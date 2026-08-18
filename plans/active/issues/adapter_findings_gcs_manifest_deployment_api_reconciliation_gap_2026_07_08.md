@@ -36,7 +36,7 @@ tags:
   ]
 related:
   [
-    ../instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
@@ -162,9 +162,10 @@ canonicalization step. Confirmed via direct reads of `prod/catalog.parquet` (bot
   enforced ID-construction path. **✅ FIXED — 2026-07-12 correction** (was: no fix note; this bullet read as still
   live): retired the same session by a concurrent sibling agent (DeFi venue-token naming cleanup), confirmed via a fresh
   re-query of `prod/catalog.parquet` — 0 ghost rows, 16 rows correctly under `AAVE_V3-OPTIMISM`. See
-  `canonical_id_builder_retrofit_checklist_2026_07_08.md`'s corresponding todo (checked `[x]`, flagged there as "stale
-  by the time this plan was filed — the parallel work wasn't visible to the agent that wrote it"). Finding #127,
-  plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+  `/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md`'s corresponding todo (checked `[x]`,
+  flagged there as "stale by the time this plan was filed — the parallel work wasn't visible to the agent that wrote
+  it"). Finding #127, plan-reconciliation
+  `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
 **Net**: `canonical_id_builder.py` reads as the intended SSOT but isn't reachable from almost anywhere real capture
 happens — it's aspirational documentation of a convention the codebase mostly doesn't follow, not a live invariant. Real
@@ -211,7 +212,7 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       artifact.
 - [x] [VERIFY] P2. **CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): the pointer below to an
       archived doc is misleading — the full execution write-up (Findings A/B/C) is actually IN THIS DOC's own Progress
-      Log (2026-07-31/08-01 entries below), which is more complete than the archived doc.** Spot-check 2-3 more
+      Log (2026-07-31/08-01 entries below), which is more complete than the archived doc.** **Spot-check 2-3 more
       findings from the smoke-test doc across all 3 layers** — good candidates: the
       DERIBIT live-vs-batch FUTURE misclassification (does deployment-ui show a FUTURE count that matches the real GCS
       row count, or does the live-WS mislabel bleed into the manifest?), and HUOBI-SPOT's missing-from-venue-universe

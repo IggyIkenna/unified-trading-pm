@@ -63,6 +63,17 @@ not "over" — it is AT the boundary — so neither carve-out's precondition is 
 WORSE off than one already over it, since the over-cap case at least has an escape hatch for cheap maintenance
 edits.
 
+> **CORRECTED 2026-08-18 (plan_reconciler, tranche=tradfi, agt-15d58e)**: two things above are now stale. (1) The
+> `>` vs `>=` question in "Recommended decision" point 2 is ALREADY ANSWERED — live-verified
+> `scripts/plan-hygiene/check_line_caps.sh:238,270` both already use `-ge`, and this doc's own 2026-08-17 Progress
+> Log below records a live-reproduction test (2 real commits) confirming both carve-outs fire correctly on this
+> exact target doc — see Todo 2, now flipped. (2) Point 3's framing — "only the mechanical flip is blocked" —
+> undersells E7's real gate: `data_completion_tradfi_2026_07_15.md`'s own E7 text (line ~211) says its verify step
+> ran and came back **CF-8 RED**, a real data-integrity condition on an irreversible legacy-bucket delete,
+> independent of the line-cap mechanics this issue is about. Splitting the source doc (Todo 1) removes the
+> mechanical blocker, but E7 itself stays open until CF-8 is separately verified GREEN — do not treat "doc is
+> under 1000L again" as sufficient to close E7.
+
 ## What was NOT done
 
 Did not force the edit through, did not delete unrelated content just to make room, did not split the doc myself
@@ -79,19 +90,26 @@ this file cleanly (`git checkout --`, verified clean, 1000L).
 2. **Separately, consider whether `check_line_caps.sh`'s carve-out preconditions should read `>= 1000` instead of
    `> 1000`** so a doc sitting exactly at the boundary isn't worse-positioned than one already over it — a design
    call for whoever owns that script, not decided here.
-3. **Once either fix lands**, close `data_completion_tradfi_2026_07_15.md`'s E7 checkbox (line 211) citing
-   `tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` — the underlying fact (extraction is real and live) is
-   already verified, only the mechanical flip is blocked.
+3. **Once the line-cap is split (Todo 1) AND `data_completion_tradfi_2026_07_15.md`'s CF-8 verify independently
+   turns GREEN**, close that doc's E7 checkbox (line 211) citing
+   `tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` — the extraction target is real and live, but E7's
+   closure is gated on CF-8, not just the mechanical line-cap (see correction above).
 
 ## Todos
 
 - [ ] [DOC] P2. Split `data_completion_tradfi_2026_07_15.md` (or fold its content into a fresh child the same way
       the 2026-07-24 line-cap remediation did for its sibling `tradfi_consolidated_closeout_2026_07_18.md`), so it
-      has headroom under the 1000L hard cap again. Done when: the doc (or its split children) are back under 1000L
-      and the E7 checkbox closes citing `tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md`.
-- [ ] [SCRIPT] P3. Confirm with the `check_line_caps.sh` owner whether the marker-only/link-repoint carve-outs'
+      has headroom under the 1000L hard cap again. Done when: the doc (or its split children) are back under 1000L.
+      E7's own checkbox closes SEPARATELY once CF-8 independently verifies GREEN (not automatically once this
+      split lands) — citing `tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` once both conditions hold.
+- [x] ✅ [SCRIPT] P3. Confirm with the `check_line_caps.sh` owner whether the marker-only/link-repoint carve-outs'
       "already over the hard cap" precondition should be `>=` instead of `>` the cap, so a doc sitting exactly at
-      the boundary isn't blocked from even the cheapest maintenance edit. Not decided here — a design call.
+      the boundary isn't blocked from even the cheapest maintenance edit. — RESOLVED 2026-08-18 (plan_reconciler,
+      agt-15d58e): already `>=` in the live script (`scripts/plan-hygiene/check_line_caps.sh:238,270`, verified
+      this pass), and independently live-reproduction-tested per this doc's own 2026-08-17 Progress Log
+      (`unified-trading-pm@8f823c84a0` + `@20a9c5916d`, both ancestor-verified on `origin/live-defi-rollout`).
+      Substance resolved via live evidence rather than a literal owner conversation — no further design call
+      needed.
 
 ## Progress Log
 

@@ -76,36 +76,60 @@ touches `batch15` after its grace clears) flips Todos 7 and 8 there.
 - `plans/active/issues/estate_orphan_assessment_2026_07_21.md` — `last_updated: 2026-07-21` → `2026-08-17`
 - `plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md` — `last_updated: "2026-08-10"` → `"2026-08-17"`
 
-## Coverage (hunters / batches / docs) — Phase 1 in progress
+## Coverage (hunters / batches / docs) — Phase 1 complete
 
-9 hunter batches planned, ~96/97 docs (this findings doc's predecessor excluded — reconciled directly above),
-~310KB each, partition at `tradfi_batches.txt` (scratchpad). Updated as Phase 1 completes.
+9 hunter batches, 96/96 docs read in full (this findings doc's predecessor excluded — reconciled in Phase -1
+above), ~310KB each, partition at `tradfi_batches.txt` (scratchpad). Roughly half the corpus was inside its own
+12h grace window at hunt time (heavy concurrent na-eligibility-audit/context-scout activity this tranche) —
+grace-protected findings are recorded under "Deferred (grace-protected)" below, not applied this run.
 
-## Flips verified
+## Checkpoint 1 — applied
 
-_(pending Phase 1-4)_
+**Contradiction fixed**: `data_completion_tradfi_line_cap_blocks_e7_stale_item_close_2026_08_16.md` mischaracterized
+E7's closure as blocked ONLY by the line-cap mechanical gate — `data_completion_tradfi_2026_07_15.md`'s own E7 text
+(GRACE-PROTECTED, not edited) says the real gate is a CF-8 RED verify result, a data-integrity condition
+independent of the line-cap. Added a correction blockquote, updated "Recommended decision" point 3, and updated
+Todo 1's done-when to require CF-8 GREEN separately from the split. Also fixed a self-contradiction in the same
+doc: its original "What happened"/"Recommended decision" diagnosed a `>` vs `>=` boundary bug in
+`check_line_caps.sh`, but the doc's own later Progress Log already live-reproduction-tested that both carve-outs
+use `-ge` — independently re-verified this pass (`scripts/plan-hygiene/check_line_caps.sh:238,270`, both `-ge`).
 
-## Contradictions
+**Flip verified**: same doc's Todo 2 ("confirm with the check_line_caps.sh owner whether precondition should be
+`>=`") — HARD evidence: direct code read (confirmed `-ge` at both cited lines) + 2 real commits
+(`unified-trading-pm@8f823c84a0`, `@20a9c5916d`), both independently re-verified `git merge-base --is-ancestor
+<sha> origin/live-defi-rollout` this pass. Flipped `[x]`, noting the substance is resolved via live evidence
+rather than a literal owner conversation.
 
-_(pending Phase 1-4)_
+**Hygiene fixes** (mechanical `../`-relative → leading-slash repointing, targets verified to exist before
+editing):
+- `instruments_remaining_work_audit_2026_07_10.md` — 2 refs: `instruments_completion_tracker_2026_07_06.md` (now
+  `/plans/active/...`) and `layer1_remeasure_and_certify_2026_07_06.md` (now archived,
+  `/plans/archive/2026_07/...`).
+- `phantom_audit_estate_coverage_gap_2026_07_10.md` — 1 ref (`consolidator_throughput_backlog_monitor_2026_07_09.md`
+  → `/plans/active/...`); also bumped stale `last_updated: 2026-07-10` → `2026-08-09` (real git last-touch date).
+- `adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md` — 1 frontmatter `../`-relative
+  ref fixed; 1 structural fix (a closing `**` with no matching opener, "Spot-check 2-3 more findings..." lost its
+  bold-open in an earlier correction); 2 stale bare-filename prose refs repointed to their real archived locations
+  (`canonical_id_builder_retrofit_checklist_2026_07_08.md` → `/plans/archive/2026_08/...`,
+  `plan_reconciliation_operator_decisions_2026_07_11.md` → `/plans/archive/issues/...`, both verified to exist).
+
+## Refuted (dropped by verify)
+
+- **`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` missing `stage:`/`repos:`/`scope:`
+  frontmatter** (batch-2 hunter finding) — direct re-read this pass shows all 3 fields ARE present and populated.
+  Likely fixed by a concurrent session between the hunter's read and this verification pass (this tranche saw
+  heavy concurrent activity — see grace-window notes throughout). No action needed; textbook case of why every
+  candidate gets adversarially re-verified before acting.
 
 ## Doc-drift
 
-_(pending Phase 1-4)_
-
-## Hygiene fixes
-
-_(pending Phase 1-4)_
+_(pending — codex-alignment findings, routed not auto-applied; compiled at Phase 6)_
 
 ## Filed
 
-_(pending Phase 1-4)_
+_(pending — compiled at Phase 6 from the deferred/grace-protected + routed findings)_
 
 ## Archive candidates (operator review)
-
-_(pending Phase 1-4)_
-
-## Refuted (dropped by verify)
 
 _(pending Phase 1-4)_
 
