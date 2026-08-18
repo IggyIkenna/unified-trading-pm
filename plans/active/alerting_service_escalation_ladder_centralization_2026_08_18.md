@@ -225,7 +225,7 @@ process stop being able to see the whole dependency graph locally, which is what
       callers resolve that first) — flag for Phase 2/3 authors if never-raises semantics were expected instead.
       9 unit tests (parametrized parity against inlined reference oracles + precedence + disjointness + determinism).
       `quality-gates.sh` green. Shipped `unified-api-contracts@d80c599c15`.
-- [ ] [INFRA] P1. Verify + grant the cross-service IAM this design needs, BEFORE building on top of it: (a)
+- [x] [INFRA] P1. Verify + grant the cross-service IAM this design needs, BEFORE building on top of it: (a)
       alerting-service's actual Cloud Run runtime identity needs WRITE access to deployment-service's durable-state
       bucket (`deployment-scripts-<project>`, resolved via `deployment-service/scripts/recovery/_durable_state.py`'s
       `state_bucket()`) for the relocated dispatch-dedup + relaunch-budget checkpoints (Phase 2); (b)
@@ -237,6 +237,19 @@ process stop being able to see the whole dependency graph locally, which is what
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md`, grant directly rather than treating it as
       operator-gated. Done-when: a scratch object written from alerting-service's live runtime identity is read back
       successfully from deployment-service's live runtime identity, and vice versa — not just an IAM-policy dump.
+      **✅ DONE (2026-08-18)** — checked the ACTUAL runtime identities rather than assuming: alerting-service runs as
+      Cloud Run service `dp-alerting-subscriber` (asia-northeast1); deployment-service's data-pipeline-monitor
+      watchers run as Cloud Run Jobs `uts-prod-dp-*` (`uts-prod-dp-meta-watchers`, `uts-prod-dp-heartbeat-watcher`,
+      etc., same region). **Finding: both already run as the SAME service account**,
+      `unified-trading-sa@central-element-323112.iam.gserviceaccount.com` — confirmed via
+      `gcloud run services describe`/`gcloud run jobs describe`. `gcloud projects get-iam-policy` shows this SA
+      already holds project-wide `roles/storage.admin`, which covers both target buckets — no new grant needed,
+      the design's IAM prerequisite was already satisfied by the existing shared-SA architecture. **Live round-trip
+      verified anyway, per the done-when bar** (not just an IAM-policy dump): wrote a scratch object to
+      `deployment-scripts-central-element-323112` via `get_storage_client()`, read it back, deleted it; same for
+      `alerting-service-central-element-323112` — both buckets confirmed reachable/writable/readable under the
+      shared identity. No IAM changes made (nothing needed granting); no code shipped for this todo (verification +
+      documentation only).
 
 ## Phase 2 — Relocate the GitHub-dispatch delivery call
 
