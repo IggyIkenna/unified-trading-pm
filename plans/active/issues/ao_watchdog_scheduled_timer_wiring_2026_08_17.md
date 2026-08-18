@@ -51,10 +51,15 @@ Following the exact pattern `escalation_queue_reconciler` already established (s
       `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01` the last two times a plan_health mode was added
       without mirroring it there). Role wrapper file, install script, and tests are separate backlog todos below —
       not done by this item.
-- [ ] [BACKEND] P2. **Add a thin role wrapper** `unified-trading-pm/agents/ao_watchdog.md` — mirror
+- [x] ✅ [BACKEND] P2. **Add a thin role wrapper** `unified-trading-pm/agents/ao_watchdog.md` — mirror
       `agents/escalation_queue_reconciler.md`'s shape exactly (a THIN wrapper carrying only the scheduled-dispatch
       boot/completion contract; the full procedure stays the skill's own SSOT, this file must not duplicate it).
       One-shot lifecycle: `POST /api/slots/$SLOT_ID/done` with `one_shot_complete: true` at the end, no looping.
+      — unified-trading-pm. Mirrors `escalation_queue_reconciler.md`'s frontmatter shape (role/model/thinking/
+      lifecycle/does/does_not/triggers) and body (boot-message-provides / STEP 0-2 one-shot lifecycle contract with
+      the literal `/done` curl + `one_shot_complete: true`), citing the not-yet-built
+      `install-ao-watchdog-timer.sh` in `triggers` per the next todo below. Install script, dispatch tests, and
+      cadence decision are separate todos below — not done by this item.
 - [ ] [SCRIPT] P2. **Write `agent-orchestrator/scripts/install-ao-watchdog-timer.sh`** — copy
       `install-escalation-queue-reconciler-timer.sh`'s structure (systemd `--user` timer + oneshot service,
       `ExecStartPre` health-gate, no sudo). Pick a cadence and an unused fire-minute offset — the existing minute
