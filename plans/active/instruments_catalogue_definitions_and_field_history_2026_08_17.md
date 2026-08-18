@@ -280,3 +280,4 @@ clear. Cross-cutting tranche audit.
 section as sharing "the same class as the reference-data-in-a-code-path rule" with a note the two checks should
 share one discriminator; kept the 3 architecture codex SSOTs + the parent gate-register plan. No source path added --
 this is a pure design proposal awaiting operator ratification, not yet executed.
+- **na-eligibility-audit 2026-08-17** [body-hash:5d2dc6fec1021b31]: KEEP-NA, valid -- re-verified, no content change since the 2026-08-17 RECLASSIFY (per-todo split) marker; still 9 open items (1 [OPERATOR] ratification + 4 direct dependents + 3 lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE + 1 explicit non-scope note, grep-confirmed against inventory's open_todos=9). Flagged in-scope this run by the body-hash-drift bug this same tranche's na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md tracks, not a real edit. Cross-cutting tranche audit.

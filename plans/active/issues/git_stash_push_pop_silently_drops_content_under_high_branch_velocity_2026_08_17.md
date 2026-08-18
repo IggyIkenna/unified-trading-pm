@@ -247,7 +247,7 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Attempt a clean repro of the suspected stash-pathspec-staleness defect above in a scratch repo
+- [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` item 1 (na-eligibility-audit 2026-08-17). Attempt a clean repro of the suspected stash-pathspec-staleness defect above in a scratch repo
       (simulate: stash push a static list → pull → pop with conflict → resolve → stash push the SAME static list
       again without re-querying git status → pull → pop) to confirm or rule out the root-cause hypothesis. **Also
       specifically test the second, more concrete failure mode**: a `stash push -- $pathspec` call where `$pathspec`
@@ -266,7 +266,7 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
       whether the double branch-drift pre-commit check is worth relaxing to a single check for small (<20 file)
       commits specifically, to reduce the race window -- not urgent, no action needed unless this recurs and starts
       costing real agent time again.
-- [ ] [SCRIPT] P2. Promote the confirmed `git pull --rebase --autostash` per-batch fix (Third incident above) into
+- [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` item 2 (na-eligibility-audit 2026-08-17). Promote the confirmed `git pull --rebase --autostash` per-batch fix (Third incident above) into
       the durable recovery guidance in `/codex/05-infrastructure/per-tab-worktrees.md` and/or
       `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md` -- this is now a CONFIRMED fix (not a
       hypothesis, unlike todo 1 above): any multi-cycle commit loop on a shared branch should default to
@@ -298,3 +298,4 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
   hand per the skill's own prescribed remedy). All three confirmed via direct evidence (log greps, file-level
   diffing against the pre-run dirty-file baseline, live git state checks), not inferred. New todos 3-5 capture the
   durable follow-ups.
+- **na-eligibility-audit 2026-08-17** [body-hash:3867e20ae8e9193f]: RECLASSIFY (per-todo split) -- of 5 open todos, 2 are bounded/worker-determinable and extracted to cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md items 1-2: todo 1 (attempt a clean repro of the suspected stash-pathspec-staleness + transient-empty-pathspec defects, full step-by-step recipe already specified in-doc) and todo 3 (promote the CONFIRMED git pull --rebase --autostash per-batch fix into the durable codex recovery guidance -- not a hypothesis, already validated empirically across ~9 further batches with zero loss). Doc stays assigned_vm: NA for its remaining 3 items: todo 2 (P3, explicitly conditional -- "not urgent, no action needed unless this recurs"), todo 4 (P3, explicitly conditional on a not-yet-existing future task), todo 5 ([REVIEW] P2, a genuine workspace-convention policy call -- "decide whether... should be retired"). Conflict-check: a related but mechanically DISTINCT sibling doc (plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md, same parent_epic agent_operating_framework_master) already confirmed a DIFFERENT root cause (cross-process stash-interleaving between concurrent sessions) for a related symptom class (git stash content loss) -- milestone-only overlap, not a duplicate claim on the same mechanism (this doc's hypothesis is same-session stale-pathspec/transient-empty-pathspec across repeated self-cycling); cited in the batch item for context, not treated as a conflict. Cross-cutting tranche audit.

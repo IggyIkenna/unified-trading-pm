@@ -26,15 +26,16 @@ related:
   ]
 parent_epic: orchestrator_master
 source: "Interactive session slot 4, 2026-08-17 — mid-edit on a UTL/MTDS cross-repo feature when the gate fired against all 3 open repos at the same timestamp (2026-08-17T18:33:10Z)"
-assigned_vm: NA
+assigned_vm: planning
 created: 2026-08-17
 resolved_by:
 locked_by:
 locked_since:
 priority: P2
-execution_scope: local-only
+execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+assigned_role: infra
 context_scope: [/codex/05-infrastructure/per-tab-worktrees.md]
 ---
 
@@ -103,3 +104,7 @@ theoretical one.
 - [ ] [INFRA] P2. Consider whether the reset-to-origin step should happen at all when the orphan-wip commit's own
       push (once fixed) succeeds — if the commit is safely on origin, resetting the LOCAL branch away from it
       serves no protective purpose and only adds the discovery burden (reflog archaeology) this incident required.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-17** [body-hash:d3150b0d1dccae32]: RECLASSIFY (whole-doc) -- all 3 open todos are bounded, worker-determinable agent-orchestrator bug fixes with a clear DoD each: (1) find+fix the pre-spawn liveness-check false-positive that misclassified a live interactive session as dead, (2) fix DirtyStateResolution.COMMIT_AND_PUSH's missing push half (root cause already partially diagnosed in-doc: none of 3 orphan-wip commits reached origin), (3) a scoped engineering judgment on whether the post-push reset-to-origin step still serves a protective purpose once (2) lands. None require operator/business judgment beyond ordinary engineering discretion. Conflict-check clear: direct grep for DirtyStateResolution/pre-spawn-dirty-state/dirty-state-gate = 0 hits outside this doc across every active planning-assigned plan in parent_epic orchestrator_master; no overlap in the cross-cutting consolidated closeout or any existing satellite batch. Flipped assigned_vm: NA -> planning in place, execution_scope -> orchestrator-agent, assigned_role: infra filled. Companion finalize: ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17_finalize_2026_08_17.md. Cross-cutting tranche audit.

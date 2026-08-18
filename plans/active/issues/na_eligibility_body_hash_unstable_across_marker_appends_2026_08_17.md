@@ -151,11 +151,11 @@ today: one dispatch's worth of redundant investigation time, not an incorrect co
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Root-cause the remaining hash-instability cause(s) beyond bugs 1+2 above -- trace 2-3 more of the
+- [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` item 3 (na-eligibility-audit 2026-08-17). Root-cause the remaining hash-instability cause(s) beyond bugs 1+2 above -- trace 2-3 more of the
       11 prediction-tranche mismatches the same way this doc traces
       `prediction_phase_e_football_arb_live_2026_07_24.md` (parent-commit hash vs. declared marker hash vs. current
       hash, diffed at the stripped-body level) until every case is explained, not just the first one found.
-- [ ] [SCRIPT] P2. Once fully root-caused, implement the complete fix in
+- [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` item 4 (na-eligibility-audit 2026-08-17). Once fully root-caused, implement the complete fix in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` (`body_content_hash()` /
       `_VERDICT_MARKER_LINE_RE` / `_latest_verdict_marker()`), and audit the 5 other importers
       (`check_extracted_checkbox_citation.py`, `generate_context_scope_inventory.py`, `check_na_corpus_ratchet.py`,
@@ -172,3 +172,4 @@ today: one dispatch's worth of redundant investigation time, not an incorrect co
 - **2026-08-17 (na_eligibility_auditor, slot 14, tranche=prediction, DISPATCH_ID=agt-997289)**: filed. Full repro,
   both confirmed bugs, and the "not sufficient alone" finding are captured above with exact commit SHAs and hash
   values so a future fix session does not have to re-derive any of it.
+- **na-eligibility-audit 2026-08-17** [body-hash:f0450de860bb8449]: RECLASSIFY (per-todo split) -- of 3 open todos, 2 are bounded/worker-determinable and extracted to cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md items 3-4: todo 1 (root-cause the remaining hash-instability cause(s) beyond the 2 already-confirmed bugs -- clear diagnostic method already demonstrated in-doc: diff parent-vs-current stripped-body hash per mismatch) and todo 2 (implement the complete fix once root-caused, audit the 5 other importers for a duplicated/drifted copy of the same hashing logic -- sequentially gated on todo 1 within the same batch item, which is ordinary plan structure, not a blocker). Doc stays assigned_vm: NA for its remaining item: todo 3 ([OPERATOR] P3, an explicit operator decision on whether/how to stagger the fix's corpus-wide one-time re-audit cost against other in-flight tranche dispatches). Conflict-check clear: no other active planning-assigned plan references body_content_hash/_VERDICT_MARKER_LINE_RE/_latest_verdict_marker; no overlap in the consolidated closeout or existing satellite batches. Meta note: this doc IS the bug several other docs in this same tranche run were re-flagged in-scope by today (a live, self-referential instance while auditing). Cross-cutting tranche audit.

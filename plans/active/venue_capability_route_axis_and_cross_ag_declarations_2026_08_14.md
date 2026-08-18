@@ -549,6 +549,7 @@ re-running its own existing refresh script (see below), not a registry rename.
   plan must not contradict" entries most relevant to what's left. Final list matches the doc's actual remaining scope
   (priority-14 arb-book registration, provider-availability re-confirmation, BETFAIR_EX/SB reconciliation) rather than
   its now-mostly-shipped P0/P1 history.
+- **na-eligibility-audit 2026-08-17** [body-hash:a3c4f5ebc221c22f]: KEEP-NA, valid -- re-verified, no content change since the second 2026-08-17 marker (matches inventory's open_todos=3). Remaining 3 items: priority-14 arb-book registration (depends on the next item), provider-availability re-confirmation (needs a live vendor subscription-state check, not a code/manifest read), and the BETFAIR_EX/SB codex-prose reconciliation (per-mention investigative judgment across 7 citations). None worker-determinable as-is. Cross-cutting tranche audit.
 ## Deferred work after 2026-08-14
 
 | Item                                                                                                              | State                                                             | Blocked on                                                                            |

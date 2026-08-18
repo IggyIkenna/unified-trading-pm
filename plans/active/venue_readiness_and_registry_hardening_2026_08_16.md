@@ -233,7 +233,7 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       seam); default preserves clamp-and-record, `refuse_unservable=True` raises `FidelityRefusedError`
       (`ErrorCategory.DATA_QUALITY`). Mode→boolean resolution deferred to whichever future CLI entry point starts
       passing `max_tier` (zero production callers do today). QG: `✅ ALL QUALITY GATES PASSED`.
-- [ ] [AGENT] P1. **Publish the granularity view.** Render it as a table a human can read: venue, instrument type, data
+- [x] ✅ [AGENT] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` item 5 (na-eligibility-audit 2026-08-17). **Publish the granularity view.** Render it as a table a human can read: venue, instrument type, data
       type, granularity, achievable matching class. This is what makes "what can we actually do here" answerable without
       reading code — and it is the same table we can show a counterparty. **The registry to render from now exists**
       (2026-08-16, `unified-api-contracts@693e823adb`,
@@ -845,6 +845,7 @@ actionable P0.
   remaining scope (1 open P1 todo, otherwise waiting on its 5 forked children) is thin enough that the existing
   plan/codex pointers outweigh adding a source path.
 
+- **na-eligibility-audit 2026-08-17** [body-hash:123ebd72ee10e83c]: RECLASSIFY (per-todo split) -- of 7 open todos, 1 is bounded/worker-determinable and extracted to cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md item 5: 'Publish the granularity view' -- the doc's own text confirms this is now purely a rendering task (the underlying VENUE_GRANULARITY_CAPABILITIES registry + get_granularity() already shipped 2026-08-16 with 412 populated cells), not a data-population one. Doc stays assigned_vm: NA for its remaining 6 items: 'Consolidate venue_universe into a clean UAC SSOT' (explicitly deferred pending W4's fork), 'Sign off each proposed merge' ([OPERATOR] P0), 'Declare capability for the 8 undeclared DeFi venues' (already PARKED as a conflict by this same tranche's earlier 2026-08-17 pass -- BLOCKED-OPERATOR-DECISION, not re-litigated here), and the 3 'Definition of done for the umbrella' items (cross-cutting completion bars spanning the whole umbrella's mechanical sweep across ~7 repos, not single-outcome work -- matches the 'multi-file, multi-day' bar even where individually phrased as one todo). Conflict-check clear for the extracted item: no other active plan claims building this render/report. Cross-cutting tranche audit.
 ## Deferred work after 2026-08-16
 
 **2026-08-16 correction**: this table previously listed W3/W4/W5 and both `[OPERATOR]` design rulings as unresolved.
