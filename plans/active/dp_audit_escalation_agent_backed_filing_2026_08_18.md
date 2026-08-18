@@ -107,19 +107,22 @@ exists on one side and is never actually exercised end-to-end.
       itself FIRST — frontmatter mirroring e2e-testing's own hand-verified `docspec.py` template — THEN proceeds to
       STEP 1's existing diagnose-from-doc flow unchanged; the "doc already filed" path is untouched. —
       unified-trading-pm@6fca190fb8 (todo 4's live run still owes end-to-end exercise of this exact path).
-- [ ] [BACKEND] P1. In `e2e-testing/scripts/audit/_dp_common.py`, delete `file_escalation_issue`'s raw
+- [x] 2. ✅ [BACKEND] P1. In `e2e-testing/scripts/audit/_dp_common.py`, deleted `file_escalation_issue`'s raw
       `path.write_text` + `_commit_and_push_pm_artifacts` subprocess `git add`/`commit`/`push` sequence entirely —
-      per this session's operator decision, never attempt a local commit from inside the Cloud Run Job. Replace it
-      with: emit the existing DP\_\* event (already wired via `_emit_data_pipeline_event`'s pubsub path) carrying the
-      full finding/candidate details in `details`, then fire a `repository_dispatch` to `escalate-to-orchestrator`
-      with `wall_type=data_pipeline_failure`, mirroring
+      per this session's operator decision, never attempt a local commit from inside the Cloud Run Job. Replaced it
+      with: emit a `DP_ESCALATION_DEFERRED` event (via the existing `emit_dp_event` pubsub path) carrying the full
+      finding/candidate details in `details`, then fire a `repository_dispatch` to `escalate-to-orchestrator` with
+      `wall_type=data_pipeline_failure`, mirroring
       `deployment-service/deployment_service/data_pipeline_monitors/escalation.py::_dispatch_to_orchestrator`'s shape
-      (same client_payload structure, same GH_PAT-from-Secret-Manager auth pattern). First verify the e2e-audit Cloud
-      Run Job's service account actually has Secret Manager access to the same `GH_PAT` secret
-      deployment-service's monitor uses — grant it directly if missing (self-service IAM, not an `[OPERATOR]` gate,
-      per CLAUDE.md's cloud-identity-self-service rule) rather than assuming it's already there. Done-when: a unit
-      test asserts `file_escalation_issue` no longer imports/calls `subprocess`/`git`, and a new test confirms the
-      `repository_dispatch` call fires with the finding's full candidate details on a genuine RED verdict.
+      (same client_payload structure — repo/pr_number/wall_type/context/authoring_slot/model, same
+      GH_PAT-from-Secret-Manager auth pattern). IAM check: confirmed live via `gcloud projects get-iam-policy` that
+      the e2e-audit Cloud Run Job's SA (`unified-trading-sa`) already carries a PROJECT-LEVEL
+      `roles/secretmanager.secretAccessor` binding (same SA deployment-service's own monitors run under, per both
+      repos' terraform `google_service_account.unified_trading.email`) — no new IAM grant was needed. Rewrote
+      `tests/unit/test_dp_audit.py`'s issue-filer coverage: a test asserts `file_escalation_issue` no longer
+      imports/calls `subprocess`/`git`, and new tests confirm the `repository_dispatch` call fires with the
+      finding's full candidate details on a genuine RED verdict + best-effort behavior on no-token/network-error. —
+      e2e-testing@aa6e8a1498
 - [x] 3. ✅ [BACKEND] P1. Fix
       `deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py::write_issue_doc`'s
       frontmatter template — it currently emits only `title`/`created`/`author`/`parent_epic`/`assigned_vm`/
