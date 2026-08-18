@@ -119,3 +119,5 @@ same-repo same-file-family basedpyright fix in sports_trigger_periodic.py one we
 via a reportPrivateUsage fix) and remains AO-dispatchable, creating a real race risk on the SAME shared repo-wide
 basedpyright counter/file family.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): ARCHIVE-eligible, confirmed -- 0 open todos (deployment-service@71871454 shipped, ratchet 1295->1259, independently re-confirmed by ci_satellite_ao_dispatch_batch13's standalone basedpyright run). Not archived directly in this pass -- tracked as a todo in `plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md`.

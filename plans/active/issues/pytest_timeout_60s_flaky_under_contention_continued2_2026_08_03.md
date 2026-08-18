@@ -145,3 +145,5 @@ archive-all-four-docs-together condition) both hinge on qg_governor_glue_runner_
 trusted the claim): that doc is genuinely at plans/archive/2026_08/, status: complete -- Phase 2-3 landed.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 2 open P3 todos, both tracking/gating on qg_governor_glue_runner_ledger_coordination_2026_08_03.md's capacity-side fix. That fix has technically landed (archived, status:complete, Phase 2-3 both [x]) but this doc's own Progress Log (2026-08-09, plan_reconciler) and embedded na-eligibility-audit verdict (2026-08-10) both independently confirm recurrence continued PAST the fix landing -- a fresh corroborating occurrence on 2026-08-09 (market-tick-data-service, under measured heavy host...

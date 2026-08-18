@@ -339,3 +339,5 @@ out with GitHub's run retention; re-attempt the purge after that.
 ## Progress Log addendum
 
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Doc has materially changed since its last dated audit passes (2026-08-07, 08-09): both DEVOPS P2 monitor-hardening todos and the semver-agent-regression/glue-pool-starvation todos those audits scoped are now `[x]` RESOLVED (2026-08-16 plan_reconciler entries), and an entirely new 'Fleet-wide zombie-queued-run purge' section + todo was added 2026-08-10, so those prior verdicts are stale as to current content and were re-derived fresh here. Item 1 (60-min clean-CI-window bar before declaring...

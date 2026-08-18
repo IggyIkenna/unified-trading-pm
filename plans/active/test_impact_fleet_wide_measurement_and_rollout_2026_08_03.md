@@ -236,7 +236,7 @@ to be per repo — not measured here, out of this todo's scope.
       code regression) — caught the 2 real bugs documented in todo 1's writeup. Full `quality-gates.sh` green (1687
       passed/11 skipped, 0 failed).
 - [x] ✅ [REVIEW] P1. **Single-repo shadow-mode trial — SUPERSEDED 2026-08-03 by direct promotion to a real gate (see
-      the new todo below) before the 2-week window completed.** `market-data-processing-service@1c8588c` shipped the
+      the new todo below) before the 2-week window completed.** `market-data-processing-service@9f58dee` shipped the
       original shadow-mode infrastructure (purely additive logging, verified via a real local run — 2332 passed/2
       skipped, exit 0 — and dry-run-validated against 3 real historical commits). The trial's own done-when (zero
       divergences over a full 2-week window) was never met by elapsed time — the operator instead directly authorized
@@ -499,3 +499,5 @@ audit pass, which explicitly identified the divergence-analysis-tool item as 'in
 bounded/deterministic-shaped...
 
 - **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Fleet-wide test-impact-selector measurement + rollout plan; Phase 1 (measurement) and most of Phase 2 (implementation, including a scoped MDPS production promotion) are shipped. grep confirms 2 open checkboxes: the deprioritized-but-repurposed divergence-analysis tool (L246, has a stated done-when but is individually bounded-looking) and the fleet-wide evidence-sufficiency judgment call (L273, explicitly gated on 'the reviewer judges large enough to trust'). The doc's frontmatter sets...

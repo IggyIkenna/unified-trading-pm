@@ -113,3 +113,5 @@ can't.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): ARCHIVE-eligible, confirmed -- 0 open todos (PR #2714 confirmed CLOSED via live `gh pr view`; fleet-wide inflight_wait guard-porting confirmed moot via ci_satellite_ao_dispatch_batch13's 2026-08-14 reconciliation). Not archived directly in this pass -- tracked as a todo in `plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md`.

@@ -561,3 +561,5 @@ per qg-host-governor.sh) is itself direct evidence recurrence continued PAST the
   the founding doc's slot-32 precedent.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 2 open P3 todos, near-verbatim copies of continued2's todos 1/3, same capacity-root-cause gate (per this doc's own 2026-08-10 na-eligibility-audit note). A dedicated 2026-08-11 post-fix monitoring pass (slot-2) surveyed the latest 3 quality-gates-v2 runs across all 10 primary tracked repos and found zero Timeout(>150s)/pytest-timeout recurrence anywhere (26/27 terminal runs success; the 3 failures independently job-level-verified as unrelated defects) -- but the doc-chain's own established...

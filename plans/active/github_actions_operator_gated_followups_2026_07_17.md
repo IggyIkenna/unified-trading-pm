@@ -729,3 +729,5 @@ bare-host bootstrap PROVE: container leg done, IMDS/EC2-role + GCP ADC (doc flag
 real GH runner registration 'structurally cannot' run in a container -- tied to 'the upcoming planning-VM deploy,' a
 genuine host rebuild.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 4 open items confirmed by direct grep, matching the doc's own most recent full audit (2026-08-10: 'Full read (1001 lines, both pages) + grep confirm 4 open todos, matching phase0=4'). Item 1 (STEP 2d) is dependency-blocked on the still-open digest-drift-sweep investigation per the D3 table's 2026-08-12 correction. Item 2 (bare-host bootstrap) is structurally blocked — the doc itself flags the GCP-ADC leg as 'interactive', i.e. needs a human auth step a worker cannot perform, plus...

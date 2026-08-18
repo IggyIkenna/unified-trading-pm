@@ -761,3 +761,5 @@ not a mechanical precedent match' to responsibly reconsider -- I performed a par
 re-confirming.
 
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (5 entries), unchanged.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 764-line CI/fleet-git-health monitoring master, almost entirely shipped (dozens of [x] items each with pw:L2 + a cited regression spec). grep confirms exactly 3 open checkboxes, all P0 [CODE][UI] smart-extras: rollout-ratchet panels (L260), runtime-level deploy signal v2 (L262), and G4 ruleset/branch-protection drift (L465, explicitly stated to fold into item 1 as a third column). 7 consecutive na-eligibility-audit passes (2026-07-30 through 2026-08-10) have kept all 3 KEEP_NA on a...

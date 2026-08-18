@@ -37,7 +37,8 @@ estimate_class: refactor
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 locked_by:
-resolved_by:
+resolved_by: market-tick-data-service@1dbdbb90
+archive_exempt: true # 2026-08-18 (na-eligibility-audit) -- 0 open todos as of this run's flip of the MTDS item; NOT archived here -- tracked as a todo in plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md instead of rushed in this audit pass.
 depends_on: []
 source:
   - "observed twice during the 25-unit staging-shutdown rollout 2026-07-23 (unified-trading-library,
@@ -163,7 +164,16 @@ guessed/placeholder environment values, cost is not a blocker (this is code + CI
       `_qg_content_hash()` now folds `ENVIRONMENT`/`DEPLOYMENT_ENV` into the sentinel hash, 2 regression test files
       (5/5 + 6/6 assertions), verified live against real `quickmerge.sh`. Checkbox never flipped here when that landed —
       closing now, na-eligibility-audit 2026-07-31.
-- [ ] [INFRA] P2. Fix the env-coupled tests in `unified-trading-library`
+- [x] ✅ [INFRA] P2. **CLOSED 2026-08-18 (na-eligibility-audit)** — MTDS half independently verified fixed:
+      `market-tick-data-service@1dbdbb90` (real commit, confirmed via `git log`) adds an autouse fixture in
+      `tests/conftest.py` (~lines 24-50) that `monkeypatch.delenv("DEPLOYMENT_ENV")` +
+      `monkeypatch.delenv("ENVIRONMENT")` before every test — confirmed it covers both named reproducer tests
+      (`test_prediction_stays_prod_without_is_test_run` in `tests/unit/test_websocket_streaming_handler.py`,
+      `test_adapter_resolves_canonical_cefi_bucket_is_test_run_aware` in
+      `tests/market_interface/adapters/cefi/test_tardis_canonical_output.py`, both present in the repo). The
+      2026-07-26 operator sequencing gate (hold MTDS behind the DEPLOYMENT_ENV race investigation) is satisfied —
+      that investigation is archived + resolved (2026-08-15) citing this exact fix. This closes the doc's last open
+      item; 0 open todos remain. Was: Fix the env-coupled tests in `unified-trading-library`
       (`tests/cloud_interface/unit/test_constants.py`), `deployment-api`, `strategy-service`, and the two
       `market-tick-data-service` cases — set the environment explicitly per-test instead of relying on the ambient
       default. **PARTIAL 2026-07-25 — 1 of 4 repos done; box stays open** (`/plan-reconcile ci`, 2026-07-26): the
@@ -287,3 +297,9 @@ and `/plans/archive/issues/mtds_deployment_env_race_survives_single_worker_2026_
 repointed this doc's `context_scope` and one resolution-checklist link but left this verdict paragraph unrevised.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP_NA_STALE_ITEMS -> closed. Independently verified (not on
+inference) that Resolution-checklist item 3's MTDS half is fixed — see the flipped checkbox above for the full
+citation (commit + conftest.py fixture + both named test files confirmed present). Doc now has 0 open todos;
+archival tracked as a todo in `plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md` rather than
+executed in this pass.

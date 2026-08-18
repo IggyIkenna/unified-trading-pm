@@ -36,8 +36,8 @@ related:
   ]
 created: 2026-08-14
 parent_epic: infrastructure_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.15
@@ -141,3 +141,13 @@ this doc's job was un-blocking the fleet, not redesigning the gate):
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): RECLASSIFY_WHOLE -> `assigned_vm: planning`. The sole open todo
+(add `detect_template_drift.py --workflows --repo <self>` as a consumer-scoped pre-commit/CI check to
+unified-api-contracts) names its exact precedent to copy (`check_cloudbuild_template_drift.py`'s already-shipped
+STEP 5.108 wiring), targets one named repo, has no open design question, and is low-blast-radius (new CI check
+script only, no prod-data/credential touch). Conflict-check clear: grepped every active `assigned_vm: planning` doc
+for `detect_template_drift.*--workflows.*--repo`/`STEP 5.108`/this exact wiring — zero hits outside this doc itself,
+and no ci-tranche `status: draft` satellite batch exists to check against. `execution_scope` corrected to
+`orchestrator-agent`; `assigned_role: infra` already valid, unchanged. Finalize plan authored:
+`unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14_finalize_2026_08_18.md`.

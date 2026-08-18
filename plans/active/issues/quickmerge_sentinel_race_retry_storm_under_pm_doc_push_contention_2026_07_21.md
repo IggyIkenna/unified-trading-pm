@@ -171,3 +171,5 @@ operator sign-off is required on the fast-path predicate because an over-eager '
 genuinely-needed gate.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- The doc carries an explicit, verbatim, still-present section heading — 'for operator / careful review — do NOT dispatch blind: quickmerge is high-blast-radius shared ship infra' — directly above its remaining candidate fixes, and the Notes section reiterates operator sign-off is required because an over-eager fast-path predicate could bypass a genuinely-needed gate. Fix 2 (backoff+jitter) already shipped via a sibling doc (unified-trading-pm@e264b3c9); only fix 1 (content-hash QG green-tree...

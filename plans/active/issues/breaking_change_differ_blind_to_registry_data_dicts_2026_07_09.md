@@ -292,3 +292,5 @@ consumer QG gate') and closed [x]; a NEW [SCRIPT] P2 mechanical-implementation t
 same day -- that is the doc's real current sole open item, not the old DESIGN question (I am not re-litigating the
 ruling, which is settled; I am assessing the new implementation todo it spawned).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 7 of 8 todos are done, including the [DESIGN] P2 consumer-QG-gate policy question that anchored 7+ consecutive prior audit passes — resolved via explicit 2026-08-08 operator ruling, with its mechanical implementation shipped 2026-08-14 (unified-api-contracts@ae2f4ce4c5 + instruments-service@054a67ba04). That same shipment spawned exactly one NEW follow-up item, created the same day (2026-08-14), postdating the doc's most recent na-eligibility-audit pass (2026-08-10): wire the new...

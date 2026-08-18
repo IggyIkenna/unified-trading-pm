@@ -244,3 +244,5 @@ Residual 2 remains genuinely open.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Only 1 open item remains: Residual 2, the client-lite wizard successor (P3, DEFERRED). Residual 1 (CI-runner-blocked openapi regen) is now [x] — flipped 2026-08-12 per /plan-reconcile citing shipped unified-api-contracts@7896deda, and its own round-11 (2026-08-09) satellite-extraction/RECLASSIFY history is already closed out, not re-litigated here. Residual 2's own stated first step is authoring a brand-new build sub-plan (archetype curtailment tiers, credentials-checklist UX, on-demand...
