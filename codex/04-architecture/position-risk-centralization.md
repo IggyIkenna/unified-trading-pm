@@ -149,8 +149,12 @@ spot third-party liquidation opportunities — `arbitrage_structural/liquidation
 `mev/liquidation_bundle.py` — currently each reimplement the identical gate independently rather than sharing one.
 The call shape differs (candidate-wallet parameter, not client-scoped), but it should route through the same
 underlying module, not a third and fourth bespoke implementation. A purpose-built circuit breaker,
-`strategy_service/circuit_breakers/liquidation_proximity_circuit.py`, looks designed for exactly this and has zero
-callers anywhere — decide whether to wire it in as the shared gate or retire it, per the issue doc's todos.
+`strategy_service/circuit_breakers/liquidation_proximity_circuit.py`, has zero callers anywhere — **RULED
+2026-08-18: wire it in, don't retire it.** It's complete, purpose-built code mapping 6 `AlertCode`s to graded
+responses (flash-close, partial-unwind, position-pause, hedge-failover, oracle-buffer, mid-loop-recovery), and it
+doesn't compete with mechanisms A/B — it's a downstream consumer of a `DefiAlert`, not another health-factor
+source. The actual gap: nothing upstream emits a `DefiAlert` with one of its 6 codes yet. Full reasoning:
+`/plans/active/strategy_service_centralization_fixes_2026_08_16.md`.
 
 ## Data model gaps (mechanism A; unverified for B)
 

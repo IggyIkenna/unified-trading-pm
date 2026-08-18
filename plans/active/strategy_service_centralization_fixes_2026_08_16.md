@@ -161,12 +161,16 @@ Full findings, root cause, and evidence for every todo below live in the three s
       strategy-service's config today — a real design decision, not a one-line call. Split to the new todo below
       rather than inventing that config shape unilaterally. Done-when (unchanged, not yet met): the aggregator's
       state reflects real position data after a live/paper run, verified by reading it back.
-- [ ] [OPERATOR] P1. **Decide the per-client DeFi-wallet config shape** so `AavePositionAdapter.get_lending_position()`
-      (shipped above) can be wired into `risk.py::update_lending_positions()` on a periodic cadence, the same way
-      `monitor_handler.py`'s reconciliation loop already periodically calls `emit_live_cefi_margin_events()`. Needs:
-      one wallet per client, or many; which chain(s); where the mapping lives (a new config-reloader field, per
-      `/codex/06-coding-standards/config-reloader-pattern.md`, not a bare module constant). Once ruled, the actual
-      wiring is a small [BACKEND] follow-up.
+- [x] [OPERATOR] P1. ✅ RULED 2026-08-18 — **Per-client DeFi-wallet config shape: many wallets per client, keyed by
+      `(client_id, chain)`, via the config reloader.** A client running DeFi archetypes isn't confined to one
+      chain — `staked_basis.py`'s own `_STAKING_PROTOCOL_CHAIN` spans 8 staking protocols across multiple chains,
+      and a client could run `CARRY_STAKED_BASIS` and `CARRY_RECURSIVE_STAKED` simultaneously on different chains,
+      so a single wallet-per-client field can't express it. Not a new pattern — the same four-destination rule
+      this plan already established: operator/client-tunable data that changes without a code release is
+      **service config, always via the reloader** (never a bare module constant), not UAC (per-client operational
+      mapping, not shared reference data) and not a hardcoded table. Concretely: a new config-reloader field,
+      `client_id -> {chain: wallet_address}`, per `/codex/06-coding-standards/config-reloader-pattern.md`. Unblocks
+      the wiring todo below.
 - [ ] [BACKEND] P0. Switch `staked_basis.py`'s `_validate_lst_margin_slot` and `recursive_staked.py`'s entry gate
       plus `_check_family2_health_kill` off `features.get("health_factor")` onto the centralized source the prior
       todo wired. Done-when: neither file reads `features.get("health_factor")` anymore, both call the centralized
@@ -175,8 +179,19 @@ Full findings, root cause, and evidence for every todo below live in the three s
       `mev/liquidation_bundle.py`'s `liq_candidate_health_factor_*` gate to the same centralized source
       (candidate-wallet-parameterized, not client-scoped — a different call shape from the prior todo). Done-when:
       neither reads an ad-hoc `features.get` key for this purpose anymore.
-- [ ] [OPERATOR] P1. Decide `liquidation_proximity_circuit.py`'s fate — wire it in as the shared gate the four
-      archetypes above call, or retire it. It currently has zero callers anywhere.
+- [x] [OPERATOR] P1. ✅ RULED 2026-08-18 — **Wire `liquidation_proximity_circuit.py` in; do not retire it.** Read
+      the file in full: it's complete, purpose-built code (Phase 8 of `defi_recursive_borrow_archetypes_2026_05_10.md`)
+      that maps 6 specific `AlertCode`s (`DEFI_LIQUIDATION_IMMINENT`, `DEFI_HEALTH_FACTOR_CRITICAL`,
+      `DEFI_FUNDING_RATE_FLIP`, `DEFI_PERP_VENUE_OUTAGE`, `DEFI_ORACLE_STALE_PAUSE`,
+      `DEFI_RECURSIVE_LOOP_GAS_BUDGET_EXCEEDED`) to graded responses (flash-close, partial-unwind, position-pause,
+      hedge-failover, oracle-buffer, mid-loop-recovery) — strictly more sophisticated than a binary kill-gate, and
+      it doesn't compete with mechanism A/B: it's a downstream consumer of a `DefiAlert`, not another
+      health-factor source. Zero callers because nothing upstream emits a `DefiAlert` with one of these codes
+      yet — that's the actual gap, not the circuit itself. **New follow-up this surfaces**: build the bridge from
+      a computed `MarginEvent`/health-factor breach into a `DefiAlert` with the matching code, so
+      `LiquidationProximityCircuit.evaluate()` has something to consume — scope as part of wiring
+      `recursive_staked.py` (the archetype this circuit is explicitly named for) onto the centralized source, not
+      as a separate effort.
 - [ ] [BACKEND] P1. Extend `DeFiAggregatedHealth`/`ProtocolHealthBreakdown` with LTV, borrow-capacity, and
       liquidation-price fields (or unify with `PositionHealthSnapshot`'s fields); fix `positions_health.py`'s
       `MarginModel.AAVE_V3`-hardcoded liquidation-threshold lookup to resolve per-position protocol instead.
@@ -205,6 +220,17 @@ Full findings, root cause, and evidence for every todo below live in the three s
 - [ ] [BACKEND] P3. Update
       [position-risk-centralization](/codex/04-architecture/position-risk-centralization.md) from
       "not yet complete" to reflect the landed state, once the earlier BACKEND todos land.
+- [ ] [AGENT] P2. **Inventory CeFi and TradFi leverage-capable archetypes** against the same test
+      `position-risk-centralization.md` already applies to DeFi (posts collateral and/or borrows/trades against it
+      → needs the gate; pure supply-side → doesn't). Unclaimed work, not a stated-zero — run before the TradFi
+      registry build below, since it determines how urgent that build actually is.
+- [ ] [AGENT] P2. **Build the TradFi margin registry + `MarginModelProtocol` implementation.** Mirror
+      `unified_api_contracts/registry/cefi_margin_tiers.py`'s shape (per-broker margin/buying-power schedule,
+      cited sources) against a broker's actual documented margin API (e.g. IBKR) — the confirmed genuine gap per
+      `position-risk-centralization.md` (no `*tradfi*margin*` registry exists anywhere in UAC today, while the
+      CeFi equivalent does). Scaffold and draft from public broker documentation; live validation against the real
+      API needs operator-provided test credentials per W14 (`/plans/epics/system_readiness_master.md`) — that part
+      is `BLOCKED-CREDENTIALS`, not a descope, so build the adapter scaffold regardless.
 
 ## THE GENERAL CLASS — reference data living inside a code path (operator ruling 2026-08-16)
 
@@ -283,7 +309,19 @@ logic and that no second archetype could ever want. That must be stated, not ass
   todo unchecked (its done-when — aggregator state reflects real data after a live/paper run — is not yet met,
   since nothing calls the new method yet) and split the remaining per-client wallet-config decision into a new
   `[OPERATOR]` todo rather than invent that config shape unilaterally.
-
+- **2026-08-18 (interactive session, operator rulings)** — Ruled on all three `[OPERATOR]` todos this AO pass left
+  open. Wallet-config shape: many wallets per client keyed by `(client_id, chain)`, via the config reloader.
+  `liquidation_proximity_circuit.py`: wire it in (read the file in full first — it's complete, purpose-built
+  6-code alert dispatcher, not a competing health-factor source; its only real gap is that nothing emits a
+  `DefiAlert` for it to consume yet). `AavePositionAdapter`'s fate todo was stale — already resolved by the prior
+  entry's shipment, retagged done. Added two new `[AGENT]` P2 todos this session surfaced: inventory CeFi/TradFi
+  leverage-capable archetypes, and build the TradFi margin registry (confirmed the genuine gap, not CeFi) — both
+  previously only prose in `position-risk-centralization.md`, never tracked, a real process gap now fixed.
+  `runtime-deployment-topology.md`'s PBM gap note corrected in the same session: current in-process implementation
+  is deliberate, not an oversight — operator confirmed a possible standalone-service decision is weeks out, ahead
+  of the already-filed November 2026 target in `system_readiness_master.md` W7. No application code touched —
+  this plan is actively AO-dispatched and being executed live (see the two entries above); resolving the
+  OPERATOR-gated decisions is what unblocks that dispatch, not parallel hand-implementation in this session.
 - **2026-08-16** — Authored from three same-day issue docs per operator direction (AO-dispatched, one wrapper
   plan). `sequential: true` set deliberately given the real chain among the first several todos — not a reflexive
   default. Companion finalize plan:
