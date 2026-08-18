@@ -81,7 +81,17 @@ as `/check-agent-orchestrator` and `check-scheduled-job-health.sh` (`aws ssm sen
 `i-0c9b283b31d6b5ca7`, `ap-northeast-1`, `AWS-RunShellScript`) — and **aggregate ON the VM in one remote script**,
 not one SSM round trip per endpoint (SSM `StandardOutputContent` truncates at ~24000 chars, and every extra round
 trip is a full `send-command`/`get-command-invocation` pair). Pull all of the following in one remote Python
-heredoc (mirror `check-scheduled-job-health.sh`'s pattern exactly — it already solves the truncation problem):
+heredoc (mirror `check-scheduled-job-health.sh`'s pattern exactly — it already solves the truncation problem).
+**Measured trap (2026-08-18 run): building one big dict and `json.dumps`-ing it at the end silently truncates
+mid-object when the total crosses ~24000 chars — the raw `/api/backlog` task list and `/api/fleet-kpis`'s
+`usage.entries` are the two fields most likely to blow the budget.** Stream one `KEY\tjson.dumps(val)` line per
+field instead (`print(key + "\t" + json.dumps(val))`, called right after each fetch, not batched into one final
+print) — a truncation then only loses the last (possibly partial) field's line, every prior field parses cleanly,
+and you can tell from `cut -f1` which field survived. Summarize list-shaped fields (status `Counter`, not the raw
+list) before emitting them for the same reason. If the health cluster (fleet-kpis/escalations/blocked/accounts/
+agents/resource-watchdog/batching/state) and the resource cluster (point-in-time snapshot + the Step 10 resource-
+history day-diff) still don't fit one command's budget together, split them into two SSM round trips rather than
+fighting for space in one — two clean pulls beat one truncated one.
 
 1. `GET /api/backlog` summary (queued/dispatched/done counts) — same view `/check-agent-orchestrator` reads.
 2. `GET /api/fleet-kpis` — the full KPI payload (see Step 3a).
