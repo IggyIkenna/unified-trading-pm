@@ -170,7 +170,7 @@
     </p>
 
     <div class="legend">
-      <span><b class="st st-live">live</b> shipped and reachable</span>
+      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
       <span><b class="st st-part">partial</b> built, reachable for some cases</span>
       <span><b class="st st-plan">planned</b> specified, not yet built</span>
       <span><b class="new">new</b> added since the last edition</span>
@@ -254,6 +254,26 @@
       Every instruction carries a full identity block. This is what lets a fill in a client report be traced back to
       the exact strategy build and configuration that produced it.
     </p>
+    <div class="callout">
+      <span class="tag">Archetypes carry a readiness state too — not just venues</span>
+      <p>
+        Readiness is usually discussed per venue, but an <b>archetype</b> has its own batch / paper / live state, and
+        so does each <b>(archetype, venue)</b> pair. An archetype is only usable on a venue whose data can satisfy the
+        inputs it declares — so "this archetype is ready" and "this venue is ready" are different questions with
+        different answers.
+      </p>
+      <p>
+        The same rule governs both: <b>derived, never declared.</b> A leg with no real machine check reports
+        <code>unverified</code> rather than passing. Two checks compose into the strategy leg — a position adapter must
+        resolve for that venue <em>in that mode</em>, <b>and</b> at least one archetype's full declared input set must
+        be satisfiable from it. Both, not either.
+      </p>
+      <p>
+        <b class="st st-plan">planned</b> — a capability audit that derives this per archetype across all three modes is
+        specified but not yet built. Until it exists, archetype readiness reports <code>unverified</code> by
+        construction, which is the honest state rather than a gap being hidden.
+      </p>
+    </div>
     <details class="sec-body">
       <summary>The identity declaration, and how a slot label is built</summary>
       <div class="code"><span class="k">class</span> <b>StrategyInstanceIdentity</b>:

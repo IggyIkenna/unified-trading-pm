@@ -192,7 +192,7 @@
     </p>
 
     <div class="legend">
-      <span><b class="st st-live">live</b> shipped and reachable</span>
+      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
       <span><b class="st st-part">partial</b> built, reachable for some cases</span>
       <span><b class="st st-plan">planned</b> specified, not yet built</span>
       <span><b class="pend">pending</b> figure not yet measured — never estimated</span>
@@ -1031,6 +1031,20 @@ next_funding_at  <i>datetime[UTC]</i></div>
         </div>
       </div>
       <div class="callout">
+        <span class="tag">Readiness applies to archetypes as well as venues</span>
+        <p>
+          A venue has a readiness state; so does a <b>strategy archetype</b>, and so does each
+          <b>(archetype, venue)</b> pair. They are genuinely different questions — an archetype is only usable on a
+          venue whose data satisfies the inputs it declares, so a fully-captured venue with no archetype able to
+          consume it is not a ready venue.
+        </p>
+        <p>
+          <b class="st st-plan">planned</b> — a capability audit deriving archetype readiness across batch, paper and
+          live is specified and not yet built. Until it runs, that axis reports <code>unverified</code> rather than
+          being assumed.
+        </p>
+      </div>
+      <div class="callout">
         <span class="tag">Reading "ready = 0" correctly</span>
         <p>
           <b>Zero venues currently clear the bar, and the bar is ours.</b> A venue is ready only when every leg of a
@@ -1164,8 +1178,10 @@ next_funding_at  <i>datetime[UTC]</i></div>
       estimates, and a figure with no measured basis is omitted rather than approximated.
     </p>
     <p>
-      Status reflects what is reachable on a production path, not what exists in a repository. Where the two differ,
-      this document says so.
+      Status reflects what is reachable on a production path AND validated with real capital — not what exists in a
+      repository. Where those differ, this document says so. <b>That bar is deliberately strict</b>: capital validation
+      is a separate gate from code being correct and reachable, so a section can be complete, wired and exercised in
+      paper and still not carry a <b>live</b> mark.
     </p>
   </footer>
 </div>
