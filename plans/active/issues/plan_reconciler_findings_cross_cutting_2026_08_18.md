@@ -321,3 +321,36 @@ the workspace HARD RULE ("every deferral must already exist as a `- [ ]` todo"),
   (see "Carry-forward items resolution" above) — 3 of 4 need no action (already tracked / guard confirmed holding /
   resolved via NEVER-RE-LITIGATE rules), 1 small real finding filed (pipeline_mode prose-todo conversion, deferred
   to a future pass since the doc is grace-protected this run).
+- **2026-08-18T03:00Z (session end, /pre-compact ritual)**: all 5 hunters returned; every candidate independently
+  re-verified (git log/merge-base/grep against live state, never trusted on the hunter's word alone) before applying
+  — 1 hunter claim caught as a false positive this way (see Refuted). Exit-gate hygiene sweep confirmed 0 NEW
+  violations vs `origin/main` on every ratchet-gated check; the sole hard failure (`check_na_corpus_ratchet`) is the
+  same pre-existing standing condition noted at entry, not this skill's remit. Tree clean, `ahead=0`, verified at
+  HEAD. **Process lessons worth carrying forward**: (1) the `/blocked`→`GET /messages` retrieval gap the 2026-08-16
+  doc already documented (Gap 2) reproduced live again this run — `GET /api/activity` was the only way to actually
+  read the operator's answer to `BLK-3e7cde0d`; treat `/messages` as unreliable for blocked-answers on this
+  orchestrator build, not just historically. (2) On this branch's current churn level, RAW `git commit`/`git push`
+  for PM docs repeatedly lost the branch-drift-hook race (observed 2x, 15-then-2-commits-behind between successive
+  attempts) — `scripts/dev/safe-doc-push.sh` should be the DEFAULT for every PM-repo doc commit under this load, not
+  a fallback reached for after raw git fails; it handled a 28-entry autostash pile and a genuine content conflict
+  (an inventory-dashboard regen artifact) correctly both times it was actually used. (3) A naive
+  both-path-prefixes-guess for resolving each tranche doc's real location (`plans/active/` vs
+  `plans/active/issues/`) silently doubled the grace/workable counts (93+255=348=174×2) before the bug was caught by
+  a sanity check — resolve each doc's real path explicitly (`[ -f ... ]`) rather than guessing both and hoping the
+  wrong one is harmless.
+
+## Next steps for a future cross-cutting `/plan-reconcile` pass
+
+This run reached full coverage of the current 174-doc tranche (85 docs read in full: 81 workable + 4 grace-protected
+Phase-1 items) and closed out the prior 2026-08-16 doc's unfinished batches 5-9 + all 7 named carry-forward items —
+**there is no unfinished "continue this run" work**. What remains is exactly the "Plans not reached" checklist above
+(13 items, now tracked as `- [ ]` todos in this doc, all low/medium severity, none live-work-blocking) plus whatever
+the standing `/na-eligibility-audit`/`/ag-closeout-audit`/`/context-scout` cadences surface between now and the next
+scheduled cross-cutting dispatch. A future session picking this up should: (1) re-run Phase -1 against THIS doc
+first (per SKILL.md's own rule — reconcile prior findings before a fresh sweep) — check whether any of the 13
+"Plans not reached" items were independently resolved by another pass in the meantime before re-doing them; (2) work
+the still-open ones in priority order (the `instruments_foundation_completeness_2026_06_24.md` multi-location edit
+and the `data_pipeline_e2e_milestones_gate_2026_07_24.md` live-status check are the two with the most reader-facing
+staleness risk); (3) the corpus will have grown again (150→174 in the 2 days between the last 2 cross-cutting
+runs) — re-derive the tranche via `generate_tranche_doc_inventory.py --tranche cross-cutting`, don't assume this
+run's 174-doc snapshot is still current.
