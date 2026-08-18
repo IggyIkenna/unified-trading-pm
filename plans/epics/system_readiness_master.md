@@ -485,6 +485,43 @@ presentation choice.
 - [ ] [DOC] P1. **Every artefact regenerates from measurement, not from prose.** Where a number is quoted, its source
       and date are recorded, so the next edition is a re-run rather than a re-write.
 
+### The closure invariant — measured 2026-08-18, and it is NOT "everything under this epic"
+
+The operator's goal is: *build the epic in full, and the two artefacts have nothing missing.* Measured corpus
+topology says that cannot be delivered by parenting work under this epic. **356 active plans + 489 active issue docs
+= 845 docs, across 29 epics. This epic declares only 5 of them.** The largest owners are elsewhere —
+`infrastructure_master` 297, `sports_master` 68, `orchestrator_master` 65, `agent_operating_framework_master` 63,
+`defi_master` 50, `cefi_master` 50, `tradfi_master` 44. That distribution is correct and should not be flattened;
+the artefacts' claim surface legitimately spans work owned by ~20 other epics.
+
+**True orphans are already near-zero**: exactly 3 active docs lack a `parent_epic` key, and none is a real plan
+(`INDEX.md`, `_agent_pings.md`, `_cefi_canonical_blueprint_2026_07_17.md`). So corpus-level orphan hygiene is not
+the gap. **The gap is directional** — nothing checks that every artefact CLAIM has a tracked owner. Invert the
+invariant: not "every plan hangs under this epic" (wrong direction, 845 docs) but **"every claim-bearing artefact
+section maps to a tracked item, wherever it lives."**
+
+- [ ] [DOC] P0. **Give every claim-bearing artefact section a third mark: its OWNER** — the workstream, plan or
+      epic that closes the gap. With the status mark (what the system does) and § E's evidence tier (how we know),
+      the artefact becomes an index INTO the corpus: scroll it, and every non-`live` claim names who is delivering
+      it. **A section with no owner is the orphan class that actually threatens this epic's promise** — an artefact
+      claim nobody is tracking — and nothing currently measures it.
+- [ ] [SCRIPT] P0. **Bidirectional closure check between the artefacts and the corpus.** Forward: every
+      claim-bearing section resolves to a live tracked item (fail on an unowned section). Reverse: every workstream
+      here is either referenced by an artefact section or explicitly marked internal-only — so a capability we hold
+      but never disclose is a deliberate choice rather than an oversight. Run it in the hygiene sweep so the answer
+      is refreshed, not remembered.
+- [ ] [SCRIPT] P1. **Extend the orphan check to issue docs.** `scripts/plans/regenerate_active_plan_inventory.py`
+      defines orphan as "plan not referenced by master or any epic" but covers `plans/active/*.md` only — measured
+      2026-08-18: **the 489 active issue docs are outside its scope entirely**, against 356 plans inside it. Issue
+      docs are where agent-generated findings land, so they are the highest-churn and highest-orphan-risk class in
+      the corpus.
+- [ ] [PROCESS] P1. **Agent-generated docs must be swept in on a cadence, not noticed by luck.**
+      `execution_delta_proxy_repricer_generalization_2026_08_18.md` was folded into W7 only because an interactive
+      session happened to read a `git log` line while shipping something unrelated. It was well-formed (it declared
+      `parent_epic: system_readiness_master` itself), so the sweep only has to FIND it — but discovery by
+      coincidence does not scale to ~300–500 agent tasks/day. Fold this into the existing daily
+      `/plan-reconcile` sweep rather than adding a new mechanism.
+
 ---
 
 ---
