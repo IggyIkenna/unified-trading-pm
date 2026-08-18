@@ -467,13 +467,13 @@ basedpyright clean; left as uncommitted working-tree edits, not lost):
   `market_data_gcs_bucket`/`instruments_store_gcs_bucket`/`unified_cloud_services_gcs_bucket` — but identical root
   cause shape to strategy-service's), breaking `test_handler_registry.py`/`test_policy_resolver.py` (11 tests) +
   `test_gcs_live_data_sink.py`/`test_defi_data_loader_coverage.py` (2 more). **2026-08-18: now tracked** —
-  `/plans/active/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md`, cross-linked to
+  `/plans/archive/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md`, cross-linked to
   the strategy-service todo above (same failure class, second independent repo, worth a human noticing the
   pattern even though the fix will likely stay per-repo).
 - `client-reporting-api/scripts/seed_demo_client.py` — blocked by 4 pre-existing failures in
   `test_invoice_viewing_transitions_analytics.py` (expects HTTP 404, gets a different status) — unrelated to GCS.
   **2026-08-18: now tracked** —
-  `/plans/active/issues/client_reporting_api_invoice_test_failures_block_gcs_fix_2026_08_18.md`, cross-linked to
+  `/plans/archive/issues/client_reporting_api_invoice_test_failures_block_gcs_fix_2026_08_18.md`, cross-linked to
   the pre-existing (but non-overlapping) `repo_scripts_governance_audit_2026_06_18.md` cloud-discipline todo.
 - `unified-trading-pm/scripts/catalogue/sync-to-mock.py` — blocked by the `archive-safety-ratchet` post-gate check:
   10 pre-existing `related:` frontmatter entries across 6 unrelated active plan/issue docs (re-measured
@@ -590,8 +590,8 @@ already prioritized toward these 6 docs now).
   since the prior session). strategy-service's blocker was already tracked (batch15) but didn't mention the 2
   riding GCS fixes — added that note. execution-service's `extra_forbidden` failure and client-reporting-api's 4
   invoice-test failures were confirmed NOT tracked anywhere — filed
-  `/plans/active/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md` and
-  `/plans/active/issues/client_reporting_api_invoice_test_failures_block_gcs_fix_2026_08_18.md` respectively (both
+  `/plans/archive/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md` and
+  `/plans/archive/issues/client_reporting_api_invoice_test_failures_block_gcs_fix_2026_08_18.md` respectively (both
   cross-linked back here and to each other where relevant). The PM-repo `sync-to-mock.py` blocker was assessed for
   a direct fix per this session's own instructions (attempt it if genuinely a simple repoint) — re-running the
   real gate found 10 violations across 6 docs (not the 8 estimated), read the checker source and confirmed the
@@ -603,3 +603,27 @@ already prioritized toward these 6 docs now).
   gets prioritized there instead of being forced here. **No code shipped this session** — all 5 fixes remain
   uncommitted working-tree edits, now with every blocker either tracked-with-context or (strategy-service) already
   tracked-and-annotated. `status` stays `open`.
+- **2026-08-18 (seventh session, resolution pass on the 5 fixed-but-ship-blocked files)**: **4 of 5 now resolved
+  and shipped.** The prior sessions' uncommitted edits no longer existed in any of the 11 local slot checkouts
+  (`git status`/`git diff`/`git stash list` all clean) — redone from scratch, same conversions as originally
+  described. `client-reporting-api/scripts/seed_demo_client.py`: its blocker (4 invoice-viewing test failures)
+  turned out to already be gone — `quality-gates.sh --test` came back fully green (667 passed, 0 failed), no commit
+  history explains a fix, most likely upstream drift in this shared multi-session checkout; redone + shipped
+  `client-reporting-api@0e54aab310`. `strategy-service`'s 2 files + `execution-service`'s 1 file: root cause
+  diagnosed for real — see
+  `/plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md`'s StrategyDomainConfig todo and
+  `/plans/archive/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md` for full detail —
+  `BaseConfig` subclasses (`pydantic_settings.BaseSettings`) auto-read `.env` on every construction regardless of
+  code-level kwargs; narrow domain-config schemas with inherited `extra="forbid"` reject any of `.env`'s many
+  unrelated keys, confirmed via direct repro (`cp .env.example .env` + rerun: 32 distinct violations for
+  execution-service's config, not just the 3 fields this doc's summary named). Fixed via `extra="ignore"`,
+  mirroring existing precedent elsewhere in the codebase. Shipped `unified-trading-library@1da1a095d4` (the actual
+  fix location — `StrategyDomainConfig` lives in UTL, not strategy-service), `strategy-service@20e9602e96` (the 2
+  riding GCS files), `execution-service@3448247dba` (pydantic fix + riding GCS file together). **Only
+  `unified-trading-pm/scripts/catalogue/sync-to-mock.py` remains ship-blocked** — unchanged, still routed through
+  the existing corpus-wide cleanup dispatch per the sixth session's assessment. **New finding, not fixed**: the
+  UTL fix resolves only 2 of 9 `DomainConfig`-family classes in `domain_configs.py` sharing the identical
+  architectural shape (narrow schema + inherited `.env`-reading + `extra="forbid"`) — the other 7
+  (`InstrumentDomainConfig`/`ClientDomainConfig`/`VenueDomainConfig`/`TickerUniverseConfig`/`RiskDomainConfig`/
+  `AlertRuleDomainConfig`/`RateLimitDomainConfig`/`FeatureFlagDomainConfig`) carry the same latent
+  crash-on-real-`.env` risk, unfixed — flagged for a follow-up decision, not scoped as a todo here.

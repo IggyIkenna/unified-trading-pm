@@ -12,7 +12,7 @@ summary: >-
   tracks fixing `seed_demo_client.py`'s cloud-discipline gap as part of a ~10-script cohort -- this GCS fix
   satisfies that item FOR THIS FILE once shipped, but that item doesn't track or explain these specific blocking
   test failures, which are a different, unrelated bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,7 +35,7 @@ estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
 assigned_role: infra
 effort: low
-resolved_by:
+resolved_by: client-reporting-api@0e54aab310
 drift_direction: advance-code
 depends_on:
 context_scope:
@@ -113,3 +113,17 @@ failures.
   Confirmed via corpus grep these 4 test failures were NOT tracked anywhere before this doc; found the related
   (but not overlapping) broader cloud-discipline todo in `repo_scripts_governance_audit_2026_06_18.md` and
   cross-linked it. Not investigated/fixed -- `assigned_vm: NA` pending root-cause triage.
+- **2026-08-18 (resolution session)**: picked up as part of a tracked backlog pass. **The blocking failure this doc
+  characterized was already gone** -- the prior session's own uncommitted GCS fix no longer existed in this repo's
+  working tree in ANY of the 11 local slot checkouts (verified via `git status`/`git diff`/`git stash list` across
+  all of them, zero hits) or the running `.env`-dependent repro, so it was redone from scratch (same
+  `get_storage_client().upload_bytes()` conversion the doc describes) rather than assumed lost-but-recoverable. Ran
+  `bash scripts/quality-gates.sh --test --no-fix` fresh (the authoritative way, not a hand-picked pytest invocation)
+  and got 667 passed / 4 skipped / **0 failed** -- `test_invoice_viewing_transitions_analytics.py`'s 4 tests are not
+  failing. This doc's own caveats ("not independently re-diagnosed," "a future session ... should re-run the suite
+  fresh rather than trust this doc's characterization blindly") turned out to matter: whatever produced the original
+  4 failures is no longer reproducing, and no commit history on the test file explains a fix, so the most likely
+  explanation is upstream drift in this shared, multi-session checkout rather than a deliberate fix -- not chased
+  further since the practical blocker is gone either way. Ran the full `quality-gates.sh --no-fix` (lint +
+  typecheck + tests + codex compliance) green, then shipped via quickmerge: `client-reporting-api@0e54aab310`.
+  `status` -> `resolved`.

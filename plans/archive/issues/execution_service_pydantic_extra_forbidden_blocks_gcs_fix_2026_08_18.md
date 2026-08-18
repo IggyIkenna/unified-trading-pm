@@ -15,7 +15,7 @@ summary: >-
   two independent repos hitting the same `extra_forbidden`/pydantic-settings signature within one session, worth a
   human noticing the cross-repo pattern even though the fix will likely be per-repo. NOT fixed here -- deliberately
   out of scope for this tracking pass; needs its own root-cause investigation.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [execution]
@@ -39,7 +39,7 @@ estimate_baseline_ai_days:
 estimate_calibrated_ai_days:
 assigned_role: infra
 effort: low
-resolved_by:
+resolved_by: execution-service@3448247dba
 drift_direction: advance-code
 depends_on:
 context_scope:
@@ -125,3 +125,28 @@ sitting there, assuming no other session has since started/lost it) -- don't los
   Confirmed via corpus grep this failure class was NOT tracked anywhere before this doc. Not investigated/fixed --
   `assigned_vm: NA` pending root-cause triage; low estimate reflects "probably a one-line `extra="ignore"` swap
   once someone looks," mirroring the strategy-service twin's own estimate shape, but unconfirmed.
+- **2026-08-18 (resolution session)**: picked up as part of a tracked backlog pass. The uncommitted GCS fix this
+  doc describes no longer existed in the working tree (checked all 11 local slot checkouts + stash lists, zero
+  hits) -- redone from scratch. **Root cause confirmed by direct repro**: `ExecutionPolicyDomainConfig`
+  (`execution_service/v2/policy_spec.py`) subclasses UTL's `BaseConfig` (a `pydantic_settings.BaseSettings`), which
+  auto-reads `.env` as a construction source on every instantiation regardless of what's explicitly passed in code.
+  `ExecutionPolicyDomainConfig` only declares 3 narrow fields (`domain`/`bindings`/`policies`); `BaseConfig`'s
+  `extra="forbid"` default meant ANY key in `.env` outside that narrow set -- not just the 3 GCS-bucket fields named
+  in this doc's `summary`, confirmed via `cp .env.example .env` + rerun: 32 distinct `extra_forbidden` violations
+  including unrelated AWS/S3 fields -- crashed construction. Fixed via `model_config = SettingsConfigDict(extra=
+  "ignore")`, mirroring existing precedent already in this codebase (`strategy_service/risk/config.py`,
+  `unified_trading_library/config_interface/cloud_config.py`/`ml_config.py`). Verified: repro'd 17 failures with a
+  real `.env` before the fix, 2 after (both an unrelated pre-existing issue -- live network calls to placeholder
+  bucket names from `.env.example`, not a code bug); the authoritative `quality-gates.sh --test` run went from 11
+  failed (`test_policy_resolver.py`) to 0. Redid the GCS conversion in `run_execution_alpha_measurement.py`
+  (`get_storage_client().upload_bytes()`). Full `quality-gates.sh --no-fix` green (one iteration needed: a code
+  comment mentioning the literal field names tripped STEP 5.11's `gcs_bucket` substring grep as a false positive --
+  reworded, not suppressed). Shipped both files together: `execution-service@3448247dba`. `status` -> `resolved`.
+  **Same-class fix also shipped for the strategy-service twin** -- see
+  `/plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md`'s StrategyDomainConfig todo; the
+  cross-repo pattern this doc flagged (worth a human noticing) turned out to be the SAME root cause (every
+  `DomainConfig`-family class in UTL's `domain_configs.py` shares this shape), not independently-converging bugs.
+  9 total classes share the shape; only the 2 tracked here were fixed -- the remaining 7
+  (`InstrumentDomainConfig`/`ClientDomainConfig`/`VenueDomainConfig`/`TickerUniverseConfig`/`RiskDomainConfig`/
+  `AlertRuleDomainConfig`/`RateLimitDomainConfig`/`FeatureFlagDomainConfig`) are UNCHANGED and carry the identical
+  latent risk -- flagged as a new finding, not fixed here (broader blast radius, not scoped to this tracking pass).
