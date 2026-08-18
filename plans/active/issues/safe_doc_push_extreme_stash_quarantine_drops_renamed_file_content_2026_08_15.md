@@ -443,3 +443,22 @@ tracked-but-missing shape.
   one-shot audit task's scope) — flagging for whoever next investigates the residual-gap todo: the false-positive
   trigger condition may be broader than "caller pre-staged/committed a rename" — worth testing a plain `git rm`
   (no new path at all) against the current `sdp_recover_named_from_any_stash()` implementation directly.
+- **2026-08-18 (review, slot-7)**: Seventh data point, same shape as slot-20's (2026-08-16): a same-commit
+  flip+archival `git mv` of `mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16_finalize.md` was
+  already correctly committed (`70fb4a0e10`, both old-absent/new-present confirmed on origin at that point) when a
+  SEPARATE `safe-doc-push.sh` invocation for an unrelated sibling file in the same batch hit exit 14: `🔧 recovered
+  <old-path> from stash@{0} -- it was missing from disk AND the index`, then `❌ per-file verification failed:
+  deletion of named file did not reach origin/live-defi-rollout (still present there)` — i.e.
+  `sdp_recover_named_from_any_stash()` resurrected the ALREADY-COMMITTED rename's old path from an unrelated stash
+  entry and silently re-added it to the batch commit, producing a live duplicate on origin (old path: stale
+  pre-edit content, `status: active`, unchecked checkbox; new path: correct, fully-edited content). Verified via
+  direct `git show` against `origin/live-defi-rollout` (not the script's own claims) that the duplicate genuinely
+  landed. Diffed the resurrected old-path content against the canonical new-path content to confirm it was a
+  strict older/stale subset (no data loss risk), then used this doc's precedented workaround directly: `git rm`
+  the stale duplicate, plain `git commit` (real pre-commit hooks fired normally, not bypassed) + `git push`,
+  reconciling two rounds of ordinary branch drift from concurrent peers along the way (`git pull --rebase
+  --autostash`, standard). Landed clean: `unified-trading-pm@431d9dabd1`, verified via `git merge-base
+  --is-ancestor` against origin. Confirms the false-positive reproduces even when the ONLY thing wrong is an
+  unrelated `--files` entry in the SAME invocation, not just the renamed path itself — the resurrection isn't
+  scoped to the specific path that's "missing and correct by design," it can trigger off the batch containing any
+  such path. Did not attempt a fix or fresh repro this session (out of this review task's scope).
