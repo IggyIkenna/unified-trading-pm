@@ -549,3 +549,37 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   the original yet). No code written this session — doc-only.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ee26e6744e46c17e]: KEEP-NA, valid — explicit dated operator ruling on record: 'human plan, not AO-dispatched' for the whole doc's live-testing/design-call content (multi-provider billing/context research).
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: RECLASSIFY (per-todo split) — re-read end to end. The doc-level 'human plan' ruling correctly covers the bulk of the remaining ~19 open todos (live-testing verification, schema/methodology design work, the GLM/Codex boost-parity workstream), all KEEP-NA on that citation. But 4 telemetry-capture todos added 2026-08-17 (compaction-occurrence join, peak-context watermark, repo-touched capture, context_scope-size capture) are pure bounded backend/DB engineering with zero design or live-testing judgment component — outside the cited ruling's own stated scope. Conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch24_2026_08_18.md` items 1-4. Doc stays `assigned_vm: NA` for its remaining ~19 items.
+
+## Gates 7-8 — post-hoc performance analysis + final model recommendation (operator's 8-gate provider-readiness framework, added 2026-08-18)
+
+> **Why here**: this doc already owns the cross-provider comparison/reconciliation goal (Gates 7-8 of the operator's
+> framework are exactly "how did each model do" and "what should we recommend given all of it") and is already ruled
+> human-driven — the natural home for the ONE dimension a 2026-08-18 corpus audit found with literally zero coverage
+> anywhere: whether bursting usage costs more than pacing it, and a final synthesized recommendation. See
+> `plans/audit/provider_smoke_test_registry_2026_08_18.md` for the full 8-gate status map this doc's existing todos
+> already cover most of (Gate 7's data exists in `TaskUsageRow`; the normalizing billing schema this doc's own
+> `[DATA] P1` todo builds is Gate 7's real prerequisite, already tracked, not duplicated here).
+
+- [ ] [DATA] P2. **Gate 8a — burst-vs-pace cost analysis, Claude first (richest usage-history data of the six
+      providers).** Test whether concentrating a given token/message volume into a short burst within a window
+      consumes quota at a different effective rate than spreading the same volume evenly across that window. A
+      2026-08-18 web-research pass found no official Anthropic documentation of a burst penalty on the weekly meter
+      specifically (the one confirmed rate-shaping mechanism, peak-hour throttling, only ever touched the 5-hour
+      meter and was removed 2026-05-06) — this todo is the empirical check that research couldn't answer from docs
+      alone. Reuse `account_usage_history`'s existing ~30-min sampling cadence; compare two real historical windows
+      with materially different intra-window usage concentration but similar total consumption. **Done when**: a
+      dated Progress Log entry states, with real data, whether burst vs. paced usage measurably differs in effective
+      quota cost for at least one Claude account, and whether the same question is even answerable for the metered/
+      free-tier providers (DeepSeek/Kimi/Gemini/Gemma have no comparable "quota efficiency" concept — state explicitly
+      if this dimension is N/A for them rather than silently skipping).
+- [ ] [OPERATOR] P3. **Gate 8b — final model/provider recommendation.** Once Gates 1-7 close out (tracked in
+      `plans/audit/provider_smoke_test_registry_2026_08_18.md` and this doc's own existing comparison todos),
+      synthesize a deep-research recommendation on the best model and best model-combination given the fleet's full
+      real history — cost, completion quality, turn-efficiency, and the burst-vs-pace finding above. Explicitly
+      operator-gated (a judgment call over incomplete/evolving data, not a bounded worker outcome) — but the DATA
+      GATHERING this recommendation depends on (the burst-vs-pace measurement above, the per-task quality/cost
+      comparison todos already tracked in this doc) is agent-doable and should be forked out per the
+      `task_template.md` §3 finding-Y operator-item-separation pattern once ready, so this final judgment call never
+      blocks the data-gathering work behind it. **Done when**: every dependency this recommendation needs is either
+      done or explicitly named as still-missing, and the recommendation itself is recorded with its own dated
+      Progress Log entry, not folded silently into another todo's evidence.

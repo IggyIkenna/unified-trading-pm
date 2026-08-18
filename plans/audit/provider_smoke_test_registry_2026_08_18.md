@@ -8,8 +8,9 @@ summary: >-
   need re-testing) across 8 dimensions: input/output cache vs. non-cache pricing, reasoning-token handling, token-count
   accuracy, tool calls, chained bash commands, provider-specific reset-window semantics, "max tier" behavior where
   applicable, and whether the provider's own subscription/quota-limit is directly readable vs. needs a workaround. This
-  is Gate 1 of the 8-gate provider-readiness framework (Gates 2-4 live in each provider's own onboarding plan; Gates
-  5-6 in deepseek_claude_blended_provider_routing Phase 4/5; Gates 7-8 in multi_provider_context_billing_reconciliation)
+  is Gate 1 of the 8-gate provider-readiness framework (Gates 2-3 live in each provider's own onboarding plan; Gate 4
+  lives HERE, see below, to keep it out of the near-line-cap deepseek_claude_blended_provider_routing plan; Gates 5-6
+  are that plan's own Phase 4/5; Gates 7-8 are in multi_provider_context_billing_reconciliation)
   — a provider cannot clear Gate 2 (real task dispatch) until every ✅-required row here is checked. Initial fill
   (2026-08-18) is derived from cross-referencing the 5 provider onboarding plans' own Progress Logs, not a fresh
   from-scratch verification pass — treat an initial ✅ as "evidence already exists in the source plan," and re-verify
@@ -120,3 +121,34 @@ not by re-deriving from scratch.
   onboarding plans' own Progress Logs (via a dedicated deep-read research pass, not a fresh verification run) — see
   the summary caveat above. This is Gate 1 of the operator's 8-gate provider-readiness framework; Gates 2-8 are being
   threaded into the existing provider plans in the same session.
+
+## Gate 4 — credit-exhaustion-aware dispatch (added 2026-08-18)
+
+Homed here rather than in `deepseek_claude_blended_provider_routing_2026_07_28.md` (which owns the actual
+`select_account_for_spawn()`/stratified-rotation mechanism these todos integrate with) because that plan was already
+at 995 of its 1000-line hard cap. A cross-provider audit (2026-08-18) confirmed none of the 4 items below exist for
+ANY provider today, including Claude, despite Claude having the richest usage-history data of the six.
+
+- [ ] [DATA] P1. **Per-account "tasks-remaining" estimate.** From current headroom (Claude's `weekly_pct`/
+      `five_hour_pct`, DeepSeek/Kimi's $ balance, Gemini/NVIDIA's remaining RPM/RPD capacity) plus a rolling
+      tokens-or-turns-per-task average (`TaskUsageRow` already carries both, per task, per provider), estimate how
+      many more tasks an account can serve before hitting its limit — not just a binary healthy/exhausted flag.
+      **Done when**: a real estimate is computed for at least one account per provider family (%-based, $-based,
+      RPM/RPD-based) and correlates with real remaining capacity within a stated tolerance.
+- [ ] [INFRA] P1. **Poll cadence vs. reset-window granularity, audited per provider.** Claude's ~30-min poll is
+      fine-grained against a 5h/weekly window; Gemini/Gemma's RPM ceilings are minute-scale and may need much faster
+      refresh. **Done when**: every provider's cadence is stated relative to its own window, and any mismatch is
+      fixed, not just flagged.
+- [ ] [BACKEND] P1. **Prove exhaustion-recovery state survives a process restart.** Concrete failure this must not
+      repeat: `plans/active/issues/ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md` — a review slot sat dead
+      23+ hours with a silent, unlogged failure to find any account, during a fleet-wide outage (all 7 Claude
+      accounts exhausted simultaneously). **Done when**: a real restart (or an equivalent test) preserves/re-derives
+      correct exhausted-vs-recovered state without a fresh multi-hour rebuild, generalized past the one Claude-specific
+      fix already patched in that issue doc.
+- [ ] [REVIEW] P2. **Reconcile against the stratified-rotation dispatch call-site coverage before assuming this is
+      separate scope.** Per `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own 2026-08-18 Progress Log,
+      only `autospawn_refill` was wired as of that entry — `escalation.py`/`main_agent_keeper.py`/`plan_health.py`/
+      `server.py`/`worker_liveness_watchdog.py`/`ensure_review_agents`/the resume pass still passed `task=None`.
+      Check that plan's current Progress Log tail first (concurrent sessions are actively landing work on it).
+      **Done when**: either every call site is confirmed wired, or the remaining gap is stated with a citation to the
+      current state.
