@@ -1,13 +1,28 @@
 ---
+doc_type: issue
 title: "Manifest hygiene RED — 4 AG(s) with findings (2026_08_18)"
 created: 2026-08-18
-author: "manifest_hygiene_daily.py (data-pipeline daily audit)"
 parent_epic: observability_master
 assigned_vm: planning
 source:
   - manifest_hygiene_daily.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
 locked_by: live-defi-rollout
+summary: "The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: cefi, defi, prediction, sports, tradfi. ..."
+status: open
+nature: process
+asset_group: [cross-cutting]
+stage: [meta]
+repos: []
+scope: [engineer, admin]
+tags: [data-pipeline, daily-audit, manifest-hygiene-red-all]
+related: []
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-08-18
+resolved_by:
 ---
 
 # Manifest hygiene RED — 4 AG(s) with findings (2026_08_18)
@@ -15,7 +30,7 @@ locked_by: live-defi-rollout
 > Auto-filed by the daily data-pipeline audit `manifest_hygiene_daily.py` (Wave 4b, Phase 5
 > scripted→LLM escalation hop). A deterministic candidate list was non-empty — the
 > verdicts below need a worker's judgment (real gap vs code bug, straggler
-> vs intentional new venue). See `codex/05-infrastructure/data-pipeline-alerts.md`.
+> vs intentional new venue). See `/codex/05-infrastructure/data-pipeline-alerts.md`.
 
 ## What I found
 
@@ -37,7 +52,7 @@ Each class is a data-correctness signal: non-v9 rows are pre-canonicalisation st
 Triage each candidate CSV: confirm real gaps → backfill; confirm code bugs → fix the adapter/writer; confirm intentional new venues/spellings → extend the UAC oracle/canonical builders. Per data_pipeline_hardening_self_monitoring_2026_06_22.md Phase 3/5.
 
 Cold-start context: read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md`
-in full + `codex/05-infrastructure/data-pipeline-alerts.md` + the candidate CSV(s)
+in full + `/codex/05-infrastructure/data-pipeline-alerts.md` + the candidate CSV(s)
 above before acting.
 
 ## Todos

@@ -40,6 +40,7 @@ source: >-
   chat when asked whether to resume them.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # Recorded reasons for the three currently-paused scheduled-dispatch modes
