@@ -688,6 +688,28 @@ investigation confirmed are both achievable with existing primitives:
       both positive/negative outcomes, using a real temp git repo for the checkbox-flip detection, not a mock), full
       `quality-gates.sh` green (3995 passed). Evidence: `agent-orchestrator@1af50054cf`.
 
+### Phase 7 — main Fleet table exclusion + registration re-verification (found 2026-08-18, not yet fixed)
+
+- [ ] [UI] P2. **Exclude human-kind slots from the main dashboard Fleet table's generic role-badge rendering** —
+      slot 9001 currently renders there with a role badge from the generic worker/reserve pool ("CI reserve"),
+      confirmed live via dashboard screenshot 2026-08-18. Phase 3's `AgentKind`/`KINDS_ORDER`/`AGENT_KIND_LABEL`
+      work (`dashboard/src/layout.tsx`, `agent-orchestrator@6b50caa795cfede5ecac6e91125a5284cad3a68e`) only ever
+      wired human slots into the DEDICATED `HumanFleet.tsx` page — find wherever the main Fleet table computes its
+      per-slot role badge and add the same `human_slot_ids()`-style exclusion the liveness/kill sites already use
+      (`server/config.py:316-331` pattern), so a human slot renders nowhere in the generic table at all (not
+      mislabeled, not present). Done when: a live dashboard check shows slot 9001 absent from the main Fleet
+      table's rows entirely, still correctly present on the Human Fleet page. Repo: agent-orchestrator.
+- [ ] [SCRIPT] P2. **Re-verify live whether `GET /api/agents?kind=human` still returns Ikenna's registered row** —
+      this plan's own 2026-08-16 Progress Log confirmed `agent_id=agt-f6b475`, `slot_id=9001`, `agent_kind=human`
+      live in production. A same-day sibling issue doc (`plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`)
+      reported a live check on 2026-08-18 finding ZERO human rows from that same endpoint — a direct contradiction
+      neither doc has reconciled. Pull `GET /api/agents?kind=human` live (SSM read-only against the orchestrator
+      VM, `i-0c9b283b31d6b5ca7`) and determine which claim is currently true — if the row is genuinely gone,
+      root-cause why (a restart clearing state? a TTL/expiry? a bug regression?) rather than just re-registering
+      over it. Done when: the live state is confirmed one way or the other with fresh evidence, and if a real
+      regression is found, it's root-caused (not just patched by re-running `ao-register.sh`). Repo:
+      agent-orchestrator.
+
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (14 entries)
@@ -704,3 +726,18 @@ investigation confirmed are both achievable with existing primitives:
   content lost, every removed copy was a verbatim or near-verbatim duplicate of a kept one. **Remaining open work,
   confirmed accurate**: Ikenna's task-cycle (blocked on live backlog state, re-check anytime, or operator names a
   task directly to override), and Harsh's entire Phase 4 (physically requires his own machine).
+- **2026-08-18 (interactive session, slot 3)**: Two new gaps found live, not yet fixed — captured as todos below
+  rather than left in chat. (1) The main agent-orchestrator dashboard Fleet table (NOT the dedicated Human Fleet
+  page this plan built) still renders slot 9001 with a role badge from the generic worker/reserve pool ("CI
+  reserve") instead of excluding human-kind slots from that computation entirely — confirmed via a live dashboard
+  screenshot. Phase 3's `AgentKind`/`KINDS_ORDER` work only ever touched the DEDICATED Human Fleet page; nothing
+  excludes a human slot from the separate, generic Fleet table's own role-badge logic. (2) A same-day sibling issue
+  doc (`ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`) reported `GET /api/agents` returning zero human rows
+  when it checked live on 2026-08-18 — directly contradicting this plan's own 2026-08-16 confirmation that
+  Ikenna's `agent_id=agt-f6b475`/`slot_id=9001` row was live and correctly typed. Not independently re-verified
+  this session; could be a real regression or a stale/wrong claim in the other doc — needs a fresh live check to
+  settle which. Design fork surfaced but NOT resolved this session (operator asked to scope it, then the
+  conversation moved on before an answer landed): should the Human Fleet content move to a same-page subsection
+  below the main Fleet table, or stay the existing separate `/human-fleet` page with just the exclusion bug (1)
+  fixed? Todos below are written to be answerable either way — resolving the fork changes WHERE the fix in (1)
+  renders, not whether it's needed.
