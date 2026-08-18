@@ -15,6 +15,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, codex, luna, openai, model-routing, multi-provider, subscription-billing, bridge]
 related:
   [
+    /plans/active/codex_mcp_tool_use_bridge_2026_08_18.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
     /codex/06-coding-standards/model-tier-selection.md,
