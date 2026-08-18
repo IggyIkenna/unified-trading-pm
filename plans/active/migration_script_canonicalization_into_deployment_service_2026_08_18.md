@@ -379,6 +379,24 @@ actual leverage point §Pattern clustering's evidence points to.
       those into the template rather than writing the template in the abstract first. Done-when: template exists,
       at least 1 Phase-1 file is refactored to import/parameterize it (not copy-pasted), `bash deployment-service/
       scripts/quality-gates.sh` green.
+      **MOSTLY DONE (2026-08-18) — one done-when criterion NOT yet met.** `template_purge.py` exists
+      (`PurgeConfig`/`run_purge`/`PurgeResult`, 3 parameterization hooks: predicate, snapshot_before_delete +
+      snapshot_path_fn, manifest_index_updater — all routing through `migration_common.py`'s `upload_bytes`/
+      `download_bytes`), with a full worked example (`scripts/migrations/lib/templates/examples/
+      example_purge_pre_launch_manifest_rows.py`) reproducing `purge_pre_launch_manifest_rows.py`'s exact
+      two-ORed-predicate shape, and 8 unit tests. `quality-gates.sh` green (deployment-service). Shipped
+      `deployment-service@8a1fdc1bc8` + a same-day fix `deployment-service@6382489f65` (the first quickmerge's
+      `--files` argument named the containing DIRECTORY, not the actual files inside it — quickmerge's foreign-path
+      guard correctly treated the unlisted files as "not mine" and unstaged them, so only `README.md` +
+      `test_template_purge.py` landed on the first push, leaving a broken state — a test committed with no module
+      to import. **Lesson: always name individual files in `--files`, never a directory path** — added to this
+      Progress Log so it isn't rediscovered the hard way again). **NOT done**: no real Phase-1 file was actually
+      refactored to IMPORT/parameterize the template (the done-when's literal bar) — `purge_bad_prediction_
+      manifest_rows.py` was mid-relocation by a concurrent agent when this was built, so the authoring agent
+      correctly avoided touching it (scope-boundary discipline) and built the standalone worked example instead.
+      **Remaining**: refactor `deployment-service/scripts/migrations/instruments-service/purge_bad_prediction_
+      manifest_rows.py` (now landed, no longer mid-move) to actually import `template_purge.py` instead of its own
+      hand-rolled purge logic.
 - [ ] [INFRA] P1. `template_canonicalize.py` (cluster 2 — field/path canonicalization & schema migration, the
       LARGEST cluster at 170 files' worth of precedent). Parameterizes: an old-shape → new-shape row transform
       function, a path-rewrite rule (old canonical-path segment → new), and a verification pass (old shape absent,
