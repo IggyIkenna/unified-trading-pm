@@ -307,6 +307,13 @@ Terraform SSOT: `deployment-service/terraform/gcp/bucket_iam_per_tier_sa.tf`. Ro
 | `uts-dev-sa`       | —                                                              | —           | **Historical** — permanently unbound (dev tier retired 2026-07-13) |
 | `uts-stg-sa`       | —                                                              | —           | **Historical** — permanently unbound (stg tier retired 2026-07-13) |
 
+**Exception (live, confirmed 2026-08-18):** `uts-test-sa` also holds a scoped write grant on
+`deployment-scripts-central-element-323112` (IAM binding title `deployment-scripts-bucket-test-sa-vm-logs`) that does
+NOT match the `*-test-*` pattern above — live-verified via a real VM launch + IAM-policy read, see
+`/plans/active/issues/features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md`. This is a standing, intentional
+carve-out for VM self-log-upload on that specific bucket, not undeclared drift — this SA's actual write boundary is the
+table's per-tier pattern plus this one exception.
+
 All live SAs also hold the 7 non-storage roles `unified-trading-sa` carries (`bigquery.dataEditor`,
 `secretmanager.secretAccessor`, `run.invoker`, `pubsub.editor`, `compute.instanceAdmin.v1`, `iam.serviceAccountUser`,
 `artifactregistry.reader`), project-wide and unconditioned — necessary for real runtime operation beyond GCS
@@ -527,7 +534,7 @@ bucket instead of `-prd-` while still reading raw input ticks from PROD (`--sour
 write.
 
 **Every real write call site must resolve the bucket via `get_output_bucket_for_asset_group()`, never
-`get_bucket_for_asset_group()` directly** — a 2026-08-02 defect (`market-data-processing-service@9642cbb`) found the
+`get_bucket_for_asset_group()` directly** — a 2026-08-02 defect (`market-data-processing-service@6a8153f`) found the
 streaming chain-bundle write dispatcher (`live_workers_streaming.py::_streaming_write_per_tf`) calling the source/PROD
 getter instead, so a `--output-bucket <test>` smoke-check VM 403'd trying to write real candles into the PROD bucket
 (caught by IAM, not by this contract — see § 8). The eager write path (`candle_write_mixin.py::_write_candles`) was

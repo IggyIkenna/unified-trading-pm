@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [ci-cd, quality-gates, ratchet, workflow-template-parity, blocking, cross-repo]
 related:
   [
-    /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md,
+    /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
     /plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13.md,
@@ -53,7 +53,7 @@ context_scope:
     scripts/quality_gates/detect_template_drift.py,
     scripts/quality_gates/workflow_template_drift_baseline.json,
     scripts/workflow-templates/rollout-workflow-templates.sh,
-    /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 source: >-
   Hit live 2026-08-14 in slot 26 (infra), gating an unrelated rollout-cloudbuild.py substitutions fix. Same-day

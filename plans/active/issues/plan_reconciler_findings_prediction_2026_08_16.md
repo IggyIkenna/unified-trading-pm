@@ -533,3 +533,9 @@ in this same run.
   targets were touched again ~2026-08-17T15:30-15:40Z (a corpus-wide event, not specific to these docs) and remain
   inside the 12h grace window as of this check (~02:04Z, ~10.5h elapsed). Will re-check later in this same dispatch
   once they clear grace, rather than making two separate checkpoint edits to this doc today.
+- **na-eligibility-audit 2026-08-18** [body-hash:37050bb4f429835b]: KEEP-NA, valid — 12 open items re-confirmed
+  genuinely non-dispatchable: 12h grace-window mechanical re-check placeholders (Betfair tag, mdps_fleet reclassify
+  question, `task_template.md` ref, batch7 archival referrer-fix), cross-tranche routing pointers (tradfi
+  dangling-refs, tradfi AG-closeout orphan, corpus-wide NA-ratchet growth — none prediction-attributable), and
+  judgment-call investigation notes. `BLK-e7b0e8da` is now closed (resolved earlier in this same doc). None is a
+  bounded worker-determinable outcome sitting undispatched here. Doc stays NA.

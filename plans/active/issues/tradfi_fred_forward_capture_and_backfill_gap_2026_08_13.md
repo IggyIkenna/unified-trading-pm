@@ -70,7 +70,7 @@ failure surface, or something else is generating these rows independent of the c
 
 ## Finding 2 — the "self-sufficient to completion" backfill claim doesn't match prod
 
-Whatever doc/claim asserts the FRED backfill is self-sufficient to completion doesn't match live state as of the
+**Source identified 2026-08-18 (plan_reconciler)**: `plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md:515` is the doc making the "self-sufficient to completion" claim (already in this doc's own `related:` list, but never explicitly connected to this finding). It doesn't match live state as of the
 2026-08-07 audit: only 99 captured dates exist (2024-01-01 through 2026-08-05 — a ~2.5 year window, not the full
 historical range), zero dates in the 1962-1970 floor range appear in any bucket, and no FRED-labeled VM was found in the
 launcher fleet. A backfill that isn't running and hasn't reached anywhere near its floor date is not "self-sufficient to

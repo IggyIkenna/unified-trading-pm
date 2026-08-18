@@ -345,7 +345,7 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
 kept as the record of what each turned out to be, because two of the four were wrong in instructive ways.
 
 **Recommended NEXT item** (written 2026-08-12, ✅ **since DONE** — kept for provenance): the P2 in
-`/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — make consumer-vs-template drift
+`/plans/archive/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — make consumer-vs-template drift
 fail in the CONSUMER's own gate. Shipped `unified-trading-pm@2b4bee96d3` as `base-service.sh` STEP 5.108 + `base-ui.sh`
 `[5.108]`. Both `[SCRIPT] P3`s below (stash-report frontmatter, slot-aware `--host` default) shipped in the same commit.
 
@@ -361,7 +361,7 @@ codex write-up.
 - **Retention default changed to 2 days (48h), not 14.** Operator ruling: drop >48h AND make it the default so it is
   automatic. ✅ **SHIPPED `unified-trading-pm@c92375f05b`**, verified on origin by marker (`STASH_PRUNE_AGE_DAYS:-2`
   present in the origin blob). It was briefly held by the fleet-wide commit block in
-  `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`, resolved by its owning session
+  `/plans/archive/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`, resolved by its owning session
   the same morning. The SWEEP below ran before the ship, using the new default from the working copy. 14 was chosen to
   mirror `stash-pile-detect.sh`'s `STASH_WARN_AGE_DAYS`, and that symmetry was simply wrong for this pile — measured the
   same day, a 14d cutoff made **0 of 30** entries droppable while the pile still regrew past `safe-doc-push`'s "extreme"

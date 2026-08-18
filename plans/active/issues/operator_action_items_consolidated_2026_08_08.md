@@ -76,13 +76,20 @@ applied autonomously and is not repeated here.
       wedge/drift alerts page instead of silently logging "no webhook." Exact resolution+restart steps (mirroring
       `bootstrap_vm.sh`'s own logic) are in
       `plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md`.
-- [ ] [OPERATOR] P2. **Run the staged `ORCHESTRATOR_JWT_SECRET` reconcile commands** (SM ← vm-0 direction) — exact
+- [x] ✅ [OPERATOR] P2. **Run the staged `ORCHESTRATOR_JWT_SECRET` reconcile commands** (SM ← vm-0 direction) — exact
       `aws secretsmanager put-secret-value` + `gcloud secrets versions add` commands staged in
       `plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`. Agent-side secret writes are permission-blocked by
-      design (deliberate split of duties).
+      design (deliberate split of duties). — **DONE (moot) 2026-08-15**, per the cited source doc's own todo
+      (`orchestrator_vm_e2e_hardening_2026_07_24.md:278-287`): "CONFIRMED ALREADY IN SYNC... the blob and vm-0's live
+      value already match... No write was performed. This staged write is now historical reference only." Flipped by
+      plan_reconciler (infra tranche, agt-830118, 2026-08-18) — this doc's checkbox had never been updated to reflect
+      the source doc's own resolution.
 - [ ] [OPERATOR] P3. **Create `bybit-trade-api-key`/`bybit-trade-api-key-secret` in GCP** — direction already approved
-      (2026-07-28), only your own Bybit exchange login can create the actual key.
-      `plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`.
+      (2026-07-28), only your own Bybit exchange login can create the actual key. **Citation corrected 2026-08-18**
+      (plan_reconciler, infra tranche, agt-830118): the real, still-open item lives in
+      `plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md:147-153`, NOT
+      `orchestrator_vm_e2e_hardening_2026_07_24.md` (0 hits for "bybit" in that file) — this line's citation was wrong
+      from filing; the underlying task itself is still genuinely open, unaffected by the citation fix.
 - [ ] [OPERATOR] P3. **Wallet-key provisioning for OKX/Binance/Bybit + live-trading kill-switch arming** — permanent
       human-only hard-stop, gating the `ML_DIRECTIONAL_CONTINUOUS` cutover to real capital. Not time-sensitive; do when
       ready.
@@ -116,7 +123,13 @@ autonomous workers, so none of this was executed.
       ambiguous: 9 are one big never-committed full-repo reformat sweep (prettier/black-style, ~988 files, matches the
       workspace's own banned "bare unpinned prettier" pattern — likely abandoned, your call whether it was ever wanted);
       the other 3 are each a single small never-landed doc-accuracy line (quoted verbatim in the audit, trivial to
-      hand-reapply if wanted).
+      hand-reapply if wanted). **⚠️ INDEX-DRIFT WARNING added 2026-08-18** (plan_reconciler, infra tranche,
+      agt-830118): live `git stash list | wc -l` in `.tabs/3` today = **59**, not 42 — this checkout's stash pile has
+      grown +17 since this audit (new entries prepend at `stash@{0}`, shifting every existing index). The `stash@{N}`
+      commands staged above almost certainly no longer target the same content described. Do NOT run them as-is —
+      re-audit this checkout fresh (or at minimum re-verify each target entry's content before dropping) before acting
+      on this row. Unlike `.tabs/1` above, this row was never given a SHA-anchored/`clear`-style command that would
+      sidestep index drift.
 - [ ] [OPERATOR] P3. **`.tabs/4` (12 entries: 10 safe, 2 ambiguous)** — 10 safe drop commands ready. The 2 ambiguous
       (idx 7, 8) are an unlanded analytical finding from an archived issue (low stakes — the functional fix shipped a
       different way).

@@ -95,7 +95,7 @@ source: >-
       legitimately emits the same `error_reason`). Source:
       `plans/active/issues/dp_fetch_009_cefi_depth_of_book_10_corrective_migration_overreach_2026_08_16.md` item 3.
       Done-when: the script's docstring/header carries a comment pointing at the finding doc's path.
-- [ ] [RESEARCH] P2. Live-verify + enumerate the 76 confirmed-live crypto OKX-FUTURES `ruleType=xperp` base symbols
+- [x] ✅ [RESEARCH] P2. Live-verify + enumerate the 76 confirmed-live crypto OKX-FUTURES `ruleType=xperp` base symbols
       (excluding the 28 already-known equity/ETF ones already in `_OKX_FUTURES_XPERP_EQUITY_BASES`) via
       `/api/v5/public/instruments?instType=FUTURES`, then add them to `_OKX_FUTURES_XPERP_EQUITY_BASES` (or a
       sibling crypto set) in `market-tick-data-service`'s `okx_futures_ws.py` so `_instrument_to_okx_futures_inst_id`
@@ -104,6 +104,14 @@ source: >-
       `plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md` item ([RESEARCH] P2, added
       2026-08-16). Done-when: the crypto base-symbol set is populated and
       `test_okx_futures_live_batch_id_parity.py` (or a new parity case) proves at least one crypto xperp id round-trips.
+      **Done 2026-08-18 (slot 15)** — `market-tick-data-service@6436fcbe01`. Live re-verification found the universe
+      grew since 2026-08-07 (104→128 xperp instruments, 125 `state=live`): 97 crypto/commodity bases now confirmed
+      (not 76 — stale figure, superseded). Of those, 93 were added (renamed `_OKX_FUTURES_XPERP_EQUITY_BASES` →
+      `_OKX_FUTURES_XPERP_BASES`); **BTC/ETH/SOL/XAU deliberately excluded** — these 4 also carry live
+      `ruleType=normal` contracts, so base-membership alone can't disambiguate their xperp vs normal dated future
+      (same `@LIN-YYYYMMDD` canonical shape) — a genuine unresolved gap, not papered over. Parity: added a real SUI
+      crypto xperp round-trip case (unambiguous, no normal-type sibling) to
+      `test_okx_futures_live_batch_id_parity.py`. QG green (11072 passed).
 
 ## Progress Log
 

@@ -39,20 +39,34 @@ Following the exact pattern `escalation_queue_reconciler` already established (s
 `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` and
 `agent-orchestrator/scripts/install-escalation-queue-reconciler-timer.sh` as the reference implementation):
 
-- [ ] [BACKEND] P2. **Add `mode="ao_watchdog"` to `agent-orchestrator/server/plan_health.py`'s dispatch handler** —
+- [x] ✅ [BACKEND] P2. **Add `mode="ao_watchdog"` to `agent-orchestrator/server/plan_health.py`'s dispatch handler** —
       a new entry in the mode→role mapping (mirroring `"escalation_reconcile": "escalation_queue_reconciler"`),
       plus whatever mode-specific branching the dispatch function needs (check lines ~648/653/666 in the current
       file for where `escalation_reconcile`'s exemptions/branches live and add the equivalent for `ao_watchdog`).
+      — agent-orchestrator@e61d34737d. Mirrored `escalation_reconcile` into `_MODE_PROMPT_TEMPLATE`/
+      `_MODE_AGENT_KIND`, the docstring mode list + force-exemption list, and the `smart_tier` tuple. Also had to
+      add `"ao_watchdog"` to `server/models/_types.py`'s `AgentKind` Literal (`test_agent_kind_literal_coverage.py`
+      caught this at QG Pass-1 — an omitted entry 500s `GET /api/agents`) and to `server/prompts.py`'s
+      `_ONE_SHOT_ESCALATION_ROLES` frozenset (the exact gap that caused
+      `review_role_boot_read_unconfirmed_stuck_loop_2026_08_01` the last two times a plan_health mode was added
+      without mirroring it there). Role wrapper file, install script, and tests are separate backlog todos below —
+      not done by this item.
 - [ ] [BACKEND] P2. **Add a thin role wrapper** `unified-trading-pm/agents/ao_watchdog.md` — mirror
       `agents/escalation_queue_reconciler.md`'s shape exactly (a THIN wrapper carrying only the scheduled-dispatch
       boot/completion contract; the full procedure stays the skill's own SSOT, this file must not duplicate it).
       One-shot lifecycle: `POST /api/slots/$SLOT_ID/done` with `one_shot_complete: true` at the end, no looping.
-- [ ] [SCRIPT] P2. **Write `agent-orchestrator/scripts/install-ao-watchdog-timer.sh`** — copy
+- [x] ✅ [SCRIPT] P2. **Write `agent-orchestrator/scripts/install-ao-watchdog-timer.sh`** — copy
       `install-escalation-queue-reconciler-timer.sh`'s structure (systemd `--user` timer + oneshot service,
       `ExecStartPre` health-gate, no sudo). Pick a cadence and an unused fire-minute offset — the existing minute
       table in `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` lists every taken slot (`:00, :05,
       :15, :20, :30, :40, :45, :52`); daily (matching this skill's own "daily health check" framing) is a
       reasonable starting cadence, open to revision once real dispatch data exists.
+      — agent-orchestrator@6d48977f52. Copied the escalation-queue-reconciler standing-repeat shape (no
+      `scheduled_job_already_ran.py` guard — a missed tick just waits for tomorrow's, same as the 3-hourly job)
+      at a daily `OnCalendar=*-*-* 06:25:00 UTC` cadence (verified live minute defaults via
+      `grep -H '^FIRE_MINUTE=' install-*.sh` rather than trusting the doc's table — live-taken minutes were
+      `00, 05, 08, 12, 15, 30, 35, 40, 45, 52`; `:25` was free). Dispatches `{"mode": "ao_watchdog", "job_name":
+      "ao_watchdog"}`. `bash -n` syntax-checked; full `quality-gates.sh` green on the committed HEAD.
 - [ ] [BACKEND] P3. **Tests** for the new `plan_health.py` dispatch branch — mirror
       `test_plan_health.py`'s `escalation_reconcile`-mode test shapes (dispatch routes to the right role, mode
       exemptions behave correctly).

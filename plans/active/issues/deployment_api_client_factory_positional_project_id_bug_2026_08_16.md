@@ -83,21 +83,25 @@ context_scope: [unified-trading-library/unified_trading_library/core/client_fact
 
 ## What to do
 
-1. For each of the 3 remaining call sites above, confirm live-broken behavior first (don't assume —
-   e.g. instantiate the real UTL function with a real non-empty project_id string and observe the
-   `ValueError`, or trace whether `infra_health.py`'s `GET /infra/health` is even reachable/used
-   vs. `health_routes.py`'s separately-implemented, separately-tested `_check_secret_manager`/
-   equivalent GCS check — if the latter is what's actually wired into production health checks,
-   `infra_health.py` may be effectively dead code and this is lower priority than it looks).
-2. Fix confirmed-live instances with the `project_id=project_id` keyword form (one-line changes,
-   mirroring the fix already applied to `venue_credentials.py:87`).
-3. Since none of the affected files currently have a test covering the real-mode Secret
-   Manager/storage-client branch (only `infra_health.py` has any real-mode test coverage, and it
-   fully mocks the factory calls — meaning it would NOT have caught this bug and will NOT catch a
-   regression either), consider adding one assertion per fixed call site that the factory is invoked
-   with `project_id=` as a keyword (e.g. `mock.assert_called_with(project_id=...)`) rather than a
-   bare positional, so this exact bug class can't silently reappear.
-4. Quality-gates.sh --no-fix green, quickmerge.
+> **Converted from a numbered prose list to tracked checkboxes 2026-08-18 (plan_reconciler cross-cutting)** —
+> `assigned_vm: planning` with zero real checkboxes was structurally undispatchable (backlog regen is
+> checkbox-driven); content unchanged.
+
+- [ ] [CODE] P2. For each of the 3 remaining call sites above, confirm live-broken behavior first (don't assume —
+      e.g. instantiate the real UTL function with a real non-empty project_id string and observe the `ValueError`,
+      or trace whether `infra_health.py`'s `GET /infra/health` is even reachable/used vs. `health_routes.py`'s
+      separately-implemented, separately-tested `_check_secret_manager`/equivalent GCS check — if the latter is what's
+      actually wired into production health checks, `infra_health.py` may be effectively dead code and this is lower
+      priority than it looks).
+- [ ] [CODE] P2. Fix confirmed-live instances with the `project_id=project_id` keyword form (one-line changes,
+      mirroring the fix already applied to `venue_credentials.py:87`).
+- [ ] [TEST] P3. Since none of the affected files currently have a test covering the real-mode Secret
+      Manager/storage-client branch (only `infra_health.py` has any real-mode test coverage, and it fully mocks the
+      factory calls — meaning it would NOT have caught this bug and will NOT catch a regression either), add one
+      assertion per fixed call site that the factory is invoked with `project_id=` as a keyword (e.g.
+      `mock.assert_called_with(project_id=...)`) rather than a bare positional, so this exact bug class can't
+      silently reappear.
+- [ ] [SCRIPT] P3. `quality-gates.sh --no-fix` green, quickmerge.
 
 ## Progress Log
 

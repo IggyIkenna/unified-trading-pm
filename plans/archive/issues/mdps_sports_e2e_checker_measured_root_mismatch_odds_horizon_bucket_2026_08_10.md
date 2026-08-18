@@ -18,8 +18,7 @@ summary: >-
   `non_canonical_object_path`/skipped for 15m+1h (data exists, just off the checker's expected root) and
   `no_candle_under`/failed for 4h+24h (nothing found under either root — genuinely no candle written or found, separate
   open question, not chased further here).
-status: open
-archive_exempt: true # all todos done; archival follows after /done (worker.md combine rule)
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -54,6 +53,11 @@ context_scope:
     market-data-processing-service/market_data_processing_service/app/core/candle_write_mixin.py,
   ]
 ---
+
+> **ARCHIVED 2026-08-18 (plan_reconciler, dispatch agt-57336e)** — all 3 todos verified done with HARD evidence
+> (`market-data-processing-service@f89112b`, content-verified live in `pipeline_e2e_check.py`). The one deferred item
+> found in this doc's prose (the stale `_declared_violations()` sports exemption) was migrated to a tracked todo:
+> `/plans/active/issues/pipeline_e2e_check_declared_violations_sports_stale_exemption_2026_08_18.md`.
 
 # pipeline_e2e_check.py's SPORTS measured-root assumption doesn't match `odds_horizon_bucket`'s real write shape
 

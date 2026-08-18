@@ -23,7 +23,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-08-15" # (was: 2026-07-24 -- plan-reconcile 2026-08-15: bumped to match latest Progress Log entry, context-scout 2026-08-15)
+last_updated: "2026-08-18" # (was: 2026-08-15 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, context-scout 2026-08-17)
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -159,7 +159,7 @@ prior design history verbatim from the parent plan's Progress Log.)_
   remains self-described architecturally open-ended with the prediction /catalogue 79-row-collapse prerequisite still
   unresolved.
 - **context-scout 2026-08-15**: refreshed context_scope (6 entries), no change needed.
-**context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17 (ui tranche)** [body-hash:c157de4d901e534d]: KEEP-NA-STALE-DUPLICATE (re-confirmed)
   — the sole open todo was already extracted 2026-08-16 to
   `deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16.md` (+ finalize), which stays

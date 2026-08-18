@@ -45,9 +45,9 @@ related:
   [
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
-    ../instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
-    ../layer1_remeasure_and_certify_2026_07_06.md,
+    /plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
   ]
 created: 2026-07-10
@@ -548,8 +548,10 @@ Cross-doc / cross-registry contradiction, drift, or design-authority gaps.
 
 ### 5a. Already tracked inside `instrument_id_format_canonicalization_2026_07_08.md`
 
-The big canonicalization effort (`plans/active/instrument_id_format_canonicalization_2026_07_08.md`) is already
-exhaustively self-tracked — its own sub-detail is NOT re-listed here. Noted only as existing; several items below are
+The big canonicalization effort (now archived:
+`/plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md` — **repointed 2026-08-18, plan_reconciler
+cross-cutting**, was a dangling `plans/active/...` reference; the doc's own frontmatter already cited the correct
+archived path) is already exhaustively self-tracked — its own sub-detail is NOT re-listed here. Noted only as existing; several items below are
 its direct satellites/follow-ups (cited explicitly where a shard identified the relationship) rather than duplicates of
 its own checklist.
 

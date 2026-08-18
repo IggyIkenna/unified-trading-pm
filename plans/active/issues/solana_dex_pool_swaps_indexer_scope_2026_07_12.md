@@ -127,7 +127,7 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
 
 ## Open actions
 
-- [x] N. ✅ [DESIGN] P3. **DONE 2026-08-08 (operator ruling: prioritize it now).** Authored the dedicated implementation
+- [x] ✅ [DESIGN] P3. **DONE 2026-08-08 (operator ruling: prioritize it now).** Authored the dedicated implementation
       plan per the breakdown above -- `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`
       (`assigned_vm: planning`, 5 todos, `sequential: true`) + its gated companion
       `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`. The indexer itself is not built yet (that

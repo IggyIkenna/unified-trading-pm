@@ -7,7 +7,8 @@ summary: >-
   Satellite-batch extraction mirroring /ag-closeout-audit's pattern, produced from a targeted read of 14 defi plan/issue
   docs that a same-day RECLASSIFY sweep found did NOT qualify for a whole-doc `assigned_vm` flip (each still carries
   genuine judgment/design/operator-gated items). Rather than leave those docs entirely NA, this batch pulls out the
-  SPECIFIC bounded, worker-determinable items each doc also carries — 12 items across 6 source docs, conflict-checked
+  SPECIFIC bounded, worker-determinable items each doc also carries — 13 items across 6 source docs (one item was
+  split mid-execution 2026-08-09; text corrected 2026-08-18, plan_reconciler), conflict-checked
   against defi_satellite_ao_dispatch_batch9/batch10 (both active) and defi_consolidated_closeout_2026_07_18.md, zero
   collisions found. The other 8 source docs (defi_cf2_cf3_legacy_canonical_backfill, 3 ag-closeout-audit parked-findings
   report docs with 0 own checkboxes, defi_distinct_values_zero_noncanonical_dispatch,

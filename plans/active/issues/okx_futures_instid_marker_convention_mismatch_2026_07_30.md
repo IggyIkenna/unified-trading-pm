@@ -190,6 +190,22 @@ reasoning above.
       (`ruleType=xperp`, excluding the 28 already-known equity/ETF ones), then add them to
       `_OKX_FUTURES_XPERP_EQUITY_BASES` (or a sibling crypto set) in `market-tick-data-service`'s
       `okx_futures_ws.py`. Repo: market-tick-data-service.
+- [ ] [OPERATOR] P2. **NEW 2026-08-18 (slot 15, follow-up gap surfaced while closing the item above).** Live
+      re-verification (`/api/v5/public/instruments?instType=FUTURES`, 2026-08-18) found the confirmed-live xperp
+      universe grew to 128 instruments (125 `state=live`), and — separately from the stale "76" figure — found that
+      4 bases (BTC, ETH, SOL, XAU) carry BOTH live `ruleType=xperp` AND live `ruleType=normal` (near-term
+      weekly/quarterly) contracts. `okx_futures_ws.py`'s reverse mapper (`_instrument_to_okx_futures_inst_id`)
+      disambiguates xperp-vs-normal via a static base-membership check against `_OKX_FUTURES_XPERP_BASES`
+      (renamed from `_OKX_FUTURES_XPERP_EQUITY_BASES`, `market-tick-data-service@6436fcbe01`) — this only works
+      because every OTHER xperp base has no normal-type sibling contract. For these 4 bases the canonical
+      `@LIN-YYYYMMDD` id is genuinely ambiguous (identical shape for both contract types), so they are deliberately
+      EXCLUDED from the set — meaning their own xperp dated-futures remain silently mis-subscribed (same failure
+      mode this whole doc chases), while their normal-type contracts continue to work correctly (unaffected,
+      unambiguous default). This is the exact ambiguity the `[OPERATOR] P1` xperp-marker todo above (RULED
+      2026-08-16, option (b) "encode `_XPERP` in the instFamily field") already anticipated for BTC/ETH — now
+      confirmed live to also apply to SOL and XAU, and still not implemented for any of the 4. Needs an operator
+      decision on the resolution mechanism (the ruled option (b) — instFamily-based lookup at subscribe time — vs.
+      an expiry-date heuristic, vs. accepting the gap) before implementation. Repo: market-tick-data-service.
 
 ## Progress Log (na-eligibility-audit)
 
@@ -257,3 +273,9 @@ reasoning above.
   `[RESEARCH] P2` above for the 76 unenumerated crypto xperp base symbols — genuine remaining gap, not fully closed
   by this fix.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-18 (slot 15, backend_engineer, task cefi_satellite_ao_dispatch_batch21-f8e8608af7cc)**: closed the
+  extracted `[RESEARCH] P2` crypto-xperp-enumeration item (see `cefi_satellite_ao_dispatch_batch21_2026_08_17.md`
+  item 3) — `market-tick-data-service@6436fcbe01`, QG green (11072 passed). Live re-verification found the universe
+  grew (104→128 xperp instruments since 2026-08-07) and the crypto count is 97, not the stale "76". Added 93 of
+  those 97 to the renamed `_OKX_FUTURES_XPERP_BASES` set; filed a new `[OPERATOR] P2` todo above for the remaining 4
+  (BTC/ETH/SOL/XAU) — a genuine xperp-vs-normal disambiguation gap discovered live, deliberately not papered over.

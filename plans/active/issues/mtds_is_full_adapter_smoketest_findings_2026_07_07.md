@@ -199,6 +199,12 @@ the entire date's capture (schema mismatch, uncaught).
   only the abandoned V1 vault is reachable. Real coverage gap, no plan surfaced.
 - **[GMX_DRIFT]** `solana_defi_drift.py:67` → `solana_defi_handler.py:376` — dead `/stats/markets` endpoint (404); the
   real fix (Drift SDK constants) already landed in instruments-service's `drift.py` but was never propagated to MTDS.
+  **MOOT — verified by plan_reconciler 2026-08-18, precision correction on the banner below**: this line is a
+  DIFFERENT protocol (Solana Drift, a perps DEX) than GMX despite sharing the `[GMX_DRIFT]` tag name — the "GMX
+  capture path deletion" reason the banner below states does not actually apply to it. It is moot for its OWN,
+  independent reason instead: DRIFT/PACIFICA were purged by operator ruling 2026-07-16 (confirmed live: `find
+  instruments-service -iname "*drift*"` → 0 hits; `solana_defi_drift.py` no longer exists in `market-tick-data-service`
+  either), a week before the GMX removal below. Same moot conclusion, correct citation.
 - **[TRADFI]** `databento/adapter.py:764-766` — CME event contracts assumed `instrument_class="BAG"`; real Databento
   returns C/P — 0 real `EVENT_CONTRACT` rows exist anywhere, all silently mistyped OPTION.
 - **[TRADFI]** `umi_tick_provider.py:123,493,499` — ICE/CBOE index instruments (Yahoo-sourced) fall through to Databento
@@ -313,6 +319,11 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
 - [x] [VERIFY] P2. STALE CHECKBOX -- na-eligibility-audit 2026-08-16, MOOT: `tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md` (filed the SAME DAY) live-verified the `tardis-api-key` secret IS genuinely resolvable (the credential gate was never actually blocking), AND bare OKX has no options-capable successor venue registered at all (deregistered 2026-08-05, no OKX-OPTIONS successor) -- there is nothing to verify against; DERIBIT is the only Tardis-registered CeFi options venue. Original text: **Open question 2 (added 2026-08-16, plan_reconciler)**: verify OKX options wiring end-to-end —
       needs a `TARDIS_API_KEY` (credential-gated). Done when: a live OKX options request succeeds using a working key,
       or the credential gap is confirmed still blocking and re-filed with a specific ask.
+- [ ] [DECISION] P3. **Open question 5 (added 2026-08-18, plan_reconciler)**: determine whether purging/regenerating
+      the stale TradFi catalogue (ICE 16,146→~1 real rows, CBOE 37,563→~89) is already scheduled, or needs a new
+      migration plan. `tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` looks relevant by name but
+      is NOT independently confirmed to answer this — verify before treating as settled. Done when: a definitive
+      answer is recorded here (with citation if already scheduled, or a new migration-plan todo filed if not).
 - [ ] [RESEARCH] P3. **Open question 6 (added 2026-08-16, plan_reconciler)**: determine whether ODDS_API's total
       absence from instruments-service's reference-data adapters (MTDS captures its tick data; IS has no adapter for
       it) is deliberate division of labor or an accidental gap — corpus-wide grep found no doc that already answers

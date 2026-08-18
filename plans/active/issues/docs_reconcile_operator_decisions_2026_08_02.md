@@ -45,7 +45,7 @@ estimate_calibrated_ai_days:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/codex/05-infrastructure/credentials-matrix.md, /codex/15-runbooks/credential-rotation-runbook.md, /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md, /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md, /plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md, scripts/workspace/setup-cursor-rules-symlink.sh]
+context_scope: [/codex/05-infrastructure/credentials-matrix.md, /codex/15-runbooks/credential-rotation-runbook.md, /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md, /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md, /plans/archive/2026_08/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md, scripts/workspace/setup-cursor-rules-symlink.sh]
 supersedes:
 superseded_by:
 depends_on:

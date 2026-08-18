@@ -18,6 +18,7 @@ related:
   [
     /plans/archive/issues/e2e_defi_strategy_funding_apr_gas_correctness_2026_06_17.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/exec_tenderly_2026_08_15.md,
   ]
 created: 2026-06-17
 author: unknown

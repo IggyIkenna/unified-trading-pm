@@ -489,3 +489,19 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   separate follow-up per this issue's established pattern.
 
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **plan_reconciler cross-cutting 2026-08-18 (agt-6602ee) — 7-day dispatch stall root-caused + fixed.** Escalated as
+  a P0 stalled-dispatch finding (`BLK-3e7cde0d`); main agent's investigation found the real mechanism (my own
+  semver-agent hypothesis was wrong — that blocker was already ruled MOOT for this route on 2026-08-10,
+  `iter_manifest_row_groups` does its own footer-only column narrowing). Confirmed: the `filter_to_mvp`
+  vectorization BACKEND P0 todo (this doc's stated remaining blocker) IS actually done
+  (`deployment-api@ce37346`, checkbox retroactively flipped by a later slot-7 session after discovering it was
+  never ticked when the fix landed) — and the sibling `provenance_breakdown` fix above is also done
+  (`deployment-api@b4b81502c0`). Every underlying sub-fix is shipped to `origin/live-defi-rollout`; the only
+  genuinely remaining step is exactly what the top-level INFRA P0 todo already says — confirm both fixes are
+  deployed (last known revision `uts-shared-deployment-api-00523-kwt` predates both SHAs) and re-run the 3-scope
+  cefi probe. **Actual root cause of the stall**: an AO-dispatch prerequisite gate
+  (`auto_unpark__venue_year_coverage_cefi_oom_deployment_api-b4e971952db3`) was never flipped GREEN after the park
+  condition it was originally set for became moot — an orchestrator-mechanism bug, not a content gap in this doc.
+  Main flipped the prerequisite true; the task is unparked and eligible on multiple idle slots (20, 21, 23, 25, 26,
+  27, 32, 9001) as of this entry. No doc content changed by this entry beyond this note — the INFRA todo's own text
+  already correctly describes the remaining work.

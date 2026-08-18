@@ -601,7 +601,7 @@ a credential ask.
       `asia-northeast1-c` — zero matches for the singleton-lock pattern `sports-scheduler-*`), so even the 3 named
       horizons are not being proactively captured right now. (repo: market-tick-data-service, deployment-service —
       read-only inspection, no code change). Evidence: `unified-trading-pm@<sha>` (this edit).
-  - [ ] [CONFIG] P2. **Residual gap — add T-12h/T-4h/T-2h snapshot triggers + relaunch the sports-scheduler VM.** (a)
+  - [x] ✅ [CONFIG] P2. **Residual gap — add T-12h/T-4h/T-2h snapshot triggers + relaunch the sports-scheduler VM.** (a)
         Add `odds_t12h`, `odds_t4h`, `odds_t2h` entries to `deployment-service/configs/sports-trigger-tiers.yaml`'s
         `pre_match.triggers` list (follow the existing `odds_t24h`/`t6h`/`t1h` pattern — each with
         `cloud_run_job_name: "uts-prod-market-tick-data-service-fast-t1-recon"` and appropriate tolerances: ±30min for
@@ -609,9 +609,10 @@ a credential ask.
         `bash deployment-service/scripts/vm/launch-sports-scheduler-vm.sh` (the singleton lock confirms no running
         instance; SPOT OK per the scheduler's GCS-state-backed resume design). (c) Verify via a sample day's manifest
         that all 6 forward horizons (T-24h/T-12h/T-6h/T-4h/T-2h/T-1h) show full per-fixture coverage. (repo:
-        deployment-service). Source: this DIAG's residual finding, 2026-08-04. **Already extracted — see
-        `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s `[CONFIG] P2` todo (line ~85, `assigned_vm: planning`,
-        still `- [ ]` open there too as of 2026-08-09) — not duplicating here.** Round-9 sweep flag (2026-08-09), for
+        deployment-service). Source: this DIAG's residual finding, 2026-08-04. **SHIPPED — verified by plan_reconciler
+        2026-08-18**: the extracted duplicate, `sports_satellite_ao_dispatch_batch10_2026_08_06.md`'s `[CONFIG] P2`
+        todo, is now `[x]` (`deployment-service@9e1fd57ae`, content+ancestry-verified against `origin/live-defi-rollout`,
+        plus a follow-up `[INFRA] P2` verification confirming it live in production). Round-9 sweep flag (2026-08-09), for
         whoever picks up batch10's copy: `sports_satellite_ao_dispatch_batch11_2026_08_09.md`'s Deferred section found
         this todo's "relaunch the sports-scheduler VM" premise may be stale — 3 independent, more current active docs
         (`sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md`,

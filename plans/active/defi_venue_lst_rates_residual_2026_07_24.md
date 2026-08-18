@@ -187,9 +187,9 @@ read-only scoping finding.
 1. ✅ `lst-rates` captured rows are credited in the DeFi could-exist / data-status view — closed 2026-07-26 (stale
    dedicated-bucket premise + capability-registry gap both already fixed elsewhere; the actual live residual, a
    venue-prefix-exclusion bug, found + fixed this pass).
-2. ✅ `VAULT` resolved (already excluded, test-guarded) — closed 2026-07-26. `SUSHISWAP` classic-vs-V3 ambiguity
-   **remains open** — genuinely undecided data-semantics call, explicitly out of scope for the todo that closed the rest
-   of this criterion.
+2. ✅ `VAULT` resolved (already excluded, test-guarded) — closed 2026-07-26. `SUSHISWAP` classic-vs-V3 ambiguity —
+   **resolved 2026-08-11** (operator: closed as verified no-op; the real remaining scope redirected to the
+   separately-tracked `SUSHISWAP_V3-ARBITRUM` registry gap, see Progress Log below).
 
 ## Progress Log
 

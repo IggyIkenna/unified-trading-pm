@@ -22,7 +22,10 @@ summary: >-
   root causes WERE identified and fixed (writer-defaults-venue-to-chain fixed via `instruments-service@f651ff8b`
   2026-07-30; the cross-AG splitter bug in `migration_orphan_sweep.py` also fixed 2026-07-30) over the 3 weeks since
   this doc was opened; see the Todos/Progress Log below for the full remediation history. Only 2 items remain open,
-  both gated on live verification, not a fresh root-cause investigation.
+  both gated on live verification, not a fresh root-cause investigation. **CORRECTED 2026-08-18 (plan_reconciler
+  cross-cutting)**: this is now stale too — a P3 POOL-casing regression item was REOPENED 2026-08-16 (a fresh
+  0→7.9M-row regrowth whose recurrence mechanism the doc's own text calls UNRESOLVED, not a verification gate). True
+  open count is 3 (grep-verified), not 2, and the 3rd is a genuine unresolved root-cause item.
 status: open
 nature: issue
 asset_group: [defi, cefi, tradfi, cross-cutting]

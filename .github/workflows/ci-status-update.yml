@@ -133,9 +133,24 @@ jobs:
           # set_status guard) via the API — the consumer sha is NOT in PM's git history, so a local
           # `git show` cannot. Best-effort: an empty value leaves the guard inert for this write
           # (identical to a no-ts call), never blocking the write.
+          # Bug fix (2026-08-18, sit_failure agt-dcc884): on a 404/error, `gh api --jq` writes the
+          # error response BODY to stdout (not stderr) before exiting non-zero, so `2>/dev/null`
+          # never suppressed it — the `|| echo ""` fallback then only APPENDED an empty line, and
+          # command substitution concatenated both, leaving COMMIT_TS holding the raw JSON error
+          # text (e.g. `{"message":"Not Found",...}`). is_stale_write's string comparison then
+          # ASCII-sorted that '{'-prefixed garbage ABOVE any real ISO-8601 date (digits sort below
+          # '{'), so EVERY future non-FAILING write for that repo compared as "older" and was
+          # rejected as stale — a permanent ci_status jam (confirmed live: e2e-testing stuck
+          # FAILING for 20+ hours while quality-gates-v2 was actually green, timing out the
+          # strategy-service 0.74.0 cascade at level 8 three times). Validate the output actually
+          # looks like an ISO-8601 timestamp before trusting it; anything else (empty, error JSON,
+          # partial output) falls back to "" — the documented no-guard-engaged behaviour.
           COMMIT_TS=""
           if [ -n "${SHA}" ]; then
-            COMMIT_TS=$(gh api "repos/${OWNER}/${REPO}/commits/${SHA}" --jq '.commit.committer.date' 2>/dev/null || echo "")
+            _RAW_TS=$(gh api "repos/${OWNER}/${REPO}/commits/${SHA}" --jq '.commit.committer.date' 2>/dev/null || echo "")
+            if [[ "${_RAW_TS}" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z?$ ]]; then
+              COMMIT_TS="${_RAW_TS}"
+            fi
           fi
           # The store applies no-downgrade (resolve_status) + the stale-write ordering guard
           # (is_stale_write) inside a per-repo CAS transaction; --emit-transition prints the RESOLVED
@@ -268,8 +283,7 @@ jobs:
     needs: [update-ci-status]
     # Only build/notify on a meaningful TRANSITION (regression to FAILING, or recovery
     # from FAILING). Steady-green + green<->green tier moves are suppressed (anti-spam).
-    if:
-      always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
+    if: always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
       'true'
     outputs:
       message: ${{ steps.build.outputs.message }}
@@ -376,8 +390,7 @@ jobs:
     # SIT_PASS into SIT_VALIDATED, which is normal activity — is still NOT notified, because it sets
     # notify_worthy but not `recovered`. The carrier's own routine-green suppressor is the second
     # belt: a success/neutral INFO post is dropped unless `recovery: true` (passed below).
-    if:
-      always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
+    if: always() && needs.update-ci-status.outputs.skip != 'true' && needs.update-ci-status.outputs.notify_worthy ==
       'true' && (github.event.client_payload.status == 'FAILING' || needs.update-ci-status.outputs.recovered == 'true')
     uses: ./.github/workflows/notify-slack.yml
     with:
@@ -394,8 +407,7 @@ jobs:
       # severity_class is computed by update-ci-status: CRITICAL for a main-branch FAILING
       # (worst case — the promoted line is red), WARNING for any other FAILING, INFO for a
       # SIT-pass / recovery. Falls back to the old status-only rule if unset.
-      severity:
-        ${{ needs.update-ci-status.outputs.severity_class || (github.event.client_payload.status == 'FAILING' &&
+      severity: ${{ needs.update-ci-status.outputs.severity_class || (github.event.client_payload.status == 'FAILING' &&
         'CRITICAL' || 'INFO') }}
       conclusion:
         ${{ (github.event.client_payload.status == 'FAILING' || needs.update-ci-status.result != 'success') && 'failure'

@@ -112,8 +112,8 @@ corrected 2026-08-10, plan_reconciler — the flat `data_status.py` module was s
 
 - Fetches `getHonestCoverage(date?)` from `src/api/client.ts`.
 - Renders a `Card` with one row per asset_group from `by_asset_group`.
-- Each row: asset_group badge + stacked progress bar (captured=green / empty_confirmed=yellow / attempted_failed=red /
-  expected_unattempted=gray) + coverage % label.
+- Each row: asset_group badge + stacked progress bar (captured=emerald / empty_confirmed=cyan / known_empty=blue /
+  attempted_failed=red / pending_fetch=amber / out_of_window=slate) + coverage % label.
 - Handles loading, 404 (no data for today yet — renders a muted "not yet measured" note), and error states.
 - Placed at the top of `DataStatusTab`'s return (after the `UpcomingFixtures` gate, before the Coverage Summary Card).
 
@@ -132,14 +132,24 @@ annotation rule.
 
 ## Styling conventions
 
-- `captured` → `bg-emerald-500` / `text-emerald-600`
-- `empty_confirmed` → `bg-yellow-400` / `text-yellow-600`
-- `attempted_failed` → `bg-red-500` / `text-red-600`
-- `expected_unattempted` → `bg-gray-300` / `text-gray-500`
+- `captured` → `bg-emerald-500`
+- `empty_confirmed` → `bg-cyan-500`
+- `expected_unattempted_known_empty` → `bg-blue-500`
+- `attempted_failed` → `bg-red-500`
+- `expected_unattempted_pending_fetch` → `bg-amber-500`
+- `out_of_window` (pre-genesis/delisted, excluded from denominator) → `bg-slate-500`
+
+Verified live 2026-08-18 (plan_reconciler agt-2a424e) against `deployment-ui/src/components/HonestCoverageCard.tsx`'s
+`SEGMENT_COLORS` const — bar segments are bg-only (no paired `text-*` class per segment; the `text-*` colors used
+elsewhere in that component style an unrelated numeric-threshold indicator, not segment identity). The prior 4-entry
+table predates the Honest Coverage v2 known_empty/pending_fetch split.
 
 ## Operational notes
 
-- Card silently hides itself when the API returns 404 (cron VM hasn't run yet for today).
+- Card renders a muted "Coverage data not yet computed for {date}" note when the API returns 404 (cron VM hasn't run
+  yet for today) — it does NOT hide itself (corrected 2026-08-18, plan_reconciler agt-2a424e; matches the "UI
+  component" section above and live-verified `HonestCoverageCard.tsx`, whose `notYetComputed` state renders an
+  inline message, never an early return/null).
 - The cron VM runs once per day at midnight UTC; data for today is available by ~00:05 UTC.
 - Re-run manually: `bash deployment-service/scripts/vm/launch-measure-honest-coverage-vm.sh`.
 - Monitor events at `gs://central-element-323112-events/events/measure-honest-coverage/`.

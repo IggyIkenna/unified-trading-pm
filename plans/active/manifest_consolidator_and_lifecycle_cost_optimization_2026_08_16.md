@@ -286,12 +286,14 @@ context_scope:
       `launch-defi-forward-poll.sh` uses a variable `--operation` flag (default `collect-lst-rates`, never
       `download`), covered by nothing — tracked as a new follow-up below, not wired on an unconfirmed target.
       Repos: deployment-service.
-- [ ] [INFRA] P3. **`launch-defi-forward-poll.sh` watchdog coverage** (newly discovered 2026-08-17 while resolving
-      the continuous/live todo above) — its `VM_OPERATION` is a variable `--operation` flag (default
+- [x] ✅ **EXTRACTED 2026-08-18 (na-eligibility-audit, infra tranche) →
+      `infra_satellite_ao_dispatch_batch20_2026_08_18.md` item 1.** Not yet executed — tracked there. ~~[INFRA] P3.
+      `launch-defi-forward-poll.sh` watchdog coverage (newly discovered 2026-08-17 while resolving the
+      continuous/live todo above) — its `VM_OPERATION` is a variable `--operation` flag (default
       `collect-lst-rates`, seen values likely include other `collect-*` operations), never `download`, so it falls
       through §5b's exact-match gate despite being `VM_SERVICE=market_tick_data_service`. Confirm each real
       `--operation` value's actual write target before wiring (same "confirm real write target" caution as the
-      bespoke `*_daily_cron` launchers). Repos: deployment-service.
+      bespoke `*_daily_cron` launchers). Repos: deployment-service.~~
 - [x] ✅ [INFRA] P1. **Terraform-drift finding — market-data-cefi resource fix not actually codified** (discovered
       2026-08-16 while shipping the watchdog-extension todo above; unrelated to that todo's own scope, surfaced only
       because a concurrent session's dirty `terraform/gcp/manifest_consolidator_scheduler.tf` had to be checked
@@ -820,3 +822,19 @@ context_scope:
   tracking — confirmed genuinely too early per the 2026-08-18 interim check; cold-start investigation; periodic
   instruments-sports OOM re-check with no concrete trigger; the operator-rejected 18→5 consolidation, already
   CANCELLED) remain genuine judgment/time-gated/research work, not worker-determinable.
+
+- **na-eligibility-audit 2026-08-18** (infra tranche, dispatch agt-80fafa, slot 29) [body-hash:10a82d75ddb34c7c]:
+  RECLASSIFY (per-todo split) — closed the loop on the `launch-defi-forward-poll.sh` watchdog-coverage item this
+  same doc's prior same-day marker (above, dispatch agt-6a3d46) tagged `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` pending a
+  second look. Confirmed bounded: its 3 completed siblings (ml_service, compound-VM_SERVICE, bespoke `*_daily_cron`
+  watchdog wiring) were all resolved without an operator decision once the real launcher code was investigated, and
+  this item's own framing carries the identical "confirm real write target, then wire" shape — no design fork
+  evident. Conflict-check clear (grepped every active `assigned_vm: planning` doc in `parent_epic:
+  infrastructure_master` for `defi-forward-poll`: 2 hits, both non-overlapping —
+  `data_completion_to_100_all_ag_2026_06_21.md` is about running/deploying the live poller, not watchdog wiring;
+  `infra_satellite_ao_dispatch_batch17_2026_08_16.md` fixed an unrelated duplicated-block/stale-string bug in the
+  same script file, already shipped; no draft-status legacy satellite doc references it). Extracted to
+  `infra_satellite_ao_dispatch_batch20_2026_08_18.md` item 1. The other 4 open items (cost-gain tracking, cold-start
+  investigation, periodic instruments-sports OOM re-check, the operator-rejected 18→5 consolidation already
+  CANCELLED) re-confirmed genuine judgment/time-gated/research work on independent re-read — doc stays
+  `assigned_vm: NA` for those.

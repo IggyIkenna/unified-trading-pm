@@ -136,9 +136,13 @@ I'm filing rather than escalating past what the evidence supports.
 - [ ] [OPERATOR] P2. Run the pause-consolidator → snapshot → filter → resume manifest-cleanup procedure this plan's DoD
       calls for, to purge the ICE-databento-non-24h rows, the CBOE VIX-cash 17 stragglers, and the BARCHART 9,119 rows
       from the manifest (GCS delete/filter of a prod manifest — needs delete-safety-protocol citation per CLAUDE.md,
-      hence `[OPERATOR]`). No live-billing urgency (DIAG above ruled out an active fetch loop), but the stale ICE
+      hence `[OPERATOR]` — see `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, cited 2026-08-18
+      plan_reconciler; this doc's own `context_scope` did not previously carry the pointer). No live-billing urgency
+      (DIAG above ruled out an active fetch loop), but the stale ICE
       objects on GCS should also be deleted, not just re-purged from the manifest, or a future rebuild will re-resurrect
-      the same rows.
+      the same rows. **NOTE (2026-08-18, plan_reconciler)**: the BARCHART row count/timestamp cited here (9,119 rows)
+      conflicts with this same doc's own fresher 2026-08-17 Progress Log entry below (4,655 rows, different
+      timestamp) — needs a fresh live remeasurement before this todo executes, do not trust either figure as-is.
 - [ ] [CODE] P3. Audit the surfaces leg (catalogue API / `/data-status` / UI) for any residual
       ICE/CBOE-VIX-cash/BARCHART display — not checked this session.
 - [x] [DIAG] P3. Cefi "equity-perp singles" — confirmed non-issue, no follow-up needed. (Tag+priority added 2026-08-16,

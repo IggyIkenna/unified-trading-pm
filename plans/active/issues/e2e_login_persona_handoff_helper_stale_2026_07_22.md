@@ -114,8 +114,10 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
       via infra_satellite_ao_dispatch_batch1_finalize_2026_07_26.md todo 1.
 - [x] ✅ [UI] P3. **Re-run verification COMPLETE (slots 20, 6, 4 — 2026-08-10).** Three independent re-runs of
       `tests/e2e/admin-strategy-assignments.spec.ts` all confirm the documented
-      Firebase-Admin-creds/dev-server-instability class — NOT a clean pass. Slot-20: 1/3 passed; slot-6: 0/3 passed;
-      slot-4: 0/3 passed. All failures trace to `/api/v1/*` routes requiring Firebase Admin credentials the mock dev
+      Firebase-Admin-creds/dev-server-instability class — NOT a clean pass. Slot-20: 1/3 passed; slot-6: 1/3 passed
+      (**corrected 2026-08-18**, plan_reconciler infra tranche agt-830118 — this line said "0/3" but the doc's own
+      Progress Log entry for this same slot-6 run records "2 failed / 1 passed"; verdict unaffected either way, still
+      not a clean pass); slot-4: 0/3 passed. All failures trace to `/api/v1/*` routes requiring Firebase Admin credentials the mock dev
       server doesn't provision. Full per-slot breakdowns recorded in the Progress Log below. **No `pw:L2 ✓` can be
       recorded until `ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md` is
       fixed.** (repo: unified-trading-system-ui) — PM@2c85d322e0.

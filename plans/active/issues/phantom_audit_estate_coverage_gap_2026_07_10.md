@@ -23,7 +23,7 @@ stage: [data]
 repos: [instruments-service, e2e-testing, deployment-service]
 scope: [engineer]
 tags: [phantom, manifest, hygiene, coverage, data-correctness, audit, consolidator]
-related: [../consolidator_throughput_backlog_monitor_2026_07_09.md]
+related: [/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md]
 created: 2026-07-10
 author: unknown
 parent_epic: infrastructure_master
@@ -45,7 +45,7 @@ execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.9
-last_updated: 2026-07-10
+last_updated: 2026-08-09
 supersedes:
 superseded_by:
 depends_on:

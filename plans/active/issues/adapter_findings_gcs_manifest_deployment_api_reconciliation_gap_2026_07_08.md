@@ -36,7 +36,7 @@ tags:
   ]
 related:
   [
-    ../instruments_completion_tracker_2026_07_06.md,
+    /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
@@ -162,9 +162,10 @@ canonicalization step. Confirmed via direct reads of `prod/catalog.parquet` (bot
   enforced ID-construction path. **✅ FIXED — 2026-07-12 correction** (was: no fix note; this bullet read as still
   live): retired the same session by a concurrent sibling agent (DeFi venue-token naming cleanup), confirmed via a fresh
   re-query of `prod/catalog.parquet` — 0 ghost rows, 16 rows correctly under `AAVE_V3-OPTIMISM`. See
-  `canonical_id_builder_retrofit_checklist_2026_07_08.md`'s corresponding todo (checked `[x]`, flagged there as "stale
-  by the time this plan was filed — the parallel work wasn't visible to the agent that wrote it"). Finding #127,
-  plan-reconciliation `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+  `/plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md`'s corresponding todo (checked `[x]`,
+  flagged there as "stale by the time this plan was filed — the parallel work wasn't visible to the agent that wrote
+  it"). Finding #127, plan-reconciliation
+  `/plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 
 **Net**: `canonical_id_builder.py` reads as the intended SSOT but isn't reachable from almost anywhere real capture
 happens — it's aspirational documentation of a convention the codebase mostly doesn't follow, not a live invariant. Real
@@ -211,7 +212,7 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       artifact.
 - [x] [VERIFY] P2. **CORRECTED 2026-08-16 (plan_reconciler, tranche=tradfi, agt-a74a6a): the pointer below to an
       archived doc is misleading — the full execution write-up (Findings A/B/C) is actually IN THIS DOC's own Progress
-      Log (2026-07-31/08-01 entries below), which is more complete than the archived doc.** Spot-check 2-3 more
+      Log (2026-07-31/08-01 entries below), which is more complete than the archived doc.** **Spot-check 2-3 more
       findings from the smoke-test doc across all 3 layers** — good candidates: the
       DERIBIT live-vs-batch FUTURE misclassification (does deployment-ui show a FUTURE count that matches the real GCS
       row count, or does the live-WS mislabel bleed into the manifest?), and HUOBI-SPOT's missing-from-venue-universe
@@ -225,9 +226,14 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
       `DataStatusDrilldown.tsx:85` types it opaque (`string`); `DataStatusTab.tsx:4817` / `VenueDetailPanel.tsx:182`
       both render via generic `Object.entries(...).map(...)`. An unrecognized value would print as literal text, not go
       blank or break — so this specific risk (silently-dropped row) is not live.
-- [ ] [DECISION] P2. **Once the pilot trace (AAVE_V3) lands, decide the reconciliation cadence for the remaining 58
-      findings** — full trace per finding (expensive, thorough) vs a lighter spot-check pattern informed by what the
-      AAVE_V3 pilot reveals about where 3-layer drift actually tends to occur.
+- [ ] [DECISION] P2. **The pilot trace (AAVE_V3) has landed (2026-07-08, see body above) — decide the reconciliation
+      cadence for the remaining findings** — full trace per finding (expensive, thorough) vs a lighter spot-check
+      pattern informed by what the pilot revealed about where 3-layer drift actually tends to occur. **Count correction
+      (plan_reconciler 2026-08-18)**: this todo's own "58 findings" figure (and every Progress Log entry re-citing it
+      unchanged since) is stale — `mtds_is_full_adapter_smoketest_findings_2026_07_07.md`'s bug list, the source of
+      that count, now shows the majority `[x]` FIXED with shipped commit SHAs; re-derive the live remaining count from
+      that doc directly before scoping this decision rather than trusting the restated "58" (a hardcoded count
+      re-stales on every bump — deliberately not replacing it with a fresh hardcoded number here either).
 - [x] [DECISION] P2. **Scope whether/when to pursue real `instrument_id` canonicalization** — **DECIDED 2026-07-08**:
       operator chose to canonicalize, full scope, rather than leave unscoped. Moved to its own doc —
       [[instrument_id_format_canonicalization_2026_07_08]] — since it grew into a 6-finding enumeration with real target

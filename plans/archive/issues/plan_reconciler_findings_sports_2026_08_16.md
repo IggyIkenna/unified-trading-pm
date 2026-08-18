@@ -6,7 +6,7 @@ summary: >-
   to cross-check plans <-> epics <-> codex <-> issue docs <-> real code state, adversarially verifies every candidate,
   auto-fixes the verified-easy (sha/PR-evidenced flips + mechanical hygiene), and routes the hard ones (contradictions
   / doc-drift) via trust-mode [WORKER REC] application per the 2026-08-15 operator ruling.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [meta]
@@ -44,6 +44,12 @@ context_scope:
     /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
   ]
 ---
+
+> **ARCHIVED 2026-08-18 (plan_reconciler, dispatch agt-57336e)** — this run died after Phase 0 and never produced any
+> real findings (all sections below are genuinely empty, not a formatting artifact). Correctly left unarchived at
+> the time per its own reasoning ("archiving it would misrepresent the sports tranche as reconciled when it was
+> not"). Superseded by `/plans/active/issues/plan_reconciler_findings_sports_2026_08_18.md`, which is the fresh,
+> substantive sports-tranche pass this doc's own Progress Log said was still needed.
 
 # plan_reconciler findings — sports — 2026-08-16
 

@@ -119,18 +119,23 @@ separate re-grep was needed to establish "no overlap" for these 8 items.
       once the golden is reconciled. Separately, scope `regenerate_expected_universe_golden.py` to accept
       `--asset-group` so a future single-AG regen doesn't carry fleet-wide (incl. tradfi near-miss) blast radius.
       Repo: instruments-service. Source: `defi_satellite_ao_dispatch_batch14_2026_08_16.md` extracted from
-      `plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md` todos 1 and 3. Done
+      `plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md` todos 1 and 2
+      (**corrected 2026-08-18, plan_reconciler**: that doc's Todos section has only 2 items, not 3 — was "todos 1
+      and 3"). Done
       when: `defi.json` matches the current UAC AAVE_V3 declaration, the `xfail` suppression is removed with the
       real test passing, and `regenerate_expected_universe_golden.py --asset-group defi` regenerates only the defi
       golden.
 - [ ] [DATA] P2. **Relaunch the legacy-fold VM with the fixed worker count; investigate the lock-reclaim gap.**
-      Relaunch the `backfill-defi-legacy-datatype-fold-*` VM with `--workers 12` (the fix for the prior OOM/zombie
-      run); if a repeat zero-heartbeat zombie recurs, capture the VM's serial console output before any further
-      remediation; separately investigate the observed ~70-minute `consolidator.lock` reclaim gap during the prior
-      run. Repo: deployment-service. Source: `defi_satellite_ao_dispatch_batch14_2026_08_16.md` extracted from
-      `plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md`. Done when: the fold
-      VM completes cleanly (or a captured serial-console zombie repro exists to escalate) and the lock-reclaim-gap
-      investigation's root cause is documented.
+      **Safe-idempotent (added 2026-08-18, plan_reconciler, re-flagging a prior reconciler's untagged-VM-launch
+      finding)**: standard SPOT backfill VM relaunch — resumes from measured progress per
+      `/codex/05-infrastructure/spot-vms-for-backfill.md`, deletes no data, preemption-safe by design; no
+      `[OPERATOR]` gate needed. Relaunch the `backfill-defi-legacy-datatype-fold-*` VM with `--workers 12` (the fix
+      for the prior OOM/zombie run); if a repeat zero-heartbeat zombie recurs, capture the VM's serial console output
+      before any further remediation; separately investigate the observed ~70-minute `consolidator.lock` reclaim gap
+      during the prior run. Repo: deployment-service. Source: `defi_satellite_ao_dispatch_batch14_2026_08_16.md`
+      extracted from `plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md`. Done
+      when: the fold VM completes cleanly (or a captured serial-console zombie repro exists to escalate) and the
+      lock-reclaim-gap investigation's root cause is documented.
 - [ ] [BACKEND] P2. **Add an internal per-shard timeout bound to the MDPS per-date subprocess.**
       The `mdps-defi-2022` DP-VM-001 single-date hang had no timeout below the launcher's outer
       `STALL_TIMEOUT_SEC` — add an internal per-date subprocess timeout so a single stuck date fails fast instead of

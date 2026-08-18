@@ -167,7 +167,7 @@ reading. All three name their replacement, so the machine already has everything
       operator-approved and SHIPPED 2026-08-12, `unified-trading-pm@c92375f05b`. Verified on origin by marker
       (`_is_retired_with_successor` present; `violation_count: 3` in the baseline blob), not by exit code. The commit
       was briefly held by an unrelated fleet-wide ratchet failure
-      (`/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`), resolved by its owning
+      (`/plans/archive/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`), resolved by its owning
       session the same morning. `_is_retired_with_successor()` skips `superseded|deprecated|archived` ONLY when a
       non-empty `superseded_by` is present; the exempt set is PRINTED as `exempt-retired` rather than dropped silently.
       Baseline ratcheted DOWN 6 → 3 by removing exactly the 3 retired entries (hand-edited removal — no

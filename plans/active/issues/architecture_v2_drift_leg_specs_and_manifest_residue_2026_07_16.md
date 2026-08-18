@@ -31,7 +31,7 @@ status: open
 nature: process
 asset_group: [ui]
 stage: [meta]
-repos: [unified-api-contracts, unified-trading-system-ui, strategy-service]
+repos: [unified-trading-system-ui]
 scope: [engineer, admin]
 tags: [drift-solana-cull, architecture-v2, leg-specs, strategy-archetype, venue-residue, ui-reference-data]
 related:
@@ -42,7 +42,7 @@ related:
 created: 2026-07-16
 author: unknown
 last_updated: 2026-08-17
-parent_epic: defi_master
+parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

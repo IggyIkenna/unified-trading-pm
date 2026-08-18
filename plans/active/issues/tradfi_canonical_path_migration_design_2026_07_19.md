@@ -595,6 +595,24 @@ removal + casing normalization remain before backfill-resume.
 Recommended next: the two VM-scale items (broader duplicate scope, short-code migration) should be scoped together as
 one VM dispatch, since both walk the same `combo`/`futures_chain` corpus.
 
+> **HARD RULE gap closed 2026-08-18 (plan_reconciler)**: this doc has every displayed Todo `[x]` (archive-ready per
+> `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 6, already queued) but the 2 "Not done" rows above were
+> real remaining work tracked only as prose — converting to tracked todos now so they aren't silently lost when
+> this doc archives.
+
+- [ ] [DATA] P2. **Scope the broader orphaned-duplicate `combo` object population** beyond the 4 known GOLD/SP500/
+      WTI/BTC objects — the manifest doesn't reliably surface these (see the finding above: 233,658 legacy `combo`
+      objects vs. ~1,598 manifest rows). Needs a scoped `instrument_type=combo/` GCS prefix walk or VM dispatch (per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`, heavy I/O never runs on the operator's local machine). Done
+      when: the broader population is enumerated and either migrated (non-destructive copy+verify) or explicitly
+      scoped out with a reason.
+- [ ] [DATA] P2. **Migrate the 207,438 historical short-code `underlying=` objects to display-name form**
+      (non-destructive copy+verify — a dry-run script already exists, needs an enumeration input). Bundle with the
+      todo above per this doc's own "Recommended next" (same `combo`/`futures_chain` corpus walk). Any SUBSEQUENT
+      delete of the legacy short-code objects (not this todo's scope) is gated on a fresh `[OPERATOR]` decision per
+      the finding above — this todo covers the copy+verify migration only. Done when: the 207,438 objects have
+      display-name-form canonical twins, verified via a fresh coverage count.
+
 ## Progress Log
 
 - **2026-08-11 (slot 31, data_engineering) — "Re-blank the 3,267 rows" P1 todo DONE, scope corrected upward 18x.** Read

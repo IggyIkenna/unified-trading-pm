@@ -172,6 +172,18 @@ source:
 > counts substituted below, replacing the earlier "8 open" / "6 open" figures rather than layering another banner on top
 > of them.
 >
+> **STALE AGAIN 2026-08-18 (plan_reconciler) — the 2026-07-31 counts below have drifted further, live-recounted this
+> pass** (`grep -c '^- \[ \]'`, this pass): `tradfi_manifest_content_recovery_completion_2026_07_24.md` is now **1
+> open** (not 3) — only the "decision on the 1,328-cell unrecoverable population" item remains; the qualifier-
+> normalization fix and the `candle_feature_canonical_path_divergence` verify-and-close pointer are both now `[x]`.
+> `tradfi_phase_d_terminal_gate_2026_07_24.md` is now **1 open** (not 2), and it's a DIFFERENT item than either one
+> named below — both the P0 MVP-gate and P1 reconciliation items are now `[x]`; the sole remaining open item is a
+> `[SCRIPT] P3` (add `TestIsBundledChainShardCboeCorrection` tests, line ~514). `tradfi_backfill_throughput_
+> followups_2026_07_24.md`'s "1 open" figure below is still accurate, re-confirmed. Not re-deriving the full bullet
+> text below in place (this doc is dense enough that a surgical rewrite risks a worse mismatch than this note) —
+> treat the specific counts/item-lists in the 3 bullets immediately below as informational history, not current
+> state; the 3 figures in this correction are the current ones.
+>
 > - `tradfi_manifest_content_recovery_completion_2026_07_24.md` — **3 open (live 2026-07-31)**, down from the 2026-07-24
 >   vintage's 8. The 2 P0s that digest named (catalogue Surface A migration, GCS-filename/tick-content Surfaces C+D
 >   migration) are BOTH now done — catalogue SHIPPED+APPLIED LIVE 2026-07-25 (`instruments-service@52d8b3ef`),
@@ -399,7 +411,10 @@ Everything below is scoped so these cells are canonical, honestly-covered, and s
 - **Child plans (forked from this parent, 2026-07-24 split — digested here too so this section alone is complete without
   needing the Split-notice table above)**. **STALE digest corrected 2026-07-31 (slot 14, AO-dispatch-readiness sweep)**
   — this section's item-level text still named the ORIGINAL 2026-07-24 P0s (catalogue/enumeration migration), both now
-  done; see the Split-notice table above for the fuller re-derivation + evidence citations:
+  done; see the Split-notice table above for the fuller re-derivation + evidence citations. **STALE AGAIN 2026-08-18
+  (plan_reconciler)** — the counts/items below are ALSO now out of date; see the "STALE AGAIN 2026-08-18" correction
+  in the Split-notice table above for current counts (1 open / 1 open, both a different item than named below in
+  the phase_d_terminal_gate case) — not re-derived here to avoid a 3rd copy of the same drifting data:
   - [`plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md`](/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md)
     (3 open — live 2026-07-31, down from 11)
     - **[DATA] P2.** RULED 2026-07-28 — qualifier-normalization fix (Option A)

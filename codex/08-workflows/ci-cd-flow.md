@@ -893,6 +893,43 @@ FIRST (bring every consumer to at-or-below its ratcheted baseline), THEN apply t
 rollout. Combining both in one pass makes it impossible to tell whether a post-rollout drift-count increase is the new
 step or pre-existing debt.
 
+**A `waitFor`-dependent step authored for `deploy` can never be template-native — revert it, don't try to force-fit it
+(codified 2026-08-18, from `deployment-api@4c31b72`'s reverted `verify-auth-contract` step).** A per-repo consumer step
+that must run AFTER a `deploy` step (to check the freshly-deployed revision, e.g. a post-deploy auth-contract check)
+cannot be forward-ported into a shared `cloudbuild-*-template.yaml`, because `deploy` itself is intentionally
+per-repo-only content absent from every template (see the drift baseline's own header). A template-native version can
+only `waitFor` the last template-native step (e.g. `scan-check`), which runs it CONCURRENTLY with the real `deploy`
+step instead of after it — checking the stale pre-deploy revision and defeating the check's purpose. There is no
+template-only way to express "runs after a per-repo-only step" short of a polling/timeout loop inside the script
+itself, which is more fragile than the original design. **The two questions are separate and both can be true at
+once**: "where was this step intended to live?" (the template — a `_SERVICE_NAME` guard on a file that only ever
+builds one consumer is a tell) vs. "can it be expressed there?" (no, for anything ordered against per-repo-only
+content). When you hit this shape, revert the step rather than either force a broken concurrent ordering or
+permanently raise the never-raise baseline; replace same-day-detection needs with a scheduled synthetic check (Cloud
+Scheduler hitting the live endpoint) instead of a build-time template gate.
+
+**Consumer-vs-template drift is now caught at the point it's introduced, both directions (shipped 2026-08-12,
+`unified-trading-pm@2b4bee96d3`).** `check_cloudbuild_template_drift.py` no longer only runs fleet-wide in the PM
+repo's own gate — it also runs `--repo`-scoped inside every consumer's own `quality-gates.sh` (`base-service.sh` STEP
+5.108; `base-ui.sh` `[5.108]` for the 2 UI repos, which have no `.venv`). A CONSUMER-side edit that drifts from its
+template now fails that consumer's own gate at commit time, instead of surfacing later as an opaque fleet-wide
+`quality-gates.sh` failure on whichever unrelated agent's repo happens to be running the PM's aggregated fleet-wide
+check next — the exact failure mode that produced three independently-filed duplicate incident docs for one root cause
+on 2026-08-12. A TEMPLATE-side edit is still only caught by PM's fleet-wide run, by construction (a template edit
+affects every consumer, so only a fleet-wide pass can see the full blast radius).
+
+**The marker list in a drift failure is positional, not a diff, and `substitutions:` are invisible to it.**
+`_cloudbuild_markers()` (in `scripts/propagation/rollout-cloudbuild.py`, shared with `check_cloudbuild_template_drift.py`)
+walks only `data["steps"]` (step ids, `secretEnv`, `availableSecrets`, step args) — it never reads top-level
+`substitutions:`. The over-baseline marker(s) a failure prints are the last N markers **by file order**, not
+necessarily the ones that actually changed (diff the consumer against its last known-good revision to find the real
+change). A consumer's per-repo `substitutions` (e.g. deploy-target keys) can diverge from its template with the
+drift count moving not at all, and `rollout-cloudbuild.py --apply`'s own drop-guard inherits the same blind spot since
+it also only compares steps — a `--apply` on a consumer with template-absent substitution keys can silently render
+them away. Fixing this would mean a new `substitutions` marker category, which would legitimately RAISE the count for
+every consumer carrying real per-repo substitutions against a shrink-only baseline — an operator-sanctioned exception,
+not a drive-by fix; not yet done as of 2026-08-18.
+
 ### `quality-gates-v2` CI-status dispatch must be outage-aware — a 0-job billing/startup-kill run is not a genuine FAILING status (codified 2026-08-07)
 
 The "Record CI status" step (`if: always()`) in `quality-gates-v2` dispatches a `STATUS=FAILING` Firestore write on ANY

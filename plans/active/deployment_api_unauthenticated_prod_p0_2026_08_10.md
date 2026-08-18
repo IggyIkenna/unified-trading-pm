@@ -534,7 +534,7 @@ are unaffected.
   `check_cloudbuild_template_drift.py` (a separate "never raise" ratchet comparing consumer cloudbuild.yaml files
   against their shared template), which blocked EVERY PM commit fleet-wide for ~1h until diagnosed (a different agent,
   slot 3, independently hit and filed
-  `/plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`). Forward-porting into
+  `/plans/archive/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`). Forward-porting into
   `cloudbuild-api-template.yaml` (the check's own sanctioned remedy) was evaluated and found structurally unsound: the
   step needs `waitFor: ["deploy"]` to check the freshly-deployed revision, but `deploy` itself is pure per-repo content
   absent from the template entirely — a template-native version could only `waitFor: ["scan-check"]`, running

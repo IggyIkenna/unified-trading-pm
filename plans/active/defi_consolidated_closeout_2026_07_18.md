@@ -433,7 +433,14 @@ Discriminator = **does a manifest row exist**.
   `issues/defi_catalogue_available_to_false_delisting_2026_07_20.md`.
 - **Close-out criterion**: fresh single-walk yields zero silent-`M` rows; denominator honest.
 
-- [ ] [DATA] P0. **PURGE first, then seed.** Purge the 1.79M duplicate + ~219.5K phantom rows (re-verify the 219,529
+- [ ] [DATA] P0. **PURGE first, then seed.** **[OPERATOR] delete-safety note (plan_reconciler 2026-08-18,
+      re-flagging na-eligibility-audit 2026-08-16's "worth a follow-up look")**: this todo performs a real prod-GCS
+      purge (1.79M duplicate + ~219.5K phantom rows) before an AO worker may execute it — unlike its sibling delete
+      todo below (line ~681, which cites a verified 7-day soft-delete retention as its safe-idempotent
+      justification), this todo has neither an operator sign-off nor a delete-safety-protocol citation yet. Get one
+      of the two (`[OPERATOR]` sign-off + `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a citation,
+      OR an equivalent stated safe-idempotent justification) before dispatching. Purge the 1.79M duplicate + ~219.5K
+      phantom rows (re-verify the 219,529
       detected vs 219,632 flipped delta), THEN apply the ~63.9M `expected_unattempted` seed (operator write-volume gate;
       incl. 812,055 solana-pool-vocab rows + 215,864 non-POOL EU rows). The "1M" framing is the old safety-cap slug —
       the real target is 63.9M. **Sequence AFTER the glued-id manifest rebuild** (both touch the same consolidated

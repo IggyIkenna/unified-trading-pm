@@ -16,11 +16,7 @@ stage: [meta]
 repos: [market-tick-data-service]
 scope: [engineer]
 tags: [mtds, venue-registry, casing, canonicalization, operator-decision]
-related:
-  [
-    /plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md,
-    /plans/archive/issues/mtds_venue_key_casing_canonicalization_unexecuted_2026_08_13.md,
-  ]
+related: [/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
 created: 2026-08-17
 author: slot-8 (backend_engineer)
 source: "Follow-up from mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md — fallback removal step deferred, needs an operator ruling, not a code investigation."
@@ -39,7 +35,6 @@ locked_by:
 last_updated: 2026-08-17
 context_scope:
   [
-    /plans/active/mtds_venue_key_casing_reverify_then_execute_ao_dispatch_2026_08_16.md,
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_clob_ws.py,
   ]

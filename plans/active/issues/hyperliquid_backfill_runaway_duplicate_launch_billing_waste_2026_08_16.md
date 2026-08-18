@@ -261,14 +261,20 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
       `uts-prod-dp-exit-code-monitor` Cloud Run Job (same "landing on main DEPLOYS NOTHING" gap the sibling mdps
       incident hit) — did not pause the cron itself (broad blast radius across every data-pipeline family, an
       [OPERATOR]-gated call per the mdps precedent, not narrowly scoped to this one bug).
-- [ ] [OPERATOR] P1. **NEW 2026-08-17**: once `deployment-service`'s LDR→main promotion completes and
+- [x] ✅ [OPERATOR] P1. **NEW 2026-08-17**: once `deployment-service`'s LDR→main promotion completes and
       `deployment-api` rebuilds+redeploys (check
       `gcloud run jobs describe uts-prod-dp-exit-code-monitor --project=central-element-323112
       --region=asia-northeast1 --format="value(metadata.labels.'run.googleapis.com/lastUpdatedTime')"` is AFTER
       2026-08-17T13:00Z, when deployment-service@540cb8cef5 shipped), re-check
       `gcloud compute instances list --filter="name~'^cefi-hyperliquid' OR name~'^cefi-aster'"` stays at 8 (one per
       cell) across a few hourly cron ticks rather than climbing again — confirms the cell-dedup fix is genuinely
-      live, not just landed on LDR. (repo: deployment-service, verification only)
+      live, not just landed on LDR. (repo: deployment-service, verification only) — **CLOSED 2026-08-18
+      (/ao-watchdog run, operator-approved close-out)**: `gcloud run jobs describe uts-prod-dp-exit-code-monitor`
+      shows `lastUpdatedTime=2026-08-18T02:20:54Z`, after the 2026-08-17T13:00Z gate — deployment-api has
+      redeployed with the fix live. Live fleet re-check (single point-in-time, not yet the full "a few hourly
+      ticks" bar): 7 `cefi-hyperliquid-*`/`cefi-aster-*` VMs, one per (venue, year) cell, no duplicates (one
+      `aster-2023` self-terminated, presumably finished). Operator confirmed close via `/ao-watchdog`'s live
+      blocked-question verification pass.
 - [ ] [INFRA] P3. **Resource-rightsizing finding, 2026-08-16** (operator-requested, mirrors
       `/vm-resource-rightsizing-check`): self-reported `RESOURCE_SAMPLE` telemetry from 4 sampled `e2-highmem-4`
       (4 vCPU / 32GB) keeper VMs' `run.log` (n=1347-1593 samples each, full VM lifetime) shows memory pinned at
@@ -435,3 +441,9 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   `uts-prod-dp-exit-code-monitor-cron` — confirmed via `gcloud run jobs describe` that the live Cloud Run Job image
   (last redeployed 2026-08-17T12:56:18Z) predates this fix, so the fix is not yet actually live; flagged as a new
   [OPERATOR] P1 todo above rather than unilaterally pausing a fleet-wide cron for a narrowly-scoped bug.
+- **2026-08-18 (`/ao-watchdog` daily fleet-health run)**: the P1 redeploy-verification todo had sat unanswered in
+  AO's blocked-question queue since 2026-08-17T16:30Z. Live re-check found the gate had cleared:
+  `uts-prod-dp-exit-code-monitor` `lastUpdatedTime=2026-08-18T02:20:54Z` (after the 13:00Z threshold), live venue
+  fleet at 7 `cefi-hyperliquid-*`/`cefi-aster-*` VMs with no duplicates. Presented to operator with this evidence;
+  operator confirmed close-out. Checkbox flipped above. Corresponding AO blocked question answered `final`. Two
+  todos remain open (row-count re-verify, resource-rightsizing) — this doc is NOT ready for archival yet.

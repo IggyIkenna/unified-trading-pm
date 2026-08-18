@@ -150,7 +150,11 @@ are identified (2) and the ledger exists (3).
 > strategy-service@f1a98416 (P2.2, 2026-08-08). Update the satellite batch's own checkbox state if it still shows these
 > open. **ALSO CORRECTED 2026-08-12 (/plan-reconcile)**: P2.11.18's remaining sub-part (b) was previously a bare bullet
 > with no `- [ ]` syntax (real open work invisible to checkbox tallies) — given real checkbox syntax below (line ~580),
-> so the true open-checkbox count here is 4, not 3.
+> so the true open-checkbox count here is 4, not 3. **CORRECTED 2026-08-18 (plan_reconciler cross-cutting)**: P9.2
+> itself is no longer open — RE-VERIFIED 2026-08-14 as self-resolved (see its own checkbox below, "no fix needed") —
+> so the true open-checkbox count here is now 3 (P2.7.3, P2.11.15, P2.11.18(b)), not 4. This header was the only
+> place still citing the stale "4" figure; the doc's own na-eligibility-audit 2026-08-17 entry elsewhere already
+> knew the true count was 3.
 
 **A — Agent-shippable infra/code (NO operator gate — a VM/agent can ship these) — EXTRACTED 2026-08-08:**
 

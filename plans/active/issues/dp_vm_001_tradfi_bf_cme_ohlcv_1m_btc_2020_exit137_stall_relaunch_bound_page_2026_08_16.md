@@ -153,12 +153,14 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **RESOLVED-BY-REDIRECT 2026-08-17** — root cause confirmed (see "Update 2026-08-17" section
+- [x] ✅ [OPERATOR] P1. **RESOLVED-BY-REDIRECT 2026-08-17** — root cause confirmed (see "Update 2026-08-17" section
       above): this is the tracked Databento CME billing block, not an independent relaunch-vs-wait call. Same
       underlying ask as `tradfi_databento_account_billing_suspended_2026_08_09.md`'s existing P0 `[OPERATOR]` todo
       (pay the invoice) — no separate decision needed here. Once billing is restored, `btc-2020` needs a fresh
       relaunch from `2020-01-02` — the family's normal backfill-completion sweep will pick it up, not urgent to
-      track separately.
+      track separately. — **Checkbox reconciled 2026-08-18 (plan_reconciler, agt-15d58e)**: this todo's own text
+      already declared resolution; only the checkbox itself was unflipped (double-confirmed by 2 independent hunter
+      batches this pass).
 - [x] ✅ [BACKEND] P1. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
       `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2** (narrowed to the two VMs in this 4-VM ask NOT
       already root-caused as billing-blocked — `es-2020` + `btc-2020`; the other two,
@@ -179,6 +181,16 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
 
 ## Progress Log
 
+- **2026-08-18 (slot 9, data_pipeline_failure escalation agt-c7ef09)**: Received a fresh DP-VM-001 escalation for
+  `tradfi-bf-cme-ohlcv-1m-btc-2020-20260818-030418` (same `btc-2020` shard, next day; escalation's own context
+  states exit_code=137 stall-induced SIGKILL and the `tradfi-bf-cme-ohlcv-1m-` launcher family already at 2/2
+  relaunch dispatches today — DO NOT RELAUNCH). Checked `plans/active/issues/` — this doc still open and covers the
+  same `btc-2020` shard's recurring incident chain (2026-08-16 → 2026-08-17×2 → 2026-08-18), appending rather than
+  filing a near-duplicate. Did not pull `run.log` for this specific VM this session — the shard's failure signature
+  is already established across 3 prior independent pulls (2026-08-16/17 entries above) as the account-wide
+  Databento `402 account_delinquent_invoice` billing block, still tracked `status: blocked` P0 in
+  `tradfi_databento_account_billing_suspended_2026_08_09.md` (re-verified open this session). Per RB-INFRA-RELAUNCH,
+  did not relaunch. No new issue doc filed. No code changed this session.
 - **2026-08-17 (slot 4, data_pipeline_failure escalation agt-990205)**: Received a fresh DP-VM-001 escalation for
   `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-090227` (same `btc-2020` shard, later same day, launcher resolves to
   `launch-tradfi-bf-cme-ohlcv-1m.sh` via `launcher_registry.resolve_launcher_for_vm`). Read `LAUNCH_PARAMS.json`

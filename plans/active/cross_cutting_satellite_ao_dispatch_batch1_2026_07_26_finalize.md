@@ -108,14 +108,19 @@ context_scope:
       **Done when**: all 6 retags are applied with `check_ag_closeout_linkage.py` passing 0 new orphans,
       `bucket_estate_fold_design_2026_07_13.md` is archived with every corpus referrer fixed, and only the archive copy
       of `gcs_data_access_audit_log_cost_2026_07_24.md` remains with the inventory regenerated.
-- [ ] [DOC] P1. **Archive both `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md` and
-      `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`** via the standard 6-step ritual (per CLAUDE.md's
-      plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above should have
-      already resolved or re-confirmed all 19 — verify none silently vanish) → add the archive banner to both → run the
-      codex-alignment check (no new durable contract from this batch, confirm still true) → grep the corpus for every
-      referrer of either doc and fix each path to point at the archived location → clear `locked_by` (already empty on
-      both, confirm). **Done when**: both plans are moved to `plans/archive/2026_07/`, every corpus referrer resolves to
-      the new path, and this finalize doc itself gets archived alongside them in the same commit.
+- [ ] [DOC] P1. **Archive `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`** via the standard 6-step
+      ritual (per CLAUDE.md's plan-archival rule). **Corrected 2026-08-18 (plan_reconciler cross-cutting)**: this
+      todo used to say "archive both" — batch1
+      (`cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`) is ALREADY archived (confirmed present at
+      `/plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`; this doc's own `related:`
+      frontmatter already cited that archived path correctly, line 19). Only batch1b (currently down to 1 open todo,
+      grep-verified) still needs the ritual run. Steps: migrate any remaining Deferred items to a tracked todo
+      elsewhere (todo 2 above should have already resolved or re-confirmed all 19 — verify none silently vanish) →
+      add the archive banner → run the codex-alignment check (no new durable contract from this batch, confirm still
+      true) → grep the corpus for every referrer of batch1b and fix each path to point at the archived location →
+      clear `locked_by` (already empty, confirm). **Done when**: batch1b is moved to `plans/archive/2026_07/`, every
+      corpus referrer resolves to the new path, and this finalize doc itself gets archived alongside it in the same
+      commit.
 
 ## Progress Log
 

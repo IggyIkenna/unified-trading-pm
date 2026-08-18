@@ -60,9 +60,11 @@ context_scope:
 
 # DeFi satellite AO batch 3 — finalize
 
-> **🟡 status: draft** — inert until its parent `defi_satellite_ao_dispatch_batch3_2026_07_26.md` is operator-approved
-> (flipped to `active`) and dispatched. **Machine-gated on that plan** (`depends_on` + `gate_on_depends: true`) — the
-> dispatcher will not queue any todo below until all 12 of its tasks are `done`. `sequential: true` because todo 2
+> **status: active** — **corrected 2026-08-18 (plan_reconciler)**: this banner still said "🟡 status: draft — inert
+> until parent is operator-approved and dispatched" even though the frontmatter summary was already corrected
+> 2026-08-12 (a partial fix that missed this body copy). The parent `defi_satellite_ao_dispatch_batch3_2026_07_26.md`
+> was operator-approved, dispatched, and is now archived (`plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md`)
+> — this finalize plan is live and gating; todo 1 is still genuinely open. `sequential: true` because todo 2
 > (deferred re-check) needs todo 1's reconciliation first, and todo 4 (archival) must run last.
 
 ## Todos
