@@ -98,6 +98,30 @@ for priority live-check wherever the doc falls):
 
 (in progress — see Progress Log)
 
+## Carry-forward items resolution (all 4 grace-protected docs, personally re-read 2026-08-18)
+
+1. `pipeline_mode_partition_migration_2026_06_01.md` — Phase 1's 2 rider todos remain correctly open (KEEP-NA valid
+   through 2026-08-07). **Real small finding, still unfixed**: the "⚠️ NEEDS VERIFICATION 2026-07-21" banner's
+   recommendation (a live `gcloud storage ls`/manifest spot-check per asset_group to confirm whether `pipeline_mode=`
+   already landed as a side effect of other writer work) is STILL prose-only, not converted to a tracked `- [ ]` todo
+   — first flagged by na-eligibility-audit 2026-08-07 as "worth converting on a future pass," still true today
+   (2026-08-18). Doc is grace-protected this run (last touched inside the 12h window) — cannot fix now. **Filed**
+   below for a future pass to convert to `- [ ] [DIAG] P3.`.
+2. `daily_trading_analyst_llm_job_design_2026_07_29.md` §5 — the stale-codex-citation concern IS already tracked as
+   its own open todo 4 ("Fix the stale scheduled-jobs table in
+   `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`"). No gap — the carry-forward note's
+   worry was already answered correctly by the doc's own structure. No action needed.
+3. `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md` — the guard fix
+   (`agent-orchestrator@5c3dfb58c8`, 2026-08-14) that was supposed to stop re-dispatching the self-declared
+   not-AO-eligible residual-gaps todo **appears to be holding**: 4 recurrences were logged 2026-08-12→08-14 (slots
+   7/21/26/10), zero further recurrences logged since the fix landed, through today (2026-08-18, 4 days later). No
+   action needed — reporting the guard as confirmed-holding rather than leaving it an open question.
+4. `infra_ops_residual_migration_verification_2026_07_24.md` — the "repeatedly re-classified NA without the audit
+   ever running" pattern the carry-forward note worried about is now resolved a different way: na-eligibility-audit
+   2026-08-17 explicitly cites "NEVER-RE-LITIGATE rules" for each of the 3 remaining open items (a genuine multi-plan
+   judgment-call audit, an operator-deferred irreversible re-stamp, and a pointer-only design item) — a durable
+   determination, not a repeat non-decision. No action needed.
+
 ## Contradictions
 
 (in progress)
@@ -116,7 +140,10 @@ for priority live-check wherever the doc falls):
 
 ## Filed
 
-(in progress)
+1. `pipeline_mode_partition_migration_2026_06_01.md` — convert the prose-only "⚠️ NEEDS VERIFICATION 2026-07-21"
+   spot-check recommendation into a tracked `- [ ] [DIAG] P3.` todo (first identified by na-eligibility-audit
+   2026-08-07, still unconverted 2026-08-18). Deferred: doc is inside this run's 12h grace window — pick up on a
+   future pass once it ages out, or the next na-eligibility-audit/plan-reconcile run touching this doc.
 
 ## Archive candidates (operator review)
 
@@ -145,3 +172,8 @@ Wave 1 dispatched: 5 hunters, batches of 14-19 docs each (81 workable docs total
   na-eligibility-audit passes; the third (cross_cutting_2026-08-16) has real unfinished work (batches 5-9 + 7 named
   items), absorbed as this run's priority input. Tranche inventory: 174 docs (up from 150), 93 grace, 81 workable,
   partitioned into 5 batches. About to launch the single wave of 5 hunters (respecting the corrected 5-parallel cap).
+- **2026-08-18T02:35Z**: launched the wave of 5 hunter sub-agents (batches 0-4, 19/17/14/16/15 docs), running in the
+  background. While waiting, personally re-read all 4 grace-protected carry-forward items from the 2026-08-16 doc
+  (see "Carry-forward items resolution" above) — 3 of 4 need no action (already tracked / guard confirmed holding /
+  resolved via NEVER-RE-LITIGATE rules), 1 small real finding filed (pipeline_mode prose-todo conversion, deferred
+  to a future pass since the doc is grace-protected this run).
