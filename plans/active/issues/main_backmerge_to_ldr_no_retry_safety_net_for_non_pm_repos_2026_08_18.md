@@ -81,19 +81,19 @@ symptom for one repo/one tick — it does not close any todo below.
 
 ## Todos
 
-- [ ] [CI] P1. Make the `branch-health.yml` drift-tick safety-net FLEET-WIDE instead of `github.repository`-scoped:
+- [x] ✅ [CI] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` item 1 (na-eligibility-audit 2026-08-18). Make the `branch-health.yml` drift-tick safety-net FLEET-WIDE instead of `github.repository`-scoped:
       dispatch `main-backmerge-to-ldr.yml` for every `promotion_model: ldr_main` repo in `workspace-manifest.json`
       (the same repo-list read the AR-lag job in that file already does), not just `unified-trading-pm`. Without this,
       a single transient GHA failure strands any fleet repo's LDR until a human or a conflict_resolver notices.
       Provenance: escalation agt-cebebf, 2026-08-18.
-- [ ] [CI] P2. Fix the misleading comment in the `main-backmerge-to-ldr.yml` caller stub — it states the drift-tick is
+- [x] ✅ [CI] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` item 2 (na-eligibility-audit 2026-08-18, fix-location pointer corrected during extraction — see that item). Fix the misleading comment in the `main-backmerge-to-ldr.yml` caller stub — it states the drift-tick is
       "now handled by PM's branch-health.yml (every 30 min) which dispatches this workflow" and that "for non-PM repos
       the push trigger covers the common case". Both halves mislead: the cadence is hourly, and the dispatch never
       reaches non-PM repos at all, so the push trigger is not a "common case" fallback but the ONLY path. Edit the
       TEMPLATE in `unified-trading-pm/scripts/workflow-templates/` + `rollout-workflow-templates.sh` — never hand-edit
       the per-repo copies. Provenance: this comment directly misled the agt-cebebf investigation.
       Depends on the P1 todo landing first (the corrected wording depends on what the net actually becomes).
-- [ ] [CI] P2. Add a detection surface for a FAILED backmerge specifically, so this class is caught by monitoring
+- [x] ✅ [CI] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` item 3 (na-eligibility-audit 2026-08-18). Add a detection surface for a FAILED backmerge specifically, so this class is caught by monitoring
       rather than by a downstream promote PR conflicting: `branch-health.yml`'s lag-monitor already computes LDR↔main
       lag — assert additionally that the most recent `main-backmerge-to-ldr` run per repo did not end `failure`, and
       route it through the existing `notify-slack.yml` carrier with a state-transition `dedup_key`. Provenance:
@@ -115,6 +115,7 @@ stub's comment — the dispatch is `github.repository`-scoped, confirming non-PM
 checked clean before auto-merge was armed, per `ldr_to_main_fleet_promote.sh`'s `provenance_check_ok()` /
 `tier_a_merge_gate_ok()`.
 
+- **na-eligibility-audit 2026-08-18** [body-hash:ef6e0dc9d0973bd1]: RECLASSIFY (per-todo split) -- 3 of 4 open todos are bounded/deterministic with cited existing patterns (workspace-manifest.json repo-list read, notify-slack.yml dedup_key carrier). Conflict-checked against 7 other active-plan hits on main-backmerge-to-ldr/branch-health.yml (different axes: git-ref hygiene, CI cost/billing, stuck-queued-run cleanup, template-hosting location, self-hosted-runner migration cost, an already-shipped different-DECISION escalation-resolution poll) -- none claims this scope/comment/detection-surface work. Extracted to cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md items 1-3. Remaining 1 item stays assigned_vm: NA: todo 4 (evaluate a warm local action-cache), explicitly self-framed in-doc as an open investigation with an uncertain answer. Corrected a stale fix-location pointer in todo 2 while extracting (unified-trading-pm/scripts/workflow-templates/ no longer hosts main-backmerge-to-ldr.yml; migrated to unified-trading-ci 2026-08-07/08). Cross-cutting tranche audit.
 ## Triage recipe for the next instance of this class
 
 A promote PR reported as `merge_conflict` is NOT necessarily a code conflict. Before resolving anything, spend three
