@@ -338,41 +338,93 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       size and its real outcome metrics (turns/tokens/compacted) joinable in one query. **Extracted 2026-08-18
       (na-eligibility-audit, ao tranche) → `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 4** —
       conflict-checked clear. Track dispatch/completion there, not here.
-- [ ] [BACKEND] P2. **New, operator ask 2026-08-18 — hourly, clock-aligned time-series aggregation per
-      (provider, role_group).** Build a new endpoint (extending `server/fleet_kpis.py`'s existing
-      `DailyDispatchEfficiency` pattern to hourly granularity, not a parallel mechanism) that buckets by FIXED UTC
-      clock-hour boundaries (00:00, 01:00, 02:00, ... — `GROUP BY` the hour, never a trailing "last N hours from now"
-      window, which is a DIFFERENT shape from every existing `window_hours` lookback endpoint in this codebase, e.g.
-      the wallet-reconciliation panels' 1h/24h/7d/Lifetime — operator explicitly flagged this distinction, don't
-      conflate the two). Range defaults to since-inception (the earliest `task_usage`/`account_usage_history` row) but
-      accepts an operator-supplied `start`/`end`. Each hour bucket reports, per (provider, `task_role_group()`):
-      published API rate (`model_pricing.py`'s rate card — the headline number, not a computed effective rate), raw
-      token usage (4-way breakdown, reusing `window_task_usage_totals`'s categories), actual $ spent (from
-      `task_usage.spend_usd` / the relevant wallet reconciliation for subscription-shaped providers), task-completion
-      count, AND dispatch-ATTEMPT count (not just completions) — reusing `DispatchRetryStats`/`spawn_retry_count`
-      (`server/autospawn.py`, `server/orm.py`) plus the `activity_log` dispatch-event vocabulary
-      `fleet_kpis.py`'s own docstring already documents, generalized from fleet-wide to per-(provider, role). This is
-      the "trying a lot of times but not landing the task" signal the operator specifically wants visible, distinct
-      from and alongside the completion count. Done when: a real query over a real historical range returns hourly
-      buckets with all five series populated for at least one provider/role pair, and a burst (a real hour with
-      materially more dispatches/tokens than its neighbors) is visibly identifiable in the raw output.
-- [ ] [UI] P2. **New, operator ask 2026-08-18 — adopt a charting library (operator's explicit choice over a
+- [x] [BACKEND] P2. **New, operator ask 2026-08-18 — hourly, clock-aligned time-series aggregation per
+      (provider, role_group).** Built `fleet_kpis.compute_hourly_provider_role_usage()` (extends
+      `compute_dispatch_efficiency_by_day`'s UTC-calendar-day pattern to hourly, per the plan's own instruction — not a
+      parallel mechanism), bucketed by FIXED UTC clock-hour boundaries (`_hour_bucket()` truncates to
+      minute=second=microsecond=0, never a rolling window). Exposed as `GET /api/backlog/usage/hourly-series` in
+      `server/routes/backlog.py` (`provider`/`role_group`/`start`/`end` query params, same AND-composing/laissez-faire
+      convention as `/api/backlog/usage/windows`); range defaults to `fleet_kpis.earliest_usage_timestamp()` (MIN across
+      `task_usage.completed_at` and `task_dispatched` activity rows) when `start` omitted. Each bucket reports
+      published rate(s) actually in use (`model_pricing.rates_for()` per distinct model seen that hour — never an
+      averaged blend across models), 4-way token usage, $ spend (poisoned to None by any unpriced row, same rule as
+      `window_task_usage_totals`), completed-task count, and dispatch-ATTEMPT count. Dispatch attempts resolve
+      provider via `slot_account_attribution.resolve_turn_account()` against `tmux_spawn.session_name(slot_id)` (a
+      `task_dispatched` activity event's own `details_json` carries no account_id — confirmed via direct read of
+      `routes/slots_worker.py:709-715`); role_group resolves via `state_store.task_role_group()` (same taxonomy
+      `/api/backlog/usage/windows` already filters on), not `RoleDispatchEfficiency.role`'s finer raw-role bucketing.
+      New Pydantic views: `HourlyUsageBucketView`/`HourlyModelRateView` in `server/models/backlog.py`.
+      **Evidence — real query against a real seeded DB** (`dashboard/tests/e2e/fixtures/seed_e2e_state.py`'s own
+      fixture, via the real `run-e2e-backend.sh` mock-mode env, not a synthetic script):
+      ```
+      hour=2026-08-18T05:00:00+00:00 provider=anthropic role_group=planning task_count=2 dispatch_attempts=2
+      hour=2026-08-18T06:00:00+00:00 provider=deepseek  role_group=cicd     task_count=1 dispatch_attempts=5
+      ```
+      The 06:00 bucket is the burst — 5 dispatch attempts landing only 1 completion, visibly identifiable against the
+      05:00 bucket's healthy 2-attempts/2-completions neighbor, satisfying the "done when" bar verbatim. Full backend
+      quality gate green (`bash scripts/quality-gates.sh --no-fix`: ruff/basedpyright 0 errors, pytest 4022 passed/7
+      skipped).
+- [x] [UI] P2. **New, operator ask 2026-08-18 — adopt a charting library (operator's explicit choice over a
       hand-rolled SVG alternative, since this dashboard has zero charting precedent today — confirmed via
-      `dashboard/package.json`, no recharts/chart.js/d3/victory/visx/nivo anywhere).** Add the dependency, confirm it
-      composes cleanly with this dashboard's existing `tsc --noEmit` / vitest / prettier / bundle-size expectations
-      before building anything on top of it. Done when: a minimal proof-of-concept chart renders real data from the
-      new hourly endpoint above, with `pw:L2 ✓` per `/codex/06-coding-standards/ui-testing-layers.md`.
-- [ ] [UI] P2. **New, operator ask 2026-08-18 — shared popup/modal chart component, launched from MULTIPLE entry
-      points, not duplicated per-panel.** One component consuming the new hourly endpoint (provider/role/date-range
-      filters), opened via a launch button/icon added to BOTH `FleetKpis.tsx` (the KPI panel) AND each wallet-
-      reconciliation / task-usage panel (`ClaudeWalletPanel.tsx`, `DeepSeekWalletPanel.tsx`, `KimiWalletPanel.tsx`,
-      `TaskUsageWindows.tsx`) — the operator's own framing ("in each of the wallet reconciliations or the task usage
-      breakdowns, you could spin it up from there"). Depends on the two todos above (needs real data + the charting
-      dependency in place first). Done when: the popup opens from at least two distinct entry points and renders the
-      same live data both times, with `pw:L2 ✓` covering at least one entry point's launch-and-render path.
+      `dashboard/package.json`, no recharts/chart.js/d3/victory/visx/nivo anywhere).** Added `recharts@^3.10.1`
+      (the actively-maintained major — 2.x is deprecated upstream, confirmed via `npm install`'s own deprecation
+      warning before switching; React 16-19 peer range, compatible with this dashboard's React 18.3). Composes cleanly:
+      `npm run typecheck`/`test`/`format:check` all green, `npm audit`'s pre-existing 8 vulnerabilities are all
+      transitive dev-tooling (vite/vitest/postcss/esbuild/babel/nanoid) unchanged before/after adding recharts —
+      confirmed by diffing `npm audit --json` output pre/post. Proof-of-concept chart:
+      `dashboard/src/UsageTimeSeriesModal.tsx` (`ComposedChart` — dispatch-attempts/tasks-completed bars +
+      spend line, dual y-axis, custom tooltip) renders real data from the new hourly endpoint. `pw:L2 ✓` —
+      `dashboard/tests/e2e/usage-time-series.spec.ts`, 3/3 passed against the real e2e stack.
+- [x] [UI] P2. **New, operator ask 2026-08-18 — shared popup/modal chart component, launched from MULTIPLE entry
+      points, not duplicated per-panel.** One component (`UsageTimeSeriesModal.tsx`) consuming the new hourly endpoint
+      (provider/role-group filter toggles reusing `TaskUsageWindows.tsx`'s own `ROLE_GROUP_FILTER_OPTIONS`), opened via
+      an "Usage over time" button added to the `Panel`'s `right` slot in ALL FIVE named entry points: `FleetKpis.tsx`,
+      `ClaudeWalletPanel.tsx` (pre-scoped `initialProvider="anthropic"`), `DeepSeekWalletPanel.tsx` (pre-scoped
+      `"deepseek"`), `KimiWalletPanel.tsx` (pre-scoped `"kimi"`), `TaskUsageWindows.tsx` (pre-scoped to that panel's
+      own current filter selection) — one implementation, five launch sites, not five copies.
+      **Real bug found + fixed while wiring this** (not pre-existing scope, a genuine regression this feature's FleetKpis
+      entry point was the first to expose): `.topbar` sets `backdrop-filter` for its frosted-glass look, which per the
+      CSS spec establishes a new containing block for `position: fixed` descendants — the shared `Modal` component
+      (`components.tsx`) was never portaled, so a Modal instantiated from inside a TopBar popover (FleetKpisMenu's
+      "KPIs" dropdown) rendered fixed-relative-to-the-144px-tall-topbar instead of the viewport, landing its content
+      far outside clickable/visible bounds (confirmed via `getBoundingClientRect()`: `.modal-back` measured
+      `144px` tall instead of the full `720px` viewport). Fixed by portaling `Modal` to `document.body` via
+      `createPortal` — a general fix benefiting every future modal-in-popover case, not a workaround scoped to this
+      feature. That portal in turn broke `usePopover`'s outside-click detection (a portaled modal's DOM node is no
+      longer a descendant of the popover's own `ref`, so any click inside it read as "click outside the popover" and
+      closed it, unmounting the modal); fixed with an explicit `.closest(".modal-back")` carve-out in
+      `layout.tsx`'s `usePopover`. Both fixes are small, targeted, and verified via the real Playwright run below —
+      not present in any other Modal usage's behavior (confirmed all other Modal call sites render from `App.tsx`'s
+      top level, never nested inside a TopBar popover, so this bug never manifested before).
+      **Evidence**: `dashboard/tests/e2e/usage-time-series.spec.ts` — 3/3 passed real end-to-end runs: (1) opens from
+      FleetKpis's "KPIs" popover, renders a real chart; (2) opens from ClaudeWalletPanel, pre-scoped to anthropic,
+      renders the same live data; (3) changing the provider filter from "All providers" to "Anthropic" re-fetches and
+      the burst-note banner (only present for deepseek's HOUR_B burst) correctly disappears. New fixture data:
+      `dashboard/tests/e2e/fixtures/seed_e2e_state.py`'s `E2E_USAGE_TS_*` constants — two real UTC-hour-anchored
+      buckets (anthropic/planning healthy pattern + deepseek/cicd deliberate 5-attempts/1-completion burst), with
+      dedicated `AgentRow` rows on slots 2/6 so `slot_account_attribution` has real intervals to resolve against.
 
 ## Progress Log
 
+- **2026-08-18 (implementation) — all 3 hourly-usage-chart todos shipped, uncommitted in the working tree.**
+  `agent-orchestrator` files touched: `server/fleet_kpis.py` (new `compute_hourly_provider_role_usage`,
+  `earliest_usage_timestamp`), `server/models/backlog.py` + `server/models/__init__.py` (new
+  `HourlyUsageBucketView`/`HourlyModelRateView`), `server/routes/backlog.py` (new `GET
+  /api/backlog/usage/hourly-series`), `dashboard/package.json` (+`recharts@^3.10.1`), new
+  `dashboard/src/UsageTimeSeriesModal.tsx` + `.test.ts`, `dashboard/src/{FleetKpis,ClaudeWalletPanel,
+  DeepSeekWalletPanel,KimiWalletPanel,TaskUsageWindows}.tsx` (launch button wiring), `dashboard/src/components.tsx`
+  (Modal portal fix — see the 3rd todo above for why), `dashboard/src/layout.tsx` (usePopover click-outside carve-out
+  — same root cause), `dashboard/src/styles.css` (`.usage-ts-tooltip`), new
+  `dashboard/tests/e2e/usage-time-series.spec.ts`, `dashboard/tests/e2e/fixtures/seed_e2e_state.py`
+  (`E2E_USAGE_TS_*` fixture block). Backend quality gate green (ruff/basedpyright/4022 pytest); dashboard
+  typecheck/408 vitest/format:check green; new Playwright spec 3/3 passed against the real e2e stack. Judgment calls
+  made without an operator ruling (flagged, not hidden): exact endpoint path/param names
+  (`/api/backlog/usage/hourly-series?provider=&role_group=&start=&end=`, mirroring `/api/backlog/usage/windows`'s
+  existing convention); burst-detection threshold (`dispatch_attempts >= 3 AND >= 2x task_count`, chosen so a single
+  crash/timeout requeue never false-flags); modal styling (plain `Modal`/`Panel` reuse, `ComposedChart` with dual
+  y-axis — bars for attempts/completions, line for spend — token totals surfaced via tooltip/rates-line rather than a
+  5th chart series, to avoid a scale mismatch against attempt/completion counts). No todo's "done when" bar was
+  infeasible — real historical spread existed (or was fixture-added) for every claim above.
 - **2026-08-18 (/plan-brainstorm) — 3 new todos added: hourly per-provider/per-role usage time-series + chart UI.**
   Operator ask: plot usage over time per provider, broken down by role, showing published API rates/usage/real $
   spent/task-completion counts, PLUS dispatch-attempt counts (not just completions — "trying a lot of times" without
