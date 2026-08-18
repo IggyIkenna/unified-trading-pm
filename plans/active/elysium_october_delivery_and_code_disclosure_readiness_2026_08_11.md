@@ -909,7 +909,7 @@ Ten planning docs carry this delivery, ~215 open todos between them — listed s
 | `strategy_service_expansion_overlays_config_and_wizard_2026_08_12` | draft | 24/5     |
 | `elysium_carveout_stubbed_strategy_service_2026_08_12`           | draft  | 17/5      |
 | `issues/path_registry_dead_mode_kwarg_…_2026_08_15`              | open   | 2/1       |
-| `issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15` | open | 1/0     |
+| `archive/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15` | **resolved+archived 2026-08-18** | 1/1 |
 
 **Artefact sources** (`/codex/14-customer-journeys/commercial-model/`): `platform-architecture.html` ·
 `carveout-engineering.html` · `strategy-service-deep-dive.html` · `ODUM_Elysium_Phase2_Update_2026-07-24.html` ·

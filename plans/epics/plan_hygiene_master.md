@@ -36,6 +36,11 @@ last_updated: 2026-07-12 # was 2026-05-23 — stale vs newer body entries; corre
 
 # Plan Hygiene Master
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/14b55091-1930-4bbb-90bb-d9a31f5801d4 (generated 2026-08-18,
+`/plan-reconcile plan_hygiene_master`)
+
 Routine maintenance of `plans/active/` and `plans/epics/` run by Ikenna and Harsh on the planning VM. Prevents the
 recurring failure mode where agent refactors silently collapse todos, leave orphaned plans, or let the plan corpus drift
 from codex.
@@ -171,11 +176,14 @@ single-walk discipline) consistently aligned. Residual items:
 - [x] ✅ [PLAN] P2. **2 RESOLVED issue docs archived** — `quality_gates_sh_missing_sentinel_write_2026_05_29` +
       `check_staging_lock_ruleset_hygiene_2026_05_29` both self-declared `status: RESOLVED` + "Issue archives." with 0
       open todos; moved to `plans/archive/2026_06/` this session (issue-doc-lifecycle HARD RULE).
-- [ ] [PLAN] P1. **Stale 2026-05-23 deadline framing** (today is past the milestone) —
-      `master_to_live_defi_2026_05_23.md` + ~10 cross-refs (INDEX, `aws_cloud_toggle_and_backfill_parity`,
-      `human_work_backlog`) still use future-tense "live by 2026-05-23 / pre-/post-cutover". Slot-1 owns the master-plan
-      refresh: re-date to actual status or archive if the cutover executed. (Master plan was dirty/in-flight at sweep
-      time — coordinate before editing.)
+- [x] ✅ [PLAN] P1. **Stale 2026-05-23 deadline framing — RESOLVED by archival (verified 2026-08-18,
+      /plan-reconcile).** All 3 named targets are gone from `plans/active/`: `master_to_live_defi_2026_05_23.md` is now
+      at `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` (`status: complete`); the 2 named cross-refs
+      (`aws_cloud_toggle_and_backfill_parity_2026_05_22.md`, `human_work_backlog_2026_05_20.md`) are both archived under
+      `plans/archive/2026_05/`. `plans/active/INDEX.md` no longer cites `master_to_live_defi` at all (0 hits). The
+      remaining ~28-doc corpus-wide `rg` hit count for "live by 2026-05-23"/"pre-cutover"/"post-cutover" phrasing is
+      historical Progress-Log narrative in unrelated active docs describing past milestones, not a live future-tense
+      claim about an un-executed cutover — out of this item's original 3-target scope, not re-opened here.
 - [x] ✅ [PLAN] P2. **DEFERRED items with placeholder successors** — resolved per-item audit 2026-06-25: -
       `tradfi_cfe_vx_futures_<date>` → **RESOLVED/MOOT**: VX futures via Databento XCBF.PITCH shipped + is
       CLAUDE.md-canonical (2026-06-24); `tradfi_datasource_closeout_krx_yahoo_parity_2026_06_24.md` 100% done. Named

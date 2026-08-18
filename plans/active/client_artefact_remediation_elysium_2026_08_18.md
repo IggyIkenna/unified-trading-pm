@@ -62,50 +62,57 @@ Full evidence for every finding is in the audit reports listed in `related:`. Do
 
 ## Accuracy fixes
 
-- [ ] [DOC] P0. **Fix the instruction-type count in §01/§03** — says "9 Instruction types" / "The nine action
+- [x] [DOC] P0. ✅ **Fix the instruction-type count in §01/§03** — says "9 Instruction types" / "The nine action
       types" and enumerates 9; the real `StrategyInstructionV2` union has **11**, missing `TransferInstructionV2`
       and `BridgeInstructionV2`. `/codex/04-architecture/strategy-execution-protocol.md` has correctly said 11 all
-      along, so the codex was right and only this document drifted.
-- [ ] [DOC] P0. **Fix §02's strategy-family list** — shows 5 families including an invented "Liquidity provision".
+      along, so the codex was right and only this document drifted. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P0. ✅ **Fix §02's strategy-family list** — shows 5 families including an invented "Liquidity provision".
       The real `StrategyFamily` enum has 9 members: `ML_DIRECTIONAL, RULES_DIRECTIONAL, CARRY_AND_YIELD,
       ARBITRAGE_STRUCTURAL, MARKET_MAKING, EVENT_DRIVEN, VOL_TRADING, STAT_ARB_PAIRS, PORTFOLIO`. "Carry" and
       "Dispersion" are not separate families — they fold into `CARRY_AND_YIELD` and `VOL_TRADING`. This exact
-      correction was already applied to `strategy-service-deep-dive.html` and never reached here.
-- [ ] [DOC] P0. **Soften §11 "Automated movement"** — presented as functioning capability under a `partial` badge.
+      correction was already applied to `strategy-service-deep-dive.html` and never reached here. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P0. ✅ **Soften §11 "Automated movement"** — presented as functioning capability under a `partial` badge.
       Measured: `_ensure_default_handlers()` registers only `SUBACCOUNT_MOVE`; `CEX_WITHDRAW` is commented
       "NOT WIRED"; gas top-up/floor has no handler and no reserve-threshold logic anywhere; `REBALANCE` is
       enum-only; and `TransferCoordinator` is never instantiated in production code. The measured reality is closer
-      to no production entry point at all than to a working subset.
-- [ ] [DOC] P0. **Re-grade every `live` badge in this file to `partial`** — all 10 of them. The re-grade audit
+      to no production entry point at all than to a working subset. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P0. ✅ **Re-grade every `live` badge in this file to `partial`** — all 10 of them. The re-grade audit
       searched the whole workspace for positive real-capital evidence (a real fill, a mainnet transaction, a
       reconciled live P&L, a funded live client) and found none, so no section survives the conjunctive test. This
-      is the definition working as designed, not a writing defect.
-- [ ] [DOC] P1. **Add the custody explanatory note, do NOT edit the `SigningSurface` list** — the audit's original
+      is the definition working as designed, not a writing defect. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P1. ✅ **Add the custody explanatory note, do NOT edit the `SigningSurface` list** — the audit's original
       finding here was a FALSE POSITIVE. Ceffu is a stub ("STUB pending API spec" in the factory), its absence from
       the enum is deliberate (`CEFFU_ROUTES_VIA_COPPER_NOTE` — its signing routes via Copper), and Fireblocks is
-      `SigningSurfaceStatus.OUT_OF_SCOPE`. Editing the list would make the document wrong; explain the design.
-- [ ] [DOC] P1. **Fix the stale §05→§08 cross-reference** — the determinism proof is in §09.
-- [ ] [DOC] P1. **Fix the CeFi spot-pair instrument-ID example** — uses instrument-type token `SPOT`; the real one
+      `SigningSurfaceStatus.OUT_OF_SCOPE`. Editing the list would make the document wrong; explain the design. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P1. ✅ **Fix the stale §05→§08 cross-reference** — the determinism proof is in §09. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P1. ✅ **Fix the CeFi spot-pair instrument-ID example** — uses instrument-type token `SPOT`; the real one
       is `SPOT_PAIR`. The other ID examples verified correct against `build_canonical_instrument_id()`, and all
-      named venues are correctly bound in `VENUE_TO_ADAPTER_KEY` — one wrong token, not a systemic problem.
-- [ ] [DOC] P0. **Remove the invented family's 2 hits in this file** (see § accuracy above) — the
-      `platform-architecture.html` and `carveout-engineering.html` instances belong to the siblings child.
+      named venues are correctly bound in `VENUE_TO_ADAPTER_KEY` — one wrong token, not a systemic problem. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P0. ✅ **Remove the invented family's 2 hits in this file** (see § accuracy above) — the
+      `platform-architecture.html` and `carveout-engineering.html` instances belong to the siblings child. **Shipped `unified-trading-pm@171dc40739`.**
 - [ ] [DOC] P2. **Soften §12's capital-budget "enforced by construction" claim** — the wallet-funding framing is
       narrower and more defensible than the owning plan's still-`UNVERIFIED` enforcement line.
 - [ ] [DOC] P2. **Caveat the hard `paper == batch-rerun` equality near §08/§09** — the now-default-ON dynamic
       universe lacks the manifest pinning that equality depends on (owning plan § H.8, open P0).
 - [ ] [REVIEW] P1. **Resolve the two re-verification findings that did not confirm** — 4 of 6 came back CONFIRMED;
       the remaining 2 need a verdict before this document ships.
+- [ ] [REVIEW] P1. **Verify §11's "Manual movement" claim, which likely overstates reachability the same way the
+      automated path did.** It states manual transfers "use the same instruction types and the same rails as
+      automated ones" — but `TransferCoordinator` is never instantiated in production and only `SUBACCOUNT_MOVE` has
+      a registered handler, so "the same rails" may describe a path that does not exist either. Raised 2026-08-18 by
+      the agent that reframed the automated half; it deliberately did **not** fix this, because it had not traced
+      the manual route's actual code path and would have been asserting rather than verifying. Trace the real route
+      first, then correct or confirm.
 
 ## Disclosure and completeness
 
-- [ ] [DOC] P1. **Add a scope statement near the top** stating this describes the full production repository and
+- [x] [DOC] P1. ✅ **Add a scope statement near the top** stating this describes the full production repository and
       naming its intended audience — distinct from the future carve-out package. Without it a future editor could
-      wrongly narrow this document to the carve-out's tighter scope.
-- [ ] [DOC] P1. **Add a carve/hosted split note to §09** distinguishing strategy-owned position/fee/PnL
-      reconciliation from custodian-spanning balance/transfer reconciliation, which sits closer to withheld IP.
-- [ ] [DOC] P2. **Name the "strategy reads only processed data, never MTDS directly" invariant explicitly** —
-      grep-confirmed absent. This document is its natural home.
+      wrongly narrow this document to the carve-out's tighter scope. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P1. ✅ **Add a carve/hosted split note to §09** distinguishing strategy-owned position/fee/PnL
+      reconciliation from custodian-spanning balance/transfer reconciliation, which sits closer to withheld IP. **Shipped `unified-trading-pm@171dc40739`.**
+- [x] [DOC] P2. ✅ **Name the "strategy reads only processed data, never MTDS directly" invariant explicitly** —
+      grep-confirmed absent. This document is its natural home. **Shipped `unified-trading-pm@171dc40739`.**
 - [ ] [DOC] P2. **Add mirrored-custody routing content (§11)** — the two-custodian mirroring model, without the
       banned product name (see the siblings child for why that name never appears).
 - [ ] [DOC] P2. **Add funding-route / per-client custody binding content (§11)**.
@@ -121,8 +128,8 @@ Full evidence for every finding is in the audit reports listed in `related:`. Do
 
 ## Evidence tiers and readiness
 
-- [ ] [DOC] P0. **Apply the parent's evidence-tier spec to every claim-bearing section in this file** — default
-      `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol inline.
+- [x] [DOC] P0. ✅ **Apply the parent's evidence-tier spec to every claim-bearing section in this file** — default
+      `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol inline. **Shipped `unified-trading-pm@171dc40739`.**
 - [ ] [DOC] P1. **Give every claim-bearing section its owner mark** (workstream / plan / epic that closes it), per
       `system_readiness_master.md` W21's closure invariant.
 - [ ] [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content** — never probed.

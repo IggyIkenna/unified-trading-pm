@@ -18,7 +18,7 @@ created: 2026-03-27
 authoritative_for: [os.getenv ban and UnifiedCloudConfig-only config sourcing standard]
 referenced_by: [/codex/06-coding-standards/config-reloader-pattern.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-08-18
 code_refs:
 ---
 
@@ -105,6 +105,29 @@ reloader.start_watching()
 ```
 
 Full wiring guide: `unified-trading-pm/codex/08-workflows/config-injection.md` — Service Wiring Pattern.
+
+### Gotcha: a `DomainConfig` subclass still auto-reads `.env` — narrow schemas need `extra="ignore"` (2026-08-18)
+
+Every `DomainConfig` (`unified_trading_library/config_interface/domain_configs.py`) subclasses `BaseConfig`, which is
+a `pydantic_settings.BaseSettings`. Even though a domain config is meant to be populated from a ConfigStore/GCS JSON
+payload — not raw env vars — `BaseSettings` still merges `.env` as an ADDITIONAL construction source on every
+instantiation, regardless of what's explicitly passed in code. A real deployment's `.env` carries dozens of keys for
+OTHER config classes across the fleet; a narrow domain schema (e.g. `StrategyDomainConfig` declares only `domain`/
+`enabled_strategies`/`strategy_params`) with `extra="forbid"` (`BaseConfig`'s default) rejects construction the
+moment ANY of those unrelated keys is present — independent of whether the actual JSON payload passed was valid.
+
+This bit `StrategyDomainConfig` and (the execution-service-local, non-UTL) `ExecutionPolicyDomainConfig` in
+practice: both crashed with `pydantic_core.ValidationError` on a machine with a normal `.env` copied from
+`.env.example`, confirmed by direct repro (`cp .env.example .env` + construct). Fixed both via
+`model_config = SettingsConfigDict(extra="ignore", ...)`, mirroring existing precedent elsewhere in the codebase
+(`strategy_service/risk/config.py`, `unified_trading_library/config_interface/cloud_config.py`/`ml_config.py`).
+
+**As of 2026-08-18, only 2 of the 9 `DomainConfig`-family classes carry this fix** — `InstrumentDomainConfig`,
+`ClientDomainConfig`, `VenueDomainConfig`, `TickerUniverseConfig`, `RiskDomainConfig`, `AlertRuleDomainConfig`,
+`RateLimitDomainConfig`, and `FeatureFlagDomainConfig` still inherit `extra="forbid"` and carry the identical latent
+risk (a real `.env` present at construction time crashes them too). Not fixed fleet-wide in that pass — narrower
+scope than what was tracked. A future author adding a new `DomainConfig` subclass, or auditing the remaining 7,
+should apply the same `extra="ignore"` fix rather than rediscovering this mechanism per-class.
 
 ---
 

@@ -54,6 +54,13 @@ paused: ["ag_closeout", "cefi_mtds_smoke", "ci_reconcile"]
 `scheduled_dispatch_pause.py` stores this as a bare `set[str]` — no timestamp, no reason. The
 three reasons below come from the operator directly (2026-08-18 chat), not from any system field.
 
+**Update, same day**: operator explicitly authorized resuming `ci_reconcile` only (`ag_closeout`
+and `cefi_mtds_smoke` stay paused — the smoke test in particular for VM-capacity reasons). Resumed
+via `POST /api/scheduled-dispatch/ci_reconcile/resume` and verified end-to-end: a triggered dispatch
+returned `status: "queued"` (the modern AutoSpawn-drain queue path, not the old "paused by operator"
+503) — the pause is genuinely lifted, not just API-flipped. Current paused set as of this update:
+`["ag_closeout", "cefi_mtds_smoke"]`. See the `ci_reconcile` section below for the resume rationale.
+
 ## `cefi_mtds_smoke` — paused: cost/orphan-resource risk, pending deployment-service registration
 
 The smoke test spins up real cloud resources and currently consumes too much of them. Before
@@ -76,15 +83,15 @@ that in-flight work rather than complement it.
 **Unblocks when**: the current manual reconciliation wave settles — operator judgment call, not a
 fixed date.
 
-## `ci_reconcile` — paused: intentionally manual, pending confidence in escalation routing
+## `ci_reconcile` — RESUMED same day (was: intentionally manual, pending confidence in escalation routing)
 
-CI reconciliation is being run manually as a daily task on purpose, not via the automated timer,
-until there's more confidence and stability in how `/ci-reconcile` findings should route into
-escalation tasks. This is a deliberate maturity gate, not a bug workaround — the operator wants to
-observe the manual process for longer before trusting the timer to run it unattended.
-
-**Unblocks when**: the operator judges the CI-reconcile-to-escalation routing pattern stable
-enough to automate.
+Originally paused so CI reconciliation ran manually as a daily task rather than via the automated
+timer, until there was more confidence in how `/ci-reconcile` findings route into escalation tasks.
+Later the same day (2026-08-18), the operator judged that gate satisfied and explicitly authorized
+resuming the timer — a considered decision, not a temporary test-then-repause. Resumed via
+`POST /api/scheduled-dispatch/ci_reconcile/resume`; a triggered dispatch immediately after came back
+`status: "queued"` (queue_key `ci_reconciler:-:2026-08-18`), confirming the timer now hits the
+normal capacity/queue path instead of the "is paused by operator" 503.
 
 ## Repeated `no_capacity` dashboard rows while paused (separate gap, found 2026-08-18)
 
@@ -117,13 +124,21 @@ itself "done," so the next natural tick after unpause dispatches normally with n
       fix for the gap this doc exists to paper over by hand — without it, every future watchdog
       run (or operator) has to re-ask "why is this paused" from scratch, exactly as happened here
       and in the 2026-08-11 incident. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Stop `record_scheduled_job_run()` from inserting a fresh row on every tick for a
+- [x] [SCRIPT] P2. Stop `record_scheduled_job_run()` from inserting a fresh row on every tick for a
       known-paused mode's 503 — route it through an upsert keyed by `(job, tranche)` (mirroring
       `queue_scheduled_job`'s dedup-by-key pattern in the same file) so the Scheduled Jobs dashboard
       shows one persistent, in-place-updating row per paused job instead of one new row per ~15-30min
       tick. No catch-up/drain logic needed on resume (see section above — both affected jobs are
-      periodic rechecks, not one-shot crons). (repo: agent-orchestrator)
-- [ ] [REVIEW] P3. Once `ci_reconcile`'s manual-daily-task period produces enough signal on
+      periodic rechecks, not one-shot crons). — agent-orchestrator@6bfd8eef9f (7 new tests, full
+      quality-gates.sh green). Also shipped a one-shot `POST /api/scheduled-jobs/purge-no-capacity`
+      admin endpoint (status=no_capacity ONLY, never touches dispatched/queued/quarantined/timeout/
+      error rows) to retroactively clear rows inserted before this fix; verified live 2026-08-18 —
+      deploy confirmed via ao-self-pull (405 on the new route = live), then invoked once after the
+      `ci_reconcile` resume below verified working: **purged 1301 historical no_capacity rows**.
+- [x] [REVIEW] P3. Once `ci_reconcile`'s manual-daily-task period produces enough signal on
       escalation-routing reliability, resume the timer and archive this doc's `ci_reconcile`
       section (or the whole doc, if all three have resolved by then). (repo: NA — operator
-      judgment call on timing)
+      judgment call on timing) — operator judged it satisfied 2026-08-18 and authorized the resume
+      (see updated `ci_reconcile` section above); `ag_closeout`/`cefi_mtds_smoke` remain paused,
+      untouched. Not archiving the doc/section since `ag_closeout`/`cefi_mtds_smoke` and follow-up 1
+      are still open.

@@ -1,9 +1,10 @@
 ---
 title: "unified-api-contracts: kamino DeFi venue fails execution-service reachability cascade invariant"
-status: open
+status: resolved
 assigned_vm: NA
 execution_scope: local-only
 created: 2026-08-15
+last_updated: "2026-08-18"
 tags: [uac, execution-service, defi, venue-coverage-cascade, ci-blocking]
 nature: issue
 doc_type: issue
@@ -11,12 +12,12 @@ asset_group: defi
 stage: execution
 repos: [unified-api-contracts]
 scope: engineer
-summary: "unified-api-contracts venue-coverage cascade invariant fails on kamino DeFi venue (no reachable execution-service connector) — pre-existing on origin HEAD, blocks quickmerge fleet-wide."
-related: [defi_consolidated_closeout_2026_07_18]
+summary: "unified-api-contracts venue-coverage cascade invariant failed on kamino DeFi venue (no reachable execution-service connector) — RESOLVED 2026-08-17: both kamino and morpho left the reachability baseline (unified-api-contracts@9b982906), the CI-incident this doc tracked is fully closed."
+related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 parent_epic: uac_master
 priority: P2
 source: "discovered while shipping cefi_satellite_ao_dispatch_batch19-0b70e8929bb9"
-resolved_by: ""
+resolved_by: "unified-api-contracts@9b982906fa4a65e2f800006577fb08642f897cbf (2026-08-17) — 'test(venue-reachability): unstale kamino/morpho from baseline (already wired)'; commit reachable on origin/live-defi-rollout, clean tree, verified 2026-08-18 by /plan-reconcile"
 locked_by: ""
 drift_direction: advance-code
 depends_on: []
@@ -31,6 +32,15 @@ context_scope:
 ---
 
 # uac_kamino_venue_reachability_cascade_regression_2026_08_15
+
+> **✅ RESOLVED 2026-08-18 — ARCHIVED (ACKED-INTO-CODE).** Both `kamino` and `morpho` left
+> `unreachable_defi_venues` on 2026-08-17 (`unified-api-contracts@9b982906`, "unstale kamino/morpho from baseline
+> (already wired)" — `DeFiAdapter` already dispatches both via its `morpho_connector`/`kamino_connector` params,
+> confirmed by that commit's own `quality-gates.sh` run). Verified live 2026-08-18 by reading the current
+> `tests/data/execution_service_venue_reachability_baseline.json` on a clean `origin/live-defi-rollout` checkout:
+> `unreachable_defi_venues` is now `["karak", "pendle"]` — no `kamino`/`morpho` entry remains. This doc's sole open
+> todo ("close this doc once morpho and kamino leave the baseline") is satisfied; archiving per
+> `/codex/11-project-management/issue-doc-lifecycle.md`.
 
 ## Finding
 
@@ -97,9 +107,12 @@ _"do not grow this list except by re-running the measurement and reviewing the d
 permitted with a re-measurement and review, which is what `kamino` was. A strictly shrink-only
 reading would have forced a rushed wiring fix during an unrelated ship.
 
-- [ ] [AGENT] P2. **Close this doc once `morpho` and `kamino` leave the baseline** — and per the
-      ratchet convention, remove each in the SAME change that wires its dispatcher path, never as
-      a separate cleanup.
+- [x] [AGENT] P2. **DONE — `morpho` and `kamino` left the baseline 2026-08-17** —
+      `unified-api-contracts@9b982906fa4a65e2f800006577fb08642f897cbf` ("unstale kamino/morpho from baseline
+      (already wired)"). `DeFiAdapter` already dispatched both via `morpho_connector`/`kamino_connector`; the
+      removal was verified by that commit's own `quality-gates.sh` run and re-confirmed live 2026-08-18
+      (`/plan-reconcile uac_master`) by reading the current baseline file on a clean checkout: `["karak", "pendle"]`
+      only. Closing this doc — see the RESOLVED banner above.
 - **na-eligibility-audit 2026-08-16** [body-hash:01a99120392fffec]: KEEP-NA, valid — This is a resolved CI-incident doc: the fleet-wide unified-api-contracts quality-gates.sh block (kamino DeFi venue failing the execution-service venue-coverage-cascade invariant) was fixed via the sanctioned remediation-2 path (added kamino to the reachability baseline with a measured root-cause note) on 2026-08-15, verified green (991s quality-gates.sh run) on 2026-08-16 — the doc explicitly states 'this issue is closed as a CI incident, not as a capability gap.' The sole remaining open todo (line 92, '[AGENT] P2. Close this doc once `morpho` and `kamino` leave the
 baseline') stays open until the P0 dispatcher-wiring work in
 `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` lands and both venues can be removed from the
@@ -109,3 +122,16 @@ reachability baseline in that same change, per the ratchet convention this doc's
   `unreachable_defi_venues: ["morpho", "kamino"]` baseline content (`unified-api-contracts@88a71f8e`) and the same
   test file, actively tracking the wiring work that would let both venues leave the baseline (this doc's own sole
   open todo). context_scope added on both docs.
+- **`/plan-reconcile uac_master` 2026-08-18**: Phase 2 done-but-unchecked sweep found this doc's sole open todo
+  HARD-evidenced done — `unified-api-contracts@9b982906` (2026-08-17, reachable on origin/live-defi-rollout, clean
+  tree) removed both `kamino`/`morpho` from `unreachable_defi_venues`; live-read confirmed the current baseline is
+  `["karak", "pendle"]`. Flipped the checkbox, fixed the `related:` bare-slug finding
+  (`plan_reconciler_findings_defi_2026_08_18.md`) in the same pass, added `last_updated`, and archived this doc
+  per `/codex/11-project-management/issue-doc-lifecycle.md` (ACKED-INTO-CODE). Referrers repointed:
+  `plans/epics/uac_master.md`, `plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16.md`,
+  `plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`,
+  `plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`. No new codex SSOT content
+  needed — the substantive kamino/morpho wiring facts already live in
+  `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (still active) and the
+  UAC baseline file's own description field, not solely in this now-archived doc. **NOT SHIPPED this pass** —
+  working-tree only, per operator instruction; the lead session commits/pushes.

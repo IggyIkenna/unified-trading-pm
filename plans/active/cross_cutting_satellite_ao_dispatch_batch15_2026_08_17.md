@@ -208,19 +208,26 @@ source: >-
 
 ## From `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
 
-- [ ] [AGENT] P3. Fix `StrategyDomainConfig` (`extra="forbid"`) breaking `TestStrategySafeFieldAllowList` against a
+- [x] [AGENT] P3. Fix `StrategyDomainConfig` (`extra="forbid"`) breaking `TestStrategySafeFieldAllowList` against a
       normal local `.env` matching `.env.example`'s own defaults — use `extra="ignore"` or construct the test via
       `_env_file=None`. Source: `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`.
       Repo: strategy-service. Done-when: the test passes on a machine with a normal `.env` matching
-      `.env.example`'s defaults, without the move-aside-and-restore workaround. **Note (2026-08-18, added while
-      tracking `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`)**: this
-      same blocker currently also blocks 2 already-fixed, verified, uncommitted GCS-compliance changes sitting in
-      this repo's working tree — `scripts/trace_all_carry_archetypes.py` + `scripts/position/capture_phase_9_evidence.py`
-      (raw `google.cloud.storage` → UTL `get_storage_client()`, see that doc's § "Category-2 remediation results").
-      When this config fix lands, `git status`/`git diff` those 2 files and commit them alongside it — don't lose
-      them chasing the config bug alone. An identical-CLASS `extra_forbidden` failure was also found independently
-      blocking execution-service; see
-      `/plans/active/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md`.
+      `.env.example`'s defaults, without the move-aside-and-restore workaround. **✅ DONE (2026-08-18)** — root
+      cause: `StrategyDomainConfig` actually lives in `unified-trading-library`
+      (`unified_trading_library/config_interface/domain_configs.py`), not strategy-service; as a `BaseSettings`
+      subclass it auto-reads `.env` on every construction, and its narrow 3-field schema + inherited
+      `extra="forbid"` rejected any of `.env`'s many unrelated keys. Fixed via `extra="ignore"` (matching existing
+      precedent: `strategy_service/risk/config.py`, UTL's `cloud_config.py`/`ml_config.py`). Verified: all 4
+      `TestStrategySafeFieldAllowList` tests pass with a real `.env` present; strategy-service's full
+      `quality-gates.sh` green. Shipped `unified-trading-library@1da1a095d4`. The 2 riding GCS-compliance changes
+      (`scripts/trace_all_carry_archetypes.py` + `scripts/position/capture_phase_9_evidence.py`) were also
+      redone (the original uncommitted edits no longer existed in any local checkout) and shipped together:
+      `strategy-service@20e9602e96`. The identical-CLASS `extra_forbidden` failure independently blocking
+      execution-service was also fixed the same session — see
+      `/plans/archive/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md` (shipped
+      `execution-service@3448247dba`). **New finding, not fixed**: 7 more `DomainConfig`-family classes in the
+      same UTL file share this identical shape (narrow schema + inherited `.env`-reading + `extra="forbid"`) and
+      carry the same latent risk — out of scope for this todo, flagged for a follow-up.
 - [ ] [AGENT] P2. Migrate Kamino's `supply()`/`withdraw()` uncited `0x01`/`0x02` discriminator bytes to Kamino's
       real Transactions API (`POST /ktx/klend/{deposit,withdraw}`), the same pattern already used for this
       connector's own `borrow()`/`repay()`. Source:

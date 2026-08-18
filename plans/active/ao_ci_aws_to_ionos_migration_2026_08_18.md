@@ -4,14 +4,15 @@ title: Migrate AO + CI Runner from AWS to IONOS Cloud Cubes
 summary:
   Move agent-orchestrator-vm-1 and ci-escalation-runner-vm-1 off AWS EC2 to IONOS Cloud Cubes for cost — building the
   first-ever VM create/bootstrap/decommission launcher for either box as a provider-abstracted shim so a future move to
-  another cloud is a config change, not a rewrite.
+  another cloud is a config change, not a rewrite. AWS boxes are stopped, not terminated — retained as a documented,
+  agent-executable disaster-recovery standby (90-day minimum floor).
 status: draft
 nature: design
 asset_group: [ao, ci, infrastructure]
 stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer, admin]
-tags: [migration, cost, cloud-agnostic, ionos, aws, vm-launcher, infra]
+tags: [migration, cost, cloud-agnostic, ionos, aws, vm-launcher, infra, disaster-recovery]
 related:
   [
     /plans/active/defi_compute_gcp_migration_2026_08_08.md,
@@ -28,8 +29,8 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P1
 estimate_class: infra
-estimate_baseline_ai_days: 16
-estimate_calibrated_ai_days: 13
+estimate_baseline_ai_days: 17
+estimate_calibrated_ai_days: 14
 assigned_role: infra
 effort: high
 drift_direction: advance-code
@@ -72,6 +73,23 @@ credential re-provisioning, and a live DNS/traffic cutover — judgment calls, n
 - **Prior, unrelated**: `defi_compute_gcp_migration_2026_08_08.md` explicitly carved AO + CI-runner OUT of its GCP
   migration scope ("stay on AWS per operator instruction, already right-sized this same session") — that carve-out is
   what this plan now reverses, ten days later, for cost reasons that plan didn't weigh.
+- **2026-08-18, operator decision**: AO/CI's cloud-agnosticism reuses the existing `CLOUD_PROVIDER` + UCI-factory
+  pattern (`/codex/05-infrastructure/cloud-agnostic-script-pattern.md`) rather than inventing a parallel mechanism —
+  `bootstrap_vm.sh`'s own `CLOUD_PROVIDER` toggle (already cleanly separate from UTL's storage-client selection; AO's
+  server code never branches storage on it) gets `ionos` added directly as a third value. Whether AO/CI should instead
+  depend on a slimmed standalone cloud-abstraction package rather than full `unified_trading_library` (avoids the
+  scipy/pandas dependency weight — relevant if AO/CI is ever leased or self-hosted separately from the core trading
+  system) was raised and deliberately deferred: `cloud_interface` stays inside UTL for now, extraction to its own
+  package scoped as a **~March 2027** initiative, not blocking this migration. Logged as an Open Question in
+  `cloud-agnostic-script-pattern.md` for future pickup.
+- **2026-08-18, operator decision**: neither AWS box is terminated. Both are **stopped and retained as a documented,
+  agent-executable disaster-recovery standby**, minimum **90-day** retention floor (re-evaluate no earlier than
+  **2026-11-16**, `[OPERATOR]`-gated — continued retention vs. termination is a human call each time, never an
+  automatic follow-on). Rationale: AWS's observability/debug tooling (CloudWatch, SSM, Cost Explorer) is more mature
+  than anything IONOS offers or that this plan builds fresh — going all-in on a single, newly-adopted provider for both
+  compute boxes felt premature. This reverses §4/§5's original "terminate" framing — see the rewritten §4/§5 P3 todos
+  and the new §6 DR-runbook todo. EBS volumes, Elastic IPs, and the existing CloudWatch/EventBridge config are all
+  retained on both AWS boxes specifically so restart-and-serve stays a real option, not a from-scratch rebuild.
 
 ## Why (cost baseline from this session's research)
 
@@ -81,6 +99,13 @@ Cost Explorer, not the inflated CloudWatch `NetworkOut` metric which also counts
 Projected on IONOS Basic Cube XL ($65.52/mo, 16vCPU/32GB/960GB NVMe, first 2TB/mo egress pooled-free per contract):
 ~$65.52 × 2 boxes + near-zero egress overage at current traffic, materially cheaper even before weighing CI-runner
 right-sizing.
+
+**DR-standby overhead (new, 2026-08-18 decision)**: keeping both AWS boxes stopped (not terminated) is not free —
+EBS volume storage keeps billing at the stopped rate, and Elastic IPs bill ~$0.005/hr each regardless of attach state
+since Feb 2024. Rough estimate (not a live AWS quote): AO's 700GiB EBS + EIP ≈ $65-70/mo; CI-runner's 290GB EBS + EIP
+≈ $30/mo — **~$95-105/mo combined** during the retention window. Net savings vs. today's ~$1,700/mo AWS spend are
+still ~$1,470/mo (~86%) even carrying both boxes as a standby; confirm the exact figure against the real invoice per
+§6's existing invoice-reconciliation todo, extended to net out this overhead too.
 
 ## Full-execution criterion (per CLAUDE.md "Plans Run To Actual Completion" HARD RULE)
 
@@ -94,10 +119,10 @@ right-sizing.
   reporting healthy.
   - **What ran**: a canary workflow (`reconcile-release-tags`) targeting `self-hosted,glue`.
   - **Verification**: the GHA run URL, showing SUCCESS, claimed by the new runner's hostname/label.
-- ✅ Both AWS boxes are terminated (not just stopped) after their confidence windows, and the DR snapshot restore path is
-  proven against the new provider.
-  - **Verification**: `aws ec2 describe-instances --region ap-northeast-1` shows `terminated`; a real
-    `restore_from_gcs.sh --vm-id <id>` dry-run against the IONOS box's own snapshot succeeds.
+- ✅ Both AWS boxes are **stopped (not terminated)** after their confidence windows and retained as documented DR
+  standbys, with a proven ≤1-hour agent-executable failback runbook — not decommissioned.
+  - **Verification**: `aws ec2 describe-instances --region ap-northeast-1` shows `stopped` (not `terminated`) for both
+    boxes; a real timed dry-run of the §6 failback runbook completes within 1 hour, elapsed time logged.
 - ✅ Zero session-transcript or eval-results history is lost in the cutover — the two backup gaps found this session
   (§2) are closed and verified BEFORE either AWS box stops, not discovered missing after.
   - **Verification**: for each AWS box, a transcript/results file present locally immediately pre-stop is confirmed
@@ -120,23 +145,38 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       (`arn:aws:sts::427895769566:assumed-role/uts-orchestrator-epic-role`, `setup-glue-runners.sh`) — breaks outright
       off AWS. Evaluate: (a) a WIF provider bound to whatever attestation IONOS exposes, (b) a GCP service-account key
       file provisioned via bootstrap + GSM instead of WIF, (c) fallback to a rotated `GH_PAT` literal (already flagged
-      elsewhere as the weaker option). Done-when: a Progress Log entry names the chosen mechanism + why.
+      elsewhere as the weaker option). **Operator-confirmed 2026-08-18**: try (a) first, per the Handoff exception
+      above; fall back to (b)/(c) only if genuinely blocked. Done-when: a Progress Log entry names the chosen mechanism
+      + why.
 - [ ] [DESIGN] P1. Decide CI-runner's remote-access model to replace AWS SSM (today's *only* remote-exec path — zero
       SSH, zero inbound security-group rules). IONOS has no SSM equivalent. Evaluate SSH with key-based auth restricted
-      to an admin IP allowlist (IONOS Cloud Firewall) vs. a jump host vs. an agent-based tool. Done-when: a written
-      decision on access model + firewall posture, logged in the Progress Log.
+      to an admin IP allowlist (IONOS Cloud Firewall) vs. a jump host vs. an agent-based tool. **Still open
+      2026-08-18**: this is specifically about the CI-runner's admin shell/exec channel (rare, ops-only — debugging,
+      pushing a fix directly), a different surface from the AO dashboard (already JWT/login-authed over public HTTPS,
+      not IP-gated, reachable from any device). Needs a direct answer to "IP-allowlist the admin-exec channel, or does
+      that need remote/mobile reachability too?" before this can close. Done-when: a written decision on access model +
+      firewall posture, logged in the Progress Log.
 - [ ] [DESIGN] P1. Decide the AO metrics/recovery replacement for the AWS CloudWatch agent (mem/swap/disk) and the
       EventBridge+Lambda auto-reboot-on-alarm mechanism (`agent-orchestrator-api-host.md`) — both AWS-native, no IONOS
-      equivalent. Evaluate a plain systemd/self-hosted metrics exporter driving recovery off the existing
-      `GET localhost:8765/health` endpoint instead of a cloud-native alarm. Done-when: a written decision.
+      equivalent, needed for the **IONOS** box only. Evaluate a plain systemd/self-hosted metrics exporter driving
+      recovery off the existing `GET localhost:8765/health` endpoint instead of a cloud-native alarm. **Note (2026-08-18
+      DR-standby decision)**: the AWS box's own existing CloudWatch agent + EventBridge/Lambda config is left running
+      untouched — it's part of what makes the retained AWS box a real, monitorable standby, not dead weight. Done-when:
+      a written decision for the IONOS replacement.
 - [ ] [DESIGN] P1. Design the provider-abstraction shape for VM lifecycle (create/start/stop/delete + floating-IP +
       firewall) covering AWS EC2 and IONOS Cloud API today, shaped so a third provider is a new case, not a rewrite —
       extend the `--cloud-provider {aws,gcp}` convention already threaded through `bootstrap_vm.sh` rather than
-      inventing a parallel mechanism. Done-when: a short design note (Progress Log or a codex stub) names the
-      abstraction's shape and which ad hoc AWS/GCP branches it replaces.
+      inventing a parallel mechanism. **Dependency scope resolved 2026-08-18** (see Decision log): this is a
+      `bootstrap_vm.sh`-local extension only, not a new shared library — `cloud_interface` stays inside
+      `unified_trading_library` for now. Target architecture: extract it into a standalone cloud-abstraction package
+      (no scipy/pandas dependency chain) that AO/CI would depend on instead of full UTL — scoped as a ~March 2027
+      initiative (leasability/self-host argument, see `cloud-agnostic-script-pattern.md` Open Questions), not this
+      migration. Done-when: a short design note (Progress Log or a codex stub) names the abstraction's shape and which
+      ad hoc AWS/GCP branches it replaces.
 - [ ] [DESIGN] P1. Decide CI-runner's IONOS sizing. Current `m8i.2xlarge` is 8vCPU/32GB; no exact Cube tier matches
-      (Basic Cube L = 8vCPU/16GB, Basic Cube XL = 16vCPU/32GB). Done-when: a written decision (accept over-provisioned
-      XL, downsize to L's 16GB RAM, or evaluate IONOS Memory Cubes) with the cost delta noted.
+      (Basic Cube L = 8vCPU/16GB, Basic Cube XL = 16vCPU/32GB). **Operator-confirmed 2026-08-18**: Basic Cube XL,
+      accepting the over-provisioned-cost delta rather than risking memory pressure on the 25-pool runner load at L's
+      16GB. Done-when: a Progress Log entry records the confirmed tier + the cost delta vs. L.
 
 ## §2. Build — the portable launcher + bootstrap extension (depends on §1 decisions landing first)
 
@@ -146,19 +186,26 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       running it against IONOS produces a reachable Basic Cube XL with SSH open only to the §1 admin allowlist.
 - [ ] [INFRA] P1. Extend `bootstrap_vm.sh`'s `--cloud-provider` branch with `ionos` (or the generalized path from §1)
       for: IMDSv2-equivalent metadata lookup, external-IP resolution, and self-registration private-IP lookup — each
-      currently AWS/GCP-only with an `unknown-vm` fallback already present. Done-when:
-      `bootstrap_vm.sh --cloud-provider ionos` completes on a fresh Cube with zero AWS-specific call failures.
+      currently AWS/GCP-only with an `unknown-vm` fallback already present. Also flip the script's own default off
+      `CLOUD_PROVIDER="${CLOUD_PROVIDER:-aws}"` (line 56) once IONOS is primary, or require the flag explicitly — a
+      bare invocation must not silently fall into AWS-specific branches on an IONOS box. Done-when:
+      `bootstrap_vm.sh --cloud-provider ionos` completes on a fresh Cube with zero AWS-specific call failures, and a
+      flagless invocation on an IONOS box fails loud rather than guessing `aws`.
 - [ ] [INFRA] P1. Replace the AWS Secrets Manager calls in `bootstrap_vm.sh` with the GCP-Secret-Manager-only path from
-      §1; keep the AWS branch working unchanged for any box still on AWS mid-transition. Done-when: a fresh IONOS
-      bootstrap fetches every needed secret with zero AWS API calls in its trace.
-- [ ] [INFRA] P2. Drop the CloudWatch agent install from the `ionos` branch; wire the §1 metrics/recovery replacement.
-      Done-when: `systemctl status` on the IONOS box shows the replacement running, no `amazon-cloudwatch-agent` unit
-      present.
+      §1; keep the AWS branch working unchanged for any box still on AWS mid-transition (including the retained
+      DR-standby boxes, which still need their existing secrets flow to work if ever restarted). Done-when: a fresh
+      IONOS bootstrap fetches every needed secret with zero AWS API calls in its trace.
+- [ ] [INFRA] P2. Drop the CloudWatch agent install from the `ionos` branch only; wire the §1 metrics/recovery
+      replacement there. The AWS branch's CloudWatch agent install stays untouched (needed for the retained AWS
+      DR-standby boxes). Done-when: `systemctl status` on the IONOS box shows the replacement running, no
+      `amazon-cloudwatch-agent` unit present; the AWS branch is unchanged (diff shows no AWS-path deletions).
 - [ ] [INFRA] P2. Author the paired `scripts/vm-winddown.sh --provider {aws,ionos} --instance <id>` — also net-new
       (today's cost control is a manual `aws ec2 stop-instances`) — that snapshots final state (reusing the existing
-      `restore_from_gcs.sh`-compatible SnapshotLoop artifact), deregisters DNS if applicable, and stops/deletes the
-      instance. Done-when: run against a disposable test box on either provider, nothing left billing, a resumable
-      snapshot left in GCS.
+      `restore_from_gcs.sh`-compatible SnapshotLoop artifact), deregisters DNS if applicable, and **stops** (never
+      deletes/terminates — no `--terminate` flag exists on the AWS path; deletion is IONOS-only, for disposable test
+      boxes) the instance. Done-when: run against a disposable test box on either provider, nothing left billing on
+      IONOS after a delete, a resumable snapshot left in GCS, and the AWS path leaves the instance in `stopped` state
+      with its EBS/EIP intact.
 - [ ] [INFRA] P2. Fix every hardcoded reference to AO's Elastic IP `13.113.200.22` to resolve through the DNS name
       `api.agent-orchestrator.odum-research.com` instead — named instances: `orchestrator_vm_registry.yaml`,
       `install_ldr_to_main_promote_heartbeat.sh`, `install_qg_baseline_daily_promote.sh`,
@@ -194,8 +241,8 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
 - [ ] [INFRA] P1. Wire BOTH of the above into `vm-winddown.sh` (§2's new decommission script) as the one-time
       pre-stop backup step — this is the ONLY invocation point for either upload (no periodic `SnapshotLoop` wiring,
       per operator directive). Done-when: running `vm-winddown.sh` against a test box confirms its transcripts and
-      eval-results both land in GCS/S3 before the instance stops. **§4's and §5's AWS-VM stop/terminate todos are
-      gated on this landing first** — do not stop either AWS box until this exists and has been verified.
+      eval-results both land in GCS/S3 before the instance stops. **§4's and §5's AWS-VM stop todos are gated on this
+      landing first** — do not stop either AWS box until this exists and has been verified.
 - [ ] [DOC] P2. Document the two closed gaps + the new `transcripts/`/`eval-results/` GCS/S3 key layout in
       `vm-log-archival.md` (the existing canonical-paths SSOT for exactly this class of problem) — note there
       explicitly that these two are one-time migration-triggered backups, unlike every other row in that doc's table
@@ -203,10 +250,10 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
 
 ## §3. IONOS account setup
 
-- [ ] [OPERATOR] P0. Create the IONOS Cloud contract/account, generate API credentials for the §2 launcher, store them
-      in GCP Secret Manager per the §1 consolidation decision. Genuine vendor-signup step only a human can do (payment
-      method, account terms). Done-when: an IONOS API token exists in GSM and `vm-launch.sh --provider ionos --dry-run`
-      authenticates successfully.
+- [ ] [OPERATOR] P0. Create the IONOS Cloud contract/account — **signup in progress 2026-08-18**. Remaining: generate
+      API credentials for the §2 launcher, store them in GCP Secret Manager per the §1 consolidation decision.
+      Done-when: an IONOS API token exists in GSM and `vm-launch.sh --provider ionos --dry-run` authenticates
+      successfully.
 
 ## §4. AO cutover (sequenced — each step follows the last; independent of §5)
 
@@ -222,13 +269,14 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
 - [ ] [OPERATOR] P1. Cut DNS (`api.agent-orchestrator.odum-research.com`) over to the IONOS floating IP. Live-traffic
       cutover with real blast radius — only proceed once the §2 hardcoded-IP fix has landed. Done-when: DNS resolves to
       the new IP and every consumer identified in §2's IP-reference sweep confirms working against the new box.
-- [ ] [INFRA] P2. After a stability window (propose 7 days), **stop** (don't yet delete) AWS AO VM
-      `i-0c9b283b31d6b5ca7` via `vm-winddown.sh` — this is the point where §2's one-time transcript/eval-results backup
-      actually fires for AO. Done-when: stopped, EIP disposition decided, Progress Log records the stop date + a
-      rollback note (how to restart it if the IONOS box has a problem).
-- [ ] [INFRA] P3. After a second, longer confidence window (propose 30 days), terminate the AWS AO VM and its EBS
-      volume for good. Done-when: `aws ec2 describe-instances` shows `terminated`, and the final month's GCS DR
-      snapshot is confirmed restorable.
+- [ ] [INFRA] P2. After a stability window (7 days), **stop** AWS AO VM `i-0c9b283b31d6b5ca7` via `vm-winddown.sh` —
+      this is the point where §2's one-time transcript/eval-results backup actually fires for AO. Done-when: stopped,
+      EIP kept allocated (not released), Progress Log records the stop date + confirms the box is the DR standby per
+      the Decision log (not a termination candidate).
+- [ ] [OPERATOR] P3. **Not termination** — re-evaluate AO's AWS DR-standby status no earlier than **2026-11-16** (90
+      days from the stop date). This is a standing review checkpoint, not an automatic action: at that point, decide
+      whether to keep retaining it, extend the window, or finally terminate. Done-when: a Progress Log entry records
+      the 2026-11-16 (or later) review outcome — do not action this before the date without a fresh operator decision.
 
 ## §5. CI-runner cutover (sequenced; independent of §4 — different files, different box)
 
@@ -238,31 +286,49 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
 - [ ] [INFRA] P1. Confirm a real canary workflow (`reconcile-release-tags`, per
       `central-vm-relaunch-glue-runner-reinstall.md`'s own verification step) claims and completes a job on the new
       IONOS runner. Done-when: a GHA run URL showing SUCCESS on the new runner's label.
-- [ ] [INFRA] P2. Run the IONOS CI-runner in parallel with the AWS one for a real window (propose 7 days) — confirm no
-      missed jobs vs. the fleet capacity already tuned in `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`.
-      Done-when: N days logged, job throughput comparable, zero missed dispatches.
-- [ ] [INFRA] P3. Stop, then (after a longer window) terminate AWS CI-runner VM `i-042a6332509482556` — the CI-runner's
-      one-time §2 backup fires at the stop step, same as AO's; confirm every `self-hosted,glue` workflow in
-      `self-hosted-qg-repos.txt` routes only to the IONOS runner. Done-when: terminated per `describe-instances`, zero
-      jobs claimed by the old instance's runner ID in the trailing week.
+- [ ] [INFRA] P2. Run the IONOS CI-runner in parallel with the AWS one for a real window (7 days) — confirm no missed
+      jobs vs. the fleet capacity already tuned in `ci_runner_fleet_split_and_vm_rightsizing_2026_08_03.md`. Done-when:
+      7 days logged, job throughput comparable, zero missed dispatches.
+- [ ] [INFRA] P3. After the 7-day parallel-run window, **stop** (do not terminate) AWS CI-runner VM
+      `i-042a6332509482556` — the CI-runner's one-time §2 backup fires at this stop step, same as AO's; confirm every
+      `self-hosted,glue` workflow in `self-hosted-qg-repos.txt` routes only to the IONOS runner. Done-when: stopped
+      (not terminated) per `describe-instances`, EBS retained (no public EIP on this box — SSM-only, same as its
+      pre-migration access model, per `central-vm-relaunch-glue-runner-reinstall.md`), zero jobs claimed by the old
+      instance's runner ID in the trailing week.
+- [ ] [OPERATOR] P3. **Not termination** — re-evaluate CI-runner's AWS DR-standby status no earlier than **2026-11-16**
+      (90 days minimum, same floor as AO's, standing review checkpoint). Done-when: a Progress Log entry records the
+      review outcome — do not action before the date without a fresh operator decision.
 
 ## §6. Cleanup, validation, and documentation
 
 - [ ] [INFRA] P1. Verify the 2 stray `ci-bootstrap-verify-*` EC2 instances (`i-00c7135c266ed54b9`, `i-0b896cf7f365c9569`
       — confirmed still running as of 2026-08-17, tied to a blocked todo in `ci_satellite_ao_dispatch_batch13_2026_08_13.md`
       gated on an SSM IAM gap) are genuinely idle, then terminate them; note the cleanup in that batch doc's blocked
-      todo so it isn't rediscovered as a surprise. Done-when: both terminated, cross-reference added.
+      todo so it isn't rediscovered as a surprise. Done-when: both terminated, cross-reference added. (Unrelated to the
+      AO/CI-runner DR-standby decision above — these two are disposable verification scratch instances, not the
+      production boxes.)
+- [ ] [DOC] P1. **New, 2026-08-18**: author the AWS DR-standby failback runbook — `/codex/15-runbooks/aws-dr-standby-failback-ao-ci.md`
+      (with `owner`/`cadence`/`verifier`/`last_executed` frontmatter per CLAUDE.md's runbook requirement) — covering,
+      for both boxes: `aws ec2 start-instances`, re-verifying CloudWatch/SSM/SnapshotLoop resume cleanly after restart,
+      re-pointing DNS (`api.agent-orchestrator.odum-research.com`) back to the AWS EIP if IONOS is the one that's down,
+      re-verifying CI-runner's GHA registration and pool health, and a rollback note for un-doing the failback once
+      IONOS recovers. Must be written so an agent with zero tribal knowledge of this migration can execute it
+      correctly — exact commands, no "you'll know it when you see it" steps. Done-when: a real timed dry-run (starting
+      one of the stopped boxes, walking the runbook, confirming it serves real traffic/claims a real job) completes in
+      **under 1 hour**, elapsed time and any friction points logged in the Progress Log, then the box is re-stopped.
 - [ ] [INFRA] P2. After both cutovers, confirm the actual first full-month IONOS invoice against the ~$65.52×2 +
-      near-zero-egress projection from this plan's "Why" section. Done-when: invoice total logged in the Progress Log
-      against the projected figure, with the delta explained if any.
+      near-zero-egress projection from this plan's "Why" section, **and** confirm the AWS DR-standby overhead against
+      the ~$95-105/mo estimate. Done-when: both invoice totals logged in the Progress Log against their projected
+      figures, with deltas explained if any.
 - [ ] [DOC] P2. Fill in `cloud-agnostic-build-lineage.md` (currently an unwritten `status: draft` stub) with the
       provider-abstraction pattern actually built in §2 — its own outline item 6 ("VM launchers … resolve
       cloud-specific tarball URI") is exactly this work. Done-when: the stub is replaced with real content citing
       `vm-launch.sh`/`vm-winddown.sh`, `status:` flips off `draft`.
 - [ ] [OPERATOR] P2. Update `cloud-spend-forecast-and-credits-2026-08.md` to record that AO+CI-runner moved to IONOS
-      rather than GCP as originally committed, citing this plan + the 2026-08-18 decision. Not a re-litigation of the
-      GCP negotiation — flag to whoever owns it, since this changes a number in a live external negotiation. Done-when:
-      the doc no longer reads as the current commercial position for this specific spend.
+      rather than GCP as originally committed, citing this plan + the 2026-08-18 decision, and to note the AWS spend
+      isn't fully zeroed out (DR-standby overhead ~$95-105/mo). Not a re-litigation of the GCP negotiation — flag to
+      whoever owns it, since this changes a number in a live external negotiation. Done-when: the doc no longer reads
+      as the current commercial position for this specific spend.
 
 ---
 
@@ -272,6 +338,7 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
   `/codex/05-infrastructure/cloud-agnostic-build-lineage.md` (stub — §6 fills it in), `/codex/05-infrastructure/agent-orchestrator-deploy.md`,
   `/codex/05-infrastructure/vm-tarball-deployment.md`, `/codex/07-security/self-hosted-runner-security-posture.md`,
   `/codex/15-runbooks/central-vm-relaunch-glue-runner-reinstall.md`,
+  `/codex/15-runbooks/aws-dr-standby-failback-ao-ci.md` (new — §6 authors it),
   `/codex/11-project-management/cloud-spend-forecast-and-credits-2026-08.md` (§6 updates it).
 
 ## Progress Log
@@ -291,3 +358,35 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
   drop all `SnapshotLoop` periodic-tick wiring — `vm-winddown.sh` is now the sole invocation point for both uploads,
   fired once per box at its stop step (§4/§5). Simpler scope: no new background-thread cadence to build or verify,
   just two upload functions plus one call site.
+- **2026-08-18**: Discussed whether AO/CI's cloud-agnosticism should follow the fleet-wide `CLOUD_PROVIDER`/UCI-factory
+  pattern (`cloud-agnostic-script-pattern.md`) and which library it should depend on. Confirmed `bootstrap_vm.sh`'s
+  `CLOUD_PROVIDER` toggle is already cleanly separate from UTL's storage-client selection (AO's server code never reads
+  it for storage; `gcs_sync.py` hardcodes both GCS+S3 explicitly for its Tier-4 dual-write) — extending it with `ionos`
+  is a low-risk, local change, no shared-library rework needed. Raised whether AO/CI should depend on a slimmed
+  standalone cloud-abstraction package instead of full UTL (leasability/self-hosting argument — UTL pulls
+  scipy/pandas/scikit-learn transitively, already proven painful for the CI VM's resource-history-sampler venv, see
+  `ci_vm_exposure_remediation_2026_08_06.md`). Operator decision: defer — `cloud_interface` stays under UTL for now,
+  extraction scoped to ~March 2027, not this migration (logged in `cloud-agnostic-script-pattern.md` Open Questions).
+  §1's provider-abstraction-shape todo updated to record this. Also flagged: `bootstrap_vm.sh` currently defaults
+  `CLOUD_PROVIDER` to `aws` (line 56) — needs to flip once IONOS is primary, else a bare invocation without an explicit
+  `--cloud-provider` flag silently tries AWS branches on an IONOS box; folded into §2's bootstrap-extension todo.
+- **2026-08-18**: Operator confirmed 3 of §1's open decisions in the interactive chat: (1) CI-runner GH credential —
+  try the IONOS WIF-equivalent first per the plan's existing Handoff exception, `GH_PAT` only if genuinely blocked; (2)
+  CI-runner sizing — Basic Cube XL, accepting the over-provisioned cost delta; (3) confidence windows — **7-day stop /
+  14-day terminate** for both AO and CI-runner. CI-runner's remote-access-model question (SSM replacement) got an
+  answer that reads as being about the AO **dashboard's** login/auth (mobile+laptop access, IP-allowlist friction)
+  rather than the CI-runner's admin-exec channel the question actually asked about — these are two different surfaces
+  (dashboard is already JWT/login-authed over public HTTPS per §4's DNS cutover, not IP-gated; CI-runner remote-exec is
+  a rare, admin-only ops path, not something touched from a phone day-to-day). Held open pending clarification.
+- **2026-08-18**: Operator revised the "14-day terminate" decision from the entry above — clarified they meant the AWS
+  boxes should be **stopped, not terminated at all**, kept as a long-term (**90-day minimum**) disaster-recovery
+  standby: AWS's observability/debug tooling is more mature than what IONOS offers or what this plan builds fresh, and
+  going all-in on one newly-adopted provider felt premature. Explicit requirement: the failback path must be
+  documented clearly enough that an agent (not just the operator) could execute it correctly within an hour. Rewrote
+  §4/§5's P3 "terminate" todos into "stop, retain, review-no-earlier-than-2026-11-16" todos; added a new §6 todo to
+  author `/codex/15-runbooks/aws-dr-standby-failback-ao-ci.md` and prove it via a real timed (<1hr) dry-run; updated
+  the Full-execution criterion, "Why" cost section (added the ~$95-105/mo standby overhead estimate, not yet a live
+  quote), and §1's CloudWatch/EventBridge design item to clarify the AWS-side config is kept, not replaced (only the
+  IONOS box needs a new metrics/recovery mechanism). Estimate bumped +1 baseline/+1 calibrated day for the new runbook
+  + dry-run work. CI-runner's remote-access-model question (previous entry) remains open regardless of this change —
+  it's about the admin-exec channel's auth model, orthogonal to the stop-vs-terminate decision.

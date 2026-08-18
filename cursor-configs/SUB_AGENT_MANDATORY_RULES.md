@@ -7,7 +7,8 @@
 ## Identity + workspace
 
 - **Multi-repo workspace** (NOT a monorepo) on `live-defi-rollout`; edit only your task's named repo. **Per-slot
-  worktrees (Path-B)**: each slot is a `git clone --reference` with its OWN `.git` (`tab/<op>/N` RETIRED). Stay current
+  worktrees (Path-B)**: each slot is a `git clone --reference` with its OWN `.git` (`tab/<op>/N` RETIRED). **Write ONLY under the absolute path your task names — a bare `<repo>/` path is ANOTHER
+  operator's live checkout, not yours; `realpath` your target before the first write.** Stay current
   `git pull --ff-only origin live-defi-rollout`; invariant = HEAD ancestor-or-equal of `origin/live-defi-rollout`. SSOT:
   `/codex/05-infrastructure/per-tab-worktrees.md`.
 - **Agent memory is BANNED (HARD RULE)**: never write to `memory/` or `MEMORY.md` — it's per-cwd, not inherited, and

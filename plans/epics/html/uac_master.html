@@ -1,0 +1,877 @@
+<!-- generated: 2026-08-18T00:00:00Z by /plan-reconcile uac_master (first reconcile pass since epic carve-out) -->
+<title>UAC Contract Registry</title>
+<style>
+  :root {
+    --bg: #f5f3ee;
+    --bg-raised: #ffffff;
+    --ink: #1c2128;
+    --ink-dim: #565f6d;
+    --ink-faint: #8892a0;
+    --rule: #d8d3c6;
+    --rule-strong: #b7b09e;
+    --accent: #0f6b63;
+    --accent-ink: #eafaf6;
+    --accent-soft: #e3efec;
+    --warn: #a24a1b;
+    --warn-soft: #f5e6da;
+    --crit: #8c2f2f;
+    --crit-soft: #f4e2df;
+    --stamp: #0f6b63;
+    --code-bg: #ece8dc;
+    --shadow: 0 1px 2px rgba(28, 33, 40, 0.06), 0 8px 24px -12px rgba(28, 33, 40, 0.18);
+    --serif: ui-serif, "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
+    --sans:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14181d;
+      --bg-raised: #1b2027;
+      --ink: #e9e6dc;
+      --ink-dim: #a3aab5;
+      --ink-faint: #6d7684;
+      --rule: #313944;
+      --rule-strong: #454f5c;
+      --accent: #4fc9ba;
+      --accent-ink: #0c211d;
+      --accent-soft: #1c2f2b;
+      --warn: #e0975a;
+      --warn-soft: #34281c;
+      --crit: #e08080;
+      --crit-soft: #331f1f;
+      --stamp: #4fc9ba;
+      --code-bg: #21262e;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #14181d;
+    --bg-raised: #1b2027;
+    --ink: #e9e6dc;
+    --ink-dim: #a3aab5;
+    --ink-faint: #6d7684;
+    --rule: #313944;
+    --rule-strong: #454f5c;
+    --accent: #4fc9ba;
+    --accent-ink: #0c211d;
+    --accent-soft: #1c2f2b;
+    --warn: #e0975a;
+    --warn-soft: #34281c;
+    --crit: #e08080;
+    --crit-soft: #331f1f;
+    --stamp: #4fc9ba;
+    --code-bg: #21262e;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 28px -14px rgba(0, 0, 0, 0.55);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      animation: none !important;
+      transition: none !important;
+    }
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 24px 96px;
+  }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    padding: 56px 0 32px;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  .eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 18px;
+  }
+
+  .seal {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid var(--stamp);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--stamp);
+    flex: none;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px);
+    line-height: 1.12;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    margin: 0 0 12px;
+  }
+
+  .dek {
+    font-size: 16px;
+    color: var(--ink-dim);
+    max-width: 62ch;
+    margin: 0 0 4px;
+  }
+
+  .gen-date {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 18px;
+  }
+
+  /* ---- Scope chips ---- */
+  .scope-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 22px 0 0;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border-radius: 3px;
+    border: 1px solid var(--rule-strong);
+    background: var(--bg-raised);
+    color: var(--ink-dim);
+  }
+
+  .chip.in {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: var(--accent-soft);
+  }
+
+  .chip.out {
+    text-decoration: line-through;
+    text-decoration-color: var(--ink-faint);
+    opacity: 0.75;
+  }
+
+  /* ---- Sections ---- */
+  section {
+    padding: 40px 0;
+    border-bottom: 1px solid var(--rule);
+  }
+
+  section:last-of-type {
+    border-bottom: none;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 22px;
+  }
+
+  .section-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 600;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .section-note {
+    color: var(--ink-dim);
+    font-size: 14px;
+    max-width: 68ch;
+    margin: -10px 0 22px;
+  }
+
+  /* ---- Stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--rule);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .stat {
+    background: var(--bg-raised);
+    padding: 20px 18px;
+  }
+
+  .stat-value {
+    font-family: var(--serif);
+    font-size: 32px;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .stat-value.accent {
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  /* ---- Registry cards (plan-by-plan) ---- */
+  .registry {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .card {
+    background: var(--bg-raised);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule-strong);
+    border-radius: 4px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+  }
+
+  .card.p0 {
+    border-left-color: var(--crit);
+  }
+
+  .card.p1 {
+    border-left-color: var(--warn);
+  }
+
+  .card.p2 {
+    border-left-color: var(--ink-faint);
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .card-title a {
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .card-title a:hover {
+    color: var(--accent);
+  }
+
+  .badge {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    padding: 3px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+  }
+
+  .badge.p0 {
+    background: var(--crit-soft);
+    color: var(--crit);
+  }
+
+  .badge.p1 {
+    background: var(--warn-soft);
+    color: var(--warn);
+  }
+
+  .badge.p2 {
+    background: var(--code-bg);
+    color: var(--ink-dim);
+  }
+
+  .card-desc {
+    color: var(--ink-dim);
+    font-size: 14px;
+    margin: 10px 0 14px;
+  }
+
+  .card-foot {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .tally {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .bar {
+    width: 64px;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--code-bg);
+    overflow: hidden;
+    display: inline-block;
+  }
+
+  .bar-fill {
+    height: 100%;
+    background: var(--accent);
+  }
+
+  .vm-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+  }
+
+  /* ---- Resolved (archived) card ---- */
+  .card.resolved {
+    border-left-color: var(--accent);
+    opacity: 0.92;
+  }
+
+  .stamp-mark {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.05em;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    border-radius: 3px;
+    padding: 3px 8px;
+    transform: rotate(-2deg);
+    display: inline-block;
+  }
+
+  /* ---- Scoping list ---- */
+  .scope-item {
+    background: var(--warn-soft);
+    border: 1px solid var(--warn);
+    border-radius: 4px;
+    padding: 16px 18px;
+  }
+
+  .scope-item h3 {
+    font-family: var(--sans);
+    font-size: 14.5px;
+    font-weight: 600;
+    margin: 0 0 6px;
+    color: var(--ink);
+  }
+
+  .scope-item p {
+    margin: 0;
+    font-size: 13.5px;
+    color: var(--ink-dim);
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.92em;
+    background: var(--code-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+  }
+
+  /* ---- Closed-out list ---- */
+  .closed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .closed-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    padding: 12px 0;
+    border-bottom: 1px dashed var(--rule);
+  }
+
+  .closed-row:last-child {
+    border-bottom: none;
+  }
+
+  .check {
+    flex: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-soft);
+    color: var(--accent);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    margin-top: 2px;
+  }
+
+  .closed-row p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--ink-dim);
+  }
+
+  .closed-row strong {
+    color: var(--ink);
+  }
+
+  /* ---- Lanes table ---- */
+  .table-scroll {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--rule);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+
+  td.lane-id {
+    font-family: var(--mono);
+    font-weight: 600;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  /* ---- Dispatch prompts ---- */
+  .prompt {
+    background: var(--bg-raised);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+
+  .prompt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 16px;
+    background: var(--code-bg);
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-dim);
+  }
+
+  .prompt pre {
+    margin: 0;
+    padding: 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--ink);
+  }
+
+  /* ---- Notes ---- */
+  .notes {
+    color: var(--ink-dim);
+    font-size: 13.5px;
+  }
+
+  .notes ul {
+    padding-left: 20px;
+    margin: 10px 0;
+  }
+
+  .notes li {
+    margin-bottom: 8px;
+  }
+
+  footer {
+    padding: 32px 0 8px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="eyebrow"><span class="seal">§</span> unified-api-contracts &middot; L1 foundational epic</div>
+    <h1>UAC Contract Registry</h1>
+    <p class="dek">
+      Schema locking, canonical-path oracle correctness, the OrderStatus SSOT, and registry completeness for
+      unified-api-contracts &mdash; the fleet's one schema/contract source of truth.
+    </p>
+    <div class="gen-date">generated 2026-08-18 &middot; /plan-reconcile uac_master</div>
+    <div class="scope-row">
+      <span class="chip in">in&nbsp;scope: schema locking + versioning</span>
+      <span class="chip in">in&nbsp;scope: canonical_path_violations() oracle</span>
+      <span class="chip in">in&nbsp;scope: OrderStatus / order-state SSOT</span>
+      <span class="chip in">in&nbsp;scope: registry + semantic completeness</span>
+      <span class="chip out">excluded: CI/SIT gate mechanics &rarr; ci_master</span>
+      <span class="chip out">excluded: asset-group data content &rarr; AG epics</span>
+    </div>
+  </header>
+
+  <section aria-label="headline stats">
+    <div class="section-label"><span class="section-num">01</span><h2>Ledger totals</h2></div>
+    <p class="section-note">
+      Deduped, aggregator-excluded &mdash; matches <code>/open-task-count</code>'s methodology, scoped to this
+      epic's 4 <code>parent_epic: uac_master</code> children.
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="stat-value">10</div><div class="stat-label">open todos</div></div>
+      <div class="stat"><div class="stat-value">12</div><div class="stat-label">done todos</div></div>
+      <div class="stat"><div class="stat-value accent">0</div><div class="stat-label">operator-blocked</div></div>
+      <div class="stat"><div class="stat-value accent">1</div><div class="stat-label">docs closed this pass</div></div>
+      <div class="stat"><div class="stat-value">4</div><div class="stat-label">open registry entries</div></div>
+    </div>
+  </section>
+
+  <section aria-label="plan by plan breakdown">
+    <div class="section-label"><span class="section-num">02</span><h2>Open registry entries</h2></div>
+    <p class="section-note">One dossier per child issue doc, in epic priority order. All four are single-doc, non-aggregator entries.</p>
+    <div class="registry">
+      <div class="card p0">
+        <div class="card-top">
+          <div class="card-title"><a href="#">canonical_path_oracle_blind_to_filename_stem_2026_07_20</a></div>
+          <span class="badge p0">P0</span>
+        </div>
+        <p class="card-desc">
+          <code>canonical_path_violations()</code> returned FALSE-CLEAN for ~811,200 wire-named CeFi objects &mdash;
+          the machine oracle never validated the filename instrument-id stem, only path structure. The default-on
+          two-class fix (<code>STRUCTURAL</code> / <code>ID_FORM</code>) shipped 2026-07-20; two residual items
+          remain from the follow-up backfill work.
+        </p>
+        <div class="card-foot">
+          <span class="tally"><span class="bar"><span class="bar-fill" style="width: 82%"></span></span> 2/11</span>
+          <span class="vm-tag">assigned_vm: planning</span>
+          <span>P3 durable-report-handoff design &middot; P2 DERIBIT/trades bare-stem root-cause</span>
+        </div>
+      </div>
+
+      <div class="card p1">
+        <div class="card-top">
+          <div class="card-title"><a href="#">instruments_schema_not_locked_versioned_2026_08_18</a></div>
+          <span class="badge p1">P1</span>
+        </div>
+        <p class="card-desc">
+          The 51/85-column instruments schema carries no version field anywhere in the chain &mdash; not on the
+          schema, not on its <code>SchemaContract</code> wrapper, and no golden test would catch a silent column
+          change. Largest single item in this epic (0.8 AI-days). Filed same-day as the epic carve-out.
+        </p>
+        <div class="card-foot">
+          <span class="tally"><span class="bar"><span class="bar-fill" style="width: 0%"></span></span> 4/0</span>
+          <span class="vm-tag">assigned_vm: planning &middot; sequential: true</span>
+          <span>4-part fix, strictly ordered &mdash; one dispatch, not four</span>
+        </div>
+      </div>
+
+      <div class="card p1">
+        <div class="card-top">
+          <div class="card-title"><a href="#">yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13</a></div>
+          <span class="badge p1">P1</span>
+        </div>
+        <p class="card-desc">
+          Mostly resolved &mdash; the missing <code>AVAILABILITY_AT_SEMANTICS</code> entry that failed 6 UAC tests
+          tree-wide shipped as <code>tick_timestamp</code> (2026-08-13). Two small items remain: a live-market-hours
+          latency re-check, then recording it in codex.
+        </p>
+        <div class="card-foot">
+          <span class="tally"><span class="bar"><span class="bar-fill" style="width: 60%"></span></span> 2/3</span>
+          <span class="vm-tag">assigned_vm: planning &middot; sequential: true</span>
+          <span>P3 latency measurement (market hours) &middot; P2 codex record</span>
+        </div>
+      </div>
+
+      <div class="card p2">
+        <div class="card-top">
+          <div class="card-title"><a href="#">order_state_machine_ssot_vs_uac_orderstatus_2026_07_31</a></div>
+          <span class="badge p2">P2</span>
+        </div>
+        <p class="card-desc">
+          <code>order-state-machine.md</code> documents a 9-state <code>OrderState</code> that does not exist in
+          UAC; the shipped contract is a 7-member <code>OrderStatus</code>, missing <code>FAIL_OUTBOUND</code> and
+          <code>RECONCILED</code>. Direction ruled (advance the contract) &mdash; scope not yet cut. See &sect;05.
+        </p>
+        <div class="card-foot">
+          <span class="tally"><span class="bar"><span class="bar-fill" style="width: 0%"></span></span> 2/0</span>
+          <span class="vm-tag">assigned_vm: NA</span>
+          <span>breaking, fleet-wide UAC change &mdash; needs its own rollout scope</span>
+        </div>
+      </div>
+
+      <div class="card resolved">
+        <div class="card-top">
+          <div class="card-title" style="opacity: 0.75">uac_kamino_venue_reachability_cascade_regression_2026_08_15</div>
+          <span class="stamp-mark">RESOLVED &middot; ARCHIVED</span>
+        </div>
+        <p class="card-desc">
+          <code>kamino</code> + <code>morpho</code> left the venue-coverage-cascade reachability baseline
+          &mdash; <code>DeFiAdapter</code> already dispatched both via <code>morpho_connector</code>/
+          <code>kamino_connector</code>. Closed this pass on HARD evidence
+          (<code>unified-api-contracts@9b982906</code>, 2026-08-17, reachable on
+          <code>origin/live-defi-rollout</code>); moved to <code>plans/archive/issues/</code>.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="needs extra scoping">
+    <div class="section-label"><span class="section-num">03</span><h2>Needs extra scoping</h2></div>
+    <p class="section-note">Found genuinely under-specified for dispatch during this pass &mdash; not a fold, not operator-blocked, just not yet cut into a bounded todo.</p>
+    <div class="scope-item">
+      <h3>order_state_machine_ssot_vs_uac_orderstatus_2026_07_31 &mdash; item 1</h3>
+      <p>
+        Direction is settled (operator RULED 2026-08-06, option A &mdash; advance the contract; confirmed
+        interactively 2026-08-12): add <code>FAIL_OUTBOUND</code> + <code>RECONCILED</code> to
+        <code>OrderStatus</code>, rename <code>PENDING</code>/<code>OPEN</code> &rarr;
+        <code>PENDING_NEW</code>/<code>NEW</code>. But it is a breaking, fleet-wide UAC contract change &mdash;
+        the doc's own text says to scope it "as its own tracked rollout (consumer audit + migration, not a
+        one-line enum edit) before dispatching." That scoping pass hasn't happened. Stays <code>assigned_vm: NA</code>
+        until someone cuts the rollout into bounded todos &mdash; not this pass's call to make.
+      </p>
+    </div>
+  </section>
+
+  <section aria-label="closed out this pass">
+    <div class="section-label"><span class="section-num">04</span><h2>Closed out this pass</h2></div>
+    <p class="section-note">What this <code>/plan-reconcile uac_master</code> run itself fixed &mdash; a diff, not just a snapshot.</p>
+    <div class="closed-list">
+      <div class="closed-row">
+        <span class="check">&#10003;</span>
+        <p><strong>Archived <code>uac_kamino_venue_reachability_cascade_regression_2026_08_15</code></strong> &mdash;
+        HARD-evidence flip of its sole open todo (<code>unified-api-contracts@9b982906fa4a</code>) then the full
+        6-step archival ritual; 4 referrer docs repointed at the new path
+        (<code>plans/epics/uac_master.md</code>, <code>defi_satellite_ao_dispatch_batch14_2026_08_16.md</code>,
+        <code>venue_readiness_and_registry_hardening_2026_08_16.md</code>,
+        <code>elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md</code>).</p>
+      </div>
+      <div class="closed-row">
+        <span class="check">&#10003;</span>
+        <p><strong>Fixed a carried-forward finding</strong> &mdash; <code>uac_kamino</code>'s <code>related:</code>
+        frontmatter used a bare slug instead of the required leading-slash path (flagged
+        <code>plan_reconciler_findings_defi_2026_08_18.md</code>, still open); repointed to
+        <code>/plans/active/defi_consolidated_closeout_2026_07_18.md</code> and added <code>last_updated</code> in
+        the same edit that archived the doc.</p>
+      </div>
+      <div class="closed-row">
+        <span class="check">&#10003;</span>
+        <p><strong>Closed 2 AO-dispatch-readiness gaps</strong> &mdash; <code>instruments_schema_not_locked_versioned_2026_08_18</code>'s
+        4-part fix and <code>yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13</code>'s 2 remaining todos
+        both stated real intra-doc ordering in prose only ("depends on the todo above") with no machine gate;
+        added <code>sequential: true</code> to both.</p>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="parallel dispatch lanes">
+    <div class="section-label"><span class="section-num">05</span><h2>Parallel-tab lanes for what's left</h2></div>
+    <p class="section-note">
+      3 lanes, each a different repo/file set &mdash; safe to run concurrently (this workspace's own 5-lane
+      ceiling). <code>order_state_machine</code> is excluded &mdash; not dispatch-ready until &sect;03's scoping
+      gap closes.
+    </p>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Lane</th>
+            <th>Source doc</th>
+            <th>Repo(s)</th>
+            <th>Shape</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="lane-id">A</td>
+            <td>canonical_path_oracle_blind_to_filename_stem_2026_07_20</td>
+            <td>market-tick-data-service</td>
+            <td>2 independent todos &mdash; durable report-handoff design; DERIBIT/trades bare-stem root-cause</td>
+          </tr>
+          <tr>
+            <td class="lane-id">B</td>
+            <td>instruments_schema_not_locked_versioned_2026_08_18</td>
+            <td>unified-api-contracts &rarr; instruments-service</td>
+            <td>4 todos, <code>sequential: true</code> &mdash; one dispatch, run in order</td>
+          </tr>
+          <tr>
+            <td class="lane-id">C</td>
+            <td>yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13</td>
+            <td>market-tick-data-service + codex</td>
+            <td>2 todos, <code>sequential: true</code> &mdash; measure during market hours, then record</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-label="dispatch prompts">
+    <div class="section-label"><span class="section-num">06</span><h2>Dispatch prompts</h2></div>
+    <p class="section-note">Copy-paste ready. Each inherits nothing &mdash; paste the mandatory rules file first.</p>
+
+    <div class="prompt">
+      <div class="prompt-head"><span>Lane A &middot; market-tick-data-service</span><span>P0/P2/P3</span></div>
+      <pre>Read and follow, in full, unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md before your first
+tool call. If you cannot read it, stop and report failure.
+
+Task: work the 2 open todos in unified-trading-pm/plans/active/issues/
+canonical_path_oracle_blind_to_filename_stem_2026_07_20.md &sect;7 (repo: market-tick-data-service):
+
+1. [DATA] P3 - give the backfill_bare_underlying_future_manifest_ids_2026_08_17.py --report checkpoint (and the
+   general pattern) a durable, session-spanning handoff location - two prior sessions each lost their discovery
+   progress at session end. Design + implement a small documented convention (see the todo for the two candidate
+   shapes), checking /codex/05-infrastructure/bucket-isolation-model.md first for any existing tier.
+2. [DATA] P2 - root-cause the DERIBIT/trades bare BASE-EXPIRY stem defect (e.g. BTC-26JUN20.parquet, no
+   VENUE:ITYPE: prefix at all) - a different, deeper defect than the rest of &sect;7. The backfill script's
+   object_non_canonical gate correctly refused to auto-correct these; find the writer bug.
+
+Implement + verify quality-gates.sh genuinely green on your changed files, then stop - do not ship. Flip each
+checkbox with `&lt;repo&gt;@&lt;sha&gt; + evidence` in the SAME turn you commit, per CLAUDE.md's commit-push-flip rule.</pre>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span>Lane B &middot; unified-api-contracts &rarr; instruments-service</span><span>P1, sequential</span></div>
+      <pre>Read and follow, in full, unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md before your first
+tool call. If you cannot read it, stop and report failure.
+
+Task: run the full 4-part fix in unified-trading-pm/plans/active/issues/
+instruments_schema_not_locked_versioned_2026_08_18.md IN ORDER (doc carries sequential: true - do not skip ahead):
+
+1. [DATA] P1 - add INSTRUMENTS_SCHEMA_VERSION: str = "1.0.0" to
+   unified_api_contracts/internal/domain/instruments/_instruments_parquet_schema.py.
+2. [DATA] P1 - extend unified-api-contracts/scripts/check_schema_versions.py to cover internal/domain/instruments/,
+   with a golden-file/hash test that fails on an unbumped schema edit.
+3. [DATA] P2 - add schema_version: str to SchemaContract (internal/schemas/contracts.py), populated from
+   INSTRUMENTS_SCHEMA_VERSION in _make_catalogue_contract().
+4. [DATA] P2 - wire the 5 per-asset-group SchemaContracts into instruments-service's catalogue-write choke point
+   (engine/orchestrator/sink.py / process_write.py) via validate_dataframe(...), alongside the existing
+   _assert_not_cross_domain_contamination call.
+
+Each todo's own Done-when is the acceptance bar. Implement + verify quality-gates.sh genuinely green after each
+part, then stop - do not ship. Flip checkboxes with evidence as you land each part, same turn as the commit.</pre>
+    </div>
+
+    <div class="prompt">
+      <div class="prompt-head"><span>Lane C &middot; market-tick-data-service + codex</span><span>P3/P2, sequential</span></div>
+      <pre>Read and follow, in full, unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md before your first
+tool call. If you cannot read it, stop and report failure.
+
+Task: the 2 remaining todos in unified-trading-pm/plans/active/issues/
+yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md, IN ORDER (doc carries sequential: true):
+
+1. [DATA] P3 - run market-tick-data-service/scripts/measure_yahoo_1h_equity_emission_latency_2026_08_14.py
+   --ticker AAPL DURING NASDAQ/NYSE market hours (09:30-16:00 America/New_York) - it cannot be measured
+   retrospectively. Record the measured wall-clock-vs-bar-close latency.
+2. [DOCS] P2 - record in /codex/02-data/tradfi-databento-sourcing-ssot.md that Yahoo is an interim ohlcv_1h
+   source while Databento billing is suspended, with the delay measured in step 1.
+
+Do not guess step 2's number - it depends on step 1's real measurement. Implement + verify, then stop - do not
+ship. Flip checkboxes with evidence, same turn as the commit.</pre>
+    </div>
+  </section>
+
+  <section aria-label="notes and methodology">
+    <div class="section-label"><span class="section-num">07</span><h2>Notes &amp; methodology</h2></div>
+    <div class="notes">
+      <ul>
+        <li>
+          <strong>Brand-new epic, small by design.</strong> Carved out of <code>infrastructure_master</code> +
+          <code>client_isolation_and_governance_master</code> on 2026-08-18 during the epic-taxonomy restructure.
+          Content-based classification of ~300 candidate docs found only 5 whose PRIMARY subject is UAC's own
+          schema/contract governance &mdash; a small bucket on purpose, not an oversight. This is the epic's
+          first <code>/plan-reconcile</code> pass since the carve-out.
+        </li>
+        <li>
+          <strong>Counts are measured, not carried forward.</strong> Ledger totals (&sect;01) and every open/done
+          tally (&sect;02) come from <code>scripts/plan-hygiene/epic_report_data.py --epic uac_master --json</code>,
+          which scopes <code>count_open_tasks.py</code>'s exact dedup methodology (aggregator-plan exclusion,
+          identical checkbox regexes) to this epic's <code>parent_epic: uac_master</code> children &mdash; the
+          same definition <code>/open-task-count</code> uses corpus-wide.
+        </li>
+        <li>
+          <strong>Membership is frontmatter-driven.</strong> "Child of this epic" means
+          <code>rg "^parent_epic: uac_master$"</code> against real frontmatter, not the filename-substring
+          heuristic <code>regenerate_active_plan_inventory.py</code> uses (that heuristic false-positives at a
+          measured 3-of-4 rate on dispatch-batch plans &mdash; see
+          <code>epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md</code>).
+        </li>
+        <li>
+          <strong>Corpus-wide entry-state, not epic-specific.</strong> The read-only Phase-0 hygiene sweep
+          (<code>run_hygiene_sweep.sh --ci --no-regen</code>) found 1 pre-existing hard failure
+          (<code>assigned_vm:NA</code> corpus-size ratchet) and 1 soft warning (delete/VM-launch tagging)
+          corpus-wide &mdash; neither traces to this epic's 4-5 docs specifically; both are
+          <code>/na-eligibility-audit</code>'s standing remit, not fixed here.
+        </li>
+        <li>
+          <strong>No sub-agent fan-out this pass.</strong> At 5 children, every doc was read in full directly
+          rather than through Phase 1's usual parallel-hunter fan-out &mdash; the small-corpus path the skill
+          itself calls out, not a shortcut.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>plan-reconcile &middot; uac_master &middot; unified-trading-pm</footer>
+</div>

@@ -1,12 +1,13 @@
 ---
 doc_type: issue
 title: >-
-  Account-failover monitor never checks overage_status — an out-of-credits account keeps killing
-  sessions on a ~35min cadence instead of triggering rotation
+  Account-failover monitor never checks overage_status — overage-rejected accounts keep killing
+  sessions fleet-wide (15+ kills/18h on slot 2, 4 accounts) instead of triggering rotation
 summary: >-
+  **UPDATED 2026-08-18 ~20:21Z — scope expanded fleet-wide.** Originally filed against
   `sub-b-iggy2london` (Ikenna sub-B, `weekly_pct=90`, `overage_status=rejected`,
-  `overage_disabled_reason=out_of_credits`) has killed slot-2 three times today on a ~35min
-  cadence (2026-08-18 14:55Z / 15:31Z / 16:46Z) — confirmed directly from the `tmux_session_lost`
+  `overage_disabled_reason=out_of_credits`), which killed slot-2 three times on 2026-08-18
+  (14:55Z / 15:31Z / 16:46Z) on a ~35min cadence — confirmed directly from the `tmux_session_lost`
   activity events, not inferred. Every kill's `account_snapshot` self-reports
   `account_status: "healthy"` and `death_class: "unexplained"`, despite `overage_status: rejected`
   already being true at kill time. Root cause: the account-failover trigger table (
@@ -19,12 +20,27 @@ summary: >-
   existing pct-based check would not have caught this even once it reaches the exact kill moment
   — the overage rejection is the actual proximate cause, not the usage percentage.
 
+  **Fleet-wide confirmation (review agent agt-8de6ec, 2026-08-18 ~20:21Z)**: slot 2 alone has hit
+  `tmux_session_lost` 15+ times over ~18h (2026-08-18T01:39Z through 19:46Z, roughly every
+  1-1.5h), `death_class: unexplained` every time, across **4 rotating accounts**:
+  `sub-b-iggy2london` (out_of_credits, most recent), `sub-h-igboestates` (org_level_disabled,
+  19:46Z death), `sub-f-odum2default` (org_level_disabled, 2026-08-14/15), `sub-a-ikenna`
+  (out_of_credits, 2026-08-14). This predates the current session lineage — pattern goes back to
+  at least 2026-08-14. This confirms `overage_status` has (at least) two distinct rejection
+  reasons the failover table misses — `out_of_credits` AND `org_level_disabled` — and that the
+  gap is systemic across the account pool, not one account's fluke. Two open hypotheses (neither
+  confirmed): (1) account rotation is repeatedly landing slot 2 on accounts already at their
+  overage ceiling instead of excluding `org_level_disabled`/`out_of_credits` accounts from the
+  rotation pool, or (2) the review role's long persistent loop burns through its assigned
+  account's overage budget faster than rotation replenishes it.
+
   Found by review agent (agt-15d551), independently confirmed by main (agt-a03340) 2026-08-18
   ~17:05Z by pulling the three `tmux_session_lost` events directly via `/api/activity` and cross-
   checking `/api/accounts` for the account's live `overage_status`/`overage_disabled_reason`
-  fields. Notable: main's OWN session (`agt-a03340`) also runs on `sub-b-iggy2london`
-  (`account_id` returned at `/api/agents/register` time) — main has not yet been killed by this
-  mechanism as of filing, but is exposed to the same risk.
+  fields. Scope expanded by review agent agt-8de6ec 2026-08-18 ~20:21Z (see above). Notable:
+  main's OWN session (`agt-a03340`) also runs on `sub-b-iggy2london` (`account_id` returned at
+  `/api/agents/register` time) — main has not yet been killed by this mechanism as of filing, but
+  is exposed to the same risk.
 status: open
 nature: issue
 asset_group: [ao]
@@ -58,12 +74,27 @@ locked_since:
 resolved_by:
 ---
 
-# Account-failover monitor ignores `overage_status` — recurring slot-2 kills on `sub-b-iggy2london`
+# Account-failover monitor ignores `overage_status` — recurring slot-2 kills fleet-wide
 
 ## Evidence
 
-Three `tmux_session_lost` events, `agent-orchestrator` `/api/activity`, all `slot_id=2`,
-`tmux_session=orch-slot-2`, `new_status=killed`, `death_class=unexplained`:
+**Fleet-wide (agt-8de6ec, ~20:21Z)**: slot 2 hit `tmux_session_lost` 15+ times over
+2026-08-18T01:39Z–19:46Z (~18h, roughly every 1-1.5h), `death_class=unexplained` every time, no
+OOM/rate-limit-in-tail/core-dump. Near-universal correlation: at death time the active account's
+`account_snapshot` already showed `overage_status=rejected`, across 4 rotating accounts:
+
+| account            | overage_disabled_reason | last/example death |
+| ------------------ | ------------------------ | ------------------- |
+| `sub-b-iggy2london` | out_of_credits           | most recent (see table below) |
+| `sub-h-igboestates` | org_level_disabled        | 2026-08-18 19:46Z    |
+| `sub-f-odum2default` | org_level_disabled       | 2026-08-14/15        |
+| `sub-a-ikenna`      | out_of_credits           | 2026-08-14           |
+
+Pattern predates the current session lineage — traces back to at least 2026-08-14.
+
+**Original 3-kill detail (main, ~17:05Z)**: three `tmux_session_lost` events, `agent-orchestrator`
+`/api/activity`, all `slot_id=2`, `tmux_session=orch-slot-2`, `new_status=killed`,
+`death_class=unexplained`:
 
 | ts (UTC)  | account_status (self-reported) | overage_status | overage_disabled_reason |
 | --------- | ------------------------------- | --------------- | ------------------------ |
@@ -114,7 +145,20 @@ list detects that state.
       path that feeds `rotate_all_slots_off_account` (see `main.md` § "Account-failover triggers"
       for the current four-condition table; the actual check lives in `server.py` per that section's
       own pointer). Should fire regardless of `weekly_pct`/`five_hour_pct` values, since overage
-      rejection is a harder failure than either percentage threshold.
+      rejection is a harder failure than either percentage threshold. Must cover BOTH observed
+      `overage_disabled_reason` values (`out_of_credits` and `org_level_disabled`), not just one.
+- [ ] [BACKEND] P2. **Investigate whether account rotation excludes overage-rejected accounts from
+      its selection pool.** Fleet-wide evidence (4 accounts, 15+ kills/18h on slot 2 alone) suggests
+      rotation may be repeatedly re-landing on accounts already at their overage ceiling rather than
+      skipping them — check the rotation-pool selection logic for an `overage_status` filter (or
+      lack thereof), separate from the failover-trigger fix above (a trigger fix stops sessions
+      dying on an already-bad account; a pool-exclusion fix stops rotation assigning a bad account
+      in the first place).
+- [ ] [BACKEND] P3. **Check whether the review role's persistent loop burns through its assigned
+      account's overage budget faster than rotation replenishes it** — alternate/complementary
+      hypothesis to the pool-exclusion one above; review agent agt-8de6ec flagged this as
+      unconfirmed. If review's long-running loop pattern is a meaningfully higher burn rate than
+      other roles, it may need its own rotation cadence rather than sharing the general pool logic.
 - [ ] [BACKEND] P3. **Classify this failure shape instead of leaving it `death_class: unexplained`**
       — when a killed slot's `account_snapshot.overage_status == "rejected"` at kill time, the
       death classifier should label it something diagnosable (e.g. `account_overage_exhausted`)
