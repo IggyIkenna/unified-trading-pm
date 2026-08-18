@@ -133,10 +133,12 @@ source: >-
       24 rows — captured but unattributed to a known asset_group; a real finding, not a dump gap). Overall: 0 ready
       / 624 not_ready / 240 unverified across 864 rows at pipeline-only scope — `unverified` used honestly per the
       done-when.
-- [ ] [DATA] P1. Friday target: record all shards at BATCH readiness pending backfill completion, with the residual
-      explicitly scoped to B8 (honest coverage 100%) and nothing else. Source:
-      `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the Friday-target table is committed and
-      any non-B8 residual is flagged as a separate finding.
+- [x] ✅ [DATA] P1. Done 2026-08-18 (slot 17). Friday target: record all shards at BATCH readiness pending backfill
+      completion, with the residual explicitly scoped to B8 (honest coverage 100%) and nothing else. Source:
+      `/plans/active/data_pipeline_completion_2026_08_21.md` § "Friday-target table — BATCH readiness per
+      asset_group (2026-08-18)". Verdict: the residual is NOT B8-only — B20-B25 (already tracked) plus two new
+      registry-gap findings (`declared=not_ready`, `features=not_ready`) flagged as a separate finding there, each
+      with a fresh P1 follow-up todo.
 - [ ] [SKILL] P1. Build the gate-evaluation skill so `data_pipeline_completion_2026_08_21.md`'s register is
       re-runnable rather than a point-in-time snapshot, mirroring the readiness-state-dump shape already used in
       the parent epic's W1/W20. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the

@@ -383,6 +383,53 @@ on my inference.
       `plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`, which already tracks the
       underlying UAC↔writer contract gap this trend sits inside.
 
+## Friday-target table — BATCH readiness per asset_group (2026-08-18)
+
+- [x] [DATA] P1. ✅ Done 2026-08-18. **Recorded the Friday-target table** (batch15 item 9). Ran `/honest-coverage-dump`
+      (B8) and `/readiness-state-dump` in BATCH mode, restricted to the data-pipeline legs this plan actually scopes
+      (`declared` → `instruments_service` → `market_tick_data` → `market_data_processing` → `features`; `strategy`
+      and `execution` legs excluded — trading readiness is a distinct gate set per this plan's own "What this is not").
+      **Verdict: the Friday-target claim ("all shards at BATCH readiness pending only B8") does NOT hold today** — B8
+      is genuinely far from 100% everywhere, but it is not the sole residual. See the finding below.
+
+  | Asset group | B8 reachable_coverage_pct | Shards at 100% / total | Non-B8 blockers (BATCH, venue-rows) |
+  | --- | --- | --- | --- |
+  | cefi | 45.51% | 2 / 73 | declared_not_ready=0, MDPS_not_ready=2, features_not_ready=2 (of 24 venues) |
+  | defi | 40.68% | 105 / 2,804 | declared_not_ready=77, MDPS_not_ready=11, features_not_ready=55 (of 180 venues) |
+  | prediction | 92.78% | 1 / 19 | declared_not_ready=0, MDPS_not_ready=0, features_not_ready=0 (of 1 venue) |
+  | sports | 99.26% | 531 / 822 | declared_not_ready=18, MDPS_not_ready=0, features_not_ready=31 (of 50 venues) |
+  | tradfi | 86.96% | 20 / 244 | declared_not_ready=1, MDPS_not_ready=4, features_not_ready=4 (of 9 venues) |
+
+  Sources: `coverage.json` date=2026-08-18 (grain=instrument_type, 3,962 shards, `reachable_coverage_pct` per SSOT
+  formula, denominator = captured+attempted_failed+expected_unattempted); `readiness-state-dump` BATCH rows,
+  live 2026-08-18, 288 venues.
+
+  **Separate finding — the residual is NOT B8-only.** Non-B8 blockers confirmed still open as of 2026-08-18:
+  - **B20** (shard-name orthogonality) — `[OPERATOR]` sign-off not yet given.
+  - **B21** (canonical Distinct Values) — MEASURED FAIL 2026-08-17 (~1,000 non-canonical objects in a 4,000-blob
+    cefi sample); verification todo still open (batch15 item 1).
+  - **B22** (path↔manifest bidirectional reconciliation) — not yet run; open (batch15 item 2).
+  - **B23** (schema locked/versioned) — UNVERIFIED, not satisfied; open (batch15 item 3).
+  - **B24/B25** (minimum-history transitive closure + registration-time gate) — not yet built; open in this doc
+    (§ "History sufficiency").
+  - **`declared=not_ready`** (defi 77/180, sports 18/50, tradfi 1/9 venues) — a UAC `VENUE_DATA_TYPE_CAPABILITIES`
+    registry gap: the venue is not even declared capable of the data_type, so backfill alone cannot close this.
+    NEW finding this run, not previously quantified — tracked as a fresh todo below.
+  - **`features=not_ready`** (defi 55/180, sports 31/50, tradfi 4/9, cefi 2/24 venues) — no archetype's
+    `FEATURE_REQUIRED_INPUTS` is satisfiable from these venues' declared data_types
+    (`venue_strategy_consumability.orphaned_data_types()`); also not closed by backfill alone. NEW finding this run —
+    tracked as a fresh todo below.
+
+- [ ] [DATA] P1. **Root-cause and close the `declared=not_ready` UAC registry gap** surfaced by the Friday-target
+      table above (defi 77/180, sports 18/50, tradfi 1/9 venues at BATCH mode) — determine per venue whether the
+      missing `VENUE_DATA_TYPE_CAPABILITIES` entry is a genuine registration gap (venue should be declared, isn't)
+      or a correct absence (venue genuinely cannot produce that data_type), and register the former. Distinct from
+      B8 — no amount of backfill closes an undeclared capability.
+- [ ] [DATA] P1. **Root-cause and close the `features=not_ready` registry gap** surfaced by the same table (defi
+      55/180, sports 31/50, tradfi 4/9, cefi 2/24 venues) — per venue, determine whether the missing archetype
+      `FEATURE_REQUIRED_INPUTS` satisfiability is a real data-type gap (venue's declared data_types genuinely can't
+      feed any archetype) or a `FEATURE_REQUIRED_INPUTS`/archetype-registry omission, and close whichever it is.
+
 ## Progress Log
 
 **2026-08-17 — authored.** Gate register created from the operator's BATCH draft, extended with 12 `+ADDED` gates and
@@ -396,6 +443,13 @@ addition, because a smoke test that exits 0 having written nothing satisfies B2 
 
 Deliberately kept OUT: strategy, execution and ML readiness. They are separate gate sets with different failure modes,
 and folding them in here would let a data-complete shard read as trading-ready.
+
+**2026-08-18 (slot 17, batch15 item 9)**: recorded the Friday-target table (§ "Friday-target table" above) —
+per-asset-group B8 coverage from `/honest-coverage-dump` plus BATCH-mode data-pipeline-chain legs (declared → IS →
+MTDS → MDPS → features; strategy/execution excluded, out of scope) from `/readiness-state-dump`, both run live
+2026-08-18. Verdict: today's residual is NOT B8-only — B20-B25 remain open (already tracked) and two NEW registry
+gaps surfaced (`declared=not_ready`, `features=not_ready`, per-AG counts in the table), each filed as a fresh P1
+todo. Per the todo's own done-when: table committed, non-B8 residual flagged as a separate finding.
 
 **na-eligibility-audit 2026-08-17** [body-hash:c833814dff07254d]: RECLASSIFY (per-todo split) -- of 18 grep-matched checkboxes
 (14 semantically distinct after collapsing an accidental duplicate block, see the doc-hygiene fix above), 10 bounded
