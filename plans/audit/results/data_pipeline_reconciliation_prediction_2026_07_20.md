@@ -44,7 +44,7 @@ audited_scope:
   interiors, market-data(tick)/sports bleed, the bare-shape legacy prefix tree."
 date: 2026-07-20
 auditor: /data-pipeline-reconciliation (first real execution of the prediction reference sheet + acceptance test)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 ---
 

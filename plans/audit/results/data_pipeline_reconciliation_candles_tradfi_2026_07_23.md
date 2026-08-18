@@ -27,7 +27,7 @@ created: 2026-07-23
 auditor:
   "P8 independent post-migration verification (fresh sharded GCS enumeration + migrate_candle_canonical_2026_07.py
   --dry-run classify)"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 audited_scope:
   "asset_group=tradfi, processed_candles/by_date/ ONLY (raw_tick_data/ and the rest of the bucket are OUT OF SCOPE),

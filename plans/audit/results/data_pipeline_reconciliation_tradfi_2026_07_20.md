@@ -38,7 +38,7 @@ audited_scope:
   Databento four-surface + legacy-shape probes"
 date: 2026-07-20
 auditor: /data-pipeline-reconciliation (first tradfi execution + acceptance test)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 skill: data-pipeline-reconciliation
 run_date: 2026-07-20

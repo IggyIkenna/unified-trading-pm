@@ -51,7 +51,7 @@ audited_scope:
   /data-pipeline-reconciliation skill — operator-requested spot-check, not a full campaign"
 date: 2026-08-05
 auditor: interactive session (operator-requested, /data-pipeline-reconciliation Phase 0-1 subset)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 skill: data-pipeline-reconciliation
 run_date: 2026-08-05

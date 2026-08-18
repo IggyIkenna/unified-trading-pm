@@ -59,7 +59,7 @@ audited_scope:
   processes launched from this slot (operator directive 2026-08-07 acknowledged)."
 date: 2026-08-07
 auditor: "cefi_reconciliation_auditor (scheduled role, slot 13, dispatch agt-13e51a)"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 skill: data-pipeline-reconciliation
 run_date: 2026-08-07
