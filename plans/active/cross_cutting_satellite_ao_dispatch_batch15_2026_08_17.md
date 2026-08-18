@@ -112,11 +112,19 @@ source: >-
       [`docs/benchmarks/three_stage_benchmark_2026_08_18.md`](https://github.com/IggyIkenna/unified-trading-library/blob/live-defi-rollout/docs/benchmarks/three_stage_benchmark_2026_08_18.md)
       (unified-trading-library repo) — figures are HARNESS-VALIDATION (synthetic fetch payload), not a
       production-vendor throughput claim; wiring real vendor fetch/write per asset group is a follow-up.
-- [ ] [BACKEND] P1. Make the three-stage benchmark harness portable — runnable on a laptop and on a non-Google
-      provider, not just in-cloud, so figures are directly comparable rather than adjusted. Depends conceptually on
-      the todo above landing a real harness to make portable — same file, do not dispatch concurrently with it.
-      Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the same harness produces
-      comparable figures run locally and against the reference Google-environment run.
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-18 (slot-12, backend_engineer).** Make the three-stage benchmark
+      harness portable — runnable on a laptop and on a non-Google provider, not just in-cloud, so figures
+      are directly comparable rather than adjusted. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`.
+      Done-when: the same harness produces comparable figures run locally and against the reference
+      Google-environment run. No code change was needed — `run_three_stage_benchmark()` was already
+      cloud-agnostic by construction (plain callables, zero provider dependency). Confirmed empirically by
+      running the unmodified CLI on a genuinely non-Google host (this slot's own worktree host, verified
+      Amazon EC2 via DMI vendor string + unreachable `metadata.google.internal`) and comparing against the
+      2026-08-18 GCP-`planning`-VM reference run: process latency (the host-bandwidth-insensitive stage)
+      matched within ~3% (~10.2-10.6ms both sides); fetch/write throughput stayed same-order-of-magnitude
+      (expected variance — memory-bandwidth-bound on the synthetic payload, not vendor/network-bound).
+      Full comparison + raw JSON in `unified-trading-library@a31ab4a2a9`
+      (`docs/benchmarks/three_stage_benchmark_2026_08_18.md` § "Portability confirmation — off-Google run").
 - [ ] [BACKEND] P2. Publish the per-shard reference ETA derived from the Google-environment figures, labelled
       REFERENCE (explicitly not a target), alongside the per-stage breakdown that explains it. Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a published reference-ETA table exists,
