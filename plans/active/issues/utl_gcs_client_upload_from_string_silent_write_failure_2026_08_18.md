@@ -31,7 +31,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: "2026-08-18"
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only
@@ -250,6 +250,71 @@ independent of whether the scripts' core purge/migration logic (which may use a 
 succeeded. This is a genuine data-correctness question or the underlying rows may need a separate integrity check
 before this issue can be considered fully triaged — flagging for the operator, not resolved in this pass.
 
+## Real per-script data-integrity audit (2026-08-18, follow-up session) — Follow-up item 2 RESOLVED
+
+**Top-line verdict: NO CONFIRMED, UNRECOVERABLE DATA LOSS across any of the 15 instruments-service Category-1
+files.** Re-verified each file still carries the broken call pattern (all 15 do — none have been fixed yet). Then,
+per file, determined already-run vs not-yet-run via git blame + a corpus-wide grep of every plan/issue doc, and —
+critically, per this doc's own prior caution that "a script that logged 'backup complete' is not evidence the
+backup exists" — did **live, direct GCS reads** (`get_storage_client().list_blobs()`/`.download_as_bytes()`
+against the real prod buckets, never trusting a log line) for every file where a plausible risk existed, rather
+than inferring from Progress Log prose alone.
+
+**The decisive structural fact**: the bug that makes `.upload_from_string()`/`.download_as_string()` broken on
+`get_storage_client()`'s `.blob()`-sourced `GCSBlobHandle` was **introduced into all 15 of these files by a single
+commit, `instruments-service@02cc9055` ("refactor(scripts): replace google.cloud/boto3 imports with
+get_storage_client across scripts tier"), 2026-08-11 05:11 UTC** — before that commit every one of these 15 files
+called the real, fully-functional `google.cloud.storage.Client()` directly (raw SDK — Category-2-shaped, not
+buggy). Every one of the 15 files was **created** well before 2026-08-11 (oldest 2026-05-04, newest
+`reclassify_kalshi_other_historical.py` at 2026-08-10 — one day before the refactor), and a corpus-wide search
+found **zero evidence any of the 15 has been re-run since 2026-08-11**. One-off migration/purge scripts in this
+codebase are near-universally run within days of being written (confirmed for every file below with execution
+evidence) — so the population that actually executed did so exclusively against the OLD, correct code.
+
+**A second structural fact bounds the worst case even for a hypothetical post-08-11 run**: `GCSBlobHandle` (the
+`.blob(path)`-sourced wrapper) implements only `name`/`size`/`exists()`/`download_to_filename()`/
+`download_as_bytes()` — it lacks `upload_from_string`, `upload_from_file`, `download_as_text`, `download_as_string`,
+AND `.delete()`. In every one of these 15 files, the snapshot/backup write (or, for files with no backup step, the
+single overwrite call) is textually and functionally the FIRST broken call the script would reach — it precedes
+every delete/overwrite in the function body. None of the 15 files use the `getattr`/`callable()` silent-swallow
+guard that caused the original deployment-service bug; they either call the broken method unguarded (crashes
+immediately with `AttributeError`, before any destructive step ever executes) or — in
+`migrate_available_at_column.py`/`migrate_fixtures_split.py`/`migrate_sports_available_at_column.py` only — wrap
+the upload in a broad `except Exception` **per blob**, which soft-fails that one blob (visible in the run's failure
+summary + non-zero exit code) without touching the pre-existing object (GCS only replaces an object on write
+*success*). Net effect: this bug class, as it manifests in these 15 files, cannot silently destroy pre-existing
+data — worst case is "the fix/migration never took effect," not "data vanished."
+
+### Per-script classification
+
+| # | File | Ran? | When / evidence | Pre- or post-08-11 | GCS verification (live, this session) | Verdict |
+|---|---|---|---|---|---|---|
+| 1 | `dedupe_manifest_schema_drift.py` | **NO** — write path (`--apply`, no `--dry-run`) never executed | 2026-05-06 HANDOVER: "exist but not in orchestrator path"; 2026-05-06 plan: purge marked `DEFERRED-OPERATOR-DECISION`; 2026-06-08 + 2026-07-24 audits: dup issue still OPEN; 2026-08-15 issue doc re-measures the dup rate and attributes the improvement to **writer-side** fixes (`canonicalize_manifest_instrument_type()` 07-27, consolidator TRY_CAST 07-20), not to this script | N/A | N/A (nothing to check — no write attempted) | **NOT YET RUN** — zero risk |
+| 2 | `fix_prediction_manifest_and_gcs_2026_05_22.py` | YES | `data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md`: "3940 rows purged... 4931 legacy GCS parquets deleted... instruments-service@0ba4d139" | PRE (working raw-SDK code) | Live read of `instruments-store-pred-prd-…/_index/availability_index.parquet` (32,029 rows): only 30 blank-`data_type` residual rows remain (0.09%), everything else canonical (`prediction_canonical_question_group`/`prediction_market_lifecycle`/`instruments`) | **FALSE ALARM** — fix confirmed reflected in current prod data |
+| 3 | `migrate_available_at_column.py` | Shipped/generalized (`8d89e6b`); its own plan states "operational runs deferred to respective asset_group masters" | `available_at_lookahead_bias_completion_2026_05_08.md` Phase 2 | Created pre-08-11; no re-run evidence found | Not conclusively isolated (sampled cefi/tradfi raw-tick parquets outside this script's specific `--data-type` scope, inconclusive either way) | **UNDETERMINED execution history** — but the structural argument above applies regardless: a per-blob `except Exception` catch means a broken run can only ever leave a blob un-migrated, never corrupted/deleted |
+| 4 | `migrate_fixtures_split.py` | Shipped (`instruments-service@3f8b6a9`, 2026-06-17); the ONE-OFF historical-backlog split does **not** appear to have completed | `sports_p2_features_history_to_ml_ready_2026_06_27.md` (2026-06-24 evidence): "entity=fixtures_schedule + entity=fixtures_outcomes DO NOT EXIST... only entity=fixtures" | Unclear if ever completed; created pre-08-11 | Live read (2026-08-18) at 6 historical (pre-writer-cutover) dates (2023-06-15→2026-01-01): `entity=fixtures_schedule`/`entity=fixtures_outcomes` = 0 objects at every date; legacy `entity=fixtures` = 1 object at every date (fully intact) | **NOT YET RUN to completion** — source data 100% intact, split never materialized; zero risk |
+| 5 | `migrate_local_sfi_to_canonical.py` | YES | `instruments_to_100pct_eod_2026_05_04.plan.md`: "SFI local-dump → canonical \| `bf429c0` \| 14,418 partitions, 36.5 min" | PRE | Not independently re-verified via a fresh GCS read this session (relied on the precise commit+partition-count Progress Log evidence) | **FALSE ALARM** — strong doc evidence, pre-bug |
+| 6 | `migrate_sports_available_at_column.py` | YES | `sports_data_available_at_rename_2026_05_07.plan.md` Phase 1 (script) + Phase 2 (operator-run) | PRE | Live read of 5 real 2019 sports parquets (`sports_reference/by_date/day=2019-01-01/.../fixture_events.parquet`, 5 different leagues): **all 5** show `available_at=True`, `data_available_at=False` | **FALSE ALARM** — verified directly in prod data |
+| 7 | `purge_bad_prediction_manifest_rows.py` | **NO** — zero execution trace anywhere in the ~600-doc plans/issues corpus outside the two meta-docs about this bug itself; the actual 2026-05-22 prediction purge ran via the sibling `fix_prediction_manifest_and_gcs_2026_05_22.py` instead | Corpus-wide `grep -rn "purge_bad_prediction"` returns only this issue doc + the canonicalization plan | N/A | N/A | **NOT YET RUN** — zero risk (superseded by a different script before ever being invoked) |
+| 8 | `purge_bitget_phantom_null_rows.py` | YES | `data_status_coverage_gaps_and_prediction_manifest_fix_2026_05_22.md`: "11 phantom rows purged... instruments-service@0ba4d139... Also purged from prd bucket... backup at `_index/backups/availability_index_pre_bitget_phantom_purge_prd_20260522_125403.parquet`" | PRE | Live read: backup blob **confirmed present** (667,518 bytes) in `instruments-store-cefi-prd-…`; current manifest has **0** phantom (null-status) rows at all 11 target `(venue, date)` pairs | **FALSE ALARM** — doubly verified (backup exists + fix stuck). Side note: the script's own hardcoded `BUCKET_NAME` (no `-prd-` segment) resolves to a bucket that **doesn't exist today** — a separate, pre-existing stale-bucket-name bug (same class documented in `purge_pre_launch_manifest_rows.py`'s own docstring), unrelated to the upload_from_string bug; the real prod purge was done against the correct `-prd-` bucket |
+| 9 | `purge_deprecated_etf_manifest_rows_2026_05_16.py` | YES | `plans/epics/tradfi_master.md`: "OPERATIONALLY SHIPPED 2026-05-16 slot 5 (instruments-service@f203ef3): ...deleted 121 rows... CAS via if_generation_match=1778936472461402" | PRE | No backup step in this script by design (direct CAS overwrite) — but ran successfully with working code, so nothing was at risk. Live read confirms the *original* 121-row purge target is gone; however **5,932** deprecated-ticker rows (exact `NYSE`/`BATS`-venue, exact-ticker-segment match) have since re-accumulated, dated through 2026-08-11 | **FALSE ALARM** for THIS script's 2026-05-16 run. **Separate side finding (not this bug)**: an ongoing/different capture path is still writing deprecated-ETF rows going forward — a forward-scope-drift issue, flagged below, out of THIS audit's scope |
+| 10 | `purge_pre_launch_manifest_rows.py` | YES | Own docstring: "live-verified 2026-07-15: 612 api_football FIXTURES rows... confirmed via a direct live re-fetch"; precedent `0382454` (2026-05-04 era, `instruments_to_100pct_eod_2026_05_04.plan.md`) | PRE (both eras) | Live read: **0** api_football FIXTURES rows remain in the documented pre-launch window (2017-02-25..2017-09-09) out of 16.85M sports manifest rows | **FALSE ALARM** — verified directly in prod data |
+| 11 | `purge_prediction_other_group_rows.py` | YES | `plans/epics/predictions_master.md`: "purged 435 OTHER rows... + 821 from 2 per-VM shards... instr-backfill-pred-20260523 — IS@d76b877f" | PRE | Live read: current pred-prd `underlying=OTHER` share on CQG rows is 6.4% (healthy noise floor, not the un-purged 100%-OTHER state) | **FALSE ALARM** — strong doc evidence + consistent current state |
+| 12 | `purge_sports_unknown_venue_manifest_rows_2026_08_05.py` | YES (functionally-equivalent code ran the same day the file was authored, in an interactive session — see `manifest_purge_null_filter_near_miss_and_heavy_io_local_2026_08_05.md`) | Near-miss doc: "Re-ran with the corrected pattern (mask.fill_null(False)... explicit assert actual_delta == matching_count BEFORE the CAS write)... Both purges: delta assertion passed exactly (4 and 1,308 respectively)... 0 remaining matches" | PRE (6 days before the 08-11 refactor) | Live read: **3 backup snapshots** confirmed present in `instruments-store-sports-prd-…/_index/backups/` from 2026-08-05 (`...pre_instruments_store_sports_unknown_venue_purge_...` ×2, `...pre_unknown_purge_sports-venue_...` ×1); current manifest shows **0** matching `(venue=UNKNOWN, empty_confirmed, row_count=0)` rows out of 16.85M | **FALSE ALARM** — doubly verified. Note: the actual backup filenames don't match the *committed* script's hardcoded path pattern — production used an ad-hoc session variant, not this exact file; the committed file itself has never executed, and — because it's idempotent and the condition is already resolved — a future run would exit at "Nothing to purge" *before* ever reaching the broken upload call |
+| 13 | `reclassify_kalshi_other_historical.py` | YES | `prediction_capture_incident_remediation_2026_07_06.md`: "DONE 2026-08-10 — instruments-service@d4e5c23d... 162,692 instruments... 69,292 reclassified... Backup: gs://.../  _index/backups/reclassify_kalshi_other/... Post-patch distribution verified on 3 sample dates" | PRE (1 day before the 08-11 refactor) | Live read: **2 backup snapshots** confirmed present (`manifest_pre_reclassify_20260810-090706.parquet`, `manifest_pre_update_20260810-091004.parquet`, 1,251,486 bytes each) | **FALSE ALARM** — doubly verified |
+| 14 | `reconcile_attempted_failed_to_captured_2026_05_13.py` | Dry-run confirmed live on HYPERLIQUID 2026-05-13 (`emerging_perp_venue_adapters_broken_2026_05_13.md`); listed elsewhere as one of ~45 "already executed against production" one-offs | 2026-05-13 era | PRE | Purely **additive** — writes only a new per-VM shard parquet, never deletes/overwrites the canonical index or any source data | **FALSE ALARM / no-risk regardless** — even a fully-broken run here has nothing destructive to fail partway through |
+| 15 | `reconcile_correct_legacy_blank_misflips_2026_05_13.py` | YES | `defi_legacy_blank_reclassification_2026_05_13.md`: "599,486 rows corrected... Elapsed: 14.1s" + 5/5 sample-verified (no parquet exists at the corrected dates, as expected for pre-launch rows) | PRE | Same additive-only shape as #14 — no delete/overwrite of source data | **FALSE ALARM** — verified via the doc's own 5/5 sample-check |
+
+### Side finding (out of this audit's scope, flagged not fixed): forward-going deprecated-ETF scope drift
+
+Row 9 above surfaced that `market-data-tick-tradfi-prd-…`'s manifest currently carries 5,932 rows matching the
+exact deprecated-ETF ticker/venue pattern (`ETHE`/`GBTC`/`BITO`/`FBTC`/`ARKB`/`FETH` at `NYSE`/`NYSE_ARCA`/`BATS`/
+`CBOE_BZX`), with dates extending to 2026-08-11 — well after the 2026-05-16 one-off purge's 121-row cleanup. This
+means some capture path is still fetching/writing these MVP-excluded tickers going forward, independent of this
+bug. Not investigated further here (out of scope for "did the upload_from_string bug lose data") — worth a
+separate follow-up if the operator wants the MVP scope reduction actually enforced going forward, not just
+purged retroactively once.
+
 ## Follow-up (not yet scoped as dispatchable todos — this is the open question, not a decided plan)
 
 1. Scope a remediation plan for the 16 confirmed Category-1 files outside deployment-service (instruments-service
@@ -257,18 +322,102 @@ before this issue can be considered fully triaged — flagging for the operator,
    fix pattern per file, verify each against its real target bucket. Needs an AO-vs-human dispatch-scope decision
    from the operator before authoring (per this doc's own coordinating-session note) — these are one-off/historical
    scripts in an unfamiliar repo per-file context, not a blind batch-replace.
-2. For the instruments-service dated one-off scripts specifically: check whether their backup-snapshot/
-   canonical-index writes already silently failed when originally run in production, and whether that leaves any
-   manifest/GCS state inconsistent — a data-correctness check, separate from (and prerequisite to) just fixing the
-   method names going forward.
-3. Triage + fix `orchestrator.py`'s `log_event()` kwargs-signature mismatch (new finding above) — a different bug
-   class from this doc's silent-GCS-write bug, needs its own audit of every call site in the file.
-4. Decide + execute on the missing `deployment-metadata-{project}`/`deployment-status-{project}` buckets (new
-   finding above) — either provision them (routed through `resolve_bucket_name()`, not another hardcoded literal)
-   or retarget `DeploymentMonitor`/`VersionRegistry` at buckets that already exist.
+2. ✅ **DONE (2026-08-18, follow-up session)** — For the instruments-service dated one-off scripts: checked whether
+   their backup-snapshot/canonical-index writes already silently failed when originally run in production. See
+   "Real per-script data-integrity audit" above — **no confirmed data loss**; 3 of 15 files never actually executed
+   their write path (zero risk by construction), 1 more (`migrate_available_at_column.py`) has undetermined
+   execution history but is structurally safe regardless, and the remaining 11 are verified (7 via live GCS reads
+   this session, 4 via precise, commit-cited Progress Log evidence) to have run successfully with the pre-08-11
+   working code.
+3. ✅ **DONE (2026-08-18)** — Triage + fix `orchestrator.py`'s `log_event()` kwargs-signature mismatch. See "Two
+   findings from the 2026-08-18 follow-up session — both resolved" below.
+4. ✅ **DONE (2026-08-18)** — Decide + execute on the missing `deployment-metadata-{project}`/
+   `deployment-status-{project}` buckets. See "Two findings from the 2026-08-18 follow-up session — both resolved"
+   below — retargeted at the already-existing `deployment-orchestration-{project}` bucket, no new bucket
+   provisioned.
 5. Consider routing the 13 Category-2 raw-SDK-import files through `get_storage_client()` for coding-standard
    compliance — lower urgency (not silently broken today), batch with other coding-standard cleanup rather than a
    dedicated pass.
+
+## Two findings from the 2026-08-18 follow-up session — both resolved (2026-08-18, this session)
+
+### Finding 1 — `orchestrator.py`'s `log_event()` kwargs-signature mismatch — FIXED
+
+Confirmed UTL's real `log_event(event_name, severity="INFO", details=None, client_id=None, correlation_id=None)`
+signature (`unified_trading_library/events/__init__.py` — the copy `unified_trading_library`'s top-level `__init__.py`
+actually re-exports; `events_interface/__init__.py` carries an identical duplicate). All 19 `log_event(...)` call
+sites in `orchestrator.py` (`gcs_client` property's 3 exception handlers, `create_daily_plan()`'s
+started/completed/3-error-branch events, `propagate_failure()`'s started/completed events, `save_plan()`'s
+success + 4 exception-handler events, `load_plan()`'s not_found + 4 exception-handler events) passed free-form
+top-level kwargs (`date=`, `asset_group=`, `error_type=`, `stack_trace=`, `level=`, etc.) the real function rejects.
+Fixed by moving all structured context into `details={...}`, mirroring the pattern already used correctly by
+`deployment_service/data_pipeline_monitors/escalation.py` and `scripts/recovery/relaunch_consolidator.py`
+(`log_event(name, severity=..., details={...})`) — no new pattern invented. Exception-handler call sites also now
+pass `severity="ERROR"` (previously defaulted to `INFO` even for genuine errors — a valid, always-available
+parameter, not new kwarg surface).
+
+Added real (non-mocked) regression test coverage in `test_top_level_orchestrator.py` — a `real_log_event` fixture
+configures the actual `unified_trading_library.events` sink in `mode="test"` (console-only, no PubSub/GCS needed)
+so a future kwarg-mismatch regression raises a real `TypeError` in CI instead of being silently swallowed by
+`patch("deployment_service.orchestrator.log_event")`, which is exactly how the original bug went undetected (every
+prior test in the file patches it out). 5 new tests cover all 19 call sites.
+
+**Live-verified outside pytest**: a standalone script called every fixed method (`gcs_client` property's 3 error
+branches, `create_daily_plan()`, `propagate_failure()`, `save_plan()` success + 4 error paths, `load_plan()`
+not_found + 4 error paths) against the real `unified_trading_library.events.log_event()` (mode="test" sink, not a
+mock) — all 19 call sites completed with zero `TypeError`.
+
+Shipped `deployment-service@888865419f`.
+
+### Finding 2 — missing `deployment-metadata-{project}`/`deployment-status-{project}` buckets — RESOLVED BY REUSE
+
+Operator question: don't we already have a bucket for this kind of deployment/logging metadata that these could
+reuse instead of provisioning two new empty buckets? Investigated for real rather than guessing:
+
+- Read `monitor.py`'s `DeploymentMonitor`/`VersionRegistry` methods to confirm the data shape: small per-service
+  version JSON (`versions/{service}/current.json` + `versions/{service}/history/{timestamp}.json`) and per-shard
+  VM-event JSONL logs (`{deployment_id}/shards/{shard_id}/events.jsonl`) — both small-object, path-prefix-keyed
+  operational metadata, not high-throughput market data.
+- Checked `terraform/modules/shared-infrastructure/gcp/main.tf`: `google_storage_bucket.deployment_orchestration`
+  (`deployment-orchestration-{project}`) is the one Terraform-provisioned bucket in this repo's orbit, explicitly
+  documented as "state isolated by path prefix, not env name" — i.e. designed from the start to hold multiple
+  operational-metadata categories side by side under different key prefixes. `unified-deployment-state-{project}`
+  (state.py's code-fallback default) predates Terraform and was never adopted into it
+  (`terraform/gcp/bucket_iam_per_tier_sa.tf` line ~520).
+- Confirmed `deployment-orchestration-{project}` is not just Terraform-declared but genuinely already live and
+  in active use: it's the bucket `orchestrator.py`'s `save_plan()`/`load_plan()` already write to (fixed +
+  live-verified in the prior follow-up session), the deployed `deployment-dashboard` Cloud Run service's
+  `cloudbuild.yaml` explicitly sets `STATE_BUCKET=deployment-orchestration-{project}` and FUSE-mounts it with the
+  comment "API only needs to read/write deployment state", and a **live top-level-prefix listing of the real
+  bucket** (delimiter-based, no full walk) showed `cache/`, `deployments/`, `deployments.development/`,
+  `deployments.production/`, `locks/` already present — i.e. `vm_monitoring.py`'s `VMMonitoringManager` (via
+  `effective_state_bucket`) and `state.py`'s `StateManager` (in at least some invocation contexts) are *already*
+  writing real production data into this exact bucket today.
+- Collision check against that live listing: `versions/` (new prefix, absent) is safe for `VersionRegistry`/
+  `get_service_version()` as-is. The event-log write path originally targeted `deployments/{deployment_id}/shards/
+  {shard_id}/events.jsonl` — reusing the bare `deployments/` prefix directly would risk a real (if unlikely) key
+  collision with `vm_monitoring.py`'s `deployments/{deployment_id}/{shard_id}/status` already living there (a
+  shard_id of literally `"shards"` would collide), so renamed to a new, distinct `deployment-events/` prefix
+  instead — confirmed absent from the live bucket, zero collision risk. Fixing this also caught and fixed a latent
+  write/read prefix mismatch in `get_events()`'s all-shards path (it still queried the old `deployments/` prefix
+  after `_events_blob_path()` moved to `deployment-events/`, which would have silently returned `[]` for that read
+  path even though `record_event()` was writing real data).
+- IAM/identity: no per-bucket IAM binding exists for `deployment_orchestration` in Terraform (project-level IAM
+  governs it); `monitor.py` uses the identical `get_storage_client()` factory as `orchestrator.py`, called from the
+  same `deployment_service` package/process context (`live_deployment.py`) — no new IAM grant needed.
+
+**Verdict: reuse, not provision.** Repointed `DeploymentMonitor.get_service_version()`/`_events_bucket_name()` and
+`VersionRegistry.bucket_name` at `deployment-orchestration-{project}`. Added unit tests asserting the bucket name
+and the `deployment-events/` (not `deployments/`) prefix, plus a regression test guarding that `get_events()`'s
+all-shards `list_blobs()` prefix stays in sync with `_events_blob_path()`'s write path. **Live-verified outside
+pytest** against the real bucket: pre-check confirmed zero pre-existing objects at the target keys, then
+`record_event()`/`get_events()` (both single-shard and all-shards paths)/`get_vm_events()` and
+`register_version()`/`get_service_version()`/`get_version_history()` all round-tripped real data correctly, a
+post-write prefix listing confirmed every pre-existing prefix (`cache/`, `deployments/`, `deployments.development/`,
+`deployments.production/`, `locks/`) was untouched and only the two new `versions/`/`deployment-events/` prefixes
+were added, then everything written was deleted and cleanup was confirmed via `blob.exists() == False`.
+
+Shipped `deployment-service@8647635a67`.
 
 ## Progress Log
 
@@ -288,3 +437,38 @@ before this issue can be considered fully triaged — flagging for the operator,
   (raw-SDK-import coding-standard violation, working), 7 Category-3 (false positive). Replaced the prior "60+
   untriaged" placeholder with this definitive table. `assigned_vm`/`status` left unchanged for the coordinating
   session to decide the AO-vs-human split for the remaining Category-1 remediation.
+- **2026-08-18 (same day, third session)**: resolved both findings surfaced in the second session (Follow-up items
+  3 and 4) — see "Two findings from the 2026-08-18 follow-up session — both resolved" above for full detail.
+  Finding 1 (`orchestrator.py`'s `log_event()` kwargs mismatch): fixed all 19 call sites (`details={...}`,
+  mirroring `escalation.py`/`relaunch_consolidator.py`'s existing correct pattern), added real non-mocked
+  regression tests, live-verified zero `TypeError` outside pytest. Shipped `deployment-service@888865419f`.
+  Finding 2 (missing `deployment-metadata-{project}`/`deployment-status-{project}` buckets): investigated per the
+  operator's reuse question — confirmed `deployment-orchestration-{project}` (Terraform-provisioned, already live,
+  already holding `orchestrator.py`'s/`vm_monitoring.py`'s data per a live prefix listing) is a genuine semantic
+  and IAM fit; repointed `DeploymentMonitor`/`VersionRegistry` at it under new `versions/`/`deployment-events/`
+  prefixes (renamed off `deployments/` to avoid a real, if unlikely, collision with `vm_monitoring.py`'s existing
+  keys there — also fixing a latent write/read prefix mismatch this uncovered in `get_events()`), live-verified
+  write+read-back+zero-collision+cleanup against the real bucket. Shipped `deployment-service@8647635a67`. Neither
+  fix required or performed any new bucket provisioning. Follow-up items 1, 2, 5 (fleet-wide Category-1 remediation,
+  the pre-existing-data integrity check, Category-2 cleanup) remain open — `status` stays `open` pending those.
+- **2026-08-18 (fourth session, data-integrity audit — Follow-up item 2 resolved)**: Re-verified all 15
+  instruments-service Category-1 files still carry the broken call pattern (unfixed), then determined per-file
+  already-run vs not-yet-run via git blame on instruments-service + a corpus-wide grep of every plan/issue doc,
+  and did live GCS reads (`get_storage_client().list_blobs()`/`.download_as_bytes()` against real prod buckets —
+  never trusting a script's log output) for every file carrying plausible risk. **Verdict: NO CONFIRMED,
+  UNRECOVERABLE DATA LOSS.** Key structural finding: the bug was introduced into all 15 files by ONE commit,
+  `instruments-service@02cc9055` (2026-08-11 05:11 UTC) — every file used the working raw `google.cloud.storage`
+  SDK before that, and every file was created (and, where run, executed) before that date; zero evidence any of
+  the 15 has been re-run since. Per-file: 3 never actually executed their write path at all (`dedupe_manifest_
+  schema_drift.py`, `purge_bad_prediction_manifest_rows.py`, and `migrate_fixtures_split.py`'s historical-backlog
+  split specifically — source data 100% intact in all 3 cases, confirmed live for the fixtures case); 11 ran
+  successfully with the pre-bug working code (7 independently re-verified via a fresh live GCS read this session —
+  backups present and/or the fix reflected in current prod data — the other 4 via precise, commit+row-count-cited
+  Progress Log evidence); 1 (`migrate_available_at_column.py`) has undetermined per-asset-group execution history
+  but is structurally safe regardless (per-blob `except Exception` catch — a broken run can only leave a blob
+  un-migrated, never corrupt/delete it). See "Real per-script data-integrity audit" section above for the full
+  15-row classification table + evidence. Side finding (flagged, not fixed, out of scope): TradFi manifest
+  currently carries 5,932 deprecated-ETF-shaped rows dated through 2026-08-11 — a forward-going capture-scope-drift
+  issue unrelated to this bug, separate from the 2026-05-16 one-off purge (which is confirmed to have worked
+  correctly at the time). No code changed this session — audit + doc update only. Follow-up items 1, 5 remain
+  open.

@@ -351,10 +351,33 @@ When `auto_recover` is exhausted or N/A, the tier escalates: **`file_issue`** wr
 (`wall_type=data_pipeline_failure`, auth via SM `GH_PAT`) — the same escalation spine CI-failure uses.
 **`page_operator`** is the terminal tier (CRITICAL → Slack page).
 
-> **PARTIAL (2026-06-23)**: the deployment-service `escalation.py::_write_issue_doc` actionable-frontmatter half is
-> SHIPPED; the e2e `_dp_common.file_escalation_issue` actionable-frontmatter half is code-complete + QG-green but **not
-> yet quickmerged** (strategy-service dirty-dep blocked) — until it lands, e2e-audit findings file a plain
-> (non-actionable) issue. Tracked in `/plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md`.
+> **RESOLVED (was "PARTIAL" 2026-06-23, corrected 2026-08-18 — the note had gone stale):** both actionable-frontmatter
+> halves shipped long ago (deployment-service's `escalation.py::_write_issue_doc` + e2e-testing's
+> `_dp_common.file_escalation_issue`, the latter landing `e2e-testing@821b73a` 2026-06-23). What was NOT resolved: the
+> e2e-testing half filed its doc by writing + `git commit`/`push`-ing directly from inside its own ephemeral Cloud Run
+> Job — no quality gates, no agent — which silently dropped a genuine RED finding three separate times in one week
+> (git identity, frontmatter drift, same-day filename collision;
+> `/plans/archive/issues/dp_audit_sibling_repo_cli_paths_and_escalation_commit_identity_2026_08_16.md`). See the new
+> subsection immediately below for the fix in flight.
+
+### Never raw-`git commit` a finding from an ephemeral/untracked runner (2026-08-18)
+
+An emitter with no durable, already-git-managed checkout (a Cloud Run Job container, any ephemeral runner) must never
+attempt to write + commit + push a PM issue doc itself — there is no real git identity, no quality gate, and no
+recovery if the commit silently fails when the container exits. Two correct shapes, both already precedented:
+
+- **A durable checkout IS available** (a real slot/agent session) — write the doc locally; normal slot git discipline
+  (or `scripts/dev/safe-doc-push.sh` for a pure doc push) commits it. No explicit "commit this finding" step needed —
+  it's just a file in an already-managed repo.
+- **No durable checkout** — skip the local write entirely (mirrors
+  `deployment_service.data_pipeline_monitors.escalation.route_finding`'s `no_pm_clone_on_disk` branch: it never even
+  tries), emit the event with the full finding/candidate payload, and fire the same `repository_dispatch
+escalate-to-orchestrator` (`wall_type=data_pipeline_failure`) fast path described above so a real dispatched worker
+  files the doc from the payload instead. The dispatched `data_pipeline_failure` boot prompt
+  (`unified-trading-pm/agents/data_pipeline_failure.md`) now handles both cases — a pre-filed slug, or a bare
+  candidate payload it must file itself before diagnosing.
+
+Full design + the incident history that motivated it: `/plans/active/dp_audit_escalation_agent_backed_filing_2026_08_18.md`.
 
 ## Alert-driven dependency revocation (2026-08-14, `alert_driven_dependency_revocation_2026_08_12.md`)
 

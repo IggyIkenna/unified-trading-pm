@@ -187,11 +187,48 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
       general 60s-default dedup path. Verify post-fix via a live-behavior re-sample that survives
       at least 2 observed redeploys within one 30-min cooldown window (a single quiet sample is not
       sufficient evidence per this doc's own "why this evaded prior investigations" section).
-- [ ] [OPERATOR] P1. (carried over, unresolved) Investigate the 2 genuine live-capture stalls
-      first flagged 2026-08-17 (BYBIT-FUTURES on `mtds-live-cefi-consolidated-20260817-025031`;
-      CME trades on `mtds-live-tradfi-cme-trades-20260809-163443`) — both VMs running, both
-      actively attempting, neither producing rows. Needs a look at the live capture
-      process/adapter itself (auth, upstream API change, schema mismatch), not a VM relaunch.
+- [x] ✅ [OPERATOR] P1. (carried over) Investigate the 2 genuine live-capture stalls first
+      flagged 2026-08-17 (BYBIT-FUTURES on `mtds-live-cefi-consolidated-20260817-025031`; CME
+      trades on `mtds-live-tradfi-cme-trades-20260809-163443`) — both VMs running, both
+      actively attempting, neither producing rows. **RESOLVED 2026-08-18 — two DIFFERENT root
+      causes, each with a fresh live-VM evidence check (not a re-citation of old findings):**
+      - **CME trades**: NOT a new bug — a live-side recurrence of the already-tracked
+        `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`
+        (Databento account billing suspended, `api_key_deactivated`/`unpaid invoice` CRAM auth
+        failure). Fresh manifest read confirms the exact same boundary: `captured` cleanly
+        2026-08-09..08-11, then 100% `empty_confirmed`/`SOURCE_RETURNED_ZERO` every single date
+        2026-08-12 through TODAY (rows written as recently as `2026-08-18T10:26:01Z`). This is
+        `BLOCKED-OPERATOR-DECISION` (pay the invoice) — that doc's existing `[OPERATOR]` P0 todo
+        already covers it; added a fresh Progress Log reconfirmation there rather than
+        duplicating. No code fix possible — the feed is dead on the vendor side.
+      - **BYBIT-FUTURES**: a genuine, distinct CODE bug — root-caused and FIXED this session.
+        The `BYBIT-FUTURES→BYBIT` Tardis-alias venue resolution
+        (`_resolve_is_lookup_venue`, `market_tick_data_service/live/_is_universe.py`) correctly
+        returns instruments-service's combined `venue=BYBIT` catalog, but that catalog mixes
+        737 PERPETUAL + 44 FUTURE + 501 SPOT_PAIR instruments under one venue token (IS only
+        writes ONE blob per Tardis exchange). Bybit's public LINEAR WS endpoint cannot serve
+        SPOT_PAIR symbols. A 2026-08-15 diagnosis
+        (`/plans/active/cross_ag_live_capture_parity_2026_08_14.md` Finding C) had already
+        identified BOTH required fixes — (1) filter to PERPETUAL/FUTURE only, (2) chunk the
+        subscribe request under Bybit's 21,000-char cap — but only fix (2) ever shipped
+        (`market-tick-data-service@a89bd433`); fix (1) was designed and stashed
+        (`orchestrator-slot-4-bybit_futures_dp_live_004_subscribe_fix-001`) but never committed
+        (host RAM contention blocked `quality-gates.sh` at the time) and the stash was never
+        recovered. Live-reconfirmed on the CURRENT VM (launched 2026-08-17, well after the
+        chunking fix landed): its manifest shard shows ALL 10,258 BYBIT-FUTURES rows
+        `empty_confirmed`/`SOURCE_RETURNED_ZERO`, with the connector still attempting the FULL
+        unfiltered 1,282-instrument universe (737+44+501, matching the source catalog exactly)
+        — confirming the filter genuinely never shipped and chunking alone was not sufficient.
+        Shipped the missing filter this session: `_is_linear_derivative()` added to
+        `market-tick-data-service/market_tick_data_service/live/connectors/bybit_ws.py`,
+        applied in `BybitFuturesWSFeedConnector.connect()`/`.subscribe()` and (via the new
+        `is_bybit_linear_derivative` export) in `bybit_futures_book_ticker_ws.py`'s
+        `_BybitBookStateConnector` + `BybitFuturesTickerWSConnector` — all 4 BYBIT-FUTURES
+        data_types now filter SPOT_PAIR ids before ever building a subscribe topic. See
+        `cross_ag_live_capture_parity_2026_08_14.md` Finding C for full evidence + the new
+        follow-up todo (verify a real `captured` row post-relaunch, since this VM needs a
+        fresh cycle to pick up the new code — not blocking this todo's resolution, the code
+        fix itself is what this todo asked for).
 
 ## Progress Log
 
@@ -221,3 +258,17 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   or re-run the P1 Cloud-Logging root-cause trace (no new evidence to add beyond what's above). No
   behavioral change shipped this pass — channel confirmed NOT quiet, all 3 open todos above remain the
   correct next actions, no new registry entry needed (no new failure class).
+- **2026-08-18 (interactive session, dispatched specifically to answer the [OPERATOR] investigate-the-2-stalls
+  todo)**: root-caused BOTH live-capture stalls with fresh live evidence (VM SSH, direct manifest reads via UTL
+  `download_bytes`, source-catalog cross-checks — never gcloud/gsutil subprocess). CME trades: NOT a code bug, a
+  live-side recurrence of the already-open `tradfi_databento_account_billing_suspended_2026_08_09.md` (Databento
+  billing block) — reconfirmed via a fresh manifest read (still zero as of `10:26:01Z` today), added a Progress Log
+  entry there, no code fix possible. BYBIT-FUTURES: a genuine code bug — the BYBIT-FUTURES→BYBIT Tardis-alias
+  universe resolution returns an UNFILTERED catalog (737 PERPETUAL + 44 FUTURE + 501 SPOT_PAIR), and Bybit's LINEAR
+  WS endpoint can't serve the SPOT_PAIR symbols; a 2026-08-15 diagnosis already named this exact fix but only half of
+  it (message chunking) ever shipped, the other half (instrument-type filtering) was stashed and lost. Shipped the
+  missing filter (`_is_linear_derivative()` in `bybit_ws.py`, applied across all 4 BYBIT-FUTURES connectors) —
+  evidence + full diagnosis in `cross_ag_live_capture_parity_2026_08_14.md` Finding C and this doc's flipped todo
+  above. Flipped the carried-over [OPERATOR] todo to done. All todos in this doc are now resolved except the P1 GCS-
+  persistence design (still correctly its own dispatch, not attempted this session — out of this session's assigned
+  scope, which was specifically the live-capture-stall investigation).

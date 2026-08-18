@@ -177,6 +177,11 @@ follow-up batch once the operator rules (see `## Deferred`).
       **Done when**: the operator states a decision (a/b) in this todo's own reply or the Progress Log below, same
       closure mechanism as todos 1/2. Repo: unified-trading-pm (decision only — no code in this todo). Source: this
       plan's own `--boot-disk-type` review (2026-08-16, slot 12).
+      **DECIDED 2026-08-18: option (a) — add the optional `boot_disk_type` param.**
+
+- [ ] [SCRIPT] P2. Implement the `boot_disk_type` param decided above (backward compatible), migrate the 15 named
+      launchers to use it instead of hardcoding `--boot-disk-type`. Cross-check the one already flagged to slot 17's
+      "Migrate group B" task before touching it. Repo: unified-trading-pm.
 
 - [ ] [OPERATOR] P2. **Resolve two more genuine blocking gaps found during group B's migration (2026-08-16, slot 17) —
       neither in this plan's or the source issue's original tier list.** (1) **`;`-delimited-metadata callers**
@@ -197,6 +202,11 @@ follow-up batch once the operator rules (see `## Deferred`).
       carve-out would be). **Done when**: the operator states a decision (a/b) in this todo's own reply or the Progress
       Log below, same closure mechanism as todos 1/2. Repo: unified-trading-pm (decision only — no code in this todo).
       Source: this plan's own group-B migration (2026-08-16, slot 17).
+      **DECIDED 2026-08-18: option (a) — fix the regexes to stop at `;` and add accelerator passthrough.**
+
+- [ ] [SCRIPT] P2. Implement the semicolon-regex fix (`[^|,]+` → `[^|,;]+`) + accelerator passthrough decided above,
+      migrate `launch-manifest-recon-all-vm.sh`, `launch-manifest-recon-apply-vm.sh`, `launch-ml-training-vm.sh`,
+      `launch-ml-vm.sh`, and any other group-C launchers sharing the pattern. Repo: unified-trading-pm.
 
 - [ ] [DOCS] P3. **Correct the source issue doc's stale "large disk / `${BOOT_DISK_SIZE%GB}` extraction" tier (1) —
       measured 0/149 launchers use that pattern.** `lc_gcloud_create`'s `disk_gb` (positional arg 5) is already a plain

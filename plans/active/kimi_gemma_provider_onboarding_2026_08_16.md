@@ -292,6 +292,23 @@ had already run. Treat every todo below as net-new work, not a resume.
       `{provider}-{variant}` override for any non-`anthropic` provider. Per-model gate wiring (the
       `gemini_headroom.py`-style piece) is NOT done — deferred to the concurrency-measurement todo below, since no
       model's real rate/concurrency ceiling is known yet to gate on.
+- [x] ✅ [UI] P2. **New, operator ask 2026-08-18**: surface Kimi's real paused state in the dashboard —
+      operator's own framing: "we should also put Kimi on pause because they were on the waiting list for their
+      subscription, so we can put that in the UI as well... it's not something we can really do much about today
+      because we need to go on the waiting list, otherwise we're doing pay-as-you-go usage, which is way too
+      expensive." The pause itself was already real and done (this plan's registration+pause todo above,
+      `POST /api/accounts/{id}/disable`, 2026-08-16) — this todo is the UI-visibility half, which was genuinely
+      missing: `KimiWalletPanel.tsx` showed reconciliation numbers with zero indication of WHY spend was flat.
+      Added `allKimiAccountsPaused()` (`KimiWalletPanel.tsx`) — derived LIVE from `GET /api/accounts`
+      (`AccountView.status === "disabled"` for every registered `provider === "kimi"` account), not a hardcoded
+      label, so the banner disappears on its own the moment the waitlist activates and the operator re-enables the
+      accounts. Renders a `.kimi-paused-banner` explaining the real reason (Moonshot membership-tier waitlist, ETA
+      unknown, pay-as-you-go alone too expensive for fleet dispatch) alongside the still-real reconciliation numbers
+      (pausing an account doesn't erase its historical spend). Done when: the banner reflects live account status,
+      not a static claim. **Evidence**: 4 new `KimiWalletPanel.test.ts` vitest cases; `pw:L2 ✓` —
+      `kimi-wallet-reconciliation.spec.ts`'s new "shows the paused banner" test (fixture: `disable_account()` called
+      on the one registered mock Kimi account, mirroring the real production state), 4/4 passed against the real
+      e2e stack. Full backend+dashboard quality gate green before shipping.
 - [ ] [REVIEW] P2. Wallet/balance reconciliation for both: Moonshot (metered $, confirm whether it exposes a
       balance/usage-read endpoint the way DeepSeek's `/user/balance` does, or whether
       it needs the DeepSeek-style "available-balance-only" design already built) and NVIDIA NIM (free tier — likely
@@ -561,3 +578,7 @@ needs the waitlist to activate first) — both correctly operator-gated, not som
   regression-checks after the litellm proxy restarts) — those describe what happened, not live open work. Also left
   the `related:`/`depends_on:`/`context_scope:` pointers to the still-existing `grok_gemini_translation_proxy_2026_08_14.md`
   doc untouched (out of scope — that doc itself is owned by the separate removal track).
+- **Kimi paused-banner UI, 2026-08-18** (operator ask): the account pause itself was already real and done (see the
+  2026-08-16 entry above, `POST /api/accounts/{id}/disable`) — this closed the remaining UI-visibility gap the
+  operator flagged, a real, live-derived `allKimiAccountsPaused()` check and `.kimi-paused-banner` in
+  `KimiWalletPanel.tsx`, not a hardcoded label. See the flipped todo above for the full evidence.

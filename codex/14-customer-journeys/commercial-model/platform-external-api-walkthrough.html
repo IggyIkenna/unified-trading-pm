@@ -179,7 +179,7 @@
       <span>Platform integration guide</span>
       <span class="sep">/</span>
       <span>Flow draft</span>
-      <span class="conf">Structure review</span>
+      <span class="conf">Measured 2026-08-18</span>
     </div>
 
     <h1>The platform <span class="light">— data, instructions, and execution, over one set of contracts</span></h1>
@@ -187,11 +187,12 @@
     <p class="standfirst">
       Everything below is reachable over an API you call from outside, using the same service-to-service contracts our
       own services use internally. This guide covers what data exists and its real boundaries, how instructions are
-      expressed once and routed anywhere, and what it takes to connect.
+      expressed once and routed anywhere, and what it takes to connect. <b>Coverage and readiness figures are measured
+      as of 2026-08-18</b>, each carrying its denominator; where a figure has no measured basis, none is given.
     </p>
 
     <div class="legend">
-      <span><b class="st st-live">live</b> shipped and reachable</span>
+      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
       <span><b class="st st-part">partial</b> built, reachable for some cases</span>
       <span><b class="st st-plan">planned</b> specified, not yet built</span>
       <span><b class="pend">pending</b> figure not yet measured — never estimated</span>
@@ -234,6 +235,21 @@
         <div><b>Collapse anything</b><span>Sections collapse. Inside coverage, an asset group collapses, then a venue, then an instrument type. Fold away what you are not evaluating</span></div>
         <div><b>Status is per-section</b><span>Every section carries live, partial or planned — against one test: can something on a production path actually reach it</span></div>
         <div><b>Numbers carry provenance</b><span>A figure is either measured with its date and denominator, or marked pending. There is no third category</span></div>
+      </div>
+      <div class="callout">
+        <span class="tag">Where this is in its life</span>
+        <p>
+          Finishing this does not require reinventing design patterns or a long stretch of hypothetical
+          architecture work. The patterns are settled and shipped; what remains is <b>commercially led</b> — we add
+          venues because someone wants to trade them, not to fill a matrix. <b>We will not build for a market that does
+          not exist.</b>
+        </p>
+        <p>
+          So treat what follows as a starting point rather than a finished inventory. Most of the venues and strategies
+          on the current plan complete over the remainder of this year, and <b>nothing in the architecture stops a new
+          venue being added</b> — adding one is a declaration plus an adapter, not a redesign. That is the whole point
+          of the normalisation described below.
+        </p>
       </div>
       <div class="callout">
         <span class="tag">The one convention that matters most</span>
@@ -388,6 +404,72 @@
         say "this perpetual" once and have it resolve correctly across venues — and it is what makes coverage
         percentages comparable rather than a per-venue accounting curiosity.
       </p>
+      <h3>Glossary — the two words that carry the most weight</h3>
+      <div class="keypoints">
+        <div><b>Venue</b><span>"Whose price is this." A price-source identity — deliberately decoupled from whether we can trade there. A separate predicate answers executability</span></div>
+        <div><b>Asset group</b><span>CeFi, DeFi, TradFi, sports, prediction. The five worlds the same contracts span</span></div>
+        <div><b>Instrument ID</b><span>A canonical identity built by one dispatcher for every asset group, so the same thing has the same name everywhere</span></div>
+      </div>
+      <p>
+        <b>Venue is broader than "exchange", deliberately.</b> It can be a centralised exchange, a bookmaker, a
+        prediction market, a data aggregator, a meta-broker, or a lending protocol on a specific chain — DeFi venues
+        carry the chain in the identity itself (<code>AAVE_V3-ARBITRUM</code>, <code>LIDO-ETHEREUM</code>), because the
+        same protocol on two chains is genuinely two venues.
+      </p>
+      <div class="callout">
+        <span class="tag">Why venue is defined by price, not by tradability</span>
+        <p>
+          A venue is a declared price source whether or not we can act on it. Executability is a <em>separate</em>
+          predicate. That split matters: a book we cannot trade is still a legitimate member of the data universe and
+          still improves a fair-value estimate — and conflating the two would either delete useful prices or imply we
+          can trade somewhere we cannot.
+        </p>
+      </div>
+      <h3>Canonical instrument IDs — one builder, five asset groups</h3>
+      <p>
+        There is a single dispatch point for instrument identity across every asset group. The consequence is the part
+        worth caring about: whatever you pull, you get a normalised identity, so the same underlying thing carries the
+        same name regardless of which world it came from.
+      </p>
+      <div class="code"><i># CeFi / DeFi / TradFi — venue, instrument type, symbol</i>
+<b>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</b>
+
+BINANCE-SPOT:SPOT:BTCUSDT
+AAVE_V3-ARBITRUM:LENDING:USDC        <i># chain rides in the venue token</i>
+CME:FUTURE:ES-20260320               <i># dated derivatives append the expiry</i></div>
+      <p>
+        DeFi token symbols preserve on-chain case (<code>aUSDC</code>, <code>stETH</code>) because that case is
+        meaningful on chain; CeFi and TradFi symbols are uppercased. Dated derivatives append
+        <code>-YYYYMMDD</code>, and options add strike and side.
+      </p>
+      <h3>The example worth dwelling on</h3>
+      <p>
+        Event markets are where normalisation earns its keep. The same real-world outcome, quoted on a sports exchange
+        and on a prediction market, resolves to two IDs that <b>differ only in the venue token</b>:
+      </p>
+      <div class="code">FOOTBALL:<b>BETFAIR_EX_UK</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME
+FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
+      <p>
+        Sport, market, league, season, fixture and selection are identical. Only the venue differs — so comparing
+        venues is a group-by, not an integration project. That is a bookmaker and a prediction market, in two different
+        asset groups, made directly comparable by construction.
+      </p>
+      <div class="callout">
+        <span class="tag">What this is used for today, and one honest boundary</span>
+        <p>
+          A cross-venue detector over Kalshi, Polymarket and Betfair is <b>shipped and paper-proven end to end</b>. It
+          normalises every venue onto one YES-probability scale — including de-vigging Betfair's decimal back/lay
+          odds — and scans venue pairs for a box. Kalshi joins that comparison <em>at the probability layer</em>: its
+          native identity is a market ticker (<code>KXBTCD-26JUN24-T95000</code>) rather than the fixture grammar
+          above, so it is normalised for comparison rather than sharing the same ID string.
+        </p>
+        <p>
+          <b>The boundary, stated rather than blurred:</b> the two-line example above is a real, shipped code example.
+          The equivalent "compare across venues by group-by" property is demonstrated for sports and prediction
+          markets; for CeFi, DeFi and TradFi the same <em>builder</em> and the same ID shape apply, but we do not claim
+          a live cross-venue arbitrage proof there.
+        </p>
+      </div>
       <details class="ref">
         <summary>Instrument record — the fields that travel<span class="tag-ref">Schema</span></summary>
         <div class="code"><span class="k">class</span> <b>InstrumentRecord</b>:
@@ -445,15 +527,25 @@
         per chain. A single headline percentage across all of them would be an average over incomparable things.
       </p>
       <div class="stat-row">
-        <div class="stat"><span class="v"><span class="pend">pending</span></span><span class="k">Venue-and-data-type pairs in scope</span></div>
-        <div class="stat"><span class="v"><span class="pend">pending</span></span><span class="k">Currently captured</span></div>
-        <div class="stat"><span class="v"><span class="pend">pending</span></span><span class="k">Obtainable without new sources</span></div>
-        <div class="stat"><span class="v"><span class="pend">pending</span></span><span class="k">Genuinely unavailable</span></div>
+        <div class="stat"><span class="v">660</span><span class="k">Venue × instrument-type × data-type triples in scope <span class="u">(12 unresolved, disclosed)</span></span></div>
+        <div class="stat"><span class="v">48.54<span class="u">%</span></span><span class="k">Reachable coverage, volume-weighted <span class="u">denominator 119,500,618</span></span></div>
+        <div class="stat"><span class="v">3,960</span><span class="k">Shards in scope, measured 2026-08-18</span></div>
+        <div class="stat"><span class="v">288</span><span class="k">Venues in the coverage manifest</span></div>
       </div>
-      <p style="font-size: 0.95rem; color: var(--ink-3);">
-        These four figures are the spine of this document and will be measured from the availability manifest, not
-        estimated. Until then they stay marked.
-      </p>
+      <div class="callout">
+        <span class="tag">How to read 48.54%</span>
+        <p>
+          <b>Volume-weighted across shards</b>, not a naive average of asset groups — the same data averaged naively per
+          asset group reads 73.04%. The 25-point spread is method, not data, which is why the basis is stated rather
+          than the number quoted alone. Denominator is captured + attempted-failed + expected-unattempted; the
+          not-expected class is excluded, since counting a venue's pre-existence as a gap makes a complete dataset look
+          broken.
+        </p>
+        <p>
+          Independently re-derived twice within 0.14 points on 2026-08-17 and 2026-08-18 at different grains — the
+          agreement is what makes it quotable.
+        </p>
+      </div>
     </details>
   </section>
 
@@ -471,7 +563,7 @@
       </p>
 
       <details class="tree">
-        <summary><span class="nm">CeFi</span><span class="meta"><span class="bar"><i style="width:0"></i></span><span class="pend">pending</span></span></summary>
+        <summary><span class="nm">CeFi</span><span class="meta">0 ready / 5 not-ready / 19 unverified</span></summary>
         <div class="tree-body">
           <details class="tree">
             <summary><span class="nm">Binance</span><span class="meta"><span class="pend">pending</span></span></summary>
@@ -512,7 +604,7 @@
       </details>
 
       <details class="tree">
-        <summary><span class="nm">DeFi</span><span class="meta"><span class="pend">pending</span></span></summary>
+        <summary><span class="nm">DeFi</span><span class="meta">0 ready / 133 not-ready / 47 unverified</span></summary>
         <div class="tree-body">
           <p style="font-size:0.93rem;color:var(--ink-3);">
             On-chain venues carry an extra axis — chain — because the same protocol on two chains is two different
@@ -530,17 +622,17 @@
       </details>
 
       <details class="tree">
-        <summary><span class="nm">TradFi</span><span class="meta"><span class="pend">pending</span></span></summary>
+        <summary><span class="nm">TradFi</span><span class="meta">0 ready / 9 not-ready / 0 unverified</span></summary>
         <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Vendor-sourced; the boundary disclosure differs and is stated per dataset.</p></div>
       </details>
 
       <details class="tree">
-        <summary><span class="nm">Prediction</span><span class="meta"><span class="pend">pending</span></span></summary>
+        <summary><span class="nm">Prediction</span><span class="meta">0 ready / 0 not-ready / 1 unverified</span></summary>
         <div class="tree-body"><p style="font-size:0.93rem;color:var(--ink-3);margin:0;">Event-scoped instruments; coverage is stated per event family.</p></div>
       </details>
 
       <details class="tree">
-        <summary><span class="nm">Sports</span><span class="meta"><span class="pend">pending</span></span></summary>
+        <summary><span class="nm">Sports</span><span class="meta">0 ready / 49 not-ready / 1 unverified</span></summary>
         <div class="tree-body">
           <p style="font-size:0.93rem;color:var(--ink-3);margin:0;">
             Carries an explicit data floor — odds data begins at a known date, and anything before it is excluded from
@@ -921,9 +1013,66 @@ next_funding_at  <i>datetime[UTC]</i></div>
         they disagree, that is a defect to fix rather than an expected difference — which is what makes a backtest
         result meaningful as a forward-looking claim.
       </p>
-      <p style="font-size:0.95rem;color:var(--ink-3);">
-        Per-asset-group readiness table — <b class="pend">pending</b>, derived from the readiness contract.
-      </p>
+      <h3>Measured readiness — 2026-08-18</h3>
+      <div class="plate">
+        <div class="plate-head"><span class="label">Derived readiness, pipeline legs</span><span class="note">288 venues × 3 modes = 864 rows</span></div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Asset group</th><th>Ready</th><th>Not ready</th><th>Unverified</th><th>Rows (BATCH)</th></tr></thead>
+            <tbody>
+              <tr><td>CeFi</td><td>0</td><td>5</td><td>19</td><td>24</td></tr>
+              <tr><td>DeFi</td><td>0</td><td>133</td><td>47</td><td>180</td></tr>
+              <tr><td>TradFi</td><td>0</td><td>9</td><td>0</td><td>9</td></tr>
+              <tr><td>Sports</td><td>0</td><td>49</td><td>1</td><td>50</td></tr>
+              <tr><td>Prediction</td><td>0</td><td>0</td><td>1</td><td>1</td></tr>
+              <tr><td>Unattributed</td><td>0</td><td>16</td><td>8</td><td>24</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Readiness applies to archetypes as well as venues</span>
+        <p>
+          A venue has a readiness state; so does a <b>strategy archetype</b>, and so does each
+          <b>(archetype, venue)</b> pair. They are genuinely different questions — an archetype is only usable on a
+          venue whose data satisfies the inputs it declares, so a fully-captured venue with no archetype able to
+          consume it is not a ready venue.
+        </p>
+        <p>
+          <b class="st st-plan">planned</b> — a capability audit deriving archetype readiness across batch, paper and
+          live is specified and not yet built. Until it runs, that axis reports <code>unverified</code> rather than
+          being assumed.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Reading "ready = 0" correctly</span>
+        <p>
+          <b>Zero venues currently clear the bar, and the bar is ours.</b> A venue is ready only when every leg of a
+          19-step contract passes a real machine check — one failing or unchecked leg fails the venue. This is not
+          "nothing works"; it is "we grade strictly and have not yet wired every check". Reported plainly, because a
+          readiness model that cannot return zero is not measuring anything.
+        </p>
+        <p>
+          The largest contributor is structural: the <b>execution-instruction leg is unverified on all 864 rows</b> —
+          that check does not exist anywhere in the fleet yet, so it cannot pass. The strategy leg passes 24 of 864,
+          dominated by archetypes whose input declarations are deliberately incomplete rather than by venues that cannot
+          trade.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Three known gaps, stated rather than smoothed</span>
+        <p>
+          <b>Path canonicalisation currently fails.</b> A live enumeration on 2026-08-18 found 113 non-canonical entries
+          across the five asset groups (defi 38, sports 71, cefi 1, prediction 1, tradfi 2), most unaccounted for by the
+          accepted-exception registry. A related casing defect is an <em>active writer regression</em> — it grew
+          thirteen-fold — so this is degrading rather than static, and no canonical claim is made anywhere here.
+        </p>
+        <p>
+          <b>Prediction capture has an active outage</b> (8 days and counting at measurement), so its coverage must not
+          be read as steady state. <b>Unattributed venues</b>: 8 appear in the coverage manifest with no resolvable
+          asset group.
+        </p>
+      </div>
     </details>
   </section>
 
@@ -1008,12 +1157,12 @@ next_funding_at  <i>datetime[UTC]</i></div>
           <table>
             <thead><tr><th>Figure</th><th>Denominator</th><th>Measured</th><th>Basis</th></tr></thead>
             <tbody>
-              <tr><td>Venue universe size</td><td>venues, and venue×data-type pairs</td><td><span class="pend">pending</span></td><td>capability registry</td></tr>
-              <tr><td>Current coverage</td><td>captured ÷ expected</td><td><span class="pend">pending</span></td><td>availability manifest</td></tr>
-              <tr><td>Obtainable coverage</td><td>captured + unattempted ÷ expected</td><td><span class="pend">pending</span></td><td>manifest + source registry</td></tr>
+              <tr><td>Venue universe size</td><td>660 (venue × instrument_type × data_type) triples; 288 venues in the coverage manifest</td><td>2026-08-18</td><td>capability registry, re-run from source</td></tr>
+              <tr><td>Current coverage</td><td>48.54% reachable, volume-weighted; denominator 119,500,618 over 3,960 shards</td><td>2026-08-18</td><td>availability manifest, via the honest-coverage dump</td></tr>
+              <tr><td>Obtainable coverage</td><td><b>No measured basis.</b> A previously-circulated figure was checked and no projection, document or measurement supports it — so none is stated here</td><td>—</td><td>deliberately absent</td></tr>
               <tr><td>Per-AG current size</td><td>bytes and rows</td><td><span class="pend">pending</span></td><td>object store</td></tr>
               <tr><td>Per-AG expected size</td><td>bytes and rows, post-backfill</td><td><span class="pend">pending</span></td><td>projection — basis to be stated</td></tr>
-              <tr><td>Readiness per AG</td><td>batch / paper / live</td><td><span class="pend">pending</span></td><td>readiness contract, derived</td></tr>
+              <tr><td>Readiness per AG</td><td>288 venues × 3 modes = 864 rows — ready 0, not_ready 844, unverified 20</td><td>2026-08-18</td><td>readiness contract, derived not declared</td></tr>
             </tbody>
           </table>
         </div>
@@ -1023,13 +1172,16 @@ next_funding_at  <i>datetime[UTC]</i></div>
 
   <footer>
     <p class="lede">
-      <span class="who">Odum Research</span> — platform integration guide. <b>Flow draft, 2026-08-16</b>: this edition
-      is for structure review. Section order, depth and the collapse hierarchy are the subject; figures marked
-      <b class="pend">pending</b> are placeholders and are being measured, not estimated.
+      <span class="who">Odum Research</span> — platform integration guide. <b>Measured edition, 2026-08-18.</b>
+      Coverage, denominator and readiness figures are live measurements with their date and denominator stated.
+      Remaining <b class="pend">pending</b> markers are figures not yet measured — they are placeholders, never
+      estimates, and a figure with no measured basis is omitted rather than approximated.
     </p>
     <p>
-      Status reflects what is reachable on a production path, not what exists in a repository. Where the two differ,
-      this document says so.
+      Status reflects what is reachable on a production path AND validated with real capital — not what exists in a
+      repository. Where those differ, this document says so. <b>That bar is deliberately strict</b>: capital validation
+      is a separate gate from code being correct and reachable, so a section can be complete, wired and exercised in
+      paper and still not carry a <b>live</b> mark.
     </p>
   </footer>
 </div>

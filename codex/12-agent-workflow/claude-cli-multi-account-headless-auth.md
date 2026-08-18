@@ -228,14 +228,41 @@ Everything above (`~/.claude-accounts/`, the two creds buckets, `CredsEnvPoller`
 live orchestrator, and that step has a real gap (confirmed live 2026-08-18, igboestates-account
 onboarding) that cost a session real time re-deriving — recorded here so it isn't re-discovered:
 
-1. Mint the token (`claude setup-token`) and upload the `.env` file to both creds buckets, per the
-   one-time-setup + VM-file-layout sections above.
+1. Mint the token (`claude setup-token`) and upload the `.env` file to both creds buckets.
+   **Do NOT run `gcloud storage cp` / `aws s3 cp` directly** — an interactive session's
+   `block_destructive_commands.py` `PreToolUse` hook rejects any raw GCS/S3 object-CLI subprocess
+   call outright (workspace HARD RULE, not specific to this task — same rule QG STEP 5.105 enforces
+   on committed code). Use UTL's `cloud_interface` instead, the exact pattern already used by
+   `gcs_sync.py`'s own account-adjacent uploaders:
+   ```python
+   from unified_trading_library import get_storage_client
+   get_storage_client(provider="gcp").upload_file(
+       "central-element-323112-orchestrator-creds", f"accounts/{account_id}.env", str(local_path),
+       content_type="text/plain",
+   )
+   get_storage_client(provider="aws").upload_file(
+       "uts-orchestrator-creds-427895769566", f"accounts/{account_id}.env", str(local_path),
+       content_type="text/plain",
+   )
+   ```
+   `get_storage_client()` needs `GCP_PROJECT_ID`/`AWS_ACCOUNT_ID` set in the environment (not
+   auto-detected) — export both before running, or the call raises `ValueError` immediately.
+   Delete the local `.env` copy once both uploads succeed — don't leave a live token sitting on a
+   laptop disk longer than needed.
 2. Add a new `AccountDef` entry to `data/config/accounts.json` (`server/accounts.py`'s schema) —
-   at minimum `id`, `label`, `tier`, `provider: "anthropic"`, `weekly_msg_limit`, `primary_email`,
-   `operator`, and `oauth_token_env_file` (the `.env` filename from step 1, NOT the token itself —
-   `accounts.json` never contains the secret, only a path reference to where the poller/spawn path
-   reads it from). `tier`/`weekly_msg_limit` are operator-declared and unverifiable from the token
-   alone (see "Scope limitation" below) — ask the operator rather than guessing.
+   at minimum `id`, `label`, `tier`, `weekly_msg_limit`, `primary_email`, `operator`, and
+   `oauth_token_env_file` (the `.env` filename from step 1, NOT the token itself — `accounts.json`
+   never contains the secret, only a path reference to where the poller/spawn path reads it from).
+   `tier` is `Literal["pro","max5","max20","team","enterprise","api"]` (`accounts.py:13`) —
+   operator-declared and unverifiable from the token alone (see "Scope limitation" below), ask
+   rather than guess; if the operator just says "a Max plan" with no further detail, `max20` /
+   `weekly_msg_limit: 1200` is the established default for every one of this operator's personal
+   accounts so far (`sub-a` through `sub-g`) — confirm against a recent sibling account's own entry
+   rather than assuming the number never changes. Edit the LIVE file on the orchestrator VM
+   (`$WD/data/config/accounts.json`, `WD` = `systemctl show orchestrator.service
+--property=WorkingDirectory --value`) as the `ubuntu` user (`sudo -u ubuntu python3 -c '...'` via
+   SSM, matching the file's real ownership) — back it up first (`shutil.copy` to a dated
+   `.bak-<date>` alongside it) before writing.
 3. **The gap**: unlike `POST /api/accounts/{id}/tier` (which writes `accounts.json` AND the live
    `AccountRow` for an EXISTING account), there is no equivalent "create" endpoint for a brand-new
    account. `bootstrap.sync_accounts_to_db()` (`server/bootstrap.py`) is the only code path that
@@ -244,12 +271,17 @@ onboarding) that cost a session real time re-deriving — recorded here so it is
    sites. A raw file edit alone will NOT make the new account appear in `/api/accounts` or become
    spawn-eligible. **Restarting `orchestrator.service` IS required** to pick up a new account (an
    existing account's tier/limits can be live-edited via the API without one; a brand-new id
-   cannot). Workers should survive this restart (`KillMode=process` — confirmed live, only the
-   uvicorn PID restarts, tmux sessions persist and reconnect), but it is still a live restart of
-   shared infrastructure — confirm with the operator before doing it, especially if other sessions
-   have in-flight dispatches, rather than restarting unilaterally.
-4. After the restart, confirm via `GET /api/accounts` that the new `account_id` appears with the
-   expected fields, and that a spawn against it succeeds (the "Quick verification recipe" above).
+   cannot) — confirm with the operator before doing it, especially if other sessions have in-flight
+   dispatches, rather than restarting unilaterally. **Verified safe live (2026-08-18,
+   igboestates-account onboarding)**: `sudo systemctl restart orchestrator.service`, API back up in
+   ~11s, all 24 live worker tmux sessions survived and reconnected (`KillMode=process` — only the
+   uvicorn PID restarts).
+4. After the restart, confirm via `GET /api/accounts` that the new `account_id` appears with
+   `status: "healthy"` and the expected fields — `weekly_pct`/`five_hour_pct`/`*_resets_at` all come
+   back `null` at this point, that's correct, not a bug: those are populated by the usage poller
+   once the account is actually used for a spawn, not at registration time. A spawn against it
+   succeeding (the "Quick verification recipe" above) is the final confirmation, not yet exercised
+   by the 2026-08-18 pass — do it if you want full end-to-end proof, not just registration proof.
 
 **Worth building, not yet built**: a live "register new account" endpoint that writes
 `accounts.json` and inserts the new `AccountRow` in one call, the same way the tier-editor does for

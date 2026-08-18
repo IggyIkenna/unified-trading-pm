@@ -15,7 +15,7 @@ summary: >-
   regression, but the outcome was not observed before this session closed out (out of scope for
   the /ci-reconcile pass that found it; the original ask was 4 specific, unrelated alerts, all
   resolved separately).
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -35,12 +35,18 @@ source: >-
   /ci-reconcile interactive run, 2026-08-18 (this session) — mandatory pre-report re-poll of
   #ci-failures via scripts/dev/slack-read-channel.py surfaced the ci-status-update CRITICAL;
   gh run view --log/--log-failed on run 32122593759 read directly to isolate the failure signature.
-resolved_by:
+resolved_by: >-
+  Confirmed one-off flake: `gh run rerun 32122593759 --failed` (dispatched ~09:58Z) came back
+  conclusion=success on re-check (same run id, same sha ffd2278ea73160a36fe0add79a2aa7c8a8f510b2) —
+  https://github.com/IggyIkenna/market-data-processing-service/actions/runs/32122593759
 locked_by:
 depends_on: []
 ---
 
 # market-data-processing-service main QG regression — single OSError, cause unconfirmed
+
+> **ARCHIVED**: resolved via `gh run rerun` confirmation, 2026-08-18 (interactive /ci-reconcile session).
+> Successor: none (confirmed one-off flake; no follow-up work unless it recurs).
 
 ## What I found
 
@@ -92,8 +98,9 @@ paging `#ci-failures` on every subsequent `ci-status-update` dispatch until some
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Check the outcome of the `gh run rerun 32122593759 --failed` dispatched
-      2026-08-18 ~09:58Z (repo: market-data-processing-service) — if green, close this out as a
-      confirmed one-off flake; if red with the same `OSError: cannot send (already closed?)`,
-      pull the full un-filtered `QG slice (tests)` log, isolate the failing test/fixture, and fix
-      the underlying async resource-cleanup race.
+- [x] ✅ [SCRIPT] P2. Check the outcome of the `gh run rerun 32122593759 --failed` dispatched
+      2026-08-18 ~09:58Z (repo: market-data-processing-service) — DONE. Rerun came back
+      conclusion=success; `main`'s `ci_status` is back to `MAIN_GREEN`. Confirmed one-off flake, not
+      a real regression — no code fix needed. Per this workspace's "harden the class" rule, only
+      worth a deeper fix if `OSError: cannot send (already closed?)` recurs a second time on this
+      repo's test suite.

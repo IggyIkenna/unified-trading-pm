@@ -73,6 +73,7 @@ source: >-
 > being re-architected to shard-write ONE parquet per instrument (like cefi/tradfi), collapsing SSOT §1 pattern #4 →
 > pattern #1. This is the target; the batch-model column/path framing in the tracks below is superseded. Grounded in
 > code (workflow `wf_20749dad`).
+> **Pre-authorized 2026-08-18**: once remaining todos here close, auto-RESUME the schedulers above (reconfirmed 3x).
 
 **Why**: MTDS wrote an arbitrary bunch of instruments per capture into one `{venue}_{chain}_{capture_ts}.parquet` batch,
 blank manifest `instrument_id`, multiple batch files per shard-day — the root cause of the manifest/data-status pain +

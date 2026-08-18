@@ -454,8 +454,11 @@ see/experience differently.
   execution-service for position.
 - **Current implementation gap:** Uses internal PositionMonitor. Target: subscribes to PBM. PBM itself is not yet
   a standalone service — its role currently lives inside strategy-service's `position/` package
-  (`margin_event_emitter.py` on top of `unified_trading_library.margin_and_liquidation`). Extraction into a real
-  standalone service targeted November 2026, tracked in `/plans/epics/system_readiness_master.md` W7 (2026-08-17).
+  (`margin_event_emitter.py` on top of `unified_trading_library.margin_and_liquidation`). **This is deliberate for
+  now, not an oversight** (operator, 2026-08-18): the in-process call is the intended current shape; extraction
+  into a real standalone service is a possible future decision, not a currently-tracked gap to close. Re-evaluate
+  in a matter of weeks, ahead of the already-filed target in `/plans/epics/system_readiness_master.md` W7
+  (November 2026) — that todo is the decision point, not a completion deadline.
 - **Data produced:** `signals_backtest_results` (GCS), live trade signals (PubSub)
 - **Data consumed:** predictions (PubSub), market data (PubSub), features (PubSub), positions (PubSub from PBM)
 

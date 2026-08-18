@@ -36,7 +36,7 @@ last_reviewed:
 code_refs:
 archetype: ARBITRAGE_MEV_LIQUIDATION_BUNDLE
 family: ARBITRAGE_STRUCTURAL
-venue_universe: [AAVE_V3, COMPOUND_V3, MORPHO_BLUE, FLUID, EULER_V2, RADIANT, VENUS, BENQI, UNISWAP_V3, BALANCER, CURVE]
+venue_universe: [AAVE_V3, COMPOUND_V3, MORPHO, FLUID, EULER_V2, RADIANT, VENUS, BENQI, UNISWAP_V3, BALANCER, CURVE]
 topology_requirements:
   isolation: { execution-service: isolated, strategy-service: isolated }
   co_location: [execution-service, strategy-service]
@@ -99,7 +99,7 @@ String metadata (`self.params`):
 - `cand_<id>_borrower`
 - `cand_<id>_debt_asset`
 - `cand_<id>_collateral`
-- `cand_<id>_pool` — `AAVE_V3` | `COMPOUND_V3` | `MORPHO_BLUE` | `FLUID` | `EULER_V2` | `RADIANT` | `VENUS` | `BENQI`
+- `cand_<id>_pool` — `AAVE_V3` | `COMPOUND_V3` | `MORPHO` | `FLUID` | `EULER_V2` | `RADIANT` | `VENUS` | `BENQI`
 - `cand_<id>_chain`
 
 ## Wire format

@@ -1,0 +1,143 @@
+---
+doc_type: issue
+title: "AO dashboard Activity Log 'Done' tab undercounts — event-vocabulary gap, not a role filter"
+summary: >-
+  Investigating why the operator's 5-hour rate-limit hit overnight (2026-08-17/18) showed only ~20 "done" tasks in
+  the Activity Log despite the fleet having clearly done much more work: the Done tab's `DONE_ACTIVITY_TYPES`
+  allowlist (`dashboard/src/App.tsx`) only recognizes `slot_done`-family event types. Escalation completions log as
+  `escalation_resolved`/`escalation_resolved_pre_dispatch`/`escalation_unresolved` (`server/escalation.py`) and
+  scheduled-task-family completions log as `plan_health_result` (`server/plan_health.py`) — neither vocabulary is in
+  the allowlist, so real completions are invisible to the tab even though `activity_log` has them. Live-measured in
+  the investigated window: 23 `slot_done` vs 32 additional real completions (7 escalation_resolved + 1
+  escalation_unresolved + 21 escalation_resolved_pre_dispatch + 3 plan_health_result) that never appeared — the
+  fleet did 55 tasks, the tab showed ~20.
+status: resolved
+nature: issue
+asset_group: [ao]
+stage: [meta]
+repos: [agent-orchestrator]
+scope: [engineer]
+tags: [agent-orchestrator, dashboard, activity-log, ui, escalation, scheduled-jobs, undercounting]
+related:
+  [
+    /plans/active/ao_open_work_consolidated_tracker_2026_08_14.md,
+    /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
+  ]
+context_scope:
+  [
+    agent-orchestrator/dashboard/src/App.tsx,
+    agent-orchestrator/server/routes/state.py,
+    agent-orchestrator/server/state_store/activity.py,
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/server/plan_health.py,
+  ]
+created: 2026-08-18
+last_updated: 2026-08-18
+parent_epic: orchestrator_master
+priority: P2
+assigned_vm: NA
+resolved_by: agent-orchestrator@05c2d94832
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on:
+source: >-
+  Surfaced investigating a 2026-08-17/18 overnight 5-hour rate-limit hit (interactive session) — the operator asked
+  why the Activity Log showed only ~20 done tasks when the actual fleet volume was clearly higher. A background
+  agent traced it to `DONE_ACTIVITY_TYPES` (`dashboard/src/App.tsx:116`) and confirmed live via a read-only SSM SQL
+  query against the production `activity_log` table (`server/orm.py:447-455`, event-type-only, no role column).
+execution_scope: local-only
+drift_direction: advance-code
+---
+
+# AO dashboard Activity Log "Done" tab undercounts — event-vocabulary gap, not a role filter
+
+> **🟢 RESOLVED 2026-08-18** — both todos done: the Activity panel's Done ✓/✗ tabs
+> (`agent-orchestrator@fae7a6d8a6`) and the per-slot "Last done" badge
+> (`agent-orchestrator@05c2d94832`) now both recognize escalation/plan_health
+> completions, not just `slot_done`. No further instances found auditing the rest
+> of the dashboard.
+
+## What's wrong
+
+`server/routes/state.py`'s `GET /api/activity` and `server/state_store/activity.py::list_activity()` filter purely
+on `event_type`. The dashboard's Done tab (`dashboard/src/App.tsx`) hardcodes:
+
+```
+DONE_ACTIVITY_TYPES = ["slot_done", ...DONE_FAILED_TYPES, "tmux_session_lost"]
+```
+
+`"slot_done"` is emitted only by the numbered-slot `/done` handler (`server/routes/slots_worker.py:2686-2698`).
+Escalation-role completions use a disjoint vocabulary: `"escalation_resolved"` (`server/escalation.py:2565`),
+`"escalation_resolved_pre_dispatch"` (`:1887`), `"escalation_unresolved"` (`:2796`). Scheduled-task-family
+(`plan_health`/`plan_reconciler`/etc.) completions log `"plan_health_result"` (`server/plan_health.py:1030`). None
+of these are in `DONE_ACTIVITY_TYPES`, so the Done tab is structurally blind to two of the fleet's three dispatch
+roles (scheduled_task, escalation) — it only ever shows `planning`/backlog-worker completions.
+
+This is NOT a role filter anyone chose deliberately — there's no role column on `ActivityRow`/`activity_log` at
+all. It's a vocabulary gap: whoever wrote the tab's allowlist covered the one event type they were looking at
+(`slot_done`) and the other two roles' distinct completion-event names were never added.
+
+## Real measured impact
+
+2026-08-17T20:00Z–2026-08-18T03:00Z window (the one investigated for the rate-limit incident): 23 `slot_done`
+events (matches the operator's observed "~20 done") vs. 32 additional real completions across escalation and
+scheduled-task roles that never rendered. Actual fleet completions: 55. Displayed: ~23. A ~58% undercount in that
+window, and structural (not a one-off) — it undercounts by this same mechanism every time the fleet does
+meaningful escalation/scheduled work.
+
+## Todos
+
+- [x] ✅ [UI] P2. **Corrected location (2026-08-18): the operator-visible Activity panel's actual "Done ✓"/"Done ✗"
+      tabs are driven by `DONE_PASSED_TYPES`/`DONE_FAILED_TYPES` (`dashboard/src/layout.tsx`,
+      `ActivityFilter = "done_passed" | "done_failed"`), NOT the `DONE_ACTIVITY_TYPES` constant this issue originally
+      cited (`dashboard/src/App.tsx:115`) — that one only feeds the separate per-slot "Last done" badge
+      (`latestDoneOutcomeBySlot`), confirmed unused by the tab itself. Fixed the real one**: `DONE_PASSED_TYPES`
+      gained `escalation_resolved`/`escalation_resolved_pre_dispatch`/`plan_health_result`; `DONE_FAILED_TYPES`
+      gained `escalation_unresolved` (explicitly NOT a success, same "done failed · …" styling convention as the
+      existing rejected-slot_done variants). A SECOND, render-layer bug found in the same code path:
+      `mergeDonePassed()` hard-filtered to `event_type === "slot_done"` only, silently dropping every other
+      `DONE_PASSED_TYPES` member even once the type lists were fixed — corrected to pass through anything that
+      isn't the slot_done/slot_done_verified pairing unchanged. `activityLabel`/`activityTypeClass` given real
+      entries for all 4 new types (previously fell through to a blank/unstyled default).
+      **Evidence**: `pw:L2 ✓` — new `dashboard/tests/e2e/activity-log-role-vocabulary.spec.ts`, 2/2 passed against
+      the real e2e stack (fixture: one `escalation_resolved`, one `escalation_unresolved`, one `plan_health_result`
+      row via `seed_e2e_state.py`'s real `log_activity()` call) — proves Done ✓ shows the two success rows and
+      excludes the unresolved one, Done ✗ shows the reverse. `src/activity.test.ts` — 409/409 vitest passing,
+      including 2 new `mergeDonePassed` regression cases. `App.tsx`'s own `DONE_ACTIVITY_TYPES` (the per-slot badge)
+      was deliberately left unfixed — same gap, smaller/different UI surface, correctly folded into the audit todo
+      below rather than force-fixed here.
+- [x] ✅ [REVIEW] P3. Checked whether any OTHER dashboard surface shares this same allowlist-style gap — audited
+      `server/fleet_kpis.py`/`dashboard/src/FleetKpis.tsx` (deliberately scoped to backlog-task throughput only,
+      numerator and denominator share the same scope, not a bug) and every other `dashboard/src/*.tsx` panel (zero
+      further hits) in addition to the one already-confirmed instance. **Fixed**: `DONE_ACTIVITY_TYPES`
+      (`dashboard/src/App.tsx`, feeding `latestDoneOutcomeBySlot`'s per-slot "Last done" badge) now spreads
+      `DONE_PASSED_TYPES` instead of hardcoding bare `"slot_done"`. A second, matching render-layer bug found in the
+      same function: `latestDoneOutcomeBySlot`'s own `isPassed` check was separately hardcoded to literal
+      `event_type === "slot_done"` — fixing the fetch alone would NOT have been enough, exactly the same two-layer
+      shape as the `mergeDonePassed` bug in the first todo above. Fixed to `DONE_PASSED_TYPE_SET.has(a.event_type)`.
+      **Evidence**: `agent-orchestrator@05c2d94832`. `pw:L2 ✓` — new test in
+      `dashboard/tests/e2e/activity-log-role-vocabulary.spec.ts` proving slot 5's "Last done" badge shows a real
+      "✓ done" for its escalation_resolved completion (fixture pitfall found and documented along the way: slot 1
+      looked like the obvious fixture target but is deliberately idle-with-no-tmux, so `slotRowIsDead()` bypasses the
+      badge entirely regardless of data — slot 5, "working" status, was the correct target). `src/activity.test.ts` —
+      414/414 vitest passing, including 2 new `latestDoneOutcomeBySlot` regression cases for escalation_resolved/
+      plan_health_result. Full backend+dashboard quality gate green before shipping. No further gaps found —
+      this todo is fully closed, not partially scoped.
+
+## Progress Log
+
+- **2026-08-18 (resolved)**: P3 audit todo closed — `agent-orchestrator@05c2d94832` fixed the one confirmed instance
+  (`DONE_ACTIVITY_TYPES` + `latestDoneOutcomeBySlot`'s own `isPassed` check, both in the per-slot "Last done" badge
+  path) and found no further gaps auditing `fleet_kpis.py`/`FleetKpis.tsx` and every other dashboard panel. Both
+  todos done — closing the issue.
+- **2026-08-18 (fix landed)**: see the flipped todo above for the full fix — corrected the location this issue
+  originally cited (`DONE_ACTIVITY_TYPES` in `App.tsx` was a red herring; the real fix was
+  `DONE_PASSED_TYPES`/`DONE_FAILED_TYPES` + `mergeDonePassed()` in `layout.tsx`), found and fixed a second bug in
+  the same code path along the way (`mergeDonePassed`'s hard `slot_done`-only filter), and left one confirmed,
+  now-precisely-scoped instance of the same gap (the per-slot badge) for the P3 audit todo rather than expanding
+  this fix's blast radius further.
+- **2026-08-18 (created, /pre-compact)**: extracted from a same-session chat finding (background-agent SSM
+  investigation) that had not yet been written to a durable, tracked doc — converting per this workspace's "every
+  deferral becomes a `- [ ]` todo, not prose" hard rule before context compacts.
