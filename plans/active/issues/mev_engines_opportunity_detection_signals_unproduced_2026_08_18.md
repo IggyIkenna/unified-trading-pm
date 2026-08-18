@@ -42,6 +42,8 @@ locked_since:
 resolved_by:
 supersedes:
 superseded_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # 3 of 4 code-shipped MEV engines have no producer for their own opportunity-detection features
