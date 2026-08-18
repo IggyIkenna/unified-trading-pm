@@ -180,8 +180,16 @@ Full findings, root cause, and evidence for every todo below live in the three s
       in-process read an `on_tick()` gate can call — `MarginEvent` is a best-effort Pub/Sub push, only fired on a
       non-INFO severity crossing, with no subscriber/cache inside strategy-service today (reconciliation finding
       #4). This todo cannot land until that read path exists — see the data-model todo below, which now owns
-      building it, not just adding schema fields. Done-when: neither file reads `features.get("health_factor")`
-      anymore, both call the centralized source, and existing archetype tests stay green.
+      building it, not just adding schema fields.
+      **RULED 2026-08-18 — fail CLOSED on missing or stale data, not open.** Current logic
+      (`if health is not None and health < min_health: return None`) silently ALLOWS the trade when health is
+      unknown — meaning a genuinely underwater `CARRY_RECURSIVE_STAKED` position could trade unchecked during any
+      gap before the live poll first populates. Must invert: `health is None` (never polled) OR stale beyond its
+      SLA (poll succeeded once but hasn't refreshed recently — needs a timestamp alongside the cached value, not
+      just a bare optional) both block, the same as a known-bad health factor. Generalized operator ruling, not
+      specific to this gate: `/plans/epics/system_readiness_master.md` W16. Done-when: neither file reads
+      `features.get("health_factor")` anymore, both call the centralized source with fail-closed-on-absent-or-stale
+      semantics, and existing archetype tests stay green (including a new test for the missing/stale-data case).
 - [ ] [BACKEND] P1. Switch `arbitrage_structural/liquidation_capture.py`'s health-factor gate and
       `mev/liquidation_bundle.py`'s `liq_candidate_health_factor_*` gate to the same centralized source
       (candidate-wallet-parameterized, not client-scoped — a different call shape from the prior todo). Done-when:
@@ -223,9 +231,11 @@ Full findings, root cause, and evidence for every todo below live in the three s
       push reconciliation (`git diff origin/<branch> -- <path>` before push would have caught it — noting for next
       time). If this reverts a third time, treat it as a genuine content-collision bug in the push path, not
       operator error, and escalate rather than silently re-fixing again.
-- [ ] [BACKEND] P2. Fix `_process_health_factor()`'s misleading docstring in
-      `features-service/features_service/onchain/engine/orchestrator.py` to describe the generic protocol-level
-      rate-index data it actually reads, not the per-wallet Aave polling it currently claims.
+- [x] [BACKEND] P2. ✅ SHIPPED 2026-08-18 — `features-service@7ebefe9319`. Fixed `_process_health_factor()`'s
+      misleading docstring in `features-service/features_service/onchain/engine/orchestrator.py` — now describes
+      the generic protocol-level rate-index data it actually reads and states plainly it is NOT used for
+      strategy-service risk gating (per-wallet Aave polling was never real). Landed via quickmerge, verified
+      post-push ancestor of `origin/live-defi-rollout`.
 - [ ] [BACKEND] P2. Unify the two divergent GCS config-loader path conventions —
       `ConfigLoader.load_config`'s `configs/{strategy_id}.json` vs. `load_strategy_config_gcs`'s
       `configs/strategies/{strategy_id}.json` — behind one loader, building on `get_strategy_params()`'s existing
