@@ -237,6 +237,21 @@
         <div><b>Numbers carry provenance</b><span>A figure is either measured with its date and denominator, or marked pending. There is no third category</span></div>
       </div>
       <div class="callout">
+        <span class="tag">Where this is in its life</span>
+        <p>
+          Finishing this does not require reinventing design patterns or a long stretch of hypothetical
+          architecture work. The patterns are settled and shipped; what remains is <b>commercially led</b> — we add
+          venues because someone wants to trade them, not to fill a matrix. <b>We will not build for a market that does
+          not exist.</b>
+        </p>
+        <p>
+          So treat what follows as a starting point rather than a finished inventory. Most of the venues and strategies
+          on the current plan complete over the remainder of this year, and <b>nothing in the architecture stops a new
+          venue being added</b> — adding one is a declaration plus an adapter, not a redesign. That is the whole point
+          of the normalisation described below.
+        </p>
+      </div>
+      <div class="callout">
         <span class="tag">The one convention that matters most</span>
         <p>
           Coverage percentages are meaningless without their denominator, so every one here states what it is over. "80%
@@ -389,6 +404,72 @@
         say "this perpetual" once and have it resolve correctly across venues — and it is what makes coverage
         percentages comparable rather than a per-venue accounting curiosity.
       </p>
+      <h3>Glossary — the two words that carry the most weight</h3>
+      <div class="keypoints">
+        <div><b>Venue</b><span>"Whose price is this." A price-source identity — deliberately decoupled from whether we can trade there. A separate predicate answers executability</span></div>
+        <div><b>Asset group</b><span>CeFi, DeFi, TradFi, sports, prediction. The five worlds the same contracts span</span></div>
+        <div><b>Instrument ID</b><span>A canonical identity built by one dispatcher for every asset group, so the same thing has the same name everywhere</span></div>
+      </div>
+      <p>
+        <b>Venue is broader than "exchange", deliberately.</b> It can be a centralised exchange, a bookmaker, a
+        prediction market, a data aggregator, a meta-broker, or a lending protocol on a specific chain — DeFi venues
+        carry the chain in the identity itself (<code>AAVE_V3-ARBITRUM</code>, <code>LIDO-ETHEREUM</code>), because the
+        same protocol on two chains is genuinely two venues.
+      </p>
+      <div class="callout">
+        <span class="tag">Why venue is defined by price, not by tradability</span>
+        <p>
+          A venue is a declared price source whether or not we can act on it. Executability is a <em>separate</em>
+          predicate. That split matters: a book we cannot trade is still a legitimate member of the data universe and
+          still improves a fair-value estimate — and conflating the two would either delete useful prices or imply we
+          can trade somewhere we cannot.
+        </p>
+      </div>
+      <h3>Canonical instrument IDs — one builder, five asset groups</h3>
+      <p>
+        There is a single dispatch point for instrument identity across every asset group. The consequence is the part
+        worth caring about: whatever you pull, you get a normalised identity, so the same underlying thing carries the
+        same name regardless of which world it came from.
+      </p>
+      <div class="code"><i># CeFi / DeFi / TradFi — venue, instrument type, symbol</i>
+<b>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</b>
+
+BINANCE-SPOT:SPOT:BTCUSDT
+AAVE_V3-ARBITRUM:LENDING:USDC        <i># chain rides in the venue token</i>
+CME:FUTURE:ES-20260320               <i># dated derivatives append the expiry</i></div>
+      <p>
+        DeFi token symbols preserve on-chain case (<code>aUSDC</code>, <code>stETH</code>) because that case is
+        meaningful on chain; CeFi and TradFi symbols are uppercased. Dated derivatives append
+        <code>-YYYYMMDD</code>, and options add strike and side.
+      </p>
+      <h3>The example worth dwelling on</h3>
+      <p>
+        Event markets are where normalisation earns its keep. The same real-world outcome, quoted on a sports exchange
+        and on a prediction market, resolves to two IDs that <b>differ only in the venue token</b>:
+      </p>
+      <div class="code">FOOTBALL:<b>BETFAIR_EX_UK</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME
+FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
+      <p>
+        Sport, market, league, season, fixture and selection are identical. Only the venue differs — so comparing
+        venues is a group-by, not an integration project. That is a bookmaker and a prediction market, in two different
+        asset groups, made directly comparable by construction.
+      </p>
+      <div class="callout">
+        <span class="tag">What this is used for today, and one honest boundary</span>
+        <p>
+          A cross-venue detector over Kalshi, Polymarket and Betfair is <b>shipped and paper-proven end to end</b>. It
+          normalises every venue onto one YES-probability scale — including de-vigging Betfair's decimal back/lay
+          odds — and scans venue pairs for a box. Kalshi joins that comparison <em>at the probability layer</em>: its
+          native identity is a market ticker (<code>KXBTCD-26JUN24-T95000</code>) rather than the fixture grammar
+          above, so it is normalised for comparison rather than sharing the same ID string.
+        </p>
+        <p>
+          <b>The boundary, stated rather than blurred:</b> the two-line example above is a real, shipped code example.
+          The equivalent "compare across venues by group-by" property is demonstrated for sports and prediction
+          markets; for CeFi, DeFi and TradFi the same <em>builder</em> and the same ID shape apply, but we do not claim
+          a live cross-venue arbitrage proof there.
+        </p>
+      </div>
       <details class="ref">
         <summary>Instrument record — the fields that travel<span class="tag-ref">Schema</span></summary>
         <div class="code"><span class="k">class</span> <b>InstrumentRecord</b>:
