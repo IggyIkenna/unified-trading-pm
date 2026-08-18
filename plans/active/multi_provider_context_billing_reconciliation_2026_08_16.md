@@ -416,7 +416,7 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       Done when: every provider that CAN report a reasoning-token count does, joined onto `TaskUsageRow` (or the
       unified schema's real replacement); every provider that genuinely can't is explicitly documented as N/A, not
       silently blank.
-- [ ] [DATA] P2. New, operator ask 2026-08-18 — bring Kimi's wallet reconciliation up to the same depth Claude/
+- [x] ✅ [DATA] P2. New, operator ask 2026-08-18 — bring Kimi's wallet reconciliation up to the same depth Claude/
       DeepSeek already have. Today `compute_kimi_wallet_window_reconciliation()` (`server/state_store/slots.py:1373`)
       only covers the 1h/24h/7d/Lifetime WINDOWED view — no lifetime LEDGER table (known top-up total / opening
       balance / attributed spend / residual), the shape `compute_claude_wallet_reconciliation()`
@@ -426,6 +426,14 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       `KimiWalletPanel.tsx` component, same lifetime-table shape already proven twice. Done when: `KimiWalletPanel.tsx`
       shows a lifetime reconciliation table alongside its existing windowed one, backed by a real
       `compute_kimi_wallet_reconciliation()`-equivalent, same as DeepSeek's/Claude's.
+      **DONE `agent-orchestrator@39d35ed696`** — new `compute_kimi_wallet_reconciliation()` (mirrors
+      `compute_deepseek_wallet_reconciliation()`, simpler: no worker/orchestrator/review split, no opening-balance
+      freeze — Kimi's wallet has no pre-observability gap), new `KimiTopupRow`/`GET+POST /api/accounts/kimi/
+      wallet-reconciliation`+`topups`, new lifetime table + top-up form in `KimiWalletPanel.tsx` alongside the
+      existing windowed one. **Evidence**: 6 new backend pytest cases (`tests/test_kimi_wallet_reconciliation.py`),
+      `pw:L2 ✓` — 2 new e2e tests in `kimi-wallet-reconciliation.spec.ts` (real computed numbers:
+      $20.0000 topup − $12.5000 balance = $7.5000 real spend, $2.0000 attributed, $5.5000 residual; a second
+      recorded top-up updates the table in place), full backend+dashboard quality gate green before shipping.
 
 ## Progress Log
 
