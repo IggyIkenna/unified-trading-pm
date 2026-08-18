@@ -582,3 +582,66 @@ needs the waitlist to activate first) — both correctly operator-gated, not som
   2026-08-16 entry above, `POST /api/accounts/{id}/disable`) — this closed the remaining UI-visibility gap the
   operator flagged, a real, live-derived `allKimiAccountsPaused()` check and `.kimi-paused-banner` in
   `KimiWalletPanel.tsx`, not a hardcoded label. See the flipped todo above for the full evidence.
+- **2026-08-18 (sub-agent dispatch, Gemma/NVIDIA-scoped half only)** — worked the two still-open items below strictly
+  for the NVIDIA/Gemma side; the Moonshot/Kimi half of the same wallet-reconciliation todo, and every Kimi-scoped
+  line elsewhere in this doc, was left untouched per the dispatching session's explicit scope boundary. Checkboxes
+  left unflipped (both todos still have real remaining scope — the Moonshot half of #1, and independent
+  Gemini/GLM/Codex verification per the sibling plan's #2) — this entry documents the Gemma-scoped work only.
+  **Uncommitted** — this is a sub-agent dispatch; the lead session reviews and ships.
+
+  **Wallet/balance reconciliation, NVIDIA/Gemma half — confirmed already at Gemini's depth, one real gap closed.**
+  Investigated before assuming "balance" meant $: `multi_provider_context_billing_reconciliation_2026_08_16.md`'s
+  own Gemma-scoped todo (its `[UI] P2` item) confirms the operator's actual ruling — "there's nothing to really
+  reconcile with" for a genuinely free tier, same principle as Gemini's free tier — so the correct interpretation of
+  THIS doc's todo (confirmed by its own text: "the meaningful reconciliation is against RATE-LIMIT capacity
+  consumed, same shape as the Gemini free-tier todo") is rate-limit-capacity tracking, not a $ ledger. Found this
+  was **already fully built** in a prior session (`agent-orchestrator@0c0e527`, "NVIDIA capacity-tracking layer
+  (shared-key RPM gauge, dormant)" — not reflected anywhere in this doc's own Progress Log, a real doc/reality drift
+  worth flagging): `server/nvidia_headroom.py` (mirrors `gemini_headroom.py`'s shape, correctly adapted for NVIDIA's
+  real structural difference — one shared per-KEY RPM ceiling across both registered accounts, not per-account like
+  Gemini's per-project ceilings), the `GET /api/accounts/nvidia/capacity` route (`server/routes/accounts.py:924`),
+  `NvidiaCapacityPanel.tsx` (dashboard, wired into `App.tsx`), and a real Playwright e2e spec
+  (`dashboard/tests/e2e/nvidia-capacity.spec.ts`). The one real, concrete gap: **no backend pytest coverage** for
+  `nvidia_headroom.py` — `test_gemini_headroom.py` exists (90 lines) with no NVIDIA equivalent. Closed: new
+  `tests/test_nvidia_headroom.py` (8 cases — fresh-key headroom, RPM ceiling trips at the real 40 RPM
+  community-reported baseline, RPM window expiry, shared-pool-not-per-account aggregation, a regression guard on the
+  `NVIDIA_RATE_CEILING` constant, and `compute_nvidia_capacity_snapshot()` coverage: None when unregistered, real
+  shared usage across every registered account, never counting a non-NVIDIA account). Full backend+dashboard
+  `quality-gates.sh --no-fix` green (4082 passed, 8 skipped; tsc clean; 414 vitest passed) —
+  `.qg_last_passed_sha` == HEAD (`0de59ba15e16db6e47bdb3021a1b87cebcb41709`), verified by direct comparison, not
+  assumed. **Not touched**: the Moonshot/Kimi half of this same todo (its own "$ balance/voucher-tracking" design is
+  Kimi-scoped and explicitly out of this dispatch's scope) — the checkbox stays unflipped because that half is
+  real, separate, remaining work.
+
+  **`/pre-compact` → `/compact` live-harness test, Gemma-scoped — real, decisive, positive result.** Spawned an
+  actual `claude` CLI session (real AWS SSM `send-command` against the orchestrator VM, `i-0c9b283b31d6b5ca7`,
+  ap-northeast-1, run as the `ubuntu` user — running as the default `root` user first silently broke the account
+  env file's `gcloud secrets versions access` substitution, the same gotcha the 2026-08-16 registration session
+  already hit and documented) using the real `nvidia-gemma-4-31b-it` account's proxy credentials
+  (`~/.claude-accounts/nvidia-gemma-4-31b-it.env`, pointed at the live `litellm-grok-gemini-proxy`). Sent a real
+  ~40K-token prompt (the same construction already proven accurate for this exact model in this plan's earlier
+  context-window/tokenizer-accuracy todo) to build genuine context, confirmed via a real `/context` reading:
+  42k/200k tokens (21%). **Ran `/pre-compact`**: genuinely executed as a real skill — "I have read the instructions
+  for the /pre-compact skill... ready to follow the 8-step ritual" — not silently swallowed. **Ran `/compact`**:
+  "Compacted (ctrl+o to see full summary)" + "Skills restored (pre-compact)". **Real, measured context drop**: a
+  follow-up `/context` read **8.1k/200k tokens (4%)** — Messages usage specifically dropped 38.7k→4.8k — proving
+  compaction genuinely reduces what gets resent, not just that the command ran. This directly satisfies all three
+  bars this plan's sibling doc set for the other providers (skill executes, context genuinely drops, behavior
+  comparable to the proven DeepSeek case).
+
+  **Real methodology gotcha found and controlled for, worth recording**: the first two attempts (from a bare
+  scratch directory outside any real repo checkout) got `Unknown command: /pre-compact` — NOT a Gemma-specific gap.
+  Root-caused before concluding anything: `/pre-compact`'s `SKILL.md` must be discoverable relative to the
+  session's CWD (`.claude/skills/pre-compact/`), and a throwaway scratch dir has none. This is a **different** root
+  cause than the 2026-08-04 DeepSeek investigation's finding (a stale pre-Skills-feature `claude` binary,
+  `deepseek_claude_blended_provider_routing_2026_07_28.md`) — the VM's current binary is v2.1.145/v2.1.234, well
+  past that. Controlled for it the same way that investigation did ("even with the real SKILL.md copied into the
+  sandbox cwd"): copied the real skill from the on-VM `unified-trading-pm/cursor-configs/skills/pre-compact/`
+  checkout into the scratch dir's `.claude/skills/`, confirmed by `/skills` count going 13→14, and got the positive
+  result above. **Flagging, not asserting as fleet-wide broken**: a direct check found neither
+  `/home/ubuntu/.claude/skills/` nor `/home/ubuntu/agent-orchestrator/.claude/skills/` exist on this VM either —
+  meaning a REAL AO-dispatched worker whose CWD is the target repo (not a scratch dir) might hit the same
+  "Unknown command" unless some other mechanism (a global settings.json skills-path, a different symlink target
+  not checked here) actually supplies it. This is genuinely uncertain from this session's evidence alone and
+  outside this dispatch's Gemma-only scope to resolve — surfaced to the lead session in the dispatch report rather
+  than filed as a new todo here, since editing this doc was scoped to a Progress Log entry only.

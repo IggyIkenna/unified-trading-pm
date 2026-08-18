@@ -36,7 +36,7 @@ context_scope:
   - agent-orchestrator/server/usage_poller.py
   - agent-orchestrator/server/model_pricing.py
 created: 2026-08-12
-last_updated: 2026-08-13
+last_updated: 2026-08-18
 parent_epic: orchestrator_master
 priority: P2
 assigned_vm: NA
@@ -299,6 +299,59 @@ accounts are systematically the most "boosted" tier by a wide margin. The 5 max2
 NOT tier-stable; Pro and Max20 read on completely different scales and must be calibrated/reported separately, never
 averaged together.
 
+## New-account weekly-window inheritance (investigated + closed 2026-08-18, `sub-h-igboestates`)
+
+**Symptom reported by the operator**: on a brand-new Pro-tier account (`igboestates@gmail.com`,
+registered live today per `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` §
+"Adding a BRAND-NEW account"), the 5-hour meter read ~20% used while the weekly meter already read
+~15% used — unexpectedly close, since ~33 five-hour windows fit in one week, so even usage would
+naively put weekly far below five-hour's percentage.
+
+**Root cause, confirmed from two independent sources**: the account's `weekly_window_start` is
+`2026-08-13 08:00:00 UTC` — five days before the account's first real use today — not a freshly
+opened window. Confirmed once via AO's server-polled `account_usage` row (live query against the
+orchestrator VM), and independently via the account's own `~/.claude.json`
+`cachedUsageUtilization.seven_day.resets_at` (`2026-08-20T07:59:59Z`, which works back exactly 7
+days to the identical `2026-08-13 08:00:00 UTC` boundary from a completely different source). No
+discontinuity or leak in the `account_usage_history` poll series; zero AO `slots`/`agents`/
+`task_usage` rows reference this account, ruling out automated-dispatch double-counting — the usage
+is genuine interactive use climbing smoothly.
+
+**Why this happens, per Anthropic's own docs**: support.claude.com articles 8325606 (Pro plan) and
+11049741 (Max plan) both state the weekly limit "resets at a fixed time each week that is assigned
+to your account. Your reset day and time stay the same regardless of when you start using Claude or
+when your subscription begins." The window boundary is **fixed and per-account-assigned**, not
+anchored to signup — so a brand-new account's *first* weekly window runs from whenever Anthropic's
+pre-assigned boundary last fell (here, 5 days before this account's first use) until the next one,
+not a full fresh 7 days. Anthropic never states this "short first window" consequence in those words
+— it's a well-grounded inference from the confirmed fixed-cycle mechanism, not a verbatim-documented
+fact. **Not confirmed either way**: whether the underlying Anthropic account/subscription itself was
+created today as the operator recalls — `weekly_window_start` is a quota-cycle boundary (this seat
+carries an `organizationUuid`, suggesting it may be org-anchored rather than seat-anchored), a
+different clock from account signup, and nothing locally accessible corroborates the signup moment
+itself.
+
+**Burst-penalty hypothesis — searched for specifically, not the explanation**: no documentation or
+credible community report of Anthropic penalizing concentrated/bursty usage on the weekly meter
+specifically was found (2026-08-18 web research pass). The one real rate-shaping mechanism that ever
+existed (peak-hour 5-hour-meter throttling, active ~March–May 2026) explicitly never touched the
+weekly meter per Anthropic's own engineer statement, and was removed fleet-wide 2026-05-06. Several
+`anthropics/claude-code` GitHub issues report weekly-counter reset-*timing* irregularities (e.g.
+resetting every ~72h instead of 7 days) — these describe suspected bugs in the reset schedule, not a
+usage-rate penalty, are unconfirmed by any maintainer, and are a distinct phenomenon from this
+finding. Do not use "bursting" as the explanation for this symptom going forward.
+
+**Does NOT explain** the separate sub-d Pro-tier ~1047x boost-multiplier outlier below (open todo) —
+that's about the $-value meter-weighting question (does the quota meter weight message count vs.
+token volume differently for Pro), a different mechanism from a window's start-time boundary. Keep
+these two findings separate; a future reader should not assume one resolves the other.
+
+**Operational takeaway, already added to the SSOT** (`/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`
+§ "Gotcha: a brand-new account's first weekly window is NOT a fresh 7 days"): expect a new account's
+`weekly_pct` to look disproportionately high relative to `five_hour_pct` in its first days — this is
+normal, not a capture defect, and should not trigger a false "something's wrong with the poller"
+investigation the next time an account is onboarded.
+
 ## Todo
 
 - [x] [BACKEND] P2. **Confirm sub-F/sub-D account identity mapping** — DONE 2026-08-13, verified against accounts.json's
@@ -329,3 +382,8 @@ averaged together.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:2d53a08f692bc520]: KEEP-NA, valid — explicit operator ruling: this entire initiative is human-driven, proceed only in operator-present sessions; covers the dispatch mechanism for the whole doc, including individually-bounded-looking items.
 - **context-scout 2026-08-17**: refreshed context_scope (3 entries), unchanged -- the account-usage/poller/pricing
   modules still cover the doc's remaining investigation todos (sub-d outlier, sub-f window reset).
+- **2026-08-18 (interactive session)**: operator-reported symptom on the brand-new `sub-h-igboestates` account (weekly
+  meter reading disproportionately close to the 5-hour meter) investigated and closed — see § "New-account weekly-window
+  inheritance" above. Root cause: fixed, per-account-assigned weekly boundary inherited 5 days pre-dating first use,
+  confirmed from two independent local sources plus Anthropic's own docs; not a burst penalty, not a capture bug.
+  Operational note added to `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.

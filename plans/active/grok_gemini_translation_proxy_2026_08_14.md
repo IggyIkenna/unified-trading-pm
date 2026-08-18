@@ -621,6 +621,82 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
   gate, not a misclassification. Does not clear the RECLASSIFY bar. Doc stays `assigned_vm: NA`, 5 open items
   unaffected.
 
+- **2026-08-18 (later) — usage-capture verification harness built + Gemini-specific resume/sequential-preference
+  code-path audit; neither todo's checkbox flipped, both still gated on things this dev checkout genuinely cannot
+  provide.** Scoped to `config/litellm/`, `server/gemini_translation_smoke.py`, and
+  `tests/test_gemini_litellm_translation_smoke.py` only (deliberately did not touch `server/autospawn.py` or
+  `tests/test_deepseek_provider_routing.py` — see the second item below for why that matters).
+
+  **`[INFRA] P1` "Accurate usage-capture"**: extended `gemini_translation_smoke.py` (not duplicated — reuses
+  `resolve_gemini_api_key`/`resolve_litellm_proxy_bin`/`first_gemini_model_name`/`running_proxy` from the existing
+  `[REVIEW] P0` module) with `fetch_gemini_native_usage()` + `run_usage_capture_verification()` +
+  `run_full_usage_capture_verification()`. Same never-trust-self-reported-numbers discipline as DeepSeek's own
+  under-report catch: since Gemini's free tier has $0 billing (no invoice) and AI Studio's usage dashboard is
+  browser-only/non-scriptable (this plan's own 2026-08-14 entry), the ground truth used is Gemini's OWN native
+  `generateContent` REST response's real `usageMetadata` — the number AI Studio's console is itself built from —
+  fetched via a second, independent, non-proxied call for the same model, diffed against what the LiteLLM proxy's
+  Anthropic-shape `/v1/messages` response self-reports in its own `usage` block. Both calls use `temperature: 0` +
+  an identical short closed-form prompt ("Reply with exactly the single word PONG") to minimize real sampling
+  variance between the two necessarily-separate generations. `USAGE_CAPTURE_TOLERANCE_PCT = 0.20` is a **stated but
+  unverified starting assumption**, documented in the module docstring as needing recalibration once a real run
+  records actual deltas — this module has never run against real Gemini credentials, same gap flagged below.
+
+  4 structural tests added (config/model-name resolution, `_pct_delta` boundary cases) — always run, pass green. 1
+  live test added (`test_usage_capture_matches_gemini_native_usage_within_tolerance`), same skip-cleanly contract as
+  the existing tool_use smoke test. **Could not run live in this environment**: no `GEMINI_SMOKE_TEST_API_KEY`, no
+  `accounts.json` (gitignored/VM-only, confirmed absent on this dev checkout), and no `litellm` binary resolvable
+  anywhere (`~/.venvs/litellm-proxy/bin/litellm` absent, not on PATH) — all three gaps independently confirmed live
+  this session, not assumed. The live test skips cleanly (confirmed: `basedpyright` 0 errors, `pytest` shows the new
+  live tests among the run's 9 skips, not failures). **No real comparison numbers exist yet** — this todo's own
+  "done when" (a dated comparison of captured-vs-vendor-reported usage for a real sample of turns) needs the
+  orchestrator VM or a real credential handoff to actually execute; the harness is ready, the data isn't.
+
+  **`[REVIEW] P1` "Codex/Gemini-specific resume/sequential-preference verification"**: audited
+  `select_account_for_spawn()`'s `sequential_preferred_account_id` path (`server/autospawn.py:1912-1936`) and
+  `_resume_pass`'s `preferred_provider` path (`server/autospawn.py:3655-3670`) by reading, not by running (both are
+  DB/tmux-state-dependent orchestrator-VM mechanics no amount of API credentials would let a laptop dev checkout
+  simulate — this is a structurally different gap from the usage-capture item above, not the same
+  "no credentials" story). Traced every gate both paths run through for a Gemini account specifically:
+  - `_pick_headroom_account()` (`autospawn.py:1010-1029`) already applies the Gemini-specific
+    `gemini_account_has_rate_headroom()` RPM/RPD gate as part of its normal candidate filter — a Gemini account at
+    its rate ceiling is excluded from selection the SAME way for a sequential/resume pick as for a fresh dispatch;
+    no separate code path to drift.
+  - The sequential-preference block's own second gate (`autospawn.py:1932-1935`,
+    `_provider_health_ok(...) and _account_has_balance_headroom(...)`) reads real risk on paper — a $-balance check
+    applied to a $0 free-tier provider — but both are confirmed provider-agnostic and default-safe by their own
+    documented contracts: `_account_has_balance_headroom` (`autospawn.py:1187-1204`) explicitly returns `True` when
+    `AccountUsageRow` has no polled balance data (Gemini never gets one — there is no Gemini balance poller, it's
+    free tier by construction), and `_provider_health_ok` (`autospawn.py:1321-1336`) is keyed purely by
+    `account_id` against an in-memory failure ring that starts empty for every account regardless of provider. Read
+    both functions' full bodies to confirm this, not just their docstrings.
+  - Net: no bug found. The mechanism reads as correctly generalized for Gemini — same conclusion as the sibling
+    `[INFRA] P0` gate/tracker work already proved for the plain `_pick_headroom_account(provider="gemini")` path,
+    now extended to the two preference-pinning callers specifically.
+  - **Existing test coverage confirmed real but narrower than this todo's scope**: `tests/test_deepseek_provider_
+    routing.py` already carries 5 Gemini-specific tests (`test_pick_headroom_account_excludes_gemini_without_rate_
+    headroom` and siblings, ~line 129-182) covering the plain rate-gate, plus 2 more (~line 960, ~line 1099)
+    covering generalized-provider fallback ordering — none of the 7 exercise `sequential_preferred_account_id` or
+    `preferred_provider` with a Gemini account. That gap is real and unaddressed by this session's work.
+  - **Deliberately not closed this session**: adding that Gemini-specific pair of tests belongs in
+    `tests/test_deepseek_provider_routing.py` (the established home for every other `sequential_preferred_account_id`
+    /`preferred_provider` test, DeepSeek/Claude included) — outside this task's given file scope, and this exact
+    slot's checkout had 5 other live sessions sharing its `cwd` this session (SessionStart collision warning),
+    making an out-of-scope edit to a hot, frequently-touched file like `autospawn.py`'s own test suite a real
+    collision risk, not just a scope nicety. Flagging as the natural next step for whoever next touches that file,
+    not adding a new todo (out of this session's instructed scope) — the existing `[REVIEW] P1` todo's own
+    "done when" (a real dispatch against live Gemini accounts) still isn't met either way; a unit test would prove
+    the generalized-mechanism claim above more rigorously than a code read alone, but not satisfy the todo's actual
+    bar, which needs the orchestrator VM regardless.
+
+  **QG**: `bash scripts/quality-gates.sh --no-fix` — one real `basedpyright` finding caught+fixed along the way
+  (`int(usage.get(...) or 0)` on a `dict[str, object]`-typed value rejected under strict mode; fixed with a proper
+  `isinstance`-narrowing `_as_int()` helper instead of a suppression), one `ruff format` reflow on the newly-added
+  code (scoped to the two edited files only, not a tree-wide reformat). Final run: 4081 passed, 9 skipped (new live
+  tests among them), 0 basedpyright errors, dashboard tsc/vitest green, `✅ agent-orchestrator quality gate PASSED`,
+  `.qg_last_passed_sha` head-line confirmed == `HEAD` (`0de59ba15e16db6e47bdb3021a1b87cebcb41709`). **Left
+  uncommitted on purpose** (per this session's own instruction) — `server/gemini_translation_smoke.py` and
+  `tests/test_gemini_litellm_translation_smoke.py` sit as working-tree edits for the lead session to review and ship.
+
 ## Context scout
 
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
