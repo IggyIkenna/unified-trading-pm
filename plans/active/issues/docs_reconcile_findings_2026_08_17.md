@@ -149,3 +149,4 @@ to chase down the exact call site in this sweep, noting so it doesn't re-mislead
 - **context-scout 2026-08-17**: populated context_scope (4 entries) — corrected a pre-existing entry
   (`manifest-consolidator-ssot.md`) that had no connection anywhere in this doc's own body, swapped for the active
   satellite batch now owning the one already-shipped fix's landing citation.
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — re-affirms 2026-08-17 verdict. All 3 remaining open items are genuine operator-gated/judgment calls (2 explicit [OPERATOR] scope decisions, 1 half-bounded dead-link item bundling a judgment sub-link); the doc's one genuinely bounded item was already extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` and correctly stays closed here.

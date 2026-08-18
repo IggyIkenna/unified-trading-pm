@@ -206,6 +206,15 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
 - [ ] [OPERATOR] P3. Decide whether to collapse registries (B)/(C) into a single manifest-driven lookup
       (removes the duplicate-registry class of bug entirely) or keep them separate with the new parity test as
       the guard — design call, not blocking. Repo: unified-trading-pm.
+- [ ] [BACKEND] P2. Add a fleet-wide "N slots quarantined on the SAME repo for the SAME reason" rollup to
+      `_alert_branch_quarantine`'s dedup key (`agent-orchestrator/server/autospawn.py:2003`) — today it dedupes by
+      `(slot_id, offending-repo-signature)`, correct for a single slot re-alerting on an unchanged problem but with
+      no cross-slot/incident-level collapse, so a single systemic root cause hitting 30+ slots simultaneously
+      legitimately produces 30+ distinct pages under the current key (each slot's signature is technically novel to
+      that slot). The individual pages are policy-correct per `/codex/04-architecture/agent-orchestrator-alerting.md`'s
+      classification of quarantine-starving-dispatch as a legitimate PAGE — this is a design change to the dedup
+      key/rollup granularity, not a bug fix. Converted from prose ("Left open" item 2 above) into a tracked todo per
+      the corpus's "every follow-up is a `- [ ]` todo, never prose" HARD RULE. Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -222,3 +231,4 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
   live/working slots deliberately left for their own workers. See "Verification" and "Idle-slot
   reconciliation" sections above for full detail.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — the sole remaining tracked todo is an explicit [OPERATOR] design call (collapse-registries question), no stated criterion for a worker to pick between the two options. Also converted a prose-only deferred-work item ("Left open" item 2, the alerting cross-slot-dedup gap) into a tracked `- [ ]` todo per the corpus HARD RULE — fixed in this same doc, same turn, per the "misleading doc / undocumented follow-up" finding rule.
