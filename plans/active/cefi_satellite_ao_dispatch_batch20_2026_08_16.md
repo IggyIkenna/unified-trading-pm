@@ -189,11 +189,26 @@ source: >-
       per-VM Cloud Logging text. Bug 1/Bug 2's fixes remain necessary regardless (unaffected by this verdict — see
       source doc). Full evidence + exact `gcloud logging read` filters in the source doc's own Progress Log.
       Source: `plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`.
-- [ ] [SCRIPT] P2. Mirror execution-service's already-shipped unscoped-key fallback pattern into MTDS's
-      `validate_api_keys_for_venues`/`get_required_secrets` (unified-trading-library) so Bybit market-data capture
-      doesn't hard-fail when only the unscoped `bybit-api-key` exists. Source:
-      `plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`. Done-when: a capture run with
-      only the unscoped key present no longer hard-fails startup validation.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-18 (slot-17, backend_engineer)** — Mirrored execution-service's
+      `LiveExecutionHandler._load_bybit_trade_credentials` fallback into `validate_api_keys_for_venues`
+      (`unified_trading_library/startup_validation.py`). Added module-level `_SCOPED_SECRET_UNSCOPED_FALLBACK` (scoped
+      secret name → unscoped fallback secret name, currently just `"bybit-trade-api-key" -> "bybit-api-key"`); the
+      per-venue secret-fetch loop now retries the unscoped name whenever the scoped one is absent/blank before
+      recording it as missing, so `get_required_secrets`'s deterministic scoped-name mapping (UAC's
+      `DATA_SOURCE_TO_SECRET["bybit"] = "bybit-trade-api-key"`) is left untouched — the fallback lives in the
+      runtime lookup, same layering execution-service already uses (config maps the scoped name, the handler resolves
+      the fallback). **`unified-trading-library@e7c2baee5f`.** 7 new unit tests
+      (`tests/unit/test_startup_validation_api_keys.py`): scoped-present-used-directly, scoped-absent-falls-back,
+      scoped-blank-falls-back, neither-present-raises (CLOUD_MOCK_MODE pinned false via monkeypatch — ambient QG env
+      defaults it true, which silently degrades the raise to a warning), scoped-preferred-over-unscoped, and two
+      "other venues unaffected" tests (Aster, no fallback entry, still hard-fails on a missing key) confirming the
+      fallback is scoped to Bybit only. `quality-gates.sh` green (sentinel=e7c2baee5fab6beb3019d6df91a2454b71d06fe0);
+      one unrelated flaky test (`test_harness_auto_resolves_params_from_specs`, a 300s-timeout-marked synthetic-harness
+      benchmark) failed on the first QG run under shared-host contention and passed clean on immediate re-run —
+      confirmed unrelated to this change (no overlap with `startup_validation.py` or the new test file). Source:
+      `plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`. Done-when satisfied: a capture
+      run with only the unscoped `bybit-api-key` present now resolves via the fallback instead of raising
+      `StartupValidationError`.
 - [ ] [SCRIPT] P2. Re-run the corpus-wide GCS VM-log grep (Script 1, cefi content-migration summary) across all 44
       cefi-content-migration shards now that shard 24 landed `EXIT_STATUS=0` 2026-08-15; settle 44/44, flip both
       target docs' remaining todos, and delete `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its
@@ -260,3 +275,6 @@ source: >-
   system operation for every one of them, and confirmed zero watchdog kills / zero `uts-prd-sa` deletes against
   those same 5 exact VM names. See this checkbox's own entry for the full evidence; also appended a correcting note
   to the source doc's "Correlation" section (append-only, doc's own prior content untouched).
+- **2026-08-18 (slot-17, backend_engineer)**: Shipped item 8 (Bybit unscoped-key fallback in
+  `validate_api_keys_for_venues`) — `unified-trading-library@e7c2baee5f`, `quality-gates.sh` green, 7 new unit tests.
+  See the checkbox's own entry for full detail.
