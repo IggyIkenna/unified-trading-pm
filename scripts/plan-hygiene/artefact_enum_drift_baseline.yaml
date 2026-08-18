@@ -1,0 +1,10 @@
+# Baseline for check_artefact_enum_drift.py -- stated enum counts in the six
+# client artefacts vs the real UAC enum/subclass count (operator ruling,
+# client_artefact_remediation_2026_08_18.md § E). Shrinking ratchet: a live count
+# ABOVE this fails (a NEW drift landed); lower it (--update-baseline) once drifts
+# are fixed. NEVER hand-raise.
+#
+# SSOT for the ground-truth enums: unified-api-contracts/unified_api_contracts/
+# internal/architecture_v2/{enums,schemas}.py.
+note: Seeded 2026-08-18 alongside the checker.
+violation_count: 0

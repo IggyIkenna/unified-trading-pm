@@ -217,10 +217,21 @@ The spine. Everything else feeds it.
 
 The registry must answer commercial and operational questions, not just "does this venue exist".
 
-- [ ] [BACKEND] P0. **Collateral that can actually be used**, per venue.
-- [ ] [BACKEND] P0. **Cross-margin logic where it exists**, declared rather than discovered.
+- [ ] [BACKEND] P0. **Collateral that can actually be used, per venue — POPULATE, don't design.** Re-verified
+      2026-08-18 (client_artefact_remediation_2026_08_18.md § E research todo): the schema already exists —
+      `VenueCapabilityV2.collateral_rules` (`CollateralRulesV2`: per-asset LTV/haircut, `cross_margin_supported`,
+      `portfolio_margin_supported`) in `unified-api-contracts/unified_api_contracts/internal/architecture_v2/
+      schemas.py` — and is already consumed by `strategy-service/strategy_service/risk/v2/{margin_sim,preflight,
+      orchestrator}.py`. Zero venues have a populated `collateral_rules`/`margin_spec` today, so every risk-v2
+      read degrades silently to "no data." See
+      [research findings](/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md).
+- [ ] [BACKEND] P0. **Cross-margin logic where it exists**, declared rather than discovered — same
+      `MarginSpec`/`CollateralRulesV2` population gap as above, not a separate design task.
 - [ ] [BACKEND] P0. **Transfer capability per venue as explicit eligibility flags**: Copper-eligible, Ceffu-eligible,
       manual-transfer-eligible, automated prime-broker-eligible (per prime broker), IBKR / Alpaca eligible.
+      Re-verified 2026-08-18: genuinely absent — no existing field on `VenueCapabilityV2` or elsewhere declares
+      this, unlike collateral/margin above (which at least has an unpopulated schema). This one needs new fields,
+      not just population.
 - [ ] [BACKEND] P0. **Manual trade capability for EVERY venue** — no exceptions. This is the disaster path.
 - [ ] [BACKEND] P1. **All of the above in UAC**, as declarations — not inferred at runtime.
 
@@ -539,7 +550,11 @@ section maps to a tracked item, wherever it lives."**
       epic that closes the gap. With the status mark (what the system does) and § E's evidence tier (how we know),
       the artefact becomes an index INTO the corpus: scroll it, and every non-`live` claim names who is delivering
       it. **A section with no owner is the orphan class that actually threatens this epic's promise** — an artefact
-      claim nobody is tracking — and nothing currently measures it.
+      claim nobody is tracking — and nothing currently measures it. **Spec defined**:
+      [rule 13 — artefact claim marks](/codex/14-customer-journeys/_ssot-rules/13-artefact-claim-marks.md)
+      (`unified-trading-pm`, client_artefact_remediation_2026_08_18.md § E) — exact CSS, markup and the owner-mark
+      content grammar (workstream shorthand vs plan short-tag vs epic slug). Applying it to the two lead artefacts
+      is tracked in the elysium/nickai children of that plan; this item stays open until both apply it.
 - [ ] [SCRIPT] P0. **Bidirectional closure check between the artefacts and the corpus.** Forward: every
       claim-bearing section resolves to a live tracked item (fail on an unowned section). Reverse: every workstream
       here is either referenced by an artefact section or explicitly marked internal-only — so a capability we hold

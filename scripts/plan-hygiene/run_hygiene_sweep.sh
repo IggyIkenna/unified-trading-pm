@@ -490,6 +490,20 @@ if [ -n "$DIFF_BASE_REF" ]; then
   AGCLOSEOUT_DIFF_ARGS=(--diff-base "$DIFF_BASE_REF")
 fi
 run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet)" hard python3 "$SCRIPT_DIR/check_ag_closeout_linkage.py" "${AGCLOSEOUT_DIFF_ARGS[@]}"
+# Artefact disclosure + enum-drift (client_artefact_remediation_2026_08_18.md § E,
+# operator ruling 2026-08-18) -- the six client-facing presentation artefacts under
+# codex/14-customer-journeys/commercial-model/*.html were never checked by anything:
+# the banned-client-name stop-ship in strategy-service-deep-dive.html was found only
+# because an audit was commissioned, and the two P0 enum drifts (StrategyFamily,
+# StrategyInstructionEnvelope) were hand-transcribed wrong independently of the SSOT.
+# Disclosure's HARD class (banned name / maturity-label leak / internal route leak) has
+# no baseline -- any hit fails, always; its WARN class (performance-figure patterns) and
+# the enum-drift check are both shrinking ratchets, same shape as reference-paths above.
+# NOTE: disclosure's hard class is currently RED (6 pre-existing ClearLoop hits in
+# strategy-service-deep-dive.html) -- tracked and owned by
+# client_artefact_remediation_siblings_2026_08_18.md, not a regression from this wiring.
+run_check "Artefact disclosure (banned terms, ratchet)" hard python3 "$SCRIPT_DIR/check_artefact_disclosure.py"
+run_check "Artefact enum drift (vs UAC, ratchet)" hard python3 "$SCRIPT_DIR/check_artefact_enum_drift.py"
 # Terminal-status-archived (operator finding 2026-07-25) — no plan/issue doc with a TERMINAL
 # status (issue: resolved/false-positive/superseded; plan: complete/superseded/cancelled) may
 # sit in plans/active/ or plans/active/issues/ instead of plans/archive/ — this is

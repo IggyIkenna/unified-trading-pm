@@ -17,20 +17,23 @@ the rules that govern the experience layer.
 
 Rules are citable, stable, and orthogonal. Each rule has its own file. Experience docs cite rules by number.
 
-## The ten rules
+## The rules
 
-| #   | Rule                                                                                   | One-line summary                                                                         |
-| --- | -------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| 01  | [grammar](01-grammar.md)                                                               | Every experience playbook has these nine sections in this order                          |
-| 02  | [tone and posture](02-tone-and-posture.md)                                             | Calm, specific, credible, non-desperate — axis.to / podlabs.xyz benchmarks               |
-| 03  | [same-system principle](03-same-system-principle.md)                                   | One operating system, partitioned views. Research ≡ live infra. Phase ⊥ maturity         |
-| 04  | [DART commercial axes](04-dart-commercial-axes.md)                                     | Two axes (strategy origin × stack depth), three practical paths                          |
-| 05  | [building-block dimensions](05-building-block-dimensions.md)                           | Thirteen blocks; pricing, demos, and entitlements all compose from them                  |
-| 06  | [show / don't-show discipline](06-show-dont-show-discipline.md)                        | Walkthrough and what-not-to-show are paired; LOCKED-VISIBLE vs HIDDEN-ENTIRELY           |
-| 07  | [data licensing boundaries](07-data-licensing-boundaries.md)                           | Enriched services, not raw-data resale                                                   |
-| 08  | [pricing principles](08-pricing-principles.md)                                         | Two external tiers, per-block mixable, twelve-month minimum, internal cost codex-private |
-| 09  | [internal commercial one-liners](09-internal-commercial-oneliners.md)                  | DART / IM / Reg Umbrella — internal shorthand, expanded externally                       |
-| 10  | [strategy instruction schema principles](10-strategy-instruction-schema-principles.md) | Signals-only fit-check: what Odum needs, what it doesn't, package boundary               |
+| #   | Rule                                                                                   | One-line summary                                                                              |
+| --- | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| 01  | [grammar](01-grammar.md)                                                               | Every experience playbook has these nine sections in this order                               |
+| 02  | [tone and posture](02-tone-and-posture.md)                                             | Calm, specific, credible, non-desperate — axis.to / podlabs.xyz benchmarks                    |
+| 03  | [same-system principle](03-same-system-principle.md)                                   | One operating system, partitioned views. Research ≡ live infra. Phase ⊥ maturity              |
+| 04  | [DART commercial axes](04-dart-commercial-axes.md)                                     | Two axes (strategy origin × stack depth), three practical paths                               |
+| 05  | [building-block dimensions](05-building-block-dimensions.md)                           | Thirteen blocks; pricing, demos, and entitlements all compose from them                       |
+| 06  | [show / don't-show discipline](06-show-dont-show-discipline.md)                        | Walkthrough and what-not-to-show are paired; LOCKED-VISIBLE vs HIDDEN-ENTIRELY                |
+| 07  | [data licensing boundaries](07-data-licensing-boundaries.md)                           | Enriched services, not raw-data resale                                                        |
+| 08  | [pricing principles](08-pricing-principles.md)                                         | Two external tiers, per-block mixable, twelve-month minimum, internal cost codex-private      |
+| 09  | [internal commercial one-liners](09-internal-commercial-oneliners.md)                  | DART / IM / Reg Umbrella — internal shorthand, expanded externally                            |
+| 10  | [strategy instruction schema principles](10-strategy-instruction-schema-principles.md) | Signals-only fit-check: what Odum needs, what it doesn't, package boundary                    |
+| 11  | [codex scope registry](11-codex-scope-registry.md)                                     | Which codex docs an experience/demo doc may cite, per audience                                |
+| 12  | [service-family scope rules](12-service-family-scope-rules.md)                         | Per-service-family disclosure defaults, machine-readable in the sibling `.yaml`               |
+| 13  | [artefact claim marks](13-artefact-claim-marks.md)                                     | Status / evidence-tier / owner — the three marks every claim-bearing artefact section carries |
 
 ## Reading order
 
@@ -45,7 +48,7 @@ First-time reader:
 
 Reviewing an experience doc: skim `01`, `02`, `06`, then check it cites whichever of `03`–`10` its content depends on.
 
-`_source-v1-feedback.md` is a frozen **archive** of the original v1 synthesis. Rules 01–11 now carry every load-bearing
+`_source-v1-feedback.md` is a frozen **archive** of the original v1 synthesis. Rules 01–13 now carry every load-bearing
 claim. Cite the numbered rule files, never the archive.
 
 ## How to cite a rule
