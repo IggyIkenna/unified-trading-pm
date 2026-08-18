@@ -88,7 +88,7 @@
     "trading-agent-service": "0.13.3",
     "strategy-service": "0.74.4",
     "ml-service": "0.58.39",
-    "alerting-service": "0.63.45",
+    "alerting-service": "0.63.49",
     "unified-trading-api": "0.4.2",
     "client-reporting-api": "0.32.55"
   },
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "07547b10032e83216a9613d4a5be862ab7b58231"
+      "ldr_ci_status_sha": "926598d1828b92c90ff2e8eb9cde82b1fa33eb31"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
