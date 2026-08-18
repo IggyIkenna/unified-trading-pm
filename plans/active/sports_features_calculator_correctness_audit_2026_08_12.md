@@ -35,7 +35,7 @@ priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 7.2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 assigned_role: data_engineering

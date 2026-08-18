@@ -56,7 +56,7 @@ audited_scope:
   campaign"
 date: 2026-08-06
 auditor: "cefi_reconciliation_auditor (scheduled role, slot 4, dispatch agt-d019d3)"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 skill: data-pipeline-reconciliation
 run_date: 2026-08-06

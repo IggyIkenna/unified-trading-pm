@@ -21,7 +21,7 @@ audited_scope:
   (pure_polars_lazy/pandas_pyarrow/current_mdps_mixed/polars_eager), subprocess-isolated
 date: 2026-05-28
 auditor: ComsicTrader
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 resulting_plan:
 lib_version:
