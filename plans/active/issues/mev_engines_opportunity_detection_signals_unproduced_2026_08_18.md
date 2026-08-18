@@ -91,10 +91,27 @@ exact "wrong entry, worse than honest gap" failure that registry's own docstring
 ## Distinct from the MEV mempool-feed gap
 
 `ARBITRAGE_MEV_SANDWICH` needs infrastructure that doesn't exist (mempool visibility) — a data-source problem,
-tracked via the already-paused `plans/archive/mempool_feed_integration_2026_06_01.plan.md`. These 3 need
-calculators built from data that likely already exists (confirmed swap/pool-state data for BACKRUN/JIT_LIQUIDITY;
-lending-position health-factor data, likely already captured for `LIQUIDATION_CAPTURE`, for LIQUIDATION_BUNDLE) —
-a much smaller, more tractable gap, just not yet built.
+tracked via the already-paused `plans/archive/mempool_feed_integration_2026_06_01.plan.md`. Confirmed 2026-08-18
+against bloXroute's own docs that this is a genuine, unavoidable constraint, not just this workspace's own gap:
+Tx-Trace retains data "only for a few hours," Bundle-Trace covers only self-submitted bundles, and the Gateway
+explicitly does not store blockchain data — no vendor sells historical mempool data because none exists past the
+live window. Live-capture-then-batch (mirroring the prediction-market quote pipeline: subscribe live, persist what
+streams by, backtest against the accumulating self-built corpus from that point forward) is the only path, and it
+starts from zero history on day one.
+
+These 3 (BACKRUN/JIT_LIQUIDITY/LIQUIDATION_BUNDLE) need calculators built from data that mostly already exists —
+confirmed swap/pool-state data for BACKRUN/JIT_LIQUIDITY (see this doc's own §"Real, wired" above). For
+LIQUIDATION_BUNDLE specifically: **correction to this doc's own earlier claim** — `LIQUIDATION_CAPTURE`'s declared
+feature_groups (`liquidation_clusters`, `liquidation_band_prediction`) are CeFi-scoped
+(`asset_group="cefi"`, `data_type={liquidations,book_snapshot,funding_rate,ohlcv_1m}`), NOT DeFi lending data — so
+LIQUIDATION_BUNDLE cannot simply reuse them despite the "extends LIQUIDATION_CAPTURE" framing in its own codex doc.
+Checked separately (2026-08-18): DeFi lending MARKET data for LIQUIDATION_BUNDLE's venue universe is real and
+present — 7 of 8 protocols (AAVE_V3, COMPOUND_V3, FLUID, EULER_V2, RADIANT, VENUS, BENQI) show 100% Layer-1
+completeness against their own declared expected matrix; the 8th, `MORPHO_BLUE` (the codex doc's own venue name),
+is captured too, just under the real UAC venue name `MORPHO` (plus a separate `MORPHOVAULTS`) — a naming mismatch
+between the codex archetype doc and the live registry, not a data gap. **Not yet confirmed**: whether the captured
+data_type per venue actually carries health-factor/position-risk fields specifically (vs. only generic lending-rate
+data) — the calculator-build todo below should verify this as its first step, not assume it.
 
 ## Todos
 
