@@ -9,7 +9,7 @@ summary: >-
   this job -- P7.1-B, DailyDeterminismHandler -- which reads paper_ledger_root/batch_ledger_root and honest-no-ops
   when they're unset). Fixed by switching the CLI operation; a separate, larger gap remains (paper_ledger_root/
   batch_ledger_root are never populated and no batch-rerun trigger stage exists), tracked as a follow-up todo.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -25,6 +25,11 @@ assigned_vm: NA
 resolved_by:
 locked_by:
 ---
+
+> **RESOLVED 2026-08-18** — fix shipped `deployment-service@e3826a7f7c`, deployed live via `gcloud run jobs
+> update`, live-verified via `gcloud run jobs execute --wait` (exit 0, expected honest no-op logged). Archived
+> per plan-completion-and-archival-discipline. Remaining follow-up work tracked as
+> `/plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` P2.7.4b + P2.7.5, not in this doc.
 
 ## What I found
 
@@ -101,5 +106,16 @@ Going with A — see Progress Log / commit for the shipped fix.
   `deployment-service@e3826a7f7c` (`--operation reconcile` → `--operation daily-determinism`, dead `RECONCILE_DATE`
   env var dropped, stale header comment corrected), verified on `origin/live-defi-rollout`. Follow-up gap
   (ledger-root wiring) tracked as `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md` P2.7.5.
-  Status kept `open` pending P2.7.5 — the immediate CRITICAL page is resolved, but this doc's title ("wired to the
-  wrong CLI operation") is now historical; re-verify next scheduled run (02:30 UTC) exits 0 before closing.
+- **2026-08-18 (deploy + live verification)** — landing the terraform source doesn't deploy it (no CI applies this
+  module's `tofu apply` automatically, and `tofu plan -target=module.blrs_daily_determinism_job` showed the local
+  state doesn't track this resource — "1 to add", not "1 to change" — so a blind `tofu apply` risked conflicting
+  with however the live job is actually managed). Applied the fix directly to the live Cloud Run Job instead
+  (`gcloud run jobs update uts-prod-blrs-daily-determinism --args=...daily-determinism... --remove-env-vars
+  RECONCILE_DATE` — safe/idempotent, matches the shipped source). Verified live:
+  `gcloud run jobs execute uts-prod-blrs-daily-determinism --wait` → execution
+  `uts-prod-blrs-daily-determinism-7lnh2` completed successfully in 28.54s; logs show exactly the expected honest
+  no-op (`[daily-determinism] paper_ledger_root/batch_ledger_root unset — no run to reconcile (honest no-op)`,
+  `Container called exit(0)`). CRITICAL page resolved — **status: RESOLVED**. P2.7.5 (ledger-root wiring, tracked
+  separately) is the only remaining open item; also file a small follow-up so the next real `tofu apply` of this
+  module doesn't accidentally revert this live hotfix (state/config drift between the gcloud-applied live spec and
+  whatever untracked state this module is in).

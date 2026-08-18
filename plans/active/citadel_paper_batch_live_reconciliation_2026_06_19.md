@@ -285,7 +285,21 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       shipped 2026-06-20 per P2.7.1/P2.7.2 above but never wired into this terraform — the header comment claiming
       it "is NOT yet implemented" was stale), which honest-no-ops (`status: ok, skipped: no_run_configured`) instead
       of crashing when `paper_ledger_root`/`batch_ledger_root` are unset. Repo: deployment-service. Issue:
-      `plans/active/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`.
+      `plans/active/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`. **Deployed + live-verified**
+      2026-08-18: `tofu plan -target=module.blrs_daily_determinism_job` showed "1 to add" (not "1 to change") —
+      local terraform state doesn't track this resource, so a blind `tofu apply` risked conflicting with however
+      the live job is actually managed; applied directly instead (`gcloud run jobs update`, safe/idempotent,
+      matches the shipped source), then `gcloud run jobs execute --wait` confirmed exit 0 with the expected honest
+      no-op log line.
+- [ ] [INFRA] P2.7.4b. **Reconcile terraform state for `blrs_daily_determinism_job` before the next real `tofu
+      apply` of this module** — found while live-deploying P2.7.4's fix: `tofu plan -target=module.blrs_daily_determinism_job`
+      showed the resource as untracked ("1 to add"), meaning this module's state is stale/missing relative to the
+      live job (which was hotfixed out-of-band via `gcloud run jobs update` for P2.7.4, and likely originally
+      created by a different deploy path than a plain `tofu apply` from this checkout). An untargeted `tofu apply`
+      of `terraform/gcp/` before this is reconciled could try to recreate or otherwise diverge from the
+      gcloud-applied live spec. Import the live resource into state (`tofu import` or the equivalent
+      `-refresh-only` reconciliation) and confirm a subsequent full `tofu plan` for this directory shows no
+      unexpected diff before anyone runs an untargeted apply. Repo: deployment-service.
 - [ ] [INFRA] P2.7.5. **Wire `paper_ledger_root`/`batch_ledger_root` + a batch-rerun trigger stage into the
       `blrs-daily-determinism` cron** — found while fixing P2.7.4. `ReconConfig.paper_ledger_root`/
       `batch_ledger_root` default `""` and nothing in `paper_week_determinism_scheduler.tf` ever populates them, so
