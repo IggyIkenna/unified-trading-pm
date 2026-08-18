@@ -31,7 +31,7 @@ related:
     /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-18"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -516,6 +516,32 @@ are unaffected.
   `POST /api/deployments/{service}/deploy`. Setting up GCP Workload Identity Federation for GHA is a prerequisite for
   any change here — a separately-scoped infrastructure project. Full 5-part rationale recorded in the todo body. No code
   change needed (verdict is status quo).
+- **2026-08-18 (interactive session) — new operator (Harsh, harshkantariya@odum-research.com) reported recurring
+  401/403s on the deployment-ui console, "some pages work, some don't." Live investigation (Cloud Run request logs +
+  `jsonPayload.message` auth log lines, not just config reads) found TWO real, distinct root causes, both now fixed,
+  plus a third that's operator-gated:**
+  1. **Stale-token 401 storm (fixed).** `GET /api/vm-deployments`, `/api/deployments/umbrella/*/summary`, etc. were
+     401ing in a sustained ~30s-cadence burst. Log evidence: `Firebase auth: invalid token: Token expired,
+     1787042924 < 1787052420` — the cached `sessionStorage` token was ~2.6h past expiry, meaning the passive
+     `onIdTokenChanged` listener (client.ts's only refresh mechanism since the 2026-08-12 popup-auth work) wasn't
+     keeping the cached copy fresh in a long-lived tab (consistent with browser background-tab timer throttling).
+     Fixed: `GoogleAuth.tsx` now self-heals on a 60s interval + `visibilitychange`, force-refreshing whenever the
+     cached token is within 5min of expiry, independent of the SDK's own proactive-refresh timer.
+  2. **Structural no-auth-header gap on ~24 files (fixed) — this is the "some pages work, some don't" mechanism.**
+     `DeploymentDetails.tsx`, `health.ts`, `ExecutionDataStatus.tsx`, `Cockpit.tsx`'s repo-ci tab, the kill-switch/risk
+     widgets, `LifecyclePrefetchContext.tsx`, and more each had their OWN raw `fetch()` calls to `_authenticated_router`
+     routes with ZERO `Authorization` header — not a timing flake, a hard 401 on every load regardless of token
+     freshness, on whichever page happened to route through one of these files instead of `client.ts`/
+     `deploymentApi.ts` (which DID already attach the header). Fixed: every call site now goes through a new canonical
+     `authHeaders()` helper in `GoogleAuth.tsx`, which also deleted two near-duplicate copies of the same header-attach
+     logic and closed a third gap in `client.ts`'s PATCH fallback path. Also added a Sign Out control (StatusMenu,
+     shows the signed-in email) — there was previously no way to switch accounts without clearing storage by hand.
+     Shipped `deployment-ui@6aad9800ee` (39 new/changed unit tests, full `quality-gates.sh` green).
+  3. **Wrong-Google-account 403s — NOT fixed, operator-gated (see new follow-up todo below).** Log evidence:
+     `Firebase auth: email not on allowlist: user=harshkantariya.work@gmail.com` (recurring 2026-08-16/17/18) — Harsh
+     is sometimes completing sign-in with his PERSONAL Gmail (`harshkantariya.work@gmail.com`) instead of his work
+     account (`harshkantariya@odum-research.com`, the one actually on `FIREBASE_ALLOWED_EMAILS`). This is a real
+     account-picker mix-up, not a bug in the allowlist itself (spelling/casing all verified correct live).
 - **2026-08-12 (interactive session, slot 5, hardening — auth-contract CI gate shipped)**. Diagnosed live operator
   report of deployment-ui console tabs all failing with 401 (`GET /api/health/overview`, `/deployments`,
   `/consolidators`) — traced to the accepted Option B trade-off above (console never sends a valid credential; this is
@@ -647,6 +673,18 @@ are unaffected.
         sign-in end-to-end (hard-refresh/incognito) and confirm it completes post the popup-auth + Cache-Control fixes
         above — the paragraph directly above this todo describes real, still-open verification work with no tracked
         checkbox anywhere in this doc.
+  - [ ] [OPERATOR] P2. **ADDED 2026-08-18.** Decide how to resolve the wrong-Google-account 403s for Harsh: live
+        Cloud Run logs show repeated `Firebase auth: email not on allowlist: user=harshkantariya.work@gmail.com`
+        (2026-08-16/17/18) — he's intermittently completing sign-in with his personal Gmail instead of his allowlisted
+        work account (`harshkantariya@odum-research.com`). Options: (a) do nothing — he just needs to pick the right
+        account in Google's chooser each time (zero code change); (b) add `harshkantariya.work@gmail.com` to the
+        `deployment-api-allowed-emails` GSM secret so either identity works — a real access-grant decision (extends
+        who can trigger prod deploys/kill-switches from this console), not a worker call; (c) bias the sign-in flow
+        toward the work account via Firebase's `GoogleAuthProvider.setCustomParameters({ hd: "odum-research.com" })`
+        (deployment-ui/src/auth/GoogleAuth.tsx `signInWithGooglePopup`) — narrows the account CHOOSER but doesn't
+        block a personal account someone deliberately picks anyway, so probably pairs with (a) or (b) rather than
+        replacing them. **Done when**: operator picks a direction and, if (b) or (c), it's shipped + live-verified
+        (repo: deployment-api for (b) — GSM secret update; deployment-ui for (c) — code change).
 
   **Found, flagged, no operator decision yet — not actioned**: 3 stale tagged Cloud Run revision URLs
   (`prd-sa-precutover`, `predeploy-verify`, `sports-fix-verify`) on `uts-shared-deployment-api`, pointing at old
