@@ -96,7 +96,14 @@ for priority live-check wherever the doc falls):
 
 ## Flips verified
 
-(in progress — see Progress Log)
+1. `bucket_fold_features_2026_07_17.md` — "Provision + yaml scaffold" todo, non-standard `[~]` marker (invisible to
+   both open/done checkbox tallies) → `[x]`. HARD evidence: the next todo's already-`[x]` "Atomic writer/reader
+   cutover" cites `UAC@cb951936 (yaml key)` — the exact work this todo said was "DEFERRED to T0" — verified
+   reachable on `origin/live-defi-rollout`. `unified-trading-pm@4b1b481fcc`.
+2. `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md` todo 2 (write + run the one-off clearing
+   script) → `[x]`. HARD evidence: `scripts/plans/clear_locked_by_placeholder_2026_08_12.py` exists with correct
+   lifecycle markers; 4 batched commits (`cd956ed32a`, `8baf3b7bf8`, `83ecf4408c`, `fb08bce437`) all verified
+   reachable on `origin/live-defi-rollout`. `unified-trading-pm@eb15a56ba0`.
 
 ## Carry-forward items resolution (all 4 grace-protected docs, personally re-read 2026-08-18)
 
@@ -124,19 +131,69 @@ for priority live-check wherever the doc falls):
 
 ## Contradictions
 
-(in progress)
+**Fixed (hard evidence from the doc's own text, batch-0/1/2/3 hunters, all independently spot-verified by me before
+applying):**
+
+1. **P1** `bucket_fold_execution_strategy_2026_07_17.md` banner claimed "🟡 MIGRATION IN FLIGHT... delete is
+   operator-gated" since authoring (2026-07-17) vs the doc's own "Delete sources + TF-state reconcile" todo, `[x]`
+   since 2026-07-18 ("operator pre-authorized autonomous delete; cefi was test data not live fills"). Same class of
+   bug already fixed on the sibling `bucket_fold_features_2026_07_17.md` 2026-08-16, missed on this one. FIXED:
+   banner corrected to "🟢 NEAR-COMPLETE". `unified-trading-pm@4b1b481fcc`.
+2. **P2** `citadel_paper_batch_live_reconciliation_2026_06_19.md` header claimed "4 items still tracked here as real
+   open checkboxes" vs the doc's own P9.2 item, `[x]` RE-VERIFIED self-resolved 2026-08-14 — true count is 3. Already
+   known internally (na-eligibility-audit 2026-08-17 cites the correct count elsewhere) but the header itself was
+   never updated. FIXED: header corrected to "3", P9.2 dropped from the list. `unified-trading-pm@4b1b481fcc`.
+3. **P2** `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md` Todo 4 said "archive both" batch1 +
+   batch1b, but batch1 is ALREADY archived (verified: `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch1_2026_07_26.md`
+   exists; this doc's own `related:` frontmatter already cited that archived path) — only batch1b (1 open todo,
+   grep-verified) remains. FIXED: todo reworded to name only batch1b. `unified-trading-pm@4b1b481fcc`.
+4. **P1** `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` frontmatter summary claimed "Only 2 items remain
+   open, both gated on live verification" — grep-verified true count is 3; the 3rd (a P3 POOL-casing regression
+   REOPENED 2026-08-16) is an unresolved root-cause item, not a verification gate. FIXED: summary corrected.
+   `unified-trading-pm@eb15a56ba0`.
+5. **P2×2** `fleet_audit_triad_deferred_followups_2026_06_01.md` — top banner still said the Tardis paid key is "NOT
+   activated" (true 2026-06-01, superseded by an operator ruling 2026-07-12 the doc's OWN body already records) AND
+   "Why it matters"/"Recommended decision" still described a VM-log-expiry risk the doc's own already-`[x]` todo
+   shows closed 2026-07-18. FIXED: both corrected with strikethrough + dated annotations (established corpus
+   convention — preserve the audit trail, don't delete stale text). `unified-trading-pm@eb15a56ba0`.
+6. **P2** `data_pipeline_e2e_milestones_gate_2026_07_24.md` — a "resolved on 2026-08-30" date is a digit
+   transposition (12 days in the doc's own future relative to today) of the source doc's real date, 2026-07-30.
+   FIXED. `unified-trading-pm@eb15a56ba0`.
+
+**Confirmed, NOT fixed — genuinely unresolved, routed (not a doc-hygiene gap):**
+
+7. **P1** `deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md` — frontmatter states a
+   dependency-backmerge root cause as settled fact; the doc's own isolated-worktree bisection falsifies the specific
+   baseline/mechanism claim, and a later cross-slot measurement only partially rehabilitates it with an explicit
+   caveat ("could not pin the specific commit"). **Independently confirmed by 2 separate reads this run** (my own
+   Phase -1 assessment of the carry-forward item, then batch-2 hunter's fresh read) — both concluded the same thing.
+   Not auto-fixed: resolving this requires an engineer to actually re-bisect and pin the mechanism, which is real
+   remaining work, not a text correction I can make from the documented record alone. Left open, noted here for
+   visibility.
 
 ## Doc-drift
 
-(in progress)
+None confirmed this run (no codex-alignment hunter finding survived verification as genuine SSOT staleness).
 
 ## Codex corrections applied (mechanical, evidence-cited)
 
-(none yet)
+(none this run)
 
 ## Hygiene fixes
 
-(in progress)
+1. `bucket_fold_execution_strategy_2026_07_17.md` — 2 dangling `related:` refs (both moved to
+   `plans/archive/2026_07/` — `bucket_fold_closeout_2026_07_17.md`, `bucket_estate_consolidation_to_sub100_2026_07_13.md`)
+   repointed with leading slashes, matching the sibling `bucket_fold_features` doc's already-correct convention.
+   `unified-trading-pm@4b1b481fcc`.
+2. `instruments_remaining_work_audit_2026_07_10.md` — body prose cited a dangling `plans/active/...` path for
+   `instrument_id_format_canonicalization_2026_07_08.md` (moved to `plans/archive/issues/`); frontmatter already had
+   it right, only the body citation was stale. Repointed. `unified-trading-pm@eb15a56ba0`.
+3. `deployment_api_client_factory_positional_project_id_bug_2026_08_16.md` — "## What to do" was a numbered prose
+   list despite `assigned_vm: planning` (structurally undispatchable — backlog regen is checkbox-driven). Converted
+   4 items to tracked `- [ ]` todos, content unchanged. `unified-trading-pm@eb15a56ba0`.
+4. `data_pipeline_self_healing_completion_residual_2026_07_24.md` — invalid frontmatter pairing `assigned_vm: NA` +
+   `execution_scope: orchestrator-agent` (the 2 valid pairings are NA+local-only or planning+orchestrator-agent).
+   Corrected to `local-only`. `unified-trading-pm@eb15a56ba0`.
 
 ## Filed
 
@@ -147,19 +204,90 @@ for priority live-check wherever the doc falls):
 
 ## Archive candidates (operator review)
 
-(in progress)
+1. `features_service_coverage_and_script_canon_2026_06_10.md` — **ARCHIVED this run**: 0 open todos (all 8 `[x]`),
+   unlocked, `archive_exempt: true` bridge marker (2026-08-12) explicitly named this exact mechanical step ("drop
+   this line + git mv... in that follow-on pass") — executed. Moved to
+   `plans/archive/2026_08/issues/features_service_coverage_and_script_canon_2026_06_10.md`. **Referrer sweep**: 13
+   mentions found across 6 files (`repo_scripts_governance_audit_2026_06_18.md`,
+   `cross_cutting_satellite_ao_dispatch_batch1_2026_07_26_finalize.md`,
+   `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md`, `cross_cutting_consolidated_closeout_2026_07_25.md`,
+   `plan_reconciler_findings_all_2026_08_12.md`, `june_2026_vintage_audit_findings_2026_07_27.md`) — all are
+   historical Progress-Log narrative prose describing past events (not `related:`/frontmatter cross-references or
+   live navigational links), so per this workspace's own proportionality precedent (the 2026-08-16 run deferred a
+   16-and-27-referrer sweep as "better suited to a dedicated `/archive-candidates-audit` pass") these are left
+   unrepointed — a deliberate, documented decision, not a silent skip. `unified-trading-pm@eb15a56ba0`.
 
 ## Refuted (dropped by verify)
 
-(in progress)
+1. `bucket_fold_features_2026_07_17.md` [DANGLING-REF] — batch-0 hunter claimed `related:` line 25 pointed at a
+   dangling `plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md`. Verified FALSE: this doc's own
+   `related:` already correctly cites the archived leading-slash path
+   (`/plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md`). The hunter almost certainly
+   conflated this doc with its sibling `bucket_fold_execution_strategy_2026_07_17.md`, which genuinely has this bug
+   (see Hygiene fixes #1). No edit applied to this doc for this claim.
 
 ## Coverage (hunters / batches / docs)
 
-Wave 1 dispatched: 5 hunters, batches of 14-19 docs each (81 workable docs total). Status tracked in Progress Log.
+5 hunters, 1 wave (respecting the corrected 5-parallel cap), 81 workable docs read in full (19+17+14+16+15) covering
+the entire non-grace cross-cutting tranche. Plus 4 grace-protected docs personally re-read for Phase -1 carry-forward
+resolution (pipeline_mode_partition_migration, daily_trading_analyst_llm_job_design,
+strategy_archetype_latency_deployment_profile_execution, infra_ops_residual_migration_verification) = **85 docs read
+in full this run**. Findings tally: 6 contradictions FIXED + 1 CONFIRMED-but-routed (genuinely unresolved, not a
+doc-hygiene gap) = 7 total contradiction-class findings surfaced and verified; 4 hygiene fixes; 2 flips; 1 archival;
+1 P0 stalled-dispatch escalation (`BLK-3e7cde0d`); 1 hunter claim REFUTED (false positive caught before applying);
+13 lower-severity confirmed findings deliberately deferred (see "Plans not reached" below, none silently dropped).
 
 ## Plans not reached
 
-(to be updated at STEP 7 if any confirmed candidates remain unapplied)
+**Confirmed findings this run did NOT apply** (verified via hunter report, time-boxed out given the run's scope —
+none of these are live-work-blocking; a future cross-cutting pass should prioritize them):
+
+- `instruments_foundation_completeness_2026_06_24.md` — 2 dangling refs (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`
+  and `sports_fixture_completeness_oracle_2026_06_24.md`, both moved to `plans/archive/2026_06/`, cited at 3
+  separate locations) + a stale Phase-0 rolling-status table (claims 11 open, actual 6) — multi-location edit in a
+  large umbrella doc, deferred.
+- `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` / `_08_06.md` / `_08_07.md` — 4 stale todo-flip candidates
+  (retag targets already archived, confirmed by a sibling `_08_08.md` doc's own 2026-08-16 refresh but never
+  back-ported to these 3 siblings) — these are themselves audit-tracking docs about OTHER docs' mistags, low urgency.
+- `ag_closeout_audit_cross_cutting_parked_2026_08_08.md` — its own 2026-08-16 "5 archived/6 active" summary doesn't
+  match its own itemized list (actual: 6 archived/4 active/1 resolved-elsewhere) — needs a careful re-count, deferred.
+- `is_catalogue_g1_root_audit_log_2026_07_24.md` — `repos:` frontmatter lists 6 repos, none of which the doc's
+  actual content (instruments-service + UAC only) touches — copy-paste leftover, low value, deferred.
+- `data_pipeline_e2e_milestones_gate_2026_07_24.md` — a Deferred-work-table row still marked "IN PROGRESS" for an
+  audit-relay step whose stated completion condition (5 reconciliation reports) has been met for 3+ weeks — needs a
+  live check of whether the relay/triage step ever actually happened, deferred.
+- `features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md` — sole open todo is `[OPERATOR]`-only
+  and hard-blocked for autonomous workers; suggests `assigned_vm: planning`→`NA` reclassification — **out of this
+  skill's scope** (a doc's own NA/planning classification is `/na-eligibility-audit`'s disjoint remit per this
+  skill's own SSOT), noted for that skill's next pass rather than actioned here.
+- `cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md` — na-eligibility-audit
+  2026-08-17 called a sibling doc's fix "unresolved" 2 days after that sibling was actually resolved+archived
+  (2026-08-15); the citation date is wrong but whether todo 1's underlying block reason is still valid needs a
+  closer read (the sibling's fix targeted a different call site per the hunter's own note) — deferred.
+- `live_pipeline_persistence_hot_path_decoupling_2026_06_24.md` — a stale inline YAML comment (references a status/
+  lock state that changed 2026-08-10/12) is misleading but superseded in practice by the doc's later
+  `archive_exempt: true` — low value, deferred.
+- `slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md` — na-eligibility-audit 2026-08-17 over-counted
+  open items by 1 (described an already-`[x]` item as still open) — doesn't affect dispatch (assigned_vm already
+  correct), low value, deferred.
+- `prosewrap_padding_corpus_wide_1290_space_2026_08_03.md` — 2 "DONE"/"shipped" Progress Log claims cite a literal
+  unfilled `<pending>` placeholder instead of a real commit sha — evidence-citation gap, deferred (would need
+  identifying which of several nearby commits is the real one, not a blind fill-in).
+- `per_client_config_surface_keying_and_missing_axes_2026_08_12.md` — a possible-superseded-todo ambiguity already
+  explicitly flagged (and left open) by na-eligibility-audit 2026-08-17 — no new action, re-confirmed only.
+- `ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md` — a flip-candidate depends on verifying
+  an external `claude.ai` published-artifact URL, outside this run's tool access — deferred.
+
+## Resolved via /blocked (closed same run)
+
+1. **`BLK-3e7cde0d`** — `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` P0 stalled-dispatch escalation.
+   **RESOLVED 2026-08-18T02:53Z** (main agent, same run): my semver-agent hypothesis was wrong (that blocker was
+   already ruled moot 2026-08-10); the REAL root cause was a stale AO-dispatch prerequisite gate
+   (`auto_unpark__venue_year_coverage_cefi_oom_deployment_api-b4e971952db3`) never flipped GREEN after its original
+   park condition became moot — an orchestrator-mechanism bug, not a doc content gap. Main flipped the prerequisite;
+   task unparked and eligible on 8 idle slots. Also confirmed both underlying sub-fixes
+   (`deployment-api@ce37346`, `@b4b81502c0`) are genuinely shipped. Full resolution recorded in the source doc's own
+   Progress Log (`unified-trading-pm`, this run).
 
 ## Progress Log
 
