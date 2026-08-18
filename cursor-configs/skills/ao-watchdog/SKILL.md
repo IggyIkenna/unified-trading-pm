@@ -235,6 +235,15 @@ online`) forces the dashboard to `level="crit"`. Read that directly rather than 
   The two context-safety-net canaries (`context_saturation_detected`, `context_activity_silence_detected`, per
   the alerting SSOT's "Self-monitoring detector registry") are the complementary check — confirm neither has
   silently stopped firing (recent activity-log rows for these event types, cited test suites still exist).
+- **A large `accounts_summary.disabled` count is not automatically a finding — check WHICH accounts first.**
+  Operator-confirmed 2026-08-18: the non-Anthropic diversity-pool accounts (DeepSeek/Gemini/GLM/Grok/Kimi/Nvidia
+  variants) being disabled right now is largely EXPECTED, mid-onboarding/testing under active plans:
+  `deepseek_claude_blended_provider_routing_2026_07_28.md`, `grok_gemini_translation_proxy_2026_08_14.md`,
+  `codex_luna_flex_bridge_2026_08_14.md`, `kimi_gemma_provider_onboarding_2026_08_16.md`. Cross-reference a
+  disabled account's provider against these plans before flagging it — only a disabled ANTHROPIC `sub-*` account,
+  or a non-Anthropic account disabled for a reason NOT explained by one of these plans, is a real finding worth
+  surfacing. Pull `overage_disabled_reason` (not `disabled_reason` — a wrong field name this skill's first live
+  run queried and got nulls back) for the actual cause per account.
 - **Resource usage/burst — this is a REAL, live-traceable subsystem, not a gap.** Two mechanisms already exist,
   separate from the Canary family (`DiskSpaceCanary` etc. in `server/*.py`) — this is what "resource issues are
   now fully traceable" refers to: (1) **`resource-watchdog.service`** (PM repo, `scripts/infra/resource-watchdog/`)
@@ -316,6 +325,17 @@ Run `/escalation-queue-reconcile`'s Step 1 cheap check (`GET /api/escalations/ac
 45-min deadline judged correctly by `dispatched_at`/`resolved_at` not `created_at` per that skill's own
 re-escalation-aware rules), hand off to `/escalation-queue-reconcile` proper for the Step 2+ root-cause — don't
 duplicate its diagnosis ladder here.
+
+**A `last_error: "no free configured slot to dispatch escalation onto"` is NOT automatically account exhaustion —
+check whether the reserve slots themselves are paused first** (confirmed root cause, 2026-08-18 live incident,
+`ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`): the CI-escalation reserve is the top-3 non-review,
+non-human, non-main slot ids (`config.ci_escalation_reserved_slot_ids`) — **when computing this set yourself,
+exclude `config.human_slot_ids()` (default `{9001, 9002}`)**, a first pass that skipped this wrongly swept a human
+operator's own slot into the guessed reserve. Pull those 3 slots' live `status`/`worker_alive`/`account_id`
+directly (`GET /api/state`) before assuming account exhaustion — a `paused` reserve slot produces the identical
+error message with zero account involvement. Also check whether all 3 are bound to the SAME account (a real,
+separate finding even once unpaused — a single-account reserve is a single point of failure the moment that one
+account is paused/rate-limited).
 
 ## Step 5 — scheduled-job efficiency + backlog
 

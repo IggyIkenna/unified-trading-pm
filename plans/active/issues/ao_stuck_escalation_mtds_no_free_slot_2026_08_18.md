@@ -123,9 +123,14 @@ spawn workers.
       DONE (corrected to 31/32/33, all sub-b). (repo: agent-orchestrator)
 - [x] [OPERATOR] P1. Decide whether to resume the reserve slots — operator approved live
       2026-08-18; applied (see Remediation above). (repo: agent-orchestrator)
-- [ ] [SCRIPT] P1. Re-verify `agt-ed7277` actually dispatched successfully after the resume +
-      next autospawn tick — this doc isn't closeable until that's confirmed, not just "slots show
-      idle now". (repo: agent-orchestrator)
+- [x] [SCRIPT] P1. Re-verify `agt-ed7277` actually dispatched successfully after the resume +
+      next autospawn tick — CONFIRMED: `status: dispatched` at attempts=108 (was still `queued` at
+      107). `agt-8717c2` (deployment-service) also flipped to `dispatched`. One residual effect
+      observed, not a new bug: `agt-63a017` (unified-trading-pm) hit the SAME "no free configured
+      slot" error at 17 attempts once 2 of the 3 reserve slots were claimed by the two dispatches
+      above — expected queue-draining contention with only a 3-slot reserve, not a regression; ties
+      directly into the "spread across multiple accounts" follow-up below (a 3-slot single-account
+      reserve saturates fast under simultaneous escalations). (repo: agent-orchestrator)
 - [ ] [SCRIPT] P2. Spread 31/32/33 across more than one account instead of triple-booking sub-b —
       today's incident is exactly what a single-account reserve produces the moment that one
       account gets paused/exhausted. (repo: agent-orchestrator)
