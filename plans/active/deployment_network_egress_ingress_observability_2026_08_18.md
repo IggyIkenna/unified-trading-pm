@@ -126,11 +126,14 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
       `bootstrap_operational_data_bq.py`, and confirm the heartbeat write path populates it on a real running VM.
       Gate: a live query against `deployment_operational_data.resource_samples` shows non-null
       `net_sent_rate_bytes_sec` for a currently-heartbeating deployment.
-- [ ] [BACKEND] P1. Extend `operational_data_queries.py` and `vm_resource_history.py`'s `ResourceRollingWindowRow`/
+- [x] [BACKEND] P1. Extend `operational_data_queries.py` and `vm_resource_history.py`'s `ResourceRollingWindowRow`/
       `ResourceRollingWindowResponse` to select and expose avg/min/max/p95 of both `net_recv_rate_bytes_sec` and
       `net_sent_rate_bytes_sec`, mirroring the existing cpu/mem/disk pattern exactly (same `CORRECT-LOCAL`
       convention, no new UAC type). Gate: `GET /api/vm-resources/rolling` returns the new fields, covered by a
-      passing deployment-api test.
+      passing deployment-api test. — deployment-api@61fa793832. 8 new SQL-aggregate columns
+      (avg/min/max/p95 × recv/sent) added to `resource_samples_rolling_sql` + the response model; new unit test
+      `test_selects_network_recv_and_sent_aggregates` asserts the SQL text, `test_prod_mode_maps_rows` extended with
+      network fixture values + response assertions. QG green (247s).
 - [x] [UI] P1. Add network columns (recv/sent, avg + p95) to `VmResourceComparison.tsx`'s per-VM table, following the
       existing column/sort-key pattern (`"vm_name" | "avg_cpu_pct" | ...`). Gate: the `/vm-resources` page renders
       live network figures for at least one real deployment, verified in the running app. — deployment-ui@95a1a62ada.
