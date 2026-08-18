@@ -135,3 +135,70 @@ Operator reported agents "keep respawning without finishing their tasks and burn
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:9534953f4daf58bc]: KEEP-NA, valid — 2 open items are an unresolved investigation into the actual DeepSeek-side crash mechanism (possibly needing vendor engagement) and an explicit operator decision on reverting a tuning flag; neither bounded/deterministic.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged.
+- **sub-agent investigation 2026-08-18 (INVESTIGATE P1 — confirm the DeepSeek tmux-session-death mechanism)**:
+  static-analysis-only pass over `server/worker_liveness_watchdog.py`, `server/tmux_spawn.py`, `server/tmux_pruner.py`,
+  `server/tmux_session_loss_rate_canary.py` + their tests, per dispatch instructions to not ship code without a
+  confirmed cause. **Doc cross-reference correction first**: the dispatch brief quoted this doc's open todo as
+  `[INVESTIGATE] P1. Root-cause death #2 (14:30:28) — NOT explained by tmpfs-disk-cleanup...` — that exact todo and
+  timestamp actually live in the sibling `/plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`
+  (its own todo list), not in this doc, whose own open INVESTIGATE item carries no timestamp. Flagging so a future
+  reader searching THIS doc for "14:30:28" doesn't come up empty — investigated both together since they're clearly
+  related (this doc is even cited in that one's own evidence for "account_snapshot" instrumentation).
+
+  **Ruled out, with reasoning (not readback)**:
+  - The DeepSeek 1M-context-window fix (`agent-orchestrator@ac9ba18`, 2026-08-10,
+    `server/tmux_spawn.py::_DEEPSEEK_CONTEXT_WINDOW_EXPORT` + `server/model_tier.py::_CONTEXT_WINDOW_DEEPSEEK`) as a
+    NEW crash-inducing regression. Its 1,048,565-token ceiling was measured directly against the raw DeepSeek API
+    (laddered oversized POSTs, not inferred from CLI transcripts — archived
+    `ao_deepseek_context_window_unknown_and_self_repoisoning_2026_08_10.md`), AO's export (1,000,000) stays 4.5% under
+    it, and I found no path in `_start_session`'s spawn-command construction where a session's real request size could
+    silently exceed `CLAUDE_CODE_MAX_CONTEXT_TOKENS` before the CLI's own auto-compact fires. (One adjacent,
+    NOT-ruled-out consequence below.)
+  - The DeepSeek native-usage-capture proxy (`server/deepseek_native_proxy_server.py`, outside this task's file
+    cluster but directly relevant — a standalone process DeepSeek `claude` CLI workers can be routed through via
+    `ANTHROPIC_BASE_URL`). Its own docstring documents a dev-time bug where an earlier revision buffered a whole
+    stream before responding (pane-silent long enough to trip the spawn-heartbeat watchdog into a mid-turn respawn) —
+    but that bug was caught and fixed BEFORE the proxy's first commit (`8523248`, 2026-08-12 14:19:01+01:00), which
+    postdates the 2026-08-11 05:30-05:43 crash-loop burst by over a day. Cannot explain that incident. Could have been
+    live by death #2 (2026-08-13 14:30:28) — see open questions below.
+  - tmpfs-disk-cleanup and the confirmed kill-server/ambient-socket mechanism as death #2's cause — both already
+    ruled out in the sibling doc with direct evidence (zero `tmpfs-disk-cleanup` runs 14:25-14:35Z; Layers 1+2 were
+    live + every session force-recycled onto them by ~13:10Z, over an hour before 14:30:28). Re-verified the sibling
+    doc's own timeline is internally consistent rather than re-deriving it.
+
+  **Remains plausible, unconfirmed**:
+  - The 2026-08-11 burst conflates two DISTINCT signatures: (a) the ~13-min, ~55-attempt, nearly-every-slot mass burst
+    matches the confirmed kill-server signature exactly (one shared-tmux-SERVER death takes every pane on the socket
+    with it), and that vulnerability was live + unfixed at the time — plausibly explains the bulk of it with DeepSeek
+    incidental (100% of the fleet just happened to be on 2 DeepSeek accounts when it fired), not causal. (b) Slot 15's
+    separate pattern — 7 deaths in one hour, ~7-15min apart, NOT simultaneous with other slots — does not fit that
+    signature (kill-server takes the whole shared socket at once; it would not selectively re-kill one slot 7x while
+    32 others survive). This half stays genuinely unexplained by anything either doc has confirmed.
+  - Whether the DeepSeek native proxy was actually WIRED UP (an account's env file pointed `ANTHROPIC_BASE_URL` at it,
+    not just present in the codebase) by 2026-08-13 14:30:28 is a deploy-time fact, not derivable from a static read —
+    the proxy's own docstring is explicit that shipping the code and flipping the wire-up are separate steps.
+  - Unverified consequence of the 08-10 context-window fix: it changed DeepSeek's runtime PROFILE, not just its
+    compaction threshold — sessions that used to compact at ~200K now legitimately run toward the real ~1M ceiling
+    first, so each request DeepSeek's provider serves keeps growing far larger than before (DeepSeek's own usage shape
+    is ~99.4% cache-read tokens per the archived doc's measurement). Neither investigation has checked whether death
+    likelihood correlates with request/context size specifically for DeepSeek — worth testing since it's a genuine
+    behavior change landing one day before the crash loop first appeared.
+
+  **Live-VM evidence that would resolve this next** (none derivable statically):
+  1. Slot 15's repeat pattern: pull `context_used_pct`/`account_snapshot` (now captured on every `tmux_session_lost`
+     via `server/tmux_pruner.py`'s death snapshot, landed after 2026-08-11 so not retroactively available for that
+     incident but live going forward) for the next DeepSeek-account death and check whether it died at a large
+     context size — a real correlation would support the "bigger requests since 08-10" hypothesis.
+  2. Any future unexplained DeepSeek death: `journalctl -u deepseek-native-proxy` (unit:
+     `scripts/deepseek-native-proxy.service`) for the exact window — a crash/restart/mid-stream-failure log line there
+     would directly implicate the proxy; silence would rule it out.
+  3. Confirm via the live account env files (`~/.claude-accounts/<deepseek-account-id>.env`, `ANTHROPIC_BASE_URL`)
+     whether DeepSeek accounts were actually routed through the native proxy at each historical death timestamp of
+     interest — a deploy fact the code alone can't prove.
+  4. A deliberate isolated-sandbox repro (the sibling doc's own pattern,
+     `/codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md`) driving one DeepSeek session's context up near
+     the ~1M ceiling under concurrent load on a shared 2-account pool, watching for the death signature — the most
+     direct test of the "large-request stress" hypothesis without waiting for a live recurrence.
+
+  No code changed this pass — could not confidently root-cause death #2 or slot 15's repeat pattern from static
+  analysis alone; not guessing-and-shipping. `[INVESTIGATE]` checkbox left unflipped per dispatch instructions.

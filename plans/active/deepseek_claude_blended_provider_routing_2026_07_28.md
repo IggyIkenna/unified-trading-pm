@@ -853,3 +853,72 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
   `select_account_for_spawn()` sequential-preference rollout note, the "sibling Grok/Gemini plan" staging-ruling
   cross-reference, and this doc's own most recent na-eligibility-audit verdict immediately above this entry) —
   historical record of decisions/work already made, not live open todos.
+
+## Phase 4 — rate-limit-aware, difficulty/duration-stratified round-robin dispatch (2026-08-18)
+
+**Why.** Every phase above got each provider to a paused-but-production-ready state; deciding WHICH task goes to
+WHICH provider was explicitly deferred (`kimi_gemma_provider_onboarding_2026_08_16.md`'s Why section: "The future
+work will be about task routing... once we fully understand the costs differences"). Operator ruling (interactive
+session, 2026-08-18): now that DeepSeek (both modes), GLM, Gemini, Codex/Luna, and Gemma are each registered,
+replace Phase 3's placeholder ("even split across all registered providers/models") with a real stratified-sampling
+rotation. Naive even-split doesn't account for (a) free/cheap-tier accounts having real rate limits — firing 20
+tasks at a rate-limited free model (Gemma, Gemini) isn't viable the way it is for a metered/subscription account;
+(b) a model+account combo only gets calibration signal if it's actually exercised — an account with six models needs
+each tried at least once, not just the account as a whole; (c) task difficulty and task duration are different axes
+(a plan's `estimate_class` calibration multiplier is a difficulty proxy, its
+`estimate_baseline_ai_days`/`estimate_calibrated_ai_days` is a duration proxy — long-lived vs. short-lived task
+survival is its own signal worth distributing across providers, not implied by difficulty alone). DeepSeek is
+included as a live comparison point despite already being "proven" — operator: "it has balance and two modes, it's
+actually a nice comparison."
+
+**Design summary** (operator-specified, refined across two follow-up clarifications):
+
+- Stratify the task queue into three difficulty bands (easy/medium/hard) using `estimate_class`'s existing
+  calibration multiplier as the proxy (refactor 0.4x/design 0.6x → easy; infra 0.8x → medium; brand-new
+  1.0x/research 1.2x → hard — see `/codex/08-workflows/estimation-calibration.md`), and independently into duration
+  bands using `estimate_baseline_ai_days`/`estimate_calibrated_ai_days` (short/medium/long-lived) — the two axes are
+  tracked separately, never merged into one score.
+- Each "round" = one pass across every LIVE model+account combination. **Batch size is the actual number of combos
+  being compared at that moment, not a fixed 20** — the rotation must stay balanced as accounts are added/paused,
+  so a hardcoded constant would silently break the moment the combo count changes. Within a round, every combo gets
+  one task from the current stratum before the rotation moves to the next stratum.
+- **Assignment within a block is randomized, not sequential.** Do not always hand combo #1 the first medium task of
+  the round, combo #2 the second, and so on — round after round that lets a systematic order effect (task-pool
+  depletion, session drift) ride along with combo identity instead of averaging out. Shuffle independently each
+  round.
+- Per-combo dispatch stays gated on the existing headroom/health check (`_pick_headroom_account()`/
+  `select_account_for_spawn()`) so a rate-limited or near-ceiling free-tier account (Gemma/Gemini) is skipped for
+  that round rather than force-fed — this extends Phase 3's existing gate with a rotation-position signal, it does
+  not add a second, separate gate.
+- Convergence target is not exact per-task matching (no two "medium" tasks are identical) but a large-enough
+  sample — after roughly 500-1,000 tasks, each combo should have accumulated enough of each difficulty×duration
+  stratum for the resulting cost/quality/turn-count comparison to be meaningful. This generalizes the retrospective
+  stratified-sample audits already run in this plan's history (the Phase-3-era 12-task and 51-item matched-plan
+  samples) into a standing forward-looking mechanism instead of a one-off audit.
+- Feeds from, and feeds into, `multi_provider_context_billing_reconciliation_2026_08_16.md`'s in-progress telemetry
+  capture (compaction-occurrence, peak-context-watermark) — that doc is building the per-task signal capture this
+  rotation's calibration comparison will consume; this phase owns the rotation/dispatch mechanism itself, that doc
+  owns the billing-accuracy signals it's measured against.
+
+### Todos
+
+- [ ] [DESIGN] P1. Write the concrete rotation-state data structure and algorithm (round counter, per-combo
+      last-served stratum, shuffle-within-block logic) as a doc-level spec here before implementing — stratum
+      boundaries and tie-breaking when a combo is degraded are judgment calls, not a mechanical change. Done when: a
+      worked example (a round with N live combos and a mixed-stratum task batch) is written out showing the shuffle
+      + skip-on-rate-limit behavior end to end.
+- [ ] [INFRA] P1. Implement the rotation as a policy layered on top of `select_account_for_spawn()`'s existing
+      headroom/health gate (extend, don't replace) — reads each task's `estimate_class` +
+      `estimate_baseline_ai_days`/`estimate_calibrated_ai_days` from its parent plan's frontmatter to bucket it,
+      tracks per-combo last-served-stratum state, and shuffles combo order per round. Done when: unit tests cover
+      (a) a rate-limited combo is skipped for that round without breaking the rotation for the rest, (b) round-robin
+      order is randomized across repeated runs — not deterministic combo-1-first, (c) batch size tracks the live
+      combo count rather than a hardcoded constant.
+- [ ] [DATA] P2. Extend `accounts.json`/`AccountProvider` bookkeeping with a per-combo "times exercised per stratum"
+      counter (or derive it from existing task/spend logs if that's cheaper than a new field) so the rotation is
+      auditable. Done when: a script can answer "how many easy/medium/hard and short/medium/long tasks has each
+      live combo run" without a manual log grep.
+- [ ] [REVIEW] P3. After roughly 500-1,000 tasks have run through the new rotation, pull the per-combo stratified
+      breakdown and confirm the distribution is balanced (no combo starved, none over-represented in one stratum).
+      Done when: a dated Progress Log entry records the actual counts and either confirms balance or identifies
+      which combo/stratum needs a rotation-weight adjustment.
