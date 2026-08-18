@@ -10,19 +10,10 @@ summary: >-
   attempts climbing (61 -> 103 across the session), `last_error="no free configured slot to
   dispatch escalation onto"`. escalation.py's tuning constants are confirmed NOT drifted, and the
   dedicated 3-slot CI-escalation reserve (`DEFAULT_CI_ESCALATION_SLOT_RESERVE=3`, config.py:436)
-  is correctly sized. **Root cause CONFIRMED (not just hypothesized)**: the actual 3 reserved slot
-  ids are 32, 33, and 9001 (the top-3 non-review slot ids at the time) — `GET /api/state` shows
-  ALL THREE currently `status=paused`, `worker_alive=false`. That alone fully explains "no free
-  configured slot" regardless of account health: the reserve is structurally paused, not just
-  capacity-constrained. A secondary, real risk: slots 32 and 33 are BOTH bound to the SAME account
-  (`sub-b-iggy2london`, `status=high_usage`, 88% of its weekly message limit used, `overage_status:
-  rejected`/`overage_disabled_reason: out_of_credits` — so it cannot burst past quota via overage)
-  — even once unpaused, 2 of the 3 reserved slots draw from one shrinking budget. Slot 9001 has no
-  account bound at all (`account_id: null`). This is NOT the same root-cause class as the
-  2026-08-05 incident (`ao_scheduled_job_reserve_and_staggering_2026_08_04.md`, pure account-pool
-  exhaustion) — that was this doc's initial hypothesis before the slot-level data came in; corrected
-  here rather than left standing, per the workspace's own "fix a misleading doc in the same turn"
-  rule.
+  is correctly sized. **Root cause CONFIRMED (not just hypothesized)**: the REAL reserve is slots
+  31/32/33 (an earlier pass wrongly included human slot 9001 — corrected below) — all three were
+  `status=paused`, `worker_alive=false`, and all three bound to the SAME account (sub-b-iggy2london,
+  88% weekly usage). Resumed via `POST /api/slots/{id}/resume`, operator-approved live in chat.
 status: open
 nature: issue
 asset_group: [ao]
@@ -33,7 +24,7 @@ tags: [ao-watchdog, escalation-queue-reconcile, stuck-escalation, account-pool]
 related:
   [
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
-    /plans/archive/2026_08/issues/ao_scheduled_job_reserve_and_staggering_2026_08_04.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /cursor-configs/skills/escalation-queue-reconcile/SKILL.md,
   ]
 created: "2026-08-18"
@@ -83,43 +74,74 @@ mechanism is retrying correctly, it just has nowhere to land.
 - `escalation.py` tuning constants match expected values exactly — no reverted/drifted constant.
 - `DEFAULT_CI_ESCALATION_SLOT_RESERVE = 3` (`config.py:436`) is live and correctly sized.
 
-## CONFIRMED root cause
+## CONFIRMED root cause (corrected — see below)
 
-`GET /api/state` slot data:
+**Correction (same session, minutes later): the first pass's `top-3 non-review slot ids` heuristic
+did not exclude human-operator slots (`config.human_slot_ids()`, `DEFAULT_HUMAN_SLOTS = (9001,
+9002)`, `ao_human_fleet_integration_2026_08_15.md`) and wrongly swept slot 9001 (Ikenna's own
+human slot) into the guessed reserve. The operator caught this live. Re-derived excluding
+`human_slot_ids()` — the REAL reserve is slots 31/32/33, not 32/33/9001.**
+
+`GET /api/state` slot data (corrected):
 
 ```json
 [
-  {"slot_id": 32, "status": "paused", "account_id": "sub-b-iggy2london", "worker_alive": false},
-  {"slot_id": 33, "status": "paused", "account_id": "sub-b-iggy2london", "worker_alive": false},
-  {"slot_id": 9001, "status": "paused", "account_id": null, "worker_alive": false}
+  {"slot_id": 31, "status": "paused", "account_id": "sub-b-iggy2london", "worker_alive": false, "kind": "worker"},
+  {"slot_id": 32, "status": "paused", "account_id": "sub-b-iggy2london", "worker_alive": false, "kind": "worker"},
+  {"slot_id": 33, "status": "paused", "account_id": "sub-b-iggy2london", "worker_alive": false, "kind": "worker"}
 ]
 ```
 
-Slots 32/33/9001 ARE the current CI-escalation reserve (top-3 non-review slot ids). **All three are
-individually paused with `worker_alive: false`** — the reserve mechanism and account pool are both
-fine in the abstract; the concrete, physical slots reserved for escalation dispatch simply cannot
-spawn anything right now because they're paused. This fully explains "no free configured slot"
-without needing an account-exhaustion story at all.
+**All three real reserve slots — not just two — are bound to the SAME account** (`sub-b-iggy2london`,
+`status: high_usage`, `weekly_pct: 88` — 1056/1200 weekly messages used, resets 2026-08-23,
+`five_hour_pct: 17`, `overage_status: rejected`/`overage_disabled_reason: out_of_credits` so it
+cannot burst past quota) **and all three are individually `paused`, `worker_alive: false`.** This
+fully explains "no free configured slot" without any account-exhaustion story — the reserve is
+100% single-account-concentrated AND fully paused, a more severe single-point-of-failure than the
+"2 of 3" first draft stated.
 
-**Secondary risk, worth fixing even after unpausing**: slots 32 and 33 are both bound to the SAME
-account, `sub-b-iggy2london` (operator-identified live in chat) — `status: high_usage`,
-`weekly_pct: 88` (1056/1200 weekly messages used, resets 2026-08-23), `five_hour_pct: 17` (healthier
-short-term), `overage_status: rejected`, `overage_disabled_reason: out_of_credits` (cannot burst
-past its plan quota). Two of the three reserved slots drawing from one account nearing its weekly
-cap is a single point of failure for the whole reserve. Slot 9001 has no account bound at all
-(`account_id: null`) — it can't dispatch anything regardless of pause state until one is assigned.
+Slot 9001 (human, Ikenna's) is unrelated to this escalation-reserve mechanism entirely — its own
+`paused`/`worker_alive: false`/`account_id: null` state reflects no interactive human session
+currently connected to it, not a bug in the escalation path. Investigating whether ITS state
+correctly reflects reality (the operator separately flagged the human-fleet dashboard overview as
+"not seeming to work") is tracked as its own, unrelated finding — not part of this doc.
+
+## Remediation applied
+
+**2026-08-18, operator-approved live in chat**: resumed slots 31/32/33 via
+`POST /api/slots/{id}/resume`. All three flipped `status: paused -> idle` successfully.
+`worker_alive` was still `false` immediately after (resume only changes eligibility for the
+autospawn loop to claim the slot on its next tick — it doesn't force-spawn synchronously), and
+`agt-ed7277` was still `queued`/`attempts=107` at the moment of the resume call. **Not yet
+re-verified past that point** — the next `/escalation-queue-reconcile` Step 1 check (or a manual
+`GET /api/escalations/active`) should confirm this row actually dispatches once the reserve slots
+spawn workers.
 
 ## Follow-up
 
 - [x] [SCRIPT] P1. Confirm which accounts the current CI-escalation-reserved slots are bound to —
-      DONE, see above. Root cause is the pause state, not account exhaustion. (repo:
-      agent-orchestrator)
-- [ ] [OPERATOR] P1. Decide whether to resume slots 32/33/9001 now — asked live in chat
-      2026-08-18, awaiting the operator's answer at time of filing. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Assign a real account to slot 9001 (`account_id: null` today) and consider
-      spreading 32/33 across two different accounts instead of double-booking sub-b, so the
-      reserve doesn't share a single quota ceiling. (repo: agent-orchestrator)
+      DONE (corrected to 31/32/33, all sub-b). (repo: agent-orchestrator)
+- [x] [OPERATOR] P1. Decide whether to resume the reserve slots — operator approved live
+      2026-08-18; applied (see Remediation above). (repo: agent-orchestrator)
+- [ ] [SCRIPT] P1. Re-verify `agt-ed7277` actually dispatched successfully after the resume +
+      next autospawn tick — this doc isn't closeable until that's confirmed, not just "slots show
+      idle now". (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Spread 31/32/33 across more than one account instead of triple-booking sub-b —
+      today's incident is exactly what a single-account reserve produces the moment that one
+      account gets paused/exhausted. (repo: agent-orchestrator)
 - [ ] [SCRIPT] P2. Pull `overage_disabled_reason` for the other 21 disabled accounts (the field
       name this session's first pass got wrong) to understand whether that's a temporary overage
       window or something needing operator action — separate from this specific stuck row, but
-      surfaced by the same investigation. (repo: agent-orchestrator)
+      surfaced by the same investigation. Cross-reference against the in-progress provider-
+      onboarding plans (`deepseek_claude_blended_provider_routing_2026_07_28.md`,
+      `grok_gemini_translation_proxy_2026_08_14.md`, `codex_luna_flex_bridge_2026_08_14.md`,
+      `kimi_gemma_provider_onboarding_2026_08_16.md`) before treating any of them as anomalous —
+      operator confirmed 2026-08-18 these disabled non-Anthropic accounts are largely expected,
+      mid-onboarding/testing. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. `/api/agents` returns ZERO rows for human slots (`human_agent_rows: []` when
+      checked live 2026-08-18) — if the dashboard's human-fleet overview reads from this endpoint,
+      that's why it "doesn't seem to work" per the operator. Needs its own investigation into which
+      endpoint the human-fleet overview actually consumes and whether human-slot rows should be
+      added to `/api/agents` or the overview should read `/api/state`'s `slots[]` instead. Filed
+      here as a pointer, not a full diagnosis — deserves its own issue doc if it isn't already
+      tracked under `ao_human_fleet_integration_2026_08_15.md`. (repo: agent-orchestrator)
