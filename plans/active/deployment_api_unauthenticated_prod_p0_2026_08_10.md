@@ -673,18 +673,14 @@ are unaffected.
         sign-in end-to-end (hard-refresh/incognito) and confirm it completes post the popup-auth + Cache-Control fixes
         above — the paragraph directly above this todo describes real, still-open verification work with no tracked
         checkbox anywhere in this doc.
-  - [ ] [OPERATOR] P2. **ADDED 2026-08-18.** Decide how to resolve the wrong-Google-account 403s for Harsh: live
-        Cloud Run logs show repeated `Firebase auth: email not on allowlist: user=harshkantariya.work@gmail.com`
-        (2026-08-16/17/18) — he's intermittently completing sign-in with his personal Gmail instead of his allowlisted
-        work account (`harshkantariya@odum-research.com`). Options: (a) do nothing — he just needs to pick the right
-        account in Google's chooser each time (zero code change); (b) add `harshkantariya.work@gmail.com` to the
-        `deployment-api-allowed-emails` GSM secret so either identity works — a real access-grant decision (extends
-        who can trigger prod deploys/kill-switches from this console), not a worker call; (c) bias the sign-in flow
-        toward the work account via Firebase's `GoogleAuthProvider.setCustomParameters({ hd: "odum-research.com" })`
-        (deployment-ui/src/auth/GoogleAuth.tsx `signInWithGooglePopup`) — narrows the account CHOOSER but doesn't
-        block a personal account someone deliberately picks anyway, so probably pairs with (a) or (b) rather than
-        replacing them. **Done when**: operator picks a direction and, if (b) or (c), it's shipped + live-verified
-        (repo: deployment-api for (b) — GSM secret update; deployment-ui for (c) — code change).
+  - [x] ✅ [OPERATOR] P2. **ADDED 2026-08-18, RESOLVED same day — see this doc's own 2026-08-18 Progress Log entry
+        below for the full finding.** Wrong-Google-account 403s for Harsh: live Cloud Run logs showed repeated
+        `Firebase auth: email not on allowlist: user=harshkantariya.work@gmail.com` (2026-08-16/17/18) — he was
+        intermittently completing sign-in with his personal Gmail instead of his allowlisted work account
+        (`harshkantariya@odum-research.com`). **Operator decision: option (a) — no code/config change**, just pick the
+        work account in Google's chooser each sign-in. Declined both (b) (allowlisting the personal Gmail — a real
+        access-grant expanding who can trigger prod deploys/kill-switches) and (c) (an `hd` hosted-domain hint biasing
+        the account chooser). No further action.
 
   **Found, flagged, no operator decision yet — not actioned**: 3 stale tagged Cloud Run revision URLs
   (`prd-sa-precutover`, `predeploy-verify`, `sports-fix-verify`) on `uts-shared-deployment-api`, pointing at old
