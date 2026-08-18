@@ -421,6 +421,61 @@ presentation choice.
 
 ---
 
+---
+
+## Issue-doc corpus, 2026-08-17/18 — folded in so nothing is tracked only in an issue doc
+
+**38 issue docs** were filed in two days off other agents' findings, mapped to workstreams below so this epic is a
+complete index of outstanding work — a finding tracked nowhere but its own issue doc is one nobody will schedule.
+
+**Load-bearing for the artefacts — these change what we may claim:**
+
+| Finding | Impact |
+| --- | --- |
+| `b21_distinct_values_noncanonical_live_2026_08_18` (P1) | **B21 measurably FAILS live**: 113 non-canonical entries across all 5 AGs (defi 38, sports 71, cefi 1, prediction 1, tradfi 2), most unaccounted for by the accepted-exceptions registry. **No artefact may claim "paths canonical".** |
+| `cefi_instrument_type_casing_active_writer_regression_2026_08_17` (P1) | Casing residual **grew 13x, 2,982 -> 39,286 rows — an ACTIVE WRITER regression, not historical debt**, traced to MTDS `partitioned_writer.py` lowercasing leaking into the manifest row-key. Canonical quality is degrading in real time, so any canonical claim has a shelf life. |
+| `manifest_hygiene_red_all_2026_08_17` (P1) | DIVERGENT_EMPTY across cefi/tradfi/prediction; POLYMARKET CQG rollup empty on 43% of days across all history; **prediction raw trades has an 8-day-and-counting capture outage**. Prediction coverage must not be quoted as steady-state. |
+| `features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18` (P1) | Corporate actions sourced from a **fleet-wide BANNED vendor**. Blocks the corporate-actions path this epic already noted as post-MVP. |
+
+**W2 — data pipeline integrity**: the four above, plus `manifest_hygiene_red_all_2026_08_18` ·
+`empty_reprobe_disagreement_all_2026_08_17` (closed) + `..._2026_08_18` ·
+`mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17` (closed) ·
+`utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18` (**P0**, closed — a silent write failure, exactly
+the class gate B9 exists to catch).
+
+**W4 — observability, alerting, recovery**: `dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18` (P1) ·
+`dp_cron_did_not_fire_dedup_volatile_field_2026_08_17` (P1) ·
+`dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17` (P1) ·
+`cefi_lighter_zksync_preempted_relaunch_blocked_tardis_cap_2026_08_17` (P2 — preemption relaunch blocked by the Tardis
+1-VM cap: gate B12 and the spot-recovery gate interacting) ·
+`escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18` (P2) ·
+`main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18` (P1).
+
+**W5 — venue readiness**: `defi_venue_e2e_batch1_deferred_followups_2026_08_17` (P2) ·
+`mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17` (P3) ·
+`defi_gas_net_cost_partial_wiring_gap_2026_08_17` (P1).
+
+**W6 strategy / W11 order lifecycle**: `mev_engines_opportunity_detection_signals_unproduced_2026_08_18` (P1 — engines
+exist, signals unproduced: the reachability class again) ·
+`execution_order_tracker_missing_cancelled_amended_status_2026_08_17` (P2 — directly W11's "every incremental step
+including updates and cancels").
+
+**Features**: `features_service_calendar_domain_manifest_tracking_gap_2026_08_18` (P2) + the banned-vendor P1 above.
+
+**Tooling / corpus hygiene (tracked, not epic-scope)**:
+`git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17` (P1 — the contention class that fired
+the self-inflicted-conflict guard repeatedly) · `unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17` (P1) ·
+`git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17` (P3) ·
+`ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17` (P2) ·
+`ao_watchdog_scheduled_timer_wiring_2026_08_17` (P2) · `ao_dashboard_activity_log_role_vocabulary_gap_2026_08_18` (P2) ·
+`na_eligibility_*` (3) · `docs_reconcile_findings_2026_08_17` (P2) ·
+`plan_reconciler_findings_{cefi,tradfi}_2026_08_18` · `sit_stamp_dispatch_503_false_positive_2026_08_17` (P3) ·
+`promote_pr_non_supersession_after_greeks_service_fix_2026_08_18` (P3) ·
+`tradfi_reconciliation_2026_08_17_findings_2026_08_17` (P2).
+
+- [ ] [AGENT] P1. **Re-fold this index weekly.** It is a 2026-08-17/18 snapshot and will rot — the mechanism that keeps
+      it true is a re-run, not an edit. When a doc closes, drop it from here rather than marking it closed twice.
+
 ## Definition of done for the epic
 
 - [ ] [BACKEND] P0. **Every venue with a code path has a derived batch / paper / live state**, with `unverified`
