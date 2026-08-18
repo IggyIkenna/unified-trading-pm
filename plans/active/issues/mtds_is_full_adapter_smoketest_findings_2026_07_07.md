@@ -324,6 +324,14 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
       migration plan. `tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` looks relevant by name but
       is NOT independently confirmed to answer this — verify before treating as settled. Done when: a definitive
       answer is recorded here (with citation if already scheduled, or a new migration-plan todo filed if not).
+      **Partial answer (na-eligibility-audit 2026-08-18)**: that doc IS about a real, executed catalogue purge — the
+      operator-approved "tradfi §8 4-leg catalogue retirement purge" (2026-08-08, retiring ICE/CBOE-OPRA/VX-spread/
+      VIX-cash rows per `instruments_completion_tracker_2026_07_06.md` §8) — directionally consistent with this
+      todo's cited ICE/CBOE row-count collapse. **Not yet a full match**: that doc never states exact pre/post row
+      counts, so whether it's the SAME purge this todo's "16,146→~1 / 37,563→~89" figures come from (vs. a
+      related-but-distinct purge) is not row-count-verified — its own follow-up (a durable build-time exclusion
+      filter + re-enabling the 2 protectively-paused catalogue-regen schedulers) is still open there. Not closeable
+      as "definitive" yet — leaving open pending a live catalogue row-count check.
 - [ ] [RESEARCH] P3. **Open question 6 (added 2026-08-16, plan_reconciler)**: determine whether ODDS_API's total
       absence from instruments-service's reference-data adapters (MTDS captures its tick data; IS has no adapter for
       it) is deliberate division of labor or an accidental gap — corpus-wide grep found no doc that already answers
@@ -707,3 +715,8 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
 - **na-eligibility-audit 2026-08-16** [body-hash:bd1e6d7b79f57815]: KEEP-NA, stale-citation fix applied (checkbox(es) corrected to cite where the work actually landed -- see inline citations above). Doc stays assigned_vm: NA.
 - **na-eligibility-audit 2026-08-17** [body-hash:f5bb51df8e7a9e79]: KEEP-NA, valid — Reaffirmed. 4 remaining open items are all open-ended research/investigation (ODDS_API ownership question, 18-month FLUID coverage gap needing an alternate historical read path, untraced 273-row mistagging root-cause, an under-specified drilldown-mockup update) with no determinable done-when. Reaffirmed KEEP-NA 5 times prior (2026-07-30 x2, 2026-08-07, 08-09, 08-16). Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-18** [body-hash:ececad44bcd66b49]: KEEP-NA, stale-items — added a partial finding to Open
+  question 5 (todo 1, new 2026-08-18) after checking the doc it names; directionally consistent but not row-count-
+  verified, left open. The other 4 open items (ODDS_API ownership research, FLUID 18-month coverage gap, 273-row
+  DERIBIT/COMBO mistagging root-cause, drilldown-mockup update) remain open-ended research/investigation per 6+ prior
+  independent passes — reaffirmed. Doc stays assigned_vm: NA.

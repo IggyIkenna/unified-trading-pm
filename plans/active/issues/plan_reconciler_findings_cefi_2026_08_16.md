@@ -357,6 +357,11 @@ None — all 80 non-grace docs in the cefi tranche were read in full by the hunt
   eligibility-audit pass earlier the same day already extracted every bounded item). Doc stays `status: open`,
   `assigned_vm: NA` — not archived (4 genuine open items remain).
 - **na-eligibility-audit 2026-08-17** [body-hash:fe51f315f7be41bd]: KEEP-NA, valid — Reaffirmed same-day. 4 remaining items (line-cap split gated on 2 design/judgment todos, an [OPERATOR] unidentified-VM confirmation, 2 [REVIEW] open-ended meta-process investigations outside this tranche's write scope) already independently re-verified by a same-day plan_reconciler Phase -1 pass. None clears the bounded-outcome bar. Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-18** [body-hash:0216dd89c4908c0d]: KEEP-NA, valid — full re-read. 2 remaining open items
+  ([INFRA] P2 line-cap split gated on 2 genuine design/judgment calls in the target doc; [REVIEW] P3 AO-dispatch
+  dedup suggestion for the mechanism owner) both already independently re-confirmed STILL-OPEN ORDINARY-WORK by this
+  doc's own Phase -1 pass today (2026-08-18, agt-421c89) — neither clears the bounded/worker-determinable bar. Doc
+  stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **plan_reconciler Phase -1 reconciliation, 2026-08-18** (tranche=cefi, dispatch `agt-421c89`, slot 13): re-verified
   all 4 remaining open items against fresh state. 2 RESOLVED with hard evidence (see checkbox flips above): the

@@ -279,3 +279,9 @@ reasoning above.
   grew (104→128 xperp instruments since 2026-08-07) and the crypto count is 97, not the stale "76". Added 93 of
   those 97 to the renamed `_OKX_FUTURES_XPERP_BASES` set; filed a new `[OPERATOR] P2` todo above for the remaining 4
   (BTC/ETH/SOL/XAU) — a genuine xperp-vs-normal disambiguation gap discovered live, deliberately not papered over.
+- **na-eligibility-audit 2026-08-18 (re-verify, same-day)** [body-hash:bbe2c34ebd59bd47]: KEEP-NA, valid — re-verified after
+  this doc's own later-same-day append (batch21 item 3 closed, new [OPERATOR] P2 filed for the 4 remaining BTC/ETH/
+  SOL/XAU ambiguous xperp-vs-normal bases). 2 open items: [SCRIPT] P1 stays on its repeatedly-established
+  "nominal-only, do not re-litigate" ruling; the new [OPERATOR] P2 is a genuine operator design-decision
+  (instFamily-lookup vs expiry-heuristic vs accept-gap), consistent with this doc's established pattern. Doc stays
+  assigned_vm: NA.
