@@ -552,10 +552,18 @@ re-running its own existing refresh script (see below), not a registry rename.
 - **na-eligibility-audit 2026-08-17** [body-hash:a3c4f5ebc221c22f]: KEEP-NA, valid -- re-verified, no content change since the second 2026-08-17 marker (matches inventory's open_todos=3). Remaining 3 items: priority-14 arb-book registration (depends on the next item), provider-availability re-confirmation (needs a live vendor subscription-state check, not a code/manifest read), and the BETFAIR_EX/SB codex-prose reconciliation (per-mention investigative judgment across 7 citations). None worker-determinable as-is. Cross-cutting tranche audit.
 ## Deferred work after 2026-08-14
 
+> **Table corrected 2026-08-19 (`/plan-reconcile batch_live_symmetry_master`)** — row 2 said "Not done" for the whole
+> P2 "expand the universe" set, but 7 of its 9 items were already extracted + dispatched per the 2026-08-17
+> na-eligibility-audit entries recorded further up this doc's own Progress Log (and the inline `✅ Extracted to
+> cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item N` markers on the P2 todos themselves) — this table
+> was never refreshed to match. Split below into what's actually still open vs. dispatched.
+
 | Item                                                                                                              | State                                                             | Blocked on                                                                            |
 | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | Refresh stale `BOOKMAKER_LEAGUE_COVERAGE` JSON (`refresh_sports_bookmaker_league_coverage_2026_06_21.py --write`) | Not done — script stalled mid-read (killed), not a design blocker | Nobody — re-run standalone from market-tick-data-service, diagnose if it stalls again |
-| P2 — expand the universe (Unity child books, priority-14 arb books, drift-guard test)                             | Not done                                                          | Nobody — explicitly out of scope for this pass per the original task instruction      |
+| P2 — expand the universe: Unity child books + capability wiring, NOVIG/PROPHETX/ONEXBET routing, BETOPENLY declaration, drift-guard test, UAC parity gate extension, parity re-measurement (7 items) | DONE — extracted 2026-08-17 to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` items 3-9 | — |
+| P2 — priority-14 arb book registration (still open in this doc)                                                   | Not done                                                          | The next row — sourcing data is known-stale, resolve it first |
+| P2 — re-confirm provider availability in `LIVE_ODDS_PROVIDERS.md` before relying on it (still open in this doc)   | Not done                                                          | Needs a live vendor subscription-state check, not a code/manifest read |
 
 All P0 + P1 (schema, migrations, 7 defi + 2 perp_funding + 31 sports declarations, adapter-backed predicate, bookmaker
 spelling — including the same-session self-correction on LADBROKES/BET888SPORT) are shipped and verified. Every commit

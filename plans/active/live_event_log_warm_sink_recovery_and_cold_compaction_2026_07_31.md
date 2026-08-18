@@ -175,13 +175,16 @@ determinism needs.
       lower-frequency publish batch, not a separate bug). This is the FIRST time any of these 3 venues' book/liquidation
       data has reached the warm tier with real content (previously either the connector produced 100% empty capture, or
       — for `OKX-FUTURES` — the whole WS connector was broken).
-- [ ] [DATA] P1.2. **⏸ PARKED 2026-07-31 (main, Option A — gated behind false prereq `p1-2-preconditions-met`,
-      priority:999).** Doubly-blocked and NOT worker-satisfiable: unpark only once BOTH (a) ≥24h since the P1.1 redeploy
-      (`2026-07-31T21:14Z`, i.e. ~`2026-08-01T21:14Z`) have elapsed AND (b) a paper run trading these 3 venues is
-      confirmed (see `/plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`).
-      **Time-gated, unblocked by P1.1 above — needs real elapsed time, not just a worker pass.** Re-run the
-      `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now that real warm+cold data is
-      confirmed flowing (P1.1). DoD: epsilon=0 match cited with the test run's report path (per
+- [ ] [DATA] P1.2. **Line-1 rewritten 2026-08-19 (`/plan-reconcile`, task_template.md §3 line-1-completeness) — the
+      action verb was buried past physical line 1, invisible to `regen_backlog_from_plan.py`'s task-brief parser.**
+      Re-run the `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now that real
+      warm+cold data is confirmed flowing (P1.1). **⏸ PARKED 2026-07-31** (main, Option A — gated behind false prereq
+      `p1-2-preconditions-met`, priority:999). Doubly-blocked and NOT worker-satisfiable: unpark only once BOTH (a)
+      ≥24h since the P1.1 redeploy (`2026-07-31T21:14Z`, i.e. ~`2026-08-01T21:14Z`) have elapsed AND (b) a paper run
+      trading these 3 venues is confirmed (see
+      `/plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md`). **Time-gated,
+      unblocked by P1.1 above — needs real elapsed time, not just a worker pass.** DoD: epsilon=0 match cited with the
+      test run's report path (per
       `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §5, the `daily-determinism`
       CLI/`DailyDeterminismHandler` in `batch-live-reconciliation-service`). **Two real preconditions this todo cannot
       itself satisfy synchronously**: (1) a full day (T+1 cadence) of real post-2026-07-31T21:14Z capture for these
