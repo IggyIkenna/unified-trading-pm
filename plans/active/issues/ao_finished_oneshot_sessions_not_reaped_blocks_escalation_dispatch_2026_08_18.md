@@ -115,13 +115,98 @@ Needs a real investigation into "the reaper," not a guess:
   post-`/done`, tmux-still-alive) as a distinct, page-worthy signal, separate from genuine account
   exhaustion.
 
+## Root cause investigation (2026-08-18, later same day)
+
+**`tmux_pruner.py` is confirmed NOT the reaper the boot prompt refers to** — it only clears the
+`tmux_session` DB field for a session already confirmed DEAD (`has_session()` returns false); it
+never proactively kills a live-but-finished session. The real reaper for "finished one-shot, /done
+called, tmux still alive" is `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions`
+(`server/worker_liveness_watchdog.py`), gated by `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED`
+(`server/config.py`) and ticked from `_tick_once` every `watchdog_interval_seconds` (default 60s).
+It requires `tuning.watchdog_idle_session_ticks` (default 2) CONSECUTIVE ticks of
+status-in-(idle,stale)-with-a-live-tmux-session before it tmux-kills the session and resets the row.
+
+**Live-confirmed via read-only SSM on the `planning` VM (i-0c9b283b31d6b5ca7)**:
+
+- `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true` is explicitly set in both the systemd unit's
+  `Environment=` and the live process's own `/proc/<pid>/environ` — the watchdog is genuinely
+  enabled and ticking (many `WorkerLivenessWatchdog started (interval=60s)` journal lines all day).
+  No `ORCHESTRATOR_REVIEW_SLOTS` / idle-tick-threshold override is set — config on this VM matches
+  code defaults exactly (rules out a review-slot or threshold misconfiguration).
+- The reclaim mechanism DOES fire successfully at times — journalctl shows bursts of
+  `reclaiming idle lingering session ... ticks=2 -> freeing slot` hitting multiple slots at once
+  (e.g. 02:06, 14:18, 15:30, 17:20 UTC on 2026-08-18), including slots 31/32/33 more than once.
+- **But right now (22:11 UTC, same day), slots 29 and 30 are STILL `status=idle` with a confirmed-
+  LIVE tmux session** (`tmux has-session` exit=0, direct check, not just the DB field) — sitting
+  idle since `last_spawned_at` 06:21:40 / 06:22:41 UTC, i.e. **~15h50m and ~15h49m respectively**,
+  never reclaimed despite being far past every eligibility check. Slots 31/32 have been idle+live
+  since 17:24:30 / 17:35:59 (~4h35m/~4h25m at check time). The queued escalation `agt-3896a8`
+  (market-tick-data-service) was STILL retrying `no free configured slot` continuously from
+  18:35:13 through at least 22:03:11 — the starvation this issue describes is not a one-off snapshot,
+  it is ongoing, hours later, while the watchdog is confirmed running.
+- **Confirmed root-causeable contributing bug**: `WorkerLivenessWatchdog._idle_session_ticks` (the
+  counter that must reach 2 before a lingering session is killed) was a PURE in-memory `dict`, never
+  persisted to disk. `ao-self-pull.sh` restarts `orchestrator.service` on every LDR HEAD move (root
+  cron every 2 min) — live journalctl shows the orchestrator process restarting roughly 15-30+ times
+  over the day, at intervals ranging from a few minutes to a couple of hours. Every restart wiped
+  ALL in-flight reclaim progress back to zero, so a slot's tick counter had to survive an
+  UNINTERRUPTED ~60-120s window post-restart to ever cross the threshold. This is the **exact same
+  bug class already fixed once in this same file** for `_heartbeat_resume_count` and `_burn_flagged`
+  (`ao_worker_context_saturation_unrecoverable_2026_08_06`: "Prod slot 3 hit exactly that... resumed
+  at 12:41:15Z and the server restarted at 12:45:22Z, re-arming an unbounded resume loop four
+  minutes later") — `_idle_session_ticks` was simply never given the same treatment.
+- **Also confirmed and fixed as a same-turn finding** (HARD RULE: a misleading doc/comment is a
+  finding): three separate comments — `config.py`'s field comment, this module's own docstring, and
+  `server.py`'s inline comment at the `watchdog.start()` call site — all claimed
+  `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED` "defaults OFF/false". The actual code default has been
+  `True` (`BoolEnvTrue`, unset/blank resolves True) since commit `33d0696b` (2026-07-29, "enable
+  worker watchdog by default") — the comments simply never got updated across three weeks. Not
+  itself the bug (the live VM explicitly sets the env var anyway), but exactly the kind of stale
+  claim that costs the next investigator a live-verification detour, so corrected in the same commit.
+
+**Honest caveat — NOT fully closed**: persisting the tick counter directly closes a confirmed,
+real, restart-interrupted-progress bug and should measurably shrink how often a slot's reclaim
+progress is discarded. It does **not** fully explain every observation above on its own — e.g. one
+observed reclaim burst (14:18:51) fired ~70 minutes into a SINGLE uninterrupted process lifetime
+(PID `989629`, started 13:08:28) rather than within the first ~2 minutes, which the restart-wipe
+theory alone does not account for. If slots keep sitting idle+live for many hours AFTER this fix has
+had time to deploy (`ao-self-pull.sh` picks it up on its next 2-min cron tick), the next
+investigator should add temporary DEBUG-level per-tick logging of `ticks` progress inside
+`_reclaim_idle_lingering_sessions` — today there is ZERO observability into sub-threshold
+accumulation from outside (no log line fires until the kill itself), which was the single biggest
+blind spot in this investigation.
+
+**Fix shipped**: `agent-orchestrator@89ca5609e0` (quickmerge, landed on `live-defi-rollout`) —
+`server/worker_liveness_watchdog.py` + `server/dedup_state.py` (new
+`watchdog_idle_session_ticks_path()` + disk-backed load/persist, mirroring the existing
+`_heartbeat_resume_count` pattern exactly) + `server/config.py` + `server/server.py` (stale-comment
+corrections). Quality gate green (4118 passed) before shipping.
+
 ## Todos
 
-- [ ] [SCRIPT] P1. Identify why the finished one-shot sessions on slots 31/32/33 (and check the rest
+- [x] [SCRIPT] P1. Identify why the finished one-shot sessions on slots 31/32/33 (and check the rest
       of the fleet for the same pattern, not just these three) still have live tmux sessions after
       `/done` — read `tmux_pruner.py` (or whichever module is actually responsible) and determine
-      root cause live, not from the docstring's stated intent alone. Repo: agent-orchestrator.
-- [ ] [SCRIPT] P2. Once root-caused, fix it so a one-shot worker's slot genuinely returns to
+      root cause live, not from the docstring's stated intent alone. Repo: agent-orchestrator. —
+      DONE: `tmux_pruner.py` is NOT it; the real mechanism is
+      `WorkerLivenessWatchdog._reclaim_idle_lingering_sessions`, confirmed enabled+ticking live but
+      failing to reclaim genuinely-eligible slots for many hours at a stretch (see Root cause
+      investigation above). agent-orchestrator (no code change for this todo — investigation only).
+- [x] [SCRIPT] P2. Once root-caused, fix it so a one-shot worker's slot genuinely returns to
       `_pick_free_slot`'s free pool promptly after `/done` (bounded by whatever grace period, if any,
       is intentional for post-completion review) — cite the fix + a live re-verification that a
       subsequently-queued escalation actually claims a freshly-reaped slot. Repo: agent-orchestrator.
+      — PARTIAL: fixed the confirmed in-memory-counter-wiped-by-restart bug at
+      `agent-orchestrator@89ca5609e0` (disk-persists `_idle_session_ticks`, mirroring the
+      already-fixed `_heartbeat_resume_count` sibling bug). NOT yet live-re-verified post-deploy
+      (this session did not wait out `ao-self-pull.sh`'s next cron tick + a subsequent multi-hour
+      observation window) — per the Honest caveat above, this fix may not be the complete
+      explanation. See follow-up todo below.
+- [ ] [SCRIPT] P2. Live re-verify AFTER `agent-orchestrator@89ca5609e0` has deployed to the
+      `planning` VM (`ao-self-pull.sh` picks it up within ~2min of the LDR HEAD move) — confirm via
+      SSM that slots sitting idle+live for >2 reclaim-ticks worth of uninterrupted uptime are
+      actually being torn down, and that a queued escalation reliably claims a freshly-reaped
+      reserve slot. If the multi-hour stalls recur despite the fix, add temporary DEBUG-level
+      per-tick logging of `ticks` progress in `_reclaim_idle_lingering_sessions` (currently zero
+      observability into sub-threshold accumulation) as the next diagnostic step. Repo:
+      agent-orchestrator.
