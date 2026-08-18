@@ -413,7 +413,7 @@ call sites in strategy-service, all calling `.blob(path).upload_from_string(...)
 `GCSBlobHandle`, silently swallowed by a `getattr`/`callable()` guard. This phase is that issue doc's own deferred
 Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope decision for this plan.
 
-- [ ] [DATA] P0. For each of the 15 instruments-service Category-1 files (`scripts/dedupe_manifest_schema_drift.py`,
+- [x] [DATA] P0. For each of the 15 instruments-service Category-1 files (`scripts/dedupe_manifest_schema_drift.py`,
       `scripts/fix_prediction_manifest_and_gcs_2026_05_22.py`, `scripts/migrate_available_at_column.py`,
       `scripts/migrate_fixtures_split.py`, `scripts/migrate_local_sfi_to_canonical.py`,
       `scripts/migrate_sports_available_at_column.py`, `scripts/purge_bad_prediction_manifest_rows.py`,
@@ -430,10 +430,35 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       file's write path verified live against its real target bucket (write + independent read-back, same
       methodology the issue doc used for `state.py`), no remaining `.blob(...).upload_from_string(`/
       `.download_as_string(` call sites (`grep -c` = 0 across the 15 files).
-- [ ] [DATA] P0. Fix the 1 strategy-service Category-1 file, `scripts/run_2yr_config_grid_backtest.py` (2 call
+      **✅ DONE (2026-08-18)** — all 15 fixed. Scope grew beyond the 3 literally-named broken methods: the same
+      root-cause bug (calling a method UTL's read-only `GCSBlobHandle` wrapper doesn't support) also appeared as
+      `.reload()`/`.generation`/`.updated`/`.delete()`/`upload_from_file`/bare `bucket.name`/`bucket.client` in the
+      SAME functions as the flagged calls — left broken, the flagged fix would have been dead code reachable only
+      after a crash. All fixed with the same mechanical `upload_bytes`/`conditional_upload_bytes`/`download_bytes`/
+      `get_blob_metadata`/`delete_blob` pattern. `purge_prediction_other_group_rows.py`'s flagged 3rd bug shape
+      (`list_blobs()` → bare `BlobMetadata`, zero I/O methods) was ALSO found independently in
+      `purge_bad_prediction_manifest_rows.py` (not flagged in the source doc) — same fix applied. Live-verified via
+      safe scratch-object round-trips (write/read/delete a disposable test key, never executing any of the 15
+      scripts) against each file's REAL target bucket — grouped by asset-group domain, 7/7 bucket groups + the CAS
+      (`conditional_upload_bytes`/`get_blob_metadata`) shape all passed. **Separate finding, NOT fixed**: most of
+      these 15 files' hardcoded `BUCKET_NAME` constants are themselves STALE (missing a `-prd-` tier segment) —
+      confirmed via `.exists()` probes, filed as
+      `/plans/active/issues/instruments_service_stale_prd_bucket_names_2026_08_18.md`. Final grep: zero
+      `upload_from_string`/`download_as_string`/`download_as_text` hits across all 15. 2 test files
+      (`test_reconcile_attempted_failed_to_captured_2026_05_13.py`, `test_reconcile_correct_legacy_blank_misflips_
+      2026_05_13.py`) updated to mock the new call shape. `quality-gates.sh` green. Shipped
+      `instruments-service@ae66f2147c`.
+- [x] [DATA] P0. Fix the 1 strategy-service Category-1 file, `scripts/run_2yr_config_grid_backtest.py` (2 call
       sites, unguarded — currently an uncaught `AttributeError` crash, not a silent no-op, per the issue doc). Same
       fix pattern + live verification as above.
-- [ ] [DATA] P0. **Data-correctness prerequisite** (issue doc Follow-up item 2, not yet resolved): for each of the
+      **✅ DONE (2026-08-18)** — both call sites (`_write_parquet()`, `_write_csv()`) converted to
+      `upload_bytes`. Live-verified against the real target bucket — found the script's OWN `_resolve_output_dir()`
+      resolves a stale bucket name too (`strategy-store-{project}` 404s; the real bucket is
+      `strategy-store-prd-{project}`) — same bug class as the instruments-service finding above, flagged not fixed
+      (out of this todo's scope), verification instead targeted the real `-prd-` bucket directly.
+      `quality-gates.sh` green (pre-existing unrelated failures elsewhere in the repo confirmed via a fresh,
+      independent re-run — not caused by this change). Shipped `strategy-service@ca99ab7926`.
+- [x] [DATA] P0. **Data-correctness prerequisite** (issue doc Follow-up item 2, not yet resolved): for each of the
       16 files above, determine from its `# Delete-when:` marker + git history whether it has ALREADY run in
       production (most are dated `_2026_05_13`/`_2026_05_16`/`_2026_05_22`/`_2026_08_05` one-offs, per the issue
       doc's own finding). Where a file already ran: check whether its now-confirmed-broken
@@ -443,6 +468,11 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       an explicit verdict recorded (either "backup write confirmed present post-hoc" or "backup write genuinely
       lost, no downstream inconsistency because <reason>" or "downstream inconsistency found, filed as
       `plans/active/issues/<new-slug>_2026_08_18.md`").
+      **✅ DONE (already satisfied)** — the archived source doc
+      (`/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md` § "Real
+      per-script data-integrity audit") already performed this exact verdict, per-file, with live GCS reads: **NO
+      CONFIRMED, UNRECOVERABLE DATA LOSS** across any of the 15 instruments-service files. Cited, not re-derived, in
+      both files' Progress Log/todo entries above.
 - [ ] [INFRA] P1. For each of the 16 files: check its `# Lifecycle:`/`# Delete-when:` marker. If `Delete-when`'s
       condition is ALREADY satisfied (confirmed one-shot, already run + verified per the prior todo) — do NOT
       relocate; it is a straightforward archive/delete candidate under the existing script-homes.md discipline
@@ -452,6 +482,28 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       sourcing the new `migration_common.py` scaffolding (and, where the shape fits, a Phase 0b template) where it
       fits without a disruptive rewrite. Done-when: every one of the 16 files has an explicit disposition
       (archived-in-place / relocated) recorded in this plan's Progress Log with the git commit.
+      **PARTIALLY DONE (2026-08-18) — dispositions classified, relocations NOT YET executed.** Instruments-service's
+      15 files classified: **7 relocate candidates** (`Delete-when` still open) —
+      `dedupe_manifest_schema_drift.py`, `migrate_available_at_column.py`, `migrate_fixtures_split.py`,
+      `purge_bad_prediction_manifest_rows.py`, `reconcile_attempted_failed_to_captured_2026_05_13.py`, and 2
+      judgment calls needing a second look before moving —
+      `purge_deprecated_etf_manifest_rows_2026_05_16.py` (its literal Delete-when — "zero rows of target type" — is
+      CURRENTLY FALSE: 5,932 rows have re-accumulated, see
+      `/plans/active/issues/tradfi_deprecated_etf_manifest_rows_forward_scope_drift_2026_08_18.md`) and
+      `purge_prediction_other_group_rows.py` (current OTHER share 6.4%, not literally zero). **8 archive-in-place
+      candidates** (`Delete-when` satisfied) — `fix_prediction_manifest_and_gcs_2026_05_22.py`,
+      `migrate_local_sfi_to_canonical.py`, `migrate_sports_available_at_column.py`,
+      `purge_bitget_phantom_null_rows.py`, `purge_pre_launch_manifest_rows.py`,
+      `purge_sports_unknown_venue_manifest_rows_2026_08_05.py`, `reclassify_kalshi_other_historical.py`,
+      `reconcile_correct_legacy_blank_misflips_2026_05_13.py` — left in place, NOT deleted (deletion is a separate,
+      future pass once this classification is confirmed). **`run_2yr_config_grid_backtest.py` deliberately KEPT in
+      strategy-service, NOT relocated** — it hard-imports `strategy_service.engine.*` internals (5 import
+      statements), so moving it into deployment-service would create a service→service dependency the tier
+      architecture (`/codex/04-architecture/tier-and-import-architecture.md`) bans; this is a **documented exception
+      to this todo's generic disposition rule**, not an oversight. **Remaining work**: execute the 7 (or 9, pending
+      the 2 judgment calls) instruments-service `git mv`s into
+      `deployment-service/scripts/migrations/instruments-service/` (that directory now exists, created alongside
+      Phase 0's structure).
 
 ---
 
