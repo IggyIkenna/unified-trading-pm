@@ -202,3 +202,71 @@ Operator reported agents "keep respawning without finishing their tasks and burn
 
   No code changed this pass — could not confidently root-cause death #2 or slot 15's repeat pattern from static
   analysis alone; not guessing-and-shipping. `[INVESTIGATE]` checkbox left unflipped per dispatch instructions.
+- **sub-agent investigation 2026-08-18 (continued — live-VM diagnostics, read-only SSM)**: dispatched specifically to
+  chase the prior same-day static-analysis pass's own "live-VM evidence that would resolve this next" list (that
+  entry's own todo #14:30:28 lives in the sibling `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`, per that
+  pass's own cross-reference note — investigated jointly again, same as it did). Findings:
+  1. **journalctl retention does not reach back far enough — evidence is gone, not merely unchecked.**
+     `journalctl -u orchestrator.service`'s earliest retained line is 2026-08-15 14:26:06Z; `-u
+     deepseek-native-proxy`'s earliest is 2026-08-16 07:44:53Z (`journalctl --disk-usage`: 4.0G archived+active;
+     `journald.conf` has no explicit `MaxRetentionSec`/`MaxUse` — plain systemd rotation under defaults, not a
+     deliberate config). Both the 2026-08-11 05:30-05:43Z burst and the 2026-08-13 14:03-14:35Z window (deaths #1/#2)
+     predate that boundary by 3-7 days. Any future incident investigated >~3-5 days after the fact will hit the same
+     wall on this VM.
+  2. **DeepSeek native-proxy wiring — CONFIRMED for both 08-13 deaths, ruled out for the 08-11 burst.**
+     `deepseek-native-proxy.service`'s `ActiveEnterTimestamp` is 2026-08-13 11:43:31Z (continuously active since,
+     confirmed via `systemctl show`) — rules the proxy out entirely for 2026-08-11 (service didn't exist yet,
+     consistent with its first commit 2026-08-12 14:19+01:00). For the two 08-13 deaths:
+     `~/.claude-accounts/deepseek-v4-pro.env` (mtime 2026-08-12 19:44:33Z) and `deepseek-v4-flash.env` (mtime
+     2026-08-13 00:29:28Z) both already had `ANTHROPIC_BASE_URL=http://127.0.0.1:8767/accounts/<id>` before either
+     death — **both accounts were live-wired through the native proxy at both historical death timestamps**,
+     resolving the prior pass's explicit "deploy-time fact, not derivable statically" open question. Could NOT
+     confirm/refute whether the proxy itself logged anything at either moment — its journal doesn't retain that far
+     back (finding 1); this half stays open.
+  3. **Both "Death #1" (14:08:21Z) and "Death #2" (14:30:40Z) are the CONFIRMED kill-server-class mass-death
+     signature, not an isolated repeat** — direct `state.db activity_log` evidence (mode=ro), not previously
+     surfaced this precisely in either doc. Death #1 killed 6 slots simultaneously (1,7,14,15,18,21), every row
+     carrying `tmux_server_alive: false, burst_size: 6`. Death #2 killed 5 slots (1,7,14,18,21), same signature,
+     `tmux_server_alive: false, burst_size: 5`, 22min later. Neither is a "dies alone, others survive" pattern —
+     both fit the already-root-caused whole-shared-server-death mechanism exactly. Each individual slot's
+     `account_snapshot` at death time was clean (`account_status: healthy`, `rate_limited_until`/`overage_status`/
+     `auth_failed_at` all null) for the specific deepseek-v4-pro/flash account involved, ruling out "that account was
+     rate-limited/quota-exhausted" as the trigger for either burst. The exact trigger for these two specific bursts
+     is still not identified (tmpfs-disk-cleanup already ruled out for #2 by the prior live session's own journalctl
+     check, before retention rolled it off) — what's newly established is that they're two more instances of the
+     SAME mechanism, not a separate unexplained class.
+
+     Widening the query: the identical `tmux_server_alive: false` signature appears **256 times** in `activity_log`
+     between 2026-08-12 15:00Z (when the per-death diagnostic capture landed) and 2026-08-13 17:13:32Z — roughly
+     every 15-90min throughout that ~26h window, hitting DeepSeek (v4-pro/v4-flash) and multiple Anthropic
+     sub-accounts (sub-a-ikenna, sub-b-iggy2london, sub-d/e-odum*default) near-interchangeably within the same
+     burst — reconfirms the sibling doc's provider-agnostic finding rather than adding a new one. **Zero
+     recurrences since**: the last one is id=484055 at 2026-08-13 17:13:32.157973Z, matching the sibling doc's own
+     "last actual occurrence... 17:13:27Z" note from its 2026-08-14 00:12Z entry almost to the second. Extending
+     that with fresh evidence — **still zero, ~5 days later** (checked this session, 2026-08-18): 1,363 slot-scope
+     `tmux_session_lost` rows since 08-13 17:13:32, every one `tmux_server_alive: true` (ordinary isolated/benign
+     losses, not the mass-kill signature). Materially stronger durability signal than either doc had before — the
+     layered fix (Layers 1-4, all landed by 2026-08-13 20:20Z) looks like it durably closed the mass-kill-server
+     VULNERABILITY CLASS, even though the specific trigger for deaths #1/#2 (which both occurred mid-investigation,
+     after the "closing verification" claim and before the final two fixes) stays individually unconfirmed.
+  4. **Instrumentation status + a new gap found in it.** `account_snapshot`/`host_snapshot`/`tmux_server_alive`
+     (`agent-orchestrator@d825c41`, 2026-08-12 15:27:35+01:00) is live and has captured every death since. But
+     `context_used_pct` is captured ONLY on the separate context-saturation-triggered requeue path
+     (`pre_reset_context_pct`), never inside the `tmux_session_lost` event itself for a kill-server-class death —
+     so the prior pass's "does death correlate with a larger request/context size" hypothesis is genuinely
+     untestable with what's captured today; a real instrumentation gap, not just an unresolved question. Separately,
+     a bulk query for "deaths with an unhealthy `account_snapshot`" over the same window returned 1,300/1,619 —
+     almost certainly inflated by stale carried-forward values (e.g. `sub-a-ikenna`'s snapshot kept showing
+     `overage_status: rejected` from a 2026-08-12T13:59:59Z event on deaths hours later) rather than a real
+     live-at-death-time correlation; not chased further, but flagging since `agent-orchestrator@3e9a224` (2026-08-18,
+     same day, unrelated session — "cross-check pane-text heuristic against real recently-probed usage before
+     trusting a block mark") touches an adjacent staleness problem in the same area and may be relevant to whoever
+     looks at this next.
+
+  **Net**: still no confirmed trigger for death #1/#2 specifically — no smoking gun for "why these two." What
+  changed: the native-proxy wiring question is answered (live + wired at both moments, logs unrecoverable), both
+  deaths are now correctly characterized as instances of the already-root-caused mass-kill-server class rather than
+  a separate mystery, and "is the fix holding" now has much stronger evidence (5 days clean vs. the prior ~4h).
+  `[INVESTIGATE]` checkbox left unflipped — that call is for the lead session after review, per dispatch
+  instructions. No code changed; read-only SSM only (`check-ao-backlog-status.sh`/`query-ao-state-db-readonly.sh`
+  pattern, `state.db` opened `mode=ro`).
