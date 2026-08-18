@@ -79,7 +79,7 @@
     "market-tick-data-service": "0.144.11",
     "system-integration-tests": "0.15.5",
     "unified-api-contracts": "0.140.2",
-    "unified-trading-library": "0.89.4",
+    "unified-trading-library": "0.90.0",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.30.19",
     "e2e-testing": "0.41.25",
