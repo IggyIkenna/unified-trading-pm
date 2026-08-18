@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Synthetic-Data Pipeline Benchmarking
-summary:
-  SSOT for the synthetic-data benchmark harness — the 5 UAC contract axes
+summary: SSOT for the synthetic-data benchmark harness — the 5 UAC contract axes
   (SyntheticGeneratorId/Domain/RealismAxis/ShardLayout/Params), the UTL generator + per-stage profiler +
   BenchmarkHarness DAG, the benchmark CLI/launcher, and the (still-unpopulated) VM-shape recommendation matrix.
 status: current
@@ -71,7 +70,7 @@ for value correctness) is post-cutover.
    GCS/S3 listing depth matches prod). `CALIBRATED_DYNAMICS` (axis 4) is declared but NOT shipped.
 4. **`SyntheticShardLayout`** — `shard_key_axes` (the SAME shard atom the `ManifestWriter` row key uses for that
    `(asset_group, data_type)` — see [`/codex/02-data/availability-manifest-and-data-status.md`] + the per-asset_group
-   shard-atom matrix in `plans/epics/infrastructure_master.md`) + `shards_per_day` + `partition_template`. Drift between
+   shard-atom matrix in `plans/epics/security_and_cross_cutting_master.md`) + `shards_per_day` + `partition_template`. Drift between
    `shard_key_axes` and the manifest matrix is review-blocking.
 5. **`SyntheticParams`** — a concrete generation request (a generator id + date range + cardinality knobs + resolved
    `output_uri` + RNG seed). Built from a `SyntheticGeneratorSpec.make_default_params(...)`; `params_hash()` is the
@@ -152,11 +151,11 @@ recommendation justified by the profile. Stages whose `wall_clock × scale_facto
 [`/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md`](/plans/archive/2026_05/live_pipeline_mtds_mdps_features_2026_05_08.md)
 (ARCHIVED) consumers. The recommendation matrix replaces the guessed defaults in `runtime-tiers-and-deployment.md` (data-pipeline
 VM machine type) + `performance-targets.md` (per-stage targets). **Status (2026-05-22): matrix not yet populated** — the
-real-VM runs remain blocked; this is post-cutover backlog tracked under `plans/epics/infrastructure_master.md`.
+real-VM runs remain blocked; this is post-cutover backlog tracked under `plans/epics/security_and_cross_cutting_master.md`.
 
 > **[DELTA 2026-05-22]** **Current state:** VM-shape recommendation matrix remains unpopulated as of 2026-05-22. Real-VM
 > benchmarking runs have not yet executed (Phase-4-tail blocked). **Planned delta:** Populate matrix post-cutover under
-> `plans/epics/infrastructure_master.md`. **Target architecture:** Per-archetype × per-stage
+> `plans/epics/security_and_cross_cutting_master.md`. **Target architecture:** Per-archetype × per-stage
 > `(min_cpu, min_ram, min_disk, min_iops)` recommendations derived from `stage_profile.parquet` runs on real VMs.
 
 ## Execution-owner

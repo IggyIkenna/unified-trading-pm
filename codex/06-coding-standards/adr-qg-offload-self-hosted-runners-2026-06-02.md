@@ -15,7 +15,7 @@ tags: [quality-gates, infrastructure, performance, cost]
 related:
   [
     ../../plans/archive/2026_06/quality_gates_resource_contention_speedup_2026_06_02.md,
-    ../../plans/epics/infrastructure_master.md,
+    ../../plans/epics/ci_master.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: 2026-06-02
@@ -30,7 +30,9 @@ code_refs:
 
 - **Status:** Accepted — 2026-06-02 (operator decision: Option A + governor; **supersedes the initial Option-B lean**)
 - **Plan:** `plans/active/quality_gates_resource_contention_speedup_2026_06_02.md` (todo `qg-offload-full-run`)
-- **Decision owner:** Harsh; **implementation:** follow-up todos in `plans/epics/infrastructure_master.md`
+- **Decision owner:** Harsh; **implementation:** follow-up todos in `plans/epics/ci_master.md` (was
+  `infrastructure_master.md` — moved 2026-08-18 epic-taxonomy restructure, self-hosted-runner content is now
+  `ci_master`'s scope)
 - **Composes with:** the host concurrency governor (`qg-host-governor.sh`) + `qg-perrepo-baseline` (sizing input).
 
 ## Context
@@ -129,7 +131,7 @@ repos. Never run self-hosted runners on `pull_request` from forks.
   natural home; plugs into the existing CI seam (no bespoke RPC).
 - Adds a network dependency for the authoritative gate + runner provisioning/queueing to operate.
 
-## Follow-up implementation todos (file in `infrastructure_master`, gated on this ADR)
+## Follow-up implementation todos (file in `ci_master`, gated on this ADR)
 
 1. `[INFRA] Provision the `qg`self-hosted runner pool +`bootstrap_runner.sh`(2×`m7i.8xlarge`).`
 2. `[INFRA] Cutover `python-quality-gates-v2.yml`/`quality-gates-v2.yml` `runs-on`→`[self-hosted,

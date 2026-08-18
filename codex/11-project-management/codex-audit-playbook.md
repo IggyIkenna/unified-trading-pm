@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Codex Audit Playbook
-summary:
-  Recurring codex-doc ↔ plan alignment audit — cadence table, the 6-tag drift taxonomy
+summary: Recurring codex-doc ↔ plan alignment audit — cadence table, the 6-tag drift taxonomy
   (CODEX-MISSING/STALE/CONTRADICTS/AHEAD/BROKEN-REF/ORPHAN-EPIC-REF), and the 5-phase execution playbook (structural
   scan → epic-level audit → plan verification → delta annotation → verification).
 status: current
@@ -92,7 +91,7 @@ For each live epic: verify that the epic's shipped phases match codex current-st
 - **L1 pipeline epics**: `mtds_mdps_master`, `manifest_master`, `instruments_master`, `features_and_ml_master`
 - **L2 functional epics**: `execution_master`, `strategy_master`, `global_ledger_pnl_attribution_master`,
   `trading_agent_master`, `client_isolation_and_governance_master`, `dart_and_promote_master`
-- **L3-L5 meta epics**: `infrastructure_master`, `batch_live_symmetry_master`, `deployment_and_user_management_master`,
+- **L3-L5 meta epics**: `security_and_cross_cutting_master`, `batch_live_symmetry_master`, `deployment_and_user_management_master`,
   `observability_master`, `orchestrator_master`, `plan_hygiene_master`
 
 L0+L1 can run in parallel. L2+L3 can run in parallel. Each group can be fan-out to a sub-agent.

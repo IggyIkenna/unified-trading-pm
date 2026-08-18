@@ -19,7 +19,7 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P3

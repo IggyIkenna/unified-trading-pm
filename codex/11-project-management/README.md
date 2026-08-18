@@ -66,7 +66,7 @@ archaeology only — do NOT add new entries there.
 
 | Epic                                                    | Assigned VM        | Owns                                                                                                       |
 | ------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `plans/epics/infrastructure_master.md`                  | `vm-cross-cutting` | VMs + tarballs + per-tab worktrees + cloud + bootstrap                                                     |
+| `plans/epics/security_and_cross_cutting_master.md`      | `vm-cross-cutting` | VMs + tarballs + per-tab worktrees + cloud + bootstrap                                                     |
 | `plans/epics/observability_master.md`                   | `vm-cross-cutting` | alerting-service + monitoring + telemetry + 3am-auto-recovery                                              |
 | `plans/epics/batch_live_symmetry_master.md`             | `vm-cross-cutting` | Per-service batch=live audit; reconciliation                                                               |
 | `plans/epics/client_isolation_and_governance_master.md` | `vm-cross-cutting` | Per-client subprocess isolation + funds isolation + jurisdiction + share-class reconciliation + UAC schema |

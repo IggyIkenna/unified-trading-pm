@@ -111,7 +111,7 @@ CeFi shard atom is `(asset_group=cefi, data_type, venue, date)`.
 
 **Shard identity propagation**: the 5-pillar shard atom must be identical across writer atomicity → manifest row key →
 data-status display → downstream preflight gate → deployment-UI drilldown. Drift between any two is a silent correctness
-bug. SSOT: [`../epics/infrastructure_master.md`](//plans/epics/infrastructure_master.md).
+bug. SSOT: [`../epics/security_and_cross_cutting_master.md`](//plans/epics/security_and_cross_cutting_master.md).
 
 ---
 
@@ -219,7 +219,7 @@ retried after key renewal. `attempted_failed` keeps the cell in the "retryable" 
 - **DeFi archetype hedge legs**:
   [`/codex/09-strategy/architecture-v2/archetypes/`](/codex/09-strategy/architecture-v2/archetypes/)
 - **BatchExecutionMode**: `unified_api_contracts.internal.execution.BatchExecutionMode`
-- **Shard-granularity SSOT**: `/plans/epics/infrastructure_master.md`
+- **Shard-granularity SSOT**: `/plans/epics/security_and_cross_cutting_master.md`
 - **Empty-record rules**:
   [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
 - **CeFi expiry-window + 401 contract**:

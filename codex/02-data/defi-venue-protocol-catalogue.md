@@ -274,7 +274,7 @@ per UTL `record_captured` HARD RULE).
 
 **Compliance with Shard-granularity SSOT** (per
 [`shard-level-failure-isolation.md`](/codex/04-architecture/shard-level-failure-isolation.md) +
-`plans/epics/infrastructure_master.md`): shard atom MUST be identical across (a) writer atomicity, (b) manifest row key,
+`plans/epics/security_and_cross_cutting_master.md`): shard atom MUST be identical across (a) writer atomicity, (b) manifest row key,
 (c) data-status display, (d) downstream pre-flight gate, (e) deployment-UI drilldown. Per-protocol Phase 2 adapter
 implementations MUST honor this matrix; deployment-UI drilldowns roll up to this same granularity.
 

@@ -466,7 +466,7 @@ cascade violation and fail the alignment job.
 
 > **[DELTA 2026-05-22]** **Current state:** Steps 1-4 of `run-version-alignment.sh` are implemented and run. Step 5
 > (workspace-requirements.txt generation + PM commit) is not yet wired. **Planned delta:**
-> `plans/epics/infrastructure_master.md` — wire Step 5 in `run-version-alignment.sh`. **Target:** Every version
+> `plans/epics/security_and_cross_cutting_master.md` — wire Step 5 in `run-version-alignment.sh`. **Target:** Every version
 > alignment run produces `configs/workspace-requirements.txt` committed to PM; `sync-workspace-venv.sh` pulls the
 > refreshed union.
 
@@ -2051,8 +2051,7 @@ steps:
   - name: "gcr.io/cloud-builders/gcloud"
     id: "ensure-repo"
     entrypoint: "bash"
-    args:
-      [
+    args: [
         "-c",
         "gcloud artifacts repositories describe {repo} --location=asia-northeast1 || gcloud artifacts repositories
         create {repo} ...",

@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [codex, lint, ratchet, file-size, refactor, quality-gates, basedpyright]
 related: [plans/active/ci_local_qg_parity_2026_06_08.md, plans/active/cicd_contract_hardening_2026_06_01.md]
 created: 2026-06-10
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only # corrected 2026-07-14, was: orchestrator-agent (invalid pairing w/ assigned_vm: NA per task_template.md's two valid tracks; no AO-dispatch banner present in body — verify-rerun-2 finding 87; matches operator ruling 2026-07-12 finding 9 applied to sibling plans)
 priority: P2
