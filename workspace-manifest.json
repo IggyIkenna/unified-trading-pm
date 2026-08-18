@@ -68,15 +68,15 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.52",
-    "deployment-api": "0.91.5",
-    "deployment-service": "0.152.2",
+    "deployment-api": "0.91.6",
+    "deployment-service": "0.152.5",
     "deployment-ui": "0.1.0",
     "execution-service": "0.82.0",
     "features-service": "0.89.1",
-    "fund-administration-service": "0.9.67",
+    "fund-administration-service": "0.9.72",
     "ibkr-gateway-infra": "0.5.3",
-    "instruments-service": "0.103.11",
-    "market-tick-data-service": "0.144.2",
+    "instruments-service": "0.103.12",
+    "market-tick-data-service": "0.144.3",
     "system-integration-tests": "0.15.5",
     "unified-api-contracts": "0.140.0",
     "unified-trading-library": "0.88.9",
@@ -87,10 +87,10 @@
     "greeks-service": "0.18.55",
     "trading-agent-service": "0.13.1",
     "strategy-service": "0.74.2",
-    "ml-service": "0.58.36",
+    "ml-service": "0.58.37",
     "alerting-service": "0.63.45",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.52"
+    "client-reporting-api": "0.32.53"
   },
   "repositories": {
     "alerting-service": {
@@ -2249,8 +2249,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.88.8.dev1+g888bb22db",
-      "published_at": "2026-08-17T23:37:27Z",
+      "version": "0.88.9",
+      "published_at": "2026-08-18T00:37:39Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
@@ -2259,8 +2259,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.103.11.dev1+g8169ef8a4",
-      "published_at": "2026-08-18T00:06:36Z",
+      "version": "0.103.12.dev1+g9ca48c040",
+      "published_at": "2026-08-18T00:54:12Z",
       "registry": "artifact-registry"
     }
   }
