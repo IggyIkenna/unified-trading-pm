@@ -140,8 +140,20 @@ def _gh_json(path: str) -> object:
 
     A cached ETag → `If-None-Match`; a `304` reuses the cached body for **free**
     (no rate cost). Returns None on any non-200/304 (preserves prior behaviour).
+
+    LIST-shaped queries (the open-PR search, a PR's comment list) skip the cache
+    entirely — GitHub's list-endpoint ETag does not reliably invalidate on membership
+    changes (a PR opening/closing, a new comment landing), so a `304` can silently
+    serve a PRE-transition result. Measured 2026-08-18: this class of staleness
+    produced two live promotion-lag misdiagnoses in one tick — `execution-service`
+    citing an already-closed promote PR (#697) instead of its live successor (#698),
+    and `instruments-service` reporting "no promote PR open" while #1284 was
+    genuinely open. Both queries are only ever reached for a pair that is ALREADY
+    lagging (see `_open_promote_pr`'s own docstring), so paying full API cost here
+    instead of a conditional one is cheap.
     """
-    cached = _ETAG_CACHE.get(path)
+    volatile = "pulls?state=open&base=" in path or "/comments?" in path
+    cached = None if volatile else _ETAG_CACHE.get(path)
     cmd = ["gh", "api", "-i", path]
     if cached:
         cmd += ["-H", f"If-None-Match: {cached[0]}"]
@@ -151,7 +163,7 @@ def _gh_json(path: str) -> object:
         body = cached[1]  # free: not counted against the rate limit
     elif status != 200:
         return None
-    elif etag and body:
+    elif etag and body and not volatile:
         _ETAG_CACHE[path] = (etag, body)
     if not body:
         return None
