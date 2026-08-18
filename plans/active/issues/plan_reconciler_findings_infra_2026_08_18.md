@@ -116,6 +116,11 @@ same-day issue docs). **Writable working set: 27 docs.**
    candidates below) — single unambiguous substitution (old path → the verified new path), no HARD-STOP governance
    area touched, no new measurement needed. Qualifies under STEP 5.f2's mechanical codex-staleness carve-out.
    `unified-trading-pm@<this-checkpoint's-sha>`.
+2. `/codex/05-infrastructure/bucket-isolation-model.md` — added an "Exception" note after the § 8.1 per-tier SA table
+   documenting `uts-test-sa`'s live `deployment-scripts-central-element-323112` write grant (does not match the
+   general `*-test-*` pattern). NOT the STEP 5.f2 mechanical carve-out (an operational IAM-grant snapshot,
+   judgment-adjacent) — routed to the operator via `/blocked` (BLK-f4dc73a8), applied only after an explicit
+   "Option A, final" ruling (2026-08-18 06:36 UTC). `unified-trading-pm@<this-checkpoint's-sha>`.
 
 ## Hygiene fixes
 
@@ -138,15 +143,13 @@ same-day issue docs). **Writable working set: 27 docs.**
       REQUIRED" re-audit first — dispatch-risky as worded (batch-1 candidate C4). Files still exist on disk (real
       remaining work, not false-unchecked) — needs the todo text rewritten with an explicit re-verify instruction
       before AO-dispatch, not a content fix.
-- [ ] [DOCS] P2. `/codex/05-infrastructure/bucket-isolation-model.md:305` — `uts-test-sa` write-scope table row
-      states its grants are exclusively `*-test-*`-pattern buckets; batch-4 hunter live-verified (via
+- [x] ✅ [DOCS] P2. `/codex/05-infrastructure/bucket-isolation-model.md:305` — `uts-test-sa` write-scope table row
+      stated its grants are exclusively `*-test-*`-pattern buckets; batch-4 hunter live-verified (via
       `features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md`'s own recorded IAM-policy read + working VM
       launch) a real, currently-live scoped exception grant on `deployment-scripts-central-element-323112` (title
-      `deployment-scripts-bucket-test-sa-vm-logs`) that does NOT match the pattern. Codex table is incomplete for
-      anyone reasoning about this SA's actual write boundary — needs a footnote/exception row. Not applied this
-      checkpoint (codex edit — even under the mechanical carve-out, the underlying fact here is an OPERATIONAL
-      IAM-grant snapshot, not a single unambiguous textual substitution, so this is judgment-adjacent; routing to the
-      operator per STEP 6 rather than mechanically applying).
+      `deployment-scripts-bucket-test-sa-vm-logs`) that does NOT match the pattern. Routed to the operator via
+      `/blocked` (BLK-f4dc73a8, STEP 6a) — ANSWERED (Option A, final, "main" role, 2026-08-18 06:36 UTC): add a
+      footnote/exception row citing the verifying doc. Applied this checkpoint (see Codex corrections applied #2).
 - [ ] [DOCS] P3. `/codex/05-infrastructure/vm-tarball-deployment.md` — `EXIT_STATUS`'s transient `"RUNNING"` sentinel
       value (a deliberate SIGKILL false-success guard, shipped `unified-trading-library@2c412c` and live-confirmed by
       batch-4) is undocumented in the "How to debug a failed VM run" recipe / exit-codes table — a future reader
@@ -191,22 +194,42 @@ same-day issue docs). **Writable working set: 27 docs.**
       fully resolved + archived, per this same finalize doc's own todo 2); `last_updated: "2026-08-04"` stale vs.
       real content edits through 2026-08-10 (batch-2 candidates 4-5). Both cheap one-line fixes, not applied this
       checkpoint under time budget — good first pick for a future pass.
-- [ ] [PROCESS] P3. Self-archival convention inconsistency across the `infra_satellite_ao_dispatch_batchN_finalize`
-      doc family: `batch17_finalize` explicitly plans to archive ITSELF alongside its parent; `batch7_finalize` /
-      `batch12_finalize` (both fully-done) instead stay `status: active` + `archive_exempt: true` with no stated
-      Progress Log justification for either. This run's own `doc_body_link_checker...finalize` doc (see Archive
-      candidates above) followed the batch7/12 precedent when it hit the identical fork. Genuinely undecided which
-      convention is intended — not a fact this run can resolve from evidence alone (batch-2 candidate 6, low-medium
-      confidence). Routing to the operator: recommend formalizing "finalize docs stay active + archive_exempt once
-      fully done, matching their parent's archival rather than duplicating it" as the documented default (matches
-      2/3 observed instances), with `batch17_finalize`'s own todo 3 updated to match if ratified.
+- [x] ⚠️ [PROCESS] P3. Self-archival convention "inconsistency" across the `infra_satellite_ao_dispatch_batchN_finalize`
+      doc family — RETRACTED as a false positive on closer check. Routed to the operator via `/blocked`
+      (BLK-e5df0f8d, STEP 6a) with a "formalize archive_exempt-as-default" recommendation; ANSWERED (Option A,
+      final) — but before applying, found `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md:195-229`
+      already has a MORE SPECIFIC, ratified rule (2026-08-09, narrowed 2026-08-10, test-backed:
+      `tests/test_check_archive_candidates_flip_then_mv.bats`): single-repo (mode-1) finalize plans SELF-ARCHIVE
+      same-commit ("the SANCTIONED path"); `archive_exempt: true` is scoped ONLY to the cross-repo (mode-2)
+      two-commit split. Re-checked all 3 by `repos:` field: `batch7_finalize` is `repos: [unified-trading-pm,
+      deployment-service]` (cross-repo — its `archive_exempt` is CORRECT); `batch17_finalize` is `repos:
+      [unified-trading-pm]` (single-repo — its CURRENT self-archive plan already matches the sanctioned path, no
+      edit needed); `batch12_finalize` is ALSO `repos: [unified-trading-pm]` (single-repo) yet uses
+      `archive_exempt` — a possible minor non-compliance, not the inconsistency originally flagged (new item below).
+      No real cross-doc inconsistency once correctly classified by repo-mode. Did NOT apply the literal answer
+      (would have made codex self-contradict its own ratified rule) — filed a correction follow-up via `/blocked`
+      (BLK-5043d7ec) recommending "leave both as-is," proceeding on that basis per `can_continue: true`. Neither
+      `batch17_finalize` nor the codex doc was edited for this item.
+- [ ] [DOCS] P3. `infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md` — single-repo (`repos:
+      [unified-trading-pm]`) finalize plan using the `archive_exempt: true` bridge, which
+      `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md:228` reserves for the cross-repo (mode-2)
+      case only. Surfaced as a byproduct of the BLK-e5df0f8d follow-up above, not independently verified this run —
+      check whether it's mid-bridge (genuinely has open todos, `archive_exempt` is a normal transient state) or
+      stuck-done-and-forgotten (0 open todos, the flag should have been dropped in an archival commit that never
+      happened) before touching it.
 
 **Phase 5.9(a) ledger**: routed-to-operator (STEP 6, needs a ruling this run cannot make from evidence alone) = 2
 (bucket-isolation-model.md IAM-snapshot judgment call; self-archival-convention preference) — both ALSO recorded
-above in this Filed list (no separate parked-elsewhere copy needed, this doc IS the durable record). The remaining
-~11 Filed items above are bounded/mechanical-but-deferred-under-time-budget, not genuine authority/preference calls
-per SKILL.md's calibration test ("can the evidence make exactly one answer provably right?" — yes for all of them,
-they just weren't cheap enough to apply this checkpoint) — correctly not escalated, left as tracked follow-ups only.
+above in this Filed list (no separate parked-elsewhere copy needed, this doc IS the durable record). **Both now
+resolved** (STEP 8, same session): BLK-f4dc73a8 ANSWERED + APPLIED (footnote added). BLK-e5df0f8d ANSWERED, but
+applying it literally would have made codex self-contradict an existing more-specific ratified rule
+(`plan-completion-and-archival-discipline.md:195-229`) — a follow-up correction (BLK-5043d7ec) was filed instead of
+blind-applying, and the operator CONFIRMED the correction ("thank you for catching it before applying"); net result
+is "leave as-is," no edit made, matching the existing rule. This produced one new byproduct finding (batch12_finalize
+archive_exempt-on-mode-1, filed above, itself bounded/deferred, not operator-routed). The remaining ~12 Filed items
+above are bounded/mechanical-but-deferred-under-time-budget, not genuine authority/preference calls per SKILL.md's
+calibration test ("can the evidence make exactly one answer provably right?" — yes for all of them, they just
+weren't cheap enough to apply this checkpoint) — correctly not escalated, left as tracked follow-ups only.
 
 ## Archive candidates (operator review)
 
@@ -351,3 +374,17 @@ applied under this checkpoint's time budget (see Filed) — that is a distinct, 
   and `na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`. Remaining hunter candidates
   (13 items, mostly P2/P3) triaged and filed rather than applied — see Filed for per-item reasoning; 2 of those are
   genuine operator-preference/judgment calls (routed per trust-mode: recommendation stated, not blocked-on).
+- **2026-08-18** — STEP 6/7/8: alerted the 2 genuinely-undecidable items via `/blocked` (BLK-f4dc73a8
+  bucket-isolation-model IAM snapshot; BLK-e5df0f8d self-archival convention), on top of already having filed them —
+  STEP 6's two-channel requirement. Posted the STEP 7 result (`POST /api/plan-health/result`, dispatch agt-830118).
+  Entered the STEP 8 wait-loop (`ScheduleWakeup`, ~9min pace) since both questions were open. Operator answered both
+  within minutes: BLK-f4dc73a8 Option A (final) — applied cleanly (footnote added to bucket-isolation-model.md, see
+  Codex corrections #2). BLK-e5df0f8d Option A (final) — before applying, found the answer would make codex
+  self-contradict an existing, more specific, ratified rule (`plan-completion-and-archival-discipline.md:195-229`,
+  the mode-1-vs-mode-2 self-archive/archive_exempt distinction, RULED 2026-08-09/narrowed 2026-08-10, test-backed);
+  did NOT apply — filed a correction follow-up (BLK-5043d7ec) recommending "leave as-is," proceeding on that basis
+  per `can_continue: true`. Operator answered the follow-up confirming the correction was right ("thank you for
+  catching it before applying"). Net this sub-cycle: 1 codex edit applied (operator-ruled, not mechanical), 1 codex
+  edit correctly NOT made (would have been a regression), 1 new minor byproduct finding filed
+  (`batch12_finalize_2026_08_09.md` archive_exempt-on-mode-1 compliance check). All 3 blocked questions now closed
+  (`answered_at` set — confirmed via `/api/state`'s unanswered-only `blocked_queue` + `/api/activity` cross-check).
