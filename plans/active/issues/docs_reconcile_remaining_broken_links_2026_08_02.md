@@ -29,7 +29,7 @@ estimate_calibrated_ai_days:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/plans/active/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md, /plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md, scripts/quality_gates/check_doc_body_links.py, scripts/plan-hygiene/check_reference_paths.py, scripts/quality_gates/check_codex_doc_freshness.py]
+context_scope: [/plans/archive/2026_08/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md, /plans/active/issues/docs_reconcile_operator_decisions_2026_08_02.md, scripts/quality_gates/check_doc_body_links.py, scripts/plan-hygiene/check_reference_paths.py, scripts/quality_gates/check_codex_doc_freshness.py]
 supersedes:
 superseded_by:
 depends_on:

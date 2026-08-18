@@ -19,8 +19,9 @@ scope: [engineer, admin]
 tags: [ao-scheduled-skills, benchmark, operator-decisions, session-checkpoint, pre-compact]
 related:
   [
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md,
-    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md,
     /plans/archive/2026_08/issues/aws_codebuild_terraform_import_pending_2026_07_22.md,
     /plans/archive/2026_08/issues/ag_closeout_linkage_gate_blind_to_four_tranches_2026_07_30.md,
@@ -43,7 +44,7 @@ source: ["2026-07-30 AO scheduled-skills benchmark + ruled-decisions execution s
 resolved_by:
 locked_by:
 depends_on: []
-context_scope: [/cursor-configs/skills/plan-reconcile/SKILL.md, /cursor-configs/skills/na-eligibility-audit/SKILL.md, /agents/na_eligibility_auditor.md, /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md, /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md]
+context_scope: [/cursor-configs/skills/plan-reconcile/SKILL.md, /cursor-configs/skills/na-eligibility-audit/SKILL.md, /agents/na_eligibility_auditor.md, /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md, /plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md]
 ---
 
 # 2026-07-30 mega-session status ledger

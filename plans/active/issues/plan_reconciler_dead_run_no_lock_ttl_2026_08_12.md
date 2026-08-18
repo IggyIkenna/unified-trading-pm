@@ -46,7 +46,7 @@ related:
     /plans/active/issues/plan_reconciler_findings_ci_2026_08_10.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_tradfi_parked_2026_08_10_r2.md,
-    /plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md,
+    /plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md,
     /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/archive/issues/plan_reconciler_findings_ao_2026_08_16.md,

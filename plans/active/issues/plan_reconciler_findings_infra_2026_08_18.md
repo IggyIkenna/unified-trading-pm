@@ -230,6 +230,24 @@ they just weren't cheap enough to apply this checkpoint) — correctly not escal
    archived. Archived per the same HARD RULE → `plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md`
    (2026_07 subdir matches its creation month, per this corpus's convention).
 
+**STEP 5 exit-gate correction (2026-08-18, checkpoint 3)**: the initial referrer-sweep reasoning above (relying on
+`check_doc_body_links.py`'s archive-fallback) turned out to be WRONG for a *different* corpus-wide check —
+`check_reference_paths.py --diff-base origin/main`, run as this run's own STEP 5 exit gate, found **6 genuinely NEW
+dangling references** from these 3 archivals (it has no archive-fallback; it just checks literal path existence
+against a ratchet baseline) — plus a cascading `check_ag_closeout_linkage` orphan (a 4th doc whose ENTIRE `related:`
+list had gone all-archived, losing its only path to its own closeout family). Fixed 5 of 6 dangling refs by
+repointing (`ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md`,
+`docs_reconcile_remaining_broken_links_2026_08_02.md`, `docs_reconcile_operator_decisions_2026_08_02.md`,
+`plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` — all confirmed NOT in the 12h grace window first) and the
+orphan by adding a legitimate `related:` link to `cross_cutting_consolidated_closeout_2026_07_25.md`. **2 dangling
+refs deliberately left unfixed** — both live inside `main_ldr_backmerge_silently_reapplies_collateral_frontmatter_deletion_2026_08_17.md`
+and `zero_checkbox_sweep_all_tranches_2026_07_31.md`, BOTH confirmed inside the 12h grace window (git log
+`--since="12 hours ago"` on each) — the grace HARD LIMIT takes priority over a fully-green exit gate. These 2 will
+self-resolve once either doc is next legitimately touched (by its own author, or a future non-grace-blocked pass).
+**Lesson for future archival passes**: `check_doc_body_links.py`'s archive-fallback does NOT generalize to
+`check_reference_paths.py` — always re-run the corpus-wide `--diff-base` reference checkers after an archival, don't
+assume the resolver behavior of one checker applies to a sibling one.
+
 All 3 archivals' referrer sweeps relied on the corpus's `_resolve()` archive-fallback (confirmed via batch-3's hunter
 read of `check_doc_body_links.py`) meaning a stale `/plans/active/issues/...` mention doesn't break the mechanical
 link checker — historical-fact mentions in already-archived docs and out-of-tranche active docs describing the issue
