@@ -94,11 +94,19 @@ different files).
       to state which rails have zero production wiring today rather than presenting dust-sweep/gas-top-up/rebalance
       as working "partial" capability. **Do not overstate readiness while the underlying system gap is still open**
       — see § "Real system gaps" below; this is a content-accuracy fix, not a claim that the gap is closed.
-- [ ] [DOC] P1. **Fix §11's `SigningSurface` code block** — verbatim-accurate against the schema
-      (`unified-api-contracts/.../domain/defi/wallet_config.py`) but names a non-functional `FIREBLOCKS_MPC` (no
-      working branch in `execution-service/execution_service/custody/factory.py`, confirmed 2026-08-18) while
-      omitting `ceffu`, which IS a working branch there. Add a one-line note distinguishing "declared in the schema"
-      from "wired in the working custody factory today (mock/local_key/cloud_kms/copper/ceffu)."
+- [ ] [DOC] P1. **REVISED 2026-08-18 — the original custody finding was a FALSE POSITIVE; do not "fix" the block.**
+      The audit claimed `SigningSurface` wrongly names `FIREBLOCKS_MPC` and wrongly omits `ceffu`, "which IS a
+      working branch." Re-verification falsified both halves: (a) `ceffu` is **not** working —
+      `execution-service/execution_service/custody/factory.py` logs it as "CeffuCustodyProvider (Binance
+      institutional MPC — **STUB pending API spec**)"; (b) CEFFU's absence from the enum is a **deliberate,
+      documented decision** — `unified-api-contracts/unified_api_contracts/internal/architecture_v2/
+      custody_surfaces.py` carries a named constant `CEFFU_ROUTES_VIA_COPPER_NOTE` stating CEFFU's signing routes
+      *via Copper*, so seeding a CEFFU surface would mean "inventing an enum member"; (c) `FIREBLOCKS_MPC` is
+      covered by `SigningSurfaceStatus.OUT_OF_SCOPE` ("enum member retained for future flexibility but NOT a
+      May-23 / June-1 target"). The artefact's quote is accurate **and** the architecture is coherent. **Correct
+      action**: add one sentence explaining the CEFFU-routes-via-Copper design and the `OUT_OF_SCOPE` status, so a
+      reader doesn't reach the same wrong conclusion the audit did. Editing the enum list would make the document
+      wrong.
 - [ ] [DOC] P1. **Fix the stale §05→§08 cross-reference** — "the determinism proof in §08" should point to §09,
       where the actual `live − batch = (paper − batch) + (live − paper)` decomposition lives.
 - [ ] [DOC] P2. **Soften §12's capital-budget "enforced by construction" claim** — the wallet-funding framing is
@@ -210,6 +218,79 @@ different files).
       between MTDS and Strategy — resolves the "strategy reads only processed data, never MTDS directly" drift-risk
       for this artefact too (currently MTDS/MDPS/features are collapsed into one undifferentiated "Market data" box
       with a direct arrow to Strategy).
+
+## E. Evidence-provenance tiers + audit-gap closure (added 2026-08-18, operator ruling)
+
+**Operator ruling 2026-08-18**: the artefacts carry a SECOND axis, orthogonal to the existing
+`live`/`partial`/`planned` status. Status says what the system **does**; the evidence tier says **how we know**, so
+the operator can scroll the document before sending and see exactly which claims are settled and which need a
+check. Three tiers, rendered as a distinct visual mark (not reusing the status pill):
+
+| Tier                | Meaning                                                                                              |
+| ------------------- | ---------------------------------------------------------------------------------------------------- |
+| **machine-verified** | Checked against code or measured data; names the command/skill/symbol so it is re-auditable on demand |
+| **needs-check**      | Stated in good faith, not yet validated — operator or agent must confirm before the document is sent  |
+| **assumption**       | Our best current understanding, explicitly not verified                                              |
+
+Same ruling: **do NOT withhold full system functionality from the artefacts.** The operator uses the top-down view
+to spot duplication, misplaced logic and wrong-home concerns. Missing capability is written in and marked, never
+omitted.
+
+- [ ] [DOC] P0. **Introduce the evidence-tier axis in both artefacts** — legend entry alongside the existing
+      status legend, a distinct mark, and a one-line explanation of what the operator should do with each tier.
+      Must not visually collide with `live`/`partial`/`planned`.
+- [ ] [DOC] P0. **Tag every claim-bearing section in both artefacts with an evidence tier.** Default to
+      `needs-check` — `machine-verified` requires naming the verifying command, skill or code symbol inline, and
+      that citation is what makes the re-audit prompt cheap to run later.
+- [ ] [DOC] P0. **Re-grade all `live` badges against the stricter definition** — "reachable on a production path
+      AND validated with real capital" landed in both artefacts at `unified-trading-pm@832033d094`, but the marks
+      were never re-graded and the 2026-08-18 audit never checked them (grep-confirmed: zero occurrences of "real
+      capital" in the audit report). **Measured: 17 sections still marked `live`** — 7 in
+      `platform-external-api-walkthrough.html`, 10 in `strategy-service-walkthrough.html`, of 39 graded sections
+      across both. A `live` mark now needs POSITIVE capital-validation evidence; the master epic's own scope is
+      "everything except going live with capital," so expect most to move to `partial`.
+- [ ] [DOC] P0. **Audit the inherited glossary / canonical-instrument-ID material (Axis 0).** Both artefacts carry
+      venue-glossary and canonical-ID content sourced from a sub-agent report and never verified; the 2026-08-18
+      audit ran zero probes on it. Check every ID example against `build_canonical_instrument_id()` and every venue
+      name against `VENUE_TO_ADAPTER_KEY` / `VENUE_CHAIN_MAP`. **Also check the framing, not just the syntax**: the
+      point of a single dispatch function is that ONE envelope spans asset groups — content presenting per-asset-
+      group ID *rules* inverts the asset-group-agnostic principle and teaches future readers the wrong model.
+- [ ] [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content**, added at operator request and never
+      probed. `ARCHETYPE_FEATURE_GROUPS` declares ~40 of 60 and its docstring deliberately refuses to guess the
+      rest — any artefact claim implying full coverage is wrong.
+- [ ] [DOC] P1. **Ground or cut the forward claim** — `platform-external-api-walkthrough.html` states work "on the
+      current plan complete over the remainder of this year" with no cited basis in any plan (verified present
+      2026-08-18; the audit never flagged it). A counterparty can hold us to it. Find a citation or remove it.
+- [ ] [RESEARCH] P1. **Research real per-venue transfer rails / custody eligibility / collateral / cross-margin,
+      then write the best current answer into the artefact marked `assumption` or `needs-check`.** Measured
+      2026-08-18: **no UAC registry field answers these** — `VenueCapabilityRecord` is market-data only (`route` +
+      `data_types`); `VenueCapability` covers actions (`spot_trade`…`stake`); a registry-wide grep for
+      `cross_margin|collateral_eligib|transfer_rail|withdraw_enabled|margin_asset` returns empty. Per operator
+      ruling, this content goes IN (marked), it is not withheld — but the research output must also spawn a
+      registry-extension todo under `system_readiness_master.md` W5 so the artefact ends up downstream of a machine
+      SSOT rather than becoming the de-facto SSOT itself.
+- [ ] [SCRIPT] P1. **Add a QG check validating artefact-quoted enum data against the UAC enums** (operator ruling
+      2026-08-18). Root cause of two of this audit's three P0s: enum contents are hand-transcribed into six client
+      HTMLs, so the same concern lives in seven places. Proof it recurs — the strategy-family correction was
+      applied to `strategy-service-deep-dive.html` and never reached `strategy-service-walkthrough.html`, and
+      `/codex/04-architecture/strategy-execution-protocol.md` has correctly said "11 polymorphic actions" all
+      along while the artefact said 9. Check must cover all six artefacts in
+      `codex/14-customer-journeys/commercial-model/`, be ratchet-baselined like the other checkers, and name which
+      enum each artefact claim derives from.
+- [ ] [REVIEW] P1. **Re-verify the six audit findings the audit itself did NOT independently check.** The report
+      names them explicitly (targets-not-deltas, atomic multi-leg, cross-client-transfer-impossible, attestation,
+      archetype counts 60/32, capital budget). This is now a demonstrated failure mode, not a hypothetical — the
+      custody P1 in § A dissolved on first re-verification. Treat each as unconfirmed until checked against code.
+- [ ] [REVIEW] P2. **Audit the four sibling client artefacts never covered** —
+      `platform-architecture.html` (252 KB, the largest client doc in the repo), `carveout-engineering.html`
+      (87 KB), `strategy-service-deep-dive.html` (66 KB),
+      `ODUM_Elysium_Phase2_Update_2026-07-24.html` (14 KB). Disclosure boundary FIRST and reported separately.
+      The audit covered 2 of 6 client-facing HTMLs.
+- [ ] [REVIEW] P2. **Cross-document consistency sweep across all six artefacts.** No agent has compared documents
+      to each other — the 4 sub-agents split two-per-artefact by axis, so sibling drift was invisible by
+      construction and the one instance found was luck. Sweep for contradictory counts, enum members, status marks,
+      venue numbers and mode vocabulary; separately verify every internal anchor resolves (one stale §05→§08 was
+      found by reading — do it mechanically).
 
 ## Real system gaps — already tracked, not duplicated here
 

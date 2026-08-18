@@ -239,6 +239,36 @@ The registry must answer commercial and operational questions, not just "does th
 
 ## W7 — Centralisation and anti-drift
 
+- [ ] [DOC] P0. **Generalise the slow-path/fast-path boundary beyond venue routing — EXTEND the existing SSOT, do
+      NOT author a new one.** Operator ruling 2026-08-18 restated the boundary as: *strategy decides WHAT we want to
+      do (slow path) and hands execution a cache it can react to fast on a tick basis; execution decides HOW (fast
+      path).* Measured 2026-08-18: that boundary IS owned, but only for venue routing —
+      [/codex/04-architecture/slow-fast-routing-split.md](/codex/04-architecture/slow-fast-routing-split.md) is
+      `authoritative_for: [slow-fast venue-routing split architecture]` and returns **zero** hits for
+      transfer/gas-top-up/reserve/capital-budget;
+      [/codex/04-architecture/strategy-execution-protocol.md](/codex/04-architecture/strategy-execution-protocol.md)
+      owns the instruction protocol (5 rules, 11 actions);
+      [/codex/04-architecture/transfer-coordinator.md](/codex/04-architecture/transfer-coordinator.md) states no
+      owner for thresholds or policy at all. **So fund-movement policy and capital-budget enforcement have no
+      declared slow/fast owner** — extend the routing-split doc (or add a sibling section it links) to cover them.
+      A third doc would be the exact duplication this workstream exists to prevent.
+- [ ] [DOC] P0. **Cite that boundary from the transfer-handler P0 before it is implemented** —
+      `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` § C is open and unclaimed. Concrete
+      risk: gas top-up needs a reserve threshold, and today there is "no handler, no reserve-threshold logic
+      anywhere." If that logic lands inside `TransferCoordinator`, execution-service acquires a policy decision,
+      needs per-chain/per-venue reserve tables locally (breaking venue-agnosticism), and gets consulted on the fast
+      path — three violations from one reasonable-looking commit. Required shape: thresholds/policy resolve
+      slow-path into the cache; execution handlers only execute a pre-computed decision. Same question applies to
+      "capital budget enforced by construction" — a per-tick budget check in execution is a slow-path concern
+      leaking into the fast path.
+- [ ] [INVESTIGATE] P1. **Reconcile the operator's "cache" framing against the documented contract.** Both existing
+      docs frame the strategy→execution handoff as instruction *emission* (`StrategyInstructionEnvelope`), not as a
+      cache execution polls per tick; a cache mechanism does exist for a different concern
+      ([instrument-lifecycle-cache-delta-hot-reload.md](/codex/04-architecture/instrument-lifecycle-cache-delta-hot-reload.md)).
+      Determine whether the tick-readable cache is a real, separate mechanism to document, an evolution of the
+      envelope contract, or shorthand for the two combined — then make the SSOT say so. Client artefacts must not
+      describe a mechanism the code does not have.
+
 - [ ] [BACKEND] P0. **Every strategy-agnostic module and function call lives centrally**, so multiple archetypes call
       one implementation instead of reimplementing it. Reimplementation is drift with a delay fuse.
 - [ ] [BACKEND] P0. **Reference / registry / config data must never live inside a single strategy's code path** — the
