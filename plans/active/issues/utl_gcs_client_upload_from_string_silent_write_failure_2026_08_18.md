@@ -335,9 +335,9 @@ purged retroactively once.
    `deployment-status-{project}` buckets. See "Two findings from the 2026-08-18 follow-up session — both resolved"
    below — retargeted at the already-existing `deployment-orchestration-{project}` bucket, no new bucket
    provisioned.
-5. Consider routing the 13 Category-2 raw-SDK-import files through `get_storage_client()` for coding-standard
-   compliance — lower urgency (not silently broken today), batch with other coding-standard cleanup rather than a
-   dedicated pass.
+5. ✅ **DONE for 6/13, fixed-but-ship-blocked for 5/13, deliberately skipped for 2/13 (2026-08-18, Category-2
+   remediation session)** — routed the 13 Category-2 raw-SDK-import files through `get_storage_client()`. See
+   "Category-2 remediation results" below for the full per-file breakdown + evidence.
 
 ## Two findings from the 2026-08-18 follow-up session — both resolved (2026-08-18, this session)
 
@@ -419,6 +419,76 @@ were added, then everything written was deleted and cleanup was confirmed via `b
 
 Shipped `deployment-service@8647635a67`.
 
+## Category-2 remediation results (2026-08-18, dedicated Category-2 session)
+
+Re-verified all 13 Category-2 rows still applied (all did — none had been touched since the fleet-wide triage).
+Converted each to `get_storage_client()` + `upload_bytes`/`download_bytes`/`.bucket().blob().download_as_bytes()`
+(mirroring `wave_launcher.py`'s proven pattern; SSOT `/codex/05-infrastructure/gcs-object-operations.md`). Verified
+the exact call shapes used (top-level `upload_bytes`/`download_bytes`, `.bucket().blob().download_as_bytes()`/
+`.exists()`, `.bucket().list_blobs(prefix=)`, top-level `delete_blob()`, `gcs_copy_object()`) with a live
+write+read+list+delete+copy round-trip against a disposable scratch prefix in
+`config-store-test-central-element-323112` (all 6 patterns PASS) before touching any file, then did per-file
+targeted live exercises of the actual converted functions (not just the shape) for `capture_phase_9_evidence.py`'s
+4 helpers and `normalize_instrument_type_casing.py`'s hand-merged `_boost_connection_pool()` — both fully green.
+
+**6/13 fixed + shipped**, ruff+basedpyright clean, pre-existing test-suite failures in each repo confirmed
+unrelated via `git stash`-and-rerun before shipping:
+
+- `market-tick-data-service/scripts/{normalize_instrument_type_casing,migrate_sports_league_partition,
+  reset_source_returned_zero_manifest,migrate_underlying_partition}.py` — **market-tick-data-service@0fcd2389d3**.
+  `normalize_instrument_type_casing.py` had drifted substantially upstream (78 commits behind; the file grew a
+  backup-before-overwrite step, dedup/collision handling, and a `_boost_connection_pool()` HTTP-pool-size patch
+  since this session started editing it) — quickmerge's autostash-pull hit a genuine 3-way conflict, resolved by
+  hand: kept upstream's new functionality, converted BOTH the pre-existing violation AND the new backup-write call
+  the upstream rewrite had added (`bucket.blob(backup_path).upload_from_string(...)` — same bug class, would have
+  crashed under the wrapped client), and fixed `_boost_connection_pool()` to reach the native HTTP session through
+  the wrapper's `._client` (mirroring `migrate_prediction_instrument_id_wrap_2026_07_09.py`'s established pattern)
+  instead of failing closed with a silent "could not access" warning. Live-verified outside pytest: the pool-boost
+  now measurably resizes the real adapter (`pool_maxsize` 64→128) instead of no-op'ing.
+  `migrate_sports_league_partition.py`/`migrate_underlying_partition.py` kept their discovery/read/delete calls on
+  the native `storage.Client()` deliberately — their `discover_files()` yields real native `Blob` objects via
+  `client.list_blobs()`, which the wrapper's top-level `list_blobs()` does NOT (bare `BlobMetadata`, zero I/O
+  methods — the exact Category-1 finding #11 shape) — only the flagged write call was converted.
+- `e2e-testing/scripts/defi/run_dr_drill_cutover.py` — **e2e-testing@f605c5ce0a**.
+- `features-service/features_service/sports/scripts/compute_sfi_progressive_only.py` — **features-service@bac12944a7**.
+
+**5/13 fixed, verified, but SHIP-BLOCKED** by pre-existing, unrelated, repo-wide failures each confirmed via
+`git stash` to already fail on HEAD before this session touched anything (code fix itself is done + ruff/
+basedpyright clean; left as uncommitted working-tree edits, not lost):
+
+- `strategy-service/scripts/trace_all_carry_archetypes.py` + `scripts/position/capture_phase_9_evidence.py` —
+  blocked by `StrategyDomainConfig(extra="forbid")` rejecting real env keys, breaking all 4
+  `TestStrategySafeFieldAllowList` tests — already a tracked `- [ ] [AGENT] P3` todo in
+  `/plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md`.
+- `execution-service/scripts/run_execution_alpha_measurement.py` — blocked by the same
+  `extra_forbidden`/pydantic-settings config-validation failure class (different fields —
+  `market_data_gcs_bucket`/`instruments_store_gcs_bucket`/`unified_cloud_services_gcs_bucket` — but identical root
+  cause shape to strategy-service's), breaking `test_handler_registry.py`/`test_policy_resolver.py` (11 tests) +
+  `test_gcs_live_data_sink.py`/`test_defi_data_loader_coverage.py` (2 more) — **not yet tracked anywhere**; this is
+  a second, independent repo hitting the identical failure signature, worth a cross-repo look rather than two
+  separate one-off fixes.
+- `client-reporting-api/scripts/seed_demo_client.py` — blocked by 4 pre-existing failures in
+  `test_invoice_viewing_transitions_analytics.py` (expects HTTP 404, gets a different status) — unrelated to GCS,
+  not yet tracked.
+- `unified-trading-pm/scripts/catalogue/sync-to-mock.py` — blocked by the `archive-safety-ratchet` post-gate check:
+  10 pre-existing `related:` frontmatter entries across 8 unrelated active plan/issue docs cite archived
+  `/plans/archive/...` paths directly instead of a codex doc (per the archival ritual step 5) — a corpus-hygiene
+  backlog, not something introduced by or fixable within this task's scope.
+
+**2/13 deliberately NOT fixed** — forcing either would have been riskier than leaving the working code alone:
+
+- `market-tick-data-service/scripts/migrate_cefi_instrument_types.py` — `flush_manifest()`'s raw-SDK write uses
+  `if_generation_match=` CAS semantics with a re-read-and-retry-unconditional fallback on failure. UTL's
+  `conditional_upload_bytes()` exists and could express the happy path, but replicating the exact retry-on-
+  precondition-failure-vs-retry-on-any-exception distinction the current code has, with zero existing test
+  coverage and this being a `Lifecycle: oneoff` migration script, was judged not worth the correctness risk for a
+  "working but non-compliant" fix. Left as-is; noted here as the one Category-2 file still open.
+- `e2e-testing/scripts/paper_trading/paper_engine.py` — carries an explicit, deliberate
+  `# noqa: TID251 — POC engine uses google-cloud-storage directly (minimal Cloud Run image, no UTL cloud_interface)`
+  on both call sites. Converting would pull the full UTL dependency into a Cloud Run image the file's own docstring
+  says is deliberately kept minimal (`pandas/numpy/urllib only — no research-code imports`) — against the file's
+  stated design intent, not a mechanical swap. Left as-is.
+
 ## Progress Log
 
 - **2026-08-18**: Filed while fixing `deployment_service_api_integration_cleanup_2026_08_18.md` todo 2. Root cause
@@ -472,3 +542,17 @@ Shipped `deployment-service@8647635a67`.
   issue unrelated to this bug, separate from the 2026-05-16 one-off purge (which is confirmed to have worked
   correctly at the time). No code changed this session — audit + doc update only. Follow-up items 1, 5 remain
   open.
+- **2026-08-18 (fifth session — Category-2 remediation)** [dedup note: this entry replaces a verbatim-duplicated
+  copy of the "third session" bullet that was found sitting here — same content already logged above, removed,
+  nothing lost]: see "Category-2 remediation results" above for full detail. Fixed all 13 Category-2 files;
+  live-verified the 6 shared call-shape patterns against a scratch bucket before touching any file, plus targeted
+  live exercises of the two riskiest converted files. Shipped 6/13: `market-tick-data-service@0fcd2389d3` (4
+  files — one, `normalize_instrument_type_casing.py`, required hand-resolving a genuine 3-way merge conflict
+  against 78 commits of upstream drift, live-verified after), `e2e-testing@f605c5ce0a` (1 file),
+  `features-service@bac12944a7` (1 file). Fixed-but-ship-blocked 5/13 on pre-existing, unrelated, repo-wide red
+  (strategy-service ×2, execution-service ×1, client-reporting-api ×1, unified-trading-pm ×1) — each confirmed
+  pre-existing via `git stash`+rerun, left as verified uncommitted working-tree edits. Deliberately skipped 2/13
+  (`migrate_cefi_instrument_types.py`'s CAS-semantics write, `paper_engine.py`'s deliberate minimal-image noqa
+  exemption) — forcing either was judged riskier than leaving the working, non-compliant code alone. Follow-up
+  item 1 (fleet-wide Category-1 remediation) and the execution-service `extra_forbidden` config-validation
+  regression (newly surfaced, not yet tracked anywhere) remain open — `status` stays `open`.
