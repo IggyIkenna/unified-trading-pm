@@ -114,13 +114,19 @@ Operator reported agents "keep respawning without finishing their tasks and burn
 
 ## What's still open
 
-- [ ] [INVESTIGATE] P1. **Confirm the actual DeepSeek tmux-session-death mechanism.** Not OOM, not a documented DeepSeek
-      rate/concurrency limit (500-2500 concurrent, 33 workers nowhere close). Leading hypothesis: DeepSeek-side
-      instability or a client/transport issue specific to this account pair under concurrent load — unproven. Needs
-      either DeepSeek-side support engagement (their account dashboard/status page, or a support ticket citing account
-      IDs + timestamps) or a client-side repro with verbose transport logging enabled on a deliberately-isolated single
-      slot to capture what actually happens at the moment a pane dies (current activity- feed data has no exit signal at
-      all). Repo: agent-orchestrator.
+- [x] [INVESTIGATE] P1. **Confirm the actual DeepSeek tmux-session-death mechanism.** ✅ **ROOT-CAUSED 2026-08-18** —
+      not a DeepSeek mechanism at all: the SAME ambient-default-tmux-socket kill-server vulnerability
+      `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` root-caused and fixed (4 layers, landed 2026-08-13,
+      zero recurrence confirmed 5 days clean). DeepSeek was purely incidental — 100% of the fleet was forced onto 2
+      DeepSeek accounts that exact day (the Anthropic-credit-outage this doc opened with), so every death that day
+      necessarily showed a DeepSeek `account_id`. Confirmed via clustering analysis of the raw 08-11
+      `tmux_session_lost` timestamps (bucketed into 2s windows): the whole burst resolves into ~30 recurring
+      mass-simultaneous-death clusters (3-21+ slots dying together every 5-15min) — the identical shape as the
+      confirmed kill-server signature, consistent with Layer 1 isolation not existing yet that day. Slot 15's
+      "dies alone" framing was independently falsified — all 12 of its deaths that window had 12-28 other slots
+      dying in the same ±3s window. What stays unconfirmed: the specific process/command issuing the kill-server
+      calls on 08-11 itself (no forensic trail survives that far back) — the mechanism CLASS is what's now answered.
+      Evidence: `unified-trading-pm@3d0f6f9798`, full writeup in Progress Log below. Repo: agent-orchestrator.
 - [ ] [OPERATOR] P2. **Decide whether `tuning.deepseek_opus_emergency_fallback` should be turned back off** once
       Anthropic capacity is reliably restored. This flag (turned on 2026-08-05 for a prior Claude-credit-outage posture)
       currently routes opus-tier work to DeepSeek too, not just sonnet-tier — it was not touched by this investigation
