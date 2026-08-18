@@ -239,6 +239,49 @@ The registry must answer commercial and operational questions, not just "does th
 
 ## W7 — Centralisation and anti-drift
 
+- [ ] [DOC] P0. **Generalise the slow-path/fast-path boundary beyond venue routing — EXTEND the existing SSOT, do
+      NOT author a new one.** Operator ruling 2026-08-18 restated the boundary as: *strategy decides WHAT we want to
+      do (slow path) and hands execution a cache it can react to fast on a tick basis; execution decides HOW (fast
+      path).* Measured 2026-08-18: that boundary IS owned, but only for venue routing —
+      [/codex/04-architecture/slow-fast-routing-split.md](/codex/04-architecture/slow-fast-routing-split.md) is
+      `authoritative_for: [slow-fast venue-routing split architecture]` and returns **zero** hits for
+      transfer/gas-top-up/reserve/capital-budget;
+      [/codex/04-architecture/strategy-execution-protocol.md](/codex/04-architecture/strategy-execution-protocol.md)
+      owns the instruction protocol (5 rules, 11 actions);
+      [/codex/04-architecture/transfer-coordinator.md](/codex/04-architecture/transfer-coordinator.md) states no
+      owner for thresholds or policy at all. **So fund-movement policy and capital-budget enforcement have no
+      declared slow/fast owner** — extend the routing-split doc (or add a sibling section it links) to cover them.
+      A third doc would be the exact duplication this workstream exists to prevent.
+- [ ] [DOC] P0. **Cite that boundary from the transfer-handler P0 before it is implemented** —
+      `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` § C is open and unclaimed. Concrete
+      risk: gas top-up needs a reserve threshold, and today there is "no handler, no reserve-threshold logic
+      anywhere." If that logic lands inside `TransferCoordinator`, execution-service acquires a policy decision,
+      needs per-chain/per-venue reserve tables locally (breaking venue-agnosticism), and gets consulted on the fast
+      path — three violations from one reasonable-looking commit. Required shape: thresholds/policy resolve
+      slow-path into the cache; execution handlers only execute a pre-computed decision. Same question applies to
+      "capital budget enforced by construction" — a per-tick budget check in execution is a slow-path concern
+      leaking into the fast path.
+- [ ] [DOC] P1. **Fold the tick-cache mechanism into the boundary SSOT — the design work is ALREADY DONE, do not
+      re-derive it.** The operator's "strategy hands execution a cache it reacts to on a tick basis" framing is
+      real and has real code, independently established by a concurrent session on 2026-08-18
+      (`unified-trading-pm@219a310df0`):
+      [/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md](/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md)
+      gives the full 3-layer design — Layer 1 strategy publishes intent, Layer 2 the execution-side
+      trigger/sensitivity cache, Layer 3 the order-fill algo. `execution_service/engine/delta_proxy_repricer.py`
+      already implements it (strategy publishes reference price + delta/gamma ONCE; execution extrapolates per tick
+      with a `max_adjustment_pct` staleness clamp that flags `stale=True` rather than extrapolating past a sane
+      bound), with real dataclasses and unit tests, plus `QuoteMaintainer` wiring it to a submitter protocol.
+      Blocked on: UAC's `QuoteInstruction` carrying no `delta`/`gamma`/`underlying_instrument_id` (wiring defaults
+      `delta = 1.0`, the spot/perp self-underlying case only), and the strategy-side receipt point (`QuoteHandler`)
+      having been deleted 2026-08-15 as dead code with no replacement. **This epic's job is to cite it, not restate
+      it** — the boundary SSOT names this as the canonical instance of the slow→fast cache handoff and links out.
+- [ ] [OPERATOR] P1. **Answer the 11 judgment calls in that issue doc** — 10 remain open (#6 resolved). Three bear
+      directly on this workstream's own principles and should be ruled consistently with them: #4 (how is "never
+      branch on archetype" *structurally* enforced, not merely conventional — strategy-agnosticism), #9 (reuse
+      `order_semantics.py`'s existing per-venue vocabulary rather than inventing a parallel schema — SSOT), #10
+      (execution consumes strategy's `ExposureAggregator` rather than keeping a duplicate local exposure view — no
+      same-concern-in-two-places). The doc records a default lean on all 11 for the record; it is not a ruling.
+
 - [ ] [BACKEND] P0. **Every strategy-agnostic module and function call lives centrally**, so multiple archetypes call
       one implementation instead of reimplementing it. Reimplementation is drift with a delay fuse.
 - [ ] [BACKEND] P0. **Reference / registry / config data must never live inside a single strategy's code path** — the

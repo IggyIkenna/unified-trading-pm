@@ -41,7 +41,7 @@ related:
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
   ]
 created: 2026-08-16
-last_updated: "2026-08-17"
+last_updated: "2026-08-18"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -171,29 +171,50 @@ Full findings, root cause, and evidence for every todo below live in the three s
       mapping, not shared reference data) and not a hardcoded table. Concretely: a new config-reloader field,
       `client_id -> {chain: wallet_address}`, per `/codex/06-coding-standards/config-reloader-pattern.md`. Unblocks
       the wiring todo below.
-- [ ] [BACKEND] P0. **CORRECTED 2026-08-18 — wrong function names.** Switch `staked_basis.py`'s `_resolve_setup`
-      (line 435, not `_validate_lst_margin_slot` — that method doesn't exist) and `recursive_staked.py`'s
-      `_check_safety_gates` (line 115, entry gate) plus `_maybe_close_family2_position` (lines 425-456, the actual
-      close/kill gate — not `_check_family2_health_kill`, which also doesn't exist) off `features.get("health_factor")`
-      onto the centralized source. **Real prerequisite, not yet built**: neither `risk.py`'s
-      `_lending_positions_by_client` nor `margin_event_emitter.py`'s `MarginEvent` currently exposes a synchronous
-      in-process read an `on_tick()` gate can call — `MarginEvent` is a best-effort Pub/Sub push, only fired on a
-      non-INFO severity crossing, with no subscriber/cache inside strategy-service today (reconciliation finding
-      #4). This todo cannot land until that read path exists — see the data-model todo below, which now owns
-      building it, not just adding schema fields.
-      **RULED 2026-08-18 — fail CLOSED on missing or stale data, not open.** Current logic
-      (`if health is not None and health < min_health: return None`) silently ALLOWS the trade when health is
-      unknown — meaning a genuinely underwater `CARRY_RECURSIVE_STAKED` position could trade unchecked during any
-      gap before the live poll first populates. Must invert: `health is None` (never polled) OR stale beyond its
-      SLA (poll succeeded once but hasn't refreshed recently — needs a timestamp alongside the cached value, not
-      just a bare optional) both block, the same as a known-bad health factor. Generalized operator ruling, not
-      specific to this gate: `/plans/epics/system_readiness_master.md` W16. Done-when: neither file reads
-      `features.get("health_factor")` anymore, both call the centralized source with fail-closed-on-absent-or-stale
-      semantics, and existing archetype tests stay green (including a new test for the missing/stale-data case).
-- [ ] [BACKEND] P1. Switch `arbitrage_structural/liquidation_capture.py`'s health-factor gate and
-      `mev/liquidation_bundle.py`'s `liq_candidate_health_factor_*` gate to the same centralized source
-      (candidate-wallet-parameterized, not client-scoped — a different call shape from the prior todo). Done-when:
-      neither reads an ad-hoc `features.get` key for this purpose anymore.
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-18 — `strategy-service@fc1afc9425`. **CORRECTED 2026-08-18 — wrong function
+      names.** Switch `staked_basis.py`'s `_resolve_setup` (line 435, not `_validate_lst_margin_slot` — that method
+      doesn't exist) and `recursive_staked.py`'s `_check_safety_gates` (line 115, entry gate) plus
+      `_maybe_close_family2_position` (lines 425-456, the actual close/kill gate — not `_check_family2_health_kill`,
+      which also doesn't exist) off `features.get("health_factor")` onto the centralized source.
+      **Built the missing prerequisite as a NEW generic module**,
+      `strategy-service/strategy_service/position/core/margin_health_cache.py`:
+      `record_margin_health(subject, scope, reading)` / `get_current_margin_health(subject, scope, now_utc=...)`,
+      fail-closed on absent-or-stale (default SLA 900s) — a synchronous in-process read `on_tick()` can call, wired
+      from BOTH `margin_event_emitter.py`'s DeFi (`cache_defi_position_health`, per-protocol, addressing
+      reconciliation finding #3's per-portfolio-dilution problem) and CeFi (`emit_margin_event_for_cefi`, cached
+      even on the INFO/no-publish path) sides — one generic getter, asset-group-agnostic, matching how
+      `unified_trading_library.margin_and_liquidation`'s compute core already was.
+      **`recursive_staked.py` is fully, correctly wired** — genuine Aave lending loop
+      (`lending_protocol` param) — scope=`lending_protocol`. Entry gate moved from `_check_safety_gates` into
+      `on_tick()` (needs `self.identity.client_id`, unavailable in that free function); Family-2 exit gate
+      (`_maybe_close_family2_position`) inverted to fail-closed-CLOSES (a missing/stale read now closes the
+      position, not holds it — the dangerous direction is leaving a leveraged loop open blind).
+      **`staked_basis.py` — NEW FINDING, corrected mid-implementation**: its `health_factor` gate is NOT an Aave
+      lending health factor at all — `carry-staked-basis.md:275,301,308` confirms "gates the perp short against
+      LST-haircut breach" and "no `lending_protocol`/`borrow_asset`" — the LST is posted directly as margin at
+      `perp_venue` (Deribit/Bybit), a CeFi/perp-margin concept, not DeFi lending. Wiring it onto the DeFi
+      lending-scoped source (as this todo originally implied by bundling both files under "the centralized
+      source") would have been WORSE than the original bug — reading a real but semantically-wrong signal.
+      Wired onto the correct GENERIC call shape (`get_current_margin_health(client_id, perp_venue, ...)`) but no
+      live sourcing adapter feeds that scope yet (no perp-margin position poll exists anywhere in the codebase) —
+      correctly fails closed (blocks) until one is built, tracked as a new follow-up below. Operator-confirmed
+      2026-08-18 (interactive session) this is the right sequencing: ship the correct call shape now, build the
+      real sourcing adapter as separately-scoped work.
+      Done-when (met): neither file reads `features.get("health_factor")` anymore; both call the centralized
+      source with fail-closed-on-absent-or-stale semantics; existing archetype tests stay green (98+2626 passed
+      across the affected suites) plus new tests for the missing/stale-data case
+      (`test_recursive_staked_margin_health_gate.py`, `test_margin_health_cache.py`, plus fail-closed cases added
+      to `test_staked_basis_validation.py`/`test_carry_basis_perp_inv_family2_on_tick.py`/`test_phase1_batch_e2e.py`).
+- [x] [BACKEND] P1. ✅ SHIPPED 2026-08-18 — `strategy-service@2d461285a8`. Switched
+      `arbitrage_structural/liquidation_capture.py`'s health-factor gate and `mev/liquidation_bundle.py`'s
+      `liq_candidate_health_factor_*` gate onto `get_current_margin_health(subject, scope)` — candidate-wallet-
+      parameterized (`subject`=wallet address, not client_id — a different call shape from the prior todo, exactly
+      as scoped). Done-when met: neither reads an ad-hoc `features.get` key for this purpose anymore. **Real gap
+      surfaced, not fabricated**: no live scanner populates this cache for arbitrary third-party candidate wallets
+      today (would need to discover/watch candidate addresses and poll their health — a genuine new infra piece,
+      out of scope for this todo), so both archetypes now correctly NEVER fire (fail-closed) rather than trusting
+      an ad-hoc features key nothing ever populated either — same honest-absence treatment as before, just moved
+      to the right layer. Tracked as a new follow-up below.
 - [x] [OPERATOR] P1. ✅ RULED 2026-08-18 — **Wire `liquidation_proximity_circuit.py` in; do not retire it.** Read
       the file in full: it's complete, purpose-built code (Phase 8 of `defi_recursive_borrow_archetypes_2026_05_10.md`)
       that maps 6 specific `AlertCode`s (`DEFI_LIQUIDATION_IMMINENT`, `DEFI_HEALTH_FACTOR_CRITICAL`,
@@ -202,28 +223,34 @@ Full findings, root cause, and evidence for every todo below live in the three s
       hedge-failover, oracle-buffer, mid-loop-recovery) — strictly more sophisticated than a binary kill-gate, and
       it doesn't compete with mechanism A/B: it's a downstream consumer of a `DefiAlert`, not another
       health-factor source. Zero callers because nothing upstream emits a `DefiAlert` with one of these codes
-      yet — that's the actual gap, not the circuit itself. **New follow-up this surfaces**: build the bridge from
-      a computed `MarginEvent`/health-factor breach into a `DefiAlert` with the matching code, so
-      `LiquidationProximityCircuit.evaluate()` has something to consume — scope as part of wiring
-      `recursive_staked.py` (the archetype this circuit is explicitly named for) onto the centralized source, not
-      as a separate effort.
-- [ ] [BACKEND] P1. **CORRECTED 2026-08-18 — split into what's honestly achievable now vs. blocked on missing
-      data.** Three sub-pieces, not one:
-      (a) **Build the in-process read path** — an `on_tick()` gate needs a synchronous "current known health for
-      this client" call; today only `MarginEvent`'s best-effort Pub/Sub push exists (fires only on a severity
-      crossing, no subscriber/cache in strategy-service). Add a getter alongside `risk.py`'s
-      `_lending_positions_by_client` (e.g. `get_current_defi_health(client_id) -> DeFiAggregatedHealth | None`,
-      re-aggregating from cached positions on read) — this is the real prerequisite the P0 switch-over todo above
-      is blocked on, not just "extend the schema."
-      (b) **`liquidation_price`/`distance_to_liquidation_pct` genuinely cannot be honestly populated today** —
-      `AavePositionAdapter.get_lending_position()` deliberately returns `supplied=[]`/`borrowed=[]` (only
-      account-level aggregates via `getUserAccountData()`, no per-asset quantities), and both fields are
-      schema-defined in price terms (`(current - liq_price) / current * 100`) that need per-reserve data.
-      Populating them with a fabricated value would be worse than leaving them `None` — per this workspace's
-      honest-absence rule. Real prerequisite: a `getUserReserveData()`-per-reserve fetch, not yet built anywhere
-      and not currently a tracked todo. Leave both fields `None` until that lands; do not guess a formula.
-      (c) Fix `positions_health.py`'s `MarginModel.AAVE_V3`-hardcoded liquidation-threshold lookup to resolve
-      per-position protocol instead — this part IS achievable now, independent of (a)/(b).
+      yet — that's the actual gap, not the circuit itself.
+      ✅ SHIPPED 2026-08-18 — `strategy-service@6b8c0c83f7`. Built the bridge:
+      `margin_event_emitter.py::defi_alert_for_margin_reading()` classifies a `CachedMarginReading` into
+      `AlertCode.DEFI_LIQUIDATION_IMMINENT`/`DEFI_HEALTH_FACTOR_CRITICAL` and constructs the matching `DefiAlert`;
+      wired into `recursive_staked.py`'s Family-2 close gate (the archetype this circuit is explicitly named for),
+      which already computes the qualifying `margin_reading`. **Scoped honestly**: the circuit now has a real
+      caller and its `ProximityDecision` is genuinely computed + logged (audit trail), but every qualifying breach
+      still fully closes as before — acting on the FULL graded taxonomy (`PARTIAL_UNWIND`'s one-loop-level
+      reduction, `POSITION_PAUSE`, `HEDGE_FAILOVER`, `ORACLE_BUFFER`, `MID_LOOP_RECOVERY`) needs new
+      leg-construction logic per action, not built here — that remains open, real follow-up work if the graded
+      response is wanted beyond "wired in + observable."
+- [x] [BACKEND] P1. ✅ SHIPPED 2026-08-18 — `strategy-service@fc1afc9425` (a), `strategy-service@2d461285a8` (c).
+      **CORRECTED 2026-08-18 — split into what's honestly achievable now vs. blocked on missing data.** Three
+      sub-pieces, not one:
+      (a) ✅ **Build the in-process read path** — built as the GENERIC `margin_health_cache.py` (see the P0 todo
+      above), not the DeFi-only `get_current_defi_health(client_id)` shape originally specced here — the shape
+      generalized once staked_basis.py's real gate turned out to be CeFi/perp-margin-shaped, not DeFi-lending-
+      shaped, so a DeFi-only getter would not have served both archetypes. `risk.py::update_lending_positions()`
+      now calls `margin_event_emitter.cache_defi_position_health()` per-protocol on every update.
+      (b) ⏸️ **Still genuinely blocked, unchanged** — `liquidation_price`/`distance_to_liquidation_pct` cannot be
+      honestly populated today (`AavePositionAdapter.get_lending_position()` deliberately returns
+      `supplied=[]`/`borrowed=[]`; needs a `getUserReserveData()`-per-reserve fetch, not yet built and not a
+      tracked todo). Left `None`; not guessed.
+      (c) ✅ Fixed `positions_health.py`'s `MarginModel.AAVE_V3`-hardcoded liquidation-threshold lookup — now
+      resolves per the wallet's RISKIEST position's actual protocol (lowest health factor, mirroring
+      `DeFiHealthAggregator._find_riskiest()`'s selection) via the same `margin_model_for_defi_protocol()`
+      resolver (a) uses. New tests: `test_derive_snapshot_liquidation_threshold_resolves_non_aave_protocol`,
+      `test_derive_snapshot_riskiest_protocol_selects_lowest_hf`.
 - [x] [OPERATOR] P2. ✅ RESOLVED BY SHIPMENT 2026-08-18 — `AavePositionAdapter`'s fate: **finished, not deleted**
       (`strategy-service@0a209dbba1`, `get_lending_position()` with a real `getUserAccountData()` eth_call, 2
       green tests — see the corrected-premise Progress Log entry above). **RE-APPLYING 2026-08-18 (second time)**:
@@ -236,6 +263,42 @@ Full findings, root cause, and evidence for every todo below live in the three s
       the generic protocol-level rate-index data it actually reads and states plainly it is NOT used for
       strategy-service risk gating (per-wallet Aave polling was never real). Landed via quickmerge, verified
       post-push ancestor of `origin/live-defi-rollout`.
+- [ ] [BACKEND] P2. **NEW 2026-08-18 — Delete `positions_health.py`'s redundant `derive_snapshot_from_lending()`
+      re-derivation once its wallet-keyed HTTP contract is reconciled with the client_id-scoped cache.** The
+      reconciliation todo's decision (above) and this doc's P0 done-note both said this deletion should follow
+      once the in-process read path exists — it now does (`margin_health_cache.py`), but `/positions/health`'s
+      route is keyed by `wallet_id` (consumed cross-service by execution-service's `run_wallet_preflight_checks`),
+      while the new cache is keyed by `client_id`+scope — deleting the redundant path requires resolving a
+      `wallet_id -> (client_id, protocol)` mapping first, a genuine small design decision (not build-and-ship),
+      to avoid silently breaking that cross-service HTTP contract. Only the hardcoded-threshold half of this todo
+      was fixed this session (see above) — the deletion half is this new todo. Done-when: `derive_snapshot_from_
+      lending()`/`update_wallet_health_from_lending()` are deleted and `/positions/health` reads the same generic
+      cache instead of re-deriving.
+- [ ] [BACKEND] P1. **NEW 2026-08-18 — Build the real live perp-margin sourcing adapter for `staked_basis.py`'s
+      LST_AS_MARGIN gate.** Surfaced while shipping the P0 switch-over above: `staked_basis.py`'s health gate is
+      correctly wired to `get_current_margin_health(client_id, perp_venue, ...)` but nothing feeds that scope —
+      `perp_venue` (Deribit/Bybit) is a CeFi/perp-margin position, not a DeFi lending position, so
+      `AavePositionAdapter`/the DeFi wallet poller don't apply. Build a per-instance perp-margin read (posted LST
+      value + used margin at `perp_venue` for THIS archetype's own wallet/account — `CefiVenueBalanceReader`
+      (`venue_balance_tracker.py`) is the closest existing shape but is scoped to PBM's shared reconciliation-loop
+      account, not a specific archetype instance's wallet) that calls
+      `record_margin_health(client_id, perp_venue, ...)` via `unified_trading_library.margin_and_liquidation`'s
+      generic `MarginModelProtocol.compute()` (MMR-mode), analogous to `emit_margin_event_for_cefi()`. Real
+      prerequisite this surfaces: `MarginModel`/`LIQUIDATION_PARAMS_REGISTRY`/`CEFI_PERP_MARGIN_MODELS` (UAC +
+      `venue_balance_tracker.py`) has no `DERIBIT` entry today, even though it's one of `staked_basis.py`'s two
+      live perp venues (Deribit, Bybit) — add it (a UAC registry change + a strategy-service consumer bump).
+      Done-when: `get_current_margin_health(client_id, perp_venue)` returns a real reading for a live
+      `LST_AS_MARGIN` slot, and DERIBIT has a registered `MarginModel`.
+- [ ] [BACKEND] P2. **NEW 2026-08-18 — Build a candidate-wallet liquidation-health scanner.** Surfaced while
+      shipping `liquidation_capture.py`/`liquidation_bundle.py`'s switch-over above: both archetypes now correctly
+      read `get_current_margin_health(subject=<candidate wallet>, scope=<protocol>)`, but nothing populates that
+      cache for third-party wallets — this needs a discovery/watch-list mechanism (which candidate addresses to
+      poll, likely sourced from features-onchain-service's `unhealthy_account_` feature keys or an on-chain event
+      scanner) plus a periodic poll per watched wallet calling `record_margin_health()`, analogous in shape to the
+      DeFi wallet poller (`defi_health_poller.py`) but keyed by discovered candidate address instead of a static
+      per-client config. Until this lands both archetypes correctly never fire (fail-closed), which is honest but
+      means neither is live-functional yet. Done-when: a live scanner populates
+      `get_current_margin_health(subject=<address>, scope=<protocol>)` for at least one discovered candidate.
 - [ ] [BACKEND] P2. Unify the two divergent GCS config-loader path conventions —
       `ConfigLoader.load_config`'s `configs/{strategy_id}.json` vs. `load_strategy_config_gcs`'s
       `configs/strategies/{strategy_id}.json` — behind one loader, building on `get_strategy_params()`'s existing
@@ -377,3 +440,43 @@ logic and that no second archetype could ever want. That must be stated, not ass
   `defi-position-risk-centralization.md` → `position-risk-centralization.md` and rewritten to match; every
   referrer in this corpus updated in the same change. TradFi confirmed as the genuine gap (no margin registry
   exists yet) — CeFi is not.
+- **2026-08-18 (interactive session, backend_engineer, slot 6)** — Shipped the P0 archetype switch-over + its true
+  prerequisite, and the P1 liquidation-gate switch-over + `positions_health.py` fix, two quickmerges:
+  `strategy-service@fc1afc9425`, `strategy-service@2d461285a8`. Operator, mid-session, asked for the ARCHITECTURE
+  to be right given the whole point of this system is unifying "only so many ways" to view risk/collateral/LTV
+  across asset groups — this reframed the implementation from "wire two archetypes onto a DeFi getter" into
+  building the actually-missing generic piece:
+  - **New module**: `strategy_service/position/core/margin_health_cache.py` — one
+    `record_margin_health(subject, scope, reading)` / `get_current_margin_health(subject, scope, now_utc=...)`
+    pair, fail-closed on absent-or-stale (default SLA 900s), asset-group-agnostic by construction (`subject` is a
+    `client_id` for an archetype's own position OR a bare wallet address for third-party candidate monitoring;
+    `scope` is a DeFi protocol or a CeFi/perp venue). This is the missing READ-BACK half of
+    `unified_trading_library.margin_and_liquidation`'s already-asset-group-agnostic COMPUTE core — the compute
+    core and the publish schema (`MarginEvent`/`MarginHealthSnapshot`) were already unified; only a synchronous
+    in-process read for `on_tick()` gates was missing.
+  - Wired from BOTH sides of `margin_event_emitter.py`: `cache_defi_position_health()` (new, per-protocol, DeFi)
+    and `emit_margin_event_for_cefi()` (existing, now also caches on the INFO/no-publish path).
+  - **`recursive_staked.py`**: fully correct — genuine Aave lending loop, scope=`lending_protocol`. Family-2 exit
+    gate inverted to fail-closed-CLOSES (a missing/stale read now closes, not holds — the ruled default per
+    `system_readiness_master.md` W16 applied to an EXIT gate is "close," not "block," since holding a leveraged
+    position blind is the dangerous direction).
+  - **`staked_basis.py` — the reframing's real finding**: its health gate is a perp-venue margin-haircut concept
+    (`carry-staked-basis.md` confirms no lending leg exists), not an Aave lending health factor — wiring it onto
+    the DeFi-scoped source (as originally worded) would have been a confidently-wrong read, worse than the
+    original bug. Wired onto the correct generic call shape instead, honestly fails closed pending a real
+    perp-margin sourcing adapter (new followup todo, includes the DERIBIT `MarginModel` registry gap this also
+    surfaced).
+  - **`liquidation_capture.py`/`liquidation_bundle.py`**: switched onto the same generic cache, candidate-wallet-
+    parameterized (`subject`=wallet address). No scanner exists to populate it for arbitrary third-party wallets
+    (new followup todo) — both archetypes correctly never fire until one does, same honest-absence treatment
+    moved to the right layer.
+  - **`positions_health.py`**: `MarginModel.AAVE_V3` hardcode fixed to resolve per the wallet's riskiest actual
+    protocol, reusing the same `margin_model_for_defi_protocol()` resolver.
+  - Full test suite green both times (`bash scripts/quality-gates.sh --no-fix`, exit 0) — 6146 then 6148 passed;
+    the only warning both runs was a pre-existing, unrelated `e2e-testing/scripts/defi` line-length lint, never
+    touched by this session. Also fixed a genuinely dead pre-existing gap found along the way: `position/
+    config_reloaders.py`'s `start_domain_config_reloaders`/`stop_domain_config_reloaders` were never called from
+    any production code path (only their own tests) — now wired into `monitor_handler.py`'s live startup/shutdown,
+    alongside the new `defi_wallets` domain reloader this session added.
+  - **Not done this session**: the DefiAlert-construction bridge (todo above, OPERATOR-ruled 2026-08-18 to wire
+    `liquidation_proximity_circuit.py` in) — still open, genuinely deferred for time, not silently dropped.

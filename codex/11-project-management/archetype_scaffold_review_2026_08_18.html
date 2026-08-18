@@ -1,0 +1,667 @@
+<title>Archetype Scaffold Review</title>
+<style>
+  :root {
+    --paper: #f3f5f2;
+    --paper-raised: #fbfcfa;
+    --ink: #1b211e;
+    --ink-soft: #4d5750;
+    --ink-faint: #7c877f;
+    --line: #d7ddd3;
+    --line-strong: #b9c2b6;
+    --accent-review: #92621f;
+    --accent-review-bg: #f7ecd9;
+    --accent-review-line: #e2c894;
+    --accent-shipped: #2f6b4f;
+    --accent-shipped-bg: #e6f0ea;
+    --accent-shipped-line: #bcd8c8;
+    --accent-gap: #9c4234;
+    --accent-gap-bg: #f6e8e4;
+    --accent-gap-line: #e2beb4;
+    --chip-bg: #eaeee6;
+    --chip-ink: #3a4239;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "JetBrains Mono", Menlo, Consolas, monospace;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Inter", Helvetica, Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #141815;
+      --paper-raised: #1b201c;
+      --ink: #e7ebe6;
+      --ink-soft: #a8b3a9;
+      --ink-faint: #71786f;
+      --line: #2b332c;
+      --line-strong: #3c463d;
+      --accent-review: #d9a75a;
+      --accent-review-bg: #2e2517;
+      --accent-review-line: #4a3a20;
+      --accent-shipped: #6bbf98;
+      --accent-shipped-bg: #172620;
+      --accent-shipped-line: #274536;
+      --accent-gap: #d98676;
+      --accent-gap-bg: #2b1a16;
+      --accent-gap-line: #4a2a22;
+      --chip-bg: #232922;
+      --chip-ink: #c4cbc2;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --paper: #141815;
+    --paper-raised: #1b201c;
+    --ink: #e7ebe6;
+    --ink-soft: #a8b3a9;
+    --ink-faint: #71786f;
+    --line: #2b332c;
+    --line-strong: #3c463d;
+    --accent-review: #d9a75a;
+    --accent-review-bg: #2e2517;
+    --accent-review-line: #4a3a20;
+    --accent-shipped: #6bbf98;
+    --accent-shipped-bg: #172620;
+    --accent-shipped-line: #274536;
+    --accent-gap: #d98676;
+    --accent-gap-bg: #2b1a16;
+    --accent-gap-line: #4a2a22;
+    --chip-bg: #232922;
+    --chip-ink: #c4cbc2;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-review-bg); }
+
+  .page {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 56px 28px 96px;
+  }
+
+  header.hero {
+    margin-bottom: 40px;
+  }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+  h1 {
+    font-size: clamp(28px, 4vw, 38px);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .lede {
+    font-size: 16px;
+    color: var(--ink-soft);
+    max-width: 62ch;
+    margin: 0 0 28px;
+  }
+  .lede code, p code, li code, td code {
+    font-family: var(--mono);
+    font-size: 0.92em;
+    background: var(--chip-bg);
+    color: var(--chip-ink);
+    padding: 0.1em 0.4em;
+    border-radius: 4px;
+  }
+
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .stat {
+    background: var(--paper-raised);
+    padding: 16px 18px;
+  }
+  .stat .n {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 26px;
+    font-weight: 600;
+    line-height: 1;
+  }
+  .stat .n.review { color: var(--accent-review); }
+  .stat .n.shipped { color: var(--accent-shipped); }
+  .stat .label {
+    margin-top: 6px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .provenance {
+    margin-top: 18px;
+    font-size: 13px;
+    color: var(--ink-faint);
+    border-left: 2px solid var(--line-strong);
+    padding-left: 12px;
+  }
+  .provenance strong { color: var(--ink-soft); font-weight: 600; }
+
+  section.tier, section.glossary, section.session-notes {
+    margin-top: 52px;
+  }
+
+  .principle {
+    margin: 20px 0 0;
+    padding: 16px 18px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--ink-faint);
+    border-radius: 10px;
+    font-size: 14px;
+    color: var(--ink-soft);
+  }
+  .principle strong { color: var(--ink); }
+
+  .glossary-item { margin-bottom: 28px; }
+  .glossary-item:last-child { margin-bottom: 0; }
+  .glossary-term {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 8px;
+  }
+  .glossary-def {
+    font-size: 14.5px;
+    color: var(--ink-soft);
+    max-width: 72ch;
+    margin: 0 0 12px;
+  }
+  .venue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 8px;
+    margin: 14px 0 4px;
+  }
+  .venue-ex {
+    background: var(--chip-bg);
+    border-radius: 8px;
+    padding: 10px 12px;
+  }
+  .venue-ex .ag {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+  .venue-ex .name {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--chip-ink);
+    font-weight: 600;
+    margin: 3px 0 2px;
+  }
+  .venue-ex .note { font-size: 11.5px; color: var(--ink-faint); line-height: 1.4; }
+
+  .id-example {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    overflow-x: auto;
+    white-space: pre;
+    margin: 4px 0 14px;
+    line-height: 1.8;
+  }
+  .id-example .diff { color: var(--accent-shipped); font-weight: 600; }
+  .id-example .same { color: var(--ink-faint); }
+  .tier-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .tier-head h2 {
+    font-size: 21px;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .tier-count {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  .tier-desc {
+    color: var(--ink-soft);
+    font-size: 14.5px;
+    max-width: 68ch;
+    margin: 8px 0 24px;
+  }
+
+  .row-card {
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    margin-bottom: 10px;
+  }
+  .row-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+  .archetype-name {
+    font-family: var(--mono);
+    font-size: 14.5px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  .family-badge {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 8px 0;
+  }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12px;
+    background: var(--chip-bg);
+    color: var(--chip-ink);
+    padding: 3px 9px;
+    border-radius: 999px;
+  }
+  .chip.none {
+    background: var(--accent-gap-bg);
+    color: var(--accent-gap);
+    border: 1px dashed var(--accent-gap-line);
+  }
+  .rationale {
+    font-size: 14px;
+    color: var(--ink-soft);
+    margin: 6px 0 12px;
+  }
+  .signoff {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    padding-top: 10px;
+    border-top: 1px dashed var(--line);
+  }
+  .signoff-opt {
+    font-size: 12px;
+    font-family: var(--mono);
+    padding: 5px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--line-strong);
+    color: var(--ink-faint);
+  }
+
+  .row-card.tier-review { border-left: 3px solid var(--accent-review); }
+  .row-card.tier-gap { border-left: 3px solid var(--accent-gap); }
+
+  .gap-categories {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 18px 0 8px;
+  }
+  .gap-cat {
+    background: var(--accent-gap-bg);
+    border: 1px solid var(--accent-gap-line);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .gap-cat .n {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--accent-gap);
+    font-weight: 600;
+    margin-bottom: 3px;
+  }
+  .gap-cat .d { font-size: 13px; color: var(--ink-soft); }
+
+  details.shipped-ref {
+    margin-top: 56px;
+    background: var(--paper-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 4px 18px;
+  }
+  details.shipped-ref summary {
+    cursor: pointer;
+    padding: 16px 0;
+    font-weight: 600;
+    font-size: 15px;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  details.shipped-ref summary::-webkit-details-marker { display: none; }
+  details.shipped-ref summary .arrow {
+    font-family: var(--mono);
+    color: var(--ink-faint);
+    transition: transform 0.15s ease;
+    font-size: 13px;
+  }
+  details.shipped-ref[open] summary .arrow { transform: rotate(90deg); }
+  .shipped-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 6px;
+    padding: 4px 0 20px;
+  }
+  .shipped-item {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--accent-shipped);
+    background: var(--accent-shipped-bg);
+    border: 1px solid var(--accent-shipped-line);
+    border-radius: 6px;
+    padding: 6px 10px;
+  }
+
+  footer.closing {
+    margin-top: 56px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+  footer.closing a { color: var(--ink-soft); }
+
+  @media (max-width: 640px) {
+    .page { padding: 36px 18px 72px; }
+  }
+</style>
+
+<div class="page">
+  <header class="hero">
+    <div class="eyebrow">Nick AI platform readiness — W2 follow-up</div>
+    <h1>Archetype scaffold, second pass</h1>
+    <p class="lede">
+      The <code>StrategyArchetype → feature_group</code> registry now covers 55 of 60 archetypes. What's left is 5
+      genuine registry gaps — not a confidence question anymore, every plausible-candidate row got resolved this
+      session.
+    </p>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="n shipped">55 / 60</div>
+        <div class="label">declared &amp; shipped</div>
+      </div>
+      <div class="stat">
+        <div class="n" style="color:var(--accent-gap)">5</div>
+        <div class="label">registry gap — genuinely nothing to point at</div>
+      </div>
+    </div>
+
+    <p class="provenance">
+      <strong>Regenerated, not restored.</strong> The original scaffold artifact lived only in a scratchpad file that
+      didn't survive this session's context compaction — this is a fresh classification pass against the live
+      registry, not a byte-for-byte reconstruction.
+    </p>
+
+    <div class="principle">
+      <strong>Why this list, and not a bigger one.</strong> This isn't a design exercise — no reinventing patterns,
+      no brainstorming hypothetical venues. It's commercially led: a venue gets built when a real market exists for
+      it, not before. The 55 declared rows in this registry are a starting point, not a ceiling — most of what's
+      currently planned lands over the rest of 2026, and nothing stops a new venue being added the moment a market
+      for it opens. We just don't pre-build for one that doesn't exist yet.
+    </div>
+  </header>
+
+  <section class="glossary">
+    <div class="tier-head">
+      <h2>Glossary — venue &amp; instrument ID</h2>
+    </div>
+    <p class="tier-desc">
+      Two terms carry a lot of weight below and mean something slightly different in each asset group. Worth
+      pinning down first, because the normalization behind them is what makes one registry legible across five very
+      different kinds of market.
+    </p>
+
+    <div class="glossary-item">
+      <div class="glossary-term">Venue</div>
+      <p class="glossary-def">
+        <strong>Whose price is this</strong> — not necessarily somewhere we can trade. That's the literal operator
+        ruling behind the registry (2026-08-08, sports-taxonomy decision): keep every real price source as a venue,
+        then answer "can we act on it" with a separate flag. A venue can be data-only — <code>PINNACLE</code> is
+        registered with no execution adapter at all — and it still counts as a venue.
+      </p>
+      <div class="venue-grid">
+        <div class="venue-ex"><div class="ag">CeFi</div><div class="name">BINANCE-SPOT</div><div class="note">a centralized exchange</div></div>
+        <div class="venue-ex"><div class="ag">DeFi</div><div class="name">AAVE_V3-ARBITRUM</div><div class="note">protocol + chain — the pair IS the venue</div></div>
+        <div class="venue-ex"><div class="ag">TradFi</div><div class="name">CME</div><div class="note">a futures exchange</div></div>
+        <div class="venue-ex"><div class="ag">Sports</div><div class="name">BETFAIR</div><div class="note">a betting exchange, real adapter</div></div>
+        <div class="venue-ex"><div class="ag">Sports</div><div class="name">PINNACLE</div><div class="note">a bookmaker, data-only — still a venue</div></div>
+        <div class="venue-ex"><div class="ag">Prediction</div><div class="name">POLYMARKET / KALSHI</div><div class="note">prediction-market platforms</div></div>
+      </div>
+    </div>
+
+    <div class="glossary-item">
+      <div class="glossary-term">Instrument ID — canonical, normalized</div>
+      <p class="glossary-def">
+        Every asset group's raw data passes through one dispatch point — <code>build_canonical_instrument_id()</code>
+        — before anything downstream ever sees it. Its own docstring states the goal directly: "one builder for
+        everything ... every asset group, every instrument type, can get its canonical instrument IDs ... just by
+        filling in the right inputs." CeFi, DeFi, TradFi, and prediction markets share one shape,
+        <code>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</code> — DeFi's venue is a protocol+chain pair
+        (<code>AAVE_V3-ARBITRUM:LENDING:USDC</code>); sports keeps its own <code>LEAGUE:MATCHUP:DATE</code> fixture
+        scheme; sports and prediction betting markets share a
+        <code>SPORT:VENUE:MARKET:LEAGUE:SEASON:HOME-AWAY::SELECTION</code> grammar underneath that.
+      </p>
+      <p class="glossary-def">
+        That last shape is what makes this real: the same Arsenal–Chelsea match, quoted on a sports betting
+        exchange and on a prediction-market platform, produces two IDs identical in every field except venue — a
+        genuine shipped example, not a mockup:
+      </p>
+      <div class="id-example"><span class="same">FOOTBALL:</span><span class="diff">POLYMARKET</span><span class="same">:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</span>
+<span class="same">FOOTBALL:</span><span class="diff">BETFAIR_EX_UK</span><span class="same">:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</span></div>
+      <p class="glossary-def" style="margin-bottom:0">
+        That's not a cosmetic parallel, it's the arb-detection mechanism itself: group by everything except venue,
+        compare prices. Shipped and paper-proven, not aspirational —
+        <code>cross-venue-prediction-arb-detection.md</code>, status <code>SHIPPED</code> since 2026-07-20 —
+        normalizing Betfair's decimal back/lay odds onto the same YES-probability scale Kalshi and Polymarket
+        already quote natively, then scanning every venue pair for a real edge. Kalshi shares the same outer
+        <code>VENUE:PREDICTION_MARKET:...</code> shape with its own market-ticker grammar
+        (<code>KX{SERIES}-{DATE}-{STRIKE}</code>) — same normalization discipline; we don't have a live production
+        ticker to quote verbatim here, just the confirmed format.
+      </p>
+    </div>
+  </section>
+
+  <section class="session-notes">
+    <div class="row-card" style="border-left:3px solid var(--accent-shipped)">
+      <div class="row-top">
+        <span class="archetype-name" style="color:var(--accent-shipped)">15 resolved this session</span>
+        <span class="family-badge">2026-08-18</span>
+      </div>
+      <p class="rationale" style="margin-bottom:0">
+        <strong>7 via real dispatch-code traces</strong> — you pushed on "I'm surprised we can't do the vaults, the
+        pools, the perp inverse," and you were right: real, live features-service calculators existed for all of
+        it, the earlier gap tier just hadn't found them. <code>CARRY_BASIS_PERP</code>, <code>CARRY_BASIS_PERP_INV</code>,
+        <code>CARRY_FUNDING_DISPERSION</code> (all → <code>perp_funding_rates</code>), <code>DEFI_LP_VAULT</code>
+        (→ <code>vault_share_price_apy</code>), <code>DEFI_LP_POOL</code> (→ <code>pool_invariant_drift</code> +
+        <code>dex_pool_swap_flow</code>), <code>DEFI_LP_CONCENTRATED</code> (→ <code>concentrated_liquidity_il_realised</code>),
+        <code>EVENT_DRIVEN</code> (→ <code>yield_curve</code> + <code>economic_results</code>, FRED-sourced).
+        <strong>8 via accepted Medium-confidence analogy</strong> — "do all the medium confidence": each reuses an
+        already-declared sibling's feature_group set by direct analogy —
+        <code>ARBITRAGE_CROSS_DOMAIN_EVENT</code>, <code>MARKET_MAKING_ML_LEAN</code>,
+        <code>ML_DIRECTIONAL_EVENT_SETTLED</code>, <code>RULES_DIRECTIONAL_EVENT_SETTLED</code>,
+        <code>VOL_ML_LEAN</code>, <code>PORTFOLIO_FACTOR_ALLOCATION</code>, <code>PORTFOLIO_RISK_PARITY</code>,
+        <code>PORTFOLIO_TACTICAL_OVERLAY</code> — honestly the same weaker evidence tier as the original 35, not
+        promoted to dispatch-traced just by being accepted; each entry's own code comment states which sibling it
+        copies and its specific weak point (three of the eight — the <code>PORTFOLIO_*</code> rows — share a deeper
+        caveat: this registry models single-instrument consumption, and a portfolio-level archetype's real input is
+        a set of open positions, a shape this registry may not fully express regardless of which feature_group is
+        cited).
+      </p>
+    </div>
+
+    <div class="row-card tier-gap">
+      <div class="row-top">
+        <span class="archetype-name">EVENT_DRIVEN — 2 legs excluded, not silently dropped</span>
+      </div>
+      <p class="rationale" style="margin-bottom:0">
+        <code>corporate_actions</code> (dividends/splits) is real and dispatched — but its only data source is
+        <code>polygon_corporate_actions_adapter.py</code>, and Massive-fka-Polygon.io is fleet-banned. A real,
+        already-live precedent exists to fix it: the same handler already fetches earnings via
+        <code>yfinance</code>, and yfinance also exposes dividends/splits directly — filed with that as the proposed
+        path, not just a bare exclusion. <code>earnings_results</code> itself IS live and yfinance-sourced (clean)
+        — but it reads a live external API call, not a captured MTDS shard, the same input-shape mismatch as
+        <code>economic_events</code>/<code>forexfactory</code> below — a genuinely different reason than first
+        thought, corrected in the same pass.
+      </p>
+    </div>
+  </section>
+
+
+  <section class="tier">
+    <div class="tier-head">
+      <h2>Registry gap — no feature_group exists yet</h2>
+      <span class="tier-count">5 archetypes</span>
+    </div>
+    <p class="tier-desc">
+      These aren't a confidence question — no candidate is offered because none of the declared <code>feature_group</code>
+      names cover the domain at all. Down to two real gap categories after this session; MEV was checked exhaustively
+      on your direct request ("double check MTDS or features don't expose it"), not just re-asserted:
+    </p>
+    <div class="gap-categories">
+      <div class="gap-cat"><div class="n">4 archetypes</div><div class="d">On-chain MEV — MTDS captures <code>mev_events</code> real rows, but zero downstream consumers anywhere (features-service, MDPS, strategy-service, execution-service); more fundamentally, needs live mempool visibility, not a historical event log</div></div>
+      <div class="gap-cat"><div class="n">1 archetype</div><div class="d">Portfolio meta-strategy — a strategy-of-strategies shape, structurally unlike every other archetype here</div></div>
+    </div>
+
+    <div class="row-card tier-gap">
+      <div class="row-top"><span class="archetype-name">ARBITRAGE_MEV_BACKRUN</span><span class="family-badge">ARBITRAGE_STRUCTURAL · MEV</span></div>
+      <div class="chips"><span class="chip none">no candidate</span></div>
+      <p class="rationale">Checked exhaustively, not assumed: <code>mev_events_handler.py</code> in MTDS really does capture real rows, but a workspace-wide search (features-service, market-data-processing-service, strategy-service, execution-service) found zero consumers. More fundamentally, backrunning needs to see a pending transaction BEFORE it lands — <code>mev_events</code> only logs MEV that already happened. No mempool-monitoring adapter exists anywhere in this codebase; that's the real missing piece, not a feature_group name.</p>
+      <div class="signoff"><span class="signoff-opt">acknowledged — needs mempool infra, not a declaration</span></div>
+    </div>
+    <div class="row-card tier-gap">
+      <div class="row-top"><span class="archetype-name">ARBITRAGE_MEV_JIT_LIQUIDITY</span><span class="family-badge">ARBITRAGE_STRUCTURAL · MEV</span></div>
+      <div class="chips"><span class="chip none">no candidate</span></div>
+      <p class="rationale">Same mempool-visibility gap as the row above — JIT-liquidity provision needs to see a large pending swap coming, not just its historical log.</p>
+      <div class="signoff"><span class="signoff-opt">acknowledged — needs mempool infra, not a declaration</span></div>
+    </div>
+    <div class="row-card tier-gap">
+      <div class="row-top"><span class="archetype-name">ARBITRAGE_MEV_LIQUIDATION_BUNDLE</span><span class="family-badge">ARBITRAGE_STRUCTURAL · MEV</span></div>
+      <div class="chips"><span class="chip none">no candidate</span></div>
+      <p class="rationale">Same mempool-visibility gap. Closest existing relative is <code>liquidation_clusters</code> (used by the declared <code>LIQUIDATION_CAPTURE</code>), but that group models the liquidation itself, not the MEV bundle competing to capture it before someone else does — still needs pending-transaction visibility.</p>
+      <div class="signoff"><span class="signoff-opt">acknowledged — needs mempool infra, not a declaration</span></div>
+    </div>
+    <div class="row-card tier-gap">
+      <div class="row-top"><span class="archetype-name">ARBITRAGE_MEV_SANDWICH</span><span class="family-badge">ARBITRAGE_STRUCTURAL · MEV</span></div>
+      <div class="chips"><span class="chip none">no candidate</span></div>
+      <p class="rationale">Same mempool-visibility gap — the fourth and last MEV-family archetype. A sandwich attack is structurally the clearest case for why this is a data-infrastructure gap, not a naming one: it requires acting on a pending transaction between its submission and confirmation, a window this codebase has no visibility into at all.</p>
+      <div class="signoff"><span class="signoff-opt">acknowledged — needs mempool infra, not a declaration</span></div>
+    </div>
+    <div class="row-card tier-gap">
+      <div class="row-top"><span class="archetype-name">PORTFOLIO_MULTI_STRATEGY</span><span class="family-badge">PORTFOLIO</span></div>
+      <div class="chips"><span class="chip none">no candidate</span></div>
+      <p class="rationale">The clearest structural mismatch on this page: a meta-strategy that allocates across OTHER strategies has no single-instrument feature_group input at all — closing this gap likely means extending the registry's own shape (what a "consumed input" even means for this archetype), not adding a feature_group.</p>
+      <div class="signoff"><span class="signoff-opt">acknowledged — no action</span></div>
+    </div>
+  </section>
+
+  <details class="shipped-ref">
+    <summary>Already declared &amp; shipped — 55 archetypes, for reference <span class="arrow">▸</span></summary>
+    <p class="rationale" style="margin-top:0">
+      5 traced to real dispatch code in strategy-service; 35 from your High-confidence sign-off on the first
+      scaffold pass; 7 traced to real dispatch code in features-service; 8 accepted at Medium-confidence by direct
+      instruction — all this session. All committed in
+      <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_feature_groups.py</code>.
+    </p>
+    <div class="shipped-grid">
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">ARBITRAGE_CROSS_DOMAIN_EVENT</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">MARKET_MAKING_ML_LEAN</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">ML_DIRECTIONAL_EVENT_SETTLED</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">RULES_DIRECTIONAL_EVENT_SETTLED</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">VOL_ML_LEAN</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">PORTFOLIO_FACTOR_ALLOCATION</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">PORTFOLIO_RISK_PARITY</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">PORTFOLIO_TACTICAL_OVERLAY</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">CARRY_BASIS_PERP</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">CARRY_BASIS_PERP_INV</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">CARRY_FUNDING_DISPERSION</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">DEFI_LP_VAULT</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">DEFI_LP_POOL</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">DEFI_LP_CONCENTRATED</span>
+      <span class="shipped-item" style="color:var(--accent-review);background:var(--accent-review-bg);border-color:var(--accent-review-line)">EVENT_DRIVEN</span>
+      <span class="shipped-item">CARRY_STAKED_BASIS</span>
+      <span class="shipped-item">CARRY_STAKED_BASIS_DATED</span>
+      <span class="shipped-item">CARRY_RECURSIVE_STAKED</span>
+      <span class="shipped-item">YIELD_STAKING_SIMPLE</span>
+      <span class="shipped-item">YIELD_ROTATION_LENDING</span>
+      <span class="shipped-item">ML_DIRECTIONAL_CONTINUOUS</span>
+      <span class="shipped-item">RULES_DIRECTIONAL_CONTINUOUS</span>
+      <span class="shipped-item">TSMOM_BTC_CTA</span>
+      <span class="shipped-item">CARRY_BASIS_DATED</span>
+      <span class="shipped-item">CARRY_BASIS_DATED_INV</span>
+      <span class="shipped-item">CARRY_RECURSIVE_BORROW_LENDING_ONLY</span>
+      <span class="shipped-item">ARBITRAGE_PRICE_DISPERSION</span>
+      <span class="shipped-item">ARBITRAGE_SPORTS_DUTCHING</span>
+      <span class="shipped-item">LIQUIDATION_CAPTURE</span>
+      <span class="shipped-item">MARKET_MAKING_CONTINUOUS</span>
+      <span class="shipped-item">MARKET_MAKING_EVENT_SETTLED</span>
+      <span class="shipped-item">MARKET_MAKING_PASSIVE_SPREAD</span>
+      <span class="shipped-item">MARKET_MAKING_INVENTORY_SKEW</span>
+      <span class="shipped-item">MARKET_MAKING_QUEUE_MICROSTRUCTURE</span>
+      <span class="shipped-item">MARKET_MAKING_PREDICTION</span>
+      <span class="shipped-item">VOL_TRADING_OPTIONS</span>
+      <span class="shipped-item">VOL_ARB_RV_IV</span>
+      <span class="shipped-item">VOL_SPREAD_STRUCTURES</span>
+      <span class="shipped-item">VOL_CARRY</span>
+      <span class="shipped-item">VOL_OVERLAY_COVERED_CALLS</span>
+      <span class="shipped-item">VOL_OVERLAY_PROTECTIVE_PUT</span>
+      <span class="shipped-item">VOL_STRADDLE</span>
+      <span class="shipped-item">VOL_SYNTHETIC_DELTA</span>
+      <span class="shipped-item">VOL_MARKET_MAKING</span>
+      <span class="shipped-item">VOL_0DTE_GAMMA_SCALPING</span>
+      <span class="shipped-item">VOL_0DTE_PIN_RISK</span>
+      <span class="shipped-item">VOL_TERM_STRUCTURE_ARB</span>
+      <span class="shipped-item">VOL_TERM_STRUCTURE_SLOPE</span>
+      <span class="shipped-item">VOL_DISPERSION</span>
+      <span class="shipped-item">VOL_VARIANCE_SWAP</span>
+      <span class="shipped-item">VOL_LEAPS_CONVEXITY</span>
+      <span class="shipped-item">VOL_CROSS_ASSET_SPREAD</span>
+      <span class="shipped-item">VOL_RATIO_SPREAD</span>
+      <span class="shipped-item">STAT_ARB_PAIRS_FIXED</span>
+      <span class="shipped-item">STAT_ARB_CROSS_SECTIONAL</span>
+    </div>
+  </details>
+
+  <footer class="closing">
+    Source: <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_feature_groups.py</code>
+    at <code>a617bbdf</code>, plus <code>enums.py</code>'s <code>StrategyArchetype</code>/<code>ARCHETYPE_TO_FAMILY</code>
+    and <code>canonical/domain/features/required_inputs.py</code>'s <code>FEATURE_REQUIRED_INPUTS</code>, both
+    read live for this pass. Glossary sourced from <code>internal/reference/canonical_id_builder.py</code>,
+    <code>registry/venue_adapter_keys.py</code>, and codex's <code>cross-venue-prediction-arb-detection.md</code> +
+    the 2026-08-08 sports-taxonomy venue ruling, also read live. Sign-off marks above are visual only — reply here
+    or tell me your calls directly and I'll commit whichever rows you accept the same way the first 35 landed.
+  </footer>
+</div>
