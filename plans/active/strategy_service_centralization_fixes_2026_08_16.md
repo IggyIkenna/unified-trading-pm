@@ -132,13 +132,38 @@ Full findings, root cause, and evidence for every todo below live in the three s
       delete `positions_health.py`'s independent `derive_snapshot_from_lending()`/AAVE_V3-hardcoded path and
       have `/positions/health` read the same state instead of re-deriving it. Full context:
       [position-risk-centralization § Two parallel mechanisms](/codex/04-architecture/position-risk-centralization.md).
-- [ ] [BACKEND] P0. Route execution-service's `HealthFactorMonitor`'s live per-wallet Aave data into
-      `DeFiHealthAggregator`'s state via `risk.py::update_lending_positions()` — **not** via
-      `positions_health.py::update_wallet_health_from_lending` (corrected 2026-08-18: that function feeds a
-      separate, redundant cache that re-derives its own collateral/debt/ltv rather than calling
-      `DeFiHealthAggregator`; see the reconciliation todo above) — and not a new poller, not the stub
-      `AavePositionAdapter`. Done-when: the aggregator's state reflects real position data after a live/paper run,
-      verified by reading it back.
+- [ ] [BACKEND] P0. **CORRECTED PREMISE 2026-08-18 — `HealthFactorMonitor` is not "already-working."** Investigated
+      before wiring: `HealthFactorMonitor` (execution-service) is constructed nowhere outside its own test file — no
+      production entrypoint builds one. Its intended data source, `AAVEConnector.get_user_account_data()`
+      (`execution_service/defi_execution/protocols/aave.py`), returns **hardcoded placeholder values**
+      (`total_collateral_eth=Decimal("10")`, `total_debt_eth=Decimal("5")`) regardless of `is_live` — already found
+      and tracked separately (`recursive_loop_orchestrator.py:730-735`'s own docstring cites this; extracted to
+      `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 15, per
+      `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`). Routing "HealthFactorMonitor's live data"
+      as originally worded would have routed simulation constants into the aggregator while claiming they were real.
+      **Also**: `HealthFactorMonitor` runs in execution-service; `update_lending_positions()` is an in-process
+      strategy-service function — no event/API bridge between the two exists today, so this path needs one built,
+      not just "wired."
+      **What shipped instead — `strategy-service@0a209dbba1`** (in-process, no cross-service bridge needed): finished
+      `AavePositionAdapter.get_lending_position()` (`position/position_interface/adapters/aave.py`) with a real
+      `getUserAccountData()` eth_call — cited pool address (reused from execution-service's own
+      `aave.py::POOL_ADDRESS`), cited selector `0xbf92857c` (verified via 4byte.directory), decoding
+      collateral_usd/debt_usd/ltv_ratio/health_factor from Aave's documented base-currency/bps/WAD units, with a
+      correct zero-debt sentinel (uint256-max HF → `None`, not a fabricated huge number). 2 unit tests
+      (`tests/position/position_interface/unit/test_aave_position_adapter.py`), both green. `supplied`/`borrowed`
+      left empty (honest-absence) — per-reserve amounts need `getUserReserveData()` per reserve, not built here.
+      **Not done — genuinely remains open**: nothing calls `get_lending_position()` yet. Wiring it into
+      `risk.py::update_lending_positions()` on a live/paper cadence needs a NEW per-client DeFi-wallet config
+      surface (which client owns which wallet address(es), which chain) that doesn't exist anywhere in
+      strategy-service's config today — a real design decision, not a one-line call. Split to the new todo below
+      rather than inventing that config shape unilaterally. Done-when (unchanged, not yet met): the aggregator's
+      state reflects real position data after a live/paper run, verified by reading it back.
+- [ ] [OPERATOR] P1. **Decide the per-client DeFi-wallet config shape** so `AavePositionAdapter.get_lending_position()`
+      (shipped above) can be wired into `risk.py::update_lending_positions()` on a periodic cadence, the same way
+      `monitor_handler.py`'s reconciliation loop already periodically calls `emit_live_cefi_margin_events()`. Needs:
+      one wallet per client, or many; which chain(s); where the mapping lives (a new config-reloader field, per
+      `/codex/06-coding-standards/config-reloader-pattern.md`, not a bare module constant). Once ruled, the actual
+      wiring is a small [BACKEND] follow-up.
 - [ ] [BACKEND] P0. Switch `staked_basis.py`'s `_validate_lst_margin_slot` and `recursive_staked.py`'s entry gate
       plus `_check_family2_health_kill` off `features.get("health_factor")` onto the centralized source the prior
       todo wired. Done-when: neither file reads `features.get("health_factor")` anymore, both call the centralized
@@ -246,6 +271,15 @@ logic and that no second archetype could ever want. That must be stated, not ass
   cache, not `DeFiHealthAggregator`) and corrected it in place per the workspace's stale-pointer rule. Full
   decision + evidence inline on the checkbox above. No code changed this session — evidence-gathering + decision
   only, per the todo's own done-when.
+- **2026-08-18 (slot 5, backend_engineer, continued)** — Investigated the live-feed todo before wiring and found
+  its premise false: `HealthFactorMonitor` is never constructed in production, and its data source
+  (`AAVEConnector.get_user_account_data()`) returns hardcoded placeholders (already a separately-tracked gap,
+  `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 15). Shipped the achievable, honest piece
+  instead: `AavePositionAdapter.get_lending_position()` (strategy-service, in-process, no cross-service bridge) —
+  a real, cited `getUserAccountData()` eth_call (pool address + selector both cited), 2 green unit tests. Left the
+  todo unchecked (its done-when — aggregator state reflects real data after a live/paper run — is not yet met,
+  since nothing calls the new method yet) and split the remaining per-client wallet-config decision into a new
+  `[OPERATOR]` todo rather than invent that config shape unilaterally.
 
 - **2026-08-16** — Authored from three same-day issue docs per operator direction (AO-dispatched, one wrapper
   plan). `sequential: true` set deliberately given the real chain among the first several todos — not a reflexive
