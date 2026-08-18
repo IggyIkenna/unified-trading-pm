@@ -1,0 +1,164 @@
+---
+doc_type: plan
+title: Data-pipeline audit escalation — agent-backed issue filing, replacing the raw Cloud Run commit path
+summary: |
+  The e2e-testing manifest-hygiene audit files RED findings by writing + `git commit`/`push`-ing a PM issue doc
+  directly from inside an ephemeral Cloud Run Job — no quality gates, no safe-doc-push, no agent. That path has
+  already silently dropped genuine RED findings 3 separate times in one week (git identity, frontmatter drift, same-
+  day filename collision — see the archived incident doc). deployment-service's own data-pipeline self-monitoring
+  substrate already solved this correctly (never raw-commit from an ephemeral runner — defer to a dispatched agent
+  instead) but its dispatched worker's boot prompt assumes a doc is already filed, so the pattern isn't actually
+  wired end-to-end anywhere. This plan closes that loop.
+status: active
+nature: process
+asset_group: [cross-cutting]
+stage: [data, meta]
+repos: [agent-orchestrator, e2e-testing, deployment-service, unified-trading-pm]
+scope: [engineer, admin]
+tags: [data-pipeline, escalation, dp-audit, issue-filing, self-healing, agent-orchestrator, reliability]
+related:
+  [
+    /plans/archive/issues/dp_audit_sibling_repo_cli_paths_and_escalation_commit_identity_2026_08_16.md,
+    /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
+    /codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
+created: "2026-08-18"
+last_updated: "2026-08-18"
+parent_epic: observability_master
+assigned_vm: NA
+execution_scope: local-only
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 3
+estimate_calibrated_ai_days: 2.4
+assigned_role: data_engineering
+effort: high
+drift_direction: advance-code
+supersedes:
+superseded_by:
+depends_on: []
+source:
+  [
+    "Interactive session 2026-08-18, slot 3 — operator asked whether the deployment pipeline's escalation process
+    adheres to safe-doc-push/quality-gates when filing issue docs; investigation found it doesn't for the e2e-testing
+    manifest-hygiene audit specifically, traced the 3 documented silent-drop incidents, found deployment-service
+    already has the correct 'defer to a dispatched agent, never raw-commit from an ephemeral runner' shape but its
+    boot prompt doesn't close the loop, and the operator ruled 'always defer' (never a local-commit fast path) +
+    human plan (assigned_vm: NA) via interactive Q&A.",
+  ]
+locked_by:
+locked_since:
+context_scope:
+  [
+    unified-trading-pm/agents/data_pipeline_failure.md,
+    e2e-testing/scripts/audit/_dp_common.py,
+    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
+    deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py,
+    agent-orchestrator/server/escalation.py,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    scripts/docs/docspec.py,
+  ]
+---
+
+# Data-pipeline audit escalation — agent-backed issue filing
+
+## Why this doc exists
+
+The e2e-testing manifest-hygiene audit (`uts-prod-dp-manifest-hygiene-{changed,full}`, a daily/weekly Cloud Run Job)
+files a genuine RED finding by having `_dp_common.py::file_escalation_issue` write a
+`plans/active/issues/<slug>_<date>.md` doc directly to disk, then commit + push it via raw subprocess `git`, from
+inside the ephemeral job container — never touching `scripts/dev/safe-doc-push.sh` or `quality-gates.sh`, never
+dispatching an agent. This has already **silently dropped a real RED finding three separate times in one week**
+(documented in full in
+`/plans/archive/issues/dp_audit_sibling_repo_cli_paths_and_escalation_commit_identity_2026_08_16.md`):
+
+1. 2026-08-16 — no git identity in the container → `commit` failed → the doc was lost when the ephemeral container
+   exited.
+2. 2026-08-16/17 — the generated frontmatter had drifted from `doc-frontmatter-schema.md` → every auto-filed doc was
+   failing `plan-hygiene`'s schema check.
+3. 2026-08-17 — same-day `-changed` and `-full` runs wrote the identical filename → an `add/add` git conflict on the
+   second commit silently dropped that run's findings.
+
+All three were fixed by hardening the raw script in place — not by changing the underlying architecture, so the
+failure *class* (an unsupervised subprocess deciding, alone, whether a finding survives) is still live.
+
+**deployment-service already solved this correctly, for a different finding source.** Its own data-pipeline
+self-monitoring substrate (`deployment_service/data_pipeline_monitors/escalation.py::route_finding` +
+`escalation_issue_writer.py::write_issue_doc`) never attempts a raw commit from an ephemeral runner: when there's no
+durable PM clone on disk, it skips the local write entirely, sets `file_issue_deferred: no_pm_clone_on_disk`, and
+fires a best-effort `repository_dispatch` to `escalate-to-orchestrator` (`wall_type=data_pipeline_failure`) so a real
+tmux-hosted agent-orchestrator worker picks it up. **But the dispatched worker's own boot prompt
+(`unified-trading-pm/agents/data_pipeline_failure.md`) hard-assumes a PM issue doc is already filed** ("STEP 1 — READ
+THE FILED ISSUE DOC") — it has no instructions for filing one itself from a candidate payload. So the correct pattern
+exists on one side and is never actually exercised end-to-end.
+
+**Operator decisions this session (2026-08-18, interactive Q&A):**
+
+- The e2e-testing audit must **always defer to a dispatched agent** — never keep a local-commit fast path, even as a
+  fallback-on-failure. Every RED finding costs a real agent dispatch; that's the accepted tradeoff for "sure, not
+  silent."
+- This is a **human plan** (`assigned_vm: NA`) — not auto-dispatched by the fleet.
+
+## Todos
+
+- [ ] [BACKEND] P1. Extend `unified-trading-pm/agents/data_pipeline_failure.md`'s boot prompt: when the boot
+      `context` carries a DP\_\* finding/candidate payload but no pre-filed issue-doc slug (the deferred-filing case
+      this plan wires up in the next todo), the worker files the doc itself FIRST — correct frontmatter per
+      `scripts/docs/docspec.py`'s `PER_TYPE["issue"]` schema (`doc_type`/`title`/`summary`/`status`/`nature`/
+      `asset_group`/`stage`/`repos`/`scope`/`tags`/`related`/`created`/`parent_epic`/`priority`/`source`) — THEN
+      proceeds to STEP 1's existing diagnose-from-doc flow unchanged. Must not regress the existing "doc already
+      filed" path. Done-when: the new instructions block is added, reviewed against docspec.py's actual current
+      schema (not the SSOT prose), and todo 4's live run exercises this exact path.
+- [ ] [BACKEND] P1. In `e2e-testing/scripts/audit/_dp_common.py`, delete `file_escalation_issue`'s raw
+      `path.write_text` + `_commit_and_push_pm_artifacts` subprocess `git add`/`commit`/`push` sequence entirely —
+      per this session's operator decision, never attempt a local commit from inside the Cloud Run Job. Replace it
+      with: emit the existing DP\_\* event (already wired via `_emit_data_pipeline_event`'s pubsub path) carrying the
+      full finding/candidate details in `details`, then fire a `repository_dispatch` to `escalate-to-orchestrator`
+      with `wall_type=data_pipeline_failure`, mirroring
+      `deployment-service/deployment_service/data_pipeline_monitors/escalation.py::_dispatch_to_orchestrator`'s shape
+      (same client_payload structure, same GH_PAT-from-Secret-Manager auth pattern). First verify the e2e-audit Cloud
+      Run Job's service account actually has Secret Manager access to the same `GH_PAT` secret
+      deployment-service's monitor uses — grant it directly if missing (self-service IAM, not an `[OPERATOR]` gate,
+      per CLAUDE.md's cloud-identity-self-service rule) rather than assuming it's already there. Done-when: a unit
+      test asserts `file_escalation_issue` no longer imports/calls `subprocess`/`git`, and a new test confirms the
+      `repository_dispatch` call fires with the finding's full candidate details on a genuine RED verdict.
+- [ ] [BACKEND] P1. Fix
+      `deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py::write_issue_doc`'s
+      frontmatter template — it currently emits only `title`/`created`/`author`/`parent_epic`/`assigned_vm`/
+      `source`/`locked_by`, missing `doc_type`/`summary`/`status`/`nature`/`asset_group`/`stage`/`repos`/`scope`/
+      `tags`/`related`/`priority` that `docspec.py`'s `PER_TYPE["issue"]` requires — the same frontmatter-drift bug
+      class already fixed once in e2e-testing's `_dp_common.py` (`e2e-testing@c05ec220ec`). Mirror that fix's field
+      derivation. Done-when: a new test parses the generated frontmatter with `yaml.safe_load` and asserts every
+      docspec-required field for `doc_type: issue` is present and correctly valued.
+- [ ] [REVIEW] P1. End-to-end live verification, gated on the three todos above landing: plant a real RED finding
+      (a genuine schema/divergence anomaly, mirroring the 2026-08-16/17 verification runs) against the `-test-`
+      buckets or a controlled prod-equivalent run of the manifest-hygiene audit, and confirm the full loop fires with
+      zero manual intervention — audit emits the event with no local write attempt → `repository_dispatch` reaches
+      agent-orchestrator → a `data_pipeline_failure` worker spawns → the worker files a schema-valid issue doc from
+      the candidate payload (todo 1's new path) → the worker diagnoses/fixes the root cause or asks via `/blocked`.
+      Done-when: a dated Progress Log entry below cites the real escalation id, the filed issue doc's path, and the
+      resulting fix commit or `/blocked` question from an actual run — not a unit-test-only claim.
+- [ ] [DOC] P2. Add a section to `/codex/05-infrastructure/data-pipeline-alerts.md` (the emit→route→escalate model
+      SSOT) documenting the pattern this plan wires up: an ephemeral/untracked runner must never raw-git-commit a
+      finding — either write locally inside a durable, already-git-managed checkout (no explicit commit needed;
+      normal slot git discipline picks it up) or, with no durable checkout, emit the event and defer to a dispatched
+      agent. Cross-link from `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md`'s
+      `data_pipeline_failure` row. Confirmed this session that no existing codex doc states this as a fleet-wide
+      rule. Done-when: both docs cite the pattern and link this plan + the archived 3-incident doc as motivating case
+      history.
+- [ ] [BACKEND] P3. \_(stretch, optional)\_ Consider extracting `write_issue_doc`'s frontmatter-template logic into a
+      shared location (UTL or UAC — both e2e-testing and deployment-service already depend on them) instead of
+      leaving two independent implementations after this plan. Deferred: the tier-and-import-architecture rule bans
+      direct service-to-service imports, e2e-testing and deployment-service already carry other independently-
+      duplicated DP\_\* code as existing precedent, and extraction into a shared dependency is a real design call
+      with its own review surface — not a mechanical follow-up. Revisit if the two templates drift again.
+
+## Progress Log
+
+- **2026-08-18 (interactive session, slot 3)**: Filed. Investigation traced the raw-commit anti-pattern in
+  e2e-testing's `_dp_common.py`, the 3 documented silent-drop incidents, and — while scoping the fix — discovered
+  deployment-service's `data_pipeline_monitors` package already implements the correct "defer to a dispatched agent,
+  never raw-commit from an ephemeral runner" shape, but the `data_pipeline_failure` boot prompt never learned to file
+  a doc from a deferred candidate payload, so the pattern was never actually exercised end-to-end for any finding
+  source. Operator ruled: always defer (no local-commit fast path) + human plan. No code changed this session.
