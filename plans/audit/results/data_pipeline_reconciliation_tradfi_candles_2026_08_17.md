@@ -41,7 +41,7 @@ audited_scope:
   figures) REUSED from the 2026-07 campaign, not re-walked this run"
 date: 2026-08-17
 auditor: /data-pipeline-reconciliation (--layer candles)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 skill: data-pipeline-reconciliation
 run_date: 2026-08-17

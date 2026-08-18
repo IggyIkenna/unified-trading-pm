@@ -27,7 +27,7 @@ audited_scope:
   catches, blank/freeform reason literals, warn-but-proceed patterns
 date: 2026-05-20
 auditor: semver
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 resulting_plan:
 lib_version:

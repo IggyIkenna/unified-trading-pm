@@ -20,7 +20,7 @@ audited_scope:
   docs filed that day; SHA-verified against origin/live-defi-rollout
 date: 2026-05-15
 auditor: harsh-claude
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

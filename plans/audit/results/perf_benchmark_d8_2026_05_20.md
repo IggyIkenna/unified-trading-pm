@@ -20,7 +20,7 @@ audited_scope:
   DeFi perp_funding handler throughput estimate
 date: "2026-05-22"
 auditor: slot-2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 resulting_plan:
 lib_version:

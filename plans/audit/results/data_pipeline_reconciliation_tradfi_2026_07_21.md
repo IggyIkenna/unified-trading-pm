@@ -43,7 +43,7 @@ related:
   ]
 created: 2026-07-21
 auditor: /data-pipeline-reconciliation (tradfi, run during a live MVP backfill — second execution)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 audited_scope:
   "asset_group=tradfi, PROD (-prd-) buckets only, read-only, Tier-1 in-session; sample = full manifest census (lower

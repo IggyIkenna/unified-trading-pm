@@ -49,7 +49,7 @@ audited_scope: >-
   confirmed-still-open enumeration bug that silently zeroes CEFI/SPORTS in an unfiltered sweep.
 date: 2026-08-07
 auditor: cefi_mtds_smoke_tester (agt-6a9c44, slot 8, real-VM automated run)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

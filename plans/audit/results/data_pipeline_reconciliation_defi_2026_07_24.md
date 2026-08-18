@@ -47,7 +47,7 @@ audited_scope:
   (corroboration spot-reads), 2020-06-15 (historical census sample)"
 date: 2026-07-24
 auditor: /data-pipeline-reconciliation (dispatched sub-agent run)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 skill: data-pipeline-reconciliation
 run_date: 2026-07-24

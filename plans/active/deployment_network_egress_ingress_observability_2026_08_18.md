@@ -126,14 +126,22 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
       `bootstrap_operational_data_bq.py`, and confirm the heartbeat write path populates it on a real running VM.
       Gate: a live query against `deployment_operational_data.resource_samples` shows non-null
       `net_sent_rate_bytes_sec` for a currently-heartbeating deployment.
-- [ ] [BACKEND] P1. Extend `operational_data_queries.py` and `vm_resource_history.py`'s `ResourceRollingWindowRow`/
+- [x] [BACKEND] P1. Extend `operational_data_queries.py` and `vm_resource_history.py`'s `ResourceRollingWindowRow`/
       `ResourceRollingWindowResponse` to select and expose avg/min/max/p95 of both `net_recv_rate_bytes_sec` and
       `net_sent_rate_bytes_sec`, mirroring the existing cpu/mem/disk pattern exactly (same `CORRECT-LOCAL`
       convention, no new UAC type). Gate: `GET /api/vm-resources/rolling` returns the new fields, covered by a
-      passing deployment-api test.
-- [ ] [UI] P1. Add network columns (recv/sent, avg + p95) to `VmResourceComparison.tsx`'s per-VM table, following the
+      passing deployment-api test. — deployment-api@61fa793832. 8 new SQL-aggregate columns
+      (avg/min/max/p95 × recv/sent) added to `resource_samples_rolling_sql` + the response model; new unit test
+      `test_selects_network_recv_and_sent_aggregates` asserts the SQL text, `test_prod_mode_maps_rows` extended with
+      network fixture values + response assertions. QG green (247s).
+- [x] [UI] P1. Add network columns (recv/sent, avg + p95) to `VmResourceComparison.tsx`'s per-VM table, following the
       existing column/sort-key pattern (`"vm_name" | "avg_cpu_pct" | ...`). Gate: the `/vm-resources` page renders
-      live network figures for at least one real deployment, verified in the running app.
+      live network figures for at least one real deployment, verified in the running app. — deployment-ui@95a1a62ada.
+      "Net In (avg/p95)" / "Net Out (avg/p95)" columns added (`fmtBytesRate` human-scales B/s→KB/s→MB/s→GB/s), sortable
+      via the existing `SortKey` pattern, `colSpan` on the expanded-row panel bumped 6→8 for the 2 new columns.
+      pw:L2 ✓ — new test in `tests/smoke/vm-resource-rolling-window.spec.ts` ("renders network in/out rate columns")
+      run against the real webServer-booted mock-mode app (not just unit-mocked): 6/6 passed. UI QG green (87s, 105
+      unit tests, coverage 73.42%).
 
 ### Track 2 — region persistence (prerequisite for the cross-region split)
 

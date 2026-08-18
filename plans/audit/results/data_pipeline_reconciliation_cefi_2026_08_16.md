@@ -65,7 +65,7 @@ audited_scope:
   daily scheduled spot-check, not a full campaign. First run in 7 days (last: 2026-08-09)."
 date: 2026-08-16
 auditor: "cefi_reconciliation_auditor (scheduled role, slot 14, dispatch agt-10f80e)"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 skill: data-pipeline-reconciliation
 run_date: 2026-08-16

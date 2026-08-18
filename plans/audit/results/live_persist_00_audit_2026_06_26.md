@@ -21,7 +21,7 @@ created: 2026-06-26
 audited_scope: 8 repos — MTDS / UAC / UTL / MDPS / features-service / strategy-service / ml-service / execution-service (read-only)
 date: '2026-06-26'
 auditor: slot-0 [human-planning]
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 resulting_plan:
 lib_version:

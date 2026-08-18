@@ -16,7 +16,7 @@ tags: [audit, infrastructure, spot-vm, quickmerge, quality-gates, single-walk, c
 related: []
 created: 2026-05-22
 tier: L4
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 cadence: weekly (minimum)
 verifier:
 lifespan:

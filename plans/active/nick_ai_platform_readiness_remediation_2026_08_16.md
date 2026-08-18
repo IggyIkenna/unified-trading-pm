@@ -32,7 +32,7 @@ created: 2026-08-16
 source: >-
   Operator direction 2026-08-16, remediating the measured gaps from the Nick AI pre-audit (§§5-6 of the disclosure
   plan). Same interactive-session dispatch mechanism as the pre-audit itself, per the operator's own instruction.
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P0

@@ -27,7 +27,7 @@ audited_scope: >-
   operator-ratified residuals R1-R3
 date: "2026-06-07"
 auditor: ikenna (slot-2, research)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 resulting_plan:
 lib_version:

@@ -56,7 +56,7 @@ audited_scope:
   triggered by an anomaly the manifest read surfaced"
 date: 2026-07-24
 auditor: /data-pipeline-reconciliation (dispatched sub-agent run)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 skill: data-pipeline-reconciliation
 run_date: 2026-07-24

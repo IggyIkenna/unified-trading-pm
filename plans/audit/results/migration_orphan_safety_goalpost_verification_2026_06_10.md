@@ -28,7 +28,7 @@ audited_scope:
   completeness + MVP-tag/config-versioning reconciliation (the "migrate once, no v10" verification harness)
 date: "2026-06-10"
 auditor: ikennaigboaka [slot-3·laptop]
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 resulting_plan:
 lib_version:

@@ -23,7 +23,7 @@ created: 2026-08-16
 source: >-
   task_template.md's "every AO-dispatched plan needs a gated finalize plan" pattern, applied to this LOCAL plan per
   the operator's own explicit instruction to author a "gated finalize companion" alongside the main remediation plan.
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

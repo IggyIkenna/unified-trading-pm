@@ -15,7 +15,7 @@ audited_scope:
   "data_pipeline_e2e_check_mdps real-VM force/skip/live pipeline check for day=2026-06-27, legs=force,canonical"
 date: 2026-07-22
 auditor: data_pipeline_e2e_check_mdps (real-VM automated run)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 resulting_plan:
 lib_version:

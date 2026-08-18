@@ -67,7 +67,7 @@ audited_scope:
   scheduler / run-jobs describe / GCS list+read calls (read-only, no VM launched by this run)."
 date: 2026-08-09
 auditor: "cefi_reconciliation_auditor (scheduled role, slot 4, dispatch agt-91ada6)"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 skill: data-pipeline-reconciliation
 run_date: 2026-08-09

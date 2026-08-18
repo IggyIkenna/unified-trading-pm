@@ -19,7 +19,7 @@ audited_scope:
   Infura)
 date: 2026-05-20
 auditor: slot-10 (ikenna-vm)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 resulting_plan:
 lib_version:

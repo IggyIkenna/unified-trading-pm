@@ -21,7 +21,7 @@ audited_scope:
   post-optimization
 date: "2026-06-11"
 auditor: slot (interactive)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 resulting_plan:
 lib_version:

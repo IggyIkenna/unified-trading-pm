@@ -44,7 +44,7 @@ audited_scope:
   the P0 census (2026-07-22) + P8 verification (2026-07-23), not re-walked"
 date: 2026-07-25
 auditor: /data-pipeline-reconciliation (--layer candles)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 skill: data-pipeline-reconciliation
 run_date: 2026-07-25

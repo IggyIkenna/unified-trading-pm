@@ -15,7 +15,7 @@ tags: [audit, trading-agent, quality-gates, per-client-isolation, execution, rec
 related: [/codex/04-architecture/per-client-isolation-architecture.md]
 created: 2026-05-22
 tier: L2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 cadence: Weekly
 verifier:
 lifespan:

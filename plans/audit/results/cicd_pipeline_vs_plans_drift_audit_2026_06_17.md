@@ -22,7 +22,7 @@ audited_scope:
   walked — the image-build path (cloudbuild.yaml/buildspec) was only spot-checked.
 date: 2026-06-17
 auditor: ikennaigboaka
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

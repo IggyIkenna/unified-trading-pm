@@ -20,7 +20,7 @@ related:
   ]
 created: 2026-06-01
 tier: L0
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 cadence: on-demand
 verifier:
 lifespan:

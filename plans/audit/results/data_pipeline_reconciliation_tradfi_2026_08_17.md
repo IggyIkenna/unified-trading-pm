@@ -54,7 +54,7 @@ related:
   ]
 created: 2026-08-17
 auditor: /data-pipeline-reconciliation (tradfi, raw-tick layer, fourth execution, Tier-1 in-session)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 audited_scope:
   "asset_group=tradfi, layer=raw-tick, PROD (-prd-) buckets only, read-only, Tier-1 in-session (full manifest census +

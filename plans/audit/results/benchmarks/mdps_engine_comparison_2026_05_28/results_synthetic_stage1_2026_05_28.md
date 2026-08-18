@@ -21,7 +21,7 @@ audited_scope:
   relative retention ordering vs real-data baseline
 date: 2026-05-28
 auditor: Ubuntu
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P3
 resulting_plan:
 lib_version:

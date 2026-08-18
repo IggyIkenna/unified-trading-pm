@@ -29,7 +29,7 @@ auditor: ikenna
 severity: P1
 date: 2026-05-15
 audited_scope: all 83 launch-*.sh VM launchers (shellcheck -S warning security audit)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resulting_plan:
 lib_version:
 doc_versions_checked: []

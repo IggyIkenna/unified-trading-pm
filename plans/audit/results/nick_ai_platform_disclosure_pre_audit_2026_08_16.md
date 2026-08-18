@@ -17,7 +17,7 @@ date: 2026-08-16
 auditor: >-
   5 parallel general-purpose sub-agents (sonnet), dispatched from an interactive session.
 severity: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resulting_plan: /plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md
 lib_version:
 doc_versions_checked:

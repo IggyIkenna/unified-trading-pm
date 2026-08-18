@@ -27,7 +27,7 @@ audited_scope:
   written).
 date: 2026-06-18
 auditor: ikennaigboaka [autonomous gcs-delete-list audit]
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

@@ -33,7 +33,7 @@ audited_scope:
   new GCS reads, per B13 single-walk discipline."
 date: 2026-08-18
 auditor: "backend_engineer (slot 7, task cross_cutting_satellite_ao_dispatch_batch15-1d0c8d58f6ff)"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 skill: data-pipeline-reconciliation
 ---

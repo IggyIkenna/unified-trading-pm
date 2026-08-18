@@ -30,7 +30,7 @@ execution_scope: local-only
 tags: [venue-readiness, registry-ssot, lazy-loading, config-abstraction, carve-out-prerequisite, smoke-test]
 priority: P0
 source: operator-request-2026-08-16
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 related:
   [
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,

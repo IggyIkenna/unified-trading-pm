@@ -35,7 +35,7 @@ audited_scope:
   interiors, manifest/catalogue surfaces (S3/S4)."
 date: 2026-07-23
 auditor: P8 independent verification (fresh-enumeration + migration script's own dry-run classifier)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 ---
 

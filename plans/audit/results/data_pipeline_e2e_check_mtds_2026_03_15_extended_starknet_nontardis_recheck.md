@@ -14,7 +14,7 @@ created: 2026-08-03
 audited_scope: "data_pipeline_e2e_check_mtds real-VM force/skip/live pipeline check for day=2026-03-15, legs=force,skip"
 date: 2026-08-03
 auditor: data_pipeline_e2e_check_mtds (real-VM automated run)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

@@ -62,7 +62,7 @@ audited_scope:
   run-jobs describe (read-only GCP API calls, no VM launched by this run)."
 date: 2026-08-08
 auditor: "cefi_reconciliation_auditor (scheduled role, slot 3, dispatch agt-9dc091)"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 skill: data-pipeline-reconciliation
 run_date: 2026-08-08

@@ -86,6 +86,28 @@ observe the manual process for longer before trusting the timer to run it unatte
 **Unblocks when**: the operator judges the CI-reconcile-to-escalation routing pattern stable
 enough to automate.
 
+## Repeated `no_capacity` dashboard rows while paused (separate gap, found 2026-08-18)
+
+Distinct from the missing `reason`/`paused_at` field above: while a mode is paused, its timer keeps
+firing on its normal cadence (`ci_reconciler` every 15min, `ag_closeout_auditor` every 2h), each
+tick 503s on `is_paused()` (`plan_health.py:662-666`, checked before any slot/capacity logic runs),
+and `record_scheduled_job_run()` (`state_store/scheduled_jobs.py:38-70`) **unconditionally inserts a
+brand-new row** for every one of those attempts — no dedup key, no upsert. Result: one dashboard row
+per tick, accumulating indefinitely for as long as the mode stays paused (observed: `ci_reconciler`
+logged ~10+ rows over 2h while paused). The rows are individually correct (each really was a
+paused-mode 503) but the aggregate reads as fleet-capacity spam rather than a static, known state.
+
+The fix pattern already exists in the same file and just isn't applied to this path:
+`queue_scheduled_job()` (`state_store/scheduled_jobs.py:107-145`) upserts by key
+`(job, tranche, day)` instead of inserting duplicates. Route the paused-mode outcome through an
+equivalent upsert (keyed by `(job, tranche)`, no `day` component needed since a pause can span many
+days) instead of `record_scheduled_job_run`'s always-insert path, so the dashboard shows one row
+per paused job that updates its "last checked" timestamp in place.
+
+No catch-up/queue-drain logic is needed on resume — confirmed both `ci_reconciler` and
+`ag_closeout_auditor` are periodic rechecks (not one-shot daily crons); a paused tick never marks
+itself "done," so the next natural tick after unpause dispatches normally with nothing to drain.
+
 ## Follow-up
 
 - [ ] [SCRIPT] P2. Add a `reason` + `paused_at` field to `scheduled_dispatch_pause.py`'s storage
@@ -95,6 +117,12 @@ enough to automate.
       fix for the gap this doc exists to paper over by hand — without it, every future watchdog
       run (or operator) has to re-ask "why is this paused" from scratch, exactly as happened here
       and in the 2026-08-11 incident. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Stop `record_scheduled_job_run()` from inserting a fresh row on every tick for a
+      known-paused mode's 503 — route it through an upsert keyed by `(job, tranche)` (mirroring
+      `queue_scheduled_job`'s dedup-by-key pattern in the same file) so the Scheduled Jobs dashboard
+      shows one persistent, in-place-updating row per paused job instead of one new row per ~15-30min
+      tick. No catch-up/drain logic needed on resume (see section above — both affected jobs are
+      periodic rechecks, not one-shot crons). (repo: agent-orchestrator)
 - [ ] [REVIEW] P3. Once `ci_reconcile`'s manual-daily-task period produces enough signal on
       escalation-routing reliability, resume the timer and archive this doc's `ci_reconcile`
       section (or the whole doc, if all three have resolved by then). (repo: NA — operator

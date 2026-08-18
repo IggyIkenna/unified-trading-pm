@@ -28,7 +28,7 @@ audited_scope:
   no_hardcoded_venue_urls/universe, uac_import_surface); regex-heuristic, no AST
 date: 2026-05-20
 auditor: semver
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 resulting_plan:
 lib_version:

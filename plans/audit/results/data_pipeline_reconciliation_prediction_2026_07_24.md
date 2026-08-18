@@ -66,7 +66,7 @@ audited_scope:
   SPOT-VM walk run; all corpus-wide extrapolations from GCS-side findings are explicitly LOWER BOUNDS."
 date: 2026-07-24
 auditor: /data-pipeline-reconciliation (dispatched sub-agent run, raw-tick layer only)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 ---
 

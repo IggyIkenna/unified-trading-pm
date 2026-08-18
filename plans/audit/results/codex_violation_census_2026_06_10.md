@@ -46,7 +46,7 @@ audited_scope:
   env/tooling gaps, not a codex count).
 date: "2026-06-10"
 auditor: claude + operator
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

@@ -27,7 +27,7 @@ audited_scope:
   Phase 7).
 date: 2026-06-01
 auditor: slot-1 (ikenna, interactive)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 resulting_plan:
 lib_version:
