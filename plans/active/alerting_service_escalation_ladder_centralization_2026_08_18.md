@@ -338,7 +338,7 @@ process stop being able to see the whole dependency graph locally, which is what
 
 ## Phase 3 — Build the escalation ladder in alerting-service
 
-- [ ] [BACKEND] P1. Add `alerting-service/alerting_service/escalation_ladder.py`: a GCS-durable retry-counter modeled
+- [x] [BACKEND] P1. Add `alerting-service/alerting_service/escalation_ladder.py`: a GCS-durable retry-counter modeled
       on `circuit_breaker.py`'s CLOSED/OPEN/HALF_OPEN state shape and naming (CLOSED = below the escalation
       threshold, OPEN = escalated, HALF_OPEN = probation after a cooldown) but backed by durable per-identity state
       instead of `circuit_breaker.py`'s in-process dicts — own implementation (not a cross-repo import of
@@ -350,7 +350,18 @@ process stop being able to see the whole dependency graph locally, which is what
       previously-written rung after simulating a restart) and a CLOSED→OPEN transition fires exactly once per
       crossing (no re-fire on every subsequent occurrence while already OPEN — mirrors `circuit_breaker.py`'s
       existing "no transition → empty string" return contract).
-- [ ] [BACKEND] P1. Wire `alerting_service/notifiers/router.py::_route_data_pipeline_event` to run every
+      **✅ DONE (2026-08-18)** — `LadderState`/`record_occurrence()`/`get_state()`, `DEFAULT_ESCALATION_THRESHOLD =
+      3`. Mirrors `circuit_breaker.py`'s return contract (`STATE_OPEN` on transition, `""` on none) with one
+      necessary extension: `None` on a durable-read/write FAILURE (bucket unresolvable/GCS exception — a failure
+      mode in-process dicts never had), fails OPEN (treated like a transition, never like a silent `""`) so a
+      GCS hiccup can't accidentally suppress a real escalation. **HALF_OPEN implemented with real semantics** (a
+      genuine judgment call, not left structural): never re-dispatch WITHIN the cooldown window once OPEN; a
+      recurrence AFTER the window elapses ages OPEN→HALF_OPEN and immediately re-fires HALF_OPEN→OPEN (bumping
+      `rung`), so a still-recurring PAGE_OPERATOR-tier condition doesn't go permanently muted after its first
+      escalation. Tests prove: fresh-process durability (write via one fake-client instance, read via a separate
+      one, no shared Python state), CLOSED→OPEN fires exactly once (5 further OPEN-state occurrences all return
+      `""`), and the HALF_OPEN re-escalation path.
+- [x] [BACKEND] P1. Wire `alerting_service/notifiers/router.py::_route_data_pipeline_event` to run every
       FILE_ISSUE/PAGE_OPERATOR-tier DP_* event through the new ladder BEFORE Phase 2's relocated dispatch call — a
       CLOSED→OPEN transition (or an already-OPEN state) is what now gates the dispatch, replacing the old
       always-dispatch-if-tier-matches-and-not-deduped behavior with a genuine "try N occurrences quietly [Slack-mirror
@@ -360,6 +371,17 @@ process stop being able to see the whole dependency graph locally, which is what
       scripted replay of N synthetic FILE_ISSUE-tier events for one identity dispatches zero times for occurrences
       1..N-1 and exactly once on occurrence N, verified against the ladder + Phase 2's dispatch module together (not
       each mocked in isolation).
+      **✅ DONE (2026-08-18)** — wired into `orchestrator_dispatch_gate.py` (Phase 2's module) before its existing
+      dedup+dispatch call. `_RECURRING_ALERT_COOLDOWNS`/`_dedup_window_for` extracted from `router.py` into a new
+      sibling `recurring_alert_cooldowns.py` (avoids a circular import — `router.py` already imports the gate
+      module — and kept `router.py` under its 1100-line cap: 1100→~1074 lines, call site unchanged); both
+      `router.py`'s own deduplicator and the ladder now consult the SAME table, not a second independently-tuned
+      one. **Done-when literally satisfied**: `test_muted_for_n_minus_one_then_dispatches_exactly_once_on_n`
+      replays 3 real `router._route_data_pipeline_event` calls through the REAL ladder + REAL dedup-budget module
+      (only the storage client and the actual GitHub dispatch call faked) — 0, 0, then 1 dispatch, staying 1 on a
+      further occurrence. `quality-gates.sh` green (independently re-verified). Shipped `alerting-service@0ea2857cc8`.
+      **Phases 1-3 of this plan are now fully complete** — only Phase 4 (deployment-service reads the ladder back)
+      and Phase 5 (a small codex cross-reference doc) remain.
 
 ## Phase 4 — Return path: deployment-service reads the ladder
 
