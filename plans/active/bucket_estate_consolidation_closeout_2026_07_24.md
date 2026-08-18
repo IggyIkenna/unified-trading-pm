@@ -34,7 +34,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P0

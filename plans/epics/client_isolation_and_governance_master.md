@@ -67,7 +67,10 @@ extends to govern post-May-23 cross-cutting evolution**:
   entity blocked from Extended Starknet (etc.); Cayman entity as gateway for venues banning UK residents.
 - **Share-class enum reconciliation** — Enum A (3-value `canonical.crosscutting.share_class.ShareClass`) vs Enum B
   (9-value `internal.architecture_v2.enums.ShareClass`); GBP/EUR/USD/SOL/USDC/FDUSD silently dropped from root facade.
-- **UAC schema evolution** — workspace-wide schema migration discipline; deprecation/rename/extension patterns.
+- **UAC schema evolution** — workspace-wide schema migration discipline; deprecation/rename/extension patterns for
+  client/strategy/account-ID and share-class schema specifically (this epic's own governance surface); general UAC
+  contract-governance work — schema locking/versioning, the canonical_path_violations oracle, registry-completeness
+  invariants — moved to [`uac_master`](uac_master.md) 2026-08-18 (epic-taxonomy restructure).
 - **Hardcoded-value cleanup** — gas estimates (21000 @ 30 gwei stub); `_WITHDRAWAL_FEES` flat dict; alerting thresholds
   (`_WEETH_DEPEG_THRESHOLD_PCT`, `_RATE_DEVIATION_*_BPS`); migrate to UAC `ALERT_THRESHOLDS` + config-hot-reload paths.
 
@@ -148,13 +151,16 @@ at the empty block and miss F-25. Finding 33, `plans/active/issues/plan_reconcil
 
 ## P2 — useful; opportunistic
 
-### 🔴 2026-07-08 canonical instrument_id — UAC-schema governance angle
+### Canonical instrument_id — UAC-schema governance angle (trimmed 2026-08-18)
 
-**status**: 🔴 CROSS-REFERENCE ONLY — owned primarily by `instruments_master`
-([`canonical_instrument_id_audit_2026_07_08`](../audit/results/canonical_instrument_id_audit_2026_07_08.md)), noted here
-since `canonical_id_builder.py` and the instrument-id/instrument-type UAC schema definitions are exactly this epic's
-"UAC schema" governance scope. No new plan filed under this epic — see `instruments_master` for the actual work items
-(the audit, the decision doc, and 4 P0 fix plans).
+**status**: 🔴 CROSS-REFERENCE ONLY — this section previously flagged `canonical_id_builder.py` + instrument-id/
+instrument-type UAC schema definitions as touching this epic's "UAC schema" governance scope, but never actually had
+a doc filed under this epic for it (the real work always lived under `instruments_master`'s own
+[`canonical_instrument_id_audit_2026_07_08`](../audit/results/canonical_instrument_id_audit_2026_07_08.md)). Per the
+2026-08-18 epic-taxonomy restructure, general UAC contract-governance work now has its own home,
+[`uac_master`](uac_master.md) — see that epic for the current UAC-schema-governance corpus. This pointer is kept only
+as a historical cross-reference; `instruments_master` remains the owner of instrument-id/instrument-type schema
+content specifically.
 
 ## P3 — backlog; revisit quarterly
 

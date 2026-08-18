@@ -18,7 +18,7 @@ created: 2026-05-07
 authoritative_for: [deployment-ui data-status drilldown depth audit]
 referenced_by:
   [
-    /plans/epics/infrastructure_master.md,
+    /plans/epics/security_and_cross_cutting_master.md,
     /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md,
   ]
 owner:
@@ -75,14 +75,14 @@ The remediation backlog above is closed. Verified against the working tree:
 | `canonical_question_group` (prediction) | `deployment-api/deployment_api/services/data_status_drilldown/`                        |
 | `league_id` (sports)                    | `deployment-api/deployment_api/services/data_status_drilldown/`                        |
 | Drilldown UI                            | `deployment-ui/src/components/DataStatusDrilldown.tsx`                                 |
-| MTDS per-shard recovery CTA flags       | `market-tick-data-service` CLI — `--instrument-type`, `--root`, `--day`, `--shard-key`  |
+| MTDS per-shard recovery CTA flags       | `market-tick-data-service` CLI — `--instrument-type`, `--root`, `--day`, `--shard-key` |
 
 The § "Open questions" below were the 2026-05-07 design questions; they are retained as historical context, not as
 live decisions.
 
 ## Cross-references
 
-- **Plan(s) that implemented this:** [`/plans/epics/infrastructure_master.md`](/plans/epics/infrastructure_master.md),
+- **Plan(s) that implemented this:** [`/plans/epics/security_and_cross_cutting_master.md`](/plans/epics/security_and_cross_cutting_master.md),
   [`/plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md`](/plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md)
   (`status: complete`, archived).
 - **Related codex SSOTs:** [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md),

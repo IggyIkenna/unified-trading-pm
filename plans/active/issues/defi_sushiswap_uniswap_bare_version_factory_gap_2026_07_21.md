@@ -29,7 +29,7 @@ related: [defi_consolidated_closeout_2026_07_18, canonical_closeout_open_questio
 created: 2026-07-21
 author: unknown
 last_updated: "2026-08-02"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

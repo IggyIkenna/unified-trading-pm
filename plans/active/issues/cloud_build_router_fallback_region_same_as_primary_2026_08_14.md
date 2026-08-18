@@ -46,7 +46,7 @@ context_scope:
   - agent-orchestrator/server/escalation.py
 created: 2026-08-14
 priority: P3
-parent_epic: infrastructure_master
+parent_epic: ci_master
 source:
   [
     "Dispatched as cicd-role escalation agt-cb29da (wall_type=cloud_build_router_failure, repo=instruments-service),

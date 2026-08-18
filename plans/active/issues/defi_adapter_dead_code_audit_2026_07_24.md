@@ -53,7 +53,7 @@ created: "2026-07-24"
 author: unknown
 last_updated: "2026-08-10"
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Dispatched todo from plans/active/defi_consolidated_closeout_2026_07_18.md (gate-audit §1, 2026-07-24): 'Audit defi
   adapters for dead code, runtime-fallback masking, and duplicate implementations' across instruments-service

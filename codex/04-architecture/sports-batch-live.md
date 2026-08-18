@@ -33,8 +33,7 @@ referenced_by:
 owner:
 last_reviewed: 2026-07-24
 code_refs:
-plan:
-  plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md +
+plan: plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md +
   pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc) +
   sports_consolidated_closeout_2026_07_19.md
 ---
@@ -184,7 +183,7 @@ would 10× the manifest for zero failure-isolation gain (multi-axis correction, 
 
 **Shard identity propagation**: writer atomicity → manifest row key → data-status → preflight gate → deployment-UI
 drilldown carry the identical atom. SSOT:
-[`../../plans/epics/infrastructure_master.md`](../../plans/epics/infrastructure_master.md).
+[`../../plans/epics/security_and_cross_cutting_master.md`](../../plans/epics/security_and_cross_cutting_master.md).
 
 ---
 

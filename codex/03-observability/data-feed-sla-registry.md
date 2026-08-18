@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Data-Feed SLA Registry
-summary:
-  "Feed-SLA registry (SSOT in data_freshness.py — DataFreshnessContract + ALL_FRESHNESS_CONTRACTS): per-feed
+summary: "Feed-SLA registry (SSOT in data_freshness.py — DataFreshnessContract + ALL_FRESHNESS_CONTRACTS): per-feed
   max_age/warn_age/cadence/criticality (critical/important/informational) plus refetch_action Layer-0 self-healing; four
   sub-dicts (MARKET_TICK/FEATURE/ML/ACCOUNT_STATE_FRESHNESS), CI-enforced no-orphan + warn<max invariants;
   cross-validated with ALERT_THRESHOLDS tick_staleness (300s floor)."
@@ -142,7 +141,7 @@ Layer-0 recovery action that fires when the feed is stale:
   `route_event_with_explicit_channels` → sustained breach adds advisory `reduce_position`.
 
 **Limitation (known, tracked):** the re-fetch uses a coarse `--day` window. Finer `--shard-key` targeting is a future
-tightening (infrastructure_master B.2 Phase 5). Feeds in the `execution`, `feature`, and `ml` domains raise
+tightening (security_and_cross_cutting_master B.2 Phase 5). Feeds in the `execution`, `feature`, and `ml` domains raise
 `UnroutableFeedError` because their owning CLIs are outside MTDS scope — the escalation ladder handles them directly.
 
 Full architecture: `/codex/04-architecture/autonomous-recovery-matrix.md` § "Stale feed — refetch-feed Layer-0 action".

@@ -313,7 +313,8 @@ architecture (L0–L4)".
   token grep misses path-prefix/filename/registry-membership binders. SSOTs:
   `/codex/02-data/availability-manifest-and-data-status.md`, `…/honest-absence-downstream-handling.md`,
   `…/pipeline-mode-partition.md`, `…/entity-rename-and-split-consumer-migration-rule.md`,
-  `plans/epics/infrastructure_master.md`. **Honest Coverage v2 (two-layer / two-view / instrument-gates-download
+  `plans/epics/security_and_cross_cutting_master.md`. **Honest
+  Coverage v2 (two-layer / two-view / instrument-gates-download
   model)** → `/codex/02-data/honest-coverage-model.md`. **Sports 2020-06 DATA FLOOR** (odds start 2020-06-06; pre-floor
   is fabrication-by-construction — WIPED from GCS + manifest, denominators/launchers/gates clamp to it) →
   `/codex/02-data/sports-2020-06-data-floor.md`.

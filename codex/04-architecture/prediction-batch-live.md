@@ -34,8 +34,7 @@ referenced_by:
 owner:
 last_reviewed: 2026-06-11
 code_refs:
-plan:
-  plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md +
+plan: plans/archive/2026_07/prediction_manifest_canonicalisation_2026_06_01.md +
   pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16
   placeholder)
 ---
@@ -152,7 +151,7 @@ the real mechanism is the lifecycle filter + the closed set above.)
 
 **Shard identity propagation**: writer atomicity → manifest row key → data-status → preflight gate → deployment-UI
 drilldown carry the identical atom. SSOT:
-[`../../plans/epics/infrastructure_master.md`](../../plans/epics/infrastructure_master.md).
+[`../../plans/epics/security_and_cross_cutting_master.md`](../../plans/epics/security_and_cross_cutting_master.md).
 
 ---
 

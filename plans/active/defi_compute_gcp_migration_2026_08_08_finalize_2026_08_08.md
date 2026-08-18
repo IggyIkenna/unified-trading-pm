@@ -16,12 +16,12 @@ tags: [defi, aws, gcp, cloud-migration, close-out, archival, plan-hygiene]
 related:
   [
     /plans/active/defi_compute_gcp_migration_2026_08_08.md,
-    /plans/epics/infrastructure_master.md,
+    /plans/epics/security_and_cross_cutting_master.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
@@ -92,7 +92,7 @@ source: >-
       `- [ ]` todos remain (all 18, post-verification above); (2) add the archival banner + set `status: complete`; (3)
       confirm the codex doc updates the parent plan's own todos 15 and 17 already made (`cloud-agnostic-migration.md`,
       `dual-cloud-cost-ops-playbook.md`, `manifest-consolidator-ssot.md`) are live on `origin/live-defi-rollout`, not
-      just committed locally; (4) confirm the `infrastructure_master` epic's two stale todos ("Operator sign-off on
+      just committed locally; (4) confirm the `security_and_cross_cutting_master` epic's two stale todos ("Operator sign-off on
       dual-cloud parity", "GCP bucket decommission") were actually flipped/annotated per the parent plan's todo 16 —
       re-verify live, don't trust the parent's own claim; (5) update every referrer's path corpus-wide — grep for
       `defi_compute_gcp_migration_2026_08_08` and repoint each hit to the archived path (leading-slash,

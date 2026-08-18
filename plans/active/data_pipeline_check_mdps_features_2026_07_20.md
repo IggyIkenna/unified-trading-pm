@@ -51,13 +51,13 @@ related:
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
     /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
     /plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md,
-    ../epics/infrastructure_master.md,
+    ../epics/security_and_cross_cutting_master.md,
     ../../cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     ../../cursor-configs/skills/data-pipeline-check-is/SKILL.md,
   ]
 created: 2026-07-20
 last_updated: 2026-08-15
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 sequential: true

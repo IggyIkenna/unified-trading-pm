@@ -26,7 +26,7 @@ related:
   ]
 created: 2026-08-11
 author: ikennaigboaka
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 source:
   [

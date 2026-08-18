@@ -38,7 +38,7 @@ last_updated: 2026-05-22
 > Python UCI factory (`unified_trading_library/cloud_interface/factory.py`, confirmed present) and the QG lint rule are
 > advisory-only (not hard-error). Bucket SSOT canonicalisation (`resolve_bucket_name`) is enforced by the inline-URI
 > ratchet step in `scripts/quality-gates-base/base-service.sh`.
-> **Planned delta:** Remaining phases tracked under `plans/epics/infrastructure_master.md`. **Target architecture:**
+> **Planned delta:** Remaining phases tracked under `plans/epics/security_and_cross_cutting_master.md`. **Target architecture:**
 > Every workspace script uses `lib/cloud-helpers.sh` + UCI factory; QG lint rule is a hard error for non-compliant
 > scripts.
 
@@ -276,7 +276,7 @@ Phase 5-6):
    transfer + Phase 6 ECS Fargate deploy gate the cutover.
 2. **`cefi-instruments`** — second. DeFi archetypes hedge across 6 CeFi perp venues; CeFi instruments reference data is
    on the May-23 critical path even though CeFi tick data stays GCP-resident.
-3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-cutover; see `infrastructure_master.md`).
+3. **`cefi`-historical / `tradfi` / `sports` / `prediction`** — Phase 9 (post-cutover; see `security_and_cross_cutting_master.md`).
    Opportunistic credit-utilisation. No deadline pressure.
 
 Per-asset_group migration checklist (apply for each asset_group):

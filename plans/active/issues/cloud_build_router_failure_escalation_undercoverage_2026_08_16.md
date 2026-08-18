@@ -52,7 +52,7 @@ context_scope:
 created: 2026-08-16
 author: claude-agent
 last_updated: 2026-08-16
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P1
 source: ci-reconcile skill, scheduled hourly ci_reconciler dispatch agt-d02274 (slot 8)
 assigned_vm: NA

@@ -32,7 +32,7 @@ created: 2026-08-12
 author: claude-agent
 source: "2026-08-12 continuation session, verifying the liquidations re-derive's manifest outcome"
 priority: P0
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code

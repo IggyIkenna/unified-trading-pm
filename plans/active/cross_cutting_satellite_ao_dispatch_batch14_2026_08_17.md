@@ -28,7 +28,7 @@ related:
   ]
 created: "2026-08-17"
 last_updated: "2026-08-17"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

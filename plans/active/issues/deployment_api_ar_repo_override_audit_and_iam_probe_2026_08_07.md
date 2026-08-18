@@ -22,7 +22,7 @@ tags: [ci-cd, deploy-chain, iam, artifact-registry, cloud-run, follow-up]
 related: [/plans/archive/2026_08/issues/deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07.md]
 created: 2026-08-07
 last_updated: "2026-08-08"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

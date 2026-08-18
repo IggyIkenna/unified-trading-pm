@@ -22,7 +22,7 @@ tags: [terraform, opentofu, prod, drift, cloud-run, iam, operator-review]
 related: [/plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md]
 created: 2026-08-07
 author: slot-3
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

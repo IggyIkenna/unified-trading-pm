@@ -18,9 +18,14 @@ description:
   `/plan-reconcile [<tranche>]` across the same 10 tranches `/ag-closeout-audit` uses (`cefi`, `defi`, `tradfi`,
   `prediction`, `sports`, `cross-cutting`, `ao`, `ci`, `infra`, `ui`), or `all` (the default with no argument — preserves
   today's whole-corpus behavior exactly) for smaller, faster sharded runs a scheduled AO trigger can complete
-  reliably. Trigger on /plan-reconcile [<tranche>], "reconcile the plans", "reconcile <tranche>", "plan contradiction
-  audit", "check the plans for contradictions", "flip done-but-unchecked plan items", "archive done plans",
-  "consolidate near-empty plans".
+  reliably. **Also epic-scoped** — `/plan-reconcile <epic_slug>` reconciles exactly one epic (validated against the
+  live `plans/epics/*.md` registry, never guessed) via its `parent_epic`-matched child docs, a second scoping axis
+  alongside tranches, covering both the 9-domain service-layer epics and the 5 asset-group L0 epics alike. Every
+  run — tranche-, epic-, or whole-corpus-scoped — ends by generating and publishing an HTML report per epic
+  touched, per `/codex/11-project-management/epic-html-report-format.md`. Trigger on /plan-reconcile [<tranche>],
+  /plan-reconcile <epic_slug>, "reconcile the plans", "reconcile <tranche>", "reconcile the <epic> epic", "plan
+  contradiction audit", "check the plans for contradictions", "flip done-but-unchecked plan items", "archive done
+  plans", "consolidate near-empty plans", "generate the epic HTML report", "publish the epic ledger".
 ---
 
 # /plan-reconcile — plans corpus contradiction audit + reconciliation
@@ -101,6 +106,56 @@ the OTHER 9 tranches' consolidated-closeout docs (or their Sources lists) for a 
 to one tranche but still cross-referenced from another's Track content (the way this session's cross-cutting Tracks 2/13
 explicitly flag overlap with the cefi/defi closeouts). Archiving it without checking would silently orphan the other
 tranche's reference. When in doubt, leave it and note the cross-reference for a future `all` pass.
+
+## Epic-scoped runs — added 2026-08-18 (a second, orthogonal scoping axis)
+
+`/plan-reconcile <epic_slug>` reconciles exactly one epic's child-doc set — the 9-domain service-layer epics from
+`/codex/11-project-management/epic-taxonomy-2026-08-18.md` and the 5 asset-group L0 epics alike. This is a DIFFERENT
+axis from the tranche sharding above, not a replacement for it: some docs (asset-group-tagged ones especially) are
+still better swept by tranche; epic-scoped is a new, additional option, useful when the unit of work IS an epic
+(e.g. the epic-taxonomy-restructure plan's own Phase 6 "run it once per active epic" sweep).
+
+**Argument resolution order** (first match wins):
+
+1. `all` or no argument → today's whole-corpus sweep, completely unchanged.
+2. One of the 10 known tranche literals (`cefi`/`defi`/`tradfi`/`prediction`/`sports`/`cross-cutting`/`ao`/`ci`/
+   `infra`/`ui`) → tranche-scoped mode, unchanged from the section above.
+3. Otherwise, check the argument against the LIVE epic registry — every `plans/epics/*.md` filename stem except
+   `README.md`. This is the exact registry `docspec.py`'s `load_registries()` builds for `parent_epic` validation
+   (`scripts/docs/docspec.py`), so it never drifts from what a doc's own frontmatter is actually checked against; a
+   match → epic-scoped mode.
+4. No match in either set → **fail loudly**. Print both the 10 valid tranche names and the full sorted list of
+   valid epic slugs, then stop — never silently fall back to treating an unrecognized argument as a tranche name
+   (or vice versa). `scripts/plan-hygiene/epic_report_data.py --epic <slug>` already implements exactly this
+   validate-or-list-and-exit check (exits 2, full slug list on stderr) — reuse it rather than re-deriving the
+   registry check by hand.
+
+Tranche literals and epic slugs never collide: every epic slug ends `_master` (or is a dated `_SUPERSEDED_*` file);
+no tranche literal does. Step 2 vs step 3 above is therefore unambiguous — no argument ever matches both.
+
+**Scope, once an epic slug resolves**: every doc where `rg "^parent_epic: <slug>$" plans/active/*.md
+plans/active/issues/*.md` matches — the docspec-aligned, frontmatter-driven definition. **Deliberately NOT**
+`regenerate_active_plan_inventory.py`'s filename/body-substring "orphan" check, which does not read `parent_epic:`
+frontmatter at all: a live sample of 4 real AO-dispatch-batch plans, each with fully valid, registry-resolving
+`parent_epic:`, found 3 of 4 would false-positive as "orphan" under that script's logic purely because epics'
+`related:` lists don't track dispatch-batch churn (full finding:
+`/plans/active/epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`'s Why section). The normative refs
+(`PLAN_FORMAT.md`, `task_template.md`, `INDEX.md`) and codex stay in scope for an epic-scoped run the same way they
+do for a tranche-scoped one — corpus-wide policy, not epic-owned.
+
+**Proactive `parent_epic`-validity check (the epic-registry "orphan" check)**: Phase 0's `run_hygiene_sweep.sh` pass
+already runs `check_parent_epic_alignment.py`/`docspec.py`'s registry-typed HARD check on `parent_epic` for every
+plan, issue, audit-result, and audit-instruction doc — the same check a commit trips at QG time. An epic-scoped
+`/plan-reconcile` run's job is to surface that check PROACTIVELY, ahead of any commit, and — when scoped to one
+epic — report only that epic's own children's pass/fail rather than the whole corpus's. A doc with an unrecognized
+`parent_epic` value routes through Phase 4 like any other mechanical class: either the doc's `parent_epic` is stale
+(repoint it to the doc's real current epic) or, on a fresh scan, it's genuinely unset/wrong (route to the operator
+like any other scope finding). Verify this catches a regression before trusting a green epic-scoped run: point it
+at a doc with a deliberately-broken `parent_epic` value and confirm the run flags it.
+
+Bare `/plan-reconcile` (no argument) is unchanged — still the `all` whole-corpus tranche-sweep exactly as before.
+**Epic-scoped mode is a new, additional entry point**, not a replacement for either the bare/`all` mode or the
+tranche-scoped mode above.
 
 ## Modes
 
@@ -624,11 +679,83 @@ data loss.
 **(e) Every count in the final report must be a measurement, not a memory.** Re-derive it from the corpus or the run
 artifacts at report time.
 
+## Phase 5.95 — HTML artifact generation (added 2026-08-18)
+
+After Phase 5's apply+commit and the Phase 5.9 ledger checks — i.e. once this pass's actual reconciliation work
+(contradiction fixes, checkbox flips, archival, hygiene) has already landed — build and publish the per-epic HTML
+report defined in `/codex/11-project-management/epic-html-report-format.md`. **Read that doc in full before this
+step** — it owns the section structure, storage/publish convention, and design-token approach; this phase only
+covers the mechanics of running it as part of a `/plan-reconcile` pass.
+
+**Which epic(s) get a report this run:**
+
+- **Epic-scoped run** (`/plan-reconcile <epic_slug>`): exactly one report, for that epic.
+- **Tranche-scoped or `all` run**: multiple epics are typically touched. Generate/refresh a report for every
+  DISTINCT `parent_epic` value among the docs this run actually swept (already known from Phase 0's inventory — no
+  new grep needed), so a routine tranche/`all` pass keeps every epic it touched fresh as a byproduct without a
+  separate explicit invocation per epic. (`epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`'s own
+  Phase 6 still runs one explicit, complete sweep across every active epic for full first-time coverage — this
+  ongoing per-touched-epic behavior is what keeps them fresh after that.)
+
+**Steps, per epic in scope:**
+
+1. **Gather real data**: `.venv/bin/python scripts/plan-hygiene/epic_report_data.py --epic <slug> --json`. It
+   scopes `count_open_tasks.py`'s exact dedup methodology (aggregator-plan exclusion, identical open/done checkbox
+   regexes) down to this epic's `parent_epic`-matched child docs, and additionally returns every `[OPERATOR]`- or
+   `BLOCKED-OPERATOR`-tagged open line verbatim plus each child's aggregator flag. This is the SSOT for section 3
+   (headline stat strip) and section 4 (plan-by-plan breakdown) of the report format — never hand-count or estimate
+   a number the script already returns. A number the report needs that the script doesn't return (this run's own
+   "closed out this pass" diff for section 7, or "needs extra scoping" items for section 6) comes from this SAME
+   run's own Phase 1-4 findings for that epic's docs, not a fresh guess.
+2. **Load the `artifact-design` skill fresh for this epic** before writing any HTML — per the codex format doc,
+   each epic's report picks its own palette/layout grounded in that epic's actual subject matter; never reuse
+   another epic's report file as a literal template.
+3. **Build the HTML** following the 10-section structure in `epic-html-report-format.md` exactly (omit sections
+   marked optional-if-empty; never pad a section to make it exist). Embed a generation timestamp as an HTML comment
+   near the top — the freshness marker `check_epic_html_freshness.py` (parent plan's Phase 5) checks against.
+4. **Write it to `plans/epics/html/<slug>.html`** — create the `plans/epics/html/` directory if it doesn't exist
+   yet (new, sibling to `plans/epics/*.md`). This is the repo copy of record, committed alongside the epic doc it
+   describes via Phase 5's normal doc-commit path (`docs(plans):` prefix, stage by name).
+5. **Publish it as a shareable artifact via the `Artifact` tool** — available to whichever agent is executing this
+   skill live (a live-execution capability, not something SKILL.md's prose can invoke itself). Check the epic
+   `.md` file's own `## Report` section (step 6) for an already-stored artifact URL from a prior run:
+   - **First-ever publish for this epic**: call `Artifact` with `file_path` = the local HTML file, no `url` param.
+     It returns a new artifact URL.
+   - **Re-run for an epic that already has a stored URL**: call `Artifact` again with the SAME `file_path` AND
+     `url` = the stored URL, so it redeploys to the existing link instead of minting a duplicate — mirrors how the
+     AO Provider Dispatch Ledger this format generalizes from was iteratively republished to one stable URL.
+   - Pick a stable `favicon` (1-2 emoji) on the FIRST publish for an epic and keep it unchanged on every later
+     redeploy of that same epic's report — a changed favicon reads as a different page to a reader tracking it by
+     tab.
+6. **Store/update the artifact URL** in the epic `.md` file's own body — add or update a `## Report` section placed
+   right after the title (before the first content section), e.g.:
+
+   ```markdown
+   ## Report
+
+   Live HTML ledger: <artifact-url> (generated <YYYY-MM-DD>, `/plan-reconcile <slug>`)
+   ```
+
+   **Why a body section, not a new frontmatter field**: the epic frontmatter spec
+   (`/codex/11-project-management/doc-frontmatter-schema.md` — required: `name`, `tier`, `priority`, `assigned_vm`,
+   `parent`; elective: `co_operators`, `codex_ssots`, `related_plans`) has no artifact-URL field, and adding one
+   would require a matching schema-doc update that's out of this change's scope. A `## Report` body section needs
+   no schema change, is trivially greppable (`rg -A1 "^## Report$" plans/epics/<slug>.md`) for the next run to find
+   and update in place, and reads naturally to a human skimming the epic doc. If the corpus later wants this
+   queryable as structured frontmatter across every epic at once, that's a separate schema-change decision for the
+   operator to make explicitly — this phase does not force it by adding a field unilaterally.
+
+7. **Report the link(s) in this run's Phase 6 chat report** — not just the local file path; the whole point of
+   publishing is a link the operator can open without a checkout.
+
+**This does not conflict with the `*_SUMMARY.md` ban** (Phase 5's note) — see that phase for why.
+
 ## Phase 6 — report
 
 Finish with text: counts by severity/class, the applied-fix list (commit shas), the operator-decision list (or parked
-issue doc path), refuted-candidate count, and coverage (docs read / batches / topics swept). **Include the Phase-5.9
-ledger explicitly — `routed_to_operator == parked` and `agent_skips == enumerated`, as NUMBERS.** If either pair does
+issue doc path), refuted-candidate count, coverage (docs read / batches / topics swept), and **every Phase 5.95 HTML
+artifact link generated this run** (not just the local file path — see Phase 5's note on why this isn't the banned
+`*_SUMMARY.md` shape). **Include the Phase-5.9 ledger explicitly — `routed_to_operator == parked` and `agent_skips == enumerated`, as NUMBERS.** If either pair does
 not balance, the run is NOT done: go park the difference before reporting. Report honestly what did NOT land, too — a
 silently-dropped finding is the failure this skill exists to prevent, so a run that hides its own misses is worse than
 one that reports them. Recommend a re-run cadence (post-major-phase or weekly) until the confirmed-findings count trends
@@ -664,4 +791,8 @@ an on-demand run.
   population from this skill's contradiction/false-unchecked sweep)
 - `cursor-configs/skills/context-scout/SKILL.md` Phase 1 step 4 — the mirrored hedge-pointer verification; that skill
   can only write `context_scope`, this skill (hunter 9) is the one that rewrites the doc's own prose
+- `/codex/11-project-management/epic-html-report-format.md` — Phase 5.95's HTML report section structure,
+  storage/publish convention, and design-token approach
+- `scripts/plan-hygiene/epic_report_data.py` — epic-scoped open/done + `[OPERATOR]`-item data feed for Phase 5.95
+  (mirrors `count_open_tasks.py`'s dedup methodology, scoped to one epic's `parent_epic`-matched children)
 - `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` — sub-agent spawn contract + escalation format

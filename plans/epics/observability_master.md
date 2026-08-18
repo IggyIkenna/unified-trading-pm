@@ -5,13 +5,15 @@ summary:
   L4 cross-cutting epic owning alerting-service + monitoring/telemetry + the Incident Gateway 13-state machine + the
   5-layer recovery defence-in-depth (L0 Python scripts → L1 LLM audit → L2 PagerDuty → L3 Twilio voice → L4 pager → L5
   human ack) + kill-switch/drawdown alerting + the deployment-UI Safety Ops manual-override tab + runbook governance.
+  Also owns (folded 2026-08-18) the role-agnostic escalation pipeline + disaster-recovery substrate, formerly a
+  separate 1-reference epic.
 status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [alerting-service, deployment-ui]
+repos: [agent-orchestrator, alerting-service, deployment-ui]
 scope: [engineer, admin]
-tags: [observability, monitoring, escalation, self-healing, slack, runbook, live-trading, ui]
+tags: [observability, monitoring, escalation, self-healing, slack, runbook, live-trading, ui, disaster-recovery, blocked-questions, auto-recovery]
 related:
   [
     ../archive/2026_05/alerting_runbook_and_operator_ux_post_cutover_2026_05_12.md,
@@ -29,6 +31,8 @@ related:
     ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md,
     ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
     /plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
+    ../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
+    /plans/epics/escalation_and_disaster_recovery_master.md,
   ]
 created: 2026-05-21
 name: observability_master
@@ -59,7 +63,8 @@ related_plans:
   - ../active/orchestrator_vm_e2e_hardening_2026_07_24.md
   - ../active/ui_satellite_ao_dispatch_batch3_2026_08_09.md
   - ../active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md
-last_updated: 2026-06-19
+  - ../active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md
+last_updated: 2026-08-18 # was 2026-06-19 -- folded escalation_and_disaster_recovery_master in 2026-08-18, see body
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -71,7 +76,8 @@ locked_since: 2026-05-21
 **drawdown + liquidation policy + strategy risk config** + **connectivity dependency buffers** + **alert-provider
 health + Twilio voice fallback (Layer-3)** + **physical pager layer (Layer-4)** + **audit acknowledgement SLA
 (Layer-5)** + **deployment-UI Safety Ops tab (manual override)** + 3am-auto-recovery agent + QG snapshot cron + runbook
-governance.
+governance. Also owns (folded 2026-08-18, see below): the role-agnostic escalation pipeline (blocked → Slack →
+human-resolve → UI) + the self-healing/auto-recovery substrate every agent role escalates through.
 
 **Status**: P0-expanded 2026-05-23 — 11 new active plans landed from
 [`../audit/results/observability_disaster_recovery_audit_2026_05_23.md`](../audit/results/observability_disaster_recovery_audit_2026_05_23.md)
@@ -83,11 +89,11 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 ## Codex SSOTs
 
 | Doc                                                          | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/codex/05-infrastructure/live-deployment-monitoring.md`     | Per-archetype heartbeat thresholds; STARTED/progress/STOPPED/FAILED event cadence; cross-cloud event-stream parity                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `/codex/03-observability/alerting.md`                        | AlertSeverity enum (CRITICAL/HIGH/WARN/INFO) → PagerDuty P-tier → routing channels                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `/codex/04-architecture/kill-switch-circuit-breaker.md`      | Kill-switch alerting; circuit-breaker trigger → auto-STOPPED event; alert escalation on arm                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `/codex/04-architecture/autonomous-recovery-matrix.md`       | Decision tree — every failure scenario × every recovery action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `/codex/04-architecture/autonomous-recovery-matrix.md`       | Decision tree — every failure scenario × every recovery action                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `/codex/04-architecture/incident-gateway-state-machine.md`   | **NEW 2026-05-23** — 13-state incident lifecycle (DETECTED → … → CLOSED); audit-ack queue; dedup-key                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `/codex/04-architecture/recovery-defence-in-depth-layers.md` | **NEW 2026-05-23** — 5-layer model: L0 Python → L1 LLM audit → L2 PagerDuty → L3 Twilio voice → L4 pager → L5 human audit ack                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | `/codex/05-infrastructure/disaster-recovery.md`              | RTO/RPO targets, Tier 0-3 recovery, restore from manifest (existing — extended 2026-05-23)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
@@ -198,6 +204,166 @@ Residual Actuator Wiring (forked from the hardening/self-monitoring plan)
       liveness-stalled detection). (FOLDED IN from deployment_observability_expansion_2026_07_08.md, originally from
       deployment_obs_backend_kinds_health_2026_07_09, via 2026-07-15 plan-reconcile §6 operator ruling — second-hop fold
       2026-07-21, source plan archived)
+
+## Folded-in epic: Escalation & Disaster Recovery Master (folded 2026-08-18)
+
+**Source**: [`escalation_and_disaster_recovery_master.md`](escalation_and_disaster_recovery_master.md) (193 lines, 1
+corpus reference at fold time) — folded into this epic per
+[`/codex/11-project-management/epic-taxonomy-2026-08-18.md`](/codex/11-project-management/epic-taxonomy-2026-08-18.md)
+(domain 4, Deployment & observability). The source file is kept as archaeology, `status: superseded`, with a banner
+pointing here — do not add new work there. The 1 referencing doc
+([`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`](../active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md))
+had its `parent_epic:` frontmatter updated to `observability_master` in the same pass.
+
+**Owns**: the one path every agent role takes when it cannot self-resolve — and the self-healing substrate that keeps
+that path rare. Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI). Design target: **95%
+self-resolution** — an agent exhausts its own tools + asks peer roles before anything reaches a human. When it must
+escalate, it escalates **once, cleanly, with options it already researched**, and the whole lifecycle is **always
+visible + always resolvable** in one UI.
+
+This is **role-agnostic infrastructure**. Each role (Data-Eng, DevOps, QA, …) declares its escalation triggers in its
+own role-registry charter (`agent_operating_framework_master`); this section owns the _pipeline_ those triggers flow
+through.
+
+**Repos**: agent-orchestrator, alerting-service, deployment-ui.
+
+**Assigned active plans**: none declared `parent_epic: escalation_and_disaster_recovery_master` at fold time — new
+work in this area now declares `parent_epic: observability_master`.
+
+### Why this section exists
+
+Today the blocked-question loop is built end-to-end but role-blind and operator-secondary:
+
+- `POST /api/slots/{id}/blocked` → SQLite `BlockedRow` (question + `options[]` + `recommendation`) → Slack alert
+  with a dashboard deep-link → dashboard `BlockedCard` (option buttons + "Other" free-text + role selector) →
+  `POST /api/blocked/{id}/answer` → worker polls the answer. **BUILT** — see
+  `/codex/04-architecture/agent-orchestrator-overview.md`.
+- `alerting-service` fans `DP_*` / kill-switch / recon / deployment events to Slack `#data-pipeline-alerts` /
+  `#uts-live-alerts`. **BUILT** but fire-and-forget (one-way webhook, no interactive resolution, no alert state).
+- The auto-recovery matrix (`/codex/04-architecture/autonomous-recovery-matrix.md`) defines what arms/un-kills
+  autonomously vs `manual_unkill` (human-only). **BUILT** as the kill-switch governance.
+
+Three gaps separate this from the operator's vision (operator design pass, 2026-06-25):
+
+1. **The Slack link goes to the _whole_ blocked queue, not a scoped single-question page** — the human has to hunt.
+2. **No alert state** — there's no `open / in-progress / resolved` lifecycle a human can filter on; no "someone is
+   working on this" intermediate so two operators don't collide.
+3. **Escalation is not generalized across roles** — `/blocked` is worker→main→operator; there is no uniform "role R
+   hit a wall, route the decision to the human with R's pre-researched options" entry point that any role
+   (Data-Eng audit, DevOps CI-wall, QA UAT) uses identically.
+
+### Target pipeline (role-agnostic)
+
+```
+agent (any role) hits a wall
+   → self-resolve attempts exhausted (autonomy gradient: Proceed)
+   → ask peer roles via broker (if available)     ── 95% resolved here
+   → still blocked → ESCALATE (autonomy gradient: Escalate-non-blocking | Gate)
+       → one durable escalation record { role, domain, question, options[], recommendation, severity, state }
+       → ONE Slack alert  → scoped link → /escalation/{id}  (just this question + its options)
+       → human: pick an option | "Other" free-text | "I'm on it" (→ in-progress)
+       → resolved → answer routed back to the originating agent
+   → always visible in deployment-ui; filter open vs in-progress vs resolved; resolved stay browsable
+```
+
+**Self-healing first**: most "escalations" are rule-based and never need a human (dirty repo too long, stale
+worker, tmux lost, CI label mismatch). Those are handled by the existing AutoSpawn / liveness / pruner mechanisms +
+the auto-recovery matrix. This section only routes to a human for the **`manual_unkill` / operator-decision**
+residue.
+
+### Escalation workstream registry (child plans)
+
+| WS  | Child plan                                                                                                  | Scope                                                                                                                                    | Depends                                                                             | Priority | Status                                                                                                                                          |
+| --- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| E1  | `escalation_pipeline_mvp_2026_06_25` → [ARCHIVED](../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md) | Generalize `/blocked` → role-agnostic escalation record + `open/in-progress/resolved` state + scoped Slack link + close the 3 gaps      | none (broker dependency retired 2026-07-16, superseded by `assigned_role` dispatch) | P1       | **tracked in this section, ACTIVE** — child plan archived 2026-07-23 as duplicate tracking; its todos live in "Escalation pipeline MVP (P1)" below |
+| E2  | _(future)_ slack-interactive-resolve                                                                        | Real Slack app (Block Kit action buttons / `/resolve` slash) so a human answers in Slack without the dashboard hop                       | E1                                                                                    | P2       | deferred                                                                                                                                              |
+| E3  | _(future)_ dr-runbook-registry                                                                              | Disaster-recovery runbooks (owner/cadence/verifier/last_executed) wired to the auto-recovery matrix for non-self-healing failure classes | E1                                                                                    | P2       | deferred                                                                                                                                              |
+
+### Escalation composition with other epics
+
+- **`agent_operating_framework_master`** — owns the role registry this pipeline rides on. Roles declare escalation
+  triggers there; this section consumes them. E1's dependency on a message broker was retired 2026-07-16
+  (superseded by `assigned_role` dispatch); the existing `POST /api/blocked/{id}/answer` → worker-poll path already
+  satisfies the reply-routing requirement.
+- **This epic (`observability_master`)** — the deployment-ui surfaces + alert-state rendering compose with the
+  observability dashboard directly, now that both live in the same file. The "always visible / filter
+  open-vs-resolved" UI lands as a deployment-ui tab.
+- **`client_isolation_and_governance_master`** — the `manual_unkill` / kill-switch governance that this pipeline's
+  human-gated branch defers to (`/codex/04-architecture/autonomous-recovery-matrix.md`).
+
+### Escalation out of scope
+
+- The message broker itself (owned by `agent_operating_framework_master` — this section _consumes_ it, doesn't own
+  it).
+- Per-role escalation _triggers_ (declared in each role's own registry charter — this section owns the _pipeline_,
+  not the triggers).
+- A new Slack OAuth app (E2, deferred — the MVP keeps the one-way webhook + dashboard-resolve, just scoped +
+  stateful).
+
+### Design input awaiting scope (not yet folded into E1)
+
+- [`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`](../active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md)
+  — operator-reported: insufficient context in question/options, scale (~30 open questions), duplicate questions
+  across agents/sessions, and the operator unable to reach the ORIGINATING agent for follow-up once it's dead.
+  Bigger than E1's scoped-link + state-machine work — read it before scoping E1 (or a wider blocked-questions
+  redesign). Deliberately deferred; not actioned. (`parent_epic:` now points here, updated in the same pass as this
+  fold.)
+
+### Escalation pipeline MVP (P1)
+
+This section is the SINGLE tracking home for E1 (child plan archived 2026-07-23 as duplicate tracking — its 5
+todos were absorbed here; 4 were already mirrored verbatim). The design reference (locked design, phased DAG,
+gates, success criteria) lives in the archived plan:
+[`../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md`](../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md).
+Generalize the blocked loop into a role-agnostic, stateful, scoped-link escalation pipeline. **The broker is NOT a
+dependency** — that plan was archived as NOT-REQUIRED (superseded by `assigned_role` dispatch), and the reply path
+already exists via `POST /api/blocked/{id}/answer`. All 6 todos below (5 original + 1 prerequisite) are real,
+fully-scoped, AO-dispatchable work — un-paused 2026-07-28 (operator gated-decision closeout pass).
+
+- [ ] [BACKEND] P0. **Prerequisite — resolve the `/api/escalate` vs `/api/escalation/{id}` route-naming collision**
+      BEFORE any of the P1 todos below are coded. `/api/escalate` already exists as the GHA-to-orchestrator CI-wall
+      judgment dispatch; this section's target pipeline (see "Target pipeline" above) proposes `/escalation/{id}`
+      for the human-facing scoped link — whoever writes the second without noticing the first will either collide
+      or wire operator escalations into the CI-judgment path. **Gate**: one of the two routes is renamed (or
+      namespaced, e.g. `/api/escalations/{id}` vs the existing CI-wall `/api/escalate`), or a recorded decision
+      explains why the near-collision is acceptable — land this BEFORE the role-agnostic escalation record todo
+      below. (E1)
+- [ ] [CODE] P1. Role-agnostic escalation record
+      `{ role, domain, question, options[], recommendation, severity, state }` generalizing `BlockedRow` (additive;
+      existing `/blocked` keeps working). (E1)
+- [ ] [CODE] P1. `open / in-progress / resolved` state + a `claim` ("I'm on it") transition; resolved rows stay
+      browsable + filterable. (E1)
+- [ ] [CODE] P1. Scoped Slack link → `/escalation/{id}` (one question + its options), not the whole queue. (E1)
+- [ ] [CODE] P1. Resolution routes the answer back to the originating agent — via the EXISTING
+      `POST /api/blocked/{id}/answer` → worker-reads-on-next-poll path, **not** a broker `reply_to` (broker retired
+      2026-07-16). **Gate**: an answered escalation delivers the choice to a waiting agent (end-to-end test). (E1)
+- [ ] [UI] P1. deployment-ui escalation tab: open / in-progress / resolved filter; deep-links to the
+      agent-orchestrator resolution surface (defer-unify with `agent_operating_framework_master`'s own UI
+      decisions). (E1)
+
+### Escalation deferred (own efforts, P2)
+
+- [ ] [CODE] P2. **E2** — Slack-interactive resolve (Block Kit buttons / slash command) so the human answers in
+      Slack.
+- [ ] [DOCS] P2. **E3** — DR runbook registry (owner/cadence/verifier/last_executed) for non-self-healing failure
+      classes.
+
+### Escalation section Progress Log (carried from the source epic)
+
+- 2026-07-28: **UN-PAUSED** (operator gated-decision closeout pass). `status: paused` → `active`. Added the
+  route-naming-collision fix as an explicit P0 prerequisite todo. All 6 todos above (5 original + this prerequisite)
+  are real, fully-scoped, AO-dispatchable work — no code shipped that pass, plan-only change.
+- 2026-07-23: E1's child plan `escalation_pipeline_mvp_2026_06_25` ARCHIVED (operator instruction); this section
+  became its single tracking home. 4 of 5 todos were already mirrored verbatim; the 5th (reply routing) was reworded
+  to drop the retired broker `reply_to` in favor of the existing `POST /api/blocked/{id}/answer` path. All 5 todos
+  code-verified UNBUILT on 2026-07-16 and stayed wanted.
+- 2026-06-25: Section created (as its own epic, pre-fold) in the operator role-registry design pass — split out of
+  the cross-agent escalation thread of `agent_operating_framework_master` because it is genuinely distinct
+  (role-agnostic pipeline + DR substrate) and composes with this epic (`observability_master`). Three gaps scoped
+  (scoped-link / alert-state / role-generalization). E1 (MVP) proposed as the first child plan. E2/E3 deferred.
+- 2026-08-18: Folded from the standalone `escalation_and_disaster_recovery_master` epic into this epic per the
+  9-domain taxonomy restructure (1 corpus reference at fold time, retagged) — see this section's own header for
+  provenance.
 
 ## Archived plans
 

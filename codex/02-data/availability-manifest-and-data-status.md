@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Availability Manifest & Data Status — SSOT
-summary:
-  SSOT for the GCS availability manifest — the 4-state capture_status ledger (captured / empty_confirmed /
+summary: SSOT for the GCS availability manifest — the 4-state capture_status ledger (captured / empty_confirmed /
   attempted_failed / expected_unattempted), schema-v9 AvailabilityRecord + universal source column, per-service shard
   atoms, the honest-coverage % denominator, the proof-of-honest-absence gate, and the DeFi multi-bucket read rule.
 status: current
@@ -1455,14 +1454,14 @@ reference, OR a default initialisation that was never overwritten when the manif
 implies SOME data exists; reality is none). Operators waste time investigating phantom progress that has no on-disk
 evidence and no manifest evidence.
 
-**Action**: file under `infrastructure_master.md` § Data-status multi-axis follow-up — the rollup worker must derive
+**Action**: file under `security_and_cross_cutting_master.md` § Data-status multi-axis follow-up — the rollup worker must derive
 `dates_found` from the same source as `capture_status_counts` (the manifest), not from the expected denominator. Without
 this, every per-(combined-venue) figure for a chain that has no manifest rows is misleading. Owner: data-status
 multi-axis stream.
 
 > **D-14 resolution status (2026-05-13)**: This finding is logged here AND in the codex doc audit findings issue
 > [`codex_audit_data_2026_05_12.md`](../../plans/archive/issues/codex_audit_data_2026_05_12.md) under D-14. It has NOT
-> been explicitly added as a new todo in `infrastructure_master.md` (verified by grep 2026-05-13: the rollup worker P5
+> been explicitly added as a new todo in `security_and_cross_cutting_master.md` (verified by grep 2026-05-13: the rollup worker P5
 > task at line 202 is about emitting `breakdowns`, not about reconciling `dates_found` ↔ `capture_status_counts`). The
 > finding remains OPEN — the rollup worker still derives `dates_found` from a different source than
 > `capture_status_counts`. Next agent touching `deployment-api/scripts/data_status_rollup_worker.py` SHOULD include this

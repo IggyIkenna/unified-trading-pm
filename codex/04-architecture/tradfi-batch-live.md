@@ -32,8 +32,7 @@ referenced_by:
 owner:
 last_reviewed: 2026-06-11
 code_refs:
-plan:
-  plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md +
+plan: plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md +
   pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md (R6-codex seam doc, replaces the 2026-05-16
   placeholder)
 ---
@@ -148,7 +147,7 @@ AND a genuine snapshot data_type (`*_OPTIONS_CHAIN_SNAPSHOT`) — do not "fix" o
 
 **Shard identity propagation**: writer atomicity → manifest row key → data-status display → downstream preflight gate →
 deployment-UI drilldown must carry the identical atom. SSOT:
-[`../../plans/epics/infrastructure_master.md`](../../plans/epics/infrastructure_master.md).
+[`../../plans/epics/security_and_cross_cutting_master.md`](../../plans/epics/security_and_cross_cutting_master.md).
 
 ---
 

@@ -33,7 +33,7 @@ source: data_pipeline_failure escalation agt-95ede4 (DP-FETCH-009, side-finding,
   escalation's own asset_group/data_type)
 resolved_by:
 locked_by:
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1

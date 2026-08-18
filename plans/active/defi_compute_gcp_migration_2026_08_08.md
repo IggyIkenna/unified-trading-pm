@@ -28,7 +28,7 @@ tags: [aws, gcp, cloud-migration, cost, cross-cloud-egress, ecs, fargate, cloud-
 related:
   [
     /plans/active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md,
-    /plans/epics/infrastructure_master.md,
+    /plans/epics/security_and_cross_cutting_master.md,
     /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
@@ -42,7 +42,7 @@ related:
   ]
 created: "2026-08-08"
 last_updated: "2026-08-14"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
@@ -64,7 +64,7 @@ context_scope:
     /codex/04-architecture/cloud-agnostic-migration.md,
     /codex/11-project-management/dual-cloud-cost-ops-playbook.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
-    /plans/epics/infrastructure_master.md,
+    /plans/epics/security_and_cross_cutting_master.md,
     deployment-service/configs/aws/,
   ]
 source:
@@ -180,7 +180,7 @@ them).
   definitions or leave them inert, gated on todo 6's finding about `uts-prod-data-status-rollup-svc` overlap.
 - **This plan does not delete the empty AWS S3 buckets or IAM/env scaffolding** — operator explicitly said these can
   remain configured; zero cost driver, zero urgency.
-- **Update codex + the `infrastructure_master` epic's stale open todos as this ships**, not as an afterthought — the
+- **Update codex + the `security_and_cross_cutting_master` epic's stale open todos as this ships**, not as an afterthought — the
   epic currently carries "Operator sign-off on dual-cloud parity" (never signed off — this plan's completion IS the
   resolution, in the opposite direction originally imagined) and "GCP bucket decommission" (the literal opposite
   direction of this plan — needs marking superseded, not left to rot as a live-looking contradiction).
@@ -401,7 +401,7 @@ them).
       AWS" framing — cite this plan. Done-when: both docs' `last_reviewed`/content reflect the post-migration state, not
       the mid-2026-05 AWS-first framing.
 
-- [ ] [DOC] P1. **Resolve `/plans/epics/infrastructure_master.md`'s stale open todos**: "Operator sign-off on dual-cloud
+- [ ] [DOC] P1. **Resolve `/plans/epics/security_and_cross_cutting_master.md`'s stale open todos**: "Operator sign-off on dual-cloud
       parity" — close it, citing this plan as the resolution (in the opposite direction than originally scoped, but a
       real resolution); "GCP bucket decommission" — mark explicitly superseded by this plan (the literal opposite
       direction), don't leave both looking simultaneously live. Done-when: the epic shows both todos flipped/annotated
@@ -532,5 +532,5 @@ them).
     (asia-northeast1, central-element-323112) → re-verified anonymous `/health` 200 + `/readiness` 200, matching
     execution-service/strategy-service posture. No repo code changed. Next: todo 13 is actionable from ~08-13/14.
 - **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- narrowed from 12 to the doc's now-remaining scope
-  (3 codex docs + the infrastructure_master epic + the AWS-side cluster configs for the pending teardown/todos 13-14),
+  (3 codex docs + the security_and_cross_cutting_master epic + the AWS-side cluster configs for the pending teardown/todos 13-14),
   dropping the already-deployed GCP Cloud Run yaml configs and bucket_naming.py now that all 3 services are live.

@@ -29,7 +29,7 @@ related:
   ]
 created: 2026-07-26
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P2
 estimate_class: infra
 assigned_vm: planning

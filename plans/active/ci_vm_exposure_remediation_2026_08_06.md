@@ -26,7 +26,7 @@ related:
   ]
 created: "2026-08-06"
 last_updated: "2026-08-15" # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale 9 days behind the doc's
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

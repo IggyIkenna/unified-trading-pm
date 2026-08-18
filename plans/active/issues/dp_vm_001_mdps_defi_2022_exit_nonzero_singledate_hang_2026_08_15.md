@@ -41,7 +41,7 @@ related:
   ]
 context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py]
 created: "2026-08-15"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

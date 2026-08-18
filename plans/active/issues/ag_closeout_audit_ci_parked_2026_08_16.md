@@ -41,7 +41,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-08-16
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 priority: P3
 last_updated: 2026-08-16

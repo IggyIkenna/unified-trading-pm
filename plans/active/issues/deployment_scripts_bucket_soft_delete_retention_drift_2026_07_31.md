@@ -28,7 +28,7 @@ created: "2026-07-31"
 author: unknown
 last_updated: "2026-07-31"
 priority: P3
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra

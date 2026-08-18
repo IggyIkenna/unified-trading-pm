@@ -60,7 +60,7 @@ codex SSOT is this doc (2026-05-12 codification).
 QG. Today reviewer-discipline-only; ratchet wiring 🟡 NEEDS-OPERATOR-GATE (auto-fail vs warning).
 
 > **[DELTA 2026-05-22]** **Current state:** Reviewer-discipline only — no automated QG ratchet for `test_*_extended.py`
-> / `test_*_additional.py` / `test_*_new.py` filenames. **Planned delta:** `plans/epics/infrastructure_master.md` — STEP
+> / `test_*_additional.py` / `test_*_new.py` filenames. **Planned delta:** `plans/epics/security_and_cross_cutting_master.md` — STEP
 > 5.x ratchet to auto-fail QG on these filename patterns. **Target:** Any new `test_*_extended.py` fails QG immediately;
 > zero such files in the workspace.
 

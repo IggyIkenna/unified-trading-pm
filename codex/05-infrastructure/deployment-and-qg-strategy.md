@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Deployment + QG strategy SSOT
-summary:
-  SSOT for deployment-method choice (tarball = dev escape valve only; Docker image required + tarball blocked in
+summary: SSOT for deployment-method choice (tarball = dev escape valve only; Docker image required + tarball blocked in
   staging/prod) plus the 4-tier QG enforcement stack (local pre-commit → act+docker pre-flight → CI → image-build) —
   cutover-window sequence, image base-pinning, Artifact Registry retention, the UAC C901 carveout, and VM-launcher
   hardening.
@@ -369,7 +368,7 @@ Last reviewed: 2026-05-15. Next review: 2026-05-17 (post 99%-repo image-build + 
 
   > **[DELTA 2026-05-22]** Phase 5 target date was 2026-05-17 (5 days ago). Actual status of PENDING_RATCHET steps
   > (5.79-5.82) has NOT been verified as of 2026-05-22 — verify per-repo QG output before assuming advisory-only.
-  > Tracked under `plans/epics/infrastructure_master.md`.
+  > Tracked under `plans/epics/security_and_cross_cutting_master.md`.
 
   Plan: `plans/archive/deployment_and_qg_strategy_implementation_2026_05_13.md`. STEP SSOT:
   `/codex/06-coding-standards/quality-gates.md` §§ 5.79-5.82.

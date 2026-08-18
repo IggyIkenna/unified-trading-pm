@@ -30,7 +30,7 @@ code_refs:
 last_reviewed: 2026-10-21
 owner:
 last_updated: "2026-07-21"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 scope_note: money-path-adjacent — these rates value LST collateral (LTV/liquidation) and the staking-yield PnL leg.
 execution_scope: orchestrator-agent
 priority: P2

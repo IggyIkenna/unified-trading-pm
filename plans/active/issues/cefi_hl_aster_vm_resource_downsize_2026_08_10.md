@@ -34,7 +34,7 @@ context_scope:
   - unified-trading-library/unified_trading_library/streaming/parallel_per_symbol_runner.py
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resolved_by:
 locked_by:
 locked_since:

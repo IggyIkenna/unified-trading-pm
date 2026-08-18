@@ -4,7 +4,7 @@ title: Escalation & Disaster Recovery Master (L4)
 summary:
   Role-agnostic escalation pipeline (blocked → Slack → human-resolve → UI) + the self-healing/auto-recovery substrate
   every agent role escalates through; 95% self-resolve, the rest escalate cleanly.
-status: active # (was: paused since 2026-06-26; un-paused 2026-07-28 — operator gated-decision closeout ruling, see banner)
+status: superseded # (was: active/un-paused 2026-07-28; superseded 2026-08-18 — folded into observability_master, see banner)
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,10 +22,21 @@ co_operators: [ikenna, harsh]
 codex_ssots:
   [/codex/04-architecture/autonomous-recovery-matrix.md, /codex/04-architecture/agent-orchestrator-overview.md]
 related_plans: []
-last_updated: 2026-07-28 # (was: 2026-07-12; un-paused 2026-07-28 per operator gated-decision closeout ruling — see banner + Progress Log)
+last_updated: 2026-08-18 # was 2026-07-28 -- superseded 2026-08-18, folded into observability_master (1 corpus reference at fold time, retagged)
 locked_by: NA
 locked_since: NA
 ---
+
+> **⚠️ SUPERSEDED-BY 2026-08-18**: This epic's content was folded into
+> [`observability_master.md`](observability_master.md) (Deployment & observability domain) per
+> [`/codex/11-project-management/epic-taxonomy-2026-08-18.md`](/codex/11-project-management/epic-taxonomy-2026-08-18.md) —
+> 1 corpus reference at fold time
+> ([`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`](../active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md),
+> retagged `parent_epic: observability_master` in the same pass). All open scope (the 6-todo escalation-pipeline
+> MVP + the 2 deferred E2/E3 items) continues there, under "Folded-in epic: Escalation & Disaster Recovery Master"
+> — all open todos carried forward, none dropped. This file is kept as **archaeology only** — DO NOT add new work
+> here. New active plans declare `parent_epic: observability_master` in frontmatter. Full epic-flow SSOT:
+> [`README.md`](README.md).
 
 > **🟢 UN-PAUSED 2026-07-28** (operator gated-decision closeout pass; frontmatter `status: paused` → `active`).
 > **Ruling + reasoning**: the 2026-06-26 pause tied resumption to "next quarter together with W7/W8/W9 (message broker

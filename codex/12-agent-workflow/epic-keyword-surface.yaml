@@ -393,7 +393,11 @@ deployment_and_user_management_master:
     - unified-trading-system-ui
     - unified-api-contracts
 
-infrastructure_master:
+security_and_cross_cutting_master:
+  # Renamed from infrastructure_master 2026-08-18 (epic-taxonomy-2026-08-18.md, Phase 3 split) — the CI-topic and
+  # UAC-topic keyword clusters that used to live in this single entry were carved out into the ci_master: and
+  # uac_master: entries below. This entry now covers the narrowed remainder: general infra/VM/bucket/QG-execution-
+  # environment/deployment-build content that is neither the CI/CD delivery pipeline nor UAC schema governance.
   keywords:
     - infrastructure
     - ec2
@@ -413,15 +417,105 @@ infrastructure_master:
     - qg step
     - base-service
     - base_service
-    - infrastructure_master
+    - security_and_cross_cutting_master
     - vm-topology
     - vm topology
     - partition-migration
     - partition migration
     - hive-partition
+    - ratchet
+    - basedpyright
   repos:
     - unified-trading-pm
     - agent-orchestrator
+
+ci_master:
+  # New 2026-08-18 (epic-taxonomy-2026-08-18.md, Phase 3 split) — carved out of infrastructure_master's CI-topic
+  # references. Covers the LDR->main delivery pipeline: quickmerge/ship scripts, the 3-gate promotion set
+  # (sit-gate/quality-gates-v2/quickmerge-provenance), GitHub Actions workflow templates + self-hosted runners,
+  # semver/release tagging, Cloud Build (image-build/deploy verification is filed under CI per CLAUDE.md's own "CI
+  # verification after every push" section), and the breaking-change/SIT cross-repo gates. Does NOT cover
+  # quality-gates.sh's own STATIC-CHECK/ratchet content (basedpyright ratchet, codex-freshness ratchet, banned-
+  # pattern checks) -- that debt-ceiling content stays security_and_cross_cutting (it is the coding-standards-gate
+  # domain, not the delivery-pipeline-mechanism domain, even though the same script also runs in CI).
+  keywords:
+    - quickmerge
+    - sit-gate
+    - sit_gate
+    - sit-stamp
+    - promotion
+    - promote-pr
+    - promote_pr
+    - ldr-to-main
+    - ldr_to_main
+    - backmerge
+    - main-backmerge
+    - semver-agent
+    - semver_agent
+    - release-tag
+    - release tag
+    - workflow-template
+    - workflow_template
+    - self-hosted runner
+    - self_hosted_runner
+    - github actions
+    - .github/workflows
+    - quality-gates-v2
+    - quality_gates_v2
+    - breaking-change
+    - detect_breaking_change
+    - ci_status
+    - cloud-build-router
+    - cloud_build_router
+    - cloud build
+    - image-build-gate
+    - image_build_gate
+    - fleet-green
+    - sit-gate/fleet-green
+    - quickmerge-provenance
+    - quickmerge_provenance
+    - ci_master
+    - unified-trading-ci
+    - unified_trading_ci
+  repos:
+    - unified-trading-pm
+    - agent-orchestrator
+
+uac_master:
+  # New 2026-08-18 (epic-taxonomy-2026-08-18.md, Phase 3 split) — carved out of infrastructure_master's and
+  # client_isolation_and_governance_master's UAC-schema-governance references. Covers unified-api-contracts'
+  # OWN schema/contract/registry correctness and governance (schema locking/versioning, canonical instrument_id,
+  # OrderStatus SSOT, the canonical_path_violations oracle, cross-repo registry-value gate blind spots). Does NOT
+  # cover asset-group data content that merely happens to reference a UAC-defined type/registry in passing (that
+  # stays with security_and_cross_cutting or the relevant asset-group epic).
+  keywords:
+    - unified_api_contracts
+    - unified-api-contracts
+    - uac schema
+    - uac-schema
+    - uac registry
+    - canonical_path_violations
+    - InstrumentKey
+    - SchemaContract
+    - schema governance
+    - schema_governance
+    - canonical.crosscutting
+    - canonical.domain
+    - contract-governance
+    - contract_governance
+    - schema evolution
+    - schema_evolution
+    - schema locked
+    - schema_locked
+    - schema versioned
+    - schema-versioning
+    - OrderStatus
+    - canonical instrument_id
+    - canonical_instrument_id
+    - uac_master
+  repos:
+    - unified-api-contracts
+    - unified-trading-library
 
 observability_master:
   keywords:

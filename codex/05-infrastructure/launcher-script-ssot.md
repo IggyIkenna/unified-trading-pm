@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: VM launcher script SSOT — `deployment-service/scripts/vm/`
-summary:
-  "Every script running `gcloud compute instances create` (or AWS equivalent) MUST live under
+summary: "Every script running `gcloud compute instances create` (or AWS equivalent) MUST live under
   deployment-service/scripts/vm/ so the Deploy-Missing UI + zombie-watchdog can render/track it. Codifies the 4
   code-delivery modes (tarball default), VM-prefix registration in VM_PREFIX_TO_BUCKET, launcher_common.sh DRY lib,
   hardcoded-name vs prefix-{ts} singleton patterns, Cloud Scheduler→Cloud Run Job→GCE VM cron pattern, and the
@@ -117,7 +116,7 @@ the tarball.
 
 > **[DELTA 2026-05-22]** **Current state:** Image-based launcher delivery is NOT shipped. VM tarball
 > (`create-code-tarballs.sh` + `launch-*.sh`) is the live path for all launchers. **Planned delta:** Image-based
-> launcher tracked under `plans/epics/infrastructure_master.md`. **Target architecture:** Deployment-api pulls + runs
+> launcher tracked under `plans/epics/security_and_cross_cutting_master.md`. **Target architecture:** Deployment-api pulls + runs
 > per-shard launch container from Artifact Registry / ECR rather than `gcloud compute instances create`.
 
 Bake the launcher set into a Docker image cached in Artifact Registry / ECR. The deployment-api would pull + run a
