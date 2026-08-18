@@ -19,7 +19,7 @@ status: active
 nature: issue
 asset_group: [ui]
 stage: [meta]
-repos: [deployment-api, unified-trading-library, deployment-service, deployment-ui]
+repos: [deployment-api, unified-trading-library, deployment-service, deployment-ui, client-reporting-api]
 scope: [engineer, admin]
 tags: [security, p0, deployment-api, unauthenticated-prod, disable-auth, escalation, cloud-run-iam]
 related:
@@ -542,6 +542,13 @@ are unaffected.
      is sometimes completing sign-in with his PERSONAL Gmail (`harshkantariya.work@gmail.com`) instead of his work
      account (`harshkantariya@odum-research.com`, the one actually on `FIREBASE_ALLOWED_EMAILS`). This is a real
      account-picker mix-up, not a bug in the allowlist itself (spelling/casing all verified correct live).
+
+  **Live-deployment verification (same session, post-ship)**: confirmed the fix isn't just merged but actually serving
+  traffic — `deployment-ui@6f83ce7` promoted LDR→main at 12:10:27Z; `deployment-api`'s cloudbuild.yaml clones
+  deployment-ui fresh from `main` on every build (`cloudbuild.yaml` Stage "Fetch deployment-ui"), and build
+  `62d20258` (12:14:49Z, `_DEPLOY=true`) picked it up automatically — no manual trigger needed this time, unlike the
+  2026-08-12 incident. Resulting revision `uts-shared-deployment-api-00642-bmm` (created 12:24:32Z) verified serving
+  100% of live traffic (`gcloud run services describe` `status.traffic`).
 - **2026-08-12 (interactive session, slot 5, hardening — auth-contract CI gate shipped)**. Diagnosed live operator
   report of deployment-ui console tabs all failing with 401 (`GET /api/health/overview`, `/deployments`,
   `/consolidators`) — traced to the accepted Option B trade-off above (console never sends a valid credential; this is
@@ -681,6 +688,18 @@ are unaffected.
         work account in Google's chooser each sign-in. Declined both (b) (allowlisting the personal Gmail — a real
         access-grant expanding who can trigger prod deploys/kill-switches) and (c) (an `hd` hosted-domain hint biasing
         the account chooser). No further action.
+  - [ ] [BACKEND] P2. **ADDED 2026-08-18, NOT investigated — deliberately scoped out of this session's fix.**
+        `deployment-ui/src/api/clientReporting.ts`'s `crFetch()` calls `client-reporting-api` (a DIFFERENT Cloud Run
+        service from deployment-api, default `VITE_CLIENT_REPORTING_API_URL=http://localhost:8014`) with NO
+        Authorization header — same shape as the ~24-file gap this session fixed elsewhere, but deliberately left
+        alone here because `client-reporting-api`'s own auth model was never established (does it even have an
+        `_authenticated_router`-equivalent gate? does it accept the same Firebase token deployment-api does, or
+        something else entirely?). **Done when**: determine whether `client-reporting-api`'s
+        `/api/v1/clients/{client_id}/nav|pnl|positions|attribution|hwm-timeline` routes require auth at all today; if
+        they do, thread `authHeaders()` (deployment-ui/src/auth/GoogleAuth.tsx) through `crFetch()` the same way, and
+        confirm `client-reporting-api` actually accepts a Firebase Bearer token (it may need its own
+        `verify_firebase_token`-equivalent — do not assume it already has one). (repos: client-reporting-api,
+        deployment-ui)
 
   **Found, flagged, no operator decision yet — not actioned**: 3 stale tagged Cloud Run revision URLs
   (`prd-sa-precutover`, `predeploy-verify`, `sports-fix-verify`) on `uts-shared-deployment-api`, pointing at old
