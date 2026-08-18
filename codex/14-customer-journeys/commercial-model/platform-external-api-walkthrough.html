@@ -169,6 +169,13 @@
          overflow: hidden; vertical-align: middle; margin-right: 8px; border: 1px solid var(--rule); }
   .bar i { display: block; height: 100%; background: var(--g-data); }
   .bar.b-part i { background: var(--warn); } .bar.b-low i { background: var(--crit); }
+
+  /* Evidence tier — a SECOND mark, orthogonal to the status pill above: how we know a claim, not what state it is in.
+     Deliberately a different shape (dashed outline pill, monospace) so the two marks are never confused at a glance. */
+  .ev { font-family: var(--mono); font-size: 10.5px; font-weight: 600; letter-spacing: 0.02em;
+        padding: 1px 8px; border-radius: 10px; white-space: nowrap; border: 1px dashed currentColor; background: transparent; }
+  .ev-verified { color: var(--g-data); } .ev-check { color: var(--ink-3); } .ev-assumed { color: var(--warn); }
+  .sec-head .ev { align-self: center; }
 </style>
 
 <div class="shell">
@@ -197,6 +204,11 @@
       <span><b class="st st-plan">planned</b> specified, not yet built</span>
       <span><b class="pend">pending</b> figure not yet measured — never estimated</span>
     </div>
+    <div class="legend">
+      <span><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named inline</span>
+      <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
+      <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
+    </div>
   </header>
 
   <nav class="contents">
@@ -224,7 +236,7 @@
   </nav>
 
   <section id="s0">
-    <div class="sec-head"><span class="num">00</span><h2>How to read this</h2></div>
+    <div class="sec-head"><span class="num">00</span><h2>How to read this</h2><b class="ev ev-check">? check</b></div>
     <p class="lede">
       This document is deliberately long and deliberately collapsed. Nothing is hidden — everything is one click away —
       but you should never have to scroll past a section you do not care about.
@@ -245,10 +257,9 @@
           not exist.</b>
         </p>
         <p>
-          So treat what follows as a starting point rather than a finished inventory. Most of the venues and strategies
-          on the current plan complete over the remainder of this year, and <b>nothing in the architecture stops a new
-          venue being added</b> — adding one is a declaration plus an adapter, not a redesign. That is the whole point
-          of the normalisation described below.
+          So treat what follows as a starting point rather than a finished inventory. <b>Nothing in the architecture
+          stops a new venue being added</b> — adding one is a declaration plus an adapter, not a redesign. That is the
+          whole point of the normalisation described below.
         </p>
       </div>
       <div class="callout">
@@ -267,7 +278,7 @@
   </section>
 
   <section id="s1">
-    <div class="sec-head"><span class="num">01</span><h2>The platform, end to end</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">01</span><h2>The platform, end to end</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       Five layers. You can take any one of them without the others — the contracts between them are the same contracts
       you would call from outside.
@@ -327,13 +338,23 @@
             <thead><tr><th>Layer</th><th>Owns</th><th>You would use it to</th></tr></thead>
             <tbody>
               <tr><td class="grp grp-data">Reference data</td><td>Instrument and contract definitions, identifiers, coverage windows</td><td>Resolve what an instrument <em>is</em>, consistently across venues</td></tr>
-              <tr><td class="grp grp-data">Market data</td><td>Tick, book and derived data per venue, with declared boundaries</td><td>Research, backtest, or feed a live model</td></tr>
+              <tr><td class="grp grp-data">Market data</td><td>Tick, book and derived data per venue, with declared boundaries — raw capture, candle/derived computation and feature computation are three separate services behind this one box</td><td>Research, backtest, or feed a live model</td></tr>
               <tr><td class="grp grp-exec">Strategy</td><td>The unified instruction contract, archetypes, configuration</td><td>Express intent once, asset-class agnostic</td></tr>
               <tr><td class="grp grp-exec">Execution</td><td>Algo selection, routing, adaptors, chained sequences</td><td>Turn intent into venue actions without writing venue code</td></tr>
               <tr><td class="grp grp-post">Security</td><td>Signing surfaces, client isolation, the immutable audit record</td><td>Satisfy the controls this has to pass anyway</td></tr>
             </tbody>
           </table>
         </div>
+      </div>
+      <div class="callout">
+        <span class="tag">What "Market data" compresses, named exactly</span>
+        <p>
+          The box above folds three real services together for readability: market-tick-data-service (raw capture),
+          market-data-processing-service — <b>MDPS</b> — (candle and derived-data computation), and features-service
+          (feature computation). <b>Strategy reads only the processed output of that pipeline; it never calls
+          market-tick-data-service directly.</b> The single arrow into Strategy in the diagram above is a
+          simplification of that chain, not a claim that strategy talks to raw market data.
+        </p>
       </div>
       <div class="callout">
         <span class="tag">Deliberately out of scope</span>
@@ -346,7 +367,7 @@
   </section>
 
   <section id="s2">
-    <div class="sec-head"><span class="num">02</span><h2>How you connect</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">02</span><h2>How you connect</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
     <p class="lede">
       You call the same contracts our services call. There is no separate "external" API with reduced fidelity, because
       a second API surface is a second thing to keep true.
@@ -356,7 +377,9 @@
       <p>
         Our services do not share a database or import each other's code. They integrate by API contract, which is a
         constraint we imposed on ourselves for testability — and it is the reason an external caller is not a special
-        case. You get the contract our own execution service gets.
+        case. Where an endpoint is live, you get the exact same contract our own services call. Not every surface is
+        live yet, and the table below names exactly which ones are and are not, rather than implying a blanket
+        "you get everything we get."
       </p>
       <div class="keypoints">
         <div><b>Contract-first</b><span>Every request and response is a declared, versioned schema — not a convention</span></div>
@@ -365,28 +388,43 @@
         <div><b>Per-client isolation</b><span>Every call is scoped to a client; funds never move between clients by construction</span></div>
       </div>
       <details class="ref">
-        <summary>The four surfaces you would integrate against<span class="tag-ref">API shape</span></summary>
+        <summary>The surfaces, named exactly — endpoint, reachability, shape<span class="tag-ref">API shape</span></summary>
         <div class="plate-body scroll-x">
           <table>
-            <thead><tr><th>Surface</th><th>Purpose</th><th>Shape</th></tr></thead>
+            <thead><tr><th>Surface</th><th>Endpoint</th><th>Reachable today</th><th>Shape</th></tr></thead>
             <tbody>
-              <tr><td>Instruments</td><td>Resolve instruments and contract definitions</td><td>Query + bulk parquet dump</td></tr>
-              <tr><td>Market data availability</td><td>Ask what exists before asking for it</td><td>Query by asset group, venue, instrument type, data type</td></tr>
-              <tr><td>Market data delivery</td><td>Retrieve it</td><td>Daily batch parquet; streaming for live</td></tr>
-              <tr><td>Instructions</td><td>Express and dispatch intent</td><td>One instruction envelope, any asset class</td></tr>
+              <tr><td>Instruments</td><td><code>GET /v1/instruments</code><br><code>GET /v1/instruments/bulk</code></td><td>Yes</td><td>Query + bulk parquet dump</td></tr>
+              <tr><td>Market data availability</td><td><code>GET /external/market-data/availability</code></td><td>Yes</td><td>Query by asset group, venue, instrument type, data type</td></tr>
+              <tr><td>Market data delivery</td><td><code>GET /external/market-data/delivery/batch</code><br><code>GET /external/market-data/delivery/stream</code></td><td>Yes</td><td>Daily batch parquet; streaming for live</td></tr>
+              <tr><td>Instructions</td><td><code>POST /external/instructions</code></td><td><b>TRADE only</b> — the other 10 action types return HTTP 501</td><td>One instruction envelope, any asset class</td></tr>
+              <tr><td>Strategy</td><td>— none —</td><td>No</td><td>No counterparty-facing surface yet — <b class="st st-plan">planned</b></td></tr>
             </tbody>
           </table>
         </div>
       </details>
+      <div class="callout">
+        <span class="tag">The honest state behind "you get the contract our own execution service gets"</span>
+        <p>
+          That is true only for the endpoints marked reachable above. On instructions specifically: <b>only the
+          TRADE action is live end-to-end</b> today, routed through the same <code>ManualOperationHandler →
+          LiveOrchestrator.execute_instruction()</code> path our own internal manual-trade surface uses. Every other
+          action on the envelope — swap, lend, borrow, stake, unstake, quote, transfer, bridge, atomic, cancel —
+          returns an honest HTTP 501: not a silent drop, but not yet the same contract either. Strategy-service itself
+          has no counterparty-facing surface at all yet; its real endpoints today are admin-token-gated internal
+          tooling (registry reads, a restriction-profile router, an operational-mode flip).
+        </p>
+      </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px;">
-        Endpoint paths, auth model and rate limits — <b class="pend">pending</b>, to be stated exactly rather than
-        sketched.
+        Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
+        <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code> and
+        <code>execution-service/execution_service/api/external_instruction_api.py</code>. Auth model and rate
+        limits — <b class="pend">pending</b>, to be stated exactly rather than sketched.
       </p>
     </details>
   </section>
 
   <section id="s3">
-    <div class="sec-head"><span class="num">03</span><h2>Contracts and reference data</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">03</span><h2>Contracts and reference data</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
     <p class="lede">
       One definition of what an instrument is, shared by every layer above it. This is the layer that makes the others
       comparable.
@@ -434,7 +472,7 @@
       <div class="code"><i># CeFi / DeFi / TradFi — venue, instrument type, symbol</i>
 <b>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</b>
 
-BINANCE-SPOT:SPOT:BTCUSDT
+BINANCE-SPOT:SPOT_PAIR:BTCUSDT
 AAVE_V3-ARBITRUM:LENDING:USDC        <i># chain rides in the venue token</i>
 CME:FUTURE:ES-20260320               <i># dated derivatives append the expiry</i></div>
       <p>
@@ -481,19 +519,26 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
     coverage_end:                <i>date | None</i></div>
       </details>
       <p>
-        Delivery: query for a single instrument, or take the whole universe as a parquet dump and join it locally.
+        Delivery: query for a single instrument, or take the whole universe as a parquet dump and join it locally —
+        live today as <code>GET /v1/instruments</code> and <code>GET /v1/instruments/bulk</code> on
+        instruments-service.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+        Verified directly against <code>unified_api_contracts/canonical/instrument_key.py</code>,
+        <code>unified_api_contracts/_instrument_enums.py</code> and
+        <code>instruments-service/instruments_service/api/routers/external.py</code>.
       </p>
     </details>
   </section>
 
   <section id="s4">
-    <div class="sec-head"><span class="num">04</span><h2>The coverage model</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">04</span><h2>The coverage model</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       The most important section in this document. How we state what we have, and — more importantly — how we state what
       we do not.
     </p>
     <details class="sec-body" open>
-      <summary>Honest coverage: four states, not two</summary>
+      <summary>Honest coverage: more than two states</summary>
       <p>
         A naive coverage number treats every missing file as a gap. That is wrong in a way that matters: a venue that
         did not exist in 2021 has no 2021 data, and counting that as a gap makes a complete dataset look broken while
@@ -506,9 +551,10 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
             <thead><tr><th>State</th><th>Meaning</th><th>Counts against coverage?</th></tr></thead>
             <tbody>
               <tr><td><b>Captured</b></td><td>Data is present and verified</td><td>No — this is the numerator</td></tr>
-              <tr><td><b>Expected, absent</b></td><td>Should exist; does not. A real gap</td><td>Yes</td></tr>
-              <tr><td><b>Expected unattempted</b></td><td>In scope, not yet fetched</td><td>Yes — and it is the recoverable half</td></tr>
-              <tr><td><b>Not expected</b></td><td>Venue or instrument did not exist then</td><td>No — excluded from the denominator</td></tr>
+              <tr><td><b>Attempted, failed</b></td><td>Fetch was attempted; it failed or errored</td><td>Yes — this is the real gap</td></tr>
+              <tr><td><b>Expected, unattempted</b></td><td>In scope, not yet fetched</td><td>Yes — and it is the recoverable half</td></tr>
+              <tr><td><b>Expected, confirmed empty</b></td><td>Attempted; genuinely nothing there for this shard</td><td>No — a confirmed absence is not a gap</td></tr>
+              <tr><td><b>Not expected</b></td><td>Venue or instrument did not exist then</td><td>No — excluded from the denominator entirely</td></tr>
             </tbody>
           </table>
         </div>
@@ -530,7 +576,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
         <div class="stat"><span class="v">660</span><span class="k">Venue × instrument-type × data-type triples in scope <span class="u">(12 unresolved, disclosed)</span></span></div>
         <div class="stat"><span class="v">48.54<span class="u">%</span></span><span class="k">Reachable coverage, volume-weighted <span class="u">denominator 119,500,618</span></span></div>
         <div class="stat"><span class="v">3,960</span><span class="k">Shards in scope, measured 2026-08-18</span></div>
-        <div class="stat"><span class="v">288</span><span class="k">Venues in the coverage manifest</span></div>
+        <div class="stat"><span class="v">288</span><span class="k">Venues in the 2026-08-18 coverage manifest, readiness-dump grain <span class="u">— not directly comparable to registry-declared counts</span></span></div>
       </div>
       <div class="callout">
         <span class="tag">How to read 48.54%</span>
@@ -550,7 +596,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s5">
-    <div class="sec-head"><span class="num">05</span><h2>Coverage by asset group</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">05</span><h2>Coverage by asset group</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       The full hierarchy, collapsed. Open only the asset group you care about; inside it, only the venue; inside that,
       only the instrument type.
@@ -558,8 +604,10 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
     <details class="sec-body" open>
       <summary>Browse the universe — asset group, venue, instrument type, data type</summary>
       <p style="font-size: 0.95rem; color: var(--ink-3);">
-        Structure shown with representative entries. Every figure is <b class="pend">pending</b> measurement; the
-        hierarchy, grouping and controls are what this draft is asking you to react to.
+        Structure shown with representative entries beneath the asset-group headers. Each header's ready /
+        not-ready / unverified split is measured (2026-08-18, the same readiness pass as <a href="#s14">§14</a>);
+        every coverage-percentage cell beneath it is <b class="pend">pending</b> measurement — the hierarchy,
+        grouping and controls are what this draft is asking you to react to.
       </p>
 
       <details class="tree">
@@ -644,7 +692,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s6">
-    <div class="sec-head"><span class="num">06</span><h2>Getting the data</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">06</span><h2>Getting the data</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
     <p class="lede">
       Two modes, one availability model: ask what exists, then take it as a daily batch file or as a live stream.
     </p>
@@ -675,11 +723,16 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
           expected difference you learn to ignore.
         </p>
       </div>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+        Verified directly: <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>'s
+        <code>/delivery/stream</code> route is backed by the UTL <code>unified_trading_library.streaming.event_facade</code>
+        (<code>get_transport</code>) — the same facade the internal live-tick sink publishes through.
+      </p>
     </details>
   </section>
 
   <section id="s7">
-    <div class="sec-head"><span class="num">07</span><h2>Shard schemas</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">07</span><h2>Shard schemas</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       Exactly what is in each file, per data type. Collapsed by data type so you can read only the ones you would
       consume.
@@ -726,7 +779,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s8">
-    <div class="sec-head"><span class="num">08</span><h2>The instruction contract</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">08</span><h2>The instruction contract</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
     <p class="lede">
       One envelope for every action, on every asset class. Swap, lend, transfer, stake, withdraw, back, lay — the same
       shape, the same lifecycle, the same audit record.
@@ -738,6 +791,11 @@ next_funding_at  <i>datetime[UTC]</i></div>
         generating an idea — it is that every venue and asset class expresses actions differently. A unified instruction
         set is what makes that translation tractable: the interface emits one shape, and the number of things downstream
         has to understand does not grow with the number of venues.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+        Verified directly against <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> — the real,
+        declared <code>StrategyInstructionEnvelope</code> family used by the external instruction endpoint in
+        <a href="#s2">§02</a>.
       </p>
       <details class="ref">
         <summary>The instruction envelope<span class="tag-ref">Contract</span></summary>
@@ -782,7 +840,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s9">
-    <div class="sec-head"><span class="num">09</span><h2>Archetypes and registry scope</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">09</span><h2>Archetypes and registry scope</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       A strategy is an archetype plus configuration. Archetypes declare what they need through registry contracts, and
       the system checks those declarations rather than trusting them.
@@ -818,7 +876,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s10">
-    <div class="sec-head"><span class="num">10</span><h2>The strategy wizard</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">10</span><h2>The strategy wizard</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       Configuration is the real surface area of a strategy platform. The wizard generates it — validated against the
       same schemas the services enforce — instead of asking anyone to hand-write it.
@@ -869,7 +927,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s11">
-    <div class="sec-head"><span class="num">11</span><h2>Configuration surface</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">11</span><h2>Configuration surface</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       Every service declares its configuration in one place, with a schema, hot-reloadable and centrally stored. What a
       thing is configured to do never requires reading its implementation.
@@ -890,7 +948,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s12">
-    <div class="sec-head"><span class="num">12</span><h2>Execution: routing and algos</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">12</span><h2>Execution: routing and algos</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       Execution decides <em>how</em>. It selects an algorithm from policy, routes to a venue adaptor, and can chain
       dependent steps into one sequence.
@@ -944,7 +1002,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s13">
-    <div class="sec-head"><span class="num">13</span><h2>Treasury, wallets, transfers</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">13</span><h2>Treasury, wallets, transfers</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
     <p class="lede">
       Both halves are available: querying balances, and instructing movement. They are separable, and most integrations
       want the first before the second.
@@ -970,6 +1028,12 @@ next_funding_at  <i>datetime[UTC]</i></div>
           operational discipline.
         </p>
       </div>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+        Verified directly: <code>execution-service/execution_service/isolation_policy.py</code>'s
+        <code>assert_client_allowed()</code>, called from the live path in
+        <code>execution-service/execution_service/engine/modes/live/trigger.py</code> — a cross-client event is
+        logged and dropped, not executed.
+      </p>
       <h3>Signing surfaces</h3>
       <p>
         Signing is pluggable — local keys, cloud-KMS-encrypted keys, or MPC custody providers — declared per deployment
@@ -979,7 +1043,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s14">
-    <div class="sec-head"><span class="num">14</span><h2>Readiness: batch, paper, live</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">14</span><h2>Readiness: batch, paper, live</h2><b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b></div>
     <p class="lede">
       Three modes, stated per venue rather than as a platform-wide claim. What separates them is which accounts exist,
       not which code exists.
@@ -1047,10 +1111,17 @@ next_funding_at  <i>datetime[UTC]</i></div>
       <div class="callout">
         <span class="tag">Reading "ready = 0" correctly</span>
         <p>
-          <b>Zero venues currently clear the bar, and the bar is ours.</b> A venue is ready only when every leg of a
-          19-step contract passes a real machine check — one failing or unchecked leg fails the venue. This is not
-          "nothing works"; it is "we grade strictly and have not yet wired every check". Reported plainly, because a
-          readiness model that cannot return zero is not measuring anything.
+          <b>Zero venues currently clear the bar, and the bar is ours.</b> A venue is ready only when every leg of an
+          8-leg readiness model — declared, instruments-service, market data, processing, features, strategy,
+          execution transfers, execution instruction — passes a real machine check; one failing or unchecked leg
+          fails the venue. This is not "nothing works"; it is "we grade strictly and have not yet wired every check".
+          Reported plainly, because a readiness model that cannot return zero is not measuring anything.
+        </p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px;">
+          Verified against the readiness-state-dump derivation's 8-leg model (<code>declared</code>,
+          <code>instruments_service</code>, <code>market_tick_data</code>, <code>market_data_processing</code>,
+          <code>features</code>, <code>strategy</code>, <code>execution_transfers</code>,
+          <code>execution_instruction</code>) — a different framework from any step-count contract quoted elsewhere.
         </p>
         <p>
           The largest contributor is structural: the <b>execution-instruction leg is unverified on all 864 rows</b> —
@@ -1077,7 +1148,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s15">
-    <div class="sec-head"><span class="num">15</span><h2>Security and the audit record</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">15</span><h2>Security and the audit record</h2><b class="st st-part">partial</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       Treated as a prerequisite of delivery rather than a later hardening pass, because it is a control layer this has
       to satisfy regardless.
@@ -1106,7 +1177,7 @@ next_funding_at  <i>datetime[UTC]</i></div>
   </section>
 
   <section id="s16">
-    <div class="sec-head"><span class="num">16</span><h2>Integration path</h2><b class="st st-plan">planned</b></div>
+    <div class="sec-head"><span class="num">16</span><h2>Integration path</h2><b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b></div>
     <p class="lede">
       What connecting actually involves, in the order it would happen, and what is needed from each side.
     </p>
@@ -1130,16 +1201,20 @@ next_funding_at  <i>datetime[UTC]</i></div>
       <div class="callout">
         <span class="tag">The honest position on step 5</span>
         <p>
-          Steps 1 to 4 need nothing from a venue. Step 5 is where venue credentials and capital have to be in place, and
-          the remaining work there depends on which venues you want — a great deal of testnet work is already complete.
-          Schemas and contracts do not change between these steps, so beginning at step 1 costs nothing later.
+          Steps 1 to 4 need nothing from a venue. Step 5 is where venue credentials and capital have to be in place,
+          and the remaining work there depends on which venues you want. Testnet readiness is currently mixed rather
+          than uniformly complete: real progress exists (AAVE on Sepolia, a Solana LST devnet, a Kalshi demo host),
+          and real gaps remain (no per-venue CeFi testnet declaration yet, sports' live-credential probe is still
+          stubbed, TradFi's only live probe covers Tardis, and Polymarket has neither a testnet nor a written
+          paper-trading ruling). Schemas and contracts do not change between these steps, so beginning at step 1
+          costs nothing later.
         </p>
       </div>
     </details>
   </section>
 
   <section id="s17">
-    <div class="sec-head"><span class="num">17</span><h2>Measured versus projected</h2><b class="st st-plan">planned</b></div>
+    <div class="sec-head"><span class="num">17</span><h2>Measured versus projected</h2><b class="st st-plan">planned</b><b class="ev ev-check">? check</b></div>
     <p class="lede">
       A single place listing every figure in this document, how it was obtained, and when. If a number is not here, it
       is not a number we are standing behind.
