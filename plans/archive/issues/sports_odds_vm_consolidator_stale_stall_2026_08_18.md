@@ -14,14 +14,14 @@ summary: >-
   has nothing new to consolidate in the window after a direct write, so the file's own last-modified/staleness marker
   never advances even though the job itself is fine. The rescan launcher already got a --consolidator-staleness-sec
   override for this exact class of false positive; the odds launcher never did.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
 repos: [deployment-service, unified-trading-library, market-tick-data-service]
 scope: [engineer]
 tags: [manifest, consolidator, staleness, sports, odds, backfill, infra]
-related: [plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md, plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md]
+related: [plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md]
 created: "2026-08-18"
 parent_epic: infrastructure_master
 priority: P1
@@ -29,10 +29,23 @@ assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
 source: [interactive-autonomous-session-2026-08-18]
-resolved_by: []
+resolved_by:
+  [
+    unified-trading-library@61d6f77729,
+    deployment-service@d19f3cdc48,
+    unified-trading-library@55c9a43a74,
+  ]
 locked_by:
 depends_on: []
 ---
+
+> **✅ RESOLVED 2026-08-18 — ACKED-INTO-CODE.** Both todos shipped: the P1 per-run staleness override
+> (`unified-trading-library@61d6f77729`, `deployment-service@d19f3cdc48`) and the P3 structural fix — the staleness
+> gate now prefers `_index/latest.json`'s dedicated consolidator-only heartbeat over the canonical blob's own mtime
+> (`unified-trading-library@55c9a43a74`), which is structurally immune to this whole false-positive class going
+> forward. Durable facts migrated to `/codex/05-infrastructure/manifest-consolidator-ssot.md` (also corrected a
+> stale `AG_STALENESS_BUDGET_SEC` value found while writing that update). Archived per
+> `/codex/11-project-management/issue-doc-lifecycle.md`'s ACKED-INTO-CODE state.
 
 # What I found
 
@@ -157,10 +170,34 @@ an actual host-endangering condition.
       Did not resize `AG_STALENESS_BUDGET_SEC["sports"]` itself — that calibration is still correct for the
       genuinely shard-dependent common case; this is a distinct, rarer trigger (a direct-write tool resetting the
       heartbeat with nothing pending to merge) that now has its own explicit, additive opt-in.
-- [ ] [SCRIPT] P3. Consider whether `ManifestMigrator.merge_into_canonical()`'s direct-write completion should also
-      touch a "last known good" marker/metadata field that OTHER readers' staleness checks could recognize as
-      equivalent to a fresh consolidator cycle (rather than requiring every possible reader launcher to carry its own
-      override) — a more structural fix than per-launcher overrides, but bigger scope; not attempted here.
+- [x] ✅ [SCRIPT] P3. **RESOLVED 2026-08-18 — implemented the OPPOSITE direction of the original framing, which
+      turned out to be the actually-correct fix.** The original idea was "make a direct write LOOK like a fresh
+      consolidator cycle to other readers." Investigating found that's backwards: a direct write's write to
+      `_index/availability_index.parquet` **already** resets every reader's staleness clock today (that's the whole
+      root cause of this incident) — the real gap is that the staleness gate conflates "the canonical blob's content
+      was touched by ANYONE" with "the consolidator specifically is alive," because it reads the blob's own
+      storage-level mtime (`_consolidated_blob_age_sec`) as its sole heartbeat signal. `manifest_consolidator.py`
+      already writes a SEPARATE, dedicated heartbeat file for exactly this purpose —
+      `_index/latest.json` (`_write_latest_run_summary`, overwritten every cycle including no-ops,
+      `last_run_at` field) — that ONLY the consolidator itself ever touches. `ManifestMigrator.merge_into_canonical()`
+      never writes it, so it is structurally IMMUNE to the false-positive class this whole issue is about, without
+      needing any new code in the migration tool at all.
+      **Fix, shipped**: `unified-trading-library@55c9a43a74` — added `_consolidator_latest_run_age_sec()`
+      (reads `_index/latest.json`'s `last_run_at`) and `_consolidator_heartbeat_age_sec()` (prefers that dedicated
+      heartbeat, falls back to the legacy blob-mtime signal only when `latest.json` is absent — a bucket whose
+      consolidator has genuinely never run, or predates this file, behaves exactly as before) in
+      `manifest_writer/_state.py`. Swapped in at all 3 real gate call sites (`_read_index.py`'s `_read_slow_path` +
+      `_raise_shards_exist_but_unreadable`, `_state.assert_consolidator_healthy`) AND the standalone
+      `ConsolidatorLivenessMonitor` (same false-positive class, same fix). Re-exported through the
+      `manifest_writer` package facade for test-patchability, matching every other primitive there.
+      Added 3 regression tests in `test_manifest_writer_per_vm.py`: (1) stale blob mtime + fresh `latest.json` → no
+      raise — the exact odds-VM scenario; (2) both stale → still raises (genuine outage still caught); (3) no
+      `latest.json` at all → falls back to blob-mtime, unchanged legacy behavior.
+      **Why this beats the per-launcher-override escape hatch from the P1 fix above for THIS specific false-positive
+      class**: that override needs a human/launcher author to remember to set it, per launcher, forever; this fix
+      means NO launcher ever needs to set anything for a direct-write-tool collision again — the gate simply stops
+      being fooled by it. The P1 override escape hatch remains useful independently for the genuinely-different case
+      of an operator deliberately widening a bucket's staleness tolerance for some other reason.
 
 ## Codex SSOTs
 

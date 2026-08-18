@@ -601,20 +601,46 @@ terraform locals via `gen_consolidator_catalog.py`, so a new consolidator auto-a
   join — against a stale index: ran green, wrote nothing) · `stale_output` (index older than budget while shards wait) ·
   `empty` (genuinely empty bucket) · `unknown`. When `latest.json` is present its verdict is authoritative; absent, the
   endpoint derives it from index freshness + the Cloud Run execution join (`latest_execution_by_job`).
-- **Per-(kind, AG) cadence staleness budget — CORRECTED 2026-07-30
-  (manifest_consolidator_cadence_cost_audit_2026_07_20.md).** The "every other consolidator = 86400s" claim below was
-  WRONG — it never matched the actual enforcement code. The REAL code-level override,
+- **Per-(kind, AG) cadence staleness budget — CORRECTED AGAIN 2026-08-18 (was already stale from the 2026-07-30
+  correction below).** The REAL code-level override,
   `unified_trading_library.manifest_writer._staleness_budget.AG_STALENESS_BUDGET_SEC` (read by
   `read_availability_index()`/`assert_consolidator_healthy()` via `_state.py`'s `_resolve_consolidated_staleness_sec()`
-  — this is the gate every REAL caller hits, not just the cockpit display), is
-  `{"cefi": 86400, "sports": 1800, "defi": 3600}` (sports added 2026-07-24, defi added 2026-07-29). Every OTHER
-  asset_group/bucket — tradfi, prediction, and every asset-group-less flat bucket (`strategy-store`, `execution-store`,
-  `ml-store`, `features-calendar`) — falls through to the Pydantic field default of **120s**, unless the SPECIFIC
-  reading process happens to export `MANIFEST_CONSOLIDATED_STALENESS_SEC` itself (set ad hoc by ~25 one-off backfill-VM
-  launchers, `deployment-service/scripts/vm/launch-*-backfill-vm.sh`, all `=86400` — NOT a durable per-bucket guarantee
-  for every reader, e.g. a dashboard or health check that never sets it). `deployment-api`'s cockpit-only
-  `_AG_STALENESS_BUDGET_SEC` (`deployment_api/routes/health_consolidator.py`) mirrors the SAME 3-entry dict (duplicated,
-  not imported — deployment-api depends on UTL, not vice versa).
+  — this is the gate every REAL caller hits, not just the cockpit display), is currently
+  `{"cefi": 86400, "sports": 1800, "defi": 7200, "tradfi": 7200}` (defi bumped 3600→7200 and tradfi added at 7200,
+  2026-08-14 — the `3600`/no-tradfi-entry values below are stale, don't trust them; re-read the module directly before
+  citing a number here again). Every OTHER asset_group/bucket — prediction, and every asset-group-less flat bucket
+  (`strategy-store`, `execution-store`, `ml-store`, `features-calendar`) — falls through to the Pydantic field default
+  of **120s**, unless the SPECIFIC reading process happens to export `MANIFEST_CONSOLIDATED_STALENESS_SEC` itself (set
+  ad hoc by ~25 one-off backfill-VM launchers, `deployment-service/scripts/vm/launch-*-backfill-vm.sh`, all `=86400` —
+  NOT a durable per-bucket guarantee for every reader, e.g. a dashboard or health check that never sets it, AND — see
+  the next bullet — a no-op for any bucket with an `AG_STALENESS_BUDGET_SEC` entry regardless). `deployment-api`'s
+  cockpit-only `_AG_STALENESS_BUDGET_SEC` (`deployment_api/routes/health_consolidator.py`) mirrors the SAME dict
+  (duplicated, not imported — deployment-api depends on UTL, not vice versa) — re-check it stayed in lockstep after
+  this correction, not verified as part of this pass.
+- **`MANIFEST_CONSOLIDATED_STALENESS_SEC` is a no-op for any bucket with an `AG_STALENESS_BUDGET_SEC` entry — use
+  `MANIFEST_CONSOLIDATED_STALENESS_OVERRIDE_SEC` instead (shipped `unified-trading-library@61d6f77729`,
+  2026-08-18).** `_resolve_consolidated_staleness_sec()` checks the AG table FIRST, unconditionally — the generic env
+  var is only ever consulted as the 120s-default fallback for a bucket with NO AG entry, so setting it on a
+  cefi/sports/defi/tradfi launcher (as ~25 pre-existing launchers already do, per the bullet above) silently does
+  nothing at this gate — it only affects the SEPARATE shell-level watchdog inside `setup-data-pipeline-vm.sh`
+  (`CONSOLIDATOR_WATCHDOG_BUDGET_SEC`). The new `manifest_consolidated_staleness_override_sec` config field (env
+  `MANIFEST_CONSOLIDATED_STALENESS_OVERRIDE_SEC`) is checked BEFORE the AG table and genuinely wins over it — the real
+  per-run escape hatch. `sports_odds_vm_consolidator_stale_stall_2026_08_18.md` (archived,
+  `plans/archive/issues/`) has the full incident this was found from.
+- **The staleness-gate's own liveness signal now prefers the dedicated `_index/latest.json` heartbeat over the
+  canonical blob's own mtime (shipped `unified-trading-library@55c9a43a74`, 2026-08-18).** The "fresh mtime == the
+  consolidator ran this cycle" claim earlier in this doc (§ "Liveness + health contract") is only true when the
+  consolidator is the SOLE writer to the canonical blob — a direct-write migration tool
+  (`ManifestMigrator.merge_into_canonical`, used by e.g. `instruments-service/scripts/rescan_sports_fixtures_canonical.py`)
+  also touches that mtime, which can make a perfectly healthy consolidator look falsely stale for a long time
+  afterward if nothing else needs consolidating. `_state._consolidator_heartbeat_age_sec()` now reads
+  `_index/latest.json`'s `last_run_at` FIRST (written ONLY by the consolidator itself, every cycle including no-ops —
+  see the `_index/latest.json` bullet above) and falls back to the legacy blob-mtime signal
+  (`_consolidated_blob_age_sec`) only when `latest.json` is absent. Wired into all 3 real gate call sites
+  (`_read_index.py`'s `_read_slow_path` + `_raise_shards_exist_but_unreadable`, `assert_consolidator_healthy`) AND
+  `ConsolidatorLivenessMonitor` — this fixes the false-positive class structurally, with no per-launcher override
+  needed, for any FUTURE direct-write-tool collision (the override bullet above remains useful independently for a
+  deliberate per-run tolerance widening).
 
   The Cloud Scheduler cron is **NO LONGER a uniform `*/1`** either (RULED 2026-07-29 "proceed", shipped 2026-07-30): 12
   of the 18 consolidator jobs (`manifest_consolidator_cadence_cost_audit_2026_07_20.md` found cost tracks INVOCATION
