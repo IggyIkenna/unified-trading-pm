@@ -113,7 +113,7 @@ source: >-
 - [x] ✅ [DATA] P0. Tuesday checkpoint: record BATCH/PAPER/LIVE readiness stage per shard across instruments-service
       through features-service, all asset groups (`unverified` is a legitimate recorded value where no check
       exists). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a per-shard stage table
-      is committed covering every asset group. — `unified-trading-pm@<SHA>`. The `readiness-state-dump` skill
+      is committed covering every asset group. — `unified-trading-pm@7f2b621ad0`. The `readiness-state-dump` skill
       (already shipped `unified-trading-pm@5b3dbf99bd`, W1/Tuesday-dumps-deliverable-1) had verified live counts
       recorded, but no per-shard TABLE had actually been committed — re-ran it live against
       `gs://central-element-323112-honest-coverage/2026-08-18/coverage.json` (288 venues x 3 modes = 864 rows) and
