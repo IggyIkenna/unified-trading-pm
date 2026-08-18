@@ -89,3 +89,10 @@ _Populated after STEP 3 fan-out._
   not touched here), 1 soft warning (delete/VM-launch tagging, no ui-tranche hits). `build_health_digest.sh` produced
   no output file despite exit 0 — noted as a minor tooling gap, not chased (outside `plans/**` write-scope; skeleton +
   full hygiene-sweep text were sufficient inputs). Fan-out hunters dispatched next.
+- **na-eligibility-audit 2026-08-18 (ui tranche, dispatch agt-a78a10)** [body-hash:a40baea9962dda25]: KEEP-NA, valid —
+  this doc is itself the live in-progress findings report for the sibling `/plan-reconcile ui` dispatch `agt-2a424e`
+  above (same day, still mid-run per its own Progress Log: hunters dispatched, no Coverage/Flips/Contradictions/etc.
+  populated yet). 0 open checkboxes to classify — a process/tracking artifact, correctly `assigned_vm: NA` /
+  `execution_scope: local-only`, not AO-dispatchable content. Confirmed via `git fetch` immediately before this edit
+  that no further plan_reconciler commits had landed on this file (last commit `f3689fe1` at 02:39 UTC, 17+ min prior)
+  — appended only, nothing existing touched.
