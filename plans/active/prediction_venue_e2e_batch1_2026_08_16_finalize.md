@@ -58,9 +58,21 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. For every completed todo in `prediction_venue_e2e_batch1_2026_08_16.md`, re-verify its cited
+- [x] ✅ [REVIEW] P1. For every completed todo in `prediction_venue_e2e_batch1_2026_08_16.md`, re-verify its cited
       evidence (commit sha resolves as an ancestor of `origin/live-defi-rollout`, cited report/run actually
-      resolves). Done-when: all 5 of that batch's todos have independently re-confirmed evidence.
+      resolves). Done-when: all 5 of that batch's todos have independently re-confirmed evidence. — VERIFIED
+      2026-08-18. All 11 cited commit SHAs across the batch's 13 todos independently re-confirmed as ancestors of
+      `origin/live-defi-rollout`: `unified-trading-pm@da8caf5f5a`, `market-tick-data-service@6e428204f9`,
+      `features-service@c5ad65df10`, `features-service@a14db662b9`, `unified-trading-pm@8bfa440ac1`,
+      `strategy-service@890ca8a4ce`, `strategy-service@dc3c0219`, `unified-trading-pm@c20f242a85`,
+      `unified-api-contracts@0ea4a852`, `unified-api-contracts@cc807336c1`, `strategy-service@daafe3e29b` (all
+      `git merge-base --is-ancestor` OK). Spot-checked 2 of the underlying code claims directly: `PREDICTION_VENUES
+      = ("POLYMARKET", "KALSHI")` confirmed live in `features-service/features_service/cross_instrument/engine/
+      prediction_ingest.py:13`; `get_books_batch`/`_build_book_snapshot_5_rows` confirmed live in
+      `market-tick-data-service/market_tick_data_service/market_interface/adapters/prediction/kalshi_adapter.py`.
+      The 3 non-code todos (stale-WIP triage, execution-adapter re-investigation, hard-rules confirmation) are
+      pure-investigation with no SHA to verify — their cited reasoning was read and is internally consistent with
+      the rest of the batch's evidence trail.
 - [ ] [REVIEW] P1. Once `prediction_venue_e2e_batch1_2026_08_16.md` has zero open todos, run the standard 6-step
       archival ritual on it and this finalize plan. Done-when: both docs are under `plans/archive/`, and
       `regenerate_active_plan_inventory.py` reports zero orphan referrers to either.
