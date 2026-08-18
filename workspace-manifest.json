@@ -843,7 +843,7 @@
         "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "e69ceb2a9358995a78466d22c2f29372b97618d6"
+      "ldr_ci_status_sha": "6541890d3c020e5ce01776811bf1f73d5ec67636"
     },
     "market-tick-data-service": {
       "promotion_model": "ldr_main",
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "fdaef7791cabd38cb2df39458604049b1ae88d80"
+      "ldr_ci_status_sha": "48b1e9f0bf1410955f364494eaf9fd0510ecd741"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
