@@ -17,7 +17,7 @@ summary: >-
   (backtick citations inside cursor-rules/*.mdc pointing at stale/moved targets) WERE hand-verified and fixed in this
   same sweep despite the checker's blindness (unified-trading-pm@809a28c97) -- this issue is about the checker's
   coverage gap itself, not those 12 fixes.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -34,7 +34,8 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.8
-resolved_by:
+resolved_by: plan_reconciler-agt-830118 (2026-08-18) — all 3 Options todos verified done live; the gated finalize
+  twin's own todo 3 explicitly instructed this archival, now executed per its "done when" bar.
 locked_by:
 locked_since:
 context_scope: [scripts/quality_gates/check_doc_body_links.py, scripts/quality_gates/doc_body_link_baseline.yaml, /plans/archive/2026_07/docs_retrieval_layer_reconcile_2026_07_23.md]
@@ -47,6 +48,9 @@ drift_direction: advance-code
 ---
 
 # check_doc_body_links.py is blind to backtick-citation links
+
+> **✅ RESOLVED — ARCHIVED 2026-08-18** (plan_reconciler, dispatch agt-830118). All 3 Options implemented + verified;
+> gated finalize twin's own todo 3 executed this archival per its stated instructions.
 
 ## Evidence
 
@@ -189,3 +193,7 @@ corpus actually uses was never brought into the checker's purview.
   ALREADY open todos in `docs_reconcile_remaining_broken_links_2026_08_02.md` — no new findings to file. Confirms the
   widened scan surfaces no NEW breakage beyond what P2 baselined + tracked.
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **plan_reconciler 2026-08-18 (infra tranche, agt-830118)**: independently re-verified all 3 Options todos still
+  genuinely `[x]` and this doc's gated finalize twin's todo 3 ("archive the parent doc") was the only remaining open
+  item anywhere in the pair. Executed that todo: added RESOLVED/ARCHIVED banner, `status: resolved`, `git mv`'d to
+  `plans/archive/2026_08/issues/`. See the finalize doc's own Progress Log for the referrer-sweep detail.

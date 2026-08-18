@@ -171,7 +171,8 @@ duplicate pairs found and reconciled from this exact mechanism).
    now propagates deletions: when a named file is absent from the caller tree but present at `origin/$BRANCH`, it is
    `rm`'d from the isolated worktree so `git add` stages the deletion. **If you are on a checkout that predates the fix,
    set `SDP_ISOLATED=0`** to use the shared-index fallback for any archival commit that includes a rename. Full
-   incident: `/plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`. **Recurrence caught
+   incident: `/plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md` (archived
+   2026-08-18, fully resolved). **Recurrence caught
    live 2026-08-14**: CLAUDE.md's general ship rule ("scope `--files` by name") pulls against this section's "no
    `--only` path-scoping" preference — an agent following the general habit passed `--files` naming ONLY the NEW archive
    path (the one that exists on disk after `git mv`), never the OLD active path. "Named" above means _listed in

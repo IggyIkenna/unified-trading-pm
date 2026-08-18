@@ -17,7 +17,7 @@ summary: >-
   copy — the run prints `isolation: named file not present in caller tree, skipping copy: <path>` and the deletion is
   dropped. So the documented-safe path is now create-only for ANY rename, and the SSOT's advice is actively wrong under
   the new default.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -33,7 +33,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-18"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -48,8 +48,10 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
-archive_exempt: true # bridge only — flip-then-mv two-commit pattern (plan-completion-and-archival-discipline.md § 1); the last todo just flipped in this commit, the archival git-mv follows in a separate commit next.
+resolved_by: plan_reconciler-agt-830118 (2026-08-18) — all 14 todos hard-evidence-verified done (checkbox count,
+  sibling-archive existence, lock status all independently re-checked live); archived same-day per CLAUDE.md's
+  "fully-done + unlocked MUST archive immediately" rule.
+archive_exempt:
 depends_on: []
 context_scope:
   [
@@ -63,6 +65,10 @@ source: >-
 ---
 
 # safe-doc-push isolated mode drops deletions → create-only archival commits
+
+> **✅ RESOLVED — ARCHIVED 2026-08-18** (plan_reconciler, dispatch agt-830118). All 14 todos shipped + hard-evidence
+> re-verified live. Three distinct symptoms of the same "safe-doc-push commit certification" gap, all fixed and
+> regression-tested (see Progress Log + the sweep table below for the full incident history).
 
 ## What happened (measured, not inferred)
 
@@ -398,3 +404,13 @@ boxed audit run, not a script-debugging session) — flagged for whoever next re
       unaffected). Full `tests/test_safe_doc_push_*.bats` suite: 71/71 green (no regressions).
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **plan_reconciler 2026-08-18 (infra tranche, agt-830118)**: Phase -1 + STEP 4 verified this doc fully done — 0/14 open
+  todos (independently re-counted via `grep -cE '^\s*[-*] \[ \]'`), unlocked, not in the 12h grace window, both
+  `related:` sibling incidents already archived. The `archive_exempt: true` "bridge only" comment (present since
+  2026-08-10) was stale — the promised follow-up `git mv` never landed despite two more symptom-fixes shipping into
+  this doc since (2026-08-16, 2026-08-17). Archived per CLAUDE.md's "fully-done + unlocked MUST archive immediately"
+  HARD RULE. Referrer sweep: the corpus's `_resolve()` archive-fallback means a stale `/plans/active/issues/...`
+  citation doesn't break the mechanical link checker, so historical-fact mentions in already-archived docs were left
+  as-is per the fact-vs-path convention; the one LIVE navigational citation
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) was repointed under the STEP 5.f2 mechanical
+  codex-staleness carve-out (single unambiguous path substitution, HARD evidence, no judgment call).
