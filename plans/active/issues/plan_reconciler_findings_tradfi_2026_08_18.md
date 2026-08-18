@@ -203,13 +203,79 @@ code/live checks before writing):
   heavy concurrent activity — see grace-window notes throughout). No action needed; textbook case of why every
   candidate gets adversarially re-verified before acting.
 
-## Doc-drift
+## Doc-drift (routed, NOT auto-applied — filed via `/blocked` BLK-3867b41d)
 
-_(pending — codex-alignment findings, routed not auto-applied; compiled at Phase 6)_
+1. **[P2]** `/codex/02-data/tradfi-databento-sourcing-ssot.md` — stale on the 2026-08-10/12 Databento billing
+   incident's blast radius (frames account-wide; `tradfi_databento_account_billing_suspended_2026_08_09.md`'s own
+   2026-08-16 correction shows it's dataset-scoped). New content needed, outside the mechanical carve-out.
+2. **[P2]** `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` — never absorbed the tradfi GOLD/WTI/
+   combo_chain near-miss (2026-08-11/12) as its own worked example, despite
+   `tradfi_canonical_path_migration_design_2026_07_19.md` explicitly framing it as the same failure class as the
+   codex's existing defi `dex_pools/` example.
+3. **[P1]** `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` reflex-sets `sequential: true` for its whole
+   8-todo plan over a single colliding pair (Todo4+Todo8) — should SPLIT per CLAUDE.md, not serialize the whole
+   plan. Treated conservatively (routed, not restructured) given the plan is `status: active`/`assigned_vm:
+   planning` and may be mid-dispatch.
 
-## Filed
+## Filed (grace-protected this run — deferred to the next tradfi pass, enumerated per Phase 5.9)
 
-_(pending — compiled at Phase 6 from the deferred/grace-protected + routed findings)_
+**Corrections needed once grace clears** (doc, finding, why deferred):
+- `plan_reconciler_findings_tradfi_2026_08_16.md` — flip Todo 7 (reference-path fix, already done-but-unchecked)
+  + Todo 8 (3 more `last_updated` bumps landed directly on target docs) in
+  `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` once THAT doc's own grace clears (was ~10.5h old at run
+  start).
+- `canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` — no actionable finding this pass (grace, ~0s old).
+- `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` — `status: open` but 0 open
+  checkboxes + its blocked question already answered 2026-08-17; gates real P1 work in
+  `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`. Needs a status-semantics check
+  (does dispatch key off `status:` or todo-count?) before closing.
+- `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` — still 1008-1009L, over the 1000 hard cap;
+  the `[OPERATOR]` tag-fix (lines ~975,983) stays split-blocked, unchanged from the 2026-08-16 finding.
+- `tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md`, `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`
+  (Todo1 `[DATA]`/Todo3 VM-launch — both need `[OPERATOR]` tag or explicit safe-idempotent justification),
+  `tradfi_satellite_ao_dispatch_batch15_2026_08_17_finalize.md`, `tradfi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md`
+  — AO-readiness gaps, all grace-protected, all P1-P3.
+- `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:96` — cites "G4 OPEN" for CEFI catalogue
+  completeness; live-checked, actual open gate is G1 not G4 (doesn't invalidate the doc's overall ruling).
+- `tradfi_phase_d_terminal_gate_2026_07_24.md:514-518` — stale 2026-08-09 inline note on an open P3 todo,
+  contradicted by the SAME doc's own later 2026-08-16 entry (todo correctly stays open, just the annotation is
+  stale). Also has a backtick-code-span hiding an already-`[x]` item at :388-389 (cosmetic, no undercounting).
+- `tradfi_satellite_ao_dispatch_batch9_2026_08_16_finalize.md` Todo1 — chases flipping a target
+  (`tradfi_volatility_no_perp_fx_underlyings_code_gap_2026_08_06.md` todo2) that's already archived/resolved
+  independent of its stated gate.
+- `mdps_features_deadcode_consolidation_2026_07_20.md:155-156` todo8 — tagged `[SCRIPT]` but repeatedly
+  self-described as operator/design adjudication over 7+ passes; should be `[DESIGN]`/`[OPERATOR]`.
+- `tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md:99-101` — a re-verify-then-delete follow-up tracked only
+  in prose ("Next step (tracked, not this todo)"), no actual todo exists for it once CF-8 clears.
+- `tradfi_bf_cme_ohlcv_1m_relaunch_dispatch_budget_hit_2026_08_16.md` — `escalation_dedup.py` repo misattribution
+  (context_scope/repos say deployment-service; a todo says "repo: agent-orchestrator" — file only exists in
+  deployment-service, live-verified by the hunter).
+- `tradfi_volatility_options_groups_empty_confirmed_missing_fetch_evidence_2026_08_17.md` — todo1/todo2 real
+  dependency not machine-enforced (`depends_on: []`), same-file concurrent-dispatch risk.
+- `tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md` — 2 multi-line backtick spans hide
+  commit-message text as apparent bullets (:176-180); a table row-sum doesn't reconcile with its stated Total
+  (gap ~14-19%, possibly intentional imprecision per a disclosed caveat) — worth a future check against the
+  underlying script's real output. Possible unmerged overlap with the now-resolved
+  `tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md` population (3,048/4,855 rows share the same error_reason) —
+  worth confirming whether this doc's still-open P0 migration already subsumes it.
+- `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` Todo2 — VM-launch lacks explicit safety wording (may be
+  an accepted tranche convention for bounded/typed backfills, not necessarily a hard violation).
+- `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo6 (phantom audit) — no cited script/symbol, unlike
+  every sibling todo in the same plan.
+
+**Needs a live remeasurement, not a doc edit** (flagged in-place already, repeated here for visibility):
+- BARCHART manifest row-count/timestamp: `retirement_completeness_pollutant_reverify_ice_still_live_2026_08_15.md`
+  says 4,655 rows / stamp 2026-05-07; `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` Todo7 (sourced from
+  `tradfi_reconciliation_2026_08_17_findings_2026_08_17.md`) says 9,119 rows / stamp 2026-07-07. Off by ~2x /
+  ~2mo, neither doc cross-references the other. Both docs already carry a note pointing at this discrepancy.
+
+**Observational, not a doc-edit** (for the operator/next pass's awareness):
+- `tradfi_vm_resource_utilization_downsize_2026_08_10.md` — sole open todo (well-specified) stale-in-queue,
+  released `GATED` 3x on 2026-08-10, no Progress Log entry since (8 days as of this run). Worth a fresh look —
+  either the OHLCV fleet stopped running or this todo is starved.
+- `tradfi_consolidated_closeout_2026_07_18.md` — file-level unpaired `` ** `` (559 = odd count via grep); exact
+  offending line not isolated within budget (many legitimate 2-line-wrapped bold spans make bisection expensive
+  relative to this P3 cosmetic finding).
 
 ## Archive candidates (operator review)
 
