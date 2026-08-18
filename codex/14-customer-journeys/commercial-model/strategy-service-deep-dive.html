@@ -617,8 +617,8 @@ DefiModeConfig              MlModeConfig</div>
     <p class="lede">
       The strategy never names a rail. It asks for a balance to exist somewhere, and a layered set of coordinators and
       adapters resolves that into either an exchange transfer or an on-chain movement signed through custody. Two
-      custodians sit at that end — <strong>Copper</strong>, whose ClearLoop service lets collateral be traded at a venue
-      without leaving custody, and <strong>Ceffu</strong>, which provides the equivalent for Binance. Which one a given
+      custodians sit at that end — <strong>Copper</strong>, which mirrors collateral onto a venue without it ever leaving
+      custody, and <strong>Ceffu</strong>, which provides the equivalent for Binance. Which one a given
       venue resolves to is configuration, not strategy logic.
     </p>
     <div class="keypoints">
@@ -630,7 +630,7 @@ DefiModeConfig              MlModeConfig</div>
       <summary>The full path from a strategy's rebalance request to funds arriving</summary>
 
       <figure>
-        <svg viewBox="0 0 1160 300" role="img" aria-label="Diagram: a strategy emits transfer requests which are netted per asset pair, converted to transfer intents, validated and de-duplicated by the TransferCoordinator, then routed by the CompositeTransferAdapter either to venue APIs for internal transfers and withdrawals, or to the custody provider for on-chain movements, which for Copper includes ClearLoop mirroring collateral onto the exchange.">
+        <svg viewBox="0 0 1160 300" role="img" aria-label="Diagram: a strategy emits transfer requests which are netted per asset pair, converted to transfer intents, validated and de-duplicated by the TransferCoordinator, then routed by the CompositeTransferAdapter either to venue APIs for internal transfers and withdrawals, or to the custody provider for on-chain movements, which for Copper includes mirroring collateral onto the exchange without it leaving custody.">
           <text x="20" y="22" style="fill:var(--ink-3);font-family:var(--sans);font-size:10px;font-weight:700;letter-spacing:0.13em">FROM DECISION TO SETTLED FUNDS</text>
 
           <rect x="20" y="40" width="176" height="62" rx="4" style="fill:var(--surface);stroke:var(--g-exec);stroke-width:1.5"/>
@@ -665,7 +665,7 @@ DefiModeConfig              MlModeConfig</div>
 
           <rect x="904" y="190" width="236" height="52" rx="4" style="fill:var(--surface);stroke:var(--g-data);stroke-width:1.4"/>
           <text x="918" y="210" style="fill:var(--ink);font-family:var(--sans);font-size:11.5px;font-weight:600">Custody — Copper / Ceffu</text>
-          <text x="918" y="228" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">on-chain send · ClearLoop / OES mirror</text>
+          <text x="918" y="228" style="fill:var(--ink-3);font-family:var(--sans);font-size:10.5px">on-chain send · custodian-side mirror</text>
 
           <line x1="20" y1="264" x2="1140" y2="264" style="stroke:var(--rule);stroke-width:1"/>
           <text x="20" y="286" style="fill:var(--ink-3);font-family:var(--sans);font-size:11.5px">The strategy names an asset, a source, a destination and a cost bound. Every decision about HOW is taken to the right of the coordinator.</text>
@@ -717,14 +717,14 @@ mock · local_key · cloud_kms · <b>copper</b> · ceffu</div>
       </p>
 
       <div class="callout">
-        <span class="tag">Where Copper, ClearLoop and Ceffu actually sit</span>
+        <span class="tag">Where Copper and Ceffu actually sit</span>
         <p>
           Our code talks to <strong>Copper</strong> and to <strong>Ceffu</strong>. Collateral posted into Copper custody
-          is mirrored onto the exchange by Copper's <strong>ClearLoop</strong> service so it can be traded without ever
+          is mirrored onto the exchange by Copper's own mirroring capability so it can be traded without ever
           leaving custody — the property that matters for counterparty risk. For Binance the same role is played by
           Ceffu's off-exchange settlement. In both cases the mirroring is the <em>custodian's</em> mechanism rather than a
           separate integration on our side: you will find <code>copper.py</code> and <code>ceffu.py</code> in the
-          execution service and no ClearLoop-specific code path, and that is by design.
+          execution service and no vendor-specific mirroring code path, and that is by design.
         </p>
         <p>
           The consequence worth understanding is that a move between two venues under the same custodian is a mirroring
