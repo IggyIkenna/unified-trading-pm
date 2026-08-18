@@ -110,10 +110,22 @@ source: >-
       to its owning plan/issue doc; where no owning plan exists, record that absence as the finding rather than
       silently absorbing it. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: every gate
       row in that doc's tables carries an owning-doc link or an explicit "no owning doc" note.
-- [ ] [DATA] P0. Tuesday checkpoint: record BATCH/PAPER/LIVE readiness stage per shard across instruments-service
+- [x] ✅ [DATA] P0. Tuesday checkpoint: record BATCH/PAPER/LIVE readiness stage per shard across instruments-service
       through features-service, all asset groups (`unverified` is a legitimate recorded value where no check
       exists). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a per-shard stage table
-      is committed covering every asset group.
+      is committed covering every asset group. — `unified-trading-pm@<SHA>`. The `readiness-state-dump` skill
+      (already shipped `unified-trading-pm@5b3dbf99bd`, W1/Tuesday-dumps-deliverable-1) had verified live counts
+      recorded, but no per-shard TABLE had actually been committed — re-ran it live against
+      `gs://central-element-323112-honest-coverage/2026-08-18/coverage.json` (288 venues x 3 modes = 864 rows) and
+      derived a pipeline-only stage (declared + instruments_service + market_tick_data + market_data_processing +
+      features legs — excludes strategy/execution, a distinct gate set per `data_pipeline_completion_2026_08_21.md`)
+      per shard. Committed both the full per-shard row table and a per-asset-group x mode summary:
+      `/plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18.json` (864 rows) +
+      `/plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18_summary.md`. Covers every asset group
+      present in the coverage manifest (cefi, defi, prediction, sports, tradfi) plus an `UNKNOWN` group (8 venues,
+      24 rows — captured but unattributed to a known asset_group; a real finding, not a dump gap). Overall: 0 ready
+      / 624 not_ready / 240 unverified across 864 rows at pipeline-only scope — `unverified` used honestly per the
+      done-when.
 - [ ] [DATA] P1. Friday target: record all shards at BATCH readiness pending backfill completion, with the residual
       explicitly scoped to B8 (honest coverage 100%) and nothing else. Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the Friday-target table is committed and
@@ -167,3 +179,9 @@ source: >-
   planning` plan (grepped for each item's distinctive claim terms) and `cross_cutting_consolidated_closeout_2026_07_25.md`'s
   24 Tracks (unrelated subject matter). Source docs' own checkboxes already flipped with citations to this batch in
   the same pass.
+- **2026-08-18 (backend_engineer, slot 8)**: item 8 (Tuesday readiness checkpoint). Confirmed the underlying
+  `readiness-state-dump` skill already existed and had been run live twice (2026-08-17, 2026-08-18) per
+  `system_readiness_master.md` W1 and `data_pipeline_completion_2026_08_21.md`'s Tuesday-dumps section, but only
+  rollup counts had been recorded — no per-shard table had actually been committed, which is this item's explicit
+  done-when. Re-ran the skill live and committed both the full per-shard row table and a per-asset-group summary
+  under `plans/audit/results/`. See the flipped checkbox above for the artifact paths and headline numbers.
