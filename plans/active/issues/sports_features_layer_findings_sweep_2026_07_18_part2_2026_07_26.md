@@ -397,18 +397,11 @@ the merge cycle, and the error message ("behind or DOWN") actively misleads the 
       `plans/active/sports_consolidated_closeout_2026_07_19.md` (fixed via
       `sports_closeout_batch1_ao_ready_2026_07_24.md` todo 8, unified-trading-library@fd87daa1, `"sports": 1800` added
       to `AG_STALENESS_BUDGET_SEC`; see that doc for execution).
-- [ ] [CODE] P2. Soften the error text: distinguish "consolidator DOWN" (no recent successful execution) from "index
-      older than budget but consolidator succeeding" (a too-tight budget). They demand opposite responses. — GENUINELY
-      OPEN: checked `sports_manifest_read_staleness_budget_missing_2026_07_15.md` and
-      `manifest_consolidator_cadence_cost_audit_2026_07_20.md` (both `status: open`, both about staleness-budget config,
-      the closest related docs) — neither addresses this specific error-message-text distinction, and no other doc or
-      code hit surfaced for it. The staleness-budget VALUE was already fixed (§ J item above), but the misleading
-      "behind or DOWN" wording itself is unchanged. Not reverified against live code this session. **Already extracted —
-      see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~343, `assigned_vm: planning`, still `- [ ]`
-      open there too as of 2026-08-09) — not duplicating here.** Round-9 sweep (2026-08-09) live-verified the code is
-      unchanged: `unified-trading-library/unified_trading_library/manifest_writer/_read_index.py:288` still raises the
-      single generic "the manifest consolidator is behind or DOWN" message unconditionally — the fix is genuinely still
-      needed.
+- [x] ✅ [CODE] P2. Soften the error text: distinguish "consolidator DOWN" (no recent successful execution) from "index
+      older than budget but consolidator succeeding" (a too-tight budget). They demand opposite responses. **SHIPPED —
+      verified by plan_reconciler 2026-08-18**: the extracted duplicate, `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s
+      "soften the manifest-consolidator staleness error text" todo, is now `[x]` (`unified-trading-library@471dee02`,
+      ancestry-verified against `origin/live-defi-rollout`, 2 new unit tests, QG green).
 
 ---
 
@@ -730,14 +723,12 @@ listing, not per-league re-walks), snapshots each parquet to `*.pre_round_backfi
       resolved, "No code shipped this session — both real defects... were already fixed and are confirmed live"). The
       full corpus-wide surgical run as originally scoped was never executed as such; the same end-state was reached by a
       cheaper combination of fixes.
-- [ ] [PROCESS] P1. Generalise: before launching a `--force` whole-corpus refetch to fix ONE column, check whether a
+- [x] ✅ [PROCESS] P2. Generalise: before launching a `--force` whole-corpus refetch to fix ONE column, check whether a
       surgical column-filler exists. The blast radius / quota cost differ by orders of magnitude, and `--force` also
-      forfeits presence-skip resume (§ G-ops). — GENUINELY OPEN: grepped `/codex/12-agent-workflow/` and
-      `/codex/05-infrastructure/vm-launcher-runbook.md` for this lesson — no hit. Unlike item 2's watchdog-artifact
-      lesson (codified into `async-wait-and-poll-discipline.md` + `CLAUDE.md`), this "check for a surgical filler before
-      a full refetch" generalisation was never written into a codex SSOT. Still a live process gap. **Already extracted
-      — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~356, `assigned_vm: planning`, still `- [ ]`
-      open there too as of 2026-08-09) — not duplicating here.**
+      forfeits presence-skip resume (§ G-ops). **SHIPPED — verified by plan_reconciler 2026-08-18**: the extracted
+      duplicate, `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s todo, is now `[x] ✅ [PROCESS] P2`, codified into
+      `/codex/05-infrastructure/vm-launcher-runbook.md` as a HARD RULE (`unified-trading-pm@aa4124c7a0`,
+      ancestry-verified).
 
 ## M-FIXED. Both rate-governance gaps CLOSED (operator: "donot just file them fix them")
 
@@ -762,27 +753,13 @@ That issue's own per-fixture-enrichment MVP-scope leak was fixed and archived (`
 `instruments-service@b00e4433`), but it deliberately deferred one narrower, riskier sub-concern rather than bundle it
 into the same fix — carried forward here so it isn't lost with the archive:
 
-- [ ] [DATA] P2. **`emit_empty_gaps_for_entity`** (`instruments-service/.../sports_reference_core.py`) — the
-      honest-absence gap emitter for FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS — still hardcodes
+- [x] ✅ [DATA] P2. **`emit_empty_gaps_for_entity`** (`instruments-service/.../sports_reference_core.py`) — the
+      honest-absence gap emitter for FIXTURE_STATS/FIXTURE_EVENTS/FIXTURE_LINEUPS/PLAYER_STATS — hardcoded
       `get_expected_leagues_for_source("api_football")` (383 leagues) as its "expected" denominator, independent of the
-      now-MVP-scoped `SPORTS_ENTITY_LEAGUE_COVERAGE`. This means completeness/coverage tracking for these 4 entities
-      will show the ~287 non-MVP widened leagues as permanently `expected_unattempted` (since capture now deliberately
-      never touches them) rather than an honest "out of scope by policy" absence. This is a coverage/reporting-accuracy
-      concern, NOT a call-volume bug (the archived fix already stops the API calls) — deliberately NOT touched in that
-      session because `emit_empty_gaps_for_entity` is a shared function whose honest-absence semantics have been the
-      subject of multiple past incidents (several "RETRACTED" analyses elsewhere in this doc's family). **Done when**:
-      either `emit_empty_gaps_for_entity` branches its expected-denominator by data_type (MVP set for the 4 enrichment
-      entities, full set otherwise), or an operator decision accepts the wider denominator as intentional for these
-      entities and documents why. — GENUINELY OPEN: `plans/active/data_completion_sports_2026_07_24.md` extended the
-      `SPORTS_ENTITY_LEAGUE_COVERAGE` mechanism to WEATHER + PLAYER_VALUES (unified-api-contracts@2ec928b0 + @a0c6064e)
-      — so the coverage-map infrastructure this fix needs now exists and is proven — but that work did NOT touch
-      `emit_empty_gaps_for_entity` or the 4 per-fixture enrichment entities (FIXTURE_STATS/FIXTURE_EVENTS/
-      FIXTURE_LINEUPS/PLAYER_STATS) this todo names. The two other `emit_empty_gaps_for_entity` hits found elsewhere in
-      the corpus (`sports_satellite_ao_dispatch_batch3_2026_07_25.md`,
-      `sports_consolidated_closeout_aggregated_sources_2026_07_24.md`) are about a DIFFERENT concern on the same
-      function (QG function-size decomposition, 89L→≤50L) — unrelated to this denominator bug. Still open. **Already
-      extracted — see `sports_satellite_ao_dispatch_batch9_2026_08_04.md` todo (line ~363, `assigned_vm: planning`,
-      still `- [ ]` open there too as of 2026-08-09) — not duplicating here.**
+      now-MVP-scoped `SPORTS_ENTITY_LEAGUE_COVERAGE`. **SHIPPED — verified by plan_reconciler 2026-08-18**: the
+      extracted duplicate, `sports_satellite_ao_dispatch_batch9_2026_08_04.md`'s `[CODE] P2` todo, is now `[x]`
+      (`instruments-service@a95049d1`, ancestry-verified — landed 2026-07-28, three weeks before this doc's own
+      "GENUINELY OPEN" note above was last written).
 
 ## Progress Log
 
