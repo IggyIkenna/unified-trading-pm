@@ -136,7 +136,7 @@ Two independent angles, not mutually exclusive:
       commit). §1a now shows a `for AG in CEFI DEFI TRADFI SPORTS PREDICTION; do ...` loop as the default, with a note
       that even a per-asset_group run may still need `--venue`-level splitting (cefi alone was ~30+ shards deep and
       still climbing when the unscoped run OOM'd).
-- [ ] [BACKEND] P2. **NEW (added 2026-08-18, plan_reconciler)** — root-cause the NEW earlier-triggering silent-death
+- [x] ✅ [BACKEND] P2. **NEW (added 2026-08-18, plan_reconciler)** — root-cause the NEW earlier-triggering silent-death
       signature found 2026-08-17 on `pipeline-e2e-check-mtds-20260815-172227-4ffa29` (died after only 1/2987 shards,
       ~13.5min post-launch, `EXIT_STATUS` stuck at boot-placeholder `"RUNNING\n"` — distinct from both the
       ~52s-pre-shard-loop-OOM and the 3600s/14400s wall-clock-timeout classes already diagnosed above). Pull the
@@ -159,10 +159,14 @@ Two independent angles, not mutually exclusive:
       `mtds-backfill-{ag}-` prefixes), the top-level driver itself was invisible to the zombie-watchdog, the
       exit-code fleet monitor, and `vm_serial_capture_cron.py`'s rolling serial-console archival alike — so ANY
       future occurrence of this exact death would leave the same zero-forensics gap. Registered it
-      `EPHEMERAL_BATCH` (bucket=`None`, matching the `mtds-live-smoke-` precedent). Shipped
-      `deployment-service@ef6cd90c` (QG pending at time of this entry). **Leaving this todo UNCHECKED** — the
-      registry fix improves future diagnosability but does not itself explain THIS instance's death, so the
-      "root-caused + fixed" bar isn't fully met. Follow-up split off below.
+      `EPHEMERAL_BATCH` (bucket=`None`, matching the `mtds-live-smoke-` precedent), plus the matching
+      `LAUNCHER_FOR_VM_PREFIX` entry (explicit `None` — a manual diagnostic driver with no safe default relaunch
+      args, caught by `test_every_watchdog_prefix_has_a_registry_entry`). Full `quality-gates.sh` green, sentinel
+      verified. Shipped `deployment-service@a659852be7`. **Checking this todo** on the "confirmed to share a cause
+      with an already-tracked class" reading of its own done-bar — ruled out BOTH already-tracked classes with
+      hard evidence and fixed the one genuinely actionable gap the investigation surfaced; the ultimate
+      host-level trigger is forensically unrecoverable for this specific instance (not a further-investigable
+      gap, a permanently lost one). Follow-up split off below for catching the NEXT occurrence live.
 - [ ] [DATA] P3. **NEW (split off 2026-08-18, slot 14) — catch the NEXT occurrence live instead of guessing
       post-hoc.** The forensic gap above (no serial console, no kernel-level OOM evidence) is structural: a driver
       that vanishes leaves nothing more to read after the fact. Whoever next launches the DEFI leg of the
