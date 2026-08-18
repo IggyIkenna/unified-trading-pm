@@ -57,6 +57,8 @@ related_plans:
   - ../active/defi_compute_gcp_migration_2026_08_08_finalize_2026_08_08.md
   - ../active/deployment_api_unauthenticated_prod_p0_2026_08_10.md
   - ../active/deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md
+  - ../active/deployment_service_api_integration_cleanup_2026_08_18.md
+  - ../active/deployment_service_api_integration_cleanup_finalize_2026_08_18.md
   - ../active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md
   - ../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
   - ../active/infra_consolidated_closeout_2026_07_25.md
