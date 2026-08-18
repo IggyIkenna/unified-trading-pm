@@ -90,7 +90,7 @@
     "ml-service": "0.58.42",
     "alerting-service": "0.63.53",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.59"
+    "client-reporting-api": "0.32.61"
   },
   "repositories": {
     "alerting-service": {
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "bea635e8fe2bdc519bf9f39def4c6f9e5da88c92"
+      "ldr_ci_status_sha": "ff881924fa786762738700de2c3d03e9630e82ab"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -843,7 +843,7 @@
         "large_file_count": 7
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "6541890d3c020e5ce01776811bf1f73d5ec67636"
+      "ldr_ci_status_sha": "3272b7dbde2ae333e7ef37b270b64bdbbc4d57ab"
     },
     "market-tick-data-service": {
       "promotion_model": "ldr_main",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "48b1e9f0bf1410955f364494eaf9fd0510ecd741"
+      "ldr_ci_status_sha": "5a1884633bd7c7c373c3f9300122247939a7d6d8"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
