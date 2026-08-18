@@ -123,10 +123,32 @@ when the violation list is empty.
       `gh workflow run <workflow>.yml --ref live-defi-rollout` escape hatch used to verify the `ldr-docs-gate.yml`
       `set +e` fix ahead of promotion. Verified present on `origin/live-defi-rollout` via `git blame`/`git log` before
       flipping — no duplicate edit made.
-- [ ] [BACKEND] P2. **Sweep the fleet for the same `-e` trap.** Grep every workflow for a `run:` block that sets
+- [x] ✅ [BACKEND] P2. **Sweep the fleet for the same `-e` trap.** Grep every workflow for a `run:` block that sets
       `-uo pipefail` (without `e`) and then captures a checker's output into a variable whose failure is meant to be
       handled by a following `RC=$?`: `rg -n 'set -uo pipefail' -A 4 .github/workflows/ | rg -B1 'RC=\$\?'`. Each hit is
       a monitor that fails closed-and-quiet the same way. Repo: unified-trading-pm (+ any per-repo copies).
+      **DONE 2026-08-18 (slot-8).** The literal command only matches `RC=$?` case-exact, so the sweep was broadened:
+      every `.github/workflows/` dir fleet-wide (all ~35 repos in this slot, incl. `unified-trading-ci` and
+      `system-integration-tests`) grepped for `set -uo pipefail` (16 files) and, independently and case-insensitively,
+      for any `<var>=$?` capture pattern (26 hits fleet-wide, unified-trading-pm + unified-trading-ci). Every hit was
+      read in full context and classified: guarded via `&&`/`||` chains (e.g. `PROV_RC=0 || PROV_RC=$?` in
+      `ldr-to-main-promote.yml`/`ldr-to-staging-promote.yml`), guarded via explicit `if`/`case` branches with no raw
+      `$?` capture at all (the majority — `staging-conflict-ldr-main-fallback.yml`, `sit-gate.yml`,
+      `ci-status-update.yml`, `freeze-deferred-build-replay.yml`, `agent-runner.yml`, `conflict-resolution-agent.yml`,
+      `deterministic-promotion-conflict-resolve.yml`, `publish-package.yml`, `python-quality-gates-v2.yml`,
+      `semver-agent.yml`), already fixed via an `ERR` trap (`main-backmerge-to-ldr.yml`, both PM and unified-trading-ci
+      copies — the origin of this bug class, `main_backmerge_to_ldr_silent_failure_2026_08_02.md`), or already carrying
+      `set +e` immediately before the capture (9 sibling monitors: `glue-runner-health-monitor.yml`,
+      `sit-gate-stuck-detector.yml`, `reconcile-release-tags.yml`, `promote-fleet-startup-failure-monitor.yml`,
+      `codex-freshness-sweep.yml`, `glue-pool-starvation-monitor.yml`, `branch-health.yml`, `stale-build-watcher.yml`,
+      `ruleset-drift-alert.yml`, plus `cloud-build-router.yml`/`cloud-build-router-aws.yml`/
+      `image-build-validate.yml`'s three build-trigger captures). **Exactly ONE genuine unfixed hit**:
+      `removed-symbols-workspace-sweep.yml`'s "Run workspace-wide removed-symbols sweep" step — `set -uo pipefail`
+      (no `set +e`) directly followed by the checker invocation and a lowercase `rc=$?` (the literal-command grep
+      missed it on case alone). Confirmed live trap: `rot_detected` is the output the "Create GitHub Issue on
+      cross-repo rot" step gates on, and it was never written on exactly the rc=1 (rot found) / rc=2 (bad manifest)
+      paths this sweep exists to catch. **FIXED**: `unified-trading-pm@<pending>` — added `set +e` immediately before
+      the checker invocation, matching the sibling-monitor pattern, with a comment citing this issue doc.
 - [ ] [BACKEND] P2. **A monitor whose failure path cannot page is a coverage hole, not just a bug.** Add a
       meta-assertion: any job that publishes a `verdict` output consumed by a notify job must emit that output on the
       failure path too (e.g. write `verdict=red` in a `trap`/`if: always()` step rather than inline in the gate step).

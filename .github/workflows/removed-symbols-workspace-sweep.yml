@@ -94,6 +94,16 @@ jobs:
         run: |
           set -uo pipefail
           cd workspace
+          # `set +e` is REQUIRED, not redundant with `set -uo pipefail` above: GitHub Actions'
+          # default shell is `bash --noprofile --norc -e -o pipefail`, and `set -uo pipefail`
+          # does NOT clear that inherited `-e`. Without this, a nonzero exit from the checker
+          # (rc=1 on genuine rot, rc=2 on an invalid manifest — the two cases this sweep exists
+          # to catch) aborts the step right here, before `rc=$?` and before the `$GITHUB_OUTPUT`
+          # writes below — so `rot_detected` is never set and the "Create GitHub Issue on
+          # cross-repo rot" step's `if: steps.sweep.outputs.rot_detected == 'true'` condition
+          # silently evaluates false. Same fleet-wide `-e` trap as ldr-docs-gate.yml's fix — see
+          # plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md.
+          set +e
           python unified-trading-pm/scripts/quality_gates/check_removed_symbols.py \
             --workspace-root "$PWD" \
             --workers 4 >sweep_report.txt 2>&1
