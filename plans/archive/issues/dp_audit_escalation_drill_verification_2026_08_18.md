@@ -5,7 +5,7 @@ summary: >-
   Synthetic DRILL finding (not a real defect), fired 2026-08-18 by interactive slot 3 to prove
   data_pipeline_failure's boot-prompt STEP 1 self-filing path works end-to-end: event=DP_ESCALATION_DEFERRED,
   registry_id=DRILL-VERIFICATION, target_repo=e2e-testing.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,12 +22,16 @@ parent_epic: observability_master
 assigned_vm: NA
 priority: P1
 source: [DP_ESCALATION_DEFERRED, DRILL-VERIFICATION]
-resolved_by:
+resolved_by: data_pipeline_failure-agent (slot 16, drill, agt-2050ac)
 author: data_pipeline_failure-agent (slot 16, drill)
 locked_by:
 ---
 
 # Verification drill — agent-backed DP_* issue filing path
+
+> **🗄️ ARCHIVED 2026-08-18** — `status: resolved`, sole todo `[x]`, zero remaining, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately. Synthetic drill, not a real defect — see Resolution below.
 
 ## What I found
 
@@ -59,6 +63,14 @@ ping the authoring slot (slot 3) with the outcome.
 
 ## Todos
 
-- [ ] [DOC] P1. Verify frontmatter schema-valid, flip to `status: resolved`, ship, ping authoring slot 3 — closes
+- [x] [DOC] P1. ✅ Verify frontmatter schema-valid, flip to `status: resolved`, ship, ping authoring slot 3 — closes
       out this drill (see `/plans/active/dp_audit_escalation_agent_backed_filing_2026_08_18.md`, the "End-to-end
       live verification" todo).
+
+## Resolution
+
+Verification drill: agent-backed filing confirmed working end-to-end, 2026-08-18. STEP 1 self-filing (this doc,
+schema-valid against `docspec.py`'s `PER_TYPE["issue"]`, `docspec.py --check` exit 0) and the
+`repository_dispatch escalate-to-orchestrator` wiring both proved live — filed at `unified-trading-pm@1ea9a7c3ce`
+via `safe-doc-push.sh`, verified an ancestor of `origin/live-defi-rollout` before proceeding. No real defect;
+closing per the drill's own recommended decision.
