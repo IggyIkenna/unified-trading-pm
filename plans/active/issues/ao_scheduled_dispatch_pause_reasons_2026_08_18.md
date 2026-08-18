@@ -130,11 +130,21 @@ itself "done," so the next natural tick after unpause dispatches normally with n
       shows one persistent, in-place-updating row per paused job instead of one new row per ~15-30min
       tick. No catch-up/drain logic needed on resume (see section above — both affected jobs are
       periodic rechecks, not one-shot crons). — agent-orchestrator@6bfd8eef9f (7 new tests, full
-      quality-gates.sh green). Also shipped a one-shot `POST /api/scheduled-jobs/purge-no-capacity`
+      quality-gates.sh green). Shipped a one-shot `POST /api/scheduled-jobs/purge-no-capacity`
       admin endpoint (status=no_capacity ONLY, never touches dispatched/queued/quarantined/timeout/
       error rows) to retroactively clear rows inserted before this fix; verified live 2026-08-18 —
       deploy confirmed via ao-self-pull (405 on the new route = live), then invoked once after the
       `ci_reconcile` resume below verified working: **purged 1301 historical no_capacity rows**.
+      **Extended same day**: operator caught that `status=queued` has the identical repeat-spam
+      pattern (na_eligibility_auditor/plan_reconciler's daily hourly-retry-until-queued cadence —
+      dozens of duplicate `queued` rows per job observed live). Generalized `COALESCIBLE_STATUSES =
+      {no_capacity, queued}` in the same collapse-on-write path, and replaced the narrower
+      purge-no-capacity endpoint with `POST /api/scheduled-jobs/collapse-streaks` — a general
+      retroactive pass that keeps the LATEST row of each consecutive same-status run instead of
+      deleting every match outright, so a job currently sitting in a coalescible state stays visible
+      rather than disappearing. Shipped agent-orchestrator@83731d3b83 (7 more new tests, quality
+      gates green); verified live the same way (405/404 route-existence check), then invoked:
+      **collapsed 250 historical duplicate `queued` rows**.
 - [x] [REVIEW] P3. Once `ci_reconcile`'s manual-daily-task period produces enough signal on
       escalation-routing reliability, resume the timer and archive this doc's `ci_reconcile`
       section (or the whole doc, if all three have resolved by then). (repo: NA — operator
