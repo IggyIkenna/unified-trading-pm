@@ -288,6 +288,26 @@ onboarding) that cost a session real time re-deriving — recorded here so it is
 an existing account — would remove the restart requirement entirely. Not filed as a todo here since
 no active plan owns this; raise it as a new plan/issue if it recurs enough to be worth building.
 
+### Gotcha: a brand-new account's first weekly window is NOT a fresh 7 days (confirmed 2026-08-18, `sub-h-igboestates`)
+
+Do not be alarmed if a just-registered account's `weekly_pct` reads disproportionately high relative
+to its `five_hour_pct` within hours of first use — this is expected, not a capture bug. Anthropic's
+own docs (support.claude.com articles 8325606 and 11049741, Pro/Max plans) state the weekly limit
+"resets at a fixed time each week that is assigned to your account... regardless of when you start
+using Claude or when your subscription begins" — the window is a **fixed, per-account-assigned
+calendar boundary**, not a rolling 7-day window anchored to first use. Confirmed live on
+`sub-h-igboestates` (registered 2026-08-18): its `weekly_window_start` was `2026-08-13 08:00:00 UTC`
+— five days before the account's first real use — cross-checked identically from two independent
+sources (AO's server-polled `account_usage` row, and the account's own `~/.claude.json`
+`cachedUsageUtilization.seven_day.resets_at`, worked back 7 days). A `five_hour` window that opened
+at first-use today will naturally look small next to a `weekly` window with a multi-day head start;
+this is not a burst penalty (searched for one specifically, 2026-08-18 — not documented, and the one
+mechanism that ever rate-shaped Claude usage, peak-hour throttling, only ever touched the 5-hour
+meter and was removed fleet-wide 2026-05-06) and not a poller/attribution bug. Full investigation:
+`/plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md` § "New-account
+weekly-window inheritance". **Does not explain** the separate sub-d Pro-tier ~1047x multiplier
+outlier tracked in that same doc — different mechanism, do not conflate the two.
+
 ## Switching accounts manually
 
 ```bash
