@@ -228,6 +228,20 @@ AlertSeverity.INFO` whenever `details.get("resolved")` is truthy, before the CRI
 > CRITICAL DP_\* event runs through two independent `AlertDeduplicator.is_duplicate()` calls with different hashes,
 > causing a double `ALERT_ROUTED`/`ALERT_SENT` per genuine fire — each state is still correctly TTL'd on its own key,
 > so this does not reproduce the cooldown-defeat symptom, just a cosmetic double-log.
+>
+> **2026-08-18 REGRESSION, OPEN — new root cause, not either bug above**
+> (`plans/active/issues/dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md`): the 09:36Z-confirmed-good
+> identity was re-sampled ~16.5h later and found firing every 15-17min again, alongside DP-LIVE-003 and DP-WATCHER-002
+> (same event name, different detectors) — a fleet-wide symptom, not one detector's `details` shape. Root cause:
+> `AlertDeduplicator._seen` is a plain in-process dict; `dp-alerting-subscriber` (`minScale=1, maxScale=1`, ruling out
+> horizontal fragmentation) still redeploys far more often than the 1800s cooldown window (5 revisions in 3.25h
+> observed, one gap only 17min) — every redeploy is a fresh process that silently wipes `_seen`, defeating every
+> `_RECURRING_ALERT_COOLDOWNS` entry fleet-wide, not just `DP_CRON_DID_NOT_FIRE`. Recommended fix: GCS-persist the
+> `_RECURRING_ALERT_COOLDOWNS` subset of dedup state, mirroring `RenagTracker` (`deployment_service.data_pipeline_
+monitors.renag_tracker`) — not yet implemented, see the issue doc. Source-side defense-in-depth shipped for
+> DP-LIVE-003 (`deployment-service@9abb2d20e4`, `RenagTracker`/`apply_cooldown` wired into
+> `missing_live_producer_watcher`); DP-LIVE-004/DP-WATCHER-002 already have source-side renag_tracker wiring, so their
+> repeat-firing depends entirely on the alerting-service fix landing.
 
 ### DP-DIGEST — routine INFO telemetry (never the incident path)
 
