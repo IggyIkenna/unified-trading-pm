@@ -55,12 +55,18 @@ Following the exact pattern `escalation_queue_reconciler` already established (s
       `agents/escalation_queue_reconciler.md`'s shape exactly (a THIN wrapper carrying only the scheduled-dispatch
       boot/completion contract; the full procedure stays the skill's own SSOT, this file must not duplicate it).
       One-shot lifecycle: `POST /api/slots/$SLOT_ID/done` with `one_shot_complete: true` at the end, no looping.
-- [ ] [SCRIPT] P2. **Write `agent-orchestrator/scripts/install-ao-watchdog-timer.sh`** — copy
+- [x] ✅ [SCRIPT] P2. **Write `agent-orchestrator/scripts/install-ao-watchdog-timer.sh`** — copy
       `install-escalation-queue-reconciler-timer.sh`'s structure (systemd `--user` timer + oneshot service,
       `ExecStartPre` health-gate, no sudo). Pick a cadence and an unused fire-minute offset — the existing minute
       table in `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` lists every taken slot (`:00, :05,
       :15, :20, :30, :40, :45, :52`); daily (matching this skill's own "daily health check" framing) is a
       reasonable starting cadence, open to revision once real dispatch data exists.
+      — agent-orchestrator@6d48977f52. Copied the escalation-queue-reconciler standing-repeat shape (no
+      `scheduled_job_already_ran.py` guard — a missed tick just waits for tomorrow's, same as the 3-hourly job)
+      at a daily `OnCalendar=*-*-* 06:25:00 UTC` cadence (verified live minute defaults via
+      `grep -H '^FIRE_MINUTE=' install-*.sh` rather than trusting the doc's table — live-taken minutes were
+      `00, 05, 08, 12, 15, 30, 35, 40, 45, 52`; `:25` was free). Dispatches `{"mode": "ao_watchdog", "job_name":
+      "ao_watchdog"}`. `bash -n` syntax-checked; full `quality-gates.sh` green on the committed HEAD.
 - [ ] [BACKEND] P3. **Tests** for the new `plan_health.py` dispatch branch — mirror
       `test_plan_health.py`'s `escalation_reconcile`-mode test shapes (dispatch routes to the right role, mode
       exemptions behave correctly).
