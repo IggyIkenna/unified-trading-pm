@@ -791,6 +791,37 @@ not a prose summary that asks the reader to trust the sweep happened. This is th
 motivated § 0b/§ 0c: the reader should be able to look at the list and see for themselves that nothing was skipped,
 rather than taking "unblocked" on faith.
 
+## 7b. Daily-run report artifact — write it down so tomorrow's run is a diff, not a rediscovery
+
+When this skill runs in daily/standing mode (§8/§9's gate — "not required on a narrow 'fix this one pasted alert'
+pass"), close the pass by writing a dated entry to `codex/15-runbooks/ci-daily-health.md` instead of letting the
+findings live only in the session that produced them. This is what turns "run /ci-reconcile" into an actual daily
+habit an operator can build on: tomorrow's run reads today's entry first, so "what changed since yesterday" is a
+two-second scroll instead of re-deriving fleet state from scratch every time.
+
+**Before running the checks**: read the doc's MOST RECENT `## <date>` section — that's the diff baseline.
+
+**After the pass**, append a NEW `## <date>` section (never edit a past one — a wrong prior entry gets corrected in
+the next one, not retroactively) with exactly these four subsections, each one line to a short paragraph, no
+padding:
+
+- **Persistent alerts (non-auto-resolving)** — anything from §0-§7's sweep that did NOT self-heal and is still open
+  at write time, or "none" if the sweep found nothing standing.
+- **ci-reconcile ran** — yes/no + how (ad-hoc this session vs. a standing timer, once one exists).
+- **GH Actions spend** — §8's findings: current visibility mix, any repo that flipped public/private since last
+  entry, migration candidates found (or "none — already self-hosted where it matters," don't force a finding).
+- **CI VM resource health** — §9's verdict for the known CI/glue-runner host(s): over-provisioned / correctly-sized
+  / under-provisioned / genuinely-uncertain, with the headline numbers (CPU avg/max, load avg, swap) cited so the
+  next entry can diff against them.
+
+Lead the new section with a **Delta since last run** line — what changed vs. the previous entry's four subsections
+(new persistent alert appeared / cleared, spend trend up or down, VM verdict flipped) — `n/a — first entry` only for
+the doc's actual first section. Update the doc's own `last_executed` frontmatter field to today's date in the same
+edit (this doc IS a runbook — `owner`/`cadence`/`verifier`/`last_executed` stay current, per this workspace's
+runbook convention, or the doc itself goes review-blocking). Ship the doc update the normal way (`quickmerge.sh
+--agent --files`), same as any other finding from this pass — a report that only exists in an ephemeral session
+transcript is not durable.
+
 ## 8. Daily-cadence checks — GH Actions spend + self-hosting migration audit
 
 Run this section on a standing/daily invocation (not required on a narrow "fix this one pasted alert" pass). Origin
@@ -801,11 +832,26 @@ workflow change.
 
 ```bash
 gh api repos/<owner>/<repo> --jq '.private'                          # per-repo: is this one billed at all right now?
-gh api /users/<owner>/settings/billing/actions 2>/dev/null \
-  || gh api /orgs/<owner>/settings/billing/actions                   # account-level minutes-used-this-cycle
 python3 scripts/generate-workflow-catalog.py                         # regenerate (§ 0b) — Trigger column shows every
                                                                        #   schedule(...) workflow's cadence at a glance
 ```
+
+**For actual dollar figures, don't fight `gh api .../settings/billing/actions`** — it 404's on an ordinary `gh` CLI
+token (needs the account's "Plan" permission, which agent tokens don't carry). `deployment-api` already solves this
+the right way (2026-08-18 finding): it holds a Plan-scoped token in Secret Manager
+(`deployment_api/services/cost_observability/github_billing.py`, GitHub's real Enhanced Billing usage report) and
+exposes it as a normal cost-observability route, no separate credential needed:
+
+```bash
+API_KEY=$(gcloud secrets versions access latest --secret=deployment-api-api-key --project=<gcp-project>)
+curl -s "https://uts-shared-deployment-api-<id>.<region>.run.app/api/costs/breakdown?dimension=day&cloud=github&days=10" \
+  -H "X-API-Key: $API_KEY" | python3 -m json.tool
+```
+
+Returns real per-day `cost` (net, after credit) / `gross` / `credit` — use this for § 7b's daily-report entry instead
+of an operator-quoted estimate. A day-by-day breakdown is more useful than a single-figure average: spend here swings
+10-15x day to day tracking commit/promote volume directly, so one busy day can dwarf a week of quiet ones — report
+the actual daily series, not just an average, or the volume-driven pattern (see the finding below) is invisible.
 
 For every PRIVATE repo: cross-reference its `schedule(...)` workflows' cadence against § 0b's catalog and flag the
 highest-frequency / longest-runtime ones as migration candidates — either to a self-hosted runner (this workspace
