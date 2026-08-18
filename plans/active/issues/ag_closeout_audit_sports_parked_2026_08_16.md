@@ -49,7 +49,7 @@ related:
     /plans/active/issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md,
     /plans/active/sports_track_h_denominator_gated_2026_07_28.md,
     /plans/active/sports_track_h_denominator_prereqs_2026_07_28.md,
-    /plans/active/issues/plan_reconciler_findings_sports_2026_08_16.md,
+    /plans/active/issues/plan_reconciler_findings_sports_2026_08_18.md,
     /plans/active/issues/ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md,
     /plans/active/issues/dp_vm_001_expected_universe_halt_safety_false_page_2026_08_07.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
