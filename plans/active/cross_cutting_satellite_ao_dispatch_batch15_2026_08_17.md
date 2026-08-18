@@ -95,10 +95,15 @@ source: >-
       proposal for what locking requires. Determination: NO (evidence + 4-part proposal recorded in
       `data_pipeline_completion_2026_08_21.md`'s B23 blockquote and filed as tracked follow-up todos in
       [`instruments_schema_not_locked_versioned_2026_08_18.md`](/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md)).
-- [ ] [BACKEND] P1. Instrument the three pipeline stages per shard — fetch throughput, process latency, GCS write
+- [x] ✅ [BACKEND] P1. Instrument the three pipeline stages per shard — fetch throughput, process latency, GCS write
       throughput — recorded separately, per MODE (batch/paper/live). Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: per-stage, per-mode figures are recorded
-      for at least one representative shard per asset group.
+      for at least one representative shard per asset group. Shipped: `unified_trading_library/core/stage_benchmark.py`
+      (portable `run_three_stage_benchmark()` harness) + `scripts/three_stage_benchmark.py` (CLI) —
+      unified-trading-library@cf266661e3. First recorded run (4 asset groups × 3 modes) + interpretation notes in
+      [`docs/benchmarks/three_stage_benchmark_2026_08_18.md`](https://github.com/IggyIkenna/unified-trading-library/blob/live-defi-rollout/docs/benchmarks/three_stage_benchmark_2026_08_18.md)
+      (unified-trading-library repo) — figures are HARNESS-VALIDATION (synthetic fetch payload), not a
+      production-vendor throughput claim; wiring real vendor fetch/write per asset group is a follow-up.
 - [ ] [BACKEND] P1. Make the three-stage benchmark harness portable — runnable on a laptop and on a non-Google
       provider, not just in-cloud, so figures are directly comparable rather than adjusted. Depends conceptually on
       the todo above landing a real harness to make portable — same file, do not dispatch concurrently with it.
