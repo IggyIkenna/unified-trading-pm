@@ -295,6 +295,18 @@ more general, already-cross-service-wired mechanism exists alongside it. Full de
   per this corpus's convention). Also corrected the live-feed todo's wrong function name
   (`update_wallet_health_from_lending` → `risk.py::update_lending_positions()`) in the same edit, here and in the
   wrapper plan.
+- **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated), whole-doc citation conversion — all 8
+  remaining open todos (P0-P2: the live-feed wiring, both archetype switch-overs, the circuit-breaker fate
+  decision, the data-model extension, the aave.py fate decision, the documentation follow-up, and the
+  mode-aware-dispatch design) are verbatim or near-verbatim duplicated, several with corrected/updated framing, in
+  `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` (status: active, assigned_vm: planning) —
+  same pattern already applied to this doc's P2 docstring todo on 2026-08-17. Converted each to a citation marker
+  rather than leaving a competing duplicate open here; doc stays `assigned_vm: NA` (zero backlog impact — this is
+  pure hygiene, not a reclassification). `grep -cE '^[[:space:]]*[-*] \[ \]'` = 0 post-conversion (was 8, matching
+  Phase-0's `open_todos=8` pre-conversion). Note for a future reader: this doc's own narrative (aave.py
+  "non-functional stub", `HealthFactorMonitor` "already-working") is now stale relative to the sibling plan's
+  2026-08-18 investigation — read the sibling plan's Progress Log for current ground truth, not this doc's
+  original Finding/Data-model-gaps sections.
 - **na-eligibility-audit 2026-08-18** [defi tranche]: KEEP-NA-STALE (already-duplicated) — all 8 remaining open
   todos verified against `strategy_service_centralization_fixes_2026_08_16.md` (status: active, assigned_vm:
   planning, sequential: true) and found to be verbatim/near-verbatim duplicates of that plan's own todos (the plan

@@ -131,3 +131,12 @@ or an equivalent is promoted); this run's job was classification + duplicate-avo
   (the one overlap found was resolved by cross-referencing, not by a competing RECLASSIFY draft, so the shared
   conflict-check's "park as BLOCKED-OPERATOR-DECISION" path was not needed). Ratchet checked at run end (see this
   run's `/done` evidence).
+- **na-eligibility-audit 2026-08-18 (dispatch agt-72629d, slot 18 — duplicate concurrent dispatch)**: a second
+  worker was independently dispatched for the same defi tranche at the same time and reached the same verdicts on
+  all 4 in-scope docs, but initially extracted the FOLD-3 residual into a standalone
+  `defi_satellite_ao_dispatch_batch17_2026_08_18.md` before discovering this doc's own (earlier-landed) C4
+  cross-reference treatment. Retracted that extraction on discovery (batch17 + its finalize deleted, never
+  committed) and deferred to this doc's analysis as the correct one — it alone identified the C4 overlap via a
+  read of `data_completion_defi_2026_07_15.md`, which the second worker's own conflict-check grep had surfaced as a
+  hit but not followed up by reading. No corpus content lost: this doc had been blind-`Write`-overwritten by the
+  second worker's own duplicate draft and is restored here to its original, correct 2026-08-18 content verbatim.
