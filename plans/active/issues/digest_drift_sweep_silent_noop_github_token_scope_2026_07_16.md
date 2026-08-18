@@ -340,3 +340,5 @@ fix, exactly matching the KEEP-NA-valid pattern this skill already independently
 ## Progress Log
 
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Carries a prominent '3-of-4 FIXED (2026-07-26)' banner showing recommendations 2b/2c/3 (GH_PAT token fix, silent-failure hardening, dispatch cap) shipped and proven via a dedicated regression-test harness (unified-trading-pm@f6e98bbdd, @6cb21eca3), plus 4 sequential na-eligibility-audit KEEP_NA confirmations (2026-07-30, 08-01, 08-06, 08-10). The sole remaining open todo — investigate why update-dependency-version.yml's primary cascade has been dormant since 2026-06-28 — is an open-ended...

@@ -925,3 +925,5 @@ no retry12 per retry discipline.
   `/plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`, the doc this plan's own tail
   Progress Log now repeatedly cross-references as the live evidence trail for the pending silent-death
   option-1-vs-option-2 operator decision; prior 4 entries unchanged.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 928-line QG host-adaptive resource governor plan; the whole governor engine (ledger, dual-gate admission, cgroup caps, 80% valve, wait-timeout, cross-host verification) is shipped and live-validated (93-min soak, 42 runs, 0 OOM). grep confirms 13 open checkboxes spanning deferred/conditional refinements (baseline schema, cpu_weight, FIFO/aging — all explicitly 'DEFERRED, revisit only if X is observed'), a Slack-alerting design gap, and several NEW-FINDING investigation items including a...

@@ -1,0 +1,65 @@
+---
+doc_type: plan
+title: ci-tranche zero-checkbox archive sweep — 2026-08-18 — finalize
+summary: >-
+  Gated closeout for `ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md` — once all 6 named docs are archived,
+  verifies zero orphan referrers corpus-wide and that each archival's codex-alignment step was genuinely performed
+  (not skipped), then archives the sweep plan itself.
+status: active
+nature: process
+asset_group: [ci]
+stage: [meta]
+repos: [unified-trading-pm]
+scope: [engineer]
+tags: [ci, ao-dispatch, close-out, finalize, archival]
+related:
+  [
+    /plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
+  ]
+created: "2026-08-18"
+last_updated: "2026-08-18"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P3
+estimate_class: infra
+estimate_baseline_ai_days: 0.2
+estimate_calibrated_ai_days: 0.16
+assigned_role: review
+effort: low
+drift_direction: advance-docs
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+depends_on: [ci_tranche_zero_checkbox_archive_sweep_2026_08_18]
+gate_on_depends: true
+sequential: true
+context_scope:
+  [
+    /plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
+source: >-
+  Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored
+  alongside the sweep plan by the ci-tranche /na-eligibility-audit run (dispatch agt-b10de6).
+---
+
+# ci-tranche zero-checkbox archive sweep — finalize
+
+> **Machine-gated on `/plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md`**
+> (`depends_on` + `gate_on_depends: true`) — will not dispatch until all 6 of that plan's todos are `done`.
+
+## Todos
+
+- [ ] [REVIEW] P3. Run `regenerate_active_plan_inventory.py` and grep the whole corpus for each of the 6 archived
+      docs' old `plans/active/issues/...` paths — confirm zero remaining referrers, or repoint any found at a codex
+      doc (never at the archived path itself, per the archival discipline SSOT). Spot-check that each archival's
+      codex-alignment step was genuinely performed (a one-line Progress Log note is enough evidence; a blank/skipped
+      step on any of the 6 is a defect to fix, not wave through). Once clean, `git mv` this finalize plan and the
+      sweep plan itself to `plans/archive/2026_08/`.
+
+## Progress Log
+
+- **2026-08-18 (na-eligibility-audit, ci tranche)**: authored alongside the sweep plan.

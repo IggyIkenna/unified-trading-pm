@@ -389,12 +389,16 @@ data that's actually needed. This plan gets the evidence first.
       itself be a maintenance-drift risk (two sources of truth for the same mapping). Remaining work is UI-only — folded
       into the un-suppress-drilldown todo below, since "wire into the drilldown" only makes sense once that component is
       live.
-- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) → `infra_satellite_ao_dispatch_batch18_2026_08_17.md`
-      item 1.** ~~defi empty_confirmed breakdown + `EXPECTED_INSTRUMENT_NOT_LISTED` semantics — still open, agent was
-      running at session checkpoint time (2026-08-15), not yet reported.~~ Not yet executed — tracked there. Same
-      method as the cefi/tradfi/prediction sibling breakdowns (grain, date/venue/data_type/instrument_type/error_reason
-      distribution via `read_availability_index`, column-projected + filtered; ~159M total rows, scope queries
-      carefully). Still the single biggest unresolved empty_confirmed population (78.7M, larger than captured 32.5M).
+- [x] ✅ **EXTRACTED 2026-08-17 (na-eligibility-audit, infra tranche) →
+      `infra_satellite_ao_dispatch_batch18_2026_08_17.md` item 1 — CLOSED STALE-DUPLICATE 2026-08-18 (slot-11,
+      data_engineering).** The extraction's premise ("still open, agent was running at session checkpoint time
+      2026-08-15, not yet reported") was a snapshot from mid-checkpoint on 2026-08-15, before the same session's
+      `/autonomous` pass finished the last of the 9 original audit todos later that same day. By the time this
+      extraction was drafted (2026-08-17), todos 4 and 5 above already fully covered this exact scope — todo 4 is the
+      breakdown (grain, chain/venue/date distribution, error_reason classification), todo 5 is the
+      `EXPECTED_INSTRUMENT_NOT_LISTED` semantics resolution — literally the same title as this entry, already `[x]`
+      RESOLVED with full evidence. No new investigation was run; batch18 item 1 has been re-flipped to cite todos 4/5
+      directly rather than re-executed. See batch18's Progress Log for the citation-correction detail.
 
 ## Progress Log
 
@@ -509,3 +513,9 @@ data that's actually needed. This plan gets the evidence first.
   is a LOCAL/human plan by design (operator ruling 2026-08-15) and the extraction is a per-todo split, not a
   whole-doc flip; the BYBIT/KRAKEN-FUTURES bundling migration and the catalogue-gap audit remain genuinely NA
   (judgment/design-gated).
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:65f9b307b0915187]: KEEP-NA, valid — unchanged.
+  The extracted batch18 item 1 was independently found to be a stale duplicate of this doc's own already-resolved
+  todos 4/5 and closed 2026-08-18 by regular work (slot-11, data_engineering), not by this audit — see this doc's
+  own todo entry above. The 2 remaining open items (undetected defi catalogue-gap on-chain walk; BYBIT/KRAKEN-FUTURES
+  futures_chain migration, hard-gated on a per-row expiry verification) stay genuine investigation/production-data-
+  migration work, not worker-determinable alone.

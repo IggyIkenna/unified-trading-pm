@@ -760,3 +760,5 @@ operator ruling quoted verbatim in the doc ('Standing 2026-07-23 ruling preserve
 citation verified real by reading it in place. Tag: DEPENDENCY_BLOCKED.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Large 762-line audit doc with 5 open checkboxes, independently re-read end-to-end. Item 1 (F1 trading kill-switch no-op) is TIME-GATED on an explicit dated 2026-07-28 operator ruling quoted verbatim in the doc ('Standing 2026-07-23 ruling preserved verbatim: KEEP TRACKED, DO NOT FIX YET... fixed when execution-service work starts') -- honored per the never-re-litigate rule. Items 2/3/5 each read as plausibly bounded/mechanical but their citation trails point to now-archived, status:complete...

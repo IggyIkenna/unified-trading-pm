@@ -320,3 +320,10 @@ understanding the root cause to be valuable.
   uncommitted work, which is precisely what round11's own author chose to log rather than act on blind. Keeping it
   paired with the todo1/3 investigation is the safer, more conservative call.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:e107f733789d1aaa]: KEEP-NA, valid — first
+  INFRA-tranche marker on this doc (prior verdicts, 2026-08-08/10, were filed under the `ao` tranche; current
+  tooling's `asset_group: [infrastructure]`-only membership makes `infra` this doc's owning tranche now — the
+  verdict itself is unchanged, this is a discoverability/marker-ownership fix). 2 open items unchanged: todo 1 is
+  opportunistic (needs a live reproduction in progress to investigate, not independently schedulable), todo 2 is
+  deliberately paired with todo 1's still-open investigation per the 2026-08-10 verdict's own reasoning
+  (automating stash-drops while the underlying race is unresolved risks destroying another session's genuine WIP).

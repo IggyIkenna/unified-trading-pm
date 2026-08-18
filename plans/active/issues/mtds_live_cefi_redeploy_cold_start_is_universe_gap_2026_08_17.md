@@ -16,7 +16,7 @@ tags: [cefi, live-capture, instruments-service, redeploy, cold-start]
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md,
+    /plans/archive/2026_08/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md,
   ]
 parent_epic: cefi_master
 created: "2026-08-17"
@@ -32,7 +32,7 @@ depends_on: []
 context_scope:
   [
     /codex/04-architecture/instruments-service-as-ssot-for-mtds.md,
-    /plans/active/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md,
+    /plans/archive/2026_08/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md,
     market-tick-data-service/market_tick_data_service/instrument_availability_paths.py,
     market-tick-data-service/market_tick_data_service/live/_is_universe.py,
     deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh,

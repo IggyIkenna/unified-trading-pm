@@ -876,3 +876,5 @@ gated off, 6 plan-hygiene ratchets fixed, job-minutes re-measured -32.4%). 8 ite
   (its only relevance, the plan-hygiene ratchet fix, is DONE) for `python-quality-gates-v2.yml`, the concrete file
   behind two still-open items (the hardcoded `content-gate` runner decision; the governor's `QG_GOVERNOR_MODE`
   reservation-vs-token gating).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Large, actively-evolving CI-VM cost/I/O audit (2026-08-05 original, independently re-verified/corrected 2026-08-06: 3 confirmed / 5 corrected / 6 falsified in its own Part 0 table) with 6+ sequential na-eligibility-audit KEEP_NA confirmations from 2026-08-06 through 2026-08-10. Most of the original action-item list is already [x] closed with live AWS/SSM/CloudWatch evidence (VM downsized to m8i.2xlarge, EBS bumped, public-repo migration completed, uv-cache gated off, 6 plan-hygiene ratchets...

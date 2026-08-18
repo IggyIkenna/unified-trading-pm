@@ -1,0 +1,100 @@
+---
+doc_type: issue
+title: B23 determination — the 51/85-column instruments schema is not locked or versioned; 4-part fix
+summary: >-
+  B23 (data_pipeline_completion_2026_08_21.md) asks whether INSTRUMENTS_PARQUET_SCHEMA is locked and versioned.
+  Determination: NO — no version field exists on the schema or its SchemaContract wrapper, the per-asset-group
+  contracts synthesised from it are never consulted by any writer/reader, and no golden/hash test would catch a
+  silent column change. This doc carries the 4-part fix as tracked, AO-dispatchable todos.
+status: open
+nature: issue
+asset_group: [cross-cutting]
+stage: [data]
+repos: [unified-api-contracts, instruments-service]
+scope: [engineer]
+tags: [schema, versioning, data-pipeline-completion, b23]
+related:
+  [
+    /plans/active/data_pipeline_completion_2026_08_21.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md,
+  ]
+created: "2026-08-18"
+last_updated: "2026-08-18"
+parent_epic: infrastructure_master
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 1.0
+estimate_calibrated_ai_days: 0.8
+assigned_role: data_engineering
+effort: medium
+drift_direction: advance-code
+locked_by:
+locked_since:
+supersedes:
+superseded_by:
+resolved_by:
+depends_on: []
+author: data_engineering (slot 9)
+source: [/plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md item 3]
+---
+
+# B23 determination — instruments schema is not locked/versioned; 4-part fix
+
+## What I found
+
+`INSTRUMENTS_PARQUET_SCHEMA` (`unified-api-contracts/unified_api_contracts/internal/domain/instruments/_instruments_parquet_schema.py`)
+is a bare `list[dict]` literal, currently 85 columns (grown silently from the "51-column" figure B23's own title still
+carries — no changelog entry or version bump marks when or why). Full evidence trail is recorded in
+`data_pipeline_completion_2026_08_21.md`'s B23 blockquote (updated 2026-08-18). In short: the schema has no version
+field, the framework that versions OTHER UAC schemas (`CANONICAL_*_VERSION` + `check_schema_versions.py`) explicitly
+excludes it, the per-asset-group `SchemaContract`s synthesised from it are registered but never consulted by any
+consumer, and no test would catch a silent column add/remove/retype.
+
+## Why it matters
+
+B23 exists because of a real incident (2026-04-14: 85 `entity=fixtures_schedule` shards silently carried an
+instrument-catalogue shape instead of fixtures data, undetected until a downstream column-projection read failed).
+The one guard that exists for that incident class (`sink.py::_assert_not_cross_domain_contamination`) is narrow and
+reactive — it would not catch an in-place change to the instrument-catalogue schema itself, which is exactly what
+"locked and versioned" is meant to prevent.
+
+## Recommended decision
+
+Implement the 4-part fix below, in order (each part is independently useful; later parts depend on earlier ones
+landing in the same repo so they are NOT concurrent-dispatchable against each other — sequential within this doc).
+
+- [ ] [DATA] P1. Add `INSTRUMENTS_SCHEMA_VERSION: str = "1.0.0"` as a module-level constant in
+      `unified-api-contracts/unified_api_contracts/internal/domain/instruments/_instruments_parquet_schema.py`,
+      following the same pattern as UAC's existing `CANONICAL_*_VERSION` constants elsewhere in the repo. Repo:
+      unified-api-contracts. Done-when: the constant exists, is exported, and a unit test asserts its value.
+- [ ] [DATA] P1. Extend `unified-api-contracts/scripts/check_schema_versions.py` (or add a sibling script) to also
+      cover `internal/domain/instruments/` — its current `_get_files()` only walks `canonical/domain/` +
+      `canonical/execution.py`. Pair with a checked-in golden file (column name+type+order, or a content hash of
+      `INSTRUMENTS_PARQUET_SCHEMA`) compared on every test run; a mismatch fails UNLESS `INSTRUMENTS_SCHEMA_VERSION`
+      was also bumped in the same change. Depends on the todo above (needs the version constant to exist). Repo:
+      unified-api-contracts. Done-when: a deliberate schema-list edit without a version bump fails CI locally
+      (`quality-gates.sh`), and the same edit WITH a version bump passes.
+- [ ] [DATA] P2. Add a `schema_version: str` field to `SchemaContract`
+      (`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py`, currently has none) and populate
+      it from `INSTRUMENTS_SCHEMA_VERSION` in `_make_catalogue_contract()`
+      (`unified-api-contracts/unified_api_contracts/internal/schemas/_instrument_catalogue_contract.py`). Depends on
+      the first todo. Repo: unified-api-contracts. Done-when: `CEFI_INSTRUMENT_CATALOGUE.schema_version` (and the
+      other 4 asset-group contracts) resolve to the same value as `INSTRUMENTS_SCHEMA_VERSION`.
+- [ ] [DATA] P2. Wire the per-asset-group `SchemaContract`s to the instruments-service write path — today
+      `CEFI_INSTRUMENT_CATALOGUE` / `DEFI_INSTRUMENT_CATALOGUE` / `TRADFI_INSTRUMENT_CATALOGUE` /
+      `PREDICTION_INSTRUMENT_CATALOGUE` / `SPORTS_INSTRUMENT_CATALOGUE` are registered into `CONTRACT_REGISTRY` but
+      never consulted by any writer or reader (grep-confirmed zero references outside their own definition file).
+      Call `validate_dataframe(df, CONTRACT_REGISTRY[(asset_group, "instrument_catalogue", "instrument_catalogue")])`
+      (or equivalent) at instruments-service's catalogue-write choke point (`engine/orchestrator/sink.py` /
+      `process_write.py`) — the same choke point that already runs `_assert_not_cross_domain_contamination`. Depends
+      on the third todo (contract needs its version field first). Repo: instruments-service. Done-when: a catalogue
+      write with a column outside the locked+versioned contract is rejected at write time, with a regression test.
+
+## Progress Log
+
+- **2026-08-18 (data_engineering, slot 9)**: filed from `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md`
+  item 3 (B23 determination). Determination recorded in `data_pipeline_completion_2026_08_21.md`'s B23 blockquote.
+  The 4-part fix is new discovered scope beyond that item's own done-when (determination + proposal only) — filed
+  here per findings-triage rather than absorbed into the determination task.

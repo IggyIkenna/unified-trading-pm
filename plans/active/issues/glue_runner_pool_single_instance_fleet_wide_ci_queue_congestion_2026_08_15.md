@@ -148,6 +148,7 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   the runner gets a persistent `_work/_actions` cache so it stops re-fetching `actions/checkout` every job). Provenance:
   cicd escalation agt-3378e5, deployment-service#1036.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged.
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — re-affirms 2026-08-17 verdict. The sole open [OPERATOR] follow-up needs AWS SSM access this class of session identity is confirmed live-denied for (non-self-serviceable per the orchestrator-cloud-identity-self-service SSOT), plus an unresolved either/or remediation-design branch. 3 new cicd-escalation Progress Log entries since the prior marker are evidence accumulation, not new open work.
 
 - **cicd escalation agt-8c192b 2026-08-17 ~14:07Z (slot 4)**: THIRD manifestation of the same single-glue-runner
   congestion — instruments-service `live-defi-rollout` quality-gates-v2 red at commit `a1754003466946c0e5b7b71ad4a5b58`

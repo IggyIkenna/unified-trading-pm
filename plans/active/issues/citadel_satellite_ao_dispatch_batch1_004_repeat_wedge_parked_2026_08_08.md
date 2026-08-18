@@ -221,5 +221,6 @@ that the failure mode on this task isn't limited to the exact `forced_compact`->
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:63c0490dc6e560eb]: KEEP-NA, valid — root-cause todo already done; both remaining items need an operator-only dashboard unpark action this interactive session has no write access to trigger.
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — re-affirms 2026-08-17 verdict. Both remaining items still need an operator-only dashboard unpark action this class of session has no write access to trigger; content unchanged in substance since the prior marker.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added the now-archived TmuxPruner root-cause
   doc this doc's own completed BACKEND todo cites as carrying "full detail" on the fix that unblocks the pending unpark.

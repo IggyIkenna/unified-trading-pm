@@ -97,17 +97,18 @@ rather than split into two same-priority concurrent items on the same file.
 
 ## Todos
 
-- [ ] [DATA] P1. **DeFi `empty_confirmed` breakdown + `EXPECTED_INSTRUMENT_NOT_LISTED` semantics.** Pick up where the
-      dispatched investigation referenced in `empty_confirmed_and_coverage_correctness_audit_2026_08_15.md` left off
-      (was mid-run at that doc's 2026-08-15 session checkpoint, not yet reported) — same method as that doc's
-      already-completed cefi/tradfi/prediction sibling breakdowns: grain × date × venue × data_type × instrument_type ×
-      error_reason distribution via `read_availability_index(...)`, column-projected + filtered (the defi
-      `empty_confirmed` population is ~159M rows total; scope queries carefully, do not materialize the whole set).
-      This is the single largest unresolved `empty_confirmed` population (78.7M rows) across every asset_group.
-      **Done when**: a written breakdown (same shape as the cefi/tradfi/prediction siblings) classifies the 78.7M rows
-      by root cause (genuinely out-of-scope / mislabeled / tagging-quality bug), cited back into the source doc's
-      Track. Read-only — no manifest mutation, backfill, or purge in this todo. Repo: market-tick-data-service.
-      Source: `empty_confirmed_and_coverage_correctness_audit_2026_08_15.md`.
+- [x] ✅ [DATA] P1. **DeFi `empty_confirmed` breakdown + `EXPECTED_INSTRUMENT_NOT_LISTED` semantics — CLOSED
+      STALE-DUPLICATE 2026-08-18 (slot-11, data_engineering), no new investigation needed.** This todo's premise ("mid-run
+      at the 2026-08-15 session checkpoint, not yet reported") was extracted from a snapshot taken mid-checkpoint on
+      2026-08-15 — but by the end of that SAME session (same day), the source doc's `/autonomous` execution pass
+      finished the last of its 9 original audit todos, and the breakdown + semantics work landed as todos 4 and 5 in
+      `empty_confirmed_and_coverage_correctness_audit_2026_08_15.md` (both `[x]` RESOLVED, full grain/chain/venue/date/
+      error_reason breakdown for the 78.7M rows + the `EXPECTED_INSTRUMENT_NOT_LISTED` "both true" nuanced resolution
+      with 2 confirmed real incidents) — literally the same scope as this todo's own title. The 2026-08-17
+      na-eligibility-audit extraction that created this todo didn't account for that later same-day completion. Source
+      doc's own stale placeholder (its item citing this extraction) corrected in the same edit to point back at todos
+      4/5 instead. No manifest mutation, code change, or ship was needed or performed. Source:
+      `empty_confirmed_and_coverage_correctness_audit_2026_08_15.md` todos 4 & 5.
 
 - [ ] [INFRA] P2. **Retry the 3 crash-loop alert-policy creates.** Retry the 3
       `google_monitoring_alert_policy.cloud_run_service_crash_loop` resource creates (3 named services) now that the
@@ -191,3 +192,8 @@ rather than split into two same-priority concurrent items on the same file.
   (44 in-scope docs read end-to-end via a 5-agent fan-out). All 6 source docs' own checkboxes flipped to cite this
   batch at authoring time. Two additional RECLASSIFY_SPLIT candidates found during conflict-check were excluded as
   already-covered-elsewhere rather than re-extracted (see "Deliberately excluded" above).
+- **2026-08-18 (slot-11, data_engineering, dispatched task infra_satellite_ao_dispatch_batch18-9efc4d0b3824)**: item 1
+  (DeFi `empty_confirmed` breakdown + `EXPECTED_INSTRUMENT_NOT_LISTED` semantics) closed as a stale-duplicate on
+  investigation — the source doc's todos 4 and 5 (both `[x]` RESOLVED, same-day 2026-08-15 completion after this
+  batch's extraction snapshot was taken) already fully cover this exact scope. No new investigation, code, or manifest
+  mutation was needed; only a citation correction on both docs. Read-only doc-only change, no code repo touched.

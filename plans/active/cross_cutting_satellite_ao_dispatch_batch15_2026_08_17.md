@@ -76,43 +76,90 @@ source: >-
 
 ## From `data_pipeline_completion_2026_08_21.md`
 
-- [ ] [DATA] P0. Verify B21 — Distinct Values in the deployment UI shows zero non-canonical values, per asset group.
+- [x] ✅ [DATA] P0. Verify B21 — Distinct Values in the deployment UI shows zero non-canonical values, per asset group.
       Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the deployment UI's Distinct
       Values view is queried for every asset group and either zero non-canonical entries are confirmed, or the
-      specific non-canonical entries are named and reported.
-- [ ] [DATA] P0. Verify B22 in BOTH directions, per asset group, off the manifest — manifest→path (does every entry
+      specific non-canonical entries are named and reported. **RESULT: B21 FAILS — 113 non-canonical entries**
+      (cefi 1, defi 38, prediction 1, sports 71, tradfi 2; all but 5 `<blank>` sentinels are real, non-blank
+      drift). Queried live via the exact `deployment_api.routes.data_status._distinct_values` code path backing
+      `GET /distinct-values/{asset_group}` against the newest nightly honest-coverage rollup (source_date
+      2026-08-18). Full per-value breakdown + 8 follow-up todos filed:
+      [`/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`](/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md).
+- [x] ✅ [DATA] P0. Verify B22 in BOTH directions, per asset group, off the manifest — manifest→path (does every entry
       have an object?) AND path→manifest (does every object have an entry?). Manifest-driven; no new whole-corpus
       GCS walk (B13 discipline). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a
       per-AG bidirectional reconciliation report is produced, citing the manifest as the sole read surface.
-- [ ] [DATA] P0. Establish whether B23's schemas (the 51-column instruments schema) are locked and versioned, and
+      **Done 2026-08-18** —
+      [`data_pipeline_reconciliation_b22_bidirectional_2026_08_18.md`](/plans/audit/results/data_pipeline_reconciliation_b22_bidirectional_2026_08_18.md).
+      Synthesized from already-published per-AG manifest-side artifacts (phantom + orphan-sweep read-backs), zero new
+      GCS reads. Headline finding: direction 1 (manifest→path/phantom) has some coverage on all 5 AGs; direction 2
+      (path→manifest/orphan) has **never been assessed** for cefi, tradfi, or prediction, and the two AGs that have
+      been measured (defi 63.74% orphan_real, sports 27,348 objects) are both ~26 days stale — confirming the gate
+      text's own warning that path→manifest is the direction that gets skipped. 4 follow-up todos filed in the
+      report itself (not this doc) to close the per-AG gaps.
+- [x] ✅ [DATA] P0. Establish whether B23's schemas (the 51-column instruments schema) are locked and versioned, and
       if not, what locking them requires. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`.
       Done-when: a written determination (locked-and-versioned: yes/no) is recorded, plus, if no, a concrete
-      proposal for what locking requires.
-- [ ] [BACKEND] P1. Instrument the three pipeline stages per shard — fetch throughput, process latency, GCS write
+      proposal for what locking requires. Determination: NO (evidence + 4-part proposal recorded in
+      `data_pipeline_completion_2026_08_21.md`'s B23 blockquote and filed as tracked follow-up todos in
+      [`instruments_schema_not_locked_versioned_2026_08_18.md`](/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md)).
+- [x] ✅ [BACKEND] P1. Instrument the three pipeline stages per shard — fetch throughput, process latency, GCS write
       throughput — recorded separately, per MODE (batch/paper/live). Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: per-stage, per-mode figures are recorded
-      for at least one representative shard per asset group.
-- [ ] [BACKEND] P1. Make the three-stage benchmark harness portable — runnable on a laptop and on a non-Google
-      provider, not just in-cloud, so figures are directly comparable rather than adjusted. Depends conceptually on
-      the todo above landing a real harness to make portable — same file, do not dispatch concurrently with it.
-      Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the same harness produces
-      comparable figures run locally and against the reference Google-environment run.
+      for at least one representative shard per asset group. Shipped: `unified_trading_library/core/stage_benchmark.py`
+      (portable `run_three_stage_benchmark()` harness) + `scripts/three_stage_benchmark.py` (CLI) —
+      unified-trading-library@cf266661e3. First recorded run (4 asset groups × 3 modes) + interpretation notes in
+      [`docs/benchmarks/three_stage_benchmark_2026_08_18.md`](https://github.com/IggyIkenna/unified-trading-library/blob/live-defi-rollout/docs/benchmarks/three_stage_benchmark_2026_08_18.md)
+      (unified-trading-library repo) — figures are HARNESS-VALIDATION (synthetic fetch payload), not a
+      production-vendor throughput claim; wiring real vendor fetch/write per asset group is a follow-up.
+- [x] ✅ [BACKEND] P1. **DONE 2026-08-18 (slot-12, backend_engineer).** Make the three-stage benchmark
+      harness portable — runnable on a laptop and on a non-Google provider, not just in-cloud, so figures
+      are directly comparable rather than adjusted. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`.
+      Done-when: the same harness produces comparable figures run locally and against the reference
+      Google-environment run. No code change was needed — `run_three_stage_benchmark()` was already
+      cloud-agnostic by construction (plain callables, zero provider dependency). Confirmed empirically by
+      running the unmodified CLI on a genuinely non-Google host (this slot's own worktree host, verified
+      Amazon EC2 via DMI vendor string + unreachable `metadata.google.internal`) and comparing against the
+      2026-08-18 GCP-`planning`-VM reference run: process latency (the host-bandwidth-insensitive stage)
+      matched within ~3% (~10.2-10.6ms both sides); fetch/write throughput stayed same-order-of-magnitude
+      (expected variance — memory-bandwidth-bound on the synthetic payload, not vendor/network-bound).
+      Full comparison + raw JSON in `unified-trading-library@a31ab4a2a9`
+      (`docs/benchmarks/three_stage_benchmark_2026_08_18.md` § "Portability confirmation — off-Google run").
 - [ ] [BACKEND] P2. Publish the per-shard reference ETA derived from the Google-environment figures, labelled
       REFERENCE (explicitly not a target), alongside the per-stage breakdown that explains it. Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a published reference-ETA table exists,
       explicitly labelled non-binding.
-- [ ] [DOC] P0. Cross-link every gate (B1-B26, P1-P13, L1-L14) in `data_pipeline_completion_2026_08_21.md`'s tables
+- [x] ✅ [DOC] P0. Cross-link every gate (B1-B26, P1-P13, L1-L14) in `data_pipeline_completion_2026_08_21.md`'s tables
       to its owning plan/issue doc; where no owning plan exists, record that absence as the finding rather than
       silently absorbing it. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: every gate
-      row in that doc's tables carries an owning-doc link or an explicit "no owning doc" note.
-- [ ] [DATA] P0. Tuesday checkpoint: record BATCH/PAPER/LIVE readiness stage per shard across instruments-service
+      row in that doc's tables carries an owning-doc link or an explicit "no owning doc" note. **Done 2026-08-18**:
+      added an "Owning doc" column to all 6 gate tables (B1-B8, B9-B20, B21-B23, B24-B26, PAPER P1-P13, LIVE L1-L14),
+      resolving all 53 rows. Finding: 29/53 (55%) have no dedicated owning plan/issue doc — enumerated in a new
+      summary blockquote under the doc's existing "Tie-in to existing plans" bullet, most tracing to a codex SSOT
+      policy rather than a tracked work item, or genuinely uncovered anywhere in the corpus (e.g. P6 stream
+      continuity, L2 SLOs, L12 access control).
+- [x] ✅ [DATA] P0. Tuesday checkpoint: record BATCH/PAPER/LIVE readiness stage per shard across instruments-service
       through features-service, all asset groups (`unverified` is a legitimate recorded value where no check
       exists). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a per-shard stage table
-      is committed covering every asset group.
-- [ ] [DATA] P1. Friday target: record all shards at BATCH readiness pending backfill completion, with the residual
-      explicitly scoped to B8 (honest coverage 100%) and nothing else. Source:
-      `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the Friday-target table is committed and
-      any non-B8 residual is flagged as a separate finding.
+      is committed covering every asset group. — `unified-trading-pm@7f2b621ad0`. The `readiness-state-dump` skill
+      (already shipped `unified-trading-pm@5b3dbf99bd`, W1/Tuesday-dumps-deliverable-1) had verified live counts
+      recorded, but no per-shard TABLE had actually been committed — re-ran it live against
+      `gs://central-element-323112-honest-coverage/2026-08-18/coverage.json` (288 venues x 3 modes = 864 rows) and
+      derived a pipeline-only stage (declared + instruments_service + market_tick_data + market_data_processing +
+      features legs — excludes strategy/execution, a distinct gate set per `data_pipeline_completion_2026_08_21.md`)
+      per shard. Committed both the full per-shard row table and a per-asset-group x mode summary:
+      `/plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18.json` (864 rows) +
+      `/plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18_summary.md`. Covers every asset group
+      present in the coverage manifest (cefi, defi, prediction, sports, tradfi) plus an `UNKNOWN` group (8 venues,
+      24 rows — captured but unattributed to a known asset_group; a real finding, not a dump gap). Overall: 0 ready
+      / 624 not_ready / 240 unverified across 864 rows at pipeline-only scope — `unverified` used honestly per the
+      done-when.
+- [x] ✅ [DATA] P1. Done 2026-08-18 (slot 17). Friday target: record all shards at BATCH readiness pending backfill
+      completion, with the residual explicitly scoped to B8 (honest coverage 100%) and nothing else. Source:
+      `/plans/active/data_pipeline_completion_2026_08_21.md` § "Friday-target table — BATCH readiness per
+      asset_group (2026-08-18)". Verdict: the residual is NOT B8-only — B20-B25 (already tracked) plus two new
+      registry-gap findings (`declared=not_ready`, `features=not_ready`) flagged as a separate finding there, each
+      with a fresh P1 follow-up todo.
 - [ ] [SKILL] P1. Build the gate-evaluation skill so `data_pipeline_completion_2026_08_21.md`'s register is
       re-runnable rather than a point-in-time snapshot, mirroring the readiness-state-dump shape already used in
       the parent epic's W1/W20. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the
@@ -120,11 +167,15 @@ source: >-
 
 ## From `instruments_catalogue_definitions_and_field_history_2026_08_17.md`
 
-- [ ] [DATA] P1. Re-measure findings 3 (path duplication / stale `.bak` backups) and 4 (sports path grammar) across
+- [x] ✅ [DATA] P1. Re-measure findings 3 (path duplication / stale `.bak` backups) and 4 (sports path grammar) across
       all four asset groups (cefi/defi/tradfi/sports), off the manifest — no new whole-corpus GCS walk. Source:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`. Done-when: a per-AG table
       of non-canonical/duplicate/`.bak` counts is produced, cross-checked against the doc's existing bounded cefi
-      sample (1,000 non-canonical / 270 `.bak` in a 4,000-blob sample).
+      sample (1,000 non-canonical / 270 `.bak` in a 4,000-blob sample). **Done (2026-08-18)**: bounded prefix-scoped
+      listing (`instrument_availability/by_date/`, sanctioned route #1/#3, not a new whole-corpus walk) run per AG —
+      cefi 1,706 non-canon/4,649 `.bak` of 49,340; defi 31,522/0 of 141,866; tradfi 67/**17,132** of 32,945; sports
+      **182,316**/0 of 362,347 (confirms finding 4 corpus-wide). Full table + cross-check against the bounded cefi
+      sample added to `instruments_catalogue_definitions_and_field_history_2026_08_17.md` (same commit).
 - [ ] [BACKEND] P1. Verify the DeFi-address immutability assumption (can pool/contract addresses migrate or be
       proxy-upgraded) rather than carrying it as belief; if mutable, add to the declared-mutable field set. Source:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`. Repo: instruments-service.
@@ -162,3 +213,28 @@ source: >-
   planning` plan (grepped for each item's distinctive claim terms) and `cross_cutting_consolidated_closeout_2026_07_25.md`'s
   24 Tracks (unrelated subject matter). Source docs' own checkboxes already flipped with citations to this batch in
   the same pass.
+- **2026-08-18 (backend_engineer, slot 8)**: item 8 (Tuesday readiness checkpoint). Confirmed the underlying
+  `readiness-state-dump` skill already existed and had been run live twice (2026-08-17, 2026-08-18) per
+  `system_readiness_master.md` W1 and `data_pipeline_completion_2026_08_21.md`'s Tuesday-dumps section, but only
+  rollup counts had been recorded — no per-shard table had actually been committed, which is this item's explicit
+  done-when. Re-ran the skill live and committed both the full per-shard row table and a per-asset-group summary
+  under `plans/audit/results/`. See the flipped checkbox above for the artifact paths and headline numbers.
+- **2026-08-18 (data_engineering, slot 9)**: item 3 (B23 determination) done. Read `INSTRUMENTS_PARQUET_SCHEMA`
+  (unified-api-contracts), `SchemaContract` (no version field), `check_schema_versions.py` (excludes
+  `internal/domain/instruments/`), the schema-version-matrix framework (no instrument references), and every test
+  touching the schema (membership-only, never freeze/hash-gated) — determination: locked-and-versioned = NO.
+  Recorded in `data_pipeline_completion_2026_08_21.md`'s B23 blockquote; 4-part fix filed as tracked follow-up in
+  `instruments_schema_not_locked_versioned_2026_08_18.md` (new discovered scope, not absorbed into this item).
+- **2026-08-18 (slot 7, backend_engineer, task `cross_cutting_satellite_ao_dispatch_batch15-1d0c8d58f6ff`)**: item 2
+  (B22 bidirectional) done — see the report linked on the checkbox above. Synthesized entirely from already-published
+  manifest-side artifacts per B13/single-walk discipline; no new GCS reads. Real finding, not a formality: the
+  path→manifest (orphan) direction has never been assessed for 3 of 5 asset groups, and the 2 that have been
+  measured are ~26 days stale — the report files 4 follow-up todos to close this.
+- **2026-08-18 (infra, slot 21)**: item 7 (gate cross-linking) done. Grepped `plans/active/` for a candidate owning
+  doc per gate topic, read the strongest matches in full (`data_pipeline_e2e_milestones_gate_2026_07_24.md`,
+  `venue_readiness_and_registry_hardening_2026_08_16.md`, `venue_smoke_test_bar_2026_08_16.md`,
+  `venue_e2e_wiring_2026_08_16.md`, `manifest_consolidator_and_lifecycle_cost_optimization_2026_08_16.md`), then added
+  an "Owning doc" column to all 6 gate tables in `data_pipeline_completion_2026_08_21.md` (53 rows total). 24 gates
+  resolved to a real plan/issue doc or codex SSOT; 29 (55%) recorded as "no owning doc found" rather than forced onto
+  a weak keyword match — summarised in a new blockquote finding under that doc's "Tie-in to existing plans" section.
+  `unified-trading-pm@<pending>`.

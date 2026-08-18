@@ -116,6 +116,35 @@ segment. Any roll-up must handle both grammars or normalise them first.
 **5. `prediction` has NO `instruments-store` bucket at all** — the registry offers only CEFI, DEFI, SPORTS, TRADFI.
 That is a scope gap, not a naming detail.
 
+**RE-MEASURED 2026-08-18 (corpus-wide, not sampled) — findings 3 and 4 across all four asset groups.** Full
+prefix-scoped listing (`client.list_blobs(bucket, prefix="instrument_availability/by_date/")`, the SAME bounded
+prefix `instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py` already sizes — sanctioned
+route #1/#3 of the single-walk constraint, `four-surface-reconciliation-procedure.md` §5; never a whole-bucket walk).
+Classification: canonical = path contains both `/pipeline_mode=` and `/asset_group=`; `.bak` = filename contains
+`.bak.`; everything else = non-canonical.
+
+| AG     | total (this prefix) | canonical         | non-canonical                | `.bak`               |
+| ------ | -------------------- | ------------------ | ----------------------------- | ---------------------- |
+| cefi   | 49,340                | 42,985 (87.1%)      | 1,706 (3.5%)                    | 4,649 (9.4%)              |
+| defi   | 141,866               | 110,344 (77.8%)     | 31,522 (22.2%)                  | 0 (0%)                    |
+| tradfi | 32,945                | 15,746 (47.8%)      | 67 (0.2%)                       | **17,132 (52.0%)**        |
+| sports | 362,347               | 180,031 (49.7%)     | **182,316 (50.3%)**             | 0 (0%)                    |
+
+**Cross-check against the bounded cefi sample above (1,000/4,000 = 25% non-canonical, 270/4,000 = 6.75% `.bak`):**
+the corpus-wide non-canonical ratio for cefi is now far lower (3.5% vs. 25%) — consistent with the flat→hive
+migration having EXECUTED for cefi/defi/tradfi/prediction between the original sample and this re-measurement
+(`canonical-cutover-register.md` §6b, `non-canonical-path-inventory.md` item 16: 84,320/117,166 flat objects
+copied-to-hive-and-purged). The `.bak` ratio, by contrast, is HIGHER corpus-wide (9.4% vs. 6.75%) — that migration
+never touched `.bak` files at all, so the stale-backup problem is undiminished; **tradfi is the standout, at 52% of
+its `instrument_availability` tree** — worse than the cefi sample implied and not previously quantified per-AG.
+defi and sports show **0** `.bak` objects in this specific prefix (none found; may exist elsewhere in those
+buckets outside this bounded prefix — out of scope for this measurement, not asserted absent bucket-wide).
+**Finding 4 confirmed corpus-wide**: sports is 50.3% non-canonical under this classifier — its live writer emits
+the `day=/league=/venue=` grammar (no `pipeline_mode=`/`asset_group=` keys) documented in
+`non-canonical-path-inventory.md` item 16's residual note, not a sampling artifact.
+**Scope caveat**: bounded to the `instrument_availability/by_date/` prefix (the dominant tree per finding 1 — no
+other tree scoped here); does not claim bucket-wide coverage of every root.
+
 **Sizing check — the operator's estimate holds.** cefi runs daily from 2019-03-30 at ~295 rows per venue-day. A
 monthly-grain roll-up over ~25 venues × ~90 months × ~300 rows lands around **675k rows** — inside the
 "few hundred thousand to ~1M" the operator predicted, and roughly a **30× object-count reduction** versus daily. The
@@ -251,3 +280,4 @@ clear. Cross-cutting tranche audit.
 section as sharing "the same class as the reference-data-in-a-code-path rule" with a note the two checks should
 share one discriminator; kept the 3 architecture codex SSOTs + the parent gate-register plan. No source path added --
 this is a pure design proposal awaiting operator ratification, not yet executed.
+- **na-eligibility-audit 2026-08-17** [body-hash:5d2dc6fec1021b31]: KEEP-NA, valid -- re-verified, no content change since the 2026-08-17 RECLASSIFY (per-todo split) marker; still 9 open items (1 [OPERATOR] ratification + 4 direct dependents + 3 lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE + 1 explicit non-scope note, grep-confirmed against inventory's open_todos=9). Flagged in-scope this run by the body-hash-drift bug this same tranche's na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md tracks, not a real edit. Cross-cutting tranche audit.

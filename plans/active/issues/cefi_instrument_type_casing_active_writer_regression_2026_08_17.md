@@ -210,16 +210,64 @@ is genuinely VM-scale work, not shared-host-scale:
       will make it slower than a fresh run would be, but that's a dry-run inefficiency only, not a
       correctness issue. Remaining chain tracked as new todos below rather than absorbed into this
       one, per the one-task-per-session AO worker model.
-- [ ] [DATA] P2. Once `canonical-migration-cefi-itype-casing-apply-20260817-130229`'s dry-run
+- [x] ✅ [DATA] P2. **DONE 2026-08-18 (slot-14, data_engineering craft)** — the prior
+      `canonical-migration-cefi-itype-casing-apply-20260817-130229` dry-run never reached a
+      terminal state and was diagnosed as a genuine hang, not a completed disposition; this todo's
+      own done-when required reviewing a genuine disposition before ever considering `--apply`, so
+      a FRESH dry-run VM (`canonical-migration-cefi-itype-casing-apply-20260818-012605`) was
+      relaunched, confirmed STARTED, and confirmed making real progress (`Scanning 170038 per-VM
+      shards ... workers=16`, connection pool boosted to 16 with none of the prior run's
+      "Connection pool is full" churn) — the no-fire-and-forget bar. Reviewing the new VM's
+      disposition (not the dead 130229 run's) and, if sane, launching the FULL `--apply` is carried
+      forward as the next todo below.
+
+      **Diagnosis of the 130229 dry-run (evidence, not guesswork)**: `gcloud compute instances
+      describe` 404s (VM gone). `run.log` (`vm-logs/.../run.log`, read via UTL
+      `download_from_storage`, never `gsutil` per the storage-ops rule) ends abruptly at
+      2026-08-17T13:39:08Z mid-scan (169,081 per-VM shards, workers=16, heavy
+      "Connection pool is full" churn right up to the cutoff — this VM ran the OLDER
+      pre-`df55d85d85` tarball `mtds-code@ccec3e5eb`) with no `Grand total` line, no error, no
+      exception. The archived serial console (`log-archive/snapshot_20260817_1508/.../
+      serial-console.txt`) confirms the WHOLE VM went silent — zero kernel/systemd/gcloud-token-
+      refresh activity — from 13:39:38Z to 15:04:26Z (**~85 minutes of total freeze**, not just
+      an app-level stall), then resumed with `systemd-networkd: ens4: Could not set DHCPv4
+      address: Connection timed out`, consistent with a host-level stall/network-blip rather than
+      a clean GCE Spot preemption (no `compute.instances.preempted` event exists anywhere in
+      Cloud Logging for the project over the same 3-day window — ruled out). `gcloud logging read`
+      shows the zombie watchdog (running as `uts-prd-sa`) killed it at 15:08:55Z:
+      `ZOMBIE canonical-migration-cefi-itype-casing-apply-20260817-130229 (asia-northeast1-c)
+      age=125min hb=90min shard=MISSING reason=zombie_stale_heartbeat` — a real kill of a VM that
+      truly had stopped producing any signal for 90 min, not a false-positive of the
+      SIGPIPE-sidecar-during-download pattern documented in `vm-launcher-runbook.md` (that pattern
+      explains a merely-frozen `run.log`/heartbeat-blob with the VM otherwise alive; this VM's
+      *serial console* — kernel/systemd level, independent of the app or its heartbeat sidecar —
+      was also silent for the same 85 minutes, which that documented pattern does not predict).
+      Root cause of the freeze itself is NOT conclusively identified (no OOM-killer message, no
+      panic/segfault in the serial console) — most plausible candidate given the timing is a
+      GCE host-level stall coinciding with the heavy connection-pool churn, but this is not proven;
+      not worth further forensics given a fresh run on the FIXED tarball is the cheaper path to a
+      real answer.
+
+      **Action taken**: refreshed tarballs (`lc_verify_tarball_freshness` confirmed mtds
+      @ `aec3e7dff825`, a descendant of `df55d85d85` — the connection-pool fix IS in this tarball)
+      and relaunched via `bash launch-canonical-migration-vm.sh cefi-itype-casing-apply 2026-08-18
+      2026-08-18 dry` from `deployment-service`. New VM
+      `canonical-migration-cefi-itype-casing-apply-20260818-012605` (asia-northeast1-c,
+      e2-standard-16, SPOT) confirmed RUNNING + `DEPLOYMENT_STARTED` reached (see Progress Log for
+      the exact confirmation) — the no-fire-and-forget bar for this session. Terminal-state review
+      is the next todo below, updated to point at THIS VM's name/log, not the dead 130229 run's.
+- [ ] [DATA] P2. Once `canonical-migration-cefi-itype-casing-apply-20260818-012605`'s dry-run
       reaches a terminal state (check `run.log` for the final
-      `Grand total instrument_type values would be normalized: N` line + VM self-delete), review
-      the disposition — sane if `N` is in the same order of magnitude as the 39,286-row baseline
-      (some growth expected given the writer regression ran until the P1 fix landed). If sane,
-      launch the FULL `--apply` run (`bash launch-canonical-migration-vm.sh cefi-itype-casing-apply
-      <today> <today> full` from `deployment-service`) on a FRESH VM — do not reuse the dry-run VM's
-      name/tarball, so the run picks up the `df55d85d85` connection-pool fix. If the disposition is
-      surprising (order-of-magnitude off from 39,286, or errors in the log), diagnose before
-      applying — do not `--apply` on an un-reviewed dry-run.
+      `Grand total instrument_type values would be normalized: N` line + VM self-delete — and if
+      it goes stale/silent again, diagnose per the freeze pattern above before assuming a repeat
+      zombie-kill is a false positive), review the disposition — sane if `N` is in the same order
+      of magnitude as the 39,286-row baseline (some growth expected given the writer regression ran
+      until the P1 fix landed, plus ~1 more day of any residual regrowth). If sane, launch the FULL
+      `--apply` run (`bash launch-canonical-migration-vm.sh cefi-itype-casing-apply <today> <today>
+      full` from `deployment-service`) on a FRESH VM — do not reuse this dry-run VM's name/tarball.
+      If the disposition is surprising (order-of-magnitude off from 39,286, errors in the log, or
+      another unexplained freeze), diagnose before applying — do not `--apply` on an un-reviewed
+      dry-run.
 - [ ] [DATA] P2. After the `--apply` VM reaches a terminal state (0 exit, backups written, grand
       total normalized matches the reviewed dry-run count), trigger the manifest consolidator to
       rebuild the merged `_index/availability_index.parquet` (per the script's own docstring) —
@@ -245,3 +293,12 @@ is genuinely VM-scale work, not shared-host-scale:
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (6 entries).
+- **slot-14 (data_engineering) 2026-08-18**: `canonical-migration-cefi-itype-casing-apply-20260817-130229`
+  dry-run never reached a terminal state — diagnosed as an ~85-minute total VM freeze (kernel/systemd
+  level, not just app/heartbeat) followed by a real (not false-positive) zombie-watchdog kill. See the
+  updated todo above for full evidence. Relaunched a fresh dry-run,
+  `canonical-migration-cefi-itype-casing-apply-20260818-012605`, on the current tarball (includes the
+  `df55d85d85` connection-pool fix) — confirmed RUNNING, `DEPLOYMENT_STARTED` at 2026-08-18T01:28:39Z,
+  then `Scanning 170038 per-VM shards in gs://market-data-tick-cefi-prd-central-element-323112/_index/
+  per_vm/ (workers=16)` at 01:28:49Z with the connection pool boosted to 16 and no repeat of the prior
+  run's "Connection pool is full" churn — genuine progress confirmed, not fire-and-forget.

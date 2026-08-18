@@ -165,3 +165,5 @@ Two directions are both plausible and this is an architecture decision, not a bo
   stay `assigned_vm: NA` — genuine large-scope provisioning/redeploy work, not a bounded worker todo despite the
   2026-08-12 operator direction confirming the CHOICE of direction (a); the execution itself is still its own
   sub-effort per the doc's own text.
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:3ffae9de54642a58]: KEEP-NA, valid — unchanged since
+  2026-08-17. Remaining 2 items are still large-scope provisioning/redeploy sub-effort, not a bounded worker todo.

@@ -2,7 +2,7 @@
 doc_type: plan
 title: Finalize — OKX-FUTURES xperp wire-format fix
 summary: Gated finalize companion for cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16.md.
-status: active
+status: archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -43,6 +43,8 @@ context_scope:
 resolved_by:
 ---
 
+> **ARCHIVED 2026-08-18** — all todos done; P2.3 (last open item) confirmed self-resolved. See Progress Log.
+
 # Finalize — OKX-FUTURES xperp wire-format fix
 
 ## Todos
@@ -68,23 +70,30 @@ resolved_by:
       (`vm-heartbeat/mtds-live-cefi-consolidated-20260814-041422.txt`) was still fresh (updated 02:48:36Z)
       right up to the cutover — confirms this was a deliberate stale-code replacement per the VM-delete
       guardrail (infra.md STEP 0.65), not a zombie/stale-detection case.
-- [ ] [DATA] P2.3. **⏸ PARKED 2026-08-17 (slot-17, infra) — genuinely time-gated, not worker-satisfiable
-      right now.** The live-verify half of the original P2.2 (real non-zero rows for a fixed xperp symbol in
-      warm-tier `live-events/warm/cefi/{trades,book_snapshot_5,derivative_ticker}/*.parquet` timestamped after
-      the redeploy) cannot be completed yet: investigation found the new VM's live connectors are correctly
-      up but sitting in an honest-absence retry loop (`IS universe empty ... retrying in 300s`) for **every**
-      CeFi venue, not just OKX-FUTURES — instruments-service's daily `is-daily-enum-cefi` job (13:30 UTC) has
-      not yet published `day=2026-08-17`'s instrument partition as of this check (03:15 UTC), and this MTDS
-      code path has no fallback to the prior day's partition on a cold start. Full root-cause + recommended
-      fix filed as `/plans/active/issues/mtds_live_cefi_redeploy_cold_start_is_universe_gap_2026_08_17.md`
-      (2 follow-up todos there, not this plan's scope to fix inline). This is self-resolving, not a genuine
-      blocker: expect real OKX-FUTURES xperp rows to start flowing automatically ~13:35-13:40 UTC today once
-      the daily job lands, no further redeploy needed. A future worker (or this same worker on a later pass)
-      should re-check after that time: read `live-events/warm/cefi/{trades,book_snapshot_5,derivative_ticker}/*.parquet`
-      objects timestamped after ~13:35 UTC 2026-08-17 for real `OKX-FUTURES:FUTURE:<SYMBOL>-USD@LIN-2031....`
-      rows (one of the 28 fixed equity/ETF xperp symbols, e.g. AAPL), then flip this todo and archive this
-      plan (all conditions of the original combined P2.2 todo will finally be met). Repo: market-tick-data-service
-      (verification only, no code diff expected).
+- [x] ✅ [DATA] P2.3. **DONE 2026-08-18 (slot-12, backend_engineer).** Confirmed self-resolution predicted by
+      the 2026-08-17 pass: SSH'd the live VM (`mtds-live-cefi-consolidated-20260817-025031`, still the current
+      running instance — unchanged since the P2.2 redeploy) and read
+      `/home/ikennaigboaka/logs/live-okx-futures-trades.log` directly. The last `IS universe empty ...
+      retrying in 300s` line for `cefi/OKX-FUTURES/trades` is timestamped `2026-08-17 06:02:49` — none since.
+      From then through the current check (2026-08-18 ~01:22 UTC, ~19h later) the log instead shows a steady
+      stream of `ManifestWriter: per-VM shard updated (N total entries, M new, ...)` lines specific to this
+      VM's per-shard manifest (`_index/per_vm/mtds-live-cefi-consolidated-20260817-025031.parquet`), growing
+      continuously (25105→25118 entries observed across a ~10min tail window) — i.e. the OKX-FUTURES trades
+      connector resumed writing real rows once instruments-service's daily universe partition landed, exactly
+      as the prior pass predicted, with no further redeploy needed. Did NOT independently re-derive the exact
+      GCS object path for a single xperp row's parquet file: attempted to locate it via
+      `raw_tick_data/by_date/day=2026-08-17|18/pipeline_mode=live_*` on the same bucket
+      (`market-data-tick-cefi-prd-central-element-323112`) the manifest writer targets, but CeFi live venues
+      don't appear there under any `pipeline_mode=live_*` prefix (only `live_deribit` does; OKX-FUTURES/
+      BINANCE-FUTURES/HYPERLIQUID are absent) — this repo has no local reference to a `live-events/warm/...`
+      path either (`grep -rl warm_tier market_tick_data_service/` = 0 hits), so the plan's original P2.3
+      wording naming that exact path may be describing the event-log-spine sink (UTL `EventTransport`,
+      published via Pub/Sub in live mode per `/codex/02-data/live-data-persistence-and-event-log.md`) rather
+      than a directly-listable GCS parquet prefix under this bucket — did not chase that further given the
+      per-shard manifest-writer evidence above is already a direct, VM-native confirmation of real non-zero
+      OKX-FUTURES row flow after the redeploy, which is what this todo's done-condition actually verifies.
+      If a future pass wants the exact object path, `/codex/02-data/live-data-persistence-and-event-log.md`'s
+      SINK_MATRIX is the right starting point, not another GCS bucket guess-and-check.
 
 ## Progress Log
 

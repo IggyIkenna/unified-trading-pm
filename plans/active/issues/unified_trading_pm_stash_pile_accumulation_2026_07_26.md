@@ -181,14 +181,15 @@ accidental `git stash clear` (a real, if unlikely, destructive action).
       precise later mechanism achieving the same intent. - **No entry in any of the 88 (slots 1-4 combined) represents
       content genuinely missing from the corpus today.**
 
-- [ ] [OPERATOR] P3. **[BLOCKED on the re-audit — do not run as written]** Run the mechanical stash drop for slots 1, 2,
-      3 (same blocked-for-agents situation as the `.tabs/4` todo above — the judgment-call review is done, only the
-      mechanical drop remains):
-      `cd .tabs/1/unified-trading-pm && for i in $(seq 1 45); do git stash drop stash@{0}; done cd .tabs/2/unified-trading-pm && for i in $(seq 1 10); do git stash drop stash@{0}; done cd .tabs/3/unified-trading-pm && for i in $(seq 1 33); do git stash drop stash@{0}; done`
-      Confirm each with `git stash list` (should print nothing). Note: `slot 3`'s checkout is the SAME repo as, but a
-      DIFFERENT clone from, the original slot-3 checkout this doc was originally filed against in 2026-07-26 (which had
-      26 entries then) — this pass audited the CURRENT slot-3 clone's 33 entries as they stand today, not a re-check of
-      the original 26 (which have almost certainly since regrown/changed given the ~10-day gap).
+- [x] ✅ **STALE, superseded — na-eligibility-audit 2026-08-18.** Was: `[OPERATOR] P3. [BLOCKED on the re-audit — do not
+      run as written]` Run the mechanical stash drop for slots 1, 2, 3 using the hardcoded counts 45/10/33. Those
+      counts and the underlying premise ("only the mechanical drop remains") were superseded three times over by later
+      dated entries in this doc's own Progress Log: the 2026-08-08 re-audit ("SUPERSEDES the two `[OPERATOR] P3` todos
+      above"), the 2026-08-09 re-audit ("SUPERSEDES the 2026-08-08 counts above; do not use them"), and the 2026-08-12
+      operator-run drops via a completely different mechanism (`audit-stash-pile.sh --apply`). This checkbox tracked
+      dead text, not live work — closing it as stale rather than reclassifying (the root blocker it named,
+      `block_destructive_commands.py`'s categorical `git stash drop` guardrail, is identical to the doc's own still-open
+      `[OPERATOR] P1` todo below, which remains the current, correct tracking point for any future mechanical drop).
 
 ## Codex SSOTs
 
@@ -476,3 +477,4 @@ precisely because they were corrupt. Do not read the unique/stale split as work-
       zero-loss discards above are unchanged by this fix, as scoped.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA-STALE-ITEMS — closed one stale checkbox (the slots-1/2/3 hardcoded-count mechanical-drop todo, superseded 3x over by later dated Progress Log entries with different counts and eventually a different mechanism entirely — see the checkbox's own citation above). The remaining open item (discard-5-provably-zero-loss-entries) stays KEEP-NA, genuinely blocked by `block_destructive_commands.py`'s categorical guardrail. Doc stays `assigned_vm: NA`.

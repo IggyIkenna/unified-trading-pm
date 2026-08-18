@@ -210,3 +210,7 @@ backstop pending a future root-cause patch.
 (did not resolve from the PM repo root, since the doc lives inside that same repo -- there is no nested
 `unified-trading-pm/` directory) to the repo-relative `cursor-configs/settings.json`, matching this doc's own body
 convention for every other same-repo path.
+
+**na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:d1f41650d3b5a2cd]: KEEP-NA, valid — first audit pass
+(no prior marker). Sole open item ("decide whether `DISABLE_AUTOUPDATER` is still wanted") is a policy tradeoff
+decision, not a fact-finding task — not worker-determinable alone.

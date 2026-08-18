@@ -209,3 +209,5 @@ whether STEP 5.83 should validate against a canonical/fresh state... rather than
 possibly-stale sibling checkouts' -- an undecided architecture tradeoff (per-run network/git-show cost vs. accepting
 host-checkout staleness) with no decision made and no stated done-when.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Carries 5 sequential na-eligibility-audit KEEP_NA confirmations (2026-08-03, 08-06, round-11 08-09, 08-10) all citing the same reasoning: the sole open todo ('Consider whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping repo's local, possibly-stale sibling checkouts') is an explicit undecided architecture tradeoff with no stated decision or done-when. The doc's actual blocking scope (todo 1, the deployment-api checkout staleness that broke...

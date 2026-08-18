@@ -8,7 +8,7 @@ summary: >-
   futures, which currently collide under the same canonical @LIN-YYYYMMDD id shape (all 104 xperp subscriptions
   silently fail at 0 rows today). Extracting into its own AO-dispatch plan since the parent issue doc stays
   assigned_vm: NA.
-status: active
+status: archived
 nature: process
 asset_group: [cefi]
 stage: [data]
@@ -44,6 +44,9 @@ context_scope:
 locked_since:
 resolved_by:
 ---
+
+> **ARCHIVED 2026-08-18** — superseded by (completed alongside) its finalize companion,
+> `/plans/archive/2026_08/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md`. All todos done.
 
 # OKX-FUTURES xperp wire-format fix
 

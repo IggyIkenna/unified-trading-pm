@@ -241,3 +241,9 @@ delimiter that was never missing.
 - **context-scout 2026-08-17**: populated context_scope (3 entries) — swapped the two now-resolved example docs
   (`live-deployment-monitoring.md`/`strategy-vm-launcher-shape.md`, both re-reviewed and closed) for the checker script's
   own ratchet baseline and `measurement-claims-discipline.md`, the doc's own real recurring theme across all 4 Updates.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): ARCHIVE-eligible, confirmed — independently re-read end-to-end,
+every todo across both dated Update sections is `[x]` done, 0 open checkboxes. Matches
+`plan_reconciler_findings_ci_2026_08_16.md`'s own finding. Not archived this pass — deferred to a dedicated archival
+sweep, same reasoning as the sibling `cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` entry today.
+`archive_exempt: true` remains accurate.

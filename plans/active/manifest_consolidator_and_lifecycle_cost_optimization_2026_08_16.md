@@ -808,3 +808,15 @@ context_scope:
   or about to reverse) carries the same risk whichever direction it's moving. Recommend shortening the re-check
   cadence from the original 30-day wait to ~1-2 weeks specifically to resolve whether this is a real trend before
   the scheduled 2026-09-15 full re-analysis, rather than waiting the full window blind to this new signal.
+
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:abc124b3751e0a04]: KEEP-NA, valid — unchanged at
+  the doc level since 2026-08-17. New since then: a 5th open item surfaced 2026-08-17
+  (`launch-defi-forward-poll.sh` watchdog coverage) not previously assessed by this skill. Tagging
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future run's re-assessment rather than extracting now: its 3 completed
+  siblings (ml_service, compound-VM_SERVICE, bespoke `*_daily_cron` watchdog wiring) all needed real per-launcher
+  investigation before turning out to be non-judgment-calls, so this one's own boundedness isn't yet confirmed;
+  combined with this file's own extensively-documented concurrent-edit fragility (lost content, duplicated Progress
+  Log entries — see entries above), a conservative touch was made this round. The other 4 open items (cost-gain
+  tracking — confirmed genuinely too early per the 2026-08-18 interim check; cold-start investigation; periodic
+  instruments-sports OOM re-check with no concrete trigger; the operator-rejected 18→5 consolidation, already
+  CANCELLED) remain genuine judgment/time-gated/research work, not worker-determinable.

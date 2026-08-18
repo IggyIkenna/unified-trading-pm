@@ -456,3 +456,5 @@ a systemd unit needs host root / SSM on the old orchestrator VM (`i-0c9b283b31d6
   than reclassified here, given this doc's history of misdiagnosis from ambiguous instance naming.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 458-line doc tracking a P1 fleet CI outage (2 then 3 stopped glue-runner systemd units blocking UAC->main + 11 dependent repos). Every P1 host-access, root-cause, writer-pool-fix, VM-naming-disambiguation, and deploy-sync-automation todo is resolved with SHA/verification evidence (last closed 2026-08-16). The sole open todo (line 147, INFRA P2) bundles a real watchdog-extension implementation task — extend/sibling-check `glue-runner-crash-loop-watchdog.sh` to catch cleanly-inactive AND...

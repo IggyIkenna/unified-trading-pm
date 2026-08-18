@@ -293,3 +293,10 @@ calendar/fleet-triggered ratchet should be able to hard-block commits at all.
 - **context-scout 2026-08-17**: populated context_scope (4 entries) — the drift checker + its ratchet baseline, the
   `rollout-cloudbuild.py` marker-collection script whose substitutions blind spot is this doc's one still-open P1 item,
   and `ci-cd-flow.md` (the gate-set/quickmerge SSOT this whole incident-class sits under).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): ARCHIVE-eligible, confirmed — independently re-read end-to-end,
+0 open `- [ ]` checkboxes (the context-scout note above is stale: the substitutions P1 item it references is itself
+now `[x]` DONE per plan_reconciler Phase -1, 2026-08-16). Matches `plan_reconciler_findings_ci_2026_08_16.md`'s own
+finding. Not archived this pass — deferred to a dedicated archival sweep (6-step ritual + referrer-web sweep) per that
+doc's own explicit caution about rushing archival on a hot, actively-changing shared branch. `archive_exempt: true`
+remains accurate.

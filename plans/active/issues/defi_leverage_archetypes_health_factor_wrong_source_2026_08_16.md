@@ -166,19 +166,28 @@ more general, already-cross-service-wired mechanism exists alongside it. Full de
 - [x] [OPERATOR] P0. ✅ RULED 2026-08-17 — **Decide the fix shape**: neither option (a) nor (b) as originally
       framed — building either would risk a *third* parallel implementation now that `margin_event_emitter.py` is
       known. See the reconciliation todo immediately below, which must resolve first.
-- [ ] [AGENT] P0. **Reconcile `DeFiHealthAggregator` against `margin_event_emitter.py`/`MarginEvent` before
-      building or wiring anything new.** Determine whether `MarginEvent`'s payload already carries what an
-      archetype's `on_tick()` gate needs (HF, LTV, liquidation price, distance-to-liquidation, per-position not
-      just per-portfolio). If yes, wire `staked_basis.py`/`recursive_staked.py` onto `MarginEvent` (subscribe, or
-      read the latest cached value) and retire `DeFiHealthAggregator`/`positions_health.py` rather than fixing
-      them in place. If no — some needed field is genuinely missing from `MarginEvent` — extend it there rather
-      than duplicating the aggregation logic in a second module. Done-when: a stated decision with evidence,
-      before the next two todos proceed.
-- [ ] [AGENT] P0. **(Superseded pending the reconciliation above.)** Wire a live feed into `DeFiHealthAggregator`.
-      Either finish `aave.py`'s
+- [x] [AGENT] P0. ✅ RECONCILED 2026-08-18 — **Reconcile `DeFiHealthAggregator` against
+      `margin_event_emitter.py`/`MarginEvent` before building or wiring anything new.** Full decision + evidence
+      now lives on the corresponding todo in
+      [strategy_service_centralization_fixes_2026_08_16](/plans/active/strategy_service_centralization_fixes_2026_08_16.md)
+      (track completion there, per this corpus's own citation convention — see the `na-eligibility-audit`
+      marker below on this doc's docstring-fix todo). Summary: A and B are NOT independent — B's DeFi path
+      (`emit_margin_event_for_health`) already consumes A's `DeFiHealthAggregator.aggregate()` output via
+      `risk.py::update_lending_positions()`; the genuinely redundant piece is `positions_health.py`'s separate
+      `derive_snapshot_from_lending()` re-derivation (hardcoded `AAVE_V3` threshold, doesn't reuse A). `MarginEvent`'s
+      schema already has `liquidation_price`/`distance_to_liquidation_pct`/`ltv_ratio` fields, but
+      `_build_event()` never populates the first two for DeFi, and the DeFi snapshot is portfolio-combined, not
+      per-position (`combined_health_factor`, not `ProtocolHealthBreakdown`-level) — both must be fixed before an
+      archetype gate can read `MarginEvent` directly. Decision: wire archetypes onto (B)'s schema, after (b)
+      populating the missing fields + per-protocol granularity, and only then retire `positions_health.py`'s
+      duplicate path — not a straight "converge on B as-is."
+- [ ] [AGENT] P0. **(Superseded pending the reconciliation above — now resolved.)** Wire a live feed into
+      `DeFiHealthAggregator`. Either finish `aave.py`'s
       `AavePositionAdapter` (fixing its schema mismatch — emit `DeFiLendingPosition`, not `CanonicalPosition`) or
       route execution-service's already-working `health_factor_monitor.py` output into the aggregator's state via
-      `update_wallet_health_from_lending`. Do not build a third parallel poller.
+      `risk.py::update_lending_positions()` — **not** `positions_health.py::update_wallet_health_from_lending`
+      (corrected 2026-08-18: that function feeds a separate, redundant cache, not `DeFiHealthAggregator` — see
+      the reconciliation todo above). Do not build a third parallel poller.
 - [ ] [AGENT] P0. **Switch `staked_basis.py:419` and `recursive_staked.py:115,447` to the centralized source**,
       once (a) and the live feed exist. This is the actual liquidation-risk fix — until this lands, both
       archetypes' kill-gates are not protecting against real liquidation risk.
@@ -243,3 +252,8 @@ more general, already-cross-service-wired mechanism exists alongside it. Full de
   reconciliation todo that must land first. Companion codex doc renamed
   `defi-position-risk-centralization.md` → `position-risk-centralization.md` and rewritten; `context_scope` updated
   to match.
+- **2026-08-18 (slot 5, backend_engineer)** — Resolved the P0 reconciliation todo (mirrored, in full, on the
+  corresponding todo in `strategy_service_centralization_fixes_2026_08_16.md` — this doc's checkbox is a citation
+  per this corpus's convention). Also corrected the live-feed todo's wrong function name
+  (`update_wallet_health_from_lending` → `risk.py::update_lending_positions()`) in the same edit, here and in the
+  wrapper plan.

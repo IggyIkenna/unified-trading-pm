@@ -257,3 +257,6 @@ the IaC config; the third is a Cloud Run job module removal.
   to `infra_satellite_ao_dispatch_batch18_2026_08_17.md` items 2-3 (not yet executed). The 3rd sub-item (resolve the
   t1_recon duplicate-module doc) is a pure forward-pointer to its own doc, not independent content — left as-is. Doc
   stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:06363bf213d7661e]: KEEP-NA, valid — unchanged since
+  2026-08-17. Sole remaining item is still a pure forward-pointer to its own sibling doc
+  (`deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md`), not independent content.

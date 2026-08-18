@@ -421,3 +421,4 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
   conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 6. The [OPERATOR] P2
   dmesg/journalctl root-access item stays KEEP-NA — genuinely CREDENTIAL_BLOCKED, agent slots lack root-level host
   access.
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — re-affirms verdict, 6th consecutive na-eligibility-audit pass reaching the same conclusion. Sole open item (dmesg/journalctl root-access) remains genuinely CREDENTIAL_BLOCKED — agent slots lack root-level host access.

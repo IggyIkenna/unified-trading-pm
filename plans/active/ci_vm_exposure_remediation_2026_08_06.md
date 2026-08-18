@@ -191,3 +191,5 @@ low-traffic pool of 25, (3) K sized from real per-run measurements -- a genuinel
 judgment call across a fleet-wide shared resource, not a single checkable fact.
 
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 2 of 3 todos are done and live-verified (swap added; resource-history-sampler parity shipped with a real fixed bug). The sole open item (fleet-wide CI concurrency cap, P2) already investigated 2 candidate mechanisms with real measurements — TasksMax cap rejected as unsafe (hard kernel fork() failure risk vs graceful queuing) and cgroup io-controller delegation rejected as too broad a blast radius for a live-serving host without a maintenance window — landing on a recommended-but-unbuilt...

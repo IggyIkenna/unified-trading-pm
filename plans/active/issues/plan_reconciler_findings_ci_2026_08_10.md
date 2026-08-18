@@ -503,3 +503,5 @@ written).
   finding; `can_continue: true` was set at blocked-question submission time (SUB_AGENT_MANDATORY_RULES ASK-never-BLOCK),
   so the sweep's completion was never contingent on this answer arriving. Proceeding to close the one-shot lifecycle.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- This is a plan_reconciler run-journal doc (dispatch agt-fb0ce4, slot 2) with 1 genuinely open item: whether the blocked-question answer-retrieval channels (GET /api/slots/N/messages; the /progress response's own messages array) have a real delivery gap -- 6 polling attempts spanning ~20 min plus 4 guessed alternate endpoint shapes all returned empty/404 despite a harness-level notification claiming the operator had answered BLK-6b80187a. The doc's own 2026-08-16 update re-checked the corpus...

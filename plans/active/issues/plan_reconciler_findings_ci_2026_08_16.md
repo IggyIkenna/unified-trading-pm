@@ -333,3 +333,9 @@ None — full tranche coverage achieved this run.
   Progress Log entries in sibling pytest-timeout docs, (e) 5 confirmed-archivable docs left unarchived. Staying
   `status: open` — not archived.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid — 0 checkboxes (prose-only candidate ledger +
+progress journal), out of na-eligibility-audit's own scope per SKILL.md's `does_not` clause (this is
+`/plan-reconcile`'s own verification/continuation work, not something this skill classifies or acts on). Doc's own
+Progress Log confirms it is genuinely not fully resolved (5 named open items awaiting a future `/plan-reconcile`
+pass). No action taken.

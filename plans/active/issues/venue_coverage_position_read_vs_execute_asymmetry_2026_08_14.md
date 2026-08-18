@@ -513,7 +513,7 @@ Kamino/Jupiter conflated the two.
       now issues are genuinely real, but its HF-gate abort check and post-iteration position readback are best-effort
       until this method reads a real `Pool.getUserAccountData()` view call. Not fixed inline — separate, larger scope
       than the P0 dispatcher-wiring todo that found it (that todo was about writes, this is a read).
-- [ ] [DATA] P3. **Re-count the READ-side coverage figure to include Kamino's bespoke adapter** — this doc's "8"
+- [x] ✅ [DATA] P3. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 16 (na-eligibility-audit 2026-08-17, citation-flip correction). **Re-count the READ-side coverage figure to include Kamino's bespoke adapter** — this doc's "8"
       read-side total (the "READ SIDE — shipped 2026-08-15" section's "Before: 3 → After: 8" table) predates the
       Kamino bespoke adapter, which shipped 2026-08-16, one day later. Deliberately deferred rather than re-counted by
       `venue_readiness_ao_dispatch_batch1_2026_08_16`'s frontmatter-fix todo (now archived to
@@ -957,3 +957,4 @@ the quickmerge on a later pass once this settles.
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-17** [body-hash:fabfd492dd204890]: KEEP-NA, stale-item corrected -- closed the 'Wire SIT invariant 2 as a ratchet baseline' todo (line 526): byte-for-byte already shipped under the active venue_readiness_ao_dispatch_batch1_2026_08_16.md (same parent_epic infrastructure_master) -- unified-api-contracts@86d5f5af46 (test_strategy_position_read_mode_cascade_invariant.py + baseline fixture, live-verified 4/4) + system-integration-tests@cce1adebc6 (wired as invariant #26). Doc stays assigned_vm: NA for its remaining items. Cross-cutting tranche audit conflict-check finding.
+- **na-eligibility-audit 2026-08-17** [body-hash:4de6146739ca4910]: KEEP-NA-STALE (citation fix only) -- found the 'Re-count the READ-side coverage figure to include Kamino's bespoke adapter' todo still showing as an open, unflipped checkbox in this doc's own body, even though the 2026-08-17 RECLASSIFY marker's own prose already claimed it was extracted as batch15 item 16. Verified directly against cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md: item 16 there genuinely cites this exact todo (Source: this doc, matching text). A real citation-flip miss, not a misdescribed marker -- flipped the checkbox to match (KEEP-NA-STALE class fix per Phase 3, not a new RECLASSIFY). Doc now has 2 remaining open items (Solblaze/Jito Restaking real write paths -- doc's own text: judged too risky to hand-roll against a live money-moving path; [OPERATOR] disclosure decision on out-of-mandate adapters), both correctly assessed by the 2026-08-17 marker already. Cross-cutting tranche audit.

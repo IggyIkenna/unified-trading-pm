@@ -98,3 +98,4 @@ decision.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — the doc's sole open todo is explicitly self-classified as a design question ("Needs an operator/plan-authoring-convention call, not a worker decision"), citing 3 mutually-exclusive options with no stated criterion for choosing among them. No corpus traps present.

@@ -985,3 +985,5 @@ the identical PYTEST_TIMEOUT=300 mitigation; instruments-service/ml-service/aler
 checked against the 'sustained non-self-clearing red' bar and found NOT to qualify (self-clea...
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- NOT flipping on inference alone. This run's Phase-1 hunter found the sole open item (extend PYTEST_TIMEOUT=300 to other recurring-sustained-red repos) looks substantively already answered in the doc's own 900+-line Progress Log (5 of 8 non-PM repos mitigated, 3 explicitly excluded under the sustained-red bar) -- but the doc's own 2026-08-10 audit entry cuts off mid-sentence before stating that conclusion or flipping the checkbox, and this pass did not independently re-verify each of the 8 repos' disposition against the same HARD-evidence bar /plan-reconcile Phase 2 uses. Flagging for the next pass to complete rather than declaring it closed on an inference. Doc is at 987/1000 lines -- any further append should split per its own established precedent.

@@ -367,3 +367,5 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
     SSOT + the capacity-crisis source doc unchanged. (A stray context-scout marker from 2026-08-05 sits above under
     "Codex SSOTs" — written before this doc had a Progress Log section; left as historical record, not relocated.)
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Sole open item (warm git-object cache for JIT-ephemeral runner checkouts, P1) has a mechanism already implemented and canaried (fast-checkout.sh) but with an unresolved live-filesystem-visibility mystery: deployed files show ABSENT to the runner's own `[ -f ]` check while a concurrent direct SSM check of the identical path shows them present with correct permissions. Several hypotheses (env-var propagation, systemd sandboxing, zombie process, mount inconsistency) were investigated and ruled...

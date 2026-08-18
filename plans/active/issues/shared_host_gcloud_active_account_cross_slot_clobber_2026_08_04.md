@@ -194,3 +194,6 @@ Two independent fix directions, either or both:
   (not yet executed; bounded mechanical audit+fix, no design call needed on its own). Fix-direction 2 (per-slot
   named gcloud configs, shared-blast-radius bootstrap infra) stays `assigned_vm: NA` — genuinely needs a direction
   decision independent of direction 1 shipping. Doc stays NA overall.
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:8204a2173d3cd135]: KEEP-NA, valid — unchanged since
+  2026-08-17. Sole remaining item (fix-direction 2, per-slot named gcloud configs) still needs an independent
+  direction decision.

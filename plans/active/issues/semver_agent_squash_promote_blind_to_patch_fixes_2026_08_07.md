@@ -553,3 +553,5 @@ the same 48 hours -- both times a GitHub Actions ~21,000-char run-block cap sile
 pipeline (zero-jobs parse failure across ~21 repos), first via the origin...
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+
+**na-eligibility-audit 2026-08-18** (ci tranche): ARCHIVE-eligible, confirmed -- 0 open todos across the full doc (Shipped/Verification/both Follow-up regressions/Live verification all [x]); the one loose end (e2e-testing source_dir misconfig) is already tracked in ibkr_gateway_infra_release_tag_stall_2026_08_11.md, not duplicated here. Not archived directly in this pass -- tracked as a todo in `plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md`.

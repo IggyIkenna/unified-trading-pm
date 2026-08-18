@@ -56,7 +56,7 @@ source:
     direct invocation, not from the Slack alert text",
   ]
 resolved_by:
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
+archive_exempt: true # STALE as of 2026-08-18 (na-eligibility-audit) -- was accurate 2026-08-16 (plan_reconciler Phase -1, 0 open todos then) but a NEW [SCRIPT] P3 todo landed 2026-08-17 (swallowed-error logging gap in ldr_to_main_fleet_promote.sh:638) -- doc is genuinely NOT zero-open-todo right now, this field is currently moot rather than load-bearing. Leaving in place rather than removing: harmless either way, and the doc may return to 0-open once that todo is picked up.
 locked_by:
 locked_since:
 context_scope:
@@ -429,3 +429,23 @@ confirmed shipped and verified (`unified-api-contracts` live-defi-rollout conten
 Closing out this escalation on that basis — the next `cicd` dispatch (if the streak is still non-zero once GitHub's
 platform issue clears) should re-run `sit_gate_stuck_detector.py` fresh rather than re-diagnose from this doc's Finding
 2, which is now superseded.
+
+**cicd escalation agt-f2579b, 2026-08-18 (re-dispatch of the same escalation id, market-tick-data-service, `CONTEXT`
+citing the same stale run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32028104167` — a
+`sit-gate-stuck-detector.yml` run created `2026-08-17T12:05:42Z`, ~24h before this dispatch, already fully diagnosed
+above): confirms this occurrence had already self-converged before the dispatch reached me — exactly the "next
+dispatch should re-run fresh" instruction the prior entry left. Live-checked, not assumed from `CONTEXT`:
+`GET /api/escalations/active` returned empty (no active escalation row), and a fresh `sit_gate_stuck_detector.py
+--threshold 3 --lookback 8` run reported `sit-gate stuck detector: healthy (no repo has 3+ consecutive SIT GATE BLOCK
+ticks)`. No repo currently blocked; nothing to fix, nothing to push. This is the delayed-dispatch/stale-alert-text
+pattern this doc's own Finding 2 correction already anticipated — the `CONTEXT` field is stamped at
+original-detection time and does not refresh on redispatch, so a worker must always re-run the detector live rather
+than trust the cited run URL's age.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 1 genuinely open item (the [SCRIPT] P3 swallowed-
+error-logging gap added 2026-08-17), tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE: the fix itself reads as small and
+bounded (echo captured stderr before falling back to {}, check both call sites), but this doc is a LIVE,
+high-edit-velocity incident tracker (7 dated cicd-escalation entries through today) -- deliberately NOT extracted this
+pass to avoid any edit-collision risk with an in-flight escalation. Flagging for extraction on a calmer day rather
+than dispatching against a hot file. See the archive_exempt frontmatter note above for why that field is currently
+stale-but-harmless.

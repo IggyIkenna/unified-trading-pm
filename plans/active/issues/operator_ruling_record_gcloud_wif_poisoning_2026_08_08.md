@@ -98,3 +98,7 @@ prior audit marker) whose entire purpose is to hold a transcribed operator rulin
 file per job') and its confirmation. The doc's own text is explicit that it settles traceability only, not authenticity
 -- 'only the operator can confirm it was really issued as quoted.' The sole todo is explicitly [OPERATOR]-tagged and
 cannot be resolved by a worker. Genuinely operator-gated by design. KEEP_NA_VALID.
+
+**na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid — confirmed unchanged. Still exactly 1 open
+[OPERATOR]-tagged todo (confirm/correct the transcribed ruling), still un-answered. Also independently relayed by
+`ag_closeout_audit_ci_parked_2026_08_16.md`'s own Todos item 1 — not duplicating a second ask here.
