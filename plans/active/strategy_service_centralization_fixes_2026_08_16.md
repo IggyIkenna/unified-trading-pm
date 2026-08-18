@@ -263,6 +263,17 @@ Full findings, root cause, and evidence for every todo below live in the three s
       the generic protocol-level rate-index data it actually reads and states plainly it is NOT used for
       strategy-service risk gating (per-wallet Aave polling was never real). Landed via quickmerge, verified
       post-push ancestor of `origin/live-defi-rollout`.
+- [ ] [BACKEND] P2. **NEW 2026-08-18 — Delete `positions_health.py`'s redundant `derive_snapshot_from_lending()`
+      re-derivation once its wallet-keyed HTTP contract is reconciled with the client_id-scoped cache.** The
+      reconciliation todo's decision (above) and this doc's P0 done-note both said this deletion should follow
+      once the in-process read path exists — it now does (`margin_health_cache.py`), but `/positions/health`'s
+      route is keyed by `wallet_id` (consumed cross-service by execution-service's `run_wallet_preflight_checks`),
+      while the new cache is keyed by `client_id`+scope — deleting the redundant path requires resolving a
+      `wallet_id -> (client_id, protocol)` mapping first, a genuine small design decision (not build-and-ship),
+      to avoid silently breaking that cross-service HTTP contract. Only the hardcoded-threshold half of this todo
+      was fixed this session (see above) — the deletion half is this new todo. Done-when: `derive_snapshot_from_
+      lending()`/`update_wallet_health_from_lending()` are deleted and `/positions/health` reads the same generic
+      cache instead of re-deriving.
 - [ ] [BACKEND] P1. **NEW 2026-08-18 — Build the real live perp-margin sourcing adapter for `staked_basis.py`'s
       LST_AS_MARGIN gate.** Surfaced while shipping the P0 switch-over above: `staked_basis.py`'s health gate is
       correctly wired to `get_current_margin_health(client_id, perp_venue, ...)` but nothing feeds that scope —
