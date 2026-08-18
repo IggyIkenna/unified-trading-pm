@@ -1,17 +1,21 @@
 ---
 doc_type: plan
-title: Grok + Gemini translation proxy — self-hosted Anthropic-format facade
+title: Gemini translation proxy — self-hosted Anthropic-format facade
 summary:
-  Stand up a self-hosted LiteLLM-based proxy presenting an Anthropic-compatible endpoint in front of Grok (xAI,
-  OpenAI-shaped backend) and Gemini (Google-shaped backend, free-tier only), so AO can dispatch to both while Claude
-  Code's harness — CLAUDE.md, skills, hooks — never changes.
+  Stand up a self-hosted LiteLLM-based proxy presenting an Anthropic-compatible endpoint in front of Gemini (Google-
+  shaped backend, free-tier only), so AO can dispatch to it while Claude Code's harness — CLAUDE.md, skills, hooks —
+  never changes. Originally scoped to cover Grok (xAI) too; Grok was fully decommissioned 2026-08-18 (operator
+  decision — pure metered pay-per-token with no subscription or free tier, judged not worth running vs Claude/
+  DeepSeek's subscriptions or Gemini's genuine free tier) — see the dated Progress Log entry below for the full
+  removal record. This doc now covers Gemini only; Grok's content is struck/cancelled in place, not deleted, so the
+  historical record of what was built and why stays intact.
 status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [agent-orchestrator, grok, xai, gemini, google, model-routing, multi-provider, translation-proxy, free-tier]
+tags: [agent-orchestrator, gemini, google, model-routing, multi-provider, translation-proxy, free-tier]
 related:
   [
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
@@ -39,14 +43,21 @@ source:
 context_scope: [agent-orchestrator/server/accounts.py, agent-orchestrator/server/autospawn.py, agent-orchestrator/server/model_pricing.py, agent-orchestrator/server/deepseek_balance.py, /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md]
 ---
 
-# Grok + Gemini translation proxy — self-hosted Anthropic-format facade
+# Gemini translation proxy — self-hosted Anthropic-format facade
+
+> **🔴 Grok (xAI) DECOMMISSIONED 2026-08-18** — operator decision: no subscription or free tier (pure metered
+> pay-per-token), judged not worth running vs Claude/DeepSeek's subscriptions or Gemini's genuine free tier. Every
+> Grok-specific todo below is marked CANCELLED in place with the same reason; Gemini's content is unaffected and
+> stays active. Code removal tracked in `agent-orchestrator` directly (accounts, RateCard, balance poller, dashboard
+> panel, tests) — see this doc's 2026-08-18 Progress Log entry.
 
 ## Why
 
 Operator decision (interactive session, 2026-08-14): onboard Grok (xAI) and Gemini (Google) as additional sonnet-tier
 fallback providers, reusing the SAME `select_account_for_spawn()`/`AccountProvider` mechanism the sibling DeepSeek/GLM
-plan owns. Unlike DeepSeek/GLM, **neither vendor ships an Anthropic-compatible endpoint** — Grok's API mimics OpenAI's
-chat-completions shape, Gemini has its own distinct shape. Standing requirement, restated multiple times this session:
+plan owns. **Grok was decommissioned 2026-08-18 — see the banner above.** Unlike DeepSeek/GLM, **neither vendor shipped
+an Anthropic-compatible endpoint** — Grok's API mimicked OpenAI's chat-completions shape, Gemini has its own distinct
+shape. Standing requirement, restated multiple times this session:
 Claude Code's harness (CLAUDE.md/skills/hooks) must not change for any provider — every provider must present as if it's
 just another Claude account. This plan's core deliverable is a self-hosted **LiteLLM proxy in Anthropic-passthrough
 mode**, chosen over a bespoke translator because it's a mature, well-documented open-source project already built for
@@ -101,10 +112,12 @@ plan's providers must respect identically (opus/fable hard-pinned to Claude, nev
 ## Design summary
 
 A self-hosted LiteLLM proxy process, deployed on/reachable from the orchestrator VM, exposes an Anthropic-compatible
-`/v1/messages` endpoint and routes to two backend classes:
+`/v1/messages` endpoint and routes to Gemini backends (originally two backend classes; the Grok class was
+decommissioned 2026-08-18 — see the banner at the top of this doc):
 
-1. **Grok backends** (2 models) — LiteLLM's native xAI provider support, translating Anthropic-format requests to xAI's
-   OpenAI-shaped chat-completions API and back, including `tool_use`/`tool_result` translation.
+1. ~~**Grok backends** (2 models) — LiteLLM's native xAI provider support, translating Anthropic-format requests to
+   xAI's OpenAI-shaped chat-completions API and back, including `tool_use`/`tool_result` translation.~~ **REMOVED
+   2026-08-18.**
 2. **Gemini backends** (6 accounts: 2 models × 3 projects) — LiteLLM's native Gemini provider support, same translation
    shape, with an added per-(project, model) RPM/TPM/RPD headroom tracker that gates dispatch before LiteLLM ever issues
    the call (LiteLLM itself doesn't know about AO's fleet-wide dispatch decisions).
@@ -166,8 +179,8 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       smoke test before any live fleet traffic — LiteLLM is designed for this, but it must be proven against THIS
       workspace's actual tool schemas, not assumed correct from general maturity. **Still open 2026-08-16** — only a
       plain-text completion was smoke-tested through the proxy (see the P0 above), not a real tool-calling exchange.
-      Done when: a real multi-step tool-calling exchange completes correctly through the proxy for both Grok and
-      Gemini backends.
+      **Narrowed 2026-08-18 (Grok decommissioned)**: Done when: a real multi-step tool-calling exchange completes
+      correctly through the proxy for the Gemini backend.
 - [x] [INFRA] P1. ✅ Register `AccountProvider` value `"grok"` + extend `"gemini"` with `gcp_project`. **DONE
       2026-08-16** — all 8 accounts (2 Grok + 6 Gemini, using 3 of the operator's 4 confirmed free-tier projects)
       registered in the live `accounts.json` and confirmed parsing cleanly via the real `load_accounts()` Pydantic
@@ -205,30 +218,52 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       non-gemini-pick-doesn't-call-the-gate). `agent-orchestrator@31687b54dc`. Simulated-exclusion proof: done (new
       tests). **Real live-account throttle proof: not yet done** — needs the accounts un-paused and real dispatch
       volume to observe.
-- [ ] [INFRA] P1. Accurate usage-capture for both — verify the LiteLLM proxy's own usage reporting against each vendor's
-      real dashboard/console numbers (xAI console, Google AI Studio quota page) before trusting it directly, same
-      principle as every other new provider this session (DeepSeek's own compat endpoint under-reported before this was
-      caught). Done when: a dated comparison of captured-vs-vendor-reported usage for a real sample of turns is
-      recorded, with a stated tolerance.
-- [ ] [DATA] P2. Feed any Grok cache-rate gap discovered by the RateCard todo above into the shared heuristic
-      reconciliation mechanism built in the sibling DeepSeek/GLM plan (infer from real observed usage vs billed spend
-      rather than leaving it unpriced). Done when: a documented, derivation-shown rate lands in `model_pricing.py`.
+- [ ] [INFRA] P1. Accurate usage-capture — verify the LiteLLM proxy's own usage reporting against Gemini's real
+      dashboard/console numbers (Google AI Studio quota page) before trusting it directly, same principle as every
+      other new provider this session (DeepSeek's own compat endpoint under-reported before this was caught).
+      **Narrowed 2026-08-18 (Grok decommissioned, xAI console check dropped)**. Done when: a dated comparison of
+      captured-vs-vendor-reported usage for a real sample of turns is recorded, with a stated tolerance.
+- [x] CANCELLED [DATA] P2. **CANCELLED 2026-08-18 — operator decision: Grok decommissioned (no subscription/free
+      tier, pure metered pricing, judged not worth running vs Claude/DeepSeek/Gemini).** Was: Feed any Grok cache-rate
+      gap discovered by the RateCard todo above into the shared heuristic reconciliation mechanism built in the
+      sibling DeepSeek/GLM plan.
 - [x] [INFRA] P1. ✅ Add an explicit soft same-provider preference across a `sequential: true` chain's todos — the
       GENERAL mechanism, shipped in the sibling plan's `select_account_for_spawn()` (new
       `sequential_preferred_account_id` param), same fix cited in the sibling Codex plan. —
       `agent-orchestrator@7ae567cbb6`. Confirmed structurally that any provider switch is always a fresh tmux/process
       spawn, never an in-place `ANTHROPIC_BASE_URL` change mid-session.
-- [ ] [REVIEW] P1. Grok/Gemini-specific verification, blocked on those accounts existing: once registered, confirm (a)
-      `_resume_pass`'s existing `preferred_provider` pin correctly holds a crash-resume on the SAME Grok/Gemini account,
-      (b) a `sequential: true` chain measurably prefers that account across its own todos via the now-shipped
-      `sequential_preferred_account_id` mechanism. Done when: a real dispatch proves both against live accounts, not
-      just the generic mechanism's own unit tests.
-- [ ] [REVIEW] P2. After ~1-2 weeks live, measure real completion quality and (for Grok) real $/task across both
-      providers against the Claude/DeepSeek/GLM baseline — feeds the same "get an idea of how well they complete things
+- [ ] [REVIEW] P1. **Narrowed 2026-08-18 (Grok decommissioned)** — Gemini-specific verification, blocked on those
+      accounts existing: once registered, confirm (a) `_resume_pass`'s existing `preferred_provider` pin correctly
+      holds a crash-resume on the SAME Gemini account, (b) a `sequential: true` chain measurably prefers that account
+      across its own todos via the now-shipped `sequential_preferred_account_id` mechanism. Done when: a real
+      dispatch proves both against live Gemini accounts, not just the generic mechanism's own unit tests.
+- [ ] [REVIEW] P2. **Narrowed 2026-08-18 (Grok decommissioned, $/task comparison dropped — Gemini is $0 by
+      construction)** — after ~1-2 weeks live, measure real completion quality and real request-consumption-rate for
+      Gemini against the Claude/DeepSeek/GLM baseline — feeds the same "get an idea of how well they complete things
       and how much things cost" calibration goal recorded in the sibling plan. Done when: a dated Progress Log entry
-      with real per-provider quality and cost numbers lands.
+      with real Gemini quality and consumption-rate numbers lands.
 
 ## Progress Log
+
+- **2026-08-18 — Grok (xAI) fully decommissioned, operator decision.** Reason stated verbatim: Grok has no
+  subscription/Max-style tier and no free tier — pure metered pay-per-token — judged pointless to keep running
+  against Claude/DeepSeek's subscription economics and Gemini's genuine free tier. This doc retitled from
+  "Grok + Gemini translation proxy" to "Gemini translation proxy"; every open Grok-specific todo above marked
+  CANCELLED or narrowed to drop the Grok half, historical `[x]` DONE entries left as-is (real record of what was
+  built, not rewritten). Code removal (agent-orchestrator): `server/grok_balance.py`, `server/grok_balance_poller.py`,
+  `tests/test_grok_balance.py` deleted; Grok `RateCard` entries removed from `server/model_pricing.py`; `"grok"`
+  `AccountProvider` literal + `grok_team_id` field removed from `server/accounts.py`;
+  `compute_grok_wallet_window_reconciliation()` removed from `server/state_store/slots.py`;
+  `GrokWalletWindowReconciliationView` removed from `server/models/accounts.py`; the
+  `/api/accounts/grok/wallet-reconciliation/window` route removed from `server/routes/accounts.py`;
+  `dashboard/src/GrokWalletPanel.tsx` + `dashboard/tests/e2e/grok-wallet-reconciliation.spec.ts` deleted; Grok
+  references removed from `dashboard/src/api.ts`, `types.ts`, `styles.css`, and the shared LiteLLM proxy config —
+  Gemini's equivalent code paths left untouched throughout. **Not done as part of this cleanup, flagged as a
+  separate operator-gated follow-up**: the two live (but already `account_status: disabled`/paused) Grok accounts
+  registered in the orchestrator VM's runtime `accounts.json`, and the funded GSM secrets (`grok-api-key`,
+  `grok-management-key`, ~$5 real balance per this doc's own 2026-08-16 entry) — removing/revoking those touches
+  live infra and real credentials, out of scope for a code-cleanup pass; needs an explicit operator go-ahead before
+  anyone deletes them.
 
 - **2026-08-14 (interactive session)**: Plan authored from a same-session design conversation covering provider pricing
   research (list vs. cache-weighted vs. subscription-effective rates), OpenCode alternative investigated for Grok and

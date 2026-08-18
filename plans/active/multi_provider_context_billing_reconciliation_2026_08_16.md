@@ -24,7 +24,6 @@ tags:
     billing,
     reconciliation,
     multi-provider,
-    grok,
     gemini,
     glm,
     codex,
@@ -77,14 +76,15 @@ visible once real traffic flowed through real proxies:
 **1. Context-window/tokenizer accuracy is NOT uniform across providers, but the mechanism that depends on it IS.**
 `context_lifecycle.py`'s 60% pre-compact trigger reads `context_used_pct` by scraping Claude Code's own self-reported
 "N% context used" pane text — a number Claude Code computes from the `usage.input_tokens`/`output_tokens` fields in
-each turn's response. For Grok/Gemini/GLM those fields are REAL (LiteLLM/GLM's native endpoint pass through the
-vendor's own usage accounting). For **Codex/Luna they are a placeholder**:
+each turn's response. For Gemini/GLM those fields are REAL (LiteLLM/GLM's native endpoint pass through the
+vendor's own usage accounting — Grok was identical before its 2026-08-18 decommission). For **Codex/Luna they are a
+placeholder**:
 `server/codex_bridge_server.py::_estimate_tokens` is `len(text) // 4` — a crude heuristic, explicitly marked
 "never to be trusted for billing" in its own docstring. This session independently demonstrated exactly how
 unreliable a naive text-length-based token estimate can be: a word-count heuristic on a real Grok 4.6 context-limit
 test undercounted the real (xAI-tokenizer-measured) count by 1.6x. If Codex's fake estimate has a similar or worse
 skew, `context_used_pct` for a Codex-backed session is silently wrong, and the SAME 60%-trigger mechanics that work
-correctly for Grok/Gemini/GLM will misfire for Codex specifically — either compacting too early (wasted turns) or,
+correctly for Gemini/GLM will misfire for Codex specifically — either compacting too early (wasted turns) or,
 worse, letting a session run past its real context ceiling undetected (an uncontrolled 400 mid-session, a materially
 worse failure than the "recover with a fresh session" path this codebase already has for a *known*-saturated session).
 
@@ -99,8 +99,8 @@ it was live-tested, not assumed.
 **Separately (operator correction, 2026-08-16): the self-compaction question needs re-testing through the REAL path.**
 The 500K-limit test above was a raw HTTP probe directly against the proxy, bypassing Claude Code entirely — it proves
 the *backend* doesn't self-compact, but says nothing about whether Claude Code's own `/pre-compact` → `/compact`
-mechanism, and the skills/hooks wrapped around it, actually work correctly when the backend is Grok/Gemini/GLM/Codex
-specifically. DeepSeek already proved this end-to-end (`deepseek_claude_blended_provider_routing_2026_07_28` Progress
+mechanism, and the skills/hooks wrapped around it, actually work correctly when the backend is Gemini/GLM/Codex
+specifically (Grok was decommissioned 2026-08-18, before this verification ran for it). DeepSeek already proved this end-to-end (`deepseek_claude_blended_provider_routing_2026_07_28` Progress
 Log, 2026-07-29: "CLAUDE.md/agents/\*.md need no DeepSeek special-casing — both load identically regardless of which
 backend ANTHROPIC_BASE_URL points at"), but that result does not automatically transfer to the 4 new providers and
 needs its own live verification, the same way DeepSeek's was actually proven rather than assumed.
@@ -123,10 +123,11 @@ operator 2026-08-16, not yet designed:
   `agent-orchestrator@616450ffac`) with real per-account numbers already pulled (Max20 accounts cluster 14x-32x; a
   genuine Pro-tier ~1047x outlier is still under investigation there, not a data bug — see that doc's own open
   todos). This plan's original framing wrongly described the Claude subscription-value question as unsolved; it
-  isn't — it's the reusable PRECEDENT this plan should generalize, not a gap to fill from scratch. The 4 newer
-  providers (Grok/Gemini/GLM/Codex) still have no per-task cost attribution built at all.
+  isn't — it's the reusable PRECEDENT this plan should generalize, not a gap to fill from scratch. The 3 newer
+  providers (Gemini/GLM/Codex) still have no per-task cost attribution built at all (Grok would have been a 4th,
+  decommissioned 2026-08-18 before this work started — no subscription/free tier, judged not worth running).
 - **Normalized bang-for-buck**: everything should reduce to input/output/cache-read/cache-write token counts so
-  providers are comparable regardless of billing shape — metered-$ (Grok), first-party token counts we trust
+  providers are comparable regardless of billing shape — metered-$ (DeepSeek), first-party token counts we trust
   (Anthropic, Gemini), subscription-flat-rate where the real value per dollar is now KNOWN for Claude (see above) but
   still genuinely UNKNOWN for GLM's Coding Plan (the one remaining real "Sonnet multiplier"-shaped gap — no
   equivalent calibration has been built for GLM's flat-rate subscription), and rate-limited-free-tier where "spend"
@@ -171,20 +172,23 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       sample of Codex-backed turns' captured token counts are cross-checked against the actual ChatGPT/Codex usage
       dashboard and found to agree within a stated tolerance — same standard already required by
       `codex_luna_flex_bridge_2026_08_14.md`'s existing accurate-usage-capture todo, which this directly unblocks.
-- [ ] [REVIEW] P1. Verify Claude Code's own end-to-end `context_used_pct` display is accurate for Grok/Gemini/GLM —
-      the individual API responses carry real vendor-reported usage (confirmed this session), but the CUMULATIVE
-      session-level percentage Claude Code itself computes and displays has not been independently checked end-to-end.
-      Done when: a real multi-turn session against each of the 3 providers shows a `context_used_pct` reading that
-      tracks real cumulative token consumption within a stated tolerance.
-- [ ] [REVIEW] P0. Live-test `/pre-compact` and `/compact` through the REAL harness (not a raw HTTP probe) for each of
-      Grok, Gemini, GLM, and Codex — spawn real `claude` CLI sessions against each new account, run long enough to
-      approach or force the 60% threshold, and confirm: (a) the skill/command actually executes (not silently
-      swallowed), (b) `context_used_pct` genuinely drops afterward — proving compaction reduces what gets resent, not
-      just that the command ran, (c) CLAUDE.md/skills/hooks behave identically to the already-proven DeepSeek case.
-      Done when: a dated Progress Log entry records this for all 4 providers, each independently verified, not
-      assumed to transfer from DeepSeek's or each other's result.
-- [ ] [REVIEW] P2. Live-test the remaining context-window claims from this session's research table (Grok 4.3's 1M,
-      GLM's 1M/131K, Gemini's 1,048,576/65,536 — already confirmed live for Gemini, DeepSeek's 1,048,576/384,000,
+- [ ] [REVIEW] P1. **Narrowed 2026-08-18 (Grok decommissioned)** — verify Claude Code's own end-to-end
+      `context_used_pct` display is accurate for Gemini/GLM — the individual API responses carry real vendor-reported
+      usage (confirmed this session), but the CUMULATIVE session-level percentage Claude Code itself computes and
+      displays has not been independently checked end-to-end. Done when: a real multi-turn session against each of
+      the 2 providers shows a `context_used_pct` reading that tracks real cumulative token consumption within a
+      stated tolerance.
+- [ ] [REVIEW] P0. **Narrowed 2026-08-18 (Grok decommissioned)** — live-test `/pre-compact` and `/compact` through
+      the REAL harness (not a raw HTTP probe) for each of Gemini, GLM, and Codex — spawn real `claude` CLI sessions
+      against each new account, run long enough to approach or force the 60% threshold, and confirm: (a) the
+      skill/command actually executes (not silently swallowed), (b) `context_used_pct` genuinely drops afterward —
+      proving compaction reduces what gets resent, not just that the command ran, (c) CLAUDE.md/skills/hooks behave
+      identically to the already-proven DeepSeek case. Done when: a dated Progress Log entry records this for all 3
+      remaining providers, each independently verified, not assumed to transfer from DeepSeek's or each other's
+      result.
+- [ ] [REVIEW] P2. **Narrowed 2026-08-18 (Grok decommissioned, its 4.3's 1M claim dropped — untested and now moot)**
+      — live-test the remaining context-window claims from this session's research table (GLM's 1M/131K, Gemini's
+      1,048,576/65,536 — already confirmed live for Gemini, DeepSeek's 1,048,576/384,000,
       GPT-5.6's 1.05M/128K) the same way Grok 4.6's 500K was — a real oversized request, built on-host to avoid
       transport payload limits, confirming the vendor enforces its documented ceiling and does not silently truncate.
       Done when: each is either confirmed live or explicitly flagged as still resting on published docs only.
@@ -222,9 +226,9 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       counts as the common denominator across every provider's billing shape (metered-$, first-party-token,
       subscription-flat-rate, rate-limited-free-tier), each priced at the provider's PUBLISHED rate (not a computed
       effective rate) for the "bang for the buck" comparison. Must generalize DeepSeek's existing `task_usage` table
-      rather than create a second, parallel per-task ledger. Done when: a design doc or schema proposal covers all 7
-      currently-registered providers (Anthropic, DeepSeek, Grok, Gemini, GLM, Codex) with a concrete field mapping
-      for each.
+      rather than create a second, parallel per-task ledger. Done when: a design doc or schema proposal covers all 6
+      currently-registered providers (Anthropic, DeepSeek, Gemini, GLM, Codex, Kimi) with a concrete field mapping
+      for each (Grok decommissioned 2026-08-18, dropped from scope).
 - [ ] [DATA] P1. Reconciliation proof: sum of every task's attributed billing (once the schema above is populated for
       a real window) must equal the fleet's real total spend for that window, per provider. Done when: a dated
       Progress Log entry shows this reconciling within a stated tolerance for at least DeepSeek + one new provider.
@@ -336,6 +340,16 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       conflict-checked clear. Track dispatch/completion there, not here.
 
 ## Progress Log
+
+- **2026-08-18 — Grok (xAI) decommissioned, operator decision; every open todo above narrowed to drop it.** Reason
+  stated verbatim: no subscription/Max-style tier and no free tier — pure metered pay-per-token — judged pointless
+  vs Claude/DeepSeek's subscription economics and Gemini's genuine free tier. Full removal record (code + the
+  dedicated onboarding plan) lives in `grok_gemini_translation_proxy_2026_08_14.md` (retitled to drop Grok, its own
+  2026-08-18 Progress Log entry has the file-by-file `agent-orchestrator` diff). This doc's provider-count references
+  updated (4→3 new providers: Gemini/GLM/Codex; 7→6 total registered providers), and the `[REVIEW]` context-window/
+  compaction-verification todos narrowed to the remaining providers. Historical findings (e.g. the real Grok 4.6
+  context-ceiling test that grounded this doc's "vendors don't self-compact" finding) left untouched — they're a
+  record of what was measured, not live scope.
 
 - **2026-08-16 (created)**: Plan authored from a same-session investigation following the live 9-model billing/context
   test battery (see the sibling provider plans' 2026-08-16 Progress Log entries for that raw data). Real findings this
