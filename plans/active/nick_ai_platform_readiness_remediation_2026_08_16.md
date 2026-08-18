@@ -209,7 +209,7 @@ helper, not a hand-rolled copy.
       during the Not-Behind Gate) — verified directly (file content diff + `git show HEAD:<path>` + `git
       merge-base --is-ancestor HEAD origin/live-defi-rollout`) that the final commit genuinely landed with the full
       change on both local HEAD and origin before treating it as done; not a blind re-run.
-- [x] [REVIEW] P2. ✅ Partially resolved 2026-08-18 — `unified-api-contracts@0f2e43ad3e`. This todo's own "12 Low
+- [x] [REVIEW] P2. ✅ Fully resolved 2026-08-18 — `unified-api-contracts@0f2e43ad3e`, `@1595fdc149`. This todo's own "12 Low
       registry gap" framing turned out to be an undercount: an operator follow-up ("I'm surprised we can't do the
       vaults, the pools, the perp inverse... dated carries") prompted a real features-service investigation, which
       found live, already-dispatched calculators for 6 of the 12 supposed gaps — perp funding (`perp_funding_rates`,
@@ -232,11 +232,26 @@ helper, not a hand-rolled copy.
       the newly-declared FRED legs) writes to a real, documented path convention but is entirely invisible to the
       honest-coverage manifest — no `record_captured` call anywhere in that domain. 2 test failures surfaced by the
       new declarations (`yield_curve`/`economic_results` needed `fetch_completed_at`, not `tick_timestamp`) — fixed
-      before shipping, full `quality-gates.sh --no-fix` green (422s). **Genuinely remaining, 13 of the original 20**:
-      8 Medium (unchanged — ambiguous domain/ML-layer-unclear, still in the scaffold artifact) + 5 Low (4 on-chain
-      MEV — confirmed zero feature_group consumers anywhere, not just undeclared — + `PORTFOLIO_MULTI_STRATEGY`'s
-      meta-strategy shape, which doesn't fit this registry's per-instrument model at all). Scaffold artifact
-      refreshed to match:
+      before shipping, full `quality-gates.sh --no-fix` green (422s).
+
+      **Second wave, same day** — `unified-api-contracts@1595fdc149`. Operator instruction: "do all the medium
+      confidence. for mev what do we actually need and double check mtds or features don't expose [it]." Declared
+      all 8 remaining Medium-confidence rows by direct analogy to an already-declared sibling archetype
+      (`ARBITRAGE_CROSS_DOMAIN_EVENT`, `MARKET_MAKING_ML_LEAN`, `ML_DIRECTIONAL_EVENT_SETTLED`,
+      `RULES_DIRECTIONAL_EVENT_SETTLED`, `VOL_ML_LEAN`, `PORTFOLIO_FACTOR_ALLOCATION`, `PORTFOLIO_RISK_PARITY`,
+      `PORTFOLIO_TACTICAL_OVERLAY`) — same weaker evidence tier as the original 35, not upgraded to dispatch-traced,
+      each comment states the sibling it copies and its specific weak point. For MEV, ran the requested
+      double-check exhaustively rather than re-asserting the prior finding: confirmed `mev_events_handler.py` in
+      MTDS really does capture real rows, then searched the WHOLE workspace (features-service,
+      market-data-processing-service, strategy-service, execution-service) and found zero consumers anywhere —
+      the earlier finding held. Went further per "what do we actually need": `mev_events` only logs MEV that
+      ALREADY happened; backrun/sandwich/JIT-liquidity/liquidation-bundle strategies need to act on a pending
+      transaction before someone else does, which needs mempool visibility — a data source this codebase has no
+      adapter for at all. This reframes the MEV gap as a missing data-capture capability, not a missing
+      feature_group declaration — a materially different (and larger) piece of work than the other 4 filed issues
+      this session. **Registry now 55/60** — the only 5 remaining are the 4 MEV archetypes (genuine
+      infrastructure gap) + `PORTFOLIO_MULTI_STRATEGY` (structural input-shape mismatch, not a naming gap). Full
+      `quality-gates.sh --no-fix` green again before shipping. Scaffold artifact refreshed to match:
       [Archetype Scaffold Review](https://claude.ai/code/artifact/e9c372d4-211c-4776-9719-0b671d730116).
 
 ## W3 — Granularity declaration (step 13) — NOW THE CRITICAL PATH FOR THE ARTIFACT (operator ruling 2026-08-17)
