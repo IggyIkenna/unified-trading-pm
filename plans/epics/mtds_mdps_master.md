@@ -1,6 +1,6 @@
 ---
 doc_type: epic
-title: Data pipeline master coordination — 2026-05-20
+title: MTDS/MDPS Master — Market Data Pipeline Coordination
 summary:
   L1 epic coordinating the MTDS/MDPS data pipeline — backfill-to-100% across all asset_groups, DeFi catalogue→per-pool
   capture, honest-absence swallow remediation, MDPS book-microstructure precompute + polars adapter seam + cost
