@@ -65,9 +65,14 @@ and verify via `git status --porcelain` that the commit didn't drop the rename's
 
 ## Todos
 
-- [ ] [REVIEW] P2. Archive `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — 0
+- [x] ✅ [REVIEW] P2. Archive `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — 0
       open todos, `archive_exempt: true` since 2026-08-16 (plan_reconciler Phase -1), independently re-confirmed
-      2026-08-18 (na-eligibility-audit: all 5 todos `[x]`, `resolved_by:` cites 6 commits across 2 repos).
+      2026-08-18 (na-eligibility-audit: all 5 todos `[x]`, `resolved_by:` cites 6 commits across 2 repos). Moved to
+      `plans/archive/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`; durable
+      `waitFor`-vs-template-native contract captured in `/codex/08-workflows/ci-cd-flow.md`; the 3 active-corpus
+      docs whose `related:`/`context_scope` pointed at the old active path (`ci_satellite_ao_dispatch_batch13`,
+      `ci_satellite_ao_dispatch_batch15`, `unified_api_contracts_image_build_gate_template_lag_...2026_08_14`)
+      repointed at codex, same commit.
 
 - [ ] [REVIEW] P2. Archive
       `plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md` — 0

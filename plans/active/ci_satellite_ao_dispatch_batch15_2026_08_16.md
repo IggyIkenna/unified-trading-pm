@@ -36,7 +36,7 @@ related:
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
     /plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md,
-    /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md,
+    /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
   ]
 created: "2026-08-16"

@@ -12,7 +12,8 @@ summary: >-
   no sentinel is written, so `quickmerge` Pass 2 refuses — for every agent on every host, for any PM CODE commit. Same
   blast radius and same shape as the codex-freshness ratchet incident the day before, from a different check. NOT
   re-baselined: the check's own remedy line says "NEVER raise a count".
-status: open
+status: archived
+superseded_by: /codex/08-workflows/ci-cd-flow.md
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -45,7 +46,6 @@ resolved_by:
   "deployment-api@b928d173b5, deployment-api@e7dde8a675, deployment-api@d47546e9da, unified-trading-pm@2b4bee96d3,
   unified-trading-pm@95dd1ded4f, unified-trading-pm@3ec88291e2 (corrected 2026-08-16, plan_reconciler Phase -1 —
   was a single-sha citation understating the fix, which spans 6 commits across 2 repos)"
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 context_scope:
@@ -61,6 +61,11 @@ source: >-
   updating to origin in between. Provenance established from git (commit date, author, ancestry on origin), not
   inferred.
 ---
+
+> **🗄️ ARCHIVED 2026-08-18** — all todos done, independently re-confirmed by two audit passes
+> (`plan_reconciler_findings_ci_2026_08_16.md`, `na-eligibility-audit` ci tranche). The durable
+> `waitFor`-vs-template-native contract this incident established is now recorded in
+> `/codex/08-workflows/ci-cd-flow.md`; read that doc for the current guidance, this one for incident history only.
 
 # A sibling repo's un-forward-ported cloudbuild step blocks the whole PM repo
 

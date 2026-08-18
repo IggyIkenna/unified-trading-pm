@@ -21,7 +21,7 @@ related:
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
     /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,
-    /plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md,
+    /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md,
     /plans/active/issues/deployment_service_basedpyright_ratchet_exceeded_sports_trigger_2026_08_08.md,
     /plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md,
