@@ -308,6 +308,51 @@ all on days with real captured trades, and what does the Tier-3 sentinel fan-out
 DELISTED/NOT_LISTED` stamping actually cover for this data_type" — a fresh code-path trace, not an (a)/(b)
 choice.
 
+## Diagnosis update (2026-08-18, slot-6) — write-path structurally sound; two new candidate gaps identified, live check still required
+
+Followed the P1 todo's directive to check the two named suspects: `_finalize_prediction_bundles`'s
+line-533 early-return, and `_record_venue_shard_counts`'s truthy-check.
+
+**Traced the full write-time accumulation chain end-to-end — no structural gap found in it.**
+`partitioned_writer.py::_update_prediction_counts` (line 557) is called unconditionally on EVERY
+`write_chunk` group when `asset_group=="prediction"` + a `canonical_question_group` column is present +
+`symbol_str` is truthy — this is genuinely data-type-agnostic (confirms slot-14's original claim).
+`polymarket_adapter.py::_annotate_cid_dataframe` (line 461-466) stamps `canonical_question_group`
+unconditionally on EVERY cid's trades DataFrame, before `write_chunk` is ever called
+(`_polymarket_helpers.py::_aggregate_trade_results`, line 277-280) — so a captured POLYMARKET trades row
+should always carry a classified group by the time it reaches the writer.
+
+**Ruled out one new hypothesis this session**: an unguarded `ValueError` from
+`validate_canonical_question_group` (`unified-api-contracts/.../write_guard.py:55`, raises if the value
+isn't a genuine `CanonicalQuestionGroup` enum member) mid-way through the per-cid loop in
+`_run_taxonomy_classifiers` (`_polymarket_helpers.py:237-244`, no try/except around the loop body) could
+plausibly abort processing of later cids in a day's fetch, silently truncating that day's
+`_prediction_cluster_counts` contribution. **Disproven by reading `classify_polymarket_to_canonical_group`
+itself** (`unified-api-contracts/.../classifiers.py:587-624`): its return type is always a genuine
+`CanonicalQuestionGroup` enum member (falls through to `OTHER`/`MISC_NOVELTY` for unmatched combinations,
+never a raw string) — so `validate_canonical_question_group(group.value)` cannot raise from this call
+site by construction. Not the mechanism.
+
+**Two new candidate gaps identified, NEITHER confirmed against live data (still needed, see todo below)**:
+1. Slot-9's "structural" disproof of the writer-lifetime hypothesis confirmed ONE writer instance is
+   threaded through the trades path in general, but did not specifically verify instance identity for
+   the two measured-divergent dates (2026-07-27, 2026-08-03) — a batch-chunked or retried fetch for those
+   SPECIFIC dates could still construct more than one writer if the orchestrator's retry/chunking logic
+   (not yet read this session) ever re-invokes `download_batch` with a fresh writer mid-run.
+2. `_prediction_cluster_counts` is accumulated across ALL prediction data_types sharing one
+   `symbol`-keyed bucket per CQG (no data_type discrimination in `_update_prediction_counts`) — the
+   37/319,830 and 8/196,303 "captured" counts slot-14 cited were read from the manifest's `trades`
+   data_type cell specifically; whether those captured trades rows are the SAME underlying write_chunk
+   calls that populate `_prediction_cluster_counts`, versus a differently-batched fetch path (e.g. the
+   `book_snapshot_5` gate at `_polymarket_helpers.py:411`, which shares the same accumulator), was not
+   verified this session.
+
+**Why this session did not go further**: both remaining candidates require live-data verification (actual
+run logs for 2026-07-27/2026-08-03, or a live instrumented count at the `_record_venue_shard_counts` call
+site) — a third round of code-only reading without live data is unlikely to add new information past what
+two prior sessions + this one already extracted from the same call chain. Per CLAUDE.md CLAIM≤MEASUREMENT,
+recording this as unconfirmed rather than picking one to ship a fix against.
+
 ## Todos
 
 - [x] ✅ [CODE] P1. Manifest hygiene RED — diagnosed (not fully fixed) 2026-08-17 slot-14. See "Diagnosis"
@@ -333,20 +378,31 @@ choice.
       sentinel. Did NOT implement (a)/(b) — both are built on the now-disproven coverage-gate premise;
       shipping either would be a fix for the wrong mechanism on prod data-correctness code. Superseded by
       the two todos below.
-- [ ] [OPERATOR/BACKEND] P1. Trace why `_finalize_prediction_bundles` (`market-tick-data-service`) does
-      not appear to reach POLYMARKET's CQG rows in production despite real captured trades that day (37
-      captured trades rows on 2026-08-03, 8 on 2026-07-27) — check whether its line-533 early-return
-      (`if not prediction_cluster_counts_by_venue: return`) or `_record_venue_shard_counts`'s
-      `if writer.prediction_cluster_counts:` truthy-check is silently skipping POLYMARKET in the live/
-      prod daily orchestrator run (add a count/log there, or trace against a known-good invocation), AND
-      confirm what `prediction_tier3_lifecycle.py::_classify_prediction_tier3_reason` (the actual source
-      of the `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons measured live) is applied against for
-      `data_type=prediction_canonical_question_group` cells — its own docstring describes it as a
-      per-market-`trades`-cell classifier, not a CQG-bundle one, so this may be a second, independent bug
-      (misapplied classifier) rather than the same mechanism. This supersedes the old (a)/(b)
-      coverage-gate ruling todo — do NOT rule on (a) vs (b), that decision no longer applies. `NOTIFIED
-      OPERATOR` per CLAUDE.md big-finding rule (data-correctness, contradicts 2 prior sessions'
-      diagnoses) — see `/blocked` on slot-14, 2026-08-17.
+- [x] ✅ [BACKEND] P1. Traced 2026-08-18 slot-6 — see "Diagnosis update (2026-08-18, slot-6)" above. The
+      write-time accumulation chain (`_update_prediction_counts` → writer.prediction_cluster_counts →
+      `_record_venue_shard_counts` truthy-check → `_finalize_prediction_bundles`) is structurally sound
+      end-to-end on a THIRD full code-path read — no gap found in it this way. Ruled out one new
+      hypothesis (an unguarded classifier `ValueError` truncating a day's cid loop) with a code citation
+      showing `classify_polymarket_to_canonical_group` cannot raise by construction. Root cause remains
+      UNCONFIRMED — this is a code-only-reading dead end; the two remaining candidates both need live
+      data, not another read. Split into the concrete live-verification todo below (does NOT supersede
+      the still-open `prediction_tier3_lifecycle.py` classifier-scope question from the prior todo — kept
+      below alongside it).
+- [ ] [OPERATOR/DATA] P1. LIVE-verify (not another code read) why POLYMARKET's `prediction_canonical_
+      question_group` cells stay `expected_unattempted`/`empty_confirmed` on 2026-07-27 and 2026-08-03
+      despite captured `trades` rows that day. Needs `data_engineering`/`backend_engineer` GCS read
+      access + either (a) actual orchestrator run logs for those two dates (grep for writer construction /
+      `download_batch` retry markers for venue=POLYMARKET), or (b) a temporary instrumented count added at
+      `_record_venue_shard_counts`'s `if writer.prediction_cluster_counts:` call site
+      (`venue_fetch.py:446`) run against one of the two dates, to determine live whether the accumulator is
+      genuinely empty at that point or whether a second writer instance is in play. ALSO confirm what
+      `prediction_tier3_lifecycle.py::_classify_prediction_tier3_reason` (source of the measured
+      `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons) is applied against for
+      `data_type=prediction_canonical_question_group` cells — its own docstring describes a
+      per-market-`trades`-cell classifier, not a CQG-bundle one, so this may be a second, independent
+      misapplied-classifier bug rather than the same mechanism. `NOTIFIED OPERATOR` per CLAUDE.md
+      big-finding rule (data-correctness, 3 sessions now without a confirmed root cause) — see `/blocked`
+      on slot-14, 2026-08-17 (still open).
 - [ ] [DATA] P1. SEPARATE, more acute finding surfaced by the above: POLYMARKET raw `trades` capture
       itself (not just the CQG bundle) has been `DIVERGENT_EMPTY` for 8 CONSECUTIVE days as of this
       writing (2026-08-09 → 2026-08-16 per `divergence_2026-08-17.csv`), with 2026-08-17 showing
