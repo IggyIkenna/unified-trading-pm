@@ -11,7 +11,7 @@ summary: >-
   the investigated window: 23 `slot_done` vs 32 additional real completions (7 escalation_resolved + 1
   escalation_unresolved + 21 escalation_resolved_pre_dispatch + 3 plan_health_result) that never appeared — the
   fleet did 55 tasks, the tab showed ~20.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -36,7 +36,7 @@ last_updated: 2026-08-18
 parent_epic: orchestrator_master
 priority: P2
 assigned_vm: NA
-resolved_by:
+resolved_by: agent-orchestrator@05c2d94832
 locked_by:
 locked_since:
 supersedes:
@@ -52,6 +52,12 @@ drift_direction: advance-code
 ---
 
 # AO dashboard Activity Log "Done" tab undercounts — event-vocabulary gap, not a role filter
+
+> **🟢 RESOLVED 2026-08-18** — both todos done: the Activity panel's Done ✓/✗ tabs
+> (`agent-orchestrator@fae7a6d8a6`) and the per-slot "Last done" badge
+> (`agent-orchestrator@05c2d94832`) now both recognize escalation/plan_health
+> completions, not just `slot_done`. No further instances found auditing the rest
+> of the dashboard.
 
 ## What's wrong
 
@@ -102,16 +108,30 @@ meaningful escalation/scheduled work.
       including 2 new `mergeDonePassed` regression cases. `App.tsx`'s own `DONE_ACTIVITY_TYPES` (the per-slot badge)
       was deliberately left unfixed — same gap, smaller/different UI surface, correctly folded into the audit todo
       below rather than force-fixed here.
-- [ ] [REVIEW] P3. Check whether any OTHER dashboard surface shares this same allowlist-style gap — this was found
-      and fixed on the main Activity panel's Done tabs, not audited fleet-wide. **One instance already confirmed and
-      scoped by the fix above, not yet applied**: `DONE_ACTIVITY_TYPES` (`dashboard/src/App.tsx:115`, feeding
-      `latestDoneOutcomeBySlot`'s per-slot "Last done" badge) still hardcodes `["slot_done", ...DONE_FAILED_TYPES,
-      "tmux_session_lost"]` — it does NOT spread `DONE_PASSED_TYPES`, so escalation/plan_health successes are still
-      invisible to that specific badge even though the main Activity tabs now show them. Check KPI panels and
-      fleet-efficiency rollups too, not just this one.
+- [x] ✅ [REVIEW] P3. Checked whether any OTHER dashboard surface shares this same allowlist-style gap — audited
+      `server/fleet_kpis.py`/`dashboard/src/FleetKpis.tsx` (deliberately scoped to backlog-task throughput only,
+      numerator and denominator share the same scope, not a bug) and every other `dashboard/src/*.tsx` panel (zero
+      further hits) in addition to the one already-confirmed instance. **Fixed**: `DONE_ACTIVITY_TYPES`
+      (`dashboard/src/App.tsx`, feeding `latestDoneOutcomeBySlot`'s per-slot "Last done" badge) now spreads
+      `DONE_PASSED_TYPES` instead of hardcoding bare `"slot_done"`. A second, matching render-layer bug found in the
+      same function: `latestDoneOutcomeBySlot`'s own `isPassed` check was separately hardcoded to literal
+      `event_type === "slot_done"` — fixing the fetch alone would NOT have been enough, exactly the same two-layer
+      shape as the `mergeDonePassed` bug in the first todo above. Fixed to `DONE_PASSED_TYPE_SET.has(a.event_type)`.
+      **Evidence**: `agent-orchestrator@05c2d94832`. `pw:L2 ✓` — new test in
+      `dashboard/tests/e2e/activity-log-role-vocabulary.spec.ts` proving slot 5's "Last done" badge shows a real
+      "✓ done" for its escalation_resolved completion (fixture pitfall found and documented along the way: slot 1
+      looked like the obvious fixture target but is deliberately idle-with-no-tmux, so `slotRowIsDead()` bypasses the
+      badge entirely regardless of data — slot 5, "working" status, was the correct target). `src/activity.test.ts` —
+      414/414 vitest passing, including 2 new `latestDoneOutcomeBySlot` regression cases for escalation_resolved/
+      plan_health_result. Full backend+dashboard quality gate green before shipping. No further gaps found —
+      this todo is fully closed, not partially scoped.
 
 ## Progress Log
 
+- **2026-08-18 (resolved)**: P3 audit todo closed — `agent-orchestrator@05c2d94832` fixed the one confirmed instance
+  (`DONE_ACTIVITY_TYPES` + `latestDoneOutcomeBySlot`'s own `isPassed` check, both in the per-slot "Last done" badge
+  path) and found no further gaps auditing `fleet_kpis.py`/`FleetKpis.tsx` and every other dashboard panel. Both
+  todos done — closing the issue.
 - **2026-08-18 (fix landed)**: see the flipped todo above for the full fix — corrected the location this issue
   originally cited (`DONE_ACTIVITY_TYPES` in `App.tsx` was a red herring; the real fix was
   `DONE_PASSED_TYPES`/`DONE_FAILED_TYPES` + `mergeDonePassed()` in `layout.tsx`), found and fixed a second bug in
