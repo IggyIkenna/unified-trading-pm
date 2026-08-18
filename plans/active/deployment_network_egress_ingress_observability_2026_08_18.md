@@ -150,13 +150,29 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
       `DeploymentOrchestrator.region` (`deployment_service/deployment/orchestrator.py`), which already knows it at
       launch and currently discards it. Gate: a newly-created deployment's durably-persisted `DeploymentState` record
       carries the correct region, verified by reading it back after a real launch.
-- [ ] [BACKEND] P2. Reconcile the two divergent UAC `DeploymentState` classes
+- [x] [BACKEND] P2. Reconcile the two divergent UAC `DeploymentState` classes
       (`unified_api_contracts/internal/deployment.py` vs
       `unified_api_contracts/internal/domain/deployment_service/deployment.py`) — decide which is canonical, fold
       the other's unique fields in, and confirm every current importer (`cluster.py`, `client_isolation.py`,
       `chaos_injections.py`, `subscriptions.py`, `kill_switch_routes.py`, `deployments_helpers.py`,
       `deployments/__init__.py`) still resolves. Gate: exactly one `class DeploymentState` definition remains in UAC,
-      and `quality-gates.sh` is green across deployment-service and deployment-api.
+      and `quality-gates.sh` is green across deployment-service and deployment-api. — unified-api-contracts@fa8b0262ed.
+      Investigation found the two `DeploymentState` classes were byte-for-byte identical, but the surrounding files
+      diverged: every named importer (all 6 + `deployments/__init__.py`) already resolves `DeploymentState` from
+      `internal.domain.deployment_service.deployment` — that file is canonical by real usage (0 external importers
+      of the sibling copy). Folded `internal/deployment.py`'s 3 `VMEventType.TARBALL_DEPLOY_*` values (referenced
+      today only as plain string literals in `deploy_missing.py`, never as enum attributes — safe to add without
+      touching a consumer) into the canonical enum, then made `internal/deployment.py` re-export
+      `DeploymentState`/`DeploymentStatus`/`ComputeType`/`ShardEvent`/`VMEventType`/`VM_INFRASTRUCTURE_EVENTS` from
+      the canonical module instead of duplicate-defining them — its own genuinely-unique classes
+      (`BackfillLaunchTaskKind`/`Request`/`Result`, `VMLifecycleEvent`, `VMEventListResult`, real consumers in
+      deployment-api's `backfill_launch.py`/`vm_events.py`/`vm_health.py`/`log_stream.py`/`vm_events_ws.py`) stay put.
+      New `test_deployment_state_is_the_single_canonical_class` asserts object *identity* (not just equal shape)
+      across both import paths. `internal/__init__.py`'s top-level re-export surface unaffected (imports exactly the
+      preserved names). Fixed one incidental break: `test_deployment_schemas.py` imported
+      `CloudProvider`/`PhaseMode`/`RuntimeMode` from `.deployment` — repointed to their real home (`.modes`). UAC QG
+      green (510s); deployment-service QG green (455s); deployment-api QG green (365s) — all 3 repos the gate names,
+      confirming every real consumer still resolves.
 
 ### Track 2 — VPC Flow Logs pipeline (GCP first)
 
