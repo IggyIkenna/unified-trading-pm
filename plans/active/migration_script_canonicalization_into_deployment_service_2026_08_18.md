@@ -6,14 +6,23 @@ summary: >-
   ONE canonical structure in deployment-service, the same discipline already codified for VM launchers
   (`/codex/05-infrastructure/launcher-script-ssot.md`), "so it's not like a new thing" and we "never deploy [a
   migration] from the repo itself directly." Real fleet discovery (this doc's own §Discovery, not a placeholder)
-  found ~615 migration-shaped scripts across 9 repos outside deployment-service, ~90% already carrying a
+  found ~619 migration-shaped scripts across 9 repos outside deployment-service, ~99% already carrying a
   `Lifecycle: oneoff` marker with a satisfied-or-satisfiable `Delete-when` condition — meaning most of that count is
-  working-as-intended TEMPORARY scaffolding under the existing script-homes.md discipline, not a relocation target.
-  The REAL actionable population is threefold — (1) the 16 Category-1 GCS-bug files already fully triaged in
-  `utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`, (2) ~55 `permanent`/`campaign`/
-  `reusable-*`-marked scripts across instruments-service + market-tick-data-service that are genuinely recurring, not
-  one-shot, and (3) the POLICY change itself — new codex SSOT + a script-homes.md correction — so every NEW
-  migration script gets authored directly in the canonical home going forward.
+  working-as-intended TEMPORARY scaffolding under the existing script-homes.md discipline, not a per-file relocation
+  target. **Revised 2026-08-18 (operator pushback, same day)**: that population IS still the plan's real deliverable
+  material, just not via relocation — real structural-signature evidence across all 619 files (83% already hand-roll
+  argparse, 70% dry-run, 75% `get_storage_client()`, 65% `--confirm`/`--apply`) shows the SAME handful of operation
+  shapes (purge/delete, canonicalize/relabel, migrate schema, backfill/populate, reconcile/repair, read-only
+  audit) being reinvented from scratch fleet-wide — exactly the "hacky, ad-hoc, no shared canonical pattern" problem
+  the operator is naming, not a reason to leave the audit closed. §Pattern clustering below turns that audit into 5
+  canonical, parameterizable templates (Phase 0b) — the actual deliverable, distinct from and more valuable than
+  file relocation. The REAL actionable population is now fourfold — (1) the 16 Category-1 GCS-bug files already
+  fully triaged in `utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`, (2) ~55 `permanent`/
+  `campaign`/`reusable-*`-marked scripts across instruments-service + market-tick-data-service that are genuinely
+  recurring, not one-shot, (3) the 5 canonical templates built FROM the ~619-file audit (Phase 0b, new), and (4) the
+  POLICY change itself — new codex SSOT + a script-homes.md correction making the canonical-template path the
+  sanctioned DEFAULT for any new recurring-shaped need, with the Lifecycle/Delete-when convention remaining valid
+  only for genuinely one-of-a-kind, never-to-recur scripts.
 status: active
 nature: process
 asset_group: [infrastructure]
@@ -49,10 +58,10 @@ assigned_vm: NA
 execution_scope: local-only
 priority: P2
 estimate_class: infra
-estimate_baseline_ai_days: 8
-estimate_calibrated_ai_days: 6.4
+estimate_baseline_ai_days: 10.5
+estimate_calibrated_ai_days: 8.4
 assigned_role: infra
-effort: high # 11-repo fleet-wide discovery + canonicalization, multi-phase, real per-repo triage — not a small fix
+effort: high # 11-repo fleet-wide discovery + canonicalization + 5 canonical templates, multi-phase — not a small fix
 drift_direction: advance-code
 depends_on:
 context_scope:
@@ -72,6 +81,11 @@ source:
     scripts and per[iodic] scripts, because this is stuff that we do quite a lot, we can sort of canonise it in the
     deployment service ... It just forces a structure that we never deploy from the repo itself directly. This would
     require going through every single service and making sure that it's all moved.\"",
+    "Operator pushback 2026-08-18 (verbatim, same day, relayed via coordinator): \"But we also will need to ensure
+    that we build on top of the canonical rather than build on top of the hacky Claude hard rules. I do consider
+    migrations and deletions not completely temporary. Even if they were done once, we might well reuse those same
+    patterns to build another script, making canonical versions where we can easily adjust those rather than always
+    have to build a new one, which would be good.\"",
   ]
 locked_by:
 locked_since:
@@ -94,6 +108,13 @@ growing its own, "so it's not like a new thing" — deployment-service's own mig
 `get_storage_client()` → `upload_bytes`/`download_as_bytes` pattern (verified below), unlike 16 of instruments-
 service's own.
 
+**2026-08-18 pushback (same day)**: the operator's follow-up correction (verbatim in `source:` above) sharpens this
+further — it is not enough to relocate files. A script instance that ran once and self-deleted still implemented a
+reusable SHAPE, and today's sanctioned default (write a fresh repo-local one-off, tag it `Lifecycle: oneoff`, let it
+self-delete) is itself the anti-pattern going forward, because it means that shape gets reinvented from scratch
+every time instead of adapted from a canonical, parameterizable version. §Pattern clustering and Phase 0b below are
+the direct response to that correction.
+
 ## Pre-task conflict check (done 2026-08-18)
 
 Grepped `plans/active/` + `plans/active/issues/` for `migration.script|script.canoniz|canonicaliz.*script|one.off
@@ -114,8 +135,8 @@ scope. Nearest neighbors, both genuinely siblings (cross-linked in `related:` ab
 
 ## Scope decision — flagged for operator confirmation, not silently assumed
 
-**The literal instruction is "move all scripts."** Real discovery below found ~615 migration-shaped scripts fleet-
-wide, and ~90% of them already carry `Lifecycle: oneoff` + a stated `Delete-when` condition under the EXISTING
+**The literal instruction is "move all scripts."** Real discovery below found ~619 migration-shaped scripts fleet-
+wide, and ~99% of them already carry `Lifecycle: oneoff` + a stated `Delete-when` condition under the EXISTING
 script-homes.md discipline — meaning most are already-scoped, self-deleting artifacts (many likely already run in
 prod and awaiting a `Delete-when` garbage-collection pass, not active tooling). Force-relocating ~550 already-
 scheduled-for-deletion files would be pure churn with no behavior change, and arguably fights the TEMPORARY-by-design
@@ -128,12 +149,22 @@ scope is therefore**:
 3. Relocate every migration-shaped script in the smaller repos regardless of Lifecycle value, since their volume is
    small enough that full relocation is cheap and the operator's instruction was unqualified (Phase 2).
 4. Change the POLICY going forward (Phase 0 + Phase 4) so every NEW migration script — the ongoing "stuff we do
-   quite a lot" — is authored directly in the canonical home.
-5. **Leave the ~500 already-`oneoff`-marked instruments-service/MTDS scripts in place**, governed by the EXISTING
-   `Delete-when`-driven pruning discipline (`/codex/06-coding-standards/script-homes.md` § "Pruning is
-   `Delete-when`-driven") — NOT relocated. If the operator wants the literal full sweep instead, that is a separate,
-   much larger follow-up plan (bulk-rename ~500 files across 2 repos) this doc explicitly does NOT authorize; flag
-   at plan review, don't silently execute a 500-file move under a P2 human plan.
+   quite a lot" — is authored directly in the canonical home, adapting a Phase 0b template rather than starting
+   from scratch.
+5. **Individual existing files in the ~500 already-`oneoff`-marked instruments-service/MTDS population mostly do NOT
+   need physical relocation** — that narrow-scope judgment stands (operator confirmed "keep narrow scope" when
+   asked) and the existing `Delete-when`-driven pruning discipline
+   (`/codex/06-coding-standards/script-homes.md` § "Pruning is `Delete-when`-driven") still governs each file's own
+   lifecycle. **This is NOT "out of scope, ignore it," and the ~619-file audit is not closed** — per the operator's
+   2026-08-18 pushback (verbatim in this doc's `source:`): even a self-deleting one-shot script instance implements
+   a SHAPE (purge stale rows, backfill a missing column, canonicalize a schema field, …) that recurs across the
+   fleet regardless of any one file's own lifespan, and today's sanctioned default — write a fresh repo-local
+   one-off, tag it `Lifecycle: oneoff`, let it self-delete — means that shape gets reinvented from scratch every
+   time instead of adapted from something canonical. The audit already done (§Discovery, §Pattern clustering) is
+   exactly the raw material for designing the canonical templates Phase 0b builds — treat it as template-design
+   input, not a closed, disposable inventory. If the operator separately wants the literal FULL FILE-RELOCATION
+   sweep too, that remains a separate, much larger follow-up plan (bulk-rename ~500 files across 2 repos) this doc
+   does not authorize on its own; flag at plan review, don't silently execute a 500-file move under a P2 human plan.
 
 ---
 
@@ -178,8 +209,9 @@ one-shot-vs-recurring split is **mostly mechanical**, not a fresh per-file read:
 - **market-tick-data-service**: 154+8+~40 variants = ~230 `oneoff`/`one-off`, 17 `campaign`, 6 `permanent`, 4
   `reusable-investigation`, several `reusable-narrow`/re-runnable-check.
 
-The `permanent`/`campaign`/`reusable-*` files are the plan's real migration targets (Phase 3); the `oneoff` bulk is
-explicitly out of this plan's scope per §Scope decision above.
+The `permanent`/`campaign`/`reusable-*` files are the plan's real relocation targets (Phase 3); the `oneoff` bulk is
+NOT a relocation target (§Scope decision item 5) but IS the primary raw material for §Pattern clustering /
+Phase 0b's template design below — that distinction is the point of this revision.
 
 ### Repo-by-repo exclusions (with rationale — not silently dropped)
 
@@ -207,6 +239,63 @@ explicitly out of this plan's scope per §Scope decision above.
 
 ---
 
+## Pattern clustering — recurring shapes across the ~619-script population (added 2026-08-18, operator-pushback revision)
+
+Per the operator's 2026-08-18 pushback (verbatim in `source:`): the "leave the ~500 oneoff scripts alone" framing
+above must not read as "out of scope, ignore." Even a script that runs once and self-deletes implements a reusable
+SHAPE, and today's sanctioned default (write a fresh repo-local one-off, tag it, let it self-delete) means that
+shape gets reinvented from scratch every time. This section re-derives the population LIVE (not reused blindly from
+the authoring session's counts — see the bug caught below) and clusters it by operation-shape, not by individual
+file, to identify what a canonical template roster should look like.
+
+### Re-derivation method (this revision, 2026-08-18)
+
+Same `find`+regex method as §Discovery, re-run fresh rather than trusting the authoring session's counts at face
+value. Caught and fixed a real bug on the first re-derivation attempt: piping `find "$repo/scripts" ...` output
+through `sed "s|^|$repo/|"` double-prefixed paths `find` already returned repo-prefixed
+(`instruments-service/instruments-service/scripts/...`), which silently zeroed out every downstream `grep -l`
+structural check (0 files "had" argparse — an implausible result, not accepted at face value, which is what
+surfaced the bug). Corrected population: **619 files** (vs. the authoring session's ~628 — the ~1.5% difference is
+expected re-derivation noise from slightly different exclusion handling, not a discrepancy worth chasing further).
+
+### Structural-signature evidence (real grep counts across all 619 files, not a sample)
+
+| Signature | Files | % |
+|---|---|---|
+| `# Lifecycle:` marker present | 614 | 99% |
+| `argparse`/`add_argument`/`ArgumentParser` | 511 | 83% |
+| `--confirm`/`--apply` flag | 400 | 65% |
+| `dry_run`/`dry-run` | 432 | 70% |
+| `get_storage_client()` (correct UTL pattern) | 462 | 75% |
+| `ManifestWriter`/`ManifestReader`/`manifest_index`/`read_availability_index` | 162 | 26% |
+
+This is the concrete evidence for the operator's point: at least 3 of 4 files already hand-roll the SAME argparse +
+dry-run + confirm/apply + storage-client scaffold independently — proof the shape is reinvented every time, not
+proof it doesn't recur.
+
+### Operation-shape clustering (basename keyword pass, ordered precedence, then sample-verified)
+
+| # | Cluster | Files | % | Representative names |
+|---|---|---|---|---|
+| 1 | **Row-removal / purge** (purge, delete, retire, decommission, wipe, cleanup, dedupe) | 110 | 18% | `purge_bad_prediction_manifest_rows.py`, `wipe_pre_floor_sports_2026_07_21.py`, `dedupe_manifest_schema_drift.py` |
+| 2 | **Field/path canonicalization & schema migration** (canonicalize, relabel, migrate, manifest-relocate/consolidate) | 170 | 27% | `canonicalize_defi_manifest_venue_2026_06_14.py`, `migrate_dex_pool_columns.py`, `reclassify_kalshi_other_historical.py` |
+| 3 | **Drift reconciliation & repair** (reconcile, repair, fix, remediate, correct) | 66 | 11% | `reconcile_phantom_manifest_rows.py`, `mtds_reconcile_partition_mismatch.py`, `fix_prediction_manifest_and_gcs_2026_05_22.py` |
+| 4 | **Backfill / populate missing value** (backfill, restamp, stamp, populate, refresh, expand) | 108 | 17% | `backfill_cefi_source_column.py`, `restamp_sports_candle_venue_2026_08_03.py` |
+| 5 | **Read-only audit / investigation / verification** (census, measure, survey, audit, characterize, trace, sweep, verify, validate, close/scope-coverage-gap) | 74 | 12% | `teams_coverage_census_2026_08_05.py`, `verify_legacy_bucket_decommission_precondition.py`, `measure_cefi_catalogue_enumeration_gap_2026_07_23.py` |
+| — | Uncategorized by this keyword pass | 91 | 15% | see below |
+
+**528/619 (85%) cluster cleanly into 5 shapes on a first keyword pass alone.** The remaining 91 (15%) were sample-
+inspected (20-file random sample, not assumed one-of-a-kind from the miss alone): most turned out to be SYNONYM
+variants of the same 5 shapes that the keyword regex simply didn't catch — `reclass_*` (short for reclassify →
+cluster 2), `flip`/`reflip` (state-correction → cluster 3), `restore` (→ cluster 3), `quarantine` (→ cluster 1),
+`investigate`/`report`/`profile`/`walk`/`smoke` (→ cluster 5), and files already living under a literal `backfill/`
+subdirectory whose basename doesn't itself contain "backfill" (→ cluster 4). A genuine handful are one-of-a-kind
+(e.g. `profile_2018_06_17_memory.py`, a one-time memory-profiling script). **Net read: the true one-of-a-kind
+population is smaller than 91/619, and this 5-cluster structure is a conservative floor, not an overfit** —
+consistent with "a reasonable pass," not a claim of perfect clustering.
+
+---
+
 ## Phase 0 — settle the canonical shape in deployment-service FIRST
 
 deployment-service's OWN migration-shaped scripts are functionally correct but structurally inconsistent — this
@@ -229,7 +318,8 @@ this phase closes.
       repo-scoped subdirectories avoid a 600+-file flat dump and a rename collision risk, mirroring how
       `scripts/vm/` groups launchers by `{asset_group}-{flavor}` prefix rather than one flat namespace. Done-when:
       directories exist with a `README.md` stub in `scripts/migrations/` stating the convention (one paragraph,
-      cites this plan + `migration-script-ssot.md` (Phase 4 — not yet created, this plan authors it) once landed).
+      cites this plan + `migration-script-ssot.md` (Phase 4 — not yet created, this plan authors it) once landed) —
+      the README stub also gets Phase 0b's "Template roster" table once that phase lands.
 - [ ] [INFRA] P1. Move deployment-service's own 6 flat-root migration scripts (named above) into
       `scripts/migrations/self/`, updating any caller (Makefile targets, README references, Cloud Scheduler /
       Terraform triggers if any invoke them by path — `grep -rn` the 6 filenames across `deployment-service/` +
@@ -246,12 +336,60 @@ this phase closes.
       `--confirm-prod-write` argparse scaffold, and a standard logging setup. **Not** the same thing as
       `market-tick-data-service/scripts/migration_common.py` (that file is domain-specific CeFi-v2 classification
       logic, `LEGACY_CHAIN_DATA_TYPES`/`classify_legacy_symbol` — stays local to MTDS as-is; only the truly generic
-      scaffolding pieces belong in the new shared lib). Done-when: at least the Phase 0 proof-of-concept move (prior
+      scaffolding pieces belong in the new shared lib). This lib is also what every Phase 0b template imports —
+      build it first, the templates depend on it. Done-when: at least the Phase 0 proof-of-concept move (prior
       todo) sources this lib, `bash scripts/quality-gates.sh` green.
 - [ ] [INFRA] P2. Stamp/verify the 3-line lifecycle marker (`# Epic:`/`# Lifecycle:`/`# Delete-when:`, per
       `/codex/06-coding-standards/script-homes.md`) on every script moved in this plan — the two mega-repo source
       files already carry it (98% adoption, confirmed above); deployment-service's own 6 files already carry it too;
       verify it survives the `git mv`, don't silently strip it.
+
+---
+
+## Phase 0b — build canonical, parameterizable templates for the 5 recurring patterns (NEW, 2026-08-18 revision)
+
+This is the actual deliverable the operator's 2026-08-18 pushback is asking for — distinct from, and more valuable
+than, relocating existing dead one-off files (which Phases 1-3 still do where it's cheap or already-triaged, but
+that is not the point of THIS phase). Each template lives under
+`deployment-service/scripts/migrations/lib/templates/`, imports Phase 0's `migration_common.py` scaffolding
+(storage client wrapper, `--dry-run`/`--apply`/`--confirm-prod-write` argparse baseline, logging) rather than
+duplicating it, and exposes a small number of shape-specific parameterization hook points (a filter/predicate
+function, a transform function, a target-path/bucket resolver) that the NEXT similar need fills in rather than
+reinventing the whole script from scratch. Building 5 templates — not relocating 619 individual files — is the
+actual leverage point §Pattern clustering's evidence points to.
+
+- [ ] [INFRA] P1. `template_purge.py` (cluster 1 — row-removal/purge, 110 files' worth of precedent). Parameterizes:
+      a row-selection predicate (criteria for "stale"/"phantom"/"duplicate"), an optional pre-delete backup-snapshot
+      write (the exact write path the sibling issue doc found broken in 15 instruments-service files — this
+      template's snapshot helper goes through `migration_common.py`'s `upload_bytes` wrapper so that specific bug
+      class cannot recur), and a manifest-index update. Build against 1-2 of the Phase 1 files
+      (`purge_bad_prediction_manifest_rows.py`, `purge_pre_launch_manifest_rows.py`) as the worked example — adapt
+      those into the template rather than writing the template in the abstract first. Done-when: template exists,
+      at least 1 Phase-1 file is refactored to import/parameterize it (not copy-pasted), `bash deployment-service/
+      scripts/quality-gates.sh` green.
+- [ ] [INFRA] P1. `template_canonicalize.py` (cluster 2 — field/path canonicalization & schema migration, the
+      LARGEST cluster at 170 files' worth of precedent). Parameterizes: an old-shape → new-shape row transform
+      function, a path-rewrite rule (old canonical-path segment → new), and a verification pass (old shape absent,
+      new shape present, row counts reconcile). Build against `canonicalize_defi_manifest_venue_2026_06_14.py` (an
+      instruments-service Phase-3 target) as the worked example. Done-when: same bar as above.
+- [ ] [INFRA] P2. `template_reconcile.py` (cluster 3 — drift reconciliation & repair, 66 files' worth of precedent).
+      Parameterizes: a two-source comparison function (manifest vs. GCS, or manifest vs. a derived-truth
+      recomputation), a per-mismatch corrective-write function, and a mismatch-count report. Build against
+      `reconcile_phantom_manifest_rows.py` (instruments-service Phase-3 target) as the worked example. Done-when:
+      same bar as above.
+- [ ] [INFRA] P2. `template_backfill.py` (cluster 4 — backfill/populate missing value, 108 files' worth of
+      precedent). Parameterizes: a "needs backfill" row predicate, a value-computation function, and an in-place
+      write-back. Build against a Phase-2/3 target (`backfill_cefi_source_column.py`, market-tick-data-service) as
+      the worked example. Done-when: same bar as above.
+- [ ] [INFRA] P2. `template_audit.py` (cluster 5 — read-only audit/investigation/verification, 74 files' worth of
+      precedent — structurally distinct from the other 4: no `--apply`/mutation path needed at all, just a scan +
+      structured report). Parameterizes: a scan function and an output formatter (text/JSON/CSV). Build against
+      `teams_coverage_census_2026_08_05.py` (instruments-service) as the worked example. Done-when: same bar as
+      above.
+- [ ] [DOC] P2. Add a "Template roster" table to `scripts/migrations/README.md` (the stub Phase 0's first todo
+      creates) listing all 5 templates, the operation-shape each covers, and a one-line "when to use this one"
+      guide — this is what a future script author actually reads before writing anything, so it needs to be
+      genuinely usable, not just a changelog entry. Cross-reference from `migration-script-ssot.md` (Phase 4).
 
 ---
 
@@ -299,9 +437,9 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       (delete once the data-correctness check above clears it). If `Delete-when` is still open (the script may run
       again, or a re-run is plausible) — relocate into
       `deployment-service/scripts/migrations/{instruments-service,strategy-service}/` per Phase 0's structure,
-      sourcing the new `migration_common.py` scaffolding where it fits without a disruptive rewrite. Done-when:
-      every one of the 16 files has an explicit disposition (archived-in-place / relocated) recorded in this plan's
-      Progress Log with the git commit.
+      sourcing the new `migration_common.py` scaffolding (and, where the shape fits, a Phase 0b template) where it
+      fits without a disruptive rewrite. Done-when: every one of the 16 files has an explicit disposition
+      (archived-in-place / relocated) recorded in this plan's Progress Log with the git commit.
 
 ---
 
@@ -398,11 +536,13 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       one-line comment cross-referencing the new `deployment-service/scripts/migrations/lib/migration_common.py`
       so a future reader isn't confused by the name collision between the two DIFFERENT `migration_common.py`
       files.
-- [ ] [DOC] P2. **Explicitly leave the ~500 remaining `oneoff`-marked instruments-service + market-tick-data-service
-      scripts in place**, per §Scope decision — do NOT relocate them. Record this disposition explicitly (not
-      silently) in this plan's Progress Log once Phases 0-3's other todos are done, so a future reader sees this was
-      a deliberate scope call, not an oversight. If the operator later wants the literal full sweep, that is a new,
-      separate plan (~500-file bulk relocation across 2 repos) — do not fold it into this one after the fact.
+- [ ] [DOC] P2. **Record the disposition of the ~500 remaining `oneoff`-marked instruments-service + market-tick-
+      data-service scripts explicitly** in this plan's Progress Log once Phases 0-3's other todos are done — NOT
+      relocated individually (that narrow-scope judgment stands, confirmed by the operator), but explicitly note
+      that this population was the raw material for Phase 0b's 5 canonical templates (§Pattern clustering), so a
+      future reader sees a deliberate, followed-through scope call, not an abandoned audit. If the operator later
+      wants the literal full file-relocation sweep too, that is a new, separate plan (~500-file bulk relocation
+      across 2 repos) — do not fold it into this one after the fact.
 
 ---
 
@@ -413,7 +553,8 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       not exist until this todo creates it), mirroring
       `/codex/05-infrastructure/launcher-script-ssot.md`'s shape (why-this-rule-exists, scope table of what counts
       as a "migration script" vs. a service CLI subcommand vs. an e2e harness, the `scripts/migrations/{repo}/`
-      naming convention, the `migration_common.py` scaffolding contract, the relationship to
+      naming convention, the `migration_common.py` scaffolding contract, Phase 0b's 5-template roster (what each
+      covers, when to adapt one vs. write something genuinely new), the relationship to
       `/codex/06-coding-standards/script-homes.md`'s existing `Lifecycle`/`Delete-when` marker discipline, and a
       migration-status table modeled on launcher-script-ssot.md's own "Migration status" section). Cross-link the
       relationship to VM launchers explicitly: a HEAVY migration (full-corpus GCS walk, manifest rewrite, bulk
@@ -423,16 +564,24 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       script-homes.md already draws for launcher-vs-compute-logic. Done-when: doc exists with `authoritative_for`
       frontmatter set, cross-referenced from the next todo.
 - [ ] [DOC] P1. **Correct** `/codex/06-coding-standards/script-homes.md`'s decision-tree item 4 (currently: "one-off,
-      single-repo operation tied to that repo's internals ... → repo-level `scripts/`") — this is now SUPERSEDED for
-      migration/backfill/repair-shaped one-offs specifically (dev/CI seeders and pure codegen-from-own-SSOT are
-      UNCHANGED, still repo-local per that doc's own sub-rules). Add a dated correction banner (2026-08-18, this
-      plan) rather than silently rewriting — the existing text is not WRONG as written for its original intent, it
-      is being narrowed by a new operator ruling, and other agents currently cite it as live truth. Point item 4 at
-      the new `migration-script-ssot.md` for the migration/backfill/repair subset; keep the decision tree's items
-      1-3 (service CLI / deployment-service-for-launch / e2e-testing) untouched. Done-when: both docs cross-
-      reference each other via `related:`, no contradiction remains between the two (re-read both after editing,
-      per CLAUDE.md's "newly-written claim must not contradict... a fact the SAME doc already shows elsewhere"
-      discipline).
+      single-repo operation tied to that repo's internals ... → repo-level `scripts/`") — **this is not a
+      documentation-drift fix, it is a default-behavior change**: per the operator's 2026-08-18 pushback, "write a
+      fresh repo-local one-off, tag it `Lifecycle: oneoff`, let it self-delete" is the anti-pattern going forward
+      for any RECURRING-SHAPED need (one that matches one of Phase 0b's 5 templates, or a future addition to that
+      roster) — the canonical-template path (`deployment-service/scripts/migrations/`, adapt/parameterize a
+      template) becomes the actual SANCTIONED DEFAULT for that case. The existing `Lifecycle`/`Delete-when`
+      one-off-marker convention remains fully valid, but ONLY for genuinely one-of-a-kind, never-expected-to-recur
+      scripts — not as the default for everything, which is what item 4 currently reads as. Add a dated correction
+      banner (2026-08-18, this plan) rather than silently rewriting — the existing text is not WRONG as written for
+      its original intent, it is being narrowed by a new operator ruling, and other agents currently cite it as
+      live truth. Point item 4 at the new `migration-script-ssot.md` for the migration/backfill/repair/canonicalize/
+      audit subset (i.e. anything Phase 0b's template roster covers or a future addition to it); keep the decision
+      tree's items 1-3 (service CLI / deployment-service-for-launch / e2e-testing) untouched. Done-when: both docs
+      cross-reference each other via `related:`, no contradiction remains between the two (re-read both after
+      editing, per CLAUDE.md's "newly-written claim must not contradict... a fact the SAME doc already shows
+      elsewhere" discipline), and the corrected item 4 text explicitly states the "canonical template = default,
+      Lifecycle-marker one-off = exception for genuinely non-recurring work" framing, not just a pointer to the new
+      doc.
 - [ ] [DOC] P2. Update `/plans/epics/infrastructure_master.md`'s `related_plans:` list to add this plan's slug (the
       epic's own `repos:` frontmatter list is representative, not exhaustive — several of its existing
       `related_plans` entries already touch repos outside that list, e.g. cefi/defi/sports plans — so no `repos:`
@@ -467,3 +616,31 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
   per-repo. Explicit scope-narrowing flagged in §Scope decision (leave ~500 already-`oneoff`-marked scripts in
   place rather than force-relocating a working TEMPORARY-by-design population) — needs operator confirmation at
   plan review, not silently assumed as final.
+- **2026-08-18 (revision session, different agent instance)**: Operator reviewed the authoring session's scope
+  decision, confirmed "keep narrow scope" for the file-relocation question, but pushed back sharply on the framing
+  of the ~500-file `oneoff` population (verbatim pushback quoted in `source:`, relayed via coordinator): leaving
+  those files in place must not mean treating the audit as closed/ignored, because even a self-deleting one-shot
+  script implements a reusable SHAPE the fleet keeps reinventing under today's "hacky" repo-local-one-off default.
+  This session is a DIFFERENT agent instance than the authoring session (dispatched for an unrelated deployment-
+  service task, with the plan-revision request relayed mid-task) — per the operator's own instruction to
+  re-verify rather than trust the prior summary blindly, independently re-derived the fleet population fresh rather
+  than reusing the authoring session's counts, and caught a real bug in the first re-derivation attempt (a
+  double-path-prefix `sed` bug that silently zeroed every structural `grep -l` check — caught because the result
+  was implausible, not accepted at face value). Corrected population: 619 files (not the ~628 the plan started
+  with). Added real structural-signature evidence (83% already hand-roll argparse, 70% dry-run, 75%
+  `get_storage_client()`, 65% `--confirm`/`--apply`, 99% `# Lifecycle:` marker) and a 5-cluster operation-shape
+  breakdown (row-removal/purge 110, canonicalization/schema-migration 170, drift-reconciliation/repair 66,
+  backfill/populate 108, read-only audit/investigation 74 — 528/619 = 85% cluster cleanly; the remaining 91 were
+  sample-inspected, 20-file random sample, and mostly turned out to be naming-variant synonyms of the same 5
+  shapes rather than genuinely novel operations). Added new Phase 0b (6 todos: 5 canonical, parameterizable
+  templates — `template_purge.py`, `template_canonicalize.py`, `template_reconcile.py`, `template_backfill.py`,
+  `template_audit.py` — plus a README "Template roster" table) as the actual deliverable this revision adds.
+  Reframed §Scope decision item 5, Phase 3's last todo, and Phase 4's script-homes.md correction todo so none of
+  them read as "audit closed, ignore" — the ~619-file audit is now explicitly the raw material for template
+  design, and Phase 4's script-homes.md correction now states the canonical-template path is the sanctioned
+  DEFAULT for a new recurring-shaped need, with the Lifecycle/Delete-when marker convention valid only for
+  genuinely one-of-a-kind, never-to-recur work (not the default for everything, which is how item 4 read before).
+  Bumped `estimate_baseline_ai_days` 8→10.5 / `estimate_calibrated_ai_days` 6.4→8.4 to reflect the added Phase 0b
+  scope. `status` stays `active`; this revision does not change the operator-confirmation-needed status of the
+  remaining file-relocation-scope question (§Scope decision), only sharpens what "leave in place" means for the
+  ~500-file population.
