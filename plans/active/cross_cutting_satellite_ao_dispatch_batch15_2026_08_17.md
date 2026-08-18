@@ -137,11 +137,15 @@ source: >-
 
 ## From `instruments_catalogue_definitions_and_field_history_2026_08_17.md`
 
-- [ ] [DATA] P1. Re-measure findings 3 (path duplication / stale `.bak` backups) and 4 (sports path grammar) across
+- [x] ✅ [DATA] P1. Re-measure findings 3 (path duplication / stale `.bak` backups) and 4 (sports path grammar) across
       all four asset groups (cefi/defi/tradfi/sports), off the manifest — no new whole-corpus GCS walk. Source:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`. Done-when: a per-AG table
       of non-canonical/duplicate/`.bak` counts is produced, cross-checked against the doc's existing bounded cefi
-      sample (1,000 non-canonical / 270 `.bak` in a 4,000-blob sample).
+      sample (1,000 non-canonical / 270 `.bak` in a 4,000-blob sample). **Done (2026-08-18)**: bounded prefix-scoped
+      listing (`instrument_availability/by_date/`, sanctioned route #1/#3, not a new whole-corpus walk) run per AG —
+      cefi 1,706 non-canon/4,649 `.bak` of 49,340; defi 31,522/0 of 141,866; tradfi 67/**17,132** of 32,945; sports
+      **182,316**/0 of 362,347 (confirms finding 4 corpus-wide). Full table + cross-check against the bounded cefi
+      sample added to `instruments_catalogue_definitions_and_field_history_2026_08_17.md` (same commit).
 - [ ] [BACKEND] P1. Verify the DeFi-address immutability assumption (can pool/contract addresses migrate or be
       proxy-upgraded) rather than carrying it as belief; if mutable, add to the declared-mutable field set. Source:
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`. Repo: instruments-service.
