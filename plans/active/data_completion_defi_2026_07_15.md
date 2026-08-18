@@ -159,6 +159,14 @@ context_scope:
 - [ ] [DATA] P1. C4 schema v4–v8 → v9 re-version across the dedicated DeFi buckets. Same walk. parent_epic:
       manifest_master. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)**
+      **na-eligibility-audit 2026-08-18**: "dedicated DeFi buckets" is now-stale scoping — dedicated buckets were
+      RETIRED 2026-08-14 (`defi_migration_dedicated_bucket_architecture_retired_2026_08_14.md`); every DeFi
+      data_type now shares the canonical `market-data`/`defi` bucket. When this walk executes, its scope must
+      explicitly include `vault_share_price`/`risk_params`/`utilization` (the former "orphan-bucket" data_types,
+      now confirmed on the same shared bucket per
+      `/plans/active/defi_migration_audit_log_2026_07_24.md` line ~406) — those 3 have real pre-2026-06-16 rows of
+      unconfirmed schema_version and are this walk's most likely remaining legacy-shaped content, not an edge case
+      to skip because they were never "dedicated".
 
 - [ ] [DATA] P1. C5 phantom-grid delete: remove the cartesian `data_type × venue` empty grid in `market-data-tick-defi`;
       point data-status at the dedicated indexes. **(MIGRATED FROM: `defi_manifest_canonicalisation_2026_06_01.md`,

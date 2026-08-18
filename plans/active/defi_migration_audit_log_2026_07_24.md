@@ -425,6 +425,16 @@ a migration gap). Probe basis: `gcloud storage` bucket sweep + `market-data-tick
       need a v8→v9 backfill the way the 8 covered data_types received — that needs a live
       `schema_version`/`pipeline_mode` distribution check against the manifest for these 3 data_types specifically
       (not a bucket migration). Left `[ ]` open, reworded rather than closed — no live check run this pass.**
+      **na-eligibility-audit 2026-08-18** [defi tranche, mandatory carry-forward re-assessment]: re-assessed this
+      residual against the primary RECLASSIFY bar. NOT independently extracted — found a likely-overlapping open
+      NA item, `/plans/active/data_completion_defi_2026_07_15.md` C4 ("schema v4–v8 → v9 re-version across the
+      dedicated DeFi buckets. Same walk.", same `parent_epic: manifest_master`, also `assigned_vm: NA`). Extracting
+      this residual as an independent satellite batch risked dispatching a duplicate schema-reversion walk against
+      C4's eventual scope. Downgraded to KEEP-NA (unchanged) rather than RECLASSIFY — added a cross-reference note
+      on C4 itself (see that doc) flagging that its own "dedicated DeFi buckets" scoping phrase is now stale
+      (dedicated buckets retired 2026-08-14) and should explicitly include these 3 data_types' legacy-row check
+      when C4 eventually executes, so this residual is not silently dropped by C4's stale scoping. Still genuinely
+      open; carried forward to the next defi run until C4 (or a dedicated check) resolves it.
 - [ ] [DATA] P2. **Retagged 2026-07-29 (corpus hygiene pass): mostly false-positive — verified
       `eigenlayer_rewards_handler.py` (Alchemy RPC + free DefiLlama), `native_staking_handler.py` (free public Solana
       RPC + free Jito Kobe MEV API) and `staking_yields_handler.py` (free Lido/EtherFi/DefiLlama APIs) are ALL complete,

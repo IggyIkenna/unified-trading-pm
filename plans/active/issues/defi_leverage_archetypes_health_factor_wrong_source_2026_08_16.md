@@ -50,6 +50,7 @@ locked_since:
 supersedes:
 superseded_by:
 resolved_by:
+archive_exempt: true # 0-open-todos 2026-08-18 (all 8 closed by citation) — underlying fix still in-progress in strategy_service_centralization_fixes_2026_08_16.md, this doc stays as the living evidence record (see Progress Log)
 context_scope:
   [
     /codex/04-architecture/defi-execution-overview.md,
@@ -181,32 +182,61 @@ more general, already-cross-service-wired mechanism exists alongside it. Full de
       archetype gate can read `MarginEvent` directly. Decision: wire archetypes onto (B)'s schema, after (b)
       populating the missing fields + per-protocol granularity, and only then retire `positions_health.py`'s
       duplicate path — not a straight "converge on B as-is."
-- [ ] [AGENT] P0. **(Superseded pending the reconciliation above — now resolved.)** Wire a live feed into
+- [x] [AGENT] P0. **(Superseded pending the reconciliation above — now resolved.)** Wire a live feed into
       `DeFiHealthAggregator`. Either finish `aave.py`'s
       `AavePositionAdapter` (fixing its schema mismatch — emit `DeFiLendingPosition`, not `CanonicalPosition`) or
       route execution-service's already-working `health_factor_monitor.py` output into the aggregator's state via
       `risk.py::update_lending_positions()` — **not** `positions_health.py::update_wallet_health_from_lending`
       (corrected 2026-08-18: that function feeds a separate, redundant cache, not `DeFiHealthAggregator` — see
       the reconciliation todo above). Do not build a third parallel poller.
-- [ ] [AGENT] P0. **Switch `staked_basis.py:419` and `recursive_staked.py:115,447` to the centralized source**,
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — this exact fix is already an open
+      todo in `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Route execution-service's
+      HealthFactorMonitor's live per-wallet Aave data into DeFiHealthAggregator's state via
+      risk.py::update_lending_positions()", [BACKEND] P0, status: active, assigned_vm: planning, sequential: true).
+      Converted this checkbox to a citation marker rather than tracking a competing duplicate — track completion
+      there, close this checkbox by citation once that todo lands.
+- [x] [AGENT] P0. **Switch `staked_basis.py:419` and `recursive_staked.py:115,447` to the centralized source**,
       once (a) and the live feed exist. This is the actual liquidation-risk fix — until this lands, both
       archetypes' kill-gates are not protecting against real liquidation risk.
-- [ ] [AGENT] P1. **Switch `liquidation_capture.py:81-97` and `liquidation_bundle.py:153,266-283` to the same
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — already an open todo in
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Switch staked_basis.py's
+      _validate_lst_margin_slot and recursive_staked.py's entry gate plus _check_family2_health_kill off
+      features.get('health_factor')...", [BACKEND] P0, status: active, assigned_vm: planning). Converted to a
+      citation marker — track completion there.
+- [x] [AGENT] P1. **Switch `liquidation_capture.py:81-97` and `liquidation_bundle.py:153,266-283` to the same
       centralized source**, once it exists — these read OTHER wallets' health factor (candidates to liquidate), so
       the call shape differs from the own-position gates above (needs a candidate-wallet parameter, not
       client-scoped), but should route through the same underlying module rather than a fourth bespoke
       implementation.
-- [ ] [AGENT] P1. **Decide `liquidation_proximity_circuit.py`'s fate.** It looks purpose-built for this exact gate
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — already an open todo in
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Switch
+      arbitrage_structural/liquidation_capture.py's health-factor gate and mev/liquidation_bundle.py's
+      liq_candidate_health_factor_* gate...", [BACKEND] P1, status: active, assigned_vm: planning). Converted to a
+      citation marker — track completion there.
+- [x] [AGENT] P1. **Decide `liquidation_proximity_circuit.py`'s fate.** It looks purpose-built for this exact gate
       and has zero callers. Either wire it in as the shared kill-gate all four archetypes above call, or determine
       why it was never adopted (superseded design, incomplete, wrong interface) and delete it if so — don't leave
       a working-looking, unused circuit breaker sitting alongside four bespoke reimplementations of what it does.
-- [ ] [AGENT] P1. **Extend the centralized data model**: add LTV, borrow-capacity, and liquidation-price to
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — already an open todo in
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Decide liquidation_proximity_circuit.py's
+      fate — wire it in... or retire it", correctly re-tagged `[OPERATOR]` P1 there — this is a genuine judgment
+      call, not [AGENT] as originally tagged here — status: active, assigned_vm: planning). Converted to a citation
+      marker — track completion there.
+- [x] [AGENT] P1. **Extend the centralized data model**: add LTV, borrow-capacity, and liquidation-price to
       `DeFiAggregatedHealth`/`ProtocolHealthBreakdown`, or unify with `PositionHealthSnapshot`'s fields. Fix the
       `AAVE_V3`-hardcoded liquidation-threshold lookup in `positions_health.py:70-72` to resolve per-position
       protocol instead.
-- [ ] [AGENT] P1. **Decide `aave.py`'s fate explicitly** — delete it in favor of the execution-service poller +
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — already an open todo in
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Extend DeFiAggregatedHealth/
+      ProtocolHealthBreakdown with LTV, borrow-capacity, and liquidation-price fields...", [BACKEND] P1, status:
+      active, assigned_vm: planning). Converted to a citation marker — track completion there.
+- [x] [AGENT] P1. **Decide `aave.py`'s fate explicitly** — delete it in favor of the execution-service poller +
       PBMS pipeline, or finish it as the canonical feed. Don't leave a non-functional stub sitting alongside a
       working parallel path.
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — already an open todo in
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Decide AavePositionAdapter (aave.py)'s
+      fate...", correctly re-tagged `[OPERATOR]` P2 there — status: active, assigned_vm: planning). Converted to a
+      citation marker — track completion there.
 - [x] [AGENT] P2. **Fix the misleading `_process_health_factor()` docstring** in
       `features-service/features_service/onchain/engine/orchestrator.py:621-623` — it describes per-wallet Aave
       polling the function doesn't do; describe it as generic protocol-level rate-index data instead.
@@ -214,15 +244,23 @@ more general, already-cross-service-wired mechanism exists alongside it. Full de
       todo in `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` line ~101 (status: active,
       assigned_vm: planning). Converted this checkbox to a citation marker rather than extracting a competing
       duplicate — track completion there, close this checkbox by citation once that todo lands.
-- [ ] [AGENT] P2. **Once the centralized path exists, document and enforce it as the pattern** for any future
+- [x] [AGENT] P2. **Once the centralized path exists, document and enforce it as the pattern** for any future
       leverage-capable archetype, in any asset group — see the companion codex doc
       [position-risk-centralization](/codex/04-architecture/position-risk-centralization.md), authored in the
       same session and rescoped asset-group-agnostic 2026-08-17.
-- [ ] [OPERATOR] P2. **Design the mode-aware dispatch** (operator direction, 2026-08-16): batch → real historical
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — already an open todo in
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Update position-risk-centralization
+      from 'not yet complete' to reflect the landed state...", [BACKEND] P3, status: active, assigned_vm: planning).
+      Converted to a citation marker — track completion there.
+- [x] [OPERATOR] P2. **Design the mode-aware dispatch** (operator direction, 2026-08-16): batch → real historical
       data for that window; live → real-time poll against the actual wallet; paper splits into **paper-testnet**
       (poll a testnet deployment, validates wiring without touching production wallets) and **paper-live**
       (read-only poll of real mainnet data for the real wallet, no execution). Apply once the centralized path from
       the todos above exists — designing the mode dispatch before the underlying call exists would be premature.
+      **na-eligibility-audit 2026-08-18**: KEEP-NA-STALE (already-duplicated) — already an open todo in
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` ("Design the mode-aware dispatch (batch /
+      live / paper-testnet / paper-live)...", [OPERATOR] P2, status: active, assigned_vm: planning). Converted to a
+      citation marker — track completion there.
 
 ## Progress Log
 
@@ -257,3 +295,12 @@ more general, already-cross-service-wired mechanism exists alongside it. Full de
   per this corpus's convention). Also corrected the live-feed todo's wrong function name
   (`update_wallet_health_from_lending` → `risk.py::update_lending_positions()`) in the same edit, here and in the
   wrapper plan.
+- **na-eligibility-audit 2026-08-18** [defi tranche]: KEEP-NA-STALE (already-duplicated) — all 8 remaining open
+  todos verified against `strategy_service_centralization_fixes_2026_08_16.md` (status: active, assigned_vm:
+  planning, sequential: true) and found to be verbatim/near-verbatim duplicates of that plan's own todos (the plan
+  was deliberately authored by extracting this doc's findings on 2026-08-16, per its own Progress Log). Closed all
+  8 by citation marker, same treatment the P2 docstring todo already received from the prior audit pass — this doc
+  now carries zero independently-tracked open todos; real execution tracking lives entirely in the wrapper plan.
+  Doc stays `assigned_vm: NA` (it remains the evidence/investigation record the plan's own text defers to — "Full
+  findings, root cause, and evidence... live in the three source issue docs"), not archived, since the underlying
+  work is still in progress. `grep -cE '^[[:space:]]*[-*] \[ \]'` = 0 post-edit, matching.

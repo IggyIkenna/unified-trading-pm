@@ -42,6 +42,12 @@ source: >-
   classified docs (16 defi-owned + 7 report-only from other tranches).
 ---
 
+> **SUPERSEDED 2026-08-18** by
+> [`na_eligibility_audit_defi_blocks_2026_08_18.md`](/plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_18.md)
+> — that doc carries the fresh Phase-1b consolidation for today's run, including this doc's still-genuinely-open
+> carry-forward items re-assessed. Kept here (not archived) as the historical record for this specific run; archival
+> deferred to a dedicated hygiene pass.
+
 # na-eligibility-audit defi tranche 2026-08-17 — blocks + carry-forward index
 
 ## Operator questions (deduped by distinct ask, not one row per doc)
