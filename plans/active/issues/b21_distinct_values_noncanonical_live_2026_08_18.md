@@ -27,6 +27,9 @@ resolved_by:
 source: >-
   cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md item 1 — "Verify B21: Distinct Values in the deployment
   UI shows zero non-canonical values, per asset group."
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # B21 verification — live result
