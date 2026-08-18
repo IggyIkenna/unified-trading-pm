@@ -44,7 +44,7 @@ context_scope:
   ]
 created: "2026-08-09"
 author: data_pipeline_failure-worker-slot5
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resolved_by:
 locked_by:
 locked_since:

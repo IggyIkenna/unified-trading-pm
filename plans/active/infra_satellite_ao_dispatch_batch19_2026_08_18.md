@@ -80,7 +80,22 @@ context_scope:
       ambiguous entry. Done-when: `check_active_refs_archived_plans.py`'s live count reaches 0 (or every remaining
       entry is filed as its own operator-gated issue doc, with the ratchet baseline lowered to match whatever was
       actually resolved). Flip this todo AND the source doc's own todo 1 in the same commit citing this batch's
-      completion evidence.
+      completion evidence. **Priority sub-note (2026-08-18, added while tracking
+      `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`)**: a real,
+      verified, uncommitted GCS-compliance fix (`scripts/catalogue/sync-to-mock.py`, raw `google.cloud.storage` →
+      UTL `get_storage_client()`) is currently ship-blocked specifically by 10 of these 925 citations across 6
+      docs (as of 2026-08-18 — re-run the checker, the live set may have shifted since other sessions keep editing
+      these same docs): `plans/active/cross_ag_live_capture_parity_2026_08_14.md`,
+      `plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md`,
+      `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`,
+      `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`,
+      `plans/active/issues/deployment_service_meta_watchers_adapter_contract_regression_blocks_mtds_quickmerge_2026_08_12.md`,
+      `plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`. Clearing THESE 10 first (not
+      necessarily the whole 925 in order) directly unblocks a shipped fix — worth prioritizing over an arbitrary
+      batch slice. Not attempted by the tracking session that added this note: all 6 docs were, at the time,
+      simultaneously dirty in the shared checkout with OTHER sessions' own unrelated uncommitted edits (confirmed
+      via `git status`), so a surgical `related:`-only edit risked entangling with live WIP this session didn't
+      own — deliberately left for whoever actually works this batch (with a fresh look at what's still dirty then).
 
 ## Progress Log
 

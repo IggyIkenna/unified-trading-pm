@@ -28,7 +28,7 @@ related: [/plans/active/data_pipeline_check_mdps_features_2026_07_20.md, /codex/
 created: 2026-07-20
 author: unknown
 last_updated: 2026-07-20
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

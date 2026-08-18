@@ -23,7 +23,7 @@ created: 2026-08-15
 author: slot-18-infra
 last_updated: 2026-08-15
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Surfaced by `/plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md` §2.1/§2.2/§2.4 research (2026-07-29);
   filed as its own issue doc per that doc's own P2 todo + the findings-triage rule, via

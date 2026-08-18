@@ -34,7 +34,7 @@ related:
 created: 2026-08-17
 author: slot-20 (data_engineering)
 assigned_vm: planning
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 resolved_by:
 locked_by:

@@ -12,11 +12,11 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, infra, sharded-run]
-related: [/plans/active/infra_consolidated_closeout_2026_07_25.md, /plans/epics/infrastructure_master.md]
+related: [/plans/active/infra_consolidated_closeout_2026_07_25.md, /plans/epics/security_and_cross_cutting_master.md]
 created: "2026-08-10"
 author: plan_reconciler
 source: agt-716973
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
@@ -31,7 +31,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/epics/infrastructure_master.md,
+    /plans/epics/security_and_cross_cutting_master.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 ---
@@ -49,7 +49,7 @@ line with an inline YAML comment (e.g. `infra_consolidated_closeout_2026_07_25.m
 `asset_group:` block with a corrective comment) — used `rg -lU 'asset_group:\s*\n?\s*\[[^]]*infrastructure[^]]*\]'`
 instead, which recovered 5 docs the naive form missed (the epic hub `infra_consolidated_closeout_2026_07_25.md` plus 4
 issue docs). Final population: **78 docs** (30 top-level `plans/active/*.md` + 47 `plans/active/issues/*.md` + the
-`infrastructure_master` epic). `parent_epic: infrastructure_master` alone is a much larger, noisier set (234 docs) and
+`security_and_cross_cutting_master` epic). `parent_epic: security_and_cross_cutting_master` alone is a much larger, noisier set (234 docs) and
 is treated only as a secondary hint per SKILL.md, not the primary filter.
 
 **Grace set (12h, read-only context this run): 36 docs.** This tranche is under heavy concurrent AO-dispatch churn right
@@ -270,7 +270,7 @@ now (infra_satellite_ao_dispatch batches 7/9/10/11/12/13/14 all landed commits w
 ## Coverage (hunters / batches / docs)
 
 - **Hunters**: 6 read-only batch hunters (sonnet), covering all 42 writable docs + the epic hub
-  (`infrastructure_master.md`, read as context) in full, plus all 36 grace docs available as context. Special tasks:
+  (`security_and_cross_cutting_master.md`, read as context) in full, plus all 36 grace docs available as context. Special tasks:
   epic-vs-closeout comparison (batch 2), disk-space-incident cross-check (batch 4), `ag_closeout_audit_infra_parked`
   series lineage + `reference_path_convention` live-number verification (batch 5), finalize-gating verification (batch
   6).

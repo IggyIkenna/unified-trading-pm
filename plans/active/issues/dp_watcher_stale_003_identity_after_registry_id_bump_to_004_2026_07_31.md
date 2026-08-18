@@ -24,7 +24,7 @@ tags: [deployment-service, data-pipeline-monitors, dp-watcher, stale-identity, c
 related: []
 created: "2026-07-31"
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning # reclassified NA -> planning 2026-08-02 (na-eligibility-audit, infra tranche) — conflict-check CLEAR
 execution_scope: orchestrator-agent
 assigned_role: infra

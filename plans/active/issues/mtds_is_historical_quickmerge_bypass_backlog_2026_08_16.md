@@ -18,7 +18,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-parent_epic: infrastructure_master
+parent_epic: ci_master
 source: ci_reconciler /ci-reconcile sweep 2026-08-16
 assigned_vm: NA
 resolved_by:

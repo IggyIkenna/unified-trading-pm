@@ -107,6 +107,16 @@ is independently shippable, no need to clear all 925 in one pass.
   `infra_satellite_ao_dispatch_batch19_2026_08_18.md` item 1 (conflict-check clear: only this doc referenced the
   mechanism, first dispatch). Todo 2 (P3, consider `--diff-base` mode once the baseline reaches 0) stays
   `assigned_vm: NA` — small forward-looking design question, not independently actionable yet.
+- **2026-08-18 (later same day)**: a session tracking 5 unrelated ship-blocked GCS-compliance fixes (see
+  `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`) found
+  `unified-trading-pm/scripts/catalogue/sync-to-mock.py`'s fix specifically blocked by 10 of this ratchet's 925
+  citations across 6 docs. Added a priority sub-note to `infra_satellite_ao_dispatch_batch19_2026_08_18.md`'s todo
+  1 naming the exact 6 docs — see that doc for detail. Did not attempt the fix itself: confirmed (via the actual
+  checker script, not the `--only` shortcut) each citation's required remedy is a genuine per-citation codex-home
+  research task (the checker rejects ANY `/plans/archive/...` path, not just the pre-archival one — a mechanical
+  "point at the new path" does not satisfy it), and all 6 target docs were simultaneously dirty with other
+  sessions' own unrelated uncommitted WIP at the time — not a safe or genuinely "cheap" fix to force in a tracking
+  pass.
 
 ## Todos
 

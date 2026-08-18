@@ -20,7 +20,7 @@ related:
 created: "2026-08-10"
 author: plan_reconciler
 source: agt-fb0ce4
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

@@ -22,7 +22,7 @@ related:
 created: "2026-08-16"
 author: plan_reconciler
 source: agt-4f7ad9
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

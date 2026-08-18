@@ -26,7 +26,7 @@ tags: [phantom, manifest, hygiene, coverage, data-correctness, audit, consolidat
 related: [/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md]
 created: 2026-07-10
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 source:
   "Consolidator-cockpit UI design follow-up, 2026-07-10 — operator asked to verify (not delegate) the phantom/reprobe

@@ -48,7 +48,7 @@ related:
 created: "2026-08-08"
 author: cefi_reconciliation_auditor (scheduled role, slot 3, dispatch agt-9dc091)
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Discovered read-only during the scheduled cefi_reconciliation_auditor daily spot-check (2026-08-08) while
   re-verifying the honest-coverage rollup freshness todo carried from the 2026-08-07 report §7. Root-caused via gcloud

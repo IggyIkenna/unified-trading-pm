@@ -33,7 +33,7 @@ related:
 created: "2026-08-16"
 author: claude-code (interactive session, slot-5)
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: >-
   Operator asked "isnt here a rule or cron for this... thought we fixed this" after I manually `git pull --ff-only`ed
   a starved PM repo. Investigation of /tmp/slot-cron-ff-pull.result.json (repo_dirty_ticks: 6 for this slot's PM

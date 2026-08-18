@@ -14,7 +14,7 @@ repos: [features-service]
 scope: [engineer]
 tags: [banned-vendor, polygon-io, compliance, corporate-actions, features-service]
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 created: 2026-08-18

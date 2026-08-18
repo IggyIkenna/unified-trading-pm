@@ -78,7 +78,7 @@ related:
   ]
 context_scope: [/codex/05-infrastructure/manifest-consolidator-ssot.md, /codex/05-infrastructure/data-pipeline-alerts.md, unified-trading-library/unified_trading_library/manifest_consolidator.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py]
 created: "2026-08-15"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

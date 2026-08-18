@@ -26,7 +26,7 @@ related:
   - /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
-parent_epic: infrastructure_master
+parent_epic: ci_master
 resolved_by: "N/A"
 locked_by:
 locked_since:

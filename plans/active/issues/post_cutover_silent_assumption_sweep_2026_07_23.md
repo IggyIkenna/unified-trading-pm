@@ -40,7 +40,7 @@ related:
 created: 2026-07-23
 author: unknown
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code

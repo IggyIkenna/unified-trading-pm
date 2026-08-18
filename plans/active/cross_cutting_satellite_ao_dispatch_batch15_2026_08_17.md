@@ -212,7 +212,15 @@ source: >-
       normal local `.env` matching `.env.example`'s own defaults — use `extra="ignore"` or construct the test via
       `_env_file=None`. Source: `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`.
       Repo: strategy-service. Done-when: the test passes on a machine with a normal `.env` matching
-      `.env.example`'s defaults, without the move-aside-and-restore workaround.
+      `.env.example`'s defaults, without the move-aside-and-restore workaround. **Note (2026-08-18, added while
+      tracking `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`)**: this
+      same blocker currently also blocks 2 already-fixed, verified, uncommitted GCS-compliance changes sitting in
+      this repo's working tree — `scripts/trace_all_carry_archetypes.py` + `scripts/position/capture_phase_9_evidence.py`
+      (raw `google.cloud.storage` → UTL `get_storage_client()`, see that doc's § "Category-2 remediation results").
+      When this config fix lands, `git status`/`git diff` those 2 files and commit them alongside it — don't lose
+      them chasing the config bug alone. An identical-CLASS `extra_forbidden` failure was also found independently
+      blocking execution-service; see
+      `/plans/active/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md`.
 - [ ] [AGENT] P2. Migrate Kamino's `supply()`/`withdraw()` uncited `0x01`/`0x02` discriminator bytes to Kamino's
       real Transactions API (`POST /ktx/klend/{deposit,withdraw}`), the same pattern already used for this
       connector's own `borrow()`/`repay()`. Source:

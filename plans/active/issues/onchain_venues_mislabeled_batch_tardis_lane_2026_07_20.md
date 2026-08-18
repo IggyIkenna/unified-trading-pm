@@ -29,7 +29,7 @@ related:
 created: 2026-07-20
 author: unknown
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Measured GCS walk of the prod cefi tick bucket (2025-11-05 -> 2026-07-18, 8 sampled days) during the cefi
   catalogue-coverage-gap investigation, cross-read against the UAC PipelineMode declarations."

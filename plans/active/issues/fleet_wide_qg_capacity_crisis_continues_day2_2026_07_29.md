@@ -44,7 +44,7 @@ created: 2026-07-29
 author: unknown
 last_updated: 2026-08-03
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: ci_master
 source:
   "operator #ci-failures Slack dump + operator ask to verify PM#1746/1747/1748 + 2 ldr_qg_failure items over 30-40min,
   2026-07-29 ~01:05Z"

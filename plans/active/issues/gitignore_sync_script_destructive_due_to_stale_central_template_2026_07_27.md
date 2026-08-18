@@ -34,7 +34,7 @@ related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]
 created: 2026-07-27
 author: unknown
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: "Discovered while shipping an unrelated small fix (stray .claude/worktrees/ gitlinks), 2026-07-27 ~21:15 UTC"
 assigned_vm: NA
 execution_scope: local-only

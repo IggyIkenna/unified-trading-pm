@@ -23,7 +23,7 @@ created: 2026-07-31
 author: unknown
 last_updated: 2026-07-31
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Follow-up from ci_satellite_ao_dispatch_batch1_2026_07_26.md's [INFRA] P2 'Sync gcp_service_accounts.yaml against
   live IAM' todo, itself delegated from issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md ([BACKEND]

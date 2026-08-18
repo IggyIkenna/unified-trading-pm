@@ -32,7 +32,7 @@ execution_scope: local-only
 tags: [defi, karak, decommission, restaking, venue-removal]
 priority: P1
 source: operator-request-2026-08-16
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 related:
   [
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,

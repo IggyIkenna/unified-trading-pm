@@ -23,7 +23,7 @@ execution_scope: local-only
 tags: [e2e-wiring, reachability, caller-graph, reconciliation, disclosure]
 priority: P0
 source: operator-request-2026-08-15
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 related:
   [
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,

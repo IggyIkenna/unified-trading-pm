@@ -23,7 +23,7 @@ related:
   - /plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md
   - /codex/05-infrastructure/vm-launcher-runbook.md
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "tradfi_satellite_ao_dispatch_batch13_2026_08_13.md todo (Source:
   dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md), 2026-08-15"

@@ -23,7 +23,7 @@ related: [/plans/active/ci_consolidated_closeout_2026_07_25.md]
 created: 2026-08-17
 author: ui_developer (slot-1, interactive)
 priority: P3
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: >-
   Investigated after receiving the same nudge 3x in one boot/heartbeat cycle
   (message_ids 9106/9165/9201) on slot 1, 2026-08-17. Acked the messages as stale after confirming

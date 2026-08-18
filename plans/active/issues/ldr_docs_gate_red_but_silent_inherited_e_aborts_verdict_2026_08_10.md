@@ -26,7 +26,7 @@ related:
   - /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md
 created: 2026-08-10
 author: /ci-reconcile (interactive, slot-2·laptop)
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P1
 source: >-
   /ci-reconcile § 0b standing-monitor sweep, 2026-08-10 — `ldr-docs-gate` was the one red monitor of 23, and had posted

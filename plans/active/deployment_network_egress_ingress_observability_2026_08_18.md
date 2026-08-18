@@ -114,10 +114,14 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
 
 ### Track 1 — total per-VM egress/ingress (extends the existing D.1 pipe)
 
-- [ ] [BACKEND] P1. Add a `net_sent_rate_bytes_sec` field to the `HostMetricsSample` dataclass and its sampler in
+- [x] [BACKEND] P1. Add a `net_sent_rate_bytes_sec` field to the `HostMetricsSample` dataclass and its sampler in
       `host_metrics.py` — the existing `psutil.net_io_counters()` call already returns `.bytes_sent`, only
       `.bytes_recv` is currently read. Gate: a unit test asserts a sampled `HostMetricsSample` carries both
-      `net_recv_rate_bytes_sec` and `net_sent_rate_bytes_sec` as independently-correct rate values.
+      `net_recv_rate_bytes_sec` and `net_sent_rate_bytes_sec` as independently-correct rate values. —
+      unified-trading-library@77ee7cec57. Both rates now share one `net_io_counters()` call (avoids a doubled
+      syscall/torn snapshot); `test_rate_fields_compute_delta_over_elapsed_time` asserts recv=200.0 vs sent=50.0 from
+      the same tick (independently-correct, not aliased). 6 pre-existing `HostMetricsSample(...)` call sites in
+      `test_daemon.py` updated for the new required field. QG green (626s, unrelated pre-existing warnings only).
 - [ ] [DATA] P1. Add a matching `net_sent_rate_bytes_sec FLOAT` column to the `resource_samples` schema in
       `bootstrap_operational_data_bq.py`, and confirm the heartbeat write path populates it on a real running VM.
       Gate: a live query against `deployment_operational_data.resource_samples` shows non-null
