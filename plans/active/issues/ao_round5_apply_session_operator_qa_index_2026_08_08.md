@@ -91,3 +91,6 @@ docs, not an isolated unverifiable claim (contrast the incident that motivated t
   ratchet fix verified via gate run 31262418685).
 - **context-scout 2026-08-14**: populated context_scope (1 entry).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (1 entries)
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:2b369826a00d6673]: KEEP-NA, valid — unchanged since
+  2026-08-09. Sole open item (replace this grep-derived index with a primary transcript if one is ever exported)
+  still has no owner/trigger driving it into existence, not worker-determinable today.

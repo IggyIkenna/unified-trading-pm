@@ -513,3 +513,9 @@ data that's actually needed. This plan gets the evidence first.
   is a LOCAL/human plan by design (operator ruling 2026-08-15) and the extraction is a per-todo split, not a
   whole-doc flip; the BYBIT/KRAKEN-FUTURES bundling migration and the catalogue-gap audit remain genuinely NA
   (judgment/design-gated).
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:65f9b307b0915187]: KEEP-NA, valid — unchanged.
+  The extracted batch18 item 1 was independently found to be a stale duplicate of this doc's own already-resolved
+  todos 4/5 and closed 2026-08-18 by regular work (slot-11, data_engineering), not by this audit — see this doc's
+  own todo entry above. The 2 remaining open items (undetected defi catalogue-gap on-chain walk; BYBIT/KRAKEN-FUTURES
+  futures_chain migration, hard-gated on a per-row expiry verification) stay genuine investigation/production-data-
+  migration work, not worker-determinable alone.

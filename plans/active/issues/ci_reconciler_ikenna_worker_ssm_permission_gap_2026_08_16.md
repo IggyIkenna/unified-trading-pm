@@ -135,3 +135,8 @@ needed" assumption and fix this for every future hourly run, not just this one).
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added `check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`
   (fingerprint match: byte-identical `AccessDeniedException`/`ssm:SendCommand`/`ikenna-worker` evidence against the SAME
   instance ARN `i-0c9b283b31d6b5ca7`, already cross-linked bidirectionally via `related:`).
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:1edc21d8ba34f2a7]: KEEP-NA, valid — first audit
+  pass (no prior marker). Sole open item is explicitly `[OPERATOR]`-tagged: a genuine AWS IAM identity decision
+  (grant `ikenna-worker` scoped SSM access, vs. fix why this dispatch shape isn't inheriting the orchestrator VM's
+  own `uts-orchestrator-epic-role` instance-profile credentials) — not worker-determinable alone per the
+  self-service SSOT's own explicit carve-out for a genuinely different, non-assumable identity.

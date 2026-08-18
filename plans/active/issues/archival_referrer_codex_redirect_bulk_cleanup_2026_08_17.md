@@ -101,11 +101,19 @@ is independently shippable, no need to clear all 925 in one pass.
 - 2026-08-17 (claude): rule sharpened in codex, ratchet built + wired into `quality-gates.sh` (`--only`-scoped, zero
   added cost on unrelated pushes), baseline seeded at 925. This doc filed as the tracked dispatch target — cleanup work
   itself not yet started.
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:92cf28bc44690cc6]: RECLASSIFY (per-todo split) —
+  todo 1 is a self-contained, bounded batch-cleanup task (its own "Dispatch prompt" section already specifies the
+  full mechanical procedure, incl. an autonomous-mode ambiguous-case escape hatch) — extracted to
+  `infra_satellite_ao_dispatch_batch19_2026_08_18.md` item 1 (conflict-check clear: only this doc referenced the
+  mechanism, first dispatch). Todo 2 (P3, consider `--diff-base` mode once the baseline reaches 0) stays
+  `assigned_vm: NA` — small forward-looking design question, not independently actionable yet.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Work the `check_active_refs_archived_plans.py` baseline down from 925 toward 0, per the dispatch
-      prompt above — batches of ~20-30, `--update-baseline` + ship after each batch.
+- [x] ✅ **EXTRACTED 2026-08-18 (na-eligibility-audit, infra tranche) →
+      `infra_satellite_ao_dispatch_batch19_2026_08_18.md` item 1.** Not yet executed — tracked there. ~~Work the
+      `check_active_refs_archived_plans.py` baseline down from 925 toward 0, per the dispatch prompt above —
+      batches of ~20-30, `--update-baseline` + ship after each batch.~~
 - [ ] [SCRIPT] P3. Once the baseline reaches 0, consider whether `--diff-base` mode (same shape as
       `check_reference_paths.py`'s) is worth adding for CI-side high-velocity-branch resilience — not needed while the
       baseline is still actively shrinking.

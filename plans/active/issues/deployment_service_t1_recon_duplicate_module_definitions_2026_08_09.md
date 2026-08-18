@@ -197,3 +197,6 @@ because:
   (not yet executed; confirmed-dead via live NOT_FOUND, matches an established in-file precedent, no judgment
   needed). The other 3 items (canonical-module choice, its dependent state-rm, and the ~20-import structural risk)
   are genuine `[OPERATOR]` judgment calls — doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:79d74c0358834746]: KEEP-NA, valid — unchanged since
+  2026-08-17. 2 remaining items both explicitly `[OPERATOR]`-tagged (canonical-module choice; the ~20-import
+  env-gating structural risk) — not worker-determinable.

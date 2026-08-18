@@ -637,6 +637,10 @@ for a `batch2` on the next pass and rehome then.
 
 ## Progress Log
 
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:2789cba752f52748]: KEEP-NA, valid — unchanged since
+  2026-08-09; now 1 open item (was 2 — the pip-audit/domain-client Phase-4 catch-alls closed since). Sole remaining
+  item (Phase 3 schema-provenance local-types-to-UAC migration) is explicitly acknowledged in-doc as needing "its
+  own dedicated phased design pass, not a batch-todo extraction" — not worker-determinable alone.
 - **na-eligibility-audit 2026-08-09** (infra tranche) [body-hash:d073265da4a96484]: KEEP-NA, valid — 2 open items remain
   (pip-audit fleet-wide bump: DEPENDENCY_BLOCKED; Phase 3 schema-provenance migration: GENUINE_WORK, both explicitly
   too-large-for-a-batch-todo). The stale G1-item-1 duplicate this doc carried was independently closed today by the

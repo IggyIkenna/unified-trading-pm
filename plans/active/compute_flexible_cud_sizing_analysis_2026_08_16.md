@@ -116,3 +116,7 @@ reversal resolve" — and it shortens the sensible re-check cadence (see the upd
   requiring a stabilization judgment call on a still-growing cost baseline. Added this Progress Log section (doc
   had none) so future incremental runs can skip it via the dated marker.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (1 entry).
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:4b8ac46902aa5bca]: KEEP-NA, valid — unchanged since
+  2026-08-17. The 2026-08-18 interim-check addition updates the REASONING (trend now declining 4 days straight, not
+  still growing) but not the verdict — both todos remain dated future re-checks requiring a stabilization judgment
+  call on a moving cost baseline, not worker-determinable today.

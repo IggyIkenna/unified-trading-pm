@@ -551,3 +551,7 @@ not data-pipeline).
   needed there.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:54ced244c025e7fb]: KEEP-NA, valid — unchanged since
+  2026-08-07. Read end-to-end; `grep -cE '^- \[ \]'` = 3, matching. All 3 remain the same unchanged all-of-N Track
+  close-out gates created by the resolved operator decision (`issues/autonomous_session_operator_decisions_2026_07_25.md`
+  entry #38) — not worker-determinable until their source docs finish.
