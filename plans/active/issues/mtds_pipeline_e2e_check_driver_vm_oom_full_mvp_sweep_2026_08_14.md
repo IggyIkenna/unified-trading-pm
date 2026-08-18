@@ -144,6 +144,39 @@ Two independent angles, not mutually exclusive:
       (SDK, never subprocess) to identify the failure mode. Done when: either the new signature is root-caused +
       fixed, or confirmed to share a cause with an already-tracked class. This blocks the DEFI leg of the todo below
       (a 4th blind launch should not proceed until this is understood — see 2026-08-17 Progress Log entry).
+      **PARTIALLY RESOLVED 2026-08-18 (slot 14, infra→backend_engineer) — see Progress Log for the full evidence.**
+      Confirmed this signature is distinct from both already-tracked classes (flat driver `RUSAGE_SELF` RSS
+      ~7.1-7.2GB across every logged poll tick rules out the memory-growth class; ~13.5min rules out the
+      3600s/14400s wall-clock timeout). Root cause of the VM's actual death is NOT fully determined — it is a
+      genuine whole-VM disappearance (heartbeat sidecar + tee'd run.log both stop in the same second, VM later
+      fully vanishes from `aggregated_list_instances`, on-demand not SPOT, no local trap/self-delete/OOM-kill
+      trace in the tee'd application log) that cannot be further diagnosed post-hoc: the VM was already gone
+      ~43h before this investigation started, so its serial console (where a real kernel OOM-killer message
+      would actually land — never in the tee'd application `run.log`) is unrecoverable. **Fixed a genuine
+      contributing gap found during the investigation**: this driver VM's name prefix
+      (`pipeline-e2e-check-`) was completely ABSENT from `deployment_service.vm_prefix_registry.VM_PREFIX_TO_BUCKET`
+      — unlike its own per-shard sub-VMs (`mtds-backfill-{ag}-pipelinecheck-*`, covered by the pre-existing
+      `mtds-backfill-{ag}-` prefixes), the top-level driver itself was invisible to the zombie-watchdog, the
+      exit-code fleet monitor, and `vm_serial_capture_cron.py`'s rolling serial-console archival alike — so ANY
+      future occurrence of this exact death would leave the same zero-forensics gap. Registered it
+      `EPHEMERAL_BATCH` (bucket=`None`, matching the `mtds-live-smoke-` precedent). Shipped
+      `deployment-service@ef6cd90c` (QG pending at time of this entry). **Leaving this todo UNCHECKED** — the
+      registry fix improves future diagnosability but does not itself explain THIS instance's death, so the
+      "root-caused + fixed" bar isn't fully met. Follow-up split off below.
+- [ ] [DATA] P3. **NEW (split off 2026-08-18, slot 14) — catch the NEXT occurrence live instead of guessing
+      post-hoc.** The forensic gap above (no serial console, no kernel-level OOM evidence) is structural: a driver
+      that vanishes leaves nothing more to read after the fact. Whoever next launches the DEFI leg of the
+      `--asset-group DEFI` re-run (the still-open [DATA] P2 todo below) should, for THIS ONE launch only, stay
+      present enough to poll `deployment_service.data_pipeline_monitors._gcs`/`get_serial_port_output`
+      (`deployment_service/data_pipeline_monitors/check_vm_cli.py`'s pattern) every ~2-3min through the VM's first
+      ~20min — if it dies again in the same ~13.5min window, the serial console tail (captured BEFORE the VM
+      vanishes/self-deletes, which is exactly what was unavailable this time) will show the real kernel-level
+      cause (OOM-killer message, hardware/host fault, etc.) that the tee'd application `run.log` structurally
+      cannot surface. Not a background/detached monitor (this needs a live poll cadence tighter than a
+      multi-hour-VM watch, and a background monitor has already been shown unreliable across ~30min in this
+      session's own environment per every prior slot's notes on this doc). Fold the finding into the [BACKEND] P2
+      todo above once caught (or confirm it survives past ~15min this time, which would itself be useful negative
+      evidence). (repos: deployment-service, unified-trading-library)
 - [ ] [DATA] P2. Once either todo above lands, re-run the MTDS baseline (`--day 2026-07-01`) to completion and cite the
       resulting report path in `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s pipeline-check gate todo. **ATTEMPTED
       2026-08-15, NOT satisfied — see Progress Log.** Real per-`--asset-group` re-run only completed cleanly for
@@ -615,3 +648,60 @@ Two independent angles, not mutually exclusive:
   presence to poll to `EXIT_STATUS`, or this new earlier-death signature root-caused first, before a 4th blind
   launch.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-18 (slot 14 worker, infra→backend_engineer) — investigated the 2026-08-17 earlier-triggering
+  silent-death signature on `pipeline-e2e-check-mtds-20260815-172227-4ffa29`.** Pulled the VM's durable `run.log`
+  (`_gcs_tail.read_text_tail`, SDK not subprocess) — full 9161-byte log, last lines show two sequential per-shard
+  sub-VM launches (`mtds-backfill-defi-pipelinecheck-20260815-172835-d8cc6f`, then `-173207-d8cc6f`, both DEFI
+  UNISWAP_V3-ETHEREUM dex_pool_swaps), 5 poll ticks each, `driver RSS peak` (this is `resource.getrusage(RUSAGE_SELF)`
+  — the top-level `pipeline_e2e_check.py` process's OWN memory, confirmed by reading
+  `unified_trading_library/pipeline_e2e_check/launcher.py:124-132`, NOT a nested sub-VM's RSS as slot 12's original
+  finding speculated) holding **flat at 7175.8MB→7178.2MB across every logged tick, right up to the last line** — this
+  directly RULES OUT the already-fixed memory-growth class (that one showed a monotonic climb toward the 32GB VM
+  ceiling; this VM died at ~22% of capacity with zero growth). The log's final line is a `PIPELINE_HEARTBEAT` at
+  `2026-08-15T17:35:49Z`; nothing after. Cross-checked the VM's own heartbeat SIDECAR (bash-level, independent of the
+  Python process — `vm-heartbeat/{vm}.txt`): its last write is epoch `1786815340` = `2026-08-15 17:35:40 UTC`, status
+  `"running"` — i.e. the bash sidecar loop and the Python driver's tee'd log both stopped in the SAME ~10s window, not
+  one crashing while the other kept beating (which is what a plain Python-level exception/OOM-kill-of-just-the-worker
+  would look like). `EXIT_STATUS` still reads the boot placeholder `"RUNNING\n"` — the terminal-write path never ran.
+  `PREEMPTED` blob absent. `LAUNCH_PARAMS.json` absent (this launcher doesn't call `lc_write_launch_params`). Confirmed
+  via `get_compute_engine_client().aggregated_list_instances` that the VM is now fully GONE (not even
+  `TERMINATED`/`STOPPED` — deleted). Confirmed via `deployment-service/scripts/vm/lib/launcher_common.sh`'s own
+  documentation (the `provisioning_model`/`instance_termination_action` params to `lc_gcloud_create` were added
+  2026-08-16, one day AFTER this VM's 2026-08-15 launch, and `launch-pipeline-e2e-check-driver-vm.sh`'s
+  `lc_gcloud_create` call passes neither) that this driver VM is **on-demand, not SPOT** — rules out ordinary SPOT
+  reclaim as the mechanism (unlike the CORRECTED verdict in the sibling
+  `vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md` doc, whose 4 investigated deaths
+  WERE confirmed SPOT preemptions on a genuinely-SPOT launcher). Also rules out the 3600s/14400s wall-clock-timeout
+  class on pure arithmetic (~13.5min ≪ either threshold) and its own signature (that class always writes a clean
+  `received signal 15`/`command exited rc=3` line before dying — this run.log has neither).
+  **Net verdict: a genuine whole-VM disappearance with zero local forensic trail** — heartbeat sidecar and tee'd
+  application log both stop simultaneously, no trap-fire, no self-delete log line, no OOM-kill message (the KERNEL's
+  own OOM-killer output lands on the SERIAL CONSOLE via dmesg, never in a tee'd application `run.log` — this is a
+  structural blind spot every session on this doc that only ever read `run.log` inherited without realizing it).
+  Attempted to pull the serial console directly (`GCPComputeEngineClient.get_serial_port_output`, the same primitive
+  `check_vm_cli.py` already uses) to check for a kernel-level signature — **impossible**: the VM is already fully
+  deleted (confirmed above), and `get_serial_port_output` requires a live instance. The investigation trail is a dead
+  end for THIS specific instance, ~43h too late.
+  **Found + fixed a genuine, distinct, contributing gap while investigating**: `pipeline-e2e-check-` (the top-level
+  driver's own VM name prefix) was **completely absent** from
+  `deployment_service.vm_prefix_registry.VM_PREFIX_TO_BUCKET` — confirmed via direct grep, zero hits — unlike its own
+  per-shard sub-VMs (`mtds-backfill-{ag}-pipelinecheck-*`, which prefix-match the pre-existing `mtds-backfill-{ag}-`
+  entries and so ARE covered). This means the driver VM itself was invisible to `vm_zombie_watchdog.py`'s lifecycle
+  classification (unregistered prefix → `_resolve_lifecycle_class` returns `None` → `keep_not_ephemeral`, so it was
+  never even eligible for reaping, but also never correctly SURFACED in any fleet/Monitor-tab view), to
+  `exit_code_fleet_monitor`'s classification, and — most relevant to this investigation's dead end — to
+  `vm_serial_capture_cron.py`'s rolling serial-console archival (which would have preserved exactly the dmesg-level
+  evidence this postmortem needed, had this VM been registered under a lifecycle class in scope for it). This also
+  violates the CLAUDE.md HARD RULE "name/register every launcher via the `VM_PREFIX_TO_BUCKET` registry, never
+  hand-roll" — the launcher itself is fully compliant (uses the shared `lc_gcloud_create` helper, proper
+  `VM_SHUTDOWN_ON_COMPLETION`/tee/heartbeat wiring), but nobody registered its VM-name prefix in the separate
+  fleet-monitor registry when it was built. **Fixed**: registered `"pipeline-e2e-check-"` as
+  `VmPrefixSpec(bucket=None, lifecycle_class=LifecycleClass.EPHEMERAL_BATCH)` (bucket=`None` since the driver never
+  writes market data directly, only shells out to sub-launchers that write to their own already-registered buckets —
+  same simplification the pre-existing `mtds-live-smoke-`/`instruments-smoke-` entries use). One shared launcher
+  covers both `--service mtds` and `--service instruments`, so this single prefix covers both. Shipped
+  `deployment-service@ef6cd90c`; `bash scripts/quality-gates.sh` run (see next entry for the result). **Not flipping
+  the [BACKEND] P2 todo above** — this fix closes a real observability gap for FUTURE occurrences but does not itself
+  explain what killed THIS VM; split off a new [DATA] P3 todo above asking whoever launches the next DEFI attempt to
+  stay present for a live serial-console poll through the VM's first ~20min, since that is now the only way left to
+  actually catch this signature with real evidence.
