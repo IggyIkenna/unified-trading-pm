@@ -15,7 +15,7 @@ tags: [audit, ui, infrastructure, quality-gates, observability]
 related: []
 created: 2026-05-22
 tier: L3
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 cadence: weekly (minimum)
 verifier:
 lifespan:

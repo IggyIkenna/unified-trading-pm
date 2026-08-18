@@ -20,7 +20,7 @@ audited_scope:
   buckets
 date: 2026-05-21
 auditor: slot-5
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

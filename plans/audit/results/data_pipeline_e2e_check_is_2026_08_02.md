@@ -27,7 +27,7 @@ audited_scope:
   checkpoints per task_template.md finding K's 3x cadence)"
 date: 2026-08-04
 auditor: data_pipeline_e2e_check_is (real-VM automated run, slot 6)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 resulting_plan:
 lib_version:

@@ -31,7 +31,7 @@ audited_scope:
   own report) — see the two linked issue docs for full root-cause detail on why manual merging was necessary."
 date: 2026-08-06
 auditor: cefi_mtds_smoke_tester (agt-e76dc5, slot 6, real-VM automated run)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

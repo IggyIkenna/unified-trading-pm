@@ -22,7 +22,7 @@ audited_scope:
   update codex AHEAD of archival so archival is mechanical."
 date: "2026-06-01"
 auditor: ikenna + claude (opus-1m, 6-worker fan-out split by codex dir)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

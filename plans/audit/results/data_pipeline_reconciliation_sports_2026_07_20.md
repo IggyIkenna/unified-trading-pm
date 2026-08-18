@@ -44,7 +44,7 @@ audited_scope:
   day=2026-07-10 four-surface disk probes + multi-day WEATHER/ODDS spot-checks + top-level tree sweep"
 date: 2026-07-20
 auditor: /data-pipeline-reconciliation (first real execution + acceptance test — sports)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 skill: data-pipeline-reconciliation
 run_date: 2026-07-20

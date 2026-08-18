@@ -24,7 +24,7 @@ created: 2026-08-08
 audited_scope: "data_pipeline_e2e_check_mtds real-VM force/skip/live pipeline check for day=2026-08-07, cefi-headline"
 date: 2026-08-08
 auditor: cefi_mtds_smoke_tester (agt-9e871f, slot 8)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 resulting_plan:
 lib_version:

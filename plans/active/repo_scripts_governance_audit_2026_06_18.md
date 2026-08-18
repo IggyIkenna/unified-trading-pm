@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [scripts, governance, ruff, lint, audit, deprecation, quickmerge, ci-cd, D16]
 related: []
 created: 2026-06-18
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
 priority: P2

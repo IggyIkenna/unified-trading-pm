@@ -18,7 +18,7 @@ audited_scope:
   2 separate invocations, results merged here — see note below)"
 date: 2026-08-04
 auditor: data_pipeline_e2e_check_mtds (real-VM automated run)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P1
 resulting_plan:
 lib_version:

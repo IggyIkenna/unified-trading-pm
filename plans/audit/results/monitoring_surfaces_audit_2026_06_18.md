@@ -24,7 +24,7 @@ audited_scope:
   CI-CD/repo-health/fleet/images surfaces, read-only)
 date: 2026-06-18
 auditor: ikennaigboaka
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 resulting_plan:
 lib_version:

@@ -30,7 +30,7 @@ audited_scope:
   classify pass, independent of the prior --apply run's own bookkeeping"
 date: 2026-07-23
 auditor: P8 independent post-migration verification (candle canonical-path migration, todo-19 residual check)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 source: >-
   Independent P8 verification, 2026-07-23: fresh google-cloud-storage list_blobs enumeration of

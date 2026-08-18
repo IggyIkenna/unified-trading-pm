@@ -24,7 +24,7 @@ audited_scope:
   unencoded gaps (per asset_group), and operator-acked scope decisions (tradfi tbbo/trades cost reduction)
 date: 2026-05-20
 auditor: semver
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 resulting_plan:
 lib_version:

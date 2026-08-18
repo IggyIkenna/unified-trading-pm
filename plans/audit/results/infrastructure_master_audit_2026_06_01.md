@@ -23,7 +23,7 @@ created: 2026-06-01
 audited_scope: CI/CD pipeline contract (checklist h–l — quickmerge/branch-protection/SIT/build-triggers/dirty-tree; VM/GCS items a–g not run this pass) across all 23 active repos
 date: 2026-06-01
 auditor: ikenna (slot 1 main, Opus 4.8 1M)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P0
 resulting_plan:
 lib_version:

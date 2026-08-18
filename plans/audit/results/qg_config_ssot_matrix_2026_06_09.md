@@ -30,7 +30,7 @@ audited_scope:
   homes, per-repo coverage-drift sweep, bandit -c behaviour, per-repo [tool.bandit] skips audit
 date: "2026-06-10"
 auditor: slot-1 (claude)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 severity: P2
 resulting_plan:
 lib_version:
