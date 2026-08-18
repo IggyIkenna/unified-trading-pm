@@ -89,10 +89,12 @@ source: >-
       have an object?) AND path→manifest (does every object have an entry?). Manifest-driven; no new whole-corpus
       GCS walk (B13 discipline). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a
       per-AG bidirectional reconciliation report is produced, citing the manifest as the sole read surface.
-- [ ] [DATA] P0. Establish whether B23's schemas (the 51-column instruments schema) are locked and versioned, and
+- [x] ✅ [DATA] P0. Establish whether B23's schemas (the 51-column instruments schema) are locked and versioned, and
       if not, what locking them requires. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`.
       Done-when: a written determination (locked-and-versioned: yes/no) is recorded, plus, if no, a concrete
-      proposal for what locking requires.
+      proposal for what locking requires. Determination: NO (evidence + 4-part proposal recorded in
+      `data_pipeline_completion_2026_08_21.md`'s B23 blockquote and filed as tracked follow-up todos in
+      [`instruments_schema_not_locked_versioned_2026_08_18.md`](/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md)).
 - [ ] [BACKEND] P1. Instrument the three pipeline stages per shard — fetch throughput, process latency, GCS write
       throughput — recorded separately, per MODE (batch/paper/live). Source:
       `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: per-stage, per-mode figures are recorded
@@ -189,3 +191,9 @@ source: >-
   rollup counts had been recorded — no per-shard table had actually been committed, which is this item's explicit
   done-when. Re-ran the skill live and committed both the full per-shard row table and a per-asset-group summary
   under `plans/audit/results/`. See the flipped checkbox above for the artifact paths and headline numbers.
+- **2026-08-18 (data_engineering, slot 9)**: item 3 (B23 determination) done. Read `INSTRUMENTS_PARQUET_SCHEMA`
+  (unified-api-contracts), `SchemaContract` (no version field), `check_schema_versions.py` (excludes
+  `internal/domain/instruments/`), the schema-version-matrix framework (no instrument references), and every test
+  touching the schema (membership-only, never freeze/hash-gated) — determination: locked-and-versioned = NO.
+  Recorded in `data_pipeline_completion_2026_08_21.md`'s B23 blockquote; 4-part fix filed as tracked follow-up in
+  `instruments_schema_not_locked_versioned_2026_08_18.md` (new discovered scope, not absorbed into this item).

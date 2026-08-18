@@ -148,8 +148,34 @@ than a hypothesis — the operator asked specifically what past failures should 
 > same structure as the code" is not yet true across asset groups. Full per-AG re-measure tracked in
 > [`/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`](/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md).
 >
-> **B23 is currently UNVERIFIED, not satisfied.** The 51-column instruments schema exists and is populated, but whether
-> it is *locked and versioned* has not been established. A schema existing is not a schema being locked.
+> **B23 DETERMINATION (data_engineering, slot 9, 2026-08-18): locked-and-versioned = NO.** `INSTRUMENTS_PARQUET_SCHEMA`
+> (`unified-api-contracts/unified_api_contracts/internal/domain/instruments/_instruments_parquet_schema.py`) is a bare
+> `list[dict]` literal, now **85 columns** (grown silently from the "51-column" figure this gate's own title still
+> carries — no changelog entry or version bump marks when/why). Evidence for NO, in full:
+> 1. The `SchemaContract` type that governs instrument-catalogue writes (`unified_api_contracts/internal/schemas/
+>    contracts.py::SchemaContract`) has **no version field at all**. UAC's separate `CANONICAL_*_VERSION` +
+>    `schema_version` mechanism (enforced by `scripts/check_schema_versions.py`) exists only for `canonical/domain/*.py`
+>    models — that script's own `_get_files()` never walks `internal/domain/instruments/`.
+> 2. The schema-version-matrix framework (`generate_schema_version_matrix.py`, `test_schema_version_matrix.py`,
+>    `test_schema_version_alignment.py`) has zero references to "instrument" — out of scope entirely.
+> 3. The 5 per-asset-group contracts synthesised from `INSTRUMENTS_PARQUET_SCHEMA` (`CEFI_INSTRUMENT_CATALOGUE` etc.,
+>    `_instrument_catalogue_contract.py`) are registered into `CONTRACT_REGISTRY` but never looked up by any consumer
+>    (grep-confirmed zero external references) — not runtime-enforced anywhere, not even at instruments-service's own
+>    write path.
+> 4. The only tests touching the schema (`test_instrument_record_fixture_match.py`,
+>    `test_instrument_record_canonical_identity.py`, `test_instrument_record_archive_metadata.py`) check 1:1
+>    membership between `InstrumentRecord` fields and schema columns — they assert a new field IS present, never that
+>    the shape is frozen/hashed/version-gated. The codebase's own repeated comment
+>    ("Additive + optional (non-breaking: added-optional-field)") documents silent, unversioned growth as the actual
+>    practice — the opposite of B23's own bar ("a schema change is a deliberate versioned act").
+> 5. No golden-file/hash/snapshot test would catch a silently changed column. The one guard that exists for the
+>    2026-04-14 incident class (`instruments-service/.../sink.py::_assert_not_cross_domain_contamination`) is a narrow
+>    6-column sentinel-membership check scoped to sports_reference writes — it would not catch an in-place schema
+>    change to the instrument-catalogue shape itself.
+>
+> **What locking requires — 4-part proposal (filed as tracked, AO-dispatchable follow-up work, not implemented by this
+> determination task per its own scope):** see
+> [`instruments_schema_not_locked_versioned_2026_08_18.md`](/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md).
 
 - [x] ✅ [DATA] P0. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 1 (na-eligibility-audit 2026-08-17). Verify B21 — Distinct Values in the deployment UI shows zero non-canonical values, per AG.
 - [ ] [OPERATOR] P0. **Sign off B20's shard-name orthogonality.** Human judgment, explicitly not delegable to a checker.
