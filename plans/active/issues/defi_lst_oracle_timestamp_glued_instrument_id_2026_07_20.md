@@ -16,7 +16,7 @@ tags: [defi, instrument-id, per-instrument-model, lst, oracle, glued-key]
 related: [defi_consolidated_closeout_2026_07_18]
 created: 2026-07-20
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

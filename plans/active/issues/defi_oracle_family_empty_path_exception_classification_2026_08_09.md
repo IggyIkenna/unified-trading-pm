@@ -34,7 +34,7 @@ source:
   /codex/12-agent-workflow/plan-completion-and-archival-discipline.md step 1
 resolved_by:
 locked_by:
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P3

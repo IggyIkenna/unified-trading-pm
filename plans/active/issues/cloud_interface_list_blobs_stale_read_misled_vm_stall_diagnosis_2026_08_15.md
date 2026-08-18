@@ -30,7 +30,7 @@ effort: medium
 drift_direction: advance-code
 estimate_class: research
 depends_on: []
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resolved_by:
 source: "cefi_residual_ao_dispatch_2026_08_15_finalize.md re-verification session, 2026-08-15"
 locked_by:

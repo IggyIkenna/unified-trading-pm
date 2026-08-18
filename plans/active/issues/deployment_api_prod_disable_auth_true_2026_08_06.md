@@ -46,7 +46,7 @@ related:
 created: 2026-08-06
 author: sub-agent (service-deployed dispatch listener task)
 last_updated: 2026-08-18 # (was: 2026-08-10 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, now through 2026-08-17)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

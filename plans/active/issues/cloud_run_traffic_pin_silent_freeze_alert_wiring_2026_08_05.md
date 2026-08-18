@@ -40,7 +40,7 @@ related:
 created: "2026-08-05"
 author: unknown
 last_updated: "2026-08-05"
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

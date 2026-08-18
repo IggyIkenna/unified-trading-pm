@@ -57,7 +57,7 @@ related:
   ]
 created: 2026-07-16
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P1
 source:
   github_actions_ci_cost_reduction_2026_07_15 batch-2 validation, slot 1, 2026-07-16 — found while proving the flipped

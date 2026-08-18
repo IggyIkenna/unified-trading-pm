@@ -43,7 +43,7 @@ last_updated: "2026-08-16"
 source: data_pipeline_failure escalation agt-95ede4 (DP-FETCH-009, wall_type=data_pipeline_failure)
 resolved_by:
 locked_by:
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1

@@ -22,7 +22,7 @@ related:
   [/plans/active/ci_consolidated_closeout_2026_07_25.md, /codex/12-agent-workflow/measurement-claims-discipline.md]
 created: 2026-08-11
 author: claude (interactive session, slot-3)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

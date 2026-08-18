@@ -36,7 +36,7 @@ related:
   ]
 created: 2026-08-17
 author: data_pipeline_alerts_reconciler (slot 9, one-shot dispatch agt-112bed)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 assigned_vm: NA
 execution_scope: local-only

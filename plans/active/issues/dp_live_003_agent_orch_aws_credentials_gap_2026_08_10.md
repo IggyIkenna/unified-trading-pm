@@ -41,7 +41,7 @@ related:
   ]
 created: 2026-08-10
 author: sub-agent (Claude Code session, dispatched to build the AWS liveness check + not_yet_active lifecycle state)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 assigned_vm: NA
 execution_scope: local-only

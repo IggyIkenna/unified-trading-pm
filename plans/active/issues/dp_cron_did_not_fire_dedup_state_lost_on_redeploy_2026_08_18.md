@@ -64,7 +64,7 @@ related:
   ]
 created: 2026-08-18
 author: data_pipeline_alerts_reconciler (slot 23, one-shot dispatch agt-d52c5d)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 assigned_vm: planning
 execution_scope: orchestrator-agent

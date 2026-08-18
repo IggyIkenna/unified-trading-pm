@@ -20,7 +20,7 @@ scope: [engineer]
 tags: [quality-gates, basedpyright, ratchet, ci-blocking]
 related: [cross_cutting_consolidated_closeout_2026_07_25]
 created: "2026-08-08"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

@@ -28,7 +28,7 @@ related:
   - /plans/active/issues/citadel_satellite_ao_dispatch_batch1_004_repeat_wedge_parked_2026_08_08.md
 created: 2026-08-08
 author: agt-22de53 (main)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 source: >-
   Main-agent routine stale-slot sweep (STEP 2.4/2.6), 2026-08-08 20:14Z-20:50Z window. Escalated straight to durable

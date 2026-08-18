@@ -46,7 +46,7 @@ related: [/plans/active/ci_consolidated_closeout_2026_07_25.md]
 created: 2026-08-06
 author: interactive session (operator-triggered CI audit)
 last_updated: 2026-08-06
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
