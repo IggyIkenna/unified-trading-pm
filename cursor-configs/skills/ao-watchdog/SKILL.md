@@ -8,7 +8,9 @@ description: >-
   for prior understanding of each finding BEFORE acting (so a regression of an already-"RESOLVED" issue is
   recognized as a regression, not re-diagnosed from scratch), fixes what's small/clear at the root, updates any
   stale-but-still-cited issue doc to current reality, and drives open `BLOCKED` questions to an answer in the
-  live interactive chat rather than just listing them. Not a replacement for `/ci-reconcile`,
+  live interactive chat rather than just listing them. Leads every report with a day-over-day diff (yesterday vs
+  the day before, across KPIs/escalations/blocked-questions/resources/Slack volume/scheduled-job health) and a
+  best-effort flag of any significant architecture/design decisions made that day. Not a replacement for `/ci-reconcile`,
   `/escalation-queue-reconcile`, `/vm-preemption-billing-waste-audit`, `/vm-resource-rightsizing-check`, or
   `/data-pipeline-alerts-reconcile` — this skill's own checks stay cheap and hand off to those for their deep-dive
   domain the moment an anomaly is confirmed. Designed to run interactively (laptop, any slot) or as an
@@ -232,10 +234,18 @@ online`) forces the dashboard to `level="crit"`. Read that directly rather than 
   two 26-27GB runaway processes). **Read `GET /api/resource-watchdog/status` for recent kills** — a kill in the
   last 24h is a real finding (name the process + slot + RSS that triggered it), not silently absorbed cleanup.
   (2) **`ResourceHistoryLoop`** (`server/resource_history.py`, standalone `resource-history-sampler.service`)
-  samples `host_resources.py::snapshot()` (cpu%, iowait%, load avg, ram/swap/disk %, cgroup mem) every 5s to
-  JSONL, mirrored to GCS/S3 and BigQuery `deployment_operational_data.resource_samples` — this is the durable,
-  queryable trace; use it for "was this VM under sustained load over the last N hours" rather than a single
-  point-in-time `uptime`/`free -h` snapshot, which only shows the instant you happened to look.
+  samples `host_resources.py::snapshot()` (cpu%, iowait%, load avg, ram/swap/disk %, cgroup mem) every 5s to a
+  **per-day JSONL file** at `config.resource_history_dir()/<date>.jsonl` (`STATE_DIR/resource_history/`, live —
+  `resource_history.py:202-206`), mirrored to GCS/S3 via the separate `resource-history-backup.timer` +
+  `resource_history_backup_once.py`. **Correction (2026-08-18, this skill previously said BigQuery here — verified
+  wrong):** this JSONL log is NOT the same system as BigQuery `deployment_operational_data.resource_samples` — that
+  table is written via Pub/Sub from deployment-service's `HeartbeatDaemon` and is scoped to
+  deployment-service-launched VMs only (backfill/launcher fleet), not the orchestrator host itself
+  (`deployment-observability.md` §§ 625-652). For "was the ORCHESTRATOR under sustained load over the last N
+  hours," read its own per-day JSONL (`cat`/tail via SSM, see Step 10 below) — there is no BigQuery table for this
+  host. For a launcher/backfill VM's sustained-load history, `GET /api/vm-resources/rolling` or the BigQuery table
+  is the right source instead. Either way this beats a single point-in-time `uptime`/`free -h` snapshot, which only
+  shows the instant you happened to look.
   Still pull the point-in-time snapshot too (`uptime`, `free -h`, `df -h /`, `ps aux --sort=-%cpu | head -15`) as
   the cheap Step-1 check — cross-check against `DiskSpaceCanary`'s `tuning.disk_space_min_free_gb` (default 60G)
   and flag **swap in active use** (any non-zero swap on a VM that shouldn't be swapping is worth a line even
@@ -441,12 +451,77 @@ agent-orchestrator-alerts <hours>` (also check `ci-failures` if the run's findin
   anything about what "actually paged" — don't infer it from the code alone; the doc and the live channel can
   drift apart, and that drift is itself the kind of finding this step exists to catch.
 
-## Step 10 — report
+## Step 10 — day-over-day diff: yesterday vs the day before
 
-Lead with anything from `regression_alert` (3a) or a genuine Step 2-9 finding — never bury a real problem under a
-wall of healthy-KPI numbers. Then, in order: occupancy + conversion (3a/3b), cost caveat-labeled estimate (3d),
-scheduled-job health (Step 5), blocked-questions outcome (how many answered now vs left open and for whom, Step
-6), escalation-queue verdict (Step 4, one line if healthy), resource usage (3f), and the Step 9 alert-quality
+The operator's standing ask (2026-08-18): every run should read as "what changed since yesterday, compared to the
+day before" — not just a snapshot. Each metric family below has a DIFFERENT real mechanism (there is no one
+generic "give me day N" API across this fleet) — use the one that actually exists, don't invent a param:
+
+1. **Fleet KPIs — already built, just read both halves.** `GET /api/fleet-kpis?window_hours=24`
+   (`server/routes/state.py:340-379`) returns `current` (last 24h from now) AND `baseline` (the 24h before that) in
+   ONE response, plus the derived `regression_alert`. This is now-anchored, not UTC-midnight-anchored, but it
+   already IS "since yesterday vs the day before" for practical purposes — Step 3a's gap so far has been reading
+   only `regression_alert` and discarding `baseline`. Report `current` vs `baseline` side by side for every field
+   (boots, dispatches, done, conversion_pct, boots_per_done), not just the alert boolean.
+2. **Scheduled-job health — already buckets by calendar day.** `check-scheduled-job-health.sh runs 2` (Step 5)
+   sweeps `within_hours` in 24h increments and prints one row per calendar day already — read yesterday's row and
+   the day-before's row and diff status counts + tranche coverage directly; no second call needed.
+3. **Escalations & blocked questions — no day-scoped route exists** (verified 2026-08-18: `/api/blocked/stats` and
+   `/api/escalations/active` are both current-snapshot-only, zero date params). Until a real route exists, derive
+   counts from `activity_log` event types `escalation_dispatched`/`escalation_resolved`/`slot_blocked`
+   (`/codex/04-architecture/agent-orchestrator-alerting.md` digest glossary), grouped by day, as one more query in
+   the same aggregated remote script Step 1 already runs — don't add a separate round trip. File a follow-up plan
+   todo for a real `by_day` route mirroring `compute_dispatch_efficiency_by_day` (`fleet_kpis.py:363-385`) rather
+   than re-deriving this ad hoc every run.
+4. **Slack alert volume — no offset param; split it yourself.** `slack-read-channel.py <channel> 48 --json-only`
+   (there is no "hours N-to-M ago" flag) pulls a 48h window to one JSON file; bucket its messages by `ts` at the
+   24h boundary to get yesterday's count vs the day-before's.
+5. **Resource usage — two different mechanisms for two different hosts, don't conflate them** (see the Step 3f
+   correction above for why):
+   - **The orchestrator VM itself**: per-day JSONL at `config.resource_history_dir()/<date>.jsonl` — `cat`/aggregate
+     yesterday's and the day-before's files (avg/max cpu/iowait/load/ram/swap/disk) via the same SSM shell Step 1
+     already opens.
+   - **Backfill/launcher VMs**: `GET /api/vm-resources/rolling` gives rolling-window avg/min/max/p95 (1h/4h/24h/1wk,
+     now-anchored) — for a strict calendar-day diff instead, use the documented `bq extract` → DuckDB pattern
+     (`deployment-observability.md` § resource_samples) grouping by `DATE(ts)`, not a from-scratch query.
+
+Report every diff as a table (metric | yesterday | day-before | delta), and lead with anything that moved
+meaningfully — two columns of numbers with no callout defeats the point of a diff report.
+
+## Step 11 — flag significant design changes
+
+Confirmed gap (2026-08-18 research): no existing activity_log event type, dashboard field, or worker-reporting
+mechanism captures "a worker made a significant architecture/design decision today" — checked against the full
+digest event glossary (`/codex/04-architecture/agent-orchestrator-alerting.md` § "Digest event glossary") and
+found nothing. This step is a best-effort heuristic sweep until a real signal exists, not a complete detector —
+say so in the report rather than implying full coverage:
+
+1. **New/changed codex SSOT docs** in the last 24h (`git log --since=<yesterday-midnight> --name-only -- 'codex/**'`
+   across the fleet) — a new or materially-edited SSOT is close to the definition of "a design decision got made."
+2. **New epics/plans** under `plans/epics/`, or `plans/active/` docs with major architectural framing — a new epic
+   is a scope-of-work decision worth a one-line flag even when expected.
+3. **`feat!:`/`BREAKING`-tagged commits** across the fleet in the window (the same AST-based breaking-change
+   detector `scripts/cicd/detect_breaking_change.py` already classifies these) — a genuine breaking-change commit
+   is definitionally a design decision, not routine.
+4. **Resolved `[OPERATOR]`-tagged design/architecture questions** from Step 6's blocked-questions pass — if any of
+   today's answered questions were framed as an architecture/design tradeoff (not a routine unblock), pull them
+   into this section too rather than letting them disappear into a bare "questions answered" count.
+5. **Big-finding notifications** (the workspace's own data-correctness/cross-repo/SSOT-contradiction triage class)
+   that fired today — these already page the operator per the workspace HARD RULE, but restate them here so the
+   daily report is a complete "here's what needed your judgment today" digest, not just a duplicate of the pager.
+
+Report each hit with repo + file/PR + a one-line description of the decision — never a bare commit count. If
+nothing matches, say so explicitly ("no design-shaped changes detected today") rather than omitting the section —
+a heuristic sweep finding nothing is a real, if weaker, signal, not the same as not having looked.
+
+## Step 12 — report
+
+Lead with anything from `regression_alert` (3a), Step 10's biggest day-over-day mover, a Step 11 design-change
+flag, or a genuine Step 2-9 finding — never bury a real problem under a wall of healthy-KPI numbers. Then, in
+order: the Step 10 day-over-day diff table (this is the headline shape the operator asks for, not an afterthought),
+occupancy + conversion (3a/3b), cost caveat-labeled estimate (3d), scheduled-job health (Step 5), blocked-questions
+outcome (how many answered now vs left open and for whom, Step 6), escalation-queue verdict (Step 4, one line if
+healthy), resource usage (3f + Step 10's VM diff), Step 11's design-change flags, and the Step 9 alert-quality
 verdict. Every $ figure carries its "API-list-price-equivalent, not actual spend" label inline, not as a
 disclaimer at the bottom where it'll get dropped in a copy-paste.
 
