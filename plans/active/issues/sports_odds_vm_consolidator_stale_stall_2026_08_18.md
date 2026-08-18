@@ -115,12 +115,48 @@ an actual host-endangering condition.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Add a `MANIFEST_CONSOLIDATED_STALENESS_SEC` (or equivalent) override mechanism to
-      `launch-mtds-sports-odds-backfill-vm.sh` (or the shared MTDS launcher path it uses), mirroring the
-      `--consolidator-staleness-sec` flag added to `launch-sports-manifest-rescan-vm.sh`
-      (`deployment-service@76991b62e9`), so a future sequential-rescan session doesn't stall this launcher's readers
-      the same way. Verify the odds VM (or its successor after any preemption) resumes forward date progress past
-      2020-12-22 once either this fix lands or the stall self-resolves.
+- [x] ✅ [SCRIPT] P1. **RESOLVED 2026-08-18 — the P1's original premise was incomplete; the real fix needed a
+      library-level change, not just a launcher mirror.** Investigating "mirror `--consolidator-staleness-sec` onto
+      the odds launcher" surfaced that the rescan launcher's already-shipped fix (`deployment-service@76991b62e9`)
+      only ever fixed the **shell-level** consolidator watchdog inside `setup-data-pipeline-vm.sh`
+      (`CONSOLIDATOR_WATCHDOG_BUDGET_SEC="${MANIFEST_CONSOLIDATED_STALENESS_SEC:-86400}"`, plain bash env lookup).
+      The odds VM's actual stall is a **different, Python-level** gate
+      (`unified_trading_library.manifest_writer._read_index.py`'s `_read_slow_path`, via
+      `_state._resolve_consolidated_staleness_sec(bucket)`), and that function checks the per-asset_group
+      `AG_STALENESS_BUDGET_SEC` table (`_staleness_budget.py`: `{"cefi": 86400, "sports": 1800, "defi": 7200,
+      "tradfi": 7200}`) **unconditionally first** — for any bucket whose name contains one of those 4 tokens, the
+      AG value wins **regardless of `MANIFEST_CONSOLIDATED_STALENESS_SEC`**. Confirmed by reading the exact
+      raise site: the odds VM's captured traceback text (`age=3725s ... staleness threshold
+      MANIFEST_CONSOLIDATED_STALENESS_SEC=1800s`) matches `_read_index.py`'s f-string exactly, and 1800 is
+      precisely `AG_STALENESS_BUDGET_SEC["sports"]` — not a value derivable from any launcher metadata, since the
+      odds launcher never set that env var at all. **The raised exception's own "Remediation: increase
+      MANIFEST_CONSOLIDATED_STALENESS_SEC..." text was itself wrong for this bucket** (and for every cefi/defi/tradfi
+      bucket) — following it would have been a no-op. Mirroring the launcher flag as originally scoped would have
+      shipped a fix that looked plausible but did nothing for the actual failure.
+      **Real fix, shipped:**
+      (1) `unified-trading-library@<pending-quickmerge-sha>` — added an explicit escape-hatch config field
+      `manifest_consolidated_staleness_override_sec` (env `MANIFEST_CONSOLIDATED_STALENESS_OVERRIDE_SEC`,
+      `config_interface/cloud_config.py`), consulted FIRST in `_state._resolve_consolidated_staleness_sec()` before
+      the AG lookup — additive only, `None` by default, so all existing call sites across cefi/defi/tradfi/sports
+      keep their exact current behavior unless a caller explicitly sets the new var. Updated the "Remediation:" half
+      of the two `_read_index.py` error messages to name the var that actually works, while keeping each message's
+      original `MANIFEST_CONSOLIDATED_STALENESS_SEC=<budget>s` threshold-report clause unchanged (two pre-existing
+      tests in `test_manifest_writer_per_vm.py` assert that exact substring — confirmed via a real QG failure after
+      an earlier edit dropped it, then fixed by restoring the label and only rewording the remediation sentence).
+      Added regression tests in the same file: explicit override wins over the sports AG default and over the
+      generic global default; absent override preserves existing AG-wins-over-generic precedence unchanged.
+      (2) `deployment-service@<pending-quickmerge-sha>` — added `--consolidator-staleness-sec` to
+      `launch-mtds-sports-odds-backfill-vm.sh` (unset by default, zero behavior change unless passed), setting BOTH
+      `MANIFEST_CONSOLIDATED_STALENESS_SEC` (shell-watchdog parity with the rescan launcher) AND the new
+      `MANIFEST_CONSOLIDATED_STALENESS_OVERRIDE_SEC` (the var that actually moves the Python-level gate for this
+      bucket) — threaded through `lc_write_launch_params`'s `RESUME_CONSOLIDATOR_STALENESS_SEC` so a SPOT-preemption
+      relaunch preserves it. Also retrofitted `launch-sports-manifest-rescan-vm.sh` to set the new override var
+      alongside its existing one (its own merge path bypasses this gate by downloading the index directly, but
+      OTHER concurrent readers of the same bucket during a rescan session — like this exact odds-VM incident — do
+      not).
+      Did not resize `AG_STALENESS_BUDGET_SEC["sports"]` itself — that calibration is still correct for the
+      genuinely shard-dependent common case; this is a distinct, rarer trigger (a direct-write tool resetting the
+      heartbeat with nothing pending to merge) that now has its own explicit, additive opt-in.
 - [ ] [SCRIPT] P3. Consider whether `ManifestMigrator.merge_into_canonical()`'s direct-write completion should also
       touch a "last known good" marker/metadata field that OTHER readers' staleness checks could recognize as
       equivalent to a fresh consolidator cycle (rather than requiring every possible reader launcher to carry its own
