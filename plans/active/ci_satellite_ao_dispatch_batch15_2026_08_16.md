@@ -40,7 +40,7 @@ related:
     /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-18"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -187,22 +187,28 @@ source: >-
       movers. Source: `plans/active/github_actions_operator_gated_followups_2026_07_17.md` (line ~106). Gate: a mover
       silently doing nothing for N consecutive days produces a real alert.
 
-- [ ] [UI] P2. **Build the rollout-ratchet dashboard panel** (workflow-template drift + Dockerfile digest-pin status)
+- [x] ✅ [UI] P2. **Build the rollout-ratchet dashboard panel** (workflow-template drift + Dockerfile digest-pin status)
       AND fold in the ruleset/branch-protection drift panel (G4) into the same panel per the source doc's own scoping
       note — these were flagged as near-duplicate scope, build together not as 2 separate panels. Also add the
       runtime-level deploy signal (diff running SHA vs `main` HEAD). Source:
       `plans/active/monitoring_control_plane_master_2026_06_10.md` (lines ~260, ~262, ~465). Gate: one panel showing
       rollout-ratchet + ruleset-drift status; a separate widget showing running-vs-HEAD SHA diff per service.
-      **INVESTIGATED, NOT DONE 2026-08-17 (slot-1, ui_developer) — mis-scoped `[UI]`-only, needs a backend
-      counterpart first.** Neither `detect_template_drift.py` nor `rules-alignment-agent.yml` writes to any
-      API-readable store today (QG-gate-only / Slack-only respectively) — 2 of 3 ratchet columns have zero backend
-      data to render. The 3rd column + the separate widget overlap conceptually with the already-active, separate
-      `artifact_pipeline_observability_2026_07_17.md` feature's `/ops/artifacts` running view (`DRIFT_PINNED`/
-      `DRIFT_STALE` classification) and need reconciliation before new UI is built. Full investigation + a concrete
-      backend/UI split recommendation filed:
-      `/plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`. Left `- [ ]` open
-      (not mine to re-split unilaterally — review/main's call per `ui_developer.md`'s escalation instruction); did
-      not build UI against a guessed/mocked contract.
+      **CHECKBOX RECONCILIATION 2026-08-18 (slot-7, ui_developer) — already fully shipped before this dispatch,
+      never flipped here.** Slot-1's 2026-08-17 investigation (mis-scoped `[UI]`-only, needs a backend split first)
+      was correct and led to exactly the recommended split being carried out the SAME day, end to end, across 5
+      sibling slots — see
+      `/plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md` (now
+      `status: resolved`, archived, all 5 of its own todos `[x]`): the 4 backend prerequisites (template-drift
+      verdicts, ruleset-drift verdicts, `GET /api/rollout-ratchet/overview`, the running-vs-`main`-HEAD extension)
+      landed as `unified-trading-pm@3e665c8a94` + `unified-trading-pm@263bbc59cb` +
+      `deployment-api@46e04e0757` + `deployment-api@a2963906ab`, and this exact `[UI]` todo (the panel + widget)
+      shipped as `deployment-ui@173e66ecab`. Independently re-verified live (not trusted from the citation alone):
+      all 6 commits confirmed real ancestors of their repos' current `live-defi-rollout` HEAD via
+      `git merge-base --is-ancestor`; `RolloutRatchetPanel.tsx` + `RolloutRatchetPanel.test.tsx` exist and are
+      wired into `RepoCi.tsx`; the playwright smoke spec `tests/smoke/verdict-store-panels.spec.ts` exists;
+      `rollout_ratchet.py` exists and is registered in `deployment-api/main.py`;
+      `main_head_drift.py` and both verdict-writer driver scripts exist. No new code needed — this batch's own
+      citation of the todo simply predated (and then never caught up with) the same-day resolution.
 
 - [x] ✅ [DEVOPS] P2. **Hoist the superseded-promote-PR cleanup above the SIT gate in `sit_gate_treadmill`'s remaining
       scope** (mirrors the same hoist pattern batch13 already applied to `ldr_to_main_fleet_promote.sh` for a sibling
@@ -448,3 +454,11 @@ source: >-
   trusting the citation: fresh `gh pr view 2714` matches the source doc's cited CLOSED/never-merged state; a fresh
   grep for doomed-run-wait patterns in `.github/workflows/ldr-to-main-promote-fleet.yml` still returns zero hits.
   Full evidence on the checkbox above.
+- **2026-08-18 (slot-7, ui_developer).** Checkbox-reconciled the "Build the rollout-ratchet dashboard panel" todo —
+  redispatched to this slot as open `[UI]` work, but slot-1's 2026-08-17 mis-scoping investigation had already
+  triggered the full backend+UI split being built and shipped the SAME day across 5 sibling slots (see
+  `/plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`, now
+  `status: resolved`/archived). Independently re-verified all 6 shipped commits are real ancestors of their repos'
+  current HEAD and every claimed artifact (panel component, its wiring, the playwright spec, the API route, both
+  verdict-writer drivers) genuinely exists on disk before flipping — did not trust the archived issue doc's own
+  claims alone. No new code needed; this batch's citation simply predated the resolution.
