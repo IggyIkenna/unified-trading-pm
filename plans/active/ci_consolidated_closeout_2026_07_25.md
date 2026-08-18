@@ -150,7 +150,7 @@ stopped glue-runner systemd units restarted and the crash-loop watchdog extended
 (promotion-lag alert masks the real quickmerge provenance-block root cause) ·
 [issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md](/plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md)
 (three unrelated failures all surfaced as one generic "PROMOTION LAG" alert) ·
-[issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md](/plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md)
+[issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md](/plans/archive/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md)
 (UAC value-only config edits break UTL untested — no gate/SIT catches it) ·
 [issues/post_cutover_silent_assumption_sweep_2026_07_23.md](/plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md)
 (post-staging-cutover audit: release-tagging/breaking-gate mechanisms broken since the cutover) ·
@@ -264,7 +264,7 @@ unblocked on a CI runner.
   regression unconfirmed; a re-run was dispatched to test the flake hypothesis). This entry IS the
   link-back fix for that doc's `asset_group: [ci]` family membership.
 - **/ci-reconcile 2026-08-18 (second pass, same day)**: filed
-  [/plans/active/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md](/plans/active/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md)
+  [/plans/archive/2026_08/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md](/plans/archive/2026_08/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md)
   — root-caused the 13-repo simultaneous QG RED/GREEN cascade (PM-manifest-validity single point of failure via
   `run-all-validators.sh`, cloned into every repo's own checks slice) and a silent SLACK_CI_WEBHOOK_URL gap on 9
   repos. Both fixed live this session (`unified-trading-pm@176ff63dab` validator retry + gh secret repropagation
