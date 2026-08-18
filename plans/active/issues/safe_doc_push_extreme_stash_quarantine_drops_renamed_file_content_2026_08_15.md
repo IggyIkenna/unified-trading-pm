@@ -39,7 +39,7 @@ estimate_calibrated_ai_days: 0.24
 assigned_role: infra
 drift_direction: none
 depends_on: []
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resolved_by:
 locked_by:
 context_scope:

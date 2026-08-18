@@ -29,7 +29,7 @@ related:
 created: "2026-08-03"
 author: unknown
 last_updated: "2026-08-09" # bumped by plan_reconciler Phase -1 (real last-touch per git log; field was 1+ week stale)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

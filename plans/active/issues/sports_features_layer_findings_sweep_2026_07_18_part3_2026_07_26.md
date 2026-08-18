@@ -48,7 +48,7 @@ estimate_class: refactor
 estimate_baseline_ai_days: 3.0
 estimate_calibrated_ai_days: 1.2
 drift_direction: advance-code
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 execution_scope: local-only
 depends_on: []
 last_updated: 2026-07-26

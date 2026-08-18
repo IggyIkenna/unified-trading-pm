@@ -35,7 +35,7 @@ created: 2026-08-16
 author: data_engineering (slot-2)
 priority: P1
 source: "sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md, split at its 999-line hard cap, 2026-08-16"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 locked_by:
 execution_scope: orchestrator-agent

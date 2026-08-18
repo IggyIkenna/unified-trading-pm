@@ -21,7 +21,7 @@ related:
   ]
 created: "2026-08-18"
 last_updated: "2026-08-18"
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P3

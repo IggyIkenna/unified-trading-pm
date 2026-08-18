@@ -27,7 +27,7 @@ related:
   ]
 created: 2026-07-20
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
@@ -52,7 +52,7 @@ context_scope:
     scripts/cicd/detect_breaking_change.py,
     /plans/archive/issues/cloudbuild_template_behind_repos_rollout_would_regress_fleet_2026_07_20.md,
     /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/epics/infrastructure_master.md,
+    /plans/epics/ci_master.md,
   ]
 ---
 

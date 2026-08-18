@@ -50,7 +50,7 @@ related: [tradfi_consolidated_closeout_2026_07_18]
 created: 2026-07-23
 author: unknown
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Operator-directed follow-up investigation, 2026-07-23 continuation of tradfi_consolidated_closeout_2026_07_18's Phase
   D full-surface run: 'investigate further, do we have action items/issues/plans around this, or can't we just point the
@@ -66,7 +66,7 @@ assigned_vm: NA
 resolved_by:
   "mtds@98a81c26 fixes the garbage-underlying (TICKS) half only. The canonical-root -> raw-symbol reverse-translation
   half and the EXCHANGE_CODE_TO_NAME SSOT-contradiction finding remain open — see § open question."
-context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md, /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md, market-tick-data-service/scripts/pipeline_e2e_check.py, unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py, unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py, /plans/epics/infrastructure_master.md]
+context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md, /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md, market-tick-data-service/scripts/pipeline_e2e_check.py, unified-api-contracts/unified_api_contracts/registry/tradfi_instrument_universe.py, unified-api-contracts/unified_api_contracts/registry/tradfi_symbology.py, /plans/epics/security_and_cross_cutting_master.md]
 ---
 
 # TradFi chain-bundle sampler: canonical-root mismatch, garbage-underlying data, and a disagreeing SSOT

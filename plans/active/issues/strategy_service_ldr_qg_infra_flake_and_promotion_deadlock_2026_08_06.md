@@ -49,7 +49,7 @@ related:
 created: 2026-08-06
 author: slot-15 (cicd escalation agt-5709e0)
 last_updated: 2026-08-06
-parent_epic: infrastructure_master
+parent_epic: ci_master
 resolved_by:
 assigned_vm: NA
 execution_scope: local-only

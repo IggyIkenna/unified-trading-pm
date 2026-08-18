@@ -18,7 +18,7 @@ tags: [test-failure, config-interface, cloud-interface, ci, unified-trading-libr
 related: []
 created: 2026-08-15
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 source:
   "Discovered auditing an unrelated 2-file CI-workflow ship (.github/workflows/quality-gates-v2.yml + a new

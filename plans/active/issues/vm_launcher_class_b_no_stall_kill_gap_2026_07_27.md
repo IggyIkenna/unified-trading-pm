@@ -36,7 +36,7 @@ related:
   ]
 created: 2026-07-27
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 estimate_class: infra
 assigned_role: infrastructure

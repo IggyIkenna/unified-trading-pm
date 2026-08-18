@@ -26,7 +26,7 @@ related:
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
 created: 2026-08-14
 author: slot-7 (worker, infra)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P3
 source: >-
   Incidental discovery during cross_cutting_satellite_ao_dispatch_batch13b-ae3464d903fd (the ldr-to-main-promote.yml

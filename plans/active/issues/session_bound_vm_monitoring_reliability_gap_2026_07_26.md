@@ -35,7 +35,7 @@ created: 2026-07-26
 author: unknown
 last_updated: 2026-08-09
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Measured during an interactive /autonomous session monitoring af-backfill-20260726-013313 (FIXTURES curated-universe
   backfill); operator reconnected after ~5h20m and reported the VM 'seems to have stopped', which led to discovering the

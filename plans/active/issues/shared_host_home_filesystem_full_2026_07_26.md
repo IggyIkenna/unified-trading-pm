@@ -23,7 +23,7 @@ related: [/plans/archive/2026_08/infra_satellite_ao_dispatch_batch10_2026_08_09.
 created: 2026-07-26
 author: unknown
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: "slot 2, discovered mid-task via a git-push ENOSPC failure, 2026-07-26 ~19:10 UTC"
 assigned_vm: planning
 execution_scope: orchestrator-agent

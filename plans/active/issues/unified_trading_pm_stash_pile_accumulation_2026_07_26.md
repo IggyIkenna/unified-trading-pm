@@ -20,7 +20,7 @@ created: 2026-07-26
 author: unknown
 last_updated: 2026-07-30
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: "slot 3, interactive session, 2026-07-26, discovered mid-task while committing an unrelated fix"
 assigned_vm: NA
 execution_scope: local-only

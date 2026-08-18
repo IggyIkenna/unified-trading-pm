@@ -51,7 +51,7 @@ related:
   ]
 created: 2026-08-17
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: ci_master
 source: >-
   Operator pasted a 03:26-05:01 UTC #agent-orchestrator-alerts dump showing ~20 near-identical "autospawn
   failed" pages across dozens of slots; interactive slot-5 investigation confirmed the page was STILL

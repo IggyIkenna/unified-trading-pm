@@ -27,7 +27,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-09
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P3
 assigned_vm: planning
 author: slot-11 (infra)

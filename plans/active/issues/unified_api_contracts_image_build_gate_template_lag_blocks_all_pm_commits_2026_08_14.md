@@ -35,7 +35,7 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13.md,
   ]
 created: 2026-08-14
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

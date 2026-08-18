@@ -39,7 +39,7 @@ related:
   ]
 created: 2026-08-08
 author: claude (interactive session, /ci-reconcile)
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2
