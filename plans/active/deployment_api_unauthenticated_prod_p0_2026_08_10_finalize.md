@@ -55,7 +55,12 @@ source: >-
 
 # Finalize — deployment-api unauthenticated-prod P0
 
-Gated behind `deployment_api_unauthenticated_prod_p0_2026_08_10.md`. Do not start until all 5 of its todos are `[x]`.
+Gated behind `deployment_api_unauthenticated_prod_p0_2026_08_10.md`. Do not start until all 5 of its original
+`## Todos` are `[x]` (confirmed done as of 2026-08-10/11). **Note (added 2026-08-18, plan_reconciler agt-2a424e):**
+the P0 doc has since grown a separate `## Follow-ups (post-flip durable close-out)` section with additional open
+items (5 open as of this note) — this finalize's own todos 1-2 (independently re-verify closure) do not depend on
+those landing, but whoever picks up todo 3 (archive the source issue doc) should judge whether any follow-up item is
+actually a precondition first. Not resolved here.
 
 ## Todos
 
@@ -86,4 +91,4 @@ Gated behind `deployment_api_unauthenticated_prod_p0_2026_08_10.md`. Do not star
 
 - **2026-08-10** — Authored alongside the P0. Gated via `depends_on` + `gate_on_depends: true`.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (2 entries).
-**context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
