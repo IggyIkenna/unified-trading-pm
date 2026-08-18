@@ -90,13 +90,13 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
 
 ## Missing capability
 
-- [ ] [DOC] P1. **Add the 7 fully-absent capability sections** — fee/gas breakdown; collateral usability and
+- [x] [DOC] P1. ✅ **Add the 7 fully-absent capability sections** — fee/gas breakdown; collateral usability and
       cross-margin per venue; manual trade on every venue as the disaster path; a reconciliation framework;
       PnL attribution across risk/exposure dimensions; risk in native AND share-class-normalised terms plus Greeks
-      and DART's dimensions; latency/tracing, preflight input registration and per-input staleness SLAs. **Write
-      these as target-state, marked with the parent's evidence tier** — each maps to an open P0 workstream
-      (W5/W10/W12/W13/W16/W17) with nothing checked off. Per operator ruling the content goes IN and is marked; it
-      is not withheld, because the top-down view is what surfaces duplication and misplaced logic.
+      and DART's dimensions; latency/tracing, preflight input registration and per-input staleness SLAs. Written as
+      target-state (§18-§24), `st-plan` "planned", tagged `? check` (six sections) or `~ assumed` (collateral +
+      cross-margin, since no UAC registry field answers it — written as best current understanding, explicitly not
+      a queryable matrix). Maps to W5/W10/W12/W13/W16/W17. **Shipped `unified-trading-pm@2b0c327e44`.**
 - [ ] [DOC] P2. **Add the 4 present-thin capability sections** — transfer rails/custody eligibility per venue; the
       batch=live determinism mechanism named (UTL `EventTransport`, `InMemoryTransport` vs Pub/Sub); order lifecycle
       vocabulary (creates/updates/cancels/amends plus restart recovery); TWAP named alongside straight-market.
@@ -124,3 +124,18 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
 
 **2026-08-18 — split out** of [`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 per operator direction. Todos moved, not copied.
+
+**2026-08-18 — 7 fully-absent capability sections shipped, `unified-trading-pm@2b0c327e44`** (slot 3): added
+§18-§24 to `platform-external-api-walkthrough.html` — fees/gas by component, collateral+cross-margin per venue,
+manual-trade disaster path, reconciliation framework, PnL attribution, risk in native+share-class terms w/ Greeks +
+DART's dimensions, latency/preflight/staleness SLAs — plus matching contents-nav entries. All `st-plan` "planned",
+tagged `? check` or `~ assumed`. No `live`/`partial` claims, no ClearLoop, no commercial or performance figures.
+**Note on this ship**: this slot's checkout had 5+ concurrent sessions sharing it; a `git stash pop` (not mine) raced
+my restore of an autostashed edit and left the working-tree copy with unresolved conflict markers for ~10 minutes.
+The already-pushed commit was independently verified clean (`git show <sha>:<path>`, `git merge-base --is-ancestor`)
+before this checkbox was flipped — the corruption never reached origin, only the local working tree, and was fixed by
+re-checking out the file from the verified-clean `origin/live-defi-rollout`. Shipped via
+`quickmerge.sh --isolated` after the first attempt (non-isolated) is what got quarantined by a peer's reconcile pass.
+Owner-mark todo (P1 below) still deliberately untouched — its spec landed separately at `unified-trading-pm@19724f5e69`
+after this pass started, out of scope for this todo. 4-thin-section (P2) and archetype-readiness/glossary-audit (P1)
+todos also untouched.
