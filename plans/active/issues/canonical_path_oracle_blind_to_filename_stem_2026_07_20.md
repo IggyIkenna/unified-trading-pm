@@ -43,7 +43,7 @@ related:
 created: 2026-07-20
 author: unknown
 priority: P0
-parent_epic: infrastructure_master
+parent_epic: uac_master
 source:
   "Operator-ratified finding 2026-07-20: the wire-named-file defect caught by eye would be reported FALSE-CLEAN by the
   official reconciliation procedure. Reproduced independently against the installed UAC before any change."

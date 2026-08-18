@@ -36,7 +36,7 @@ related:
 created: "2026-08-08"
 author: slot-17
 priority: P1
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source: >-
   Operator flagged early STOPPING state. slot-17 confirmed via gcloud compute instances describe + gcloud logging read
   audit trail + GCS probe (probe_cefi_perp_funding_raw_coverage.py 2026-06-05→08-05).

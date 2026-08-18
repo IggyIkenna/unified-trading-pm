@@ -14,7 +14,7 @@ asset_group: [cross-cutting, defi, sports, cefi, tradfi, prediction]
 stage: [data]
 repos: [deployment-api, unified-api-contracts, market-tick-data-service, market-data-processing-service]
 scope: [engineer]
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 tags: [b21, distinct-values, canonical-drift, data-pipeline-completion]
 related:

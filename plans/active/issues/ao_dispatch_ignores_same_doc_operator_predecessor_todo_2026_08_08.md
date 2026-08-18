@@ -32,7 +32,7 @@ related:
   - /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md
 created: 2026-08-08
 author: agt-22de53 (main)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 source: >-
   Main-agent routine blocked-queue sweep, 2026-08-08 21:24Z-21:53Z window — noticed the exact same design-decision

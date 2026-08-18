@@ -51,7 +51,7 @@ related:
 created: "2026-08-08"
 author: ag_closeout_auditor (cross-cutting tranche, dispatch agt-58625b, slot 3)
 last_updated: "2026-08-08"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

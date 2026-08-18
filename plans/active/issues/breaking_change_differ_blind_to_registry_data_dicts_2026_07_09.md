@@ -41,7 +41,7 @@ related:
   ]
 created: 2026-07-09
 author: unknown
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P1
 source:
   interactive session 2026-07-09 — CI-gate false-negative analysis of the

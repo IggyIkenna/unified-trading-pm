@@ -5,7 +5,7 @@ nature: issue
 scope: [engineer, admin]
 related: []
 context_scope: [agent-orchestrator/server/auto_park.py, agent-orchestrator/server/dispatch.py]
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 title:
   AO durable park wiring missing from a task's backlog entry → a false condition does NOT gate dispatch (3rd premature
   dispatch of the sports loader-migration todo)

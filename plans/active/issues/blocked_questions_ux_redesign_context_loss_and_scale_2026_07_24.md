@@ -30,7 +30,7 @@ created: 2026-07-24
 author: unknown
 last_updated: 2026-08-10
 priority: P2
-parent_epic: escalation_and_disaster_recovery_master
+parent_epic: observability_master
 source: "Operator design context, relayed 2026-07-24 after the /api/escalation/{id} scope question"
 assigned_vm: planning
 execution_scope: orchestrator-agent

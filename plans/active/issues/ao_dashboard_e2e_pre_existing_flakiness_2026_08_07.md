@@ -37,7 +37,7 @@ execution_scope: local-only
 drift_direction: advance-code
 estimate_class: infra
 depends_on: []
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resolved_by:
 source:
   [
