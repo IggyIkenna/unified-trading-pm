@@ -205,3 +205,19 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   one of the three affected detectors (DP-LIVE-003); filed this doc for the deeper
   alerting-service persistence fix, which needs careful scoping given `AlertDeduplicator`'s hot-path
   usage across every alert in the system, not just DP-*.
+- **data_pipeline_alerts_reconciler 2026-08-18 (slot 1, dispatch agt-a01f7a), re-confirm sweep**: fresh
+  `slack-read-channel.py data-pipeline-alerts 24` (1698-line dump) + `gcloud run revisions list
+  --service=dp-alerting-subscriber` re-confirm the SAME symptom, unchanged, no new mechanism: `DP-LIVE-004`
+  (BYBIT-FUTURES all 5 data_types + CME trades) still firing `DP_CRON_DID_NOT_FIRE` every ~14-15min at
+  `06:22Z/06:36Z/06:37Z` today, well under the 1800s cooldown; a new revision `-00116-vx8` deployed
+  `06:15:16Z`, 6-7min before the 06:22Z fire, consistent with (not new evidence beyond) this doc's own
+  redeploy-wipes-`_seen` root cause. `DP_RUN_MOSTLY_EMPTY` event counts (600/24h) are ~98% `STATIC
+  BACKLOG — no new attempted_failed activity` (already-tracked pre-existing backlogs, not fresh
+  regressions) with a handful of `Fresh` cells matching known-open items (`defi/dex_pool_swaps`,
+  `tradfi/ohlcv_*`, `sports/odds_horizon_bucket`) already covered by their own asset-group issue docs —
+  no new class found. One `DP_VM_STALL` (`canonical-migration-cefi-itype-casing-apply-20260818-012605`)
+  self-resolved by `03:41Z`, no action needed. Did not re-attempt the P1 GCS-persistence design (still
+  correctly scoped as its own dispatch, not a low-effort reconciliation-sweep change to a hot alert path)
+  or re-run the P1 Cloud-Logging root-cause trace (no new evidence to add beyond what's above). No
+  behavioral change shipped this pass — channel confirmed NOT quiet, all 3 open todos above remain the
+  correct next actions, no new registry entry needed (no new failure class).
