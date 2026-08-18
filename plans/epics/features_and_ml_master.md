@@ -26,10 +26,10 @@ related:
     ../archive/2026_07/features_read_book_columns_not_snapshots_2026_06_28.md,
     ../archive/2026_06/mvp_for_mdps_and_features_universe_uac_2026_06_28.md,
     ../archive/features_repo_consolidation_2026_05_08.plan.md,
-    ../active/features_service_qg_cleanup_2026_05_11.md,
-    ../active/ml_repo_consolidation_2026_05_19.md,
+    ../archive/2026_05/features_service_qg_cleanup_2026_05_11.md,
+    ../archive/2026_05/ml_repo_consolidation_2026_05_19.md,
     ../archive/2026_05/phase5_features_streaming_carry_staked_basis_mvp_2026_05_19.md,
-    ../active/regime_clustering_structure_allocator_2026_05_29.md,
+    ../archive/2026_06/regime_clustering_structure_allocator_2026_05_29.md,
   ]
 created: 2026-05-07
 name: features_and_ml_master
@@ -62,6 +62,11 @@ locked_since: 2026-05-07
 > B-queue ruling.
 
 # ML + Features Master (umbrella)
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/b4524480-f561-494c-8b95-ed1d71ef0415 (generated 2026-08-19,
+`/plan-reconcile features_and_ml_master`)
 
 > **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
 > [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
@@ -197,7 +202,7 @@ Phase 5 (phantom audit + sanity replay)
 
 **Upstream sibling-blocker.** Phase 2A consumer migration depends on adapter-side `available_at` write-time stamping
 landing across the per-source MDPS / MTDS / features-input adapter surface. That stamping work is owned by
-[`writegate_honest_coverage_endtoend_2026_05_06`](../active/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 2.D
+[`writegate_honest_coverage_endtoend_2026_05_06`](../archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md) Phase 2.D
 (per-source `stamp_available_at_*` helpers). Coordinate cadence with Agent 2 (writegate tab) — partial coverage exists
 today; the Phase 2A `assert_no_lookahead_for_feature_group` helper silently no-ops on adapters that haven't been
 migrated yet, so Phase 2A correctness is contingent on writegate Phase 2.D progressing.
@@ -837,16 +842,13 @@ respectively).
 
 ## Sub-plans (referenced from this epic)
 
-- **`plans/active/ml_repo_consolidation_2026_05_19.md`** (~6 cal-AI-days, P0, deadline 2026-05-23, `infra` class) —
-  Merge `ml-training-service` + `ml-inference-service` into a new `ml-service` repo with sub-packages
-  `ml_service/training/` and `ml_service/inference/`; archive both source repos via `gh repo archive`. ONE Docker image
-  (conditional training-deps Docker layer to keep live-inference image lean), ONE flat `pyproject.toml`, ONE Health-API
-  exposing aggregated freshness, ONE CLI with `--operation` discriminating train / evaluate / hyperparam /
-  batch-inference / live-inference / cascade-inference. Mirrors `features_repo_consolidation_2026_05_08.md` 10-phase
-  pattern. Pre-cutover race; flips to `BLOCKED-CUTOVER` if Phase 6 parity slips. Soft freeze on structural changes in
-  both source repos for duration. Phase 4D consumers (strategy-service calibrated-signal consumption) will reference
-  `ml-service` post-merge — coordinate downstream-import-rewrite sweep. Sibling:
-  `plans/active/strategy_repo_consolidation_2026_05_19.md` (independent execution).
+- **✅ DONE — `plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md`** (`status: complete`; was ~6 cal-AI-days, P0,
+  deadline 2026-05-23, `infra` class) — **CORRECTED 2026-08-19 (`/plan-reconcile features_and_ml_master`)**: was linked
+  `../active/...` while the doc has been `status: complete` in `plans/archive/2026_05/` for some time. Merged
+  `ml-training-service` + `ml-inference-service` into a new `ml-service` repo with sub-packages `ml_service/training/`
+  and `ml_service/inference/`; both source repos archived via `gh repo archive` (confirmed `isArchived: true`, per
+  `plans/epics/mtds_mdps_master.md`'s Bucket-1 record). Sibling:
+  `plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md` (independent execution, also archived).
 
 ## Coordination with sibling plans
 
