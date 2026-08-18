@@ -10,9 +10,13 @@ summary: >-
   the archived plan). Cross-checking each Deferred bullet against the live corpus found 5 of 7 already have a tracked
   home: the fixture-pairing residual and the politics/geo cross-venue canonicalization audit are both `[x]` complete
   in `prediction_satellite_ao_dispatch_batch6_2026_07_29.md` (lines 517, and the fixture-pairing team-alias-table
-  follow-up); the tarball-overwrite race and the series-scoped historical Kalshi enumeration are both still live
-  open items in `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (confirmed via that doc's own
-  na-eligibility-audit 2026-08-08/09 Progress Log entries, "2 open" citing exactly these two, lines ~172/380); the
+  follow-up); the tarball-overwrite race is a still-live open item in
+  `prediction_cross_venue_arb_and_coverage_2026_07_24.md` (confirmed via that doc's own na-eligibility-audit
+  2026-08-08/09 Progress Log entries); the series-scoped historical Kalshi enumeration was separately extracted +
+  closed via `prediction_satellite_ao_dispatch_batch9_2026_08_09.md` (archived, `instruments-service@3f2ddca0` +
+  `e2e-testing@5e2f90e` — **this summary field corrected 2026-08-18 (plan_reconciler)**: it previously repeated the
+  same stale "still open in cross_venue_arb_and_coverage" claim the body table below already corrected on
+  2026-08-17; the frontmatter just hadn't been updated to match); the
   Polymarket historical-date `book_snapshot_5` row-proof is `[x]` complete in
   `prediction_live_clob_depth_capture_2026_07_24.md` (line 247); and `prediction_perps_kalshi_polymarket_parked_2026_07_24.md`
   is itself `status: complete`. Only 2 genuinely have no other tracked home — this doc gives them one.

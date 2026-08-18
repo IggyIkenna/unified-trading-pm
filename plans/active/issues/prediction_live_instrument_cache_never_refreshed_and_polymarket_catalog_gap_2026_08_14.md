@@ -144,6 +144,11 @@ and is flagged, not diagnosed further, here.
 - **na-eligibility-audit 2026-08-17 (prediction tranche, re-verify)** [body-hash:53901990cf58bd20]: KEEP-NA, valid —
   3 open items re-confirmed as genuine, unblocked root-cause/design investigations on live-dispatch-critical capture
   code. Cross-checked `cross_ag_live_capture_parity_2026_08_14.md` and confirmed a mutual redirect (that plan's own
-  todo 224 stays open specifically pending this doc's fix), not a duplicate extraction — `KEEP_NA_STALE_DUPLICATE`
-  does not apply. Doc stays NA.
-- **na-eligibility-audit 2026-08-18** [body-hash:eb19afefaee42f7d]: KEEP-NA, valid -- all 3 open items explicitly redirect to cross_ag_live_capture_parity_2026_08_14.md (mutual redirect re-confirmed -- that plan's own todo 224 stays open pending this doc) or to an instruments-service investigation blocked on trigger-log access this session does not have. Doc stays NA -- flipping assigned_vm here would misroute the dispatch mechanism.
+  item at line 224 stays open specifically pending this doc's fix), not a duplicate extraction —
+  `KEEP_NA_STALE_DUPLICATE` does not apply. Doc stays NA.
+- **na-eligibility-audit 2026-08-18** [body-hash:eb19afefaee42f7d]: KEEP-NA, valid -- all 3 open items explicitly redirect to cross_ag_live_capture_parity_2026_08_14.md (mutual redirect re-confirmed -- that plan's own item at line 224 stays open pending this doc) or to an instruments-service investigation blocked on trigger-log access this session does not have. Doc stays NA -- flipping assigned_vm here would misroute the dispatch mechanism.
+- **plan_reconciler 2026-08-18 (prediction tranche)**: label fix only — the 2 entries above both said "todo 224",
+  but `cross_ag_live_capture_parity_2026_08_14.md` has only 17 top-level todos total; 224 is that doc's LINE number
+  for the redirect item (`- [ ] [DATA] P1. Diagnose the prediction live-capture stall...`), not a todo ordinal. The
+  substance both entries describe (a real, deliberate mutual redirect) is verified accurate — only the "todo 224"
+  label was imprecise. Corrected in place above rather than left to keep misleading a future reader.
