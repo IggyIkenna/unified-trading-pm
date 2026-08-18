@@ -663,7 +663,7 @@ batch)
   (archived 2026-08-14, resolved),
   [`promote_ref_orphaned_on_manual_pr_close_2026_08_06.md`](/plans/archive/2026_08/issues/promote_ref_orphaned_on_manual_pr_close_2026_08_06.md),
   [`provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`](/plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md),
-  [`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`](/plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md)
+  [`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`](/plans/archive/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md)
   — evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_07.md` findings 1/5/6, `…_2026_08_08.md` for the rest.
 - **infrastructure**:
   [`autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md`](/plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md),

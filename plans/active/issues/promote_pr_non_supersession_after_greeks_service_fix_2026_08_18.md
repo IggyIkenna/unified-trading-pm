@@ -23,8 +23,9 @@ scope: [engineer]
 tags: [ci-cd, promote-pr, ldr-to-main, investigation, extracted]
 related:
   [
-    /plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
+    /plans/archive/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
     /plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-18
 parent_epic: ci_master
@@ -38,7 +39,7 @@ depends_on: []
 supersedes:
 context_scope:
   [
-    /plans/active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
+    /plans/archive/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
     scripts/cicd/ldr_to_main_fleet_promote.sh,
   ]
 source: >-

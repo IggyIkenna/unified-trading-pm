@@ -24,6 +24,7 @@ tags: [quickmerge, isolated-worktree, quality-gates, infra-bug, ship-pipeline]
 related:
   - /codex/05-infrastructure/per-tab-worktrees.md
   - /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md
+  - /plans/active/ci_consolidated_closeout_2026_07_25.md
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
 parent_epic: ci_master
