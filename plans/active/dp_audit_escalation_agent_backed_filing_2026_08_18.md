@@ -162,3 +162,24 @@ exists on one side and is never actually exercised end-to-end.
   never raw-commit from an ephemeral runner" shape, but the `data_pipeline_failure` boot prompt never learned to file
   a doc from a deferred candidate payload, so the pattern was never actually exercised end-to-end for any finding
   source. Operator ruled: always defer (no local-commit fast path) + human plan. No code changed this session.
+- **2026-08-18 (same session)**: Todos 1/3/5 shipped (`unified-trading-pm@6fca190fb8` boot prompt + codex,
+  `deployment-service@f2fb7973126a5f59afe7ca943a65a4a162433225` frontmatter fix,
+  `unified-trading-pm@c934930ba50d0a91c3ca15899469336be6ec0b66` checkbox flip). Todo 2 shipped
+  `e2e-testing@aa6e8a1498` — raw commit path fully removed, IAM/Secret-Manager access to `GH_PAT` confirmed already
+  granted (same `unified-trading-sa` service account both Cloud Run job families already run under), checkbox flip
+  `unified-trading-pm@10a898359b`.
+- **2026-08-18, todo 4 live drill (same session, in progress)**: Fired a real `repository_dispatch` to
+  `escalate-to-orchestrator` by hand (`gh api repos/IggyIkenna/unified-trading-pm/dispatches`), mirroring
+  `_dispatch_escalation_to_orchestrator`'s exact `client_payload` shape, with a `context` payload explicitly labeled
+  as a verification drill (not a real finding) instructing the spawned worker to file the doc, verify its own
+  frontmatter, mark it `status: resolved` as a drill, and stop — never attempt a root-cause fix. GH Actions run
+  `32137368186` (`escalate-to-orchestrator.yml`) completed `success`. Confirmed live via read-only SSM check
+  (`GET localhost:8765/api/escalations/active` on the orchestrator VM) that AO created a real escalation row
+  `agt-2050ac` (repo `e2e-testing`, `wall_type: data_pipeline_failure`, `created_at: 2026-08-18T12:32:30Z`) —
+  proves the chain works end-to-end through AO ingestion. **Not yet proven**: a worker actually claiming it and
+  filing the doc — `agt-2050ac` sat `status: queued`, `slot_id: null` for the full ~15min check window, and the
+  live queue shows genuine fleet capacity pressure right now (a real escalation, `agt-63a017`, has been stuck
+  `queued` 3+ hours on "no free configured slot"), not a defect in this fix. Deliberately did not try to jump the
+  drill ahead of real queued escalations. Todo 4 stays open pending a worker actually dispatching; check
+  `plans/active/issues/dp_audit_escalation_drill_verification_2026_08_18.md` (once/if filed) or re-run the same SSM
+  check against escalation id `agt-2050ac`.
