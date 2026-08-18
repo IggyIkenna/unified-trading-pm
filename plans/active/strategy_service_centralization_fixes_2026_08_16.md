@@ -132,7 +132,10 @@ Full findings, root cause, and evidence for every todo below live in the three s
       delete `positions_health.py`'s independent `derive_snapshot_from_lending()`/AAVE_V3-hardcoded path and
       have `/positions/health` read the same state instead of re-deriving it. Full context:
       [position-risk-centralization § Two parallel mechanisms](/codex/04-architecture/position-risk-centralization.md).
-- [ ] [BACKEND] P0. **CORRECTED PREMISE 2026-08-18 — `HealthFactorMonitor` is not "already-working."** Investigated
+- [x] [BACKEND] P0. ✅ **SPLIT 2026-08-18 — CORRECTED PREMISE — `HealthFactorMonitor` is not "already-working."**
+      Shipped the achievable, honestly-scoped piece and split the remaining genuine decision into the new
+      `[OPERATOR]` todo directly below — this checkbox tracks THIS todo's investigation + shipped code, not the
+      original (false-premised) done-when, which the split todo now owns. Investigated
       before wiring: `HealthFactorMonitor` (execution-service) is constructed nowhere outside its own test file — no
       production entrypoint builds one. Its intended data source, `AAVEConnector.get_user_account_data()`
       (`execution_service/defi_execution/protocols/aave.py`), returns **hardcoded placeholder values**
