@@ -147,6 +147,13 @@ measurement itself sitting at 0%, not lack of approval — worth investigating W
 migration for these 900 rows genuinely never landed, or the coverage check has a bug) as its own follow-up if you want
 it pursued; not investigated further here.
 
+> **CORRECTED 2026-08-18 (plan_reconciler)**: the "WHY" this item flags as unpursued HAS since been investigated and
+> answered — `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` Todo 2 (DONE 2026-08-17, slot-23)
+> found + fixed the `canonical_twin_path()` lookup bug (`instruments-service@271b3d33`, predates that plan) and
+> re-measured: the same 900/900 rows are now blocked for a DIFFERENT reason (legacy objects already deleted from GCS
+> — a stale candidate-report problem — not "canonical twin not captured"). Still 0 deletions executed; the blocker
+> just changed shape.
+
 ## What this session DID decide from documented intent (informational, not asking)
 
 - The manifest `instrument_type` casing residual (45,681 rows re-drifted post-2026-07-22 CAS run) was fixed per the
@@ -414,6 +421,12 @@ the 403-denied list call yields it). No available worker credential can close th
 
 **Recommendation: A.** It is a single read-only command, it is the only step that can still change the outcome, and
 every day narrows or closes it permanently.
+
+> **RESOLVED 2026-07-26, closing note added 2026-08-18 (plan_reconciler)** — this recommendation was never converted
+> to a tracked todo and had no closing entry; its target was independently resolved the next day:
+> `plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md:60` — "🟢 RESOLVED
+> 2026-07-26 — recovery window confirmed CLOSED (soft-delete restore unavailable); operator decision: [recorded
+> there]." No further action needed on this item.
 
 ## Progress Log
 

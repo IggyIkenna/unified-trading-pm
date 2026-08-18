@@ -153,12 +153,14 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
 
 ## Todos
 
-- [ ] [OPERATOR] P1. **RESOLVED-BY-REDIRECT 2026-08-17** — root cause confirmed (see "Update 2026-08-17" section
+- [x] ✅ [OPERATOR] P1. **RESOLVED-BY-REDIRECT 2026-08-17** — root cause confirmed (see "Update 2026-08-17" section
       above): this is the tracked Databento CME billing block, not an independent relaunch-vs-wait call. Same
       underlying ask as `tradfi_databento_account_billing_suspended_2026_08_09.md`'s existing P0 `[OPERATOR]` todo
       (pay the invoice) — no separate decision needed here. Once billing is restored, `btc-2020` needs a fresh
       relaunch from `2020-01-02` — the family's normal backfill-completion sweep will pick it up, not urgent to
-      track separately.
+      track separately. — **Checkbox reconciled 2026-08-18 (plan_reconciler, agt-15d58e)**: this todo's own text
+      already declared resolution; only the checkbox itself was unflipped (double-confirmed by 2 independent hunter
+      batches this pass).
 - [x] ✅ [BACKEND] P1. **EXTRACTED 2026-08-17 (na-eligibility-audit, tradfi tranche, dispatch agt-d99b5c) →
       `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2** (narrowed to the two VMs in this 4-VM ask NOT
       already root-caused as billing-blocked — `es-2020` + `btc-2020`; the other two,

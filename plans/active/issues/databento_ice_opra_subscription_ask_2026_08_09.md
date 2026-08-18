@@ -98,11 +98,11 @@ incur real metered billing the moment they're queried.
       Databento account (billing decision — see cost consequences enumerated in
       `/codex/02-data/tradfi-databento-sourcing-ssot.md` §"Consequences of the 3-dataset choice"). `BLOCKED-CREDENTIALS`
       (subscription-gated, not a missing API key).
-- [ ] [CODE] P3. Once approved: add the subscribed dataset code(s) to `ALLOWED_DATABENTO_DATASETS`
-      (`unified-api-contracts` or wherever the allowlist module lives per the SSOT doc) + verify the corresponding
-      `assert_*` gate now permits (rather than raises on) the newly-subscribed dataset via a real Databento call in a
-      dry-run/smoke test. Repo: market-tick-data-service or market-data-processing-service (whichever owns the allowlist
-      assertion call site — confirm before editing).
+- [ ] [CODE] P3. Once approved: add the subscribed dataset code(s) to `ALLOWED_DATABENTO_DATASETS` in
+      `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` (confirmed live at
+      this path 2026-08-18, plan_reconciler — already named in this doc's own `context_scope`) + verify the
+      corresponding `assert_*` gate now permits (rather than raises on) the newly-subscribed dataset via a real
+      Databento call in a dry-run/smoke test.
 
 ## Progress Log
 

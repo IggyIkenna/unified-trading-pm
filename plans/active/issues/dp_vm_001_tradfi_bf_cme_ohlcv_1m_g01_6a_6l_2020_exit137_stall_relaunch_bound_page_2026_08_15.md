@@ -117,15 +117,24 @@ this could be a systemic issue in the launcher/capture path rather than two unre
 
 ## Todos
 
+> **CORRECTED 2026-08-18 (plan_reconciler)**: both todos below are stale — this exact VM/shard is now confirmed
+> **billing-caused**, not an independent relaunch-vs-wait or shared-code-defect question. See
+> `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`
+> (root cause: tracked Databento CME billing block). Once billing is restored, this shard needs a fresh relaunch —
+> the family's normal backfill-completion sweep will pick it up, not urgent to track separately here (same
+> disposition as the sibling `btc-2020`/`es-2020` docs already record).
+
 - [ ] [OPERATOR] P1. Decide relaunch-vs-wait for `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260815-200147`'s shard
       (tradfi/CME/g01-6a-6l/2020 1m OHLCV) per the recommended decision above; the `tradfi-bf-cme-ohlcv-1m-` family
-      relaunch bound is already exhausted for today (2/2, per this escalation's own context).
+      relaunch bound is already exhausted for today (2/2, per this escalation's own context). **SUPERSEDED — see
+      correction above: billing-caused, no separate decision needed.**
 - [ ] [BACKEND] P2. Pull + read `run.log` for both `tradfi-bf-cme-ohlcv-1m-es-2020-20260815-030216` and
       `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260815-200147` via
       `deployment_service.data_pipeline_monitors._gcs.read_text`/`read_terminal_exit_code` (SDK, never subprocess),
       compare failure signatures, and fix at the root if it's a shared code defect (bound the offending call with
       `asyncio.wait_for` at the per-shard level per the shard-isolation SSOT). Cross-reference the sibling doc's
-      identical todo rather than duplicating the investigation.
+      identical todo rather than duplicating the investigation. **SUPERSEDED — see correction above: billing-caused,
+      not a code defect.**
 
 ## Progress Log
 
@@ -137,8 +146,6 @@ this could be a systemic issue in the launcher/capture path rather than two unre
   fleet (0 rows). Per RB-INFRA-RELAUNCH, both the OOM and stall actuator classes share the identical
   `≤2/(vm-prefix, day)` bound, and the family was already reported at that bound today — did not relaunch. Filed this
   issue doc and paging the operator via `/blocked` per the escalation's explicit instruction. **na-eligibility-audit 2026-08-16** (tradfi tranche, dispatch agt-45ad7b): **KEEP-NA, valid.** Todo 1 is an explicit
-[OPERATOR] relaunch-vs-wait judgment call. Genuinely operator-gated. assigned_vm unchanged.
-
-No code changed this
+[OPERATOR] relaunch-vs-wait judgment call. Genuinely operator-gated. assigned_vm unchanged. No code changed this
   session.
-**context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)

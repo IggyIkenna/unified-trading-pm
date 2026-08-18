@@ -136,6 +136,14 @@ Two independent angles, not mutually exclusive:
       commit). §1a now shows a `for AG in CEFI DEFI TRADFI SPORTS PREDICTION; do ...` loop as the default, with a note
       that even a per-asset_group run may still need `--venue`-level splitting (cefi alone was ~30+ shards deep and
       still climbing when the unscoped run OOM'd).
+- [ ] [BACKEND] P2. **NEW (added 2026-08-18, plan_reconciler)** — root-cause the NEW earlier-triggering silent-death
+      signature found 2026-08-17 on `pipeline-e2e-check-mtds-20260815-172227-4ffa29` (died after only 1/2987 shards,
+      ~13.5min post-launch, `EXIT_STATUS` stuck at boot-placeholder `"RUNNING\n"` — distinct from both the
+      ~52s-pre-shard-loop-OOM and the 3600s/14400s wall-clock-timeout classes already diagnosed above). Pull the
+      VM's serial-console/`run.log` tail around the 13.5min mark via `deployment_service.data_pipeline_monitors._gcs`
+      (SDK, never subprocess) to identify the failure mode. Done when: either the new signature is root-caused +
+      fixed, or confirmed to share a cause with an already-tracked class. This blocks the DEFI leg of the todo below
+      (a 4th blind launch should not proceed until this is understood — see 2026-08-17 Progress Log entry).
 - [ ] [DATA] P2. Once either todo above lands, re-run the MTDS baseline (`--day 2026-07-01`) to completion and cite the
       resulting report path in `defi_track5_coverage_mvp_backfill_2026_07_24.md`'s pipeline-check gate todo. **ATTEMPTED
       2026-08-15, NOT satisfied — see Progress Log.** Real per-`--asset-group` re-run only completed cleanly for

@@ -164,7 +164,9 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
       six" hypothesis — pull `run.log` for the four other still-recent `mdps-tradfi-`/`tradfi-bf-` sibling VMs (2023,
       2025, 2026 shards + the CME 2020 shards, see `related:` above) via the same UTL-storage-client method, before
       their `vm-logs/` GCS objects age out of the 14-day retention window.
-- [ ] [SCRIPT] P2. Consider whether `create-code-tarballs.sh`'s tarball refresh cadence/triggers should include MDPS
+- [ ] [DESIGN] P2. Retagged from [SCRIPT] 2026-08-18 (plan_reconciler) — this is an open design question ("consider
+      whether..."), not a bounded/executable script task. Consider whether `create-code-tarballs.sh`'s tarball
+      refresh cadence/triggers should include MDPS
       (and other TradFi-pipeline service repos) more proactively — e.g. a scheduled `--asset-group TRADFI` (or
       `--all`) refresh, or a CI hook on `market-data-processing-service` merges — rather than relying on an operator
       to remember the scope flag per `/codex/05-infrastructure/vm-tarball-deployment.md`'s own documented "Lesson

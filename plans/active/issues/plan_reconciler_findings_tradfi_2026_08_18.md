@@ -113,7 +113,49 @@ editing):
   (`canonical_id_builder_retrofit_checklist_2026_07_08.md` → `/plans/archive/2026_08/...`,
   `plan_reconciliation_operator_decisions_2026_07_11.md` → `/plans/archive/issues/...`, both verified to exist).
 
+## Checkpoint 2 — applied
+
+**Flip verified**: `dp_vm_001_tradfi_bf_cme_ohlcv_1m_btc_2020_exit137_stall_relaunch_bound_page_2026_08_16.md`'s
+`[OPERATOR]` todo — its own bolded lead-in ("RESOLVED-BY-REDIRECT 2026-08-17") already declared resolution but the
+checkbox stayed `[ ]`. **Double-confirmed** by 2 independent hunter batches (1 and 5) before flipping.
+
+**Contradictions fixed** (redirect-to-billing-rootcause corrections, all citing
+`dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`):
+- `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md` — 2 open todos
+  (OPERATOR relaunch-decision + BACKEND run.log investigation) were investigating a shard already confirmed
+  billing-caused elsewhere; added a correction + superseded-markers on both (left unflipped — the correction, not
+  a flip, is the safe action here; a future pass can archive/close once the family's normal sweep picks the shard
+  back up). Also fixed a cosmetic orphaned-sentence text-splice in the same doc's Progress Log.
+- `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 4 — corrected: the "WHY is twin-coverage at 0%"
+  question this item left unpursued WAS since investigated and answered by
+  `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` Todo 2 (canonical_twin_path() bug fixed,
+  re-measured — same 900/900 rows now blocked for a different reason).
+- Same doc, item 10 — added a closing note: this P0 recommendation was never converted to a tracked todo and had
+  no closing entry; its target was independently resolved the next day
+  (`plans/archive/issues/tradfi_legacy_bucket_deleted_without_also_legacy_migration_2026_07_26.md`, RESOLVED
+  2026-07-26).
+
+**Hedge-pointer resolved**: `tradfi_fred_forward_capture_and_backfill_gap_2026_08_13.md` Finding 2 — identified the
+doc making the "self-sufficient to completion" claim
+(`plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md:515`, already in this doc's own
+`related:` list but never explicitly connected) and rewrote the hedge into a direct citation.
+
+**AO-dispatch-readiness fixes**:
+- `databento_ice_opra_subscription_ask_2026_08_09.md` — todo cited "wherever the allowlist module lives... confirm
+  before editing" despite the exact file already being in `context_scope`; rewrote to cite it directly
+  (`unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py`, independently
+  confirmed to exist at that path this pass).
+- `dp_vm_001_mdps_tradfi_2021_exit_nonzero_stale_tarball_rootcause_2026_08_16.md` — retagged an open design
+  question ("consider whether...") from `[SCRIPT]` to `[DESIGN]`.
+- `mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md` — added a missing todo tracking the new
+  <13.5min VM silent-death signature discovered 2026-08-17 (previously prose-only in the Progress Log, HARD RULE
+  violation).
+
 ## Refuted (dropped by verify)
+
+- **`mtds_is_full_adapter_smoketest_findings_2026_07_07.md` hedge-pointer finding (batch-5 hunter, "Open question
+  5" candidate-owner update)** — direct re-read this pass found the fix ALREADY LANDED by a concurrent session
+  (dated 2026-08-18, near-identical content to what was planned). Skipped to avoid a race; no action needed.
 
 - **`honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md` missing `stage:`/`repos:`/`scope:`
   frontmatter** (batch-2 hunter finding) — direct re-read this pass shows all 3 fields ARE present and populated.
