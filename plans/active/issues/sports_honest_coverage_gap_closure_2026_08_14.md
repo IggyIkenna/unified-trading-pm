@@ -525,8 +525,14 @@ with real fixes. Every row below needs a fresh pull before being quoted anywhere
       self-delete — a genuine completion, not a preemption. Launched
       `bash deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh` immediately after
       (`sports-manifest-rescan-20260817-144852`) to materialize `empty_confirmed` rows from the new captures.
-- [ ] [SCRIPT] P2. **Two rescan attempts down to the SAME root cause — third attempt (`sports-manifest-rescan-
-      20260817-155832`) in flight, verify THIS one completes.** Attempt 1 (`...144852`) died silently (stale
+- [x] ✅ [SCRIPT] P2. **CLOSED 2026-08-18 (na-eligibility-audit) — stale, superseded by its own two successor todos.**
+      This todo's own text (below) already says "This todo is DONE as far as diagnosis goes" and explicitly splits
+      remaining work into "the new todo immediately below" — that split produced the
+      `ManifestMigrator.merge_into_canonical()` streaming-rewrite todo (now `[x]` DONE + LIVE-VERIFIED 2026-08-18) and
+      the still-open "Rescan WEATHER entity-type" todo. Closing here purely to stop this checkbox re-appearing as an
+      unaddressed item; no new work performed, full diagnostic history preserved below unchanged. Two rescan attempts
+      down to the SAME root cause — third attempt (`sports-manifest-rescan-
+      20260817-155832`) in flight, verify THIS one completes. Attempt 1 (`...144852`) died silently (stale
       `EXIT_STATUS=RUNNING`, no terminal log line). Attempt 2 (`...152312`) died with a clean, self-diagnosing
       failure: `DEPLOYMENT_FAILED cause=consolidator_down reason=CONSOLIDATOR_DOWN
       bucket=instruments-store-cefi-prd-central-element-323112 age_sec=2396 budget_sec=1800` (exit_code=137) — the
@@ -734,3 +740,11 @@ its own pattern), or genuinely operator-gated.
   behind" when it is not — this nearly triggered a false fleet-wide Cloud-Scheduler-outage escalation earlier this
   session and caused a second, smaller false "stale log" read. Always run `date -u` fresh before reasoning about
   timestamp deltas that mix a local shell/log source with a GCS-read source.
+
+- **na-eligibility-audit 2026-08-18** [body-hash:04ef2bdd43f29e84]: KEEP-NA, stale item closed — closed the
+  "Two rescan attempts... verify THIS one completes" `[SCRIPT] P2` todo (its own text already said "DONE as far as
+  diagnosis goes", split into the two successor todos beneath it — one now `[x]` DONE + LIVE-VERIFIED 2026-08-18, one
+  still open). 1 open todo remains: "Rescan WEATHER entity-type" (`[SCRIPT] P2`) — GENUINE_WORK, a VM-launch action
+  with no stated safe-idempotency citation in this doc, consistent with the 2026-08-17 second-pass audit's explicit
+  decline-to-reclassify on the same grounds (live, frequently multi-touched ops-journal character, not a bounded task
+  list) — nothing has changed about that character since. Doc stays `assigned_vm: NA`.
