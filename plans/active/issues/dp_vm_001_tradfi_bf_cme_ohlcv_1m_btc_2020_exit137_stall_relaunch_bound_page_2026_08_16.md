@@ -181,6 +181,24 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
 
 ## Progress Log
 
+- **2026-08-18 (slot 33, data_pipeline_failure escalation agt-8717c2)**: Received a fresh DP-VM-001 escalation for
+  `tradfi-bf-cme-ohlcv-1m-btc-2020-20260818-060302` (same `btc-2020` shard, later same day than the
+  `...-030418` VM the entry immediately below already covers; escalation's own context again states
+  exit_code=137 stall-induced SIGKILL and the `tradfi-bf-cme-ohlcv-1m-` launcher family already at 2/2 relaunch
+  dispatches today — DO NOT RELAUNCH). Checked `plans/active/issues/` — this doc still `status: open` and still
+  covers the same `btc-2020` shard's recurring incident chain (2026-08-16 → 08-17×2 → 08-18×2 → this entry);
+  re-confirmed `tradfi_databento_account_billing_suspended_2026_08_09.md` is still `status: blocked` (its P0
+  `[OPERATOR]` invoice-payment todo unresolved). Did not pull `run.log` for this specific VM — the shard's
+  `402 account_delinquent_invoice` signature is already established across 3+ independent prior pulls (see the
+  2026-08-16/17 entries above) and this occurrence carries no new information over the `...-030418` entry logged
+  hours earlier the same day. Per RB-INFRA-RELAUNCH, did not relaunch. No new issue doc filed. Did not re-post a
+  `/blocked` — the operator-gated ask (pay the Databento invoice) is already tracked as an open P0 in the billing
+  doc and this is the second identical same-day recurrence with zero new information, not a fresh decision point;
+  re-paging every recurring VM crash of an already-escalated, already-tracked billing block would be alert
+  duplication, not a new signal (mirrors the no-re-block precedent set by the `...-030418` entry below and the
+  workspace's "standing conditions dedup by state-transition, never every tick" alerting principle).
+  `$AUTHORING_SLOT=dp-fleet-monitor` is not a numeric slot id, so the authoring-slot ping step was skipped per the
+  role file's own carve-out — the dispatch-time Slack alert already covers the FYI. No code changed this session.
 - **2026-08-18 (slot 9, data_pipeline_failure escalation agt-c7ef09)**: Received a fresh DP-VM-001 escalation for
   `tradfi-bf-cme-ohlcv-1m-btc-2020-20260818-030418` (same `btc-2020` shard, next day; escalation's own context
   states exit_code=137 stall-induced SIGKILL and the `tradfi-bf-cme-ohlcv-1m-` launcher family already at 2/2
