@@ -83,19 +83,41 @@ meaningful escalation/scheduled work.
 
 ## Todos
 
-- [ ] [UI] P2. Extend `DONE_ACTIVITY_TYPES` (`dashboard/src/App.tsx`) to include the escalation and scheduled-task
-      completion vocabularies named above (`escalation_resolved`, `escalation_resolved_pre_dispatch`,
-      `plan_health_result` — decide whether `escalation_unresolved` counts as "done" or belongs in a distinct
-      "failed/unresolved" bucket, it is NOT a success). Verify against the SAME live window this issue was found in
-      (or a fresh one) that the Done tab's count now matches a direct `activity_log` query. `pw:L2 ✓` required per
-      `/codex/06-coding-standards/ui-testing-layers.md` — a fixture with all three completion vocabularies seeded,
-      asserting the tab shows all three, not just `slot_done`.
-- [ ] [REVIEW] P3. Check whether any OTHER dashboard surface (KPI panels, fleet-efficiency rollups) shares this same
-      `DONE_ACTIVITY_TYPES`-style allowlist and has the identical gap — this was found on one tab, not audited
-      fleet-wide across the dashboard.
+- [x] ✅ [UI] P2. **Corrected location (2026-08-18): the operator-visible Activity panel's actual "Done ✓"/"Done ✗"
+      tabs are driven by `DONE_PASSED_TYPES`/`DONE_FAILED_TYPES` (`dashboard/src/layout.tsx`,
+      `ActivityFilter = "done_passed" | "done_failed"`), NOT the `DONE_ACTIVITY_TYPES` constant this issue originally
+      cited (`dashboard/src/App.tsx:115`) — that one only feeds the separate per-slot "Last done" badge
+      (`latestDoneOutcomeBySlot`), confirmed unused by the tab itself. Fixed the real one**: `DONE_PASSED_TYPES`
+      gained `escalation_resolved`/`escalation_resolved_pre_dispatch`/`plan_health_result`; `DONE_FAILED_TYPES`
+      gained `escalation_unresolved` (explicitly NOT a success, same "done failed · …" styling convention as the
+      existing rejected-slot_done variants). A SECOND, render-layer bug found in the same code path:
+      `mergeDonePassed()` hard-filtered to `event_type === "slot_done"` only, silently dropping every other
+      `DONE_PASSED_TYPES` member even once the type lists were fixed — corrected to pass through anything that
+      isn't the slot_done/slot_done_verified pairing unchanged. `activityLabel`/`activityTypeClass` given real
+      entries for all 4 new types (previously fell through to a blank/unstyled default).
+      **Evidence**: `pw:L2 ✓` — new `dashboard/tests/e2e/activity-log-role-vocabulary.spec.ts`, 2/2 passed against
+      the real e2e stack (fixture: one `escalation_resolved`, one `escalation_unresolved`, one `plan_health_result`
+      row via `seed_e2e_state.py`'s real `log_activity()` call) — proves Done ✓ shows the two success rows and
+      excludes the unresolved one, Done ✗ shows the reverse. `src/activity.test.ts` — 409/409 vitest passing,
+      including 2 new `mergeDonePassed` regression cases. `App.tsx`'s own `DONE_ACTIVITY_TYPES` (the per-slot badge)
+      was deliberately left unfixed — same gap, smaller/different UI surface, correctly folded into the audit todo
+      below rather than force-fixed here.
+- [ ] [REVIEW] P3. Check whether any OTHER dashboard surface shares this same allowlist-style gap — this was found
+      and fixed on the main Activity panel's Done tabs, not audited fleet-wide. **One instance already confirmed and
+      scoped by the fix above, not yet applied**: `DONE_ACTIVITY_TYPES` (`dashboard/src/App.tsx:115`, feeding
+      `latestDoneOutcomeBySlot`'s per-slot "Last done" badge) still hardcodes `["slot_done", ...DONE_FAILED_TYPES,
+      "tmux_session_lost"]` — it does NOT spread `DONE_PASSED_TYPES`, so escalation/plan_health successes are still
+      invisible to that specific badge even though the main Activity tabs now show them. Check KPI panels and
+      fleet-efficiency rollups too, not just this one.
 
 ## Progress Log
 
+- **2026-08-18 (fix landed)**: see the flipped todo above for the full fix — corrected the location this issue
+  originally cited (`DONE_ACTIVITY_TYPES` in `App.tsx` was a red herring; the real fix was
+  `DONE_PASSED_TYPES`/`DONE_FAILED_TYPES` + `mergeDonePassed()` in `layout.tsx`), found and fixed a second bug in
+  the same code path along the way (`mergeDonePassed`'s hard `slot_done`-only filter), and left one confirmed,
+  now-precisely-scoped instance of the same gap (the per-slot badge) for the P3 audit todo rather than expanding
+  this fix's blast radius further.
 - **2026-08-18 (created, /pre-compact)**: extracted from a same-session chat finding (background-agent SSM
   investigation) that had not yet been written to a durable, tracked doc — converting per this workspace's "every
   deferral becomes a `- [ ]` todo, not prose" hard rule before context compacts.

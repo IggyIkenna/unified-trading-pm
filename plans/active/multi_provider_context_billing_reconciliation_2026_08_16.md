@@ -404,8 +404,49 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       buckets (anthropic/planning healthy pattern + deepseek/cicd deliberate 5-attempts/1-completion burst), with
       dedicated `AgentRow` rows on slots 2/6 so `slot_account_attribution` has real intervals to resolve against.
 
+- [ ] [DATA] P2. New, operator ask 2026-08-18 — capture reasoning/thinking tokens as part of the unified per-task
+      billing schema above (that todo scopes cache-read/write; reasoning tokens are the one dimension it doesn't yet
+      name). Investigate what's actually capturable per vendor before assuming uniform feasibility: DeepSeek already
+      has real `reasoning_tokens` (`DeepSeekNativeUsageRow`, `deepseek_native_proxy_server.py`) but it is never
+      joined onto `TaskUsageRow` itself; Codex is a reasoning model with zero token capture of any kind today
+      (blocked on the P0 fake-token-estimate fix above landing real usage data first); GLM/Kimi go through a
+      generic Anthropic-shape proxy parser that never reads a reasoning-token field; Claude's own API has no
+      reasoning-token count in its `usage` object at all — already flagged as a known gap in
+      `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`, genuinely N/A, not a missed capture point.
+      Done when: every provider that CAN report a reasoning-token count does, joined onto `TaskUsageRow` (or the
+      unified schema's real replacement); every provider that genuinely can't is explicitly documented as N/A, not
+      silently blank.
+- [ ] [DATA] P2. New, operator ask 2026-08-18 — bring Kimi's wallet reconciliation up to the same depth Claude/
+      DeepSeek already have. Today `compute_kimi_wallet_window_reconciliation()` (`server/state_store/slots.py:1373`)
+      only covers the 1h/24h/7d/Lifetime WINDOWED view — no lifetime LEDGER table (known top-up total / opening
+      balance / attributed spend / residual), the shape `compute_claude_wallet_reconciliation()`
+      (`account_usage.py:533`) and `compute_deepseek_wallet_reconciliation()` (`slots.py:1468`) both already have.
+      `kimi_gemma_provider_onboarding_2026_08_16.md`'s own todo explicitly forward-points here for "full
+      billing-schema inclusion" rather than duplicating scope in that doc. No new UI pattern needed — same
+      `KimiWalletPanel.tsx` component, same lifetime-table shape already proven twice. Done when: `KimiWalletPanel.tsx`
+      shows a lifetime reconciliation table alongside its existing windowed one, backed by a real
+      `compute_kimi_wallet_reconciliation()`-equivalent, same as DeepSeek's/Claude's.
+
 ## Progress Log
 
+- **2026-08-18 (delta investigation, operator ask) — re-investigated existing coverage before adding scope, per
+  operator instruction ("investigate the delta ... I'm not sure why there are so many extra to-dos").** Operator's
+  original ask ("reconciliation, task usage, batch call usage, terms, reasoning, tokens ... across all providers")
+  mapped almost entirely onto this plan's ALREADY-open scope: cache-token schema unification (existing `[DATA] P1`
+  unified-schema todo already names all 6 providers), published-rate "terms" (already the Why section's explicit
+  requirement), Codex's fake-token bug (already the #1 `[INFRA] P0` todo, re-confirmed today still current via a
+  fresh read of `codex_bridge_server.py:237-254` — unchanged). "Batch call usage" was a genuine misread on my part —
+  the operator clarified it means TOOL-CALL BATCHING (the hook that nudges chaining Bash/Read/Edit calls, not LLM
+  provider batch-billing APIs). Verified real, not a gap: `cursor-configs/hooks/batching-nudge.py` is the actual
+  hook; `server/batching_stats.py` + `batching_stats_poller.py` (registered `server.py:329`) do real transcript
+  scanning (with a genuine, hard-won multi-line `message.id`-grouping fix documented in its own module docstring);
+  `dashboard/src/BatchingEfficiencyPanel.tsx` already surfaces it with the same 1h/5h/24h/7d/Lifetime window shape as
+  every other reconciliation panel, filterable by provider/model/role-group/account — nothing to build there. Two
+  genuine deltas found and added as todos above: (1) reasoning tokens are not named anywhere in this plan's existing
+  unified-schema todo, captured for DeepSeek only, never joined onto `TaskUsageRow`; (2) Kimi's reconciliation depth
+  is windowed-only, no lifetime ledger table the way Claude/DeepSeek both have. No new UI pattern for either — same
+  existing panel/table shapes, real accuracy work only, per the operator's own framing ("it's just accuracy on all
+  the providers, we already have the things we need shown there").
 - **2026-08-18 (implementation) — all 3 hourly-usage-chart todos shipped, uncommitted in the working tree.**
   `agent-orchestrator` files touched: `server/fleet_kpis.py` (new `compute_hourly_provider_role_usage`,
   `earliest_usage_timestamp`), `server/models/backlog.py` + `server/models/__init__.py` (new
