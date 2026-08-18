@@ -109,6 +109,14 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
 - [x] [DOC] P0. ✅ **Apply the parent's evidence-tier spec to every claim-bearing section in this file** — default
       `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol inline. **Shipped `unified-trading-pm@ec08cccad1`.**
 - [ ] [DOC] P1. **Give every claim-bearing section its owner mark**, per W21's closure invariant.
+- [ ] [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content — it asserts a dimension nothing can
+      derive.** Measured 2026-08-18: the only skill emitting the three modes is `readiness-state-dump`, and it
+      derives per **(venue x mode)** only — archetype is NOT one of its dimensions. Per-archetype readiness is an
+      OPEN, unchecked `[BACKEND] P0` in [system_readiness_master](/plans/epics/system_readiness_master.md) W1 ("an archetype has its own batch /
+      paper / live"). This content was added to BOTH artefacts at `unified-trading-pm@832033d094` on operator
+      request and was never probed. Per W21, an artefact claim that outruns the derived state is a defect — so
+      either mark it `~ assumed` with the gap stated, or cut it until the epic todo lands. Sibling todo in the
+      Elysium child covers the other file.
 - [ ] [DOC] P1. **Audit the glossary / canonical-instrument-ID framing** — check that it presents ONE dispatch
       spanning asset groups, not per-asset-group ID rules, which would invert asset-group-agnosticism.
 
