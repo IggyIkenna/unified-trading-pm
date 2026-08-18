@@ -380,6 +380,21 @@ archival — no live Databento dependency).
   in the same session. Did not re-page the operator — this doc's existing P0 `[OPERATOR]` invoice todo already
   covers the ask; this is a second independent corroboration, not a new event. No code changed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (1 entries).
+- **2026-08-18 (interactive session, answering dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md's
+  carried-over [OPERATOR] investigate-the-2-live-capture-stalls todo) — STILL `blocked`, reconfirmed via a fresh direct
+  manifest read of the SAME live VM this doc already tracks, not a re-citation of old evidence.** Downloaded
+  `_index/per_vm/mtds-live-tradfi-cme-trades-20260809-163443.parquet` directly (UTL `download_bytes`, not gcloud/gsutil)
+  and read all 44 rows: `captured` (real row_count 8-201) on 2026-08-09..08-11, then **100% `empty_confirmed` /
+  `SOURCE_RETURNED_ZERO` on every single date from 2026-08-12 through TODAY 2026-08-18** (including rows written
+  `2026-08-18T10:23:01Z`/`10:24:01Z`/`10:25:01Z`/`10:26:01Z` — literally minutes before this entry, i.e. the VM is
+  still actively attempting and still getting zero, right now). This is byte-for-byte the same boundary the
+  2026-08-14/08-15/08-17 entries above already established (captured cleanly through 08-11, dead from 08-12 onward) —
+  ~6 days further into the same unresolved recurrence, no new mechanism, no code fix possible (the existing `[OPERATOR]`
+  P0 "pay the invoice again" todo above already covers the correct action; not re-added as a duplicate). Did not attempt
+  a fresh `DatabentoBaseClient.warmup()` call this session — the manifest evidence above is itself a today-dated live
+  measurement of the actual symptom (not the account-level auth probe), which is the more direct signal for "is CME
+  live capture working," so a redundant warmup call was judged unnecessary. Did not relaunch/restart the VM — the feed
+  is dead on the vendor side per every prior diagnosis in this doc; a restart would not fix anything.
 - **2026-08-17 (slot 16, data_pipeline_failure escalation agt-4e1517)**: Received a DUPLICATE dispatch of the
   identical DP-VM-001 finding agt-dfccf4 (slot 12) already fully diagnosed above — same VM
   `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-060542`, same `tradfi-bf-cme-ohlcv-1m-` family at its 2/2 relaunch

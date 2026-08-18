@@ -302,14 +302,40 @@ The rest is unowned.
       working) and the IS catalog publish-timing gap (real, but not the current blocker — the catalog was available and
       resolved successfully by 06:07:55). Not further root-caused this session (would need the WS connect/subscribe code
       path + a live log grep for subscribe-frame confirmations/errors after the 06:07:55 resolve — out of budget for
-      this pass). - [ ] [CODE] P1. **BYBIT-FUTURES live capture is confirmed still fully broken as of 2026-08-15**
+      this pass). - [x] ✅ [CODE] P1. **BYBIT-FUTURES live capture is confirmed still fully broken as of 2026-08-15**
       despite the 2026-08-09 venue-alias fix working correctly (universe resolves) — root-cause why the WS connector
       produces zero captured rows across all 4 data_types (trades/book_snapshot_5/derivative_ticker/ depth_of_book_10)
       even after a successful instrument-universe resolve. Start by grepping `live-bybit-futures-trades.log` on
       `mtds-live-cefi-consolidated-20260814-041422` for subscribe-frame confirmations/rejections in the minutes after a
       `resolved N instruments` line, and check whether the connector's subscribe step ever actually fires post-resolve.
-      DoD: real `captured` rows appear for at least one BYBIT-FUTURES data_type, or a named root cause + fix is filed. -
-      [ ] [DATA] P2. File the separate IS daily-catalog PUBLISH-TIMING gap as its own instruments-service issue —
+      DoD: real `captured` rows appear for at least one BYBIT-FUTURES data_type, or a named root cause + fix is filed. —
+      **RESOLVED 2026-08-18** (dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md's carried-over
+      [OPERATOR] investigate-the-2-live-capture-stalls todo): the 2026-08-15 diagnosis two lines up already named the
+      TWO required fixes — (1) filter the IS-resolved universe to PERPETUAL/FUTURE only (excludes the ~501 SPOT_PAIR
+      ids the BYBIT-FUTURES→BYBIT Tardis-alias resolution pulls in) and (2) chunk the subscribe request under Bybit's
+      21,000-char cap — but only fix (2) ever actually shipped (`market-tick-data-service@a89bd433`, 2026-08-15); fix
+      (1) was designed + stashed (`orchestrator-slot-4-bybit_futures_dp_live_004_subscribe_fix-001`) but never
+      committed (severe host RAM contention blocked `quality-gates.sh` at the time) and the stash was never recovered.
+      **Live-reconfirmed 2026-08-18** on the CURRENT VM (`mtds-live-cefi-consolidated-20260817-025031`, launched
+      2026-08-17 — well after the chunking fix landed): its `_index/per_vm/<vm>.parquet` shard shows ALL 10,258
+      BYBIT-FUTURES rows `empty_confirmed`/`SOURCE_RETURNED_ZERO`, with exactly 737 PERPETUAL + 44 FUTURE + 501
+      SPOT_PAIR unique instrument_ids attempted — matching instruments-service's unfiltered `venue=BYBIT` catalog
+      count exactly, confirming the filter genuinely never shipped (the connector is still subscribing every SPOT_PAIR
+      id, and even the legitimate PERPETUAL/FUTURE ones return zero — chunking alone was not sufficient). **Fix
+      shipped**: `market-tick-data-service@5f88715e4b` (landed `live-defi-rollout`, `quality-gates.sh --no-fix` ALL
+      PASSED — 11082 passed/28 skipped/1 xpassed, 476s) adds `_is_linear_derivative()` (bybit_ws.py) —
+      filters to PERPETUAL/FUTURE before any subscribe topic is built — applied in `BybitFuturesWSFeedConnector`
+      (trades) `.connect()`/`.subscribe()` and, via the existing `is_bybit_linear_derivative` export re-imported into
+      `bybit_futures_book_ticker_ws.py`, in `_BybitBookStateConnector` (book_snapshot_5/depth_of_book_10) and
+      `BybitFuturesTickerWSConnector` (derivative_ticker) — all 4 data_types now filtered identically. Updated 2
+      pre-existing tests whose fixture ids used the unrealistic legacy `:PERP:` token (would now be silently filtered
+      out) to the real canonical `:PERPETUAL:` shape, and added positive/negative filter-coverage tests in both test
+      files. DoD's captured-row half NOT YET independently re-verified post-deploy in this session (the fix needs a
+      fresh VM cycle to pick up the new code — recorded as a follow-up, not blocking this todo's code-fix closure).
+      - [ ] [INFRA] P2. Once `market-tick-data-service@5f88715e4b`'s tarball reaches a fresh
+        `mtds-live-cefi-consolidated-*` relaunch (routine cycle or the next redeploy), verify at least one real
+        `captured` BYBIT-FUTURES row appears post-relaunch — DoD per the original todo above.
+      - [ ] [DATA] P2. File the separate IS daily-catalog PUBLISH-TIMING gap as its own instruments-service issue —
       BYBIT's `instrument_availability/by_date/day=<today>/.../venue=BYBIT/instruments.parquet` was absent at every
       check from VM boot (2026-08-14 03:27 UTC) through 2026-08-15 06:02 UTC, only appearing by 06:07:55 UTC — i.e. the
       same-day catalog isn't reliably available until well into the UTC morning. Likely affects every live shard that
