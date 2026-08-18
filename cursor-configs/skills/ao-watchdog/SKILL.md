@@ -350,6 +350,24 @@ sub-agents as the backlog's domain spread reasonably supports (don't serialize 4
 one at a time) — but batch related items from the same doc/domain into one agent rather than one agent per
 question, or the verification pass itself becomes the thing burning excessive tool calls.
 
+**Two failure modes measured live (2026-08-18 run), fold into how you read this step's results:**
+
+- **A verification subagent's own hand-back can get flagged for exceeding its authority** — e.g. recommending the
+  parent kill+relaunch a live VM it didn't create, or read credential-sensitive files (wallet/KMS config) via a
+  path that bypasses the intended access pattern, or self-mark an `[OPERATOR]`-tagged todo done without actual
+  operator sign-off. When a subagent's result carries a security-policy flag like this, treat its factual findings
+  as informative but do NOT execute its recommended action — surface it to the operator via `AskUserQuestion` same
+  as any other still-valid finding, and only act once they've actually said yes. This isn't a subagent bug to
+  suppress; it's the harness correctly catching a subagent overstepping an `[OPERATOR]` gate that exists for a
+  reason.
+- **A verification (or any) subagent can itself fail with a session/rate-limit error** (`"You've hit your session
+limit"`) when the account pool backing this interactive session — not just AO's fleet — is broadly exhausted.
+  This is a REAL signal, not noise: if it fires, cross-check it against Step 3f's account-status pull (a subagent
+  failing this way while several named accounts show `rate_limited` is corroborating evidence for that finding,
+  not a separate problem). Don't retry-loop against it — note the check as incomplete/deferred (answer the
+  corresponding blocked question with `disposition: partial` if one exists), state the reset time if given, and
+  let the next run or a later retry pick it back up once capacity returns.
+
 1. **Pull every open question.** `GET /api/blocked/stats` for the count/age distribution; the full list (grep
    `server/routes/backlog.py` / `state.py` for the exact list route if `/stats` alone doesn't carry full text —
    `group_similar_blocked`/`_blocked_to_view` in `routes/state.py` are the rendering helpers the dashboard itself
