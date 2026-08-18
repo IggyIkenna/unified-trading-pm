@@ -429,3 +429,15 @@ confirmed shipped and verified (`unified-api-contracts` live-defi-rollout conten
 Closing out this escalation on that basis — the next `cicd` dispatch (if the streak is still non-zero once GitHub's
 platform issue clears) should re-run `sit_gate_stuck_detector.py` fresh rather than re-diagnose from this doc's Finding
 2, which is now superseded.
+
+**cicd escalation agt-f2579b, 2026-08-18 (re-dispatch of the same escalation id, market-tick-data-service, `CONTEXT`
+citing the same stale run `https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32028104167` — a
+`sit-gate-stuck-detector.yml` run created `2026-08-17T12:05:42Z`, ~24h before this dispatch, already fully diagnosed
+above): confirms this occurrence had already self-converged before the dispatch reached me — exactly the "next
+dispatch should re-run fresh" instruction the prior entry left. Live-checked, not assumed from `CONTEXT`:
+`GET /api/escalations/active` returned empty (no active escalation row), and a fresh `sit_gate_stuck_detector.py
+--threshold 3 --lookback 8` run reported `sit-gate stuck detector: healthy (no repo has 3+ consecutive SIT GATE BLOCK
+ticks)`. No repo currently blocked; nothing to fix, nothing to push. This is the delayed-dispatch/stale-alert-text
+pattern this doc's own Finding 2 correction already anticipated — the `CONTEXT` field is stamped at
+original-detection time and does not refresh on redispatch, so a worker must always re-run the detector live rather
+than trust the cited run URL's age.
