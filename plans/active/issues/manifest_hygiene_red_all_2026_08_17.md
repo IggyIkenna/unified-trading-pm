@@ -353,6 +353,74 @@ site) — a third round of code-only reading without live data is unlikely to ad
 two prior sessions + this one already extracted from the same call chain. Per CLAUDE.md CLAIM≤MEASUREMENT,
 recording this as unconfirmed rather than picking one to ship a fix against.
 
+## Diagnosis update (2026-08-18, slot-19) — POLYMARKET raw `trades` gap ROOT-CAUSED: upstream instruments-service catalogue stopped writing POLYMARKET, not an MTDS/adapter bug
+
+Per the "SEPARATE, more acute finding" P1 todo (diagnose whether POLYMARKET trades capture broke
+recently vs a genuine multi-day lull), started from `polymarket_adapter.py` per the todo's own
+pointer. `_RETRYABLE_STATUS_CODES`/CF-11 fetch-failure signalling (`_emit_fetch_failures` →
+`failed_per_dt["trades"] = TRADES_FETCH_RETRIES_EXHAUSTED` → `attempted_failed`) is intact and
+correctly wired — so if the Data API itself were erroring/rate-limiting, the manifest would show
+`attempted_failed` rows. It does not.
+
+**Live manifest read** (`_index/availability_index.parquet`,
+`market-data-tick-pred-prd-central-element-323112`, filtered to
+`venue=POLYMARKET,data_type=trades,date∈[2026-08-01,2026-08-17]` — no new whole-corpus walk, same
+bounded-read pattern as slot-14's round-2 measurement):
+
+- Every divergent date (2026-08-10, 08-12 → 08-16) shows EXACTLY 10 manifest rows, ALL
+  `capture_status=empty_confirmed, reason=SOURCE_RETURNED_ZERO`, `written_at` near-live (day+1
+  ~01:0x UTC) — zero `attempted_failed` rows anywhere in the range. Contrast with a healthy day
+  (2026-08-11): ~50 rows, a real mix of `captured` (up to 464 trades/shard) and
+  `empty_confirmed` — the normal shape of "most shards traded, a few didn't".
+- The suspiciously-constant "10 rows, all zero" on every divergent date is NOT a trading lull —
+  it is the shard-level zero-trading-day sentinel stamping a FIXED small shard set because the
+  adapter had **zero condition_ids to query that day**, not because real markets returned no
+  trades.
+
+**Traced to source — `PolymarketAdapter._load_instruments_from_gcs` → `load_polymarket_instruments_df`**
+(`market_tick_data_service/market_interface/adapters/prediction/_polymarket_helpers.py`) reads
+`instrument_availability/by_date/day={date}/.../venue=POLYMARKET/.../instruments.parquet` from the
+**instruments-service** prediction bucket (`instruments-store-pred-prd-central-element-323112`) —
+this is `cid_to_shard` in `download_batch`; empty → the early-return "no instruments" path (never
+calls the Data API at all, so no failure is ever possible to signal).
+
+**Live GCS listing of that exact prefix, per date** (`instrument_availability/by_date/day={date}/`,
+total blobs vs POLYMARKET-venue blobs):
+
+| date | total blobs | POLYMARKET blobs |
+| --- | --- | --- |
+| 2026-08-08 | 108 | 62 (healthy) |
+| 2026-08-09 | 79 | 33 (degraded but present) |
+| 2026-08-10 | 46 | **0** |
+| 2026-08-11 | 51 | 2 (anomalous partial blip — OTHER shard only) |
+| 2026-08-12 | 49 | **0** |
+| 2026-08-13 | 49 | **0** |
+| 2026-08-14 | 49 | **0** |
+| 2026-08-15 | 50 | **0** |
+| 2026-08-16 | 50 | **0** |
+| 2026-08-17 | 50 | **0** (today, in progress) |
+
+Other venues' instrument-availability files ARE present in the SAME day's listing on every date
+(total blobs stays 46-50 throughout) — this rules out an instruments-service-wide outage. The gap
+is POLYMARKET-specific, started between 2026-08-09 and 2026-08-10, and is STILL ONGOING as of
+2026-08-17.
+
+**Conclusion**: the POLYMARKET raw-`trades` `DIVERGENT_EMPTY` finding is a symptom, not the bug —
+the actual defect is in **instruments-service**'s POLYMARKET instrument-catalogue writer
+(`instruments_service/engine/orchestrator/process_write.py::_write_prediction_venue` per
+`instrument_availability_paths.py`'s own docstring), which stopped emitting POLYMARKET
+`instruments.parquet` objects around 2026-08-10 while continuing to write every other venue. MTDS's
+adapter is working exactly as designed (CF-11 signalling intact); it simply has no condition_ids to
+fetch. This is a DIFFERENT repo (`instruments-service`) than this issue doc's `repos:` frontmatter
+names — filed as a new todo below per findings-triage rather than freelanced across repos.
+
+**Not yet done** (out of this diagnosis's scope — instruments-service code, not
+market-tick-data-service/unified-trading-library): why `_write_prediction_venue` stopped emitting
+POLYMARKET specifically on 2026-08-10 (a recent instruments-service commit/config change,
+credential/rate-limit issue on IS's OWN Polymarket catalogue source, or a filter/classification
+change that now excludes POLYMARKET) — needs an `instruments-service` repo trace + its own run logs
+for 2026-08-09→2026-08-10.
+
 ## Todos
 
 - [x] ✅ [CODE] P1. Manifest hygiene RED — diagnosed (not fully fixed) 2026-08-17 slot-14. See "Diagnosis"
@@ -403,14 +471,27 @@ recording this as unconfirmed rather than picking one to ship a fix against.
       misapplied-classifier bug rather than the same mechanism. `NOTIFIED OPERATOR` per CLAUDE.md
       big-finding rule (data-correctness, 3 sessions now without a confirmed root cause) — see `/blocked`
       on slot-14, 2026-08-17 (still open).
-- [ ] [DATA] P1. SEPARATE, more acute finding surfaced by the above: POLYMARKET raw `trades` capture
-      itself (not just the CQG bundle) has been `DIVERGENT_EMPTY` for 8 CONSECUTIVE days as of this
-      writing (2026-08-09 → 2026-08-16 per `divergence_2026-08-17.csv`), with 2026-08-17 showing
-      `MISSING_EXPECTED` (0 rows, still in progress). This is a currently-ACTIVE, worsening gap distinct
-      from the CQG-bundle mechanism above — diagnose whether POLYMARKET trades capture has broken
-      recently (adapter/credential/rate-limit failure) vs a genuine multi-day market lull, starting from
-      `market_tick_data_service/market_interface/adapters/prediction/polymarket_adapter.py` + recent
-      orchestrator run logs for `venue=POLYMARKET`.
+- [x] ✅ [DATA] P1. Diagnosed 2026-08-18 slot-19 — see "Diagnosis update (2026-08-18, slot-19)" above.
+      ROOT-CAUSED via live GCS listing (not just code read): NOT an MTDS/adapter/API bug — CF-11
+      fetch-failure signalling is intact (zero `attempted_failed` rows anywhere). The real cause is
+      **instruments-service** — its POLYMARKET instrument-catalogue writer
+      (`instrument_availability/by_date/day={date}/.../venue=POLYMARKET/...`) stopped emitting ANY
+      POLYMARKET objects starting 2026-08-10 (0 POLYMARKET blobs on 08-10, 08-12→08-17, vs 33-62 on
+      08-08/08-09) while every other venue kept writing that same day. MTDS's trades adapter
+      correctly has zero condition_ids to fetch → the shard-level empty sentinel stamps a fixed
+      10-row `empty_confirmed`/`SOURCE_RETURNED_ZERO` placeholder, masking what is actually an
+      upstream catalogue-availability gap. Split into the instruments-service-scoped todo below
+      (different repo than this issue's `repos:` frontmatter — not freelanced here).
+- [ ] [DATA] P1. Trace WHY instruments-service's POLYMARKET instrument-catalogue writer
+      (`instruments_service/engine/orchestrator/process_write.py::_write_prediction_venue`) stopped
+      emitting `instrument_availability/by_date/day={date}/.../venue=POLYMARKET/...` objects starting
+      2026-08-10 (confirmed live via GCS listing — see "Diagnosis update (2026-08-18, slot-19)" above
+      for the per-date blob-count table) while every other venue's catalogue objects kept writing on
+      the same days. Check `instruments-service`'s own orchestrator run logs for `venue=POLYMARKET`
+      around 2026-08-09→2026-08-10 for a source-fetch error, credential/rate-limit failure, or a
+      filter/classification change that now excludes POLYMARKET from the write set. `instruments-service`
+      repo. This is the upstream fix that would resolve the downstream MTDS raw-`trades`
+      `DIVERGENT_EMPTY` finding — MTDS itself needs no code change (its CF-11 signalling is correct).
 - [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group cefi` (14M+ row
       manifest OOMs the shared host at a 4GB cap) and get the real per-cell CSV breakdown (not the
       stdout-tail sample) — determine which venue(s)/data_type(s) actually drive the 58,362
@@ -422,3 +503,6 @@ recording this as unconfirmed rather than picking one to ship a fix against.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **slot-19 2026-08-18**: root-caused the POLYMARKET raw `trades` DIVERGENT_EMPTY todo — upstream
+  instruments-service catalogue gap (POLYMARKET instrument_availability writes stopped 2026-08-10),
+  not an MTDS adapter bug. Flipped that todo, filed the instruments-service-scoped follow-up.
