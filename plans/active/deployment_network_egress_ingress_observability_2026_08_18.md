@@ -131,9 +131,14 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
       `net_sent_rate_bytes_sec`, mirroring the existing cpu/mem/disk pattern exactly (same `CORRECT-LOCAL`
       convention, no new UAC type). Gate: `GET /api/vm-resources/rolling` returns the new fields, covered by a
       passing deployment-api test.
-- [ ] [UI] P1. Add network columns (recv/sent, avg + p95) to `VmResourceComparison.tsx`'s per-VM table, following the
+- [x] [UI] P1. Add network columns (recv/sent, avg + p95) to `VmResourceComparison.tsx`'s per-VM table, following the
       existing column/sort-key pattern (`"vm_name" | "avg_cpu_pct" | ...`). Gate: the `/vm-resources` page renders
-      live network figures for at least one real deployment, verified in the running app.
+      live network figures for at least one real deployment, verified in the running app. — deployment-ui@95a1a62ada.
+      "Net In (avg/p95)" / "Net Out (avg/p95)" columns added (`fmtBytesRate` human-scales B/s→KB/s→MB/s→GB/s), sortable
+      via the existing `SortKey` pattern, `colSpan` on the expanded-row panel bumped 6→8 for the 2 new columns.
+      pw:L2 ✓ — new test in `tests/smoke/vm-resource-rolling-window.spec.ts` ("renders network in/out rate columns")
+      run against the real webServer-booted mock-mode app (not just unit-mocked): 6/6 passed. UI QG green (87s, 105
+      unit tests, coverage 73.42%).
 
 ### Track 2 — region persistence (prerequisite for the cross-region split)
 
