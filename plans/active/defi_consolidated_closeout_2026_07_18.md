@@ -994,3 +994,4 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   tail). Doc-level `depends_on`+`gate_on_depends` gate re-verified live this pass (`defi_track01_per_instrument_and_canon_id_2026_07_24.md`
   frontmatter `status: active`, prerequisite still open) — citation still real, not re-litigated. Doc stays
   `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-18** (agt-2c8a26): KEEP-NA, valid — 10 open todos match Phase 0; `depends_on`+`gate_on_depends` gate re-verified live (defi_track01 freshly re-read same run, still 2 open, infra-gated). Content change since 08-17 was plan_reconciler's `[OPERATOR]` note on the Track-3 PURGE todo only. No new RECLASSIFY/stale-done items. Doc stays `assigned_vm: NA`.

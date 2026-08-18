@@ -173,3 +173,8 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
   re-confirmed — doc unchanged since the 2026-08-16 verdict (context-scout metadata touch only). Sole open item
   (archive-this-doc trigger) is still the identical closing action tracked as todo 2 of the active
   `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md`; citation still correct and current. No action needed.
+- **na-eligibility-audit 2026-08-18** (defi tranche, dispatch agt-2c8a26): KEEP-NA-STALE (already-duplicated),
+  reconfirmed — content-hash change since 2026-08-17 was plan_reconciler's same-day hygiene fix (removed a stray
+  leftover "N." template token between a checkbox and its tag), not a substantive edit. Sole open item unchanged;
+  citation to `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md` todo 2 still correct and current. No action
+  needed.

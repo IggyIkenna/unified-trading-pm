@@ -123,12 +123,14 @@ this doc's own established pattern of infrastructure existing without being wire
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Confirm whether the MEV engines actually call `TenderlyExecutionProvider.simulate-bundle`
-      before submission** — infrastructure exists and is wired into `matching_engine.py`, but no MEV-engine call
+- [x] [REVIEW] P2. **EXTRACTED 2026-08-18 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch17_2026_08_18.md`
+      item 1.** Confirm whether the MEV engines actually call `TenderlyExecutionProvider.simulate-bundle`
+      before submission — infrastructure exists and is wired into `matching_engine.py`, but no MEV-engine call
       site was confirmed this session. If unused, that's a real pre-submission safety gap for `LIQUIDATION_BUNDLE`'s
       atomic flash-loan bundle in particular (a revert there costs gas only, but an unsimulated bundle is still a
       worse bet than a simulated one).
-- [ ] [REVIEW] P1. **Confirm the exact default behavior** at `liquidation_bundle.py:265-267` (no explicit default
+- [x] [REVIEW] P1. **EXTRACTED 2026-08-18 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch17_2026_08_18.md`
+      item 2.** Confirm the exact default behavior at `liquidation_bundle.py:265-267` (no explicit default
       shown in this pass — could be `None`, raising downstream, or silently coerced) before scoping the fix.
 - [ ] [FEATURES] P2. **Build the BACKRUN opportunity-detection calculator** — `backrun_target_swap_size_usd_<chain>`
       / `backrun_arb_spread_bps_<chain>` / `backrun_target_pool_<chain>`, likely derivable from
@@ -151,3 +153,13 @@ this doc's own established pattern of infrastructure existing without being wire
 **2026-08-18 — filed.** Found while investigating whether to declare 3 MEV archetypes in UAC's registry, not from a
 dedicated audit — narrow, direct-read confirmation across the 3 engine files plus a workspace-wide grep for each
 specific feature key, not a corpus-wide sweep.
+
+- **na-eligibility-audit 2026-08-18** (defi tranche, dispatch agt-2c8a26): RECLASSIFY, per-todo split — read end to
+  end (6 open items, matches Phase 0). Todos 1-2 (Tenderly simulate-bundle call-site confirmation;
+  `liquidation_bundle.py:265-267` default-behavior confirmation) are bounded confirm-and-report code reads with a
+  determinable outcome — conflict-checked clean against the full active-defi covering set (incl. the explicitly
+  cross-referenced sibling `defi_gas_net_cost_partial_wiring_gap_2026_08_17.md` and `defi_satellite_ao_dispatch_batch16`,
+  neither overlaps) and extracted to `defi_satellite_ao_dispatch_batch17_2026_08_18.md` items 1-2 (checkboxes flipped
+  above by citation). Todos 3-5 (the 3 opportunity-detection calculators) each self-declare an unresolved design
+  question — stay genuine build/design work, not bounded. Todo 6 is explicitly gated on 3-5 landing. Doc stays
+  `assigned_vm: NA` for the 4 remaining items (3-6).
