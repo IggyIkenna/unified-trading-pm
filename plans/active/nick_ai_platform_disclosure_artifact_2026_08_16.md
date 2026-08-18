@@ -371,6 +371,16 @@ that path *designed*, not just funded.
 
 ## Build
 
+- [ ] [DOC] P0. **Re-grade every section mark in BOTH artefacts against the STRICTER `live` definition** (operator,
+      2026-08-18): `live` now means reachable on a production path **AND validated with real capital**. The definition
+      landed (`unified-trading-pm@832033d094`); **the section marks did not change.** Since the epic excludes going live
+      with capital before 2026-08-25, expect most `live` marks to drop to `partial` — a section can be complete, wired
+      and paper-exercised and still not earn `live`. Do not leave the two documents grading on different definitions.
+- [ ] [DOC] P0. **Ground or remove the forward claim in the platform guide's intro** — *"most of the venues and
+      strategies on the current plan complete over the remainder of this year"*. It came from operator framing and has
+      **no cited basis in any plan**. A counterparty will hold us to it: cite what supports it, or cut it. This is the
+      only unsupported forward-looking commitment in either artefact.
+
 - [ ] [DOC] P0. **Build the artifact** once the P0 pre-audit items are measured. Reuse the established design
       language from the existing walkthrough artifacts rather than redesigning — they read well and consistency
       across our client documents is itself a signal.

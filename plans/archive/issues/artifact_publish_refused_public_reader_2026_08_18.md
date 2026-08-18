@@ -5,7 +5,7 @@ summary: >-
   Three identical consecutive refusals publishing the platform integration guide on 2026-08-18. The error is
   account/platform-side, not content-side, and blocks republishing both client-facing artefacts. Content is safe —
   committed to codex — but the published pages are stale relative to the repository.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,7 +31,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: "workaround applied 2026-08-18 — republished from a fresh file_path"
 drift_direction: NA
 context_scope: [/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md]
 ---
@@ -77,3 +77,20 @@ state on the artifact platform. Nothing about the file could cause it: the same 
       needs no further edits. Republish the strategy-service walkthrough in the same pass.
 - [ ] [AGENT] P3. **Record the outcome here** so a recurrence is recognised as a known condition rather than
       re-diagnosed — three identical refusals cost several attempts before being classified as stable.
+
+## RESOLVED — 2026-08-18, workaround applied
+
+**Root cause confirmed by the operator: an account switch.** The refusal was the tool trying to READ the previously
+published page, owned by the *previous* account — nothing to do with the file.
+
+**The workaround is now the documented recovery path**: publishing from a **fresh `file_path`** claims a new URL under
+the current account. Both artefacts were republished this way from scratchpad render copies; the committed sources under
+`codex/14-customer-journeys/commercial-model/` remain the SSOT:
+
+- Platform integration guide — `https://claude.ai/code/artifact/991d31e9-fb77-4ef5-b15c-124e37541258`
+- Strategy service walkthrough — `https://claude.ai/code/artifact/0cb35a2d-ecc7-4d47-b855-bb24e51d8d8e`
+
+Earlier URLs are orphaned with the previous account. **Nothing was lost, and only because the sources were committed
+first** — which is why this incident became the hard rule
+[artefact-source-must-be-committed](/codex/12-agent-workflow/artefact-source-must-be-committed.md), where the recovery
+mechanics now live permanently. The operator todo (check account state) is moot — the workaround needs no account change.
