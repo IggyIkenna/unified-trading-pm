@@ -16,19 +16,12 @@ repos: [agent-orchestrator, alerting-service, client-reporting-api, deployment-a
 scope: [engineer, admin]
 tags: [data-pipeline, self-healing, actuators, monitoring, plan-split, residual]
 related:
-  [
-    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
-    /plans/archive/2026_07/data_pipeline_alert_substrate_residual_2026_07_24.md,
-    /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
-  ]
+  [/plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md]
 created: "2026-07-24"
 last_updated: "2026-07-24"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only # corrected 2026-08-18 (plan_reconciler cross-cutting) -- was orchestrator-agent, an
-  # invalid pairing with assigned_vm:NA (task_template.md's 2 valid pairings are NA+local-only or
-  # planning+orchestrator-agent)
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
