@@ -550,4 +550,17 @@ bans. Fleet VMs (setup-token env files) are unaffected.
   chain this item specifically describes. Still genuinely open, unbuilt design work — 4th consecutive audit pass
   reaching the same conclusion, now with an actual second look performed, not just deferred.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:6822af0002bce136]: KEEP-NA, valid — the 2026-08-15 operator note narrows the design question but the remaining deliverable (dispatch-hook stash-and-proceed flow + a new retention-sweep job) still touches live dispatch-critical-path machinery across multiple files; flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future, more-confident pass or explicit operator sub-scoping, not split now.
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — closing the loop on the 2026-08-17 marker's
+  `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` flag on the dirty-worktree stash-and-proceed deliverables. Conflict-check
+  (surface d) found `ao_satellite_ao_dispatch_batch22_2026_08_16.md` already considered and DELIBERATELY EXCLUDED
+  this exact item from batch-extraction, citing a specific standing workspace caution
+  (`unified-trading-pm@14478ca26`, invoked repeatedly across this tranche's audit history) that routes fleet-wide
+  boot/dispatch-critical-path TEXT changes — this item rewrites the worker prompt template + dispatch hook every
+  slot spawn reads on its first message — to a deliberate, human-attended session rather than casual
+  batch-extraction. That is a more specific, better-evidenced basis than finding V's general test-coverage gate (a
+  prompt-quality/instruction-clarity risk in fleet-wide boot text is not fully caught by automated tests the way a
+  code-logic bug is). Concur: does not clear the RECLASSIFY bar today. Doc stays `assigned_vm: NA`, its sole open
+  item unaffected — already flagged prominently in batch22's own report and
+  `ao_open_work_consolidated_tracker_2026_08_14.md` Track 4 as "highest-value remaining bounded work" pending a
+  deliberate human-attended session.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified all 4 still resolve; unchanged.
