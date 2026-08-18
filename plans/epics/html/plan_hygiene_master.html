@@ -1,0 +1,915 @@
+<!-- generated: 2026-08-18T00:00:00Z -->
+<title>Plan Hygiene Control Room</title>
+<style>
+  @font-face {
+    font-family: "Panel Mono";
+    src: local("JetBrains Mono"), local("SF Mono"), local("Menlo"), local("Consolas");
+  }
+
+  :root {
+    color-scheme: light dark;
+
+    /* -- light (default) -- */
+    --bg: #eef1ee;
+    --bg-grid: #e2e7e2;
+    --panel: #ffffff;
+    --panel-2: #f5f7f4;
+    --border: #d5dcd4;
+    --border-strong: #b9c4b6;
+    --ink: #1a231e;
+    --ink-muted: #566058;
+    --ink-faint: #7c877e;
+    --accent: #2f6f4f;
+    --accent-ink: #ffffff;
+    --accent-soft: #e3f0e8;
+    --amber: #9a5b12;
+    --amber-soft: #f8ecd9;
+    --red: #a83b34;
+    --red-soft: #f7e1df;
+    --blue: #33587a;
+    --blue-soft: #e3ebf3;
+    --shadow: 0 1px 2px rgba(20, 30, 22, 0.06), 0 8px 24px -12px rgba(20, 30, 22, 0.18);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #101512;
+      --bg-grid: #161c18;
+      --panel: #1a211c;
+      --panel-2: #212924;
+      --border: #2c352e;
+      --border-strong: #3d493f;
+      --ink: #e8ede8;
+      --ink-muted: #a3ada2;
+      --ink-faint: #77837a;
+      --accent: #59d692;
+      --accent-ink: #08150e;
+      --accent-soft: #16352450;
+      --amber: #f2b158;
+      --amber-soft: #3a2c1250;
+      --red: #ff8b80;
+      --red-soft: #3a191650;
+      --blue: #8fb6de;
+      --blue-soft: #16273750;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #101512;
+    --bg-grid: #161c18;
+    --panel: #1a211c;
+    --panel-2: #212924;
+    --border: #2c352e;
+    --border-strong: #3d493f;
+    --ink: #e8ede8;
+    --ink-muted: #a3ada2;
+    --ink-faint: #77837a;
+    --accent: #59d692;
+    --accent-ink: #08150e;
+    --accent-soft: #16352450;
+    --amber: #f2b158;
+    --amber-soft: #3a2c1250;
+    --red: #ff8b80;
+    --red-soft: #3a191650;
+    --blue: #8fb6de;
+    --blue-soft: #16273750;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background:
+      linear-gradient(var(--bg-grid) 1px, transparent 1px) 0 0 / 100% 28px,
+      var(--bg);
+    color: var(--ink);
+    font-family: ui-sans-serif, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono {
+    font-family: "Panel Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  h1, h2, h3 {
+    text-wrap: balance;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 28px 24px 96px;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+    padding: 28px 28px 24px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    margin-bottom: 22px;
+  }
+
+  .masthead .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 10px;
+  }
+
+  .status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+
+  .masthead h1 {
+    margin: 0 0 8px;
+    font-size: 32px;
+  }
+
+  .masthead .dek {
+    color: var(--ink-muted);
+    max-width: 60ch;
+    margin: 0;
+  }
+
+  .masthead .readout {
+    text-align: right;
+    font-size: 12px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+
+  .masthead .readout .ts {
+    display: block;
+    color: var(--ink-muted);
+    font-size: 13px;
+    margin-top: 4px;
+  }
+
+  /* ---------- stat strip ---------- */
+  .gauges {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .gauge {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .gauge::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 3px;
+    background: var(--gauge-color, var(--accent));
+  }
+
+  .gauge .n {
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--gauge-color, var(--ink));
+    line-height: 1;
+  }
+
+  .gauge .lbl {
+    margin-top: 8px;
+    font-size: 11.5px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .gauge .sub {
+    margin-top: 4px;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  /* ---------- sections ---------- */
+  section {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+    padding: 22px 26px 26px;
+    margin-bottom: 18px;
+  }
+
+  section > h2 {
+    font-size: 13px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin: 0 0 4px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  section > h2::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+  }
+
+  section > .lede {
+    margin: 0 0 16px;
+    color: var(--ink-muted);
+    max-width: 76ch;
+    font-size: 13.5px;
+  }
+
+  /* ---------- plan-by-plan cards ---------- */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+  }
+
+  .card {
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    border-radius: 10px;
+    padding: 13px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .card .title {
+    font-weight: 600;
+    font-size: 13.5px;
+    line-height: 1.35;
+  }
+
+  .card .path {
+    font-size: 11px;
+    color: var(--ink-faint);
+    word-break: break-all;
+  }
+
+  .meter {
+    height: 6px;
+    border-radius: 4px;
+    background: var(--border);
+    overflow: hidden;
+    display: flex;
+  }
+
+  .meter .done {
+    background: var(--accent);
+  }
+
+  .meter .open {
+    background: var(--amber);
+  }
+
+  .card .counts {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+  }
+
+  .card .op-quote {
+    font-size: 11.5px;
+    background: var(--amber-soft);
+    border-left: 2px solid var(--amber);
+    padding: 6px 8px;
+    color: var(--ink);
+    border-radius: 0 6px 6px 0;
+  }
+
+  /* ---------- tables ---------- */
+  .tbl-wrap {
+    overflow-x: auto;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  th {
+    text-align: left;
+    font-size: 11px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    border-bottom: 1px solid var(--border-strong);
+    padding: 8px 10px;
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 10px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  .pill.applied {
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  .pill.routed {
+    background: var(--blue-soft);
+    color: var(--blue);
+  }
+
+  .pill.blocked {
+    background: var(--red-soft);
+    color: var(--red);
+  }
+
+  .pill.p0 {
+    background: var(--red-soft);
+    color: var(--red);
+  }
+
+  .pill.p1 {
+    background: var(--amber-soft);
+    color: var(--amber);
+  }
+
+  .pill.p2, .pill.p3 {
+    background: var(--panel-2);
+    color: var(--ink-muted);
+    border: 1px solid var(--border-strong);
+  }
+
+  /* ---------- lanes ---------- */
+  .lanes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+  }
+
+  .lane {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    background: var(--panel-2);
+  }
+
+  .lane .n {
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .lane h3 {
+    margin: 4px 0 6px;
+    font-size: 13.5px;
+  }
+
+  .lane .files {
+    font-size: 11px;
+    color: var(--ink-muted);
+    line-height: 1.5;
+  }
+
+  /* ---------- console prompts ---------- */
+  .console {
+    background: #0d1210;
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: 14px 16px;
+    color: #d4ffe4;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    margin-top: 8px;
+  }
+
+  :root:not([data-theme="dark"]) .console {
+    background: #101613;
+  }
+
+  .console .cmd-title {
+    color: #7fa38c;
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .foot-note {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border);
+  }
+
+  ul.tight {
+    margin: 0;
+    padding-left: 18px;
+  }
+
+  ul.tight li {
+    margin-bottom: 6px;
+  }
+
+  @media (max-width: 900px) {
+    .gauges {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div>
+      <div class="eyebrow"><span class="status-dot"></span>Epic ledger &middot; L5 &middot; process/tooling</div>
+      <h1>Plan Hygiene Control Room</h1>
+      <p class="dek">
+        The instrument panel for <code class="mono">plan_hygiene_master</code> &mdash; the epic that owns the
+        check scripts, the daily corpus sweep, and the reconciliation loop this report was itself generated by.
+        First epic-scoped <code class="mono">/plan-reconcile plan_hygiene_master</code> run.
+      </p>
+    </div>
+    <div class="readout mono">
+      generated 2026-08-18
+      <span class="ts">epic-scoped pass &middot; docs-only</span>
+    </div>
+  </header>
+
+  <div class="gauges">
+    <div class="gauge" style="--gauge-color: var(--accent)">
+      <div class="n mono">22</div>
+      <div class="lbl">Child docs in scope</div>
+      <div class="sub">4 plans &middot; 18 issues &middot; 0 aggregators</div>
+    </div>
+    <div class="gauge" style="--gauge-color: var(--amber)">
+      <div class="n mono">78</div>
+      <div class="lbl">Open todos (deduped)</div>
+      <div class="sub">across all 22 children</div>
+    </div>
+    <div class="gauge" style="--gauge-color: var(--accent)">
+      <div class="n mono">362</div>
+      <div class="lbl">Done todos (deduped)</div>
+      <div class="sub">82% closure rate</div>
+    </div>
+    <div class="gauge" style="--gauge-color: var(--red)">
+      <div class="n mono">7</div>
+      <div class="lbl">On operator's desk</div>
+      <div class="sub">of 9 raw hits, 2 are cross-refs &mdash; see &sect;5</div>
+    </div>
+    <div class="gauge" style="--gauge-color: var(--blue)">
+      <div class="n mono">2</div>
+      <div class="lbl">Closed out this pass</div>
+      <div class="sub">working-tree only, not shipped</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>&sect;1 &middot; Plan-by-plan breakdown</h2>
+    <p class="lede">
+      Every doc where <code class="mono">parent_epic: plan_hygiene_master</code> matches exactly (docspec-aligned,
+      not the filename-substring inventory script). Bar = open (amber) vs. done (green) share of that doc's own
+      todos.
+    </p>
+    <div class="cards">
+
+      <div class="card">
+        <div class="title">Codex-vs-repo-docs SSOT audit + consolidation</div>
+        <div class="path mono">codex_vs_repo_docs_ssot_audit_2026_06_01.md</div>
+        <div class="meter"><div class="done" style="width:93.5%"></div><div class="open" style="width:6.5%"></div></div>
+        <div class="counts mono"><span>2 open</span><span>29 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">&hellip; finalize (gated close-out)</div>
+        <div class="path mono">codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md</div>
+        <div class="meter"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts mono"><span>1 open</span><span>0 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Epic taxonomy restructure + HTML artifact mode</div>
+        <div class="path mono">epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md</div>
+        <div class="meter"><div class="done" style="width:71.4%"></div><div class="open" style="width:28.6%"></div></div>
+        <div class="counts mono"><span>8 open</span><span>20 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">June-2026 vintage audit findings</div>
+        <div class="path mono">june_2026_vintage_audit_findings_2026_07_27.md</div>
+        <div class="meter"><div class="done" style="width:89.7%"></div><div class="open" style="width:10.3%"></div></div>
+        <div class="counts mono"><span>4 open</span><span>35 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">AO round-5 apply session &mdash; Q&amp;A index</div>
+        <div class="path mono">issues/ao_round5_apply_session_operator_qa_index_2026_08_08.md</div>
+        <div class="meter"><div class="done" style="width:50%"></div><div class="open" style="width:50%"></div></div>
+        <div class="counts mono"><span>1 open</span><span>1 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">context-scout marker/frontmatter count mismatch</div>
+        <div class="path mono">issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md</div>
+        <div class="meter"><div class="done" style="width:75%"></div><div class="open" style="width:25%"></div></div>
+        <div class="counts mono"><span>1 open</span><span>3 done</span></div>
+        <div class="op-quote">[OPERATOR] human line-cap trim of data_completion_defi_2026_07_15.md</div>
+      </div>
+
+      <div class="card">
+        <div class="title">Governance sweep &mdash; deferred follow-ups</div>
+        <div class="path mono">issues/governance_sweep_deferred_followups_2026_08_06.md</div>
+        <div class="meter"><div class="done" style="width:66.7%"></div><div class="open" style="width:33.3%"></div></div>
+        <div class="counts mono"><span>3 open</span><span>6 done</span></div>
+        <div class="op-quote">[OPERATOR] P0 fork-PR-approval GitHub setting &middot; P3 live-trading go-ahead</div>
+      </div>
+
+      <div class="card">
+        <div class="title">Issue-docs remediation sweep (2026-05/06 backlog)</div>
+        <div class="path mono">issues/issue_docs_remediation_sweep_2026_06_02.md</div>
+        <div class="meter"><div class="done" style="width:88.2%"></div><div class="open" style="width:11.8%"></div></div>
+        <div class="counts mono"><span>6 open</span><span>45 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Same-tranche duplicate concurrent dispatch (defi)</div>
+        <div class="path mono">issues/na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md</div>
+        <div class="meter"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts mono"><span>3 open</span><span>0 done</span></div>
+        <div class="op-quote">[OPERATOR] root-cause the idempotency-guard miss</div>
+      </div>
+
+      <div class="card">
+        <div class="title">body_content_hash() unstable across marker appends</div>
+        <div class="path mono">issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md</div>
+        <div class="meter"><div class="done" style="width:66.7%"></div><div class="open" style="width:33.3%"></div></div>
+        <div class="counts mono"><span>1 open</span><span>2 done</span></div>
+        <div class="op-quote">[OPERATOR] stagger the corpus-wide re-audit cost?</div>
+      </div>
+
+      <div class="card">
+        <div class="title">NA inventory counts fenced-code-block checkboxes</div>
+        <div class="path mono">issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md</div>
+        <div class="meter"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts mono"><span>3 open</span><span>0 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">na_marker_helper.py hardcodes root PM-clone path</div>
+        <div class="path mono">issues/na_marker_helper_hardcoded_root_pm_path_2026_08_18.md</div>
+        <div class="meter"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts mono"><span>2 open</span><span>0 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">Operator ruling record &mdash; 2026-08-15 session (items 1-7)</div>
+        <div class="path mono">issues/operator_ruling_record_plan_reconcile_session_2026_08_15.md</div>
+        <div class="meter"><div class="done" style="width:100%"></div><div class="open" style="width:0%"></div></div>
+        <div class="counts mono"><span>0 open</span><span>0 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">plan_reconciler full-corpus run &mdash; all tranches, 08-12</div>
+        <div class="path mono">issues/plan_reconciler_findings_all_2026_08_12.md</div>
+        <div class="meter"><div class="done" style="width:84.2%"></div><div class="open" style="width:15.8%"></div></div>
+        <div class="counts mono"><span>23 open</span><span>123 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">plan_reconciler fresh full-corpus sweep &mdash; 08-15</div>
+        <div class="path mono">issues/plan_reconciler_findings_all_2026_08_15.md</div>
+        <div class="meter"><div class="done" style="width:97.4%"></div><div class="open" style="width:2.6%"></div></div>
+        <div class="counts mono"><span>1 open</span><span>37 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">plan_reconciler &mdash; epic-scoped run (this doc)</div>
+        <div class="path mono">issues/plan_reconciler_findings_plan_hygiene_master_2026_08_18.md</div>
+        <div class="meter"><div class="done" style="width:0%"></div><div class="open" style="width:0%"></div></div>
+        <div class="counts mono"><span>0 open</span><span>0 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">plan_reconciler &mdash; prediction tranche, 08-16</div>
+        <div class="path mono">issues/plan_reconciler_findings_prediction_2026_08_16.md</div>
+        <div class="meter"><div class="done" style="width:74.5%"></div><div class="open" style="width:25.5%"></div></div>
+        <div class="counts mono"><span>12 open</span><span>35 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">plan_reconciler &mdash; prediction tranche, 08-17</div>
+        <div class="path mono">issues/plan_reconciler_findings_prediction_2026_08_17.md</div>
+        <div class="meter"><div class="done" style="width:93.3%"></div><div class="open" style="width:6.7%"></div></div>
+        <div class="counts mono"><span>1 open</span><span>14 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">plan_reconciler &mdash; prediction tranche, 08-18</div>
+        <div class="path mono">issues/plan_reconciler_findings_prediction_2026_08_18.md</div>
+        <div class="meter"><div class="done" style="width:50%"></div><div class="open" style="width:50%"></div></div>
+        <div class="counts mono"><span>5 open</span><span>5 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">plan_reconciler &mdash; sports tranche, 08-18</div>
+        <div class="path mono">issues/plan_reconciler_findings_sports_2026_08_18.md</div>
+        <div class="meter"><div class="done" style="width:100%"></div><div class="open" style="width:0%"></div></div>
+        <div class="counts mono"><span>0 open</span><span>0 done</span></div>
+      </div>
+
+      <div class="card">
+        <div class="title">PM archive false-done sweep + unresolved reference</div>
+        <div class="path mono">issues/pm_archive_false_done_and_review_backlog_2026_08_15.md</div>
+        <div class="meter"><div class="done" style="width:80%"></div><div class="open" style="width:20%"></div></div>
+        <div class="counts mono"><span>1 open</span><span>4 done</span></div>
+        <div class="op-quote">[OPERATOR] name the "Chunks 1/2 + Phase B" review</div>
+      </div>
+
+      <div class="card">
+        <div class="title">S5.7 required-docs audit gaps <span class="pill p3" style="margin-left:4px">exempt</span></div>
+        <div class="path mono">issues/s5_7_required_docs_gaps_2026_07_29.md</div>
+        <div class="meter"><div class="done" style="width:100%"></div><div class="open" style="width:0%"></div></div>
+        <div class="counts mono"><span>0 open</span><span>3 done</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <h2>&sect;2 &middot; On the operator&rsquo;s desk</h2>
+    <p class="lede">
+      Every open item gated on human action across the 22-doc corpus. 2 of the script&rsquo;s 9 raw
+      <code class="mono">[OPERATOR]</code>-substring hits are DOCS-tagged cross-references quoting a
+      <em>different</em> doc&rsquo;s possible mistag, not a direct ask of the operator &mdash; excluded below,
+      shown in the footnote instead.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Pri</th><th>Ask</th><th>Gated on</th><th>Doc</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill p0">P0</span></td>
+            <td>Set the GitHub "require approval for fork PRs" setting</td>
+            <td>Manual UI click &mdash; no REST endpoint exists (checked)</td>
+            <td class="mono">governance_sweep_deferred_followups_2026_08_06.md</td>
+          </tr>
+          <tr>
+            <td><span class="pill p1">P1</span></td>
+            <td>Trim <code class="mono">data_completion_defi_2026_07_15.md</code> (sits at the 1000L hard cap)</td>
+            <td>Editorial judgment &mdash; which content to cut/split</td>
+            <td class="mono">context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md</td>
+          </tr>
+          <tr>
+            <td><span class="pill p2">P2</span></td>
+            <td>Root-cause why the per-tranche idempotency guard let 2 concurrent <code class="mono">defi</code> dispatches run</td>
+            <td>Read the AO dispatcher + timer install script</td>
+            <td class="mono">na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md</td>
+          </tr>
+          <tr>
+            <td><span class="pill p3">P3</span></td>
+            <td>Decide whether the concurrent-dispatch finding warrants a SKILL.md edit (Write&rarr;Edit discipline)</td>
+            <td>Preference call, no forced answer</td>
+            <td class="mono">na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md</td>
+          </tr>
+          <tr>
+            <td><span class="pill p3">P3</span></td>
+            <td>Stagger the corpus-wide re-audit cost the body-hash fix will trigger?</td>
+            <td>Coordination call across other in-flight tranches</td>
+            <td class="mono">na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md</td>
+          </tr>
+          <tr>
+            <td><span class="pill p3">P3</span></td>
+            <td>Name the "Chunks 1/2 and Phase B full code review" session referenced by a prior audit</td>
+            <td>No searchable record found &mdash; genuinely unresolvable by a worker</td>
+            <td class="mono">pm_archive_false_done_and_review_backlog_2026_08_15.md</td>
+          </tr>
+          <tr>
+            <td><span class="pill p3">P3</span></td>
+            <td>Live-trading go-ahead for sports/prediction (permanent, standing hard-stop)</td>
+            <td>Real-money activation sign-off, never defaulted</td>
+            <td class="mono">governance_sweep_deferred_followups_2026_08_06.md</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="foot-note">
+      Excluded from the count above (cross-references, not direct asks):
+      <code class="mono">plan_reconciler_findings_prediction_2026_08_16.md</code> and
+      <code class="mono">…_2026_08_18.md</code> each carry a <code class="mono">[DOCS] P3</code> todo about whether
+      a different doc&rsquo;s <code class="mono">[OPERATOR]</code> tag might be a mistag &mdash; a hygiene note about
+      tagging, not itself a live ask.
+    </p>
+  </section>
+
+  <section>
+    <h2>&sect;3 &middot; Needs extra scoping</h2>
+    <p class="lede">Found genuinely ambiguous this pass, not routed to the operator desk because it is a preference call with no provable answer, not a blocker.</p>
+    <ul class="tight">
+      <li>
+        <strong>Where should the prediction/sports <code class="mono">plan_reconciler</code> findings docs&rsquo;
+        <code class="mono">parent_epic</code> point?</strong> All 4 (<code class="mono">plan_reconciler_findings_prediction_2026_08_16/17/18.md</code>,
+        <code class="mono">plan_reconciler_findings_sports_2026_08_18.md</code>) currently carry
+        <code class="mono">plan_hygiene_master</code>, while every other tranche&rsquo;s equivalent doc points at
+        its own content epic (<code class="mono">cefi_master</code>, <code class="mono">defi_master</code>,
+        etc. &mdash; a 7-vs-2 asymmetry). Ran <code class="mono">check_parent_epic_alignment.py</code> before
+        concluding anything: it rates <code class="mono">plan_hygiene_master</code> plausible for all 4
+        (score 5&ndash;6, not a mismatch) &mdash; these are reconciler-mechanism run-journals, keyword-defensible
+        either way. Not auto-applied; both options are legitimate. <span class="pill routed">routed, unresolved</span>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>&sect;4 &middot; Closed out this pass</h2>
+    <p class="lede">
+      Applied to the <strong>working tree only</strong> &mdash; DO-NOT-SHIP in force this session (shared checkout
+      under contention). Lead session reviews the diff and ships.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead><tr><th>Fix</th><th>Doc</th><th>Evidence</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="pill applied">flip</span> done-but-unchecked</td>
+            <td class="mono">plans/epics/plan_hygiene_master.md:174</td>
+            <td>All 3 named cross-refs (master plan + 2 satellites) confirmed archived; INDEX.md no longer cites the master plan (0 hits)</td>
+          </tr>
+          <tr>
+            <td><span class="pill applied">archive</span> 6-step ritual</td>
+            <td class="mono">plan_commit_sha_evidence_unresolvable_0f9b8a65ca_2026_08_10.md</td>
+            <td>Both todos done since 2026-08-10; ratchet re-verified green (3127 citations, 0 unresolvable); all 3 referrers already archived</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>&sect;5 &middot; Parallel-tab flow for what&rsquo;s left</h2>
+    <p class="lede">
+      Remaining non-operator-blocked, worker-determinable work in this epic, divided so no two lanes touch the same
+      file. 5 lanes &mdash; this workspace&rsquo;s own parallel-agent ceiling.
+    </p>
+    <div class="lanes">
+      <div class="lane">
+        <div class="n">Lane 1</div>
+        <h3>na_marker_helper.py path fix</h3>
+        <div class="files">scripts/plan-hygiene/na_marker_helper.py</div>
+      </div>
+      <div class="lane">
+        <div class="n">Lane 2</div>
+        <h3>Fenced-code-block checkbox fix</h3>
+        <div class="files">scripts/plan-hygiene/generate_na_doc_tranche_inventory.py<br />scripts/plan-hygiene/check_todo_format.sh</div>
+      </div>
+      <div class="lane">
+        <div class="n">Lane 3</div>
+        <h3>MTDS doc dedup finish</h3>
+        <div class="files">market-tick-data-service/docs/DEPLOYMENT_GUIDE_FEMI.md<br />market-tick-data-service/docs/SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md</div>
+      </div>
+      <div class="lane">
+        <div class="n">Lane 4</div>
+        <h3>strategy-service doc dedup</h3>
+        <div class="files">strategy-service/docs/STRATEGY_MODES.md<br />strategy-service/docs/CLI_REFERENCE.md<br />strategy-service/docs/BACKTEST_ENGINE.md</div>
+      </div>
+      <div class="lane">
+        <div class="n">Lane 5</div>
+        <h3>Idempotency-guard hardening</h3>
+        <div class="files">agent-orchestrator (dispatch-time lock or Edit-only file-touch discipline)</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>&sect;6 &middot; Dispatch prompts</h2>
+    <p class="lede">Copy-pasteable, one per lane. Each is self-contained &mdash; a fresh tab inherits nothing.</p>
+
+    <div class="console">
+      <span class="cmd-title">Lane 1 &middot; na_marker_helper.py</span>Paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full first, then follow ALL rules.
+
+Read plans/active/issues/na_marker_helper_hardcoded_root_pm_path_2026_08_18.md in full. Fix the 2 open [SCRIPT] todos:
+derive PM/INVENTORY_SCRIPT dynamically in scripts/plan-hygiene/na_marker_helper.py (match the pattern already used by
+generate_na_doc_tranche_inventory.py / check_na_corpus_ratchet.py — read those first, don't invent a 2nd convention),
+then audit the 3 named sibling scripts for the same hardcoded-root pattern. quality-gates.sh green, then quickmerge.
+    </div>
+
+    <div class="console">
+      <span class="cmd-title">Lane 2 &middot; fenced-code-block checkbox fix</span>Paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full first, then follow ALL rules.
+
+Read plans/active/issues/na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md in full. Make
+CHECKBOX_RE in generate_na_doc_tranche_inventory.py skip lines inside fenced (```) code blocks; apply the same guard
+to check_todo_format.sh; re-baseline check_na_corpus_ratchet.py LAST (sequential: true already enforces this order —
+do not run todo 3 before 1+2 land). Add a unit test pinning the fence-vs-real distinction. quality-gates.sh green,
+then quickmerge.
+    </div>
+
+    <div class="console">
+      <span class="cmd-title">Lane 3 &middot; MTDS doc dedup finish</span>Paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full first, then follow ALL rules.
+
+Read plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md's "market-tick-data-service finish" P1 todo (Appendix A).
+DEPLOYMENT_GUIDE_FEMI.md (person-named onboarding dup) + SHAHRIYAR_DEPLOYMENT_INFRA_SPEC.md (infra-spec dup) in
+market-tick-data-service/docs/: migrate any unique delta into codex/05-infrastructure + codex/08-workflows, replace
+both with S5.11 redirect stubs, delete the dumps. Verify no other repo doc references either filename before deleting.
+    </div>
+
+    <div class="console">
+      <span class="cmd-title">Lane 4 &middot; strategy-service doc dedup</span>Paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full first, then follow ALL rules.
+
+Read plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md's "strategy-service (15)" P1 todo (Appendix A registry).
+In strategy-service/docs/: STRATEGY_MODES.md (retired basis-strategy-v1 references + dead links) and
+CLI_REFERENCE.md ("batch only" framing contradicts batch=live) need FIX-STALE/REDIRECT; BACKTEST_ENGINE.md is a
+confirmed duplicate — delete after verifying no unique content. Ground-truth against live code before applying, per
+the plan's own "mtime safety check" principle.
+    </div>
+
+    <div class="console">
+      <span class="cmd-title">Lane 5 &middot; idempotency-guard hardening</span>Paste `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full first, then follow ALL rules.
+
+Read plans/active/issues/na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md in full — a
+real edit collision from 2 concurrent same-tranche dispatches. Root-cause via agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh
++ the /api/plan-health/dispatch endpoint (todo 1, [OPERATOR]-gated finding — report back rather than assume). Once
+root-caused, harden per todo 2: a dispatch-time per-tranche lock, or narrow every file-touching step in the skill to
+Edit-only (never blind Write) for any file that might already exist from a concurrent run.
+    </div>
+  </section>
+
+  <section>
+    <h2>&sect;7 &middot; Notes &amp; methodology</h2>
+    <p class="lede">
+      Open/done counts derived via <code class="mono">scripts/plan-hygiene/epic_report_data.py --epic
+      plan_hygiene_master --json</code> (mirrors <code class="mono">count_open_tasks.py</code>&rsquo;s dedup
+      methodology). Scope via <code class="mono">rg "^parent_epic: plan_hygiene_master$"</code> against real
+      frontmatter, never the filename-substring inventory script. Every claim marked "confirmed"/"verified" above
+      was checked live this run &mdash; a command actually executed, not carried forward from an earlier doc.
+    </p>
+    <ul class="tight">
+      <li>This is the epic that <em>owns</em> <code class="mono">/plan-reconcile</code> itself &mdash; several of
+        its 22 children are the reconciler&rsquo;s own dated run-journals (findings docs), not third-party plans,
+        which is why so many already read as heavily self-audited (repeated na-eligibility-audit + context-scout
+        passes) rather than freshly discovered here.</li>
+      <li>Entry-gate <code class="mono">run_hygiene_sweep.sh --ci --no-regen</code>: 1 hard failure
+        (<code class="mono">check_na_corpus_ratchet</code>, +1 doc/+4 todos vs <code class="mono">origin/main</code>)
+        &mdash; the same structurally-unavoidable class every plan_reconciler run trips (a findings doc is itself
+        <code class="mono">assigned_vm: NA</code>; <code class="mono">main</code> lags
+        <code class="mono">live-defi-rollout</code> by design). Routed to <code class="mono">/na-eligibility-audit</code>
+        per established precedent, not this skill&rsquo;s remit.</li>
+      <li>DO-NOT-SHIP was in force this session &mdash; nothing above landed on any branch; every edit sits in the
+        working tree awaiting the lead session&rsquo;s review.</li>
+    </ul>
+  </section>
+</div>

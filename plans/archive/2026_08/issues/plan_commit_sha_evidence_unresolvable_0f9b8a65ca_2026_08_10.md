@@ -10,7 +10,7 @@ summary:
   local ref, not present after `git fetch`, and 404s on GitHub (`gh api repos/.../commits/0f9b8a65ca` -> Not Found). The
   flip commit `b9d9725354` (slot-28, 2026-08-10 11:15) introduced the citation. This red blocks every PM ship (post-gate
   failure in quality-gates.sh)."
-status: open
+status: resolved
 nature: process
 asset_group: [meta]
 stage: [meta]
@@ -33,7 +33,6 @@ estimate_calibrated_ai_days: 0.08
 assigned_vm: planning
 execution_scope: orchestrator-agent
 assigned_role: infra
-archive_exempt: true
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -45,6 +44,16 @@ source: slot-20 QG pass on unified-trading-pm, 2026-08-10
 ---
 
 # plan-commit-sha-evidence ratchet RED — unresolvable `unified-trading-pm@0f9b8a65ca`
+
+> **🟄 ARCHIVED 2026-08-18 (/plan-reconcile, plan_hygiene_master epic-scoped run).** Both todos have been `[x]` since
+> 2026-08-10; `archive_exempt: true` was set as an explicitly TEMPORARY bridge pending "a separate follow-up commit
+> immediately after this one" (see the 2026-08-10 slot-19 Progress Log entry) — that follow-up never landed and the
+> doc sat 8 days past its own stated archival point. Re-verified fresh before archiving: `check_plan_commit_sha_evidence.py`
+> run 2026-08-18 reports `3127 citations, 0 unresolvable` — the ratchet is still green, the fix has held. All 3
+> corpus referrers (`infra_satellite_ao_dispatch_batch15_2026_08_10.md`,
+> `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`,
+> `pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md`) are themselves already under `plans/archive/2026_08/`
+> — no active-corpus referrer path needs updating.
 
 ## What I found
 
