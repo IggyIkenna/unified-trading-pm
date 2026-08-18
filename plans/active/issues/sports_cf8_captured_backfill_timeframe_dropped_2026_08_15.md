@@ -36,7 +36,7 @@ created: 2026-08-15
 author: data_engineering (slot-2)
 priority: P0
 source: "cf_manifest_audit_first_full_rollup_findings_2026_07_26.md P3 todo dispatch, slot 2, 2026-08-15"
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 locked_by:
 execution_scope: orchestrator-agent

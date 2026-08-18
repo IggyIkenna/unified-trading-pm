@@ -31,7 +31,7 @@ related: [/codex/08-workflows/ci-cd-flow.md, /plans/active/ci_consolidated_close
 created: 2026-07-27
 author: unknown
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: ci_master
 source: "slot-3, infra, discovered while shipping unrelated plan-doc updates, 2026-07-27"
 execution_scope: local-only
 drift_direction: advance-code

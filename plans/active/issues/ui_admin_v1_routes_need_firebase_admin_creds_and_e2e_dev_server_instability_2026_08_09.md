@@ -35,7 +35,7 @@ related:
   ]
 created: "2026-08-09"
 author: slot-28 (data_engineering, adopted infra craft per task assigned_role)
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 assigned_vm: NA
 execution_scope: local-only

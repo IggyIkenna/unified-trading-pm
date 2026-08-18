@@ -17,7 +17,7 @@ created: 2026-08-11
 author: claude-agent
 source: "Auto-generated dry-run stash audit, 2026-08-11 interactive session, slot 2"
 priority: P3
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code

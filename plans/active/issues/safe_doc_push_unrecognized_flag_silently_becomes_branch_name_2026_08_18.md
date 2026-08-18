@@ -25,7 +25,7 @@ related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/12-agent-workflo
 created: "2026-08-18"
 author: plan_reconciler
 source: agt-830118 (infra tranche daily reconciliation)
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1

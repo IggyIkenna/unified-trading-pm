@@ -36,7 +36,7 @@ related:
 created: 2026-07-28
 author: unknown
 last_updated: 2026-07-30
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2 # was P1 while this doc still carried the P0 gas-fee fix; the sole remaining todo is the P2 e2e-testing

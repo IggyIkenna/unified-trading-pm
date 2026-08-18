@@ -22,7 +22,7 @@ related: [tradfi_phase_d_terminal_gate_2026_07_24, tradfi_fx_provenance_and_mani
 created: 2026-08-17
 author: data-pipeline-reconciliation (tradfi post-full-backfill checkpoint)
 priority: P2
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 source:
   "Filed as the required issue-doc half of tradfi_phase_d_terminal_gate_2026_07_24.md's P1 todo
   ('Post-full-backfill reconciliation RUN checkpoint') — see

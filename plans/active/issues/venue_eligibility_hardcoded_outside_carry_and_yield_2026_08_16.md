@@ -28,7 +28,7 @@ related:
   ]
 created: 2026-08-16
 author: interactive-session
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 5

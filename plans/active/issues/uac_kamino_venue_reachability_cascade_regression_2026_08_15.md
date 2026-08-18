@@ -13,7 +13,7 @@ repos: [unified-api-contracts]
 scope: engineer
 summary: "unified-api-contracts venue-coverage cascade invariant fails on kamino DeFi venue (no reachable execution-service connector) — pre-existing on origin HEAD, blocks quickmerge fleet-wide."
 related: [defi_consolidated_closeout_2026_07_18]
-parent_epic: infrastructure_master
+parent_epic: uac_master
 priority: P2
 source: "discovered while shipping cefi_satellite_ao_dispatch_batch19-0b70e8929bb9"
 resolved_by: ""

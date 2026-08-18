@@ -17,7 +17,7 @@ created: "2026-08-15"
 author: slot-18 infra worker
 assigned_vm: planning
 execution_scope: orchestrator-agent
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 priority: P1
 locked_by:
 locked_since:

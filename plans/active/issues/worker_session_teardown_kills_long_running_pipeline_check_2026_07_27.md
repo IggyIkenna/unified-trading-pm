@@ -16,7 +16,7 @@ scope: [engineer, admin]
 created: 2026-07-27
 author: unknown
 assigned_vm: NA
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 resolved_by:
 locked_by:
 source: [data_pipeline_check_mdps_features_2026_07_20.md todo 8]

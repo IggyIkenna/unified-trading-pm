@@ -22,7 +22,7 @@ execution_scope: local-only
 tags: [venue-coverage, reconciliation, position-adapters, disclosure]
 priority: P0
 source: operator-request-2026-08-14
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 related:
   [
     /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md,

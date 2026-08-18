@@ -28,7 +28,7 @@ related:
 created: 2026-07-17
 author: unknown
 last_updated: 2026-07-17
-parent_epic: infrastructure_master
+parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

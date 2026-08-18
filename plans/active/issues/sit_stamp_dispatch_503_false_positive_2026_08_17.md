@@ -26,7 +26,7 @@ related:
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
 created: 2026-08-17
 author: cicd (escalation agt-0e693e, slot 3)
-parent_epic: infrastructure_master
+parent_epic: ci_master
 priority: P3
 assigned_vm: planning
 execution_scope: orchestrator-agent
