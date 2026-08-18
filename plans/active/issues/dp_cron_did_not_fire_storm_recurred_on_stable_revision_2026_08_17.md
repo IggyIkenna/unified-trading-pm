@@ -65,7 +65,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-17
+last_updated: 2026-08-18
 locked_since:
 context_scope:
   [
@@ -163,6 +163,10 @@ checked against exact revision-swap timestamps to the second).
 - [ ] [SCRIPT] P3. Check whether `dp-alerting-subscriber`'s 10-deploys-in-18h churn today has a cause beyond the
       deliberate dedup-bug fix-deploy cycle (stray trigger, unrelated repo change re-triggering the same Cloud Build
       trigger). (repo: alerting-service)
+- [x] ✅ [SCRIPT] P1. Promote `route_event()`'s DEBUG-only "Duplicate alert suppressed" log to a structured
+      `log_event("ALERT_DEDUPLICATED", ...)` call (both call sites, `router.py`) so a future Cloud-Logging trace can
+      actually see suppression, not just delivery — additive-only, no behavior change, QG-green.
+      Evidence: `alerting-service@4135b078cd`, ancestry-verified against `origin/live-defi-rollout`.
 
 ## Progress Log
 
@@ -183,3 +187,39 @@ checked against exact revision-swap timestamps to the second).
   deploy-chain that day); swapped in as a 2nd entry, dropping the now-redundant archived
   `dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md` (its content is already fully re-narrated
   in this doc's own "What was found" section above).
+- **data_pipeline_alerts_reconciler 2026-08-18 (slot 23, dispatch agt-c5c423), follow-up sweep**: fresh ground-truth
+  Slack read (`slack-read-channel.py data-pipeline-alerts 24`, full 24h window = 1868 msgs, not just the 200-line
+  tail) confirms the storm is STILL LIVE as of `01:36Z` today — `DP_CRON_DID_NOT_FIRE=766` msgs/24h, 414 of them for
+  a single identity family on `mtds-live-cefi-consolidated-20260817-025031` (BYBIT-FUTURES trades/derivative_ticker/
+  book_snapshot_5/depth_of_book_10 + ASTER liquidations), gap pattern for BYBIT-FUTURES/trades over 65 fires:
+  alternating short (~14-16min) and near-compliant (~29-31min) gaps — i.e. roughly every OTHER sweep leaks past the
+  1800s cooldown, not a total dedup bypass. New findings this pass, none conclusive enough to ship a fix on:
+  1. **Confirmed single stable Cloud Run instance for the CURRENT window**: `gcloud logging read` for revision
+     `dp-alerting-subscriber-00113-2vg` (deployed `00:55:55Z`) over the prior 6h returned exactly 1 distinct
+     `run.googleapis.com/instanceId` across 3000 log lines — rules out mid-window instance recycling as the
+     explanation for at least this window's leaks (same negative result the prior dispatch got for its own window;
+     the "recurs every 1.5-3h on a stable revision" mechanism is still unexplained).
+  2. **uvicorn runs with no `--workers` flag** (`Dockerfile` CMD: `uvicorn alerting_service.api.main:app --host 0.0.0.0
+     --port 8080`) — single process confirmed, ruling out a multi-worker-process split of the `_deduplicator` module
+     singleton as the cause.
+  3. **`_dedup_window_for` verified NOT the culprit**: traced `dp_run_mostly_empty_static_backlog.dedup_window_override`
+     — it only special-cases `DP_RUN_MOSTLY_EMPTY`; for `DP_CRON_DID_NOT_FIRE` it falls straight through to the
+     caller's `default` (`_RECURRING_ALERT_COOLDOWNS["DP_CRON_DID_NOT_FIRE"] = 1800.0`), so the effective TTL is not
+     silently degrading to the deduplicator's 60s fallback via this path.
+  4. **Real observability gap found and NOT yet fixed**: `route_event()`'s suppression branch
+     (`alerting_service/notifiers/router.py`) logs via bare `logger.debug("Duplicate alert suppressed: %s", event_name)`
+     — Python-stdlib DEBUG level, not the structured `log_event()` used for `ALERT_ROUTED`/`ALERT_SENT`/etc. Cloud Run's
+     default log level does not surface DEBUG, so **every suppressed alert is invisible in Cloud Logging** — a live
+     Cloud-Logging trace (as P1's todo below prescribes) can prove when an alert WAS delivered but cannot distinguish
+     "0% suppression happening" from "90% suppression happening, we only see the 10% that leak" without this fixed
+     first. Recommend the next dispatch promote this one suppression log line to a structured `log_event("ALERT_
+     DEDUPLICATED", ...)` (mirroring `ALERT_COALESCED`'s pattern already in the same function) BEFORE attempting the
+     P1 root-cause trace — otherwise the trace is working with an artificially incomplete picture, same failure mode
+     this doc's own point 2 already hit once when a `--region` omission produced a false "no results" read.
+  5. Shipped the point-4 observability fix only (`alerting-service@4135b078cd`) — no candidate root-cause
+     explanation for the actual TTL-violation reached the confidence bar `does_not: guess at an ambiguous fix`
+     requires, so no behavioral change was attempted. The root-cause todo (P1 below) stays open for the next
+     dispatch, now with `ALERT_DEDUPLICATED` events available for its Cloud-Logging trace. Storm classification
+     unchanged: § 1(b) routing/dedup bug, in-process, not a live-infra failure — both flagged live-capture-stall VMs
+     are a SEPARATE, already-tracked `[OPERATOR]` item in the sibling doc
+     `dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md`.
