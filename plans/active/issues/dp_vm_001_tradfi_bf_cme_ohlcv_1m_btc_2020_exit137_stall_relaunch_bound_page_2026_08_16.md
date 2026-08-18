@@ -181,6 +181,16 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
 
 ## Progress Log
 
+- **2026-08-18 (slot 9, data_pipeline_failure escalation agt-c7ef09)**: Received a fresh DP-VM-001 escalation for
+  `tradfi-bf-cme-ohlcv-1m-btc-2020-20260818-030418` (same `btc-2020` shard, next day; escalation's own context
+  states exit_code=137 stall-induced SIGKILL and the `tradfi-bf-cme-ohlcv-1m-` launcher family already at 2/2
+  relaunch dispatches today — DO NOT RELAUNCH). Checked `plans/active/issues/` — this doc still open and covers the
+  same `btc-2020` shard's recurring incident chain (2026-08-16 → 2026-08-17×2 → 2026-08-18), appending rather than
+  filing a near-duplicate. Did not pull `run.log` for this specific VM this session — the shard's failure signature
+  is already established across 3 prior independent pulls (2026-08-16/17 entries above) as the account-wide
+  Databento `402 account_delinquent_invoice` billing block, still tracked `status: blocked` P0 in
+  `tradfi_databento_account_billing_suspended_2026_08_09.md` (re-verified open this session). Per RB-INFRA-RELAUNCH,
+  did not relaunch. No new issue doc filed. No code changed this session.
 - **2026-08-17 (slot 4, data_pipeline_failure escalation agt-990205)**: Received a fresh DP-VM-001 escalation for
   `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-090227` (same `btc-2020` shard, later same day, launcher resolves to
   `launch-tradfi-bf-cme-ohlcv-1m.sh` via `launcher_registry.resolve_launcher_for_vm`). Read `LAUNCH_PARAMS.json`
