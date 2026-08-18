@@ -459,21 +459,50 @@ basedpyright clean; left as uncommitted working-tree edits, not lost):
 - `strategy-service/scripts/trace_all_carry_archetypes.py` + `scripts/position/capture_phase_9_evidence.py` —
   blocked by `StrategyDomainConfig(extra="forbid")` rejecting real env keys, breaking all 4
   `TestStrategySafeFieldAllowList` tests — already a tracked `- [ ] [AGENT] P3` todo in
-  `/plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md`.
+  `/plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md`; **2026-08-18 tracking pass** confirmed
+  the fix is still sitting uncommitted + correct, and annotated that todo with the specific 2 files riding on top
+  of it so they aren't lost when the config bug is eventually fixed.
 - `execution-service/scripts/run_execution_alpha_measurement.py` — blocked by the same
   `extra_forbidden`/pydantic-settings config-validation failure class (different fields —
   `market_data_gcs_bucket`/`instruments_store_gcs_bucket`/`unified_cloud_services_gcs_bucket` — but identical root
   cause shape to strategy-service's), breaking `test_handler_registry.py`/`test_policy_resolver.py` (11 tests) +
-  `test_gcs_live_data_sink.py`/`test_defi_data_loader_coverage.py` (2 more) — **not yet tracked anywhere**; this is
-  a second, independent repo hitting the identical failure signature, worth a cross-repo look rather than two
-  separate one-off fixes.
+  `test_gcs_live_data_sink.py`/`test_defi_data_loader_coverage.py` (2 more). **2026-08-18: now tracked** —
+  `/plans/active/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md`, cross-linked to
+  the strategy-service todo above (same failure class, second independent repo, worth a human noticing the
+  pattern even though the fix will likely stay per-repo).
 - `client-reporting-api/scripts/seed_demo_client.py` — blocked by 4 pre-existing failures in
-  `test_invoice_viewing_transitions_analytics.py` (expects HTTP 404, gets a different status) — unrelated to GCS,
-  not yet tracked.
+  `test_invoice_viewing_transitions_analytics.py` (expects HTTP 404, gets a different status) — unrelated to GCS.
+  **2026-08-18: now tracked** —
+  `/plans/active/issues/client_reporting_api_invoice_test_failures_block_gcs_fix_2026_08_18.md`, cross-linked to
+  the pre-existing (but non-overlapping) `repo_scripts_governance_audit_2026_06_18.md` cloud-discipline todo.
 - `unified-trading-pm/scripts/catalogue/sync-to-mock.py` — blocked by the `archive-safety-ratchet` post-gate check:
-  10 pre-existing `related:` frontmatter entries across 8 unrelated active plan/issue docs cite archived
-  `/plans/archive/...` paths directly instead of a codex doc (per the archival ritual step 5) — a corpus-hygiene
-  backlog, not something introduced by or fixable within this task's scope.
+  10 pre-existing `related:` frontmatter entries across 6 unrelated active plan/issue docs (re-measured
+  2026-08-18, was estimated at "8 docs" — actual is 6) cite archived `/plans/archive/...` paths directly instead
+  of a codex doc (per the archival ritual step 5). **2026-08-18: assessed, NOT fixed, remains ship-blocked** — see
+  "PM-repo blocker: assessed as NOT a simple repoint" below for why this turned out to be more involved than
+  originally scoped; **already tracked** at
+  `/plans/active/issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md` +
+  `/plans/active/infra_satellite_ao_dispatch_batch19_2026_08_18.md` (the existing 925-citation corpus-wide
+  cleanup dispatch) — annotated with the exact 6 docs blocking this specific fix so they get priority.
+
+### PM-repo blocker: assessed as NOT a simple repoint (2026-08-18)
+
+Re-ran the actual gate (`quality-gates.sh --no-fix`, not a hand-picked file list) to get the true current blocking
+set: **10 violations across 6 docs**, not the "8 docs" estimated by the prior session (the set of dirty docs in
+this shared checkout shifts as other sessions work — re-measure before trusting an old count). Read the checker
+source (`scripts/plan-hygiene/check_active_refs_archived_plans.py`): it rejects **any** `/plans/archive/...`
+citation, full stop — there is no "point at the archived plan's new/current path" remedy, because every resolving
+path under `plans/archive/` fails the same regex. The only valid fix is migrating each archived plan's still-load-
+bearing durable fact into a codex SSOT and repointing there (or dropping the citation if nothing is genuinely
+load-bearing) — a real per-citation research task, not a mechanical string-swap, and genuinely different across
+the 6 docs' 10 citations (6 unrelated topics: a WSFeedConnector rollout-gap audit, a SIT-treadmill incident, 2
+CVE remediations, 3 tradfi-databento satellite batches, an adapter-contract-regression ratchet + a lint-sweep
+regression, and an MTDS pyright-suppressions contradiction). Separately, all 6 target docs were simultaneously
+dirty in the shared checkout with **other sessions' own unrelated uncommitted WIP** at the time (confirmed via
+`git status`) — editing and staging them risked entangling this task's fix with work this session doesn't own.
+Both factors together (genuine research complexity + live entanglement) meant this did not qualify as the "cheap
+and safe" case worth forcing — tracked instead, per the existing corpus-wide cleanup dispatch (already active,
+already prioritized toward these 6 docs now).
 
 **2/13 deliberately NOT fixed** — forcing either would have been riskier than leaving the working code alone:
 
@@ -556,3 +585,21 @@ basedpyright clean; left as uncommitted working-tree edits, not lost):
   exemption) — forcing either was judged riskier than leaving the working, non-compliant code alone. Follow-up
   item 1 (fleet-wide Category-1 remediation) and the execution-service `extra_forbidden` config-validation
   regression (newly surfaced, not yet tracked anywhere) remain open — `status` stays `open`.
+- **2026-08-18 (sixth session — tracking pass on the 5 fixed-but-ship-blocked files)**: re-verified all 5 fixes
+  still sitting correctly uncommitted in their 4 repos (`git status`/`git diff` each — no content lost or drifted
+  since the prior session). strategy-service's blocker was already tracked (batch15) but didn't mention the 2
+  riding GCS fixes — added that note. execution-service's `extra_forbidden` failure and client-reporting-api's 4
+  invoice-test failures were confirmed NOT tracked anywhere — filed
+  `/plans/active/issues/execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md` and
+  `/plans/active/issues/client_reporting_api_invoice_test_failures_block_gcs_fix_2026_08_18.md` respectively (both
+  cross-linked back here and to each other where relevant). The PM-repo `sync-to-mock.py` blocker was assessed for
+  a direct fix per this session's own instructions (attempt it if genuinely a simple repoint) — re-running the
+  real gate found 10 violations across 6 docs (not the 8 estimated), read the checker source and confirmed the
+  only valid remedy is per-citation codex-migration research (not a mechanical path-swap), and found all 6 target
+  docs entangled with other sessions' live unrelated WIP — concluded this was NOT the simple case, and instead
+  annotated the existing corpus-wide cleanup dispatch
+  (`/plans/active/issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md` +
+  `/plans/active/infra_satellite_ao_dispatch_batch19_2026_08_18.md`) with the exact 6 blocking docs so that work
+  gets prioritized there instead of being forced here. **No code shipped this session** — all 5 fixes remain
+  uncommitted working-tree edits, now with every blocker either tracked-with-context or (strategy-service) already
+  tracked-and-annotated. `status` stays `open`.
