@@ -276,6 +276,39 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
 - [ ] [INFRA] P2.7.3. **Live → reconcile to paper → (∴ to batch)** — same machinery with real venue fills; report
       live↔paper execution alpha + confirm `live↔batch = determinism(≈0) + execution(measured)`. Repo: (gated on live
       custody readiness — `BLOCKED-OPERATOR-DECISION` until a live wallet is approved).
+- [x] ✅ [INFRA] P2.7.4. **`blrs-daily-determinism` Cloud Run Job wired to the wrong CLI operation, paging daily** —
+      DONE (2026-08-18, `deployment-service@e3826a7f7c`). DP-WATCHER-006 CRITICAL page every scheduled run since
+      `paper_determinism_enabled` flipped to `true` by default: Stage B invoked `--operation reconcile` (the
+      LIVE-trading T+1 recon path — `stage0_config_pull`), which unconditionally requires an execution-store
+      config snapshot + ML/strategy `t1-recon` `_SUCCESS` markers that no producer writes for this paper-week-soak
+      pipeline → `exit 1` daily. Switched to `--operation daily-determinism` (P7.1-B `DailyDeterminismHandler`,
+      shipped 2026-06-20 per P2.7.1/P2.7.2 above but never wired into this terraform — the header comment claiming
+      it "is NOT yet implemented" was stale), which honest-no-ops (`status: ok, skipped: no_run_configured`) instead
+      of crashing when `paper_ledger_root`/`batch_ledger_root` are unset. Repo: deployment-service. Issue:
+      `plans/active/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`. **Deployed + live-verified**
+      2026-08-18: `tofu plan -target=module.blrs_daily_determinism_job` showed "1 to add" (not "1 to change") —
+      local terraform state doesn't track this resource, so a blind `tofu apply` risked conflicting with however
+      the live job is actually managed; applied directly instead (`gcloud run jobs update`, safe/idempotent,
+      matches the shipped source), then `gcloud run jobs execute --wait` confirmed exit 0 with the expected honest
+      no-op log line.
+- [ ] [INFRA] P2.7.4b. **Reconcile terraform state for `blrs_daily_determinism_job` before the next real `tofu
+      apply` of this module** — found while live-deploying P2.7.4's fix: `tofu plan -target=module.blrs_daily_determinism_job`
+      showed the resource as untracked ("1 to add"), meaning this module's state is stale/missing relative to the
+      live job (which was hotfixed out-of-band via `gcloud run jobs update` for P2.7.4, and likely originally
+      created by a different deploy path than a plain `tofu apply` from this checkout). An untargeted `tofu apply`
+      of `terraform/gcp/` before this is reconciled could try to recreate or otherwise diverge from the
+      gcloud-applied live spec. Import the live resource into state (`tofu import` or the equivalent
+      `-refresh-only` reconciliation) and confirm a subsequent full `tofu plan` for this directory shows no
+      unexpected diff before anyone runs an untargeted apply. Repo: deployment-service.
+- [ ] [INFRA] P2.7.5. **Wire `paper_ledger_root`/`batch_ledger_root` + a batch-rerun trigger stage into the
+      `blrs-daily-determinism` cron** — found while fixing P2.7.4. `ReconConfig.paper_ledger_root`/
+      `batch_ledger_root` default `""` and nothing in `paper_week_determinism_scheduler.tf` ever populates them, so
+      `--operation daily-determinism` currently runs as a permanent (correct, honest) no-op — it never actually
+      reconciles. Needs: (1) a stage that triggers strategy-service's existing `batch-rerun` CLI op
+      (`cli/handlers/batch_rerun.py`, proven ε=0 — P2.7.2/P9.B) against the prior day's paper run to produce "run
+      B"'s ledger, and (2) a mechanism (wrapper script or Cloud Scheduler body override, since the run_id isn't
+      known at `tofu apply` time) to resolve "yesterday's paper run_id" and inject both ledger roots as env vars
+      into the daily-determinism job. Repo: deployment-service + strategy-service.
 
 ## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
 

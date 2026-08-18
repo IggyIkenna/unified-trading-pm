@@ -171,10 +171,25 @@ Full findings, root cause, and evidence for every todo below live in the three s
       mapping, not shared reference data) and not a hardcoded table. Concretely: a new config-reloader field,
       `client_id -> {chain: wallet_address}`, per `/codex/06-coding-standards/config-reloader-pattern.md`. Unblocks
       the wiring todo below.
-- [ ] [BACKEND] P0. Switch `staked_basis.py`'s `_validate_lst_margin_slot` and `recursive_staked.py`'s entry gate
-      plus `_check_family2_health_kill` off `features.get("health_factor")` onto the centralized source the prior
-      todo wired. Done-when: neither file reads `features.get("health_factor")` anymore, both call the centralized
-      source, and existing archetype tests stay green.
+- [ ] [BACKEND] P0. **CORRECTED 2026-08-18 — wrong function names.** Switch `staked_basis.py`'s `_resolve_setup`
+      (line 435, not `_validate_lst_margin_slot` — that method doesn't exist) and `recursive_staked.py`'s
+      `_check_safety_gates` (line 115, entry gate) plus `_maybe_close_family2_position` (lines 425-456, the actual
+      close/kill gate — not `_check_family2_health_kill`, which also doesn't exist) off `features.get("health_factor")`
+      onto the centralized source. **Real prerequisite, not yet built**: neither `risk.py`'s
+      `_lending_positions_by_client` nor `margin_event_emitter.py`'s `MarginEvent` currently exposes a synchronous
+      in-process read an `on_tick()` gate can call — `MarginEvent` is a best-effort Pub/Sub push, only fired on a
+      non-INFO severity crossing, with no subscriber/cache inside strategy-service today (reconciliation finding
+      #4). This todo cannot land until that read path exists — see the data-model todo below, which now owns
+      building it, not just adding schema fields.
+      **RULED 2026-08-18 — fail CLOSED on missing or stale data, not open.** Current logic
+      (`if health is not None and health < min_health: return None`) silently ALLOWS the trade when health is
+      unknown — meaning a genuinely underwater `CARRY_RECURSIVE_STAKED` position could trade unchecked during any
+      gap before the live poll first populates. Must invert: `health is None` (never polled) OR stale beyond its
+      SLA (poll succeeded once but hasn't refreshed recently — needs a timestamp alongside the cached value, not
+      just a bare optional) both block, the same as a known-bad health factor. Generalized operator ruling, not
+      specific to this gate: `/plans/epics/system_readiness_master.md` W16. Done-when: neither file reads
+      `features.get("health_factor")` anymore, both call the centralized source with fail-closed-on-absent-or-stale
+      semantics, and existing archetype tests stay green (including a new test for the missing/stale-data case).
 - [ ] [BACKEND] P1. Switch `arbitrage_structural/liquidation_capture.py`'s health-factor gate and
       `mev/liquidation_bundle.py`'s `liq_candidate_health_factor_*` gate to the same centralized source
       (candidate-wallet-parameterized, not client-scoped — a different call shape from the prior todo). Done-when:
@@ -192,14 +207,35 @@ Full findings, root cause, and evidence for every todo below live in the three s
       `LiquidationProximityCircuit.evaluate()` has something to consume — scope as part of wiring
       `recursive_staked.py` (the archetype this circuit is explicitly named for) onto the centralized source, not
       as a separate effort.
-- [ ] [BACKEND] P1. Extend `DeFiAggregatedHealth`/`ProtocolHealthBreakdown` with LTV, borrow-capacity, and
-      liquidation-price fields (or unify with `PositionHealthSnapshot`'s fields); fix `positions_health.py`'s
-      `MarginModel.AAVE_V3`-hardcoded liquidation-threshold lookup to resolve per-position protocol instead.
-- [ ] [OPERATOR] P2. Decide `AavePositionAdapter` (`aave.py`)'s fate — delete it or finish it as a canonical feed —
-      now that a working live-poller route exists via the earlier todos.
-- [ ] [BACKEND] P2. Fix `_process_health_factor()`'s misleading docstring in
-      `features-service/features_service/onchain/engine/orchestrator.py` to describe the generic protocol-level
-      rate-index data it actually reads, not the per-wallet Aave polling it currently claims.
+- [ ] [BACKEND] P1. **CORRECTED 2026-08-18 — split into what's honestly achievable now vs. blocked on missing
+      data.** Three sub-pieces, not one:
+      (a) **Build the in-process read path** — an `on_tick()` gate needs a synchronous "current known health for
+      this client" call; today only `MarginEvent`'s best-effort Pub/Sub push exists (fires only on a severity
+      crossing, no subscriber/cache in strategy-service). Add a getter alongside `risk.py`'s
+      `_lending_positions_by_client` (e.g. `get_current_defi_health(client_id) -> DeFiAggregatedHealth | None`,
+      re-aggregating from cached positions on read) — this is the real prerequisite the P0 switch-over todo above
+      is blocked on, not just "extend the schema."
+      (b) **`liquidation_price`/`distance_to_liquidation_pct` genuinely cannot be honestly populated today** —
+      `AavePositionAdapter.get_lending_position()` deliberately returns `supplied=[]`/`borrowed=[]` (only
+      account-level aggregates via `getUserAccountData()`, no per-asset quantities), and both fields are
+      schema-defined in price terms (`(current - liq_price) / current * 100`) that need per-reserve data.
+      Populating them with a fabricated value would be worse than leaving them `None` — per this workspace's
+      honest-absence rule. Real prerequisite: a `getUserReserveData()`-per-reserve fetch, not yet built anywhere
+      and not currently a tracked todo. Leave both fields `None` until that lands; do not guess a formula.
+      (c) Fix `positions_health.py`'s `MarginModel.AAVE_V3`-hardcoded liquidation-threshold lookup to resolve
+      per-position protocol instead — this part IS achievable now, independent of (a)/(b).
+- [x] [OPERATOR] P2. ✅ RESOLVED BY SHIPMENT 2026-08-18 — `AavePositionAdapter`'s fate: **finished, not deleted**
+      (`strategy-service@0a209dbba1`, `get_lending_position()` with a real `getUserAccountData()` eth_call, 2
+      green tests — see the corrected-premise Progress Log entry above). **RE-APPLYING 2026-08-18 (second time)**:
+      this checkbox reverted to unresolved between my first fix and this edit, most likely lost in a concurrent
+      push reconciliation (`git diff origin/<branch> -- <path>` before push would have caught it — noting for next
+      time). If this reverts a third time, treat it as a genuine content-collision bug in the push path, not
+      operator error, and escalate rather than silently re-fixing again.
+- [x] [BACKEND] P2. ✅ SHIPPED 2026-08-18 — `features-service@7ebefe9319`. Fixed `_process_health_factor()`'s
+      misleading docstring in `features-service/features_service/onchain/engine/orchestrator.py` — now describes
+      the generic protocol-level rate-index data it actually reads and states plainly it is NOT used for
+      strategy-service risk gating (per-wallet Aave polling was never real). Landed via quickmerge, verified
+      post-push ancestor of `origin/live-defi-rollout`.
 - [ ] [BACKEND] P2. Unify the two divergent GCS config-loader path conventions —
       `ConfigLoader.load_config`'s `configs/{strategy_id}.json` vs. `load_strategy_config_gcs`'s
       `configs/strategies/{strategy_id}.json` — behind one loader, building on `get_strategy_params()`'s existing

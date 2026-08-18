@@ -404,18 +404,28 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       buckets (anthropic/planning healthy pattern + deepseek/cicd deliberate 5-attempts/1-completion burst), with
       dedicated `AgentRow` rows on slots 2/6 so `slot_account_attribution` has real intervals to resolve against.
 
-- [ ] [DATA] P2. New, operator ask 2026-08-18 — capture reasoning/thinking tokens as part of the unified per-task
+- [~] [DATA] P2. New, operator ask 2026-08-18 — capture reasoning/thinking tokens as part of the unified per-task
       billing schema above (that todo scopes cache-read/write; reasoning tokens are the one dimension it doesn't yet
-      name). Investigate what's actually capturable per vendor before assuming uniform feasibility: DeepSeek already
-      has real `reasoning_tokens` (`DeepSeekNativeUsageRow`, `deepseek_native_proxy_server.py`) but it is never
-      joined onto `TaskUsageRow` itself; Codex is a reasoning model with zero token capture of any kind today
-      (blocked on the P0 fake-token-estimate fix above landing real usage data first); GLM/Kimi go through a
-      generic Anthropic-shape proxy parser that never reads a reasoning-token field; Claude's own API has no
-      reasoning-token count in its `usage` object at all — already flagged as a known gap in
-      `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`, genuinely N/A, not a missed capture point.
-      Done when: every provider that CAN report a reasoning-token count does, joined onto `TaskUsageRow` (or the
-      unified schema's real replacement); every provider that genuinely can't is explicitly documented as N/A, not
-      silently blank.
+      name). Investigate what's actually capturable per vendor before assuming uniform feasibility.
+      **PARTIAL `agent-orchestrator@b6fe23c7c6`** — DeepSeek: **DONE**, `DeepSeekNativeUsageRow.reasoning_tokens` is
+      now joined onto `TaskUsageRow.reasoning_tokens` (new nullable column, migrated via
+      `_TASK_USAGE_MIGRATION_COLUMNS` per the 2026-08-05 schema-drift-outage lesson) at both `/done` write-path call
+      sites (`_record_done_task_usage` in `routes/slots_worker.py`, and the human-usage-push route) — persisted going
+      forward, not just computable via the pre-existing live read-time join in `routes/backlog.py`. NULL (never a
+      fabricated 0) when no matching `DeepSeekNativeUsageRow` exists for the session. Evidence: 2 new pytest cases in
+      `tests/test_record_done_task_usage_isolation.py` (5/5 passing), full backend suite 4047 passed/5 skipped,
+      full `quality-gates.sh` green. Claude: confirmed **N/A** (no reasoning-token field in the API's `usage` object
+      at all — unchanged from `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md`'s known gap). Codex:
+      confirmed still **blocked** on the P0 fake-token-estimate fix above landing real usage data first (unchanged).
+      **Still open — Kimi/GLM**: the generic Anthropic-shape proxy parser these route through never reads a
+      reasoning-token field, and it's not yet established whether Moonshot/Zhipu's actual API response even carries
+      one — that requires either reading vendor API docs or a live probe, and a live probe against Kimi specifically
+      is undesirable right now given Kimi's accounts are deliberately paused fleet-wide (see the "Kimi Blocked"
+      badge work above; do not spend metered requests probing this before the Moonshot waitlist resolves). If the
+      field does exist, capturing it durably would need a DeepSeek-style dedicated native proxy (a real, separate
+      build — not a quick parser tweak), since the generic proxy is intentionally shape-agnostic. Done when: Kimi/GLM
+      resolved either way (captured + joined, or documented N/A same as Claude) — the other three providers already
+      meet the original "capture-or-explicitly-N/A" bar.
 - [x] ✅ [DATA] P2. New, operator ask 2026-08-18 — bring Kimi's wallet reconciliation up to the same depth Claude/
       DeepSeek already have. Today `compute_kimi_wallet_window_reconciliation()` (`server/state_store/slots.py:1373`)
       only covers the 1h/24h/7d/Lifetime WINDOWED view — no lifetime LEDGER table (known top-up total / opening

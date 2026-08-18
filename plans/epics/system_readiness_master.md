@@ -344,6 +344,20 @@ The registry must answer commercial and operational questions, not just "does th
 - [ ] [BACKEND] P0. **Preflight registration checks fail if required data is absent** — at registration, not at
       runtime. Discovering a missing input mid-run is the expensive way to learn it.
 - [ ] [BACKEND] P0. **An SLA per input for how long is a reasonable wait before data is considered stale.**
+- [ ] [BACKEND] P0. **RULED 2026-08-18 — missing or stale required data fails CLOSED, not open, as the default
+      across every archetype.** Concrete trigger: while wiring the DeFi own-leverage gates onto real position data
+      (`strategy_service_centralization_fixes_2026_08_16.md`), found the current gate logic treats a missing
+      health factor as "no check, proceed" — meaning a genuinely underwater leveraged position could trade
+      unchecked during any gap before the live poll first populates. Operator ruling generalizes this beyond the
+      one gate: **every strategy archetype must be considered startup-ready only once it has fresh data across
+      everything it needs** — position, PnL, risk, the specific venues it trades, and every market-data
+      type/feature group it consumes — each checked for both **presence** (the W16 preflight registration check
+      above) **and freshness** (the SLA-per-input line above), with **absent or stale failing closed by default**.
+      This is the behavior the two checks above were implicitly assuming but never stated; this line makes it
+      explicit. Done-when: a named startup-readiness check exists per archetype covering all of the above
+      dimensions, defaulting fail-closed, with any deliberate fail-open exception stated and justified per input,
+      not assumed by an unhandled-`None` code path. First concrete instance:
+      `strategy_service_centralization_fixes_2026_08_16.md`'s DeFi health-factor gates.
 
 ## W17 — Fees and gas
 

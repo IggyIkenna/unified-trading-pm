@@ -42,6 +42,7 @@ source: >-
   (server/tmux_session_loss_rate_canary.py, server/config.py) to rule out a dedup bug.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # TmuxSessionLossRateCanary likely over-tuned, not under-deduped
