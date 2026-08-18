@@ -24,9 +24,10 @@ tags:
   [backmerge, merge-semantics, frontmatter, collateral-deletion, conflict-resolver, ldr-main, silent-regression]
 related:
   [
-    /plans/active/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md,
+    /plans/archive/2026_08/issues/safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-17"
 last_updated: "2026-08-17"

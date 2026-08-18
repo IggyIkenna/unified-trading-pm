@@ -23,7 +23,7 @@ tags: [plan-quality, issue-docs, todo-format, hygiene-sweep, zero-checkbox, cros
 related:
   [
     /plans/archive/issues/issue_docs_zero_checkbox_sweep_2026_07_24.md,
-    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     /plans/active/task_template.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /codex/11-project-management/issue-doc-lifecycle.md,
@@ -44,7 +44,7 @@ depends_on: []
 source:
   "Operator ruling 2026-07-31 (corpus-sweep item 5): the predecessor sweep doc was archived before it could be re-run at
   full width, and its population definition structurally excluded 5 of the 9 tranches. Standing follow-up was recorded
-  in /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md's Progress Log, which explicitly noted the class
+  in /plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md's Progress Log, which explicitly noted the class
   'currently has no owning active doc'."
 resolved_by:
 locked_by:
@@ -55,7 +55,7 @@ context_scope:
   [
     /codex/11-project-management/issue-doc-lifecycle.md,
     /plans/active/task_template.md,
-    /plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
+    /plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md,
     cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 ---
@@ -103,7 +103,7 @@ and this doc is the register it writes to.
    ("every follow-up is a `- [ ]` todo, never prose"). Converted in place.
 2. `plans/archive/issues/deployment_api_artifact_pipeline_health_test_date_drift_flake_2026_07_29.md` — "Fix direction
    (not yet done)" prose; its Progress Log had already self-nominated for this sweep. Converted.
-3. `plans/active/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` — a parking register whose P0-A (a **dated**
+3. `plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md` — a parking register whose P0-A (a **dated**
    2026-08-15 `check_codex_doc_freshness.py` hard-gate cliff), P1-C, P1-D and P2-E findings were all prose, so a
    repo-wide commit blocker with a known arrival date was invisible to every open-todo count. Converted.
 4. `plans/archive/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md` (stale path CORRECTED

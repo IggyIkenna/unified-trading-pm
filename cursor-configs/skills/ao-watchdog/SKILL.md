@@ -228,7 +228,7 @@ online`) forces the dashboard to `level="crit"`. Read that directly rather than 
   now fully traceable" refers to: (1) **`resource-watchdog.service`** (PM repo, `scripts/infra/resource-watchdog/`)
   polls every 10s and SIGKILLs non-allowlisted processes over RSS/CPU/swap thresholds —
   `POST /api/resource-watchdog/kill`, `GET /api/resource-watchdog/status`, dashboard `ResourceWatchdog.tsx`,
-  documented `codex/05-infrastructure/agent-orchestrator-api-host.md` (built from the 2026-08-05 OOM incident:
+  documented `/codex/05-infrastructure/agent-orchestrator-api-host.md` (built from the 2026-08-05 OOM incident:
   two 26-27GB runaway processes). **Read `GET /api/resource-watchdog/status` for recent kills** — a kill in the
   last 24h is a real finding (name the process + slot + RSS that triggered it), not silently absorbed cleanup.
   (2) **`ResourceHistoryLoop`** (`server/resource_history.py`, standalone `resource-history-sampler.service`)
