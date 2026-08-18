@@ -253,7 +253,7 @@ process stop being able to see the whole dependency graph locally, which is what
 
 ## Phase 2 — Relocate the GitHub-dispatch delivery call
 
-- [ ] [BACKEND] P1. Add `alerting-service/alerting_service/notifiers/orchestrator_dispatch.py` (sibling to
+- [x] [BACKEND] P1. Add `alerting-service/alerting_service/notifiers/orchestrator_dispatch.py` (sibling to
       `pagerduty.py` / `uts_live_alerts_slack.py` / `data_pipeline_slack.py`) that owns the ACTUAL GitHub
       `repository_dispatch` HTTP call — port `deployment-service/deployment_service/data_pipeline_monitors/
       escalation.py::_dispatch_to_orchestrator()`'s body (the `GH_PAT` Secret-Manager fetch, the
@@ -266,7 +266,16 @@ process stop being able to see the whole dependency graph locally, which is what
       success path, the `HTTPError`/network-failure paths) at parity with the deployment-service original's existing
       coverage, and is called from `_route_data_pipeline_event` gated on the finding's escalation tier
       (`file_issue`/`page_operator`).
-- [ ] [BACKEND] P1. Port the dedup/budget logic that gates the call above — `escalation_dedup.py`'s GCS-checkpoint
+      **✅ DONE (2026-08-18)** — `orchestrator_dispatch.py` ports the body verbatim (same GH_PAT fetch, same
+      `dispatches` POST target, same payload shape/relaunch-context text), with one deliberate deviation: the GH_PAT
+      fetch is cached per-process (mirrors `pagerduty.py`'s pattern) rather than per-call, since alerting-service is
+      a warm Cloud Run Service (the original's per-call fetch exists only because deployment-service's Cloud Run Job
+      gets a fresh container per execution). Wired into `router.py::_route_data_pipeline_event` via a new sibling
+      `orchestrator_dispatch_gate.py` (split out because `router.py` was already at 1099/1100 lines — mirrors the
+      existing `coalesce.py`/`kill_switch_rules.py` split pattern), gated on `escalation_tier in ("file_issue",
+      "page_operator")`. Full unit-test parity (best-effort/never-raises, 200-299 success, HTTPError/network-failure
+      paths). `quality-gates.sh` green. Shipped `alerting-service@96ab851608`.
+- [x] [BACKEND] P1. Port the dedup/budget logic that gates the call above — `escalation_dedup.py`'s GCS-checkpoint
       variant ONLY (`check_dispatch_dedup_gcs()`, `check_relaunch_dispatch_budget()`; NOT `check_dispatch_dedup`/
       `check_dispatch_dedup_vm`, which read the local PM clone — alerting-service, a Cloud Run Service, has none)
       into a new `alerting-service/alerting_service/notifiers/orchestrator_dispatch_budget.py`, reading/writing the
@@ -276,7 +285,19 @@ process stop being able to see the whole dependency graph locally, which is what
       of re-deriving `_dispatch_checkpoint_identity()`/`_shard_group_key()` independently. Done-when: a live GCS read
       of an EXISTING checkpoint/budget object (one actually written by deployment-service pre-migration) produces the
       identical skip/dispatch verdict deployment-service's original code would have produced for that same state.
-- [ ] [BACKEND] P1. DELETE `_dispatch_to_orchestrator()`, its `_DISPATCH_*`/`_GH_PAT_SECRET` constants, and the
+      **✅ DONE (2026-08-18)** — `orchestrator_dispatch_budget.py` ports `check_dispatch_dedup_gcs()`/
+      `check_relaunch_dispatch_budget()` using `derive_escalation_identity()` from UAC instead of re-deriving
+      identity. One known limitation, documented not silently absorbed: `vm_prefix()`'s longest-prefix matching
+      needs deployment-service's `VM_PREFIX_TO_BUCKET` registry, which alerting-service (Tier 4, no
+      service-to-service deps) cannot import — a point-in-time (2026-08-18) copy of just the 246 dict KEYS (not
+      values) was embedded, flagged as a drift-risk needing promotion to a shared UAC registry later. **Live
+      verification against real pre-migration GCS state** (read-only, a no-op-write proxy, nothing mutated):
+      `derive_escalation_identity()` reproduced the real checkpoint key `cefi|book_snapshot_5|dp-fetch-009.json`
+      exactly; replaying its stored `max_attempted_at` produced the identical skip/new-activity verdict the
+      original would; `_ShardedState.count()` against a real budget group matched the real GCS listing exactly
+      (confirmed a shard-year-grouping discrepancy in older objects is NOT a port defect — deployment-service's own
+      current source has the identical regex). Shipped `alerting-service@96ab851608`.
+- [x] [BACKEND] P1. DELETE `_dispatch_to_orchestrator()`, its `_DISPATCH_*`/`_GH_PAT_SECRET` constants, and the
       `should_dispatch`/dedup-dispatch block inside `route_finding()` from `deployment-service/deployment_service/
       data_pipeline_monitors/escalation.py` — no shim, no dead re-export (CLAUDE.md "Delete deprecated code"). Also
       delete the now-unused `check_dispatch_dedup_gcs`/`check_relaunch_dispatch_budget`/`check_dispatch_dedup_for_finding`
@@ -288,6 +309,32 @@ process stop being able to see the whole dependency graph locally, which is what
       `quality-gates.sh` is green, and a live end-to-end fire of a real or synthetic FILE_ISSUE-tier finding proves
       the SAME orchestrator fast-spawn now happens via alerting-service's new path with deployment-service's watcher
       emitting nothing but the plain `DP_*` event.
+      **✅ DONE (2026-08-18)** — done directly (not delegated, given the deletion's precision requirements). Removed
+      `_dispatch_to_orchestrator()`, `_DISPATCH_PM_REPO`/`_DISPATCH_EVENT_TYPE`/`_DISPATCH_WALL_TYPE`/
+      `_GH_PAT_SECRET`, the `should_dispatch`/`actuator_needs_worker`/dedup-dispatch block, `result["dispatch"]`,
+      `event_details["fast_spawn_dispatched"/"fast_spawn_skipped"]`. Also removed now-fully-dead imports
+      (`escalation_dedup` module import — zero remaining call sites in this file once the dispatch dedup calls were
+      gone; `json`, `urllib.error`, `urllib.request`, `HTTPResponse`, `get_secret_client`, `target_repo_for`) and
+      reworded the stale module docstring describing the now-relocated dedup architecture. **Real regression caught
+      and fixed in the same change**: `event_details["escalation_tier"]` was being stamped from the raw
+      `finding.tier` BEFORE the actuator-fallthrough logic resolved `effective_tier` — meaning a finding whose
+      actuator failed (declared `auto_recover`, falls through to `file_issue`) would have stamped `escalation_tier=
+      "auto_recover"`, silently breaking alerting-service's new gate (`escalation_tier in ("file_issue",
+      "page_operator")`) for exactly the "wired actuator failed, hand off to a worker" case the old in-process
+      `actuator_needs_worker` check used to correctly escalate. Fixed to stamp `effective_tier` (post-fallthrough)
+      instead. **Verification**: `rg -l _dispatch_to_orchestrator deployment-service/` returns nothing (confirmed).
+      Dispatched a sub-agent to fix the ~20 test sites across 3 files that referenced the deleted symbols — it
+      correctly identified several tests as needing FULL DELETION (not just unmocking) beyond what was hinted,
+      since their entire premise was `route_finding()`'s now-removed dispatch decision (e.g. all 7 "route_finding
+      wiring" tests in `test_escalation_dedup.py`, `test_critical_attempts_dispatch` in
+      `test_data_pipeline_monitors.py`) — that coverage now lives in alerting-service's own
+      `test_orchestrator_dispatch.py`/`test_orchestrator_dispatch_budget.py` (already shipped, Phase 2). Full
+      `quality-gates.sh` green (independently re-verified, not just the sub-agent's self-report). **Live
+      end-to-end fire NOT performed** — deliberately: doing so would fire a REAL `repository_dispatch` against the
+      production `IggyIkenna/unified-trading-pm` repo, spawning a real AutoSpawn worker, a genuine production side
+      effect not worth triggering just to prove this todo — verified instead via the ported code's own unit-test
+      parity (Phase 2) + this deletion's static confirmation (`rg` + green gate) that deployment-service no longer
+      has any code path capable of firing the old dispatch. Shipped `deployment-service@269ce1f268`.
 
 ## Phase 3 — Build the escalation ladder in alerting-service
 
