@@ -120,7 +120,10 @@ unblockers per plan body Findings Triage).
 Per-cell overrides via catalog builder `_build_carry_recursive_borrow_lending_only()` in `strategy-service`
 `engine/strategies/v2/target_universe/catalog.py` (Phase 3 spec). Chain-overridable defaults:
 `ltv_target = liquidation_threshold - 0.05`, `rebalance_threshold_lower_hf=1.10`, `oracle_staleness_max_seconds=86400`.
-`gas_budget_usd_per_loop_iter`: 25 (eth), 0.50 (arb), 0.20 (base). `recursion_depth_max`: 8 (eth), 10 (arb), 12 (base).
+`gas_budget_usd_per_loop_iter`: 25 (eth), 0.50 (arb), 0.20 (base). `recursion_depth_max`: 5 (uniform, all chains) —
+**corrected 2026-08-18 (plan_reconciler)**: the per-chain 8/10/12 figures above were never adopted — RULED 2026-08-09
+(operator, interactive): keep the already-shipped flat `recursion_depth_max=5` for both archetypes, chain-uniform;
+revisit only after a live track record. See `plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
 
 ```yaml
 # Chain constraint (UAC canonical/crosscutting/defi.ChainKind; Phase 3 defi_master 2026-05-18):
