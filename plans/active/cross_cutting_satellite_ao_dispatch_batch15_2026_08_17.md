@@ -76,10 +76,15 @@ source: >-
 
 ## From `data_pipeline_completion_2026_08_21.md`
 
-- [ ] [DATA] P0. Verify B21 — Distinct Values in the deployment UI shows zero non-canonical values, per asset group.
+- [x] ✅ [DATA] P0. Verify B21 — Distinct Values in the deployment UI shows zero non-canonical values, per asset group.
       Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the deployment UI's Distinct
       Values view is queried for every asset group and either zero non-canonical entries are confirmed, or the
-      specific non-canonical entries are named and reported.
+      specific non-canonical entries are named and reported. **RESULT: B21 FAILS — 113 non-canonical entries**
+      (cefi 1, defi 38, prediction 1, sports 71, tradfi 2; all but 5 `<blank>` sentinels are real, non-blank
+      drift). Queried live via the exact `deployment_api.routes.data_status._distinct_values` code path backing
+      `GET /distinct-values/{asset_group}` against the newest nightly honest-coverage rollup (source_date
+      2026-08-18). Full per-value breakdown + 8 follow-up todos filed:
+      [`/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`](/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md).
 - [ ] [DATA] P0. Verify B22 in BOTH directions, per asset group, off the manifest — manifest→path (does every entry
       have an object?) AND path→manifest (does every object have an entry?). Manifest-driven; no new whole-corpus
       GCS walk (B13 discipline). Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: a
