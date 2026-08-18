@@ -22,7 +22,7 @@ related:
     agent-orchestrator/docs/deepseek_cli_setup_guide.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-18
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -83,7 +83,7 @@ turns / ~5.0B cache-read tokens over 7 days — a real, continuous fallback volu
 Luna allowance (OpenAI's stated range: ~1,000-5,600 messages/5h + a separate weekly cap) is plausibly comparable in
 order of magnitude if Luna absorbs a DeepSeek-like share of fallback traffic — but OpenAI states this as a wide range,
 not a number to bank on, and AO's own routing split (how much of the fallback pool goes to Luna specifically, vs.
-DeepSeek/GLM/Grok) is not yet decided. Treat the $200/mo bet as directionally reasonable, not proven — the plan includes
+DeepSeek/GLM) is not yet decided. Treat the $200/mo bet as directionally reasonable, not proven — the plan includes
 a real post-launch measurement checkpoint rather than trusting this estimate.
 
 **Codex SSOTs this plan depends on** (read before touching the cited mechanism): the sibling
@@ -317,3 +317,13 @@ template, minus the third-party dependency).
   system-prompt marker verification, quota tracking/gating, cross-checked usage-capture, the `model_pricing.py` Luna
   entry, and streaming support.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:fad9ed0c1cf72aa5]: KEEP-NA, valid — CORRECTED from an initial per-todo-split read: `ag_closeout_audit_ao_parked_2026_08_16.md` (this same tranche's parking register) explicitly states this whole doc is 'excluded from AO-dispatch by operator direction 2026-08-14 (operator is handling both elsewhere, not via this tracker)' — a redirect-banner never-relitigate case (c) found on a sibling surface. Not extracting the Luna rate-card item.
+- **Grok removal cleanup, 2026-08-18** (operator decision: xAI/Grok has no subscription or free tier, pure metered
+  pricing, not worth keeping — a separate track handles the actual agent-orchestrator code/UI removal and the sibling
+  `grok_gemini_translation_proxy_2026_08_14.md` doc). Stripped the single passing "vs. DeepSeek/GLM/Grok" mention from
+  the Why section's still-open routing-split sentence (§ real usage grounding) — the sentence's own subject is
+  Luna's fallback-pool share, Grok was only a passing list member. Left everything else untouched: the "Ruled out
+  this session: xAI's SuperGrok+OpenCode subscription integration" paragraph and every Grok mention inside an
+  already-`[x]`-DONE todo body or a dated Progress Log entry (account tagging precedent, litellm scaffolding
+  comparisons) are historical record of decisions/work already made, not live open todos. Also left the "sibling
+  Grok/Gemini proxy plan" pointer in Non-goals and the Progress Log's `grok_gemini_translation_proxy_2026_08_14.md`
+  citation untouched — that doc is owned by the separate removal track, not this one.

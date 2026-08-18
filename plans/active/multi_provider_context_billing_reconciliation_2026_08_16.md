@@ -24,7 +24,6 @@ tags:
     billing,
     reconciliation,
     multi-provider,
-    grok,
     gemini,
     glm,
     codex,
@@ -39,7 +38,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-17
+last_updated: 2026-08-18
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -77,14 +76,15 @@ visible once real traffic flowed through real proxies:
 **1. Context-window/tokenizer accuracy is NOT uniform across providers, but the mechanism that depends on it IS.**
 `context_lifecycle.py`'s 60% pre-compact trigger reads `context_used_pct` by scraping Claude Code's own self-reported
 "N% context used" pane text — a number Claude Code computes from the `usage.input_tokens`/`output_tokens` fields in
-each turn's response. For Grok/Gemini/GLM those fields are REAL (LiteLLM/GLM's native endpoint pass through the
-vendor's own usage accounting). For **Codex/Luna they are a placeholder**:
+each turn's response. For Gemini/GLM those fields are REAL (LiteLLM/GLM's native endpoint pass through the
+vendor's own usage accounting — Grok was identical before its 2026-08-18 decommission). For **Codex/Luna they are a
+placeholder**:
 `server/codex_bridge_server.py::_estimate_tokens` is `len(text) // 4` — a crude heuristic, explicitly marked
 "never to be trusted for billing" in its own docstring. This session independently demonstrated exactly how
 unreliable a naive text-length-based token estimate can be: a word-count heuristic on a real Grok 4.6 context-limit
 test undercounted the real (xAI-tokenizer-measured) count by 1.6x. If Codex's fake estimate has a similar or worse
 skew, `context_used_pct` for a Codex-backed session is silently wrong, and the SAME 60%-trigger mechanics that work
-correctly for Grok/Gemini/GLM will misfire for Codex specifically — either compacting too early (wasted turns) or,
+correctly for Gemini/GLM will misfire for Codex specifically — either compacting too early (wasted turns) or,
 worse, letting a session run past its real context ceiling undetected (an uncontrolled 400 mid-session, a materially
 worse failure than the "recover with a fresh session" path this codebase already has for a *known*-saturated session).
 
@@ -99,8 +99,8 @@ it was live-tested, not assumed.
 **Separately (operator correction, 2026-08-16): the self-compaction question needs re-testing through the REAL path.**
 The 500K-limit test above was a raw HTTP probe directly against the proxy, bypassing Claude Code entirely — it proves
 the *backend* doesn't self-compact, but says nothing about whether Claude Code's own `/pre-compact` → `/compact`
-mechanism, and the skills/hooks wrapped around it, actually work correctly when the backend is Grok/Gemini/GLM/Codex
-specifically. DeepSeek already proved this end-to-end (`deepseek_claude_blended_provider_routing_2026_07_28` Progress
+mechanism, and the skills/hooks wrapped around it, actually work correctly when the backend is Gemini/GLM/Codex
+specifically (Grok was decommissioned 2026-08-18, before this verification ran for it). DeepSeek already proved this end-to-end (`deepseek_claude_blended_provider_routing_2026_07_28` Progress
 Log, 2026-07-29: "CLAUDE.md/agents/\*.md need no DeepSeek special-casing — both load identically regardless of which
 backend ANTHROPIC_BASE_URL points at"), but that result does not automatically transfer to the 4 new providers and
 needs its own live verification, the same way DeepSeek's was actually proven rather than assumed.
@@ -123,10 +123,11 @@ operator 2026-08-16, not yet designed:
   `agent-orchestrator@616450ffac`) with real per-account numbers already pulled (Max20 accounts cluster 14x-32x; a
   genuine Pro-tier ~1047x outlier is still under investigation there, not a data bug — see that doc's own open
   todos). This plan's original framing wrongly described the Claude subscription-value question as unsolved; it
-  isn't — it's the reusable PRECEDENT this plan should generalize, not a gap to fill from scratch. The 4 newer
-  providers (Grok/Gemini/GLM/Codex) still have no per-task cost attribution built at all.
+  isn't — it's the reusable PRECEDENT this plan should generalize, not a gap to fill from scratch. The 3 newer
+  providers (Gemini/GLM/Codex) still have no per-task cost attribution built at all (Grok would have been a 4th,
+  decommissioned 2026-08-18 before this work started — no subscription/free tier, judged not worth running).
 - **Normalized bang-for-buck**: everything should reduce to input/output/cache-read/cache-write token counts so
-  providers are comparable regardless of billing shape — metered-$ (Grok), first-party token counts we trust
+  providers are comparable regardless of billing shape — metered-$ (DeepSeek), first-party token counts we trust
   (Anthropic, Gemini), subscription-flat-rate where the real value per dollar is now KNOWN for Claude (see above) but
   still genuinely UNKNOWN for GLM's Coding Plan (the one remaining real "Sonnet multiplier"-shaped gap — no
   equivalent calibration has been built for GLM's flat-rate subscription), and rate-limited-free-tier where "spend"
@@ -171,20 +172,23 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       sample of Codex-backed turns' captured token counts are cross-checked against the actual ChatGPT/Codex usage
       dashboard and found to agree within a stated tolerance — same standard already required by
       `codex_luna_flex_bridge_2026_08_14.md`'s existing accurate-usage-capture todo, which this directly unblocks.
-- [ ] [REVIEW] P1. Verify Claude Code's own end-to-end `context_used_pct` display is accurate for Grok/Gemini/GLM —
-      the individual API responses carry real vendor-reported usage (confirmed this session), but the CUMULATIVE
-      session-level percentage Claude Code itself computes and displays has not been independently checked end-to-end.
-      Done when: a real multi-turn session against each of the 3 providers shows a `context_used_pct` reading that
-      tracks real cumulative token consumption within a stated tolerance.
-- [ ] [REVIEW] P0. Live-test `/pre-compact` and `/compact` through the REAL harness (not a raw HTTP probe) for each of
-      Grok, Gemini, GLM, and Codex — spawn real `claude` CLI sessions against each new account, run long enough to
-      approach or force the 60% threshold, and confirm: (a) the skill/command actually executes (not silently
-      swallowed), (b) `context_used_pct` genuinely drops afterward — proving compaction reduces what gets resent, not
-      just that the command ran, (c) CLAUDE.md/skills/hooks behave identically to the already-proven DeepSeek case.
-      Done when: a dated Progress Log entry records this for all 4 providers, each independently verified, not
-      assumed to transfer from DeepSeek's or each other's result.
-- [ ] [REVIEW] P2. Live-test the remaining context-window claims from this session's research table (Grok 4.3's 1M,
-      GLM's 1M/131K, Gemini's 1,048,576/65,536 — already confirmed live for Gemini, DeepSeek's 1,048,576/384,000,
+- [ ] [REVIEW] P1. **Narrowed 2026-08-18 (Grok decommissioned)** — verify Claude Code's own end-to-end
+      `context_used_pct` display is accurate for Gemini/GLM — the individual API responses carry real vendor-reported
+      usage (confirmed this session), but the CUMULATIVE session-level percentage Claude Code itself computes and
+      displays has not been independently checked end-to-end. Done when: a real multi-turn session against each of
+      the 2 providers shows a `context_used_pct` reading that tracks real cumulative token consumption within a
+      stated tolerance.
+- [ ] [REVIEW] P0. **Narrowed 2026-08-18 (Grok decommissioned)** — live-test `/pre-compact` and `/compact` through
+      the REAL harness (not a raw HTTP probe) for each of Gemini, GLM, and Codex — spawn real `claude` CLI sessions
+      against each new account, run long enough to approach or force the 60% threshold, and confirm: (a) the
+      skill/command actually executes (not silently swallowed), (b) `context_used_pct` genuinely drops afterward —
+      proving compaction reduces what gets resent, not just that the command ran, (c) CLAUDE.md/skills/hooks behave
+      identically to the already-proven DeepSeek case. Done when: a dated Progress Log entry records this for all 3
+      remaining providers, each independently verified, not assumed to transfer from DeepSeek's or each other's
+      result.
+- [ ] [REVIEW] P2. **Narrowed 2026-08-18 (Grok decommissioned, its 4.3's 1M claim dropped — untested and now moot)**
+      — live-test the remaining context-window claims from this session's research table (GLM's 1M/131K, Gemini's
+      1,048,576/65,536 — already confirmed live for Gemini, DeepSeek's 1,048,576/384,000,
       GPT-5.6's 1.05M/128K) the same way Grok 4.6's 500K was — a real oversized request, built on-host to avoid
       transport payload limits, confirming the vendor enforces its documented ceiling and does not silently truncate.
       Done when: each is either confirmed live or explicitly flagged as still resting on published docs only.
@@ -222,9 +226,9 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       counts as the common denominator across every provider's billing shape (metered-$, first-party-token,
       subscription-flat-rate, rate-limited-free-tier), each priced at the provider's PUBLISHED rate (not a computed
       effective rate) for the "bang for the buck" comparison. Must generalize DeepSeek's existing `task_usage` table
-      rather than create a second, parallel per-task ledger. Done when: a design doc or schema proposal covers all 7
-      currently-registered providers (Anthropic, DeepSeek, Grok, Gemini, GLM, Codex) with a concrete field mapping
-      for each.
+      rather than create a second, parallel per-task ledger. Done when: a design doc or schema proposal covers all 6
+      currently-registered providers (Anthropic, DeepSeek, Gemini, GLM, Codex, Kimi) with a concrete field mapping
+      for each (Grok decommissioned 2026-08-18, dropped from scope).
 - [ ] [DATA] P1. Reconciliation proof: sum of every task's attributed billing (once the schema above is populated for
       a real window) must equal the fleet's real total spend for that window, per provider. Done when: a dated
       Progress Log entry shows this reconciling within a stated tolerance for at least DeepSeek + one new provider.
@@ -334,8 +338,121 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       size and its real outcome metrics (turns/tokens/compacted) joinable in one query. **Extracted 2026-08-18
       (na-eligibility-audit, ao tranche) → `ao_satellite_ao_dispatch_batch24_2026_08_18.md` item 4** —
       conflict-checked clear. Track dispatch/completion there, not here.
+- [x] [BACKEND] P2. **New, operator ask 2026-08-18 — hourly, clock-aligned time-series aggregation per
+      (provider, role_group).** Built `fleet_kpis.compute_hourly_provider_role_usage()` (extends
+      `compute_dispatch_efficiency_by_day`'s UTC-calendar-day pattern to hourly, per the plan's own instruction — not a
+      parallel mechanism), bucketed by FIXED UTC clock-hour boundaries (`_hour_bucket()` truncates to
+      minute=second=microsecond=0, never a rolling window). Exposed as `GET /api/backlog/usage/hourly-series` in
+      `server/routes/backlog.py` (`provider`/`role_group`/`start`/`end` query params, same AND-composing/laissez-faire
+      convention as `/api/backlog/usage/windows`); range defaults to `fleet_kpis.earliest_usage_timestamp()` (MIN across
+      `task_usage.completed_at` and `task_dispatched` activity rows) when `start` omitted. Each bucket reports
+      published rate(s) actually in use (`model_pricing.rates_for()` per distinct model seen that hour — never an
+      averaged blend across models), 4-way token usage, $ spend (poisoned to None by any unpriced row, same rule as
+      `window_task_usage_totals`), completed-task count, and dispatch-ATTEMPT count. Dispatch attempts resolve
+      provider via `slot_account_attribution.resolve_turn_account()` against `tmux_spawn.session_name(slot_id)` (a
+      `task_dispatched` activity event's own `details_json` carries no account_id — confirmed via direct read of
+      `routes/slots_worker.py:709-715`); role_group resolves via `state_store.task_role_group()` (same taxonomy
+      `/api/backlog/usage/windows` already filters on), not `RoleDispatchEfficiency.role`'s finer raw-role bucketing.
+      New Pydantic views: `HourlyUsageBucketView`/`HourlyModelRateView` in `server/models/backlog.py`.
+      **Evidence — real query against a real seeded DB** (`dashboard/tests/e2e/fixtures/seed_e2e_state.py`'s own
+      fixture, via the real `run-e2e-backend.sh` mock-mode env, not a synthetic script):
+      ```
+      hour=2026-08-18T05:00:00+00:00 provider=anthropic role_group=planning task_count=2 dispatch_attempts=2
+      hour=2026-08-18T06:00:00+00:00 provider=deepseek  role_group=cicd     task_count=1 dispatch_attempts=5
+      ```
+      The 06:00 bucket is the burst — 5 dispatch attempts landing only 1 completion, visibly identifiable against the
+      05:00 bucket's healthy 2-attempts/2-completions neighbor, satisfying the "done when" bar verbatim. Full backend
+      quality gate green (`bash scripts/quality-gates.sh --no-fix`: ruff/basedpyright 0 errors, pytest 4022 passed/7
+      skipped).
+- [x] [UI] P2. **New, operator ask 2026-08-18 — adopt a charting library (operator's explicit choice over a
+      hand-rolled SVG alternative, since this dashboard has zero charting precedent today — confirmed via
+      `dashboard/package.json`, no recharts/chart.js/d3/victory/visx/nivo anywhere).** Added `recharts@^3.10.1`
+      (the actively-maintained major — 2.x is deprecated upstream, confirmed via `npm install`'s own deprecation
+      warning before switching; React 16-19 peer range, compatible with this dashboard's React 18.3). Composes cleanly:
+      `npm run typecheck`/`test`/`format:check` all green, `npm audit`'s pre-existing 8 vulnerabilities are all
+      transitive dev-tooling (vite/vitest/postcss/esbuild/babel/nanoid) unchanged before/after adding recharts —
+      confirmed by diffing `npm audit --json` output pre/post. Proof-of-concept chart:
+      `dashboard/src/UsageTimeSeriesModal.tsx` (`ComposedChart` — dispatch-attempts/tasks-completed bars +
+      spend line, dual y-axis, custom tooltip) renders real data from the new hourly endpoint. `pw:L2 ✓` —
+      `dashboard/tests/e2e/usage-time-series.spec.ts`, 3/3 passed against the real e2e stack.
+- [x] [UI] P2. **New, operator ask 2026-08-18 — shared popup/modal chart component, launched from MULTIPLE entry
+      points, not duplicated per-panel.** One component (`UsageTimeSeriesModal.tsx`) consuming the new hourly endpoint
+      (provider/role-group filter toggles reusing `TaskUsageWindows.tsx`'s own `ROLE_GROUP_FILTER_OPTIONS`), opened via
+      an "Usage over time" button added to the `Panel`'s `right` slot in ALL FIVE named entry points: `FleetKpis.tsx`,
+      `ClaudeWalletPanel.tsx` (pre-scoped `initialProvider="anthropic"`), `DeepSeekWalletPanel.tsx` (pre-scoped
+      `"deepseek"`), `KimiWalletPanel.tsx` (pre-scoped `"kimi"`), `TaskUsageWindows.tsx` (pre-scoped to that panel's
+      own current filter selection) — one implementation, five launch sites, not five copies.
+      **Real bug found + fixed while wiring this** (not pre-existing scope, a genuine regression this feature's FleetKpis
+      entry point was the first to expose): `.topbar` sets `backdrop-filter` for its frosted-glass look, which per the
+      CSS spec establishes a new containing block for `position: fixed` descendants — the shared `Modal` component
+      (`components.tsx`) was never portaled, so a Modal instantiated from inside a TopBar popover (FleetKpisMenu's
+      "KPIs" dropdown) rendered fixed-relative-to-the-144px-tall-topbar instead of the viewport, landing its content
+      far outside clickable/visible bounds (confirmed via `getBoundingClientRect()`: `.modal-back` measured
+      `144px` tall instead of the full `720px` viewport). Fixed by portaling `Modal` to `document.body` via
+      `createPortal` — a general fix benefiting every future modal-in-popover case, not a workaround scoped to this
+      feature. That portal in turn broke `usePopover`'s outside-click detection (a portaled modal's DOM node is no
+      longer a descendant of the popover's own `ref`, so any click inside it read as "click outside the popover" and
+      closed it, unmounting the modal); fixed with an explicit `.closest(".modal-back")` carve-out in
+      `layout.tsx`'s `usePopover`. Both fixes are small, targeted, and verified via the real Playwright run below —
+      not present in any other Modal usage's behavior (confirmed all other Modal call sites render from `App.tsx`'s
+      top level, never nested inside a TopBar popover, so this bug never manifested before).
+      **Evidence**: `dashboard/tests/e2e/usage-time-series.spec.ts` — 3/3 passed real end-to-end runs: (1) opens from
+      FleetKpis's "KPIs" popover, renders a real chart; (2) opens from ClaudeWalletPanel, pre-scoped to anthropic,
+      renders the same live data; (3) changing the provider filter from "All providers" to "Anthropic" re-fetches and
+      the burst-note banner (only present for deepseek's HOUR_B burst) correctly disappears. New fixture data:
+      `dashboard/tests/e2e/fixtures/seed_e2e_state.py`'s `E2E_USAGE_TS_*` constants — two real UTC-hour-anchored
+      buckets (anthropic/planning healthy pattern + deepseek/cicd deliberate 5-attempts/1-completion burst), with
+      dedicated `AgentRow` rows on slots 2/6 so `slot_account_attribution` has real intervals to resolve against.
 
 ## Progress Log
+
+- **2026-08-18 (implementation) — all 3 hourly-usage-chart todos shipped, uncommitted in the working tree.**
+  `agent-orchestrator` files touched: `server/fleet_kpis.py` (new `compute_hourly_provider_role_usage`,
+  `earliest_usage_timestamp`), `server/models/backlog.py` + `server/models/__init__.py` (new
+  `HourlyUsageBucketView`/`HourlyModelRateView`), `server/routes/backlog.py` (new `GET
+  /api/backlog/usage/hourly-series`), `dashboard/package.json` (+`recharts@^3.10.1`), new
+  `dashboard/src/UsageTimeSeriesModal.tsx` + `.test.ts`, `dashboard/src/{FleetKpis,ClaudeWalletPanel,
+  DeepSeekWalletPanel,KimiWalletPanel,TaskUsageWindows}.tsx` (launch button wiring), `dashboard/src/components.tsx`
+  (Modal portal fix — see the 3rd todo above for why), `dashboard/src/layout.tsx` (usePopover click-outside carve-out
+  — same root cause), `dashboard/src/styles.css` (`.usage-ts-tooltip`), new
+  `dashboard/tests/e2e/usage-time-series.spec.ts`, `dashboard/tests/e2e/fixtures/seed_e2e_state.py`
+  (`E2E_USAGE_TS_*` fixture block). Backend quality gate green (ruff/basedpyright/4022 pytest); dashboard
+  typecheck/408 vitest/format:check green; new Playwright spec 3/3 passed against the real e2e stack. Judgment calls
+  made without an operator ruling (flagged, not hidden): exact endpoint path/param names
+  (`/api/backlog/usage/hourly-series?provider=&role_group=&start=&end=`, mirroring `/api/backlog/usage/windows`'s
+  existing convention); burst-detection threshold (`dispatch_attempts >= 3 AND >= 2x task_count`, chosen so a single
+  crash/timeout requeue never false-flags); modal styling (plain `Modal`/`Panel` reuse, `ComposedChart` with dual
+  y-axis — bars for attempts/completions, line for spend — token totals surfaced via tooltip/rates-line rather than a
+  5th chart series, to avoid a scale mismatch against attempt/completion counts). No todo's "done when" bar was
+  infeasible — real historical spread existed (or was fixture-added) for every claim above.
+- **2026-08-18 (/plan-brainstorm) — 3 new todos added: hourly per-provider/per-role usage time-series + chart UI.**
+  Operator ask: plot usage over time per provider, broken down by role, showing published API rates/usage/real $
+  spent/task-completion counts, PLUS dispatch-attempt counts (not just completions — "trying a lot of times" without
+  landing the task is its own signal), launched as a popup from the KPI panel and/or each wallet-reconciliation/
+  task-usage panel. Operator explicitly ruled: fold into an existing plan, no new plan doc. Researched first (this
+  doc's own `context_scope` + `FleetKpis.tsx`/`server/fleet_kpis.py`): `DailyDispatchEfficiency`/
+  `RoleDispatchEfficiency`/`DispatchRetryStats` already exist (daily-granularity dispatch/done/retry KPIs) — this is
+  NOT greenfield, it's an hourly generalization + a new billing/rate dimension layered on. The plan that originally
+  built FleetKpis (`ao_fleet_observability_kpis_2026_07_20`) is archived, and the only other active KPI-adjacent plan
+  (`ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md`) is scoped to compaction/death-
+  diagnostics specifically — neither is the right home, so this doc (already covering per-task/per-provider billing
+  reconciliation) is. Two operator decisions resolved via `/plan-brainstorm` clarifying questions: (1) adopt a real
+  charting library (not hand-rolled SVG) despite this being the dashboard's first-ever charting dependency; (2)
+  hourly buckets (not daily) to actually surface intraday burst patterns. Operator separately clarified mid-session:
+  buckets must be FIXED UTC clock-hour boundaries (00:00, 01:00, ...), never a rolling "last N hours from now"
+  window — a different shape from every existing `window_hours` lookback endpoint in this codebase (the wallet
+  panels' own 1h/24h/7d/Lifetime toggle shipped earlier today), folded into the new todo's own text so it isn't
+  conflated by whoever builds it.
+
+- **2026-08-18 — Grok (xAI) decommissioned, operator decision; every open todo above narrowed to drop it.** Reason
+  stated verbatim: no subscription/Max-style tier and no free tier — pure metered pay-per-token — judged pointless
+  vs Claude/DeepSeek's subscription economics and Gemini's genuine free tier. Full removal record (code + the
+  dedicated onboarding plan) lives in `grok_gemini_translation_proxy_2026_08_14.md` (retitled to drop Grok, its own
+  2026-08-18 Progress Log entry has the file-by-file `agent-orchestrator` diff). This doc's provider-count references
+  updated (4→3 new providers: Gemini/GLM/Codex; 7→6 total registered providers), and the `[REVIEW]` context-window/
+  compaction-verification todos narrowed to the remaining providers. Historical findings (e.g. the real Grok 4.6
+  context-ceiling test that grounded this doc's "vendors don't self-compact" finding) left untouched — they're a
+  record of what was measured, not live scope.
 
 - **2026-08-16 (created)**: Plan authored from a same-session investigation following the live 9-model billing/context
   test battery (see the sibling provider plans' 2026-08-16 Progress Log entries for that raw data). Real findings this

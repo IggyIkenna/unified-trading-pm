@@ -1,0 +1,6 @@
+asset_group,finding,event,detail
+tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"  DIVERGENT_EMPTY                             8,477 ❌"
+tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-18 08:11:29,104 WARNING DIVERGENT_EMPTY asset_group=tradfi venue=NYSE data_type=ohlcv_1s date=2026-08-14"
+tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-18 08:11:29,104 WARNING DIVERGENT_EMPTY asset_group=tradfi venue=NYSE data_type=ohlcv_1s date=2026-08-17"
+tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-18 08:11:29,104 WARNING DIVERGENT_EMPTY asset_group=tradfi venue=NYSE data_type=ohlcv_1s date=2026-08-18"
+tradfi,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"DIVERGENT_EMPTY:  8,477"

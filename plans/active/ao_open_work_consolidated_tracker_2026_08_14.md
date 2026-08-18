@@ -33,7 +33,7 @@ related:
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-17
+last_updated: 2026-08-18
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -201,6 +201,19 @@ context_scope:
       Verified 2026-08-15 (reconciliation sweep, this session). Source:
       `/plans/archive/issues/cicd_escalation_agentrow_archived_prematurely_mid_session_2026_07_29.md` (its own
       "declined-P3, revisited" section already narrates this as shipped — flip the checkbox to match).
+- [x] [DIAG] P0. Root-caused + fixed: `context_lifecycle.py::_tick_target`'s boundary-confirmed compaction path
+      recognized a real compaction but never wrote the corrected pct back, so the stale pre-compaction-high value
+      re-armed another forced compact every ~3.5min indefinitely — the "agents dying mid-task" pattern. Fixed +
+      surfaced as a HealthStrip KPI. Fleet resumed to full capacity (0 paused). Evidence: `agent-orchestrator@
+      9ba4391e60` (fix), `agent-orchestrator@1b2dddffc9` (UI). Full detail:
+      `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 2, resolved).
+- [x] [BACKEND] P1. Root-caused + fixed: `_pick_free_slot` had zero awareness of `scheduled_task_reserved_slot_ids`
+      at all — it never diverged from a race, it simply never consulted the reserve, so scheduled jobs landed on
+      whichever slot iterated first. Fixed to prefer a reserved-and-free slot. Evidence: `agent-orchestrator@
+      54f8fc5811`. Full detail: `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 1, resolved).
+- [x] [UI] P2. Fixed: human-fleet rows now state their own scope ("Ikenna (human-fleet slot 9001)") + a
+      scope-clarifying STALE tooltip. Evidence: `agent-orchestrator@1b2dddffc9`. Full detail:
+      `/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md` (Finding 3, resolved).
 - [x] [DIAG] P0. Root-caused + fixed: `context_lifecycle.py::_tick_target`'s boundary-confirmed compaction path
       recognized a real compaction but never wrote the corrected pct back, so the stale pre-compaction-high value
       re-armed another forced compact every ~3.5min indefinitely — the "agents dying mid-task" pattern. Fixed +
@@ -720,22 +733,22 @@ with plain dispatchable todos gets that item forked into a companion `assigned_v
 plan can reach zero-open-todos and archive independently.
 
 - [ ] [PM] P2. **Run the Track-A/B classification pass** (`task_template.md` §3 finding Y's 3-step process) across
-      every `orchestrator_master`-scoped `assigned_vm: planning` plan. One concrete seed finding already surfaced
-      this session (2026-08-16 AO-corpus dedup audit, live-verified against the agent-orchestrator backlog): the
-      Anthropic per-task calibration run
-      (`plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md`, live backlog id
-      `...-8719bc760e62`, currently `status=blocked`) is tagged `[OPERATOR]` but is actually read-only/fully
-      AO-dispatchable — only the *interpretation* of the result needs a human. That's a mis-tag to correct
-      (finding Y's step 1: "if mis-tagged, untag it instead of forking it out"), not a fork candidate. Classify the
-      rest of the `orchestrator_master` population the same way before assuming another one needs forking.
-- [ ] [PM] P2. **Resolve the `batch14` DeepSeek-credential-fix conflict** — live-verified 2026-08-16: the env-file
-      GSM-indirection todo (`ao_satellite_ao_dispatch_batch14_2026_08_09.md`, live backlog id `...-791d3e7d35b7`) is
-      `status=queued` right now — genuinely still open, NOT done despite an earlier (incorrect) claim that it landed
-      2026-08-12. It sits on a topic the tracker's own Notes below call fully CANCELLED/out-of-tracker-scope
-      (`deepseek_claude_blended_provider_routing_2026_07_28.md`). Since this specific todo is real, live, queued
-      work with nobody owning it, either (a) dispatch it normally (it's a plain `[INFRA]` todo, not `[OPERATOR]`,
-      and the live backlog already has it queued and ready), or (b) if the DeepSeek-cancellation ruling was meant to
-      cover this too, explicitly cancel it with a citation — don't leave it silently queued-but-orphaned.
+      every `orchestrator_master`-scoped `assigned_vm: planning` plan. **Re-checked 2026-08-18**: the one concrete
+      seed finding this todo cited (the Anthropic per-task calibration plan's `[OPERATOR]` item being a mis-tag)
+      does NOT reproduce against the doc's current state — `plans/active/anthropic_per_task_actual_spend_and_
+      account_calibration_2026_08_10.md` has exactly one open `[OPERATOR]` todo today ("LAPTOP-ONLY — log the
+      laptop's login identity on change," line 347), and that one is genuinely laptop-only (needs
+      `~/.claude.json` on the operator's own machine, structurally unreachable from an AO VM worker) — not a
+      mis-tag. Either the doc changed since the 2026-08-16 finding, or the finding pointed at a different backlog
+      item than this plan's current checkbox set reflects. The broader classification pass across the rest of the
+      `orchestrator_master` population is still explicitly NOT bounded for a single pass (this todo's own framing) —
+      stays open, un-attempted this round; the seed finding specifically is stale and should not be reused as a
+      template without re-verifying against live backlog state first.
+- [x] [PM] P2. **RESOLVED 2026-08-18 — not cancelled, distinct topic, safe to dispatch normally.** The `batch14`
+      env-file GSM-indirection fix (real todo tracked in `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md`
+      todo 2, a fresh `[INFRA] P0`) is a credential-hygiene bug fix, unrelated to the BLENDED-ROUTING PILOT topic
+      the DeepSeek-cancellation ruling (`deepseek_claude_blended_provider_routing_2026_07_28.md`) actually covered.
+      No conflict — plain `[INFRA]`, already queued, safe to dispatch normally.
 
 ---
 
@@ -782,32 +795,14 @@ plan can reach zero-open-todos and archive independently.
 
 ## Progress Log
 
-- **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
-- **2026-08-14 (authoring)**: Created from the 5-parallel-agent code-audit sweep of 44 AO-subject-matter docs run
-  earlier this session. 10 already-implemented-but-unflipped items were fixed directly (not tracked here — see
-  `unified-trading-pm@0969b12571`/`9906379de6`); the gcloud WIF-poisoning security issue was fully resolved + archived
-  (`unified-trading-pm@f34adbc7f1` + supporting commits); 58 items confirmed genuinely still open, as of that sweep.
-- **2026-08-14 (same-day correction)**: 7 DeepSeek-routing todos CANCELLED per operator direction — that work + the
-  Luna/Flex bridge are handled outside this tracker; the "credit-exhausted" gate the first cancelled item cited was
-  already stale (accounts funded, DeepSeek actively taking tasks). 51 items remain genuinely open above.
-- **2026-08-14 (Track 6 dispatch, sub-agent)**: Worked all 6 assigned Track-6 items to completion — archived batch6 +
-  batch6_finalize, batch7 + batch7_finalize, and batch5 + batch5_finalize (all 0-open-todos, full 6-step ritual, corpus
-  referrers repointed); applied the RULED 2026-08-06 disposition sweep to the 12 operator-gated docs + bucketed the 7
-  unclear docs from `ao_orphan_audit_followup_triage_2026_07_30.md` (archived that doc too, 0 open todos after both
-  items); audited the ~14 `BLOCKED-PREREQ` occurrences down to 6 live ones, all confirmed genuine same-corpus
-  dependencies, spawned 1 tracked design-question follow-up. **Known residual, not fixed this pass**: `INDEX.md`'s regen
-  repeatedly failed to land via `safe-doc-push.sh` (3 attempts, each reporting "THE PUSH LANDED BUT YOUR CHANGE DID NOT"
-  against a large, extremely stale local stash pile — 48 autostash/safety-snapshot entries) — reverted the local copy to
-  match HEAD rather than keep fighting a pre-existing systemic issue tracked at
-  `/plans/archive/2026_08/issues/pm_repo_commit_rate_exceeds_precommit_hook_duration_2026_08_10.md` (F4/F8); `INDEX.md`
-  is machine-regenerated by the daily hygiene sweep regardless, so this is cosmetic staleness, not a correctness gap.
-  Also hit + recovered from 2 genuine stash-pop merge conflicts mid-session (both were redundant duplicates of
-  already-landed content, resolved by keeping the landed HEAD version; one conflict resolution surfaced and fixed a real
-  content duplication bug in the triage doc). See the individual archived docs' own Progress Logs for full per-item
-  evidence.
-- **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries) — kept to the Track 1/Track 2 codex SSOTs
-  - dispatch.py/worker_liveness_watchdog.py; this tracker's own design is "each todo cites its Source doc", so a wider
-    list would duplicate what's already per-item.
+- **2026-08-18 (operator triage ask)**: re-checked all 8 `[ ]` items. `batch14` conflict resolved (see flipped
+  item — not cancelled, safe to dispatch). Track-A/B's seed finding is stale (doesn't reproduce), flagged not
+  re-applied. Remaining 6 re-confirmed correctly gated as already stated, not forced. Real bug found outside this
+  doc's own list (Track 5 line 532, `window_task_usage_totals` mis-attribution) — queued for a direct fix once the
+  concurrent hourly-usage-series build vacates `agent-orchestrator/server/`.
+- **2026-08-14/15 early history (authoring, Track 6 dispatch, first context-scout passes)** extracted verbatim to
+  [`ao_open_work_consolidated_tracker_history_2026_08_18.md`](/plans/archive/2026_08/ao_open_work_consolidated_tracker_history_2026_08_18.md)
+  per finding J (line-cap discipline) — nothing lost, just relocated.
 - **2026-08-15 (interactive session, operator-requested reconciliation)**: operator asked for a full reconcile against
   live code before dispatching anything further — ran a targeted Workflow verification sweep (18 code-checkable items)
   plus manual grep confirmation on Track 3's 3 items, 21 of the 51 originally-open items checked. **Result: 12 already

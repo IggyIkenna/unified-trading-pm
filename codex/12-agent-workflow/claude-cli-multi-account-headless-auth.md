@@ -194,8 +194,21 @@ file.
 └── sub-d-odum1default.env           # chmod 600
 ```
 
-(Current roster verified 2026-05-28: 4 accounts, all with setup-tokens minted, all distributed to both
-`gs://central-element-323112-orchestrator-creds/accounts/` AND `s3://uts-orchestrator-creds-427895769566/accounts/`.)
+**These two bucket paths are the canonical creds-bucket location — the ONLY place a setup-token
+`.env` file should ever be uploaded.** (Roster count is a snapshot, not re-verified every edit —
+check `GET /api/accounts` for the live list rather than trusting a stale number here; last hand-count
+was 2026-05-28 at 4 accounts, corrected 2026-08-18 to 7 (`sub-a` through `sub-g`) while onboarding
+an 8th — don't trust either number without a live check.)
+
+```
+gs://central-element-323112-orchestrator-creds/accounts/<account_id>.env
+s3://uts-orchestrator-creds-427895769566/accounts/<account_id>.env
+```
+
+**Do not copy these commands from `agent-orchestrator/docs/WORKER_SPAWN_PREREQUISITES.md`** — that
+doc used to carry the same instructions with the bucket names left as unresolved placeholders
+(`<creds-bucket>`), which cost a live session real time re-deriving them from `bootstrap_vm.sh` /
+`creds_env_poller.py` on 2026-08-18. It now points back here instead of duplicating.
 
 Each env file:
 
@@ -207,6 +220,41 @@ export CLAUDE_ACCOUNT_LABEL=sub-a-ikenna   # for orchestrator logging + dashboar
 ```
 
 The `unset` line is non-negotiable. Treat it as part of the env-file contract.
+
+## Adding a BRAND-NEW account (not just a new host for an existing one)
+
+Everything above (`~/.claude-accounts/`, the two creds buckets, `CredsEnvPoller`) is about
+**distributing** a token to hosts. A brand-new account additionally needs registering with the
+live orchestrator, and that step has a real gap (confirmed live 2026-08-18, igboestates-account
+onboarding) that cost a session real time re-deriving — recorded here so it isn't re-discovered:
+
+1. Mint the token (`claude setup-token`) and upload the `.env` file to both creds buckets, per the
+   one-time-setup + VM-file-layout sections above.
+2. Add a new `AccountDef` entry to `data/config/accounts.json` (`server/accounts.py`'s schema) —
+   at minimum `id`, `label`, `tier`, `provider: "anthropic"`, `weekly_msg_limit`, `primary_email`,
+   `operator`, and `oauth_token_env_file` (the `.env` filename from step 1, NOT the token itself —
+   `accounts.json` never contains the secret, only a path reference to where the poller/spawn path
+   reads it from). `tier`/`weekly_msg_limit` are operator-declared and unverifiable from the token
+   alone (see "Scope limitation" below) — ask the operator rather than guessing.
+3. **The gap**: unlike `POST /api/accounts/{id}/tier` (which writes `accounts.json` AND the live
+   `AccountRow` for an EXISTING account), there is no equivalent "create" endpoint for a brand-new
+   account. `bootstrap.sync_accounts_to_db()` (`server/bootstrap.py`) is the only code path that
+   syncs `accounts.json` into the live DB-backed rows `/api/accounts` actually serves from, and it
+   runs **once, at server boot** — confirmed via a full grep of `server/*.py`, zero other call
+   sites. A raw file edit alone will NOT make the new account appear in `/api/accounts` or become
+   spawn-eligible. **Restarting `orchestrator.service` IS required** to pick up a new account (an
+   existing account's tier/limits can be live-edited via the API without one; a brand-new id
+   cannot). Workers should survive this restart (`KillMode=process` — confirmed live, only the
+   uvicorn PID restarts, tmux sessions persist and reconnect), but it is still a live restart of
+   shared infrastructure — confirm with the operator before doing it, especially if other sessions
+   have in-flight dispatches, rather than restarting unilaterally.
+4. After the restart, confirm via `GET /api/accounts` that the new `account_id` appears with the
+   expected fields, and that a spawn against it succeeds (the "Quick verification recipe" above).
+
+**Worth building, not yet built**: a live "register new account" endpoint that writes
+`accounts.json` and inserts the new `AccountRow` in one call, the same way the tier-editor does for
+an existing account — would remove the restart requirement entirely. Not filed as a todo here since
+no active plan owns this; raise it as a new plan/issue if it recurs enough to be worth building.
 
 ## Switching accounts manually
 

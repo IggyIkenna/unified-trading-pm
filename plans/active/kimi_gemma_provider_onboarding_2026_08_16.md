@@ -2,7 +2,7 @@
 doc_type: plan
 title: Kimi (Moonshot) + Gemma (NVIDIA NIM) provider onboarding
 summary:
-  Onboard two more sonnet-tier fallback providers into the AO fleet, same pattern as the GLM/Grok/Gemini/Codex work
+  Onboard two more sonnet-tier fallback providers into the AO fleet, same pattern as the GLM/Gemini/Codex work
   (live model checks against real APIs, not vendor docs; cheapest-tier-first; real accounts registered but PAUSED
   until task-routing logic exists). Kimi (Moonshot AI — k2.5/k2.6/k3) and Gemma (via NVIDIA's free hosted NIM
   OpenAI-compatible endpoint, not self-hosted Ollama) are explicitly a hedge against a DeepSeek price rise, not an
@@ -25,7 +25,7 @@ related:
     /codex/06-coding-standards/model-tier-selection.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-16
+last_updated: 2026-08-18
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -58,10 +58,10 @@ context_scope:
 ## Why
 
 Operator decision (interactive session, 2026-08-16): add two more standby providers beyond the four already
-onboarded (GLM, Grok, Gemini, Codex/Luna) — explicitly framed as a hedge, in the operator's own words: **"Other
+onboarded (GLM, Gemini, Codex/Luna) — explicitly framed as a hedge, in the operator's own words: **"Other
 models are implemented to guard against deepseek price rise."** Same discipline as the prior four: verify real
-model names/tiers/limits against live APIs (not trusted vendor docs — this session's GLM/Grok work already caught
-two dead model names this way), start at the cheapest viable tier, register real production-ready accounts
+model names/tiers/limits against live APIs (not trusted vendor docs — this session's provider-onboarding work already
+caught two dead model names this way), start at the cheapest viable tier, register real production-ready accounts
 (billing/wallet reconciliation working), but leave every new account **paused** (`account_status: disabled`) until
 task-routing logic exists to decide which job goes where. Per the operator: **"The future work will be about task
 routing (does it do the job) once we fully understand the costs differences"** — that routing question is explicitly
@@ -293,7 +293,7 @@ had already run. Treat every todo below as net-new work, not a resume.
       `gemini_headroom.py`-style piece) is NOT done — deferred to the concurrency-measurement todo below, since no
       model's real rate/concurrency ceiling is known yet to gate on.
 - [ ] [REVIEW] P2. Wallet/balance reconciliation for both: Moonshot (metered $, confirm whether it exposes a
-      balance/usage-read endpoint the way DeepSeek's `/user/balance` and Grok's `management-api.x.ai` do, or whether
+      balance/usage-read endpoint the way DeepSeek's `/user/balance` does, or whether
       it needs the DeepSeek-style "available-balance-only" design already built) and NVIDIA NIM (free tier — likely
       no $ balance at all, so the meaningful reconciliation is against RATE-LIMIT capacity consumed, same shape as
       the Gemini free-tier todo already tracked in `multi_provider_context_billing_reconciliation_2026_08_16.md`).
@@ -325,7 +325,7 @@ had already run. Treat every todo below as net-new work, not a resume.
       session — the core concern this todo exists for is resolved; revisit the exact ceiling only if a real
       session actually approaches it in practice.
 - [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` through the REAL Claude Code harness (a spawned `claude`
-      subprocess, not a raw HTTP probe) for both new providers, same requirement already tracked for GLM/Grok/Gemini/
+      subprocess, not a raw HTTP probe) for both new providers, same requirement already tracked for GLM/Gemini/
       Codex in the sibling plan. Done when: a real compact cycle is observed working end-to-end for both.
 - [x] [INFRA] P1. ✅ **New, operator 2026-08-16**: measure each new provider's real MAX-CONCURRENT-REQUESTS ceiling
       (distinct from RPM/RPD/TPM rate limits already covered above) and feed it into AO's dispatch model as a new
@@ -549,3 +549,15 @@ doesn't); and the two `[OPERATOR]` todos (Moonshot waitlist tracking, ETA unknow
 needs the waitlist to activate first) — both correctly operator-gated, not something to force.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:843074028a63712c]: KEEP-NA, valid — sister doc to the DeepSeek/GLM routing plan, same live billing/credential domain; remaining 5 items are vendor-dependency-blocked, schema-blocked on a sibling plan, or need real multi-turn live-fleet measurement.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **Grok removal cleanup, 2026-08-18** (operator decision: xAI/Grok has no subscription or free tier, pure metered
+  pricing, not worth keeping vs Claude/DeepSeek/Gemini/GLM/Codex/Kimi — a separate track handles the actual
+  agent-orchestrator code/UI removal and the sibling `grok_gemini_translation_proxy_2026_08_14.md`/
+  `multi_provider_context_billing_reconciliation_2026_08_16.md` docs). Stripped passing Grok mentions from this doc's
+  frontmatter `summary:` and 3 live-todo sentences (the "GLM/Grok/Gemini/Codex" pattern reference, the "four already
+  onboarded" provider list, the Moonshot-balance-endpoint comparison, and the pre-compact live-test provider list) —
+  the actual work in every case is about Kimi/Gemma, Grok was only ever a passing comparison. Left every Grok mention
+  INSIDE an already-`[x]`-DONE todo body or a dated Progress Log entry untouched (historical record of what was
+  actually tested/shipped this session, e.g. the `grok-4.1-fast` dead-model-name finding, the Grok/Gemini
+  regression-checks after the litellm proxy restarts) — those describe what happened, not live open work. Also left
+  the `related:`/`depends_on:`/`context_scope:` pointers to the still-existing `grok_gemini_translation_proxy_2026_08_14.md`
+  doc untouched (out of scope — that doc itself is owned by the separate removal track).

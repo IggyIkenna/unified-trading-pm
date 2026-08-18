@@ -209,11 +209,50 @@ helper, not a hand-rolled copy.
       during the Not-Behind Gate) — verified directly (file content diff + `git show HEAD:<path>` + `git
       merge-base --is-ancestor HEAD origin/live-defi-rollout`) that the final commit genuinely landed with the full
       change on both local HEAD and origin before treating it as done; not a blind re-run.
-- [ ] [REVIEW] P2. **The 20 rows NOT declared** (8 Medium — ambiguous domain/ML-layer-unclear; 12 Low — genuine
-      `feature_group` registry gaps: CeFi perp-funding basis, on-chain MEV, DEX-pool-state/vault-share-price,
-      PORTFOLIO_MULTI_STRATEGY's meta-strategy shape) remain open in the scaffold artifact, un-actioned. The 12 gap
-      rows are a separate, likely-larger follow-up (new `feature_group` definitions in features-onchain/
-      features-delta-one, not an archetype-declaration task) — do not fold them into a future declaration pass.
+- [x] [REVIEW] P2. ✅ Fully resolved 2026-08-18 — `unified-api-contracts@0f2e43ad3e`, `@1595fdc149`. This todo's own "12 Low
+      registry gap" framing turned out to be an undercount: an operator follow-up ("I'm surprised we can't do the
+      vaults, the pools, the perp inverse... dated carries") prompted a real features-service investigation, which
+      found live, already-dispatched calculators for 6 of the 12 supposed gaps — perp funding (`perp_funding_rates`,
+      one CeFi and one DeFi-Hyperliquid calculator, both writing under `asset_group=cefi`), DeFi LP/vault
+      (`vault_share_price_apy`, `pool_invariant_drift`, `dex_pool_swap_flow`, `concentrated_liquidity_il_realised`).
+      Declared `CARRY_BASIS_PERP`/`_INV`, `CARRY_FUNDING_DISPERSION`, `DEFI_LP_VAULT`, `DEFI_LP_POOL`,
+      `DEFI_LP_CONCENTRATED` against them — each cited to a real dispatch site (`onchain/engine/orchestrator.py` /
+      `onchain/schemas/feature_builder_registry.py`), never inferred from naming. Also declared `EVENT_DRIVEN`
+      (scoped by the operator to "earnings results and corporate actions... macro news from Fred or Forex Factory")
+      against `yield_curve` + `economic_results`, both real FRED-sourced-via-MTDS feature_groups. **Found and
+      excluded rather than silently wired**: `corporate_actions` (dividends/splits) is live but sourced exclusively
+      from `polygon_corporate_actions_adapter.py` — Massive-fka-Polygon.io, fleet-banned — filed as
+      `features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md`, with a real precedent already in
+      the same handler (`yfinance` already used for its earnings leg) proposed as the fix; `earnings_results` is
+      genuinely yfinance-clean and live-dispatched but reads a live external API call, not a captured
+      `(asset_group, data_type)` MTDS shard, the same input-shape mismatch as `economic_events`/`forexfactory` —
+      correctly left undeclared, though an earlier note in the code wrongly said "no dispatch site," caught and
+      fixed before shipping. Separately filed
+      `features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`: the whole calendar family (including
+      the newly-declared FRED legs) writes to a real, documented path convention but is entirely invisible to the
+      honest-coverage manifest — no `record_captured` call anywhere in that domain. 2 test failures surfaced by the
+      new declarations (`yield_curve`/`economic_results` needed `fetch_completed_at`, not `tick_timestamp`) — fixed
+      before shipping, full `quality-gates.sh --no-fix` green (422s).
+
+      **Second wave, same day** — `unified-api-contracts@1595fdc149`. Operator instruction: "do all the medium
+      confidence. for mev what do we actually need and double check mtds or features don't expose [it]." Declared
+      all 8 remaining Medium-confidence rows by direct analogy to an already-declared sibling archetype
+      (`ARBITRAGE_CROSS_DOMAIN_EVENT`, `MARKET_MAKING_ML_LEAN`, `ML_DIRECTIONAL_EVENT_SETTLED`,
+      `RULES_DIRECTIONAL_EVENT_SETTLED`, `VOL_ML_LEAN`, `PORTFOLIO_FACTOR_ALLOCATION`, `PORTFOLIO_RISK_PARITY`,
+      `PORTFOLIO_TACTICAL_OVERLAY`) — same weaker evidence tier as the original 35, not upgraded to dispatch-traced,
+      each comment states the sibling it copies and its specific weak point. For MEV, ran the requested
+      double-check exhaustively rather than re-asserting the prior finding: confirmed `mev_events_handler.py` in
+      MTDS really does capture real rows, then searched the WHOLE workspace (features-service,
+      market-data-processing-service, strategy-service, execution-service) and found zero consumers anywhere —
+      the earlier finding held. Went further per "what do we actually need": `mev_events` only logs MEV that
+      ALREADY happened; backrun/sandwich/JIT-liquidity/liquidation-bundle strategies need to act on a pending
+      transaction before someone else does, which needs mempool visibility — a data source this codebase has no
+      adapter for at all. This reframes the MEV gap as a missing data-capture capability, not a missing
+      feature_group declaration — a materially different (and larger) piece of work than the other 4 filed issues
+      this session. **Registry now 55/60** — the only 5 remaining are the 4 MEV archetypes (genuine
+      infrastructure gap) + `PORTFOLIO_MULTI_STRATEGY` (structural input-shape mismatch, not a naming gap). Full
+      `quality-gates.sh --no-fix` green again before shipping. Scaffold artifact refreshed to match:
+      [Archetype Scaffold Review](https://claude.ai/code/artifact/e9c372d4-211c-4776-9719-0b671d730116).
 
 ## W3 — Granularity declaration (step 13) — NOW THE CRITICAL PATH FOR THE ARTIFACT (operator ruling 2026-08-17)
 

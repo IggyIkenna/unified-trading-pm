@@ -1,0 +1,98 @@
+---
+doc_type: issue
+title: features-service calendar domain (economic_events, forexfactory, corporate_actions, earnings_results) writes outside the honest-coverage manifest
+summary: >-
+  The whole `calendar/` feature family (economic_events, economic_results, yield_curve, forexfactory,
+  corporate_actions, earnings_results) writes to its own path convention (`calendar/{feature_type}/by_date-or-week/
+  {date}/{file}.parquet`, documented per-handler) but none of it calls `record_captured` or otherwise registers with
+  the honest-coverage manifest/capture_status system — coverage.json has zero visibility into whether this data is
+  actually being captured, how completely, or when it last ran.
+status: open
+nature: process
+asset_group: [tradfi, cross-cutting]
+stage: [features]
+repos: [features-service]
+scope: [engineer]
+tags: [honest-coverage, manifest, calendar, features-service, data-pipeline-correctness]
+priority: P2
+parent_epic: infrastructure_master
+assigned_vm: NA
+execution_scope: local-only
+created: 2026-08-18
+source: >-
+  Found answering an operator question about how the calendar domain's batch/paper/live read path is tracked, during
+  the same EVENT_DRIVEN archetype registry investigation as the sibling Polygon.io finding
+  (features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md). Confirmed by direct read of
+  corporate_actions_handler.py, economic_results_handler.py, forexfactory_handler.py, and batch_handler.py — no
+  `record_captured` (or equivalent) call found in any of them.
+related:
+  [
+    /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+  ]
+locked_by:
+locked_since:
+resolved_by:
+supersedes:
+superseded_by:
+drift_direction: advance-code
+depends_on: []
+---
+
+# features-service calendar domain writes outside the honest-coverage manifest
+
+## What was found
+
+Every calendar-domain handler documents a real, consistent GCS write path in its own module docstring:
+
+- `calendar/economic_results/by_date/day={YYYY-MM-DD}/macro_results.parquet`
+- `calendar/forexfactory/by_week/week={YYYY-MM-DD}/macro_results.parquet` (weekly grain — the one outlier;
+  everything else is daily)
+- `calendar/corporate_actions/by_date/day={YYYY-MM-DD}/{dividends,splits}.parquet`
+- `calendar/earnings_results/by_date/day={YYYY-MM-DD}/results.parquet`
+
+None of these paths follow the standard MTDS hive layout (`asset_group=X/venue=Y/instrument_type=Z/data_type=W/`)
+that the honest-coverage manifest/capture_status system is built around — this is a deliberately different,
+calendar-specific convention. That in itself may be fine (calendar data doesn't cleanly fit the venue/instrument_type
+axes), but no handler in this family calls `record_captured` (or any equivalent manifest-write function) — checked
+directly across `corporate_actions_handler.py`, `economic_results_handler.py`, and `forexfactory_handler.py`. This
+means:
+
+- `coverage.json` / the honest-coverage dump have zero rows for any calendar data_type — not `expected_unattempted`,
+  not `attempted_failed`, nothing. The whole domain is invisible to the standard coverage measurement this codebase
+  otherwise treats as load-bearing (CLAUDE.md: "Data pipeline correctness is the heartbeat").
+- There is no machine-checkable way to answer "did today's economic-calendar batch run, and did it write real
+  rows" without manually reading GCS or the service's own logs.
+
+## Mode coverage, a related but distinct observation
+
+The calendar CLI's `batch_handler.py` only declares `choices=["batch", "live", "info"]` — no distinct `paper` mode.
+`live_handler.py` streams via Pub/Sub (`get_messaging_protocol(mode="live") -> "pubsub"`). Calendar events are
+exogenous/scheduled (the same NFP release date is the same fact regardless of trading mode), so paper likely reusing
+batch-computed data directly is a reasonable design — but it's not stated anywhere as a deliberate choice, which is
+worth a one-line doc note distinguishing "no paper mode because it's unnecessary here" from "paper mode was never
+built."
+
+## Why this wasn't fixed in the same commit
+
+This is a real gap across an entire feature domain, not a bounded edit — wiring `record_captured` into 4+ handlers,
+choosing what "shard" even means for a weekly-grain forexfactory write vs. a daily one, and deciding whether
+Layer-1's EXPECTED universe should include calendar data_types at all, are each real design questions. Filed rather
+than silently worked around, per findings-triage (outside every currently-open plan).
+
+## Todos
+
+- [ ] [REVIEW] P2. **Decide whether calendar data_types belong in the Layer-1 EXPECTED universe at all** — they're
+      structurally different from every other tracked data_type (event-driven, not per-venue-per-instrument). A
+      "yes" answer needs a shard-atom definition for the calendar domain before `record_captured` calls make sense.
+- [ ] [AGENT] P2. **If yes: wire `record_captured` (or the calendar-appropriate equivalent) into
+      `corporate_actions_handler.py`, `economic_results_handler.py`, `forexfactory_handler.py`, and the
+      `calendar_orchestrator.py` dispatch path.**
+- [ ] [DOC] P3. **Add a one-line note to `batch_handler.py` on why calendar has no distinct paper mode** (reuses
+      batch output directly, or is genuinely unbuilt — state which, once confirmed).
+
+## Progress Log
+
+**2026-08-18 — filed.** Found answering an operator question, not from a dedicated audit — narrow, direct-read
+confirmation across 4 handler files, not a corpus-wide sweep of every features-service domain.

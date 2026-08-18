@@ -24,7 +24,7 @@ tags: [manifest, consolidator, staleness, sports, odds, backfill, infra]
 related: [plans/archive/issues/manifest_consolidator_stale_sports_bucket_2026_07_21.md, plans/active/issues/sports_honest_coverage_gap_closure_2026_08_14.md]
 created: "2026-08-18"
 parent_epic: infrastructure_master
-priority: P2
+priority: P1
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
@@ -54,9 +54,12 @@ per-VM shard merge (can OOM on large buckets).
 
 Checked back at 02:36:25 UTC (43 minutes later, past the reader's own documented 2400s bounded-wait horizon): **the
 staleness age had GROWN to 6285s, not shrunk** — confirming this is an ongoing stall, not a transient blip self-healing
-within its documented wait window. The VM has been cycling the SAME five dates (2020-12-18 through 2020-12-22) the
-entire time, each hitting the same error, caught by shard-level failure isolation (correct resilience behavior — no
-crash, no data corruption), then retried on the next pass. Zero forward progress since 01:53:46 UTC.
+within its documented wait window. **Re-checked again at 02:46 UTC: the picture is WORSE than a fixed 5-date stall** —
+the `RETRY-ALL` date window had slid forward from 2020-12-18..22 to 2020-12-23..27, but every date in the NEW window
+was *also* hitting the identical `ManifestConsolidatorStaleError` (staleness now 6886s and still climbing). This is not
+5 dates stuck — the sliding retry window means the backfill is marching forward through its date range while losing
+EVERY date it touches to this error, with zero confirmed `Processed date=` successes anywhere in the affected span.
+The actual data-loss surface grows with elapsed time, not fixed at 5 dates.
 
 **Confirmed the consolidator itself is healthy**, not down: `gcloud run jobs executions list --job=uts-prod-manifest-
 consolidator-instruments-sports` showed 10 consecutive executions (01:32-01:41 UTC), every one `SUCCEEDED_COUNT=1`,
@@ -81,10 +84,12 @@ to consolidate at all).
 
 # Why it matters
 
-- The odds backfill (`mtds-backfill-odds-20260817-062648`, running since 2026-08-16, currently around 2020-11/12) is
-  making ZERO progress while stuck — every date in the 2020-12-18..22 window is being lost to this error on every
-  retry pass, and per the 2026-07-21 precedent, an affected date needs a LATER re-fetch to ever get captured (shard
-  isolation prevents a crash but does not recover the lost date on its own).
+- **Upgraded from a bounded 5-date stall to an unbounded, growing data-loss surface** (see the 02:46 UTC re-check
+  above): every date the odds backfill (`mtds-backfill-odds-20260817-062648`, running since 2026-08-16) touches while
+  this condition persists is lost to the error, and per the 2026-07-21 precedent, an affected date needs a LATER
+  re-fetch to ever get captured (shard isolation prevents a crash but does not recover the lost date on its own). This
+  is not "5 dates missing" — it's every date processed between 01:53:46 UTC and whenever the staleness condition
+  clears.
 - Any OTHER long-running reader of `instruments-store-sports-prd-central-element-323112` (not just this one odds VM)
   is equally exposed the next time a direct-write rescan runs while it's active — this is a structural gap, not a
   one-off.
@@ -110,7 +115,7 @@ an actual host-endangering condition.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Add a `MANIFEST_CONSOLIDATED_STALENESS_SEC` (or equivalent) override mechanism to
+- [ ] [SCRIPT] P1. Add a `MANIFEST_CONSOLIDATED_STALENESS_SEC` (or equivalent) override mechanism to
       `launch-mtds-sports-odds-backfill-vm.sh` (or the shared MTDS launcher path it uses), mirroring the
       `--consolidator-staleness-sec` flag added to `launch-sports-manifest-rescan-vm.sh`
       (`deployment-service@76991b62e9`), so a future sequential-rescan session doesn't stall this launcher's readers

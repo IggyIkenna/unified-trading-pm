@@ -32,7 +32,7 @@ estimate_calibrated_ai_days: 2.4
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-05
+last_updated: 2026-08-18
 locked_by:
 locked_since:
 supersedes:
@@ -734,7 +734,7 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
       without a code change. Done when: a simulated-near-ceiling test shows the account excluded from selection, same
       proof standard as Claude's existing headroom exclusion.
 - [ ] [DATA] P2. Build a heuristic reconciliation pass that infers any unpublished multiplier (e.g. GLM-4.7-FlashX's
-      cache-read rate, whatever the live API doesn't disclose for Grok/Gemini either — reused by the sibling Grok/Gemini
+      cache-read rate, whatever the live API doesn't disclose for Gemini either — reused by the sibling Grok/Gemini
       plan) from real observed usage vs billed spend, mirroring the existing DeepSeek cache-discount verification (this
       plan's 2026-08-04 Progress Log: operator-reported ≈$35 actual spend matched the
       ~$22-25 implied by the
@@ -842,3 +842,14 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
   agents dont use them yet" — a standing business/operational instruction still in force (never reversed), not a
   design ambiguity a worker could resolve alone. Does not clear the RECLASSIFY bar. Doc stays `assigned_vm: NA`, 11
   open items unaffected.
+- **Grok removal cleanup, 2026-08-18** (operator decision: xAI/Grok has no subscription or free tier, pure metered
+  pricing, not worth keeping — a separate track handles the actual agent-orchestrator code/UI removal and the
+  sibling `grok_gemini_translation_proxy_2026_08_14.md` doc). Stripped the single passing "for Grok/Gemini either"
+  mention from the still-open GLM heuristic-cache-rate-reconciliation todo (Phase 3) — that todo's own subject is
+  GLM's unpublished cache-read rate, Grok was only a passing comparison; left the same sentence's "sibling
+  Grok/Gemini plan" pointer untouched since that doc is owned by the separate removal track. Left every other Grok
+  mention as-is: all of them sit inside an already-`[x]`-DONE todo body or a dated Progress Log narrative entry
+  (the `grok-4.1-fast` dead-model-name precedent cited twice for GLM's own dead-model catch, the
+  `select_account_for_spawn()` sequential-preference rollout note, the "sibling Grok/Gemini plan" staging-ruling
+  cross-reference, and this doc's own most recent na-eligibility-audit verdict immediately above this entry) —
+  historical record of decisions/work already made, not live open todos.
