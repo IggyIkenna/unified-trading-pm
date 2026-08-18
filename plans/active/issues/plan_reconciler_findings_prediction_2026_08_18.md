@@ -147,36 +147,163 @@ referrers were already fixed — routed to Hunter 3 (sub-task A) to verify that 
 
 ## Flips verified
 
-_TBD — pending hunter results._
+None this run — Hunter 3's missed-flip sweep covered all 18 remaining writable docs (52 open todos read + their
+Progress Log context) and found 0 done-but-unchecked candidates, HARD or SOFT. Hunters 1 and 2 found none in their
+batches either.
 
-## Contradictions
+## Contradictions — FIXED (5, all independently re-verified before applying — `unified-trading-pm@b0e6835e17`)
 
-_TBD — pending hunter results._
+- [x] ✅ [DOCS] P2. `data_completion_prediction_2026_07_15.md:381,385` — a line citation into
+      `data_completion_defi_2026_07_15.md` had drifted from `:363-368` to the content's actual current location
+      `:380-390` (re-grepped, confirmed), and a second citation claimed the archived
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md:427` showed "active/dispatched" status when that doc's own
+      Phase-3 conflict-check (verified directly, lines 433-434) actually says the item is "already RESOLVED" —
+      backwards framing, not just a stale line number. Both corrected; underlying conclusion (item is closed)
+      unchanged. (Hunter 1, independently re-verified by me via direct Read of both targets.)
+- [x] ✅ [DOCS] P2. `data_pipeline_check_mdps_features_2026_07_20.md:411` — dangling markdown link to
+      `issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md` (404s — archived since). Repointed to
+      `/plans/archive/issues/...` (confirmed the archive path exists, the active path doesn't); kept net-line-neutral
+      since this doc was already at 998L, one edit shy of the 1000L hard cap. (Hunter 1, independently confirmed via
+      `ls` on both paths.)
+- [x] ✅ [DOCS] P3. `mdps_features_deadcode_consolidation_2026_07_20.md:27` — `related:` used a `../`-relative path
+      instead of the corpus-wide leading-slash convention; target confirmed to exist, format-only fix. (Hunter 2.)
+- [x] ✅ [DOCS] P3. `prediction_live_instrument_cache_never_refreshed_and_polymarket_catalog_gap_2026_08_14.md:147,149` —
+      two dated entries (2026-08-17, 2026-08-18) both said "that plan's own todo 224 stays open", but
+      `cross_ag_live_capture_parity_2026_08_14.md` has only 17 top-level todos total — 224 is that doc's LINE number
+      for the redirect item, not a todo ordinal (Hunter 2 grep-verified: zero matches for "224" as a todo identifier).
+      The substance (a real, deliberate mutual redirect) was accurate — only the label was wrong. Corrected both
+      occurrences in place + appended a note explaining why, rather than silently rewriting dated history.
+- [x] ✅ [DOCS] P2. `prediction_batch4_deferred_residuals_2026_08_16.md:13-15` (frontmatter `summary:`) — repeated a
+      stale claim ("the series-scoped historical Kalshi enumeration [is] still live open... in
+      `prediction_cross_venue_arb_and_coverage_2026_07_24.md`") that the doc's OWN body table (line 74) already
+      corrected on 2026-08-17 (the item was actually closed via the archived
+      `prediction_satellite_ao_dispatch_batch9_2026_08_09.md`). Since this workspace's doc-retrieval flow explicitly
+      trusts `summary:` at the L2 confirm-relevance step before opening a doc in full, a stale summary carries real
+      misdirection risk even when the body is correct. Corrected to match the body. (Hunter 2, independently
+      confirmed via a fresh grep of the target doc's current open todos — only the tarball-race item remains, no
+      Kalshi item.)
+
+**Reviewed — confirmed candidates, no fix warranted (not routed, not refuted — genuinely low-value/uncertain):**
+
+- `data_completion_prediction_2026_07_15.md` — a narrative date-ordering quirk between two closure entries (a
+  "duplicate of the earlier item" bullet dated 2026-07-30, whose "earlier" counterpart's own closure banner reads
+  2026-08-06 — a week later). Hunter 1's own assessment: "likely just imprecise narrative phrasing... not a tracking
+  error." Agreed — no underlying fact is wrong, only prose sequencing; not worth an edit.
+- `mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md:162-167` — one entry called the doc "a good
+  `/archive-candidates-audit` candidate", followed a day later by "genuinely NOT an archive candidate"
+  (`archive_exempt: true`). Hunter 2's own read: likely means "a good candidate for the audit skill to review", whose
+  verdict was ARCHIVE_EXEMPT — plausible, not confirmed as a hard contradiction (didn't `git blame` when the exempt
+  flag was added). Left as a soft/unverified tension per the hunter's own calibration, not escalated.
 
 ## Hygiene fixes
 
-_TBD — pending hunter results._
+(Folded into the Contradictions list above — all 5 fixes this run were citation/reference-format corrections, no
+separate frontmatter/todo-format mechanical-fixer runs were needed.)
 
-## Filed
+## Filed (routed — this run's new items)
 
-_TBD — pending hunter results._
+- [ ] [DOC] P3. **Systemic `last_updated` frontmatter staleness** — Hunter 1 found all 6 of its batch's docs never
+      have `last_updated` advanced by the `context-scout`/`na-eligibility-audit`/`plan_reconciler` passes that
+      otherwise actively edit their bodies (Progress Log entries, checkbox flips, `context_scope` refreshes).
+      Staleness ranged 2-41 days (worst: `honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md`,
+      literally never updated past its creation date despite 41 days of continuous editing). This reads as a tooling
+      gap in those 3 skills, not a per-doc authoring error — hand-editing 6 dates would be a band-aid on a
+      root-cause-fixable pattern, and likely recurs corpus-wide (not prediction-specific). Not fixed here (outside a
+      single-file mandate, and the actual fix belongs in the 3 skills' own update logic, not in per-doc content) —
+      flagging for whoever owns `cursor-configs/skills/context-scout/` or `na-eligibility-audit` to consider having
+      those passes touch `last_updated` when they touch the body.
+
+**Carried forward from 2026-08-16/17, re-confirmed still open (not new routing — see Phase -1 above):**
+
+- [ ] [DOCS] P3. `prediction_satellite_ao_dispatch_batch6_2026_07_29.md:159` — Betfair item's `[INFRA]` tag vs. the
+      account-lockout blocker question. Still grace-protected (10h45m at last check).
+- [ ] [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — possible `[OPERATOR]` mistag.
+      Still grace-protected (10h53m at last check).
+- [ ] [DOCS] P3. `task_template.md:402` — stale reference to an archived doc (normative ref, corpus-wide ownership,
+      not prediction-specific). Still grace-protected (10h43m at last check).
+- [ ] [DOC] P3. `prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` todo 2 (archive batch7 + finalize) —
+      dependency `plans/epics/predictions_master.md` cleared grace >24h ago, but the finalize doc + its parent that
+      would need editing are themselves still grace-protected (10h45m at last check).
+- `prediction_live_clob_depth_capture_2026_07_24.md:470` — carried forward as "reviewed, correctly left as ordinary
+  work" by the 2026-08-16 run (a real live-code question beyond doc reconciliation, not a doc-hygiene gap) — not
+  re-litigated today, doc is grace-protected regardless (0h08m at last check — touched again very recently by a
+  concurrent session).
+
+**Self-resolved since 2026-08-16 (moot, no longer needs routing):** the hub (`prediction_consolidated_closeout_2026_07_18.md`)
+"missing `venue_e2e_batch1` citation" finding — `prediction_venue_e2e_batch1_2026_08_16.md` and its `_finalize`
+sibling were BOTH archived to `plans/archive/2026_08/` during this run (observed via an incoming fast-forward pull,
+not this run's own action — a concurrent AO-dispatch session completed and archived that batch). A hub not linking
+forward to an archived plan's pre-archive path is no longer a live citation gap.
 
 ## Archive candidates (operator review)
 
-_TBD._
+None this run.
 
 ## Refuted (dropped by verify)
 
-_TBD._
+None — every hunter candidate that reached verification was either confirmed-and-fixed, confirmed-but-not-worth-fixing
+(2, see "Reviewed" above), or carried forward correctly (grace window / already dispositioned).
 
 ## Coverage (hunters / batches / docs)
 
-_TBD — filled in at STEP 6/7._
+- **3 hunters** (general-purpose, sonnet, read-only, `SUB_AGENT_MANDATORY_RULES.md` pasted at spawn): 6-doc batch +
+  5-doc batch (incl. 2 parent_epic plausibility checks + 1 split-conservation check) + a 3-part sweep (moved-doc-
+  referrer verification, zero-checkbox classification, missed-flip sweep across 18 docs).
+- **Docs read in full by a hunter**: 11 (6 + 5) fresh-territory docs, none previously touched by the 08-16/08-17
+  runs. **Docs read in full by me directly**: 5 more (`b21_distinct_values_noncanonical_live_2026_08_18.md`,
+  `manifest_hygiene_red_all_2026_08_17.md`, `nick_ai_audit_data_quality_findings_2026_08_16.md` + its `_finalize`
+  sibling, `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`) plus both prior findings docs (526 + 262
+  lines) for Phase -1. **Total docs directly read this run** (hunter or me): 16 of the 20 writable docs — the
+  remaining 4 (`plan_reconciler_findings_prediction_2026_08_16/17.md` themselves, `ag_closeout_audit_rollout_2026_07_25.md`,
+  `instruments_remaining_work_audit_2026_07_10.md`) were either edited directly (the 2 findings docs) or already
+  fully reconciled by the 2026-08-16 run's own commits (the latter 2) and not re-read cold this run.
+- **Candidates surfaced**: ~13 (across both hunters' reports, excluding the 2 clean parent_epic checks and the clean
+  split-conservation check, which are verifications not candidates). **Verified CONFIRMED and fixed**: 5. **Reviewed,
+  no fix warranted**: 2. **Carried forward (grace-protected or already dispositioned)**: 5. **Self-resolved since
+  last run (moot)**: 1. **Refuted**: 0.
+- **Ledger check (Phase 5.9a)** — this run's NEW routing: routed = 1 (the systemic `last_updated` todo); parked/
+  enumerated in this doc's Filed section = 1. Balanced. Carried-forward items (5, listed separately above with their
+  own "Carried forward" label) are re-confirmations of PRIOR runs' routing, not double-counted as new.
+- **Ledger check (Phase 5.9b)**: 0 sub-agent skips reported by any of the 3 hunters — nothing to enumerate.
 
 ## Plans not reached
 
-27 of 47 docs grace-protected for this run's duration so far (listed in Grace set above); will re-check the 5
-carried-forward carried-forward items once their targets individually clear the 12h window.
+27 of 47 docs were grace-protected for this run's duration (listed in Grace set above); one of those 27
+(`prediction_venue_e2e_batch1_2026_08_16.md`) was archived mid-run by a concurrent session and is no longer part of
+the active tranche going forward (a future tranche-inventory regen will show 46, not 47, until new docs land). The
+remaining 26 carry no new open finding from this run beyond the 4 explicitly carried-forward items above — will
+re-check each once it individually clears its 12h window, most likely in tomorrow's dispatch given how much of the
+run's remaining duration they stayed inside grace.
+
+## Exit-gate observations (STEP 5, corpus-wide — NOT self-inflicted by this run)
+
+`run_hygiene_sweep.sh --ci` at exit: 1 hard failure, 1 soft warning. Traced directly rather than assumed clean:
+
+- **`check_na_corpus_ratchet` (--diff-base origin/main): 13 new NA-population docs, 30 new open todos.** Ran the
+  checker directly (not just read its summary line) to get the itemized diff: of the 13 new NA docs, exactly **1**
+  is prediction-tranche — this doc itself (`plan_reconciler_findings_prediction_2026_08_18.md`, 5 open todos), the
+  same unavoidable "+1 mandated by every plan_reconciler run" both prior runs already documented. The other 12
+  (`archival_referrer_codex_redirect_bulk_cleanup`, `dp_cron_did_not_fire_storm_recurred`,
+  `git_stash_push_pop_silently_drops_content`, `main_backmerge_to_ldr_no_retry_safety_net`,
+  `mtds_ws_venue_fallback_removal_polymarket_decision`, `na_eligibility_audit_defi_blocks`,
+  `na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch`, `na_eligibility_body_hash_unstable`,
+  `plan_reconciler_findings_cefi_2026_08_18`, `plan_reconciler_findings_tradfi_2026_08_18`,
+  `promote_pr_non_supersession_after_greeks_service_fix`, `utl_gcs_client_upload_from_string_silent_write_failure`)
+  are CI/infra/AO/cefi/tradfi topics — none prediction. Likewise all 5 TODO-GROWTH items
+  (`compute_flexible_cud_sizing_analysis`, `glue_runner_pool_single_instance_fleet_wide_ci_queue_congestion`,
+  `sit_gate_treadmill_recurs_under_high_ldr_velocity`, `unified_trading_ci_ff_pull_cron_branch_override_gap`,
+  `multi_provider_context_billing_reconciliation`) are CI/infra-adjacent, not prediction. **0 prediction-attributable
+  regression beyond this doc's own expected +1** — consistent with 2/2 prior runs' identical root-cause finding.
+  This is `origin/main` lagging the much-more-active `live-defi-rollout` by design (main promotes periodically), not
+  same-day drift — not fixed here (whole-corpus scope, `/na-eligibility-audit`'s remit per the checker's own remedy
+  line), matches established precedent exactly.
+- Soft warnings (`parent_epic` low-confidence-match heuristic on 2 non-prediction docs): not investigated, out of
+  scope.
+
+**Verdict**: this run's OWN tranche work is hygiene-clean; the 1 hard failure is corpus-wide fleet drift outside this
+shard's bounds, verified (not assumed) via the checker's own itemized diff. Holding this run's completion hostage to
+fixing 11 other tranches' concurrent NA growth would defeat the sharded-run design's purpose. Inventory regenerated:
+343 plans, 0 orphans, 0 TBD, 62% done overall.
 
 ## Progress Log
 
@@ -195,3 +322,27 @@ carried-forward carried-forward items once their targets individually clear the 
 - **2026-08-18T02:2xZ** — STEP 3: fanned out 3 read-only hunters over the ~10 not-yet-recently-reconciled writable
   docs + a moved-doc-referrer/zero-checkbox/missed-flip sweep. This doc created as the run's findings-doc skeleton
   while hunters run in the background.
+- **2026-08-18T02:2x-02:4xZ** — all 3 hunters completed (durations 560s/635s/592s). STEP 4: independently
+  re-verified every candidate against a fresh direct Read of the primary + cited target docs before applying (2
+  citations spot-checked personally for the Hunter-1 finding, the archive-path existence checked directly for the
+  Hunter-1 link finding, a fresh grep re-run for the Hunter-2 frontmatter-summary finding). STEP 5: applied 5
+  contradiction/hygiene fixes across 5 files, hit the `data_pipeline_check_mdps_features_2026_07_20.md` 1000L hard
+  cap on the first attempt (999→1001L) and tightened the fix to stay net-line-neutral (998→1000L, at but not over
+  cap) before it would commit. Committed + pushed (`b0e6835e17`) after the fleet's very high commit velocity forced
+  2 full retry cycles (a tight pull→add→commit→push loop landed on the 3rd cycle's first iteration) — branch drift
+  was detected between the pre-commit hook's own two internal check stages at one point, not just between separate
+  push attempts, confirming this is a genuinely high-concurrency window today, not a fluke.
+- **2026-08-18T02:5xZ** — re-checked the 4 remaining carried-forward grace items (Betfair tag, mdps_fleet reclassify,
+  task_template.md ref, batch7 archival-referrer-fix) fresh: all still inside the 12h window (~10h43m-10h53m
+  elapsed vs. a ~2026-08-17T15:26-15:53Z corpus-wide touch), plus `prediction_live_clob_depth_capture_2026_07_24.md`
+  was touched again 8 minutes prior by a concurrent session — carried forward for a future dispatch rather than
+  waiting out the remaining ~1-1.5h mid-run, matching the 08-16/08-17 runs' own established precedent of not
+  blocking a shard's completion on grace timing. Discovered `prediction_venue_e2e_batch1_2026_08_16.md` (+
+  `_finalize`) was archived mid-run by a concurrent AO-dispatch session — the corresponding carried-forward "hub
+  missing citation" finding is now moot, updated accordingly.
+- **2026-08-18 (exit-gate)** — `run_hygiene_sweep.sh --ci`: 1 hard failure (`check_na_corpus_ratchet`), 1 soft
+  warning. Ran the checker directly (not just its summary) to get the itemized per-doc diff: confirmed 0
+  prediction-attributable regression beyond this doc's own expected +1 NA doc (detail in "Exit-gate observations"
+  above) — matches 2/2 prior runs' identical finding for this exact check. Inventory regenerated (343 plans, 0
+  orphans, 0 TBD). **This dispatch asked no new blocked-questions** (BLK-e7b0e8da was CLOSED, not newly opened) —
+  completing via `/done` per STEP 8's "immediately if you asked none" clause.
