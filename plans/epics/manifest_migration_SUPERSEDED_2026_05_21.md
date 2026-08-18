@@ -345,7 +345,7 @@ This is the operator-visible view — what the human needs to do, when, in what 
   rename.
 - Predictions Phase 3 migration: [`predictions_master.md`](./predictions_master.md).
 - Final rescan: [`defi_master.md`](/plans/epics/defi_master.md) § mtds-s4-10.
-- Raw tables + `_ensure_timestamp` deletion: [`infrastructure_master.md`](./infrastructure_master.md).
+- Raw tables + `_ensure_timestamp` deletion: [`security_and_cross_cutting_master.md`](./security_and_cross_cutting_master.md).
 - Workspace rule: CLAUDE.md `§ Manifest migration, NOT fallback` — when manifest drifts from canonical shape, write a
   one-time migration script and **remove** the fallback reader. No compat shims.
 - Workspace rule: CLAUDE.md `§ Per-VM shard isolation for concurrent backfills`.

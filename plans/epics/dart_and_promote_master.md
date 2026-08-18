@@ -5,7 +5,7 @@ summary:
   L3 epic owning the DART operator UX cockpit (ManualTradeGateDialog, manual replication of every live action) + the
   promote workflow (CLI primary / UI secondary, CANDIDATE→PAPER_1D→LIVE_EARLY state machine, MinimalCandidateManifest in
   UAC, Firebase execution-full enforcement); UI ticks gated by the playwright pw:L2 verification contract.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,10 +27,18 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans: []
-last_updated: 2026-05-21
+last_updated: 2026-08-18 # was 2026-05-21 -- superseded 2026-08-18, folded into strategy_master (0 corpus references at fold time)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
+
+> **⚠️ SUPERSEDED-BY 2026-08-18**: This epic's content was folded into [`strategy_master.md`](strategy_master.md)
+> (Strategy service domain) per
+> [`/codex/11-project-management/epic-taxonomy-2026-08-18.md`](/codex/11-project-management/epic-taxonomy-2026-08-18.md) —
+> 0 corpus references at fold time. All scope (DART operator UX cockpit, promote workflow CLI/UI tracks,
+> `MinimalCandidateManifest`) continues there, under "Folded-in epic: DART + Promote Workflow Master". This file is
+> kept as **archaeology only** — DO NOT add new work here. New active plans declare `parent_epic: strategy_master`
+> in frontmatter. Full epic-flow SSOT: [`README.md`](README.md).
 
 # DART + Promote Workflow Master (L3)
 

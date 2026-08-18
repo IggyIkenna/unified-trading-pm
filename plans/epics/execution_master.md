@@ -26,7 +26,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans: []
-last_updated: 2026-07-12 # was 2026-05-21 (stale vs 2026-07-12 body edits, line 57) — see body "Assigned active plans" note
+last_updated: 2026-08-18 # was 2026-07-12 — folded trading_agent_master in 2026-08-18, see body
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -75,3 +75,24 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 _(no active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land here as
 they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
+
+## Folded-in epic: Trading Agent Master (folded 2026-08-18)
+
+**Source**: [`trading_agent_master.md`](trading_agent_master.md) (0 corpus references, 42 lines) — folded into this
+epic per
+[`/codex/11-project-management/epic-taxonomy-2026-08-18.md`](/codex/11-project-management/epic-taxonomy-2026-08-18.md)
+(domain 5, Execution service). The source file is kept as archaeology, `status: superseded`, with a banner pointing
+here — do not add new work there.
+
+**Owns**: trading-agent-service closed-loop allocator, `AllocationDirective` pipeline, and `StrategyPnlStreamEvent`
+consumer. Architecture-unlock (directive pipeline + event contracts + UAC schema + codex SSOT) shipped 2026-05-23;
+P3 backlog covers real allocator logic, ML/LLM subscribers, and `performance_features` passthrough.
+
+**Repos**: trading-agent-service (already listed in this epic's own `repos:` frontmatter).
+
+**Assigned active plans**: none declared `parent_epic: trading_agent_master` at fold time — new work in this area
+now declares `parent_epic: execution_master`.
+
+**Archived plans**:
+[`trading_agent_service_architecture_unlock_2026_05_22`](../archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md) —
+architecture-unlock (directive pipeline + event contracts + UAC schema + codex SSOT), shipped 2026-05-23.

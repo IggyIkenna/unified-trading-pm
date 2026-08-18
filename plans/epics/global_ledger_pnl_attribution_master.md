@@ -9,7 +9,7 @@ summary:
   here until the 2026-07-12 re-audit) and the SAME Phase 7/8 scope (InstructionLedger/PricingLedger/TransferLedger
   writers + paper-mode PassiveLedger synthesiser) SHIPPED via the Citadel determinism-spine plan; live PassiveLedger
   listener + the acked ledger_type=treasury partition still genuinely missing.
-status: active
+status: superseded
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -31,10 +31,18 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans: []
-last_updated: 2026-07-12
+last_updated: 2026-08-18 # was 2026-07-12 -- superseded 2026-08-18, folded into strategy_master (0 corpus references at fold time)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
+
+> **⚠️ SUPERSEDED-BY 2026-08-18**: This epic's content was folded into [`strategy_master.md`](strategy_master.md)
+> (Strategy service domain) per
+> [`/codex/11-project-management/epic-taxonomy-2026-08-18.md`](/codex/11-project-management/epic-taxonomy-2026-08-18.md) —
+> 0 corpus references at fold time. All scope (the 4-SSOT-ledger + 4-derived-view architecture, RiskView, the
+> 2026-07-12 re-audit corrections) continues there, under "Folded-in epic: Global Ledger + PnL Attribution Master".
+> This file is kept as **archaeology only** — DO NOT add new work here. New active plans declare
+> `parent_epic: strategy_master` in frontmatter. Full epic-flow SSOT: [`README.md`](README.md).
 
 # Global Ledger + PnL Attribution Master
 
