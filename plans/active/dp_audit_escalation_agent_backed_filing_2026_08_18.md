@@ -102,14 +102,11 @@ exists on one side and is never actually exercised end-to-end.
 
 ## Todos
 
-- [ ] [BACKEND] P1. Extend `unified-trading-pm/agents/data_pipeline_failure.md`'s boot prompt: when the boot
-      `context` carries a DP\_\* finding/candidate payload but no pre-filed issue-doc slug (the deferred-filing case
-      this plan wires up in the next todo), the worker files the doc itself FIRST — correct frontmatter per
-      `scripts/docs/docspec.py`'s `PER_TYPE["issue"]` schema (`doc_type`/`title`/`summary`/`status`/`nature`/
-      `asset_group`/`stage`/`repos`/`scope`/`tags`/`related`/`created`/`parent_epic`/`priority`/`source`) — THEN
-      proceeds to STEP 1's existing diagnose-from-doc flow unchanged. Must not regress the existing "doc already
-      filed" path. Done-when: the new instructions block is added, reviewed against docspec.py's actual current
-      schema (not the SSOT prose), and todo 4's live run exercises this exact path.
+- [x] 1. ✅ [BACKEND] P1. Extend `unified-trading-pm/agents/data_pipeline_failure.md`'s boot prompt: when the boot
+      `context` carries a DP\_\* finding/candidate payload but no pre-filed issue-doc slug, the worker files the doc
+      itself FIRST — frontmatter mirroring e2e-testing's own hand-verified `docspec.py` template — THEN proceeds to
+      STEP 1's existing diagnose-from-doc flow unchanged; the "doc already filed" path is untouched. —
+      unified-trading-pm@6fca190fb8 (todo 4's live run still owes end-to-end exercise of this exact path).
 - [ ] [BACKEND] P1. In `e2e-testing/scripts/audit/_dp_common.py`, delete `file_escalation_issue`'s raw
       `path.write_text` + `_commit_and_push_pm_artifacts` subprocess `git add`/`commit`/`push` sequence entirely —
       per this session's operator decision, never attempt a local commit from inside the Cloud Run Job. Replace it
@@ -139,14 +136,11 @@ exists on one side and is never actually exercised end-to-end.
       the candidate payload (todo 1's new path) → the worker diagnoses/fixes the root cause or asks via `/blocked`.
       Done-when: a dated Progress Log entry below cites the real escalation id, the filed issue doc's path, and the
       resulting fix commit or `/blocked` question from an actual run — not a unit-test-only claim.
-- [ ] [DOC] P2. Add a section to `/codex/05-infrastructure/data-pipeline-alerts.md` (the emit→route→escalate model
-      SSOT) documenting the pattern this plan wires up: an ephemeral/untracked runner must never raw-git-commit a
-      finding — either write locally inside a durable, already-git-managed checkout (no explicit commit needed;
-      normal slot git discipline picks it up) or, with no durable checkout, emit the event and defer to a dispatched
-      agent. Cross-link from `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md`'s
-      `data_pipeline_failure` row. Confirmed this session that no existing codex doc states this as a fleet-wide
-      rule. Done-when: both docs cite the pattern and link this plan + the archived 3-incident doc as motivating case
-      history.
+- [x] 5. ✅ [DOC] P2. Added a section to `/codex/05-infrastructure/data-pipeline-alerts.md` (the emit→route→escalate
+      model SSOT) documenting the pattern this plan wires up, corrected the now-stale 2026-06-23 "PARTIAL" note
+      (both actionable-frontmatter halves had actually already shipped), and cross-linked from
+      `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md`'s `data_pipeline_failure` row (incl.
+      bumping its `last_reviewed`). — unified-trading-pm@6fca190fb8
 - [ ] [BACKEND] P3. \_(stretch, optional)\_ Consider extracting `write_issue_doc`'s frontmatter-template logic into a
       shared location (UTL or UAC — both e2e-testing and deployment-service already depend on them) instead of
       leaving two independent implementations after this plan. Deferred: the tier-and-import-architecture rule bans
