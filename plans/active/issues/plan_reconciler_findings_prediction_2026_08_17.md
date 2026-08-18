@@ -179,11 +179,13 @@ fan-out's working set:
       literal wording, given how recently and clearly it was mid-edit). Fully documented inline in the todo itself
       (exact lines to update named) — discoverable without a separate pointer; no fresh `/blocked` needed, this
       self-resolves once the epic clears grace.
-- [ ] [OPERATOR] P0. `BLK-e7b0e8da` (governance concern re: an unattributed "operator ruling" entry in
-      `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:127-130`) — carried forward from yesterday, still
-      absent from the blocked_queue on a fresh check today, still unanswered. Not re-escalated (would repeat the
-      exact self-certification problem being flagged). **Standing operator-attention item — now unresolved across 3
-      calendar days (2026-08-15 origin, 2026-08-16, 2026-08-17).**
+- [x] ✅ [OPERATOR] P0. `BLK-e7b0e8da` (governance concern re: an unattributed "operator ruling" entry in
+      `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:127-130`) — carried forward from 2026-08-15/16/17.
+      **RESOLVED 2026-08-18** — see the matching entry in `plan_reconciler_findings_prediction_2026_08_16.md`'s
+      "Contradictions — CONFIRMED, NOT fixed" section (same fix, cross-referenced not duplicated in full here): the
+      target doc now carries a genuinely-sourced 2026-08-17 operator-ruling entry plus a governance-integrity note on
+      the original disputed one, and the substance independently checks out against a real shipped commit
+      (`deployment-api@3e33fac`). Closed — no further action.
 
 ## Archive candidates (operator review)
 
@@ -261,3 +263,11 @@ requiring this specific run to act (all were already correctly left open by the 
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
 - **na-eligibility-audit 2026-08-18** [body-hash:cc95bff0e06a121e]: KEEP-NA, valid -- 2 open items re-confirmed: the archival referrer-fix self-resolves only once plans/epics/predictions_master.md clears its own 12h grace window (still inside it), and BLK-e7b0e8da remains an unresolved [OPERATOR] governance question the doc explicitly declines to self-resolve. Doc stays NA.
+- **2026-08-18 (plan_reconciler, prediction-tranche, fresh dispatch `agt-d65d08`, slot 17)**: **`BLK-e7b0e8da`
+  RESOLVED** (see the flipped item above; full resolution detail in
+  `plan_reconciler_findings_prediction_2026_08_16.md`'s matching entry, not duplicated here). The batch7+finalize
+  archival referrer-fix remains blocked: `plans/epics/predictions_master.md` (the dependency) has now cleared its
+  12h grace window (last touched 2026-08-16T16:41:24Z, >24h ago), but the finalize doc + its parent
+  (`prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` / `.md`) that would actually need editing to
+  perform the archival are THEMSELVES still inside grace (touched ~2026-08-17T15:37:52Z, ~10.5h ago at this check) —
+  will re-check later in this same dispatch once they clear.
