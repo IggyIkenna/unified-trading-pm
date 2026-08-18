@@ -35,22 +35,63 @@ jobs:
   # ── JOB 1: Drift-tick — dispatch main-backmerge-to-ldr ───────────────────────────────
   # Replaces the hourly `schedule:` trigger that was in main-backmerge-to-ldr.yml.
   # The push trigger on that workflow still handles the common case; this job is the
-  # safety-net for [skip ci] commits to main that suppress the push trigger.
+  # safety-net for [skip ci] commits to main AND for a transient GHA infra failure on the
+  # push-triggered run (e.g. a codeload 429) that leaves nothing to re-drive it — the push
+  # trigger fires exactly once per push, so a failed run on a non-PM repo previously had NO
+  # retry path at all until this job started covering the whole fleet (2026-08-18,
+  # main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md).
   # Main-backmerge-to-ldr.yml's schedule trigger is removed (template updated separately).
+  # Fleet-wide (not github.repository-scoped): dispatches for every promotion_model:
+  # ldr_main repo in workspace-manifest.json, the same repo-list read the ar-lag job below
+  # already uses — best-effort per repo, one repo's dispatch failure never blocks another's.
   drift-tick:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 5
     steps:
-      - name: Dispatch main-backmerge-to-ldr (drift safety-net)
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+      - name: Dispatch main-backmerge-to-ldr (drift safety-net, fleet-wide)
         env:
           # Cross-repo dispatch → must use GH_PAT (GITHUB_TOKEN cannot trigger workflows).
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set +e
-          gh workflow run main-backmerge-to-ldr.yml \
-            --repo "${{ github.repository }}" \
-            && echo "[branch-health:drift-tick] dispatched main-backmerge-to-ldr drift sweep" \
-            || echo "[branch-health:drift-tick] dispatch failed (best-effort; push trigger still active)"
+
+          # Read the fleet's ldr_main repo list from workspace-manifest.json — same source
+          # + same promotion_model filter the ar-lag job's REPOS read uses below, plus the
+          # github_url field to resolve each repo's owner/name for the cross-repo dispatch.
+          REPOS=$(python3 -c "
+          import json
+          m = json.load(open('workspace-manifest.json'))
+          repos = m.get('repositories', {})
+          for name, cfg in repos.items():
+              if name.startswith('_'):
+                  continue
+              if cfg.get('promotion_model') != 'ldr_main':
+                  continue
+              url = cfg.get('github_url', '')
+              full = url.rstrip('/').split('github.com/')[-1] if 'github.com/' in url else f'IggyIkenna/{name}'
+              print(full)
+          " 2>/dev/null || echo "")
+
+          if [ -z "$REPOS" ]; then
+            echo "[branch-health:drift-tick] no ldr_main repos found in manifest — nothing to dispatch"
+            exit 0
+          fi
+
+          FAILED=""
+          while IFS= read -r FULL_REPO; do
+            [ -z "$FULL_REPO" ] && continue
+            gh workflow run main-backmerge-to-ldr.yml --repo "$FULL_REPO" \
+              && echo "[branch-health:drift-tick] dispatched main-backmerge-to-ldr for $FULL_REPO" \
+              || { echo "[branch-health:drift-tick] dispatch FAILED for $FULL_REPO (best-effort; push trigger still active there)"; FAILED="${FAILED} ${FULL_REPO}"; }
+          done <<< "$REPOS"
+
+          if [ -n "$FAILED" ]; then
+            echo "[branch-health:drift-tick] dispatch failures (non-fatal, job stays best-effort):${FAILED}"
+          fi
           exit 0
 
   # ── JOB 2: Promotion-lag monitor ─────────────────────────────────────────────────────
