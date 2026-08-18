@@ -112,3 +112,28 @@ None needed — resolved. No `[OPERATOR]`/credential/judgment gap encountered. O
 done here, out of this one-shot role's scope): the orphaned `uts-prod-instruments-service-t1-recon` Cloud Run Job
 resource itself could be deleted from GCP (it costs nothing idle and is harmless to leave, but it's dead weight);
 left in place since deleting cloud resources is a human-judgment call this role defers rather than guesses at.
+
+## Progress Log
+
+- **data_pipeline_failure escalation 2026-08-18 (`agt-c61c32`, DP-WATCHER-006/DP_CLOUD_RUN_JOB_FAILED, dispatched
+  ~51811m/36 days after the original static failure)**: a second dispatch on this same already-RESOLVED alert instance
+  (root cause identical: legacy `uts-prod-instruments-service-t1-recon`, no scheduler, 2026-07-13 OOM). Found the code
+  fix (`deployment-service@03be2c2ada`, 2026-08-18T16:50:48Z) already merged and confirmed present on
+  `live-defi-rollout` before doing any re-diagnosis. **New finding beyond re-confirmation**: the fix was authored/merged
+  but not yet DEPLOYED — `deployment-api` (the runtime host for the DP-monitor Cloud Run Jobs, per the "PACKAGING" note
+  in `/codex/05-infrastructure/data-pipeline-alerts.md`) vendors `deployment-service` at BUILD time
+  (`clone_dep deployment-service _deployment-service` in `cloudbuild.yaml`, no auto-trigger on `deployment-service`
+  pushes), so the fix sat inert in source until a fresh `deployment-api` image was built. Confirmed live: the
+  `deployment-api:latest` Artifact Registry tag was last pushed 2026-08-18T12:26:49Z — 4h14m BEFORE the fix commit —
+  so every DP-monitor sweep since 16:50Z was still running the pre-fix code, which is why this second dispatch fired
+  at all despite the issue already being marked RESOLVED. **Action taken**: triggered `deployment-api-main-deploy`
+  Cloud Build (`e3e32f87-f79a-406b-a363-d8c32f714cfb`, region `asia-northeast1`) to rebuild+redeploy from current
+  `live-defi-rollout` (which vendors the fixed `deployment-service` code). Verified live (not fire-and-forget): the
+  build's `redeploy-monitor-jobs` step successfully updated all 3 DP-monitor Cloud Run Jobs
+  (`uts-prod-dp-exit-code-monitor`, `uts-prod-dp-heartbeat-watcher`, `uts-prod-dp-meta-watchers`) to the new image;
+  independently re-confirmed via `gcloud run jobs describe uts-prod-dp-exit-code-monitor` —
+  `lastUpdatedTime=2026-08-18T17:48:50Z`, image `deployment-api:latest` (post-fix). The fix is now genuinely live, not
+  just merged — this closes the residual gap this doc's original "RESOLVED" status didn't account for (code-shipped ≠
+  operationally-shipped, per the workspace's own runtime-verification rule). No further action needed; not
+  re-archiving/re-opening the doc (still correctly `status: resolved`) — this entry documents the deploy-lag closure
+  for anyone else who sees a stray dispatch land on an already-resolved DP-WATCHER-006 doc.
