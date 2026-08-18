@@ -215,6 +215,18 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
       classification of quarantine-starving-dispatch as a legitimate PAGE — this is a design change to the dedup
       key/rollup granularity, not a bug fix. Converted from prose ("Left open" item 2 above) into a tracked todo per
       the corpus's "every follow-up is a `- [ ]` todo, never prose" HARD RULE. Repo: agent-orchestrator.
+- [ ] [OPERATOR] P3. Reconcile MacBook-Pro slots 6-11's `unified-trading-ci` local `main` (each reporting
+      `ahead=49` against `origin/main` in `/api/fleet/git-health`, 2026-08-18 ~16:52 UTC) and Mac slots 0/5-11
+      (each `diverged ahead=3/behind=3`, same SHA across all of them). Checked from slot-2/this host: GitHub
+      itself shows only a small, stable gap (`origin/main..origin/live-defi-rollout` = 6 commits,
+      `origin/live-defi-rollout..origin/main` = 3) and no NEW `wip-preserve/*unified-trading-ci*` branches since
+      2026-08-17 — so this is NOT active re-divergence on origin, consistent with residual local-only FF-merge
+      pollution from the pre-fix cron bug (same mechanism as the already-reconciled slots in "Idle-slot
+      reconciliation" above, just on the two laptop hosts rather than this VM). Not reconcilable from here — Mac
+      and MacBook-Pro are separate physical hosts with no SSM/SSH reach from this session. Either their own next
+      dispatch/heal cycle self-corrects (`checkout -B main origin/main`, same as `heal_dead_slot_branch_quarantine`)
+      once genuinely idle, or an interactive session on those specific laptops reconciles directly per the
+      liveness-gated realign recipe already used above. Repo: unified-trading-ci.
 
 ## Progress Log
 
@@ -232,3 +244,12 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
   reconciliation" sections above for full detail.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — the sole remaining tracked todo is an explicit [OPERATOR] design call (collapse-registries question), no stated criterion for a worker to pick between the two options. Also converted a prose-only deferred-work item ("Left open" item 2, the alerting cross-slot-dedup gap) into a tracked `- [ ]` todo per the corpus HARD RULE — fixed in this same doc, same turn, per the "misleading doc / undocumented follow-up" finding rule.
+- **2026-08-18 (review, slot-2, agt-15d551)**: main (agt-a03340) flagged a new wrinkle during routine
+  git-health monitoring — MacBook-Pro slots 6-11 all reporting `unified-trading-ci` `ahead=49` and Mac slots
+  0/5-11 all `diverged ahead=3/behind=3` at the same SHA, unusually large/uniform counts. Investigated from
+  this session (only origin-reachable checks possible — no cross-host access to the Mac/MacBook-Pro laptops):
+  `git fetch` + `rev-list --count` on both directions between `origin/main` and `origin/live-defi-rollout`
+  shows only 6/3 commits respectively (small, stable), and `git ls-remote --heads origin 'refs/heads/wip-preserve/*'`
+  shows no new `unified-trading-ci` preserve branches since the 2026-08-17 incident's own. Confirms main's
+  hypothesis: this is residual local-only content from the pre-fix cron bug, not active re-divergence. Added a
+  tracked `[OPERATOR]` todo above since the actual laptop-local checkouts aren't reconcilable from this session.

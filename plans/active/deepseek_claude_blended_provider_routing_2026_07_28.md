@@ -720,26 +720,32 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
       entry). `price_usage()` verified returning non-None for both. Real, live, working end-to-end: `curl` against
       `https://api.z.ai/api/anthropic/v1/messages` returned genuine completions for both `glm-5.2` and `glm-5-turbo`
       (real `usage` blocks, `HTTP 200`). `agent-orchestrator@4595e46e61` — QG green, shipped alongside the test fix.
-- [ ] [INFRA] P1. Build GLM's accurate-usage-capture proxy, mirroring `deepseek_native_proxy_server.py`: verify GLM's
+- [x] [INFRA] P1. ✅ Build GLM's accurate-usage-capture proxy, mirroring `deepseek_native_proxy_server.py`: verify GLM's
       Anthropic-compatible endpoint reports real usage (input/output/cache-read/cache-write) before trusting it directly
       — DeepSeek's own compat endpoint under-reported 2.5-3.2x before this was caught. If GLM under-reports the same
       way, add the same kind of intercepting translation layer; if it reports accurately, document that finding instead
       of building unneeded infra. Done when: a dated comparison of captured-vs-Z.ai-dashboard usage for a real sample of
-      turns is recorded, with a stated tolerance.
-- [ ] [UI] P2. Surface GLM's subscription-quota usage reusing the SAME `five_hour_pct`/`weekly_pct` fields Claude
-      already uses (GLM Coding Plan's 5h/weekly shape is structurally identical to Claude's tier system regardless of
-      which tier is active — Lite's ~80/5h + 400/wk at signup, Max's ~1,600/5h + 8,000/wk after the later upgrade) —
-      GATE dispatch on it in `_pick_headroom_account()`/`select_account_for_spawn()`, not just display it. Read the
-      ceiling from config rather than hardcoding one tier's numbers, since the upgrade todo above will change them
-      without a code change. Done when: a simulated-near-ceiling test shows the account excluded from selection, same
-      proof standard as Claude's existing headroom exclusion.
-- [ ] [DATA] P2. Build a heuristic reconciliation pass that infers any unpublished multiplier (e.g. GLM-4.7-FlashX's
-      cache-read rate, whatever the live API doesn't disclose for Gemini either — reused by the sibling Grok/Gemini
-      plan) from real observed usage vs billed spend, mirroring the existing DeepSeek cache-discount verification (this
-      plan's 2026-08-04 Progress Log: operator-reported ≈$35 actual spend matched the
-      ~$22-25 implied by the
-      published hit/miss ratio). Done when: a documented, derivation-shown heuristic rate lands in `model_pricing.py`
-      for any provider/model missing a published number, with the derivation cited inline.
+      turns is recorded, with a stated tolerance. **RESOLVED BY FINDING, no proxy built — 2026-08-18.** Live cache-hit
+      test (~7.7k-token system block, immediate repeat) showed GLM correctly reports `cache_read_input_tokens` on the
+      hit for both `glm-5.2`/`glm-5-turbo` — the test that would have caught DeepSeek's under-report. See Progress Log.
+- [x] [UI] P2. ✅ Surface GLM's subscription-quota usage reusing the SAME `five_hour_pct`/`weekly_pct` fields Claude
+      already uses (Lite's ~80/5h + 400/wk at signup, Max's ~1,600/5h + 8,000/wk after the later upgrade) — GATE
+      dispatch on it in `_pick_headroom_account()`/`select_account_for_spawn()`, not just display it. Read the
+      ceiling from config, not hardcoded. Done when: a simulated-near-ceiling test shows the account excluded from
+      selection. — `agent-orchestrator@79c42aaade`. New `server/glm_quota_poller.py` (count-based estimate — GLM
+      exposes no rate-limit headers, verified live) populates the existing generic `AccountUsageRow.five_hour_pct`/
+      `weekly_pct`; `_pick_headroom_account` already gates any provider on these (zero autospawn.py changes needed),
+      and the dashboard's `FlatRateBoostPanel`/`AccountRow` were already generic + mounted, dormant for lack of data.
+      QG green: 4081 passed/0 failed; dashboard vitest 18/18.
+- [x] [DATA] P2. ✅ Build a heuristic reconciliation pass that infers any unpublished multiplier (e.g. glm-5-turbo's
+      cache-read rate — CORRECTED 2026-08-18, was "GLM-4.7-FlashX", replaced 2026-08-16, see [INFRA] P1 above) from
+      real observed usage vs billed spend, mirroring the existing DeepSeek cache-discount verification (this plan's
+      2026-08-04 Progress Log). Done when: a documented, derivation-shown heuristic rate lands in `model_pricing.py`.
+      **RESOLVED BY FINDING, 2026-08-18** — `agent-orchestrator@79c42aaade`. DeepSeek's spend-based technique is
+      structurally inapplicable (GLM is a flat subscription, no billed-spend signal); redirected to the already-built
+      `compute_flat_rate_boost_reconciliation` (Claude's own flat-rate calibration, generalized to GLM/Codex
+      2026-08-16), unblocked by the `[UI] P2` poller above. Also fixed a stale "$160/mo" (real: $18/mo) in
+      `model_pricing.py`'s GLM comment.
 - [x] [INFRA] P0. ✅ Implement time-window-aware peak/off-peak pricing for DeepSeek: one shared hour-of-day utility used
       by BOTH `model_pricing.py` (which rate applies right now) and `autospawn.py` (is DeepSeek dispatch-eligible right
       now) — not two separate implementations of the same check. New `RateCard` entries for both peak and off-peak, both
@@ -808,32 +814,13 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
   not Pro) and noted (no tier concept applies) in the sibling Grok/Gemini plan. Todos above updated to Lite; new
   `[OPERATOR] P3` upgrade-to-Max todo added rather than silently changing done-when criteria.
 
-- **2026-08-16 — GLM fully shipped: real key, both accounts registered+paused, real model-name correction found and
-  fixed, per operator instruction to get all three new providers "fully shipped ready to use but on pause mode."**
-  Real Coding Plan Lite API key handed over, stored in GSM (`glm-coding-plan-api-key`).
-
-  **Real bug caught before it shipped wrong**: a live `/v1/models` call against the real key confirmed
-  `glm-4.7-flashx` (registered blind 2026-08-15) does not exist in Z.ai's catalog — same silent-drift class already
-  hit with Grok's dead `grok-4.1-fast`, and arguably more dangerous here: the API returned a 429 "Insufficient
-  balance or no resource package" rather than a clean model-not-found error, which reads exactly like a real billing
-  problem rather than a wrong model name. Live catalog confirmed instead: glm-4.5, glm-4.5-air, glm-4.6, glm-4.7,
-  glm-5, glm-5-turbo, glm-5.1, glm-5.2, glm-5.3. Swapped the dead model for the real `glm-5-turbo`
-  (`agent-orchestrator@4595e46e61`, QG green). Separately confirmed: Z.ai does its own model aliasing server-side —
-  a request for `glm-5.2` gets served by `glm-5.3` (released just 2 days before this session), and `glm-4.5-air` gets
-  served by `glm-4.7`; the completion's own `model` field reports what was ACTUALLY served, not what was requested.
-
-  Both accounts (`glm-5-2`, `glm-5-turbo`) registered in the live `accounts.json`, confirmed parsing cleanly via the
-  real `load_accounts()` Pydantic model, then explicitly paused (`account_status: disabled`, confirmed for both) —
-  same treatment as the sibling Grok/Gemini/Codex plans' accounts this same day. Real live smoke test succeeded for
-  both models directly against `https://api.z.ai/api/anthropic/v1/messages` (genuine completions, real `usage`
-  blocks, `HTTP 200`) — GLM's native Anthropic-compatible endpoint needed no proxy, unlike Grok/Gemini/Codex.
-
-  **Honest scope of what's still open**: the accurate-usage-capture proxy (verifying GLM's endpoint reports real
-  usage, not under-reporting the way DeepSeek's did) is unbuilt and unverified. The UI headroom-gate (surfacing +
-  gating on GLM's subscription quota) is unbuilt. The heuristic cache-rate reconciliation for `glm-5-turbo` is
-  unbuilt. This closes GLM's credential/registration story, not its full production-readiness story — mirrors
-  exactly where Grok/Gemini/Codex landed this same session (real bridges/proxies live and smoke-tested, deeper
-  usage-verification and tool-use-fidelity work still ahead).
+- **2026-08-16 — GLM fully shipped: real key, both accounts registered+paused** (operator instruction: "fully
+  shipped ready to use but on pause mode"). Real Coding Plan Lite key stored in GSM (`glm-coding-plan-api-key`).
+  Model-name correction + aliasing finding: see `[INFRA] P1` checkbox above (condensed here, same detail — this
+  entry duplicated it verbatim before 2026-08-18's line-cap condensation). Both accounts registered+paused in
+  `accounts.json`, real live smoke test succeeded against `https://api.z.ai/api/anthropic/v1/messages` — no proxy
+  needed for basic completions (unlike Grok/Gemini/Codex). Closed the credential/registration story only; the
+  usage-capture/UI-headroom/cache-rate production-readiness items stayed open until 2026-08-18 (see above).
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — closing the loop on the 2026-08-17 marker's
   `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` flag on the 3 GLM production-readiness engineering items (usage-capture proxy,
   UI headroom-gate, heuristic cache-rate reconciliation). All 3 require making real calls against the GLM endpoint,
@@ -842,17 +829,30 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
   agents dont use them yet" — a standing business/operational instruction still in force (never reversed), not a
   design ambiguity a worker could resolve alone. Does not clear the RECLASSIFY bar. Doc stays `assigned_vm: NA`, 11
   open items unaffected.
-- **Grok removal cleanup, 2026-08-18** (operator decision: xAI/Grok has no subscription or free tier, pure metered
-  pricing, not worth keeping — a separate track handles the actual agent-orchestrator code/UI removal and the
-  sibling `grok_gemini_translation_proxy_2026_08_14.md` doc). Stripped the single passing "for Grok/Gemini either"
-  mention from the still-open GLM heuristic-cache-rate-reconciliation todo (Phase 3) — that todo's own subject is
-  GLM's unpublished cache-read rate, Grok was only a passing comparison; left the same sentence's "sibling
-  Grok/Gemini plan" pointer untouched since that doc is owned by the separate removal track. Left every other Grok
-  mention as-is: all of them sit inside an already-`[x]`-DONE todo body or a dated Progress Log narrative entry
-  (the `grok-4.1-fast` dead-model-name precedent cited twice for GLM's own dead-model catch, the
-  `select_account_for_spawn()` sequential-preference rollout note, the "sibling Grok/Gemini plan" staging-ruling
-  cross-reference, and this doc's own most recent na-eligibility-audit verdict immediately above this entry) —
-  historical record of decisions/work already made, not live open todos.
+- **Grok removal cleanup, 2026-08-18** (operator decision: xAI/Grok has no subscription/free tier, not worth
+  keeping — a separate track owns the actual code/UI removal + `grok_gemini_translation_proxy_2026_08_14.md`).
+  Stripped one passing "for Grok/Gemini either" mention from the GLM heuristic-cache-rate todo (since resolved by
+  finding, see above); every other Grok mention in this doc sits inside already-`[x]`-DONE todo bodies or dated
+  historical Progress Log entries — left as-is, not live open todos.
+
+- **2026-08-18 (interactive, slot 4) — SHIPPED all 3 remaining Phase 3 GLM production-readiness items
+  (`agent-orchestrator@79c42aaade`, lead-session-reviewed).** Full detail moved into the 3 flipped todo checkboxes
+  above (condensed here per this doc's own precedent — see the 2026-08-05 condensation note). Summary: **[INFRA]
+  P1** resolved by finding, no proxy built — a live cache-hit test (small prompt ambiguous, ~7.7k-token repeat
+  decisive: `cache_read_input_tokens` 0→7680 correctly, `input_tokens` 7697→17) proved GLM's endpoint reports
+  accurate usage, unlike DeepSeek's. **[UI] P2** shipped: new `server/glm_quota_poller.py` (verified live GLM
+  exposes zero rate-limit headers, so counts `free_provider_spawn_selected` activity_log rows against a
+  config-driven ceiling instead) populates `AccountUsageRow.five_hour_pct`/`weekly_pct` — the existing
+  `_pick_headroom_account` dispatch gate and `FlatRateBoostPanel`/`AccountRow` dashboard UI were already
+  provider-generic and dormant only for lack of data, so zero changes needed to either. New
+  `tests/test_glm_quota_poller.py` (real DB round-trips). **[DATA] P2** resolved by finding: the DeepSeek
+  spend-based technique doesn't apply (GLM is a flat subscription, no billed-spend signal) — redirected to the
+  already-built `compute_flat_rate_boost_reconciliation`, now unblocked by the poller. Also fixed a stale
+  "$160/mo" (real: $18/mo) in `model_pricing.py`. **QG**: genuinely green on the second attempt (first run caught
+  a real off-by-one in this session's own new test, fixed) — 4081 pytest passed/0 failed, dashboard vitest 18/18
+  after `cd dashboard && npm ci` fixed a pre-existing `recharts`/`node_modules` install-drift unrelated to this
+  work; `.qg_last_passed_sha == HEAD` confirmed before shipping.
+
 
 ## Phase 4 — rate-limit-aware, difficulty/duration-stratified round-robin dispatch (2026-08-18)
 
