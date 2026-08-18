@@ -292,6 +292,56 @@ omitted.
       venue numbers and mode vocabulary; separately verify every internal anchor resolves (one stale §05→§08 was
       found by reading — do it mechanically).
 
+## F. Second-pass audit results (5 agents, landed 2026-08-18 `unified-trading-pm@8b7e78e21f`)
+
+The 5 findings docs are `/plans/audit/results/client_artefact_{live_regrade, axis0_content_verification,
+sibling_docs_audit, cross_document_consistency, forward_claim_and_reverification}_2026_08_18.md`. **The four sibling
+artefacts had no owning plan until this section** — they carry the only HARD disclosure violations found anywhere
+in the corpus, and the first-pass audit never opened them.
+
+- [ ] [DOC] P0. **STOP-SHIP: the banned client name appears 6× in `strategy-service-deep-dive.html`.** Independently
+      verified 2026-08-18 by direct grep — 6 hits, one of them inside an SVG `<text>` element (so a prose-only sweep
+      would miss it). Used as the name of Copper's collateral-mirroring service, i.e. factually correct and still a
+      hard-rule violation: this name never appears in a client-facing artefact. **This document must not be sent to
+      anyone until this is cleared.** Removing it needs a rewrite of the surrounding custody explanation, not a
+      find-and-replace — the mirroring mechanism it describes is real and worth keeping; only the product name goes.
+      Grep all six artefacts after the fix, not just this one.
+- [ ] [DOC] P0. **Performance figures in two client documents**, violating the owning plan's "no performance figure
+      anywhere until the overlays land" rule. Verified directly: `platform-architecture.html` — "consistent positive
+      annualised returns, generally ranging from single digits into double digits"; the ODUM Phase2 email —
+      "increasingly confident the strategies generate consistent positive annualised…". **Note for whoever fixes
+      this**: `platform-architecture.html`'s other `annualised` hits are legitimate and must NOT be stripped —
+      "net carry (annualised, bps)" is a metric label and "stablecoin borrow rate, typically 5–8% annualised" is a
+      market fact, not our performance.
+- [ ] [DOC] P0. **`platform-architecture.html` asserts the staked-basis structure as present-tense capability** —
+      the sibling audit found this materially false. Re-frame as target-state, or cut.
+- [ ] [DOC] P0. **The invented strategy family is in THREE documents, not one.** Verified by direct count:
+      `platform-architecture.html` 4 hits, `strategy-service-walkthrough.html` 2, `carveout-engineering.html` 1
+      ("Liquidity provision" / "DeFi liquidity provision" / "liquidation capture"). § A's todo scoped the fix to
+      one document; it must cover all three. Same for the custody Fireblocks/Ceffu mismatch, now a confirmed
+      three-way contradiction — and note § A's correction that the mismatch is **deliberate and documented**, so
+      the fix is an explanatory note in all three, never an edit to the enum list.
+- [ ] [DOC] P0. **RESOLVED VERDICT — every `live` badge downgrades to `partial`.** The re-grade audit measured 36
+      badge instances (18 per file, including one embedded sub-badge each) and 16 top-level `live` sections (6 Nick
+      AI + 10 Elysium) — **not the 39/17/7-10 figures in the dispatch brief, which were my own over-count from a
+      markup grep**. An exhaustive workspace-wide search for positive real-capital evidence (a real fill, a mainnet
+      transaction, a reconciled live P&L, a funded live client) found **none anywhere**, so no section survives the
+      conjunctive test. This is the definition working as designed, not a writing defect: the owning epic
+      deliberately excludes going live with capital before 2026-08-25.
+- [ ] [DOC] P0. **RESOLVED VERDICT — cut the forward claim.** The corpus search found no committed basis anywhere
+      for "most venues and strategies on the current plan complete over the remainder of this year." Cut it rather
+      than soften it.
+- [ ] [DOC] P1. **Fix the CeFi spot-pair instrument-ID example in BOTH artefacts** — uses the instrument-type token
+      `SPOT` where the real one is `SPOT_PAIR`. The other 3 of 4 ID examples verified byte-for-byte correct against
+      `build_canonical_instrument_id()`/`build_instrument_id()`, and all 7 named venues are real, correctly spelled
+      and correctly bound in `VENUE_TO_ADAPTER_KEY` — so this is a single wrong token, not a systemic ID problem.
+- [ ] [REVIEW] P1. **Reconcile the two re-verification findings that did NOT confirm.** 4 of 6 came back CONFIRMED
+      (including cross-client-transfer-impossible, via a different real production path than the one originally
+      cited); the remaining 2 need a verdict before either artefact ships.
+- [ ] [PROCESS] P1. **Bring the four sibling artefacts under a tracked owner permanently** — this plan now covers
+      them, but they reached a client-sendable state with P0 violations and no plan at all. Feed this instance into
+      `system_readiness_master.md` W21's closure-invariant check as its first regression case.
+
 ## Real system gaps — already tracked, not duplicated here
 
 These findings trace to genuine gaps in the system itself, not documentation gaps. **Do not re-author them as todos

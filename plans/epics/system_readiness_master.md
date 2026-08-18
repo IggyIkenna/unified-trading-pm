@@ -487,12 +487,35 @@ presentation choice.
 
 ### The closure invariant — measured 2026-08-18, and it is NOT "everything under this epic"
 
-The operator's goal is: *build the epic in full, and the two artefacts have nothing missing.* Measured corpus
-topology says that cannot be delivered by parenting work under this epic. **356 active plans + 489 active issue docs
-= 845 docs, across 29 epics. This epic declares only 5 of them.** The largest owners are elsewhere —
-`infrastructure_master` 297, `sports_master` 68, `orchestrator_master` 65, `agent_operating_framework_master` 63,
-`defi_master` 50, `cefi_master` 50, `tradfi_master` 44. That distribution is correct and should not be flattened;
-the artefacts' claim surface legitimately spans work owned by ~20 other epics.
+The operator's goal is: *build the epic in full, and the two artefacts have nothing missing.* Corpus topology says
+that cannot be delivered by parenting work under this epic. **This epic declares a single-digit number of docs; the
+other ~850 hang off ~30 other epics**, and that distribution is correct — the artefacts' claim surface legitimately
+spans work owned by many of them. Do not flatten it.
+
+**Derive the numbers, never quote them from here.** A frozen snapshot in this section was already wrong within
+hours: the 2026-08-18 taxonomy restructure (9 `parent_epic` reclassification batches + 3 new epics — `ci_master`,
+`uac_master`, `security_and_cross_cutting_master`) moved the single largest owner from `infrastructure_master` at
+297 to `security_and_cross_cutting_master` at 212, while epics went 29 → 32. Any reader relying on the old list
+would have been misled about who owns what. Re-derive with:
+
+```bash
+ls plans/epics/*.md | wc -l                                        # epics
+rg -N --no-filename '^parent_epic:' plans/active/*.md plans/active/issues/*.md \
+  | sed 's/parent_epic: *//' | sort | uniq -c | sort -rn           # ownership distribution
+for f in plans/active/*.md plans/active/issues/*.md; do rg -qN '^parent_epic:' "$f" || echo "$f"; done
+```
+
+**True orphans are already near-zero** — the last check found 3 active docs with no `parent_epic` key, none a real
+plan (`INDEX.md`, `_agent_pings.md`, `_cefi_canonical_blueprint_2026_07_17.md`), and the restructure did not change
+that. So corpus-level orphan hygiene is not the gap. **The gap is directional** — nothing checks that every artefact
+CLAIM has a tracked owner. Invert the invariant: not "every plan hangs under this epic" (wrong direction, ~850 docs)
+but **"every claim-bearing artefact section maps to a tracked item, wherever it lives."**
+
+**This invariant has already failed once, measurably.** The 2026-08-18 second-pass audit found P0 disclosure
+violations in four sibling client artefacts (`strategy-service-deep-dive.html`, `platform-architecture.html`,
+`carveout-engineering.html`, `ODUM_Elysium_Phase2_Update_2026-07-24.html`) — none of which is covered by any
+remediation plan, because the only such plan scopes to the two audited documents. Four client-sendable documents
+carrying hard-rule violations, with no owning plan, is exactly the orphan class this section exists to catch.
 
 **True orphans are already near-zero**: exactly 3 active docs lack a `parent_epic` key, and none is a real plan
 (`INDEX.md`, `_agent_pings.md`, `_cefi_canonical_blueprint_2026_07_17.md`). So corpus-level orphan hygiene is not
