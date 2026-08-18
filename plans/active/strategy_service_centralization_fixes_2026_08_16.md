@@ -223,11 +223,17 @@ Full findings, root cause, and evidence for every todo below live in the three s
       hedge-failover, oracle-buffer, mid-loop-recovery) — strictly more sophisticated than a binary kill-gate, and
       it doesn't compete with mechanism A/B: it's a downstream consumer of a `DefiAlert`, not another
       health-factor source. Zero callers because nothing upstream emits a `DefiAlert` with one of these codes
-      yet — that's the actual gap, not the circuit itself. **New follow-up this surfaces**: build the bridge from
-      a computed `MarginEvent`/health-factor breach into a `DefiAlert` with the matching code, so
-      `LiquidationProximityCircuit.evaluate()` has something to consume — scope as part of wiring
-      `recursive_staked.py` (the archetype this circuit is explicitly named for) onto the centralized source, not
-      as a separate effort.
+      yet — that's the actual gap, not the circuit itself.
+      ✅ SHIPPED 2026-08-18 — `strategy-service@6b8c0c83f7`. Built the bridge:
+      `margin_event_emitter.py::defi_alert_for_margin_reading()` classifies a `CachedMarginReading` into
+      `AlertCode.DEFI_LIQUIDATION_IMMINENT`/`DEFI_HEALTH_FACTOR_CRITICAL` and constructs the matching `DefiAlert`;
+      wired into `recursive_staked.py`'s Family-2 close gate (the archetype this circuit is explicitly named for),
+      which already computes the qualifying `margin_reading`. **Scoped honestly**: the circuit now has a real
+      caller and its `ProximityDecision` is genuinely computed + logged (audit trail), but every qualifying breach
+      still fully closes as before — acting on the FULL graded taxonomy (`PARTIAL_UNWIND`'s one-loop-level
+      reduction, `POSITION_PAUSE`, `HEDGE_FAILOVER`, `ORACLE_BUFFER`, `MID_LOOP_RECOVERY`) needs new
+      leg-construction logic per action, not built here — that remains open, real follow-up work if the graded
+      response is wanted beyond "wired in + observable."
 - [x] [BACKEND] P1. ✅ SHIPPED 2026-08-18 — `strategy-service@fc1afc9425` (a), `strategy-service@2d461285a8` (c).
       **CORRECTED 2026-08-18 — split into what's honestly achievable now vs. blocked on missing data.** Three
       sub-pieces, not one:
