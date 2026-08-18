@@ -226,9 +226,12 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       counts as the common denominator across every provider's billing shape (metered-$, first-party-token,
       subscription-flat-rate, rate-limited-free-tier), each priced at the provider's PUBLISHED rate (not a computed
       effective rate) for the "bang for the buck" comparison. Must generalize DeepSeek's existing `task_usage` table
-      rather than create a second, parallel per-task ledger. Done when: a design doc or schema proposal covers all 6
-      currently-registered providers (Anthropic, DeepSeek, Gemini, GLM, Codex, Kimi) with a concrete field mapping
-      for each (Grok decommissioned 2026-08-18, dropped from scope).
+      rather than create a second, parallel per-task ledger. Done when: a design doc or schema proposal covers all 7
+      currently-registered providers (Anthropic, DeepSeek, Gemini, GLM, Codex, Kimi, NVIDIA/Gemma) with a concrete
+      field mapping for each (Grok decommissioned 2026-08-18, dropped from scope; count+list corrected 2026-08-18
+      per `/plan-reconcile ao` — NVIDIA/Gemma is a genuinely separate `AccountProvider` value per
+      `kimi_gemma_provider_onboarding_2026_08_16.md`, was omitted from this count; Kimi's own schema coverage is
+      still pending per that same doc's todo, not yet designed despite being counted here).
 - [ ] [DATA] P1. Reconciliation proof: sum of every task's attributed billing (once the schema above is populated for
       a real window) must equal the fleet's real total spend for that window, per provider. Done when: a dated
       Progress Log entry shows this reconciling within a stated tolerance for at least DeepSeek + one new provider.
@@ -280,13 +283,18 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       all agree? This is the "check that dollars spent are recorded correctly" check the operator asked for
       explicitly, not just a one-sided computation. Done when: a real 3-way comparison table exists in this doc's
       Progress Log for both GLM and Codex, with any mismatch explained (not silently dropped).
-- [ ] [UI] P2. New, operator-refined 2026-08-17 — for Gemma (NVIDIA NIM, free tier): explicitly SKIP the $/
+- [x] ✅ [UI] P2. New, operator-refined 2026-08-17 — for Gemma (NVIDIA NIM, free tier): explicitly SKIP the $/
       boost-multiplier reconciliation above — operator's own words, "there's nothing to really reconcile with," and
       it's genuinely $0 (see this plan's existing Non-goals section, same principle already applied to Gemini's free
       tier). But still show REAL request/token counts on the dashboard, not a placeholder, an omitted panel, or a
       copy of another provider's shape. Done when: Gemma's account row shows real usage numbers with no
       reconciliation math attached, visibly distinct from the metered/subscription rows (not silently blank or
-      mislabeled as reconciled).
+      mislabeled as reconciled). **DONE — already shipped `agent-orchestrator@0c0e527`, found + cross-linked
+      2026-08-18 via `kimi_gemma_provider_onboarding_2026_08_16.md`'s own Progress Log (that doc's author flagged
+      this exact drift: the shipment was never recorded here).** `server/nvidia_headroom.py` (shared-key RPM gauge)
+      + `GET /api/accounts/nvidia/capacity` (`server/routes/accounts.py:924`) + `NvidiaCapacityPanel.tsx` (wired
+      into `App.tsx`, no $ reconciliation math, visibly distinct panel type from the Wallet panels) +
+      `dashboard/tests/e2e/nvidia-capacity.spec.ts` (real Playwright e2e spec). — /plan-reconcile 2026-08-18.
 - [ ] [UI] P2. New, operator-refined 2026-08-17 — add an operator-facing quick sanity-check surface: show "requests
       tracked by AO" per account (GLM/Codex/Gemma first, but not exclusive to them) so the operator can manually spot
       -check it against the provider's own console/dashboard. Operator's own framing: "It might make sense for an

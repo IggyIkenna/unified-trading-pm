@@ -3,9 +3,9 @@ doc_type: plan
 title: Multi-agent slot collision + safe-doc-push hardening — finalize
 summary: >-
   Gated closeout for `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` — machine-held via
-  `depends_on` + `gate_on_depends: true` until all 4 of that doc's remaining todos (rename-corruption fix, the
-  now-unblocked `.agent-claim` heartbeat + session-start collision warning, and the codex/CLAUDE.md fold-in) are done.
-  Verifies the live heartbeat + warning mechanism actually reduces collision frequency before archiving.
+  `depends_on` + `gate_on_depends: true` until every remaining todo in that doc (the parent doc has continued gaining new
+  todos since this finalize was authored, e.g. the autostash-chain fix and the bounded-age prune policy) is done. Verifies
+  the live heartbeat + warning mechanism actually reduces collision frequency before archiving.
 status: active
 nature: process
 asset_group: [ao]
@@ -55,8 +55,9 @@ source: >-
 
 > **Machine-gated on `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`** (`depends_on`
 >
-> - `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 4 of the parent doc's remaining
->   todos are `done`.
+> - `gate_on_depends: true`) — the dispatcher will not queue any todo below until EVERY remaining todo in the parent doc
+>   is `done` (the parent doc has gained new todos since this finalize was authored — do not assume the count is still
+>   4; re-check the parent doc's own open-checkbox count live).
 
 ## Todos
 
@@ -130,3 +131,12 @@ source: >-
   own transcript — informational, not actioned as a new todo (out of this plan's scope). 1 todo remains open (the 6-step
   archival, `[DOCS]`) — doc stays `status: active`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified all 5 still resolve; unchanged.
+- **/plan-reconcile ao 2026-08-18 (hunter #7)**: fixed a stale-count finding — the frontmatter `summary:` and the body
+  banner both said "all 4 of the parent doc's remaining todos," but the parent (`.../multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md`)
+  has since gained 2 more todos (autostash-chain fix, done 2026-08-10; a bounded-age prune policy, still open as of
+  2026-08-18 — confirmed via `grep -cE '^[[:space:]]*- \[ \]'` = 1 open / 7 done, 8 total). `gate_on_depends: true` gates
+  on ALL of the parent's todos regardless of count, so the mechanism itself was never wrong — only the doc's own
+  human-readable count was stale and could mislead a reader into checking only the originally-named 4 items. Per the
+  workspace HARD RULE ("delete the number that rotted rather than updating it — a count re-rots"), removed the specific
+  "4" from both locations rather than updating it to "8." No checkbox state changed; this doc's own single open todo
+  (the 6-step archival) correctly stays gated on the parent's still-open bounded-age-prune todo.

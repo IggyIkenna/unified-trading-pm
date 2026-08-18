@@ -258,7 +258,7 @@ adjacent axis the same script happens to also report). **Both findings investiga
       unrelated to this diff — `test_solana_defi_handler.py::TestCollectProtocol::test_writes_data_to_gcs`,
       `test_lst_rates_handler.py::test_process_writes_canonical_partition_per_protocol_chain` — verified via
       `git stash` + re-run on clean HEAD; see
-      `plans/active/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`). The 3 files below exist,
+      `plans/archive/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`). The 3 files below exist,
       uncommitted, in slot-24's `.tabs/24/market-tick-data-service` working tree — do NOT discard them; ship via the
       normal Pass-1/Pass-2 flow the moment the blocker clears, THEN flip this checkbox with the real sha. Wrote
       `market-tick-data-service/scripts/migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py` following the

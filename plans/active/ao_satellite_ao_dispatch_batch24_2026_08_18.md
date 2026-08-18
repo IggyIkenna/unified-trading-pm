@@ -44,6 +44,7 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
+sequential: true # added 2026-08-18 (/plan-reconcile ao, trust-mode ruling — see operator_ruling_record_plan_reconcile_ao_2026_08_18.md #5): todos 1-4 confirmed to add 4 different columns to the SAME TaskUsageRow model via 4 separate migrations against the same table's schema state — a genuine shared-resource risk the "different files" concurrency rule doesn't cover; the doc's own "coordinate informally" prose is not machine-enforced
 context_scope:
   [
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
@@ -132,9 +133,10 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
 - All 5 todos below are file-disjoint (todos 1-4 touch `agent-orchestrator/server/orm.py` + `context_lifecycle.py` +
   `dispatch.py` in different, non-overlapping ways per todo; todo 5 touches a `unified-trading-pm` codex doc entirely)
   — safe to run concurrently, no `sequential: true`.
-- Todos 1-4 all read from `TaskUsageRow` (`agent-orchestrator/server/orm.py:292`) but each ADDS a different column/field
-  — coordinate schema-migration ordering informally (check for an in-flight migration from a sibling todo before
-  adding your own) rather than assuming exclusive ownership of the table.
+- Todos 1-4 all read from the `TaskUsageRow` model (`agent-orchestrator/server/orm.py` — symbol, not a line number,
+  corrected 2026-08-18 /plan-reconcile per task_template.md §3) but each ADDS a different column/field — coordinate
+  schema-migration ordering informally (check for an in-flight migration from a sibling todo before adding your own)
+  rather than assuming exclusive ownership of the table.
 
 ## Todos
 
@@ -142,7 +144,7 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
       triggered `forced_precompact`/`forced_compact`/`forced_compact_ineffective` during its own run —
       `ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md` already logs these events with a
       timestamp + `slot_id` (`server/fleet_kpis.py`/`server/context_lifecycle.py`, its own `craft_type`-tagging todo 3
-      shipped `agent-orchestrator@c46102b9b5`), and `TaskUsageRow` (`server/orm.py:292`) already carries
+      shipped `agent-orchestrator@c46102b9b5`), and the `TaskUsageRow` model (`server/orm.py`) already carries
       `assigned_at`/`completed_at` per task — the join key (an event's timestamp falling inside a task's own
       `[assigned_at, completed_at]` window for that `slot_id`) exists in principle but is never materialized as a
       field or query today. **Done when**: a real query (or a new persisted field, e.g. `TaskUsageRow.compact_count`)
@@ -157,12 +159,14 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
       (2026-08-17): capture the PEAK/high-watermark `context_used_pct`...". Repo: agent-orchestrator.
 - [ ] [DATA] P2. **Capture which repo(s) a task actually touched, from real commit/push evidence.** Not the plan's
       declared `repos:` frontmatter (a stated intent, not a measurement) — confirmed no such field exists today
-      (`repos_touched`/`repo_count` in `server/` only match unrelated dirty-worktree-state concepts,
-      `server/routes/git_health.py:277`, `server/worktree_clean_check/_report.py:51`). **Done when**: a real completed
+      (`repos_touched`/`repo_count` in `server/` only match unrelated dirty-worktree-state concepts, in
+      `server/routes/git_health.py` and `server/worktree_clean_check/_report.py` — symbols, not line numbers,
+      corrected 2026-08-18 /plan-reconcile). **Done when**: a real completed
       task's record shows the real repo(s) it committed to, sourced from actual commit/push evidence. Source: same
       doc, "[DATA] P2. New (2026-08-17): capture which repo(s) a task actually touched...". Repo: agent-orchestrator.
 - [ ] [DATA] P2. **Persist the task's `context_scope` size onto the completed-task record.** The reading-list already
-      passed to the worker at dispatch (`server/dispatch.py:564`) is dispatch-time-only today and never carried
+      passed to the worker at dispatch (`server/dispatch.py` — symbol, not a line number, corrected 2026-08-18
+      /plan-reconcile) is dispatch-time-only today and never carried
       through to `TaskUsageRow` or any other durable per-task table. **Done when**: a real completed task's record
       shows both its `context_scope` size and its real outcome metrics (turns/tokens/compacted) joinable in one
       query. Source: same doc, "[DATA] P2. New (2026-08-17): persist the task's `context_scope`...". Repo:

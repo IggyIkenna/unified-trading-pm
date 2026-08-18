@@ -131,7 +131,7 @@ Evidence (converging, three independent layers, all post-dating the audited wind
    `market_tick_data_service/engine/ cefi_catalog_reader.py` actually consults to decide what to download) didn't exist
    before 2026-06-08, and BITGET-SPOT/BITGET-FUTURES were added to its `venues` frozenset only in
    `unified-api-contracts@54325576` (2026-06-23, MVP_SCOPE v7→v8, commit msg: "Add the 8 venues (...BITGET-*...) to the
-   MVP rule venues set (were absent -> mvp=0)"). Per `plans/active/issues/cefi_universe_capture_rule_2026_06_23.md`,
+   MVP rule venues set (were absent -> mvp=0)"). Per `plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md`,
    this 2026-06-23 operator ruling is what SUPERSEDES the pre-existing informal "curated top-100 guess" capture universe
    — i.e. there was no earlier formal mechanism that could have included BITGET-SPOT before this date either.
 3. **Live transport wired even later.** `bitget_spot_ws.py`'s `WSFeedConnector` was first registered in

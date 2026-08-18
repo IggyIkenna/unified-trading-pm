@@ -94,8 +94,10 @@ source: >-
       archival ritual (migrate any DEFERRED item → banner → codex-alignment check → fix every referrer's path
       corpus-wide → clear the lock) on any doc that IS fully done. **Done when**: `grep -rl <slug> plans/ codex/`
       returns only the archived copy's own path for each archived doc, and
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero NEW hard failures (compare against the baseline
-      recorded at this finalize plan's authoring time).
+      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero NEW hard failures — corrected 2026-08-18
+      (`/plan-reconcile ao`, trust-mode ruling, `operator_ruling_record_plan_reconcile_ao_2026_08_18.md` #6): no
+      baseline count was ever actually recorded at this doc's authoring time, so establish one live via a
+      `run_hygiene_sweep.sh --ci` dry run at pickup time and compare against THAT, not an unrecorded number.
 - [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
       `/plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md`, migrate any still-open Deferred item into batch 9
       (never leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_08/`,

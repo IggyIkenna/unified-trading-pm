@@ -62,7 +62,7 @@ context_scope: [/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_reti
 
 ## What I found
 
-Task: todo 7 of `plans/active/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` — "Verify + retire
+Task: todo 7 of `plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md` — "Verify + retire
 `dex_pool_fees` legacy `captured` rows if any remain", whose premise (from the archived
 `defi_dex_pool_fees_retirement_recommendation_2026_08_04.md` + the distinct-values plan) was: **"the corpus itself was 0
 real objects for its whole lifetime, phantom manifest rows only."**

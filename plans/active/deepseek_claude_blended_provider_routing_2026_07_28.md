@@ -531,19 +531,25 @@ default from an external reference.
           name(s) to an agent session to wire the re-sourcing (next todo) — no guessing needed, this doc already states
           the name.
 
-- [ ] [INFRA] P2. **Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret on BOTH hosts** — this machine and the planning
-      VM — so `~/.claude-accounts/deepseek-v4-pro.env` no longer contains the literal key. ~~BLOCKED on the operator
-      todo above~~ **UNBLOCKED 2026-08-09**: the secret was created live (see the todo above), naming resolved.
-      **Verified still open 2026-08-06** by direct file read: the env file contains no `gcloud secrets` / secret-manager
-      indirection of any kind, i.e. the key is still literal — this half is unambiguously undone regardless of whether a
-      secret has since been created. **Done when**: both hosts read the token via secret-manager indirection, a fresh
-      spawn authenticates successfully, and the literal key is removed from both files. **➡️ EXTRACTED 2026-08-09 to
-      `ao_satellite_ao_dispatch_batch14_2026_08_09.md` todo 1 — do NOT action here.** **Evidence appended 2026-08-09
-      (slot 30) — DONE in batch14, checkbox left unflipped here per that plan's own rule (finalize plan reconciles):**
-      "both hosts" was stale (only ONE VM exists post-2026-08-03 termination); the executing slot's own host IS the
-      planning VM (verified via IMDSv2 instance-metadata), so one file fix (`~/.claude-accounts/deepseek-v4-pro.env`)
-      covers it. Full verification method + the fresh $0-balance finding this surfaced: see batch14's flipped todo 1 and
-      this doc's own new `[OPERATOR] P2` balance-recurrence todo above.
+- [x] ✅ [INFRA] P2. **RECONCILED 2026-08-18 (/plan-reconcile, per `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md`
+      todo 2) — the real, durable fix.** Re-source `ANTHROPIC_AUTH_TOKEN` from the GSM secret — `~/.claude-accounts/deepseek-v4-pro.env`
+      on the (single, post-2026-08-03-termination) planning VM no longer contains the literal key.
+      **This checkbox's own path was NOT the eventual fix** — batch14's original 2026-08-09 (slot 30) claim was FALSE
+      (caught 2026-08-10, slot 15: the file was byte-identical to the pre-change backup, edit never applied); a real
+      edit landed 2026-08-10 (slot 5) but was silently reverted within one tick by `creds_env_poller.py`'s S3-bucket
+      resync (caught 2026-08-12, slot 16 — the local-only edit never touched the S3 source of truth); the DURABLE fix
+      is `plans/archive/2026_08/issues/deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md`'s `[INFRA] P0`
+      todo (DONE 2026-08-12, slot 18), which updated BOTH the S3 creds bucket object AND the local file to the
+      indirection, plus a companion `[BACKEND] P0` fix to `deepseek_native_proxy_server`'s token resolution (the
+      literal-regex-parse path that would otherwise have sent the `$(gcloud secrets ...)` string itself as the Bearer
+      token). **Confirmed live 2026-08-12 (slot 2, final measurement)**: `~/.claude-accounts/deepseek-v4-pro.env`
+      carries the `gcloud secrets versions access` indirection (`grep -c` = 1), sha256 `5ca2561f...` (≠ old literal
+      `86f0758f...`), zero literal `sk-`-shaped token lines, mtime 2026-08-12 19:44 UTC; the issue doc's all 5 todos
+      are `[x]`. **Done-when fully met**: token reads via secret-manager indirection on the one live host, a fresh
+      `claude -p` spawn authenticates (balance was topped up per the issue doc), literal key removed. Full evidence
+      chain: `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo (now marked CANCELLED — SUPERSEDED, see that
+      doc) + `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md`'s todos 1-2 +
+      `deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md`.
 
       > **⚠️ Measurement trap recorded 2026-08-06 — do not repeat it.** This todo's earlier line "Confirmed 2026-08-04:
           > no `deepseek*` secret exists in GSM yet" should be re-verified before being trusted. A 2026-08-06 attempt to

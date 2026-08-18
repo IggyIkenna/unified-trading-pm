@@ -462,3 +462,22 @@ tracked-but-missing shape.
   unrelated `--files` entry in the SAME invocation, not just the renamed path itself — the resurrection isn't
   scoped to the specific path that's "missing and correct by design," it can trigger off the batch containing any
   such path. Did not attempt a fix or fresh repro this session (out of this review task's scope).
+- **2026-08-18 (main, slot-3, `/plan-reconcile ao` run)**: Eighth data point, a DIFFERENT symptom shape from the
+  prior seven — no `safe-doc-push.sh` invocation was directly observed by this session causing it (this run's 9
+  parallel hunter sub-agents were explicitly instructed not to ship until the run's own Phase 5), but live,
+  repeated MID-EDIT content reverts hit this exact slot-3 checkout while those hunters had dirty, uncommitted edits
+  sitting in the shared working tree: (1) a hunter's verified fix to
+  `ao_human_claim_reserved_slot_bypass_2026_08_16.md`'s `resolved_by:` field (correct value
+  `agent-orchestrator@d13788ec2f`) was found reverted back to an older placeholder value minutes after the
+  sub-agent had already verified and reported it landed — re-applied directly, confirmed still present afterward;
+  (2) a separate hunter independently self-reported the identical phenomenon hitting 4 of its own first 5 edits,
+  citing 116+ and growing `safety-snapshot: pre-reconcile quarantine` stash entries accumulating in real time
+  during its own session — all 5 of its edits were re-applied and confirmed present. Leading hypothesis: a
+  DIFFERENT concurrent process/session sharing this same slot-3 checkout ran `safe-doc-push.sh` for its own
+  unrelated work during this window, and its stash-quarantine-and-restore cycle (this doc's core subject)
+  snapshotted the shared tree's THEN-current dirty state and later restored an older snapshot over part of it —
+  the same underlying mechanism this doc documents, just triggered by a third party's shipping activity landing on
+  content the triggering session didn't author. Not root-caused further (out of this run's scope). Take-away for
+  any future multi-agent run on a shared checkout: verify every file's content at HEAD/on-disk immediately before
+  staging in the final apply phase, never trust an earlier in-session verification alone — this run applied that
+  discipline throughout and caught both reverts before they could ship silently.

@@ -89,7 +89,7 @@ import surface specification.
 ## Positions SSOT — PBMS canonical ledger (codified 2026-05-12 per slot 8 audit PB-7)
 
 > **REPO MERGE 2026-05-27 (per BLRS audit
-> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: `position-balance-monitor-service` is
+> `plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: `position-balance-monitor-service` is
 > **no longer a standalone repo** — it was merged into `strategy-service/strategy_service/position/` on 2026-05-20
 > (`workspace-manifest.json:231`). Read "PBMS" below as that module. Its query API now lives at
 > `strategy-service/strategy_service/position/api/routes/` (`pnl_series.py`, `positions_health.py`, `nav_snapshot.py`) +

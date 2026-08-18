@@ -1342,7 +1342,7 @@ case (PM calling its own local copy since it couldn't reference itself remotely)
 did NOT move: every repo (PM included) keeps its own local copy (`uses: ./.github/workflows/notify-slack.yml`) since it
 was never referenced cross-repo. Full incident + migration history:
 `plans/archive/shared_ci_workflow_repo_extraction_2026_08_06.md` (once archived) or
-`plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`.
+`plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md`.
 
 **Forward migration (2026-08-15/16) — the wave-2 billing sweep.** Once a repo is flipped private (billing is otherwise
 free/unmetered on GitHub-hosted for public repos, so self-hosting only pays off private), the sanctioned sequencing is

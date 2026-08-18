@@ -25,7 +25,7 @@ referenced_by:
   [
     /codex/09-strategy/operational/cli-promote-paths.md,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
-    plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
+    plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md,
   ]
 owner:
 last_reviewed:

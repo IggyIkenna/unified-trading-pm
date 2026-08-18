@@ -412,7 +412,7 @@ context_scope:
       `no_parquet_under`): baseline `plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_20.md`, mid
       `plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_24.md`, final
       `plans/audit/results/data_pipeline_e2e_check_mtds_2025_12_18.md`. Finding filed:
-      `plans/active/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`. **Done when**: 3 dated runs cited
+      `plans/archive/2026_08/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md`. **Done when**: 3 dated runs cited
       by report path/dispatch_id, baseline through final. Source: `sports_consolidated_closeout_2026_07_19.md:665-669`.
 - [x] ✅ [DATA] P1. **Track K (MDPS) — run + cite 3 dated checkpoints (baseline/mid/final) for
       `data-pipeline-check-mdps` against sports.** Split 2026-08-01, see Track K (IS) above for the split rationale. Use

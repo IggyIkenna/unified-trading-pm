@@ -570,7 +570,7 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   worker can determine alone. This is the textbook "figure out how X should look" pattern the dispatch-scope-eligibility
   rule excludes from AO batching (CLAUDE.md § Plans — operator ruling 2026-07-23). Drafting a competing/pre-empting AO
   todo here would violate the very ruling that spawned this doc.
-- **`plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md`**: Confirmed via direct read: the doc has 5
+- **`plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md`**: Confirmed via direct read: the doc has 5
   open todos, none overridden by a later dated section. Conflict check: grepped every
   batch2/3/4(+finalize)/consolidated-closeout/fork/foldin/hygiene/native-ao-extract doc for
   "SportsMatchingEngine"/"sports_matching" and for "BACKTESTS.md"/"backtest-groups verification". Result — no genuine

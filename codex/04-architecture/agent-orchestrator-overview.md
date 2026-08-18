@@ -371,4 +371,4 @@ Behaviour-domain docs: [`agent-orchestrator-autospawn.md`](agent-orchestrator-au
 [`agent-orchestrator-worker-liveness.md`](agent-orchestrator-worker-liveness.md) (liveness + account failover) ·
 [`agent-orchestrator-backlog-state-alignment.md`](agent-orchestrator-backlog-state-alignment.md) (dispatch + regen +
 task state). In-flight remediation of the open items:
-`plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`. Epic: `plans/epics/orchestrator_master.md`.
+`plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md`. Epic: `plans/epics/orchestrator_master.md`.

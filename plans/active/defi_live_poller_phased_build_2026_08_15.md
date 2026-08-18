@@ -175,7 +175,7 @@ chain-footprint proxy.
   evidence — ran `market-tick-data-service`'s full `quality-gates.sh` on live-defi-rollout HEAD: all
   34 pre-existing unit tests across `test_dex_swap_uniswap_v3_ws_connector.py` +
   `test_aave_liquidations_ws_connector.py` pass unmodified (11052 passed / 1 pre-existing unrelated
-  failure tracked separately at `plans/active/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`,
+  failure tracked separately at `plans/archive/issues/mtds_lst_rates_solana_defi_handler_qg_red_2026_08_17.md`,
   not touching the connectors package). Tranche 0 checkboxes above flipped. The TVL-ordering
   follow-up todo below is UNCHANGED/still open — Tranche 0 landing unlocks Tranches 1-2 dispatch
   (same-chain reuse of the now-proven base classes) but does not itself resolve the TVL-snapshot

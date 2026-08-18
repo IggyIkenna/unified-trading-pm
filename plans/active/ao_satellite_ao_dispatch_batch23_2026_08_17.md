@@ -16,7 +16,7 @@ summary: >-
   item — a CEFI-manifest-script streaming fix, source `orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`
   — found new on that run's fresh Phase 0 diff (didn't exist yet at this doc's original authoring) and
   conflict-checked clear the same way. Now 6 items across 4 source docs.
-status: draft
+status: active # flipped from draft 2026-08-18 (/plan-reconcile ao, trust-mode ruling — see operator_ruling_record_plan_reconcile_ao_2026_08_18.md #4): todos already fully vetted/conflict-checked per this doc's own Phase 2 write-up; draft was a copy-paste template artifact, not a content gate
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -136,8 +136,10 @@ are bounded, already-decided, and conflict-clear:
       Audit whether other plan_reconciler/na-eligibility-audit runs...". Repo: agent-orchestrator (+ unified-trading-pm
       for the source doc's own historical-scan scope).
 - [ ] [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic**
-      (`scripts/plan-hygiene/fix_frontmatter.py` `get_first_paragraph_after_heading()`, lines ~245-294, called at
-      ~646-654 only `if not has_field(new_fm, "summary")`). Two confirmed defects: (a) hard-cuts mid-word at 197
+      (`scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()`, gated by its sole caller's
+      `if not has_field(new_fm, "summary")` guard — reference the symbols, not a line number: this todo previously
+      cited `lines ~245-294`/`~646-654`, corrected 2026-08-18 /plan-reconcile per task_template.md §3's "reference
+      SYMBOLS, never line numbers" rule). Two confirmed defects: (a) hard-cuts mid-word at 197
       chars with a literal `" ..."` suffix when no sentence/space boundary is found in budget; (b) locks onto the
       FIRST `". "`/`"! "`/`"? "` in the source paragraph even when that leaves most of the 197-char budget unused,
       producing dangling lead-ins. **Fix direction**: widen the sentence-boundary search to use more of the 197-char

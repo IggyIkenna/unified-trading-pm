@@ -26,6 +26,7 @@ related:
   [
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
   ]
 created: "2026-08-18"
 parent_epic: agent_operating_framework_master
@@ -40,6 +41,7 @@ source: >-
   and a targeted per-job follow-up pull.
 resolved_by:
 locked_by:
+depends_on: []
 ---
 
 # Scheduled-job reaped-stale rate — 36% fleet-wide, not evenly distributed
@@ -64,6 +66,20 @@ at minimum, plus whichever other jobs weren't individually checked this session)
   `ci_reconciler`, `data_pipeline_alerts_reconciler`, `escalation_queue_reconciler`,
   `plan_reconciler`) individually — only the 3 named above were pulled.
 - Didn't check whether this is a NEW pattern or a longstanding baseline rate.
+
+## Relationship to the separate "sessions never reaped" gap (same night, different hunter)
+
+Filed the same night (2026-08-18) as
+`/plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md` — both
+live in the same `tmux_pruner.py` subsystem, so they're worth distinguishing rather than conflating. Code-confirmed
+(`agent-orchestrator/server/tmux_pruner.py` ~line 730-752): `exit_reason="reaped-stale"` is the label the pruner
+applies when it successfully archives a one-shot/scheduled agent whose tmux session it found already gone (a
+heuristic "this session died without a confirmed `/done`" call, not a confirmed crash) — i.e. this doc's 36% figure
+measures a **death rate** (sessions that DID get cleaned up, just via the stale-archival path instead of a clean
+completion), not a failure of the reap mechanism itself. The other doc's title ("never get their tmux sessions torn
+down") describes the opposite shape — sessions that are NOT being reaped at all, sitting alive and blocking new
+dispatch. Distinct mechanisms per this code read; not asserting they share no common cause (unconfirmed either way),
+just that this doc's numbers should not be read as evidence for the other doc's claim or vice versa.
 
 ## Follow-up
 

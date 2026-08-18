@@ -100,8 +100,23 @@ A 1-item batch is sanctioned by `task_template.md` §4 ("Fewer is fine; group RE
 
 ## Todos
 
-- [ ] [INFRA] P2. **CORRECTED 2026-08-12 (/plan-reconcile) — reverted to `[ ]` per this doc's own stated intent.** This
-      checkbox was rendered `[x]` with "DONE 2026-08-10 (slot 5) — for real this time" text, but that same slot's
+- **[INFRA] P2. CANCELLED — SUPERSEDED 2026-08-18 (/plan-reconcile, per
+      `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todo 2 + the reconciled evidence now on
+      `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own checkbox).** Converted from a `- [ ]` checkbox to
+      this non-checkbox marker because the open `[ ]` form was costing a full worker re-diagnosis on every dispatch
+      tick with no way to close it (7 confirmed re-derivations 2026-08-09 through 2026-08-12, each logged below) —
+      `regen_backlog_from_plan.py` has no syntax for "ingested but permanently non-actionable except via a pointer,"
+      so per `task_template.md` §3's CANCELLED/SUPERSEDED disposition marker (exactly this case: "the todo is
+      re-scoped or dead, nothing left to complete"), this todo is retired in place. The real fix DID land and is
+      DURABLY LIVE as of 2026-08-12 19:44 UTC (slot 2's own measurement below: `gcloud secrets versions access`
+      indirection present, sha256 differs from the old literal, zero `sk-` lines) — evidence now also reconciled
+      into the source doc's own checkbox (see finalize plan todo 2, done 2026-08-18). This checkbox itself is
+      permanently retired; do not re-derive further work from it. Original (unreliable) history preserved below for
+      the record — the FIRST "DONE" claim here (2026-08-09, slot 30) was FALSE (caught 2026-08-10, slot 15); the
+      SECOND fix (2026-08-10, slot 5) was real but got silently reverted by `creds_env_poller.py`'s S3 resync within
+      one poll tick (caught 2026-08-12, slot 16); the THIRD fix (2026-08-12, via the issue doc
+      `deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md`'s durable S3+local + proxy-token-resolution fix)
+      is the one that actually held (confirmed live 2026-08-12, slot 2). This checkbox was rendered `[x]` with "DONE 2026-08-10 (slot 5) — for real this time" text, but that same slot's
       Progress Log entry explicitly states "this batch14 todo itself intentionally stays `[ ]`/reverted — its checkbox
       is not the record of the real fix; see the finalize plan" — the real fix evidence lives in
       `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md` todo 2 (slot 5), not here. **See finalize plan todo 2

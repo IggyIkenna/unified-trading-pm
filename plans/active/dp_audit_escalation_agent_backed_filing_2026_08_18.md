@@ -181,5 +181,5 @@ exists on one side and is never actually exercised end-to-end.
   live queue shows genuine fleet capacity pressure right now (a real escalation, `agt-63a017`, has been stuck
   `queued` 3+ hours on "no free configured slot"), not a defect in this fix. Deliberately did not try to jump the
   drill ahead of real queued escalations. Todo 4 stays open pending a worker actually dispatching; check
-  `plans/active/issues/dp_audit_escalation_drill_verification_2026_08_18.md` (once/if filed) or re-run the same SSM
+  `plans/archive/issues/dp_audit_escalation_drill_verification_2026_08_18.md` (once/if filed) or re-run the same SSM
   check against escalation id `agt-2050ac`.

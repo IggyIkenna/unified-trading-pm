@@ -649,7 +649,7 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
     on the shared 16-vCPU host, even purely CPU-bound synchronous pandas tests were starved 15+ min (todo 7/8 evidence)
     — there is no fixed budget that beats unbounded contention. **Capacity question resolved**: the dominant contention
     source (public repos' QG on the shared self-hosted VM) was removed by the 2026-08-05 operator-ruled public-repo
-    runner revert (`plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`: 15 public repos → GH-hosted
+    runner revert (`plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md`: 15 public repos → GH-hosted
     ubuntu-latest, unmetered for public repos) + the 2026-08-06 PM public flip; the remaining 8 private repos stay
     self-hosted under the reservation-mode governor (`qg_host_adaptive_resource_governor_2026_07_14.md`, RAM+CPU
     dual-gate admission), which prevents host-crashing oversubscription. Corroborated live this session:

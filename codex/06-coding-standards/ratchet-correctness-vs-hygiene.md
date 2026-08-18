@@ -89,7 +89,7 @@ before deciding whether an absorb-path is safe to offer at all.
 ## Why this wasn't written down until now
 
 Both kinds were hit in one 2026-08-11/12 shipping session
-(`plans/active/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`): a commit-SHA evidence gate correctly blocked
+(`plans/archive/2026_08/issues/qg_ratchets_block_unrelated_ships_2026_08_12.md`): a commit-SHA evidence gate correctly blocked
 because a peer's commit hadn't actually reached origin (correctness, left blocking), and a codex-freshness gate blocked
 because two unrelated docs aged past 90 days with zero edits (hygiene, later converted to warn-with-digest). Both were
 handled correctly in the moment, but the reasoning for treating them differently lived only in the shipping commit

@@ -285,7 +285,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       shipped 2026-06-20 per P2.7.1/P2.7.2 above but never wired into this terraform — the header comment claiming
       it "is NOT yet implemented" was stale), which honest-no-ops (`status: ok, skipped: no_run_configured`) instead
       of crashing when `paper_ledger_root`/`batch_ledger_root` are unset. Repo: deployment-service. Issue:
-      `plans/active/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`. **Deployed + live-verified**
+      `plans/archive/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`. **Deployed + live-verified**
       2026-08-18: `tofu plan -target=module.blrs_daily_determinism_job` showed "1 to add" (not "1 to change") —
       local terraform state doesn't track this resource, so a blind `tofu apply` risked conflicting with however
       the live job is actually managed; applied directly instead (`gcloud run jobs update`, safe/idempotent,

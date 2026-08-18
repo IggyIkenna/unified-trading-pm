@@ -15,7 +15,7 @@ stage: [meta]
 repos: [agent-orchestrator, unified-trading-pm]
 scope: [engineer]
 tags: [agent-orchestrator, ao-watchdog, scheduled-jobs, plan_health, follow-up]
-related: [ao_consolidated_closeout_2026_08_12]
+related: [/plans/active/ao_consolidated_closeout_2026_08_12.md]
 created: 2026-08-17
 priority: P2
 parent_epic: orchestrator_master

@@ -727,7 +727,7 @@ apply/delete.
 **Post-push prek-orphaned-patch event 2 (2026-08-10, slot 3, exit-9 follow-up)**: this ritual's safe-doc-push push
 landed (`5988a04104`) but exited 9 on THREE orphaned prek patches, all identical (`1786396575675-1137739.patch` =
 `1786396598129-1172608.patch` = `1786396603103-1179699.patch`) — one single-line edit on
-`plans/active/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md` resolving the `unified-trading-pm@<SHA>`
+`plans/archive/2026_08/backfill_smoke_write_path_canonical_audit_finalize_2026_08_08.md` resolving the `unified-trading-pm@<SHA>`
 placeholder → `unified-trading-pm@a5161236d0` on its Archive-todo line. Same recurrence class as the 8th-ritual pair
 (peer WIP stashed by my prek run, restore never ran). NOT mine — this session never edits that file; its HEAD is
 `a5161236d0` (peer:
@@ -798,7 +798,7 @@ drops. No chat-only findings, no new lessons; nothing to finish/ship.
 `-204358` still RUNNING at 21:44Z (watcher tick 21:43:33Z + direct gcloud 21:44Z agree, RUNNING count = 1), watcher
 alive (PID 1840594, ~1h25m elapsed). NO migration activity run; hold per BLK-6c04234a. Git: porcelain empty, HEAD
 `20672d1ffc`, behind=1 → FF-pulled origin (peer landed
-`plans/active/issues/tradfi_manifest_casing_tests_red_trunk_2026_08_10.md`) → ahead=0/behind=0. Step-1 audit: stash
+`plans/archive/2026_08/issues/tradfi_manifest_casing_tests_red_trunk_2026_08_10.md`) → ahead=0/behind=0. Step-1 audit: stash
 stable at 39 (untouched); dangling-ref grep re-confirms only the PRE-EXISTING archived slot-9 issue ref + pre-existing
 refs in other plans' docs (peer-owned, not edited); scratchpad new task outputs (`bavelm4ut` 21:45 = this turn's own git
 output, `btmsjp1fc` = live watcher, both regenerable) — deliberate drops. No chat-only findings, no new lessons this

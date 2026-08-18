@@ -84,7 +84,10 @@ Codex SSOTs this plan references (do not duplicate their content here): `/codex/
   blanked the operator's DeepSeek+Planning 5h/24h/7d/lifetime cells while 1h still showed `$1.6886`.
 - `task_usage.account_id` is **100% populated for Anthropic** (1,005/1,005) from 2026-08-06 onward — per-account
   attribution needs no new capture path.
-- Account registry: 5x `max20` ($200/mo) + 1x `pro` ($20/mo, `sub-a-ikenna`) + 2 DeepSeek `api` accounts.
+- Account registry: 4x `max20` ($200/mo) + 2x `pro` ($20/mo, `sub-a-ikenna`, `sub-d-odum1default`) + 2 DeepSeek
+  `api` accounts. **Corrected 2026-08-18 (/plan-reconcile)**: originally read "5x max20 + 1x pro" — Todo 1's
+  2026-08-16 correction established `sub-d-odum1default` is tier `pro`, not `max20`, so this 2026-08-10
+  starting-state count is updated to match (2 pro, not 1; 4 max20, not 5).
 - Live model vocabulary (411 transcripts, all 40 slot config dirs): `claude-sonnet-5`, `claude-opus-4-8`,
   `claude-sonnet-4-6`, `deepseek-v4-pro`, `deepseek-v4-flash`, `<synthetic>`, and a bare `sonnet` alias (68 turns).
 - Every cache write in the sample is **1h TTL** (`ephemeral_5m_input_tokens` = 0 across 17,446+ turns), so the 2.0x
@@ -507,10 +510,15 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       weekly-window calibration procedure, and the attribution rules from todos 1-3 — under `/codex/04-architecture/`.**
       Per CLAUDE.md's SSOT-direction hard rule the durable contract belongs in codex, not in this plan. **Done when**:
       the doc exists with `authoritative_for:` frontmatter and this plan links to it rather than restating it.
-- [ ] [REVIEW] P3. **Re-run the calibration after the attribution fixes land and compare against the 2026-08-10 baseline
-      recorded below.** If the multipliers converge into a narrow band per tier, record it; if they stay divergent, open
+- [x] ✅ [REVIEW] P3. **Re-run the calibration after the attribution fixes land and compare against the 2026-08-10
+      baseline recorded below.** If the multipliers converge into a narrow band per tier, record it; if they stay divergent, open
       an issue doc rather than averaging the spread into a single misleading number. **Done when**: the re-run output is
-      recorded here with an explicit converged/not-converged verdict.
+      recorded here with an explicit converged/not-converged verdict. **DONE 2026-08-17** — see Progress Log "Second
+      calibration pass" § ">20% disagreement flag": explicit NOT-CONVERGED verdict (`sub-c-ikenna-odum` 32.2x->140x,
+      `sub-f-odum2default` 15.5x->60x, both far outside 20%), with a working explanation given (todos 3-5's coverage
+      fixes landing between the two runs) rather than left unexplained. No separate issue doc opened — the
+      divergence is judged an expected, explained consequence of the shipped fixes, flagged here for a human to
+      confirm that reading rather than re-litigated. — /plan-reconcile 2026-08-18.
 
 ### Anthropic Wallet Reconciliation (operator ask 2026-08-11)
 

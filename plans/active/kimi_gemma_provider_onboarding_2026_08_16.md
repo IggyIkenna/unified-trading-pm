@@ -57,9 +57,9 @@ context_scope:
 
 ## Why
 
-Operator decision (interactive session, 2026-08-16): add two more standby providers beyond the four already
+Operator decision (interactive session, 2026-08-16): add two more standby providers beyond the three already
 onboarded (GLM, Gemini, Codex/Luna) — explicitly framed as a hedge, in the operator's own words: **"Other
-models are implemented to guard against deepseek price rise."** Same discipline as the prior four: verify real
+models are implemented to guard against deepseek price rise."** Same discipline as the prior three: verify real
 model names/tiers/limits against live APIs (not trusted vendor docs — this session's provider-onboarding work already
 caught two dead model names this way), start at the cheapest viable tier, register real production-ready accounts
 (billing/wallet reconciliation working), but leave every new account **paused** (`account_status: disabled`) until
@@ -320,7 +320,11 @@ had already run. Treat every todo below as net-new work, not a resume.
       until it's drawn down. Track TOTAL credited (cash + voucher), not cash-only. Done when: a real number (either
       $ balance or rate-limit-capacity-consumed) is confirmed readable and matches what the vendor's own
       dashboard/console shows — cash and voucher portions both accounted for — cross-checked live the way the
-      DeepSeek $50 topup was verified this session.
+      DeepSeek $50 topup was verified this session. **NVIDIA/Gemma half DONE 2026-08-18** — see Progress Log
+      "Wallet/balance reconciliation, NVIDIA/Gemma half": `server/nvidia_headroom.py` + `GET
+      /api/accounts/nvidia/capacity` + `NvidiaCapacityPanel.tsx` confirmed already shipped (`agent-orchestrator@
+      0c0e527`), plus new `tests/test_nvidia_headroom.py` closing the coverage gap. **Moonshot/Kimi half remains
+      open** — checkbox stays unflipped for that reason alone.
 - [x] [REVIEW] P2. ✅ Context-window/tokenizer accuracy check for Kimi and Gemma-via-NVIDIA, following the same
       live-test discipline established in `multi_provider_context_billing_reconciliation_2026_08_16.md` (don't trust
       the char/4 or word-count heuristics — this session already proved a word-count estimate under-measured a real
@@ -343,7 +347,10 @@ had already run. Treat every todo below as net-new work, not a resume.
       session actually approaches it in practice.
 - [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` through the REAL Claude Code harness (a spawned `claude`
       subprocess, not a raw HTTP probe) for both new providers, same requirement already tracked for GLM/Gemini/
-      Codex in the sibling plan. Done when: a real compact cycle is observed working end-to-end for both.
+      Codex in the sibling plan. Done when: a real compact cycle is observed working end-to-end for both. **Gemma
+      half DONE 2026-08-18** — see Progress Log: a real `/pre-compact`→`/compact` cycle observed working end-to-end
+      via `nvidia-gemma-4-31b-it` (context dropped 42k→8.1k of 200k tokens). **Moonshot/Kimi half remains open** —
+      checkbox stays unflipped for that reason alone.
 - [x] [INFRA] P1. ✅ **New, operator 2026-08-16**: measure each new provider's real MAX-CONCURRENT-REQUESTS ceiling
       (distinct from RPM/RPD/TPM rate limits already covered above) and feed it into AO's dispatch model as a new
       gating axis. Confirmed by code check (2026-08-16): AO's only existing concurrency concept is

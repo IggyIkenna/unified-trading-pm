@@ -105,7 +105,9 @@ source: >-
       `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, migrate any still-Deferred item into batch 4 (never
       leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_07/`, fix
       every corpus-wide referrer including this finalize plan's own `related:`/ `depends_on:`, then run
-      `.venv/bin/python scripts/plan-hygiene/regenerate_active_plan_inventory.py`. **Done when**: the batch plan is
+      `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py` (CORRECTED 2026-08-18 /plan-reconcile —
+      was `scripts/plan-hygiene/regenerate_active_plan_inventory.py`, which does not exist; the real script lives at
+      `scripts/plans/regenerate_active_plan_inventory.py`, verified via `find`). **Done when**: the batch plan is
       archived with a banner, the inventory regenerates with an orphan count of 0, and `check_finalize_plan_coverage.py`
       no longer names this pair.
 
