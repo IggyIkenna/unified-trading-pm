@@ -261,14 +261,95 @@ before this issue can be considered fully triaged — flagging for the operator,
    canonical-index writes already silently failed when originally run in production, and whether that leaves any
    manifest/GCS state inconsistent — a data-correctness check, separate from (and prerequisite to) just fixing the
    method names going forward.
-3. Triage + fix `orchestrator.py`'s `log_event()` kwargs-signature mismatch (new finding above) — a different bug
-   class from this doc's silent-GCS-write bug, needs its own audit of every call site in the file.
-4. Decide + execute on the missing `deployment-metadata-{project}`/`deployment-status-{project}` buckets (new
-   finding above) — either provision them (routed through `resolve_bucket_name()`, not another hardcoded literal)
-   or retarget `DeploymentMonitor`/`VersionRegistry` at buckets that already exist.
+3. ✅ **DONE (2026-08-18)** — Triage + fix `orchestrator.py`'s `log_event()` kwargs-signature mismatch. See "Two
+   findings from the 2026-08-18 follow-up session — both resolved" below.
+4. ✅ **DONE (2026-08-18)** — Decide + execute on the missing `deployment-metadata-{project}`/
+   `deployment-status-{project}` buckets. See "Two findings from the 2026-08-18 follow-up session — both resolved"
+   below — retargeted at the already-existing `deployment-orchestration-{project}` bucket, no new bucket
+   provisioned.
 5. Consider routing the 13 Category-2 raw-SDK-import files through `get_storage_client()` for coding-standard
    compliance — lower urgency (not silently broken today), batch with other coding-standard cleanup rather than a
    dedicated pass.
+
+## Two findings from the 2026-08-18 follow-up session — both resolved (2026-08-18, this session)
+
+### Finding 1 — `orchestrator.py`'s `log_event()` kwargs-signature mismatch — FIXED
+
+Confirmed UTL's real `log_event(event_name, severity="INFO", details=None, client_id=None, correlation_id=None)`
+signature (`unified_trading_library/events/__init__.py` — the copy `unified_trading_library`'s top-level `__init__.py`
+actually re-exports; `events_interface/__init__.py` carries an identical duplicate). All 19 `log_event(...)` call
+sites in `orchestrator.py` (`gcs_client` property's 3 exception handlers, `create_daily_plan()`'s
+started/completed/3-error-branch events, `propagate_failure()`'s started/completed events, `save_plan()`'s
+success + 4 exception-handler events, `load_plan()`'s not_found + 4 exception-handler events) passed free-form
+top-level kwargs (`date=`, `asset_group=`, `error_type=`, `stack_trace=`, `level=`, etc.) the real function rejects.
+Fixed by moving all structured context into `details={...}`, mirroring the pattern already used correctly by
+`deployment_service/data_pipeline_monitors/escalation.py` and `scripts/recovery/relaunch_consolidator.py`
+(`log_event(name, severity=..., details={...})`) — no new pattern invented. Exception-handler call sites also now
+pass `severity="ERROR"` (previously defaulted to `INFO` even for genuine errors — a valid, always-available
+parameter, not new kwarg surface).
+
+Added real (non-mocked) regression test coverage in `test_top_level_orchestrator.py` — a `real_log_event` fixture
+configures the actual `unified_trading_library.events` sink in `mode="test"` (console-only, no PubSub/GCS needed)
+so a future kwarg-mismatch regression raises a real `TypeError` in CI instead of being silently swallowed by
+`patch("deployment_service.orchestrator.log_event")`, which is exactly how the original bug went undetected (every
+prior test in the file patches it out). 5 new tests cover all 19 call sites.
+
+**Live-verified outside pytest**: a standalone script called every fixed method (`gcs_client` property's 3 error
+branches, `create_daily_plan()`, `propagate_failure()`, `save_plan()` success + 4 error paths, `load_plan()`
+not_found + 4 error paths) against the real `unified_trading_library.events.log_event()` (mode="test" sink, not a
+mock) — all 19 call sites completed with zero `TypeError`.
+
+Shipped `deployment-service@888865419f`.
+
+### Finding 2 — missing `deployment-metadata-{project}`/`deployment-status-{project}` buckets — RESOLVED BY REUSE
+
+Operator question: don't we already have a bucket for this kind of deployment/logging metadata that these could
+reuse instead of provisioning two new empty buckets? Investigated for real rather than guessing:
+
+- Read `monitor.py`'s `DeploymentMonitor`/`VersionRegistry` methods to confirm the data shape: small per-service
+  version JSON (`versions/{service}/current.json` + `versions/{service}/history/{timestamp}.json`) and per-shard
+  VM-event JSONL logs (`{deployment_id}/shards/{shard_id}/events.jsonl`) — both small-object, path-prefix-keyed
+  operational metadata, not high-throughput market data.
+- Checked `terraform/modules/shared-infrastructure/gcp/main.tf`: `google_storage_bucket.deployment_orchestration`
+  (`deployment-orchestration-{project}`) is the one Terraform-provisioned bucket in this repo's orbit, explicitly
+  documented as "state isolated by path prefix, not env name" — i.e. designed from the start to hold multiple
+  operational-metadata categories side by side under different key prefixes. `unified-deployment-state-{project}`
+  (state.py's code-fallback default) predates Terraform and was never adopted into it
+  (`terraform/gcp/bucket_iam_per_tier_sa.tf` line ~520).
+- Confirmed `deployment-orchestration-{project}` is not just Terraform-declared but genuinely already live and
+  in active use: it's the bucket `orchestrator.py`'s `save_plan()`/`load_plan()` already write to (fixed +
+  live-verified in the prior follow-up session), the deployed `deployment-dashboard` Cloud Run service's
+  `cloudbuild.yaml` explicitly sets `STATE_BUCKET=deployment-orchestration-{project}` and FUSE-mounts it with the
+  comment "API only needs to read/write deployment state", and a **live top-level-prefix listing of the real
+  bucket** (delimiter-based, no full walk) showed `cache/`, `deployments/`, `deployments.development/`,
+  `deployments.production/`, `locks/` already present — i.e. `vm_monitoring.py`'s `VMMonitoringManager` (via
+  `effective_state_bucket`) and `state.py`'s `StateManager` (in at least some invocation contexts) are *already*
+  writing real production data into this exact bucket today.
+- Collision check against that live listing: `versions/` (new prefix, absent) is safe for `VersionRegistry`/
+  `get_service_version()` as-is. The event-log write path originally targeted `deployments/{deployment_id}/shards/
+  {shard_id}/events.jsonl` — reusing the bare `deployments/` prefix directly would risk a real (if unlikely) key
+  collision with `vm_monitoring.py`'s `deployments/{deployment_id}/{shard_id}/status` already living there (a
+  shard_id of literally `"shards"` would collide), so renamed to a new, distinct `deployment-events/` prefix
+  instead — confirmed absent from the live bucket, zero collision risk. Fixing this also caught and fixed a latent
+  write/read prefix mismatch in `get_events()`'s all-shards path (it still queried the old `deployments/` prefix
+  after `_events_blob_path()` moved to `deployment-events/`, which would have silently returned `[]` for that read
+  path even though `record_event()` was writing real data).
+- IAM/identity: no per-bucket IAM binding exists for `deployment_orchestration` in Terraform (project-level IAM
+  governs it); `monitor.py` uses the identical `get_storage_client()` factory as `orchestrator.py`, called from the
+  same `deployment_service` package/process context (`live_deployment.py`) — no new IAM grant needed.
+
+**Verdict: reuse, not provision.** Repointed `DeploymentMonitor.get_service_version()`/`_events_bucket_name()` and
+`VersionRegistry.bucket_name` at `deployment-orchestration-{project}`. Added unit tests asserting the bucket name
+and the `deployment-events/` (not `deployments/`) prefix, plus a regression test guarding that `get_events()`'s
+all-shards `list_blobs()` prefix stays in sync with `_events_blob_path()`'s write path. **Live-verified outside
+pytest** against the real bucket: pre-check confirmed zero pre-existing objects at the target keys, then
+`record_event()`/`get_events()` (both single-shard and all-shards paths)/`get_vm_events()` and
+`register_version()`/`get_service_version()`/`get_version_history()` all round-tripped real data correctly, a
+post-write prefix listing confirmed every pre-existing prefix (`cache/`, `deployments/`, `deployments.development/`,
+`deployments.production/`, `locks/`) was untouched and only the two new `versions/`/`deployment-events/` prefixes
+were added, then everything written was deleted and cleanup was confirmed via `blob.exists() == False`.
+
+Shipped `deployment-service@8647635a67`.
 
 ## Progress Log
 
@@ -288,3 +369,17 @@ before this issue can be considered fully triaged — flagging for the operator,
   (raw-SDK-import coding-standard violation, working), 7 Category-3 (false positive). Replaced the prior "60+
   untriaged" placeholder with this definitive table. `assigned_vm`/`status` left unchanged for the coordinating
   session to decide the AO-vs-human split for the remaining Category-1 remediation.
+- **2026-08-18 (same day, third session)**: resolved both findings surfaced in the second session (Follow-up items
+  3 and 4) — see "Two findings from the 2026-08-18 follow-up session — both resolved" above for full detail.
+  Finding 1 (`orchestrator.py`'s `log_event()` kwargs mismatch): fixed all 19 call sites (`details={...}`,
+  mirroring `escalation.py`/`relaunch_consolidator.py`'s existing correct pattern), added real non-mocked
+  regression tests, live-verified zero `TypeError` outside pytest. Shipped `deployment-service@888865419f`.
+  Finding 2 (missing `deployment-metadata-{project}`/`deployment-status-{project}` buckets): investigated per the
+  operator's reuse question — confirmed `deployment-orchestration-{project}` (Terraform-provisioned, already live,
+  already holding `orchestrator.py`'s/`vm_monitoring.py`'s data per a live prefix listing) is a genuine semantic
+  and IAM fit; repointed `DeploymentMonitor`/`VersionRegistry` at it under new `versions/`/`deployment-events/`
+  prefixes (renamed off `deployments/` to avoid a real, if unlikely, collision with `vm_monitoring.py`'s existing
+  keys there — also fixing a latent write/read prefix mismatch this uncovered in `get_events()`), live-verified
+  write+read-back+zero-collision+cleanup against the real bucket. Shipped `deployment-service@8647635a67`. Neither
+  fix required or performed any new bucket provisioning. Follow-up items 1, 2, 5 (fleet-wide Category-1 remediation,
+  the pre-existing-data integrity check, Category-2 cleanup) remain open — `status` stays `open` pending those.
