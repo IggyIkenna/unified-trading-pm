@@ -313,6 +313,11 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
 - [x] [VERIFY] P2. STALE CHECKBOX -- na-eligibility-audit 2026-08-16, MOOT: `tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md` (filed the SAME DAY) live-verified the `tardis-api-key` secret IS genuinely resolvable (the credential gate was never actually blocking), AND bare OKX has no options-capable successor venue registered at all (deregistered 2026-08-05, no OKX-OPTIONS successor) -- there is nothing to verify against; DERIBIT is the only Tardis-registered CeFi options venue. Original text: **Open question 2 (added 2026-08-16, plan_reconciler)**: verify OKX options wiring end-to-end —
       needs a `TARDIS_API_KEY` (credential-gated). Done when: a live OKX options request succeeds using a working key,
       or the credential gap is confirmed still blocking and re-filed with a specific ask.
+- [ ] [DECISION] P3. **Open question 5 (added 2026-08-18, plan_reconciler)**: determine whether purging/regenerating
+      the stale TradFi catalogue (ICE 16,146→~1 real rows, CBOE 37,563→~89) is already scheduled, or needs a new
+      migration plan. `tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` looks relevant by name but
+      is NOT independently confirmed to answer this — verify before treating as settled. Done when: a definitive
+      answer is recorded here (with citation if already scheduled, or a new migration-plan todo filed if not).
 - [ ] [RESEARCH] P3. **Open question 6 (added 2026-08-16, plan_reconciler)**: determine whether ODDS_API's total
       absence from instruments-service's reference-data adapters (MTDS captures its tick data; IS has no adapter for
       it) is deliberate division of labor or an accidental gap — corpus-wide grep found no doc that already answers

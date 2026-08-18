@@ -14,7 +14,13 @@ summary: >-
   Hard Rule #4 lists as REVIEW-BLOCKING BANNED. So the operator's real intent (index-exact interest PnL in prod) is
   served by fixing the accrual IN THE SPINE, not by wiring compute_pnl (which would be inert AND create a second
   divergent interest model — the determinism-spine G1 failure). This is a money-path change to client NAV numbers and an
-  SSOT contradiction, so it is operator-gated before ship.
+  SSOT contradiction, so it is operator-gated before ship. **UPDATE 2026-08-18 (plan_reconciler)**: for the
+  `carry_staked_basis` archetype specifically, the FUNDING leg (strategy-service@aa1fcdc7) and STAKING leg
+  (strategy-service@e93902d8) are now shipped onto real index-ratio/funding-rate sources (shas verified reachable
+  on origin/live-defi-rollout) — see body Progress Log 2026-07-23. Whether every other archetype's interest PnL is
+  similarly fixed, or the banned-formula problem persists elsewhere, was NOT re-verified this pass — check the
+  Todos section for current scope before assuming this summary's "unqualified banned formula" framing still applies
+  fleet-wide.
 status: open
 nature: issue
 asset_group: [defi]

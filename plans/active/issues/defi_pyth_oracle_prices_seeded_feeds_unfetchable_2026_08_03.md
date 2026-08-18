@@ -440,5 +440,5 @@ Two genuinely different directions, not mutually exclusive with the naming recon
   work (reconcile 3 coexisting oracle_prices/PYTH naming conventions) -- an earlier in-session attempt at this exact
   reconciliation produced a false "77 gap days" result via a last-writer-wins merge shadowing real data. Multiple
   standing audits (2026-08-04/07/08) independently reached KEEP-NA. Doc stays `assigned_vm: NA`.
-- **na-eligibility-audit 2026-08-16** [body-hash:6e8ce2a479c03735]: KEEP-NA, valid — Read end-to-end, including the extensive Progress Log documenting a two-mechanism active data-loss regression (seeded-unfetchable family-3 rows AND a live BTC/ETH/INF drop via _filter_pyth_rows_to_is), both since fixed and live-verified via a VM capturing all 12 PYTH SOLANA feeds. 5 of 6 original todos are closed;.
+- **na-eligibility-audit 2026-08-16** [body-hash:6e8ce2a479c03735]: KEEP-NA, valid — Read end-to-end, including the extensive Progress Log documenting a two-mechanism active data-loss regression (seeded-unfetchable family-3 rows AND a live BTC/ETH/INF drop via _filter_pyth_rows_to_is), both since fixed and live-verified via a VM capturing all 12 PYTH SOLANA feeds. 5 of 6 original todos are closed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)

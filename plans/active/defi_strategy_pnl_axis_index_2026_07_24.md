@@ -172,7 +172,8 @@ independently-startable item any session can pick up without waiting on the phas
   `strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py`, the source file the
   "Recommended next action" (orphaned-archetype build Phase 1) directly targets for generalization — this doc's own body
   names it but no prior scout pass had added a source path (this is an index/pointer-hub doc, but its own "Recommended
-  next action" section points at real code, not just other docs). Note for the record: this doc's `repos:` frontmatter
-  list is missing `strategy-service` even though the doc's whole subject is the strategy-service axis — a pre-existing
-  frontmatter gap, not fixed here (out of this skill's scope, flagged for /plan-reconcile).
+  next action" section points at real code, not just other docs). ~~Note for the record: this doc's `repos:`
+  frontmatter list is missing `strategy-service`~~ — **fixed 2026-08-17** (plan_reconciler `plan_reconciler_findings_defi_2026_08_17.md`
+  Hygiene fixes #1): `strategy-service` is now the first entry in `repos:` above. This note was stale for a day
+  before being caught (plan_reconciler 2026-08-18).
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

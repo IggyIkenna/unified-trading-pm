@@ -991,5 +991,8 @@ against). Moved verbatim, nothing summarized, to
   dedicated infra investigation — see `issues/ag_closeout_audit_defi_parked_2026_08_10.md` for the full audit-cycle
   report this finding is part of.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).
-- **na-eligibility-audit 2026-08-16** [body-hash:cc2c48afab816294]: KEEP-NA, valid — Read this 994-line plan end to end across two passes (including the full R1-R8 build history and Track 1 residual-canon-walk section, plus the ~70 line-cap-extraction and operator-ruling entries), not just its checkboxes -- content changed substantially since the 2026-08-09 verdict marker (which counted 4 open items): a 2026-08-13 line-cap remediation extracted 5 already-done deferred items to an archive doc, and two 2026-08-16 operator rulings (DEX-relevance no-TVL-fallback WON'T-DO;.
+- **na-eligibility-audit 2026-08-16** [body-hash:cc2c48afab816294]: KEEP-NA, valid — Read this 994-line plan end to end across two passes (including the full R1-R8 build history and Track 1 residual-canon-walk section, plus the ~70 line-cap-extraction and operator-ruling entries), not just its checkboxes -- content changed substantially since the 2026-08-09 verdict marker (which counted 4 open items): a 2026-08-13 line-cap remediation extracted 5 already-done deferred items to an archive doc, and two 2026-08-16
+  operator rulings landed (one is the DEX-relevance no-TVL-fallback ruling at line ~927 below; this summary line was
+  found truncated 2026-08-18 (plan_reconciler) and closed honestly rather than guessing the second ruling's name —
+  see the doc's own 2026-08-16 Progress Log entries for the full ruling text).
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)

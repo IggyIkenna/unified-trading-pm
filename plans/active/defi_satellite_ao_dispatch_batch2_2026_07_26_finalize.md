@@ -86,7 +86,11 @@ context_scope:
       found during Phase-0 discovery") to resolve the defi-vs-cross-cutting ambiguity, check whether it is still
       `locked_by: live-defi-rollout` (if still locked, defer this sub-item to a later finalize iteration rather than
       editing a locked doc), and retag if the lock has cleared and the content confirms one side. (3) Archive
-      `mtds_perp_funding_backfill_hang_2026_07_14.md` (batch2's "Note — 1 doc found archivable_now") via the standard
+      `mtds_perp_funding_backfill_hang_2026_07_14.md` (batch2's "Note — 1 doc found archivable_now") — **DONE,
+      verified 2026-08-18 (plan_reconciler)**: confirmed live at `plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`
+      (34207 bytes), archived per the sibling batch3-finalize's cited commit `bec54efeb` ("archive 35
+      confirmed-resolved/superseded/complete docs"). Sub-items (1) and (2) below remain unverified/likely open — the
+      containing checkbox stays unflipped until all 3 sub-items are confirmed done. via the standard
       6-step ritual. **Done when**: item (1) is retagged with `check_ag_closeout_linkage.py` passing 0 new orphans; item
       (2) is either retagged (lock cleared) or explicitly re-deferred with the lock status re-checked and cited; item
       (3) is moved to `plans/archive/2026_07/` with every corpus referrer fixed.
