@@ -141,13 +141,22 @@
   .st-live { color: var(--good); background: var(--g-data-wash); }
   .st-part { color: var(--warn); background: var(--g-post-wash); }
   .st-plan { color: var(--crit); background: var(--accent-wash); }
-  .sec-head .st { align-self: center; margin-left: auto; }
+  .sec-head .st { align-self: center; }
+  .sec-head .marks { margin-left: auto; display: flex; align-items: center; gap: 8px; }
   .legend { display: flex; flex-wrap: wrap; gap: 10px 20px; align-items: center; font-family: var(--sans);
             font-size: 12px; color: var(--ink-3); margin: 22px 0 0; }
   .legend span { display: inline-flex; align-items: center; gap: 7px; }
   .new { font-family: var(--sans); font-size: 9.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
          color: var(--g-exec); border: 1px solid var(--g-exec); background: var(--g-exec-wash);
-         border-radius: 3px; padding: 1px 5px; margin-left: 7px; white-space: nowrap; }
+         border-radius: 3px; padding: 1px 5px; white-space: nowrap; }
+  /* Evidence tier — orthogonal to the status pill above: HOW a claim is known, not WHAT state it is in.
+     Deliberately un-pill-shaped versus .st (dashed border, full round, lighter weight) so the two marks are
+     never mistaken for one another at a glance. */
+  .ev { font-family: var(--sans); font-size: 10px; font-weight: 600; letter-spacing: 0.01em;
+        padding: 2px 8px 2px 7px; border-radius: 999px; white-space: nowrap; border: 1px dashed currentColor; }
+  .ev-verified { color: var(--good); }
+  .ev-check { color: var(--ink-3); }
+  .ev-assumed { color: var(--warn); }
 </style>
 
 <div class="shell">
@@ -175,6 +184,21 @@
       <span><b class="st st-plan">planned</b> specified, not yet built</span>
       <span><b class="new">new</b> added since the last edition</span>
     </div>
+    <div class="legend">
+      <span><b class="ev ev-verified">✓ verified</b> checked against code or measured data — the verifying file or symbol is named inline</span>
+      <span><b class="ev ev-check">? check</b> stated in good faith, not yet validated — the default mark</span>
+      <span><b class="ev ev-assumed">~ assumed</b> best current understanding, explicitly not verified</span>
+    </div>
+
+    <div class="callout">
+      <span class="tag">Scope of this document</span>
+      <p>
+        This walkthrough describes the strategy-service codebase as it stands across the full production
+        repository — not a narrower, contracted carve-out of it. It is written for a reader with broad system
+        visibility, not as the specification for any future scoped delivery; a separate, narrower carve-out
+        package is tracked elsewhere and is not this document.
+      </p>
+    </div>
   </header>
 
   <nav class="contents">
@@ -201,11 +225,13 @@
     </ol>
   </nav>
   <section id="s1">
-    <div class="sec-head"><span class="num">01</span><h2>What this service is, and what it isn't</h2></div>
+    <div class="sec-head"><span class="num">01</span><h2>What this service is, and what it isn't</h2><span class="marks"><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
-      This service decides. It consumes features and market state, evaluates archetypes each tick, sizes and hedges,
-      and emits typed instructions. It does not connect to venues, work orders, or move funds — those are execution
-      concerns, reached through the contract in §03.
+      This service decides. It consumes features and market state — always the processed kind, delivered through
+      features-service and market-data-processing-service (MDPS), never by reading market-tick-data-service (MTDS)
+      directly — evaluates archetypes each tick, sizes and hedges, and emits typed instructions. It does not
+      connect to venues, work orders, or move funds — those are execution concerns, reached through the contract
+      in §03.
     </p>
     <div class="keypoints">
       <div><b>It decides</b><span>Archetype evaluation, sizing, hedge ratios, risk vetoes, position monitoring, PnL attribution</span></div>
@@ -217,7 +243,7 @@
       <div class="stat-row">
         <div class="stat"><span class="v">60</span><span class="k">Archetypes declared</span></div>
         <div class="stat"><span class="v">32</span><span class="k">Factory-registered</span></div>
-        <div class="stat"><span class="v">9</span><span class="k">Instruction types</span></div>
+        <div class="stat"><span class="v">11</span><span class="k">Instruction types</span></div>
         <div class="stat"><span class="v">158</span><span class="k">Venues in capture</span></div>
         <div class="stat"><span class="v">84</span><span class="k">Venue families</span></div>
       </div>
@@ -241,15 +267,18 @@
       <div class="callout">
         <span class="tag">How to read the status marks</span>
         <p>
-          <b>Live</b> means something on a production path calls it — not that the code exists and passes its tests.
-          Those are different claims, and only the first earns the mark.
+          <b>Live</b> means something on a production path calls it <em>and</em> it has been validated with real
+          capital — not that the code exists and passes its tests, and not reachability by itself. Those are
+          three different claims, and only the strictest earns the mark. As of this revision nothing in this
+          document clears that bar: real capital has not moved through any surface described here, so every
+          section that would previously have read <b>live</b> now reads <b>partial</b>.
         </p>
       </div>
     </details>
   </section>
 
   <section id="s2">
-    <div class="sec-head"><span class="num">02</span><h2>Strategy identity: families, archetypes, slots</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">02</span><h2>Strategy identity: families, archetypes, slots</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-verified" title="unified_api_contracts/internal/architecture_v2/enums.py — StrategyFamily">✓ verified</b></span></div>
     <p class="lede">
       Every instruction carries a full identity block. This is what lets a fill in a client report be traced back to
       the exact strategy build and configuration that produced it.
@@ -277,7 +306,7 @@
     <details class="sec-body">
       <summary>The identity declaration, and how a slot label is built</summary>
       <div class="code"><span class="k">class</span> <b>StrategyInstanceIdentity</b>:
-    family: StrategyFamily                <i># CARRY, DISPERSION, VOL_TRADING, …</i>
+    family: StrategyFamily                <i># CARRY_AND_YIELD, VOL_TRADING, PORTFOLIO, …</i>
     archetype_id: StrategyArchetype       <i># the specific archetype within the family</i>
     archetype_build_version: str          <i># which build of the archetype produced this</i>
     strategy_instance_id: str             <i># this running instance</i>
@@ -307,18 +336,40 @@ archetype          │    spot venue  │        │   environment
         different venues, and that is the normal case rather than the exception.
       </p>
       <h3>Families</h3>
+      <p>
+        Nine families, not five — <code>StrategyFamily</code> is a 9-member enum (a 17-member predecessor was
+        retired 2026-04-21); every archetype belongs to exactly one.
+      </p>
       <div class="keypoints">
-        <div><b>Carry</b><span>Funding, basis and staking-yield differentials, including staked-basis and recursive-staked structures</span></div>
-        <div><b>Dispersion</b><span>Cross-venue divergence in funding or price for the same economic exposure</span></div>
-        <div><b>Volatility</b><span>Options structures built on a resolved at-the-money straddle</span></div>
-        <div><b>Liquidity provision</b><span>AMM and concentrated-liquidity positions</span></div>
-        <div><b>Event-driven</b><span>Liquidation capture and similar bounded opportunities</span></div>
+        <div><b>ML_DIRECTIONAL</b><span>Directional exposure sized by a machine-learned signal</span></div>
+        <div><b>RULES_DIRECTIONAL</b><span>Directional exposure sized by a rules-based signal</span></div>
+        <div><b>CARRY_AND_YIELD</b><span>Funding, basis and staking-yield differentials, including staked-basis and recursive-staked structures</span></div>
+        <div><b>ARBITRAGE_STRUCTURAL</b><span>Structural mispricing between related instruments, held to convergence rather than direction</span></div>
+        <div><b>MARKET_MAKING</b><span>Two-sided quoting, inventory-aware</span></div>
+        <div><b>EVENT_DRIVEN</b><span>Liquidation capture and similar bounded opportunities</span></div>
+        <div><b>VOL_TRADING</b><span>Options structures, including cross-venue dispersion in implied volatility for the same exposure</span></div>
+        <div><b>STAT_ARB_PAIRS</b><span>Statistical relationships between paired instruments</span></div>
+        <div><b>PORTFOLIO</b><span>Cross-category sleeves spanning more than one family</span></div>
+      </div>
+      <div class="callout">
+        <span class="tag">Two invented names retired from this list</span>
+        <p>
+          "Carry" and "Dispersion" were never separate families — an earlier edition of this document invented
+          them. Funding/basis/staking carry folds into <b>CARRY_AND_YIELD</b>; cross-venue dispersion folds into
+          <b>VOL_TRADING</b>. A fifth invented member, "Liquidity provision," had no counterpart in the enum at all
+          and is dropped rather than mapped.
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — checked directly against <code>StrategyFamily(StrEnum)</code>
+          in <code>unified_api_contracts/internal/architecture_v2/enums.py</code> (2026-08-18); the enum's own
+          docstring states "9 orthogonal families."
+        </p>
       </div>
     </details>
   </section>
 
   <section id="s3">
-    <div class="sec-head"><span class="num">03</span><h2>The instruction contract, in full</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">03</span><h2>The instruction contract, in full</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-verified" title="unified_api_contracts/internal/architecture_v2/schemas.py — StrategyInstructionV2 union">✓ verified</b></span></div>
     <p class="lede">
       This is the seam an external strategy would have to satisfy. Every instruction inherits one envelope; the action
       subclasses add only what that action needs.
@@ -335,7 +386,7 @@ archetype          │    spot venue  │        │   environment
       <div class="code"><i># CeFi / DeFi / TradFi — the chain rides inside the venue token for DeFi</i>
 <b>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</b>
 
-BINANCE-SPOT:SPOT:BTCUSDT
+BINANCE-SPOT:SPOT_PAIR:BTCUSDT
 AAVE_V3-ARBITRUM:LENDING:USDC
 CME:FUTURE:ES-20260320</div>
       <p>
@@ -387,7 +438,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
       </div>
     </details>
     <details class="sec-body">
-      <summary>The nine action types, with their real fields</summary>
+      <summary>The eleven action types, with their real fields</summary>
       <div class="code"><span class="k">class</span> <b>TradeInstruction</b>(StrategyInstructionEnvelope):
     target_position_units: Decimal        <i># a TARGET, not a delta — idempotent by design</i>
     target_instrument: str
@@ -432,6 +483,20 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
     instrument: str
     reference_price: Decimal              <i># narrows the envelope's optional to required</i>
 
+<span class="k">class</span> <b>TransferInstructionV2</b>(StrategyInstructionEnvelope):
+    asset: str
+    venue_from: str
+    venue_to: str
+    target_balance_at_destination: Decimal   <i># a TARGET balance, not an amount to move</i>
+    max_cost_bps: int | None = None
+
+<span class="k">class</span> <b>BridgeInstructionV2</b>(StrategyInstructionEnvelope):
+    asset: str
+    chain_from: str
+    chain_to: str
+    target_balance_at_destination: Decimal
+    bridge_hint: str | None = None
+
 <span class="k">class</span> <b>AtomicInstruction</b>(StrategyInstructionEnvelope):
     <i># multiple legs that must succeed or fail together</i>
 
@@ -440,16 +505,24 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
       <div class="callout">
         <span class="tag">Targets, not deltas</span>
         <p>
-          Trade, lend, borrow and stake all express a <b>target</b> state rather than an increment. Re-sending the same
-          instruction is therefore idempotent: it cannot double a position if a response was lost, which is what makes
-          the contract safe to retry across a service restart.
+          Trade, lend, borrow, stake, transfer and bridge all express a <b>target</b> state rather than an
+          increment. A transfer or bridge targets a balance at the destination, not an amount to move; re-sending
+          the same instruction is therefore idempotent — it cannot double a position or a movement if a response
+          was lost, which is what makes the contract safe to retry across a service restart.
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — all eleven subclasses above, and the
+          <code>StrategyInstructionV2</code> union that lists them, checked directly against
+          <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> (2026-08-18). An earlier edition of
+          this document said nine and omitted <code>TransferInstructionV2</code> and <code>BridgeInstructionV2</code>,
+          which were already present in code.
         </p>
       </div>
     </details>
   </section>
 
   <section id="s4">
-    <div class="sec-head"><span class="num">04</span><h2>Configuration surface and the wizard</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">04</span><h2>Configuration surface and the wizard</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       Every archetype declares its parameters in a schema registry rather than in free-form configuration, so the
       wizard can render a validated form for a new parameter without anyone editing a user interface.
@@ -481,13 +554,13 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
       </p>
       <p>
         The governing sections separate what a strategy owns from what it merely references. Execution behaviour is
-        deliberately not among them — that belongs to the policy binding in §09.
+        deliberately not among them — that belongs to the policy binding in §10.
       </p>
     </details>
   </section>
 
   <section id="s5">
-    <div class="sec-head"><span class="num">05</span><h2>Batch, paper and live — the mode axis</h2><b class="st st-live">live</b><b class="new">new</b></div>
+    <div class="sec-head"><span class="num">05</span><h2>Batch, paper and live — the mode axis</h2><span class="marks"><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       All three run simultaneously: batch replays on a next-day cadence alongside paper and live running inline. Mode
       is a property of a strategy instance, never a service-wide setting.
@@ -508,7 +581,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
       <div class="callout">
         <span class="tag">Not an implementation detail</span>
         <p>
-          That identity is required rather than incidental: it is exactly what makes the determinism proof in §08
+          That identity is required rather than incidental: it is exactly what makes the determinism proof in §09
           meaningful. If paper and batch matched differently, a difference between them would be uninterpretable.
         </p>
       </div>
@@ -516,7 +589,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s6">
-    <div class="sec-head"><span class="num">06</span><h2>Venue coverage: three surfaces, tracked apart</h2><b class="st st-part">partial</b><b class="new">new</b></div>
+    <div class="sec-head"><span class="num">06</span><h2>Venue coverage: three surfaces, tracked apart</h2><span class="marks"><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       A venue counts as supported only when three separate things are true. The system now tracks them independently
       rather than assuming one implies the others — and reports coverage per surface, never as one number.
@@ -571,7 +644,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s7">
-    <div class="sec-head"><span class="num">07</span><h2>Reading positions back</h2><b class="st st-part">partial</b><b class="new">new</b></div>
+    <div class="sec-head"><span class="num">07</span><h2>Reading positions back</h2><span class="marks"><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       Position reading is the exchange side of reconciliation, and it is read-only by contract — the adapters expose
       balances, positions and account snapshots, and have no order-placing or signing surface at all.
@@ -613,7 +686,7 @@ FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
   </section>
 
   <section id="s8">
-    <div class="sec-head"><span class="num">08</span><h2>How a strategy picks: coins, venues, funding</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">08</span><h2>How a strategy picks: coins, venues, funding</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       A staked-basis or basis strategy is not one trade — it is a choice among many possible (coin × spot venue ×
       hedge venue × staking protocol) combinations. This is how that choice is made and re-made.
@@ -666,7 +739,7 @@ staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
   </section>
 
   <section id="s9">
-    <div class="sec-head"><span class="num">09</span><h2>Reconciliation — the engines and the scenarios</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">09</span><h2>Reconciliation — the engines and the scenarios</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       Reconciliation is not one comparison. Nine engines cover different surfaces and different moments, and their
       output can arm a circuit breaker rather than merely log.
@@ -704,6 +777,16 @@ staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
         transfer that left one venue and never arrived at the other, both show up as slow PnL drift that no position
         check would catch.
       </p>
+      <div class="callout">
+        <span class="tag">Two different territories, not one uniform capability</span>
+        <p>
+          <b>Position, fee and PnL reconciliation</b> are strategy-owned — checking the strategy's own book against
+          what a venue reports. <b>Balance and transfer reconciliation</b> reach further, across a custodian's own
+          ledger, and sit closer to custody/treasury territory than to strategy decision-making. This section does
+          not mark that boundary by depth of detail; it is worth knowing they are different territories before
+          reading it as one uniform capability.
+        </p>
+      </div>
     </details>
     <details class="sec-body">
       <summary>Four scenarios, and what happens in each</summary>
@@ -747,7 +830,7 @@ staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
     </details>
   </section>
   <section id="s10">
-    <div class="sec-head"><span class="num">10</span><h2>The execution seam and its config loop</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">10</span><h2>The execution seam and its config loop</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       Execution turns an instruction into orders. What matters from the strategy side is what it optimises for, and
       what governs its behaviour per client.
@@ -785,7 +868,7 @@ staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
   </section>
 
   <section id="s11">
-    <div class="sec-head"><span class="num">11</span><h2>Transfers, custody and client isolation</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">11</span><h2>Transfers, custody and client isolation</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-verified" title="execution-service/execution_service/transfer_coordinator.py; unified_api_contracts/internal/architecture_v2/custody_surfaces.py">✓ verified</b></span></div>
     <p class="lede">
       Capital movement is a first-class instruction type, not a side effect. This is the surface that touches an
       allocator's own custody arrangements, so it is specified in full.
@@ -833,6 +916,23 @@ staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
           without modification.
         </p>
       </div>
+      <div class="callout">
+        <span class="tag">Why Ceffu isn't in this list, and why Fireblocks is</span>
+        <p>
+          Ceffu has no signing route of its own to declare: its transactions route through Copper
+          (<code>COPPER_MPC</code> above), and its own provider integration is currently a stub. Adding a distinct
+          Ceffu member would invent an enum value the system does not use — the list above is complete as written.
+          <b>Fireblocks</b>, by contrast, does appear (<code>FIREBLOCKS_MPC</code>) but carries an out-of-scope
+          rollout status; the member is retained for future flexibility, not because a Fireblocks integration is
+          wired today.
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — checked directly against
+          <code>unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>
+          (<code>CEFFU_ROUTES_VIA_COPPER_NOTE</code>; <code>SigningSurfaceStatus.OUT_OF_SCOPE</code> on the
+          Fireblocks policy entry), 2026-08-18.
+        </p>
+      </div>
       <h3>Treasury versus trading wallets</h3>
       <div class="code"><span class="k">class</span> <b>ShareClassWalletMapping</b>:
     <i># per share class: the treasury wallet, plus trading wallets</i>
@@ -857,12 +957,33 @@ staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
     </details>
     <details class="sec-body">
       <summary>Manual, automated, and how much goes to each venue</summary>
-      <h3>Automated movement</h3>
+      <h3>Automated movement — specified as a target state, mostly not yet wired</h3>
+      <p>
+        The keypoints below describe what the transfer coordinator is designed to route once every handler lands —
+        not a working subsystem today. Measured against the current implementation, only one of the four paths
+        below has a registered handler; the rest are declared intent without a production entry point.
+      </p>
       <div class="keypoints">
-        <div><b>Dust consolidation</b><span>Balances below a threshold are swept back to the main wallet rather than stranded across venues</span></div>
-        <div><b>Gas top-up</b><span>On-chain wallets are kept funded so they can always transact</span></div>
-        <div><b>The gas floor</b><span>A sweep never takes a wallet below its reserve — a wallet without gas cannot act, including to close a position</span></div>
-        <div><b>Rebalance</b><span>Between our own wallets, on the on-chain rail, scoped to one client</span></div>
+        <div><b>Dust consolidation</b><span>Target: balances below a threshold sweep back to the main wallet automatically. Only SUBACCOUNT_MOVE has a registered handler today — sweep logic for the other rails is not wired</span></div>
+        <div><b>Gas top-up</b><span>Target: on-chain wallets stay funded automatically. No handler and no reserve-threshold logic exists in the coordinator — an unenforced classifier tag is the only trace of the idea</span></div>
+        <div><b>The gas floor</b><span>Target: a sweep never takes a wallet below its reserve. There is nothing yet to enforce that floor, because there is no sweep handler to enforce it against</span></div>
+        <div><b>Rebalance</b><span>Target: move value between our own wallets on the on-chain rail. REBALANCE exists as a declared type with zero registered handlers</span></div>
+      </div>
+      <div class="callout">
+        <span class="tag">Measured, not assumed</span>
+        <p>
+          <code>TransferCoordinator._ensure_default_handlers()</code> registers exactly one handler —
+          <code>SUBACCOUNT_MOVE</code>. <code>CEX_WITHDRAW</code> carries an inline comment marking it not wired.
+          <code>REBALANCE</code> has zero registered handlers anywhere in the coordinator. And
+          <code>TransferCoordinator</code> itself is never instantiated outside tests — a
+          <code>grep "TransferCoordinator(" -- ':!tests/'</code> across execution-service returns nothing. This
+          section describes what the transfer contract is <em>for</em>, not a working automated-movement subsystem
+          today.
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — checked directly against
+          <code>execution-service/execution_service/transfer_coordinator.py</code>, 2026-08-18.
+        </p>
       </div>
       <h3>How much goes to each venue</h3>
       <p>
@@ -885,7 +1006,7 @@ staking_protocol  ×  lst_asset  ×  spot_venue  ×  perp_hedge_venue
   </section>
 
   <section id="s12">
-    <div class="sec-head"><span class="num">12</span><h2>Risk: drawdown, leverage, delta, position caps</h2><b class="st st-part">partial</b></div>
+    <div class="sec-head"><span class="num">12</span><h2>Risk: drawdown, leverage, delta, position caps</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       Risk rules sit between a strategy's intent and its execution. A rule that fires can warn, or block the
       instruction and emit a rejection event — so a blocked instruction is a recorded fact, not a silence.
@@ -968,7 +1089,7 @@ max_position_usd          <i># notional ceiling per position</i></div>
   </section>
 
   <section id="s13">
-    <div class="sec-head"><span class="num">13</span><h2>Auto-resolution and escalation</h2><b class="st st-live">live</b><b class="new">new</b></div>
+    <div class="sec-head"><span class="num">13</span><h2>Auto-resolution and escalation</h2><span class="marks"><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       When a dependency fails, the response is graduated rather than binary. Each failure maps to an action and an
       escalation target, so most problems resolve without a human and the ones that reach a human are the ones that
@@ -1013,7 +1134,7 @@ max_position_usd          <i># notional ceiling per position</i></div>
     </details>
   </section>
   <section id="s14">
-    <div class="sec-head"><span class="num">14</span><h2>Orders and the audit record</h2><b class="st st-part">partial</b><b class="new">new</b></div>
+    <div class="sec-head"><span class="num">14</span><h2>Orders and the audit record</h2><span class="marks"><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       Positions, trades, fills, orders and the strategy instructions that caused them are one class of private record:
       the entry is immutable, and the actions taken on it are auditable.
@@ -1042,7 +1163,7 @@ max_position_usd          <i># notional ceiling per position</i></div>
   </section>
 
   <section id="s15">
-    <div class="sec-head"><span class="num">15</span><h2>PnL, ledgers and the high-water mark</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">15</span><h2>PnL, ledgers and the high-water mark</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       Performance is attributed across parallel ledgers rather than collapsed into one number, so the source of a
       difference is identifiable rather than inferred.
@@ -1068,7 +1189,7 @@ max_position_usd          <i># notional ceiling per position</i></div>
   </section>
 
   <section id="s16">
-    <div class="sec-head"><span class="num">16</span><h2>Backtest fidelity</h2><b class="st st-live">live</b></div>
+    <div class="sec-head"><span class="num">16</span><h2>Backtest fidelity</h2><span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       A backtest is only as honest as its fill assumptions. Fidelity is explicit: the system knows what data quality a
       given instrument and period had, and never claims a better fill model than the data supports.
@@ -1097,13 +1218,13 @@ max_position_usd          <i># notional ceiling per position</i></div>
       <p>
         A separate mode replaces execution entirely, filling every instruction at the strategy's own reference price.
         The difference between that and a realistic fill isolates execution's contribution from the strategy's — the
-        same decomposition as §08, applied inside a single backtest.
+        same decomposition as §09, applied inside a single backtest.
       </p>
     </details>
   </section>
 
   <section id="s17">
-    <div class="sec-head"><span class="num">17</span><h2>How this is kept honest</h2><b class="st st-live">live</b><b class="new">new</b></div>
+    <div class="sec-head"><span class="num">17</span><h2>How this is kept honest</h2><span class="marks"><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span></div>
     <p class="lede">
       The checks below are why the status marks in this document can be trusted. Each exists because something went
       wrong once.
@@ -1136,7 +1257,7 @@ max_position_usd          <i># notional ceiling per position</i></div>
   </section>
 
   <section id="s18">
-    <div class="sec-head"><span class="num">18</span><h2>What is still open</h2><b class="st st-plan">planned</b></div>
+    <div class="sec-head"><span class="num">18</span><h2>What is still open</h2><span class="marks"><b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b></span></div>
     <p class="lede">
       Stated plainly, because the distinction between built and reachable is the whole point of this walkthrough.
     </p>
@@ -1175,12 +1296,15 @@ max_position_usd          <i># notional ceiling per position</i></div>
 
   <footer>
     <p class="lede">
-      Target-state walkthrough — internal draft, revised 2026-08-16. Status reflects what is reachable on a production
-      path, not what exists in the repository. Where the two differ, this document says so.
+      Target-state walkthrough — internal draft, revised 2026-08-18. Status reflects what is reachable on a
+      production path AND validated with real capital, not what exists in the repository or what has been
+      exercised only in paper. A section can be complete, wired and exercised in paper and still not carry a live
+      mark. Where the two differ, this document says so.
     </p>
     <p class="lede">
       Counts carry the date they were measured. Where wiring has landed since a sweep, this says the figure has
-      improved rather than restating it — an un-re-measured number is a claim, not a measurement.
+      improved rather than restating it — an un-re-measured number is a claim, not a measurement. The evidence-tier
+      mark beside each section states how that section's claims were checked, independent of the status pill.
     </p>
   </footer>
 </div>
