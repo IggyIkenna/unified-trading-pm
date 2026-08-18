@@ -255,3 +255,54 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
   staged content from another live session in this same slot (the epic taxonomy restructure), not yet pushed to
   origin. Operator chose to temporarily point `parent_epic` at the still-valid `infrastructure_master` rather than
   block on the other session; tracked as a follow-up todo above.
+- **2026-08-18 (interactive session, execution pass)**: Executed Track 1 (3/4 landed) and most of Track 2 (region
+  persistence, UAC reconciliation, VPC Flow Logs subnet-enablement, the `network_flow_summary` table + Log Router
+  sink + deployment-api route + UI panel all landed as code) across 5 repos + this plan doc. Full per-todo evidence
+  is inline above on each flipped checkbox. **Two genuine external blockers surfaced, both GCP-side propagation
+  delays, neither a code defect** — full ~55min investigation trail on the first one lives in
+  `/plans/active/issues/resource_samples_bq_subscription_schema_refresh_stuck_2026_08_18.md`:
+  1. The `resource-samples-bq` native BigQuery subscription hasn't picked up the `net_sent_rate_bytes_sec` column
+     despite the schema being correct and 4 real end-to-end publish probes (recv-field lands every time, sent stays
+     null) — Track 1 Todo 2 stays `[ ]` pending this.
+  2. VPC Flow Logs themselves haven't started generating any log entries yet, 80+ minutes after
+     `--enable-flow-logs` was confirmed set correctly on both in-scope subnets, despite ~15 actively-running VMs in
+     asia-northeast1 during that window. `gcloud logging logs list --filter="name:vpc_flows"` returns 0 items —
+     genuinely zero generation, not a delivery-latency artifact (confirmed the query mechanism itself works via a
+     matching `cloudaudit.googleapis.com` hit in the same window). This blocks building the actual aggregation query
+     (can't confirm real column names/types from GCP's VPC Flow Log JSON schema without a real row to inspect) — the
+     Log Router sink (`vpc-flow-logs-to-bq`, writer IAM granted) and the `network_flow_summary` destination table
+     schema are both built and live, ready to receive data the moment flow logs start flowing, but the todo stays
+     `[ ]` since its gate needs a real aggregated row spot-checked against a real flow log row.
+  - **Design decision made and documented inline** (`bootstrap_operational_data_bq.py`'s `network_flow_summary`
+    comment): same-region/cross-region classification will read the flow log's own `src_instance`/`dest_instance`
+    region annotations directly (GCP's real-time ground truth for where each endpoint runs) rather than joining
+    against the newly-persisted `DeploymentState.region` the todo's literal text names — `DeploymentState.region` is
+    a point-in-time snapshot recorded once at launch, GCS-stored (not BigQuery-queryable without a new worker reading
+    GCS), and a strictly less-authoritative proxy for the same fact the flow log already carries per-flow. Instance
+    -> deployment_id/service/asset_group attribution instead joins the flow log's `vm_name` against this dataset's
+    own `resource_samples` table (already in BigQuery, no GCS read needed) — this is why the deployment-api route +
+    UI panel could be built now, entirely independent of the still-pending flow-log propagation.
+  - Two unrelated fixes landed along the way (both real, both blocking things at the time): a pre-existing red QG on
+    `live-defi-rollout` from another session's commits (`fd3c54ff`/`2058bab3`) fixed via `# noqa: qg-empty-fallback`
+    on 5 deliberate-absence sites + baseline ratchet (deployment-service@ec9a88aeec, unified-trading-pm@f76b52afd7);
+    and a `broad_except_baseline` violation on the new `/network-flows` route's own degrade-safely except block
+    (deployment-api@f2e4551c66).
+
+## Deferred work after 2026-08-18
+
+| Item                                                                      | State / why deferred                                                                                       | Blocked on                                                    |
+| -------------------------------------------------------------------------| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
+| Track 1 Todo 2 — confirm `net_sent_rate_bytes_sec` lands non-null        | Cannot be done yet — schema + code both confirmed correct, GCP subscription schema-cache hasn't refreshed after ~55min + 2 nudges | External GCP propagation. Issue doc has the exact recovery recipe (delete/recreate the subscription) if it's still stuck after a few more hours. |
+| Track 2 — BQ aggregation query populating `network_flow_summary`         | Not done — the sink + destination table exist, but the actual `INSERT`/worker reading the raw flow-log table and writing hourly rollups was never written, because | Cannot be done yet: 0 real flow log rows exist anywhere to confirm the raw table's real column names/types against (GCP's VPC Flow Log JSON schema is well-documented but unverified in THIS project until a real row lands). |
+| Track 2 — deployment-api route + UI panel "returns real data" gate       | Code done + shipped + tested (mocked); the literal "real data" half of both gates unmet                    | Same flow-log propagation blocker above — once real rows exist and the aggregation query is written, these two gates close for free (the route/panel already read from the table). |
+| `warn_cross_region_egress` flag wiring                                   | Not done — genuinely depends on the region-split data existing                                             | The BQ aggregation item above                                   |
+| Codex doc update (`deployment-observability.md`)                        | Not done — deliberately last per the plan's own ordering note                                              | All the above landing first                                     |
+| Regression check (`vm-resource-rightsizing-check` + existing cpu/mem)   | Not done — deliberately last                                                                                | All the above landing first                                     |
+| `parent_epic` flip to `security_and_cross_cutting_master`               | Not done — waiting on the epic-taxonomy-restructure session (not this one) to land its new epic slug on origin | Operator-owned / another session's work, not this plan's         |
+
+**Recommended next action** once flow logs actually start generating entries (check with
+`gcloud logging read 'logName="projects/central-element-323112/logs/compute.googleapis.com%2Fvpc_flows"' --project=central-element-323112 --limit=3 --freshness=1h`):
+inspect one real row's `jsonPayload` shape, write the aggregation query/worker against the confirmed real schema,
+verify Track 2's 2 remaining VPC-Flow-Logs todos, then the 3 closing-the-loop todos in the stated order, then archive
+this plan per the standard 6-step ritual. Track 1 Todo 2 is independent and can be rechecked any time — see its issue
+doc for the exact recovery command if it's still null after several more hours.
