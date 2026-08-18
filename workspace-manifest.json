@@ -88,7 +88,7 @@
     "trading-agent-service": "0.13.10",
     "strategy-service": "0.76.3",
     "ml-service": "0.58.44",
-    "alerting-service": "0.63.55",
+    "alerting-service": "0.64.0",
     "unified-trading-api": "0.4.2",
     "client-reporting-api": "0.32.65"
   },
