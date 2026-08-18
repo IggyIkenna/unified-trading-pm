@@ -20,7 +20,7 @@ related:
     /agents/plan_reconciler.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/plan_reconciler_findings_sports_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_sports_2026_08_16.md,
   ]
 created: "2026-08-18"
 parent_epic: plan_hygiene_master
@@ -43,7 +43,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
-    /plans/active/issues/plan_reconciler_findings_sports_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_sports_2026_08_16.md,
     /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
   ]
 ---

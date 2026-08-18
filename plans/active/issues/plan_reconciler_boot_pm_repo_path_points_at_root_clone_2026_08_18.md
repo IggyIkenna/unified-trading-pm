@@ -22,7 +22,7 @@ tags: [agent-orchestrator, plan_reconciler, boot-prompt, dispatch, env-vars, tmu
 related:
   [
     /agents/plan_reconciler.md,
-    /plans/active/issues/plan_reconciler_findings_sports_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_sports_2026_08_16.md,
     /plans/active/issues/plan_reconciler_findings_sports_2026_08_18.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
