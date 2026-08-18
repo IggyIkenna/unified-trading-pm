@@ -139,14 +139,14 @@ into any of the 9.
 
 - [x] [DOCS] P1. ✅ DONE 2026-08-18 — authored `/codex/11-project-management/epic-taxonomy-2026-08-18.md`, the
       decision record: the 9-domain table, the "why not the 5 asset-group epics" non-goal, and the disposition of
-      every active epic. `unified-trading-pm@<see Progress Log>`.
+      every active epic. `unified-trading-pm@ca8851438a`.
 - [x] [DOCS] P1. ✅ DONE 2026-08-18 — authored `/codex/11-project-management/epic-html-report-format.md`,
       generalizing the AO Provider Dispatch Ledger's section structure into a reusable spec (10 sections, several
       explicitly optional/omit-if-empty), plus a design-token approach that deliberately does NOT reuse one shared
       stylesheet across epics (each epic's report picks its own palette per `artifact-design`, to avoid the
-      every-report-looks-the-same smell). `unified-trading-pm@<see Progress Log>`.
+      every-report-looks-the-same smell). `unified-trading-pm@ca8851438a`.
 - [x] [DOCS] P2. ✅ DONE 2026-08-18 — fixed `mtds_mdps_master.md`'s title from "Data pipeline master coordination —
-      2026-05-20" to "MTDS/MDPS Master — Market Data Pipeline Coordination". `unified-trading-pm@<see Progress Log>`.
+      2026-05-20" to "MTDS/MDPS Master — Market Data Pipeline Coordination". `unified-trading-pm@ca8851438a`.
 - [ ] [DOCS] P2. Refresh `plans/epics/README.md`'s epic-registry table — **deferred to Phase 6** (not done here):
       it's already flagged stale with its own tracked todo (line ~225, "script this regeneration so the registry
       can't drift again"), and Phase 2/3 will change the epic set again (2 folds→removals, 2 new epics, 1 rename) —
@@ -158,14 +158,13 @@ into any of the 9.
       references) into `execution_master.md` as a new "Folded-in epic: Trading Agent Master" subsection (owns
       line, repos, assigned-active-plans note, archived-plans pointer all carried over); `trading_agent_master.md`
       flipped `status: superseded` with a banner pointing to `execution_master.md`. 0 open todos existed in the
-      source (verified via `grep -c "^\- \[ \]"` = 0), none lost. `unified-trading-pm@<uncommitted, see Progress
-      Log>`.
+      source (verified via `grep -c "^\- \[ \]"` = 0), none lost. `unified-trading-pm@cf7489d077`.
 - [x] [DOCS] P1. ✅ DONE 2026-08-18 (pending lead-session ship) — folded `dart_and_promote_master.md` (0
       references) and `global_ledger_pnl_attribution_master.md` (0 references) into `strategy_master.md` as two new
       "Folded-in epic:" subsections (full substance: owns, scope-inherited, UI verification contract / codex SSOTs
       / cross-epic handshakes / archived plans / VM notes / continuous-verification table, not just links); both
       source files flipped `status: superseded` with banners pointing to `strategy_master.md`. Both sources had 0
-      open todos (verified), none lost. `unified-trading-pm@<uncommitted, see Progress Log>`.
+      open todos (verified), none lost. `unified-trading-pm@cf7489d077`.
 - [x] [DOCS] P1. ✅ DONE 2026-08-18 (pending lead-session ship) — folded `escalation_and_disaster_recovery_master.md`
       (193 lines, 1 reference) into `observability_master.md` as a new "Folded-in epic: Escalation & Disaster
       Recovery Master" subsection (all 8 open todos preserved verbatim: 6 P1 escalation-pipeline-MVP + 2 P2
@@ -174,8 +173,7 @@ into any of the 9.
       referencing doc via `rg -l "^parent_epic: escalation_and_disaster_recovery_master" plans/active/
       plans/active/issues/` →
       `plans/active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`; its `parent_epic:`
-      frontmatter updated to `observability_master` in the same pass. `unified-trading-pm@<uncommitted, see
-      Progress Log>`.
+      frontmatter updated to `observability_master` in the same pass. `unified-trading-pm@cf7489d077`.
 
 ### Phase 3 — the big split: ci_master + uac_master carve-out, infrastructure_master rename
 
@@ -191,7 +189,8 @@ into any of the 9.
       CI-escalation-runner-VM migration equally) and `repo_scripts_governance_audit_2026_06_18.md` (spans general
       script governance + the quickmerge carve-out definition) — both defaulted to `security_and_cross_cutting_master`
       per the "safe stays-where-it-was" rule, flagged here for human follow-up reclassification.
-      `unified-trading-pm@<uncommitted, see Progress Log>`.
+      `unified-trading-pm@13cd3e5a82..2e733b3303` (the reclassification + recovery batch range, see final
+      Progress Log entry for the full 12-commit ship list).
 - [x] [DATA] P0. ✅ DONE 2026-08-18 — extended `/codex/12-agent-workflow/epic-keyword-surface.yaml` with new
       `ci_master:` and `uac_master:` entries (keywords derived from the classification), and renamed the
       `infrastructure_master:` entry to `security_and_cross_cutting_master:` with a narrowed keyword list (added
@@ -206,12 +205,13 @@ into any of the 9.
       titles/status/estimates) and a Scope/Current-state narrative summarizing the 7 recurring failure classes
       actually found in the corpus (self-hosted-runner capacity, promotion-pipeline livelock, workflow-template
       drift, release-tagging stalls, cross-repo gate blind spots, ship-script mechanism bugs, the 2 active
-      build-out plans). 446 lines, well under the 2000-line epic cap. `unified-trading-pm@<uncommitted>`.
+      build-out plans). 446 lines, well under the 2000-line epic cap. `unified-trading-pm@cf7489d077`.
 - [x] [SCRIPT] P0. ✅ DONE 2026-08-18 — created `plans/epics/uac_master.md` (`tier: L1`, `priority: P1`,
       `assigned_vm: NA`), populated from the 5-doc UAC-bound bucket (all sourced from former `infrastructure_master`
       referrers — the `client_isolation_and_governance_master` UAC cross-reference had zero actual referrer docs of
       its own, see next todo). Small bucket by design, not omission — documented in the epic's own "Why this epic
-      exists" section. `unified-trading-pm@<uncommitted>`.
+      exists" section. `unified-trading-pm@cf7489d077` (epic file) / `unified-trading-pm@13cd3e5a82..2e733b3303` (the 419-doc
+      parent_epic rewrite, see final Progress Log entry for the full commit list).
 - [x] [SCRIPT] P0. ✅ DONE 2026-08-18 — `git mv plans/epics/infrastructure_master.md
       plans/epics/security_and_cross_cutting_master.md`; updated `name:`/`title:` frontmatter + added a rename
       banner; stripped the 6 CI-bound "Assigned active plans" entries that moved to `ci_master.md` (0 UAC-bound
@@ -220,7 +220,8 @@ into any of the 9.
       "🔴 canonical instrument_id — UAC-schema governance angle" P2 section to a pointer at `uac_master.md` (it had
       **0 actual referrer docs** of its own — "no new plan filed under this epic" per its own original text — so
       nothing needed re-parenting, only the narrative pointer needed updating) and its "UAC schema evolution"
-      Extension-scope bullet similarly repointed. `unified-trading-pm@<uncommitted>`.
+      Extension-scope bullet similarly repointed. `unified-trading-pm@cf7489d077` (epic file) / `unified-trading-pm@13cd3e5a82..2e733b3303` (the 419-doc
+      parent_epic rewrite, see final Progress Log entry for the full commit list).
 - [x] [SCRIPT] P0. ✅ DONE 2026-08-18 — bulk-rewrote the `^parent_epic: infrastructure_master$` frontmatter LINE ONLY
       (verified regex-safe: exact full-line match, never a body-text substring sub) across all 297 Step-1 docs (58→
       `ci_master`, 5→`uac_master`, 234→`security_and_cross_cutting_master`) via a one-off Python script (safer +
@@ -231,7 +232,8 @@ into any of the 9.
       (`deployment_network_egress_ingress_observability_2026_08_18.md`) + 3 docs nested under
       `plans/active/issues/stash_audit_reports/` (a subdirectory the flat glob never reaches). Done-when confirmed:
       `rg -c "^parent_epic: infrastructure_master$" plans/active/ plans/active/issues/` → 0 (quoted in Progress Log).
-      `unified-trading-pm@<uncommitted>`.
+      `unified-trading-pm@cf7489d077` (epic file) / `unified-trading-pm@13cd3e5a82..2e733b3303` (the 419-doc
+      parent_epic rewrite, see final Progress Log entry for the full commit list).
 - [x] [SCRIPT] P1. ✅ DONE 2026-08-18 — corpus-wide sweep for `infrastructure_master`. **Major additional finding not
       anticipated by this todo's original scope**: the actual live docspec gate (`check_frontmatter_schema.py`)
       ALSO validates `plans/audit/results/**/*.md` + `plans/audit/instructions/**/*.md` (118 more docs carrying
@@ -247,7 +249,8 @@ into any of the 9.
       across `scripts/` + `tests/` (a same-scale-or-larger undertaking than this doc-reclassification pass, clearly
       out of this todo's original scope), plus a smaller residual of `plans/active/`/`plans/audit/` prose mentions
       (mostly historical Progress-Log-style narrative, lower actionability). See the new follow-up todos below.
-      `unified-trading-pm@<uncommitted>`.
+      `unified-trading-pm@cf7489d077` (epic file) / `unified-trading-pm@13cd3e5a82..2e733b3303` (the 419-doc
+      parent_epic rewrite, see final Progress Log entry for the full commit list).
 - [x] [REVIEW] P0. ✅ DONE 2026-08-18 — ran `python3 scripts/plan-hygiene/check_frontmatter_schema.py` (the real
       docspec/`check_frontmatter_schema` gate `quality-gates.sh`'s Post-gates PM-level sequence calls) over the full
       live corpus post-rename. **Result, quoted verbatim**: `❌ check_frontmatter_schema: 1 doc(s) with frontmatter
@@ -257,7 +260,8 @@ into any of the 9.
       session, NOT caused by this rename/split. **Zero new HARD violations** — confirmed by iterating: before the
       Step-7 dangling-reference fixes the gate reported 13 docs with `related`/`context_scope` HARD violations citing
       the dead `/plans/epics/infrastructure_master.md` path; after fixing them, only the 1 unrelated SOFT item
-      remains. Done-when criterion met. `unified-trading-pm@<uncommitted>`.
+      remains. Done-when criterion met. `unified-trading-pm@cf7489d077` (epic file) / `unified-trading-pm@13cd3e5a82..2e733b3303` (the 419-doc
+      parent_epic rewrite, see final Progress Log entry for the full commit list).
 - [ ] [DOCS] P2. Update `plans/epics/README.md`'s registry table for the Phase 3 changes (2 new epics, 1 renamed,
       folding in Phase 2's changes too if not already done). **NOT done this pass** — deliberately deferred, same
       reasoning as Phase 1's todo #4 (avoid redundant edits; Phase 6's own P2 todo already collects this exact
@@ -280,6 +284,29 @@ into any of the 9.
       infrastructure_master_audit_instructions.md`'s FILENAME itself should be renamed to match (a live,
       standing audit-instruction file whose name no longer matches its `parent_epic:`, deliberately NOT renamed
       this pass since a file rename has its own referrer-tracing implications).
+- [ ] [SCRIPT] P2. **NEW — found during the ship, 2026-08-18.** 3 docs' `parent_epic: infrastructure_master`
+      reclassification could NOT ship this pass, each for a distinct, pre-existing reason unrelated to this
+      restructure's own content:
+      1. `plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` — already 1092L (over the
+         1000L hard cap) on origin BEFORE this pass touched it; a bare 1-line `parent_epic:` value substitution
+         doesn't match any of `check_line_caps.sh`'s 4 existing narrow carve-outs (whitespace-only, small-marker-
+         append, link-repoint, single-todo-flip — see the script's own comments) since none of them cover a bare
+         frontmatter-VALUE substitution. Needs either a real split (95 todos, real content decision) or a 5th
+         operator-ruled carve-out added to `check_line_caps.sh` before this one line can land.
+      2. `plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md` — has a pre-existing
+         dangling reference (a `codex/02-data` doc path with "manifest-writer-ssot" in the name, confirmed via
+         `find` — no such doc exists
+         anywhere in the corpus under any name) unrelated to this session's content; `check_reference_paths.py`
+         blocks the whole staged commit on it. Needs the dangling ref repointed or removed (historical-narrative
+         text left untouched, just the broken link) before the parent_epic fix can land.
+      3. `plans/active/deployment_network_egress_ingress_observability_2026_08_18.md` — deliberately excluded all
+         session: an unrelated concurrent session's brand-new, actively-edited doc (confirmed live via repeated
+         `git status` checks across this ship's full duration); touching a live peer's WIP file is against this
+         workspace's multi-agent-safety rules. Its `parent_epic:` value needs the same 1-line fix once that
+         session's own work settles.
+      Done-when: `rg -c "^parent_epic: infrastructure_master$" plans/active/ plans/audit/results/
+      plans/audit/instructions/ plans/epics/ codex/` → 0 (currently 1 — item 3 above; items 1-2 already carry the
+      corrected LOCAL value, just can't ship until their own blocker resolves).
 
 ### Phase 4 — `/plan-reconcile` extension: epic scope + HTML artifact generation
 
@@ -290,14 +317,14 @@ into any of the 9.
       (`rg "^parent_epic: <slug>$"` across `plans/active/*.md` + `plans/active/issues/*.md`), and an explicit
       contrast with `regenerate_active_plan_inventory.py`'s broken filename-substring approach, citing this plan's
       own Why section. Bare `/plan-reconcile` keeps its unchanged `all` behavior; epic-scoped is documented as an
-      additional entry point, not a replacement. `unified-trading-pm@<uncommitted, see diff>`.
+      additional entry point, not a replacement. `unified-trading-pm@13cd3e5a82` (SKILL.md landed in reclassification batch 1).
 - [x] [INFRA] P1. ✅ DONE 2026-08-18, pending lead-session ship — same SKILL.md section documents the proactive
       `parent_epic`-validity check: Phase 0's existing `run_hygiene_sweep.sh` → `check_parent_epic_alignment.py` /
       `docspec.py` registry-typed HARD check already covers this at QG time; the new instruction is to surface it
       PROACTIVELY and, when epic-scoped, report only that epic's own children rather than the whole corpus, with a
       verify-before-trusting-green step (point at a doc with a deliberately-broken `parent_epic` value). No new code
       needed — this reuses the existing mechanical check, scoped and run earlier in the pipeline.
-      `unified-trading-pm@<uncommitted, see diff>`.
+      `unified-trading-pm@13cd3e5a82` (SKILL.md landed in reclassification batch 1).
 - [x] [INFRA] P1. ✅ DONE 2026-08-18, pending lead-session ship — built the HTML-generation phase: new
       "Phase 5.95 — HTML artifact generation" section in SKILL.md (which-epics-in-scope logic for epic- vs
       tranche/`all`-scoped runs, 7 concrete steps: gather data → load `artifact-design` → build HTML per the 10
@@ -310,14 +337,14 @@ into any of the 9.
       extraction; validates `--epic` against the live `plans/epics/*.md` registry (same set `docspec.py`'s
       `load_registries()` builds), failing loudly with the full valid-slug list on a miss. Verified against the
       real `mtds_mdps_master` epic — see this plan's Progress Log for the actual output.
-      `unified-trading-pm@<uncommitted, see diff>` (`scripts/plan-hygiene/epic_report_data.py`,
-      `cursor-configs/skills/plan-reconcile/SKILL.md`).
+      `unified-trading-pm@bd5d8acce9` (`scripts/plan-hygiene/epic_report_data.py`) /
+      `unified-trading-pm@13cd3e5a82` (`cursor-configs/skills/plan-reconcile/SKILL.md`).
 - [x] [DOCS] P2. ✅ DONE 2026-08-18, pending lead-session ship — updated SKILL.md's `*_SUMMARY.md`-ban line (end of
       Phase 5, the line that actually carries the ban text) with a clarifying note that Phase 5.95's HTML artifact
       is additive, not a substitute for the chat report, and doesn't conflict with the ban (ban targets ad hoc
       unpublished summaries; the HTML report is structured, explicitly requested, and published with a shareable
       link). Also added a reinforcing pointer in Phase 6 itself ("report") to include the Phase 5.95 link(s).
-      `unified-trading-pm@<uncommitted, see diff>`.
+      `unified-trading-pm@13cd3e5a82` (SKILL.md landed in reclassification batch 1).
 
 ### Phase 5 — QG hardening for the new structure
 
@@ -337,7 +364,7 @@ into any of the 9.
       unit checks (date coercion across real-date/quoted-string/blank/invalid `last_updated` shapes, and
       fresh/stale/missing `<!-- generated: … -->` comment parsing) all passed against synthetic fixtures — the
       corpus itself has no HTML files yet to exercise the fresh/stale branches for real.
-      `unified-trading-pm@<uncommitted — lead session ships>`.
+      `unified-trading-pm@bd5d8acce9` (code quickmerge).
 - [x] [SCRIPT] P1. ✅ DONE 2026-08-18, pending lead-session ship — wired the new check into `scripts/quality-gates.sh`'s
       Post-gates PM-level sequence (the same block that runs `FRONTMATTER_SCHEMA_CHECKER`/`check_frontmatter_schema.py`
       i.e. the "docspec" gate this todo referred to — `check_line_caps.sh`/`check_parent_epic_alignment.py` are
@@ -346,7 +373,7 @@ into any of the 9.
       Archive-safety-ratchet block, before the Conflict-marker gate — calls the script with `--quiet` (no `--strict`,
       matching the soft-launch contract) and never fails the gate, mirroring the frontmatter-auto-fixer block's
       "informational, exit 0 always" style. `bash -n scripts/quality-gates.sh` confirms no syntax breakage.
-      `unified-trading-pm@<uncommitted — lead session ships>`.
+      `unified-trading-pm@bd5d8acce9` (code quickmerge).
 - [ ] [DOCS] P2. Update CLAUDE.md's "Plans — format + authoring discipline" section with a one-line pointer to the
       new epic-taxonomy codex doc + the HTML-artifact convention (condense, don't duplicate, per this file's own
       maintenance rules). **NOT done this pass — see Progress Log finding**: `cursor-configs/CLAUDE.md` measured at
@@ -621,3 +648,78 @@ into any of the 9.
   the outcome, since that ship was still in flight when this entry was written (context budget forced a checkpoint
   mid-ship, per this session's `/pre-compact` ritual — the next session/reader should check `git status` and `git
   log -3` on `unified-trading-pm` FIRST, before assuming anything below this line reflects final state).
+
+- **2026-08-18 (resumed session, lead-session ship — LANDED, 12 commits).** Picked up exactly where the prior
+  session's `/pre-compact` checkpoint left off. Operator redirected the shipping strategy mid-flight: after 2 more
+  monolithic-batch failures (a false-positive-turned-real content collision on
+  `plans/active/strategy_service_centralization_fixes_2026_08_16.md` — adjacent-line adjacency, not a real
+  disagreement, resolved by conflict-marker surgery; then a genuine `check_frontmatter_schema` wall of 28
+  `parent_epic 'X' not an epic slug` failures caused by `ci_master.md`/`uac_master.md`/
+  `security_and_cross_cutting_master.md` not yet being present in that batch's isolated worktree), the operator
+  asked: _"i though we were just gonna ship the plans and docs which werent conflicting with remote first, then
+  ship the others in batches of maybe 50 at a time."_ Switched strategy: (1) ship the 13 `plans/epics/*.md` files
+  ALONE first (`unified-trading-pm@cf7489d077`) so every later batch's `parent_epic` value resolves against a live
+  registry; (2) split the remaining 446 reclassification docs into ~50-file batches, shipped sequentially with a
+  Monitor watchdog per batch rather than one 458-file attempt.
+
+  **Full commit list (12, in landing order)**: `cf7489d077` (epic registry: rename + 2 new epics + Phase 2 folds),
+  `13cd3e5a82` / `e64b0649ce` / `bcfbcab010` / `0257b29e93` / `7d734bf07e` / `6b3f1affa9` / `34721c3136`
+  (reclassification batches 1-7 of 9), `ea81f66d5f` / `a4bd0e57e2` / `2e733b3303` (recovery batches 1-3, see
+  below), `bd5d8acce9` (code quickmerge: `check_epic_html_freshness.py`, `epic_report_data.py`,
+  `quality-gates.sh`'s wiring — `codex/12-agent-workflow/epic-keyword-surface.yaml` had already landed inside
+  `13cd3e5a82` since it's a doc, not code, and was swept in by the batch-builder's blanket dirty-file grep).
+
+  **Real findings from this pass, not fabricated pass claims:**
+
+  1. **The epic-registry-first ordering is load-bearing, not cosmetic.** `check_frontmatter_schema.py`'s
+     `parent_epic` validation resolves against whatever `plans/epics/*.md` files exist in THAT batch's isolated
+     worktree — not the ambient corpus. A batch of reclassified docs shipped before the epic files themselves land
+     genuinely fails "not an epic slug," every time, for every doc pointing at a new slug. This is now the
+     documented required order for any future epic-rename-plus-reclassification ship.
+
+  2. **A large-scale "your uncommitted edit is GONE" scare was mostly a false alarm, one real recovery needed.**
+     Multiple batches reported dozens of unrelated `plans/audit/results/*.md` files and `scripts/quality-gates.sh`
+     as "reverted during the reconcile." Root cause: `safe-doc-push.sh`'s isolated-worktree mode commits from a
+     PRIVATE index and does NOT auto-advance the local branch's HEAD — so `git diff HEAD` against a stale local
+     HEAD (many commits behind origin) looks identical to a genuine revert. A plain `git pull --rebase --autostash`
+     resolved the vast majority of these instantly (dirty count 147→5) by catching the local branch up; a fast
+     `git checkout "stash@{0}" -- scripts/quality-gates.sh` recovered the one genuinely-reverted file (verified via
+     `git diff HEAD "stash@{0}" -- <path>` showing a pure clean addition before trusting the stash content).
+     **Lesson for the next large multi-batch ship**: run `git pull --rebase --autostash` between batches, not just
+     rely on each batch's own internal reconcile — it resolves the "GONE" false-positive class before it ever needs
+     investigating.
+
+  3. **One genuine, repeatable data-loss class DID occur**: 145 legitimately-reclassified docs (mostly the 118
+     audit-tree docs from Phase 3's own additional-scope finding) had their `parent_epic:` fix silently reverted to
+     `infrastructure_master` by an EARLIER batch's autostash-pop colliding with the docs' own dirty state (real
+     content collision, not a stale-HEAD illusion — confirmed via `git show HEAD:<path> | grep parent_epic`
+     showing the stale value on the ACTUAL current HEAD, not just a local diff artifact). Recovered 142 of 145 by
+     scripting a per-file stash search (`git show "stash@{N}:<path>"` across the 11 most recent autostash entries,
+     first non-`infrastructure_master` value wins) + a targeted `sed` fix, then re-shipped in 3 more ~50-file
+     batches (`ea81f66d5f`/`a4bd0e57e2`/`2e733b3303`). The remaining 3: `deployment_network_egress_...` (the
+     already-known excluded live-WIP file, correctly never touched) and 2 brand-new issue docs
+     (`execution_service_pydantic_extra_forbidden_blocks_gcs_fix_2026_08_18.md`,
+     `client_reporting_api_invoice_test_failures_block_gcs_fix_2026_08_18.md`) created by another concurrent
+     session mid-ship and never covered by any stash — classified fresh (both clearly `security_and_cross_cutting_master`,
+     general cross-cutting bug-fix content, no CI/UAC signal) and shipped in the same recovery batch.
+
+  4. **2 more pre-existing-debt files surfaced and were correctly excluded, not force-shipped**:
+     `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (already over the 1000L hard cap on origin,
+     unrelated to this pass; none of `check_line_caps.sh`'s 4 narrow carve-outs cover a bare frontmatter-value
+     substitution) and `mega_audit_phase_a_issues_human_readable_2026_05_20.md` (a pre-existing dangling reference
+     to a codex doc that was confirmed, via `find`, to not exist anywhere in the corpus under any name). Both left
+     with their LOCAL working-tree copy carrying the correct `parent_epic` value but unshipped — tracked as a new
+     Phase-3 follow-up todo (3 items) rather than force-bypassed or silently dropped.
+
+  5. **Verification, not assumption, closed this out**: final corpus-wide check —
+     `rg -l "^parent_epic: infrastructure_master$" plans/active/ plans/audit/results/ plans/audit/instructions/
+     plans/epics/ codex/` → exactly 1 hit (`deployment_network_egress_ingress_observability_2026_08_18.md`, the
+     one deliberate exclusion) — confirms all 417 of 419 originally-planned reclassifications landed (2 permanently
+     rerouted to the new Phase-3 follow-up todo above, not silently lost). `.qg_last_passed_sha == HEAD` was NOT
+     re-checked after this specific doc-only ship since `safe-doc-push.sh` runs prek, not full `quality-gates.sh`
+     — the code files' own separate `quality-gates.sh --no-fix` run (before the `bd5d8acce9` quickmerge) was
+     verified directly by grepping for `❌`/`FAILED` rather than trusting its exit code, which the harness reported
+     as 0 while a 2026-08-10-incident-class exit-code lie was independently ruled out by reading the actual
+     output — the only 2 `❌` lines found (`VERSION_SPLIT`, `VESTIGIAL_SCALAR_DRIFT`) are fleet-wide release-tag
+     manifest drift checks unrelated to any file this session touched, confirmed pre-existing corpus-wide, not a
+     regression this pass introduced.
