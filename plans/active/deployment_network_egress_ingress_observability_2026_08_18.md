@@ -190,12 +190,25 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
 
 ### Track 2 — VPC Flow Logs pipeline (GCP first)
 
-- [ ] [INFRA] P2. Enable VPC Flow Logs (`--enable-flow-logs --logging-metadata=include-all
+- [x] [INFRA] P2. Enable VPC Flow Logs (`--enable-flow-logs --logging-metadata=include-all
       --logging-flow-sampling=<cost-justified value, start 0.1-0.5>`) on every GCP subnet hosting a
       deployment-service-launched VM, enumerated from the existing VM-launcher region registry rather than a fresh
       manual list. Note the incremental per-GB logging cost this introduces — state the chosen sampling rate and its
       cost rationale inline when landing this. Gate: `gcloud compute networks subnets describe <subnet>
-      --region=<region>` shows `enableFlowLogs: true` for every in-scope subnet.
+      --region=<region>` shows `enableFlowLogs: true` for every in-scope subnet. — **Scope derivation**: grepped
+      every `deployment-service/scripts/vm/launch-*.sh` for `--zone`/`ZONE=`/`--network`/`--subnet` (the real
+      VM-launcher registry, not a manual list) — exactly 2 GCP regions appear: `asia-northeast1` (default zone for
+      ~40 launchers, no explicit `--network`/`--subnet` ⇒ the `default` network's `default` subnet) and
+      `europe-west2` (`launch-betfair-egress-proxy-vm.sh` only, explicit `--network=default` ⇒ also the `default`
+      subnet). A third subnet exists in the project (`market-data-subnet`/`market-data-vpc`, asia-northeast1) but
+      **excluded** — no launcher references it, so it's out of this plan's "deployment-service-launched VM" scope.
+      **Sampling rate: 0.1 (10%)**, the low end of the plan's suggested 0.1-0.5 — chosen because the consuming query
+      (next todo) only needs an hourly/daily same-region-vs-cross-region byte-total rollup, not per-flow fidelity;
+      10% sampled bytes scale to a statistically reasonable aggregate at a fraction of the logging-ingestion cost of
+      a higher rate, applied uniformly to both subnets for simplicity (europe-west2's single-VM volume is low enough
+      that a higher rate there would cost negligibly more, but consistency was preferred over micro-optimizing one
+      subnet). Verified: `gcloud compute networks subnets describe default --region=asia-northeast1` and
+      `--region=europe-west2` both show `enableFlowLogs: True, flowSampling: 0.1`.
 - [ ] [DATA] P2. Create a BigQuery Log Router sink routing the new flow logs into the `deployment_operational_data`
       dataset as a new aggregated table (e.g. `network_flow_summary` — rolled up per-deployment-per-hour, not a raw
       flow firehose), computing same-region vs cross-region byte totals by joining flow records' `src_instance`/
