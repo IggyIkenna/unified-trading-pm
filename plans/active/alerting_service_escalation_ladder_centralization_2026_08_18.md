@@ -207,7 +207,7 @@ process stop being able to see the whole dependency graph locally, which is what
 
 ## Phase 1 — Shared identity contract + IAM verification
 
-- [ ] [INFRA] P1. Add `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/escalation_identity.py`
+- [x] [INFRA] P1. Add `unified-api-contracts/unified_api_contracts/canonical/crosscutting/alerting/escalation_identity.py`
       exposing ONE pure function that derives a canonical identity string from a finding's `(registry_id, vm_name,
       asset_group, data_type)` fields — mirrors the two identity shapes `deployment-service/deployment_service/
       data_pipeline_monitors/escalation_dedup.py` already established in `_dispatch_checkpoint_identity()` (tuple-keyed)
@@ -215,6 +215,16 @@ process stop being able to see the whole dependency graph locally, which is what
       (and risking drift in) the derivation logic. Export it alongside `DATA_PIPELINE_ALERT_RULES` in
       `unified_api_contracts/canonical/crosscutting/alerting/`. Done-when: a unit test asserts identical output for
       both known identity shapes, and Phases 2-4 import this function rather than re-deriving either shape locally.
+      **✅ DONE (2026-08-18)** — `derive_escalation_identity()` added, tuple-keyed branch verified byte-identical to
+      `_dispatch_checkpoint_identity()`'s source; vm-keyed shape is a NEW canonical definition (no prior standalone
+      derivation existed for it in `find_open_issue_for_vm()`, which only does substring/tag matching) — uses the
+      same sanitization convention with a `"vm|"` disambiguating prefix, keeping the two identity spaces disjoint by
+      construction. Also exported through the top-level `unified_api_contracts/alerting.py` consumer-facing facade
+      (not just the crosscutting `__init__.py`), mirroring `DATA_PIPELINE_ALERT_RULES`'s existing dual-export
+      pattern. Raises `ValueError` when neither shape resolves (identity derivation, not dedup-applicability —
+      callers resolve that first) — flag for Phase 2/3 authors if never-raises semantics were expected instead.
+      9 unit tests (parametrized parity against inlined reference oracles + precedence + disjointness + determinism).
+      `quality-gates.sh` green. Shipped `unified-api-contracts@d80c599c15`.
 - [ ] [INFRA] P1. Verify + grant the cross-service IAM this design needs, BEFORE building on top of it: (a)
       alerting-service's actual Cloud Run runtime identity needs WRITE access to deployment-service's durable-state
       bucket (`deployment-scripts-<project>`, resolved via `deployment-service/scripts/recovery/_durable_state.py`'s

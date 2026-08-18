@@ -311,7 +311,7 @@ shaped scripts flat alongside ~35 setup/deploy/sync/provision scripts — `migra
 **no dedicated `scripts/migrations/` subdirectory** the way `scripts/vm/` exists for launchers — that is the gap
 this phase closes.
 
-- [ ] [INFRA] P1. Create `deployment-service/scripts/migrations/` with one subdirectory per SOURCE repo
+- [x] [INFRA] P1. Create `deployment-service/scripts/migrations/` with one subdirectory per SOURCE repo
       (`deployment-service/scripts/migrations/self/`, `.../instruments-service/`, `.../market-tick-data-service/`,
       `.../market-data-processing-service/`, `.../features-service/`, `.../strategy-service/`,
       `.../unified-trading-library/`, `.../client-reporting-api/`, `.../deployment-api/`, `.../e2e-testing/`) —
@@ -320,7 +320,9 @@ this phase closes.
       directories exist with a `README.md` stub in `scripts/migrations/` stating the convention (one paragraph,
       cites this plan + `migration-script-ssot.md` (Phase 4 — not yet created, this plan authors it) once landed) —
       the README stub also gets Phase 0b's "Template roster" table once that phase lands.
-- [ ] [INFRA] P1. Move deployment-service's own 6 flat-root migration scripts (named above) into
+      **✅ DONE (2026-08-18)** — all 10 subdirectories created; README stub cites this plan (not
+      `migration-script-ssot.md`, correctly deferred since Phase 4 hasn't landed it yet).
+- [x] [INFRA] P1. Move deployment-service's own 6 flat-root migration scripts (named above) into
       `scripts/migrations/self/`, updating any caller (Makefile targets, README references, Cloud Scheduler /
       Terraform triggers if any invoke them by path — `grep -rn` the 6 filenames across `deployment-service/` +
       `deployment-service/terraform/` first). This is the PROOF-OF-CONCEPT move that establishes the pattern before
@@ -329,6 +331,16 @@ this phase closes.
       rebuild_sports_manifest\|scripts/validate_league_migration\|scripts/wipe_pre_floor_sports\|scripts/
       wipe_sports_reference_v2_post_floor\|scripts/bootstrap_operational_data_bq"` outside `scripts/migrations/self/`
       returns nothing).
+      **✅ DONE (2026-08-18)** — all 6 files `git mv`'d. Pre-move `grep -rn` across the whole repo (Makefile,
+      terraform/, README.md, tests/, quality_gates/, pyproject.toml) found exactly one real caller —
+      `scripts/setup-pubsub.sh` (2 lines, a comment + an echo string referencing `bootstrap_operational_data_bq.py`)
+      — updated to the new path. Two substring matches on `rebuild_sports_manifest` in
+      `vm_prefix_registry.py`/`launch-sports-v9-migration-vm.sh` confirmed as false positives (a DIFFERENT script,
+      `rebuild_sports_manifest_v9`, in a different repo). Also fixed 4 of the 6 moved scripts' own internal
+      `Usage:` docstring examples showing the stale pre-move invocation path (a stale self-reference is a finding
+      per this workspace's own doc-hygiene rule, fixed in the same commit rather than left to rot). `bash
+      deployment-service/scripts/quality-gates.sh --no-fix` green; final dangling-reference grep empty. Shipped
+      `deployment-service@b7fb15841c`.
 - [ ] [INFRA] P2. Extract `deployment-service/scripts/migrations/lib/migration_common.py` — a GENERIC scaffolding
       module (mirrors `deployment-service/scripts/vm/lib/launcher_common.sh`'s DRY role for launchers), covering: a
       `get_storage_client()`-wrapped read/write helper pair (so no future script can reinvent the
