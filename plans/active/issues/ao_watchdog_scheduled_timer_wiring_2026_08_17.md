@@ -77,6 +77,13 @@ Following the exact pattern `escalation_queue_reconciler` already established (s
       already did a "pre-audit" and only need to check the delta since then, rather than redoing the full sweep —
       worth keeping in mind when the actual dispatch-mode wiring (todo above) designs how this run's output/state
       gets persisted for a later run to diff against, not just posted to Slack and discarded.
+- [ ] [SCRIPT] P2. **Update the already-installed timer's cadence to match the operator's decision above** — the
+      shipped `install-ao-watchdog-timer.sh` (`agent-orchestrator@6d48977f52`) still fires at
+      `OnCalendar=*-*-* 06:25:00 UTC`, which the operator's 2026-08-18 decision explicitly supersedes (midnight
+      UTC, staggered against `ci_reconciler`/`plan_reconciler`, retry buffer before morning). Re-check the live
+      minute-table (`grep -H '^FIRE_MINUTE=' install-*.sh`, per the original installer todo's own method — don't
+      trust a stale doc table) for a free near-midnight offset, update the script's `OnCalendar`, re-run the
+      installer so the live systemd timer picks up the new time, and verify via `systemctl --user list-timers`.
 
 ## Why this wasn't done in the same session as the skill itself
 
