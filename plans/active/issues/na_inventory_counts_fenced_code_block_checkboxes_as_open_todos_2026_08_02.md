@@ -141,16 +141,27 @@ bug, which is why the fix belongs in a shared helper rather than patched per-scr
 - [ ] [SCRIPT] P2. Make `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py`'s open-todo count skip `- [ ]` lines
       inside fenced code blocks. **Done when**: a fresh `--tranche ao --json` run reports `open_todos: 0` for
       `issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md` and `open_todos: 1` for
-      `issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`, the corpus total drops 1317 → 1310, and
+      `issues/ao_non_dispatchable_regex_swallows_resolved_retags_2026_07_29.md`, the corpus total drops by exactly 7
+      from whatever it measures at fix-time (**absolute-number done-when corrected 2026-08-18** — plan_reconciler,
+      infra tranche, agt-830118: the original "1317 → 1310" figures are now stale from ordinary corpus growth alone —
+      live `na_corpus_baseline.yaml` already shows `max_na_open_todos: 1393` as of today; a worker landing the real
+      fix today would correctly NOT see the total hit exactly 1310 and could wrongly self-assess failure. The 2 named
+      per-doc absolute checks are unaffected, they don't depend on corpus size), and
       a unit test pins the fenced-vs-real distinction so this bug class cannot return a fourth time. (repo:
       unified-trading-pm)
 - [ ] [SCRIPT] P2. Apply the same fence guard to `scripts/plan-hygiene/check_todo_format.sh`, which is **confirmed** to
       false-positive on the identical 3 quoted lines (evidence in "Recommended fix" above), then grep the remaining
       sibling counters (`count_open_tasks.py`, `generate_ag_closeout_audit_candidates.py`,
-      `generate_context_scope_inventory.py`) for the same whole-body-`CHECKBOX_RE` shape. Prefer one shared
+      `generate_context_scope_inventory.py`, **`check_na_corpus_ratchet.py` — added 2026-08-18, plan_reconciler infra
+      tranche agt-830118: this script has the IDENTICAL bug (its own code comment names this doc by slug) and only
+      got a PARTIAL fix 2026-08-14 (`4484ad120042834ea93168f7bb9b503e42954725`) — that fix covers only its
+      `--diff-base` path (`_count_open_checkboxes_fence_aware`); its PRIMARY path (`_current_counts()`, which this
+      doc's own todo 3 depends on) still calls the still-unfixed `generate_na_doc_tranche_inventory.py --json` and
+      remains fence-blind**) for the same whole-body-`CHECKBOX_RE` shape. Prefer one shared
       fence-stripping helper over N per-script patches. **Done when**: `check_todo_format.sh` no longer flags
-      `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md:66-68`, and each remaining script is either fixed
-      or confirmed not to count checkboxes, with the disposition recorded here. (repo: unified-trading-pm)
+      `gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md:66-68`, and each remaining script (including
+      `check_na_corpus_ratchet.py`'s primary path) is either fixed or confirmed not to count checkboxes, with the
+      disposition recorded here. (repo: unified-trading-pm)
 - [ ] [SCRIPT] P3. **DO NOT RUN until todos 1+2 have landed** (ordering NOT machine-enforced — no `sequential:` flag):
       re-run `check_na_corpus_ratchet.py --update-baseline` so `na_corpus_baseline.yaml`'s `max_na_open_todos` reflects
       the corrected count instead of the inflated one, and note the old → new numbers in the commit message (a baseline

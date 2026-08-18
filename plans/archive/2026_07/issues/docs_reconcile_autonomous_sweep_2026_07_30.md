@@ -16,7 +16,7 @@ summary: >-
   re-scopes. Second, `slot-label grammar` is claimed in `authoritative_for:` by two `status: current` codex-ssot docs
   whose grammars genuinely disagree (one says the archetype enum has 18 members, the other 57; the code has 60) — an
   authority call the skill forbids auto-resolving in any mode.
-status: open
+status: resolved
 nature: issue
 asset_group: [infrastructure] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]
 stage: [meta]
@@ -46,7 +46,8 @@ source:
   "/docs-reconcile autonomous full-corpus run, 2026-07-30, slot-3 — Phase 3 routing produced 2 operator-gated items and
   3 non-authority findings the run deliberately did not guess at"
 depends_on: []
-resolved_by:
+resolved_by: plan_reconciler-agt-830118 (2026-08-18) — last open item (P1-C sync-system.mdc) confirmed already
+  shipped 2026-08-09; this doc now has 0 open todos.
 locked_by:
 context_scope: [/cursor-configs/skills/docs-reconcile/SKILL.md, /codex/11-project-management/doc-frontmatter-schema.md, /codex/06-coding-standards/strategy-identity-versioning.md, /plans/archive/2026_07/issues/plan_reconcile_autonomous_sweep_2026_07_30.md]
 supersedes:
@@ -54,6 +55,10 @@ superseded_by:
 ---
 
 # /docs-reconcile autonomous sweep — 2026-07-30 parked decisions + findings
+
+> **✅ RESOLVED — ARCHIVED 2026-08-18** (plan_reconciler, dispatch agt-830118). Every tracked item closed; the sole
+> remaining open todo (P1-C, sync-system.mdc dead-doctrine-ref) was confirmed already shipped 2026-08-09
+> (`unified-trading-pm@f240895d85`) — 3 later audit touches had missed it. See Progress Log for the full history.
 
 ## Run context (read this before acting on anything below)
 
@@ -239,13 +244,19 @@ terminology, not broken links.
 - [x] ✅ [DOC] P0. **P0-B `slot-label grammar` dual-SSOT collision — RESOLVED 2026-07-31** by another session via OPTION
       C (merge), `unified-trading-pm@257ee3a13`; see the resolved banner in §P0-B for the full evidence. Flipped here so
       the register reflects it.
-- [ ] [DOC] P1. **Resolve the last dead `unified-trading-codex` doctrine ref with no successor (P1-C, narrowed
+- [x] ✅ [DOC] P1. **Resolve the last dead `unified-trading-codex` doctrine ref with no successor (P1-C, narrowed
       2026-08-08)** — 3 of the original 4 rows are independently resolved/moot (see §P1-C table for evidence:
       `strategy-data-access.mdc` MOOT via the 2026-08-02 `cursor-rules/` archival, `provider-api-version-manifest.mdc`
       FIXED 2026-08-05, `ui-quality-gates-typescript.mdc` already rewritten to explanatory prose). Only
       `.cursor/rules/misc/sync-system.mdc:14-17` remains: needs a human to decide whether to strip the `DO:` line (keep
       the rule aspirational pending a successor sync script) or delete the rule outright, since the script it names does
-      not exist anywhere. (repo: `unified-trading-pm`)
+      not exist anywhere. (repo: `unified-trading-pm`) — **DONE 2026-08-09**, `unified-trading-pm@f240895d85`
+      (verified reachable on origin): the `DO:` line was rewritten to "No automated enforcement exists — reconcile
+      drift manually against `/codex/10-audit/sync-mapping-registry.yaml` until a successor script is built", live-
+      confirmed identical today. Flipped by plan_reconciler (infra tranche, agt-830118, 2026-08-18) — 3 prior audit
+      touches (2026-08-10, and two on 2026-08-17) all re-affirmed this "still open" without checking the fix had
+      already shipped; independently re-verified via `git merge-base --is-ancestor` + a live file read before
+      flipping, not taken on the hunter's word alone.
 - [x] ✅ [DOC] P1. **Fix the unterminated bold span (P1-D)** at
       `/plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md:429` — the span never closes
       before the paragraph ends at :434 and the next line repeats the "and STOPPED (not built) because…" clause, so this
@@ -397,3 +408,10 @@ blocked from its documented ship path whenever any unrelated repo in the workspa
   flip. No new bounded content on independent re-read.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:b8189b7aaddf181e]: KEEP-NA, valid — sole open item needs a human decision (backing script no longer exists anywhere); unchanged across 3 prior audit passes.
+- **plan_reconciler 2026-08-18 (infra tranche, agt-830118)**: independently re-verified the sole open todo
+  (P1-C, sync-system.mdc) against live state — `git merge-base --is-ancestor f240895d85e9f54909d66213ddbd36c2c08c64d4
+  origin/live-defi-rollout` confirms reachable, and the live `DO:` line matches the described fix verbatim. Flipped
+  `[x]`; this left the doc at 0/0 open todos, unlocked, not in the 12h grace window — archived per CLAUDE.md's
+  "fully-done + unlocked MUST archive immediately" HARD RULE. 4 prior audit touches (context-scout ×2, na-eligibility-audit
+  ×2 across 2026-08-09 through 2026-08-17) had all re-affirmed "still open" without independently checking the fix
+  had already shipped 9 days earlier.

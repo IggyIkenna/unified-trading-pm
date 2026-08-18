@@ -29,7 +29,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-07-28
+last_updated: 2026-08-18
 locked_by:
 locked_since:
 supersedes:
@@ -979,8 +979,12 @@ MIGRATE-TO-CODEX; no codex target needs creating.
 
 ## Deferred work — migrated to:
 
-- unified-api-contracts DELETE half (L332-339): delete 4 `docs/` twins, SCHEMA_GOVERNANCE rewrite, 3 mirror refs.
-- deployment-service DELETE half (L825-828): delete 4 files. PARKED ibkr-gateway-infra (L818): owner call pending.
+None remaining — **corrected 2026-08-18 (plan_reconciler, infra tranche, agt-830118)**: this section was fully stale,
+contradicted by the rest of this same document. All 3 listed items are actually resolved: unified-api-contracts
+DELETE half CLOSED 2026-08-10 (see that repo's checkbox above); deployment-service DELETE half SHIPPED 2026-08-10
+(see that repo's checkbox above); ibkr-gateway-infra resolved by operator ruling 2026-08-13,
+`ibkr-gateway-infra@905a317` (see that repo's checkbox above). The section header's own "migrated to:" also never
+named a destination — a dead/malformed leftover from an earlier state of this doc, not a real pointer.
 
 ## Progress Log
 

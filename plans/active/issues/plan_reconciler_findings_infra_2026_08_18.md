@@ -72,17 +72,41 @@ same-day issue docs). **Writable working set: 27 docs.**
 
 ## Flips verified
 
-None this checkpoint (no HARD-evidenced missed-flip candidates confirmed yet — several batches' false-unchecked
-candidates are still in STEP 4 triage, see "Candidates pending further STEP 4/5 triage" below).
+1. `docs_reconcile_autonomous_sweep_2026_07_30.md` P1-C (sync-system.mdc dead-doctrine-ref todo) — independently
+   verified `unified-trading-pm@f240895d85` (2026-08-09) reachable on origin AND live file content matches;
+   3 later audit touches (2026-08-10, 2×2026-08-17) had all re-affirmed "still open" without checking.
+2. `operator_action_items_consolidated_2026_08_08.md` (`ORCHESTRATOR_JWT_SECRET` reconcile todo) — independently
+   verified via its own cited source doc (`orchestrator_vm_e2e_hardening_2026_07_24.md:278-287`, "CONFIRMED ALREADY
+   IN SYNC... no write was performed", 2026-08-15).
 
 ## Contradictions
 
-Pending further STEP 4 triage — see "Candidates pending further STEP 4/5 triage" below (several high-confidence
-candidates from batches 2/4/6/7, not yet independently re-verified/applied by the orchestrator this checkpoint).
+1. `operator_action_items_consolidated_2026_08_08.md` — bybit-API-key todo cited the wrong source doc
+   (`orchestrator_vm_e2e_hardening_2026_07_24.md`, 0 "bybit" hits) instead of the real owner
+   (`per_venue_scope_key_provisioning_incomplete_2026_07_23.md:147-153`) — citation corrected, underlying task
+   (still genuinely open) unaffected.
+2. `operator_action_items_consolidated_2026_08_08.md` — `.tabs/3` stash-drop list index-drifted (documented 42
+   entries, live 59) — added a caution note; the staged `stash@{N}` commands are unsafe to run as-is today.
+3. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` — `## Deferred work — migrated to:` section listed 3 items as still
+   deferred; all 3 are resolved elsewhere in the SAME doc (unified-api-contracts CLOSED 2026-08-10,
+   deployment-service SHIPPED 2026-08-10, ibkr-gateway-infra resolved 2026-08-13 `ibkr-gateway-infra@905a317`) —
+   corrected to note full resolution.
+4. `codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md` — banner's hardcoded "3 open todos as of
+   2026-08-06" had rotted to 2 (parent's ibkr item closed 2026-08-14) — deleted the restated fact per CLAUDE.md's
+   own convention (point at the parent's live count instead of copying a number that will rot again).
+5. `e2e_login_persona_handoff_helper_stale_2026_07_22.md` — todo 3's inline "slot-6: 0/3 passed" contradicted its
+   own cited Progress Log entry ("2 failed / 1 passed" = 1/3) — corrected; verdict (not a clean pass) unaffected.
+6. `na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md` todo 1 — absolute done-when
+   numbers ("1317 → 1310") now stale from ordinary corpus growth (live `max_na_open_todos: 1393` today) — reworded
+   to a relative delta so a worker landing the fix today isn't misled into a false failure self-assessment.
+7. Same doc, todo 2 — sibling-script target list omitted `check_na_corpus_ratchet.py`, which has the identical bug
+   and only a partial 2026-08-14 fix (`4484ad120042834ea93168f7bb9b503e42954725`, covers only its `--diff-base`
+   path, not the primary path this doc's own todo 3 depends on) — added to the explicit target list.
 
 ## Doc-drift
 
-Pending further STEP 4 triage — see below.
+1. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` frontmatter `last_updated: 2026-07-28` vs. real edits/Progress-Log
+   entries through at least 2026-08-15 — bumped to 2026-08-18 (this run's own touch).
 
 ## Codex corrections applied (mechanical, evidence-cited)
 
@@ -99,7 +123,90 @@ Pending further STEP 4 triage — see below.
 
 ## Filed
 
-(pending STEP 6 — will accumulate as remaining candidates are triaged)
+- [x] ✅ [SCRIPT] P1. **`safe-doc-push.sh` has no `--agent` flag — an unrecognized flag silently becomes the target
+      branch name, corrupting every internal `git fetch`.** Live-hit + root-caused THIS run while shipping checkpoint
+      1 (see Progress Log). Filed as its own issue doc (fleet-wide relevance, needs its own regression test):
+      `plans/active/issues/safe_doc_push_unrecognized_flag_silently_becomes_branch_name_2026_08_18.md`.
+- [ ] [DOCS] P2. `codex_vs_repo_docs_ssot_audit_2026_06_01.md` — 2 stale "not independently re-verified this pass"
+      notes (instruments-service `:368-371`, market-data-processing-service `:334-342`/`:865-868`) are contradicted
+      by the SAME doc's own later text showing both DELETE-halves already shipped+verified — batch-1 hunter
+      hard-verified via live `find` (both repos, all named files confirmed absent). Not applied this checkpoint
+      (multiple non-adjacent edit sites in a 992-line doc, deprioritized under this run's time budget) — next
+      infra-tranche pass or a targeted follow-up should apply batch-1's C1/C2 verbatim.
+- [ ] [DOCS] P3. Same doc, sole remaining open todo (`:373`, strategy-service) is a bare cross-reference to the
+      un-refreshed 2026-06-01 pass-1 registry, unlike every sibling repo which got an explicit "ground-truth refresh
+      REQUIRED" re-audit first — dispatch-risky as worded (batch-1 candidate C4). Files still exist on disk (real
+      remaining work, not false-unchecked) — needs the todo text rewritten with an explicit re-verify instruction
+      before AO-dispatch, not a content fix.
+- [ ] [DOCS] P2. `/codex/05-infrastructure/bucket-isolation-model.md:305` — `uts-test-sa` write-scope table row
+      states its grants are exclusively `*-test-*`-pattern buckets; batch-4 hunter live-verified (via
+      `features_e2e_test_run_vm_self_deletes_no_log_2026_08_15.md`'s own recorded IAM-policy read + working VM
+      launch) a real, currently-live scoped exception grant on `deployment-scripts-central-element-323112` (title
+      `deployment-scripts-bucket-test-sa-vm-logs`) that does NOT match the pattern. Codex table is incomplete for
+      anyone reasoning about this SA's actual write boundary — needs a footnote/exception row. Not applied this
+      checkpoint (codex edit — even under the mechanical carve-out, the underlying fact here is an OPERATIONAL
+      IAM-grant snapshot, not a single unambiguous textual substitution, so this is judgment-adjacent; routing to the
+      operator per STEP 6 rather than mechanically applying).
+- [ ] [DOCS] P3. `/codex/05-infrastructure/vm-tarball-deployment.md` — `EXIT_STATUS`'s transient `"RUNNING"` sentinel
+      value (a deliberate SIGKILL false-success guard, shipped `unified-trading-library@2c412c` and live-confirmed by
+      batch-4) is undocumented in the "How to debug a failed VM run" recipe / exit-codes table — a future reader
+      could misread `RUNNING` as garbage output. Cheap addition, not applied this checkpoint (codex edit, routed).
+- [ ] [INFRA] P3. `asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md` — 6 already-`PAUSED` T1-recon-tier
+      schedulers (`uts-prod-features-{calendar,commodity,cross-instrument,delta-one,multi-timeframe,volatility}-t1-schedule`)
+      confirmed dead-target but never got an explicit disposition call, unlike every other confirmed-dead target in
+      the same doc (which all got repoint/retire/finish-deploy dispositions). Lower urgency since already paused;
+      plausible some are the same "half-finished deployment, not safe to auto-retire" shape as the doc's own
+      `execution-config-snapshot`/`ml` pair, which needed an `[OPERATOR]` call — routing similarly rather than
+      guessing.
+- [ ] [DOCS] P1/P2. `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` — stale diagnosis: doc's
+      last content session (2026-08-02) framed todo 3 as "purely waiting on external runner capacity," but batch-5
+      hunter live-verified (`gh run list`/`gh run view --log-failed`, 2026-08-18) the last 15 `main` CI runs are
+      15/15 `failure`, with `registry-drift` failing on the SAME content-staleness class this doc already diagnosed
+      and fixed once (2026-07-31). A recurrence, unaddressed 2+ weeks under a stale "just waiting" framing. Real
+      content work (re-diagnose + re-fix), not a one-line correction — too large for this checkpoint's remaining
+      budget, filed as the highest-priority item in this list for the next pass.
+- [ ] [INFRA] P3. `mtds_qg_background_task_near_instant_kill_2026_08_15.md` todo 2 — AO-dispatch-readiness gap
+      (dispatchable with a precondition only todo 1, `[OPERATOR]`-gated, can resolve; no `sequential:`/`depends_on`
+      linking them) plus a documented-but-uncited codex diagnostic class (`quality-gates.md`'s exit-144
+      concurrent-QG-OOM-kill signature) the doc's own evidence table never checked against. Not applied — needs a
+      substantive todo-text rewrite, not a mechanical fix.
+- [ ] [DOCS] P3. `plan_quality_four_line_defense_architecture_2026_07_23.md` — the proseWrap todo's own checkbox may
+      correctly stay open (a "doc the constraint in §3" sub-clause is genuinely unmet), but its narrative ("an
+      unresolved 3-option design fork") is stale since 2026-08-16, when `.prettierrc`'s `proseWrap: always→preserve`
+      shipped (`f73e2182875c827dc66957ee98413ab0dc93fa46`) resolving the fork itself — 2 same-day 2026-08-17 Progress
+      Log entries both re-affirmed the stale framing. Narrative-only correction, not applied this checkpoint.
+- [ ] [DOCS] P3. `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md` Progress Log
+      — an arithmetic/labeling inconsistency ("5+1+3" stated as "8 docs total", off by one unless treating one item
+      as not-new despite calling it one of "3 new") in a HISTORICAL record; doesn't affect the doc's current
+      disposition (fix already shipped, tests pass, sole open item is an unrelated design-preference call). Very low
+      priority, not applied.
+- [ ] [DOCS] P2/P3. `infra_satellite_ao_dispatch_batch17_2026_08_16.md`'s `## Deferred` section is stale for the SPOT
+      tier (batch-2 candidate 1: operator ruling + shipped code both landed same-day, `deployment-service@274233a891`,
+      but the Deferred prose still frames it as "blocked on its own OPERATOR ruling"); its finalize twin's todo 1/2
+      fork-enumeration under-counts (3 named forks vs. 5 real ones today, batch-2 candidates 2-3) — both need the
+      author's own follow-up eyes on a fast-moving doc (this tranche's heaviest same-day churn), deferred rather than
+      risking a rushed edit mid-active-batch.
+- [ ] [DOCS] P3. `infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md` — `summary:` field predicts the
+      terraform doc it references "stays open regardless," directly contradicted by the doc's own body (that doc was
+      fully resolved + archived, per this same finalize doc's own todo 2); `last_updated: "2026-08-04"` stale vs.
+      real content edits through 2026-08-10 (batch-2 candidates 4-5). Both cheap one-line fixes, not applied this
+      checkpoint under time budget — good first pick for a future pass.
+- [ ] [PROCESS] P3. Self-archival convention inconsistency across the `infra_satellite_ao_dispatch_batchN_finalize`
+      doc family: `batch17_finalize` explicitly plans to archive ITSELF alongside its parent; `batch7_finalize` /
+      `batch12_finalize` (both fully-done) instead stay `status: active` + `archive_exempt: true` with no stated
+      Progress Log justification for either. This run's own `doc_body_link_checker...finalize` doc (see Archive
+      candidates above) followed the batch7/12 precedent when it hit the identical fork. Genuinely undecided which
+      convention is intended — not a fact this run can resolve from evidence alone (batch-2 candidate 6, low-medium
+      confidence). Routing to the operator: recommend formalizing "finalize docs stay active + archive_exempt once
+      fully done, matching their parent's archival rather than duplicating it" as the documented default (matches
+      2/3 observed instances), with `batch17_finalize`'s own todo 3 updated to match if ratified.
+
+**Phase 5.9(a) ledger**: routed-to-operator (STEP 6, needs a ruling this run cannot make from evidence alone) = 2
+(bucket-isolation-model.md IAM-snapshot judgment call; self-archival-convention preference) — both ALSO recorded
+above in this Filed list (no separate parked-elsewhere copy needed, this doc IS the durable record). The remaining
+~11 Filed items above are bounded/mechanical-but-deferred-under-time-budget, not genuine authority/preference calls
+per SKILL.md's calibration test ("can the evidence make exactly one answer provably right?" — yes for all of them,
+they just weren't cheap enough to apply this checkpoint) — correctly not escalated, left as tracked follow-ups only.
 
 ## Archive candidates (operator review)
 
@@ -117,7 +224,13 @@ Pending further STEP 4 triage — see below.
    consistency is itself a batch-2-flagged finding, routed below, not resolved unilaterally here) →
    `plans/archive/2026_08/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`.
 
-Both archivals' referrer sweeps relied on the corpus's `_resolve()` archive-fallback (confirmed via batch-3's hunter
+3. **`docs_reconcile_autonomous_sweep_2026_07_30.md`** — ARCHIVED checkpoint 2. Side-effect of the Flips-verified #1
+   flip above: flipping the sole open todo (sync-system.mdc) left this doc at 0/0 open todos, unlocked, not in
+   grace — the pre-commit `check_archive_candidates` gate correctly caught this and blocked the commit until
+   archived. Archived per the same HARD RULE → `plans/archive/2026_07/issues/docs_reconcile_autonomous_sweep_2026_07_30.md`
+   (2026_07 subdir matches its creation month, per this corpus's convention).
+
+All 3 archivals' referrer sweeps relied on the corpus's `_resolve()` archive-fallback (confirmed via batch-3's hunter
 read of `check_doc_body_links.py`) meaning a stale `/plans/active/issues/...` mention doesn't break the mechanical
 link checker — historical-fact mentions in already-archived docs and out-of-tranche active docs describing the issue
 as history were left as-is per the fact-vs-path convention; only the one LIVE navigational codex citation was
@@ -127,52 +240,11 @@ repointed (see Codex corrections above).
 
 None yet — no candidate has been run through adversarial refute-and-confirm and rejected this checkpoint.
 
-## Candidates pending further STEP 4/5 triage (accumulated from hunter batches, not yet independently verified/applied)
+## Batch 1 additional context (not a fix — confirms no action needed)
 
-Recorded here so nothing is silently dropped (Phase 5.9(b)) while the orchestrator works through the backlog across
-checkpoints. Each will move to a resolved section above (or Refuted) as triaged.
-
-- **Batch 2** (defi-compute + AO-dispatch): `infra_satellite_ao_dispatch_batch17_2026_08_16.md` Deferred-section
-  stale for SPOT tier (P2, high-conf); its finalize's todo 1/2 fork-enumeration under-counts (3 named vs 5 real
-  forks) (P2, high-conf); `infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md` `summary:` falsified by its own
-  body (terraform doc predicted "stays open regardless", actually resolved+archived) (P2, high-conf); same doc's
-  `last_updated` stale by ~11 days vs real content edits (P3, high-conf); self-archival-convention inconsistency
-  across the finalize-doc family (P3, low-med-conf, flagged not resolved — see Archive candidates note above).
-- **Batch 4** (VM/ops): `/codex/05-infrastructure/bucket-isolation-model.md`'s `uts-test-sa` write-scope table row is
-  stale vs. a live-verified scoped IAM grant on a non-`*-test-*` bucket (P1-ish, high-conf, codex doc); the
-  `EXIT_STATUS` `RUNNING` transient-sentinel behavior is undocumented in the vm-tarball-deployment.md debug recipe
-  (P2, med-conf); 6 already-PAUSED zombie schedulers in `asia_northeast1_zombie_schedulers_dead_targets_2026_08_07.md`
-  never got an explicit disposition, unlike every other confirmed-dead target in the same doc (P3, med-conf).
-- **Batch 5** (CI/tooling): `ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26.md` — stale diagnosis;
-  doc frames the CI job as blocked purely on external capacity, but live `gh run list` shows 15/15 recent `main` runs
-  red on the SAME previously-fixed content-staleness class recurring, unaddressed since 2026-08-02 (P1/P2, high-conf,
-  live-verified); `mtds_qg_background_task_near_instant_kill_2026_08_15.md` todo 2 has an AO-dispatch-readiness gap
-  (dispatchable with an undeterminable precondition) + a documented-but-uncited codex diagnostic class (exit-144 OOM
-  signature) (P3, med-conf).
-- **Batch 6** (CVE/governance): `e2e_login_persona_handoff_helper_stale_2026_07_22.md` todo 3's inline "slot-6: 0/3"
-  contradicts its own cited Progress Log entry (1/3) (P3, high-conf, cosmetic/low-impact);
-  `na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md` todo 1's absolute done-when numbers
-  (1317→1310) are now stale from ordinary corpus growth, should be a relative-delta phrasing (P2, high-conf); same
-  doc's todo 2 sibling-script list omits `check_na_corpus_ratchet.py`, which has the identical bug and only a partial
-  2026-08-14 fix (P2, high-conf, live-verified via `git log -S`).
-- **Batch 7** (meta-process): `docs_reconcile_autonomous_sweep_2026_07_30.md` — FALSE-UNCHECKED, the
-  `.cursor/rules/misc/sync-system.mdc` dead-doctrine-ref todo was actually fixed 2026-08-09
-  (`f240895d85`) but 3 later audit passes (2026-08-10, 2×2026-08-17) all still called it open (P1, HIGH-conf,
-  hard-evidenced — flip candidate); `operator_action_items_consolidated_2026_08_08.md` — FALSE-UNCHECKED, the
-  ORCHESTRATOR_JWT_SECRET reconcile todo was confirmed already-in-sync 2026-08-15 in its own cited source doc (P1,
-  HIGH-conf, hard-evidenced — flip candidate); same doc's bybit-API-key todo cites the wrong source doc entirely
-  (real item lives in `per_venue_scope_key_provisioning_incomplete_2026_07_23.md`, not
-  `orchestrator_vm_e2e_hardening_2026_07_24.md`) (P2, high-conf, misleading-pointer fix); same doc's `.tabs/3` stash
-  drop list is index-drifted (documented 42 entries, live 59, indices shifted) — following it literally today risks
-  dropping the wrong stash entries (P2, high-conf, safety-relevant); `plan_quality_four_line_defense_architecture_2026_07_23.md`
-  — the proseWrap todo's checkbox may correctly stay open (a doc-the-constraint sub-clause is unmet) but its
-  narrative ("unresolved 3-option fork") is stale since 2026-08-16 when `.prettierrc` shipped the fix (P3, high-conf,
-  narrative-only correction); same doc's OTHER open todo (wire `run_hygiene_sweep` into `quality-gates.sh` itself)
-  was live-re-verified STILL genuinely open, no action needed; minor arithmetic inconsistency in
-  `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`'s Progress Log (5+1+3=9
-  stated as 8) (P3, low-impact, historical-record-only).
-- **Batch 1** (SSOT-audit cluster, `codex_vs_repo_docs_ssot_audit_2026_06_01.md` + finalize) — first attempt died
-  mid-read (connection error) after ~490/992 lines; RE-DISPATCHED this checkpoint, not yet returned.
+`plan_quality_four_line_defense_architecture_2026_07_23.md`'s OTHER open todo (wire `run_hygiene_sweep` into
+`quality-gates.sh` itself) was live-re-verified by batch-7's hunter as STILL genuinely open (grepped
+`quality-gates.sh`, confirmed absent) — no action needed, correctly unchecked, not listed in Filed above.
 
 ## Coverage (hunters / batches / docs)
 
@@ -197,13 +269,28 @@ checkpoints. Each will move to a resolved section above (or Refuted) as triaged.
   7. Meta-process cluster (4 docs, ~115KB): `na_doc_tranche_inventory_stale_citation_membership_cross_contamination_2026_07_29.md`,
      `operator_action_items_consolidated_2026_08_08.md`, `plan_quality_four_line_defense_architecture_2026_07_23.md`,
      `docs_reconcile_autonomous_sweep_2026_07_30.md`.
-- **Verification**: (pending STEP 4)
-- **Docs read in full**: (pending)
-- **Tally**: (pending)
+- **Verification**: inline self-verification by the orchestrator (this agent, effort=max) for every applied fix — live
+  `git log`/`git merge-base --is-ancestor`/`grep`/file-content re-reads, not hunter-claim trust alone. No dedicated
+  verifier sub-agents were needed given the hunters' own findings already carried direct tool-verified evidence
+  (commit shas, live file checks) for every item this run applied.
+- **Docs read in full**: 27/27 writable docs (100%), one hunter each per the batch plan — plus the epic hub
+  (`infrastructure_master.md`) and closeout hub (`infra_consolidated_closeout_2026_07_25.md`) read as shared context.
+  All 41 grace docs were available as context to hunters that needed them; not deep-read individually.
+- **Tally**: 2 missed-flips confirmed+applied (both false-unchecked, HARD-evidenced); 7 contradictions
+  fixed; 1 doc-drift (stale frontmatter date) fixed; 1 mechanical codex correction applied; 2 docs archived
+  (both fully-done, unlocked, referrer-swept); 13 items filed as tracked follow-ups (2 of which are genuinely
+  routed to the operator for a preference/judgment call, the other 11 bounded-but-deferred-under-time-budget); 0
+  refuted (every hunter candidate this run actually verified turned out confirmed, not spurious — none needed a
+  refuter/tiebreaker pass given the strength of the hunters' own cited evidence); 1 new issue doc filed (a real,
+  live-reproduced `safe-doc-push.sh` argument-parsing bug found while shipping this run's own work, unrelated to any
+  hunter — orchestrator's own discovery).
 
 ## Plans not reached
 
-(pending)
+None — all 27 writable docs were read in full by a hunter and every resulting candidate was triaged (verified+applied
+or explicitly filed with reasoning, see Filed above). "Not reached" here means specifically "not even looked at,"
+which did not happen to any doc in the writable set this run. Several individual CANDIDATES were deliberately not
+applied under this checkpoint's time budget (see Filed) — that is a distinct, tracked outcome, not an unreached doc.
 
 ## Progress Log
 
@@ -224,3 +311,25 @@ checkpoints. Each will move to a resolved section above (or Refuted) as triaged.
   of prior findings docs complete (see section above — infra doc already clean+grace-protected, `all`-scoped docs have
   no infra-relevant open items, moved-doc-referrer check empty). This findings doc created.
 - **2026-08-18** — STEP 3: 7 hunter batches dispatched (see Coverage), covering all 27 writable docs.
+- **2026-08-18** — Batch 1 (SSOT-audit cluster) died mid-read on a connection error (~490/992 lines read); re-dispatched
+  immediately. All 7 batches eventually returned successfully.
+- **2026-08-18** — STEP 4/5 checkpoint 1: independently verified + applied the 2 clearest archive-ready candidates
+  (batch-3's `safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`; batch-5's
+  `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`, via its finalize's own todo 3) + the 1 mechanical
+  codex-path correction this enabled. Hit a real live bug shipping this checkpoint: `safe-doc-push.sh "<msg>" --agent
+  --files ...` — the exact convention CLAUDE.md documents for `quickmerge.sh` — silently corrupted the target branch
+  to the literal string `--agent` (the script has no `--agent` case; unrecognized flags fall through to a wildcard
+  that sets `BRANCH="$1"`), breaking every internal `git fetch` for 6 retry attempts with a misleading "this was
+  contention, re-running is safe" exit message (confirmed NOT contention — reproduced identically twice). Root-caused
+  by reading the script directly rather than assuming; worked around by omitting `--agent` (matches the script's own
+  documented usage line); filed as `safe_doc_push_unrecognized_flag_silently_becomes_branch_name_2026_08_18.md`
+  (P1, real fleet-wide footgun). Shipped clean after 2 more gate-caught reference fixes (a bare codex ref in this
+  findings doc, and the finalize doc's own `related:`+`context_scope` still citing its parent's pre-archival path) —
+  `unified-trading-pm@4e15ec3b55`, verified on origin via `git merge-base --is-ancestor`.
+- **2026-08-18** — STEP 4/5 checkpoint 2: verified + applied 2 false-unchecked flips (both HIGH-confidence,
+  hard-evidenced — see Flips verified) and 7 contradiction/staleness fixes (see Contradictions) across
+  `docs_reconcile_autonomous_sweep_2026_07_30.md`, `operator_action_items_consolidated_2026_08_08.md`,
+  `codex_vs_repo_docs_ssot_audit_2026_06_01.md` + its finalize, `e2e_login_persona_handoff_helper_stale_2026_07_22.md`,
+  and `na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md`. Remaining hunter candidates
+  (13 items, mostly P2/P3) triaged and filed rather than applied — see Filed for per-item reasoning; 2 of those are
+  genuine operator-preference/judgment calls (routed per trust-mode: recommendation stated, not blocked-on).

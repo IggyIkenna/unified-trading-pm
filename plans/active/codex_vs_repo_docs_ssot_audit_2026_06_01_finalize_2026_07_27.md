@@ -58,10 +58,13 @@ context_scope:
 > **STATUS: `active` (frontmatter is correct — this is NOT a `draft`/not-ingested doc), gate held open.** Machine-gated
 > via `depends_on` + `gate_on_depends: true` (`_wire_gate_on_depends_prereqs` in
 > `agent-orchestrator/server/regen_backlog_from_plan.py`): this doc IS ingested, but its lone todo's prerequisite stays
-> unmet until every todo in the gated parent plan, `codex_vs_repo_docs_ssot_audit_2026_06_01.md` (3 open `- [ ]` todos
-> as of 2026-08-06), is done — or on explicit operator direction to start reconciling early. — fixed 2026-08-06
-> (/plan-reconcile ao): banner previously said `draft`/"NOT dispatched," contradicting the correct frontmatter
-> `status: active`; corrected to describe the gate accurately.
+> unmet until every todo in the gated parent plan, `codex_vs_repo_docs_ssot_audit_2026_06_01.md`, is done — or on
+> explicit operator direction to start reconciling early. — fixed 2026-08-06 (/plan-reconcile ao): banner previously
+> said `draft`/"NOT dispatched," contradicting the correct frontmatter `status: active`; corrected to describe the gate
+> accurately. **Open-todo count deliberately not restated here as of 2026-08-18** (plan_reconciler, infra tranche,
+> agt-830118) — the "3 open as of 2026-08-06" figure had already rotted to 2 by today (parent's ibkr-gateway-infra
+> item closed 2026-08-14) without this banner being updated; per CLAUDE.md's "delete a derivable restated fact rather
+> than re-correcting it" guidance, see the parent plan directly for its live count instead of trusting a copy here.
 
 ## Todos
 
