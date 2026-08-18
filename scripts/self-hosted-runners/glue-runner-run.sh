@@ -117,7 +117,23 @@ json_get() { python3 -c "import sys, json; print(json.load(sys.stdin)['$1'])"; }
 if [ "${POOL}" = "glue" ]; then
   # ---- JIT-EPHEMERAL ------------------------------------------------------------------------
   # One job per process. Safe to wipe here precisely BECAUSE this runs once per job.
-  rm -rf _work/* _diag/*.log 2>/dev/null || true
+  #
+  # EXCEPT _work/_actions (2026-08-18, live SSM investigation of a glue-runner-crash-loop-watchdog
+  # CRITICAL page): this is the Actions runner's OWN action-download cache (checkout@v4,
+  # setup-python@v5, etc. get extracted here, keyed by a `.completed` marker the runner checks
+  # before re-downloading). A blanket `rm -rf _work/*` nukes it every single job on this
+  # JIT-ephemeral pool, so EVERY job re-downloads every action fresh from codeload.github.com --
+  # confirmed live as the root cause of a fleet-wide CI wall: agent-orchestrator's quality-gates-v2
+  # run 32180100237 (2026-08-18 20:03-20:05Z) hard-canceled after `actions/checkout@v4` hit
+  # `codeload.github.com` 429 (Too Many Requests) twice in a row, and
+  # plans/archive/issues/glue_runner_pool_single_instance_fleet_wide_ci_queue_congestion_2026_08_15.md
+  # logged 4 prior recurrences (2026-08-15, 3x 2026-08-17) of the identical signature across
+  # different repos on this same host. Safe to exclude: _actions is scoped to THIS runner
+  # instance's own repo only (glue-N is one instance per repo, see this file's own pool-split
+  # comment above), so caching action code across job cycles within the same repo carries no
+  # cross-repo trust leak -- only the job WORKSPACE (_work/<owner>/<repo>) needs a fresh wipe.
+  find _work -mindepth 1 -maxdepth 1 ! -name '_actions' -exec rm -rf {} + 2>/dev/null || true
+  rm -f _diag/*.log 2>/dev/null || true
 
   # SELF-HEAL a stale registration holding OUR name, or we cannot start at all.
   #

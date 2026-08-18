@@ -24,7 +24,7 @@ summary: >-
   self-service-blessed `uts-orchestrator-epic-role` either (confirmed live, both calls attempted and denied). This is
   the SAME coverage gap as this sweep's §0c host-dispatched-watchdog sweep (also blocked by the identical IAM gap) — see
   this doc's "What's NOT confirmed" section.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -42,7 +42,7 @@ priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.5
-resolved_by:
+resolved_by: unified-trading-pm (this commit — scripts/self-hosted-runners/glue-runner-run.sh _work/_actions cache-persistence fix)
 locked_by:
 locked_since:
 context_scope:
@@ -57,6 +57,13 @@ depends_on: []
 ---
 
 # Glue-runner pool is a single instance — fleet-wide CI queue congestion observed live
+
+> **🟢 ARCHIVED 2026-08-18** — status=resolved, archived per /codex/11-project-management/issue-doc-lifecycle.md's
+> archive-on-resolve rule. Root cause confirmed: branch (a), the JIT-ephemeral glue-N pool's per-job workspace wipe
+> in scripts/self-hosted-runners/glue-runner-run.sh was also nuking `_work/_actions` (the Actions runner's own
+> action-download cache) every job, forcing every quality-gates-v2 job to re-download `actions/checkout@v4` etc.
+> fresh and tripping `codeload.github.com` 429s under fleet load. Fixed same-commit by excluding `_actions` from
+> the wipe — see this doc's final Progress Log entry for full evidence.
 
 ## What's confirmed
 
@@ -149,6 +156,7 @@ genuinely different, non-self-service identity is a real access gap, not somethi
   cicd escalation agt-3378e5, deployment-service#1036.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged.
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — re-affirms 2026-08-17 verdict. The sole open [OPERATOR] follow-up needs AWS SSM access this class of session identity is confirmed live-denied for (non-self-serviceable per the orchestrator-cloud-identity-self-service SSOT), plus an unresolved either/or remediation-design branch. 3 new cicd-escalation Progress Log entries since the prior marker are evidence accumulation, not new open work.
+- **2026-08-18 ~22:10Z (slot 3, glue-runner-crash-loop-watchdog CRITICAL page follow-up)**: ROOT-CAUSED + FIXED via a session with working `ssm:SendCommand` (the IAM gap named above did not apply to this identity). Live SSM (`i-042a6332509482556`, `ap-northeast-1`) confirmed `github-glue-runner-unified-api-contracts@glue-1.service`'s alert was a self-resolved false alarm (process had already exited cleanly, `Result=success`, and restarted fresh — `ActiveEnterTimestamp` 21:07:44Z, `Listening for Jobs`, 64.6M RSS, 2.3s CPU over 58min — no restart needed or performed), but investigating it surfaced the ACTUAL root cause of this doc's [OPERATOR] follow-up: `scripts/self-hosted-runners/glue-runner-run.sh`'s glue-N (JIT-ephemeral) pool ran `rm -rf _work/*` before every single job — and `_work/_actions` (the Actions runner's own action-download cache, keyed by a `.completed` marker it checks before re-downloading) lives inside `_work`, so it was wiped every cycle. This is branch (a): the cache WAS being wiped, not a capacity shortfall. Confirmed live against agent-orchestrator's canceled quality-gates-v2 run `32180100237` (2026-08-18 20:03-20:05Z): `actions/checkout@v4` hit `codeload.github.com` 429 twice in a row (20:04:54Z, 20:05:21Z) before `##[error]A task was canceled.` at 20:05:47Z — the same signature as this doc's 4 prior cicd-escalation entries. Fixed by excluding `_actions` from the wipe (`find _work -mindepth 1 -maxdepth 1 ! -name '_actions' -exec rm -rf {} +`) — safe because `_actions` is scoped to this runner instance's own repo only (one glue-N instance per repo), so persisting action code across job cycles within the same repo carries no cross-repo trust leak; only the job workspace (`_work/<owner>/<repo>`) still needs a fresh wipe per job. Separately investigated whether the fleet-wide `/home/ubuntu/.cache/uv` tar noise (`Cannot mkdir`/`Cannot open`, seen in an unrelated QG-cascade investigation) was connected: confirmed it is NOT — traced the exact noise to alerting-service's quality-gates-v2 run `32185996475`'s "Cache uv package cache" step, which logged ~2.8M tar warning lines but still reported `conclusion: success`; the `uv` cache restore is silently and consistently miss-restoring (a real but purely cosmetic/perf issue, not investigated further here — out of scope for this doc) and did not cause or contribute to either the hung-runner alert or the codeload-429 cascade. Archived same-commit as this fix per the doc's own last open todo now being closed (single-repo mode-1 same-commit flip+archival is the sanctioned shape per /codex/12-agent-workflow/plan-completion-and-archival-discipline.md). Provenance: glue-runner-crash-loop-watchdog CRITICAL page 2026-08-18 20:01Z.
 
 - **cicd escalation agt-8c192b 2026-08-17 ~14:07Z (slot 4)**: THIRD manifestation of the same single-glue-runner
   congestion — instruments-service `live-defi-rollout` quality-gates-v2 red at commit `a1754003466946c0e5b7b71ad4a5b58`
@@ -196,7 +204,7 @@ genuinely different, non-self-service identity is a real access gap, not somethi
 
 ## Follow-ups (tracked work, not prose)
 
-- [ ] [OPERATOR] P1. From a session/identity WITH `ssm:SendCommand`/`ssm:DescribeInstanceInformation` on the
+- [x] [OPERATOR] P1. From a session/identity WITH `ssm:SendCommand`/`ssm:DescribeInstanceInformation` on the
       glue-runner host (or console access), check whether the self-hosted runner's `_work/_actions` action-download
       cache is being wiped between jobs (ephemeral/containerized runner re-provisioned per job would explain why
       EVERY quality-gates-v2 job re-downloads `actions/checkout@v4` fresh, not just the first job after a cold boot).
@@ -204,4 +212,4 @@ genuinely different, non-self-service identity is a real access gap, not somethi
       additional runner capacity so a single IP isn't accumulating enough codeload requests/hour to trip GitHub's
       rate limit. This is the SAME capacity gap as this doc's original P1 finding, now with a second concrete
       symptom (codeload 429 on `actions/checkout`, 2026-08-17) in addition to the original queue-depth/duration
-      symptom (2026-08-15).
+      symptom (2026-08-15). **CONFIRMED + FIXED 2026-08-18** — branch (a), see Progress Log.
