@@ -303,6 +303,34 @@ archetype          │    spot venue  │        │   environment
       This is the seam an external strategy would have to satisfy. Every instruction inherits one envelope; the action
       subclasses add only what that action needs.
     </p>
+    <div class="callout">
+      <span class="tag">What makes one envelope possible across five asset groups</span>
+      <p>
+        A single instruction contract only works if the <em>thing being traded</em> already has one name everywhere.
+        That is upstream of this section and worth stating, because it is what stops the envelope fragmenting into a
+        per-asset-class dialect: <b>one canonical instrument-ID builder serves every asset group</b>, so a strategy
+        naming an instrument names it the same way whether it is a perpetual, a lending position, a future or an
+        event market.
+      </p>
+      <div class="code"><i># CeFi / DeFi / TradFi — the chain rides inside the venue token for DeFi</i>
+<b>VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</b>
+
+BINANCE-SPOT:SPOT:BTCUSDT
+AAVE_V3-ARBITRUM:LENDING:USDC
+CME:FUTURE:ES-20260320</div>
+      <p>
+        The clearest demonstration is event markets, where the same real-world outcome quoted on a sports exchange and
+        on a prediction market resolves to two IDs <b>differing only in the venue token</b> — so comparing them is a
+        group-by rather than an integration:
+      </p>
+      <div class="code">FOOTBALL:<b>BETFAIR_EX_UK</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME
+FOOTBALL:<b>POLYMARKET</b>:MATCH_ODDS:EPL:2025-26:ARSENAL-CHELSEA::HOME</div>
+      <p>
+        For a strategy author the consequence is concrete: <code>eligible_venues</code> below can list venues from
+        different asset groups against one instrument identity, and the archetype does not need to know which world
+        each venue came from.
+      </p>
+    </div>
     <details class="sec-body" open>
       <summary>The envelope every instruction carries</summary>
       <div class="code"><span class="k">class</span> <b>StrategyInstructionEnvelope</b>:
