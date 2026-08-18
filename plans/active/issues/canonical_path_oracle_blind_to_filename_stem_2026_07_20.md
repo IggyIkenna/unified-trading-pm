@@ -375,7 +375,7 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       filename, which per this same defect class also carries the bare form — see the write-time-guard analysis in
       `plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md` for the analogous historical-
       migration pattern) is tracked as a fresh todo below.
-- [ ] [DATA] P2. Backfill/migrate the ~20,134 pre-fix OKX-FUTURES/DERIBIT `FUTURE` manifest rows (`capture_status=
+- [x] [DATA] P2. Backfill/migrate the ~20,134 pre-fix OKX-FUTURES/DERIBIT `FUTURE` manifest rows (`capture_status=
       captured`, `instrument_id` currently a bare underlying token, `written_at` up to 2026-08-16) left behind by the
       item above — re-derive each row's real per-contract instrument_id from its corresponding GCS object's own
       filename/content (the object itself may ALSO carry the bare-underlying stem, since it shares the same root
@@ -400,7 +400,18 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       unfiltered, not a bounded/columnar read); the watchdog's own kill message is explicit: "Do not re-spawn on
       planning VM. Offload this workload to a spot VM." Not retried a third time per that directive — new todo
       below.
-- [ ] [INFRA] P2. **New finding (2026-08-17, slot-7) — `_apply()`'s manifest write-back cannot run on the shared
+      **APPLIED 2026-08-18 (slot-15, data_engineering) — `market-tick-data-service@171234a73f`.** Rewrote `_apply()`
+      to a bounded/columnar DuckDB write-back (option (b) of the sibling INFRA todo below), validated against a
+      synthetic manifest + a real-shaped snapshot before ever touching production, then ran it for real against
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet`: **17,684 canonical
+      rows re-keyed -> 81,030 replacement rows written; manifest now 30,001,825 rows** (up from 29,938,146).
+      Pre-write backup: `gs://market-data-tick-cefi-prd-central-element-323112/_migration_backup/backfill_bare_underlying_future_manifest_ids_2026_08_17/availability_index_pre_backfill_20260818-021345.parquet`
+      (byte-length verified before the live write). Reused slot-7's complete 20,134-row discovery report (the
+      `_apply()` safety contract re-verifies every targeted row against the live manifest immediately before write,
+      so a slightly-stale report is safe by design). The `phantom_no_object` (2,259), `object_non_canonical` (116),
+      and `content_mismatch` (75) verdict classes were intentionally left untouched (different defect classes,
+      already tracked separately above).
+- [x] [INFRA] P2. **New finding (2026-08-17, slot-7) — `_apply()`'s manifest write-back cannot run on the shared
       planning VM.** `backfill_bare_underlying_future_manifest_ids_2026_08_17.py --apply`/`--apply-from-report --apply`
       reads the ENTIRE canonical `_index/availability_index.parquet` into memory via
       `pd.read_parquet(io.BytesIO(blob.download_as_bytes()))` before filtering/rewriting — measured peak RSS
@@ -415,6 +426,17 @@ Full write-path treatment (the verbatim-write + no-guard + `validate=False` fami
       file on disk rather than `pd.read_parquet` on an in-memory `BytesIO`, per the DuckDB-over-pandas precedent in
       `/codex/05-infrastructure/manifest-consolidator-ssot.md`) so a future in-session `--apply` can succeed under
       the 4GB cap. Repo: market-tick-data-service (+ VM dispatch is cross-cutting infra work, not this repo).
+      **CLOSED via option (b) 2026-08-18 (slot-15, data_engineering) — `market-tick-data-service@171234a73f`.**
+      Rewrote `_apply()` to download the manifest to a real-disk scratch dir (NOT the default `tempfile` location,
+      which is tmpfs/RAM-backed on this host and was double-counting against RSS) and process it via a
+      `memory_limit`-capped DuckDB connection (final: 3GB — 1.5GB hit DuckDB's own internal buffer-manager cap
+      mid-COPY). Also had to eliminate an unpartitioned `row_number() OVER ()` over the full ~30M-row table (forced
+      full materialized ordering, blew the temp-directory spill cap) in favor of plain filters/anti-joins, scoping
+      any window function to only the small matched subset. Peak RSS on the real production run stayed well under
+      the 4GB host cap (measured ~691MB on a 261MB/11.5M-row test snapshot after the DuckDB rewrite, before the
+      tmpfs/window-function fixes; the live 420MB/29.9M-row production run completed cleanly under the bounded
+      wrapper — see the DATA todo above for the write result). Both options from this todo are now moot; closing via
+      (b) only, no VM dispatch needed.
 - [ ] [DATA] P3. **New finding (2026-08-17, slot-22) — no durable cross-session handoff location exists for a
       `--report` JSONL checkpoint file, so every session's discovery progress on THIS backfill has been lost at
       session end (slot-19's report gone before slot-22 started; slot-22's own report will be gone once this
