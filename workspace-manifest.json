@@ -84,13 +84,13 @@
     "market-data-processing-service": "0.30.21",
     "e2e-testing": "0.41.25",
     "agent-orchestrator": "0.100.3",
-    "greeks-service": "0.18.63",
-    "trading-agent-service": "0.13.9",
+    "greeks-service": "0.18.66",
+    "trading-agent-service": "0.13.10",
     "strategy-service": "0.76.1",
     "ml-service": "0.58.44",
     "alerting-service": "0.63.55",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.64"
+    "client-reporting-api": "0.32.65"
   },
   "repositories": {
     "alerting-service": {
