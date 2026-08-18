@@ -31,10 +31,10 @@ tags:
 related:
   [
     plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
-    plans/active/bucket_estate_consolidation_to_sub100_2026_07_13.md,
+    /plans/archive/2026_07/bucket_estate_consolidation_to_sub100_2026_07_13.md,
     plans/active/issues/strategy_store_split_brain_2026_07_13.md,
     plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    plans/active/bucket_fold_closeout_2026_07_17.md,
+    /plans/archive/2026_07/bucket_fold_closeout_2026_07_17.md,
     /codex/05-infrastructure/bucket-isolation-model.md,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     /codex/02-data/pipeline-mode-partition.md,
@@ -71,10 +71,15 @@ context_scope:
 
 # Bucket fold — execution-store 4+pred → 1 & strategy-store flat → tiered
 
-> **🟡 MIGRATION IN FLIGHT (started 2026-07-17).** Provisions `execution-store-{prd,test}-{pid}` + re-tiers
-> `strategy-store` → `strategy-store-{env}-{pid}`; deletes the per-AG execution-store buckets (cefi holds LIVE fills —
-> delete is operator-gated). Cross-plan banner on [[bucket_estate_consolidation_to_sub100_2026_07_13]] W3 +
-> [[bucket_estate_fold_design_2026_07_13]] Folds C/D.
+> **🟢 NEAR-COMPLETE (code-complete + delete executed 2026-07-18).** Provisioning/parity-migrate/atomic-cutover/
+> redeploy/consolidator-retarget/source-delete are all DONE; only the AWS leg + `terraform plan` drift-assert, IAM +
+> lifecycle, and the P3 "Alias sunset" cleanup remain open. **Corrected 2026-08-18 (plan_reconciler cross-cutting)**
+> — was stale "🟡 MIGRATION IN FLIGHT... delete is operator-gated" since authoring (2026-07-17); the doc's own
+> "Delete sources + TF-state reconcile" todo has read `[x]` DONE since 2026-07-18 ("operator pre-authorized
+> autonomous delete; cefi was test data not live fills") — the live-fills caution this banner described was resolved
+> by the operator's own same-day decision that the data was test-only, not live. Cross-plan banner on
+> [[bucket_estate_consolidation_to_sub100_2026_07_13]] W3 (now archived) + [[bucket_estate_fold_design_2026_07_13]]
+> Folds C/D.
 
 **What / why**: Folds C + D of [[bucket_estate_fold_design_2026_07_13]], bundled because they touch the same services
 (execution-service + strategy-service) in one cutover window.

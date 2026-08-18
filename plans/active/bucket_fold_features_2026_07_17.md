@@ -96,7 +96,8 @@ design's counts are 2026-07-13).
 
 ## Todos — DeFi-playbook order
 
-- [~] [DATA] P1. **Provision + yaml scaffold** — **BUCKETS PROVISIONED 2026-07-18** (direct gcloud/aws NOT tofu, per the
+- [x] ✅ [DATA] P1. **DONE — flipped 2026-08-18 (plan_reconciler cross-cutting), evidence below already existed,
+      checkbox never matched.** **Provision + yaml scaffold** — **BUCKETS PROVISIONED 2026-07-18** (direct gcloud/aws NOT tofu, per the
   unsafe-state gotcha): GCP `features-{cefi,defi,tradfi}-{prd,test}-central-element-323112` (6; ASIA-NORTHEAST1, UBLA,
   STANDARD→COLDLINE@60d) — pred/sports folded targets ALREADY EXIST (they ARE flat
   `features-prediction`/`features-sports`; name-collision RESOLVED, no new pred/sports GCP provision); AWS
@@ -105,6 +106,10 @@ design's counts are 2026-07-13).
   together, no orphan-key window (buckets exist so resolution works the instant the key lands). Adopting **shape (b)**:
   ONE folded per-AG dict key `features` + aliases from all 5 retired kinds → `features` (synthesis rec; the ONLY shape
   the alias soft-window is expressible in — resolver does a single asset-group-blind `_KIND_ALIASES.get(kind)`).
+  **The "DEFERRED to T0" yaml scaffold + `_KIND_ALIASES` half landed there as stated**: the very next todo ("Atomic
+  writer/reader cutover", `[x]` DONE) cites `UAC@cb951936 (yaml key)` — verified reachable on
+  `origin/live-defi-rollout` (`git merge-base --is-ancestor`). Both halves of this todo are complete; the non-standard
+  `[~]` marker (invisible to open/done checkbox tallies) is corrected to `[x]` above.
 - [x] ✅ [DATA] P1. **Reconcile the features-onchain-defi twin THEN parity migrate** — **DONE 2026-07-18.** Twin
       reconcile = NO-OP (RESOLVED): only flat `features-onchain-defi` (727) exists; no `-onchain-defi-prd-*` on either
       cloud — the design's flat-712-vs-prd-76 hazard is STALE. **4 real server-side copies (byte-parity ✓):**
