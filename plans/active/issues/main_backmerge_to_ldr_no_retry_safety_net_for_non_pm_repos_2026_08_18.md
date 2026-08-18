@@ -114,3 +114,48 @@ stub's comment — the dispatch is `github.repository`-scoped, confirming non-PM
 (strict-quickmerge provenance over `0d447a8..origin/live-defi-rollout`, and Tier-A `ci_status` = `MAIN_GREEN`) were
 checked clean before auto-merge was armed, per `ldr_to_main_fleet_promote.sh`'s `provenance_check_ok()` /
 `tier_a_merge_gate_ok()`.
+
+## Triage recipe for the next instance of this class
+
+A promote PR reported as `merge_conflict` is NOT necessarily a code conflict. Before resolving anything, spend three
+commands separating "two agents genuinely wrote different code" from "a backmerge was skipped and the target is a stale
+snapshot of the source". They need opposite responses — the first is a merits merge, the second means the AUTOMATION
+failed and resolving the PR alone leaves the cause live to recur next tick.
+
+```bash
+# 1. Shape: how much real content actually differs?
+gh api repos/IggyIkenna/$REPO/compare/main...$HEAD --jq '{ahead:.ahead_by, behind:.behind_by, files:(.files|length)}'
+# files==0            -> drain-noise, close
+# files small + behind>0 -> suspect a skipped backmerge, continue to 2
+
+# 2. Provenance: does the target name the source commit it was squashed FROM?
+git log -1 --format='%b' origin/main | grep Promoted-From-LDR
+git merge-base --is-ancestor <that-sha> origin/live-defi-rollout   # TRUE => target holds zero source-absent work
+
+# 3. Cause: did the backmerge that should have reconciled them actually run?
+gh run list --repo IggyIkenna/$REPO --workflow main-backmerge-to-ldr.yml --limit 5
+```
+
+If step 2 is TRUE, the differing lines are by definition a stale snapshot, and the resolution is decided by which side
+is NEWER — not by reading the diff on its merits. Step 3 is the one that turns a symptom fix into a root-cause fix; it
+is also the step that is easy to skip once the PR is green.
+
+## Lessons / measurement traps hit while diagnosing this
+
+- **A workflow's own comment is not evidence of what it does.** `main-backmerge-to-ldr.yml`'s stub asserts a 30-minute
+  fleet-wide safety-net; reading `branch-health.yml` showed an hourly, `github.repository`-scoped dispatch. The claim
+  was wrong on both cadence and scope. Read the dispatching workflow, not the dispatched one's description of it.
+- **`gh pr checks` / the check-runs REST API 403 on the workspace PAT** (`Resource not accessible by personal access
+  token`). `gh run list --branch <head-branch>` returns the same information and does work — use it instead of
+  concluding the checks are missing.
+- **`promote_provenance_range.py --base ...` is ambiguous** (`--base-branch` vs `--base-ref`) and errors out; pass
+  `--base-branch main --cwd .` explicitly.
+- **`ci_status_store.py get-doc` fails open, not loud, on the system python** — it prints
+  `Firestore unavailable (ModuleNotFoundError: No module named 'google')` and emits `{}`. An empty doc is NOT
+  `ci_status: clean`; run it from the repo `.venv` or the Tier-A gate check is silently meaningless.
+- **`safe-doc-push` printing `✅ Pushed <sha>` is not proof the file landed** — in this run it also quarantined a dirty
+  tree into a named stash on the way (the "extreme stash pile" path, see
+  `/plans/active/issues/safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md`, which
+  documents that path dropping RENAMED-file content). Verify with
+  `git cat-file -e origin/live-defi-rollout:<path>` plus a content spot-check, per the workspace's own
+  `ahead=0 + clean tree != landed` rule.
