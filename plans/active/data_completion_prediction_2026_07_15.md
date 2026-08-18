@@ -378,13 +378,17 @@ range never overlaps a still-in-flight per-market-only day).
       `resolve_bucket_name`. Item's own text already said "Not in another AG slice's scope" and redirected to
       `defi_manifest_canonicalisation_2026_06_01.md` §H — that redirect target is now ARCHIVED (superseded_by
       `data_completion_to_100_all_ag_2026_06_21`). The live copy of this finding,
-      `data_completion_defi_2026_07_15.md:363-368`, is already `[x]` CLOSED: **"na-eligibility-audit 2026-08-01: CLOSED
-      — stale premise, root cause found + fixed elsewhere"** — `deployment-api`'s DeFi sub-bucket-fold machinery
-      (`_BUCKET_CATEGORY_OVERRIDES`/`_MTDS_DEFI_SUB_DIMENSIONS` in `services/data_status/defi.py`) is now empty, every
-      DeFi sub-bucket ever created has been consolidated into the single shared bucket, shipped
-      `deployment-api@f919c87`. Independently reconfirmed active/dispatched at
-      `defi_satellite_ao_dispatch_batch3_2026_07_26.md:427` (`assigned_vm: planning`). Closing this stale copy; nothing
-      left untracked.
+      `data_completion_defi_2026_07_15.md:380-390` (line drifted from the original :363-368 citation — content
+      reordered since written; re-grepped and confirmed 2026-08-18), is already `[x]` CLOSED: **"na-eligibility-audit
+      2026-08-01: CLOSED — stale premise, root cause found + fixed elsewhere"** — `deployment-api`'s DeFi
+      sub-bucket-fold machinery (`_BUCKET_CATEGORY_OVERRIDES`/`_MTDS_DEFI_SUB_DIMENSIONS` in
+      `services/data_status/defi.py`) is now empty, every DeFi sub-bucket ever created has been consolidated into the
+      single shared bucket, shipped `deployment-api@f919c87`. Independently reconfirmed ALREADY RESOLVED (corrected
+      2026-08-18 — the original "active/dispatched" framing was backwards) at the archived
+      `defi_satellite_ao_dispatch_batch3_2026_07_26.md:433-434`, whose own Phase-3 conflict-check states this exact
+      item is "already RESOLVED at `defi_dedicated_bucket_shared_migration_2026_07_13.md`:257-268 ([x] ✅
+      deployment-api)" — i.e. evidence the item needed no separate dispatch, not evidence of active work. Closing
+      this stale copy; nothing left untracked.
 
 - [ ] [CODE] P2. **GAP-4 (all consumers): ASSERT v9 schema columns on manifest read.** `read_availability_index`
       backfills missing v9 cols as NULL on a v8 manifest → consumers silently read NULL

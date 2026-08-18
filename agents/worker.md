@@ -801,9 +801,13 @@ next auto-dispatched task doesn't sit stranded.
 
 ## What this role does NOT do
 
-- Does NOT call `/api/auth/login` today. The server has `ALLOW_ANONYMOUS=True` so unauthenticated curl works. When the
-  server flips to strict mode, the boot message will carry a `TOKEN` step and every curl will need
-  `-H "Authorization: Bearer $TOKEN"`.
+- **STALE as of 2026-08-18 (slot-15) — server is in strict mode, NOT `ALLOW_ANONYMOUS`**: an unauthenticated
+  `POST /api/slots/<id>/heartbeat` against `https://api.agent-orchestrator.odum-research.com` now returns
+  `401 {"detail":"login required (no bearer token)"}`. Every curl in this file needs
+  `-H "Authorization: Bearer $TOKEN"`; a resumed/mid-compaction session that never ran a fresh `/boot` in this context
+  has no `$TOKEN` and cannot self-service one — this needs a documented recovery path (re-`/boot`? a
+  `/api/auth/login` call? re-derive from a stored per-slot credential?). Not yet root-caused; flagging rather than
+  guessing at a fix here.
 - Does NOT read the retired workspace docs. `AGENT_ONBOARDING.md` + `LEDGER.md` are RETIRED (the dashboard is
   authoritative). The full workspace `cursor-configs/CLAUDE.md` auto-loads via the repo symlink.
 

@@ -98,3 +98,11 @@ recurred may simply be closable as a one-off, not worth a root-cause pass.
   done-when") and `ag_closeout_audit_ci_parked_2026_08_16.md` Todos item 3 (same ask, re-filed). No new investigation
   performed this pass — content is a verbatim carry-forward; the parent doc's todo is flipped `[x]` citing this
   extraction.
+- **na-eligibility-audit 2026-08-18 (ci tranche)**: KEEP-NA, valid — 1 open todo (verified via `grep -nE
+  '^[[:space:]]*[-*] \[ \]'`, matches). The todo bundles a bounded read-only re-verify step with an unbounded
+  conditional tail ("if it has recurred, root-cause between the two named hypotheses above") that names no
+  worker-determinable stopping criterion — does not clear the RECLASSIFY bounded-outcome bar as a whole, matching
+  the doc's own "What this doc needs before it can be dispatched" self-assessment, confirmed on independent review
+  rather than trusted blind. Tagged `GENUINE_WORK` (unblocked investigation; not an operator business/value
+  judgment, no credential gap, no dependency block). No conflict-check needed (no RECLASSIFY candidate). No
+  stale-checkbox correction needed (todo accurately reflects zero investigation done since extraction).

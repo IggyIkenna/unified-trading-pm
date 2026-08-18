@@ -165,3 +165,4 @@ context_scope:
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added
   deployment-ui/src/components/AxisValueCensus.tsx, the shipped panel the residual CQG-axis addition needs to land in
   per the 2026-08-17 na-eligibility-audit finding directly above.
+- **na-eligibility-audit 2026-08-18** [body-hash:201325ea5c74f377]: KEEP-NA, valid -- depends_on+gate_on_depends:true on prediction_phase_ab_residuals_2026_07_24 re-confirmed live still open (status:active, 4 open todos). Doc stays NA on the citation alone, per the never-re-litigate rule.

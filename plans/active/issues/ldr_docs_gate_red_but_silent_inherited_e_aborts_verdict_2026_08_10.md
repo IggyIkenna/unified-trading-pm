@@ -109,13 +109,20 @@ when the violation list is empty.
       them and NO corpus edit is required. Lesson worth keeping: a probe that reports "file absent" is only evidence
       once you have confirmed the probe looked in the right place, the same failure shape the reconciliation codex
       already warns about for vocabulary probes.
-- [ ] [BACKEND] P2. **A `workflow_dispatch`/`schedule` workflow runs the file from the DEFAULT branch (main), not the
+- [x] ✅ [BACKEND] P2. **A `workflow_dispatch`/`schedule` workflow runs the file from the DEFAULT branch (main), not the
       checked-out ref** — so this doc's own `set +e` fix was inert for every scheduled run the moment it landed on LDR,
       and stays inert until promotion carries it to main. That is a circular dependency: the fix for a silent-alert bug
       is gated behind the promotion it exists to help unblock. Any future fix to a scheduled workflow's own YAML has the
       same property. Document it in `/codex/08-workflows/ci-cd-flow.md` next to the existing "a scheduled/push workflow
       fires ONLY from the DEFAULT branch" line, and note the `gh workflow run <wf> --ref <branch>` escape hatch used to
       verify this one. Repo: unified-trading-pm.
+      **ALREADY SHIPPED 2026-08-15 (slot-19) — `unified-trading-pm@83a3227b7d`** (checkbox was never flipped; found and
+      corrected 2026-08-18, slot-15). The "Circular-dependency gap" subsection landed immediately after the existing
+      "Default-branch gotcha" line in `/codex/08-workflows/ci-cd-flow.md` (lines 227-236 as of this flip), names this
+      issue doc, explains the circular-dependency property generally (not staging-specific), and documents the
+      `gh workflow run <workflow>.yml --ref live-defi-rollout` escape hatch used to verify the `ldr-docs-gate.yml`
+      `set +e` fix ahead of promotion. Verified present on `origin/live-defi-rollout` via `git blame`/`git log` before
+      flipping — no duplicate edit made.
 - [ ] [BACKEND] P2. **Sweep the fleet for the same `-e` trap.** Grep every workflow for a `run:` block that sets
       `-uo pipefail` (without `e`) and then captures a checker's output into a variable whose failure is meant to be
       handled by a following `RC=$?`: `rg -n 'set -uo pipefail' -A 4 .github/workflows/ | rg -B1 'RC=\$\?'`. Each hit is

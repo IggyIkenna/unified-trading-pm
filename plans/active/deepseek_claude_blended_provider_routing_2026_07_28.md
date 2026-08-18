@@ -834,3 +834,11 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
   unbuilt. This closes GLM's credential/registration story, not its full production-readiness story — mirrors
   exactly where Grok/Gemini/Codex landed this same session (real bridges/proxies live and smoke-tested, deeper
   usage-verification and tool-use-fidelity work still ahead).
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — closing the loop on the 2026-08-17 marker's
+  `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` flag on the 3 GLM production-readiness engineering items (usage-capture proxy,
+  UI headroom-gate, heuristic cache-rate reconciliation). All 3 require making real calls against the GLM endpoint,
+  and the operator's explicit, repeated, fleet-wide ruling (2026-08-16, applied identically across
+  DeepSeek/GLM/Grok/Gemini/Codex in this doc and its siblings) is "fully shipped ready to use but on pause mode so
+  agents dont use them yet" — a standing business/operational instruction still in force (never reversed), not a
+  design ambiguity a worker could resolve alone. Does not clear the RECLASSIFY bar. Doc stays `assigned_vm: NA`, 11
+  open items unaffected.

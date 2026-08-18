@@ -408,7 +408,7 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       todos in `mdps_features_ml_strategy_orphan_sweep_tooling_gap_2026_07_27.md` (now archived, resolved) landed real
       per-stage findings (MDPS candle, features, ml/strategy sweeps built + validated on real prod data); the combined
       report is
-      [`issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
+      [`mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md`](/plans/archive/issues/mdps_features_ml_strategy_orphan_lineage_report_2026_08_03.md).
       Headline: every pipeline stage now has real-prod-data-validated orphan tooling; every real orphan population found
       is either already backfilled or has a small, bounded, already-tracked follow-up — no new corpus-wide unknown.
 - [x] ✅ [DATA] P0. 11c. **MIGRATE existing candle/feature data to zero orphans** (MVP or not) — WRITES the GCS manifest.

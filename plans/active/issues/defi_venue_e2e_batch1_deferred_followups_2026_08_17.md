@@ -98,3 +98,7 @@ NA` is correct; not auto-dispatchable as-is.
   matching.
 - **context-scout 2026-08-17**: populated context_scope (3 entries) — the two named source files (the LST address
   registry; the archetype/slot catalogue) plus the current active parent tracking plan for venue e2e wiring work.
+- **na-eligibility-audit 2026-08-18**: KEEP-NA, valid — reconfirmed, no change since 2026-08-17's verdict. Both
+  open items remain cleanly `[OPERATOR]`-tagged with rationale in this doc's own "Recommended decision" section
+  (external on-chain address sourcing under the registry's provenance rule; AAVE-PLASMA archetype-catalogue
+  strategic decision). `grep -cE '^[[:space:]]*[-*] \[ \]'` = 2, matching Phase-0's open_todos=2.

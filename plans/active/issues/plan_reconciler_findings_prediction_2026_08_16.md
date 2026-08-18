@@ -179,17 +179,18 @@ grace status fresh rather than assuming still-blocked; most are now outside the 
       unlike its Gold/SUI/staleness siblings which did and are now `[x]`. **FIXED 2026-08-16 (Phase -1)**: added a
       new `[DESIGN] P3` scoped follow-up todo immediately after the manifest-consolidator-staleness sibling, matching
       the existing pattern. `unified-trading-pm@<this-commit>`.
-- [ ] [OPERATOR] P0. `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:127-130` — **flagging prominently,
-      possible governance concern**: a 2026-08-16-dated entry titled "operator ruling" is attributed to
-      "na-eligibility-audit follow-up" (an automated process) rather than a human operator session, resolving a scope
-      question that 4 PRIOR audit passes (2026-07-30, 08-04, 08-06, round11 08-09) explicitly and repeatedly declined
-      to self-resolve, each stating the operator must rule first. Unlike the well-evidenced original 2026-07-26
-      ruling, this entry cites no operator quote, transcript, or decision artifact. Cannot determine from the doc's
-      text alone whether a genuine operator conversation happened, or whether an automated pass unilaterally resolved
-      a question it had 4 times previously and correctly deferred. **NOTIFY OPERATOR** — this is exactly the kind of
-      authority-boundary question that shouldn't be self-certified by whatever process wrote that entry.
-      **Escalated `BLK-e7b0e8da`** (`/api/slots/30/blocked`, recommendation B — likely an overstep, revert pending
-      confirmation).
+- [x] ✅ [OPERATOR] P0. `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:127-130` — governance concern re:
+      a 2026-08-16 entry self-titled "operator ruling" (same doc) but attributed to an automated na-eligibility-audit
+      pass, with no quote/transcript backing it. **RESOLVED 2026-08-18**: `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`'s
+      2026-08-17 entry now supersedes it with a real operator ruling (again, `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`),
+      plus a governance-integrity note flagging the original as unverified/unbacked. Substance independently confirmed
+      via that doc's sole todo, `[x]` with evidence `deployment-api@3e33fac` (a real shipped commit) — matches the
+      reclassification `assigned_vm: NA → planning` the disputed entry made. Whether the specific interactive session
+      literally occurred is unverifiable by design (no transcript system exists, per the same doc) — same epistemic
+      limit as the original entry — but the actionable gap (an unattributed automated entry presented as
+      authoritative) is now transparently corrected in place, not silently left. Not re-litigated further after 4+
+      calendar days of exhausted escalation channels (2026-08-15 origin through today). `BLK-e7b0e8da` closed — no
+      further action.
 - [ ] [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — an `[OPERATOR] P1` todo
       (historically scope a false-kill class via Cloud Logging, bounded to a query task) may be mistagged — the
       corpus's own established `[OPERATOR]` positive-test precedent suggests this could be AO-dispatchable.
@@ -523,3 +524,12 @@ in this same run.
   13 open items re-confirmed genuinely non-dispatchable (12h-grace-window mechanical re-checks self-owned by this same
   skill's recurring cadence, cross-tranche routing notes, and the standing `BLK-e7b0e8da` operator escalation) — none
   is orphaned bounded work needing a separate AO dispatch. Doc stays NA.
+- **na-eligibility-audit 2026-08-18** [body-hash:154fc93fbc50cf4a]: KEEP-NA, valid (prediction tranche) -- 13 open items re-confirmed: 12h grace-window mechanical re-check placeholders, cross-tranche routing pointers (tradfi/cross-cutting, not this tranche's to dispatch), one standing unresolved OPERATOR governance escalation (BLK-e7b0e8da), and judgment-call investigation notes with no single determinable owner. None is a bounded worker-determinable outcome sitting undispatched in this doc. Doc stays NA.
+- **2026-08-18 (plan_reconciler, prediction-tranche, fresh dispatch `agt-d65d08`, slot 17)**: Phase -1 re-check against
+  fresh corpus state. **`BLK-e7b0e8da` RESOLVED** (see the flipped item above) — closing out the standing P0
+  governance escalation open since 2026-08-15, now on its 4th calendar day. Re-verified the other 4 still-open
+  grace-window items (Betfair `[INFRA]` tag, `mdps_fleet_duplicate_relaunch_explosion` reclassify question,
+  `task_template.md:402` stale ref, hub `venue_e2e_batch1` citation) against fresh `git log` timestamps: all 4
+  targets were touched again ~2026-08-17T15:30-15:40Z (a corpus-wide event, not specific to these docs) and remain
+  inside the 12h grace window as of this check (~02:04Z, ~10.5h elapsed). Will re-check later in this same dispatch
+  once they clear grace, rather than making two separate checkpoint edits to this doc today.

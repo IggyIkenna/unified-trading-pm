@@ -33,8 +33,8 @@ created: "2026-08-18"
 last_updated: "2026-08-18"
 author: claude-code (na_eligibility_auditor, slot 28, DISPATCH_ID=agt-7e78e2, tranche=cross-cutting) -- found during
   /pre-compact's Step-1 loss audit
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.15
@@ -125,3 +125,12 @@ exists to prevent).
 - **2026-08-18 (na_eligibility_auditor, dispatch agt-7e78e2, slot 28, via /pre-compact Step 1)**: filed. Full
   repro + the exact workaround used (not promoted) captured above so a future fix session does not have to
   re-derive either.
+- **na-eligibility-audit 2026-08-18 (dispatch agt-4d9716, slot 19)**: RECLASSIFY (whole-doc) -- both open todos are
+  bounded/deterministic with a cited existing pattern (sibling scripts in the same directory already resolve paths
+  dynamically; explicit done-when criteria). Conflict-checked against the one other corpus hit for
+  `na_marker_helper` (`cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` items 3-4): that item audits this
+  same file for a DIFFERENT, unrelated bug (hash/marker-parsing-logic reimplementation), not this hardcoded-path
+  bug -- no claim overlap. Flipped `assigned_vm: NA -> planning`, `execution_scope: local-only -> orchestrator-agent`.
+  Issue doc -- structurally exempt from the finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only
+  globs `plans/active/*.md`, not `plans/active/issues/`), so no companion finalize doc authored. Cross-cutting
+  tranche audit.

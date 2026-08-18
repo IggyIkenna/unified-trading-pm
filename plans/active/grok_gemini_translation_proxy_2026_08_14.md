@@ -516,6 +516,13 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       live-infra change this cancellation doesn't call for (this is a documentation/scope change, not an infra
       teardown). There is simply no plan to ever un-pause them or raise their spend cap going forward.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:e4999c17192967a1]: KEEP-NA, valid — sibling onboarding plan to the DeepSeek/Claude routing doc; heavy operator-gated credential/pause decisions (accounts deliberately PAUSED per explicit 2026-08-16 operator instruction). 3 of 5 items plausibly bounded on their own engineering shape but flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE given this doc's overall live-credential character, not split now.
+- **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — closing the loop on the 2026-08-17 marker's
+  `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` flag on the "3 of 5" items (tool_use/tool_result translation smoke test,
+  usage-capture verification, Grok cache-rate-gap feed). Same governing reason as the sibling DeepSeek/GLM plan's
+  identical close-out today: the operator's explicit, repeated 2026-08-16 fleet-wide ruling ("fully shipped ready to
+  use but on pause mode so agents dont use them yet") covers Grok/Gemini identically and remains a live standing
+  gate, not a misclassification. Does not clear the RECLASSIFY bar. Doc stays `assigned_vm: NA`, 5 open items
+  unaffected.
 
 ## Context scout
 

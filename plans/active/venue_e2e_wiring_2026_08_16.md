@@ -155,7 +155,8 @@ ruling, and it is what stops the sweep manufacturing green.
       [sports_venue_e2e_batch1_2026_08_16](/plans/active/sports_venue_e2e_batch1_2026_08_16.md) (31 rows),
       [tradfi_venue_e2e_batch1_2026_08_16](/plans/archive/2026_08/tradfi_venue_e2e_batch1_2026_08_16.md) (16 rows,
       archived 2026-08-17 — done),
-      [prediction_venue_e2e_batch1_2026_08_16](/plans/active/prediction_venue_e2e_batch1_2026_08_16.md) (4 rows).
+      [prediction_venue_e2e_batch1_2026_08_16](/plans/archive/2026_08/prediction_venue_e2e_batch1_2026_08_16.md)
+      (4 rows, archived 2026-08-18 — done).
       The four Method todos below are now digest pointers, not dispatchable work (task_template.md §3 finding H) —
       the real work moved into the 5 batches. This plan's own `depends_on` + `gate_on_depends: true` now gates its
       Definition of done section on all 5 finishing.
