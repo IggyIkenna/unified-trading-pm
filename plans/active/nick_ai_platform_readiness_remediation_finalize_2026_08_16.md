@@ -61,18 +61,24 @@ context_scope:
 
 ## Todos (execute in order — `sequential: true`)
 
-- [ ] [DOC] P0. **BLOCKED-ON:system_readiness_master (W3 "Land the instrument_type axis on `VenueCapabilityRecord`")**
-      — **Refresh `/codex/02-data/honest-coverage-model.md`'s certified Layer-1 table** for defi/tradfi/
-      sports/prediction, using the FINAL state after the main plan's W1/W3/W4 work has landed — not the 2026-08-16
-      pre-audit snapshot, which will itself have moved (e.g. W3 changes what step-13 reports; W4-Sports may change
-      the sports Layer-1 completeness if the registry-contradiction fix touches captured-data reachability). Re-run
-      the same live `coverage.json` read the pre-audit used (never re-implement); cite the fresh date + generated_at
-      timestamp. Done-when: every row in the codex table carries a 2026-08-16-or-later date, `safe-doc-push.sh`
-      lands it. **2026-08-17: confirmed genuinely blocked, not just cautioned** — the venue-universe denominator
-      (`unified-api-contracts/scripts/generate_venue_universe_denominator.py`) still computes `(venue, data_type)`
-      2-tuples only; any coverage % refreshed before the instrument_type-axis work lands would need redoing. That
-      work is now tracked as a P0 item in `/plans/epics/system_readiness_master.md` W3, owned by a different live
-      session — do not duplicate it here.
+- [x] [DOC] P0. ✅ Done 2026-08-18 — `unified-trading-pm@<see commit below>`. **Refreshed
+      `/codex/02-data/honest-coverage-model.md`'s certified Layer-1 table** using the `/honest-coverage-dump` skill
+      (never re-implemented — read `gs://central-element-323112-honest-coverage/2026-08-17/coverage.json`'s own
+      `layer_1.by_asset_group` block verbatim, generated_at `2026-08-17T00:49:33Z`). New certified numbers: cefi
+      94.52% (69/73), defi 83.08% (108/130), tradfi 67.74% (21/31), sports 79.03% (49/62), prediction 100.00% (4/4,
+      denominator now COMPLETE — no longer gated). **Self-caught and corrected an error before shipping**: this
+      todo's own text (above) assumed the refresh needed the instrument_type-axis landing as a prerequisite. Checked
+      that assumption directly rather than trusting it — it was WRONG. `expected_universe.py` (the actual builder of
+      Layer-1's EXPECTED tuples) has always sourced `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` directly, never
+      `VenueCapabilityRecord`, so Layer-1 was never blocked on the axis; the coverage.json read also predates the
+      axis commit by ~19h. The axis landing is real but feeds a DIFFERENT script
+      (`generate_venue_universe_denominator.py`, cited in `venue_readiness_and_registry_hardening_2026_08_16.md`),
+      not this codex table. Recorded the correction IN the codex doc itself (visible, not silently rewritten) so a
+      future reader doesn't inherit the same wrong assumption. Also re-ran `/readiness-state-dump` (the plan's other
+      Tuesday-dump skill) — byte-identical to its own original verification run, confirming it likewise doesn't
+      consume the axis registry. Both dumps' full diff evidence + a new stray-tuple-growth follow-up are tracked in
+      `/plans/active/data_pipeline_completion_2026_08_21.md` § "Tuesday dumps" (that plan's own "re-run both dumps"
+      todo and this one are the same piece of work, done once).
 - [x] [REVIEW] P1. ✅ Done 2026-08-17. **Reconciled evidence into the sibling plan** —
       `unified-trading-pm@<pending, see commit below>`. Added a "Shipped evidence" cross-reference section to
       `venue_readiness_and_registry_hardening_2026_08_16.md` immediately after its readiness-contract table, mapped
@@ -131,6 +137,15 @@ finalize todo's own guessed step numbers didn't fully match — step 4 doesn't f
 the PAPER-READY clause instead); (3) added an explicit `BLOCKED-ON:system_readiness_master` marker to the W6 todo
 above. Remaining open in this plan: W6 itself (blocked as stated) and the "check W2 scaffold review" todo (asked
 the operator directly in-session rather than trying to infer it from files). Archival stays gated on both.
+
+**2026-08-18 — W6's blocker cleared.** `system_readiness_master.md` W3's "Land the instrument_type axis" item
+shipped `unified-api-contracts@d19866d339` (2026-08-17): denominator re-measured 353 `(venue, data_type)` pairs →
+660 `(venue, instrument_type, data_type)` triples (12 cells, 3.4%, disclosed unresolved). The stale "353" figure at
+this Progress Log's line 113 above is a historical record of what was true when written — left as-is rather than
+edited, since it accurately describes that day's state. Proceeding to execute W6 now using the two dump skills
+(`/honest-coverage-dump`, `/readiness-state-dump`) that `data_pipeline_completion_2026_08_21.md` shipped for exactly
+this re-measurement — see that plan's "Tuesday dumps" section for the shared "re-run after the axis lands" todo,
+which this session's W6 work also satisfies (one re-run, two plans' evidence).
 - **na-eligibility-audit 2026-08-17** [body-hash:e69f016a4e685458]: KEEP-NA, valid -- Gated finalize companion (depends_on + gate_on_depends: true on the main nick_ai remediation plan) -- criterion (b) applies directly. Of its 3 open todos: todo 1 (W6 codex refresh) carries an explicit 2026-08-17 BLOCKED-ON marker redirecting the actual instrument_type-axis prerequisite work to a DIFFERENT doc, /plans/epics/system_readiness_master.md W3, 'owned by a different live session -- do not duplicate it here' (criterion c, redirect); todo 2 depends on the OPERATOR's own external review status of a Claude.ai artifact (explicitly described as 'operator-paced'); todo 3 (archive both plans) is gated on todos 1-2 completing first, per its own text ('once every todo above is done and unlocked').
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added `/plans/epics/system_readiness_master.md`
   (the epic W6 is now formally `BLOCKED-ON`, per this doc's own 2026-08-17 Progress Log), the sibling

@@ -710,45 +710,94 @@ unit tests); live measure `coverage_v3.json` 2026-06-29 06:00 UTC.
    to one canonical grain before intersection (the bug that had produced artifact 0%s for defi/sports). Post-alignment
    numbers measure REAL holes.
 
-**Certified Layer-1 (instrument-denominator) per AG — re-measured 2026-07-03 08:52 UTC after the UAC↔writer matrix
-reconciliation landed** (`honest_coverage_uac_writer_matrix_reconciliation_2026_06_29`: cefi venue-suffix fold, defi
-lending grain roll-up, `rate_indices` dialect fold, ASTER over-seed carve-out + 17,282-row manifest purge):
+**Certified Layer-1 (instrument-denominator) per AG — re-measured 2026-08-17T00:49:33Z, read directly (never
+recomputed) from `gs://central-element-323112-honest-coverage/2026-08-17/coverage.json`.**
 
-| AG         | Layer-1 completeness                                                                                                                      | present/expected    | real holes | strays                                            | Layer-2 (lower bound, gated)                         |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------- | ------------------------------------------------- | ---------------------------------------------------- |
-| cefi       | 94.52% — refreshed 2026-08-14, read directly (not recomputed) from `gs://central-element-323112-honest-coverage/2026-08-12/coverage.json` | 69/73 (as of 08-12) | 4          | 104 (2026-07-03, not re-measured in this refresh) | 37.90% (2026-07-03, not re-measured in this refresh) |
-| defi       | 94.81% (was 69.44%)                                                                                                                       | 73/77               | 4          | 128                                               | 58.02%                                               |
-| tradfi     | 51.43%                                                                                                                                    | 18/35               | 17         | 52                                                | 95.15%                                               |
-| sports     | 30.77%                                                                                                                                    | 8/26                | 18         | 24                                                | 100.00%                                              |
-| prediction | 66.67%                                                                                                                                    | 4/6                 | 2          | 17                                                | 22.73%                                               |
+> **Correction to this refresh's own first draft (caught before shipping)**: this row set was initially written up as
+> "the axis-corrected baseline" produced by `VenueCapabilityRecord` gaining its instrument_type axis
+> (`unified-api-contracts@d19866d339`, landed 2026-08-17T19:57:45Z). That causal claim was checked and is WRONG —
+> two independent facts rule it out: (1) this `coverage.json` was generated at **00:49:33Z**, ~19 hours **before**
+> the axis commit landed; (2) `instruments-service/scripts/expected_universe.py::build_expected` (the actual builder
+> of Layer-1's EXPECTED tuples) imports `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` directly from
+> `unified_api_contracts.registry.market_data_categories` — the same underlying G1-ENUM data the axis module later
+> inverted, but via a path that has never touched `VenueCapabilityRecord`. **Layer-1 has been
+> `(venue × instrument_type × data_type)`-grain all along**, independent of the axis work. What actually changed
+> between this row set and the prior one below is ~6 weeks of real data/registry drift (2026-07-03/08-12 →
+> 2026-08-17), not a methodology shift. The axis landing is real and matters — it fixed the SEPARATE
+> `generate_venue_universe_denominator.py` script (353 → 660 triples, cited in
+> `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`) — but that script and this table's Layer-1
+> computation were never the same measurement, and conflating them was this refresh's own near-miss. Left visible
+> here rather than silently rewritten, per this doc's own certification standard: an honest correction is not a
+> failure to hide.
 
-(Historical: the 2026-06-29 06:00 UTC certification measured cefi 65.91% / defi 69.44%; defi rose to 94.81% via the
-protocol enumeration work landed 06-29→06-30, cefi to 79.55% via the reconciliation dialect folds — 6 of cefi's 15
-"holes" were captured-under-suffix false holes (OKX-SPOT/-SWAP/-FUTURES rows vs bare-OKX expectation). Pre-alignment
-artifacts remain retired: defi 0%/EXPECTED=3,581, sports 0%, cefi 14.9% were dialect-mismatch artifacts.)
+This table is simply a fresh read, same methodology as every prior row:
 
-**Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent):** cefi (refreshed 2026-08-14 from
-`gs://central-element-323112-honest-coverage/2026-08-12/coverage.json`) `BITGET-FUTURES/future/book_snapshot_5`,
-`BITGET-FUTURES/future/derivative_ticker`, `OKX-FUTURES/perpetual/book_snapshot_5`,
-`OKX-FUTURES/perpetual/derivative_ticker`; defi EIGENLAYER-ETHEREUM `spot_asset` ×4; tradfi CBOE `index` ohlcv + ICE
-`combo`/`options_chain` ohlcv_1m + YAHOO_FINANCE grains; sports BETFAIR/ODDS_API/PINNACLE bookmaker snapshot types;
-prediction KALSHI/POLYMARKET `market_lifecycle`.
+| AG         | Layer-1 completeness | present/expected | real holes | strays | Layer-2 (lower bound, gated unless noted)      |
+| ---------- | -------------------- | ---------------- | ---------- | ------ | ---------------------------------------------- |
+| cefi       | 94.52%               | 69/73            | 4          | 82     | 45.51%                                         |
+| defi       | 83.08%               | 108/130          | 22         | 700    | 40.67%                                         |
+| tradfi     | 67.74%               | 21/31            | 10         | 70     | 86.96%                                         |
+| sports     | 79.03%               | 49/62            | 13         | 755    | 99.29%                                         |
+| prediction | 100.00%              | 4/4              | 0          | 4      | 92.71% — **UNGATED**, denominator now COMPLETE |
 
-> **Known cefi denominator caveat (2026-07-03, matrix size since grown to 73 tuples per the 2026-08-14 read above):**
-> the (then-44-tuple) cefi expected matrix omits whole venues the (venue,itype) gate + capability table are blind to
-> (Tier-3 BITFINEX-SPOT/BITGET-\*/KRAKEN-SPOT, non-Tardis HYPERLIQUID/ASTER/EXTENDED, capability-absent
-> BYBIT-SPOT/COINBASE-FUTURES/BINANCE-DELIVERY/KALSHI-PERP/…) — whether this omission still holds against the grown
-> 73-tuple matrix has not been re-verified. SSOT: `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md`.
+**Prediction's Layer-1 denominator is now fully COMPLETE** (`denominator_status: COMPLETE`,
+`instrument_gates_download: False`) — the only AG where this is true. Its 92.71% Layer-2 figure is a real measured
+value, not a lower bound; every other AG's Layer-2 figure remains gated (`instrument_gates_download: True`) and
+should still be read as "at least this much."
 
-**CERTIFICATION CAVEAT — completeness % is an UPPER bound where UAC under-specifies.** The high stray counts surfaced a
-**UAC↔writer contract gap** (a newly-discovered cross-repo finding, NOT a measurement bug): the writer captures real
-`(venue, instrument_type, data_type)` combos that UAC's per-itype validity matrix does not yet sanction — e.g. tradfi
-CME `futures_chain` `mbp_10`/`ohlcv_24h`/`tbbo`, prediction KALSHI `book_snapshot_5`, defi AAVE `a_token` sub-grains —
-so for those nodes EXPECTED is too small and completeness is over-reported. Plus one writer↔UAC carve-out contradiction
-(ASTER `book_snapshot_5`/`liquidations` captured despite UAC declaring ASTER cannot produce them). These are tracked in
-`plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`; resolving them (owner-verified UAC
-matrix expansion + writer canonicalisation) will refine the certified numbers. The MODEL and MEASUREMENT are certified;
-the per-node % will tighten as that reconciliation lands.
+(Historical — same grain and methodology throughout, kept for trend context: 2026-07-03 08:52 UTC measured defi
+94.81% (73/77, 4 holes, 128 strays, Layer-2 58.02%), tradfi 51.43% (18/35, 17 holes, 52 strays, Layer-2 95.15%),
+sports 30.77% (8/26, 18 holes, 24 strays, Layer-2 100.00%), prediction 66.67% (4/6, 2 holes, 17 strays, Layer-2
+22.73%); cefi was last read 2026-08-14 from the 2026-08-12 payload at 94.52% (69/73) — identical to the fresh
+2026-08-17 read, i.e. genuinely stable, not a coincidence of matching grain. The 2026-06-29 06:00 UTC certification
+measured cefi 65.91% / defi 69.44% before the reconciliation dialect folds. Pre-alignment artifacts remain retired:
+defi 0%/EXPECTED=3,581, sports 0%, cefi 14.9% were dialect-mismatch artifacts.)
+
+**Real Layer-1 holes (honest backfill backlog, correctly surfaced — NOT silent), 2026-08-17, full grain:**
+
+- cefi (4, unchanged from the 08-12 read): `BITGET-FUTURES/future/book_snapshot_5`,
+  `BITGET-FUTURES/future/derivative_ticker`, `OKX-FUTURES/perpetual/book_snapshot_5`,
+  `OKX-FUTURES/perpetual/derivative_ticker`.
+- defi (22): `ETHERFI/yield_bearing/{lst_rates,oracle_prices,staking_yields}`,
+  `JITORESTAKING/staking/staking_yields`, `KARAK/spot_asset/{oracle_prices,staking_yields}`,
+  `KELPDAO/spot_asset/{lst_rates,oracle_prices,staking_yields}`,
+  `LIDO/yield_bearing/{lst_rates,oracle_prices,staking_yields}`,
+  `PUFFER/spot_asset/{lst_rates,oracle_prices,staking_yields}`,
+  `RENZO/spot_asset/{lst_rates,oracle_prices,staking_yields}`, `SANCTUM/staking/lst_rates`,
+  `SOLBLAZE/staking/lst_rates`, `SYMBIOTIC/spot_asset/{oracle_prices,staking_yields}`.
+- tradfi (10): `CBOE/futures_chain/ohlcv_24h`,
+  `KRX/{bond,commodity,currency,etf,future,index,spot_pair}/ohlcv_24h`, `NASDAQ/equity/ohlcv_1h`,
+  `NYSE/equity/ohlcv_1h`.
+- sports (13): `BETFAIR_EX_EU/odds/trades`, `BETOPENLY/odds/{odds,trades}`, `BETSSON/odds/trades`,
+  `NOVIG/odds/{odds,trades}`, `ONEXBET/odds/{odds,trades}`, `PINNACLE/odds/trades`, `PROPHETX/odds/{odds,trades}`,
+  `UNIBET/odds/trades`, `UNIBET_EU/odds/trades`.
+- prediction: none — denominator COMPLETE.
+
+Superseded: the 2026-07-03 holes list (EIGENLAYER-ETHEREUM `spot_asset` ×4 for defi; CBOE `index` ohlcv + ICE
+`combo`/`options_chain` ohlcv_1m + YAHOO_FINANCE for tradfi; BETFAIR/ODDS_API/PINNACLE bookmaker snapshot types for
+sports; KALSHI/POLYMARKET `market_lifecycle` for prediction) is ~6 weeks stale — some of those specific holes have
+since been backfilled, others may persist under a different venue/instrument_type spelling. Not re-reconciled
+venue-for-venue against the list above (that would be a fresh investigation, not a re-read); the list above is the
+current, actionable backfill backlog.
+
+> **cefi denominator caveat, re-checked 2026-08-17 against the 73-tuple matrix (was open since 2026-07-03):** the
+> per-venue breakdown confirms the omission still holds — `BINANCE-DELIVERY`, `KALSHI-PERP`/`KALSHI_PERP`, `OKX`
+> (bare), `OKX-OPTIONS`, `PACIFICA-SOLANA`, `POLYMARKET-PERP` all show `expected_tuples: 0` in the fresh read, meaning
+> they are still invisible to the expected-matrix rather than genuinely having zero obligations. SSOT:
+> `plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md` — still open, now confirmed current rather than
+> stale.
+
+**CERTIFICATION CAVEAT — completeness % is an UPPER bound where UAC under-specifies.** The stray counts moved
+substantially since 2026-07-03 (defi 128→700, sports 24→755, tradfi 52→70; cefi fell 104→82, prediction fell 17→4)
+— same grain both times (see the correction above), so this is NOT a grain artifact. This is the same
+**UAC↔writer contract gap** already tracked in
+`plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`; the magnitude of the shift over
+6 weeks has not been root-caused in this refresh (candidates: real new captures at venues UAC hasn't sanctioned yet,
+a UAC registry change that narrowed what counts as expected, or a writer change — not distinguished here, flagged as
+open rather than guessed at). Resolving the underlying reconciliation (owner-verified UAC matrix expansion + writer
+canonicalisation) will refine the certified numbers further; the stray-count _trend_ itself is worth a dedicated
+follow-up given its size. The MODEL and MEASUREMENT are certified; the per-node % will keep tightening as that
+reconciliation and the stray backlog land.
 
 **This codex doc is the standing authoritative SSOT for the Honest-Coverage-v2 model.**
 
