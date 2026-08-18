@@ -40,6 +40,7 @@ estimate_calibrated_ai_days: 0.2
 assigned_role: data_engineering
 effort: max
 drift_direction: advance-code
+sequential: true
 resolved_by:
 locked_by:
 locked_since:

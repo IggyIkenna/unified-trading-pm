@@ -206,9 +206,9 @@ resolves these; re-check after the next operator ruling or credential grant):
 
 **Time/dependency-gated** (re-check next round — the actual trigger condition may have cleared by then):
 
-- `uac_kamino_venue_reachability_cascade_regression_2026_08_15.md` — the doc's sole remaining item ("close this doc
-  once morpho and kamino leave the baseline") is gated on `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`'s
-  own dispatcher-wiring work landing first (not in this run's covering set) — re-check its status next round.
+- `uac_kamino_venue_reachability_cascade_regression_2026_08_15.md` — **RESOLVED + ARCHIVED 2026-08-18** (`/plan-reconcile
+  uac_master`): `kamino`/`morpho` left the reachability baseline `unified-api-contracts@9b982906` (2026-08-17); moved to
+  `/plans/archive/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md`. No further re-check needed.
 
 **Too-large-or-risky-for-a-batch-todo** (a live, multi-phase, actively-gated doc in its own right — needs its own
 dedicated pass, not a single extracted todo):

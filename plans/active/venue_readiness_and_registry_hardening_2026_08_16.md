@@ -57,7 +57,7 @@ context_scope:
     /codex/06-coding-standards/config-reloader-pattern.md,
     /codex/04-architecture/tier-and-import-architecture.md,
     /codex/04-architecture/shard-level-failure-isolation.md,
-    /plans/active/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md,
+    /plans/archive/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md,
   ]
 ---
 
@@ -832,6 +832,9 @@ actionable P0.
   a different batch: `issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md` independently records
   the identical `unreachable_defi_venues: ["morpho", "kamino"]` baseline content
   (`unified-api-contracts@88a71f8e`) and the same `test_execution_service_venue_coverage_cascade_invariant.py` test
+- **`/plan-reconcile uac_master` 2026-08-18**: the doc referenced above resolved and archived
+  (`kamino`/`morpho` left the baseline, `unified-api-contracts@9b982906`) — repointed the `context_scope` entry to
+  `/plans/archive/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md`.
   this plan's own Progress Log traces above — that doc's sole open todo (close it once morpho/kamino leave the
   baseline) is this plan's own wiring work reaching completion. context_scope added on both docs; this doc's other 5
   entries and remaining content not otherwise re-scouted this pass (out of the assigned batch's scope).

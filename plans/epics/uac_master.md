@@ -34,7 +34,6 @@ related_plans:
   - ../active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md
   - ../active/issues/instruments_schema_not_locked_versioned_2026_08_18.md
   - ../active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md
-  - ../active/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md
   - ../active/issues/yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13.md
 last_updated: 2026-08-18
 locked_by:
@@ -42,6 +41,11 @@ locked_since:
 ---
 
 # UAC Master — unified-api-contracts schema, registry, and contract-governance correctness
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/59fb54f7-d1ca-40c1-b7f2-cefd26aee3bf (generated 2026-08-18,
+`/plan-reconcile uac_master`)
 
 ## Why this epic exists
 
@@ -85,10 +89,11 @@ schema).
 blindness to a UAC content edit (the gate is the subject, not the schema); asset-group data-content bugs that happen
 to reference a UAC-defined type/registry value in passing.
 
-## Current state (as of the 2026-08-18 carve-out)
+## Current state (as of the 2026-08-18 carve-out; `/plan-reconcile uac_master` same day)
 
-Only 5 docs, all `status: open` issue docs (no active build-out plan yet) — this is a real gap, not a sign the domain
-is healthy:
+Carved out with 5 open issue docs (no active build-out plan yet) — this is a real gap, not a sign the domain is
+healthy. **4 remain open** after the first `/plan-reconcile uac_master` pass (same day, 2026-08-18) found the
+5th genuinely done and archived it:
 
 - **`instruments_schema_not_locked_versioned_2026_08_18`** (P1, 0.8 AI-days) — the largest and most structural: the
   51/85-column instruments schema has no version field anywhere in the chain (schema itself, `SchemaContract`
@@ -101,17 +106,19 @@ is healthy:
 - **`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31`** (P2) — `order-state-machine.md` documents a 9-state
   `OrderState` that does not exist in UAC; the shipped contract is a 7-member `OrderStatus` missing states the docs
   claim are authoritative.
-- **`uac_kamino_venue_reachability_cascade_regression_2026_08_15`** (P2) — the UAC-owned venue-coverage cascade
-  invariant fails on the kamino DeFi venue (no reachable execution-service connector), blocking quickmerge fleet-wide
-  — a registry-completeness gap, not an invariant-logic bug.
+- **`uac_kamino_venue_reachability_cascade_regression_2026_08_15`** (P2) — **RESOLVED + ARCHIVED 2026-08-18** (see
+  `/plans/archive/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md`): `kamino`/`morpho` left the
+  venue-coverage-cascade reachability baseline `unified-api-contracts@9b982906` (2026-08-17) — `DeFiAdapter` already
+  dispatches both, confirmed by that commit's own `quality-gates.sh` run and re-verified live by `/plan-reconcile`.
 - **`yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13`** (P1, 0.2 AI-days) — mostly resolved: a half-finished
   change added a SOURCE_PRIORITY entry without the matching `AVAILABILITY_AT_SEMANTICS` entry, failing 6 UAC tests
   tree-wide and blocking every UAC ship; fixed as `tick_timestamp` 2026-08-13, only a P3 latency re-check remains open.
 
 ## Assigned active plans
 
-_5 active issues declare `parent_epic: uac_master` in their frontmatter (carved from `infrastructure_master` +
-`client_isolation_and_governance_master` 2026-08-18). Workers pick up in priority order (P0 first)._
+_4 active issues declare `parent_epic: uac_master` in their frontmatter (carved from `infrastructure_master` +
+`client_isolation_and_governance_master` 2026-08-18; a 5th, `uac_kamino_venue_reachability_cascade_regression_2026_08_15`,
+resolved + archived the same day — see Current state above). Workers pick up in priority order (P0 first)._
 
 ## P0 — must complete before next foundation gate
 
@@ -134,10 +141,6 @@ _5 active issues declare `parent_epic: uac_master` in their frontmatter (carved 
 ### [`order_state_machine_ssot_vs_uac_orderstatus_2026_07_31`](../active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md)
 **status**: open
 **title**: order-state-machine.md is authoritative_for a 9-state OrderState that does not exist in UAC — shipped contract is 7-member OrderStatus
-
-### [`uac_kamino_venue_reachability_cascade_regression_2026_08_15`](../active/issues/uac_kamino_venue_reachability_cascade_regression_2026_08_15.md)
-**status**: open
-**title**: unified-api-contracts: kamino DeFi venue fails execution-service reachability cascade invariant
 
 ## P3 — backlog; revisit quarterly
 
@@ -164,3 +167,28 @@ _(no plans currently assigned at this priority)_
 | --- | --- |
 | `/codex/04-architecture/client-funds-isolation.md` | Cross-client UAC schema enforcement (3-layer) |
 | `/codex/02-data/four-surface-reconciliation-procedure.md` | The `canonical_path_violations()` oracle's scope + known blind spots |
+
+## Progress Log
+
+- **`/plan-reconcile uac_master` 2026-08-18** (first reconcile pass since the epic's carve-out, same day):
+  Phase -1 found no prior `plan_reconciler_findings_*.md` doc mentions `uac_master` (expected — brand-new epic) but
+  found the 5-doc population is referenced by 6 pre-existing tranche findings docs (cefi/defi/tradfi/all,
+  2026-08-12..08-18); reconciled every one — 2 already-fixed-by-a-concurrent-run items confirmed current
+  (`canonical_path_oracle`'s mid-line checkbox + §5.1 correction), 1 genuinely open finding still live (`uac_kamino`'s
+  `related:` bare-slug + missing `last_updated`, from `plan_reconciler_findings_defi_2026_08_18.md`) and fixed in the
+  same pass as its archival below. Phase 0/1: read all 5 children in full; no contradictions found; 2 AO-dispatch-
+  readiness gaps found (unstated intra-doc sequencing on `instruments_schema_not_locked_versioned_2026_08_18` and
+  `yahoo_ohlcv_1h_availability_semantic_undecided_2026_08_13` — both had real prose-only "depends on the todo above"
+  ordering with no `sequential: true`; fixed). Phase 2 done-but-unchecked: `uac_kamino_venue_reachability_cascade_regression_2026_08_15`'s
+  sole open todo was HARD-evidenced done (`unified-api-contracts@9b982906`, reachable on origin/live-defi-rollout) —
+  flipped and archived per the 6-step ritual (see Current state + Assigned active plans above). The other 4 children's
+  open todos were verified genuinely still open by direct measurement (live-read the actual UAC/execution-service code:
+  `INSTRUMENTS_SCHEMA_VERSION` doesn't exist yet, `OrderStatus` is still the 7-member enum, `schema_version` field
+  doesn't exist on `SchemaContract`), not just trusted from doc text. Phase 0 entry-state hygiene sweep (corpus-wide,
+  read-only): 1 pre-existing hard failure (`assigned_vm:NA` corpus-size ratchet) and 1 soft warning (delete/VM-launch
+  tagging) — both corpus-wide, unrelated to this epic's 4-5 docs specifically, out of this epic-scoped run's remit
+  (`/na-eligibility-audit`'s domain). Referrers fixed for the archived doc: this epic file,
+  `defi_satellite_ao_dispatch_batch14_2026_08_16.md`, `venue_readiness_and_registry_hardening_2026_08_16.md`,
+  `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`. No codex SSOT edit needed this pass (no
+  contradiction adjudicated a codex doc as the stale side). **NOT SHIPPED this pass** — working tree only, per
+  operator instruction (shared checkout under multi-session contention); the lead session commits/pushes.
