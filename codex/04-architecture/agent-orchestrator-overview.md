@@ -261,8 +261,9 @@ Task-state + dispatch consequences: single-VM SSOT § "Task lifecycle".
 
 `GET /api/fleet/git-health?scope=fleet|local` aggregates each slot's stored `SlotGitStatus` into a hosts→slots→repos
 surface (`reporter_stale` / `ff_cron_stale` / `drift_violation` / dirty / behind badges). Dashboard route `/fleet-git`
-(`dashboard/src/FleetGit.tsx`). The PRIMARY operator view is mirrored into **deployment-ui** (`/fleet` tab via
-deployment-api); this orchestrator page stays for worker-ops. Division-of-surfaces SSOT:
+(`dashboard/src/FleetGit.tsx`). **deployment-ui's `/fleet` tab was DELETED 2026-07-27** (Fleet-tab consolidation,
+`/plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md`) — this orchestrator page (`/fleet-git`) is now
+the ONLY operator view for fleet git-health. Division-of-surfaces SSOT:
 `/codex/03-observability/monitoring-control-plane.md`.
 
 ## Host-offline failover (dormant on single-VM)

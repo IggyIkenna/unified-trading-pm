@@ -27,7 +27,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
-created: 2026-05-14
+created: 2026-05-13
 authoritative_for: [deployment-method decision matrix (tarball vs image per env) + the 4-tier QG enforcement stack]
 referenced_by: [/codex/05-infrastructure/act-preflight-coverage.md]
 owner: workspace-platform
@@ -54,8 +54,10 @@ operator-pickable in non-dev.
 
 **Enforcement points**:
 
-1. `deployment-api/.../deploy_endpoint.py` — env-aware deploy validation rejects tarball method for staging/prod with
-   explicit error (P0 wire-in pending — see plan).
+1. `deployment-api/deployment_api/services/deploy_missing.py::assert_tarball_not_blocked` — env-aware deploy validation
+   rejects tarball method for staging/prod with explicit error. **Shipped** (Phase 1 of
+   `deployment_and_qg_strategy_implementation_2026_05_13.md`; tested in
+   `deployment-api/tests/unit/test_tarball_env_block.py`).
 2. `deployment-ui/.../DeploymentForm.tsx` — env-aware UI guard greys out tarball toggle for staging/prod (per Ikenna's
    "2x2 matrix toggle" design).
 3. Audit log on every tarball deploy attempt (success or rejection) for post-incident review.
@@ -201,9 +203,9 @@ them while laggards catch up.
 | 1-3 | 2026-05-13 → 2026-05-15 | All repos to QG-green on LDR; parallel coverage-raise; identify 99%-repos; wire `act + docker` pre-flight                              | per-repo slot (root deps serial, leaf parallel) |
 | 4   | 2026-05-16              | Cloud-build async image build per commit-to-main on 99%-repos; tarball stays as dev escape valve                                       | deployment-service slot                         |
 | 5-6 | 2026-05-17 → 2026-05-18 | Rest of repos hit QG-green; CI/CD on main fully passing; image builds caught up for all services; UI env-locking shipped               | governance + deployment-ui slots                |
-| 7-8 | 2026-05-19 → 2026-05-20 | Staging deploys go image-only; tarball blocked in staging via UI guard; dress rehearsal uses image path end-to-end                     | governance + deployment-api slots               |
-| 9   | 2026-05-22              | Prod deploys go image-only; pre-cutover sign-off includes "all production VMs running pinned image SHA" check in `credential-probe.sh` | slot 1 main + operator                          |
-| 10  | 2026-05-23              | Cutover on image-only prod path; tarball available in dev for hotfix iteration only                                                    | operator                                        |
+| 7-9 | 2026-05-19 → 2026-05-21 | Staging deploys go image-only; tarball blocked in staging via UI guard; dress rehearsal uses image path end-to-end                     | governance + deployment-api slots               |
+| 10  | 2026-05-22              | Prod deploys go image-only; pre-cutover sign-off includes "all production VMs running pinned image SHA" check in `credential-probe.sh` | slot 1 main + operator                          |
+| 11  | 2026-05-23              | Cutover on image-only prod path; tarball available in dev for hotfix iteration only                                                    | operator                                        |
 
 ## Parallelization model — root vs leaf
 

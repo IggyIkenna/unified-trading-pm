@@ -320,7 +320,9 @@ truth.
 
 - `deployment-service/scripts/vm/` now holds **209 entries** (launchers + libs + templates + watchdog/monitor helpers),
   up from the ~30-launcher baseline the migration started against.
-- **Only 6 scripts outside `deployment-service/scripts/vm/` still create a VM** — down from the 20 deferred rows above.
+- **Only 6 scripts outside `deployment-service/scripts/vm/` still create a VM** — 5 down from the 20 deferred rows above,
+  plus 1 (`launch_instruments_reference_v3.sh`) that was never one of the 20: its canonical form already shipped in Tab
+  11 (row 5 above); this is just the un-deleted v3 source.
   Measured with `rg -l 'gcloud compute instances create|aws ec2 run-instances' e2e-testing/scripts`:
 
   | Still-violating script                                          | Deferred reason (unchanged)                                     |

@@ -99,13 +99,29 @@ full existing `test_human_fleet_endpoints.py` (21 passed) and `test_dispatch_rev
       is a live-infra write action explicitly left out of this investigation's scope; verify current state via
       `GET /api/state` slot 2 before deciding it's still needed (it may self-resolve once the stuck task eventually
       completes/times out).
-- [ ] [BACKEND] P3. Second, independent gap noted but not chased: `ensure_review_agents`/the AgentKeeper reap path
-      appears to treat any review slot with `tmux_alive: True` as "something is running, leave it alone" rather than
-      checking whether that something is actually review's own boot loop vs. a stray non-review session — this fix
-      closes the ENTRY point (nothing should get bound there again), but does not add a detect-and-recover path for a
-      review slot that ends up wedged by some other future mechanism. Worth a follow-up: should
-      `ensure_review_agents`/`AgentKeeper` positively verify a review slot's live session is actually running the
-      `review` prompt (not just any live session) before treating it as healthy?
+- [x] ✅ [BACKEND] P3. **DONE 2026-08-19.** Second, independent gap — `ensure_review_agents` treated any review slot
+      with `tmux_alive: True` as "something is running, leave it alone" without ever checking whether that something
+      was actually review's own boot loop vs. a stray non-review session. Fixed via
+      `agent-orchestrator@13b51c2e1e` (shipped `--isolated` under confirmed heavy concurrent contention on the shared
+      checkout — an unrelated peer session's in-progress WIP was independently confirmed as the source of the only
+      other quality-gate failures at ship time, not this change; independently re-verified as an ancestor of
+      `origin/live-defi-rollout` post-push, not just trusted from the script's exit code). Added
+      `_review_slot_occupant_is_verified_review()` (`server/autospawn.py`): requires a `role=review` `AgentRow`
+      actually registered against the exact tmux session before trusting the working-pane-refresh /
+      heartbeat-silent checks that follow it. A boot-grace exemption (anchored on the tmux session's own measured
+      creation time via `tmux_spawn.session_created_at`, mirroring `orphan_reap.py`'s PID-age boot-grace pattern —
+      not DB bookkeeping, so it is robust to whatever mechanism actually created the session) protects a freshly
+      (re)spawned review agent that has not self-registered yet. Past that grace with zero registration, the
+      occupant is killed and respawned via the same account-pick + `_do_spawn` path a hung review agent already
+      uses (`review_slot_occupied_by_non_review_session` activity-log event). Regression tests added to
+      `tests/test_autospawn.py` covering both cases: a genuinely-running (verified) review session is left alone
+      (`test_ensure_review_agents_runs_normal_checks_when_review_registration_verified`), an unregistered session
+      still within boot grace is left alone
+      (`test_ensure_review_agents_leaves_alone_unregistered_session_within_boot_grace`), and a stray non-review
+      occupant past boot grace is detected and recovered
+      (`test_ensure_review_agents_kills_and_respawns_non_review_slot_occupant`) — plus 4 focused unit tests on the
+      new helper itself. Full agent-orchestrator quality gate green (4151 passed, 8 skipped) inside the isolated
+      ship worktree.
 
 ## Progress Log
 
@@ -121,3 +137,12 @@ full existing `test_human_fleet_endpoints.py` (21 passed) and `test_dispatch_rev
   session's read-only-live/code-fix-only scope) — see "Fix" section above.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:da3ed222c3680a3d]: KEEP-NA — the 'second, independent gap' item (ensure_review_agents liveness-verification depth) is ALREADY claimed by the active `ao_satellite_ao_dispatch_batch22_2026_08_16.md` (its todo 6 cites this doc + this exact todo text); leave open, do not duplicate. The [OPERATOR] manual-recovery-decision item stays KEEP-NA.
+- 2026-08-19: Implemented + shipped the `[BACKEND] P3` "second, independent gap" fix — see the flipped todo above for
+  the full evidence (`agent-orchestrator@13b51c2e1e`). **Superseding `ao_satellite_ao_dispatch_batch22_2026_08_16.md`'s
+  todo 6 claim on this exact item**: that plan is `status: draft` and was never activated/ingested by AO (confirmed via
+  its frontmatter before starting this work), so it held no live lock on the item — nothing to unlock or coordinate
+  with. Noting here so a future `/ag-closeout-audit`, `/na-eligibility-audit`, or operator activating that draft plan
+  does not re-dispatch already-completed work from its todo 6; that plan's own todo 6 checkbox was intentionally left
+  untouched by this session (out of scope for this doc's edit) but its "Done when" criteria are now satisfied by this
+  fix. The `[OPERATOR] P2` manual-recovery-decision todo remains open (live-infra judgment call, unrelated to this
+  fix) — this doc stays `active`, not archived.

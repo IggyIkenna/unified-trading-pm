@@ -34,7 +34,7 @@ related:
   [
     canonical_path_oracle_blind_to_filename_stem_2026_07_20,
     tradfi_canonical_path_migration_design_2026_07_19,
-    _cefi_canonical_blueprint_2026_07_17,
+    cefi_canonical_blueprint_2026_07_17,
   ]
 created: 2026-07-20
 priority: P1

@@ -31,13 +31,13 @@ context_scope:
 created: "2026-08-10"
 last_updated: "2026-08-10"
 parent_epic: security_and_cross_cutting_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.6
-assigned_role:
+assigned_role: worker
 drift_direction: none
 locked_by:
 locked_since:
@@ -149,3 +149,10 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
 - **na-eligibility-audit 2026-08-17** [body-hash:433905a7777dbda9]: KEEP-NA, valid -- Sole remaining todo is to write and run a one-off script clearing `locked_by`/`locked_since` on 95 remaining docs corpus-wide where the value is the bogus placeholder 'live-defi-rollout'. The operator did rule Option B (one-time corpus-wide clear) on 2026-08-15 for todo 1 (already closed), which is real authorization for the general approach. However the doc's own 'Recommendation' section explicitly frames the clearing action itself as 'Not applied autonomously -- clearing locked_by is itself an unlock action, HARD-STOP, operator-only,' and that caveat was never revisited/softened after the Option-B ruling landed. Given locked_by/unlock handling is repeatedly treated as human-gated elsewhere in this workspace's archival discipline, and the blast radius spans the entire active corpus (not just this doc), I kept this NA rather than committing to a clean reclassify, flagging it at lower confidence instead.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): RECLASSIFY whole-doc — the doc has ONE open item now
+  (line 121), added 2026-08-18 after the 2026-08-17 marker above and categorically distinct from it: that prior
+  marker was about the operator-gated corpus-wide UNLOCK action (correctly kept NA, HARD-STOP). The remaining item
+  never touches an existing lock — it fixes the upstream bug-source still stamping the bogus placeholder on NEW
+  docs, a precisely-scoped, worker-determinable bug-hunt-and-fix with 2 live repro cases and a ready repro command.
+  Flipped `assigned_vm: NA -> planning`, filled `assigned_role: worker` (was missing). Companion:
+  `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10_finalize_2026_08_19.md`.

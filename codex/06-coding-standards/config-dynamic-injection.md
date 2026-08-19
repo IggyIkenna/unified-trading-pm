@@ -122,11 +122,11 @@ practice: both crashed with `pydantic_core.ValidationError` on a machine with a 
 `model_config = SettingsConfigDict(extra="ignore", ...)`, mirroring existing precedent elsewhere in the codebase
 (`strategy_service/risk/config.py`, `unified_trading_library/config_interface/cloud_config.py`/`ml_config.py`).
 
-**As of 2026-08-18, only 2 of the 9 `DomainConfig`-family classes carry this fix** — `InstrumentDomainConfig`,
+**As of 2026-08-18, only 1 of the 9 `DomainConfig`-family classes carries this fix** — `InstrumentDomainConfig`,
 `ClientDomainConfig`, `VenueDomainConfig`, `TickerUniverseConfig`, `RiskDomainConfig`, `AlertRuleDomainConfig`,
 `RateLimitDomainConfig`, and `FeatureFlagDomainConfig` still inherit `extra="forbid"` and carry the identical latent
 risk (a real `.env` present at construction time crashes them too). Not fixed fleet-wide in that pass — narrower
-scope than what was tracked. A future author adding a new `DomainConfig` subclass, or auditing the remaining 7,
+scope than what was tracked. A future author adding a new `DomainConfig` subclass, or auditing the remaining 8,
 should apply the same `extra="ignore"` fix rather than rediscovering this mechanism per-class.
 
 ---

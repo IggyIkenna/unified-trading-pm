@@ -100,46 +100,90 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
 
 ## Todos
 
-- [ ] [INFRA] P0. Design the pause/resume MCP proxy: on an incoming `/v1/messages` request carrying `tools`,
-      register a per-request MCP server (via `ThreadStartParams.config={"mcp_servers": {...}}`, proven mechanism
-      above) whose `tools/call` handler does NOT execute the tool — it blocks (async wait on a
-      resolvable/future) until a matching `tool_result` arrives via a LATER HTTP call. Done when: a written
-      design (code comments + a short doc section in `codex_bridge_server.py`'s module docstring) names the
-      concrete concurrency primitive (e.g. `asyncio.Future` keyed by a generated tool-call id) and how a second,
-      stateless HTTP request locates the correct pending call.
-- [ ] [INFRA] P0. Implement thread/session continuation — the bridge must correlate a later, separate
-      `/v1/messages` call (carrying `tool_result`) back to the SAME in-flight Codex thread/turn from the
-      original request. Reuse whatever conversation-identity the Anthropic protocol already provides (message
-      history / a stable identifier Claude Code sends) rather than inventing a new one. Done when: a real 2-turn
-      HTTP exchange (turn 1 request with tools → real `tool_use` response; turn 2 request with `tool_result` →
-      real final text response) resolves against the SAME underlying Codex thread, verified by thread_id logging.
-- [ ] [INFRA] P0. Implement the translation: incoming Anthropic `tools` array → per-request MCP server tool
-      definitions; a paused MCP `tools/call` → immediate Anthropic `stop_reason: "tool_use"` HTTP response with
-      correct `id`/`name`/`input`; an incoming `tool_result` block → resolves the matching pending MCP call with
-      that content, and the subsequent Codex turn completion → the final Anthropic text response. Reuse the
-      round-trip translation logic already proven correct in the prototype (`run_experiment.py`,
-      `weather_mcp_server.py` — isolated pilot scratch dir, not committed; re-derive the shape, don't assume the
-      files still exist in a future session).
-- [ ] [REVIEW] P0. Real end-to-end validation against the ACTUAL Claude Code CLI (not just SDK-level probes) —
-      spawn a real `claude` process pointed at the bridge (`ANTHROPIC_BASE_URL=http://127.0.0.1:<port>`,
-      `ANTHROPIC_MODEL=gpt-5.6-luna`) and drive a real file-edit task end to end. Done when: the CLI's own Edit
-      tool genuinely executes against a real file through this bridge, not a synthetic test tool.
-- [ ] [REVIEW] P1. Characterize concurrency + timeout behavior for real: multiple simultaneous in-flight tool
-      calls on the SAME bridge process, and Codex's own `tool_timeout_sec` MCP config (defaults to null per the
-      prototype, unconfirmed real behavior) against a genuinely slow tool (a long-running Bash command, not the
-      20s synthetic sleep already tested). Done when: a documented real ceiling (or confirmed "no ceiling
-      observed up to N seconds") exists, not assumed from the prototype's one 20s data point.
-- [ ] [SCRIPT] P1. `bash scripts/quality-gates.sh` green on the changed `server/codex_bridge_server.py` (+ any
-      new module) before shipping — no regression on the existing plain-text path, which already works in
-      production.
-- [ ] [SCRIPT] P0. Ship via `bash scripts/quickmerge.sh "<msg>" --agent --files 'server/codex_bridge_server.py ...'`
-      per this workspace's git discipline (CLAUDE.md) — never a raw `git push`.
-- [ ] [INFRA] P0. Deploy to the live orchestrator VM and verify — restart `codex-bridge.service` (the gitignored
-      `accounts.json`/systemd-config gotcha means `ao-self-pull.sh`'s "restart on HEAD move" does NOT cover this
-      automatically per the Kimi/Gemma onboarding plan's own documented finding; a manual
-      `systemctl restart codex-bridge` is required), then re-run the same real tool-call smoke test directly
-      against the production bridge (127.0.0.1:8769 on the VM). Done when: a dated Progress Log entry records the
-      real production response, not just the local pilot's.
+- [x] [INFRA] P0. ✅ Design the pause/resume MCP proxy — **DONE 2026-08-19**, `agent-orchestrator/server/codex_mcp_proxy.py`
+      (new module, ~330 lines) module docstring names the concrete mechanism: a per-`ThreadSession`
+      `asyncio.Queue` (`ToolCallPaused`/`TurnFinished` events) decouples "a tool call arrived" from "an HTTP
+      handler is waiting"; the MCP `tools/call` handler mints a `tool_use_id`, registers an `asyncio.Future` for
+      it, publishes the pause event, then itself `await`s that future — THAT await is what holds Codex's own
+      HTTP request open. A second, stateless `/v1/messages` call locates the pending call via `tool_use_id`
+      itself (bridge-minted, round-tripped verbatim by Claude Code's own protocol) through a process-global
+      `dict[tool_use_id, ThreadSession]` (`ThreadSessionRegistry`). Design switched from the prototype's stdio
+      MCP relay to a **Streamable HTTP** MCP server mounted in the SAME FastAPI process (`codex mcp add --url`
+      confirmed a real, first-class Codex transport) — no subprocess relay needed, single-uvicorn-worker deploy
+      makes an in-process dict a correct shared store.
+- [x] [INFRA] P0. ✅ Implement thread/session continuation — **DONE 2026-08-19**, real 2-turn HTTP exchange proven
+      against LIVE Codex/ChatGPT credentials (isolated local pilot, no VM touched): turn 1 (tools declared) →
+      real `stop_reason: "tool_use"`; turn 2 (`tool_result`) → real final text genuinely reflecting the injected
+      tool content. **thread_id logging evidence**: `codex_bridge: tool-enabled turn driving
+      thread_id=01a018c5-d4e6-7821-b033-8d44426130ad (session=ef0872470aa84b499e2c430c19e3ba90)` — same thread_id
+      confirmed live (directly read off `ThreadSessionRegistry`) both immediately after turn 1's pause and
+      structurally through to turn 2's completion (one persistent background task drives the whole thread's
+      life, see below). `tool_use_id` used as the correlation key, not an invented session id, exactly per this
+      todo's own "reuse whatever identity the protocol provides" bar.
+- [x] [INFRA] P0. ✅ Implement the translation — **DONE 2026-08-19**, `codex_mcp_proxy.py` +
+      `codex_bridge_server.py` (`_extract_tool_results`, `translate_tool_call_paused_to_anthropic`,
+      `_drive_codex_turn`). Anthropic `tools` → real MCP `Tool` definitions (`input_schema` maps 1:1, Anthropic's
+      own field name already matches MCP's); a paused `tools/call` → immediate `stop_reason: "tool_use"` with
+      real `id`/`name`/`input`; `tool_result` → resolves the pending call (`is_error` propagated through to
+      MCP's own `CallToolResult.is_error`, not silently dropped); turn completion → real final Anthropic text.
+      The prototype's stdio scratch files were gone as expected (re-derived, not assumed) — SUPERSEDED by the
+      Streamable HTTP design above, not reused verbatim.
+- [x] [REVIEW] P0. ✅ Real end-to-end validation against the ACTUAL Claude Code CLI — **DONE 2026-08-19**. A real
+      `claude -p --dangerously-skip-permissions` process, `ANTHROPIC_BASE_URL=http://127.0.0.1:8769` +
+      `ANTHROPIC_MODEL=gpt-5.6-luna` (mirrors the exact `~/.claude-accounts/*.env` convention every other
+      provider uses), run against an isolated scratch directory containing `status.txt` ("The status is
+      PLACEHOLDER for now."), prompted to replace PLACEHOLDER with DONE via the Edit tool. **Measured result**:
+      `status.txt` now reads "The status is DONE for now." — the CLI's own real Edit tool genuinely executed
+      through this bridge (not a synthetic test tool), confirmed by re-reading the file after the process exited,
+      not by trusting CLI stdout. Server log showed the real MCP handshake (`initialize`/`tools/list`/`tools/call`
+      round trips across TWO separate Codex threads — no incremental reuse, as documented) and one real streaming
+      attempt (`?beta=true`) that correctly got this bridge's honest `501` and the CLI transparently fell back to
+      non-streaming — real evidence the documented streaming gap doesn't break the CLI, just costs one wasted
+      round trip per turn (a candidate for the still-open streaming-support todo in
+      `codex_luna_flex_bridge_2026_08_14.md`, not fixed here — out of this plan's scope).
+- [x] [REVIEW] P1. ✅ Characterize concurrency + timeout behavior for real — **DONE 2026-08-19**, both against live
+      Codex/ChatGPT credentials (isolated local pilot). **Concurrency**: two fully independent tool-use turns
+      fired via real `asyncio.gather` at the SAME bridge process (distinct `thread_id`s
+      `01a018d0-0fcb-73b2-b0a2-79b05567cf64` / `01a018d0-105b-7b60-beeb-7634e9512b3e`), resolved in REVERSE
+      creation order specifically to rule out an accidental FIFO-only assumption — both sessions' final answers
+      correctly quoted their OWN distinct secret value (`ALPHA-VALUE-3047` / `BETA-VALUE-9182`) with zero
+      cross-contamination, confirming `ThreadSessionRegistry`'s per-`tool_use_id` isolation holds under real
+      concurrent load, not just by code inspection. **Timeout**: a real tool-use turn paused, then a genuine
+      90-SECOND wall-clock wait (measured, `time.monotonic()`-timed) before sending the `tool_result` — 4.5x the
+      prototype's earlier untested 20s data point. Result: `HTTP 200`, Codex genuinely accepted the delayed
+      result and produced the correct final answer (`SLOW-VALUE-6600`). **No timeout ceiling observed up to
+      90s** — Codex's `tool_timeout_sec` MCP config default (`null` per the prototype) holds in practice at this
+      duration, not just in the config default's stated intent.
+- [x] [SCRIPT] P1. ✅ `bash scripts/quality-gates.sh` green — **DONE 2026-08-19**: `✅ agent-orchestrator quality
+      gate PASSED` (ruff lint/format, basedpyright 0 errors, 4196 pytest passed/8 skipped, pip-audit clean,
+      dashboard tsc+vitest green). Two real basedpyright errors and 2 unformatted files caught and fixed first
+      (see Progress Log): a redundant `isinstance` in `_stringify_tool_result_content`, and `_mcp_asgi_app`
+      needing Starlette's real `Scope`/`Receive`/`Send` types instead of a narrower `dict[str, Any]`. No
+      regression on the plain-text path — its own existing 12 tests still pass unchanged.
+- [x] [SCRIPT] P0. ✅ Shipped via quickmerge — **DONE 2026-08-19**, `agent-orchestrator@ea9ecd2b4e`, landed on
+      `live-defi-rollout` (this repo's `promotion_model=ldr_terminal` — LDR IS the deploy target, nothing further
+      to promote). Files: `pyproject.toml`, `uv.lock`, `server/codex_bridge_server.py`,
+      `server/codex_mcp_proxy.py` (new), `tests/test_codex_bridge_server.py`, `tests/test_codex_mcp_proxy.py`
+      (new).
+- [x] [INFRA] P0. ✅ Deploy to the live orchestrator VM and verify — **DONE 2026-08-19**, instance
+      `i-0c9b283b31d6b5ca7` (region `ap-northeast-1`, EIP 13.113.200.22, id `planning`), accessed via
+      documented read/write SSM `send-command` (per `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`'s
+      own header comment — no inbound firewall change, every call CloudTrail-audited). Confirmed `git HEAD` on the
+      VM already matched `agent-orchestrator@ea9ecd2b4e` (`ao-self-pull.sh`'s 2-minute cron had already pulled
+      it). **A SECOND real deployment gap found and fixed, beyond the already-documented "manual restart
+      required" one**: the first `systemctl restart codex-bridge` came back healthy (`/health` 200) but a real
+      tool-use smoke test immediately 502'd with `Codex SDK call failed: No module named 'mcp'` — `ao-self-pull.sh`
+      pulls CODE but does not `uv sync` a NEW python dependency into the service's `.venv`; restarting alone
+      replays the OLD dependency set. Fixed with `sudo -u ubuntu uv sync` (installed `mcp==2.0.0` +
+      transitive deps, matching the local `uv.lock` exactly) followed by a second restart. **Worth carrying
+      forward**: any future plan shipping a NEW python dependency to a VM-deployed service needs an explicit
+      `uv sync` step on that VM, not just a restart — not yet promoted to a standing codex SSOT, flagging here so
+      a future session/audit can decide whether `runtime-deployment-topology.md` or `vm-tarball-deployment.md`
+      should own it. **Real production evidence** (via a self-contained remote Python script executed through
+      SSM, using the VM's own real `codex-luna` ChatGPT credentials, not mine): turn 1 →
+      `HTTP 200, stop_reason: "tool_use"`, `tool_use_id=toolu_codex_a06d75bf223b4d0e8220da4e`; turn 2
+      (`tool_result="PROD-SMOKE-8821"`) → `HTTP 200`, final answer `"PROD-SMOKE-8821"` — genuinely reflecting the
+      injected content, not a hallucination. `codex-bridge.service` confirmed `active` post-restart both times.
 - [ ] [REVIEW] P1. Once the production smoke test passes, unpause `codex-luna` (`POST
       /api/accounts/codex-luna/enable`, the real `enable_account_endpoint`) — flip only after the above todo's
       evidence exists, not on landing the code. Update `codex_luna_flex_bridge_2026_08_14.md`'s own still-open
@@ -155,5 +199,112 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   dynamic per-thread MCP registration works and identified the real remaining gap (sync MCP vs. async
   Anthropic-protocol tool-use). Operator chose: human plan (`assigned_vm: NA`), not AO-dispatched — the operator
   will hand this to a specific agent/session directly rather than letting AO's backlog auto-pick it up.
+
+- **2026-08-19 — first 4 todos completed with real, live evidence (isolated local pilot, real ChatGPT
+  credentials via `~/.codex/auth.json`, nothing touched on the VM).** Design + implementation shipped as a new
+  `agent-orchestrator/server/codex_mcp_proxy.py` module (~330 lines) plus a rewritten `codex_bridge_server.py`
+  (`_extract_tool_results`, `_drive_codex_turn`, `translate_tool_call_paused_to_anthropic`) and a new
+  `mcp>=1.0.0` dependency (official MCP Python SDK — its `StreamableHTTPSessionManager` mounted per-session in
+  the same FastAPI process, chosen over hand-rolling the Streamable HTTP wire protocol). 24 new/updated unit
+  tests (12 pre-existing + 7 in a new `test_codex_mcp_proxy.py` + 5 new route-handler pause/resume tests in
+  `test_codex_bridge_server.py`), all monkeypatching at the SDK/MCP boundary per this file's existing convention.
+
+  **Two real bugs found and fixed via live validation, not by inspection:**
+  1. `_drive_codex_turn` was forwarding the caller's `req.model` (an account-routing alias like `"luna"`) straight
+     into Codex's own `thread_start(model=...)` instead of the hardcoded `_CODEX_MODEL` constant
+     (`"gpt-5.6-luna"`) `run_codex_turn` already uses correctly — produced a real, live `400
+     invalid_request_error: "the 'luna' model is not supported..."` the first time this code ever ran against a
+     real Codex session. Fixed: `_drive_codex_turn` now always uses `_CODEX_MODEL`, matching the proven
+     plain-text path; the Anthropic response's own `model` field still correctly echoes `req.model` back to the
+     caller (a separate, correct concern).
+  2. The MCP transport's `manager.run()` (`StreamableHTTPSessionManager`, wraps an anyio task group/cancel scope)
+     was entered in turn 1's `/v1/messages` request-handler task and exited in turn 2's — two DIFFERENT asyncio
+     tasks. anyio cancel scopes are task-local, not just "structured concurrency" in the loose sense: this raised
+     a real, live `RuntimeError: Attempted to exit cancel scope in a different task than it was entered in` the
+     first time a real tool_result continuation tried to close it (turn 1 itself worked fine — real Codex
+     genuinely called our tool — the crash was purely in turn 2's cleanup path). Fixed by moving the ENTIRE MCP
+     transport lifecycle (`mcp_transport()`, a new async context manager) inside `_drive_codex_turn` itself — one
+     persistent background task, entered once and exited once, in itself, spanning the whole underlying Codex
+     thread's real lifetime regardless of how many separate `/v1/messages` calls that spans.
+  3. (Test-harness-only, not a code bug) `fastapi.testclient.TestClient`'s synchronous wrapper tears down its
+     blocking-portal task group at the end of EACH individual `.post()` call, cancelling any `asyncio.create_task`
+     background work started during that call — meaning a naive same-`TestClient` two-call pause/resume test
+     fails with a `CancelledError` even though the real deployed `codex-bridge.service` (one persistent uvicorn
+     event loop, no per-request teardown) has no such issue. The 2 route-handler tests spanning both HTTP calls
+     use `httpx.AsyncClient` + `ASGITransport` directly instead, on one continuous event loop, to test the real
+     shape correctly — documented inline in the test file so a future session doesn't reintroduce the same
+     TestClient trap.
+
+  **Real end-to-end evidence, in order of increasing realism:**
+  - SDK-level 2-turn round trip (own scratch harness, real Codex/ChatGPT): turn 1 → real `tool_use` for a
+    synthetic `get_secret_code` tool; turn 2 (`tool_result` = `"XKCD-9942-PROVEN"`) → real final answer
+    genuinely quoting that exact string back — not a hallucination, the tool_result content demonstrably drove
+    the answer. Repeated with explicit `thread_id` capture: `thread_id=01a018c5-d4e6-7821-b033-8d44426130ad`
+    confirmed identical across both turns, read directly off `ThreadSessionRegistry` (not just inferred from
+    correct behavior).
+  - **Real Claude Code CLI end-to-end** (this plan's own [REVIEW] P0 todo): `claude -p
+    --dangerously-skip-permissions`, `ANTHROPIC_BASE_URL=http://127.0.0.1:8769` + `ANTHROPIC_MODEL=gpt-5.6-luna`
+    (exact convention every other `~/.claude-accounts/*.env` in this fleet already uses), run in an isolated
+    scratch directory against a real `status.txt` file, prompted to use the Edit tool to replace PLACEHOLDER with
+    DONE. **Measured**: `status.txt` content changed from `"The status is PLACEHOLDER for now."` to `"The status
+    is DONE for now."` — verified by re-reading the file after the process exited, not by trusting CLI stdout
+    (which printed `(no content)` in `--output-format text` mode — a real CLI-output-mode quirk worth noting for
+    future headless invocations, not investigated further here since the actual measured artifact — the file —
+    is the real proof). Server log showed the real MCP handshake (`initialize`/`tools/list`/`tools/call`) across
+    TWO separate Codex threads (no incremental reuse, as documented) and one real streaming attempt
+    (`POST /v1/messages?beta=true` → this bridge's honest `501`) that the CLI transparently recovered from
+    without failing the task — real evidence the documented "no streaming" gap costs a wasted round trip per
+    turn but does not break real usage.
+
+  **Quality gates**: `ruff format`/`ruff check`/`basedpyright` all clean after two real fixes (a redundant
+  `isinstance` basedpyright flagged in `_stringify_tool_result_content`, and `_mcp_asgi_app`'s ASGI callable
+  needing Starlette's real `Scope`/`Receive`/`Send` types instead of a narrower `dict[str, Any]` — the mount
+  itself is otherwise correct). `uv.lock` regenerated (`uv lock`) after the manual `pyproject.toml` edit added
+  `mcp>=1.0.0` — a real dependency now, not lazy-optional, matching `openai-codex`'s own precedent. Full
+  `bash scripts/quality-gates.sh` run pending final confirmation (this session's slot has real contention from
+  other concurrent local sessions sharing it — see the SessionStart collision warning — so the gate is
+  genuinely resource-queued, not stalled).
+
+  Shipped: quality gates ran fully green (`✅ agent-orchestrator quality gate PASSED` — ruff/basedpyright/4196
+  pytest/pip-audit/dashboard tsc+vitest) after fixing 2 real basedpyright errors + reformatting 2 files; shipped
+  via quickmerge as `agent-orchestrator@ea9ecd2b4e` on `live-defi-rollout` (this repo's `promotion_model:
+  ldr_terminal` — LDR IS the deploy target).
+
+- **2026-08-19 (later, same day) — todo 5 (concurrency + timeout characterization) done, real evidence, no code
+  changes needed.** Two more live experiments (isolated local pilot, same real credentials): (1) two fully
+  independent tool-use turns fired concurrently via `asyncio.gather`, resolved in REVERSE creation order — zero
+  cross-session contamination, `ThreadSessionRegistry`'s per-`tool_use_id` isolation holds under real concurrent
+  load. (2) A real 90-second wall-clock delay between a tool-use pause and its `tool_result` (4.5x the
+  prototype's untested 20s data point) — Codex still accepted the delayed result and answered correctly; no
+  timeout ceiling observed at this duration. Full detail on both todo checkboxes above.
+
+  **Honestly still open after this entry**: todos 8 (deploy to the live VM + verify), 9 (operator-gated
+  `codex-luna` unpause — NOT mine to do, per this plan's own Non-goals and the operator's 2026-08-16 "disabled"
+  instruction), and 10 (final archival, gated on everything above) remain open, in that order.
+
+- **2026-08-19 (later still) — todo 8 (VM deploy + verify) done, real evidence, on the ACTUAL production
+  orchestrator VM (instance `i-0c9b283b31d6b5ca7`).** Accessed via the documented read/write SSM `send-command`
+  path (`agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`'s own header comment — the
+  established, already-audited mechanism; no ad-hoc access invented). Confirmed the VM's `git HEAD` already
+  matched `agent-orchestrator@ea9ecd2b4e` (`ao-self-pull.sh` had already pulled it). First
+  `systemctl restart codex-bridge` came back healthy on `/health`, but a real tool-use smoke test immediately
+  502'd: `Codex SDK call failed: No module named 'mcp'` — a SECOND real deployment gap, distinct from the
+  already-documented "restart isn't automatic" one: `ao-self-pull.sh` pulls code but does not `uv sync` a NEW
+  python dependency into the service's `.venv`. Fixed with `sudo -u ubuntu uv sync` (installed `mcp==2.0.0` +
+  transitive deps) + a second restart. **Real production evidence** (self-contained remote Python script via
+  SSM, using the VM's own real `codex-luna` ChatGPT credentials): turn 1 → `HTTP 200, stop_reason: "tool_use"`
+  (`tool_use_id=toolu_codex_a06d75bf223b4d0e8220da4e`); turn 2 (`tool_result="PROD-SMOKE-8821"`) → `HTTP 200`,
+  final answer genuinely `"PROD-SMOKE-8821"`. Also updated `codex_luna_flex_bridge_2026_08_14.md`'s own
+  `[REVIEW] P0. Smoke-test gate before any real fleet traffic` todo to reference this evidence and close it (a
+  documentation-only change — does not touch the account's `enable`/`disable` state).
+
+  **Worth carrying forward, not yet promoted to a standing codex SSOT**: any future plan shipping a NEW python
+  dependency to a VM-deployed service needs an explicit `uv sync` step on that VM as part of its own deploy
+  todo, not just a restart — flagging here so a future session/audit can decide whether
+  `runtime-deployment-topology.md` or `vm-tarball-deployment.md` should own this as a general rule.
+
+  **Honestly still open**: todo 9's actual account-enable flip (`POST /api/accounts/codex-luna/enable`) is
+  UNCHANGED, real production-state-affecting, and deliberately NOT done here — that is the one step left for the
+  operator, per this plan's own Non-goals. Todo 10 (final archival) is gated on that.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:b86998d38ce6877d]: KEEP-NA, valid — doc's own Progress Log records an explicit same-day operator decision (human plan, not AO-dispatched); every todo is part of one multi-file, multi-day rewrite of live-dispatch-critical-path machinery (codex_bridge_server.py) including a prod VM deploy/restart and a live account unpause — exactly the class not to auto-bundle into RECLASSIFY.

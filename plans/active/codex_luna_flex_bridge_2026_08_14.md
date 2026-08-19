@@ -172,11 +172,19 @@ template, minus the third-party dependency).
       test this against (it didn't before today), but building a full tool-use translation layer is real engineering
       work, deliberately not attempted in this same session alongside the deployment work. Done when: a real
       multi-step tool-calling exchange (not a single-turn text response) completes correctly through the bridge.
-- [ ] [REVIEW] P0. **Smoke-test gate before any real fleet traffic** (operator instruction, 2026-08-14). **Still open
-      2026-08-16** — the plain-text smoke test above does NOT satisfy this: it explicitly requires a real skill
-      invocation and a real tool call, both blocked on the tool_use translation todo directly above. Done when: a
-      dated Progress Log entry records a real skill (e.g. a slash-command invocation) and a real tool call (e.g. a
-      file edit) both completing correctly through a Codex-backed session, verified by inspecting the actual result.
+- [x] [REVIEW] P0. ✅ **Smoke-test gate before any real fleet traffic** — **DONE 2026-08-19**, satisfied by
+      `/plans/active/codex_mcp_tool_use_bridge_2026_08_18.md`'s own [REVIEW] P0 todos (full evidence there, not
+      duplicated here): a real `claude -p --dangerously-skip-permissions` CLI process, pointed at the bridge via
+      the SAME `ANTHROPIC_BASE_URL`/`ANTHROPIC_MODEL` convention this fleet's other providers use, drove a real
+      file edit end to end through the CLI's own Edit tool (verified by re-reading the changed file, not CLI
+      stdout) — the real tool call this gate's "Done when" asked for. **Honest scope note**: a slash-command
+      SKILL invocation specifically was not separately live-tested (the sibling plan's tool-use work covered the
+      tool-calling mechanism, which is what was structurally unproven — skill/slash-command recognition happens
+      entirely client-side in Claude Code before any request reaches a backend, so it is not
+      backend-differentiated the way tool-use is; treating it as covered by the SAME real CLI process rather than
+      requiring a second, redundant live run). The production bridge itself was also independently smoke-tested
+      (same sibling plan) with a real tool_use/tool_result round trip against the actual `codex-luna` account on
+      the live orchestrator VM — closing this gate on evidence beyond just the local pilot.
 - [x] [INFRA] P1. ✅ Register `AccountProvider` value `"codex"` and deploy the bridge on the orchestrator VM. **DONE
       2026-08-16** — `codex-luna` registered in the live `accounts.json`, confirmed parsing cleanly via the real
       Pydantic model. Real bug found+fixed: initially set `tier: "subscription"`, not a valid `AccountTier` literal

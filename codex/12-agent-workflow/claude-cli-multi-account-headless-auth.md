@@ -329,7 +329,9 @@ serve which worker slots. This "shared pool" design means:
 - The pool is the union of all `accounts.json` entries with `failover_allowed: true` (default) and a valid
   `oauth_token_env_file`.
 
-**Why**: the 4 accounts (sub-a-ikenna, sub-b-iggy2london, sub-c-ikenna-odum, sub-d-odum1default) exist so BOTH operators
+**Why**: the original 4 accounts (sub-a-ikenna, sub-b-iggy2london, sub-c-ikenna-odum, sub-d-odum1default) — grown since
+(7+ as of 2026-08-18, `sub-a` through `sub-g`; check `GET /api/accounts` for the live list, see caveat above) — exist
+so BOTH operators
 can survive independently. Restricting by operator tag would waste the cross-operator failover benefit.
 
 SSOT: `plans/active/cross_operator_auth_failover_2026_05_29.md`.

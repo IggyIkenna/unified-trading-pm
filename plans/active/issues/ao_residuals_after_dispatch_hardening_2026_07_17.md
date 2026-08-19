@@ -145,7 +145,32 @@ source:
       CWD-fallback bug in `regen_backlog_from_plan.py`), not the earlier, well-known 08:1x UTC `/tmp`-ENOSPC blip (which
       was real but contained). Root-fixed same day, `agent-orchestrator@fc9ac53`. Full hourly-breakdown methodology +
       activity-log evidence lives in that plan's Progress Log — not duplicated here.
-- [ ] [UI] P3. **Backlog-relations view.** ⏳ **RE-DECIDED 2026-08-14 (6+ weeks after the 2026-07-23 recheck found no
+- [x] [UI] P3. **Backlog-relations view.** ✅ **SHIPPED 2026-08-19 — `agent-orchestrator@003aafb608`.** Backend:
+      `GET /api/backlog/graph` (already existed from an earlier `agent-orchestrator@6ce6379` pass) extended with a
+      STRUCTURED `blockers: [{kind: "condition"|"task", ref, satisfied}]` array per task (brief §6's own framing) —
+      positionally paired with `needs_conditions`/`after_tasks`, `satisfied` computed from the live
+      `PrerequisiteRow.value` / `dispatch.completed_task_satisfied` (new public wrapper) so the frontend never has to
+      re-derive dispatch's own done-or-pruned rule. `tests/test_backlog_graph.py` covers the empty-graph case,
+      slots-only count, the cross-plan fan-out+skip shape, a full example-D-style task-edge satisfied/pruned/open
+      matrix, and the empty-`needs_conditions` (never-gated) case — 8 tests, all green.
+      Frontend: `dashboard/src/BacklogRelations.tsx`, a new standalone route (`/backlog-relations`, wired into
+      `App.tsx`/`Landing.tsx` alongside Fleet KPIs/Doc Graph/Human Fleet). Design calls against brief §12's open
+      questions: (1) organizing principle — no plan grouping, plan is one row attribute; (2) a shared condition
+      renders ONCE in a fan-out-ranked "Top conditions" panel with its full `gates` list inline, never duplicated;
+      (3) the contradiction (backend-ready-but-fleet-declined) gets its own always-on-top banner PLUS a per-row
+      `⚠ ready but declined` badge — never folded into the ordinary skip-count column; (4) one view, not a linked
+      primary+detail page — click-to-expand IS the detail (full explain + skip reasons + a small bounded local-edge
+      SVG diagram, never a whole-graph layout); (5) scale — deliberately NOT a node-link/force-directed diagram at
+      all (three prior attempts already failed at that, brief §7): fan-out is a sort, not a drawing problem, so it
+      reads the same at n=300 as n=18 and never needs horizontal scroll (checked against the brief's own "phone over
+      SSH/tmux" constraint); (6) `done`/orphan history is a collapsed-by-default section, out of the live view's way.
+      Tests: `dashboard/src/BacklogRelations.test.ts` (22 vitest cases against brief §10 worked examples A-D as
+      fixtures — the contradiction flag, bucket classification, fan-out ranking, provenance, search). Playwright
+      DOES now exist in this repo (`dashboard/playwright.config.ts`, `tests/e2e/*.spec.ts` — the brief's July
+      "no Playwright" claim is stale) — added a full `[UI] pw:L2` regression spec,
+      `dashboard/tests/e2e/backlog-relations.spec.ts` (10 cases), against a DEDICATED isolated e2e backend +
+      fixture (`fixtures/backlog_relations.e2e.yaml` + `seed_e2e_backlog_relations_state.py`, worked examples A-D
+      verbatim) — all 10 passing against the real backend, not mocked. **RE-DECIDED 2026-08-14 (6+ weeks after the 2026-07-23 recheck found no
       movement) — the brief itself is READY TO DISPATCH; do not close this as un-actionable.** Re-read
       `agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md` in full. This doc's earlier framing ("cannot start until a
       design lands") was correct as of 2026-07-23, but the brief itself has never actually been un-actionable — it

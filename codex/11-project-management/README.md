@@ -1,6 +1,6 @@
 ---
 scope: [engineer, admin]
-last_reviewed: 2026-05-18
+last_reviewed: 2026-08-19
 ---
 
 # 11 — Project Management
@@ -17,68 +17,52 @@ Boundary rule: See `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.m
 
 ---
 
-## Active Epics (19 epics in 5 tiers — everlasting)
+## Active Epics (22 epics in 6 tiers — everlasting)
 
 Epics live under `plans/epics/<slug>.md` — **everlasting, no date suffix, no `estimate_*` fields**. Each owns one
-persistent code surface and one assigned VM. Full SSOT for the epic flow:
-[`../../plans/epics/README.md`](../../plans/epics/README.md) (this section's pointer:
+persistent code surface. **Per-epic VM ownership is retired** (single-VM, role-based-dispatch architecture,
+2026-06-27) — every epic's `assigned_vm` frontmatter reads `NA`; do not dispatch or match against it. Full SSOT for
+the epic flow: [`../../plans/epics/README.md`](../../plans/epics/README.md) (this section's pointer:
 [`epic-execution-with-sub-agents.md`](epic-execution-with-sub-agents.md)).
 
 **Legacy YAML schema** at `codex/11-project-management/epics/epic-schema.yaml` was the pre-2026-05-21 readiness-pipeline
 form. It is superseded by the markdown-primary model; the YAML files (`cefi-epic.yaml` / `defi-epic.yaml` / etc.) are
 archaeology only — do NOT add new entries there.
 
-### L0 — Asset-group ops (5 epics)
+Mirrored from `plans/epics/README.md`, regenerated 2026-08-19 post epic-taxonomy restructure (19→22: 5 folds —
+`infrastructure_master`→`security_and_cross_cutting_master`, `escalation_and_disaster_recovery_master`→
+`observability_master`, `dart_and_promote_master`+`trading_agent_master` folded into their consumers,
+`global_ledger_pnl_attribution_master`→`strategy_master` — plus 2 new epics, `uac_master` and
+`security_and_cross_cutting_master`, and `ci_master` split out of the old infra umbrella):
 
-| Epic                                | Assigned VM     | Owns                                                                  |
-| ----------------------------------- | --------------- | --------------------------------------------------------------------- |
-| `plans/epics/defi_master.md`        | `vm-defi`       | DeFi adapters + on-chain execution + Copper custody + DeFi archetypes |
-| `plans/epics/cefi_master.md`        | `vm-cefi`       | CeFi adapters + CCXT + CEFFU + perp hedge legs + CeFi archetypes      |
-| `plans/epics/tradfi_master.md`      | `vm-tradfi`     | TradFi adapters + dated futures + TradFi archetypes                   |
-| `plans/epics/sports_master.md`      | `vm-sports`     | Sports adapters + GBP settlement + sports archetypes                  |
-| `plans/epics/predictions_master.md` | `vm-prediction` | Polymarket + Kalshi + binary-outcome archetypes                       |
-
-### L1 — Data pipeline (4 epics)
-
-| Epic                                    | Assigned VM            | Owns                                                                  |
-| --------------------------------------- | ---------------------- | --------------------------------------------------------------------- |
-| `plans/epics/instruments_master.md`     | `vm-cefi` (co-located) | instruments-service: IS reference + universe SSOT                     |
-| `plans/epics/mtds_mdps_master.md`       | `vm-ml`                | MTDS adapters + MDPS candles + writegate + raw market data            |
-| `plans/epics/features_and_ml_master.md` | `vm-ml`                | features-service (8 families) + ml-service (inference + training)     |
-| `plans/epics/manifest_master.md`        | `vm-defi` (co-located) | Manifest schema v8 + honest absence + backfill + evolution discipline |
-
-### L2 — Trading core (3 epics; co-located on one VM)
-
-| Epic                                  | Assigned VM       | Owns                                                        |
-| ------------------------------------- | ----------------- | ----------------------------------------------------------- |
-| `plans/epics/strategy_master.md`      | `vm-trading-core` | strategy-service post-consolidation; 53 archetypes          |
-| `plans/epics/execution_master.md`     | `vm-trading-core` | execution-service handlers + transfers + treasury + custody |
-| `plans/epics/trading_agent_master.md` | `vm-trading-core` | trading-agent-service closed-loop allocator                 |
-
-### L3 — Operator surfaces (2 epics; one VM)
-
-| Epic                                                   | Assigned VM       | Owns                                                            |
-| ------------------------------------------------------ | ----------------- | --------------------------------------------------------------- |
-| `plans/epics/dart_and_promote_master.md`               | `vm-operator-ops` | DART + ManualTradeGateDialog + promote workflow + state machine |
-| `plans/epics/deployment_and_user_management_master.md` | `vm-operator-ops` | deployment-api + deployment-ui + user-management                |
-
-### L4 — Cross-cutting (4 epics; one VM)
-
-| Epic                                                    | Assigned VM        | Owns                                                                                                       |
-| ------------------------------------------------------- | ------------------ | ---------------------------------------------------------------------------------------------------------- |
-| `plans/epics/security_and_cross_cutting_master.md`      | `vm-cross-cutting` | VMs + tarballs + per-tab worktrees + cloud + bootstrap                                                     |
-| `plans/epics/observability_master.md`                   | `vm-cross-cutting` | alerting-service + monitoring + telemetry + 3am-auto-recovery                                              |
-| `plans/epics/batch_live_symmetry_master.md`             | `vm-cross-cutting` | Per-service batch=live audit; reconciliation                                                               |
-| `plans/epics/client_isolation_and_governance_master.md` | `vm-cross-cutting` | Per-client subprocess isolation + funds isolation + jurisdiction + share-class reconciliation + UAC schema |
-
-### L5 — Meta (1 epic)
-
-| Epic                                 | Assigned VM       | Owns                                                        |
-| ------------------------------------ | ----------------- | ----------------------------------------------------------- |
-| `plans/epics/orchestrator_master.md` | `vm-orchestrator` | agent-orchestrator multi-VM stack + planning VM + dashboard |
+| #   | Tier | Epic slug                                | Owns                                                                                                         |
+| --- | ---- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 1   | L0   | `defi_master`                            | DeFi adapters + on-chain execution + Copper custody + DeFi archetypes                                        |
+| 2   | L0   | `cefi_master`                            | CeFi adapters + CCXT + CEFFU + perp hedge legs + CeFi archetypes                                             |
+| 3   | L0   | `tradfi_master`                          | TradFi adapters + dated futures (Databento) + TradFi archetypes                                              |
+| 4   | L0   | `sports_master`                          | Sports adapters + GBP settlement + sports archetypes                                                         |
+| 5   | L0   | `predictions_master`                     | Polymarket + Kalshi + binary-outcome archetypes                                                              |
+| 6   | L1   | `instruments_master`                     | instruments-service IS reference + universe SSOT                                                             |
+| 7   | L1   | `mtds_mdps_master`                       | MTDS adapters + MDPS candles + writegate + raw market data                                                   |
+| 8   | L1   | `features_and_ml_master`                 | features-service (8 families) + ml-service (inference + training)                                            |
+| 9   | L1   | `manifest_master`                        | Manifest v9 + honest absence + backfill + evolution discipline                                               |
+| 10  | L1   | `uac_master`                             | unified-api-contracts schema/registry SSOT + contract-governance correctness                                 |
+| 11  | L2   | `strategy_master`                        | strategy-service; archetypes; portfolio_allocator; risk; position; PnL/HWM attribution                       |
+| 12  | L2   | `execution_master`                       | execution-service handlers + transfers + treasury + custody + flash loan + matching engine                   |
+| 13  | L3   | `deployment_and_user_management_master`  | deployment-api + deployment-ui + user-management surfaces                                                    |
+| 14  | L4   | `ci_master`                              | GitHub Actions delivery pipeline, quickmerge/ship scripts, LDR→main promotion gate set                       |
+| 15  | L4   | `observability_master`                   | alerting-service + monitoring/telemetry; Incident Gateway; kill-switch alerting; escalation + DR (folded in) |
+| 16  | L4   | `batch_live_symmetry_master`             | Per-service batch=live audit; reconciliation                                                                 |
+| 17  | L4   | `client_isolation_and_governance_master` | Per-client isolation + funds isolation + jurisdiction + share-class + UAC schema                             |
+| 18  | L4   | `security_and_cross_cutting_master`      | Credentials/secrets + IAM + kill-switch authority; shard/data-status + deployment-build (infra, folded in)   |
+| 19  | L4   | `system_readiness_master`                | Everything gating go-live readiness                                                                          |
+| 20  | L5   | `orchestrator_master`                    | agent-orchestrator single-VM runtime + promote/live-flip gating machinery                                    |
+| 21  | L5   | `agent_operating_framework_master`       | Agent dispatch (assigned_vm fail-closed matcher) + grep-native retrieval + role charters                     |
+| 22  | L5   | `plan_hygiene_master`                    | Continuous plan-corpus hygiene: check scripts + hygiene sweep + codex-alignment audit                        |
 
 **Cutover master (NOT an epic)**: `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan
-tracking May-23 cutover across all 19 epics. Archives after cutover. Not in `plans/epics/`.
+tracking the May-23 live DeFi rollout across all 20 epics (the count at cutover time, pre-restructure). Archives after
+cutover. Not in `plans/epics/`.
 
 ---
 

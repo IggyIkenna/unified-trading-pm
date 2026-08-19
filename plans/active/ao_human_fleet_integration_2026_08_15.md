@@ -868,9 +868,33 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 8 — follow-up from Harsh's 2026-08-19 onboarding (not yet actioned)
 
-- [ ] [SCRIPT] P2. **Check whether Ikenna's stale `ikenna-tabN` rows (observed 2026-08-19, `GET /api/agents?kind=human`
+- [x] ✅ [SCRIPT] P2. **Check whether Ikenna's stale `ikenna-tabN` rows (observed 2026-08-19, `GET /api/agents?kind=human`
       showing tab3/4/5/6 all `status=stale`/`online=false`) were caused by the `ao-fleet-sync-tick.sh` GNU/BSD `stat`
       ordering bug fixed this session (`agent-orchestrator@1e80d160e0`)** — if his cron was installed before this fix
       and his machine is Linux, every tick since would have silently crashed before reaching the heartbeat call.
       Check his crontab log (`/tmp/ao-fleet-sync-9001.log`) for the failure signature, confirm the fix resolves it on
-      his machine too, not just Harsh's. Repo: agent-orchestrator.
+      his machine too, not just Harsh's. Repo: agent-orchestrator. **Resolved 2026-08-19 (same session)**: not the
+      `stat` bug — a SEPARATE, bigger bug found checking Harsh's own log: `ao-fleet-sync-tick.sh` called bare
+      `python3` for both `ao-usage-push.py` and `ao-liveness-heartbeat.py`. Under cron's real minimal PATH that
+      resolves to system Python (no `pydantic` installed), not this repo's `.venv` — so **every scheduled tick on
+      Harsh's own host, since his cron was first installed, silently crashed** (`/tmp/ao-fleet-sync-9002.log` full
+      of `ModuleNotFoundError: No module named 'pydantic'`; confirmed by reproducing under
+      `env -i PATH=/usr/bin:/bin`). Fixed by pinning to `${SCRIPT_DIR}/../../.venv/bin/python3` explicitly (fallback
+      to bare `python3` only if the venv is missing) — verified under the same simulated cron-minimal-PATH before
+      shipping. Evidence: `agent-orchestrator@6e5c8ccc57`. **Correction, same session, operator caught it**: the
+      Progress Log originally claimed this as a BOTH-operators bug and credited this fix with `ikenna-tab2/4/6`
+      going `active` shortly after shipping — both wrong. Ikenna's cron runs on his own separate machine against
+      his own separate checkout; confirmed `/tmp/ao-fleet-sync-9001.log` does not even exist on this host, so his
+      already-running cron job could not have picked up a fix that only landed on `origin/live-defi-rollout` without
+      his own `git pull` — nothing shipped this session could mechanically have caused his recovery. The observed
+      timing was coincidental (his own tick cycle, independent of this fix), not causal. Whether Ikenna's host ever
+      hit this exact bug is **unconfirmed** — his log was never read, his host's `python3` resolution was never
+      checked, and no access to his machine exists from this session. Confirmed scope: this bug is proven on Harsh's
+      host only; the fix is real and correct regardless of whether it was ever needed elsewhere. **Separately
+      confirmed, not a bug**: `harsh-tabN` rows still don't appear for THIS
+      session specifically — `resolve_tab_number()` only matches a `-tabs-(\d+)-` cwd-slug segment, and this
+      session's own transcript lives under the bare `-active-unified-trading-system-repos` project slug (no
+      `.tabs/N` segment), unlike Ikenna's, whose active tabs are each opened with `.tabs/N` as their own VS Code
+      workspace root. Per-tab visibility is working as designed; it requires each window to actually be opened at
+      its own `.tabs/N` folder (this workspace's own existing "an interactive session IS slot N" rule), which at
+      least this session isn't. Not fixed here — flagged to Harsh directly, his call how to restructure his windows.

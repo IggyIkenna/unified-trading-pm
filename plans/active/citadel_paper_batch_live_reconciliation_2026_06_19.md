@@ -291,7 +291,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       the live job is actually managed; applied directly instead (`gcloud run jobs update`, safe/idempotent,
       matches the shipped source), then `gcloud run jobs execute --wait` confirmed exit 0 with the expected honest
       no-op log line.
-- [ ] [INFRA] P2.7.4b. **Reconcile terraform state for `blrs_daily_determinism_job` before the next real `tofu
+- [x] ✅ [INFRA] P2.7.4b. **Reconcile terraform state for `blrs_daily_determinism_job` before the next real `tofu
       apply` of this module** — found while live-deploying P2.7.4's fix: `tofu plan -target=module.blrs_daily_determinism_job`
       showed the resource as untracked ("1 to add"), meaning this module's state is stale/missing relative to the
       live job (which was hotfixed out-of-band via `gcloud run jobs update` for P2.7.4, and likely originally
@@ -299,8 +299,10 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       of `terraform/gcp/` before this is reconciled could try to recreate or otherwise diverge from the
       gcloud-applied live spec. Import the live resource into state (`tofu import` or the equivalent
       `-refresh-only` reconciliation) and confirm a subsequent full `tofu plan` for this directory shows no
-      unexpected diff before anyone runs an untargeted apply. Repo: deployment-service.
-- [ ] [INFRA] P2.7.5. **Wire `paper_ledger_root`/`batch_ledger_root` + a batch-rerun trigger stage into the
+      unexpected diff before anyone runs an untargeted apply. Repo: deployment-service. **EXTRACTED 2026-08-19
+      (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** — see
+      `citadel_satellite_ao_dispatch_batch2_2026_08_19.md` item 1.
+- [x] ✅ [INFRA] P2.7.5. **Wire `paper_ledger_root`/`batch_ledger_root` + a batch-rerun trigger stage into the
       `blrs-daily-determinism` cron** — found while fixing P2.7.4. `ReconConfig.paper_ledger_root`/
       `batch_ledger_root` default `""` and nothing in `paper_week_determinism_scheduler.tf` ever populates them, so
       `--operation daily-determinism` currently runs as a permanent (correct, honest) no-op — it never actually
@@ -308,7 +310,9 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       (`cli/handlers/batch_rerun.py`, proven ε=0 — P2.7.2/P9.B) against the prior day's paper run to produce "run
       B"'s ledger, and (2) a mechanism (wrapper script or Cloud Scheduler body override, since the run_id isn't
       known at `tofu apply` time) to resolve "yesterday's paper run_id" and inject both ledger roots as env vars
-      into the daily-determinism job. Repo: deployment-service + strategy-service.
+      into the daily-determinism job. Repo: deployment-service + strategy-service. **EXTRACTED 2026-08-19
+      (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** — see
+      `citadel_satellite_ao_dispatch_batch2_2026_08_19.md` item 2.
 
 ## Phase 9 — paper/batch spine correctness fixes (2026-06-20) + captured pre-existing findings
 
@@ -940,4 +944,11 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   custody (Copper/CEFFU) approval not yet ready, P2.7.3 stays `BLOCKED-OPERATOR-DECISION` pending. No change to status;
   the paper↔batch-rerun ε=0 proof (P2.7.1/P2.7.2) remains unaffected since it does not depend on live custody.
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): RECLASSIFY per-todo split — of 5 open todos, P2.7.3
+  (permanent live-wallet hard-stop) and P2.11.15/P2.11.18 (ML retrain judgment calls, near-duplicate citation vs
+  `crypto_alpha_research_2026_07_24.md`) stay KEEP-NA per every prior pass; P2.7.4b (terraform-state reconcile) and
+  P2.7.5 (wire ledger-roots + cron trigger), both new 2026-08-18 findings never before audited, cleared the
+  conflict-check (archived `citadel_satellite_ao_dispatch_batch1_2026_08_08.md` + finalize checked directly — no
+  mention of either item) and are extracted to `citadel_satellite_ao_dispatch_batch2_2026_08_19.md`. Doc's own
+  `assigned_vm: NA` unchanged — P2.7.3 alone still justifies it.
 - **na-eligibility-audit 2026-08-17** [body-hash:b71a12f0d634c013]: KEEP-NA, valid -- 3 open todos confirmed via grep, matches inventory. Caught a stale-summary-vs-body contradiction: the doc's own 'Remaining-work register' header (dated 2026-08-08) claims '4 items still tracked here as real open checkboxes are P2.7.3 (operator-gated), P9.2 (dependency-blocked), P2.11.15..., and P2.11.18 sub-part (b)' -- but P9.2's actual checkbox in Phase 9 is already [x] checked, with a 2026-08-14 'RE-VERIFIED -- self-resolved, no fix needed' entry. The true open count is 3 (matching the given inventory), not the stale header's 4; this is prose that misled a reader but does not affect the actual checkbox state or verdict. Of the 3 genuinely open items: P2.7.3 (live -> reconcile to paper) is explicitly BLOCKED-OPERATOR-DECISION pending an approved live wallet + custody, reaffirmed 2026-07-28 as a PERMANENT CLAUDE.md hard-stop (wallet keys are human-only) -- citable on this alone. P2.11.15 and P2.11.18(b) are both ML research/retrain work (longer-horizon target retrain to fix a 2026 cs-leg drag) requiring research judgment, not bounded outcomes.

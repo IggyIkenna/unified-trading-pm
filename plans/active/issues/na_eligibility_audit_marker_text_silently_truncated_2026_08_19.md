@@ -36,8 +36,8 @@ related:
 created: "2026-08-19"
 author: "claude-code (plan_reconciler, epic-scoped deployment_and_user_management_master run)"
 parent_epic: plan_hygiene_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P3
 assigned_role: review
 drift_direction: NA
@@ -147,3 +147,16 @@ frontmatter claim in the second example is simply absent.
   incidentally while reading 2 of the epic's 17 child docs in full; confirmed genuine (not a Read-tool artifact) via
   a raw `tail -c` byte read on both files. Not fixed here (root-causing a script-side truncation is out of scope for
   a docs-only reconciliation pass) — filed with full repro text so a future session doesn't have to re-find it.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): RECLASSIFY whole-doc — all 3 todos are a bounded
+  investigate-then-fix-then-sweep chain (root-cause a specific truncation, implement the fix, corpus-sweep for other
+  instances), the standard SCRIPT-bugfix shape, no operator gate found. Conflict-check clear (no active
+  `plan_hygiene_master` planning doc or satellite batch touches this). Flipped `assigned_vm: NA -> planning`.
+  **Fresh corroborating instance found + self-corrected THIS SAME RUN, with a concrete root-cause hint for todo 1**:
+  writing this run's own 27 KEEP-NA Progress Log markers, a naive fixed-length (220-char) clip of a long evidence
+  string cut 8 of them mid-clause with no ellipsis (e.g. one ended "...multi-repo build/design work (M6, M7." —
+  unbalanced parens, dangling mid-list) — the exact defect shape this doc describes, reproduced live by cutting a
+  string at a raw character offset without checking for a clause/paren boundary. Caught via a scripted paren-balance
+  check before shipping and fixed by cutting at the nearest safe boundary instead; all 8 verified clean in the final
+  files. If the tracked script/LLM-sub-call mechanism does something equivalent (slice/truncate a marker string at a
+  fixed length without boundary-awareness), that is a plausible root cause worth checking first. Companion:
+  `na_eligibility_audit_marker_text_silently_truncated_2026_08_19_finalize_2026_08_19.md`.

@@ -242,7 +242,8 @@ already caught once.
       rows reindexed to `expected`'s final column set (post-union) before hashing, or switch the presence check to the
       same natural-key-subset method `verify_stale_raw_league_id_content_2026_08_14.py` already uses. Add a regression
       test with mismatched source/existing schemas (mirrors this session's real case).
-- [ ] [DATA][OPERATOR] P3. **CONTRADICTION FLAGGED (`/plan-reconcile sports_master` 2026-08-19) — this todo's own "AUTHORIZED 2026-08-16" header is NOT corroborated by this doc's own Progress Log below and must NOT be read as a live go-ahead to fire `--apply-prod` on this ~144K-275K-object prod GCS delete.** The 2026-08-16 (slot 30) Progress Log entry states verbatim: "Did NOT launch the `full`-mode delete ... filing a `/blocked` question to the operator for that explicit go-ahead rather than treating this 0-FAIL result as authorization by itself." The 2026-08-17 (slot 27) entry reconfirms: "Did NOT execute the delete — that stays gated on the separate `[OPERATOR]` re-authorization slot-30 already filed a `/blocked` question for." No Progress Log entry anywhere in this doc records the operator actually answering that `/blocked` question. **Before dispatching this todo, first check the live escalation-queue/`/blocked`-question state for a genuine operator answer — do not treat the bold "AUTHORIZED" text alone as sufficient.** Re-tagged `[OPERATOR]` as a safety measure pending that confirmation.
+- [x] N. ✅ [DATA][OPERATOR] P3. **EXECUTED 2026-08-19 (interactive session, Harsh — explicit live go-ahead in chat, resolving the contradiction flagged below).**
+      See Progress Log entry below for full evidence. Historical text preserved: **CONTRADICTION FLAGGED (`/plan-reconcile sports_master` 2026-08-19) — this todo's own "AUTHORIZED 2026-08-16" header is NOT corroborated by this doc's own Progress Log below and must NOT be read as a live go-ahead to fire `--apply-prod` on this ~144K-275K-object prod GCS delete.** The 2026-08-16 (slot 30) Progress Log entry states verbatim: "Did NOT launch the `full`-mode delete ... filing a `/blocked` question to the operator for that explicit go-ahead rather than treating this 0-FAIL result as authorization by itself." The 2026-08-17 (slot 27) entry reconfirms: "Did NOT execute the delete — that stays gated on the separate `[OPERATOR]` re-authorization slot-30 already filed a `/blocked` question for." No Progress Log entry anywhere in this doc records the operator actually answering that `/blocked` question. **Before dispatching this todo, first check the live escalation-queue/`/blocked`-question state for a genuine operator answer — do not treat the bold "AUTHORIZED" text alone as sufficient.** Re-tagged `[OPERATOR]` as a safety measure pending that confirmation.
       Once genuine operator authorization is confirmed (not assumed from this header): the fresh full-range
       (`2020-06-06..2026-08-16`) `dry`-mode re-verify (144,276/144,276 PASS, 0 FAIL — see Progress Log entry below)
       cleared the 5-part-proof gating-evidence condition. **Before firing `--apply-prod`, the dispatched worker must
@@ -255,6 +256,16 @@ already caught once.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
       `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same
       commit) — see that plan's Progress Log / todo annotation.
+- [ ] [DATA] P2. **New 2026-08-19**: characterize + resolve the 606-object (543 skipped + 63 failed) residual from
+      the 2026-08-19 delete execution (see Progress Log below) — their canonical targets vanished sometime during
+      that run's own ~1h45m window despite a fresh VERIFY confirming them 0-FAIL only ~38-100 minutes earlier.
+      Run a narrowly-scoped LIST+VERIFY re-pass over `2025-07-31..2025-08-13` (the sampled date range) to recover
+      the full object list (only a 5-item sample survives in the console log; no detailed report was uploaded for
+      the DELETE step) and confirm whether the targets are genuinely gone or were transiently touched. If
+      genuinely gone, this is a Track-V coverage gap needing the same additive-CAS-merge remediation the doc's
+      earlier `day=2025-09-18` fix used — NOT a re-run of this delete (the raw sources are safe/untouched, not
+      urgent). Not the same root-cause class as the already-diagnosed `day=2025-09-18` (foreign-writer overwrite)
+      or `SUPER_LEAGUE`-family (latent under-coverage) incidents — different date range, different raw labels.
 - [x] [CODE] P2. ✅ Added the `sports-league-id-delete` launcher category to `deployment-service`'s
       `scripts/vm/launch-canonical-migration-vm.sh` (5 call sites: usage string, dispatch case block,
       `MIGRATION_EXTRA_ARGS` suppression, asset-group tag, `STALL_PROGRESS_REGEX`), mirroring
@@ -516,6 +527,55 @@ already caught once.
   above); this task's scope was the live-writer pre-check only, per
   `sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md`. No repo code changes this session (read-only
   script re-runs only, no new script written).
+- **2026-08-19 (interactive session, Harsh, via /ao-watchdog chat)**: Picked up the P3 `[OPERATOR]`-gated todo.
+  Presented the full contradiction + count-mismatch context to Harsh live; he explicitly authorized proceeding
+  ("for the 144276 sports related entries please delete them, and be careful that you delete only those ones"),
+  resolving both the missing-authorization gap the 2026-08-19 plan-reconcile flagged AND the 144,276-vs-275,136
+  ambiguity (accepted 144,276 — this trio's own object-level delete-candidate population — as the correct scope,
+  not the July manifest-swap's unrelated 275,136 row-count metric).
+  **Pre-flight (all fresh, not assumed from prior runs)**: confirmed no concurrent VM in this category
+  (`gcloud compute instances list`, 0 matches); confirmed `deployment-service` local checkout clean and exactly
+  at `origin/live-defi-rollout` HEAD (0 ahead/0 behind) before letting the launcher auto-republish its stale
+  tarball; queried `gcs_bucket_soft_delete_retention_seconds('market-data-tick-sports-prd-central-element-323112')`
+  fresh — **604,800s (exactly 7 days)**, qualifies for the §3a reversibility carve-out.
+  **Launched** via the existing, unmodified launcher (no ad-hoc delete code):
+  `GCP_PROJECT_ID=central-element-323112 bash scripts/vm/launch-canonical-migration-vm.sh sports-league-id-delete 2020-06-06 2026-08-19 full`
+  → `canonical-migration-sports-league-id-delete-20260819-100257` (asia-northeast1-c, e2-standard-8, SPOT).
+  **Result** (from the durable off-VM `run.log`, not the VM's own transient serial console — the VM self-deleted
+  per `VM_SHUTDOWN_ON_COMPLETION=true` once the chain exited):
+  - LIST (123.0s, 2266 days): 144,276 candidates — **exact match to the 2026-08-16 baseline**, confirming the
+    population is genuinely frozen (consistent with the `data_type=trades` write path retirement on 2026-08-16).
+  - VERIFY (2281.5s / ~38min, fully fresh re-derivation, not reused from any prior report): **144,276 PASS, 0
+    FAIL** — the current-moment safety proof held clean, same as 2026-08-16's finding.
+  - DELETE (3979.0s / ~66min): `deleted: 143,670`, `skipped_target_missing: 543`, `failed: 63` (a distinct
+    code path, same underlying symptom — a 404 on the pre-delete re-verify GET), all other skip categories 0.
+    **143,670 + 543 + 63 = 144,276 — fully reconciled, nothing double-counted or unaccounted for.**
+    `DELETE DONE rc=1` (non-zero, correctly signaling "not fully clean" rather than silently succeeding).
+  - **99.58% of the population (143,670 objects) deleted successfully.** The remaining 606 (543 + 63) were
+    **NOT deleted — their raw sources are untouched and safe** — because the delete script's own
+    immediately-before-delete re-verification (re-describes/re-reads source + all recorded targets fresh,
+    never reusing the VERIFY report's cached content) found their recorded canonical target **no longer
+    present**, despite VERIFY having confirmed those exact same targets existed and passed content-verify only
+    ~38-100 minutes earlier in this SAME run. This is the delete-safety design working exactly as intended
+    (source-only deletion, gated on a live target re-check, never a blind trust of a stale report) — **no data
+    was lost or incorrectly deleted this run.**
+  - **New, unresolved finding**: something removed or altered 606 canonical target objects during this run's
+    own ~1h45m execution window (04:39-06:24 UTC) — a live-writer-shaped mystery, same unresolved-root-cause
+    class as the doc's own 2026-08-15 "unidentified 10:11-10:42 UTC write burst" finding (same known gap: no
+    GCS Data Access audit logging enabled on this bucket, so the actual writer/process cannot be identified
+    after the fact). The console log only samples 5 example paths per category (not the full 606 — no separate
+    detailed report was uploaded for the DELETE step, only `verify_report.json` for VERIFY), but the sample is
+    concentrated on `day=2025-07-31` (7 of 10 sampled) plus `2025-08-05/08-12/08-13`, all `SOCCER_ITALY_SERIE_A`
+    and `SOCCER_GERMANY_BUNDESLIGA` raw labels folding into `SERIE_A`/`BUNDESLIGA` canonical targets — a
+    different date range and raw-label pair than the prior `day=2025-09-18` (UEFA Champions League) and
+    `SUPER_LEAGUE`-family incidents, so likely a new occurrence of the same class of issue, not a recurrence of
+    either previously-diagnosed one.
+  - **Not yet done, left as an open follow-up** (the remaining 606 raw sources are safe/untouched, so this is
+    not urgent): a fresh, narrowly-scoped LIST+VERIFY re-run over just `2025-07-31..2025-08-13` to characterize
+    the full 606-object set (not just the 10 sampled) and confirm whether their canonical targets have
+    genuinely vanished for good or were transiently touched by something that already finished; if genuinely
+    gone, this becomes a Track-V coverage gap needing the same remediation pattern the doc's earlier
+    `day=2025-09-18` fix used (additive CAS-merge fold), not a repeat of this delete.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added
   `/plans/active/sports_satellite_ao_dispatch_batch15_2026_08_17.md` on a confirmed evidence fingerprint match: this

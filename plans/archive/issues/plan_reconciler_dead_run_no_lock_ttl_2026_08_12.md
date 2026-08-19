@@ -33,7 +33,7 @@ summary: >-
   auto-unlock" policy (`locked_by:` is designed to mean "a person must say `[unlock-plan]`"), a dead run's lock is now
   provably permanent until a human notices and intervenes — today that only happens when a LATER audit run happens to
   read the doc and files an incidental FYI, sometimes days later.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -63,7 +63,7 @@ estimate_baseline_ai_days: 0.6
 estimate_calibrated_ai_days: 0.6
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: agent-orchestrator@bfe8fb28a0
 locked_by:
 locked_since:
 source:
@@ -79,11 +79,22 @@ context_scope:
     agent-orchestrator/server/tmux_pruner.py,
     agent-orchestrator/scripts/install-plan-reconciler-timer.sh,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
-    unified-trading-pm/cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-trading-pm/agents/plan_reconciler.md,
   ]
 ---
 
 # plan_reconciler dead-run lock has no TTL / self-healing — 4 of 10 tranches stuck on 2026-08-09, recurring pattern
+
+> **🟢 RESOLVED 2026-08-19** — all 3 remaining todos shipped. Option A auto-clear + the pre-dispatch duplicate-tranche
+> guard both landed in `agent-orchestrator@bfe8fb28a0` (`PlanReconcilerDeadLockSweep` +
+> `_tranche_dispatch_gate`/`_last_tranche_dispatch` in `server/plan_health.py`), each with regression tests proving
+> the positive AND negative case. The lock-stamping hygiene fix landed in `unified-trading-pm@<this commit>`
+> (`agents/plan_reconciler.md` — NOT `cursor-configs/skills/plan-reconcile/SKILL.md`, this doc's own stale pointer,
+> corrected above). Durable contract migrated to
+> `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock correlation + duplicate-tranche
+> dispatch guard". `ao_satellite_ao_dispatch_batch22_2026_08_16.md` (status: draft, never activated, unlocked) claimed
+> all 3 of these items as its own todos 1-3 — that claim is now MOOT/superseded by this shipment; see this doc's final
+> Progress Log entry.
 
 ## Evidence
 
@@ -203,22 +214,44 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
 - [x] [OPERATOR] P2. ✅ **Ruled 2026-08-15 (operator via /plan-reconcile session): Option A** — once AO confirms a
       dispatch id is reaped-stale, the lock auto-clears without a human step. (Staleness threshold + which repo/service
       owns the AO↔PM-repo correlation sweep are implementation details of the follow-up todo below, not re-opened here.)
-- [ ] [BACKEND] P1. Implement Option A auto-clear: wire the plan_reconciler lock-clear into AO's reaped-stale detection
-      path (see agent-orchestrator's dispatch-status model) so a PM-repo doc lock auto-releases once AO confirms the
-      dispatch that set it is reaped-stale — ruled 2026-08-15, see this doc's Progress Log.
+- [x] [BACKEND] P1. ✅ **Shipped 2026-08-19** — Implemented Option A auto-clear:
+      `server/plan_reconciler_dead_lock_sweep.py` (`PlanReconcilerDeadLockSweep`, an AO-side daemon-thread periodic
+      sweep, wired in `server.py` alongside `PlanReconcilerLivenessCanary`) correlates a
+      `plan_reconciler_findings_<tranche>_<date>.md` doc's `locked_by:` dispatch id against AO's own
+      `AgentRow.exit_reason` and auto-clears the PM-repo lock only once confirmed `exit_reason="reaped-stale"` AND old
+      enough (`tuning.plan_reconciler_dead_lock_max_age_hours`, default 8h — inside this doc's own 6-12h
+      recommendation), aged off the AgentRow's OWN `finished_at`/`registered_at` timestamp — never a hand-typed doc
+      timestamp (live docs were found inconsistent on carrying one at all, see todo below). The PM-repo write happens
+      in a throwaway scratch clone, never the shared read-only `pm_repo_path` checkout: clone → edit → commit → push
+      → delete, never force. Regression tests prove both directions:
+      `test_sweep_once_clears_a_confirmed_dead_lock` (a confirmed-dead lock clears) and
+      `test_sweep_once_does_not_clear_a_still_live_lock` (a still-live dispatch is left completely untouched), plus 7
+      pure `assess_lock` unit tests covering every branch (no id, unknown id, wrong exit_reason, inside the grace
+      window, etc.). Codex updated:
+      `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock correlation…". Evidence:
+      `agent-orchestrator@bfe8fb28a0`.
 - [x] [INFRA] P3. ✅ **Fixed 2026-08-15** — `agent-orchestrator/scripts/install-plan-reconciler-timer.sh`'s header
       comment claim that the dispatch POST "blocks synchronously for that tranche's FULL worker run" (finding 4) is
       confirmed wrong: no completion-polling exists in `plan_health.dispatch()`/`autospawn._do_spawn()`. Rewrote the
       comment to the "spawn receipt, not completion" framing matching
       `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`.
-- [ ] [INFRA] P3. Once ruled: audit why 2 of the 4 dead 2026-08-09 docs (`…_defi_…`, `…_cefi_…`) stamped a bare
-      `locked_by: plan_reconciler` with no `(agt-xxxxxx) since <ts>` suffix (finding 6) — a genuine dead-session
-      correlation needs the dispatch id + timestamp on every run's lock-stamping step, not just most of them.
-      **Confirmed-recurring, not hypothetical**: independently reproduced live this session (2026-08-15) in the
-      sports-tranche doc (`plan_reconciler_findings_sports_2026_08_10.md`), which also carried the bare
-      `locked_by: plan_reconciler` / `locked_since: "2026-08-10"` format with no dispatch id before it was cleared —
-      this is the same hygiene gap recurring in a THIRD dated doc, not a one-off from the original 2 defi/cefi cases.
-- [ ] [BACKEND] P1. **Pre-dispatch duplicate-tranche check — a DIFFERENT gap from this doc's dead-lock focus, found
+- [x] [INFRA] P3. ✅ **Shipped 2026-08-19** — Audited: the actual lock-stamping step lives in
+      `unified-trading-pm/agents/plan_reconciler.md` STEP 2b ("START YOUR RUN-FINDINGS DOC"), **not**
+      `cursor-configs/skills/plan-reconcile/SKILL.md` — this doc's own `context_scope` pointer to SKILL.md was itself
+      stale/misleading (SKILL.md only discusses RESPECTING an existing `locked_by:` on OTHER plans, never the
+      self-stamping step; corrected in this doc's `context_scope` above per the misleading-pointer HARD RULE). Root
+      cause: the instruction listed `locked_by` as a bare frontmatter field NAME in a parenthetical list with no
+      literal value template shown — 3 different formats were found live as a result: a bare
+      `locked_by: plan_reconciler` (2 of 4 dead 2026-08-09 docs + the reproduced 2026-08-15 sports case), the target
+      `plan_reconciler (agt-xxxxxx) since <ts>` shape, and — found live during this fix, the CURRENT majority format
+      across every 2026-08-16..08-18 findings doc checked — an id-only `plan_reconciler-<dispatch_id>` with **no
+      timestamp at all**. Fixed `agents/plan_reconciler.md` to an unconditional literal template:
+      `locked_by: plan_reconciler (<dispatch_id>) since <UTC ISO-8601 timestamp>` (id from `$DISPATCH_ID`, timestamp
+      from `date -u +%Y-%m-%dT%H:%M:%SZ`), both required every run. Note: the auto-clear sweep above (todo 1) does NOT
+      depend on this fix — it ages a lock off AO's own AgentRow timestamp, by design, specifically because the doc's
+      own timestamp was found unreliable — but the dispatch ID is still required for correlation, and a human reading
+      `locked_by:` directly still needs the timestamp. Evidence: `unified-trading-pm@<this commit>`.
+- [x] [BACKEND] P1. **Pre-dispatch duplicate-tranche check — a DIFFERENT gap from this doc's dead-lock focus, found
       live 2026-08-16.** `plan_health_dispatch_initiated` fired a SECOND same-day `tranche=ao` worker (`agt-053eab`,
       slot 7, 17:15:16 UTC) while a FIRST `tranche=ao` worker (`agt-3eb42b`, slot 28, started 16:17:25 UTC) was still
       ALIVE — confirmed via `/api/activity`: `forced_precompact` events for `orch-slot-28` fired at 17:14/17:18 UTC,
@@ -234,6 +267,24 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
       `AgentRow` for a prior dispatch matching tranche+today still non-terminal) and skip/queue the new dispatch
       instead of spawning a collision. **Done when**: a second same-day same-tranche dispatch is refused or queued
       while a prior tranche worker's lock is confirmed live, with a test.
+      ✅ **Shipped 2026-08-19** — Implemented `_tranche_dispatch_gate` in `agent-orchestrator/server/plan_health.py`'s
+      `dispatch()` (alongside the existing report-mode-only `_report_dispatch_gate`): before spawning a
+      `mode="reconcile"`/`"na_eligibility"`/`"ag_closeout"` worker with a `tranche` set, a new `_last_tranche_dispatch`
+      correlates the same-day same-`(mode, tranche)` `plan_health_dispatch_initiated` activity row (now also logging
+      `tranche`) to its `AgentRow`; if no `plan_health_result` has posted AND the AgentRow isn't `archived`, the new
+      dispatch coalesces onto the existing one (no spawn) instead of colliding. A confirmed-dead (archived) prior
+      AgentRow never blocks a fresh retry — no `force=` bypass, unlike the report throttle, since a genuinely-live
+      sibling is never safe to double-spawn onto regardless. This single, generalized (mode-parametrized, not
+      reconcile-only) fix ALSO closes `na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18`'s
+      identical gap (same root cause, `mode="na_eligibility"`) — see that doc's own todo 2, extracted to
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2; flagged in that batch's Progress Log so its own
+      dispatch of item 2 isn't a duplicate of work already shipped here. Regression tests prove both directions:
+      `test_dispatch_reconcile_mode_coalesces_no_spawn_when_tranche_gate_live` (a live same-tranche dispatch
+      coalesces, no new spawn) and `test_dispatch_na_eligibility_mode_different_tranche_still_spawns` (a genuinely
+      different tranche/date proceeds to a real spawn), plus 9 more unit tests directly on the gate/correlation
+      functions (`_tranche_dispatch_gate`/`_last_tranche_dispatch`), covering na_eligibility/ag_closeout too, not just
+      reconcile. Codex updated: `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock
+      correlation…". Evidence: `agent-orchestrator@bfe8fb28a0`.
 
 ## Progress Log
 
@@ -306,3 +357,37 @@ run, i.e. ≥18h, and per this investigation, ≥3 days by 2026-08-12).
 - **plan_reconciler 2026-08-18 (ao tranche, hunter #3, Phase -1 pass)**: re-verified all 3 open todos against fresh code. Todos 1 and 3 unchanged from the 2026-08-16 re-verification (still zero `reaped-stale`↔`locked_by` correlation code; bare-`locked_by` stamping audit not independently re-checked this pass). **Todo 4 (pre-dispatch duplicate-tranche check) — root-caused precisely this pass**: `plan_health.py`'s ONLY at-most-one-live-dispatch coalescing mechanism, `_report_dispatch_gate()`, is gated exclusively to `mode == "report"` inside `dispatch()` (`if mode == "report": ... coalesced = _report_dispatch_gate(...)`) — the function's own docstring lists `mode="reconcile"` (what `plan_reconciler` dispatches as) explicitly among the modes "exempt from the whole gate (their own scheduled call, not promotion-triggered)". This is not an oversight-shaped absence, it is a deliberate design exemption that happens to leave `reconcile`-mode dispatches with zero duplicate/live-dispatch protection at the server layer. **Corroborating live evidence, same root cause, a different mode**: `na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md` (this same tranche's batch) documents a live 2026-08-18 incident where two `mode="na_eligibility"` dispatches for the identical tranche ran concurrently and collided on a real file write — `na_eligibility` is listed in the exact same docstring exemption set as `reconcile`. Both incidents are two symptoms of one confirmed gap: `_report_dispatch_gate`'s coalesce logic was never generalized past `mode="report"`. Cross-linked in that doc's own Progress Log. Still not implemented — real `agent-orchestrator` engineering, out of scope for a plans-corpus pass — but the fix now has a single, shared, well-evidenced implementation target for BOTH todo 4 here and that doc's todo 2.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:13f9495b0e5d0bb8]: KEEP-NA-STALE (already-duplicated) — reconfirms the 2026-08-17 verdict: all 3 open todos are already claimed verbatim by ao_satellite_ao_dispatch_batch22_2026_08_16.md (todos 1-3 cite this doc by path + text); that batch's own finalize plan owns reconciling/archiving this doc. Today's 2026-08-18 plan_reconciler pass reconfirmed all 3 remain genuinely open in code but did not touch the duplication verdict. Not reclassifying — would dispatch a duplicate.
+
+- **2026-08-19 — All 3 remaining todos implemented + shipped, doc resolved + archived.** Read this doc's own current
+  Todos section directly (not the stale KEEP-NA-STALE citation above) before starting, per the pre-task conflict-check
+  HARD RULE. Implemented and shipped in `agent-orchestrator@bfe8fb28a0`:
+  1. **Option A auto-clear** (`server/plan_reconciler_dead_lock_sweep.py`, `PlanReconcilerDeadLockSweep`) — an AO-side
+     daemon-thread sweep correlating a PM-repo `locked_by:` dispatch id against AO's own `AgentRow.exit_reason`,
+     auto-clearing only once confirmed `exit_reason="reaped-stale"` and old enough (aged off the AgentRow's OWN
+     timestamp, never a doc-embedded one). Write happens in a throwaway scratch clone, never the shared read-only
+     `pm_repo_path` checkout.
+  2. **Pre-dispatch duplicate-tranche guard** (`_tranche_dispatch_gate` + `_last_tranche_dispatch` in
+     `server/plan_health.py`) — generalized across `reconcile`/`na_eligibility`/`ag_closeout` (not reconcile-only),
+     which also closes `na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18`'s identical gap in
+     the SAME fix (that doc's own extraction, `ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2, is now
+     redundant with what's already shipped here — noted in that batch's own Progress Log so its dispatch doesn't
+     duplicate the work).
+  3. **Lock-stamping hygiene fix** (`unified-trading-pm/agents/plan_reconciler.md` STEP 2b) — made the
+     `locked_by: plan_reconciler (<dispatch_id>) since <ts>` stamp unconditional (both id AND timestamp, every run).
+     **Misleading-pointer finding, fixed in the same turn**: this doc's own `context_scope`/todo 3 text pointed at
+     `cursor-configs/skills/plan-reconcile/SKILL.md` as the lock-stamping step's home — SKILL.md never contains that
+     step at all (it only discusses respecting an existing lock on OTHER docs); the actual step lives in
+     `agents/plan_reconciler.md`. Corrected `context_scope` above.
+  Regression tests for both mechanisms prove the negative case explicitly (a still-live dispatch is NOT cleared /
+  a genuinely different tranche IS allowed to dispatch concurrently) — see the Evidence lines on each todo above.
+  Durable contract migrated to `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock
+  correlation + duplicate-tranche dispatch guard" (step 3 of the archival ritual) before this doc moves to
+  `plans/archive/issues/`.
+  **Superseding `ao_satellite_ao_dispatch_batch22_2026_08_16.md`'s claim**: that batch plan (`status: draft`, never
+  activated, unlocked — verified directly, not assumed) lists these exact 3 items as its own todos 1-3, sourced from
+  this doc. Since `status: draft` means never auto-ingested/dispatched, it held no live lock and blocked nothing —
+  but now that the work is done here, batch22's todos 1-3 are MOOT. Left un-edited (it is not this doc's plan to
+  edit, and it is a draft an operator may still activate/discard) but flagged here so anyone reviewing or activating
+  batch22 later sees this doc's resolution first and does not re-dispatch already-shipped work. All 3 open todos now
+  `[x]`, doc unlocked (`locked_by:` empty, verified) — archiving per the 6-step ritual
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) in the same commit as this entry.

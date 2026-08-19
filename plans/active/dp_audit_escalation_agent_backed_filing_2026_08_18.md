@@ -188,3 +188,4 @@ exists on one side and is never actually exercised end-to-end.
   15:36:31 UTC) then resolved+archived it (`unified-trading-pm@8100c10056`, 15:38:49 UTC, "drill confirmed
   working"). Both commits verified ancestors of `origin/live-defi-rollout`. Todo 4's checkbox above is correct;
   this entry was just never appended (found + closed — plan-reconcile observability_master, 2026-08-19).
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 1 open stretch/optional todo remains on an otherwise fully-shipped, live-verified plan (4/5 todos DONE + a live end-to-end drill proved the whole chain works); the residual is explicitly self-described as 'a real design.

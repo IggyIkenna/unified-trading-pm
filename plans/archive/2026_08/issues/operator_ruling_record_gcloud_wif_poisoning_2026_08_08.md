@@ -11,7 +11,7 @@ summary: >-
   citation a traceable home, per the same pattern established by
   `operator_ruling_record_ao_round5_apply_session_2026_08_08.md` — it is NOT a substitute for the operator confirming it
   is accurate.
-status: open
+status: resolved
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -47,6 +47,10 @@ source: >-
 depends_on: []
 ---
 
+> **🟢 RESOLVED — archived 2026-08-19.** Operator confirmed the ruling below is accurate as transcribed. Separately
+> verified: the "two unresolved implementation todos" this doc's own todo referenced were already shipped
+> 2026-08-14, before that reference was ever corrected — see the final Progress Log entry.
+
 # Operator ruling record — gcloud WIF-poisoning durable-direction decision
 
 ## Provenance — read this before citing this doc
@@ -74,13 +78,26 @@ a third party cannot tell which from the outside). The confirmation todo below s
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Confirm this ruling is accurate as transcribed, or correct it.** It is quoted verbatim from the
+- [x] [OPERATOR] P2. ✅ **Confirm this ruling is accurate as transcribed, or correct it.** It is quoted verbatim from the
       todo that applied it, but only the operator can confirm it was really issued this way — the two unresolved
       implementation todos it unblocks (Part 1/2 of the credential-file migration, plus the ADC-backed-client extension)
       both rest on this decision being real. **Done when**: this doc records the confirmation (or correction), dated.
-      Repo: unified-trading-pm.
+      Repo: unified-trading-pm. — **CONFIRMED 2026-08-19 (operator, interactive session): accurate as transcribed.**
+      No correction needed.
 
 ## Progress Log
+
+- **2026-08-19 (interactive session)**: operator confirmed the ruling is accurate as transcribed. Separately
+  verified against `/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md` (read in
+  full): this doc's own todo text ("the two unresolved implementation todos it unblocks... both rest on this
+  decision being real") was already STALE at write time relative to that doc — both implementation parts had
+  actually shipped 5 days before this correction: Part 1 (`agent-orchestrator@5375439`, AO workers pin
+  `GOOGLE_APPLICATION_CREDENTIALS` to a non-shared `/etc/orchestrator/gcp-sa.json`, never resolving via ambient
+  `gcloud` active-account state) and Part 2 (`execution-service@a3ce78261`, the one other exposed self-hosted CI
+  job isolated via `CLOUDSDK_CONFIG`), both landed 2026-08-14 and live-verified the same day via an
+  operator-authorized SSM acceptance test that deliberately poisoned the shared config and confirmed AO's
+  credential resolution held anyway (full transcript in that doc's own final `[OPERATOR]` todo). That source doc
+  is itself `status: resolved`, archived. Nothing technical remains outstanding on either doc.
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 

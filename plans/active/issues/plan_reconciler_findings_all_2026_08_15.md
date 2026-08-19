@@ -22,7 +22,7 @@ tags: [plan_reconciler, reconciliation, plan-hygiene, findings, all-tranches, fr
 related:
   [
     /plans/active/issues/operator_ruling_record_plan_reconcile_session_2026_08_15.md,
-    /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
   ]
 created: "2026-08-15"
 parent_epic: plan_hygiene_master

@@ -123,7 +123,7 @@ Phase-3): `ci-status-update.yml` writes Firestore only (per-repo-doc CAS + `is_s
 per-transition manifest commit, the `manifest-update` concurrency group, or the retired `ci-status-reconciler`; the
 hourly `ci-status-consolidator` owns the manifest-cache projection (manifest stays a fallback cache, read Firestore for
 live state). **Never `gh workflow run ldr-to-main-promote-fleet.yml` to check your own promotion** — shared
-single-concurrency slot; ad-hoc dispatches starve it (measured 2+ h livelock 2026-08-07). Read
+single-concurrency slot, ad-hoc dispatches starve it. Read
 `scripts/cicd/promotion_lag_monitor.py` or `gh pr list --search "chore(promote)"`. SSOT:
 `/codex/08-workflows/ci-cd-flow.md`.
 
@@ -180,9 +180,8 @@ SSOT: `/codex/05-infrastructure/per-tab-worktrees.md`.
   `/codex/12-agent-workflow/async-wait-and-poll-discipline.md`.
 - **Batch independent tool calls — the trigger is PRE-call**: before any Bash/Read/Grep ask _what else will I want to
   know regardless of this answer_, and fold it into the SAME call (compound `&&`/`;`, several `tool_use` blocks per
-  message, `replace_all` over serial Edits); only result-dependent calls stay sequential. Stating it as an outcome fails
-  — a reminder acknowledged ~88×/session changed nothing. Measured: 57.3% collapsible, each a ~406k prefix re-read.
-  SSOT: `/codex/06-coding-standards/tool-call-batching.md`.
+  message, `replace_all` over serial Edits); only result-dependent calls stay sequential. SSOT (measured impact + why
+  restating it as a reminder alone doesn't work): `/codex/06-coding-standards/tool-call-batching.md`.
 - **Grep codex before asking the operator for committed numbers** (`codex/14-customer-journeys/commercial-model/`).
 - **Pre-task plan/issue conflict check (HARD RULE)** — before ANY task grep `plans/active/`+`issues/`: plans go
   stale/superseded between daily `/plan-reconcile` sweeps: no-flag≠current; 0 hits ≠ clear (grep-then-read) — check
@@ -198,8 +197,7 @@ cuts (`doc_type` / `asset_group` / `stage` / `repos` / `status` / `nature` / `ta
 `rg -l '^doc_type: codex-ssot' codex/ | xargs rg -l '^asset_group:.*defi'`). Confirm relevance via `summary:` (L2)
 before opening; open ONLY the confirmed doc (L3); jump doc→code via its `code_refs` (L4, module-dir granularity). The
 domain index below is the shortcut for known domains; L0/L1 grep covers everything else. SSOT:
-`/codex/11-project-management/doc-frontmatter-schema.md` §1 + epic `agent_operating_framework_master` § "Target
-architecture (L0–L4)".
+`/codex/11-project-management/doc-frontmatter-schema.md` §1 + `agent_operating_framework_master.md`'s L0-L4 section.
 
 ## Plans — format + authoring discipline
 
@@ -223,8 +221,10 @@ architecture (L0–L4)".
 - **Format**: every todo `- [x] [SCRIPT] P0. …`. **Frontmatter SSOT: `plans/PLAN_FORMAT.md`** (canonical schema via
   `/codex/11-project-management/doc-frontmatter-schema.md`) — read it for the required-key list; a copy here only rots.
   Semantics not to guess: **`status: draft`** = WIP → NOT ingested (flip to `active` to dispatch); **`depends_on`**
-  documents ordering + gates archival, does NOT affect dispatch. SSOTs: `plans/PLAN_FORMAT.md`,
-  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
+  documents ordering + gates archival, does NOT affect dispatch. **Epic assignment (HARD RULE)**: asset-group-specific
+  -> asset-group epic; shared-mechanism, even found via one asset group -> the owning epic. SSOTs: `plans/PLAN_FORMAT.md`,
+  `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`,
+  `/codex/11-project-management/epic-assignment-decision-rule.md`.
 - **A plan REFERENCES codex, it does not duplicate it (HARD RULE)**: the durable rule's SSOT is the codex doc; the plan
   links to it. **When authoring or touching a plan, READ the codex docs it depends on and check the plan against them**
   — plan↔codex drift is review-blocking (this is why plans cite a `Codex SSOTs:` section). After a major phase, run the
@@ -285,8 +285,7 @@ architecture (L0–L4)".
   verification** — never "done" without running the code; a `- [x]` Cloud Build / deploy / promote-green claim MUST cite
   `Evidence: cloudbuild=<id>` that resolves SUCCESS via `gcloud builds describe` (QG
   `check_evidence_backed_completion.py` fails on a non-SUCCESS build; SSOT `plans/PLAN_FORMAT.md` § 8b). **Citadel
-  planning standards** (pre-audit / phased DAG / no tech debt / SSOT in UAC / foundation-gate / issue-doc-lifecycle) →
-  `codex/11-project-management/`.
+  planning standards** → `codex/11-project-management/`.
 
 ---
 
@@ -391,8 +390,8 @@ architecture (L0–L4)".
   resolved · git RECOVERED · escalation resolved-if-it-paged; webhook-only correlation via opened-at ts, no threading).
   SSOT: `/codex/04-architecture/agent-orchestrator-alerting.md`. **CI alerts (`ci-failures` channel)** route through the
   reusable `notify-slack.yml` carrier (read-back dedup: `dedup_key`+`cooldown_min`, `recovery`-gated all-clears,
-  fail-open); cooldowns track a condition's MEASURED delivery cadence, not its declared cron (GH throttles `schedule:`
-  well below the declared rate — measured rates + dates in the SSOT, re-measure before trusting an old %). SSOT:
+  fail-open); cooldowns track a condition's MEASURED delivery cadence, not its declared cron (GH throttles well below
+  it — re-measure before trusting an old rate; see SSOT). SSOT:
   `/codex/04-architecture/ci-alerting.md`. **Need to READ a channel directly (not just receive alerts)?**
   `scripts/dev/slack-read-channel.py` already has it (GSM + gcloud ADC, zero setup, every slot/VM/AO) — check before
   assuming no access. SSOT: `/codex/05-infrastructure/agent-slack-read-access.md`.

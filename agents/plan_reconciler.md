@@ -237,7 +237,17 @@ Create `plans/active/issues/plan_reconciler_findings_<TRANCHE>_<TODAY>.md` (TODA
 set, else `all` for an unsharded run) — **required** even for an unsharded run, so the bare filename never races with a
 sharded tranche worker running the same day (up to 10 sibling tranche workers can dispatch same-day per the 2026-08-06
 sharded-cadence ruling; a shared bare filename is a one-writer-per-file violation). With frontmatter (title / created /
-author: plan_reconciler / source: `<dispatch_id>` / locked_by) and sections you APPEND to as you go:
+author: plan_reconciler / source: `<dispatch_id>`) and set `locked_by:` to the LITERAL value
+`plan_reconciler (<dispatch_id>) since <UTC ISO-8601 timestamp>` — e.g.
+`locked_by: plan_reconciler (agt-7f3a92) since 2026-08-19T14:32:00Z` (id from `$DISPATCH_ID`, timestamp from
+`date -u +%Y-%m-%dT%H:%M:%SZ`) — **unconditionally, every run, both the id AND the timestamp, never a bare
+`locked_by: plan_reconciler` or an id-only `plan_reconciler-<dispatch_id>` variant**. This is not cosmetic: 2 of 4 dead
+2026-08-09 docs (and a 3rd independently reproduced 2026-08-15) stamped the bare form with no id at all, making
+dead-session correlation impossible for those rows even after `server/plan_reconciler_dead_lock_sweep.py` shipped (it
+ages a lock off the owning AgentRow's own timestamp, not this doc's — but it still needs the id to find that AgentRow
+in the first place, and a human reading `locked_by:` directly still needs the timestamp). See
+`/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` finding 6. Then fill the rest of the sections
+you APPEND to as you go:
 `## Flips verified`, `## Contradictions`, `## Doc-drift`, `## Hygiene fixes`, `## Filed`,
 `## Archive candidates (operator review)`, `## Refuted (dropped by verify)`, `## Coverage (hunters / batches / docs)`,
 `## Plans not reached`. SIZE ROUTING: this doc is the home for a SUBSTANTIVE run; if the run turns out TRIVIAL (zero

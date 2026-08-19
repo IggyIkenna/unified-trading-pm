@@ -22,26 +22,26 @@ tags: [gcs, bucket-naming, stale-config, data-correctness, migration-scripts]
 related:
   [
     /plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md,
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-18
-last_updated: "2026-08-18"
+last_updated: "2026-08-19"
 parent_epic: security_and_cross_cutting_master # was: infrastructure_master (renamed 2026-08-18, epic-taxonomy restructure; corrected cross-epic sweep 2026-08-19)
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: research
-estimate_baseline_ai_days:
-estimate_calibrated_ai_days:
-assigned_role: data
+estimate_baseline_ai_days: 0.6
+estimate_calibrated_ai_days: 0.7
+assigned_role: worker # was: data (not a valid agents/*.md registry entry; corrected na-eligibility-audit 2026-08-19)
 effort: medium
 resolved_by:
 drift_direction: advance-code
 depends_on:
 context_scope:
   [
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
     instruments-service/scripts/,
   ]
 supersedes:
@@ -94,9 +94,26 @@ material caveat on top of the GCS-method-call fix that already shipped.
 - No check of the ~4 CLI-docstring usage examples that also reference the stale names (lower priority — cosmetic
   vs. functional, but still misleading to a future reader copy-pasting the example).
 
+## Todos
+
+- [ ] [DATA] P2. Per-file live `.exists()`-probe verification pass across all 15 Category-1 files to determine each
+      file's correct `-prd-` bucket name, confirming whether the `-prd-` insertion + `pred`/`prediction` stem
+      exception is uniform across asset groups or file-specific, then fix each file's hardcoded `BUCKET_NAME`
+      constant to the verified value. Done when: all 15 files' constants are verified live and corrected, with the
+      per-AG naming-rule pattern documented in this doc.
+- [ ] [DOCS] P3. Fix the ~4 CLI-docstring usage examples in the same files that reference the stale (non-`-prd-`)
+      bucket names, matching the corrected constants from the todo above. Done when: a grep confirms no CLI
+      docstring in these files references a non-`-prd-` bucket name.
+
 ## Progress Log
 
 - **2026-08-18**: filed while shipping the 15 Category-1 GCS-client fixes (`instruments-service@ae66f2147c`) — the
   investigating sub-agent found this while determining target buckets for live scratch-round-trip verification, out
   of scope for the method-call fix itself. `assigned_vm: NA` pending a dedicated per-file bucket-name verification
   pass.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): RECLASSIFY whole-doc — 0 checkboxes existed (prose-only
+  remaining work, a HARD RULE violation on its own), but the "What's NOT done here" section describes real, bounded,
+  entirely machine-checkable work (bucket exists-or-doesn't + mechanical constant fix), confirmed not a duplicate of
+  the citing parent doc's own DONE checkbox. Converted prose to 2 tracked todos above and flipped
+  `assigned_vm: NA -> planning`. Companion:
+  `instruments_service_stale_prd_bucket_names_2026_08_18_finalize_2026_08_19.md`.

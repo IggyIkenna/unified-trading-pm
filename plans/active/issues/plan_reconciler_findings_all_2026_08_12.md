@@ -619,7 +619,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
 - [ ] [REVIEW] P3. (ao-readiness) plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md — low severity. **Still open
       (checked 2026-08-16)**: generic low-severity tag with no specific defect stated; doc has 3 ordinary open
       engineering todos (decoder build-out, wiring, backfill VM launch), nothing concretely wrong found on a fast pass.
-- [x] ✅ [DOC] P3. (codex-drift) plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md — no evidence the Phase-2
+- [x] ✅ [DOC] P3. (codex-drift) /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md — no evidence the Phase-2
       codex correction on filename-stem contract ever shipped. **DONE**: doc's own banner already shows
       "RESOLVED-BY-REFERENCE 2026-07-29 (retag) — corrected 2026-08-12 (/plan-reconcile)" plus a 2026-08-12-dated
       correction of stale leftover boilerplate on its sole todo; 0 open todos remain — verified 2026-08-15.
@@ -763,3 +763,4 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   extracted verbatim 2026-08-14/15. Also fixed item 14's own path-drift bug (cited `plans/archive/issues/...`, real
   path is `plans/active/issues/...`, never archived). Item 14 closed; the other 23 items unchanged from the marker
   above, doc otherwise KEEP-NA valid. Cross-cutting tranche audit.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 22 open items (grep-verified, matches Phase-0=22) in a P2/P3 review-tracking backlog from the 2026-08-12 full-corpus /plan-reconcile run; already audited twice by this same skill (2026-08-17 x2) reaching KEEP-NA both. (4/22 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)

@@ -28,7 +28,8 @@ scope: [engineer]
 tags: [quality-gates, baseline-ratchet, hardcoded-config, test-hygiene]
 related:
   [
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-19
 last_updated: "2026-08-19"
@@ -46,7 +47,7 @@ drift_direction: advance-code
 depends_on:
 context_scope:
   [
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
     deployment-service/scripts/sync/,
     deployment-service/tests/unit/,
   ]
@@ -110,3 +111,7 @@ fallback-import` was warranted. Re-ran `check_no_fallback_imports.py --scope dep
 non-hard-failing check in the sweep, or was masked by the item-1 failure aborting the run first each time), and
 fixing it properly is still a judgment call (whether the hardcoded ID is acceptable in test fixtures or needs a
 shared constant) outside the migration-canonicalization plan's scope. Needs its own pass.
+
+## Progress Log
+
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 0 open checkboxes (grep-verified, matches Phase-0=0) — the doc uses pure prose, no checkbox syntax at all. Item 1 (fallback-import baseline overage) is fully resolved and shipped.

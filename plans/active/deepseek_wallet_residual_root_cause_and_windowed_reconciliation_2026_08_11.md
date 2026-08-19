@@ -28,9 +28,10 @@ related:
     /plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md,
     /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md,
     /codex/12-agent-workflow/measurement-claims-discipline.md,
+    /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_operator_items_2026_08_19.md,
   ]
 created: 2026-08-11
-last_updated: 2026-08-16
+last_updated: 2026-08-19
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -208,13 +209,10 @@ last 24 hours" was not unimplemented — it was structurally impossible. Fixed b
       it, same "frozen historical stock" shape as the $26.40 pre-observability gap this plan already has a
       dedicated `opening_balance` mechanism for. No code fix is applicable (nothing to fix going forward; already
       fixed) — see the new [OPERATOR] todo below for the optional stock-freeze follow-up.
-- [ ] [OPERATOR] P3. **Optional — fold the now-explained -$16.93 into the frozen `opening_balance` (or record a
-      second freeze event) so `residual_since_observability_usd` reads zero instead of carrying an already-
-      root-caused, already-fixed historical bug as a live-looking number.** `opening_balance_usd` is still `null`
-      live (2026-08-16 — the earlier $26.40 pre-observability freeze from the P2 todo above was also never actually
-      submitted via the panel form). Not urgent: the underlying bug is fixed forward and the dollar amount is small:
-      `POST /api/accounts/deepseek/wallet-reconciliation/opening-balance` with the measured pre-observability +
-      2026-08-12 cache-bug stock, or via the `DeepSeekWalletPanel` freeze form. (repo: agent-orchestrator, doc only)
+- **[OPERATOR] P3. CANCELLED — SUPERSEDED 2026-08-19 (Track-A/B classification pass, forked per `task_template.md`
+  §3 finding Y): re-scoped to a companion NA doc, nothing left to complete here** — optional accounting freeze of the
+  now-explained -$16.93 residual, same action-class as the P0 `[OPERATOR]` item above. See
+  [`deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_operator_items_2026_08_19.md`](/plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_operator_items_2026_08_19.md).
 - [x] ✅ [UI] P2. **Surface the windowed view in `DeepSeekWalletPanel.tsx` with a 24h/7d toggle —
       agent-orchestrator@4d2f9ed118.** `WINDOW_OPTIONS` (24h/168h) toggle wired to
       `GET /api/accounts/deepseek/wallet-reconciliation/window?window_hours=`; `windowedSpendCellText` renders the
@@ -551,3 +549,11 @@ Progress Log).
   `deepseek_flash_spend_235_residual_2026_08_10.md` issue (already surfaced via this doc's own `related:` field, and
   superseded by this doc's own fuller root-cause narrative).
 **context-scout 2026-08-17**: populated/refreshed context_scope (7 entries)
+- **2026-08-19 (Track-A/B classification pass, ao_open_work_consolidated_tracker_2026_08_14.md Track 7, per
+  task_template.md §3 finding Y)**: this plan's last remaining open todo (`[OPERATOR] P3`, the optional
+  `opening_balance` freeze) forked into a companion NA doc —
+  `/plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_operator_items_2026_08_19.md`
+  — cross-linked via `related:` both directions, source checkbox replaced with a bold pointer digest line. This plan
+  now has **zero open todos**; its gated finalize plan
+  (`deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_finalize.md`) owns the archival ritual
+  from here, not this pass — see that finalize plan for the actual `git mv` + corpus referrer sweep.

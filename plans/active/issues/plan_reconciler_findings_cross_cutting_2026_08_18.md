@@ -243,28 +243,41 @@ doc-hygiene gap) = 7 total contradiction-class findings surfaced and verified; 4
 none of these are live-work-blocking; a future cross-cutting pass should prioritize them). Tracked as checkboxes per
 the workspace HARD RULE ("every deferral must already exist as a `- [ ]` todo"), not left as prose:
 
-- [ ] [DOC] P2. `instruments_foundation_completeness_2026_06_24.md` — repoint 2 dangling refs
+- [x] ✅ [DOC] P2. `instruments_foundation_completeness_2026_06_24.md` — repoint 2 dangling refs
       (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` and
       `sports_fixture_completeness_oracle_2026_06_24.md`, both moved to `plans/archive/2026_06/`, cited at 3
       separate locations) + refresh the stale Phase-0 rolling-status table (claims 11 open, actual 6, verified via
       grep against `instruments_foundation_phase0_cross_cutting_2026_07_24.md`). Multi-location edit in a large
-      umbrella doc.
+      umbrella doc. **EXTRACTED 2026-08-19 (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** —
+      see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 4.
 - [ ] [DOC] P3. `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` / `_08_06.md` / `_08_07.md` — flip 4 stale
       todos (retag targets already archived, confirmed by a sibling `_08_08.md` doc's own 2026-08-16 refresh but
       never back-ported to these 3 siblings). These are themselves audit-tracking docs about OTHER docs' mistags,
-      low urgency.
-- [ ] [DOC] P3. `ag_closeout_audit_cross_cutting_parked_2026_08_08.md` — its own 2026-08-16 "5 archived/6 active"
+      low urgency. **HELD BACK 2026-08-19 (na-eligibility-audit, cross-cutting tranche)** — genuinely ambiguous
+      against `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 17's own 2026-08-10 tranche-tag
+      reconciliation pass across these exact `ag_closeout_audit_cross_cutting_parked_*` siblings (different specific
+      claim — tranche-tag consolidation + DEDUPED-marking vs. this item's "retag targets already archived"
+      back-port — but close enough, and that batch's own docs note 14 of the parked items are deliberately
+      "left open per the docs' own 'do not flip them early' notes" gated on still-in-flight batch todos) to extract
+      without a closer read reconciling the two; parked for the next pass, not silently dropped.
+- [x] ✅ [DOC] P3. `ag_closeout_audit_cross_cutting_parked_2026_08_08.md` — its own 2026-08-16 "5 archived/6 active"
       summary doesn't match its own itemized list immediately above it (actual, hunter-tallied: 6 archived/4
-      active/1 resolved-elsewhere) — needs a careful re-count against the live corpus before correcting.
-- [ ] [DOC] P3. `is_catalogue_g1_root_audit_log_2026_07_24.md` — `repos:` frontmatter lists 6 repos
+      active/1 resolved-elsewhere) — needs a careful re-count against the live corpus before correcting. **EXTRACTED
+      2026-08-19 (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** — see
+      `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 5.
+- [x] ✅ [DOC] P3. `is_catalogue_g1_root_audit_log_2026_07_24.md` — `repos:` frontmatter lists 6 repos
       (agent-orchestrator, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui,
       e2e-testing), none of which the doc's actual content touches (it's entirely instruments-service + UAC,
-      neither listed) — copy-paste leftover from the 2026-07-24 extraction split.
-- [ ] [DIAG] P3. `data_pipeline_e2e_milestones_gate_2026_07_24.md` — a Deferred-work-table row still marked "IN
+      neither listed) — copy-paste leftover from the 2026-07-24 extraction split. **EXTRACTED 2026-08-19
+      (na-eligibility-audit, cross-cutting tranche, conflict-check clear — batch13's own finalize plan does not
+      touch this doc)** — see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 6.
+- [x] ✅ [DIAG] P3. `data_pipeline_e2e_milestones_gate_2026_07_24.md` — a Deferred-work-table row still marked "IN
       PROGRESS" for the "Operator-requested broader audit pass, part 3" relay/triage step, whose stated completion
       condition (5 `/data-pipeline-reconciliation` reports, one per AG) has been met for 3+ weeks
       (all 5 exist at `plans/audit/results/data_pipeline_reconciliation_{defi,cefi,sports,prediction,tradfi}_2026_07_24.md`,
       361-495 lines each) — check whether the relay/triage step ever actually happened, update the row either way.
+      **EXTRACTED 2026-08-19 (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** — see
+      `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 7.
 - [ ] [REVIEW] P3. `features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md` — sole open todo is
       `[OPERATOR]`-only and hard-blocked for autonomous workers (`git stash drop` guardrail); consider
       `assigned_vm: planning`→`NA` reclassification. **Routed, not actioned here** — a doc's own NA/planning
@@ -274,16 +287,20 @@ the workspace HARD RULE ("every deferral must already exist as a `- [ ]` todo"),
       was actually resolved+archived (2026-08-15); first confirm whether todo 1's underlying block reason is still
       valid (the sibling's fix targeted a different call site per the batch-2 hunter's own note — not automatically
       satisfied just because the citation date is wrong).
-- [ ] [DOC] P3. `live_pipeline_persistence_hot_path_decoupling_2026_06_24.md` — a stale inline YAML comment
+- [x] ✅ [DOC] P3. `live_pipeline_persistence_hot_path_decoupling_2026_06_24.md` — a stale inline YAML comment
       (references a status/lock state that changed 2026-08-10/12) is misleading but superseded in practice by the
-      doc's later `archive_exempt: true` — low value.
-- [ ] [DOC] P3. `slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md` — na-eligibility-audit
+      doc's later `archive_exempt: true` — low value. **EXTRACTED 2026-08-19 (na-eligibility-audit, cross-cutting
+      tranche, conflict-check clear)** — see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 8.
+- [x] ✅ [DOC] P3. `slot_collision_guard_bats_fails_open_under_host_load_2026_08_15.md` — na-eligibility-audit
       2026-08-17 over-counted open items by 1 (described an already-`[x]` item as still open); doesn't affect
-      dispatch (assigned_vm already correct) — low value.
-- [ ] [DOC] P3. `prosewrap_padding_corpus_wide_1290_space_2026_08_03.md` — 2 "DONE"/"shipped" Progress Log claims
+      dispatch (assigned_vm already correct) — low value. **EXTRACTED 2026-08-19 (na-eligibility-audit,
+      cross-cutting tranche, conflict-check clear)** — see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md`
+      item 9.
+- [x] ✅ [DOC] P3. `prosewrap_padding_corpus_wide_1290_space_2026_08_03.md` — 2 "DONE"/"shipped" Progress Log claims
       cite a literal unfilled `<pending>` placeholder instead of a real commit sha (the 2026-08-15 "Re-opened" and
       "Resolved... cicd escalation agt-f4b815" entries) — identify which of several nearby commits is the real one,
-      backfill the citation.
+      backfill the citation. **EXTRACTED 2026-08-19 (na-eligibility-audit, cross-cutting tranche, conflict-check
+      clear)** — see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 10.
 - [ ] [REVIEW] P3. `per_client_config_surface_keying_and_missing_axes_2026_08_12.md` — a possible-superseded-todo
       ambiguity (line 159's client-first layout todo vs a later, broader `(client_id, slot_label)` ruling that may
       supersede it) already explicitly flagged AND left open by na-eligibility-audit 2026-08-17 — re-confirmed only,
@@ -354,3 +371,13 @@ and the `data_pipeline_e2e_milestones_gate_2026_07_24.md` live-status check are 
 staleness risk); (3) the corpus will have grown again (150→174 in the 2 days between the last 2 cross-cutting
 runs) — re-derive the tranche via `generate_tranche_doc_inventory.py --tranche cross-cutting`, don't assume this
 run's 174-doc snapshot is still current.
+
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): RECLASSIFY per-todo split of this doc's own "Plans
+  not reached" section — 7 of 12 deliberately-deferred items are bounded fact-corrections independent of judgment
+  (conflict-check clear against active planning docs, the consolidated closeout, and every satellite batch corpus-
+  wide, incl. reading batch13's own finalize plan directly since its convention defers source-doc reconciliation
+  there); extracted to `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md`. 1 (`ag_closeout_audit_cross_cutting_parked_2026_08_01/06/07.md`
+  retag) held back — genuinely ambiguous against `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`'s own
+  prior reconciliation pass on the same sibling docs, needs a closer read before extracting. 4 (routes to a
+  disjoint skill's remit, needs external artifact access, or carry explicitly-flagged genuine ambiguity) stay
+  KEEP-NA. This doc's own `assigned_vm: NA` unchanged.

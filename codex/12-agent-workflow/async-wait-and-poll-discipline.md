@@ -267,8 +267,8 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
      `1.39 2.05 3.09`) — this fits a fixed-duration, session/cgroup-boundary reap of nohup-detached processes, not a
      load-triggered OOM kill. Relaunching the identical work directly under the harness's own tracked
      `run_in_background` (no `nohup`/`disown` at all) survived well past the same ~1-3 minute window and ran healthily
-     for 90+ minutes before eventually succumbing to a genuine, severe resource-exhaustion event — roughly **10x more
-     durable, not immune**.
+     for 90+ minutes before eventually succumbing to a genuine, severe resource-exhaustion event — roughly **30x more
+     durable (90+ min vs. the ~1-3 min baseline), not immune**.
    - **A genuinely heavy job (e.g. a full `quality-gates.sh` run, or the same lightweight script under sustained
      100%-swap host pressure) CAN still be killed under `run_in_background`** — confirmed at host loads of 62-325 (on a
      16-core host) and swap 87-100% used, `status: "failed"`/`"killed"`/`"stopped"`, exit code 144, zero traceback. This

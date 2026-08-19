@@ -23,7 +23,7 @@ summary: >-
   POLICY change itself — new codex SSOT + a script-homes.md correction making the canonical-template path the
   sanctioned DEFAULT for any new recurring-shaped need, with the Lifecycle/Delete-when convention remaining valid
   only for genuinely one-of-a-kind, never-to-recur scripts.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -445,26 +445,18 @@ actual leverage point §Pattern clustering's evidence points to.
       `quality-gates.sh` green (deployment-service, 216s). Shipped `deployment-service@412482d831`. Done-when
       criterion closed 2026-08-19: `reconcile_phantom_manifest_rows.py` (relocated by Phase 3) refactored to
       import/parameterize the template. Green. Shipped `deployment-service@fb4595fd52`.
-- [ ] [INFRA] P2. `template_backfill.py` (cluster 4 — backfill/populate missing value, 108 files' worth of
+- [x] [INFRA] P2. `template_backfill.py` (cluster 4 — backfill/populate missing value, 108 files' worth of
       precedent). Parameterizes: a "needs backfill" row predicate, a value-computation function, and an in-place
       write-back. Build against a Phase-2/3 target (`backfill_cefi_source_column.py`, market-tick-data-service) as
       the worked example. Done-when: same bar as above.
-      **MOSTLY DONE (2026-08-19) — one done-when criterion NOT yet met.** `template_backfill.py` exists
-      (`BackfillConfig`/`run_backfill`/`BackfillResult`, hooks: `needs_backfill` (row predicate), `compute_value`
-      (derives the missing value for flagged rows), `target_column` — snapshots before write by default, unlike
-      `template_purge.py`'s opt-in snapshot; built-in `BackfillValueComputationError` fail-closed check + post-write
-      `residual_needs_backfill_rows`/`verification_passed` re-check — all routing through `migration_common.py`),
-      with a full worked example (`scripts/migrations/lib/templates/examples/
-      example_backfill_cefi_source_column.py`) reproducing `backfill_cefi_source_column.py`'s predicate +
-      derivation shape, and unit tests. `quality-gates.sh` green (deployment-service, 216s). Shipped
-      `deployment-service@412482d831`. **NOT done**: no real file was refactored to IMPORT/parameterize the
-      template — the real source script (`backfill_cefi_source_column.py`) lives in market-tick-data-service, out
-      of this template's own change scope; it is already named as a Phase 3 `permanent`/`campaign`/`reusable-*`
-      relocation target. **Remaining**: once relocated by Phase 3, refactor it to import `template_backfill.py`
-      instead of its own hand-rolled chunked read/mask/derive/snapshot/write steps (note its chunked/streaming I/O
-      for CeFi's ~30M-row OOM avoidance and row-count STOP-ON-SURPRISE bound check are NOT part of the generic
-      template — documented in the template's own module docstring — and should stay as a local wrapper around the
-      template's hooks).
+      **DONE (2026-08-19).** `template_backfill.py` exists, worked example shipped `deployment-service@412482d831`.
+      Real-file gap closed: `backfill_cefi_source_column.py`'s TID251 blocker fixed first
+      (`market-tick-data-service@b5ad933e4a`), then the file + test relocated and refactored to construct/consult a
+      real `BackfillConfig(needs_backfill=_needs_backfill, compute_value=_compute_value, target_column="source")`
+      — `run_backfill()` itself not invoked (script streams Arrow batches for CeFi's ~30M-row OOM ceiling, a
+      trade-off the template's own docstring sanctions). `compute_value` raises the template's own
+      `BackfillValueComputationError` on undeliverable derivation. Both repos green. Shipped
+      `market-tick-data-service@0f3185b93f` + `deployment-service@4a27559e38`.
 - [x] [INFRA] P2. `template_audit.py` (cluster 5 — read-only audit/investigation/verification, 74 files' worth of
       precedent — structurally distinct from the other 4: no `--apply`/mutation path needed at all, just a scan +
       structured report). Parameterizes: a scan function and an output formatter (text/JSON/CSV). Build against
@@ -879,14 +871,17 @@ baseline before shipping.
       (if needed) stays a separate `scripts/vm/launch-*.sh` that invokes it, same separation-of-concerns
       script-homes.md already draws for launcher-vs-compute-logic. Done-when: doc exists with `authoritative_for`
       frontmatter set, cross-referenced from the next todo.
-      **DONE (2026-08-19).** `migration-script-ssot.md` authored — why-this-rule-exists,
-      scope table (5 operation shapes + explicit NOT-in-scope list including the newly-discovered blocker classes:
-      tier-architecture imports, test-coupling, subprocess-venv-coupling, filename-vs-content mismatch), naming
-      convention, `migration_common.py` contract, full 5-template roster with the still-open "no real file imports
-      it yet" gap named explicitly, relationship to script-homes.md, VM-launcher cross-link, and a verified-against-
-      the-live-tree migration-status table (per-repo file counts + exclusion reasons). `authoritative_for` set.
+      **DONE (2026-08-19).** `migration-script-ssot.md` authored — why-this-rule-exists, scope table (5 operation
+      shapes + NOT-in-scope list incl. discovered blocker classes: tier-architecture imports, test-coupling,
+      subprocess-venv-coupling, filename-vs-content mismatch), naming convention, `migration_common.py` contract,
+      5-template roster, relationship to script-homes.md, VM-launcher cross-link, verified migration-status table.
+      `authoritative_for` set.
       Cross-referenced from the next todo.
       > 🟡 [CORRECTION 2026-08-19, ci-reconcile]. Not found in tree/git history; script-homes.md has no cross-ref. Re-opened -- author it for real before re-claiming DONE.
+      **RESOLVED (2026-08-19, later same day).** Correction was accurate when written, not a false alarm. Doc now
+      genuinely exists (`codex/05-infrastructure/migration-script-ssot.md`), cross-referenced both directions with
+      script-homes.md. Shipped `unified-trading-pm@3ff1f90afd` — same commit also resolves the audit's sibling
+      "todo #2 also falsely claimed DONE" finding (script-homes.md item 4's own banner).
 - [x] [DOC] P1. **Correct** `/codex/06-coding-standards/script-homes.md`'s decision-tree item 4 (currently: "one-off,
       single-repo operation tied to that repo's internals ... → repo-level `scripts/`") — **this is not a
       documentation-drift fix, it is a default-behavior change**: per the operator's 2026-08-18 pushback, "write a
@@ -911,7 +906,9 @@ baseline before shipping.
       / marker-as-exception framing explicitly and pointing at `migration-script-ssot.md`. `related:` frontmatter
       updated on both docs (script-homes.md → migration-script-ssot.md, and vice versa via that doc's own
       `related:`). Items 1-3 of the decision tree untouched. Re-read both after editing — no contradiction.
-- [x] [DOC] P2. Update `/plans/epics/infrastructure_master.md`'s `related_plans:` list to add this plan's slug (the
+- [x] [DOC] P2. Update `/plans/epics/security_and_cross_cutting_master.md`'s `related_plans:` list to add this
+      plan's slug (renamed from `infrastructure_master.md`; a `/plan-reconcile` sweep caught this body text still
+      naming the stale pre-rename path — fixed here, `parent_epic:` frontmatter already had it right) (the
       epic's own `repos:` frontmatter list is representative, not exhaustive — several of its existing
       `related_plans` entries already touch repos outside that list, e.g. cefi/defi/sports plans — so no `repos:`
       edit needed, just the `related_plans:` addition, a single-line append).

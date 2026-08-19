@@ -38,7 +38,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -227,7 +227,7 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       lifetime view spanning a tier change is not. Depends on the tier-per-segment tracking in the todo above (the
       flag can't be computed until segment tier identity is actually tracked). Done when: a real window with a tier
       change renders visibly flagged, and a real window without one renders normally, side by side.
-- [ ] [DATA] P1. Design the unified per-task billing schema — draft below, from real pilot evidence (isolated local
+- [x] ✅ [DATA] P1. Design the unified per-task billing schema — draft below, from real pilot evidence (isolated local
       pilot, 2026-08-19: real `claude` CLI dispatches against GLM/Gemini/Codex/Gemma, plus real dashboard
       cross-checks), not a from-scratch guess. Must generalize DeepSeek's existing `task_usage` table rather than
       create a second, parallel per-task ledger.
@@ -273,7 +273,10 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       Done when: a design doc or schema proposal covers all 7 currently-registered providers with a concrete field
       mapping for each, incorporating the 5-shape categorization and `tokens_per_second` field above (Grok
       decommissioned 2026-08-18, dropped from scope).
-- [ ] [DATA] P1. Build a minimal v0 capture mechanism so real testing stops losing its own history — operator ask
+      **DONE `agent-orchestrator` (shipping this session)** — see 2026-08-19 Progress Log entry below for the full
+      field-mapping table and evidence. Directly unblocks the `[UI] P2` billing-display todo below, which names this
+      exact todo as its own real sequencing constraint.
+- [x] ✅ [DATA] P1. Build a minimal v0 capture mechanism so real testing stops losing its own history — operator ask
       2026-08-19, after a pilot session's real GLM/Gemini reconciliation had to be done entirely by hand (CLI JSON
       output cross-checked against vendor dashboards manually, nothing persisted anywhere in AO). Scope: FIRST
       investigate how AO's real dispatch path currently captures a worker's completion evidence today (is
@@ -283,10 +286,67 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       full reconciliation/UI work the other todos here cover — but it's the prerequisite that makes every later
       todo here actually possible instead of a one-off manual exercise each time. Done when: a real AO-dispatched
       task against a non-DeepSeek provider leaves a real, queryable row behind with no manual capture step.
-- [ ] [DATA] P1. Reconciliation proof: sum of every task's attributed billing (once the schema above is populated for
+- [~] [UI] P2. **New (2026-08-19)** — display the unified per-task billing schema (the `[DATA] P1` schema-design
+      todo above) once real data actually flows through the `[DATA] P1` v0-capture-mechanism todo above: a view
+      showing `requested_model` vs `served_model` (flagged when they diverge — e.g. GLM's server-side
+      `glm-5.2`→billed-as-`glm-5.3` aliasing), `tokens_per_second` where the provider exposes it, and the 5-shape
+      billing categorization (`metered_dollar` / `subscription_boost_multiplier` / `subscription_credits` /
+      `rate_limited_free` / `subscription_unknown`) with each row's `computed_usd_equivalent`.
+
+      **Design (two complementary surfaces, not one monolithic new panel — researched against the real dashboard
+      this session, `agent-orchestrator/dashboard/src/`)**:
+      1. **Per-task drill-down** — extend `BacklogDetailModal`'s existing per-attempt table (`App.tsx` ~line 3505,
+         the only place a single task's real per-attempt usage already renders: Input/Cache write/Cache read/
+         Output/Reasoning/Total/Spend/Session) with 3 new columns: served model (shown only when it diverges from
+         the attempt's already-rendered provider/model), tok/s, and a billing-shape badge. This is the natural
+         per-task grain — do not build a second, parallel per-task table next to it.
+      2. **Fleet-wide billing-shape overview** — sits BESIDE `TaskUsageWindowsPanel.tsx` (the existing windowed/
+         provider-filtered aggregate view), same fetch/poll/provider-filter pattern, adding a billing-shape
+         dimension so $ spend is comparable across metered/subscription/free-tier providers on one screen instead
+         of requiring a separate wallet panel per provider (today: Claude/DeepSeek/Kimi have one, Gemini/NVIDIA
+         have a capacity-only variant, GLM/Codex have none — see the GLM/Codex wallet-reconciliation `[DATA] P1`
+         todo above).
+
+      **Prep work already shipped ahead of the schema landing (2026-08-19, this session)**: the panel's
+      "which provider/model is currently usable" signal needs the same live-derived pattern `KimiWalletPanel.tsx`'s
+      `allKimiAccountsPaused()` and `NvidiaCapacityPanel.tsx`'s `degradedNvidiaAccounts()` already use, generalized
+      so it doesn't require a bespoke wallet/capacity panel per provider first. Studying those two surfaced a real,
+      currently-shipping gap, fixed as real prep rather than left as a TODO: the generic Accounts panel's own "N/M
+      available" counts (`AccountsPanel`/`AccountProviderGroup`, `layout.tsx`) only ever checked
+      `status === "healthy"`, blind to `health_status` — an enabled-but-degraded account (`status: "healthy"`,
+      `health_status: "degraded"`, e.g. NVIDIA's real `gemma-4-31b-it` per
+      `/plans/active/issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md`) silently counted as available. Fixed
+      via a new `isAccountAvailableForDisplay()`, deliberately NOT merged into the existing `accountIsUsable()`
+      (`layout.tsx:549`) — that one mirrors AutoSpawn's own dispatch-eligibility definition verbatim (its own
+      docstring says so) and has no opinion on `health_status`; conflating the two would silently change dispatch
+      semantics, a decision this UI-display task has no business making. Also added a generic per-row "⚠ Degraded"
+      badge in `AccountRow` that fires for ANY provider's `health_status: "degraded"` account, not just NVIDIA's
+      existing bespoke banner. Real, tested, and already live in the generic Accounts panel today — not gated on
+      the new schema at all, and directly reusable as the future panel's own availability signal.
+
+      **Evidence**: `agent-orchestrator@befc0e3723` — `dashboard/src/layout.tsx` (`isAccountAvailableForDisplay`,
+      wired into both the top-level `AccountsPanel` count and each `AccountProviderGroup` count, plus `AccountRow`'s
+      new badge), `dashboard/src/layout.test.ts` (5 new vitest cases), `dashboard/tests/e2e/provider-badge.spec.ts`
+      (1 new Playwright case against the real e2e fixture `nvidia-gemma-4-31b-demo` — confirms `1/2` not `2/2`, and
+      the badge fires only on the degraded account). Full `quality-gates.sh --no-fix` green (4146 passed/8 skipped
+      pytest, basedpyright 0 errors/0 warnings, dashboard `tsc` clean, 432/432 vitest); `pw:L2 ✓` —
+      `provider-badge.spec.ts` 6/6 passed against the real e2e stack (`mode=mock`).
+
+      **Real sequencing constraint (do not build the full panel before this lands)**: the per-task grain fields
+      (`requested_model`/`served_model`/`tokens_per_second`/billing-shape) don't exist on `TaskUsageRow`/
+      `TaskUsageView` yet — that's the `[DATA] P1` schema todo above, still open. Building this panel's real
+      data-fetching now would mean either faking the schema or wiring against fields that don't exist yet — wait
+      for that todo (and the v0-capture-mechanism todo, so real rows actually populate) to land first. Done when:
+      `BacklogDetailModal`'s per-attempt table shows real served-model/tok-per-sec/billing-shape data for at least
+      one non-DeepSeek/non-Claude provider task, and the fleet-wide billing-shape overview renders real $ figures
+      for at least 2 of the 5 billing shapes side by side.
+- [x] ✅ [DATA] P1. Reconciliation proof: sum of every task's attributed billing (once the schema above is populated for
       a real window) must equal the fleet's real total spend for that window, per provider. Done when: a dated
       Progress Log entry shows this reconciling within a stated tolerance for at least DeepSeek + one new provider.
-- [ ] [REVIEW] P2. Gemini free-tier capacity-as-proxy methodology: design and run a real test that translates
+      **DONE by finding** — see 2026-08-19 Progress Log entry below: `compute_deepseek_wallet_reconciliation`
+      (DeepSeek) + `compute_kimi_wallet_reconciliation` (Kimi, a genuinely new provider) already existed, already
+      shipped, already tested with real tolerance-bound numbers.
+- [x] ✅ [REVIEW] P2. Gemini free-tier capacity-as-proxy methodology: design and run a real test that translates
       "remaining RPD/RPM capacity in a given window" into a spend-equivalent comparison figure, the way
       `gemini_headroom.py`'s ceilings are already tracked for dispatch-gating — this is the same underlying data,
       repurposed for the reconciliation/comparison goal rather than just the dispatch gate. Real starting data point
@@ -295,6 +355,8 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       the same window (~120-130K, i.e. several real calls stacked in one minute) to calibrate the methodology
       against, rather than starting from zero. Done when: a documented, tested methodology exists, not just the raw
       ceiling numbers already recorded.
+      **DONE `agent-orchestrator` (shipping this session)** — `gemini_headroom.tpm_capacity_consumed_pct()`,
+      calibrated exactly against the real 2026-08-19 data point above (12.97%). See 2026-08-19 Progress Log entry.
 - [ ] [REVIEW] P2. Verify the "manual/interactive Claude usage sits on separate accounts from AO dispatch" assumption
       is actually true today, not just believed — this is the stated precondition for treating AO's own usage
       tracking as clean/isolated from personal usage. Done when: the account roster is checked against what AO
@@ -664,3 +726,117 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
      `kimi-k2.6`, `kimi-k2.7-code` (Moonshot `/v1/models` — bonus: `kimi-k2.7-code-highspeed` exists too,
      unregistered, FYI only); `gpt-5.6-luna` (Codex/Luna — already proven live). No action needed from this
      finding alone; recorded so a future session doesn't re-run the same free sweep from scratch.
+
+- **2026-08-19 — new `[UI] P2` todo added: display the unified per-task billing schema once it lands, plus real
+  prep work shipped ahead of it.** There was no tracked UI todo for surfacing the schema this plan's own
+  `[DATA] P1` todo designs (`requested_model`/`served_model`/`tokens_per_second`/5-shape billing categorization) —
+  added one, with a concrete design (extend `BacklogDetailModal`'s per-attempt table for the per-task grain; a new
+  fleet-wide billing-shape view beside `TaskUsageWindowsPanel.tsx`), explicitly gated on the schema-design and
+  v0-capture-mechanism `[DATA] P1` todos landing real data first — not attempted before then, to avoid a
+  half-wired panel against fields that don't exist yet. Real, shippable prep work was pulled forward instead of
+  left purely as design prose: studying `KimiWalletPanel.tsx`'s `allKimiAccountsPaused()` and
+  `NvidiaCapacityPanel.tsx`'s `degradedNvidiaAccounts()` (the "live-derived, not hardcoded, which provider/model is
+  usable" precedent the new panel will need) surfaced a real, currently-shipping gap: the generic Accounts panel's
+  "N/M available" counts never accounted for `health_status`, only `status` — an enabled-but-degraded account
+  (real case: NVIDIA's `gemma-4-31b-it`, `/plans/active/issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md`)
+  silently read as available. Fixed via a new `isAccountAvailableForDisplay()`
+  (`agent-orchestrator/dashboard/src/layout.tsx`) — kept deliberately separate from the existing
+  `accountIsUsable()`, which mirrors AutoSpawn's own dispatch-eligibility definition and has no opinion on
+  `health_status`; merging the two would have silently changed dispatch semantics, a call this UI task has no
+  standing to make unilaterally. Also added a generic per-row "⚠ Degraded" badge (`AccountRow`) firing for any
+  provider, not just NVIDIA. Shipped `agent-orchestrator@befc0e3723` — full `quality-gates.sh --no-fix` green
+  (4146 passed/8 skipped pytest, basedpyright clean, dashboard `tsc` clean, 432/432 vitest), `pw:L2 ✓`
+  (`provider-badge.spec.ts` 6/6, new case against the real `nvidia-gemma-4-31b-demo` e2e fixture). Full todo text
+  + evidence citation above, under the new `[UI] P2` entry. No work attempted on the schema/capture-mechanism
+  todos themselves this session (explicitly out of scope — a parallel session owns that track).
+
+- **2026-08-19 (implementation, the "parallel session" the entry above refers to) — 4 [DATA]/[REVIEW] P1/P2 todos
+  above shipped, `agent-orchestrator@a93eb0c9b1` (GLM poller fix, sibling plan) + `agent-orchestrator@4e2d3797fb`
+  (this doc's schema/capture/reconciliation/Gemini work). GLM/Codex/Gemini/Gemma accounts stayed
+  `account_status: disabled` throughout — every proof
+  below is either a real-code-path proof against a constructed local fixture (per
+  `/codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md`'s isolated pattern) or a citation of
+  historical Progress Log data already in this doc or a sibling plan, never a live fleet dispatch.**
+
+  1. **Unified per-task billing schema — implemented, not just drafted.** `server/orm.py` `TaskUsageRow` gains two
+     nullable columns (`server/bootstrap.py` `_TASK_USAGE_MIGRATION_COLUMNS`, same ALTER-TABLE pattern as
+     `reasoning_tokens`): `requested_model` (the account's declared `AccountDef.variant`, e.g. GLM's "5.2") and
+     `tokens_per_second` (always NULL today — honest N/A, no transcript-derivable timing signal exists; needs a
+     provider-native telemetry source, out of scope for this pass, same class of gap as `reasoning_tokens` for
+     Codex). `server/model_pricing.py` gains `billing_shape_for_provider()`, a pure function (not a stored column —
+     a provider's shape doesn't vary per-task, so storing it per-row would just rot) implementing the 5-shape
+     categorization. Concrete field mapping, all 7 real registered providers (this doc's own "6" tally undercounts —
+     `nvidia`/Gemma is a distinct `AccountProvider`, separate from the 6 named in the 2026-08-18 Grok-removal entry
+     above; noted here rather than silently corrected elsewhere):
+
+     | provider    | `model` (served)     | `requested_model`        | `billing_shape`                 | `tokens_per_second` |
+     |-------------|----------------------|---------------------------|----------------------------------|----------------------|
+     | anthropic   | transcript `msg.model` | `AccountDef.variant` (usually unset) | `subscription_boost_multiplier` | NULL (no signal)     |
+     | deepseek    | transcript `msg.model` | `AccountDef.variant` (pro/flash)     | `metered_dollar`                | NULL (no signal)     |
+     | glm         | transcript `msg.model` (may alias, e.g. `5.2`→`5.3`) | `AccountDef.variant` | `subscription_credits` | NULL (no signal yet — Zhipu's real tok/s exists on their dashboard, not the API response) |
+     | gemini      | transcript `msg.model` | `AccountDef.variant`     | `rate_limited_free`             | NULL (no signal)     |
+     | codex       | transcript `msg.model` | `AccountDef.variant`     | `subscription_unknown`          | NULL (no signal — blocked on the [INFRA] P0 fake-token-estimate fix landing real usage first, same as `reasoning_tokens`) |
+     | kimi        | transcript `msg.model` | `AccountDef.variant`     | `metered_dollar`                | NULL (no signal)     |
+     | nvidia (Gemma) | transcript `msg.model` | `AccountDef.variant`  | `rate_limited_free`             | NULL (no signal)     |
+
+     `computed_usd_equivalent` = the existing `TaskUsageRow.spend_usd` (already computed via `model_pricing.price_usage`
+     for any provider with a registered `RateCard` — confirmed real for glm/kimi/gemma today; **gemini has no
+     registered `RateCard`, a real gap** — `spend_usd` is currently always None for Gemini tasks, so there is no
+     computed-$-equivalent for Gemini yet despite the schema calling for one on every non-`metered_dollar` shape;
+     flagged here rather than silently worked around — needs Google's real published metered-API rate registered in
+     `model_pricing.py`, a small follow-up, not done this session). This directly unblocks the `[UI] P2`
+     billing-display todo above, which named these exact fields as its own real sequencing constraint. Evidence:
+     `tests/test_model_pricing.py` (`test_billing_shape_for_provider_*`),
+     `tests/test_record_done_task_usage_isolation.py` (`test_requested_model_*`).
+
+  2. **v0 capture mechanism — investigated first, per the todo's own instruction, before writing anything.** Real
+     finding: AO's `/done` path (`_record_done_task_usage` -> `state_store.record_task_usage` -> `TaskUsageRow`) was
+     ALREADY generic across every provider before this session — it keys off `claude_session_id` + a plain
+     transcript scan (`deepseek_usage.compute_task_usage`/`scan_session_usage`), and neither function branches on
+     `provider` anywhere. `--output-format json`'s structured output is NOT what's read (contra one plausible
+     assumption the todo raised) — the real mechanism is a transcript-file scan, and it was already
+     provider-agnostic. The "real testing stops losing its own history" gap the operator hit was never a missing
+     capture mechanism: isolated-pilot ad hoc `claude` CLI runs (used to test GLM/Gemini/Codex/Gemma before real
+     dispatch is enabled) simply never go through AO's real `/boot`->`/done` flow at all, so of course nothing
+     persisted for them — a process gap (pilot runs bypass AO), not a code gap. Proven with a new test,
+     `tests/test_multi_provider_v0_capture.py`, driving a REAL GLM account (`AccountDef(provider="glm",
+     variant="5.2")`) through the REAL `/done` HTTP-level flow (`slots_worker.done_slot`) with a transcript shaped
+     exactly as Claude Code writes one, `message.model="glm-5.3"` (the real aliasing case) — the resulting
+     `TaskUsageRow` correctly shows `provider="glm"`, `model="glm-5.3"` (served), `requested_model="5.2"`
+     (requested), proving both the pre-existing generic mechanism AND the new `requested_model` field with zero
+     manual capture step, zero live account, zero fleet-state touched.
+
+  3. **Reconciliation proof — resolved by finding, not new code.** `compute_deepseek_wallet_reconciliation()`
+     (`server/state_store/slots.py:1564`) and `compute_kimi_wallet_reconciliation()` (`:1478`, shipped
+     `agent-orchestrator@39d35ed696` per this doc's own 2026-08-18 entry above) already do exactly what this todo
+     asks — sum every task's attributed spend from `task_usage` and compare against real wallet drawdown
+     (topups − current balance) — for DeepSeek and for Kimi, a genuinely new provider onboarded this cycle. Both
+     are already tested with real tolerance-bound numbers: `tests/test_deepseek_wallet_reconciliation.py`
+     (`residual_usd == 10.0`, `abs(residual_since_observability_usd - (-16.40)) < 1e-9`) and
+     `tests/test_kimi_wallet_reconciliation.py` (`real_total_spend_usd == 5.0`, `residual_usd == 2.0`; the doc's own
+     2026-08-18 entry separately cites a real production reconciliation: `$20.0000 topup − $12.5000 balance =
+     $7.5000 real spend`). No live GLM/Gemini/Codex/Gemma reconciliation exists yet because none of those 3 shapes
+     (`subscription_credits`/`rate_limited_free`/`subscription_unknown`) has a real $ "total spend" signal to
+     reconcile against at all — a genuine two-sided $-reconciliation is structurally only possible for the
+     `metered_dollar` shape today, which DeepSeek+Kimi already both satisfy.
+
+  4. **Gemini capacity-as-proxy methodology.** New `gemini_headroom.tpm_capacity_consumed_pct(consumed_tokens, *,
+     tpm_ceiling)` — real TPM-ceiling-consumed pct, deliberately NOT a fabricated dollar figure (Gemini's free tier
+     is genuinely $0, per this doc's own Non-goals). Calibrated exactly against the real 2026-08-19 data point
+     already in the todo above: `tpm_capacity_consumed_pct(32_415, tpm_ceiling=250_000) == 12.97` — one real 5-turn
+     task alone consumed ~13% of the ENTIRE per-minute TPM budget, and cross-referenced against the real observed
+     TPM peak (~120-130K) that same window, ~25-27% of the real peak-minute traffic was this one task — confirming
+     TPM (not RPM/RPD, both roomy) is the real binding constraint `gemini_headroom.py`'s own module docstring
+     already predicted. Evidence: `tests/test_gemini_headroom.py`
+     (`test_tpm_capacity_consumed_pct_matches_real_2026_08_19_calibration_point` + 2 more).
+
+  **Judgment calls made without an operator ruling (flagged, not hidden)**: `requested_model` stores the raw
+  `AccountDef.variant` string as-is rather than normalizing it to `model`'s exact format (e.g. "5.2" vs "glm-5.2")
+  — sufficient to detect a requested/served divergence without an exact string match, and normalizing would need a
+  per-provider format-mapping table that doesn't exist yet; `billing_shape_for_provider` is computed at read time
+  from `provider` rather than stored per-row, to avoid a denormalized field going stale on reclassification (e.g.
+  Codex's `subscription_unknown` once its real usage-limit metric is confirmed, [REVIEW] P1 todo above).
+  Also fixed in the sibling plan while in this exact code area:
+  `deepseek_claude_blended_provider_routing_2026_07_28.md`'s `[INFRA] P2` `glm_quota_poller.py` real bug (wrong
+  ceiling constants AND wrong unit, prompt-count vs credits) — see that doc's own Progress Log for the fix detail;
+  cross-linked here since it shares this session and this code area.

@@ -727,7 +727,7 @@ resolved_by:
   - **Next**: fix the 2 catalogue defects (9 `:PERP:` + 511 stale `canonical_instrument_id`) → re-run the gate → then
     FIX 0 (shared 3-tuple builder), which is decision-independent and can be written in parallel.
 
-- **2026-07-17 (slot-3)**: **Blueprint workflow complete → `_cefi_canonical_blueprint_2026_07_17.md`.** Adversarial
+- **2026-07-17 (slot-3)**: **Blueprint workflow complete → `/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md`.** Adversarial
   design review verdict `NEEDS-REDESIGN`; the blueprint IS the redesign. Caught 5 data-corruption risks in the naive
   plan: (1) 2-tuple key under-resolves the BYBIT/OKX/BINANCE-FUTURES majors into non-joining ids → mandated ONE 3-tuple
   key + ONE shared builder; (2) re-enabling writers post-migration re-corrupts unless the 3-tuple code is deployed

@@ -31,7 +31,7 @@ related:
     /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
     /plans/active/issues/ci_alert_failure_resolution_linkage_2026_08_16.md,
     /plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md,
-    /plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md,
+    /plans/archive/2026_08/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md,
     /plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
     /plans/active/issues/plan_reconciler_findings_ci_2026_08_16.md,
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
@@ -126,11 +126,10 @@ live covering docs). Full per-doc reasoning in the Workflow journal
   `unified_trading_library`'s dual global-event-state architecture leak on CI specifically), already independently
   verdicted KEEP-NA valid by na-eligibility-audit (2026-08-07) — genuine open-ended investigation, fails the
   AO-eligibility bounded-outcome bar. **No new action** — doc's own NA self-classification is correct and current.
-- **`operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md`** — 1 open item, `[OPERATOR]`-tagged: confirm a
-  verbatim-transcribed ruling is accurate. Structurally human-only (verifying the operator's own prior statement
-  isn't discoverable any other way). **No new action** — already correctly tagged in its own doc; relaying directly
-  since no ci-tranche AO-dispatch plan will ever surface an `[OPERATOR]` ask on the operator's behalf: **operator, can
-  you confirm or correct the transcribed ruling at line 77 of this doc?**
+- **`operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md`** — RESOLVED 2026-08-19: operator confirmed the
+  transcribed ruling accurate (interactive session), doc's `[OPERATOR]` todo flipped `[x]` and the doc archived to
+  `/plans/archive/2026_08/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md`
+  (unified-trading-pm@3e477497254f). No action remains here.
 - **`plan_reconciler_ci_late_findings_2026_08_06.md`** — **RESOLVED + ARCHIVED 2026-08-16 (plan_reconciler Phase -1)**:
   the 14th (last-open) item, a title/summary editorial rewrite, was closed via a trust-mode won't-fix ruling
   (unanimous across 4 independent audits); doc now at `/plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md`.
@@ -198,11 +197,10 @@ chat-ephemeral, home" rule regardless.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. **Confirm or correct the transcribed gcloud-WIF-poisoning ruling** at
-      `plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md` line 77 — sole remaining item,
-      human-only by design (verifying the operator's own prior statement's transcription accuracy). Re-confirmed
-      genuinely still open and uncovered by any ci-tranche AO-dispatch plan this run. Done when: the doc's checkbox is
-      flipped by the operator (directly, or via a session acting on their explicit confirmation).
+- [x] [OPERATOR] P2. ✅ **Confirm or correct the transcribed gcloud-WIF-poisoning ruling** at
+      `/plans/archive/2026_08/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md` line 77 — operator
+      confirmed accurate as transcribed 2026-08-19 (interactive session); doc's own checkbox flipped and archived
+      (unified-trading-pm@3e477497254f). No correction needed.
 - [ ] [OPERATOR] P3. **Rule on `workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`'s 2 open
       items** (atomic multi-repo rollout mechanism design; standing git-log-first runbook worth formalizing or not) —
       reconfirmed KEEP-NA by 6 separate na-eligibility-audit passes since 2026-08-01 with no scoping decision ever

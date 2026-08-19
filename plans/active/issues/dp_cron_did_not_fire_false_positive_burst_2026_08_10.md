@@ -218,13 +218,21 @@ is exactly the kind of judgment call this doc should surface, not resolve.
       rollout-ahead-shaped) and are deliberately left classified `ACTIVE`/alerting per the fail-toward- alerting rule —
       see the NEW narrower operator todo below for just these 2. Evidence:
       `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`. Repo: deployment-service.
-- [ ] [OPERATOR] P1. For the 2 producers NOT resolved by the lifecycle-state pass above (`mdps-features-live-tradfi-` —
-      short launch/delete cycles on 2026-08-04, ~6 days absent at time of finding; `prediction-arb-detector-` — ran
-      continuously until deleted 2026-06-29, ~6 weeks absent at time of finding), confirm operational intent: real
-      regression needing relaunch, or a deliberate pause the lifecycle-state framework should also mark
-      `not_yet_active`/`superseded`. Both currently stay `ACTIVE` and WILL page again on the next DP-LIVE-003 sweep
-      cycle (by design — fail toward alerting on ambiguous evidence). Do not relaunch blind — each producer's current
-      config/entrypoint needs a fresh look before restart. Repo: deployment-service.
+- [x] ✅ [OPERATOR] P1. **RESOLVED (2026-08-19, escalation `agt-7f6044`)** — `mdps-features-live-tradfi-` half of this
+      todo. DP-LIVE-003 paged again for this prefix (live-verified zero running instances via `gcloud`); escalated the
+      still-open decision via `/blocked` (options: A relaunch now vs B mark `not_yet_active`/`superseded`). Operator
+      chose **B**: deliberately not relaunching TradFi live features yet. Reclassified
+      `mdps-features-live-tradfi-` from ACTIVE to `NOT_YET_ACTIVE` in `producer_lifecycle.NOT_YET_ACTIVE_PREFIXES` —
+      DP-LIVE-003 no longer pages on its absence. New regression tests added covering both directions (must NOT page
+      when absent; the remaining ambiguous producer below still MUST page). — deployment-service@16b45256
+      (`quality-gates.sh --no-fix` ALL PASSED, 3647 tests; shipped via quickmerge, landed on `live-defi-rollout`,
+      ancestry-verified against origin).
+- [ ] [OPERATOR] P1. For the remaining unresolved producer, `prediction-arb-detector-` (ran continuously until deleted
+      2026-06-29, ~6 weeks absent at time of finding — NOT part of the escalation this session answered), confirm
+      operational intent: real regression needing relaunch, or a deliberate pause the lifecycle-state framework should
+      also mark `not_yet_active`/`superseded`. Currently stays `ACTIVE` and WILL page again on the next DP-LIVE-003
+      sweep cycle (by design — fail toward alerting on ambiguous evidence). Do not relaunch blind — the producer's
+      current config/entrypoint needs a fresh look before restart. Repo: deployment-service.
 - [x] ✅ [SCRIPT] P1. **RESOLVED (2026-08-10 follow-up session)** — finding 1's `agent-orch-planning-vm-` exclusion was
       a same-day stopgap (blanket `_GCP_CENSUS_UNOBSERVABLE_PREFIXES` exclusion); it now has a REAL, dedicated AWS EC2
       liveness check (`missing_live_producer_watcher._agent_orch_planning_vm_present`, via a new
@@ -301,4 +309,15 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   (ancestry-verified against origin).
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-16** [body-hash:83cc19e793382ee1]: KEEP-NA, valid — Read end-to-end. 4 of 5 todos closed across a same-day follow-up session that shipped a formal ProducerLifecycleState mechanism (classifying 6 of 8 genuinely-absent producers NOT_YET_ACTIVE per the operator's own confirmation that these are pre-live-trading placeholders) plus a real dedicated AWS EC2 liveness check replacing an earlier blanket GCP-only exclusion for the orchestrator VM.
-**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-19 (slot-31, data_pipeline_failure, escalation `agt-7f6044`, `DP_CRON_DID_NOT_FIRE`/DP-LIVE-003 re-page)**:
+  DP-LIVE-003 paged again for `mdps-features-live-tradfi-` — the exact producer the still-open `[OPERATOR]` todo below
+  already names. Live-verified 2026-08-19: `gcloud compute instances list --filter="name~'^mdps-features-live-tradfi-'"`
+  returns zero rows across all zones — genuinely still absent, not a stale/dedup-defeated re-fire artifact (the
+  2026-08-17/18 dedup-defeat bugs tracked in `dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md` +
+  `dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md` are about repeated pages for the SAME still-true
+  condition, not about this condition being false). No new root cause found — this is the same producer, same open
+  decision, now 9 days stale. Per this session's role contract (data_pipeline_failure: diagnose or ask, never guess an
+  operator-gated relaunch), did not file a duplicate issue doc (findings-triage: "fits another plan → annotate it,
+  don't fix") and did not relaunch — escalated the stale `[OPERATOR]` todo below via `/blocked` instead. No code
+  changed this session.

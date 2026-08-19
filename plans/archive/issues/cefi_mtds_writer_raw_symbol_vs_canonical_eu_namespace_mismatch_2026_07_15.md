@@ -71,7 +71,7 @@ resolved_by:
   "market-tick-data-service@5d44a197,@90ecde17,@bbf6649c (Tardis manifest-write + Tier-3 sentinel canonicalization) +
   instruments-service@a2468dd9,@7f1aed10,@f021cb2b (enumerator bundle-shape fix + purge + relabel scripts); stale-shape
   purge --apply executed 2026-07-30 (GATE PASSED, 0 stale-shape eu rows remain); relabel half correctly parked pending
-  the 3-tuple _cefi_canonical_blueprint_2026_07_17.md redesign per operator ruling 2026-07-29"
+  the 3-tuple /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md redesign per operator ruling 2026-07-29"
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
@@ -79,7 +79,7 @@ depends_on: []
 
 > **✅ ARCHIVED 2026-07-30** — every todo done (manifest-write canonicalization, Tier-3 sentinel fix, enumerator bundle
 > fix + purge, purge `--apply` executed with GATE PASSED); relabel half correctly parked pending
-> `_cefi_canonical_blueprint_2026_07_17.md`'s 3-tuple redesign, not this doc's own remaining scope. 0 open todos,
+> `/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md`'s 3-tuple redesign, not this doc's own remaining scope. 0 open todos,
 > unlocked. Moved to `plans/archive/issues/`.
 
 # CeFi MTDS writer: raw exchange symbol vs canonical instrument_key — eu namespace mismatch
@@ -477,7 +477,7 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
       relabel.** The P0 re-materialization purge script (49,720 stale eu rows, pure denominator debris) is approved to
       `--apply` now — independent, low-risk, unaffected by the relabel's key-arity issue below. The relabel script
       (3,133,117 candidates, 82.7% resolvable via the original `(venue, raw_symbol)` 2-tuple key) is DEFERRED: a later,
-      broader redesign (`_cefi_canonical_blueprint_2026_07_17.md`, its "Script 3") found the 2-tuple key silently
+      broader redesign (`/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md`, its "Script 3") found the 2-tuple key silently
       under-resolves exactly the BYBIT/OKX/BINANCE-FUTURES majors, and forks this same relabel into a 3-tuple version —
       running the 2-tuple relabel now would mean redoing it for the majors once that ships. Retagged `[OPERATOR]` ->
       `[DATA]`: the purge half is now a normal dispatchable `--apply` run (dry-run already verified); the relabel half
@@ -674,7 +674,7 @@ Three options, not mutually exclusive, in dependency order — scoped to the Tar
   `_index/snapshots/pre_purge_stale_shape_eu_availability_index_20260730T055545Z.parquet` before any delete, 17,927 rows
   deleted from `_index/availability_index.parquet` (9,497,252 → 9,479,325; all 5 per-vm shard blobs had 0 matches),
   post-apply verify gate confirmed `GATE PASSED: 0 stale-shape expected_unattempted rows remain`. This is the ONLY todo
-  this doc had left; the relabel half stays correctly deferred to `_cefi_canonical_blueprint_2026_07_17.md`'s 3-tuple
+  this doc had left; the relabel half stays correctly deferred to `/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md`'s 3-tuple
   redesign per the ruling's own text — not re-opened here. Leaving `status: open` (unchanged) since the relabel half of
   this doc's original scope is still tracked, now entirely in that other doc; this doc has nothing further of its own
   left to execute.

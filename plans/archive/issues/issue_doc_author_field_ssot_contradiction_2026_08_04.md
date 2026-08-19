@@ -148,7 +148,7 @@ context_scope:
   contract. QG green.
 - **2026-08-04 (slot-8)** — Todo 3 done. Backfilled `author` on 435 issue docs from git-log author. Post-backfill:
   441/444 (99.3%) carry `author`, exceeding the 90% threshold. 3 intentionally skipped: 1 has no YAML frontmatter
-  (`_cefi_canonical_blueprint_2026_07_17.md`), 2 at 1000-line hard cap
+  (`/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md`), 2 at 1000-line hard cap
   (`instruments_remaining_work_audit_2026_07_10.md`,
   `tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`). All three SSOT sources now agree
   and the corpus is consistent. QG green, shipped via quickmerge. — unified-trading-pm@a6e5eae25

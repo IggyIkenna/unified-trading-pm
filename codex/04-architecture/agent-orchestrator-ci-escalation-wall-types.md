@@ -5,8 +5,9 @@ summary: >-
   Full catalog of every `wall_type` server/escalation.py's WALL_TYPES accepts — what triggers it, which workflow
   dispatches it, which agent role/prompt template resolves it, and whether it's PR-scoped or a bare LDR-push wall. No
   single doc catalogued this before (agent-orchestrator-overview.md and agent-orchestrator-alerting.md both cite
-  escalation.py as their own SSOT but neither lists the wall types) — this is that catalog, plus the 3-tier
-  Slack-then-escalate pattern (drain-bot self-heal → debounced Slack alert → agent dispatch) used for wall types where
+  escalation.py as their own SSOT but neither lists the wall types) — this is that catalog, plus the 2-tier
+  Slack-then-escalate pattern (drain-bot self-heal → debounced Slack alert + agent dispatch together) used for wall
+  types where
   most failures self-resolve before a human or an agent needs to look.
 status: current
 nature: ssot
@@ -27,7 +28,7 @@ related:
 created: 2026-08-12
 last_reviewed: 2026-08-18
 authoritative_for:
-  [ci-escalation wall_type catalog, AO agent-role-to-wall_type mapping, 3-tier escalation timing pattern]
+  [ci-escalation wall_type catalog, AO agent-role-to-wall_type mapping, 2-tier escalation timing pattern]
 referenced_by: []
 owner: ""
 code_refs: []
@@ -79,7 +80,7 @@ feature commit, alerted only to `#ci-failures`, no agent ever looked at it). `py
 FLEET-WIDE reusable template (`unified-trading-ci`, pulled via `@main` by every caller repo) — this is where the fix had
 to land, not a per-repo workflow.
 
-## The 3-tier pattern (why NOT dispatch instantly on every QG failure)
+## The 2-tier pattern (why NOT dispatch instantly on every QG failure)
 
 A promote PR's QG failure is very often a **promote-cadence race**: the branch was cut from LDR before a later,
 unrelated LDR edit landed, so the promote diff would have regressed `main` relative to current LDR — not a code defect.
@@ -88,7 +89,7 @@ Measured repeatedly 2026-08-12 on `unified-trading-pm` (PRs #2850→#2872, sever
 needs to act. Dispatching an agent on every first-tick failure would mostly dispatch it at things that were never going
 to still be broken by the time it started working — a wasted spawn, not a fix.
 
-Three lines of defense, each firing only if the previous one didn't already clear the wall:
+Two lines of defense, each firing only if the previous one didn't already clear the wall:
 
 1. **T+0**: the drain bot's own supersede cycle (already existed; unrelated to this change) — most failures never reach
    tier 2 at all.

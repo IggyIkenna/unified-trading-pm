@@ -27,7 +27,7 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler-agt-15d58e
+locked_by:
 depends_on: []
 context_scope:
   [
@@ -439,3 +439,7 @@ finding it records is either already applied, routed as a `/blocked` escalation,
 operator-decision item, or a grace-protected pointer, none of which is expressible as a bounded todo on THIS doc.
 Resolving the remaining corpus-wide contradiction/false-unchecked findings is `/plan-reconcile`'s own remit, not
 this skill's. `assigned_vm` unchanged.
+
+## Progress Log
+
+- **2026-08-19 (plan_reconciler_dead_lock_sweep, automated)**: auto-cleared `locked_by:` — agent agt-15d58e confirmed reaped-stale, 8.0h old (>= 8.0h threshold). Dispatch `agt-15d58e` confirmed `exit_reason="reaped-stale"` via AO's own AgentRow state (ruled 2026-08-15, `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A). Cleared at 2026-08-19T07:38:34Z.

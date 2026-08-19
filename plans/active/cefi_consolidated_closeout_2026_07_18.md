@@ -32,7 +32,7 @@ tags: [cefi, close-out, consolidation, canonicalisation, manifest, coverage, bac
 related:
   [
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md,
     /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
     /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
@@ -225,7 +225,7 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
 > the historical subsumption record.
 
 - **Vehicle**: `plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md` (+ blueprint
-  `_cefi_canonical_blueprint_2026_07_17.md`). Phase A (code on `main`) ✅ · Phase B (deploy) ✅ · Phase C (4 scripts
+  `/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md`). Phase A (code on `main`) ✅ · Phase B (deploy) ✅ · Phase C (4 scripts
   dry-run-clean) ✅ · **Phase D/E (drain + `--apply`) — DONE, see checkbox below.**
 - [ ] [PM] P0. **Execute the minutes-gap hybrid cutover (Phase D/E: drain + `--apply` for Scripts 1-4)** — Scripts 2
       (filename rename), 3 (manifest dedup v2), 4 (eu-twin drop) DONE 2026-07-27. Script 1 (parquet CONTENT backfill —

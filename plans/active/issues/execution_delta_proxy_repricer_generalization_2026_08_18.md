@@ -342,9 +342,10 @@ POST_ONLY as two independently composable fields.
 - [ ] [STRATEGY] P2. **Apply the pattern to `JIT_LIQUIDITY`** once the above lands — explicit restated caveat: does
       NOT resolve its mempool-visibility gap (tracked separately), only lets it react faster once a real signal
       exists.
-- [ ] [REVIEW] P2. **Measure this deployment's real `EventTransport`/Pub/Sub round-trip latency** before permanently
+- [x] ✅ [REVIEW] P2. **Measure this deployment's real `EventTransport`/Pub/Sub round-trip latency** before permanently
       ruling out this pattern for `BACKRUN`/`LIQUIDATION_BUNDLE` — today's "12s block budget is generous enough" is
-      reasoned, not measured.
+      reasoned, not measured. **EXTRACTED 2026-08-19 (na-eligibility-audit, cross-cutting tranche, conflict-check
+      clear)** — see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 1.
 - [ ] [BACKEND] P2. **Extend `ExecutionPolicyResolver`/`algorithms/selector.py` with an
       actionable-given-current-price-move gate** — today `DeltaProxyRepricer`'s `stale=True` just silently clamps
       with no re-route, the same class of gap the epic's W16 fail-closed ruling already names.
@@ -360,13 +361,17 @@ POST_ONLY as two independently composable fields.
       at least one real venue** — today zero venues have either wired, per `VENUE_ORDER_SEMANTICS`'s own honest gap
       registry. This is the formal, already-declared name for the pattern this whole issue is about; wiring it real
       for one venue is arguably the cleanest first concrete deliverable, ahead of the broader generic-contract work.
-- [ ] [REVIEW] P2. **Confirm whether execution-service's `engine/risk/preflight_gate.py` reads strategy-service's
+- [x] ✅ [REVIEW] P2. **Confirm whether execution-service's `engine/risk/preflight_gate.py` reads strategy-service's
       real `ExposureAggregator`-computed net/effective exposure**, or maintains an independent view — resolve
-      judgment call 10 with a real answer, not an assumption.
-- [ ] [AGENT] P3. **Resolve the dead `feedback_market_making_reference_price_model.md` reference** cited by both
+      judgment call 10 with a real answer, not an assumption. **EXTRACTED 2026-08-19 (na-eligibility-audit,
+      cross-cutting tranche, conflict-check clear)** — see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md`
+      item 2.
+- [x] ✅ [AGENT] P3. **Resolve the dead `feedback_market_making_reference_price_model.md` reference** cited by both
       `vol_trading/options.py` and `quote_maintenance.py`'s docstrings — confirmed not to exist anywhere in
       `unified-trading-pm`. Either this issue doc becomes the real record (repoint both docstrings here) or the memo
-      should be authored for real if it once existed elsewhere and was lost.
+      should be authored for real if it once existed elsewhere and was lost. **EXTRACTED 2026-08-19
+      (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** — see
+      `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 3.
 
 ## Progress Log
 
@@ -378,3 +383,10 @@ read this session (`delta_proxy_repricer.py`, `quote_maintenance.py`, `atomic_le
 `prediction_venue_dispersion.py`, `algorithms/selector.py`, `order_semantics.py`, `exposure_aggregator.py` — all
 read in full, not summarized secondhand), not taken on a research agent's word alone. 11 judgment calls now stand
 for the operator, one resolved (credit-tolerance is optional). Nothing in the Todos section has been built yet.
+
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): RECLASSIFY per-todo split — 3 of 14 open todos
+  (latency measurement, a preflight_gate fact-check, a dead-doc-reference cleanup) are pure read/measure/cleanup
+  tasks independent of the 11 unresolved operator judgment calls and touch no live-execution behavior; extracted to
+  `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md`. The other 11 stay KEEP-NA — genuine design/judgment
+  work or explicitly dependent on it, appropriately NA given this is live execution-critical-path (order
+  pricing/repricing) machinery. Doc's own `assigned_vm: NA` unchanged.

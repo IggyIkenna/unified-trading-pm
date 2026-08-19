@@ -37,7 +37,7 @@ related:
   [
     data_pipeline_reconciliation_skill_2026_07_20,
     tradfi_canonical_path_migration_design_2026_07_19,
-    _cefi_canonical_blueprint_2026_07_17,
+    cefi_canonical_blueprint_2026_07_17,
     data_pipeline_hardening_self_monitoring_2026_06_22,
   ]
 created: 2026-07-20

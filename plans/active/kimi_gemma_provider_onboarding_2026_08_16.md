@@ -659,3 +659,18 @@ needs the waitlist to activate first) — both correctly operator-gated, not som
   than filed as a new todo here, since editing this doc was scoped to a Progress Log entry only.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:1d518ee8ded96503]: RECLASSIFY (per-todo split) — the remaining Moonshot-only half of the wallet-reconciliation item and the remaining Kimi-only half of the pre-compact live-test item extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 5-6 (each item's NVIDIA/Gemma half was already shipped). Doc stays NA for its other remaining items (Kimi re-add reconciliation [OPERATOR], Moonshot waitlist tracking [OPERATOR], per-task billing schema extension [DEPENDENCY_BLOCKED on a sibling doc's design]).
+
+- **2026-08-19 (interactive session, slot 1, `/multi_provider_model_capability_bakeoff_2026_08_19.md` prep)**:
+  Real `tool_use`/`tool_result` round-trip additionally confirmed (beyond the 2026-08-16 plain-completion proof
+  already recorded above) for `kimi-k2.6` and `diffusiongemma-26b-a4b-it`, via the same local litellm proxy
+  instance used for the sibling Grok/Gemini plan's identical check. Both returned a correct `stop_reason:
+  "tool_use"` with the right tool name + parsed input for a `get_weather` smoke test — `kimi-k2.6` showed a
+  visible `thinking` block first, consistent with this doc's already-documented reasoning-by-default behavior.
+
+  **Contradiction flag, not resolved here**: this doc's 2026-08-16 entry recorded `google/gemma-4-31b-it` as
+  "confirmed working through the proxy" (the cold-start-latency explanation, a real 200 after a 90s retest).
+  The operator directly instructed (2026-08-19, separate session) to EXCLUDE `gemma-4-31b-it` from the current
+  model-capability bake-off as "not working properly." This directly conflicts with the "confirmed working" line
+  above — not re-investigated in this entry, but flagged so a future reader doesn't trust that line without
+  re-checking live. `diffusiongemma-26b-a4b-it` is unaffected by this — stays confirmed working, now with real
+  tool-use proof too.

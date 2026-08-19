@@ -550,6 +550,8 @@ re-running its own existing refresh script (see below), not a registry rename.
   (priority-14 arb-book registration, provider-availability re-confirmation, BETFAIR_EX/SB reconciliation) rather than
   its now-mostly-shipped P0/P1 history.
 - **na-eligibility-audit 2026-08-17** [body-hash:a3c4f5ebc221c22f]: KEEP-NA, valid -- re-verified, no content change since the second 2026-08-17 marker (matches inventory's open_todos=3). Remaining 3 items: priority-14 arb-book registration (depends on the next item), provider-availability re-confirmation (needs a live vendor subscription-state check, not a code/manifest read), and the BETFAIR_EX/SB codex-prose reconciliation (per-mention investigative judgment across 7 citations). None worker-determinable as-is. Cross-cutting tranche audit.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 3 open checkboxes (lines 212/217/237), matching Phase-0 exactly. All 3 already triple-confirmed KEEP-NA by this same skill on 2026-08-17 (2 audit passes plus a re-verification pass), after an earlier RECLASSIFY_SPLIT.
+
 ## Deferred work after 2026-08-14
 
 > **Table corrected 2026-08-19 (`/plan-reconcile batch_live_symmetry_master`)** — row 2 said "Not done" for the whole

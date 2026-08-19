@@ -208,3 +208,17 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       and, if a real regression, root-caused (not just patched by re-registering). Repo: agent-orchestrator.
 
 ## Progress Log
+
+- **2026-08-19 (cross-reference note, not this batch's own dispatch)**: item 2 above ("Harden the na-eligibility-audit
+  same-tranche concurrent-dispatch case… a dispatch-time lock per tranche in `server/plan_health.py::dispatch()`") is
+  now **already shipped** by `agent-orchestrator@bfe8fb28a0` — `_tranche_dispatch_gate`/`_last_tranche_dispatch`,
+  implemented while resolving `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4 (the
+  identical gate-exemption root cause for `mode="reconcile"`), generalized across
+  `reconcile`/`na_eligibility`/`ag_closeout` in one fix rather than per-mode. This closes the collision class
+  `na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md` describes (a dispatch-time
+  coalescing gate keyed on `(mode, tranche, day)`, not the file-level `Edit`-only alternative this item's text also
+  named — the gate approach was chosen). **Whoever dispatches this batch: verify `_tranche_dispatch_gate` covers your
+  `na_eligibility` case (it does, per its own test `test_tranche_dispatch_gate_covers_na_eligibility_and_ag_closeout`
+  in `agent-orchestrator/tests/test_plan_health.py`) and mark item 2 done-by-citation rather than re-implementing it.**
+  Durable contract: `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock correlation +
+  duplicate-tranche dispatch guard".
