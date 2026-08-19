@@ -185,7 +185,8 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
 - [ ] [INFRA] P1. Author `scripts/vm-launch.sh --provider {aws,ionos} --role {ao,ci-runner}` provisioning compute +
       floating/public IP + firewall rules + boot disk on either provider — net-new for **both** clouds (no launcher
       exists today even for AWS; AO's EIP/SG/EBS were hand-provisioned per `docs/ikenna-vm-setup.md`). Done-when:
-      running it against IONOS produces a reachable Basic Cube XL with SSH open only to the §1 admin allowlist.
+      running it against IONOS produces a reachable Basic Cube XL with SSH key-based access per §1's remote-access
+      decision (no IP-allowlist).
 - [ ] [INFRA] P1. Extend `bootstrap_vm.sh`'s `--cloud-provider` branch with `ionos` (or the generalized path from §1)
       for: IMDSv2-equivalent metadata lookup, external-IP resolution, and self-registration private-IP lookup — each
       currently AWS/GCP-only with an `unknown-vm` fallback already present. Also flip the script's own default off
@@ -434,8 +435,9 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
   untouched), active-plan logged evidence of past commands (also historical record), or the new DR-failback runbook,
   which deliberately hardcodes the AWS IP on purpose — bypassing DNS during a failback IS the point. Shipped fix:
   updated the 4 comment-only scripts to reference the DNS name + `orchestrator_vm_registry.yaml` instead of the bare
-  EIP so they don't go stale post-migration. No `agent-orchestrator` repo changes needed — its 6 hits were
-  comment-only re-derivation examples or the documented DNS-bypass diagnostic in `ao_client.sh`, both correct as-is.
+  EIP so they don't go stale post-migration — `unified-trading-pm@9a3471df9c`. No `agent-orchestrator` repo changes
+  needed — its 6 hits were comment-only re-derivation examples or the documented DNS-bypass diagnostic in
+  `ao_client.sh`, both correct as-is.
 
 ## Deferred work after 2026-08-19
 
