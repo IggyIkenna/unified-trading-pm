@@ -1,0 +1,79 @@
+# Baseline for the oneoff-recurring-shape ratchet.
+#
+# This is a SHRINKING ratchet. `repos[<repo>].count` is the number of
+# `scripts/` files carrying `# Lifecycle: oneoff` whose basename matches a
+# Phase 0b canonical-template operation shape (purge/canonicalize/
+# reconcile/backfill/audit — the founding plan's own §Discovery regex),
+# without a `# QG-allow:` marker on that line. A repo whose live count
+# EXCEEDS its baseline fails: a NEW oneoff-marked, shape-matching script
+# landed — adapt the matching `deployment-service/scripts/migrations/lib/
+# templates/template_*.py` instead, or add `# QG-allow: <reason>` if it
+# genuinely isn't shape-matching despite the name.
+#
+# LOWER a count (re-run --update-baseline) as legacy files get resolved
+# (relocated + wired to a template, or deleted once genuinely dead).
+# NEVER raise a count. Repos not listed default to count=0.
+#
+# SSOT: /codex/05-infrastructure/migration-script-ssot.md.
+note: Seeded 2026-08-19 at plan archival — day-1 baseline is the legacy population.
+repos:
+  agent-orchestrator:
+    count: 0
+  alerting-service:
+    count: 0
+  batch-live-reconciliation-service:
+    count: 0
+  client-reporting-api:
+    count: 0
+  deployment-api:
+    count: 0
+  deployment-service:
+    count: 14
+  deployment-ui:
+    count: 0
+  e2e-testing:
+    count: 0
+  e2e-testing.stale-pre-history-rewrite-20260805T112453Z:
+    count: 4
+  execution-service:
+    count: 0
+  execution-service.stale-pre-history-rewrite-20260805T112453Z:
+    count: 0
+  features-service:
+    count: 11
+  fund-administration-service:
+    count: 0
+  greeks-service:
+    count: 0
+  ibkr-gateway-infra:
+    count: 0
+  instruments-service:
+    count: 211
+  instruments-service.stale-pre-history-rewrite-20260805T112453Z:
+    count: 218
+  market-data-processing-service:
+    count: 7
+  market-data-processing-service.stale-pre-history-rewrite-20260805T112453Z:
+    count: 7
+  market-tick-data-service:
+    count: 156
+  ml-service:
+    count: 0
+  strategy-service:
+    count: 1
+  system-integration-tests:
+    count: 0
+  trading-agent-service:
+    count: 0
+  unified-api-contracts:
+    count: 0
+  unified-trading-api:
+    count: 0
+  unified-trading-library:
+    count: 0
+  unified-trading-library.stale-pre-history-rewrite-20260805T112453Z:
+    count: 0
+  unified-trading-pm:
+    count: 11
+  unified-trading-system-ui:
+    count: 1
