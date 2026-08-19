@@ -108,11 +108,11 @@ unable to pass the FULL-suite gate to reach `origin/live-defi-rollout`).
 
 ## Todos
 
-- [ ] [BACKEND] P1. Root-cause + fix the `prd-` prefix / `launched_by` provenance mismatch in
+- [x] ✅ [BACKEND] P1. Root-cause + fix the `prd-` prefix / `launched_by` provenance mismatch in
       `deployment_api/routes/deployments_inventory/_classification.py` (or its test fixtures in
       `tests/unit/test_route_deployments_inventory.py`, if the naming change was intentional) so
       `test_build_inventory_classifies_vms_and_jobs` and
-      `test_build_inventory_launched_by_provenance_for_cloud_run_jobs` pass deterministically. Repo: deployment-api.
+      `test_build_inventory_launched_by_provenance_for_cloud_run_jobs` pass deterministically. Repo: deployment-api — deployment-service@a0005a55 + deployment-api@29c4e47 (root cause: manifest-consolidator `{kind}-{ag}` registry-stem mismatch, not a prefix-strip regression).
 - [ ] [BACKEND] P2. Determine whether `test_inventory_route_live_path_mocks_registry_and_cloud_run`'s repeated
       (3/3, not intermittent) blocked-socket failure is the same class as
       `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md`'s entry for this test (a timeout there, an
@@ -124,3 +124,11 @@ unable to pass the FULL-suite gate to reach `origin/live-defi-rollout`).
 - **2026-08-19 (slot 7, backend_engineer)**: Filed while blocked shipping an unrelated fix. Verified pre-existing +
   unrelated via clean-tree byte-identical reproduction (RULES.md §4b). Declaring a `qg_red` repo-blocker for
   `deployment-api` referencing this doc.
+- **2026-08-19 (slot 1, backend_engineer)**: Root-caused + closed P1. NOT a `prd-`-strip regression — the
+  manifest-consolidator Cloud Run job name gained a `{kind}` segment (`{env_prefix}-manifest-consolidator-{kind}-{ag}`)
+  while `deployment_service`'s `CLOUD_RUN_JOBS` registry still listed bare `manifest-consolidator-{ag}` stems, so
+  `_classification.py`'s `_match_registered_job` (correctly prefix-agnostic via `stem in job_name`) fell through to the
+  `adhoc` default → `service` with the prefix intact + `launched_by=adhoc`. Already fixed on origin/live-defi-rollout by
+  parallel work: `deployment-service@a0005a55` (real `{kind}-{ag}` stems) + `deployment-api@29c4e47` (fixtures →
+  `prd-manifest-consolidator-market-data-cefi`). Verified: both P1 tests + the full 113-test file pass (113 passed in
+  7.63s). No code change needed; checkbox flipped.
