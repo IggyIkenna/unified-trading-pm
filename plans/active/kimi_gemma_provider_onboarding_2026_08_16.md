@@ -309,7 +309,7 @@ had already run. Treat every todo below as net-new work, not a resume.
       `kimi-wallet-reconciliation.spec.ts`'s new "shows the paused banner" test (fixture: `disable_account()` called
       on the one registered mock Kimi account, mirroring the real production state), 4/4 passed against the real
       e2e stack. Full backend+dashboard quality gate green before shipping.
-- [ ] [REVIEW] P2. Wallet/balance reconciliation for both: Moonshot (metered $, confirm whether it exposes a
+- [x] N. ✅ [REVIEW] P2. Wallet/balance reconciliation for both: Moonshot (metered $, confirm whether it exposes a
       balance/usage-read endpoint the way DeepSeek's `/user/balance` does, or whether
       it needs the DeepSeek-style "available-balance-only" design already built) and NVIDIA NIM (free tier — likely
       no $ balance at all, so the meaningful reconciliation is against RATE-LIMIT capacity consumed, same shape as
@@ -324,7 +324,7 @@ had already run. Treat every todo below as net-new work, not a resume.
       "Wallet/balance reconciliation, NVIDIA/Gemma half": `server/nvidia_headroom.py` + `GET
       /api/accounts/nvidia/capacity` + `NvidiaCapacityPanel.tsx` confirmed already shipped (`agent-orchestrator@
       0c0e527`), plus new `tests/test_nvidia_headroom.py` closing the coverage gap. **Moonshot/Kimi half remains
-      open** — checkbox stays unflipped for that reason alone.
+      open** — the remaining Moonshot-only scope extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 5 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 - [x] [REVIEW] P2. ✅ Context-window/tokenizer accuracy check for Kimi and Gemma-via-NVIDIA, following the same
       live-test discipline established in `multi_provider_context_billing_reconciliation_2026_08_16.md` (don't trust
       the char/4 or word-count heuristics — this session already proved a word-count estimate under-measured a real
@@ -345,12 +345,12 @@ had already run. Treat every todo below as net-new work, not a resume.
       narrower, less load-bearing question than the accounting-accuracy one just proven. Deliberately not done this
       session — the core concern this todo exists for is resolved; revisit the exact ceiling only if a real
       session actually approaches it in practice.
-- [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` through the REAL Claude Code harness (a spawned `claude`
+- [x] N. ✅ [REVIEW] P2. Live-test `/pre-compact` → `/compact` through the REAL Claude Code harness (a spawned `claude`
       subprocess, not a raw HTTP probe) for both new providers, same requirement already tracked for GLM/Gemini/
       Codex in the sibling plan. Done when: a real compact cycle is observed working end-to-end for both. **Gemma
       half DONE 2026-08-18** — see Progress Log: a real `/pre-compact`→`/compact` cycle observed working end-to-end
       via `nvidia-gemma-4-31b-it` (context dropped 42k→8.1k of 200k tokens). **Moonshot/Kimi half remains open** —
-      checkbox stays unflipped for that reason alone.
+      the remaining Kimi-only scope extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 6 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 - [x] [INFRA] P1. ✅ **New, operator 2026-08-16**: measure each new provider's real MAX-CONCURRENT-REQUESTS ceiling
       (distinct from RPM/RPD/TPM rate limits already covered above) and feed it into AO's dispatch model as a new
       gating axis. Confirmed by code check (2026-08-16): AO's only existing concurrency concept is
@@ -652,3 +652,5 @@ needs the waitlist to activate first) — both correctly operator-gated, not som
   not checked here) actually supplies it. This is genuinely uncertain from this session's evidence alone and
   outside this dispatch's Gemma-only scope to resolve — surfaced to the lead session in the dispatch report rather
   than filed as a new todo here, since editing this doc was scoped to a Progress Log entry only.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:1d518ee8ded96503]: RECLASSIFY (per-todo split) — the remaining Moonshot-only half of the wallet-reconciliation item and the remaining Kimi-only half of the pre-compact live-test item extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 5-6 (each item's NVIDIA/Gemma half was already shipped). Doc stays NA for its other remaining items (Kimi re-add reconciliation [OPERATOR], Moonshot waitlist tracking [OPERATOR], per-task billing schema extension [DEPENDENCY_BLOCKED on a sibling doc's design]).

@@ -36,11 +36,14 @@ created: 2026-08-18
 author: escalation_queue_reconciler (slot 4, dispatch agt-a4ff24)
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning # reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
+execution_scope: orchestrator-agent
 estimate_class: refactor
+estimate_baseline_ai_days: 0.4
+estimate_calibrated_ai_days: 0.16
 assigned_role: backend_engineer
 drift_direction: advance-code
+sequential: true # todo 2 (live-verify) is explicitly gated on todo 1 (the fix) landing first
 depends_on: []
 locked_by:
 resolved_by:
@@ -170,3 +173,4 @@ failed" vs. "no attempt was made at all" if that distinction ever becomes alert-
   design review); no answer within the bounded ~2min wait, filing per the skill's timed-out-to-operator fallback.
   Queue had already begun self-clearing by the time of filing (2/9 remaining rows dispatched) — no immediate operator
   action needed; this doc tracks the alerting-gap code fix only.
+- **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. Fresh (2026-08-18), root-caused, fully-scoped fix with exact call-site/mechanism citations; both todos (decouple the alert + live-verify) are bounded/deterministic, chained via `sequential: true` since todo 2 is explicitly gated on todo 1 landing. Conflict-check clear: the naming-adjacent `ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md` mention of `pool_exhaustion` refers to a DIFFERENT mechanism (DB connection pool, `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25`), not the escalation pool-exhaustion alert this doc targets. Companion gated finalize: `escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18_finalize_2026_08_19.md`.

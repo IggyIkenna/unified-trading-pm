@@ -148,12 +148,12 @@ safe outcome was a timing accident, not a property of the current design.
       exemption list). Same root cause independently confirmed to also affect `mode="reconcile"` (the
       `plan_reconciler` skill) — see `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4, cross-linked.
       Todo 2 below (the actual hardening fix) remains open and is now unblocked with a concrete, evidenced target.
-- [ ] [BACKEND] P2. **Harden the same-tranche concurrent-dispatch case regardless of root cause**, once the above is
+- [x] N. ✅ [BACKEND] P2. **Harden the same-tranche concurrent-dispatch case regardless of root cause**, once the above is
       answered — options include: a dispatch-time lock per tranche (reject/queue a second `defi` dispatch while one
       is already live), or narrowing every na-eligibility-audit Phase-3 file-touching step to `Edit`-only (never
       `Write`) for any file that might already exist from a concurrent run, so a genuine collision fails loudly
       (like the leverage-archetypes doc did) instead of silently overwriting. The second option is cheap and
-      defends against MORE than just this specific race (any stale-Read scenario), independent of the first.
+      defends against MORE than just this specific race (any stale-Read scenario), independent of the first. Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 - [ ] [OPERATOR] P3. **Decide whether this warrants a `SKILL.md` update** — e.g., "when creating a NEW same-day
       artifact doc (a blocks-index doc, a satellite batch), prefer `Edit` with a narrow anchor + `replace_all: false`
       over a blind `Write`, even for a path Phase 0 didn't report as already existing" — since Phase 0's inventory
@@ -180,3 +180,5 @@ safe outcome was a timing accident, not a property of the current design.
   `agent-orchestrator` engineering); this doc's own todo 1 can now be considered answered (the two options it
   posed — "design gap" vs "race in tracking" — resolve to "design gap," confirmed via code, not requiring the
   operator investigation it originally called for) even though todo 2 (the actual hardening fix) remains open.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:f6a1c78847a68470]: RECLASSIFY (per-todo split) — todo 2 (harden the same-tranche concurrent-dispatch case) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2. Doc stays NA for todo 3 ([OPERATOR] SKILL.md-update decision).
