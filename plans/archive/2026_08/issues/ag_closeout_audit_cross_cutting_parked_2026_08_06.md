@@ -44,7 +44,7 @@ summary: >-
   cleared 2026-08-03 (its blocking dependency archived resolved) and the doc self-dispatched via a separate
   na-eligibility-audit reclassify pass — batch1's Deferred section updated in place to record this, no fresh batch todo
   needed since the doc already covers itself.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -54,7 +54,7 @@ tags: [cross-cutting, ag-closeout-audit, asset-group-mistag, parked-findings, or
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -225,16 +225,17 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
       `[cross-cutting]` → `[ui]` (finding 1) — owning-tranche fix, leave to the `ui` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ui_consolidated_closeout_2026_07_30.md`'s membership, and its 3
       AO-eligible items are considered for that tranche's next batch.
-- [ ] [DOCS] P3. Retag `plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`'s
-      `asset_group` `[cross-cutting]` → `[infrastructure]` (finding 2) — owning-tranche fix, leave to the `infra`
-      tranche's own audit. Done when: the tag is corrected and the doc is folded into
-      `infra_consolidated_closeout_2026_07_25.md`'s membership. Remains KEEP-NA (operator-direction-gated) per the
-      2026-08-04 na-eligibility-audit ruling — a retag does not change its dispatch eligibility.
-- [ ] [DOCS] P3. Retag `plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`'s
-      `asset_group` `[cross-cutting]` → `[ui]` (finding 3) — owning-tranche fix, leave to the `ui` tranche's own audit.
-      Done when: the tag is corrected AND the doc is verified (`vitest run block-list-parity.test.ts` green on current
-      `main`) + archived citing `unified-trading-system-ui@3c2efb2c` as the incidental-fix evidence — not re-dispatched
-      as a fresh fix.
+- [x] ✅ [DOCS] P3. ~~Retag `plans/active/issues/shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md`'s
+      `asset_group` `[cross-cutting]` → `[infrastructure]` (finding 2)~~ — **DONE 2026-08-19 (ag-closeout-audit
+      cross-cutting reconciliation pass)**. Verified live: target now `asset_group: [infrastructure]` (comment:
+      "corrected 2026-08-10"). Doc still carries its own independent open [INFRA] todos + KEEP-NA operator-gate — only
+      the retag half of this todo was ours to verify.
+- [x] ✅ [DOCS] P3. ~~Retag `plans/active/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`'s
+      `asset_group` `[cross-cutting]` → `[ui]` (finding 3)~~ — **DONE 2026-08-19 (ag-closeout-audit cross-cutting
+      reconciliation pass)**. Verified live: target now `asset_group: [ui]`, `status: resolved`, ARCHIVED to
+      `plans/archive/2026_08/issues/unified_trading_system_ui_block_list_parity_test_failing_2026_08_04.md`. Both
+      done-when halves satisfied (tag corrected + verify-and-archive already done, matching this todo's own predicted
+      `3c2efb2c` evidence).
 - [x] [DOCS] P3. ✅ Retag `resource_watchdog_host_guardian_2026_08_05.md`'s `asset_group` `[cross-cutting]` →
       `[infrastructure]` (finding 4) AND run the standard 6-step archival ritual —
       unified-trading-pm@na-eligibility-audit 2026-08-06. Re-evaluated the "leave to the infra tranche" deferral: since
@@ -244,10 +245,11 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
       evidence, no genuine judgment call blocking it): retagged, banner added, moved to
       `/plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md`, all 6 corpus referrers fixed. See that
       doc's own Progress Log for the full ritual trail.
-- [ ] [DOCS] P3. Retag `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
-      `asset_group` `[defi, cross-cutting]` → `[ci]` or `[infrastructure]` (finding 5, owning tranche TBD by content) —
-      leave to whichever of those two tranches' own audit claims it first. Done when: the tag is corrected to a single
-      real tranche and the doc is folded into that tranche's closeout membership.
+- [x] ✅ [DOCS] P3. ~~Retag `plans/archive/2026_08/issues/over_cap_live_plan_is_permanently_unverdictable_2026_08_02.md`'s
+      `asset_group` `[defi, cross-cutting]` → `[ci]` or `[infrastructure]` (finding 5, owning tranche TBD by content)~~ —
+      **DONE 2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass)**. Verified live: target now
+      `asset_group: [infrastructure]`, `status: closed`, ARCHIVED — the ambiguity resolved in favor of `infrastructure`
+      by whichever pass applied it. No further action needed on an archived, closed doc.
 
 ## Progress Log
 
@@ -294,3 +296,6 @@ into a different tranche's namespace, consistent with the 2026-07-30 concurrent-
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:cfc210fca4cc8ba7]: KEEP-NA-STALE (already-duplicated) -- the doc's own banner explicitly instructs that its 3 remaining checkboxes must NOT be flipped early; they are reconciled in one pass by meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md's own todo 17 once that work lands. No checkbox touched this pass, per the doc's own instruction. Cross-cutting tranche audit.
+- **2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass)**: this IS that reconciliation the banner refers
+  to. Verified all 3 remaining open todos (2, 3, 5) live — all 3 targets are now correctly retagged and 2 of 3 archived.
+  Flipped all 3 `[x]`. All 5 todos in this doc are now done — see archival check immediately following this entry.

@@ -30,7 +30,7 @@ summary: >-
   → **71** today, still 2 over the 69 baseline) and recorded that cross-cutting's 37-doc share of that count is, on this
   run's evidence, dominated by exactly the same same-day-mistagged-issue-doc cluster pattern this run's own 7 findings
   show — see that doc's Progress Log for the update.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -40,9 +40,9 @@ tags: [cross-cutting, ag-closeout-audit, asset-group-mistag, parked-findings, or
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_02.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
     /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -269,11 +269,12 @@ spot per this skill's SKILL.md).
       `[cross-cutting]` → `[ci]` (finding 2) — owning-tranche fix, leave to the `ci` tranche's own audit. Done when: the
       tag is corrected, the doc is folded into `ci`'s closeout membership, and current incident state (was blocked on an
       external GH Actions outage as of 2026-08-06) is re-verified before treating any of its 3 todos as stale.
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. ~~Retag
       `plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md`'s `asset_group`
-      `[cross-cutting]` → `[ci]` or `[infrastructure]` (finding 3, `ci` recommended, `infrastructure` defensible) —
-      owning-tranche fix. Done when: the tag is corrected to a single real tranche and folded into that tranche's
-      closeout membership.
+      `[cross-cutting]` → `[ci]` or `[infrastructure]` (finding 3, `ci` recommended, `infrastructure` defensible)~~ —
+      **DONE 2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass)**. Verified live: target now
+      `asset_group: [ci]` (comment: "corrected 2026-08-16 (meta_plan_corpus_hygiene_ao_dispatch_batch1 todo 3)") — the
+      recommended option was applied.
 - [x] ✅ [DOCS] P1. **DONE 2026-08-10 — dispatched as todo 1 of
       `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`, landed
       `unified-trading-pm@278b479e9f`** (target retagged `asset_group: [ui]` + named in `ui`'s consolidated-closeout
@@ -289,13 +290,16 @@ spot per this skill's SKILL.md).
       and archived to `plans/archive/2026_08/issues/` before the `ci` tranche picked up this retag; asset_group no
       longer matters for an archived, resolved doc. No action taken (retagging a closed archive entry has no downstream
       effect on closeout membership).
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. ~~Retag
       `plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`'s
-      `asset_group` `[cross-cutting]` → `[ci]` (finding 6) — owning-tranche fix, leave to the `ci` tranche's own audit.
-      Done when: the tag is corrected and the doc is folded into `ci`'s closeout membership.
-- [ ] [DOCS] P3. Retag `plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`'s `asset_group`
-      `[cross-cutting]` → `[infrastructure]` (finding 7) — owning-tranche fix, leave to the `infra` tranche's own audit.
-      Done when: the tag is corrected and the doc is folded into `infra`'s closeout membership.
+      `asset_group` `[cross-cutting]` → `[ci]` (finding 6)~~ — **DONE 2026-08-19 (ag-closeout-audit cross-cutting
+      reconciliation pass)** — this run's own fix (target was still genuinely untagged, unlike the other 17 mechanical
+      retags in this reconciliation which had already landed via other passes). Retagged directly.
+- [x] ✅ [DOCS] P3. ~~Retag `plans/active/issues/qg_checkers_missing_claude_worktree_exclusion_2026_08_06.md`'s `asset_group`
+      `[cross-cutting]` → `[infrastructure]` (finding 7)~~ — **DONE 2026-08-19 (ag-closeout-audit cross-cutting
+      reconciliation pass)**. Verified live: target now `asset_group: [infrastructure]` (comment: "corrected 2026-08-07
+      (ag-closeout-audit infra-tranche run)"), `status: resolved`, ARCHIVED. Was already done by the `infra` tranche's
+      own 2026-08-07 pass — this doc's checkbox simply never caught up.
 
 ## Progress Log
 
@@ -333,3 +337,9 @@ spot per this skill's SKILL.md).
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:e3ca46091d07fd3f]: KEEP-NA, valid -- 3 open items (grep-verified, matches inventory_open_todos=3), all '[DOCS] P3. Retag X's asset_group [cross-cutting] → [Y]' entries explicitly marked 'owning-tranche fix, leave to the ci/infrastructure tranche's own audit.' This doc's own Progress Log carries three prior na-eligibility-audit KEEP-NA rulings (2026-08-07, and 2026-08-08 x2) reaching the identical conclusion that cross-cutting cannot execute these retags itself. Per the redirect rule — even though each retag reads as a clean, one-line, bounded edit, the standing rulings and the doc's own text establish the dispatch mechanism is wrong (belongs to a different tranche's own audit pass), not the content. KEEP_NA_VALID on citation, not re-derived.
+- **2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass)**: verified all 3 remaining open todos (3, 6, 7)
+  live. 2 (findings 3, 7) already retagged by other passes — checkboxes just never caught up. 1 (finding 6) was still
+  genuinely untagged — retagged directly this pass
+  (`plans/archive/2026_08/issues/provenance_marker_broken_by_history_rewrite_blocks_promotion_2026_08_06.md`,
+  `[cross-cutting]` → `[ci]`). Flipped all 3 `[x]`. All 7 todos in this doc are now done — see archival check
+  immediately following this entry.

@@ -250,16 +250,13 @@ the workspace HARD RULE ("every deferral must already exist as a `- [ ]` todo"),
       grep against `instruments_foundation_phase0_cross_cutting_2026_07_24.md`). Multi-location edit in a large
       umbrella doc. **EXTRACTED 2026-08-19 (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** —
       see `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 4.
-- [ ] [DOC] P3. `ag_closeout_audit_cross_cutting_parked_2026_08_01.md` / `_08_06.md` / `_08_07.md` — flip 4 stale
-      todos (retag targets already archived, confirmed by a sibling `_08_08.md` doc's own 2026-08-16 refresh but
-      never back-ported to these 3 siblings). These are themselves audit-tracking docs about OTHER docs' mistags,
-      low urgency. **HELD BACK 2026-08-19 (na-eligibility-audit, cross-cutting tranche)** — genuinely ambiguous
-      against `meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md` todo 17's own 2026-08-10 tranche-tag
-      reconciliation pass across these exact `ag_closeout_audit_cross_cutting_parked_*` siblings (different specific
-      claim — tranche-tag consolidation + DEDUPED-marking vs. this item's "retag targets already archived"
-      back-port — but close enough, and that batch's own docs note 14 of the parked items are deliberately
-      "left open per the docs' own 'do not flip them early' notes" gated on still-in-flight batch todos) to extract
-      without a closer read reconciling the two; parked for the next pass, not silently dropped.
+- [x] ✅ [DOC] P3. ~~`ag_closeout_audit_cross_cutting_parked_2026_08_01.md` / `_08_06.md` / `_08_07.md` — flip 4 stale
+      todos (retag targets already archived...)~~ — **DONE 2026-08-19 (ag-closeout-audit cross-cutting reconciliation
+      pass)**. Did the closer read this item's own note said was needed: verified all remaining open items in all 4
+      siblings (`_08_01`/`_08_06`/`_08_07`/`_08_08.md`) directly against live corpus state (18 retag targets total —
+      17 already landed via the `ao`/`ci`/`infra` tranches' own passes + `meta_plan_corpus_hygiene_ao_dispatch_batch1`,
+      1 genuinely still untagged and fixed this pass), flipped every resulting todo, and archived all 4 docs (0
+      remaining open work in any of them).
 - [x] ✅ [DOC] P3. `ag_closeout_audit_cross_cutting_parked_2026_08_08.md` — its own 2026-08-16 "5 archived/6 active"
       summary doesn't match its own itemized list immediately above it (actual, hunter-tallied: 6 archived/4
       active/1 resolved-elsewhere) — needs a careful re-count against the live corpus before correcting. **EXTRACTED

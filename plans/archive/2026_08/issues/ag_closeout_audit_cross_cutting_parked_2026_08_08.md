@@ -32,7 +32,7 @@ summary: >-
   `ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md` (also closed that doc's Todo 2 on the met done-when).
   `cursor-configs/skills/ag-closeout-audit/SKILL.md` updated with the widened Orthogonality peer set so every future run
   (any tranche) inherits the fix.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -42,9 +42,9 @@ tags: [cross-cutting, ag-closeout-audit, asset-group-mistag, parked-findings, or
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_01.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_06.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
     /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -278,10 +278,17 @@ ledger.
 
 ## Todos
 
-- [ ] [DOCS] P3. Retag findings 1-13 above `asset_group` `[cross-cutting]`/`[ao, cross-cutting]`/`[ci, cross-cutting]` →
-      their real single owner (`ao` ×3, `ci` ×6, `infrastructure` ×3, `meta` ×1) — owning-tranche fix, leave to each
-      tranche's own audit. Done when: all 13 tags are corrected and folded into their real tranche's closeout
-      membership.
+- [x] ✅ [DOCS] P3. ~~Retag findings 1-13 above `asset_group` `[cross-cutting]`/`[ao, cross-cutting]`/`[ci, cross-cutting]`
+      → their real single owner (`ao` ×3, `ci` ×6, `infrastructure` ×3, `meta` ×1)~~ — **DONE 2026-08-19
+      (ag-closeout-audit cross-cutting reconciliation pass)**. Verified all 13 targets live: all now carry their
+      recommended single tag (3× `[ao]`, 6× `[ci]`, 3× `[infrastructure]`, 1× `[meta]`) — done via the `ao` tranche's own
+      2026-08-09 pass (findings 1-3) and the 2026-08-16 `meta_plan_corpus_hygiene_ao_dispatch_batch1` dispatch (the
+      remaining 10). This tranche's own checkbox simply never caught up until now.
+- [x] ✅ [DIAG] P2. ~~The 1 genuine new orphan this doc found,
+      `plans/active/issues/honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`, was never converted to a real
+      todo here~~ — **MOOT 2026-08-19, checked immediately after adding this todo**: the target doc is already fully
+      resolved (`archive_exempt: true`, "Genuinely 0 open todos" per its own 2026-08-15 Progress Log entry, reaffirmed
+      by a 2026-08-17 na-eligibility-audit KEEP-NA pass). No fold-in or re-park needed.
 - [x] ✅ [DOCS] P1. **DEDUPED 2026-08-10 — duplicate of finding 4 in
       `/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md`, the origin doc**, and now dispatched
       as todo 1 of `/plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md`. The "3rd consecutive day"
@@ -348,3 +355,9 @@ ledger.
   action needed on this doc's side, implementation tracked at the target.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:512467bfd55ad790]: KEEP-NA, valid -- Sole remaining open todo is an explicit cross-tranche retag handoff: 'Retag findings 1-13 above ... → their real single owner (ao ×3, ci ×6, infrastructure ×3, meta ×1) — owning-tranche fix, leave to each tranche's own audit.' This is governed by the 2026-07-30 concurrent-sharded-worker primary-owner rule cited throughout this doc family — the cross-cutting tranche must not act on it directly. Two same-day prior na-eligibility-audit passes (2026-08-08 x2) confirmed KEEP-NA with identical reasoning.
+- **2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass)**: verified all 13 mistag targets live — all
+  already retagged by other tranches' own passes (ao ×3 on 2026-08-09; ci ×6/infrastructure ×3/meta ×1 on 2026-08-16 via
+  `meta_plan_corpus_hygiene_ao_dispatch_batch1`). Flipped the combined todo `[x]`. Found this doc's one genuine orphan
+  (`honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08.md`) had only ever been tracked in prose, never as a real
+  todo — added one. That item stays open pending today's fresh re-verification (see today's parked doc); this doc is
+  NOT archived yet because of it.

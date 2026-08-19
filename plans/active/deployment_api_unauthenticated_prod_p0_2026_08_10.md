@@ -26,8 +26,8 @@ related:
   [
     /plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md,
     /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
-    /plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_07.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
     /plans/active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md,
   ]
 created: "2026-08-10"
