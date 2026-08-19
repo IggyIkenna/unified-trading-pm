@@ -1404,7 +1404,7 @@
           <span class="v">177</span><span class="k">Canonically grouped by asset group <span class="u"><code>VENUES_BY_ASSET_GROUP</code></span></span>
         </div>
         <div class="stat">
-          <span class="v">16</span><span class="k">Chains, named below <span class="u">19 distinct chain-string tokens once Hyperliquid's transport suffixes are counted separately</span></span>
+          <span class="v">23</span><span class="k">Chains declared <span class="u"><code>ChainKind</code>, the full enum — not a sample of string literals</span></span>
         </div>
         <div class="stat">
           <span class="v">121</span><span class="k">DeFi protocol×chain capability entries <span class="u"><code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code></span></span>
@@ -1457,9 +1457,22 @@
         yet enumerated in the canonical per-asset-group list — declared capability ahead of categorisation, not a
         missing venue.
       </p>
+      <div class="callout">
+        <span class="tag">There is no single settled "DeFi venue count" <b class="ev ev-check">? check</b></span>
+        <p>
+          The 103 figure above is <code>VENUES_BY_ASSET_GROUP["defi"]</code> — venue tokens, chain suffix included.
+          Cut differently, the same registries give different, equally real numbers: <b>121</b> protocol×chain entries
+          in <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> (the capability dict merged into the 192-venue total),
+          <b>~59-67</b> distinct protocol names (stripping the chain suffix, depending on which of those two sources is
+          the base set), and <b>135</b> distinct venues in <code>ALL_DEFI_VENUES</code>. None of these is wrong; they
+          answer different questions ("venues", "protocols", or "everything the DeFi onboarding list has ever carried"),
+          and this document reports the precise, symbol-cited cut for each claim rather than blending them into one
+          number that would imply more agreement than the registries actually have.
+        </p>
+      </div>
       <div class="plate">
         <div class="plate-head">
-          <span class="label">The chain surface, named</span><span class="note">Distinct chain tokens across the registries, not a sample</span>
+          <span class="label">The chain surface, named</span><span class="note">Every <code>ChainKind</code> member — the full enum, not a sample</span>
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -1475,12 +1488,20 @@
                 <td>42161</td>
               </tr>
               <tr>
+                <td>Aurora</td>
+                <td>1313161554</td>
+              </tr>
+              <tr>
                 <td>Avalanche</td>
                 <td>43114</td>
               </tr>
               <tr>
                 <td>Base</td>
                 <td>8453</td>
+              </tr>
+              <tr>
+                <td>Bitcoin</td>
+                <td>native, non-EVM</td>
               </tr>
               <tr>
                 <td>Blast</td>
@@ -1491,8 +1512,20 @@
                 <td>56</td>
               </tr>
               <tr>
+                <td>Celo</td>
+                <td>42220</td>
+              </tr>
+              <tr>
                 <td>Ethereum</td>
                 <td>1</td>
+              </tr>
+              <tr>
+                <td>Fantom</td>
+                <td>250</td>
+              </tr>
+              <tr>
+                <td>Gnosis</td>
+                <td>100</td>
               </tr>
               <tr>
                 <td>Hyperliquid <span class="u">(L1)</span></td>
@@ -1507,12 +1540,20 @@
                 <td>5000</td>
               </tr>
               <tr>
-                <td>Optimism</td>
-                <td>10</td>
+                <td>Metis</td>
+                <td>1088</td>
               </tr>
               <tr>
-                <td>Plasma</td>
-                <td>9745</td>
+                <td>Mode</td>
+                <td>34443</td>
+              </tr>
+              <tr>
+                <td>Moonbeam</td>
+                <td>1284</td>
+              </tr>
+              <tr>
+                <td>Optimism</td>
+                <td>10</td>
               </tr>
               <tr>
                 <td>Polygon</td>
@@ -1539,9 +1580,17 @@
         </div>
       </div>
       <p style="font-size: 0.93rem; color: var(--ink-3)">
-        Hyperliquid contributes three additional distinct chain-string tokens beyond the name above
-        (<code>hyperliquid_api</code>, <code>hyperliquid_rest</code>, <code>hyperliquid_testnet</code> — transport
-        variants, not separate chains), which is why a raw token count over the registries reads 19 rather than 16.
+        <b>Correction, same day:</b> an earlier pass of this section counted 16 chains by grepping string literals
+        across the registry source rather than reading the declaring enum — a filter artefact, not a registry read, and
+        it both missed 8 real chains (gnosis, mode, celo, aurora, fantom, metis, moonbeam, bitcoin) and wrongly counted
+        Hyperliquid's transport suffixes as separate chains. The table above is the corrected, enum-sourced count.
+      </p>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        <b>A gap this correction surfaced, stated rather than smoothed over:</b> Plasma has real, live venues
+        (<code>AAVE-PLASMA</code>, <code>FLUID-PLASMA</code> — a chain that went live 2025-09-25 with over $6.5B in
+        Aave deposits in its first week) and a mainnet chain ID in <code>chain_env.MAINNET_CHAIN_IDS</code>
+        (<code>9745</code>), but is <em>not</em> a <code>ChainKind</code> member — so it is excluded from the 23 above.
+        That is a real registry gap between two sources of chain truth, not a documentation choice.
       </p>
       <div class="plate">
         <div class="plate-head">
@@ -1634,9 +1683,13 @@
         <span class="tag">A registry defect this count surfaced, named rather than smoothed over</span>
         <p>
           <code>VENUE_CHAIN_MAP</code> — a different, narrower registry object used for wallet-grouping logic — declares
-          only <b>15 venues across 4 chains</b>. It is not the source for the counts above and was not used to derive
-          them; anything that <em>does</em> derive chain coverage from that map specifically would under-report. Tracked
-          as a registry fix, not a documentation one — <span class="u">registry_ground_truth_2026_08_19.md</span>.
+          only <b>4 chains / 15 venues</b> against the <b>23 chains / 192 venues</b> shown above. It is not the source
+          for the counts above and was not used to derive them; anything that <em>does</em> derive chain coverage from
+          that map specifically would under-report. Checked directly against the <a href="#s5">§05</a> coverage
+          pipeline this document also cites: neither <code>measure_honest_coverage.py</code> nor its expected-universe
+          builder imports <code>VENUE_CHAIN_MAP</code> — zero references in either — so the coverage percentages in
+          <a href="#s5">§05</a> are not under-counted through this specific gap. Tracked as a registry fix, not a
+          documentation one — <span class="u">registry_ground_truth_2026_08_19.md</span>.
         </p>
       </div>
       <h3>Canonical instrument IDs — one builder, five asset groups</h3>
