@@ -243,6 +243,12 @@ where it writes.
 | Model | Task (tier) | Exit | Turns | Tool calls (err) | Cumulative in/out tokens | Cache-read tokens | Peak approx context-fill% | Wall-clock | Gate 1 | Notes |
 |---|---|---|---|---|---|---|---|---|---|---|
 | Gemini 3.5-flash-lite | `ag-closeout-auditor` audit (Easy) | 0 | 83 | 29 (4) | 730,196 / 11,248 | 2,607,683 | 1.61% | 10.1 min | PASS (clean tree, real citations, committed not pushed) | 4/4 checks answered with specific file/line + log citations (sharding via `MAX_CONCURRENT_TRANCHES=4`, runtime range 6.5-63.9 min measured, no PR/review-branch gate found, a real 2026-08-16 escalation traced through to a produced batch plan). Full poll history: `usage_poll.jsonl` under this attempt's out-dir. |
+| Gemini 3.5-flash-lite | tmux-fixture anti-pattern audit (Medium) | 0 | 67 | 26 (1) | 475,123 / 13,869 | 3,355,399 | 0.56% | 11.3 min | PASS (clean tree, committed not pushed) | 1 real tool_error recorded (not a Gate-1 blocker — recovered same task). Not yet content-reviewed for depth (that's a separate Gate-2 pass, tracked as pending). |
+| Gemini 3.5-flash-lite | `docs-reconcile` audit (Easy #2) | 1 | 2 | — | — | — | — | ~1 min | INFRA-BLOCKED (Gemini free-tier `RESOURCE_EXHAUSTED`, $0.25 spent, not a real result) | Excluded — quota, not model quality. |
+| Gemini 3.5-flash-lite | `escalation-queue-reconciler` audit+gap-check (Medium #1) | 1 | 13 | — | — | — | — | — | INFRA-BLOCKED (Gemini free-tier `RESOURCE_EXHAUSTED`, $1.31 spent, not a real result) | Excluded — quota, not model quality. |
+| **Gemini 3.7-flash** | **all 6 assigned tasks** | 1 (×6) | 9,1,1,1,1,1 | — | — | — | — | — | **INFRA-BLOCKED, entire lane** — 20 req/min free-tier quota exhausted on task 1 ($0.74 spent), never recovered before tasks 2-6's turn (30s spacing too short) | Zero usable data for this model this run. Re-run needed (ideally paced/serialized or on a higher quota tier) before drawing any conclusion about Gemini 3.7-flash's real capability. |
+| **DiffusionGemma 26B** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~5s each | **INFRA-BLOCKED, entire lane** — NVIDIA NIM `InternalServerError`(500)/`BadGatewayError`(502) on every attempt; a simple single-turn smoke test against the SAME endpoint succeeded (200 OK) immediately after, isolating the failure to the full real Claude Code request shape (real CLAUDE.md system prompt + full multi-tool schema), not a dead endpoint | Zero usable data. Root cause not yet pinned to a specific payload/tool-count limit — flagged, not fixed. Re-run needs that fixed first. |
+| **Codex/Luna** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~0.1s each | **INFRA-BLOCKED, entire lane** — bridge rejects any `system`-role message (HTTP 400), root-caused in `codex_luna_flex_bridge_2026_08_14.md` | Zero usable data. Needs a real bridge-code fix, not a config/retry issue. |
 
 _(remaining rows populated as each attempt completes)_
 
@@ -402,3 +408,16 @@ _(remaining rows populated as each attempt completes)_
   yet root-caused precisely — flagging the pattern, not yet diagnosed to the same depth as the Codex bug. 2 tasks
   remain; if they fail identically, this lane's results need the same "infra-blocked, not a real result" treatment
   once confirmed.
+
+- **2026-08-19 (later) — Gemma lane confirmed 6/6 complete washout (same pattern, now proven not a one-off);
+  slot 24 task 4 (tmux-fixture audit) landed a second real PASS.** All 6 diffusiongemma-26b attempts failed
+  identically (1 turn, $0 each) — 4 with `InternalServerError` (500), 2 with `BadGatewayError` (502), both
+  "server-side issue, usually temporary" per the error text itself. Same lane treatment as Codex/Luna: zero usable
+  data, excluded from real results, root cause not yet pinned down (flagged for a future pass, not this session).
+  Slot 24 (gemini-3.5-flash-lite) task 4 (tmux-fixture-audit, Medium) finished clean: 27 turns, 1 tool_error
+  (non-blocking), $3.05, 11.3 min, `is_error:false` — second real PASS for this model. Full Results table above
+  now reflects every attempt's true status (real pass/fail vs. infra-blocked) rather than conflating them.
+  **Running total so far**: only Gemini 3.5-flash-lite has produced any real signal this run (2 PASS, 2
+  quota-blocked, 2 still in flight) — every other model's lane is either 100% infra-blocked or still pending. This
+  bake-off's infra had more real bugs waiting in it than expected; that is itself the most useful thing found
+  today, arguably more valuable than the model-quality data it was designed to produce.
