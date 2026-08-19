@@ -39,10 +39,6 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
 last_updated: "2026-08-18" # 2026-08-18: plan_reconciler cefi_master epic-scoped reconcile — added a consolidated
-  # STALE-DIGEST FIX correction block (22 over-counted + 1 under-counted + 1 misfiled entry, see body). Was
-  # 2026-08-02: added 3 self-dispatched-but-unlinked citations (ag-closeout-audit linkage-gap fix); was 2026-07-25
-  # (appended the parent's "Pass-through from the 2026-07-18 consolidated canonicalisation audit" section verbatim,
-  # 4-child split pass, cefi.4)
 locked_by:
 locked_since:
 supersedes:
