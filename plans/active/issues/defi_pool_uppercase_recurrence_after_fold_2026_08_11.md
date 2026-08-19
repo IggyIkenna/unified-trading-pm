@@ -745,3 +745,13 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   `[OPERATOR]` P2 "decide plan destination" todo above still stands, answered with a recommendation of
   `assigned_vm: NA` (human plan, per this workspace's default-human rule for a judgment-call-scale migration plan) —
   no plan authored, no migration executed, per the check-only scope of this session.
+- **plan-reconcile 2026-08-19 (epic-scoped, finding-Y candidate — flagged, not fixed)**: this doc is `assigned_vm:
+  planning` and currently carries 2 `[OPERATOR]`-tagged items (P2 "decide plan destination", P1 "decide disposition for
+  mdps-* VMs") in the same file as plain dispatchable todos (`[SCRIPT] P1` GATED re-retirement, `[DIAG] P3` logs-mode
+  retry) — the exact shape `task_template.md` §3 finding Y bans. Not forked out here: per finding Y's own text,
+  retroactive remediation is the job of the dedicated sweep
+  (`/plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md`, a DIFFERENT epic,
+  `agent_operating_framework_master`), not this epic-scoped run, and this doc's live, heavily-narrated investigation
+  state makes it a poor candidate for a rushed mechanical fork under today's shared-checkout contention. Routing this
+  doc as a candidate for that sweep's "Group: defi-related epics" todo (not yet added there — out of this run's scope
+  to edit a different epic's doc; flagging for the lead session / next sweep pass instead).

@@ -39,9 +39,6 @@ co_operators:
 codex_ssots:
 related_plans:
   - ../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md
-  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md
-  - ../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md
-  - ../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md
   - ../active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md
   - ../active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md
   - ../active/instruments_completion_tracker_2026_07_06.md
@@ -52,9 +49,11 @@ related_plans:
   - ../active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md
   - ../active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md
   - ../active/mtds_venue_backfill_and_ops_hardening_residuals_2026_07_24.md
-  - ../active/mvp_scope_catalogue_tagging_2026_06_08.md
+  - ../active/mvp_could_exist_rollup_dual_scope_2026_08_12.md
   - ../active/prediction_capture_incident_remediation_2026_07_06.md
   - ../active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md
+  - ../active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md
+  - ../active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16_finalize.md
   - ../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md
   - ../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize.md
 last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-08, unchanged despite the 2026-07-12 body edits below; finding 125 verify-rerun-2, doc-reconciliation sync)
@@ -70,6 +69,11 @@ locked_since: 2026-05-08
      125 is the frontmatter last_updated bump above). -->
 
 # Instruments Live — Master Activation Plan
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/f4b0545a-b1be-4554-94b5-8e99e5948798 (generated 2026-08-19,
+`/plan-reconcile instruments_master`)
 
 > **🔵 CONSOLIDATION 2026-06-26 — live instruments work now runs through 2 themed survivors.** Per the operator's
 > instruments/MTDS amalgamation (`../active/instruments_mtds_plan_consolidation_2026_06_26.md`), all done/largely-done
@@ -448,8 +452,13 @@ Full-execution verification (per "Plans Run To Actual Completion" HARD RULE):
 
 ## Assigned active plans
 
-_19 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_18 active plans declare `parent_epic: instruments_master` in their frontmatter. Workers pick up in priority order (P0
+first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`. Regenerated 2026-08-19 via
+`/plan-reconcile instruments_master` — the prior roster (`last_updated: 2026-07-14`) had gone stale: it still listed 2
+plans since archived (`mvp_scope_catalogue_tagging_2026_06_08`,
+`defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08`) as if active, and was missing 3 plans that now
+declare this epic (`mvp_could_exist_rollup_dual_scope_2026_08_12`,
+`tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16` + its finalize)._
 
 ## P0 — must complete before next foundation gate
 
@@ -488,15 +497,6 @@ residuals
 
 ## P1 — important; post-current-gate
 
-### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md)
-
-**status**: complete (archived 2026-08-16) · **estimate**: 4.4 cal AI-days (class: infra)
-
-### [`cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize`](../archive/2026_08/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09_finalize.md)
-
-**status**: complete (archived 2026-08-16) · **estimate**: 0.8 cal AI-days (class: infra) **title**: Cross-cutting satellite AO batch 2 —
-finalize (reconcile source docs + archive)
-
 ### [`instruments_mtds_consistency_remediation_residuals_2026_07_24`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md)
 
 **status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: Instruments <-> MTDS F1-N9 consistency
@@ -507,20 +507,15 @@ remediation -- residual continuation
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: Instruments-store CF canonicalisation —
 inherited single-walk lineage
 
-### [`mvp_scope_catalogue_tagging_2026_06_08`](../active/mvp_scope_catalogue_tagging_2026_06_08.md)
+### [`mvp_could_exist_rollup_dual_scope_2026_08_12`](../active/mvp_could_exist_rollup_dual_scope_2026_08_12.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: design)
+**status**: active · **estimate**: 3.0 cal AI-days (class: design)
 
 ## P2 — useful; opportunistic
 
 ### [`canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08`](../active/canonical_id_p1_tradfi_combo_leg_canonicalization_2026_07_08.md)
 
 **status**: active · **estimate**: 0.8 cal AI-days (class: refactor)
-
-### [`defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08`](../active/defi_expected_unattempted_backlog_1m_2026_07_03_finalize_2026_08_08.md)
-
-**status**: active · **estimate**: 0.12 cal AI-days (class: refactor) **title**: Finalize — defi A_TOKEN/DEBT_TOKEN
-instrument_type-alias + oracle_prices validity fix close-out
 
 ### [`instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize`](../active/instruments_mtds_consistency_remediation_residuals_2026_07_24_finalize.md)
 
@@ -531,6 +526,16 @@ remediation residuals — finalize
 
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra) **title**: TradFi legacy-twin bucket deletes — Ikenna
 sign-off gate
+
+### [`tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16`](../active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md)
+
+**status**: active · **estimate**: 1.6 cal AI-days (class: infra) **title**: TradFi residual catalogue-leg purge
+extension + twin-delete lookup-bug fix
+
+### [`tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16_finalize`](../active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16_finalize.md)
+
+**status**: active · **estimate**: 0.15 cal AI-days (class: infra) **title**: Finalize — TradFi purge extension +
+twin-delete lookup-bug fix
 
 ### [`tradfi_satellite_ao_dispatch_batch9_2026_08_09`](../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md)
 

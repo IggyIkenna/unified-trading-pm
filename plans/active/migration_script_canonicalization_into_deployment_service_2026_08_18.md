@@ -590,10 +590,30 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       output; also `scripts/sports/*` subdirectory entries). Same Delete-when-first triage + relocate to
       `deployment-service/scripts/migrations/features-service/`. Done-when: same green-QG + no-dangling-reference
       bar as above.
-- [ ] [DATA] P3. **strategy-service remainder** (the 2 non-Category-1 matches — `scripts/
+- [x] [DATA] P3. **strategy-service remainder** (the 2 non-Category-1 matches — `scripts/
       backfill_strategy_instructions_orphan_class_e.py`, `scripts/migrate_clients_yaml_to_client_first.py` — the 3rd
       strategy-service match, `run_2yr_config_grid_backtest.py`, is already covered by Phase 1). Relocate to
       `deployment-service/scripts/migrations/strategy-service/`.
+      **DONE (2026-08-19) — resolved as "leave both in place", not a relocation.** Both files carry the SAME class
+      of blocker Phase 1 already found for `run_2yr_config_grid_backtest.py`. (1) `backfill_strategy_instructions_
+      orphan_class_e.py` dynamically loads its sibling `strategy_orphan_sweep.py` at runtime
+      (`importlib.util.spec_from_file_location(..., Path(__file__).resolve().parent / "strategy_orphan_sweep.py")`)
+      — `strategy_orphan_sweep.py` is NOT in this todo's scope, so relocating only the backfill script would break
+      it (dangling sibling-file load) unless the sweep script moved too, which would be an unrequested scope
+      expansion. This script is also genuinely NOT dead weight yet — its own docstring states it's
+      `BLOCKED on the exact --reason value (operator decision pending)`, `--apply` deferred — i.e. still-pending
+      work, not a Delete-when-satisfied one-off, so archiving-in-place-as-dead isn't the right frame either; it
+      simply stays exactly where it runs today. (2) `migrate_clients_yaml_to_client_first.py` has a HARD
+      `from strategy_service.engine.core.client_config import ...` / `client_config_migration import ...` package
+      import — folding it into deployment-service would create a literal service↔service dependency, violating
+      `/codex/04-architecture/tier-and-import-architecture.md`'s "no service↔service deps" rule the exact same way
+      `run_2yr_config_grid_backtest.py` already did. Neither file changed; `bash strategy-service/scripts/
+      quality-gates.sh` and `bash deployment-service/scripts/quality-gates.sh` both already green (no diff to
+      verify) since nothing moved. No dangling-reference risk since no path changed. **Emerging pattern worth
+      flagging for Phase 3**: strategy-service's own migration scripts skew toward deep in-package coupling
+      (engine/core imports, sibling-script dynamic loading) more than instruments-service's GCS/manifest-only
+      scripts do — expect a similar in-place-only outcome for any strategy-service Phase 3 candidates, not a
+      relocation-by-default assumption.
 - [ ] [DATA] P3. **unified-trading-library** (2 files — `scripts/migrate_manifest_v8.py`, `scripts/
       check_consolidator_lock_orphan_status_2026_08_17.py`). Relocate to `deployment-service/scripts/migrations/
       unified-trading-library/`. Note: UTL is a dependency of every other service (per

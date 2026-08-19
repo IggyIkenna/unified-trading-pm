@@ -1,17 +1,22 @@
 ---
 doc_type: issue
 title:
-  Estate orphan assessment 2026-07-21 — sports/cefi/defi orphan populations measured (prediction hung, tradfi still
-  pending)
+  Estate orphan assessment 2026-07-21 — sports/cefi/defi/tradfi/prediction orphan populations measured (all 5
+  asset-groups complete by 2026-07-24)
 summary:
-  Ran migration_orphan_sweep per asset_group (GCS→manifest, single-walk, read-only). UPDATED 2026-08-18
-  (plan_reconciler, corrected stale title/summary — see body for full detail) — SPORTS measured — 214,319 ORPHAN_REAL
-  objects (real data with no manifest row — the silent-write gap) plus 34,385 LEGACY_DUPLICATE. The original
-  in-session walk FAILED on defi/cefi/tradfi's multi-GB availability-index download, but both CEFI (935,714
-  orphan_class_E, sweep `orphan-sweep-cefi-20260722-161432`) and DEFI (15,865,384 orphan_class_E, the largest of any
-  asset_group) were subsequently COMPLETED via the sanctioned VM run by 2026-07-24 (session 3) — see body Progress
-  Log for both. Prediction hung in the classification phase (30 min no progress, killed) and TradFi's status was not
-  re-confirmed in this pass — verify current state before treating either as still-pending.
+  Ran migration_orphan_sweep per asset_group (GCS→manifest, single-walk, read-only). UPDATED 2026-08-19
+  (plan_reconciler instruments_master, corrected stale title/summary — see body todo 3 for full detail) — SPORTS
+  measured — 214,319 ORPHAN_REAL objects (real data with no manifest row — the silent-write gap) plus 34,385
+  LEGACY_DUPLICATE. The original in-session walk FAILED on defi/cefi/tradfi's multi-GB availability-index download and
+  prediction hung in the classification phase (30 min no progress, killed same session) — but all 4 were subsequently
+  relaunched via the sanctioned VM run and reached durable completion, confirmed by the doc's own body todo 3
+  (`[x]` since 2026-07-30, citing exact sweep IDs) — **tradfi** (`orphan-sweep-tradfi-20260722...`, fresh report,
+  clean exit, 2026-07-22), **cefi** (935,714 orphan_class_E, `orphan-sweep-cefi-20260722-161432`), **prediction**
+  (3,137,183 orphan_class_E, `orphan-sweep-prediction-20260722-161520`, full 6.6M-object walk, 2026-07-22), **defi**
+  (15,865,384 orphan_class_E, the largest of any asset_group, `orphan-sweep-defi-20260723-043605`, 6th attempt,
+  completed 2026-07-24/session 3). The prior (2026-08-18) correction pass fixed the SPORTS/CEFI/DEFI framing but left
+  this title/summary describing TradFi/Prediction in their same-day (2026-07-21) pre-completion state, despite the
+  body's own already-verified evidence recording both complete a day later (2026-07-22) — fixed here.
 status: open
 nature: issue
 asset_group: [sports, defi, cefi, tradfi, prediction]
@@ -28,7 +33,7 @@ related:
   ]
 created: 2026-07-21
 author: unknown
-last_updated: 2026-08-17
+last_updated: 2026-08-19
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only

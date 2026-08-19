@@ -1,0 +1,699 @@
+<!-- generated: 2026-08-19 by /plan-reconcile manifest_master (epic-scoped) -->
+<title>Manifest Master</title>
+<style>
+  :root {
+    /* ---- Field-ledger palette: named tokens ---- */
+    --paper-050: #eeece1;       /* aged parchment ground (light) */
+    --paper-100: #e3e0d1;       /* card ground (light) */
+    --paper-200: #d5d1bd;       /* hairline / border (light) */
+    --ink-900: #23271d;         /* primary text (light) */
+    --ink-600: #52543f;         /* secondary text (light) */
+    --brass-600: #8a5f22;       /* accent — text-safe on paper */
+    --brass-500: #b6863c;       /* accent — chips / stripes */
+    --verdigris-600: #2f6154;   /* verified/done — text-safe */
+    --verdigris-500: #3f7d6c;   /* verified/done — fills */
+    --rust-600: #7c3d28;        /* gated/attention — text-safe */
+    --rust-500: #a2543a;        /* gated/attention — fills */
+    --shadow: 0 1px 2px rgba(35, 39, 29, 0.08);
+
+    --bg: var(--paper-050);
+    --surface: var(--paper-100);
+    --border: var(--paper-200);
+    --text: var(--ink-900);
+    --text-dim: var(--ink-600);
+    --accent: var(--brass-600);
+    --accent-fill: var(--brass-500);
+    --ok: var(--verdigris-600);
+    --ok-fill: var(--verdigris-500);
+    --warn: var(--rust-600);
+    --warn-fill: var(--rust-500);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper-050: #12160f;
+      --paper-100: #191d14;
+      --paper-200: #2c3123;
+      --ink-900: #e9e6d6;
+      --ink-600: #a9a690;
+      --brass-600: #d6a75a;
+      --brass-500: #c99a4c;
+      --verdigris-600: #6bb39e;
+      --verdigris-500: #4e9682;
+      --rust-600: #d68465;
+      --rust-500: #b8654a;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper-050: #12160f;
+    --paper-100: #191d14;
+    --paper-200: #2c3123;
+    --ink-900: #e9e6d6;
+    --ink-600: #a9a690;
+    --brass-600: #d6a75a;
+    --brass-500: #c99a4c;
+    --verdigris-600: #6bb39e;
+    --verdigris-500: #4e9682;
+    --rust-600: #d68465;
+    --rust-500: #b8654a;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 40px 24px 96px; }
+
+  h1, h2, h3 {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+    font-weight: 700;
+    text-wrap: balance;
+    margin: 0;
+    color: var(--text);
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  a { color: var(--accent); }
+
+  /* ---- Masthead ---- */
+  .masthead {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    gap: 24px;
+    border-bottom: 3px solid var(--text);
+    padding-bottom: 20px;
+    margin-bottom: 8px;
+    flex-wrap: wrap;
+  }
+  .masthead h1 { font-size: clamp(32px, 5vw, 44px); letter-spacing: -0.01em; }
+  .masthead .stamp {
+    border: 2px solid var(--accent);
+    color: var(--accent);
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 6px 10px;
+    transform: rotate(-2deg);
+    white-space: nowrap;
+  }
+  .dek { color: var(--text-dim); max-width: 62ch; margin: 14px 0 0; font-size: 16px; }
+  .dek .genline { display: block; margin-top: 6px; font-size: 13px; }
+
+  section { margin-top: 52px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  .section-head h2 { font-size: 22px; }
+  .section-head .count-badge {
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+  }
+
+  /* ---- Stat strip ---- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+  }
+  .stat {
+    background: var(--surface);
+    padding: 20px 16px;
+  }
+  .stat .n {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 34px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+  .stat .n.ok { color: var(--ok); }
+  .stat .n.warn { color: var(--warn); }
+  .stat .lbl {
+    margin-top: 8px;
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    color: var(--text-dim);
+    text-transform: uppercase;
+  }
+
+  /* ---- Ledger register (plan cards) ---- */
+  .register { display: flex; flex-direction: column; gap: 1px; background: var(--border); border: 1px solid var(--border); }
+  .entry {
+    background: var(--surface);
+    padding: 16px 18px 16px 20px;
+    border-left: 4px solid var(--border);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 8px 20px;
+    align-items: start;
+  }
+  .entry.st-ok { border-left-color: var(--ok-fill); }
+  .entry.st-warn { border-left-color: var(--warn-fill); }
+  .entry.st-active { border-left-color: var(--accent-fill); }
+  .entry .title-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .entry h3 { font-size: 15.5px; font-family: -apple-system, sans-serif; font-weight: 700; }
+  .tag {
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border: 1px solid currentColor;
+  }
+  .tag.ok { color: var(--ok); }
+  .tag.warn { color: var(--warn); }
+  .tag.agg { color: var(--text-dim); }
+  .entry .path { font-size: 12px; color: var(--text-dim); margin-top: 3px; }
+  .entry .summary { font-size: 13.5px; color: var(--text-dim); margin-top: 8px; max-width: 62ch; }
+  .entry .op-quote {
+    margin-top: 8px;
+    font-size: 12.5px;
+    padding: 8px 10px;
+    background: color-mix(in srgb, var(--warn-fill) 12%, var(--surface));
+    border-left: 2px solid var(--warn-fill);
+    color: var(--text);
+  }
+  .entry .op-quote .mono { color: var(--warn); }
+  .counts { text-align: right; white-space: nowrap; }
+  .counts .fig { font-family: ui-monospace, monospace; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .bar { width: 92px; height: 6px; background: var(--warn-fill); opacity: 0.55; margin-top: 6px; display: flex; overflow: hidden; }
+  .bar .done { background: var(--ok-fill); opacity: 1; }
+
+  /* ---- Tables ---- */
+  .tblwrap { overflow-x: auto; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  thead th {
+    text-align: left;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  tbody td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+  td.mono, th.mono { font-family: ui-monospace, monospace; font-size: 12px; }
+
+  /* ---- Lanes ---- */
+  .lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .lane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--accent-fill);
+    padding: 16px;
+  }
+  .lane .n { font-family: ui-monospace, monospace; color: var(--accent); font-size: 12px; letter-spacing: 0.08em; }
+  .lane h3 { font-size: 14px; margin-top: 6px; }
+  .lane ul { margin: 10px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--text-dim); }
+  .lane li { margin-bottom: 4px; }
+
+  /* ---- Dispatch prompts ---- */
+  .prompt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .prompt summary {
+    cursor: pointer;
+    padding: 12px 16px;
+    font-family: ui-monospace, monospace;
+    font-size: 12.5px;
+    color: var(--accent);
+    list-style: none;
+  }
+  .prompt summary::-webkit-details-marker { display: none; }
+  .prompt summary::before { content: "▸ "; }
+  .prompt[open] summary::before { content: "▾ "; }
+  .prompt pre {
+    margin: 0;
+    padding: 16px;
+    border-top: 1px solid var(--border);
+    white-space: pre-wrap;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  .note-list { font-size: 13.5px; color: var(--text-dim); padding-left: 20px; }
+  .note-list li { margin-bottom: 10px; }
+  .note-list code, p code, li code, td code { font-family: ui-monospace, monospace; font-size: 0.92em; background: var(--surface); padding: 1px 4px; border: 1px solid var(--border); }
+
+  footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 12px; color: var(--text-dim); }
+
+  @media (max-width: 640px) {
+    .entry { grid-template-columns: 1fr; }
+    .counts { text-align: left; }
+    .bar { margin-left: 0; }
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">Epic Ledger — Data Pipeline</div>
+      <h1>Manifest Master</h1>
+      <p class="dek">
+        The manifest is the pipeline's honest record of what was actually captured, versus what was expected, empty,
+        or failed — schema v9, the 3-axis batch invariant (schema + writer code + GCS layout co-evolve), and the
+        Stage 0–4 backfill that gets the corpus there. This register tracks its 20 child docs against that invariant.
+        <span class="genline mono">Generated 2026-08-19 · <code>/plan-reconcile manifest_master</code></span>
+      </p>
+    </div>
+    <div class="stamp">Reconciled 2026‑08‑19</div>
+  </div>
+
+  <!-- 3. Headline stat strip -->
+  <section>
+    <div class="stats">
+      <div class="stat"><div class="n warn">82</div><div class="lbl">Open todos (deduped)</div></div>
+      <div class="stat"><div class="n ok">241</div><div class="lbl">Done todos (deduped)</div></div>
+      <div class="stat"><div class="n warn">5</div><div class="lbl">On operator's desk</div></div>
+      <div class="stat"><div class="n">20</div><div class="lbl">Docs in scope (14 plans · 6 issues)</div></div>
+      <div class="stat"><div class="n ok">13</div><div class="lbl">Docs corrected this pass</div></div>
+    </div>
+  </section>
+
+  <!-- 4. Plan-by-plan breakdown -->
+  <section>
+    <div class="section-head"><h2>The register</h2><span class="count-badge">20 docs · <code>parent_epic: manifest_master</code></span></div>
+    <div class="register">
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>CeFi E4→E8 orphan-sweep + legacy gap-fill + manifest rebuild</h3><span class="tag warn">delete-safety</span></div>
+          <div class="path mono">plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md</div>
+          <div class="summary">Human-executed (never AO) VM chain. Phase B's dry-run census found the real orphan population was 287,074 objects — not the ~1.2M this doc's own frontmatter summary claimed (contaminated estimate); deleted 287,074/287,074 clean. Summary corrected this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">2 open · 4 done</div><div class="bar"><div class="done" style="width:67%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Data completion — DeFi</h3></div>
+          <div class="path mono">plans/active/data_completion_defi_2026_07_15.md</div>
+          <div class="summary">Manifest canonicalisation + backfill, split from M-1. Todo C2 (data_type alias dedup) is tracked across 3 docs (this one, defi_consolidated_closeout, defi_track01) — a prior na-eligibility-audit pass already flagged the overlap and deferred it to a dedicated pass; not re-litigated here.</div>
+        </div>
+        <div class="counts"><div class="fig">16 open · 39 done</div><div class="bar"><div class="done" style="width:71%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Data completion — Prediction</h3></div>
+          <div class="path mono">plans/active/data_completion_prediction_2026_07_15.md</div>
+          <div class="summary">GAP-4's "prod corpus is 100% v8 today" premise is dated 2026-06-02; the Gate-State Board now shows prediction G4 applied 2026-06-29 — flagged for re-verification, not auto-resolved.</div>
+        </div>
+        <div class="counts"><div class="fig">18 open · 5 done</div><div class="bar"><div class="done" style="width:22%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Data completion — Sports</h3></div>
+          <div class="path mono">plans/active/data_completion_sports_2026_07_24.md</div>
+          <div class="summary">Manifest canonicalisation + backfill, parity sibling of M-1. No findings this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">2 open · 39 done</div><div class="bar"><div class="done" style="width:95%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Data completion — TradFi</h3></div>
+          <div class="path mono">plans/active/data_completion_tradfi_2026_07_15.md</div>
+          <div class="summary">Manifest canonicalisation + backfill, split from M-1. No findings this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">14 open · 24 done</div><div class="bar"><div class="done" style="width:63%"></div></div></div>
+      </div>
+
+      <div class="entry st-ok">
+        <div>
+          <div class="title-row"><h3>/data-pipeline-reconciliation skill</h3><span class="tag ok">clean</span></div>
+          <div class="path mono">plans/active/data_pipeline_reconciliation_skill_2026_07_20.md</div>
+          <div class="summary">Per-asset-group four-surface canonicalisation reconciliation skill — fully shipped.</div>
+        </div>
+        <div class="counts"><div class="fig">0 open · 48 done</div><div class="bar"><div class="done" style="width:100%"></div></div></div>
+      </div>
+
+      <div class="entry st-ok">
+        <div>
+          <div class="title-row"><h3>DeFi distinct-values zero-noncanonical dispatch</h3><span class="tag ok">clean</span></div>
+          <div class="path mono">plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md</div>
+          <div class="summary">All 3 formal todos done, but its Deferred-work table carried 2 stale "not done" rows: the GMX column-fill regression's own issue doc is actually <code>status: false-positive</code>, and the ManifestWriter concurrent-duplication library fix is actually shipped (<code>unified-trading-library@85bd0354</code>, ancestor-verified). Both corrected this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">0 open · 3 done</div><div class="bar"><div class="done" style="width:100%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Finalize — Kamino/Blazestake regrowth root-cause</h3></div>
+          <div class="path mono">plans/active/defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md</div>
+          <div class="summary">Gated finalize companion. Its one todo had a line-1-completeness defect (flip + archive actions stranded on lines 2-3) — fixed this pass. Was entirely missing from the epic's own roster until this pass added it.</div>
+        </div>
+        <div class="counts"><div class="fig">1 open · 0 done</div><div class="bar"><div class="done" style="width:0%"></div></div></div>
+      </div>
+
+      <div class="entry st-warn">
+        <div>
+          <div class="title-row"><h3>DeFi migration audit log</h3><span class="tag warn">operator</span></div>
+          <div class="path mono">plans/active/defi_migration_audit_log_2026_07_24.md</div>
+          <div class="op-quote"><span class="mono">[OPERATOR]</span> Resolve aggregator-routes' bucket target before the 9th migrator spec is ever <code>--apply</code>'d.</div>
+          <div class="summary">Era-B legacy-retirement todo's stated gate ("coupled to cefi+tradfi <code>--apply</code> complete") now appears satisfied per the catalogue's Gate-State Board — annotated, not unblocked (a deliberate operator sequencing directive governs it). <code>last_updated</code> was 24 days stale; corrected.</div>
+        </div>
+        <div class="counts"><div class="fig">7 open · 18 done</div><div class="bar"><div class="done" style="width:72%"></div></div></div>
+      </div>
+
+      <div class="entry st-ok">
+        <div>
+          <div class="title-row"><h3>DeFi venue hygiene + lst-rates residual</h3><span class="tag ok">clean</span></div>
+          <div class="path mono">plans/active/defi_venue_lst_rates_residual_2026_07_24.md</div>
+          <div class="summary">All 4 todos closed with hard evidence; <code>archive_exempt: true</code> with justification on record.</div>
+        </div>
+        <div class="counts"><div class="fig">0 open · 4 done</div><div class="bar"><div class="done" style="width:100%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Infra/ops residual tail</h3></div>
+          <div class="path mono">plans/active/infra_ops_residual_migration_verification_2026_07_24.md</div>
+          <div class="summary">Correctly cites the real decision-338 commit sequence (<code>d52217f</code>+<code>e0035fd</code>+<code>8e3108d</code>) — this pass used it to cross-confirm and correct a sibling doc's wrong SHA citation for the same decision.</div>
+        </div>
+        <div class="counts"><div class="fig">3 open · 6 done</div><div class="bar"><div class="done" style="width:67%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>IS catalogue G1 root audit log</h3></div>
+          <div class="path mono">plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md</div>
+          <div class="summary">Cited <code>unified-api-contracts@d4523602</code> for "decision 338" — verified WRONG (that SHA is dated a month later, an unrelated logging fix). Corrected to point at the real 3-commit decision-338 sequence; not independently confirmed those 3 cover the specific "OTHER-catch-all" sub-claim (flagged in Needs extra scoping).</div>
+        </div>
+        <div class="counts"><div class="fig">4 open · 5 done</div><div class="bar"><div class="done" style="width:56%"></div></div></div>
+      </div>
+
+      <div class="entry st-warn">
+        <div>
+          <div class="title-row"><h3>Manifest v9 residual</h3><span class="tag warn">operator</span></div>
+          <div class="path mono">plans/active/manifest_v9_residual_2026_08_15.md</div>
+          <div class="op-quote"><span class="mono">[OPERATOR]</span> Phase 0.A+0.B pre-audit sign-off · Phase 8.A+8.B sign-off on <code>manifest_divergence_triage</code>.</div>
+          <div class="summary">Orphaned epic-body checkboxes extracted from manifest_master's own body (a prior finding: the epic body isn't scanned by plan-corpus tooling, so live checkboxes there were invisible). Was entirely absent from the epic's own roster despite being real, current P2 work — added this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">5 open · 1 done</div><div class="bar"><div class="done" style="width:17%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Master data canonicalisation migration catalogue</h3><span class="tag agg">aggregator</span></div>
+          <div class="path mono">plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md</div>
+          <div class="summary">The epic's own Gate-State Board SSOT (G0–G5 per asset_group) — used throughout this pass to verify 3 other docs' stale gating claims. <code>last_updated</code> was 12 days stale; corrected.</div>
+        </div>
+        <div class="counts"><div class="fig">2 open · 26 done</div><div class="bar"><div class="done" style="width:93%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Coverage-floor registries — no cross-propagation</h3></div>
+          <div class="path mono">plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md</div>
+          <div class="summary">Line-1-completeness defect on its sole open todo (re-verify verb stranded on line 2) — fixed this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">1 open · 12 done</div><div class="bar"><div class="done" style="width:92%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>DeFi/CeFi venue-chain axis contamination</h3></div>
+          <div class="path mono">plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md</div>
+          <div class="summary">Frontmatter's own "true open count is 3" claim verified exactly correct. 3 line-1-completeness defects fixed; one P3 todo had degraded into a confusing DONE→STALE→CONTRADICTED chain with no actionable line 1 — rewritten as a clean gated pointer to the authoritative sibling investigation, citing its shipped fix commit.</div>
+        </div>
+        <div class="counts"><div class="fig">3 open · 15 done</div><div class="bar"><div class="done" style="width:83%"></div></div></div>
+      </div>
+
+      <div class="entry st-ok">
+        <div>
+          <div class="title-row"><h3>Contamination doc over-cap + prettier-dirty blocks routine edits</h3><span class="tag ok">clean</span></div>
+          <div class="path mono">plans/active/issues/defi_contamination_doc_over_cap_and_prettier_dirty_blocks_routine_edits_2026_08_10.md</div>
+          <div class="summary">Both todos closed with commit evidence; <code>archive_exempt: true</code> with justification on record.</div>
+        </div>
+        <div class="counts"><div class="fig">0 open · 2 done</div><div class="bar"><div class="done" style="width:100%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Kamino/Blazestake regrowth after retirement</h3></div>
+          <div class="path mono">plans/active/issues/defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md</div>
+          <div class="summary">Source doc for the finalize plan above. Its sole DIAG todo had the method clause stranded on line 2 — fixed this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">1 open · 0 done</div><div class="bar"><div class="done" style="width:0%"></div></div></div>
+      </div>
+
+      <div class="entry st-active">
+        <div>
+          <div class="title-row"><h3>Legacy data_type names — manifest migration scope</h3></div>
+          <div class="path mono">plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md</div>
+          <div class="summary">Sole open todo correctly gated; its precondition was satisfied 2026-08-17. No findings this pass.</div>
+        </div>
+        <div class="counts"><div class="fig">1 open · 4 done</div><div class="bar"><div class="done" style="width:80%"></div></div></div>
+      </div>
+
+      <div class="entry st-warn">
+        <div>
+          <div class="title-row"><h3>POOL-uppercase recurrence after fold</h3><span class="tag warn">operator</span></div>
+          <div class="path mono">plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md</div>
+          <div class="op-quote"><span class="mono">[OPERATOR]</span> Decide plan destination for the ~30.7M-object (defi+cefi+tradfi+prediction) migration · Decide disposition for already-running stale <code>mdps-*</code> VMs.</div>
+          <div class="summary">The most actively-narrated doc in the epic — root cause of a real, ongoing data-correctness defect CONFIRMED 2026-08-16 (a live MDPS writer bug), fix shipped and tarball-refreshed, live-confirmation still pending. Carries 2 <code>[OPERATOR]</code> items mixed with dispatchable todos in an <code>assigned_vm: planning</code> file (a finding-Y violation) — flagged, not forked out (belongs to a different epic's dedicated sweep).</div>
+        </div>
+        <div class="counts"><div class="fig">4 open · 12 done</div><div class="bar"><div class="done" style="width:75%"></div></div></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. On the operator's desk -->
+  <section>
+    <div class="section-head"><h2>On the operator's desk</h2><span class="count-badge">5 items</span></div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Doc</th><th>Item</th><th>Gated on</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">defi_migration_audit_log</td>
+            <td>Resolve aggregator-routes' bucket target</td>
+            <td>Before the 9th migrator spec is ever <code>--apply</code>'d</td>
+          </tr>
+          <tr>
+            <td class="mono">manifest_v9_residual</td>
+            <td>Phase 0.A+0.B pre-audit</td>
+            <td>Human sign-off, same-region test bucket + <code>measure-honest-coverage.py</code></td>
+          </tr>
+          <tr>
+            <td class="mono">manifest_v9_residual</td>
+            <td>Phase 8.A+8.B sign-off</td>
+            <td>Operator review of class-C triage rows + sign-off appendix</td>
+          </tr>
+          <tr>
+            <td class="mono">defi_pool_uppercase_recurrence_after_fold</td>
+            <td>Decide migration plan destination (AO vs. human)</td>
+            <td>~30.7M-object non-canonical population, scoped, not yet migrated</td>
+          </tr>
+          <tr>
+            <td class="mono">defi_pool_uppercase_recurrence_after_fold</td>
+            <td>Decide disposition for already-running stale <code>mdps-*</code> VMs</td>
+            <td>Kill+relaunch (loses progress) vs. let finish + corrective re-pass</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. Needs extra scoping -->
+  <section>
+    <div class="section-head"><h2>Needs extra scoping</h2><span class="count-badge">3 items</span></div>
+    <ul class="note-list">
+      <li><strong>Decision-338 partial verification</strong> (<code>is_catalogue_g1_root_audit_log</code>) — the wrong-SHA citation is corrected and the replacement 3 commits are confirmed real, dated 2026-06-16, and self-tagged <code>(decision 338)</code>; not independently confirmed that they specifically cover the "OTHER-catch-all" classifier sub-change the sentence originally attributed to the wrong SHA. Needs a content read of the 3 diffs, not just a SHA/date check.</li>
+      <li><strong>C2 data_type alias dedup tracked in 3 docs</strong> (<code>data_completion_defi</code> + <code>defi_consolidated_closeout_2026_07_18</code> + <code>defi_track01_per_instrument_and_canon_id</code>) — a prior na-eligibility-audit pass (2026-08-16) already identified this exact overlap and explicitly deferred it to "a dedicated hands-on pass given 3 docs are involved." Not re-litigated this run; carried forward as-is.</li>
+      <li><strong>Finding-Y violation on <code>defi_pool_uppercase_recurrence_after_fold</code></strong> — 2 <code>[OPERATOR]</code> items sit in the same <code>assigned_vm: planning</code> file as dispatchable todos. Per <code>task_template.md</code>'s own text, retroactive fixes for this class route through <code>ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md</code> — a different epic (<code>agent_operating_framework_master</code>), out of this run's edit scope. Flagged in that doc's own Progress Log; the sweep doc itself was not edited.</li>
+    </ul>
+  </section>
+
+  <!-- 7. Closed out this pass -->
+  <section>
+    <div class="section-head"><h2>Closed out this pass</h2><span class="count-badge">13 docs touched · working-tree only, not shipped</span></div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Doc</th><th>What changed</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">manifest_master.md (epic)</td><td>Roster corrected 15→14 real active plans: removed 2 archived+complete entries mislabeled active, 1 dangling link; added 2 real P2/P3 plans missing entirely.</td></tr>
+          <tr><td class="mono">cefi_e4_e8_orphan_sweep...</td><td>Frontmatter summary's stale "~1.2M-object delete" corrected to the verified, fully-executed 287,074.</td></tr>
+          <tr><td class="mono">defi_kamino..._finalize_2026_08_17</td><td>Line-1-completeness: flip+archive actions moved from lines 2-3 onto line 1.</td></tr>
+          <tr><td class="mono">defi_migration_audit_log</td><td><code>last_updated</code> 24d stale, corrected. Era-B G4-gate condition flagged as now-satisfied (annotation only).</td></tr>
+          <tr><td class="mono">master_data_canonicalisation...</td><td><code>last_updated</code> 12d stale, corrected.</td></tr>
+          <tr><td class="mono">defi_distinct_values...</td><td><code>last_updated</code> 5d stale, corrected. 2 Deferred-work-table rows corrected (GMX regression closed false-positive; ManifestWriter fix shipped, ancestor-verified).</td></tr>
+          <tr><td class="mono">data_completion_defi</td><td><code>last_updated</code> 1d stale, corrected.</td></tr>
+          <tr><td class="mono">data_completion_prediction</td><td><code>last_updated</code> 34d stale (never bumped since creation), corrected. GAP-4 stale premise flagged.</td></tr>
+          <tr><td class="mono">coverage_floor_registries...</td><td>Line-1-completeness: re-verify verb moved onto line 1.</td></tr>
+          <tr><td class="mono">defi_kamino..._2026_08_17 (issue)</td><td>Line-1-completeness: method clause moved onto line 1. <code>last_updated</code> corrected.</td></tr>
+          <tr><td class="mono">defi_cefi_venue_chain...</td><td>3 line-1-completeness/definition-of-done fixes; P3 DONE→STALE→CONTRADICTED chain rewritten as a clean gated pointer with a citation to the shipped fix. <code>last_updated</code> corrected.</td></tr>
+          <tr><td class="mono">is_catalogue_g1_root_audit_log</td><td>Wrong decision-338 SHA corrected to the verified real 3-commit sequence. <code>last_updated</code> corrected.</td></tr>
+          <tr><td class="mono">defi_pool_uppercase_recurrence...</td><td>Finding-Y candidate logged in Progress Log (annotation only, not forked).</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8. Parallel-tab flow for what's left -->
+  <section>
+    <div class="section-head"><h2>Parallel-tab flow for what's left</h2><span class="count-badge">5 file-disjoint lanes</span></div>
+    <div class="lanes">
+      <div class="lane">
+        <div class="n">LANE 1</div>
+        <h3>TradFi backfill completion</h3>
+        <ul><li>data_completion_tradfi_2026_07_15.md — 14 open</li></ul>
+      </div>
+      <div class="lane">
+        <div class="n">LANE 2</div>
+        <h3>Prediction backfill + GAP-4 re-check</h3>
+        <ul><li>data_completion_prediction_2026_07_15.md — 18 open</li></ul>
+      </div>
+      <div class="lane">
+        <div class="n">LANE 3</div>
+        <h3>DeFi backfill completion</h3>
+        <ul><li>data_completion_defi_2026_07_15.md — 16 open (C2 overlap: read, don't duplicate defi_track01's version)</li></ul>
+      </div>
+      <div class="lane">
+        <div class="n">LANE 4</div>
+        <h3>CeFi/infra residuals</h3>
+        <ul>
+          <li>defi_cefi_venue_chain_axis_contamination — 3 open</li>
+          <li>coverage_floor_registries_no_cross_propagation — 1 open</li>
+          <li>is_catalogue_g1_root_audit_log — 4 open</li>
+          <li>infra_ops_residual_migration_verification — 3 open</li>
+        </ul>
+      </div>
+      <div class="lane">
+        <div class="n">LANE 5</div>
+        <h3>Small residuals</h3>
+        <ul>
+          <li>cefi_e4_e8_orphan_sweep... — 2 open</li>
+          <li>defi_kamino_...regrowth (issue + finalize) — 1 + 1 open</li>
+          <li>defi_legacy_data_type_names... — 1 open</li>
+          <li>master_data_canonicalisation... — 2 open</li>
+          <li>data_completion_sports — 2 open</li>
+        </ul>
+      </div>
+    </div>
+    <p style="font-size:12.5px;color:var(--text-dim);margin-top:14px;">
+      The 5 operator-desk items and the 3 needs-scoping items above are excluded from every lane — none is a bounded,
+      worker-dispatchable outcome yet. Lane boundaries are drawn on FILE ownership, not doc count: two lanes never
+      touch the same file.
+    </p>
+  </section>
+
+  <!-- 9. Dispatch prompts -->
+  <section>
+    <div class="section-head"><h2>Dispatch prompts</h2><span class="count-badge">one per lane, copy-pasteable</span></div>
+
+    <details class="prompt"><summary>Lane 1 — TradFi backfill completion</summary><pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: work the 14 open todos in unified-trading-pm/plans/active/data_completion_tradfi_2026_07_15.md (TradFi manifest
+canonicalisation + backfill, parent_epic: manifest_master). Read the whole doc first, including its Progress Log, so
+you don't re-investigate anything already resolved. For each open todo, either execute it (commit + push + flip the
+checkbox in the SAME turn, docs(plans): prefix) or, if genuinely blocked, state why with evidence rather than
+guessing. Do not touch any other doc's file. Ship via the normal quickmerge path — do not raw git push.</pre></details>
+
+    <details class="prompt"><summary>Lane 2 — Prediction backfill + GAP-4 re-check</summary><pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: work the 18 open todos in unified-trading-pm/plans/active/data_completion_prediction_2026_07_15.md (Prediction
+manifest canonicalisation + backfill, parent_epic: manifest_master). Priority: the GAP-4 todo's "100% v8 TODAY"
+premise was flagged 2026-08-19 as likely stale (prediction's G4 --apply landed 2026-06-29 per
+master_data_canonicalisation_migration_catalogue_2026_06_07.md's Gate-State Board) — re-measure the current
+schema_version distribution on the prod manifest before designing the assert/warn logic this todo calls for, don't
+inherit the 2026-06-02 assumption blind. Commit + push + flip checkboxes in the same turn as you close each todo.</pre></details>
+
+    <details class="prompt"><summary>Lane 3 — DeFi backfill completion</summary><pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: work the 16 open todos in unified-trading-pm/plans/active/data_completion_defi_2026_07_15.md (DeFi manifest
+canonicalisation + backfill, parent_epic: manifest_master). The C2 data_type-alias-dedup todo is ALSO tracked in
+defi_consolidated_closeout_2026_07_18.md and defi_track01_per_instrument_and_canon_id_2026_07_24.md (confirmed 3-way
+overlap, 2026-08-16 na-eligibility-audit finding) — grep both before touching C2 to avoid duplicating work someone
+else already did under a different doc's checkbox. Every other todo in this file is independent. Commit + push +
+flip in the same turn.</pre></details>
+
+    <details class="prompt"><summary>Lane 4 — CeFi/infra residuals</summary><pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: work the remaining open todos across these 4 files (parent_epic: manifest_master), each independent, no shared
+files with any other lane:
+  - unified-trading-pm/plans/active/issues/defi_cefi_venue_chain_axis_contamination_2026_07_28.md (3 open — one is
+    GATED, re-close only after defi_pool_uppercase_recurrence_after_fold_2026_08_11.md's own re-retirement todo lands;
+    read that doc first)
+  - unified-trading-pm/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md (1 open)
+  - unified-trading-pm/plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md (4 open)
+  - unified-trading-pm/plans/active/infra_ops_residual_migration_verification_2026_07_24.md (3 open)
+Commit + push + flip each doc's checkbox in the same turn as you close it.</pre></details>
+
+    <details class="prompt"><summary>Lane 5 — Small residuals</summary><pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: work the remaining small residuals across these 5 files (parent_epic: manifest_master), each independent:
+  - unified-trading-pm/plans/active/cefi_e4_e8_orphan_sweep_gapfill_rebuild_execution_2026_07_28.md (2 open — hard-stop-2
+    delete-safety class, human-executed only, do not attempt any --apply autonomously)
+  - unified-trading-pm/plans/active/issues/defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17.md (1 open)
+  - unified-trading-pm/plans/active/defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md
+    (1 open, gate_on_depends on the doc above — work it only after that one lands)
+  - unified-trading-pm/plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md (1 open)
+  - unified-trading-pm/plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md (2 open)
+  - unified-trading-pm/plans/active/data_completion_sports_2026_07_24.md (2 open)
+Commit + push + flip each doc's checkbox in the same turn as you close it.</pre></details>
+  </section>
+
+  <!-- 10. Notes & methodology -->
+  <section>
+    <div class="section-head"><h2>Notes &amp; methodology</h2></div>
+    <ul class="note-list">
+      <li>Open/done counts (82/241 deduped; 84/267 raw) via <code>scripts/plan-hygiene/epic_report_data.py --epic manifest_master --json</code>, which shares <code>count_open_tasks.py</code>'s exact dedup methodology (aggregator-plan exclusion, identical checkbox regexes) — same numbers <code>/open-task-count</code> would report for this slice.</li>
+      <li>Child-doc membership is <code>rg "^parent_epic: manifest_master$"</code> against real frontmatter (20 hits: 14 plans + 6 issues), cross-verified against the script's own count — not the filename-substring inventory method.</li>
+      <li>2 commit SHAs were verified as real ancestors of <code>origin/live-defi-rollout</code> via <code>git merge-base --is-ancestor</code> in the relevant local clones this pass (<code>unified-trading-library@85bd0354</code> for the ManifestWriter fix). A 3rd claimed ancestor (<code>market-data-processing-service@94215e9cd9</code>) was NOT re-verified as an ancestor — its own source doc already found it's squash-merged (content present on <code>origin/main</code>, SHA itself not an ancestor) and this pass cited it descriptively only, matching that prior finding rather than re-asserting ancestry.</li>
+      <li>The decision-338 SHA correction (<code>is_catalogue_g1_root_audit_log</code>) is a proven wrong-SHA fix (wrong date, wrong content, verified via direct <code>git log</code>) — the REPLACEMENT SHAs are confirmed real/dated/self-tagged, but this pass did not independently confirm they cover the specific "OTHER-catch-all" sub-claim; carried forward as a residual scoping item rather than asserted as fully resolved.</li>
+      <li>This pass found zero zero-checkbox docs, zero hedge-pointer hits, and zero broken referrers for the one known doc move in this epic (<code>defi_kamino_lending_blazestake_regrowth_after_retirement_..._finalize</code>, issues/ → active/, 2026-08-18) — a corpus-wide grep for the old path found no remaining referrers.</li>
+      <li>Working-tree-only pass — no commit, no push, no quickmerge. Every fix above is staged nowhere; a lead session ships them.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Manifest Master epic ledger · <code>plans/epics/manifest_master.md</code> · generated by <code>/plan-reconcile manifest_master</code>, 2026-08-19.
+  </footer>
+
+</div>

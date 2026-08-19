@@ -427,9 +427,7 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       rather than absorbed here. Cross-ref: `cefi_hl_aster_batch_data_gaps_2026_06_22.md`. Repo: deployment-service —
       VM launch only, no code shipped.
 
-- [ ] [DATA] P3. **RE-POINTED 2026-08-16 (slot-23)** — the 2026-08-15 7-shard fleet this todo originally named is
-      confirmed no longer in the fleet (0/7 match by name); re-verify HYPERLIQUID captured-row coverage for the
-      2023-06-14..2023-12-31 window once the NEW, broader `cefi-hyperliquid-{2023,2024,2025,2026}-20260816-*` fleet
+- [ ] [DATA] P3. **RE-POINTED 2026-08-16 (slot-23)** — re-verify HYPERLIQUID captured-row coverage for the 2023-06-14..2023-12-31 window (line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master`: verb moved up from line 2; the 2026-08-15 7-shard fleet this todo originally named is confirmed no longer in the fleet, 0/7 match by name) once the NEW, broader `cefi-hyperliquid-{2023,2024,2025,2026}-20260816-*` fleet
       (19 VMs, `VM_TASK=cefi-hl-aster-backfill`, full-year ranges each covering `trades;book_snapshot_5;
       derivative_ticker`, `VM_FORCE=false` idempotent — see slot-23's 2026-08-16 Progress Log entry above) reaches
       `DEPLOYMENT_COMPLETED exit_code=0` for its 2023-year VM(s) (or is confirmed no longer in the fleet). Live-probe

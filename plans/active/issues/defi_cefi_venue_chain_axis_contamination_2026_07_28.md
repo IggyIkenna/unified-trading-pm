@@ -55,7 +55,7 @@ related:
   ]
 created: "2026-07-28"
 author: unknown
-last_updated: "2026-08-17"
+last_updated: "2026-08-19"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -320,9 +320,7 @@ in this read-only audit pass (time-bounded scope).
       `purge_gas_fees_legacy_venue_prefixes_2026_08_04.py --apply` run (same bucket, same manifest index, same
       consolidator cron paused for that run's duration) — sequence AFTER it completes and the cron is resumed +
       verified, to avoid CAS contention / cron-pause confusion between two concurrent prod-mutating operations.
-- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04
-      ruling above), gated on step 1 landing AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE
-      the first time — must genuinely re-verify clean this run) before any delete.** The ~35 real CeFi-Tardis
+- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — gated on step 1 landing AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE the first time — must genuinely re-verify clean this run) before any delete.** Follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04 ruling above) — line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master` (hard constraint moved up from line 2). The ~35 real CeFi-Tardis
       `perp_funding`/`perp_daily_ctx` objects physically mis-filed in the DeFi bucket
       (`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-16..22/ pipeline_mode=batch_tardis/asset_group=cefi/venue={BINANCE,BITFINEX,BITGET,BYBIT,KRAKEN,OKX}-FUTURES|DERIBIT/…`,
       verified present 2026-08-10, correct cefi-bucket twins verified at the matching prefix) are still there. Gated on
@@ -402,9 +400,8 @@ in this read-only audit pass (time-bounded scope).
       prerequisites for step 1 (corpus-freshness) ever landing** — until then, this doc's step-3 physical-delete todo
       (below) and the sibling cron-verification todo remain correctly GATED, not merely "waiting". **Repo:
       deployment-service.**
-- [ ] [DATA] P1. **NEW 2026-08-15 (slot-4) — follow-up: verify the two cron hosts launched above (task -1b75e9a1f3d4)
-      actually FIRED and, once raw input catches up, that the corpus-freshness gate clears.** No earlier than
-      2026-08-16T09:10Z (after both `cefi-fwd-daily-cron-20260815-212910` @ 09:00 UTC and
+- [ ] [DATA] P1. **NEW 2026-08-15 (slot-4) — no earlier than 2026-08-16T09:10Z** (line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master`: hard timing gate moved up from line 2). Follow-up: verify the two cron hosts launched above (task -1b75e9a1f3d4)
+      actually FIRED and, once raw input catches up, that the corpus-freshness gate clears — check after both `cefi-fwd-daily-cron-20260815-212910` @ 09:00 UTC and
       `cefi-perp-funding-daily-cron-20260815-212924` @ 07:00 UTC have had their first fire): (1) confirm each cron
       actually fired — `gcloud compute ssh cefi-fwd-daily-cron-20260815-212910 --zone=asia-northeast1-c --command
       'sudo tail -50 /var/log/cefi-fwd-cron.log'` (expect a `cefi-fwd-{TS}` worker-VM launch line, no `FAILED rc=`) and
@@ -461,8 +458,9 @@ in this read-only audit pass (time-bounded scope).
       shipped chain-allowlist fix (`instruments-service@f651ff8b`) — no further architecture change needed. Decided
       using this doc's own new evidence per the autonomous-dispatch "decide, don't ask" rule (documented record of
       intent: this doc's own P2(b) investigation), not a fresh guess.
-- [ ] [DATA] P3. **REOPENED 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0) — the DONE claim below is
-      CONTRADICTED by this same item's own STALE annotation further down; aligning the checkbox to reality.** Original
+- [ ] [DATA] P3. **GATED — re-close only once `/plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md`'s own gated `[SCRIPT]` re-retirement todo lands** (root cause CONFIRMED 2026-08-16 there — a live `market-data-processing-service` writer defect, fix shipped `market-data-processing-service@94215e9cd9`; live-confirmation of that fix + safe re-retirement still pending as of that doc's latest entry). Corrected 2026-08-19 (`/plan-reconcile manifest_master`, line-1-completeness + definition-of-done fix — this line previously ended mid-sentence with no actionable instruction, and did not cite the sibling doc's now-shipped fix).
+      REOPENED 2026-08-16 (plan_reconciler, defi tranche, dispatch agt-1a88e0) — the DONE claim below is
+      CONTRADICTED by this same item's own STALE annotation further down; aligning the checkbox to reality. Original
       claim: **DONE 2026-08-05 — `market-tick-data-service@87e9e100` + live manifest fold executed, 0 POOL rows
       remain.** Fold historical `instrument_type=POOL` (uppercase) defi manifest rows to canonical lowercase `pool`.
       Script `scripts/one_offs/fold_pool_instrument_type_casing_2026_08_05.py` (committed
