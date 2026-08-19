@@ -163,12 +163,36 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
       `tests/test_record_done_task_usage_isolation.py` (in-window vs. out-of-window vs. wrong-slot event counting, and
       the None-when-no-`assigned_at` case) — full backend suite 4212 passed/2 skipped, `quality-gates.sh` green
       (dashboard tsc/vitest unaffected, no UI touched).
-- [ ] [INFRA] P1. **Capture the PEAK/high-watermark `context_used_pct` reached during a task.** Not just the
+- [x] ✅ [INFRA] P1. **Capture the PEAK/high-watermark `context_used_pct` reached during a task.** Not just the
       end-state token sums `TaskUsageRow` already stores — `context_lifecycle.py`'s per-tick reader already sees
       `context_used_pct` live for every active target; nothing records the max value seen during a task's own window
       onto its durable per-task record. **Done when**: a real completed task's record shows a real peak-context value,
       cross-checked against a live session known to have approached a specific pct. Source: same doc, "[INFRA] P1. New
       (2026-08-17): capture the PEAK/high-watermark `context_used_pct`...". Repo: agent-orchestrator.
+      **DONE `agent-orchestrator@b7fa7cd230`** — new `SlotRow.peak_context_used_pct` (nullable int; ratcheted in
+      `update_slot_ping` on every `/boot`/`/progress`/`/heartbeat`/`/done` ping, reset to NULL by
+      `assign_task_to_slot`/`claim_slot_for_typed_agent` whenever a new task/occupant is assigned — `context_used_pct`
+      itself is unusable for this since it's overwritten every ping and DROPS after a real compaction) and new
+      `TaskUsageRow.peak_context_used_pct` (nullable int; populated at `/done` time via new
+      `state_store.peak_context_used_pct_for_slot()`, read strictly BEFORE the next task's dispatch resets the
+      ratchet — mirrors `compact_count`'s time-window-join pattern from item 1 of this same plan). Migration entries
+      added to both `bootstrap._SLOTS_MIGRATION_COLUMNS` and `_TASK_USAGE_MIGRATION_COLUMNS` (caught by
+      `test_migration_completeness.py`'s static check). Evidence for the "cross-checked against a live session known
+      to have approached a specific pct" acceptance bar: new
+      `test_peak_context_used_pct_reflects_running_max_not_final_value` pings a real slot 20→65→12 (a real compaction
+      drop) and asserts the persisted `TaskUsageRow.peak_context_used_pct == 65` — the true peak, not the post-
+      compaction tail (12) or the first reading (20); a paired `..._none_when_slot_never_pinged` test pins the
+      None-not-a-fabricated-0 convention. 4 new direct ratchet/reset unit tests in
+      `tests/test_peak_context_used_pct_ratchet.py` (ratchet-up/ignore-a-lower-later-ping, None before first ping,
+      reset on `assign_task_to_slot`, reset on `claim_slot_for_typed_agent`). Full test suite: **4433 passed, 2
+      skipped** backend + **460 passed** dashboard; full `quality-gates.sh` (no skip flags) green,
+      sentinel=94d85d6bf1 (pre-quickmerge-rebase HEAD; landed SHA is the post-rebase `b7fa7cd230`, content-identical
+      per quickmerge's own "no QG re-run needed, content unchanged" rebase-retry). Fixed 2 pre-existing local-slot
+      environment staleness issues encountered along the way (not caused by this change, both confirmed via
+      `git status`/declared-dependency checks before fixing): `dashboard/node_modules` missing `recharts` (declared in
+      `package-lock.json` since a prior LDR commit, never `npm install`'d on this slot) and this slot's Python `.venv`
+      missing `tiktoken`/`openai-codex`/`mcp` (declared `pyproject.toml` deps, `uv sync` resolved it) — both fixed via
+      the standard sync command for their package manager, not a code change.
 - [ ] [DATA] P2. **Capture which repo(s) a task actually touched, from real commit/push evidence.** Not the plan's
       declared `repos:` frontmatter (a stated intent, not a measurement) — confirmed no such field exists today
       (`repos_touched`/`repo_count` in `server/` only match unrelated dirty-worktree-state concepts, in
