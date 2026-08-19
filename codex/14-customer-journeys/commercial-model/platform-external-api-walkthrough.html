@@ -1889,10 +1889,12 @@
       <summary>Browse the universe — asset group, venue, instrument type, data type</summary>
       <p style="font-size: 0.95rem; color: var(--ink-3)">
         Structure shown with representative entries beneath the asset-group headers. Each header's ready / not-ready /
-        unverified split is measured (2026-08-18, the same readiness pass as <a href="#s14">§14</a>). The
-        asset-group-level coverage percentage is now measured (below, 2026-08-19); per-venue / per-data-type cells
-        inside each tree remain <b class="pend">pending</b> at that finer grain — the hierarchy, grouping and controls
-        are what this draft is asking you to react to.
+        unverified split is measured — DeFi refreshed 2026-08-19 (a clean re-run with all three service probes
+        reachable; CeFi/TradFi/Sports/Prediction/Unattributed remain the 2026-08-18 pass in <a href="#s14">§14</a>,
+        not re-verified this session). The asset-group-level coverage percentage is now measured (below, 2026-08-19);
+        per-venue / per-data-type cells inside each tree remain <b class="pend">pending</b> at that finer grain — the
+        hierarchy, grouping and controls are what this draft is asking you to react to. DeFi's chain level is the
+        exception: every chain with a live venue is enumerated and measured below, not just two.
       </p>
       <div class="callout">
         <span class="tag">What "coverage" means here, and what it deliberately excludes</span>
@@ -1985,6 +1987,38 @@
         grain, and is not directly comparable to the registry-declared per-asset-group counts in <a href="#s3">§03</a>
         (a venue appears here only once it has at least one attempted or captured shard).
       </p>
+      <div class="callout">
+        <span class="tag">Two different "how many" questions below, named rather than blended</span>
+        <p>
+          The group headers in this tree are the <b>manifest-observed</b> grain — every distinct venue token with at
+          least one attempted or captured shard in the 2026-08-19 coverage manifest (<b>288</b> total: CeFi 24, DeFi
+          180, TradFi 9, Sports 50, Prediction 1, Unattributed 24 — the six groups this tree now shows sum to the same
+          288 <a href="#s4">§04</a> and the table above both cite). That is a different, larger and messier universe
+          than the <b>registry-declared</b> grain <a href="#s3">§03</a> reports (192 declared in
+          <code>VENUE_DATA_TYPE_CAPABILITIES</code>, 177 canonically bucketed by <code>VENUES_BY_ASSET_GROUP</code> —
+          CeFi 25, DeFi 103, TradFi 8, Sports 39, Prediction 2, 24 declared-but-unbucketed) — and a third, narrower cut
+          again from the "venues in manifest" column of the reachable-coverage table above (CeFi 22, DeFi 105, the
+          Layer-1 <em>expected</em> universe only). None of the three is wrong; each answers a different question, and
+          every count below names its grain and registry symbol rather than letting them silently disagree. DeFi's 180
+          manifest-observed tokens decompose cleanly against the registry cut, verified by direct set comparison:
+          <b>103</b> chain-suffixed venues (exactly <code>VENUES_BY_ASSET_GROUP["defi"]</code>'s count) + <b>76</b>
+          pre-canonical bare-protocol tokens with no chain suffix + <b>1</b> cross-chain aggregator
+          (<code>ALCHEMY-ONCHAIN</code>) = 180. <b class="ev ev-verified">✓ verified</b> 2026-08-19.
+        </p>
+        <p>
+          <b>This tree's asset-group split does not route through the known-broken
+          <code>unified_api_contracts.execution.get_venue_asset_group()</code></b> — the function that silently
+          returns <code>"cefi"</code> for every venue its lookup misses, DeFi and CeFi slugs alike (P0 issue filed
+          2026-08-19). Checked directly, both ends: the readiness-state-dump script behind this tree classifies each
+          venue via <code>VENUES_BY_ASSET_GROUP</code> and the coverage manifest's own <code>by_asset_group</code>
+          structure, never importing <code>unified_api_contracts.execution</code> anywhere in its dependency chain;
+          and <code>measure_honest_coverage.py</code> (the script that writes that manifest) partitions by asset_group
+          structurally — one manifest bucket per asset_group, read from a static per-group bucket table, never a
+          per-venue classifier call. <b class="ev ev-verified">✓ verified</b> by reading both call chains, 2026-08-19.
+          Why every group still reads 0 ready is answered once, not per group — see <a href="#s14">§14</a>'s "Reading
+          &quot;ready = 0&quot; correctly".
+        </p>
+      </div>
 
       <details class="tree">
         <summary><span class="nm">CeFi</span><span class="meta">0 ready / 5 not-ready / 19 unverified</span></summary>
@@ -2081,29 +2115,180 @@
       </details>
 
       <details class="tree">
-        <summary><span class="nm">DeFi</span><span class="meta">0 ready / 133 not-ready / 47 unverified</span></summary>
+        <summary><span class="nm">DeFi</span><span class="meta">0 ready / 180 not-ready / 0 unverified</span></summary>
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
             On-chain venues carry an extra axis — chain — because the same protocol on two chains is two different
-            coverage questions.
+            coverage questions. <b>11 of the 23 <code>ChainKind</code> chains carry at least one live DeFi venue</b>
+            today, not the two shown previously — verified by importing <code>ChainKind</code>,
+            <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> and <code>VENUES_BY_ASSET_GROUP</code> directly, 2026-08-19
+            <b class="ev ev-verified">✓ verified</b>. A twelfth chain, Plasma, has live venues without being a
+            <code>ChainKind</code> member at all — see <a href="#s3">§03</a>'s "gap this correction surfaced" for the
+            same finding, independently reconfirmed here. 103 of the 180 manifest-observed DeFi tokens carry a chain
+            suffix (the 11 chains below); the remaining 77 are pre-canonical or non-chain and are shown as their own
+            entries rather than folded silently into a chain they do not belong to.
           </p>
           <details class="tree">
             <summary>
-              <span class="nm">Ethereum</span><span class="meta"><span class="pend">pending</span></span>
+              <span class="nm">Ethereum</span><span class="meta">0 ready / 40 not-ready / 0 unverified</span>
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
-                Protocols on this chain, then instrument and data types.
+                40 venues in the 2026-08-19 coverage manifest (<code>VENUES_BY_ASSET_GROUP["defi"]</code>), 46
+                capability-declared in <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> — the largest chain either way.
+                Includes <code>AAVE_V3</code>, <code>LIDO</code>, <code>CURVE</code>, <code>UNISWAP_V2/V3/V4</code>,
+                <code>MORPHO</code>, <code>SPARK</code>, <code>COMPOUND_V3</code>, <code>ETHENA</code>,
+                <code>ETHERFI</code>, <code>MAKER</code>, plus 30 more.
               </p>
             </div>
           </details>
           <details class="tree">
             <summary>
-              <span class="nm">Solana</span><span class="meta"><span class="pend">pending</span></span>
+              <span class="nm">Arbitrum</span><span class="meta">0 ready / 13 not-ready / 0 unverified</span>
             </summary>
             <div class="tree-body">
               <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
-                Protocols on this chain, then instrument and data types.
+                13 venues: <code>AAVE_V3</code>, <code>CAMELOT_V3</code>, <code>SUSHISWAP</code>,
+                <code>UNISWAP_V3</code>, <code>COMPOUND_V3</code>, <code>BALANCER</code>, <code>BEEFY</code>,
+                <code>CHAINLINK</code>, <code>KARAK</code>, <code>PENDLE</code>, <code>RADIANT</code>,
+                <code>RENZO</code>, <code>YEARN_V3</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Solana</span><span class="meta">0 ready / 13 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                13 venues, all Solana-native with no EVM overlap: <code>JUPITER</code>, <code>KAMINO</code>,
+                <code>MARGINFI</code>, <code>MARINADE</code>, <code>ORCA</code>, <code>RAYDIUM</code>,
+                <code>JITO</code>, <code>JITORESTAKING</code>, <code>SOLEND</code>, <code>SOLBLAZE</code>,
+                <code>SANCTUM</code>, the oracle <code>PYTH</code>, and the native staking venue
+                <code>SOLANA-NATIVE</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Base</span><span class="meta">0 ready / 10 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                10 venues: <code>AAVE_V3</code>, <code>AERODROME_V3</code>, <code>PANCAKESWAP_V3</code>,
+                <code>SUSHISWAP_V3</code>, <code>UNISWAP_V3</code>, <code>COMPOUND_V3</code>, <code>BALANCER</code>,
+                <code>BEEFY</code>, <code>CHAINLINK</code>, <code>MORPHO</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Optimism</span><span class="meta">0 ready / 7 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                7 venues: <code>AAVE_V3</code>, <code>VELODROME_V2</code>, <code>UNISWAP_V3</code>,
+                <code>COMPOUND_V3</code>, <code>BALANCER</code>, <code>CHAINLINK</code>, <code>CURVE</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Avalanche</span><span class="meta">0 ready / 7 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                7 venues: <code>AAVE_V3</code>, <code>TRADER_JOE_V2</code>, <code>SUSHISWAP_V3</code>,
+                <code>BALANCER</code>, <code>BEEFY</code>, <code>CURVE</code>, <code>BENQI</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">BSC</span><span class="meta">0 ready / 6 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                6 venues: <code>AAVE_V3</code>, <code>PANCAKESWAP_V3</code>, <code>BINANCE</code>,
+                <code>RADIANT</code>, <code>VENUS</code>, <code>BEEFY</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Polygon</span><span class="meta">0 ready / 4 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                4 venues: <code>AAVE_V3</code>, <code>UNISWAP_V3</code>, <code>BALANCER</code>,
+                <code>CHAINLINK</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Linea</span><span class="meta">0 ready / 1 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                1 venue so far: <code>AAVE_V3-LINEA</code>.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Scroll</span><span class="meta">unverified — declared, never attempted</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                2 venues capability-declared (<code>AAVE_V3-SCROLL</code>, <code>COMPOUND_V3-SCROLL</code>) in
+                <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code>, but absent from both
+                <code>VENUES_BY_ASSET_GROUP["defi"]</code> and the 2026-08-19 coverage manifest — no shard has ever
+                been attempted, so no ready/not-ready split can be derived honestly. Declared capability ahead of
+                both categorisation and capture, the same pattern <a href="#s3">§03</a> names for the 24 unbucketed
+                venues generally.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">zkSync</span><span class="meta">unverified — declared, never attempted</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                1 venue capability-declared (<code>AAVE_V3-ZKSYNC</code>) — same gap as Scroll above.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Plasma <span class="u">— not a ChainKind member</span></span><span class="meta">0 ready / 2 not-ready / 0 unverified</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                <code>AAVE-PLASMA</code> and <code>FLUID-PLASMA</code> — live, onboarded
+                (<code>VENUES_BY_ASSET_GROUP["defi"]</code>, <code>ALL_DEFI_VENUES</code>, adapter-keyed in
+                <code>VENUE_TO_ADAPTER_KEY</code>) and present in the coverage manifest, but
+                <b>zero entries in <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code></b> — capability declaration has not
+                caught up with onboarding. Plasma is also absent from the <code>ChainKind</code> enum entirely, the
+                same registry gap <a href="#s3">§03</a> names.
+              </p>
+            </div>
+          </details>
+          <details class="tree">
+            <summary>
+              <span class="nm">Pre-canonical <span class="u">— no chain suffix</span></span><span class="meta">76 manifest tokens, 1 aggregator</span>
+            </summary>
+            <div class="tree-body">
+              <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+                76 of the 180 DeFi tokens in the 2026-08-19 coverage manifest carry a bare protocol name with no
+                <code>-CHAIN</code> suffix at all (<code>AAVE</code>, <code>COMPOUND</code>, <code>BINANCE</code>,
+                <code>UNISWAP_V3</code>, and 72 more) — pre-canonical identities that predate the chain-suffixed venue
+                model <a href="#s3">§03</a> describes, not a missing chain. This is the same defect the "three known
+                gaps" callout in <a href="#s14">§14</a> names as an active path-canonicalisation failure (defi: 38
+                non-canonical entries, 2026-08-18). One further token, <code>ALCHEMY-ONCHAIN</code>, is a cross-chain
+                data aggregator by design, not a chain-specific venue. All 77 are shown here rather than folded into a
+                chain they do not belong to or silently dropped.
               </p>
             </div>
           </details>
@@ -2136,6 +2321,20 @@
           <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
             Carries an explicit data floor — odds data begins at a known date, and anything before it is excluded from
             the denominator rather than reported as a gap.
+          </p>
+        </div>
+      </details>
+
+      <details class="tree">
+        <summary><span class="nm">Unattributed</span><span class="meta">0 ready / 16 not-ready / 8 unverified</span></summary>
+        <div class="tree-body">
+          <p style="font-size: 0.93rem; color: var(--ink-3); margin: 0">
+            24 tokens in the 2026-08-19 coverage manifest that neither the manifest's own <code>by_asset_group</code>
+            partition nor <code>VENUES_BY_ASSET_GROUP</code> can resolve to one of the five groups above — already
+            present in <a href="#s14">§14</a>'s table but missing from this tree until now, which made this tree's
+            total (264) silently undercount the measured universe (288) by exactly this bucket. Not the
+            <code>get_venue_asset_group()</code> defect named in the callout above — that function is not in this
+            path — but a real, separate gap worth its own look.
           </p>
         </div>
       </details>
@@ -2938,7 +3137,7 @@
         Verified directly against <code>unified_trading_library/streaming/event_facade.py</code>'s
         <code>get_transport()</code> dispatch.
       </p>
-      <h3>Measured readiness — 2026-08-18</h3>
+      <h3>Measured readiness — 2026-08-18 <span class="u">(DeFi row refreshed 2026-08-19)</span></h3>
       <div class="plate">
         <div class="plate-head">
           <span class="label">Derived readiness, pipeline legs</span
@@ -2966,8 +3165,8 @@
               <tr>
                 <td>DeFi</td>
                 <td>0</td>
-                <td>133</td>
-                <td>47</td>
+                <td>180</td>
+                <td>0</td>
                 <td>180</td>
               </tr>
               <tr>
@@ -3001,6 +3200,24 @@
             </tbody>
           </table>
         </div>
+      </div>
+      <div class="callout">
+        <span class="tag">DeFi refreshed 2026-08-19 — why the split moved, not just the date</span>
+        <p>
+          Re-run clean (all three service probes reachable, unlike whatever produced the 47-unverified figure
+          previously in this row) via <code>derive_readiness.py --asset-group defi</code>, reading
+          <code>gs://central-element-323112-honest-coverage/2026-08-19/coverage.json</code>. The 47 rows that
+          previously read <code>unverified</code> now resolve to <code>not_ready</code>: with the strategy-service
+          probe reachable, the <b>strategy</b> leg — a position adapter AND a satisfiable archetype, both required —
+          now returns a definitive verdict (<code>not_ready</code> on all 180 DeFi rows today) instead of bailing out
+          unverified. Row count (180) is unchanged; only the split within it moved, and it moved toward more
+          confidence, not less. CeFi / TradFi / Sports / Prediction / Unattributed above were <b>not</b> re-run this
+          session — a parallel attempt to refresh all groups together hit a transient execution-service probe failure
+          and was discarded rather than published; they remain the 2026-08-18 measurement. The separate all-mode,
+          all-group total quoted in <a href="#s17">§17</a> (864 rows — not_ready 844 / unverified 20) has not been
+          re-derived against this DeFi refresh and may now be slightly stale — flagged rather than silently left or
+          guessed at.
+        </p>
       </div>
       <div class="callout">
         <span class="tag">Readiness applies to archetypes as well as venues</span>
