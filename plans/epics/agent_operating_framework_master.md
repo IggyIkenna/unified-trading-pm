@@ -30,8 +30,12 @@ related_plans:
   - ../active/ao_consolidated_closeout_2026_08_12.md
   - ../active/ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md
   - ../active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md
+  - ../active/ao_satellite_ao_dispatch_batch25_2026_08_19.md
+  - ../active/ao_satellite_ao_dispatch_batch25_finalize_2026_08_19.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
   - ../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md
+  - ../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md
   - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
   - ../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md
   - ../active/meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md
@@ -39,7 +43,6 @@ related_plans:
   - ../active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md
   - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
   - ../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md
-  - ../archive/2026_08/reference_path_convention_2026_07_23_finalize_2026_08_08.md
   - ../active/task_template.md
 last_updated: 2026-07-23
 locked_by: live-defi-rollout
@@ -47,6 +50,11 @@ locked_since: 2026-06-24
 ---
 
 # Agent Operating Framework Master (L5)
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/08c154ae-be37-458d-9044-85de539d3ab2 (generated 2026-08-19,
+`/plan-reconcile agent_operating_framework_master`)
 
 **Owns**: how agents work + the automation framework that runs them — broader than the `agent-orchestrator` (AO) stack
 alone (AO is one substrate). Four pillars: (1) **strict per-plan dispatch** (`assigned_vm` is the fail-closed matcher);
@@ -393,7 +401,7 @@ Everything else (W3–W8) depends on this shape.
 
 ## Assigned active plans
 
-_15 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_18 active plans declare `parent_epic: agent_operating_framework_master` in their frontmatter. Workers pick up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 ## P0 — must complete before next foundation gate
 
@@ -426,6 +434,14 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 3.2 cal AI-days (class: infra)
 **title**: AO-dispatch plan corpus sweep — separate operator-gated items from worker-dispatchable todos
 
+### [`ao_satellite_ao_dispatch_batch25_2026_08_19`](../active/ao_satellite_ao_dispatch_batch25_2026_08_19.md)
+**status**: active · **estimate**: 0.45 cal AI-days (class: refactor)
+**title**: AO satellite AO batch 25 — conflict-clear bounded extraction from the 2026-08-19 na-eligibility-audit ao run
+
+### [`ao_satellite_ao_dispatch_batch25_finalize_2026_08_19`](../active/ao_satellite_ao_dispatch_batch25_finalize_2026_08_19.md)
+**status**: active · **estimate**: 0.24 cal AI-days (class: infra)
+**title**: AO satellite AO batch 25 — finalize
+
 ### [`asset_class_to_asset_group_rename_2026_07_21`](../active/asset_class_to_asset_group_rename_2026_07_21.md)
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
 **title**: AssetClass → AssetGroup rename — domain enum only, cross-repo coordinated landing
@@ -433,6 +449,14 @@ _(no plans currently assigned at this priority)_
 ### [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra)
 **title**: Complete context_scout plumbing + close a frontmatter-schema drift + add a plan-brainstorm skill
+
+### [`cross_cutting_satellite_ao_dispatch_batch16_2026_08_17`](../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md)
+**status**: active · **estimate**: 2.0 cal AI-days (class: infra)
+**title**: cross-cutting satellite AO dispatch batch 16 — 2026-08-17
+
+### [`cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize`](../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md)
+**status**: active · **estimate**: 0.5 cal AI-days (class: infra)
+**title**: Finalize — cross-cutting satellite AO dispatch batch 16 (2026-08-17)
 
 ### [`doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08`](../active/doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md)
 **status**: active · **estimate**: 0.24 cal AI-days (class: infra)
@@ -448,10 +472,6 @@ _(no plans currently assigned at this priority)_
 ### [`na_docs_validity_and_ao_eligibility_audit_2026_07_26`](../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md)
 **status**: active · **estimate**: 14.4 cal AI-days (class: research)
 **title**: >-
-
-### [`reference_path_convention_2026_07_23_finalize_2026_08_08`](../archive/2026_08/reference_path_convention_2026_07_23_finalize_2026_08_08.md)
-**status**: complete (archived 2026-08-17) · **estimate**: 0.4 cal AI-days (class: infra)
-**title**: Cross-reference path convention cleanup backlog — finalize
 
 ### [`task_template`](../active/task_template.md)
 **status**: active

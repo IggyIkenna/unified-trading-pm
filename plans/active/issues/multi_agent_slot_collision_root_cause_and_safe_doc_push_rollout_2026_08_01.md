@@ -272,8 +272,9 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
       session, which is also the diagnostic: `git stash push -u -m "<why>"` to quarantine the whole dirty set
       reversibly, then verify `git status` is clean against HEAD before doing anything else.
 
-- [ ] [SCRIPT] P3. **The quarantine half of the autostash fix works; the "bounded so the chain cannot age" half does
-      not** — observed 2026-08-16, `.tabs/6/unified-trading-pm`: a `safe-doc-push.sh` run correctly detected 21
+- [ ] [SCRIPT] P3. **Add a bounded-age or bounded-count prune policy for quarantined autostash entries** — the
+      quarantine half of the autostash fix works, but its "bounded so the chain cannot age" half does not. Observed
+      2026-08-16, `.tabs/6/unified-trading-pm`: a `safe-doc-push.sh` run correctly detected 21
       accumulated autostash/safety-snapshot entries and quarantined the current dirty tree into a new named stash
       before pulling, exactly per the fix above's "detected and refused (or quarantined)" half — the dangerous
       blind-reapply is confirmed not happening. But the fix's OWN second "done when" clause — "the autostash backlog

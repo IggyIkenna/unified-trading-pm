@@ -243,8 +243,8 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       pre-filter itself over-includes for this one tranche pairing). Fix: for `cross-cutting`, additionally require the
       doc is NOT already cited in `ci`/`infra`/`ao`'s own covering docs before counting it as a cross-cutting candidate
       (mirrors the `peer_cited` exclusion already correct in `generate_na_doc_tranche_inventory.py`).
-- [ ] [SCRIPT] P2. **Wire `scripts/plan-hygiene/check_na_duplicate_staleness.py` (new, 2026-08-03) into this skill's own
-      scheduled cadence** — it currently exists only as a standalone script, invoked by hand. It mechanically flags
+- [ ] [SCRIPT] P2. Wire `scripts/plan-hygiene/check_na_duplicate_staleness.py` (new, 2026-08-03) into this skill's own
+      scheduled cadence — it currently exists only as a standalone script, invoked by hand. It mechanically flags
       `assigned_vm: NA` docs whose open checkbox is duplicate-tracked by an active `planning` doc (via `Source:`
       citations) where the AO-side copy already shipped `[x]` but the NA-side original was never reconciled — exactly
       the "KEEP-NA-STALE (already-duplicated)" verdict class this skill's own rubric already names, just without a
@@ -310,17 +310,15 @@ inline in the doc itself (Progress Log entry) or in a per-tranche audit-results 
       `na-eligibility-audit 2026-08-03` verdict markers from a concurrent process when opened — confirms this class of
       audit is now also running on another schedule/slot in parallel; no conflicting edits resulted since agents
       verified content directly rather than trusting pre-existing markers.
-- [ ] [DOC] P2. **`lst_rate_honest_coverage_2026_07_21.md` line 381 (A2 staking leg, `[STRATEGY] P2`) verified DONE**
-      (`strategy-service@e93902d8`, cited at `defi_satellite_ao_dispatch_batch3_2026_07_26.md:191`) but the checkbox
-      flip could not be committed: the doc is 1017L, over the 1000L hard cap, and the SCOPED-mode small-marker-append
-      exception (operator ruling 2026-08-02) requires zero deletions in the staged diff — a same-line `[ ]`→`[x]`
-      replace is 1 insertion + 1 deletion, so it does not qualify even though total line count doesn't change. This is
-      one of the 4 docs the exception's own docstring already names as chronically stuck
-      (`lst_rate_honest_coverage_2026_07_21.md`, `data_completion_to_100_all_ag_2026_06_21.md`,
-      `instruments_completion_tracker_2026_07_06.md`, `master_data_canonicalisation_migration_catalogue_2026_06_07.md`)
-      — a checkbox flip on any of them hits the same wall. **Done when**: the doc is split/condensed under 1000L (or a
-      future operator ruling extends the append-only exception to cover a single same-line checkbox flip specifically),
-      then this A2 staking-leg checkbox gets flipped with the evidence above.
+- [x] N. ✅ [DOC] P2. `lst_rate_honest_coverage_2026_07_21.md:401` (A2 staking leg, `[STRATEGY] P2`) flip landed —
+      unified-trading-pm@99e725a679 (na-eligibility-audit defi tranche 2026-08-08), evidence strategy-service@e93902d8.
+      **RESOLVED 2026-08-19 (`/plan-reconcile agent_operating_framework_master`)**: the 1000L-cap blocker this todo
+      described is also cleared — `lst_rate_honest_coverage_2026_07_21.md` is now 870L (the doc's own 2026-08-17
+      na-eligibility-audit pass extracted its closed history), so the SCOPED-mode append-only exception this todo was
+      stuck behind no longer applies to it. The other 3 docs named in the original blocker
+      (`data_completion_to_100_all_ag_2026_06_21.md`, `instruments_completion_tracker_2026_07_06.md`,
+      `master_data_canonicalisation_migration_catalogue_2026_06_07.md`) were not re-verified this pass — still
+      chronically stuck on the same wall unless independently confirmed.
 
 ## Phase 4 — Final QA on everything this plan touched
 

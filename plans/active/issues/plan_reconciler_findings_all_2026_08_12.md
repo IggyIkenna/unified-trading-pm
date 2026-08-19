@@ -200,8 +200,16 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       **[BACKEND] P2. EXTRACTED...**` bullet with no `- [ ]`, but this matches the corpus's established convention (see
       `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s own explanation) of rendering an EXTRACTED item's
       pointer as a deliberately non-ingestable bullet, not real open work — false positive, no fix needed.
-- [ ] [REVIEW] P3. (P3) agent_operating_framework_master_batch2 manifest entries 14/18 — 404, archived before manifest
-      generated (index drift)
+- [x] ✅ [REVIEW] P3. (P3) agent_operating_framework_master_batch2 manifest entries 14/18 — 404, archived before manifest
+      generated (index drift). **RESOLVED (verified 2026-08-19, `/plan-reconcile agent_operating_framework_master`,
+      Phase -1)**: no live corpus artifact matches this string (`git log --all --diff-filter=D` across the whole repo
+      history finds no file ever named with this `batch2` pattern; the doc this line originally referenced described
+      is not this doc's own frontmatter `parent_epic` either — it has none). This described a transient hunter-batch
+      doc-list handed to one of the 2026-08-12 run's own 46 read-only hunters (analogous to today's per-epic batch
+      lists), stale at generation time relative to concurrent archivals — not a persisted corpus reference. No dangling
+      `depends_on`/`related`/`supersedes` ref or broken citation currently exists in the `agent_operating_framework_master`
+      epic's 71-doc corpus attributable to this (fresh existence + conflict-marker sweep, same run, found 0). No
+      corpus action needed.
 - [x] ✅ [REVIEW] P3. (P2) plans/active/ao_satellite_ao_dispatch_batch11_2026_08_09.md:16 — frontmatter says
       active/planning, todo already [x] — cosmetic. **DONE (verified 2026-08-16)**: doc is archived
       (`plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_2026_08_09.md`, `status: resolved`) — the cited

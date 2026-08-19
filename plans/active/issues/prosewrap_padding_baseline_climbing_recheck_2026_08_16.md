@@ -52,9 +52,9 @@ context_scope:
       finding (e.g. concurrent agent activity has quieted, or the non-idempotent prettier reflow bug has since been
       fixed elsewhere), the climbing-baseline problem may no longer be current — say so and stop here, do not
       hand-raise the baseline on stale evidence.
-- [ ] [DATA] P2. If the count is still climbing (measure 2-3 checkpoints ~10-15 min apart to confirm, same method
-      the original finding used): investigate the root cause fresh — confirm it's still the documented non-idempotent
-      prettier reflow bug (`prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md`) and not something new,
+- [ ] [DATA] P2. If the count is still climbing, investigate the root cause fresh: confirm it's still the
+      documented non-idempotent prettier reflow bug. Measure 2-3 checkpoints ~10-15 min apart to confirm climbing,
+      same method the original finding used (`prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31.md`) and not something new,
       then decide between the worker's original recommendation (hand-raise the baseline with a dated justification,
       given `--diff-base` mode is confirmed still disabled for promote-PR/whole-branch contexts) or a different fix,
       based on what the fresh investigation finds. Report back before hand-raising anything — this todo authorizes

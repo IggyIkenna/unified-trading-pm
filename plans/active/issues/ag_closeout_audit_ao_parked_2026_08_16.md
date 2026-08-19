@@ -47,7 +47,7 @@ context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active
 
 - **RESOLVED since filing (corrected 2026-08-18, `/plan-reconcile` ao tranche)** — was: "ACTIVE P0 INCIDENT — fleet
   paused at reduced capacity." `ao_fleet_regression_triad_2026_08_16.md` is now `status: resolved` and archived
-  (`plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md`) — Finding 2 (agents dying mid-task) was
+  (`/plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md`) — Finding 2 (agents dying mid-task) was
   root-caused (`context_lifecycle.py::_tick_target`'s boundary-confirmed compaction path never wrote the corrected
   pct back, re-arming a forced compact every ~3.5min indefinitely) and fixed, `resolved_by: agent-orchestrator@
   9ba4391e60` (fix) + `@1b2dddffc9` (UI). Fleet resumed to full capacity (0 paused) — confirmed via

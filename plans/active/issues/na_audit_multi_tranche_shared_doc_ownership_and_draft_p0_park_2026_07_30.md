@@ -238,10 +238,11 @@ scope on every run. Fix belongs with Finding 3's script todo.
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **DEFAULT-RULED 2026-08-06, option A+A2: frontmatter scalar (`na_audit_verdict: KEEP-NA <date>`),
-      paired with excluding frontmatter lines from the line-cap count entirely.** `[SCRIPT]` tag (was `[OPERATOR]`) —
-      lowest-friction, consistent with how markers already work elsewhere in this corpus; the line-cap exclusion avoids
-      the marker itself contributing to over-cap pressure. Rule on Finding 4 (A / A2 / B / C / D) — where the
+- [ ] [SCRIPT] P2. Implement DEFAULT-RULED 2026-08-06 option A+A2 in `generate_na_doc_tranche_inventory.py`: a
+      frontmatter scalar (`na_audit_verdict: KEEP-NA <date>`), paired with excluding frontmatter lines from the
+      line-cap count entirely. `[SCRIPT]` tag (was `[OPERATOR]`) — lowest-friction, consistent with how markers
+      already work elsewhere in this corpus; the line-cap exclusion avoids the marker itself contributing to
+      over-cap pressure. Rule on Finding 4 (A / A2 / B / C / D) — where the
       incremental-skip verdict marker lives for a doc pinned at the 1000L hard cap. **Done when**: the ruling is
       recorded here and, for A/A2/B, the marker mechanism is implemented in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` + named in

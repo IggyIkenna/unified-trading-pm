@@ -91,19 +91,22 @@ either (a) a runner-side debug run with the clone step's stdout NOT suppressed t
 right after each clone, or (b) reproducing it enough times to catch it live via GH Actions' own diagnostics — both are
 more than the ambiguous-finding time budget for a single sweep.
 
-## Suggested next step (for whoever picks this up)
+## Todos
 
-1. Add a debug step to `workspace-quickmerge-validation.yml` (or a scratch dispatch) that, right after cloning
-   `unified-api-contracts`, echoes `git -C unified-api-contracts log -1 --format='%H %ai %s'` and
-   `git -C unified-api-contracts show HEAD:unified_api_contracts/registry/token_wrapping.py | sed -n '25,45p'` to the
-   job log — this will show definitively whether the CLONE itself got stale/wrong content, or whether something
-   downstream (the checker script's own resolved workspace-root, a stray second `unified-api-contracts` directory, etc.)
-   is the actual culprit.
-2. If it's confirmed to be a clone-time issue: harden the "Clone canary repos" step to verify the clone succeeded with
-   real content (e.g. assert `.git` exists and `git rev-parse HEAD` succeeds) and retry once on failure/mismatch, rather
-   than the current silent `|| echo Skip`.
-3. Re-run `workspace-quickmerge-validation.yml` after the fix lands and confirm 3 consecutive green ticks before closing
-   this doc.
+_(converted from a plain numbered "Suggested next step" list — 2026-08-19, `/plan-reconcile
+agent_operating_framework_master` Phase 2 zero-checkbox sweep — no real work content changed.)_
+
+- [ ] [INFRA] P2. Add a debug step to `workspace-quickmerge-validation.yml` (or a scratch dispatch) that, right after
+      cloning `unified-api-contracts`, echoes `git -C unified-api-contracts log -1 --format='%H %ai %s'` and
+      `git -C unified-api-contracts show HEAD:unified_api_contracts/registry/token_wrapping.py | sed -n '25,45p'` to
+      the job log. Done when: the debug output shows definitively whether the CLONE itself got stale/wrong content,
+      or whether something downstream (the checker script's own resolved workspace-root, a stray second
+      `unified-api-contracts` directory, etc.) is the actual culprit.
+- [ ] [INFRA] P2. BLOCKED-ON:above — if the debug step confirms a clone-time issue, harden the "Clone canary repos"
+      step to verify the clone succeeded with real content (e.g. assert `.git` exists and `git rev-parse HEAD`
+      succeeds) and retry once on failure/mismatch, rather than the current silent `|| echo Skip`.
+- [ ] [INFRA] P2. BLOCKED-ON:above — re-run `workspace-quickmerge-validation.yml` after the fix lands and confirm 3
+      consecutive green ticks before closing this doc.
 
 ## Progress Log
 

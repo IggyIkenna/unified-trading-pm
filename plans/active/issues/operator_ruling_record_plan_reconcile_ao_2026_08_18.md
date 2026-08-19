@@ -44,7 +44,7 @@ any entry.
 ## 1. Codex-staleness fix (pre-existing MECHANICAL carve-out, not a trust-mode judgment call)
 
 **Finding** (hunter 9, moved-doc referrer sweep): `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`
-lines 412-414 claimed `plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` was "still
+lines 412-414 claimed `/plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` was "still
 open — one todo, the content-derived-id follow-up, is deliberately deferred, not resolved."
 
 **Independently verified** (main, not just trusting the hunter): read the archived doc directly —
@@ -136,7 +136,7 @@ but no such baseline number was ever recorded in the doc.
 
 **Ruling: APPLY WORKER REC** (trust-mode): rewrote the todo's done-when to require establishing a fresh
 `run_hygiene_sweep.sh --ci` baseline live at pickup time rather than referencing a number that was never written
-down. Diff: `plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`.
+down. Diff: `/plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`.
 
 ## 7. fleet_venv_drift_after_pull_no_resync — archive blocked on missing codex home (hunter 6)
 

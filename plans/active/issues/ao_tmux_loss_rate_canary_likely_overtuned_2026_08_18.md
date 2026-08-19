@@ -109,18 +109,20 @@ check for this directly rather than only counting raw crossings.
 - [x] N. ✅ [SCRIPT] P2. Query `ActivityRow` for `tmux_session_lost` events over the last 7 days,
       bucket into rolling 10-min windows the same way `_count_excluded_losses` does, and plot/
       count how often the count crosses 3. If it crosses routinely (say, >5x/day) outside any
-      known incident window, that's direct evidence for raising the threshold. **For each
+      known incident window, that's direct evidence for raising the threshold below. **For each
       crossing, also cross-reference every member against a preceding `reason="manual"`
       `SESSION-TEARDOWN` log line within ~60s** (the method
       `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` already proved out for its
       2026-08-14 23:33 cluster) — if crossings are dominated by benign recycles rather than genuine
       losses, that's a DIFFERENT fix (exclude `reason="manual"` from the count) than raising the
-      raw threshold. (repo: agent-orchestrator) Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
+      raw threshold. (repo: agent-orchestrator) Extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 - [ ] [SCRIPT] P2. If confirmed over-tuned, raise `tmux_session_loss_rate_min_count` and/or
       `tmux_session_loss_rate_window_seconds`, OR add a "sustained N consecutive ticks over
       threshold" requirement (the interval is 120s — even 2 consecutive over-threshold ticks
       would filter out a single-tick blip while still catching a real multi-minute spike).
       Cite the measured baseline from the todo above in the commit, not a guessed number. (repo:
-      agent-orchestrator)
+      agent-orchestrator) **Ordering NOT machine-enforced**: this todo is conditioned on the
+      confirming measurement extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md`
+      item 3 — no `depends_on`/`gate_on_depends` links the two, the ordering rests on this prose note only.
 
-- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:96033122b406632d]: RECLASSIFY (per-todo split) — todo 1 (7-day ActivityRow rate measurement) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3. Doc stays NA for todo 2 (the raise-threshold action, correctly conditional on todo 1's own result).
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:96033122b406632d]: RECLASSIFY (per-todo split) — todo 1 (7-day ActivityRow rate measurement) extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3. Doc stays NA for todo 2 (the raise-threshold action, correctly conditional on todo 1's own result).

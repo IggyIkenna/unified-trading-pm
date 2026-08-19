@@ -16,6 +16,10 @@ summary: >-
   `2026-07-31T21:14Z`, vs the required 24h; no paper run confirmed per the sibling issue doc below), so this is a live
   recurrence of the exact bug class `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` was supposed to have fixed
   (`agent-orchestrator@8dd5763`) — the fix either doesn't cover this code path or has regressed.
+  **CORRECTED (this doc's own later investigation, todo 2, DONE)**: determined to be a one-time process gap (an
+  intended manual-park edit that never actually happened), NOT a code regression of
+  `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` — the title's "recurrence of..." framing above is disproven;
+  see the Todos section for the resolved finding.
 status: open
 nature: issue
 asset_group:

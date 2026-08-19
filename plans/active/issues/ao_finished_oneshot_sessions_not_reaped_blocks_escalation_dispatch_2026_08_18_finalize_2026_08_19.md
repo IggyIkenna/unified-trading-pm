@@ -59,9 +59,9 @@ Machine-gated: `depends_on: [ao_finished_oneshot_sessions_not_reaped_blocks_esca
       single-uninterrupted-lifetime reclaim delay) recurred after this fix deployed, spin a fresh tracked follow-up
       todo/issue for the DEBUG-logging diagnostic step rather than letting it drop silently.
 - [ ] [DOC] P1. Once reconciled, run the standard 6-step archival ritual on
-      `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md` (git mv to
-      `plans/archive/issues/`, SUPERSEDED-not-needed banner not required for a clean close, fix every corpus referrer
-      including this finalize doc's own `related:`/`depends_on:` citations and
-      `ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`'s `related:` link).
+      `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md`.
+      git mv to `plans/archive/issues/`, SUPERSEDED-not-needed banner not required for a clean close, fix every
+      corpus referrer including this finalize doc's own `related:`/`depends_on:` citations and
+      `ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`'s `related:` link.
 
 ## Progress Log

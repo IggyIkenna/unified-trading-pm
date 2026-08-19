@@ -156,9 +156,9 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       logs to size how often a sub-agent wrote to a foreign checkout instead of its named `.tabs/<N>/` slot. Done
       when: a count/report exists (even if the answer is "zero other occurrences found"). Repo: unified-trading-pm.
       Source: `plans/active/issues/subagent_wrote_to_foreign_checkout_bare_repo_path_2026_08_18.md` item 3.
-- [ ] [BACKEND] P2. Harden the na-eligibility-audit same-tranche concurrent-dispatch case: implement either a
-      dispatch-time lock per tranche in `server/plan_health.py::dispatch()`, or narrow every na-eligibility-audit
-      Phase-3 file-touching step to `Edit`-only (never `Write`) for any file that might already exist from a
+- [ ] [BACKEND] P2. Harden the na-eligibility-audit same-tranche concurrent-dispatch case: implement a dispatch-time
+      lock per tranche in `server/plan_health.py::dispatch()`, OR narrow every na-eligibility-audit Phase-3
+      file-touching step to `Edit`-only (never `Write`) for any file that might already exist from a
       concurrent run. Cite `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4's finding (same gate-exemption
       class for `mode="reconcile"`) as related but do not duplicate its own tracked fix. Done when: a synthetic
       concurrent-dispatch test proves the chosen mitigation prevents the collision class described in
@@ -195,9 +195,10 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       "rejected"` at kill time. Done when: a fresh occurrence of this failure shows the new, diagnosable
       `death_class` instead of `unexplained`. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P2. Pull `overage_disabled_reason` for the 21 currently-disabled non-Anthropic accounts and
-      cross-reference each against the named in-progress provider-onboarding plans (`deepseek_claude_blended_provider_routing_2026_07_28.md`,
+      cross-reference each against the named in-progress provider-onboarding plans before treating any as anomalous.
+      Named plans: `deepseek_claude_blended_provider_routing_2026_07_28.md`,
       `grok_gemini_translation_proxy_2026_08_14.md`, `codex_luna_flex_bridge_2026_08_14.md`,
-      `kimi_gemma_provider_onboarding_2026_08_16.md`) before treating any as anomalous. Done when: every one of the
+      `kimi_gemma_provider_onboarding_2026_08_16.md`. Done when: every one of the
       21 is classified expected-mid-onboarding vs. genuinely anomalous, with the anomalous set (if any) flagged as a
       fresh follow-up. Repo: agent-orchestrator.
 - [ ] [SCRIPT] P2. Investigate why `GET /api/agents?kind=human` returns zero rows for human slots in production
