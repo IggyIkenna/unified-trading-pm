@@ -395,3 +395,5 @@ investigation the next time an account is onboarded.
   inheritance" above. Root cause: fixed, per-account-assigned weekly boundary inherited 5 days pre-dating first use,
   confirmed from two independent local sources plus Anthropic's own docs; not a burst penalty, not a capture bug.
   Operational note added to `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:f719f529dda6fdcb]: KEEP-NA, valid — explicit dated operator ruling (2026-08-13): entire initiative is human-driven, proceed only in operator-present sessions, covers the dispatch mechanism for the whole doc even for individually-bounded-looking items. Reconfirms the 2026-08-17 na-eligibility-audit verdict verbatim.

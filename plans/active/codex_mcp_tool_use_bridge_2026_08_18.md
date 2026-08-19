@@ -155,3 +155,5 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   dynamic per-thread MCP registration works and identified the real remaining gap (sync MCP vs. async
   Anthropic-protocol tool-use). Operator chose: human plan (`assigned_vm: NA`), not AO-dispatched — the operator
   will hand this to a specific agent/session directly rather than letting AO's backlog auto-pick it up.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:b86998d38ce6877d]: KEEP-NA, valid — doc's own Progress Log records an explicit same-day operator decision (human plan, not AO-dispatched); every todo is part of one multi-file, multi-day rewrite of live-dispatch-critical-path machinery (codex_bridge_server.py) including a prod VM deploy/restart and a live account unpause — exactly the class not to auto-bundle into RECLASSIFY.

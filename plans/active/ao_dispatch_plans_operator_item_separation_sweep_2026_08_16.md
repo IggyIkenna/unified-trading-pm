@@ -175,3 +175,5 @@ tracked, just no longer blocking the AO plan's own archival or reading as "why i
   sampled hits, 4 concrete examples) come from a same-session Explore-agent research pass, not a full corpus run —
   Phase 1 replaces this estimate with the real complete list.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:1a4a951d09a2ddd0]: KEEP-NA, valid — explicit operator ruling on record that per-doc classification in this sweep is itself the judgment-call deliverable, not AO-dispatchable, even though individual Phase-0/1/3 tooling todos are mechanical in isolation.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:5e353e515fd43619]: KEEP-NA, valid — frontmatter source: cites an explicit dated operator ruling that this sweep itself is a LOCAL plan (per-doc classification is a judgment call); converges with the 2026-08-17 na-eligibility-audit verdict on the same citation. 4 Phase-0/1/3 tooling todos look mechanical in isolation, tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment, but the doc-level ruling covers the whole doc regardless.

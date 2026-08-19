@@ -110,3 +110,5 @@ this will recur on each one's own expiry unless fixed.
   `CredsEnvPoller`, which is confirmed disabled). The account itself is now `status: healthy`
   (`weekly_pct=12`, `five_hour_pct=8`, real `last_used_at`) — this issue tracks the STANDING poller gap, not the
   one-off symptom, which is already resolved.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:a31fbbeb17037f53]: KEEP-NA, valid — primary/blocking todo is an [OPERATOR]-tagged live orchestrator.service systemd env-var change + restart (fleet-critical service, in-flight dispatch risk); todo 2 is gated on todo 1's outcome and can't execute meaningfully first.

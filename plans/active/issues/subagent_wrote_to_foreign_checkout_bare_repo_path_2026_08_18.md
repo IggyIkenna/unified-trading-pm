@@ -75,20 +75,25 @@ found slot 6 clean and concluded the agent did nothing.
 
 ## Todos
 
-- [ ] [DOC] P1. **Harden the sub-agent rule** — done as a one-line clause in
+- [x] N. ✅ [DOC] P1. **Harden the sub-agent rule** — done as a one-line clause in
       `cursor-configs/SUB_AGENT_MANDATORY_RULES.md` ("write ONLY under the absolute path your task names; a bare
-      `<repo>/` path is ANOTHER operator's live checkout; `realpath` your target before the first write"). Confirm
-      the file is still under its QG-enforced 10 KB cap after the edit, and that the wording survives the next
-      condense pass — it is easy to trim as redundant, and it is not.
+      `<repo>/` path is ANOTHER operator's live checkout; `realpath` your target before the first write.") —
+      unified-trading-pm@34ebb7e5f. Verified live 2026-08-19: clause is present verbatim in the file; file measures
+      9893 bytes, under its 10 KB QG-enforced cap.
 - [ ] [SCRIPT] P2. **Consider a mechanical guard**: a sub-agent whose task names a `.tabs/<N>/` path should fail
       loudly on a write outside that subtree. Prompt discipline alone did not hold here — the prompt was correct and
       unambiguous, and the agent still resolved elsewhere. Weigh against the cost of wrapping every sub-agent write.
-- [ ] [REVIEW] P2. **Check whether other recent sub-agent work landed in the bare checkout** rather than a slot.
+- [x] N. ✅ [REVIEW] P2. **Check whether other recent sub-agent work landed in the bare checkout** rather than a slot.
       This was caught by chance; the same failure in a session that did not read the agent's path would look like a
-      no-op. A sweep of the bare clone's dirty files against recent sub-agent tasks would size the problem.
+      no-op. A sweep of the bare clone's dirty files against recent sub-agent tasks would size the problem. —
+      extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 1 (na-eligibility-audit
+      2026-08-19, ao tranche, RECLASSIFY per-todo split — this item is bounded/deterministic, the sibling items above
+      are not).
 
 ## Progress Log
 
 **2026-08-18 — filed.** Content recovered and shipped from slot 6 (`unified-trading-pm@171dc40739`); the peer's
 checkout was deliberately left alone rather than cleaned, per the hard rule against touching a live peer's dirty
 working tree.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:4a9dbc02450782c8]: KEEP-NA-STALE (items closed) — todo 1 (harden SUB_AGENT_MANDATORY_RULES.md) verified done: unified-trading-pm@34ebb7e5f, clause confirmed present, file 9893 bytes < 10KB cap. Todo 3 (bounded, GENUINE_WORK) extracted to plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md item 1 (RECLASSIFY per-todo split). Todo 2 (mechanical guard) stays NA — explicit judgment/cost tradeoff, no determinable outcome.
