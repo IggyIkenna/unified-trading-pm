@@ -411,3 +411,21 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
   the AWS-Secrets-Manager-to-GCP-only replacement, `vm-launch.sh`/`vm-winddown.sh` themselves) needs either real IONOS
   API knowledge to do well or touches AO's live bootstrap script directly — higher blast-radius, held for the
   operator's go-ahead rather than rushed.
+
+## Deferred work after 2026-08-18
+
+| Item                                                                            | State / why deferred                                                                             | Blocked on                                                          |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| §1: CI-runner remote-access model                                                | Not done — needs a direct answer, not implementation                                               | Operator: confirm IP-allowlist for the admin-exec channel specifically (the earlier answer addressed dashboard access instead) |
+| §2: `bootstrap_vm.sh` `ionos` branch, AWS-Secrets-Manager→GCP swap, `vm-launch.sh`, `vm-winddown.sh` | Not done — deliberately held back, not attempted blind                                             | Real IONOS API access to build/verify correctly; touches AO's live bootstrap script (operator go-ahead wanted given blast radius) |
+| §2: hardcoded-EIP-reference fix                                                  | Not done — turned out to need a careful per-file read, not a mechanical find-replace               | Nothing external — just needs the careful pass, can happen any time     |
+| §2: wire transcript/eval-results uploads into `vm-winddown.sh`                   | Cannot be done yet — the functions exist (`agent-orchestrator@946eeaba51`) but have no caller       | `vm-winddown.sh` doesn't exist yet (row above)                          |
+| §3: IONOS account/API token                                                      | In progress                                                                                          | Operator (signup underway as of 2026-08-18)                             |
+| §4/§5: actual cutover (provision, shadow-observe, DNS, stop)                     | Cannot be done yet                                                                                   | §3's IONOS API token                                                    |
+| §6: failback-runbook timed dry-run                                               | Cannot be done yet — the runbook itself is done (`unified-trading-pm@6ff00d4ca7`)                   | A real stopped AWS box, which only exists after §4/§5's stop steps      |
+| §6: cloud-spend-forecast doc update, invoice reconciliation                      | Operator-owned / cannot be done yet                                                                 | Operator needs to flag the GCP-negotiation owner; invoice check needs a full IONOS billing cycle |
+
+**Recommended next item**: once §3's IONOS API token lands in GSM, `vm-launch.sh` + `bootstrap_vm.sh`'s `ionos` branch
+unblocks the whole rest of §2/§4/§5 — start there. Independently, and not blocked on anything, the CI-runner
+remote-access-model question just needs the operator to answer the actual question asked (admin-exec channel, not the
+dashboard) to unstick §1.
