@@ -59,13 +59,18 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P2. Reconcile every completed todo in
-      `deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md` — the plan is self-contained (not
-      a batch extraction from other source docs), so verify its own checkboxes cite real evidence (a commit sha / a
-      measured windowed-residual number) rather than trusting a bare `[x]`. In particular confirm the first true 24h
-      windowed measurement (available 2026-08-12 per the doc) was actually captured and recorded. Re-check any deferred
-      item's gate. Done when: every checkbox is verified evidence-backed, and the 24h windowed-residual measurement is
-      confirmed recorded in the doc.
+- [x] ✅ [REVIEW] P2. **RECONCILED 2026-08-19 (slot-4) — every completed todo in the source plan is evidence-backed;
+      the 24h windowed-residual measurement is confirmed recorded.** (a) All 18 `[x]` todos cite real evidence — a
+      commit sha with repo or a measured windowed-residual number; none is a bare `[x]`. (b) Independently verified all
+      13 cited commit shas resolve on `origin/live-defi-rollout` (agent-orchestrator: b4e3e74205 / 18fc60b / 002126cb32
+      / 60fd7ba / a3eda085f6 / 85232486e3 / 4d2f9ed118 / bb05ece096 / fab845c1df / 4e2d7b34b6 / 6f37771 / ff72f0a958;
+      unified-trading-pm: ea53432c4e) — none missing, none dangling. (c) The first true 24h windowed measurement IS
+      recorded: the `[OPERATOR] P0` todo (MEASURED 2026-08-12 08:00 UTC), window 2026-08-11T08:00:09Z→
+      2026-08-12T08:00:09Z, real drawdown $29.14 vs $16.70 attributed (ratio 1.745). (d) Zero open `- [ ]` todos
+      (grep-verified: 0) — the last `[OPERATOR] P3` line is CANCELLED/SUPERSEDED (forked to the companion NA doc
+      2026-08-19), not open. (e) Deferred-table "Not done" items (count_tokens on proxy, #1/#10/#11 selector fix,
+      uv.lock churn, QG_ENFORCE_FRESH_VENV) are prose — to be migrated to tracked `- [ ]` todos in the archival ritual
+      (todo 2 of this finalize plan) per plan-completion-and-archival-discipline.md step 1.
 - [ ] [REVIEW] P2. Once the source plan has zero open todos and the reconciliation above is clean, run the standard
       6-step archival ritual on `deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`, then
       archive this finalize plan too. Done when: the source plan and this finalize plan are both under `plans/archive/`,
@@ -73,5 +78,13 @@ source: >-
 
 ## Progress Log
 
+- **slot-4 2026-08-19 (REVIEW task
+  `deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_finalize-28e41165b279`)**: reconciled the
+  source plan's completed todos — all 18 `[x]` checkboxes cite real evidence (commit sha with repo, or a measured
+  windowed-residual number); all 13 cited commit shas independently verified on `origin/live-defi-rollout`
+  (agent-orchestrator ×12, unified-trading-pm ×1); the first true 24h windowed-residual measurement (2026-08-12 08:00
+  UTC, ratio 1.745) is recorded in the source doc; 0 open `- [ ]` todos (grep-verified). Flipped todo 1 above.
+  Deferred-table "Not done" items remain prose — the archival ritual (todo 2 of this finalize plan) owns migrating
+  them to tracked todos per plan-completion-and-archival-discipline.md step 1.
 - **context-scout 2026-08-15**: refreshed context_scope (3 entries), no change needed -- this is a gated
   finalize/archival doc, genuinely code-free.
