@@ -253,6 +253,13 @@ todos only to confirm they are data-movement, then leave it.
       `cursor-configs/skills/readiness-state-dump/`.
 - [ ] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
       moves 844 `not_ready` rows off their structural blocker. Track the dependency; do not wait idle on it.
+      **2026-08-20 — dependency tracked and the non-blocked half DONE, `unified-trading-pm@c3a3e870f4`.** Request
+      filed on T4's `## Inbound requests` naming the exact probe shape (`unified-trading-pm@241933d56e`), with the
+      groundwork pre-done so T4 need not re-derive it. Our side: `instruction_actions.py` measures handler coverage
+      by AST (11/16 actions have a settlement path; 5 raise `UnhandledActionError`), the leg now carries a measured
+      denominator instead of "no check wired", and the SKILL.md pointer that named the WRONG file
+      (`v2/policy_resolver.py` — an algo resolver keyed by `(client_id, slot_label)`, not an instruction registry)
+      is corrected. Remaining work here is a one-line probe call once T4 lands the venue-aware surface.
 - [ ] [BACKEND] P0. Add the archetype capability axis across batch, paper and live to the dump. The artefacts mark
       it `planned — specified and not yet built`, so that axis reports `unverified` today. Consume T3's
       `/archetype-code-completeness` output rather than re-deriving it.
@@ -272,6 +279,13 @@ todos only to confirm they are data-movement, then leave it.
       `coverage.json` — never re-derive the expected universe and never re-walk GCS.
 - [ ] [BACKEND] P0. Re-run the dump at the finer grain the moment T2 lands `instrument_type` / `data_type` in
       `coverage.json`. The skill auto-detects grain from the payload — verify that, do not assume it.
+      **2026-08-20 — the "verify that, do not assume it" half is DONE, `unified-trading-pm@c3a3e870f4`.**
+      `tests/test_shard_universe_grain_detection.py`, 7 tests green. The case that matters for this exact handoff:
+      when T2 lands the `by_venue_instrument_type_data_type` KEY before landing data under it, a presence-keyed
+      detector would flip to the fine grain and enumerate **zero** shard cells — every coverage figure silently
+      collapsing while looking structurally fine. The shipped detector requires a non-empty venue block and falls
+      back correctly, still reporting the real 2-tuple cells. Confirmed by test, not by reading. The re-run itself
+      still waits on T2.
 - [ ] [BACKEND] P0. Report the 4-state capture ledger per shard (captured / expected-absent / attempted_failed /
       expected_unattempted) plus a not-expected section for tuples outside the Layer-1 expected universe.
 - [ ] [BACKEND] P1. Close the remaining data types the artefacts mark pending — on-chain, sports odds, prediction
@@ -387,7 +401,7 @@ todos only to confirm they are data-movement, then leave it.
      checking `origin` directly. Re-shipped after fixing. Exit 0 from a piped ship script is not evidence.
 
 - 2026-08-20 — **`execution_instruction` leg: the SKILL.md pointer was wrong, and the real blocker is now named.**
-  Not yet shipped (in progress this session).
+  Shipped — `unified-trading-pm@c3a3e870f4` (all 5 files verified individually in origin, not by exit code).
 
   `readiness-state-dump/SKILL.md` pointed this leg at `execution-service/execution_service/v2/policy_resolver.py`,
   calling it "the real `InstructionActionV2`-adaptor registry". **It is not.** Measured 2026-08-20: that module
@@ -453,7 +467,8 @@ todos only to confirm they are data-movement, then leave it.
   `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`, which
   this plan carries as a P1.
 
-- 2026-08-20 — **Grain auto-detection VERIFIED, not assumed** (the P0 says so explicitly). Not yet shipped.
+- 2026-08-20 — **Grain auto-detection VERIFIED, not assumed** (the P0 says so explicitly) —
+  `unified-trading-pm@c3a3e870f4`.
   `tests/test_shard_universe_grain_detection.py`, 7 tests passing. The case that matters for the T2 handoff is
   the third: when T2 lands the `by_venue_instrument_type_data_type` KEY before landing data under it, a detector
   keyed on mere key-presence would flip to the fine grain and enumerate **zero** shard cells — every coverage
