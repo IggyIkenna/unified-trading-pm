@@ -540,6 +540,42 @@ investigation confirmed are both achievable with existing primitives:
       the script is already generic per-operator. Done when: `crontab -l | grep 'ao-fleet-sync:9002'` shows the
       installed entry and a `GET /api/agents?kind=human` call shows `harsh` with a fresh `last_ping`.
 
+### Phase 2c — per-tab presence sub-slots (2026-08-19, operator caught the real gap)
+
+> Operator: "why only one slot, i am working over 11 registered slots on my laptop albeit many are dormant 4 or 5
+> doing real work why cant it discern the difference" — Phase 2b collapsed every concurrently-active `.tabs/<N>`
+> session to a single "most recent" heartbeat, hiding real concurrent-work visibility. Operator explicitly chose
+> the fuller fix over a cheaper "active count" alternative: "Give each tab its own slot/row."
+
+- [x] [BACKEND] P1. **Reserve a wide per-operator slot range for per-tab presence** — `server/config.py`:
+      `HUMAN_TAB_SLOT_BASE = {"ikenna": 91000, "harsh": 92000}`, 1000-wide each. `is_human_slot_id()` widens the
+      membership check from `human_slot_ids()`'s fixed 2-element set to a RANGE check, so a brand-new tab is
+      recognized with no server-side config change. Task-claim endpoints (`human_claim`/`human_claim_check`)
+      deliberately keep calling `human_slot_ids()` directly, unwidened — a claim stays tied to the operator's one
+      stable identity, never fragments across tabs. Wired into `human_heartbeat` + all 3 liveness/kill-exemption
+      sites (`WorkerLivenessWatchdog`, `WorkerLivenessKicker`, `AutoSpawn._should_spawn`) — 3 of 4 shipped;
+      `AutoSpawn`'s site deferred (see follow-up below). Evidence: agent-orchestrator@a20126efbe (new
+      `tests/test_human_tab_slots.py` + updated existing liveness-exemption tests).
+- [x] [INFRA] P1. **Fan out `ao-liveness-heartbeat.py` per active tab.** Tab number recovered directly from Claude
+      Code's own cwd-slugified project-directory name (`-tabs-(\d+)` regex — no need to read inside the
+      transcript); each active tab heartbeats its own slot, labeled `<operator>-tabN`; the stable identity slot
+      also still refreshes from whichever tab is most recent (existing task-claim/done tooling unaffected).
+      **Verified live in production this session**: 3 concurrently-active tabs (3, 4, 6) each registered as a
+      distinct `AgentRow`/slot, plus the identity slot (9001) refreshed — confirmed via the scripts' own
+      `{"ok":true,"agent_id":...,"slot_id":...}` responses. Evidence: same commit as above, live verification.
+- [ ] [SCRIPT] P2. **Widen `AutoSpawn._should_spawn`'s human-slot check too (the 4th exemption site, deferred from
+      the Phase 2c commit)** — `server/autospawn.py` had an unrelated concurrent WIP change from another session
+      at ship time; reverted just this one hunk rather than risk sweeping their in-progress work into this commit.
+      Re-apply once that file is clear: change `if slot.slot_id in config.human_slot_ids():` to
+      `if config.is_human_slot_id(slot.slot_id):` in `_should_spawn` (mirrors the other 3 sites exactly). Low
+      urgency — the other 3 sites already cover the core never-kill/never-kick guarantee; this one only matters if
+      AO's own slot-picker ever considered a 91000+/92000+ id a spawn candidate, which its normal small-dense-
+      integer roster iteration does not do in practice. Repo: agent-orchestrator.
+- [ ] [OPERATOR] P2. **Harsh — same per-tab visibility, no extra steps beyond his existing Phase 4/2b setup.** The
+      identical `install-fleet-sync-cron.sh 9002` command (Phase 4/2b above) already installs the per-tab-aware
+      script — no new command needed. Done when: `GET /api/agents?kind=human` shows one or more `harsh-tabN` rows
+      alongside `harsh` once he's actively working in more than one tab.
+
 ### Phase 3 — dashboard
 
 - [x] 17. ✅ [UI] P2. **Add `"human"`/`"planning-human"` to the `AgentKind` union, `KINDS_ORDER`, and
