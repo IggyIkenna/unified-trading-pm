@@ -523,3 +523,22 @@ _(remaining rows populated as each attempt completes)_
   to already hold the right IAM grant here too — the reauth, not a missing grant, is the actual blocker for it.
   Deleted the empty/broken local copies rather than leave misleading zero-length credential files sitting in
   `~/.claude-accounts/`.
+
+- **2026-08-19 (later) — paid-tier Gemini re-run came back MIXED, not clean: the "Paid Tier 3" upgrade is only
+  partially effective, real $ spent either way.** `gemini-3.7-flash-paidtier` (slot 25): 6/6 STILL failed — task 1
+  got 11 turns/$0.67 before a 429, tasks 2-6 failed instantly — and the error text explicitly names
+  `generate_content_free_tier_requests` as the exhausted metric, on the SAME project we just wired as "confirmed
+  Paid Tier 3." `gemini-3.5-flash-lite-paidtier` (slot 24, the 4-task backfill): task 2 hit the identical
+  `free_tier`-labeled 429 again ($3.21 spent first); task 3 (`escalation-queue-reconciler`) got a REAL clean PASS
+  this time — 23 turns, $3.30, `is_error:false`; task 5 still in flight.
+  **Conclusion: enabling billing on project 371216509644 did not uniformly lift every quota metric** — some
+  requests now get real headroom (task 3's pass), but the specific `generate_content_free_tier_requests` RPM-style
+  metric is still gating other requests as if the project were free-tier, even though line ~420 of
+  `grok_gemini_translation_proxy_2026_08_14.md` says this project was independently confirmed Paid Tier 3 on
+  2026-08-16. This is a known Google Cloud pattern (billing-enabled lifts SOME default caps, others need an
+  EXPLICIT quota-increase request via the console, not just billing) — worth the operator checking the AI Studio
+  quota page for this specific metric on project 371216509644, not just the billing/spend-cap page.
+  **PAUSING further paid-tier Gemini dispatch here** — real money continues to accumulate ($0.67 + $3.21 this
+  round, on top of the earlier free-tier spend) for a fix that is not yet reliably working; not continuing to burn
+  spend on a partially-broken paid tier without the operator's input on whether to pursue the quota-increase path
+  or accept the current data as-is.
