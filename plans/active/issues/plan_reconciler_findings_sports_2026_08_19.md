@@ -180,8 +180,12 @@ None — no finding this run met the narrow mechanical carve-out bar.
    bug described under Doc-drift above (see Progress Log for filing confirmation).
 2. **`BLK-7d1f4a2d`** (P0, big finding) — `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s stalled
    liquidations re-derive (see Phase 1 batch-7 findings above). Raised via `/api/slots/4/blocked` — durable lookup
-   `GET /api/blocked/BLK-7d1f4a2d`, survives slot reassignment. Options A/B/C given, recommendation A. Answer not
-   yet received as of this write-up — check on next tick.
+   `GET /api/blocked/BLK-7d1f4a2d`, survives slot reassignment. Options A/B/C given, recommendation A. **Answered
+   2026-08-19T19:24:44Z by operator: A** (dispatch a live-status check now, update the doc either way). Tracked as a
+   `- [ ]` todo directly on the target plan (new `## Liquidations re-derive live-status check` section, end of
+   `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`) rather than executed inline this pass — the check
+   itself (cross-referencing MDPS commits 2026-08-12→2026-08-16 against current shard counts) is genuinely new
+   scoped work, not a mechanical reconciliation fix.
 
 ## Archive candidates (operator review)
 
@@ -399,3 +403,31 @@ adversarially verified (Phase 3) or applied (Phase 5) yet as of this write-up.
   (archive the extract plan) confirmed pre-condition-ready but deferred (21-referrer scope, recorded in the finalize
   plan itself for the next pass). Proceeding to the corpus-wide Phase 1 fan-out for the remaining ~95 non-grace
   sports-tranche docs.
+- **2026-08-19T~19:20Z**: Phase 1 hunter fan-out complete — 8 parallel batches over the remaining 99 non-grace
+  sports-tranche docs (full coverage + per-batch results: `## Phase 1 hunter fan-out` section above). Candidates
+  surfaced: 7 contradiction fixes, 5 missed-flip candidates, 2 archive-ready docs, 3 escalation-worthy items — none
+  yet adversarially verified, Phase 3 remains fully open. Raised `BLK-7d1f4a2d` (P0, big finding —
+  `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s stalled liquidations re-derive: no progress logged
+  since 2026-08-12 despite adjacent `market-data-processing-service` activity through 08-16 not cited back) via
+  `/api/slots/4/blocked`, options A/B/C given, recommendation A. Step 8 verdict at this point (given in chat only —
+  durably recorded here retroactively, see next entry): safe to compact, nothing at risk (scratchpad dumps
+  regenerable, findings already extracted into this doc), Phase 3 verification of the fan-out backlog above +
+  BLK-7d1f4a2d's pending answer were the named next goalposts.
+- **2026-08-19T19:31Z**: `BLK-7d1f4a2d` answered by operator — **A** (dispatch a live-status check now, update the
+  target doc either way), answered `2026-08-19T19:24:44Z`. Recorded in `## Filed` above; tracked as a new
+  `- [ ] [DATA] P0.` todo directly on `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` (new
+  `## Liquidations re-derive live-status check` section) rather than executed inline — the check itself is new
+  scoped investigative work, not a mechanical reconciliation fix. Both docs committed+pushed together,
+  `unified-trading-pm@837b44dfe3`, verified `ahead=0` / clean tree.
+- **2026-08-19T19:37Z (pre-compact re-run, post-`/compact`)**: Step 1 audit re-run from scratch — `git status`
+  clean, `ahead=0` at `837b44dfe3` (confirms the prior entry's push survived compaction intact). Scratchpad: 25
+  files, all this session's own hunter-fan-out/hygiene-sweep/skeleton-dump outputs, findings already extracted into
+  this doc, none referenced by any committed doc, nothing token-shaped — no promotion needed. One dangling
+  `scratchpad/` grep hit (`sports_consolidated_closeout_2026_07_19.md:648`) is pre-existing historical evidence
+  text from an unrelated past incident, not this session's. Gap closed by this entry + the two above: the Phase 1
+  fan-out completion and the BLK-7d1f4a2d resolution existed only in chat before this write — per the pre-compact
+  skill's Autonomous-mode rule, that verdict must be a durable write, not a chat-only report. **Safe to compact:
+  YES.** Resuming into Phase 3 adversarial verification of the fan-out backlog next (`## Phase 1 hunter fan-out`
+  above has the full candidate list); the BLK-7d1f4a2d live-status-check todo on
+  `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` is the single highest-priority actionable-now item
+  (operator-ordered, P0) and should be picked up first.

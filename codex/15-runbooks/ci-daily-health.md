@@ -358,3 +358,73 @@ cancel/timeout x2, unified-trading-pm LDR RED) are confirmed self-healed by dire
 - **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow hourly-cadence scope, same as the
   third pass; still no rightsizing check run against the CI host in >24h (§9 trigger), still deferred to a future
   daily-mode pass.
+
+## 2026-08-19 (fifth pass, agt-bc20f9, scheduled hourly sweep)
+
+**Delta since last run**: two genuine new items landed and were fixed — a `check_reference_paths` existence-ratchet
+regression (self-inflicted by a same-day archival's referrer-sweep miss) and a small provenance-gate bypass that had
+been CRITICAL-paging hourly since 14:46Z. Both confirmed clear by session end.
+
+**Persistent alerts (non-auto-resolving)**:
+
+- FIXED: `unified-trading-pm` `check_reference_paths` existence ratchet regressed 34→42 (8 new dangling refs — an
+  archival moved `dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` to `plans/archive/2026_08/issues/` without
+  updating its referrers). A concurrent `plan_reconciler`/`ldr_qg_failure` session (`agt-6b1355`, slot 14) had already
+  fixed 7 of 8 by the time this pass looked (confirmed via `git pull --ff-only`, count dropped 42→35); this pass fixed
+  the 8th (repointed 3 references in `plans/active/issues/dp_exit_code_monitor_cadence_stale_after_hourly_reconcile_2026_08_19.md`
+  to the doc's new archived path). `check_reference_paths.py` now reports 34/34 (baseline) locally. Landed as
+  `unified-trading-pm@9cdd4918de` — identical content converged via `git pull --rebase --autostash`, no duplicate
+  commit needed (textbook §0e concurrent-session reconciliation).
+- FIXED: `unified-trading-pm` provenance gate BLOCKED, re-paging hourly 14:46Z-19:11Z. Root cause: 2 code commits
+  (`9a3471df9c` "docs(plans): resolve CI-runner remote-access model...", `79c504b7f5` "feat(skills): add
+  archetype-code-completeness skill...") pushed directly by `ikennaigboaka [slot-6·laptop]` — a legitimate per-tab
+  identity, not the `[main·laptop]` irregular-identity pattern — but the second commit touched real script files
+  (`checks.py`, `derive_archetype_completeness.py`), so it doesn't qualify for the docs(plans)-only carve-out. Single
+  author, 2 commits, self-contained → reprovenanced directly per §4's size/authorship gate:
+  `scripts/cicd/reprovenance_bypass.sh 9a3471df9c` then `79c504b7f5`, pushed as `unified-trading-pm@1d5d08256e`.
+  `check_strict_quickmerge.py --range origin/main..origin/live-defi-rollout --block` now reports clean.
+- OPEN, not independently confirmable this pass: `glue-runner-crash-loop-watchdog` fired for two DIFFERENT glue
+  runners on two DIFFERENT private repos this window (`execution-service@glue-1`, 6.8h active, 15:12Z;
+  `agent-orchestrator@glue-2`, 3.2h active, 19:12Z) on host `i-042a6332509482556` — both repos confirmed private
+  (`gh api repos/<r> --jq .private` → true), so self-hosted glue runners are legitimately still in use there (unlike
+  the PM-specific pool retirement below). No in-progress GH Actions job found for either repo via
+  `gh api repos/<r>/actions/runs?status=in_progress` at check time (consistent with self-heal), but direct host
+  verification remains structurally unavailable to this identity: `ikenna-worker` denied both `ssm:SendCommand` on
+  the instance and `sts:AssumeRole` on `uts-orchestrator-epic-role` — unchanged, already tracked in
+  `plans/active/issues/ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md`.
+- Branch-health PROMOTION LAG for `unified-trading-pm` (21 commits, ~15h old) was a direct downstream symptom of the
+  QG failure above, not a separate condition — expected to clear once the next content-triggering push reruns green
+  (empty reprovenance-blessing commits do not themselves retrigger `quality-gates-v2`'s content-based selectors).
+
+**Sweep 1 (26 repos, `workspace-manifest.json`)**: 25/26 confirmed `quality-gates-v2` success on `live-defi-rollout`
+at sweep time; `unified-trading-pm` was the lone red (root-caused and fixed above). `unified-trading-ci` has no
+`quality-gates-v2.yml` run history at all — confirmed by design, not a gap: its actual push-triggered gate is
+`lint.yml` (green, last run 2026-08-18); `python-quality-gates-v2.yml` exists in its workflow set but isn't
+push-triggered for this repo.
+
+**Sweep 2 (catalog-derived `schedule(...)`+Slack workflows, freshly regenerated `CICD-WORKFLOW-CATALOG.md`)**: 19 of
+the ~23-workflow population individually re-polled via `gh run list --workflow=<name>.yml --limit 1`, all `success`
+and recently run, except `glue-pool-starvation-monitor` (last run 2026-08-08) and `glue-runner-health-monitor` (last
+run 2026-08-07) — both confirmed deliberately schedule-DISABLED 2026-08-07 per their own header comments (PM's own
+self-hosted glue pool permanently retired after the public-repo revert) — not a gap, verified by reading the
+workflow YAML directly rather than trusting the stale last-run timestamp alone.
+
+**Sweep 3 (host-dispatched watchdogs)**: `grep -l "dispatch_alert\|repository_dispatch\|/dispatches\"" scripts/self-hosted-runners/*.sh`
+finds `ci-vm-resource-watchdog.sh`, `classify-glue-workflows.sh` (advisory, no timer, correctly excluded), and
+`glue-runner-crash-loop-watchdog.sh`. Live SSM verification blocked by the same tracked permission gap (see above);
+confirmed the `current_job_started_epoch()` real-job-start-time fix (vs. the old `unit_active_seconds` conflation) is
+present in the live script content, and used the GH Actions API in-progress-job check as the indirect fallback per
+§0c's own guidance.
+
+**Sweep 4 (open promote PRs on repos touched)**: `unified-trading-pm` PR #3523 — `BLOCKED` at check time due to the
+now-fixed reference-path failure; expected to clear on its next rerun (not forced this pass).
+
+**AO escalation-queue cross-check (§5)**: 2 active escalations at session end. `agt-6b1355` (`ldr_qg_failure`,
+`unified-trading-pm`, slot 14, dispatched 19:15:29Z) is the exact same condition this pass independently found and
+fixed — converged with zero duplicate work per §0e, escalation mechanism worked as designed. `agt-955440`
+(`data_pipeline_failure`, `market-tick-data-service`) is outside CI/CD domain, not chased here.
+
+- **ci-reconcile ran**: yes (scheduled hourly `ci_reconciler` dispatch, `agt-bc20f9`, slot 30).
+- **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow hourly-cadence scope, same as prior
+  passes this day; still no rightsizing check run against the CI host in >24h (§9 trigger), still deferred to a future
+  daily-mode pass.
