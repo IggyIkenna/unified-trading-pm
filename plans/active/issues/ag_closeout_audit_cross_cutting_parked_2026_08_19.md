@@ -54,6 +54,8 @@ related:
     /plans/active/cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch20_2026_08_19.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_cross_cutting_parked_2026_08_08.md,
+    /plans/active/issues/ag_closeout_audit_fork_scope_creep_duplicate_batch_draft_2026_08_19.md,
+    /plans/active/issues/autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-19"
@@ -150,10 +152,10 @@ got silently reverted twice by concurrent `safe-doc-push.sh` reconcile cycles be
 files were caught in a stash during one of my reconcile passes and had to be recovered from
 `git stash show -p`) — both recovered without data loss, but both are exactly the
 `autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07.md` incident class happening live between
-two sessions sharing one slot's worktree. **Follow-up worth flagging to the AO scheduling layer** (not fixed here,
-outside this doc's own scope): if `ag_closeout_auditor` dispatches can spawn forks that independently re-run the
-tranche's own Phase 1 Workflow, two dispatches on the same tranche within a short window will keep colliding on the
-`batchN` filename — the naming scheme has no reservation mechanism, only after-the-fact detection.
+two sessions sharing one slot's worktree — corroborating entry added there this run (both incidents fully
+recovered, zero data loss). The fork-scope-creep / duplicate-batch-draft mechanism itself is tracked as its own
+follow-up, not left as prose here: `/plans/active/issues/ag_closeout_audit_fork_scope_creep_duplicate_batch_draft_2026_08_19.md`
+(tagged `[ao]` — an agent-orchestrator/fork-dispatch design question, not this tranche's own scope to resolve).
 
 ## Part D — 9 of 26 genuine orphans dispatched (batch19 + batch20, both `status: draft`)
 
