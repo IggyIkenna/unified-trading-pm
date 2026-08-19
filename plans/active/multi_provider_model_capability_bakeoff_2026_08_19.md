@@ -344,3 +344,16 @@ _(remaining rows populated as each attempt completes)_
   related stats and all the stats that we can get frequently, 30s or 1 min at the most." `[OPERATOR] P0` flipped
   done. New `[INFRA] P1` poller todo added (spec above); building it now, proving it end-to-end on the first real
   attempt alongside the existing isolated-branch-mechanism todo, before scaling to the remaining 35.
+
+- **2026-08-19 (later) — Codex/Luna lane's real dispatch immediately exposed the exact gap its own plan already
+  flagged as open: HARD FAIL, not a model-quality result.** All 6 tasks in slot 29's queue ran and exited within
+  seconds each (0 real turns, 0 tokens) — every single one hit an identical `API Error: 400` from the bridge:
+  `AnthropicMessagesRequest` validation rejects a `system`-role message (`codex_bridge_server.py`'s
+  `AnthropicMessage.role: Literal["user", "assistant"]` has no `"system"` case). This is
+  `codex_luna_flex_bridge_2026_08_14.md`'s own still-open `[INFRA] P0. Translate system-prompt injection correctly`
+  todo, now sharpened to a precise root cause and written back there (its own "smoke-test gate DONE" claim likely
+  didn't exercise this workspace's real, full CLAUDE.md as system content the way a genuine dispatched attempt
+  does — flagged there for the bridge's own owner to double-check). **Codex/Luna lane is INFRA-BLOCKED, not a real
+  Gate-1 result** — all 6 attempts excluded from the Results table below (would misrepresent Codex/Luna's actual
+  capability if scored as 6 fails; the model never got a chance to attempt any task). Re-run once the bridge fix
+  lands; no further action on this lane from the bake-off side until then.

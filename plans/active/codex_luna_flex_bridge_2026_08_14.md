@@ -164,6 +164,22 @@ template, minus the third-party dependency).
       open 2026-08-16** — only a plain-text completion was smoke-tested (see the P0 above), not a real CLAUDE.md
       marker-carrying request. Done when: a real request carrying a distinctive CLAUDE.md marker string is proven to
       influence the Codex-backed response (the marker is echoed/acted on), not just passed through blind.
+      **Sharper finding, 2026-08-19 (multi_provider_model_capability_bakeoff_2026_08_19.md)**: this is worse than
+      "unproven" — it's a HARD FAILURE, not a silent drop/truncation. A real `claude -p --dangerously-skip-permissions`
+      process launched from this actual workspace (so it loads the real, full production CLAUDE.md as system content,
+      unlike whatever minimal payload the [REVIEW] P0 smoke-test below used) gets an immediate 400 on its very first
+      request, 0 real turns completed: `AnthropicMessagesRequest` validation error, `messages.1.role` — `Input should
+      be 'user' or 'assistant' [input_value='system']`. Root cause: `codex_bridge_server.py`'s own
+      `AnthropicMessage.role: Literal["user", "assistant"]` (module-level Pydantic model) has no `"system"` variant at
+      all — the CLI's real request shape (a `system`-role entry inside `messages`, at minimum when the payload is this
+      large/this-workspace's-CLAUDE.md-sized) gets rejected at the schema layer before any translation logic even
+      runs. Reproduced identically across 6/6 separate bake-off attempts (100% reproduction, not flaky) — see that
+      plan's Progress Log for the full task list and exact error text. **This likely also explains why the
+      [REVIEW] P0 "smoke-test gate DONE 2026-08-19" below didn't catch it**: that test's own CLI invocation may not
+      have exercised this workspace's real, full CLAUDE.md as system content the same way (worth the sibling plan's
+      owner double-checking exactly what system-prompt payload that smoke test actually sent). Until this is fixed,
+      Codex/Luna is NOT usable for any real dispatch from a CLAUDE.md-carrying workspace, only for a stripped/bare
+      session — this bake-off's Codex/Luna lane is blocked pending a real fix here, not a config issue.
 - [ ] [INFRA] P0. Translate `tool_use`/`tool_result` round-tripping correctly. **Still open 2026-08-16, confirmed a
       real structural gap, not just untested** — the module's own code still renders `tool_use`/`tool_result` content
       blocks as a labelled text placeholder, not a real translation to Codex's own tool-execution model (unchanged
