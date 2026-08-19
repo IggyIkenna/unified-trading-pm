@@ -166,11 +166,37 @@ The UTC-alignment rule (§10.1 of `batch-live-architecture.md`) applies: MTDS ne
 
 ---
 
+## §8 Cross-references
+
+- **Batch/live invariant (global)**: [`batch-live-architecture.md`](batch-live-architecture.md) §1-§4
+- **Matching engine + L2Matcher**: [`batch-live-architecture.md §5`](batch-live-architecture.md)
+- **AMMMatcher (DeFi leg)**: [`amm-slippage-simulation.md`](amm-slippage-simulation.md)
+- **Live pipeline cascade**:
+  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
+- **Replay subsystem**: [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)
+- **Pipeline-mode partition**: [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
+- **DeFi archetype hedge legs**:
+  [`/codex/09-strategy/architecture-v2/archetypes/`](/codex/09-strategy/architecture-v2/archetypes/)
+- **BatchExecutionMode**: `unified_api_contracts.internal.execution.BatchExecutionMode`
+- **Shard-granularity SSOT**: `/plans/epics/security_and_cross_cutting_master.md`
+- **Empty-record rules**:
+  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
+- **CeFi expiry-window + 401 contract**:
+  [`/codex/02-data/honest-absence-downstream-handling.md §7`](/codex/02-data/honest-absence-downstream-handling.md)
+
+---
+
 ## §9 — CeFi adapter: expiry-window contract + 401≠honest-absence (2026-05-27)
 
 > Full codex SSOT:
 > [`/codex/02-data/honest-absence-downstream-handling.md §7`](/codex/02-data/honest-absence-downstream-handling.md).
 > Summary here for CeFi adapter authors.
+>
+> **Note (2026-08-19, docs-reconcile): the `record_empty` reason used below appears to conflict with §4/§7's ban on
+> `EXPECTED_INSTRUMENT_NOT_LISTED` for CeFi at instrument-day grain — flagged, NOT resolved here.** See
+> `plans/active/issues/docs_reconcile_bigger_scope_findings_2026_08_19.md` for the investigation (live-code evidence on
+> both sides, cross-repo, touches production data-correctness — needs an owner to read `EmptyConfirmedReason`'s own
+> docstring + `tardis_batch_download.py` in full before this section's code sample can be trusted as-is).
 
 ### Expiry-window pre-request filter (MANDATORY)
 
@@ -204,23 +230,3 @@ except VenueAuthError:  # classified from HTTP 401 by classify_venue_error()
 
 Rationale: a 401-stamped `empty_confirmed` row looks like a calendar gap to downstream consumers and will never be
 retried after key renewal. `attempted_failed` keeps the cell in the "retryable" queue.
-
----
-
-## §8 Cross-references
-
-- **Batch/live invariant (global)**: [`batch-live-architecture.md`](batch-live-architecture.md) §1-§4
-- **Matching engine + L2Matcher**: [`batch-live-architecture.md §5`](batch-live-architecture.md)
-- **AMMMatcher (DeFi leg)**: [`amm-slippage-simulation.md`](amm-slippage-simulation.md)
-- **Live pipeline cascade**:
-  [`/codex/05-infrastructure/live-pipeline-architecture.md`](/codex/05-infrastructure/live-pipeline-architecture.md)
-- **Replay subsystem**: [`/codex/05-infrastructure/replay-subsystem.md`](/codex/05-infrastructure/replay-subsystem.md)
-- **Pipeline-mode partition**: [`/codex/02-data/pipeline-mode-partition.md`](/codex/02-data/pipeline-mode-partition.md)
-- **DeFi archetype hedge legs**:
-  [`/codex/09-strategy/architecture-v2/archetypes/`](/codex/09-strategy/architecture-v2/archetypes/)
-- **BatchExecutionMode**: `unified_api_contracts.internal.execution.BatchExecutionMode`
-- **Shard-granularity SSOT**: `/plans/epics/security_and_cross_cutting_master.md`
-- **Empty-record rules**:
-  [`/codex/02-data/availability-manifest-and-data-status.md`](/codex/02-data/availability-manifest-and-data-status.md)
-- **CeFi expiry-window + 401 contract**:
-  [`/codex/02-data/honest-absence-downstream-handling.md §7`](/codex/02-data/honest-absence-downstream-handling.md)

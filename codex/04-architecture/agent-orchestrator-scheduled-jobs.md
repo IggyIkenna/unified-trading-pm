@@ -2,7 +2,7 @@
 doc_type: codex-ssot
 title: agent-orchestrator — scheduled-job dispatch mechanism
 summary: >-
-  SSOT for the AO scheduled-job dispatch layer: the 9 systemd timers, the plan_health modes they POST, the status model
+  SSOT for the AO scheduled-job dispatch layer: the 10 systemd timers, the plan_health modes they POST, the status model
   (dispatched/queued/no_capacity/quarantined/timeout/error), which statuses page, the capacity queue
   (ScheduledJobQueueRow), the 503-classification allowlist (BENIGN_503_RE), and the HARD RULE that a git pull does NOT
   reinstall a live timer unit.
@@ -39,6 +39,7 @@ code_refs:
   - agent-orchestrator/scripts/install-cefi-reconciliation-timer.sh
   - agent-orchestrator/scripts/install-ci-reconciler-timer.sh
   - agent-orchestrator/scripts/install-data-pipeline-alerts-reconciler-timer.sh
+  - agent-orchestrator/scripts/install-ao-watchdog-timer.sh
   - agent-orchestrator/scripts/scheduled_job_already_ran.py
 ---
 
