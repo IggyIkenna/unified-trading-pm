@@ -898,3 +898,20 @@ investigation confirmed are both achievable with existing primitives:
       workspace root. Per-tab visibility is working as designed; it requires each window to actually be opened at
       its own `.tabs/N` folder (this workspace's own existing "an interactive session IS slot N" rule), which at
       least this session isn't. Not fixed here — flagged to Harsh directly, his call how to restructure his windows.
+- **2026-08-19 (same session, scope leak found + fixed, cron repointed to a stable checkout)**: Harsh asked whether the
+  cron only scans this workspace — it did not. `ao-fleet-sync-tick.sh`'s usage-push loop globbed
+  `~/.claude/projects/*/*.jsonl` with no project filter, so ANY local Claude Code project's real, priced token spend
+  active within the recency window got pushed into this trading system's AO under his identity — a real scope leak,
+  not cosmetic (`ao-liveness-heartbeat.py`'s per-tab rows were already correctly scoped via `resolve_tab_number()`;
+  only the usage-push loop lacked the equivalent check). Fixed by adding the identical `-tabs-[0-9]+` guard to the
+  usage-push loop. Separately, Harsh asked to repoint the standing cron job from `.tabs/2` to the root
+  `agent-orchestrator` checkout, reasoning a `.tabs/N` worktree is more likely to be deleted/rotated than the root
+  checkout — reinstalled via `install-fleet-sync-cron.sh` run from the root checkout (bakes in an absolute path;
+  crontab entry now points there). Shipped from `.tabs/2` per operator instruction (not the root checkout, despite
+  cron now targeting root — root's own uncommitted copy of the identical fix was left as local-only, to be
+  reconciled by a future `git pull` there). Found and fixed one more real gap while shipping: `.tabs/2`'s own
+  `.venv` had drifted stale (`orchestrator==0.99.1...` vs the current `0.100.4...`) — `basedpyright` failed on
+  unrelated files (`codex_bridge_server.py`/`codex_mcp_proxy.py`, missing `tiktoken`/`mcp`) until
+  `uv pip install -e . --python .venv/bin/python3` resynced it (plain `uv pip install -e .` without an explicit
+  `--python` silently targeted the pyenv global environment instead of `.venv` from this shell — worth remembering
+  for any future manual dependency sync in a per-slot checkout). Evidence: `agent-orchestrator@24a249b42f`.
