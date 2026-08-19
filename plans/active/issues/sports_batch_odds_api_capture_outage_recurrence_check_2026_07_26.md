@@ -547,3 +547,15 @@ via `GET /api/backlog`) and its `prereqs.prerequisites` in the live `agent-orche
 covering the general mechanism + an immediate-mitigation todo (re-attach the gate to the current id — needs
 main/operator write access to the root-clone yaml, out of scope here). Checkbox still correctly left unchecked. Skipping
 with `reason_code: GATED`.
+
+**2026-08-19T22:59Z (slot 7, dispatched as review-role, task assigned_role=data_engineering)** — Re-dispatched item 1
+again, ~3h after the slot-33 19:48Z entry above. Read `ao_backlog_task_id_churn_orphans_handtuned_prereqs_2026_08_19.md`
+first per the pre-task plan/issue conflict-check HARD RULE — it already root-causes this exact re-dispatch pattern
+(orphaned `prereqs.prerequisites` gate) and its remaining fix is genuinely out of scope for a worker session, so not
+re-investigated or re-filed here. Live-reconfirmed rather than trusting the prior timestamp: fresh
+`census_odds_api_gap_verify_2026_08_02.py` run shows 277/2266 missing days, **byte-identical** to both the 05:57Z and
+19:48Z readings (same 2 residual ranges inside window-1: 2026-06-25..07-02, 2026-07-07..07-10) — genuinely zero new
+information this dispatch. VM `mtds-backfill-odds-20260817-062648` confirmed still RUNNING via `gcloud compute
+instances list` (same instance as the last 2 checks, no relaunch needed). `GET /api/backlog` confirms the current task
+id `...-bbab759cd4a7` still carries no `prereqs.prerequisites` — the orphaned gate remains unfixed. Checkbox correctly
+left unchecked. Skipping with `reason_code: GATED`.

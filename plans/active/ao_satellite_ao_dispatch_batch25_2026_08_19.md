@@ -152,10 +152,12 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
 
 ## Todos
 
-- [ ] [REVIEW] P2. Sweep the bare (non-slot) `unified-trading-pm` clone's dirty files against recent sub-agent task
+- [x] ✅ [REVIEW] P2. Sweep the bare (non-slot) `unified-trading-pm` clone's dirty files against recent sub-agent task
       logs to size how often a sub-agent wrote to a foreign checkout instead of its named `.tabs/<N>/` slot. Done
       when: a count/report exists (even if the answer is "zero other occurrences found"). Repo: unified-trading-pm.
-      Source: `plans/active/issues/subagent_wrote_to_foreign_checkout_bare_repo_path_2026_08_18.md` item 3.
+      Source: `plans/active/issues/subagent_wrote_to_foreign_checkout_bare_repo_path_2026_08_18.md` item 3. **DONE — 0
+      foreign sub-agent writes found** across 10 swept dirty files (all legit main/review/operator artifacts; see
+      Progress Log 2026-08-19).
 - [ ] [BACKEND] P2. Harden the na-eligibility-audit same-tranche concurrent-dispatch case: implement a dispatch-time
       lock per tranche in `server/plan_health.py::dispatch()`, OR narrow every na-eligibility-audit Phase-3
       file-touching step to `Edit`-only (never `Write`) for any file that might already exist from a
@@ -224,3 +226,15 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   duplicate-tranche dispatch guard".
 - **context-scout 2026-08-19**: verified the pre-existing context_scope (3 entries, set at authoring) — all paths
   confirmed resolving on disk, still the correct source-doc reading list; no change needed.
+- **review sweep 2026-08-19 (item 1 done)**: swept the bare `unified-trading-pm` clone
+  (`/home/ubuntu/unified-trading-system-repos/unified-trading-pm/`) — 10 dirty files total (2 modified tracked + 8
+  untracked). **Zero foreign sub-agent writes found.** All 10 are legitimate orchestrator artifacts: 8 untracked
+  `plans/active/issues/*_2026_08_19.md` (filed by main / flagged by review-role agents — `ao_sqlite_database_locked…`,
+  `backlog_500_malformed_depends_on_comment…`, `mac_host_all_12_slots…`, `mac_slot3_…`, `macbook_pro_slot2_…`,
+  `main_agent_own_slot_stale…`); 2 modified tracked files (`mac_slot0_base_checkout_stuck_dirty_files_2026_08_11.md`
+  main's Progress-Log append re Mac slot-0 scope growth; `prediction_satellite_ao_dispatch_batch11_2026_08_13.md`
+  main's fix moving a malformed inline `depends_on` comment off the machine-parsed line — matches
+  `backlog_500_malformed_depends_on_comment_2026_08_19.md`); plus 2 non-doc artifacts
+  (`scripts/infra/resource-watchdog/resource-watchdog.sh.bak_pre_urgent_fix`, `slack-data-pipeline-alerts-24h.json`).
+  The 2026-08-18 Elysium incident remains the only known occurrence; the mechanical-guard item (source doc todo 2)
+  stays NA as the residual.

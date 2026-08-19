@@ -412,7 +412,26 @@ in this read-only audit pass (time-bounded scope).
       `perp_funding`/`perp_daily_ctx`, DeFi bucket) for a day AFTER both crons have had a chance to fire on fresh raw
       input — do not re-check same-day as the raw fire. **Repo: deployment-service** (verification only, no code
       change expected unless a cron fire genuinely fails).
-- [x] ✅ [DATA] P2 (c). **RESOLVED 2026-08-03 — investigated, no code/registry change needed; documented below.** The
+- [ ] [INFRA] P1. **NEW 2026-08-19 (slot-4) — the corpus-freshness gate structurally CANNOT clear under the current
+      cron cadence; one-day skew mechanism pinned with direct evidence (the real blocker behind every prior GATED
+      re-check).** Both crons verified FIRED and healthy this pass: fwd-cron log 2026-08-19 09:00Z launched
+      `cefi-fwd-20260819-090020` capturing `day=2026-08-18`; perp-funding cron log 2026-08-19 07:00Z launched
+      `features-cefi-cefi-20260819-070011`. Raw `derivative_ticker` IS flowing again (CeFi bucket, day=2026-08-17:
+      BINANCE-FUTURES 717 / BYBIT 728 / OKX-SWAP 446 / KRAKEN-FUTURES 280 / BITGET-FUTURES 744 / BITFINEX-FUTURES 74
+      objects — first raw flow since ~2026-05-20). But `perp_funding`/`perp_daily_ctx` remain **0 for 2026-08-15..19**
+      (bounded single-prefix `list_blobs` probe, never a corpus walk) because
+      `deployment-service/scripts/vm/launch-cefi-perp-funding-daily-cron-vm.sh:160` fires the corpus compute with
+      `--start-date $(date -u +\%F) --end-date $(date -u +\%F)` (= TODAY) at 07:00Z, while the 09:00Z fwd-cron fire
+      captures only YESTERDAY's Tardis raw — so the corpus compute always targets a day whose raw input does not yet
+      exist, and every run honest-skips. Verified in the features-VM run.logs (both 08-18 and 08-19 runs):
+      "`<venue>/<day> no ticker shards — honest skip`", `DONE start=<day> end=<day> venue-days=0 total_funding_rows=0`,
+      `exit rc=0` — the compute is healthy, just structurally empty. **Fix direction**: change the corpus cron's date
+      selection to a day whose raw has landed — e.g. compute `--start-date <D-1> --end-date <D-1>` with the fire time
+      moved to AFTER the same day's 09:00Z fwd capture completes (or a trailing window ending D-1), then hot-fix the live
+      `cefi-perp-funding-daily-cron-20260815-212924` VM's `/etc/cron.d/cefi-perp-funding-daily` line (mirror slot-17's
+      2026-08-17 hot-fix pattern). **Blocks** the step-3 physical-delete todo in this doc permanently until fixed — this
+      is the root cause of the gate that has failed every re-check since 2026-08-10. **Repo: deployment-service**
+      (`launch-cefi-perp-funding-daily-cron-vm.sh`).
       `gas_fees` venue==chain shape is NOT an open design question between the two options this todo originally posed —
       a THIRD option, already shipped, supersedes both. `gas_fee_handler.py`'s `venue=<chain-name>` reuse was fixed
       2026-07-22 (`market-tick-data-service@522185a6`): every `write_defi_rows()` call site now stamps a synthetic
@@ -664,7 +683,24 @@ doc for the full history).
   deployment-service blocker directly is out of this task's `[DATA]`/data_engineering craft+repo scope (already
   separately tracked as its own todo above). No delete executed, no code shipped. Released `reason_code=GATED`.
 
-## Session final report — 2026-08-04 (`/autonomous`, operator away ~8h from ~01:00)
+- **slot-4 2026-08-19 ~22:57Z (data_engineering, task `defi_cefi_venue_chain_axis_contamination-6d8648d7fd76`, step-3
+  physical-delete re-check — first re-check AFTER the 2026-08-17 INFRA cron fixes shipped)**: Fresh-pulled all repos.
+  Re-verified both gates. **(1) Gate 2 (in-flight defi rebuild) CLEAR**: `gcloud compute instances list
+  --filter="name~canonical-migration"` empty. **(2) Gate 1 (corpus freshness) STILL FAIL**, but the blocker is now
+  PINNED and materially different from every prior re-check: raw `derivative_ticker` IS flowing again (CeFi bucket,
+  day=2026-08-17: BINANCE-FUTURES 717 / BYBIT 728 / OKX-SWAP 446 / KRAKEN-FUTURES 280 / BITGET-FUTURES 744 /
+  BITFINEX-FUTURES 74 objects — written by the 08-18 09:00Z fwd fire) — yet `perp_funding`/`perp_daily_ctx` remain 0 for
+  2026-08-15..19. Root-caused via both cron-host logs + the features-VM run.logs: `launch-cefi-perp-funding-daily-cron-
+  vm.sh:160` fires the corpus compute at 07:00Z with `--start-date $(date +%F)` (= TODAY), while the 09:00Z fwd fire
+  captures only YESTERDAY's raw — the corpus compute always targets a day whose raw input does not exist yet, so every
+  run honest-skips ("no ticker shards — honest skip", venue-days=0, exit 0; verified for the 08-18 AND 08-19 runs). The
+  corpus-freshness gate structurally cannot clear under this cadence — filed a new `[INFRA] P1` todo above naming the
+  exact launcher line + fix direction. Also confirmed the sibling follow-up todo's step (1): both cron hosts DID fire
+  (fwd launched `cefi-fwd-20260819-090020`, perp-funding launched `features-cefi-cefi-20260819-070011`). 98
+  contaminated objects (7 venues × 7 days 2026-05-16..22 × 2 data_types) still present in the DeFi bucket — delete
+  remains correctly BLOCKED on gate (1); the fresh 5-part delete-safety proof stays pending until step 1 lands. No
+  delete executed, no code shipped. Released `reason_code=GATED` (re-check once the perp-funding cron produces non-zero
+  output — i.e. after the skew fix lands or a manual `--start <D-1>` recompute runs).
 
 **Dispatch**: operator screenshotted deployment-ui's DEFI Distinct Values panel showing non-canonical venues/chains/
 data_types/instrument_types and GMX still appearing as a venue; asked to investigate, check GCS/manifest, and execute

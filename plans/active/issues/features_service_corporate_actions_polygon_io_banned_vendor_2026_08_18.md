@@ -116,3 +116,23 @@ independently re-derived, this is a direct-read confirmation of the adapter's re
   re-sourcing decision — yfinance vs. a paid contract for corporate-actions dividends/splits) is genuine
   diligence/judgment work; todo 3 is contingent on todo 2's outcome. `assigned_vm` unchanged.
 - **context-scout 2026-08-19**: populated/refreshed context_scope (5 entries).
+- **blast-radius confirmation 2026-08-19** (via `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 1, review):
+  **CONFIRMED UNSCHEDULED — built-but-never-run.** `--operation corporate_actions --mode batch` is a registered,
+  callable operation (`features-service@afa03168`, 2026-08-03 — `cli/main.py` `operations` map) but no production job
+  dispatches it today. Evidence: (1) not in `CALENDAR_FEATURE_GROUPS` (`batch_handler.py:46` — the scheduled
+  `--operation compute` batch iterates only time_features/economic_events/yield_curve/economic_results; the handler's
+  own docstring confirms corporate_actions is NOT wired into `process_day()`); (2) no Cloud Scheduler job — the full
+  asia-northeast1 list has no corporate_actions/economic_results/forexfactory job; the only features-calendar scheduler
+  `uts-prod-features-calendar-t1-schedule` is **PAUSED** and its target Cloud Run Job
+  `uts-prod-features-calendar-service-t1-recon` **does not exist** (`gcloud run jobs describe` → "Cannot find job");
+  (3) no deployment-service/orchestrator dispatcher — `cloud_run_job_registry.py` classifies the t1-recon stem but is
+  not a dispatcher, agent-orchestrator has zero `corporate_actions` refs, and
+  `terraform/services/features-calendar-service/` is an un-applied scaffold (`n-service` placeholders); (4) the only
+  `--operation corporate_actions` dispatch configs in the workspace target the **instruments-service** image (the
+  IBKR/yfinance handler — `configs/sharding.corporate-actions.yaml` with zero consumers, and instruments-service
+  `main.tf` Workflow, self-superseded by the t1-recon jobs per its own comment), NOT this features-service Polygon.io
+  calculator. **Blast radius of the Polygon.io adapter: ZERO live production dispatch — no scheduled job pulls Polygon
+  dividends/splits today.** Also corrects this doc's premise: `earnings_results` has no independent dispatcher either —
+  it runs only inside this same unscheduled `--operation corporate_actions`, so "genuinely dispatched" holds only as
+  "registered callable operation", not "scheduled". Limitation: GCS presence (has the handler EVER written data) not
+  machine-verified — `gcloud storage` CLI is guardrail-blocked on this host.

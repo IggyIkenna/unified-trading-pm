@@ -61,7 +61,7 @@ rationale).
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Confirm current blast radius of the banned-vendor `corporate_actions` calculator** — is
+- [x] ✅ [REVIEW] P1. **Confirm current blast radius of the banned-vendor `corporate_actions` calculator** — is
       `features_service/calendar/cli/handlers/corporate_actions_handler.py`'s CLI (`--operation corporate_actions
       --mode batch`) actually invoked by a scheduled/production job today, or built-but-never-run? Check Cloud
       Scheduler / cron / any orchestrator config that could dispatch this operation (the sibling `earnings_results`
@@ -70,6 +70,9 @@ rationale).
       (is it wired to a live schedule, yes/no), not a judgment call. Done when: a definitive answer is recorded
       (scheduled + evidence, or confirmed dead/unscheduled) in the source doc's Progress Log. Source:
       `features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md` todo 1 (`[REVIEW] P1`).
+      ✅ 2026-08-19: **CONFIRMED UNSCHEDULED (built-but-never-run)** — `--operation corporate_actions --mode batch` is
+      registered/callable (features-service@afa03168) but no Cloud Scheduler / cron / orchestrator config dispatches it
+      today; full evidence in the source doc's Progress Log.
 - [ ] [DOC] P3. **Add a one-line note to `batch_handler.py` on why the calendar domain has no distinct paper mode**
       — read `batch_handler.py`/`live_handler.py` (features-service calendar CLI) to confirm whether paper reuses
       batch output directly (calendar events are exogenous/scheduled, same fact regardless of trading mode) or
