@@ -1389,6 +1389,256 @@
           can trade somewhere we cannot.
         </p>
       </div>
+      <h3>The venue and chain surface, counted <b class="ev ev-verified">✓ verified</b></h3>
+      <p>
+        Counted by importing the registries directly rather than sampling them, 2026-08-19. <b>192</b> venues are
+        declared (<code>VENUE_DATA_TYPE_CAPABILITIES</code>), and DeFi venue identity carries the chain in the token
+        itself — the same protocol on two chains is genuinely two venues, so the chain surface below is wider than any
+        single-chain description would suggest.
+      </p>
+      <div class="stat-row">
+        <div class="stat">
+          <span class="v">192</span><span class="k">Venues declared <span class="u"><code>VENUE_DATA_TYPE_CAPABILITIES</code></span></span>
+        </div>
+        <div class="stat">
+          <span class="v">177</span><span class="k">Canonically grouped by asset group <span class="u"><code>VENUES_BY_ASSET_GROUP</code></span></span>
+        </div>
+        <div class="stat">
+          <span class="v">16</span><span class="k">Chains, named below <span class="u">19 distinct chain-string tokens once Hyperliquid's transport suffixes are counted separately</span></span>
+        </div>
+        <div class="stat">
+          <span class="v">121</span><span class="k">DeFi protocol×chain capability entries <span class="u"><code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code></span></span>
+        </div>
+      </div>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Venues by asset group</span><span class="note"><code>VENUES_BY_ASSET_GROUP</code>, 2026-08-19</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset group</th>
+                <th>Venues</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-data">CeFi</td>
+                <td>25</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data">DeFi</td>
+                <td>103</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post">TradFi</td>
+                <td>8</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec">Sports</td>
+                <td>39</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec">Prediction</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><b>Total, canonically grouped</b></td>
+                <td><b>177</b> of 192 declared</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        The remaining 24 declared entries (e.g. <code>AAVE_V3-SCROLL</code>, <code>MORPHO-ARBITRUM</code>,
+        <code>UNISWAP-ETHEREUM</code>) carry capability data in <code>VENUE_DATA_TYPE_CAPABILITIES</code> but are not
+        yet enumerated in the canonical per-asset-group list — declared capability ahead of categorisation, not a
+        missing venue.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The chain surface, named</span><span class="note">Distinct chain tokens across the registries, not a sample</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Chain</th>
+                <th>Chain ID <span class="u">(mainnet)</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Arbitrum</td>
+                <td>42161</td>
+              </tr>
+              <tr>
+                <td>Avalanche</td>
+                <td>43114</td>
+              </tr>
+              <tr>
+                <td>Base</td>
+                <td>8453</td>
+              </tr>
+              <tr>
+                <td>Blast</td>
+                <td>81457</td>
+              </tr>
+              <tr>
+                <td>BSC</td>
+                <td>56</td>
+              </tr>
+              <tr>
+                <td>Ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td>Hyperliquid <span class="u">(L1)</span></td>
+                <td>native, non-EVM</td>
+              </tr>
+              <tr>
+                <td>Linea</td>
+                <td>59144</td>
+              </tr>
+              <tr>
+                <td>Mantle</td>
+                <td>5000</td>
+              </tr>
+              <tr>
+                <td>Optimism</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td>Plasma</td>
+                <td>9745</td>
+              </tr>
+              <tr>
+                <td>Polygon</td>
+                <td>137</td>
+              </tr>
+              <tr>
+                <td>Scroll</td>
+                <td>534352</td>
+              </tr>
+              <tr>
+                <td>Solana</td>
+                <td>native, non-EVM</td>
+              </tr>
+              <tr>
+                <td>Starknet</td>
+                <td>native, non-EVM</td>
+              </tr>
+              <tr>
+                <td>zkSync</td>
+                <td>324</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        Hyperliquid contributes three additional distinct chain-string tokens beyond the name above
+        (<code>hyperliquid_api</code>, <code>hyperliquid_rest</code>, <code>hyperliquid_testnet</code> — transport
+        variants, not separate chains), which is why a raw token count over the registries reads 19 rather than 16.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">DeFi protocol × chain spread</span><span class="note"><code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> venue keys, split on the trailing <code>-CHAIN</code></span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Chains</th>
+                <th>Which</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>AAVE_V3</code></td>
+                <td>10</td>
+                <td>arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon, scroll, zksync</td>
+              </tr>
+              <tr>
+                <td><code>BALANCER</code></td>
+                <td>6</td>
+                <td>arbitrum, avalanche, base, ethereum, optimism, polygon</td>
+              </tr>
+              <tr>
+                <td><code>BEEFY</code></td>
+                <td>6</td>
+                <td>arbitrum, avalanche, base, bsc, ethereum, polygon</td>
+              </tr>
+              <tr>
+                <td><code>COMPOUND_V3</code></td>
+                <td>6</td>
+                <td>arbitrum, base, ethereum, optimism, polygon, scroll</td>
+              </tr>
+              <tr>
+                <td><code>CHAINLINK</code></td>
+                <td>5</td>
+                <td>arbitrum, base, ethereum, optimism, polygon <span class="u">(oracle, not a tradable venue)</span></td>
+              </tr>
+              <tr>
+                <td><code>MORPHO</code></td>
+                <td>5</td>
+                <td>arbitrum, base, ethereum, optimism, polygon</td>
+              </tr>
+              <tr>
+                <td><code>UNISWAP_V3</code></td>
+                <td>5</td>
+                <td>arbitrum, base, ethereum, optimism, polygon</td>
+              </tr>
+              <tr>
+                <td><code>PANCAKESWAP_V3</code></td>
+                <td>4</td>
+                <td>arbitrum, base, bsc, ethereum</td>
+              </tr>
+              <tr>
+                <td><code>CURVE</code></td>
+                <td>3</td>
+                <td>avalanche, ethereum, optimism</td>
+              </tr>
+              <tr>
+                <td><code>PENDLE</code></td>
+                <td>2</td>
+                <td>arbitrum, ethereum</td>
+              </tr>
+              <tr>
+                <td><span class="u">Solana-native set</span></td>
+                <td>1 each</td>
+                <td>
+                  <code>JUPITER</code>, <code>KAMINO</code>, <code>METEORA</code>, <code>ORCA</code>,
+                  <code>RAYDIUM</code>, plus <code>JITO</code>, <code>JITORESTAKING</code>, <code>MARGINFI</code>,
+                  <code>MARINADE</code>, <code>SOLEND</code>, <code>SOLBLAZE</code>, <code>SANCTUM</code>,
+                  <code>LIFINITY</code>, <code>PHOENIX</code>, <code>PYTH</code>
+                </td>
+              </tr>
+              <tr>
+                <td><span class="u">Single-chain named venues</span></td>
+                <td>1 each</td>
+                <td>
+                  <code>HYPERLIQUID</code> (hyperliquid_l1), <code>ASTER</code>, <code>EXTENDED-STARKNET</code>
+                  (starknet), <code>ETHENA-ETHEREUM</code>, <code>LIDO-ETHEREUM</code>, plus
+                  <code>AAVE-PLASMA</code> / <code>FLUID-PLASMA</code> on the newest chain
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">A registry defect this count surfaced, named rather than smoothed over</span>
+        <p>
+          <code>VENUE_CHAIN_MAP</code> — a different, narrower registry object used for wallet-grouping logic — declares
+          only <b>15 venues across 4 chains</b>. It is not the source for the counts above and was not used to derive
+          them; anything that <em>does</em> derive chain coverage from that map specifically would under-report. Tracked
+          as a registry fix, not a documentation one — <span class="u">registry_ground_truth_2026_08_19.md</span>.
+        </p>
+      </div>
       <h3>Canonical instrument IDs — one builder, five asset groups</h3>
       <p>
         There is a single dispatch point for instrument identity across every asset group. The consequence is the part
@@ -1586,9 +1836,101 @@
       <summary>Browse the universe — asset group, venue, instrument type, data type</summary>
       <p style="font-size: 0.95rem; color: var(--ink-3)">
         Structure shown with representative entries beneath the asset-group headers. Each header's ready / not-ready /
-        unverified split is measured (2026-08-18, the same readiness pass as <a href="#s14">§14</a>); every
-        coverage-percentage cell beneath it is <b class="pend">pending</b> measurement — the hierarchy, grouping and
-        controls are what this draft is asking you to react to.
+        unverified split is measured (2026-08-18, the same readiness pass as <a href="#s14">§14</a>). The
+        asset-group-level coverage percentage is now measured (below, 2026-08-19); per-venue / per-data-type cells
+        inside each tree remain <b class="pend">pending</b> at that finer grain — the hierarchy, grouping and controls
+        are what this draft is asking you to react to.
+      </p>
+      <div class="callout">
+        <span class="tag">What "coverage" means here, and what it deliberately excludes</span>
+        <p>
+          The percentages below are <b>pipeline coverage</b> — declared capability that has actually reached
+          instruments-service, then market-tick-data-service (raw capture), then market-data-processing-service
+          (candle and derived computation), then features-service. Reachable = captured / (captured + attempted-failed
+          + expected-unattempted), the same formula <a href="#s4">§04</a> states.
+        </p>
+        <p>
+          <b>Strategy and execution are deliberately excluded from this percentage</b> — not because they are
+          unmeasured, but because a percentage there is meaningless. Both scale with configuration iterations and
+          client count rather than a fixed declared universe: a client adding a fifth strategy config, or running forty
+          live strategies instead of four, says nothing about coverage, and forcing a denominator onto either would
+          manufacture a number shaped like the ones below without meaning the same thing.
+        </p>
+      </div>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Reachable coverage, by asset group</span
+          ><span class="note"
+            >Volume-weighted, measured 2026-08-19 <span class="u"
+              >— instruments-service <code>measure_honest_coverage.py</code>, read via UTL
+              <code>cloud_interface</code>, no subprocess GCS calls</span
+            ></span
+          >
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Asset group</th>
+                <th>Reachable coverage</th>
+                <th>Denominator</th>
+                <th>Shards</th>
+                <th>Venues in manifest</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-post">Sports</td>
+                <td>99.26%</td>
+                <td>6,488,597</td>
+                <td>822</td>
+                <td>46</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec">Prediction</td>
+                <td>92.81%</td>
+                <td>525,293</td>
+                <td>19</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post">TradFi</td>
+                <td>86.96%</td>
+                <td>9,333,876</td>
+                <td>244</td>
+                <td>9</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data">CeFi</td>
+                <td>45.57%</td>
+                <td>21,653,365</td>
+                <td>73</td>
+                <td>22</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data">DeFi</td>
+                <td>40.94%</td>
+                <td>82,034,301</td>
+                <td>2,804</td>
+                <td>105</td>
+              </tr>
+              <tr>
+                <td><b>All, volume-weighted</b></td>
+                <td><b>48.73%</b></td>
+                <td>120,035,432</td>
+                <td>3,962</td>
+                <td>—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        This is a one-day-fresher re-run of the same measurement <a href="#s4">§04</a> quotes at
+        48.54% / 119,500,618 / 3,960 shards (2026-08-18) — the two are consistent within a day's normal drift, not two
+        different methods. "Venues in manifest" is the distinct-venue count observed in the coverage manifest at this
+        grain, and is not directly comparable to the registry-declared per-asset-group counts in <a href="#s3">§03</a>
+        (a venue appears here only once it has at least one attempted or captured shard).
       </p>
 
       <details class="tree">
@@ -2027,6 +2369,98 @@
           deliberate and is where the line sits.
         </p>
       </div>
+      <h3>The 9 families, 60 archetypes <b class="ev ev-verified">✓ verified</b></h3>
+      <p>
+        Every archetype belongs to exactly one family (<code>StrategyArchetype</code>, <code>StrategyFamily</code>,
+        <code>ARCHETYPE_TO_FAMILY</code> — counted by import, not by reading the enum source, 2026-08-19). A family is
+        the trade shape; an archetype is a specific structural variant within it — <code>CARRY_BASIS_PERP</code> and
+        <code>CARRY_BASIS_PERP_INV</code> are both carry, on opposite sides of the same basis relationship.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Families → archetypes</span><span class="note">60 total, <code>ARCHETYPE_TO_FAMILY</code></span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>Count</th>
+                <th>Archetypes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>VOL_TRADING</code></td>
+                <td>19</td>
+                <td>
+                  Options, RV/IV arb, spread structures, carry, covered calls, protective puts, straddle, synthetic
+                  delta, market making, ML-lean, 0DTE gamma scalping, 0DTE pin risk, term-structure arb, term-structure
+                  slope, dispersion, variance swap, LEAPS convexity, cross-asset spread, ratio spread
+                </td>
+              </tr>
+              <tr>
+                <td><code>CARRY_AND_YIELD</code></td>
+                <td>11</td>
+                <td>
+                  Basis dated (+ inverse), basis perp (+ inverse), funding dispersion, staked basis (+ dated), recursive
+                  staked, recursive borrow/lending-only, yield rotation lending, staking simple
+                </td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING</code></td>
+                <td>10</td>
+                <td>
+                  Continuous, event-settled, passive spread, inventory skew, ML-lean, queue microstructure, prediction,
+                  plus the three DeFi LP shapes — concentrated, pool, vault
+                </td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_STRUCTURAL</code></td>
+                <td>8</td>
+                <td>
+                  Price dispersion, sports dutching, liquidation capture, MEV sandwich, MEV JIT liquidity, MEV backrun,
+                  MEV liquidation bundle, cross-domain event
+                </td>
+              </tr>
+              <tr>
+                <td><code>PORTFOLIO</code></td>
+                <td>4</td>
+                <td>Multi-strategy, risk parity, factor allocation, tactical overlay</td>
+              </tr>
+              <tr>
+                <td><code>RULES_DIRECTIONAL</code></td>
+                <td>3</td>
+                <td>Continuous, event-settled, TSMOM BTC CTA</td>
+              </tr>
+              <tr>
+                <td><code>ML_DIRECTIONAL</code></td>
+                <td>2</td>
+                <td>Continuous, event-settled</td>
+              </tr>
+              <tr>
+                <td><code>STAT_ARB_PAIRS</code></td>
+                <td>2</td>
+                <td>Fixed pairs, cross-sectional</td>
+              </tr>
+              <tr>
+                <td><code>EVENT_DRIVEN</code></td>
+                <td>1</td>
+                <td>Event-driven (single archetype family)</td>
+              </tr>
+              <tr>
+                <td><b>Total</b></td>
+                <td><b>60</b></td>
+                <td>9 families</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        This is the structural catalogue, not a readiness claim — an archetype existing in the registry is not the same
+        as an archetype being satisfiable on a given venue in a given mode; that check is per <a href="#s14">§14</a>.
+      </p>
     </details>
   </section>
 
