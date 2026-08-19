@@ -568,3 +568,8 @@ every day narrows or closes it permanently.
   already complete; item 8 superseded by `tradfi_consolidated_closeout_2026_07_18.md`'s standing
   `archive_exempt: true`). See the resolution note on the checkbox itself above. Doc now has 0 open todos —
   candidate for a future ARCHIVE pass, not executed here (out of this audit's scope). `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — reaffirmed.** 0 open
+  todos (grep-confirmed, unchanged since 08-18's closure of the sole remaining propagation checkbox). Standing
+  `archive_exempt: true` ruling (2026-08-18) not re-litigated: completed decision log kept as the historical record
+  20+ other tradfi docs cite; a real 6-step archival's referrer-fixing blast radius remains disproportionate to this
+  doc's remaining function. `assigned_vm` unchanged.

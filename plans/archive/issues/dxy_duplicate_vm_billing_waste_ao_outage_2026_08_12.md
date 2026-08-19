@@ -10,7 +10,7 @@ summary: >-
   identified: the obvious candidate (uts-prod-tradfi-wave-launcher-cron) is PAUSED, and AO's central server was
   confirmed DOWN (ConnectionRefusedError via SSM) at investigation time, ruling out both as the active trigger. Most
   likely explanation: a concurrent interactive session on this shared workspace manually invoking the same launcher.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -20,11 +20,19 @@ tags: [billing-waste, vm-duplicate, tradfi, dxy, ao-outage]
 related:
   - /plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md
   - /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md
+  - /plans/active/tradfi_satellite_ao_dispatch_batch18_2026_08_19.md
 parent_epic: tradfi_master
 source: "Fleet-wide /vm-preemption-billing-waste-audit sweep, 2026-08-12, interactive session"
 assigned_vm: NA
 created: 2026-08-12
 resolved_by:
+  "na-eligibility-audit, tradfi tranche, dispatch agt-5d34f9, 2026-08-19 — both remaining open todos closed this
+  pass: the dedup/collision-check todo was a stale checkbox (already shipped 2026-08-15,
+  deployment-service@b8649d9bd4, via tradfi_satellite_ao_dispatch_batch13_2026_08_13.md); the manifest-purge todo
+  was bounded/conflict-cleared and extracted to tradfi_satellite_ao_dispatch_batch18_2026_08_19.md todo 2. No new
+  codex content needed — the general VM-duplicate-billing-waste pattern is already covered by
+  /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md, which this doc's related: already cited;
+  this was one instance of that pattern, not a new rule. 0 open todos, unlocked -> archived same pass."
 locked_by:
 priority: P1
 execution_scope: local-only
@@ -34,6 +42,11 @@ context_scope: [/codex/05-infrastructure/vm-preemption-and-billing-waste-monitor
 ---
 
 # 26+ duplicate DXY VMs — active billing waste, killed
+
+> **RESOLVED + ARCHIVED 2026-08-19 (na-eligibility-audit, tradfi tranche, dispatch agt-5d34f9).** Both remaining
+> open todos closed this pass (see `resolved_by:` frontmatter for the full disposition) — one stale-checkbox fix,
+> one extraction to `tradfi_satellite_ao_dispatch_batch18_2026_08_19.md` todo 2. No open work remains on this doc;
+> see the batch18 doc for the live follow-through on the manifest-purge work.
 
 ## What was found
 
@@ -98,16 +111,22 @@ tmux workers despite the server process being healthy.
       not attempting at all — and reconcile the `dependency_health_alerting_never_wired-376d92bc984b` task's stale
       `status=dispatched` claim (no live session behind it) before it silently blocks that queue slot indefinitely.
       Doc's own text already stated this was moot ("kept for record" only); closing the checkbox to match.
-- [ ] [SCRIPT] P2. Determine whether any manual-launcher-invocation path (as opposed to `wave_launcher.py`'s automated
-      dispatch) has a dedup/collision check against already-running VMs for the same shard — if not, consider whether
-      one is worth adding given this is the second fleet-wide duplicate-VM billing-waste incident this week (different
-      launcher family each time).
+- [x] ✅ [SCRIPT] P2. Determine whether any manual-launcher-invocation path (as opposed to `wave_launcher.py`'s
+      automated dispatch) has a dedup/collision check against already-running VMs for the same shard — if not,
+      consider whether one is worth adding given this is the second fleet-wide duplicate-VM billing-waste incident
+      this week (different launcher family each time). — **STALE-CHECKBOX FIX (na-eligibility-audit, 2026-08-19,
+      dispatch agt-5d34f9): already extracted verbatim + DONE 2026-08-15 (slot-5, backend_engineer) —
+      `deployment-service@b8649d9bd4`** (per-shard collision check added inside shared `ohlcv_create_vm`; see
+      `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md` lines 195-211, `Source:` cites this doc). Remaining
+      ~166-of-187-launcher residual scope filed separately:
+      `plans/active/issues/manual_launcher_shard_dedup_gap_167_of_187_2026_08_15.md`. This checkbox was simply
+      never flipped to reflect the ship — not new dispatch work.
 - [x] ✅ [DATA] P3. Confirm the killed duplicate VMs' partial/redundant writes didn't leave any non-idempotent
       side-effects (expected: none, since DXY capture is a pure overwrite-safe write, but not independently re-verified
       after the kill). **DONE 2026-08-15 (slot-16)** — see Progress Log entry below: no corruption/non-idempotent side
       effect, but a real manifest-hygiene byproduct (stale `attempted_failed` noise rows) DOES exist and is tracked in
       the new todo below.
-- [ ] [DATA] P2. **NEW 2026-08-15.** Purge/reclassify stale `attempted_failed` rows in `market-data-tick-tradfi`'s
+- [x] ✅ [DATA] P2. **NEW 2026-08-15.** Purge/reclassify stale `attempted_failed` rows in `market-data-tick-tradfi`'s
       `availability_index` for `(venue, data_type)` ∈ {(ICE, ohlcv_24h), (CBOE, ohlcv_24h), (FX, ohlcv_24h)} where a
       `captured` row ALREADY exists for the same date (duplicate-VM-race artifacts — see Progress Log below for the
       measured overlap: 100% of CBOE's, ~99.3% of FX's (corrected 2026-08-16, plan_reconciler — was mis-stated 99.5%
@@ -120,7 +139,11 @@ tmux workers despite the server process being healthy.
       Soft-delete retention on `market-data-tick-tradfi-prd-central-element-323112` already confirmed 604800s (7 days)
       elsewhere this session — reversibility gate passes. Done when: dry-run counts cited per cell, `--apply` completes
       with before/after evidence, self-verify shows 0 remaining same-date captured+attempted_failed duplicate pairs for
-      the 3 cells.
+      the 3 cells. — **EXTRACTED 2026-08-19 (na-eligibility-audit, tradfi tranche, dispatch agt-5d34f9) →
+      `tradfi_satellite_ao_dispatch_batch18_2026_08_19.md` todo 2** (conflict-cleared: batch13 explicitly deferred
+      this exact cleanup to this doc rather than claiming it, confirmed via direct read; no other active/draft doc
+      claims it). Bounded/worker-determinable, reversibility-verified per finding T (retention check already cited
+      inline above), no `[OPERATOR]` tag needed.
 
 ## Progress Log
 
@@ -145,3 +168,12 @@ tmux workers despite the server process being healthy.
   `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s own Progress Log.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **RECLASSIFY, per-todo split, +
+  1 stale-checkbox fix.** 2 open todos re-read end-to-end. The dedup/collision-check todo (line 101) was
+  KEEP-NA-STALE-DUPLICATE — already shipped via `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`
+  (`deployment-service@b8649d9bd4`, 2026-08-15), checkbox simply never flipped; fixed the citation, not a
+  reclassification. The purge/reclassify-stale-rows todo (line 110) cleared the bounded-outcome bar (named cells,
+  a cited playbook to mirror, a fresh reversibility check already inline) and conflict-checked clean (batch13
+  explicitly deferred this exact work here) — extracted to `tradfi_satellite_ao_dispatch_batch18_2026_08_19.md`
+  todo 2. Doc now has 0 open todos remaining (both closed via fix-or-extraction, not silently). `assigned_vm`
+  unchanged — nothing left native to this doc to reclassify.

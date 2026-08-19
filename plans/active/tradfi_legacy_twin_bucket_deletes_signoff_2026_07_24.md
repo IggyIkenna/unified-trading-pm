@@ -387,3 +387,11 @@ restated here.
   the whole-doc RECLASSIFY rule, 1-of-2 bounded keeps the doc KEEP-NA; flagging for a future `/ag-closeout-audit`
   satellite-extraction pass (not this skill's mechanism) rather than promoting unilaterally. `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, stale-items reaffirmed —
+  no new change.** Sole open todo (the 3-bucket legacy-twin DELETE) re-read end-to-end; its embedded dispatch-shape
+  text (re-run the dry-run against the existing 900-row `orphan_sweep_tradfi.parquet` report) is still stale per the
+  2026-08-17 marker's finding — the walk that would produce a fresh, trustworthy twin-coverage number
+  (`tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`, `assigned_vm: planning`) has not run in
+  the intervening 2 days. Not reclassifying, per the same reasoning: this remains a real prod-bucket delete gated
+  per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, and the real next step lives in the already-
+  AO-dispatched doc above, not a re-run of this doc's own literal dispatch shape. `assigned_vm` unchanged.

@@ -310,3 +310,17 @@ answer):**
   `[OPERATOR]`-tagged; doc's own text states plainly this is "a genuine design/scope decision, not a mechanical bug."
   Genuinely operator-gated. `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — independent review
+  declines to promote the `classify_venue_error()` todo (line 292) despite a Phase-1 hunter flagging it
+  MISCLASSIFIED_LIKELY_AO_ELIGIBLE.** The todo offers two structurally different fixes with no prescribed choice
+  between them — (a) alias `VENUE_ERRORS_TRADFI["databento"]`'s entries under every Databento-backed tradfi venue
+  key (a scoped registry edit), or (b) thread a provider tag through `sentinels.py`'s shared
+  `failed_shards`/`failed_per_dt_by_venue` Tier-2/Tier-3 call sites (a cross-cutting change to shared
+  shard-level-failure-isolation machinery, `/codex/04-architecture/shard-level-failure-isolation.md`) — picking
+  between them is a design call, not pure execution, and per the "never re-litigate" clause's own caution about
+  self-framed-bounded todos on live-dispatch-critical-path machinery (cf. the BLK-29884333 precedent,
+  `regen_positional_task_ids_not_content_stable_2026_07_17.md`), a classifier's `ao_eligible: true` flag is a
+  strong signal, not a final ruling. Todo (line 300, [OPERATOR] disposition decision) stays genuinely operator-gated,
+  matching the 08-16 marker. Flagging line 292 MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future pass — worth resolving
+  which of the two fix paths is intended (a scoped design note pinning one approach would likely clear it) rather
+  than re-flagging indefinitely. `assigned_vm` unchanged.

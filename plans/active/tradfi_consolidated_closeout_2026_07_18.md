@@ -922,3 +922,9 @@ operator activation.
   children gating archival per PLAN_FORMAT.md regardless. Only intervening changes were the plan_reconciler
   child-digest count corrections (Split-notice table) and a context-scout touch — neither shifts this disposition.
   `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — reaffirmed (7th
+  consecutive pass).** 0 open native todos (live grep confirmed). Doc came back into this run's scope because
+  `plan_reconciler@193df835e1` touched it after the 08-18 marker (Split-notice table stale-count corrections) —
+  content-only, doesn't shift disposition. NOT an ARCHIVE candidate: `archive_exempt: true`, tranche
+  aggregated-reference umbrella / `check_ag_closeout_linkage.py` linkage anchor, with still-open dependent children
+  gating archival per PLAN_FORMAT.md regardless. `assigned_vm` unchanged.
