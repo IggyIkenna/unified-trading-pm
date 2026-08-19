@@ -283,7 +283,7 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       full reconciliation/UI work the other todos here cover — but it's the prerequisite that makes every later
       todo here actually possible instead of a one-off manual exercise each time. Done when: a real AO-dispatched
       task against a non-DeepSeek provider leaves a real, queryable row behind with no manual capture step.
-- [ ] [UI] P2. **New (2026-08-19)** — display the unified per-task billing schema (the `[DATA] P1` schema-design
+- [~] [UI] P2. **New (2026-08-19)** — display the unified per-task billing schema (the `[DATA] P1` schema-design
       todo above) once real data actually flows through the `[DATA] P1` v0-capture-mechanism todo above: a view
       showing `requested_model` vs `served_model` (flagged when they diverge — e.g. GLM's server-side
       `glm-5.2`→billed-as-`glm-5.3` aliasing), `tokens_per_second` where the provider exposes it, and the 5-shape
