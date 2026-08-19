@@ -38,7 +38,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -283,6 +283,60 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       full reconciliation/UI work the other todos here cover — but it's the prerequisite that makes every later
       todo here actually possible instead of a one-off manual exercise each time. Done when: a real AO-dispatched
       task against a non-DeepSeek provider leaves a real, queryable row behind with no manual capture step.
+- [ ] [UI] P2. **New (2026-08-19)** — display the unified per-task billing schema (the `[DATA] P1` schema-design
+      todo above) once real data actually flows through the `[DATA] P1` v0-capture-mechanism todo above: a view
+      showing `requested_model` vs `served_model` (flagged when they diverge — e.g. GLM's server-side
+      `glm-5.2`→billed-as-`glm-5.3` aliasing), `tokens_per_second` where the provider exposes it, and the 5-shape
+      billing categorization (`metered_dollar` / `subscription_boost_multiplier` / `subscription_credits` /
+      `rate_limited_free` / `subscription_unknown`) with each row's `computed_usd_equivalent`.
+
+      **Design (two complementary surfaces, not one monolithic new panel — researched against the real dashboard
+      this session, `agent-orchestrator/dashboard/src/`)**:
+      1. **Per-task drill-down** — extend `BacklogDetailModal`'s existing per-attempt table (`App.tsx` ~line 3505,
+         the only place a single task's real per-attempt usage already renders: Input/Cache write/Cache read/
+         Output/Reasoning/Total/Spend/Session) with 3 new columns: served model (shown only when it diverges from
+         the attempt's already-rendered provider/model), tok/s, and a billing-shape badge. This is the natural
+         per-task grain — do not build a second, parallel per-task table next to it.
+      2. **Fleet-wide billing-shape overview** — sits BESIDE `TaskUsageWindowsPanel.tsx` (the existing windowed/
+         provider-filtered aggregate view), same fetch/poll/provider-filter pattern, adding a billing-shape
+         dimension so $ spend is comparable across metered/subscription/free-tier providers on one screen instead
+         of requiring a separate wallet panel per provider (today: Claude/DeepSeek/Kimi have one, Gemini/NVIDIA
+         have a capacity-only variant, GLM/Codex have none — see the GLM/Codex wallet-reconciliation `[DATA] P1`
+         todo above).
+
+      **Prep work already shipped ahead of the schema landing (2026-08-19, this session)**: the panel's
+      "which provider/model is currently usable" signal needs the same live-derived pattern `KimiWalletPanel.tsx`'s
+      `allKimiAccountsPaused()` and `NvidiaCapacityPanel.tsx`'s `degradedNvidiaAccounts()` already use, generalized
+      so it doesn't require a bespoke wallet/capacity panel per provider first. Studying those two surfaced a real,
+      currently-shipping gap, fixed as real prep rather than left as a TODO: the generic Accounts panel's own "N/M
+      available" counts (`AccountsPanel`/`AccountProviderGroup`, `layout.tsx`) only ever checked
+      `status === "healthy"`, blind to `health_status` — an enabled-but-degraded account (`status: "healthy"`,
+      `health_status: "degraded"`, e.g. NVIDIA's real `gemma-4-31b-it` per
+      `/plans/active/issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md`) silently counted as available. Fixed
+      via a new `isAccountAvailableForDisplay()`, deliberately NOT merged into the existing `accountIsUsable()`
+      (`layout.tsx:549`) — that one mirrors AutoSpawn's own dispatch-eligibility definition verbatim (its own
+      docstring says so) and has no opinion on `health_status`; conflating the two would silently change dispatch
+      semantics, a decision this UI-display task has no business making. Also added a generic per-row "⚠ Degraded"
+      badge in `AccountRow` that fires for ANY provider's `health_status: "degraded"` account, not just NVIDIA's
+      existing bespoke banner. Real, tested, and already live in the generic Accounts panel today — not gated on
+      the new schema at all, and directly reusable as the future panel's own availability signal.
+
+      **Evidence**: `agent-orchestrator@befc0e3723` — `dashboard/src/layout.tsx` (`isAccountAvailableForDisplay`,
+      wired into both the top-level `AccountsPanel` count and each `AccountProviderGroup` count, plus `AccountRow`'s
+      new badge), `dashboard/src/layout.test.ts` (5 new vitest cases), `dashboard/tests/e2e/provider-badge.spec.ts`
+      (1 new Playwright case against the real e2e fixture `nvidia-gemma-4-31b-demo` — confirms `1/2` not `2/2`, and
+      the badge fires only on the degraded account). Full `quality-gates.sh --no-fix` green (4146 passed/8 skipped
+      pytest, basedpyright 0 errors/0 warnings, dashboard `tsc` clean, 432/432 vitest); `pw:L2 ✓` —
+      `provider-badge.spec.ts` 6/6 passed against the real e2e stack (`mode=mock`).
+
+      **Real sequencing constraint (do not build the full panel before this lands)**: the per-task grain fields
+      (`requested_model`/`served_model`/`tokens_per_second`/billing-shape) don't exist on `TaskUsageRow`/
+      `TaskUsageView` yet — that's the `[DATA] P1` schema todo above, still open. Building this panel's real
+      data-fetching now would mean either faking the schema or wiring against fields that don't exist yet — wait
+      for that todo (and the v0-capture-mechanism todo, so real rows actually populate) to land first. Done when:
+      `BacklogDetailModal`'s per-attempt table shows real served-model/tok-per-sec/billing-shape data for at least
+      one non-DeepSeek/non-Claude provider task, and the fleet-wide billing-shape overview renders real $ figures
+      for at least 2 of the 5 billing shapes side by side.
 - [ ] [DATA] P1. Reconciliation proof: sum of every task's attributed billing (once the schema above is populated for
       a real window) must equal the fleet's real total spend for that window, per provider. Done when: a dated
       Progress Log entry shows this reconciling within a stated tolerance for at least DeepSeek + one new provider.
@@ -664,3 +718,26 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
      `kimi-k2.6`, `kimi-k2.7-code` (Moonshot `/v1/models` — bonus: `kimi-k2.7-code-highspeed` exists too,
      unregistered, FYI only); `gpt-5.6-luna` (Codex/Luna — already proven live). No action needed from this
      finding alone; recorded so a future session doesn't re-run the same free sweep from scratch.
+
+- **2026-08-19 — new `[UI] P2` todo added: display the unified per-task billing schema once it lands, plus real
+  prep work shipped ahead of it.** There was no tracked UI todo for surfacing the schema this plan's own
+  `[DATA] P1` todo designs (`requested_model`/`served_model`/`tokens_per_second`/5-shape billing categorization) —
+  added one, with a concrete design (extend `BacklogDetailModal`'s per-attempt table for the per-task grain; a new
+  fleet-wide billing-shape view beside `TaskUsageWindowsPanel.tsx`), explicitly gated on the schema-design and
+  v0-capture-mechanism `[DATA] P1` todos landing real data first — not attempted before then, to avoid a
+  half-wired panel against fields that don't exist yet. Real, shippable prep work was pulled forward instead of
+  left purely as design prose: studying `KimiWalletPanel.tsx`'s `allKimiAccountsPaused()` and
+  `NvidiaCapacityPanel.tsx`'s `degradedNvidiaAccounts()` (the "live-derived, not hardcoded, which provider/model is
+  usable" precedent the new panel will need) surfaced a real, currently-shipping gap: the generic Accounts panel's
+  "N/M available" counts never accounted for `health_status`, only `status` — an enabled-but-degraded account
+  (real case: NVIDIA's `gemma-4-31b-it`, `/plans/active/issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md`)
+  silently read as available. Fixed via a new `isAccountAvailableForDisplay()`
+  (`agent-orchestrator/dashboard/src/layout.tsx`) — kept deliberately separate from the existing
+  `accountIsUsable()`, which mirrors AutoSpawn's own dispatch-eligibility definition and has no opinion on
+  `health_status`; merging the two would have silently changed dispatch semantics, a call this UI task has no
+  standing to make unilaterally. Also added a generic per-row "⚠ Degraded" badge (`AccountRow`) firing for any
+  provider, not just NVIDIA. Shipped `agent-orchestrator@befc0e3723` — full `quality-gates.sh --no-fix` green
+  (4146 passed/8 skipped pytest, basedpyright clean, dashboard `tsc` clean, 432/432 vitest), `pw:L2 ✓`
+  (`provider-badge.spec.ts` 6/6, new case against the real `nvidia-gemma-4-31b-demo` e2e fixture). Full todo text
+  + evidence citation above, under the new `[UI] P2` entry. No work attempted on the schema/capture-mechanism
+  todos themselves this session (explicitly out of scope — a parallel session owns that track).
