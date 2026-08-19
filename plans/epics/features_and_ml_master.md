@@ -1008,3 +1008,30 @@ where Hyperliquid is a narrow-MVP parameterization gap and Aster is a net-new ca
       ASTER — cross-check against `mtds_mdps_master.md`'s 2026-08-19 priority-venue audit (Aster is confirmed
       MDPS-wired there) before assuming this is purely a features-service-side gap; if MDPS has since caught up
       this todo is unblocked, otherwise sequence behind the MDPS side.
+
+## Solana venue feature-coverage audit (2026-08-19)
+
+Audit scope: Jupiter, Raydium, Drift, Pacifica, Jito (LST) — same Solana venue set audited in
+`execution_master.md`/`strategy_master.md`/`mtds_mdps_master.md` this session. **Verified 2026-08-19**: no
+venue-specific feature gap found for this set — every real venue is already covered by an existing generic
+calculator, not by a missing venue-specific one.
+
+- [x] [DATA] P2. ✅ **Raydium — 0 venue-specific calculator hits, no gap.** Covered generically via the already-
+      shipped `FEATURE_GROUP_DATA_TYPE_OVERRIDES['defi']` mapping (volume_analysis/vwap/microstructure →
+      `dex_pool_swaps`, DeFi #1 above) — the same generic-DEX-swap path already serving Uniswap/CoW Swap's future
+      build. No Raydium-specific calculator is needed unless a Raydium-only feature (e.g. concentrated-liquidity
+      range metrics) is later required.
+- [x] [DATA] P2. ✅ **Jito (LST, jitoSOL) — covered by the same generic LST calculators already confirmed for
+      Lido/EtherFi above, not a separate gap.** `lst_features.py` (native on-chain exchange-rate path, keyed via
+      UAC `LST_TOKEN_TO_PROTOCOL_ASSET`) and `lst_seasonal_rewards_collector.py` both carry real Jito-inclusive
+      hits — same multi-LST-generic pattern, no Jito-only calculator required.
+- [ ] [DATA] P3. **Jupiter (spot) and Pacifica — feature coverage not separately verified this pass, state
+      explicitly rather than assume.** Jupiter spot swaps fall under the same generic `dex_pool_swaps` mapping as
+      Raydium (very likely no gap, same reasoning) but wasn't independently grepped. Pacifica's funding-rate
+      feature path is CeFi-side (`features_service/cefi/`, not `onchain/`, since Pacifica is `cefi`-classified per
+      its own reintegration plan) — whether an existing CeFi funding calculator already covers it or whether it
+      needs the same Aster-style net-new calculator above was not checked this session. Genuinely `unverified`, not
+      `no gap` — confirm before assuming either way.
+- [ ] [DATA] P3. **Drift** — no feature audit performed; the venue is operator-killed per the standing
+      2026-08-14-reaffirmed codex ruling (see `execution_master.md`'s flagged operator-instruction conflict) so
+      building or auditing Drift-specific features is premature until that conflict resolves.

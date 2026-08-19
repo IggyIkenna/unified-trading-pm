@@ -208,6 +208,36 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
+- [ ] [BACKEND] P0. **cefi `venue-year-coverage` still WORKER-TIMEOUTs (300s gunicorn limit) even with every
+      shipped per-chunk vectorization fix live — an AGGREGATE wall-clock budget problem across 215+ row groups, not a
+      single slow call.** Live repro 2026-08-19 (slot 32, infra re-verification) against deployed revision
+      `uts-shared-deployment-api-00656-vv8` (confirmed containing `deployment-api@18489f99f8`'s `_union_rank_series`
+      fix + every prior vectorization fix — tree-diff `git diff origin/main origin/live-defi-rollout -- <3 files>`
+      empty): 2 fresh WORKER TIMEOUT + `Uncaught signal: 6` (SIGABRT) events, faulthandler-identifying TWO DIFFERENT
+      abort sites, NEITHER of which is any previously-fixed call site — (1) pid 21 @19:49:09Z: raw pyarrow
+      `parquet/core.py:480 read_row_group()` ← `manifest_source.py:326 iter_manifest_row_groups` ←
+      `_live_coverage_venue_year.py:326 get_venue_year_coverage` — the timeout fired mid-row-group READ itself
+      (network fetch + decode), before any per-chunk processing logic even ran on that row group; (2) pid 22
+      @19:51:31Z: `_live_coverage_venue_year.py:155` = `union_reduce_to_cells(df, rank=row_rank)` inside
+      `_process_manifest_chunk` — still slow enough in aggregate to blow the budget despite the already-shipped
+      rank-once optimization (`deployment-api@b4b81502c0`). Root cause read from the two tracebacks (not guessed):
+      every per-row-group fix shipped so far (`_classify` vectorize, `filter_to_mvp` broadcast,
+      `provenance_breakdown`/`union_reduce_to_cells` rank-once) reduced EACH call's cost but none reduced the CALL
+      COUNT (still once per row group × 215+ row groups for cefi, up from 88 at the original 2026-08-09 audit) or the
+      raw pyarrow row-group network-fetch/decode cost itself — so the SUM of now-individually-fast per-row-group
+      costs can still exceed the 300s gunicorn worker timeout when run sequentially in one request. This is a
+      different bug class than every prior finding in this issue (aggregate budget, not a single slow call) — a
+      further per-call vectorization pass alone will not close it. Candidate architectural fixes (not evaluated here,
+      outside INFRA craft scope): (a) parallelize row-group processing (row groups are independent — concurrent
+      fetch/decode via a thread pool or `asyncio.gather`), (b) raise the gunicorn worker timeout for this route (or
+      service) if Cloud Run's own request-timeout budget allows it, (c) precompute/cache the venue-year aggregation
+      on a schedule (the manifest changes at most hourly per the consolidator cadence, so a synchronous per-request
+      full-corpus re-aggregation may be the wrong architecture regardless of per-call speed), or (d) a pyarrow read
+      strategy that decodes multiple row groups per call instead of one Python-level loop iteration each. `could_exist`
+      scope's own failure again had no SIGABRT captured in its own probe window (only an isolated "malformed
+      response" error at request start, same ambiguous signature as the 2026-08-19 slot-31 entry below) — not
+      conclusively attributable to either mechanism above from logs alone. Repo: deployment-api. Re-run this issue's
+      3-scope cefi probe as the acceptance check once shipped.
 - [x] ✅ [BACKEND] P0. **`_union_rank_series`'s `status.map(_STATUS_RANK)` call (`data_status_union.py:145`) is a NEW
       WORKER-TIMEOUT/SIGABRT abort site** — surfaced live 2026-08-19 (slot 31, infra re-verification) inside the very
       helper the now-shipped `provenance_breakdown` vectorization fix (`deployment-api@b4b81502c0`, above) introduced
@@ -592,3 +622,22 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   full `quality-gates.sh` green, sentinel=18489f99f805c138e396ff3cd09e3613287c151e. **Live-prod re-verification is
   a separate follow-up** — the top-level INFRA todo should be re-run once this SHA reaches `main` and redeploys
   `uts-shared-deployment-api`, per this issue's established pattern for every other BACKEND fix.
+- **2026-08-19 (slot 32, infra)**: **Live-prod re-verification of `deployment-api@18489f99f8` — FAIL, but the
+  container-level OOM and every prior WORKER-TIMEOUT abort site remain resolved; a NEW aggregate-budget bottleneck
+  surfaced instead.** Confirmed `18489f99f8` reached `main`: tree-diff (`git diff origin/main origin/live-defi-rollout
+  -- _live_coverage_venue_year.py data_status_union.py`) empty. Confirmed deployed: revision
+  `uts-shared-deployment-api-00656-vv8` (created 2026-08-19T15:15:13Z, ~8 min after the LDR→main promotion `711a157`
+  @15:07:02Z, 100% traffic). Ran the 3-scope cefi probe (`X-API-Key` from `deployment-api-api-key` GSM secret,
+  one-at-a-time, 20s apart, `--max-time 90`) 2026-08-19T19:46:26-19:51:36Z: **all 3 scopes still failed** — each
+  client-side timeout (`http_code=000`, 0 bytes) at 90s. Cloud Logging swept 19:45:30-19:52:30Z: **confirmed ZERO
+  `Memory limit exceeded` / `terminated on signal 9` events** — container OOM stays resolved. 2 fresh WORKER TIMEOUT +
+  SIGABRT events fired instead (pid 21 @19:49:09Z, pid 22 @19:51:31Z), but faulthandler identifies BOTH abort sites as
+  NEW — neither is `_union_rank_series`, `_classify`, or `filter_to_mvp` (all three confirmed NOT implicated, still
+  holding) — see the new BACKEND P0 todo above for the full root-cause + two abort-site detail. Summary: the
+  bottleneck has shifted from "one slow call per row-group" (every prior finding in this issue) to "sum of many now-
+  individually-fast per-row-group calls across cefi's 215+ row groups still exceeds the 300s gunicorn timeout" — an
+  aggregate wall-clock budget problem needing an architectural fix (parallelization / higher timeout / precomputed
+  cache), not another vectorization pass. Filed as a new BACKEND P0 todo (repo/craft outside this INFRA session's
+  scope per infra.md's `does_not: Python service business logic`). **Not flipping the top-level INFRA todo — the
+  clean-window acceptance bar is still not met**, now gated on this new aggregate-budget finding rather than any
+  previously-shipped fix (all of which are confirmed live and holding).

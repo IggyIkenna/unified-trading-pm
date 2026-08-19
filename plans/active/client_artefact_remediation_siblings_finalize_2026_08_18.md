@@ -52,9 +52,21 @@ context_scope:
 Gated on [`client_artefact_remediation_siblings_2026_08_18.md`](/plans/active/client_artefact_remediation_siblings_2026_08_18.md).
 Do not start before then.
 
-- [ ] [REVIEW] P0. **Re-run the banned-term sweep across ALL SIX artefacts and confirm zero hits** — including
+- [x] ✅ [REVIEW] P0. **Re-run the banned-term sweep across ALL SIX artefacts and confirm zero hits** — including
       inside SVG `<text>` elements, which is where one of the original 6 hits hid. Open the files; do not trust the
-      parent plan's checkboxes.
+      parent plan's checkboxes. — verified 2026-08-19 (slot 31, review), fresh-pulled to LDR HEAD `eb190e4427`
+      first. Direct `rg`/`grep` sweep of all six live files in `codex/14-customer-journeys/commercial-model/`
+      (`strategy-service-deep-dive.html`, `platform-architecture.html`, `carveout-engineering.html`,
+      `ODUM_Elysium_Phase2_Update_2026-07-24.html`, `platform-external-api-walkthrough.html`,
+      `strategy-service-walkthrough.html`) — not a re-read of the parent plan's checkboxes. **0 hits for
+      `clearloop`** (case-insensitive, whole-file grep so this also covers SVG `<text>`/`alt`/label content, plus a
+      separate spacing/hyphen-variant pass and a split-tag heuristic scan — all clean). Also swept `$`
+      (0 hits), `budget`/`ARR`/`valuation`/`revenue` (hits found are all legitimate technical usage — e.g.
+      "capital budget" as a position-sizing term in `strategy-service-deep-dive.html`/`platform-architecture.html`,
+      "Valuation and post-trade" as a component-category label in `carveout-engineering.html` — none are commercial
+      figures/company valuation, so none violate the disclosure rule), the performance-figure phrase (0 hits — item
+      2's fix holds), and the invented-strategy-family phrase (0 new hits outside the already-tracked
+      `strategy-service-walkthrough.html` instance the Elysium child plan owns).
 - [ ] [REVIEW] P1. **Verify each claimed fix against the live file**, then update the corresponding finding's
       status in [the sibling-docs audit](/plans/audit/results/client_artefact_sibling_docs_audit_2026_08_18.md)
       from open to resolved.
@@ -68,3 +80,8 @@ Do not start before then.
 
 **context-scout 2026-08-19**: populated context_scope (2 entries) — added the sibling-docs audit report this
 finalize reconciles findings back into; source-path hunt skipped (finalize gate).
+
+**2026-08-19 (slot 31, review)** — Dispatched item 1 (banned-term sweep). Fresh-pulled first (LDR HEAD
+`eb190e4427`). Independently swept all six live artefact files (not the parent plan's checkboxes) for `clearloop`,
+`$`, `budget`/`ARR`/`valuation`/`revenue`, the performance-figure phrase, and the invented-strategy-family phrase —
+see the flipped checkbox above for the full breakdown. Zero disqualifying hits. Items 2 and 3 remain open.
