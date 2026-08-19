@@ -160,3 +160,28 @@ frontmatter claim in the second example is simply absent.
   files. If the tracked script/LLM-sub-call mechanism does something equivalent (slice/truncate a marker string at a
   fixed length without boundary-awareness), that is a plausible root cause worth checking first. Companion:
   `na_eligibility_audit_marker_text_silently_truncated_2026_08_19_finalize_2026_08_19.md`.
+- **plan_reconciler 2026-08-19 (dispatch agt-f212cb, ci tranche)** — additive evidence for todo 3 (corpus-wide
+  sweep), found incidentally by this run's own 6 hunter batches while reading the ci tranche in full (not a
+  dedicated sweep — still not superseding todo 3's own planned corpus-wide pass). **11 MORE confirmed instances**,
+  all byte-verified (`tail -c`, not a Read-tool artifact), all `na-eligibility-audit 2026-08-18` markers:
+  `plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md:626`,
+  `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md:826`,
+  `plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md:880`,
+  `plans/active/issues/deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md:213`,
+  `plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md:149`,
+  `plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md:565`,
+  `plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued_2026_08_02.md:985` (**structural
+  variant** — this one is NOT at literal EOF, a later entry was appended after it, so the bug can leave a
+  truncated entry stranded MID-document, not only at file-end — worth checking the root-cause fix handles both
+  cases), `plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md:343`,
+  `plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md:235`,
+  `plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md:296`,
+  `plans/active/issues/build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md:229`,
+  `plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md:344` (path updated — this
+  doc was archived by this same plan_reconciler run, same commit chain). Every truncation instance found across
+  this run's ci-tranche sweep is a `na-eligibility-audit 2026-08-18` marker, always on an `assigned_vm: NA` doc —
+  strengthens the existing 220-char-clip-without-boundary-awareness root-cause hypothesis. **Scale finding,
+  important for todo 3's sizing**: a corpus-wide grep this session (by one of the hunter batches) found **116
+  docs** carry a `"na-eligibility-audit 2026-08-18"` entry — the true blast radius of this bug is almost certainly
+  much larger than the 13 instances now confirmed across both runs combined (2 original + 11 here); todo 3's own
+  planned sweep should treat 116 as the upper-bound candidate count to check, not a fresh unknown.
