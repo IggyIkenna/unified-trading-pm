@@ -150,6 +150,38 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T5] P0. **Expose a real per-venue instruction-path check in `execution-service`** — this is the leg the
+      readiness dump names as the structural reason its rows cannot confirm execution readiness. T5 has done the
+      groundwork and needs only the venue-aware surface; the shape asked for is deliberately minimal.
+
+      **What T5 measured 2026-08-20, so you do not repeat it** (`unified-trading-pm`
+      `cursor-configs/skills/readiness-state-dump/scripts/instruction_actions.py`):
+
+      1. `execution_service/v2/policy_resolver.py` is **NOT** an instruction-adaptor registry, despite the readiness
+         SKILL.md having claimed so (now corrected). It resolves an execution *algorithm* keyed by
+         `(client_id, slot_label)`; venue appears only as an `applies_to` gate dimension (`venue_category`).
+      2. The only action-keyed dispatch that exists is `backtest_v2/action_handlers.py::resolve_settlement`, which is
+         **venue-independent and backtest-scoped**. AST-measured coverage: **11/16 `InstructionActionV2` actions have
+         a settlement path** (10 handled + `CANCEL` control-plane no-fill by design); **5 raise
+         `UnhandledActionError`: `CONVERT_DUST`, `LP_BURN`, `LP_MINT`, `REPAY`, `WITHDRAW`**. `REPAY`/`WITHDRAW` are
+         core lending actions; `LP_MINT`/`LP_BURN` are what the enum's own comment says `DEFI_LP_CONCENTRATED` emits.
+      3. Mapping actions onto UAC `operation_details` keys was considered and **rejected as drift** — that vocabulary
+         is per-venue idiosyncratic (`place_order` / `create_order` / `new_order` / `post_order` / `add_order` /
+         `submit_order` / `buy`+`sell`) and mixed with feed endpoints, across 47 of 67 registered sources. Please do
+         not build the readiness check on that mapping either.
+
+      **Shape T5 needs** — anything callable from a subprocess probe under `execution-service/.venv`, mirroring the
+      existing `_execution_order_capability_probe.py` (stdin: JSON venue list; stdout: JSON dict). Concretely, per
+      canonical dash-form venue, per env (`mainnet`/`testnet`):
+      `{venue: {action_name: "supported" | "unsupported" | "unknown"}}` over `InstructionActionV2` members. A real
+      `unsupported` is as valuable as a `supported` — the dump reports a genuine negative as `not_ready`. `unknown`
+      keeps the leg honestly `unverified` rather than inventing a pass.
+
+      T5 is NOT idle-waiting on this: the leg already prints `unverified` per venue with a measured denominator, and
+      the global handler gap is surfaced as a dump-level finding. Wire-up on T5's side is a one-line probe call.
+      Evidence: `/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md` Progress Log,
+      2026-08-20.
+
 > **T1 unblock notice 2026-08-20** — UAC `OrderStatus` is now the full 9-state machine the codex SSOT describes.
 > `FAIL_OUTBOUND` and `RECONCILED` exist, and so do `ORDER_STATUS_TRANSITIONS`, `TERMINAL_ORDER_STATUSES`,
 > `is_terminal_order_status()` and `is_legal_order_transition()`, all exported from the top-level
