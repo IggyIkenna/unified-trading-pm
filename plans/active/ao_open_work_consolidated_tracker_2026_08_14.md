@@ -665,18 +665,26 @@ finding Y: any `assigned_vm: planning` AO plan carrying a genuine `[OPERATOR]`/`
 with plain dispatchable todos gets that item forked into a companion `assigned_vm: NA` doc, cross-linked, so the AO
 plan can reach zero-open-todos and archive independently.
 
-- [ ] [PM] P2. **Run the Track-A/B classification pass** (`task_template.md` §3 finding Y's 3-step process) across
-      every `orchestrator_master`-scoped `assigned_vm: planning` plan. **Re-checked 2026-08-18**: the one concrete
-      seed finding this todo cited (the Anthropic per-task calibration plan's `[OPERATOR]` item being a mis-tag)
-      does NOT reproduce against the doc's current state — `plans/active/anthropic_per_task_actual_spend_and_
-      account_calibration_2026_08_10.md` has exactly one open `[OPERATOR]` todo today ("LAPTOP-ONLY — log the
-      laptop's login identity on change," line 347), and that one is genuinely laptop-only (needs
-      `~/.claude.json` on the operator's own machine, structurally unreachable from an AO VM worker) — not a
-      mis-tag. Either the doc changed since the 2026-08-16 finding, or the finding pointed at a different backlog
-      item than this plan's current checkbox set reflects. The broader classification pass across the rest of the
-      `orchestrator_master` population is still explicitly NOT bounded for a single pass (this todo's own framing) —
-      stays open, un-attempted this round; the seed finding specifically is stale and should not be reused as a
-      template without re-verifying against live backlog state first.
+- [x] [PM] P2. ✅ **DONE 2026-08-19 — Track-A/B classification pass completed across all 24 `orchestrator_master`-scoped,
+      `assigned_vm: planning` plans in `plans/active/*.md`** (mechanical soft-flag: file contains an open `- [ ]` line
+      carrying `[OPERATOR]`/`BLOCKED-<TOKEN>`, cross-checked per-doc for genuine-vs-mis-tag per finding U's 3-part test).
+      **Disposition** (24/24 checked, 2 genuine hits forked, 0 mis-tags, 22 clean — full per-doc detail in each
+      forked doc's own Progress Log, not repeated here to stay under the 1000L cap):
+      - **FORKED**: `anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md` (28→27 open) — genuine
+        `[OPERATOR]` (laptop-only login-identity log) → companion NA doc `..._operator_items_2026_08_19.md`.
+      - **FORKED**: `deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md` (1→0 open, this
+        was its ONLY remaining todo) — genuine `[OPERATOR]` (optional `opening_balance` freeze) → companion NA doc
+        `..._operator_items_2026_08_19.md`; plan now has zero open todos, its gated finalize plan is unblocked.
+      - **Clean, no gated item, nothing to fork**: `anthropic_..._finalize_2026_08_10`,
+        `ao_satellite_ao_dispatch_batch{14,21,22,23,24,25,3,8}` + each batch's `_finalize` sibling,
+        `content_derived_backlog_task_ids_2026_08_08` + `_finalize`, `deepseek_wallet_..._finalize`,
+        `quality_gates_quickmerge_timing_baseline_2026_07_31` + `_finalize`, `slot0_self_cleaning_daemon_2026_08_18`
+        + `_finalize` (batch14/21/8 already zero-open; rest have only plain dispatchable todos, no
+        `[OPERATOR]`/`BLOCKED-<TOKEN>` line).
+      2026-08-18's re-check found the Anthropic item isn't a mis-tag but stopped short of finding Y's remediation
+      (fork it out) — this pass completes that step. Both source-doc checkboxes replaced with bold pointer digest
+      lines + `related:` cross-linked both ways, shipped this session. Archival of the now-zero-open `deepseek_wallet`
+      plan is left to its gated finalize plan. All 24 `orchestrator_master` plans covered; treat as point-in-time.
 - [x] [PM] P2. **RESOLVED 2026-08-18 — not cancelled, distinct topic, safe to dispatch normally.** The `batch14`
       env-file GSM-indirection fix (real todo tracked in `ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md`
       todo 2, a fresh `[INFRA] P0`) is a credential-hygiene bug fix, unrelated to the BLENDED-ROUTING PILOT topic

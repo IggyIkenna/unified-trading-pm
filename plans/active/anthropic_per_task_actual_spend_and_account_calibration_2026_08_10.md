@@ -25,9 +25,10 @@ related:
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md,
     /plans/audit/results/claude_account_usage_value_measurement_2026_08_01.md,
+    /plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_operator_items_2026_08_19.md,
   ]
 created: "2026-08-10"
-last_updated: 2026-08-10
+last_updated: 2026-08-19
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -351,18 +352,10 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       `ATTRIBUTION_CAPTURE_ERA_START` (2026-08-06) and one straddling a month boundary, and explicitly does NOT treat
       partial consumption as a disqualifier — a window that consumed 7% is a valid sample because the percentage is what
       converts to dollars. Tests cover accept / month-straddle / pre-capture / partial-consumption.
-- [ ] [OPERATOR] P2. **LAPTOP-ONLY — log the laptop's login identity on change, as ASSURANCE that the reservation held
-      (no longer time-critical, and no longer for attribution).** Downgraded from P0 on 2026-08-10 evening: its original
-      purpose was to attribute laptop turns to the right account for calibration, and the reservation makes that
-      unnecessary — the calibrated accounts are AO-exclusive, so laptop turns land on a DIFFERENT account entirely and
-      cannot enter their windows. What remains is genuinely useful but smaller: a log of
-      `(timestamp, accountUuid, emailAddress)` from `~/.claude.json`'s `oauthAccount` is the only way to EVIDENCE that
-      the laptop never logged into `sub-a` or `sub-e`, which is exactly what the reservation-verification todo needs to
-      check rather than assume. No longer time-critical because nothing is being lost hour by hour: the windows that
-      matter start Wednesday. **Script now exists (2026-08-16)**: `scripts/dev/log-laptop-login-identity.py` —
-      operator runs `python3 scripts/dev/log-laptop-login-identity.py` on the laptop itself (appends only on identity
-      change, idempotent no-op otherwise); log lands at `~/.claude/laptop_login_identity_log.jsonl`. **Done when**: the
-      log exists and covers the first post-reset window.
+- **[OPERATOR] P2. CANCELLED — SUPERSEDED 2026-08-19 (Track-A/B classification pass, forked per `task_template.md`
+  §3 finding Y): re-scoped to a companion NA doc, nothing left to complete here** — laptop-only login-identity
+  logging, structurally unreachable from an AO VM worker. See
+  [`anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_operator_items_2026_08_19.md`](/plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_operator_items_2026_08_19.md).
 - [ ] [BACKEND] P1. **Report `max(measured)` as the defensible floor for PRE-reservation windows — but stop calling
       post-reservation windows lower bounds, because they are not.** Amended 2026-08-10 evening. The original reasoning
       still holds for history: `sub-c` was a laptop login on 2026-08-02, the `~/.claude-accounts/*.env` absence never
@@ -574,6 +567,13 @@ which answers "where did the money go" for a metered wallet and surfaces the una
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)
+- **2026-08-19 (Track-A/B classification pass, ao_open_work_consolidated_tracker_2026_08_14.md Track 7, per
+  task_template.md §3 finding Y)**: the sole open `[OPERATOR] P2` item (laptop login-identity logging) forked into a
+  companion NA doc —
+  `/plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_operator_items_2026_08_19.md` —
+  cross-linked via `related:` both directions, source checkbox replaced with a bold pointer digest line. The
+  2026-08-18 Track 7 re-check had already confirmed this item is not a mis-tag but stopped short of forking it out;
+  this pass completes that step. 27 plain dispatchable todos remain open in this plan, unaffected.
 
 ### 2026-08-17 — Second calibration pass (AO worker, slot 15, read-only)
 
