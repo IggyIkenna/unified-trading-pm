@@ -166,7 +166,7 @@ one week. The boot prompt now also handles a bare candidate payload with no pre-
 schema-valid frontmatter) before diagnosing — closing the loop deployment-service's own escalation substrate already
 half-built (`route_finding`'s `no_pm_clone_on_disk` defer-to-agent branch). See
 `/codex/05-infrastructure/data-pipeline-alerts.md` § "Never raw-`git commit` a finding from an ephemeral/untracked
-runner" and `/plans/active/dp_audit_escalation_agent_backed_filing_2026_08_18.md`.
+runner" and `/plans/archive/2026_08/dp_audit_escalation_agent_backed_filing_2026_08_18.md`.
 
 ## Still-open coverage gaps (not fixed this pass)
 
