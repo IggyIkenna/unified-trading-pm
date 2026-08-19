@@ -191,12 +191,14 @@ STEP 2 — start the polling loop. Two options, pick by how long you'll be runni
 (A) Dynamic /loop — dies if your session dies. Fine for in-session work:
 
 ```
-/loop <loop_seconds>s Poll $SERVER_URL/api/agents/$AGENT_ID/poll for new operator messages and reply to each one with full conversation context. Then run STEP 2.5 (blocked-queue sweep). Run STEP 2A (poll), STEP 2B (reply to any messages), STEP 2C (update last_msg) every tick.
+/loop <loop_seconds>s Each tick, fire STEP 2A's poll ($SERVER_URL/api/agents/$AGENT_ID/poll) and STEP 2.5's blocked-queue check ($SERVER_URL/api/state) TOGETHER in the same turn (two tool_use blocks in one response) -- they are independent lookups, never sequence one after the other. Then process both results: reply to any new operator messages with full conversation context (STEP 2B), sweep blocked_queue per STEP 2.5's rubric, and update last_msg (STEP 2C).
 ```
 
 (B) CronCreate — SURVIVES session death (the cron is owned by the Claude Code runtime, not the chat). Use for overnight
-/ long-haul: run CronCreate with a prompt that polls `$SERVER_URL/api/agents/$AGENT_ID/poll`, replies to messages,
-updates last_msg, then sweeps the blocked queue per STEP 2.5, at interval=60. Save the `cron_id` it returns.
+/ long-haul: run CronCreate with a prompt that, each tick, fires the poll (`$SERVER_URL/api/agents/$AGENT_ID/poll`) and
+the STEP 2.5 blocked-queue check (`$SERVER_URL/api/state`) TOGETHER in the same turn — they're independent lookups,
+never sequence one after the other — then replies to messages, sweeps the blocked queue per STEP 2.5, and updates
+last_msg, at interval=60. Save the `cron_id` it returns.
 
 STEP 2.4 — **NEVER conclude "the fleet is deadlocked" from ONE gated task** (R3, `ao_dispatch_hardening_2026_07_16`;
 incident 2026-07-07).
@@ -234,7 +236,10 @@ scarcest capacity on the Opus plan first.
   "fix" it by re-tiering plans to make the queue uniform. `model_tier` is a plan's declared requirement, and downgrading
   it to smooth the queue makes the worker's own SSOT self-check STOP on "Sonnet on opus-required".
 
-STEP 2.5 — blocked-queue sweep (every tick — you are the FIRST responder). The `/api/state` field is **`blocked_queue`**
+STEP 2.5 — blocked-queue sweep (every tick — you are the FIRST responder). **Fire this GET together with STEP 2A's
+poll below, in the SAME turn** (two `tool_use` blocks in one response, not sequential calls) — see the batching note
+under "Each tick" just before STEP 2A; the two calls never depend on each other's result. The `/api/state` field is
+**`blocked_queue`**
 (NOT `blocked` — there is no `blocked` key; `.get('blocked', [])` silently returns `[]` every tick and you will miss
 every worker question — invisible-wait bug, caught 2026-07-24). Each entry with `answered_at: null` is unanswered;
 `authority` tells you whether it is yours (`main_agent`) or operator-only:
@@ -282,9 +287,15 @@ you must respect:
 
 All POST to the same blocked queue, so this one sweep covers every agent type — there is no separate handling path.
 
-Either way the polling task fires every 60 seconds. Each tick:
+Either way the polling task fires every 60 seconds. Each tick, START by firing STEP 2A's poll (below) and STEP 2.5's
+blocked-queue GET (above) TOGETHER in the SAME turn — two `tool_use` blocks in one response, not a sequential
+poll-then-check pair. Neither call depends on the other's result, so sequencing them burns a whole extra turn every
+tick for nothing; this is a measured, confirmed regression (main's own session dropped from 13.2% to 0.0% multi-tool
+turns while its share of all fleet turns rose to 24% in the degraded window, 2026-08-14). Only AFTER both calls
+return do you branch: process STEP 2.5's `blocked_queue` result per its rubric above, and STEP 2A's `messages` result
+per STEP 2B / STEP 2C below.
 
-STEP 2A — poll for messages:
+STEP 2A — poll for messages (fire together with STEP 2.5's GET above, same turn):
 
 ```bash
 curl -sS -X POST $SERVER_URL/api/agents/$AGENT_ID/poll \
@@ -612,13 +623,17 @@ frontmatter + `- [ ]` todos → the backend's `PlanRegenLoop` → the backlog), 
 `conditions`). There is no fixed phase-ownership map — you author/prioritise PLAN todos and let the dispatcher's prereq
 gating do the sequencing.
 
-Your overnight loop (every 60s poll tick):
+Your overnight loop (every 60s poll tick). Steps 1, 2, and 5 below are independent GET lookups — `blocked_queue` and
+`slots[]` both live in the ONE `/api/state` payload (the same call STEP 2.5 already fetches above), plus
+`/api/activity` — so fire `/api/state` and `/api/activity` TOGETHER in the same turn at the start of the tick (same
+batching rule as STEP 2A + STEP 2.5), then branch into steps 1/2/5's processing from the results already in hand
+instead of re-fetching per step:
 
-1. **Walk `state.blocked_queue`** — apply the auto-resolve rubric above. Auto-answer the doc-grounded ones. Escalation
-   to operator is rare overnight; only escalate if a question hits the hard-stop list (wallet keys, kill-switches,
-   cross-client funds, plan unlock, 1.0.0 graduation).
-2. **Read each working/dispatched slot's most recent /progress** (via `/api/state.slots[].last_msg` and the activity
-   feed for `progress`/`done` events).
+1. **Walk `state.blocked_queue`** (from the `/api/state` payload just fetched) — apply the auto-resolve rubric above.
+   Auto-answer the doc-grounded ones. Escalation to operator is rare overnight; only escalate if a question hits the
+   hard-stop list (wallet keys, kill-switches, cross-client funds, plan unlock, 1.0.0 graduation).
+2. **Read each working/dispatched slot's most recent /progress** (`slots[].last_msg` from the same `/api/state`
+   payload, plus the `/api/activity` feed for `progress`/`done` events).
 3. **Verify done-claims + flip GREEN conditions**. When a slot posts a `/done` whose task corresponds to a gated
    milestone: read the plan's verification criterion, confirm it's met (run the verification commands if the worker
    didn't), and if GREEN flip the corresponding condition (`POST /api/prerequisites/<name>` with `value=true` — the
@@ -633,8 +648,9 @@ Your overnight loop (every 60s poll tick):
    exception the regen can't derive yet: create/flip them via `POST /api/prerequisites/<name>` and attach them to a
    derived task's `prereqs.conditions` per RULES.md § "Backlog-edit hygiene". As conditions flip through the night,
    gated tasks auto-dispatch. You orchestrate; the gating does the sequencing.
-5. **Watch for stale slots** (worker_alive=false, tmux_alive=true). The kicker skips `stale` status. Send a
-   `/api/slots/{N}/message` "Resume work — re-read your plan-of-record; default to fuller solution; do not idle."
+5. **Watch for stale slots** (worker_alive=false, tmux_alive=true — same `slots[]` array fetched in step 2, not a
+   separate call). The kicker skips `stale` status. Send a `/api/slots/{N}/message` "Resume work — re-read your
+   plan-of-record; default to fuller solution; do not idle."
 6. **Update your `last_msg`** with a tick summary so the operator sees activity on next dashboard glance.
 
 ### What you do NOT do overnight
