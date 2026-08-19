@@ -99,6 +99,17 @@ so the universe work is *reconciling* against that, not deriving from scratch.
 
 ## Universe denominator — resolved 2026-08-16, plan flipped to `active`
 
+> **⚠️ DENOMINATOR STALE — flagged 2026-08-19 (plan_reconciler, cross-cutting tranche, `agt-b2fcb2`), NOT YET
+> RE-SCOPED.** The 353 `(venue, data_type)` pair model below was superseded 2026-08-17 by a shipped, operator-ruled
+> `unified-api-contracts@d19866d339`: the real unit is now 660 `(venue, instrument_type, data_type)` triples (12
+> cells unresolved, 3.4%) — see `nick_ai_platform_readiness_remediation_finalize_2026_08_16.md`'s 2026-08-18 Progress
+> Log entry ("W6's blocker cleared... denominator re-measured 353 → 660"). This plan's `depends_on` +
+> `gate_on_depends: true` on 5 already-dispatched AG batch plans (defi/cefi/sports/tradfi/prediction
+> `venue_e2e_batch1_2026_08_16`, several already archived as done) were all scoped and partly executed against the
+> OLD 353-pair unit — whether/how those batches' scope needs re-deriving under the 660-triple model is a real
+> engineering re-scoping question this banner does NOT attempt to answer (routed to the operator, see this run's
+> findings doc). Do not cite "353"/"192 declared venues" below as current without checking this banner first.
+
 The Venue Readiness Contract is settled and the operator's rulings landed 2026-08-16. The denominator blocker that
 held this plan at `status: draft` is now resolved: "158 capture venues across 84 families" was a stale one-off
 manual tally (`venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md:62-65`) with no producing script —
