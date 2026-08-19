@@ -90,6 +90,16 @@ credential re-provisioning, and a live DNS/traffic cutover — judgment calls, n
   compute boxes felt premature. This reverses §4/§5's original "terminate" framing — see the rewritten §4/§5 P3 todos
   and the new §6 DR-runbook todo. EBS volumes, Elastic IPs, and the existing CloudWatch/EventBridge config are all
   retained on both AWS boxes specifically so restart-and-serve stays a real option, not a from-scratch rebuild.
+- **2026-08-19, cross-plan input (not an operator decision, a design note from a sibling effort)**: AO's server is
+  being containerized under `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md` Phase 4,
+  explicitly motivated by making cross-cloud moves easier — this migration is its first real test. The
+  containerization decision itself: Docker **wraps** the existing self-pull/restart deploy model, it does not
+  replace `ao-self-pull.sh`'s mechanics — "how a new version reaches the running box" still flows through the
+  same self-pull-detects-a-new-LDR-commit trigger, just rebuilding/restarting a container instead of restarting a
+  bare uvicorn process. This plan's own §1/§2 VM-lifecycle-abstraction and `bootstrap_vm.sh` `ionos`-branch design
+  work was authored before this existed — not wrong, but should account for it when picked up (see the updated §1
+  todo). This plan does NOT need to change its own sequencing or scope for this now; it's context for whoever
+  next touches §1/§2, not a new blocking dependency (§3's IONOS account signup is still the actual blocker).
 
 ## Why (cost baseline from this session's research)
 
@@ -174,7 +184,13 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       (no scipy/pandas dependency chain) that AO/CI would depend on instead of full UTL — scoped as a ~March 2027
       initiative (leasability/self-host argument, see `cloud-agnostic-script-pattern.md` Open Questions), not this
       migration. Done-when: a short design note (Progress Log or a codex stub) names the abstraction's shape and which
-      ad hoc AWS/GCP branches it replaces.
+      ad hoc AWS/GCP branches it replaces. **Cross-plan input, 2026-08-19 (see Decision log)**: AO's server is being
+      containerized (separate effort, `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md` Phase 4)
+      — a Docker image, not the bare `uv`-venv install `bootstrap_vm.sh` provisions today. When this todo is picked
+      up, evaluate whether the AWS-vs-IONOS abstraction shrinks to "provision compute + firewall + a container
+      runtime, then `docker pull` + `docker run` the image" rather than replicating the full Python-venv bootstrap
+      per provider — containerizing was explicitly motivated by cross-cloud portability, so this migration is its
+      first real test. Not a mandate to redesign now; just don't design the venv-based abstraction blind to this.
 - [ ] [DESIGN] P1. Decide CI-runner's IONOS sizing. Current `m8i.2xlarge` is 8vCPU/32GB; no exact Cube tier matches
       (Basic Cube L = 8vCPU/16GB, Basic Cube XL = 16vCPU/32GB). **Operator-confirmed 2026-08-18**: Basic Cube XL,
       accepting the over-provisioned-cost delta rather than risking memory pressure on the 25-pool runner load at L's

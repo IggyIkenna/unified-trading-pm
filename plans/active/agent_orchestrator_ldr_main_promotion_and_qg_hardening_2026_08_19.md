@@ -375,22 +375,29 @@ own the cloud migration itself** — `/plans/active/ao_ci_aws_to_ionos_migration
 (added to this plan's `related:`) — but containerizing AO is directly relevant to it and must be cross-checked
 against whatever that plan currently assumes about how AO is deployed/run.
 
-- [ ] [INFRA] P1. **Read `ao_ci_aws_to_ionos_migration_2026_08_18.md` in full before designing the container build**
-      — it may already assume a specific deploy shape (the existing `ao-self-pull.sh` root-cron + `systemctl
-      restart` model this plan's Phase 1 confirmed is still current) that a container changes. State explicitly
-      whether containerizing REPLACES `ao-self-pull.sh`'s restart mechanism or wraps it (e.g. the container still
-      polls LDR internally and restarts its own process, vs. an external supervisor rebuilding/redeploying the
-      container on each LDR push).
+- [x] [INFRA] P1. ✅ **DONE 2026-08-19.** Read `ao_ci_aws_to_ionos_migration_2026_08_18.md` in full before
+      designing the container build. Finding: it's a mature, mostly-blocked (on the operator's IONOS account
+      signup, §3) human plan with real production-cutover stakes, assuming the exact bare-VM systemd +
+      `ao-self-pull.sh` model unchanged — zero containerization anywhere in it. **Decision: containerizing WRAPS
+      the existing self-pull/restart model, does not replace its mechanics** — "how a new version reaches the
+      running box" still flows through the same self-pull-detects-a-new-LDR-commit trigger, just
+      rebuilding/restarting a container instead of restarting a bare uvicorn process. Folded into the IONOS plan
+      itself as a Decision-log entry + a note on its open VM-lifecycle-abstraction design todo (next todo below
+      covers that fold-in specifically).
 - [ ] [INFRA] P1. **Design + ship the Dockerfile/image-build workflow** for agent-orchestrator's server. Decide
       build trigger (same `push:[live-defi-rollout]` this plan's Phase 1 confirmed as AO's actual deploy signal, or
       a separate build-only trigger) and registry target (this fleet already has `image-build-gate.yml` precedent
       per Phase 1's semver-agent finding — check whether that's reusable or AO-specific). Done-when: an image
       builds successfully from a real LDR commit and runs the server correctly in a local/test container.
-- [ ] [INFRA] P2. **Decide what "runs as a Docker container inside the VM" means for the EC2→IONOS migration
-      specifically** — does containerizing make the migration strictly easier (portable image, same container
-      runtime on either cloud) or does it need its own IONOS-side prerequisite (a container runtime installed,
-      registry access from the new host)? Fold the answer into the IONOS plan itself, don't duplicate it here —
-      this todo's done-when is "the IONOS plan's own todos reflect the container model," not new IONOS work here.
+- [x] [INFRA] P2. ✅ **DONE 2026-08-19 — `unified-trading-pm@<pending, this commit>`.** Decide what "runs as a
+      Docker container inside the VM" means for the EC2→IONOS migration. Containerizing makes it strictly
+      easier — a container runtime is a much smaller cross-cloud-portability surface than replicating a full
+      `uv`-venv Python bootstrap per provider. Folded into the IONOS plan directly (not duplicated here): a new
+      Decision-log entry there records the wrap-not-replace decision and its "first real test of the
+      portability motivation" framing, and its open §1 VM-lifecycle-abstraction design todo now notes to
+      evaluate "provision compute + firewall + a container runtime, then `docker pull`+`docker run`" instead of
+      the full venv-bootstrap-per-provider shape when it's next picked up — not a mandate to redesign now, since
+      that plan is still blocked on §3 (IONOS account signup) regardless.
 
 ### Considered and explicitly OUT of scope: CI self-hosted runners do NOT get this same treatment
 
