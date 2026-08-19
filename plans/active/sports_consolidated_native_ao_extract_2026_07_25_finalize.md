@@ -69,8 +69,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile `sports_consolidated_native_ao_extract_2026_07_25.md`'s 26 now-done todos back into
-      `sports_consolidated_closeout_2026_07_19.md`'s own corresponding checkboxes.** For each of the 26 todos: flip the
+- [ ] [REVIEW] P1. **Reconcile `sports_consolidated_native_ao_extract_2026_07_25.md`'s 26 now-done todos back into `sports_consolidated_closeout_2026_07_19.md`'s own corresponding checkboxes.** For each of the 26 todos: flip the
       identically-worded (or closely-paraphrased) checkbox at the cited
       `sports_consolidated_closeout_2026_07_19.md: <line>` location, citing the extract plan's shipped commit(s) —
       verify the actual shipped commit exists before citing it (`git log`, not the extract plan's own claim alone).

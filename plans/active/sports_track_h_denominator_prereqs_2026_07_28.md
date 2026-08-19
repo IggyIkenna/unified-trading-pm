@@ -57,11 +57,14 @@ context_scope:
 
 # Sports Track H denominator prerequisites
 
-> Both todos below are independent (different repos, different scripts) and can run concurrently. Neither is
-> `[OPERATOR]`-gated: both are idempotent, copy-before-delete/reprocess-from-canonical-source operations already
-> authorised in principle by `issues/sports_league_id_namespace_migration_2026_07_20.md`'s "READY TO EXECUTE 2026-07-21"
-> section (operator-authorised migrate+delete, gated on dry-run success + VM drain — both already met for the raw
-> `batch_odds_api` shape; these 2 todos extend the same authorised migration to its 2 still-outstanding shapes).
+> Both todos below are independent (different repos, different scripts) and can run concurrently. **CORRECTED
+> 2026-08-19 (/plan-reconcile): this note is stale for todo 1** — todo 1 was retagged `[CODE]`→`[OPERATOR]` on
+> 2026-08-12 (blocked on a genuine cross-repo design decision, see its own text) after this note was written; it is
+> no longer accurate to say "neither is `[OPERATOR]`-gated." Todo 2 (batch_footystats copy+swap) remains correctly
+> non-gated: an idempotent, copy-before-delete/reprocess-from-canonical-source operation already authorised in
+> principle by `issues/sports_league_id_namespace_migration_2026_07_20.md`'s "READY TO EXECUTE 2026-07-21" section
+> (operator-authorised migrate+delete, gated on dry-run success + VM drain — both already met for the raw
+> `batch_odds_api` shape; todo 2 extends that same authorised migration to its still-outstanding shape).
 
 ## Todos
 
@@ -234,3 +237,7 @@ and verified independent of the code-ship — this is a shipping-mechanics gap o
 - **context-scout 2026-08-03**: refreshed context_scope (6 entries) -- added `bucket_assignment_adapter.py`, the todo 1
   STOP condition's actual root-caused file (`_get_dedup_columns` excludes `league_id`); dropped the epic doc.
 - **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.
+- **/plan-reconcile 2026-08-19 (sports_master hunter pass)**: fixed a stale contradiction — the header note above the
+  Todos section still read "Neither is `[OPERATOR]`-gated," but todo 1 was retagged `[CODE]`→`[OPERATOR]` on
+  2026-08-12 (per its own text) after the note was written. Corrected the note to reflect todo 1's current
+  `[OPERATOR]` status while leaving todo 2's non-gated justification intact. No other changes.

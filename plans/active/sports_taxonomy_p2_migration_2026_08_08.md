@@ -609,9 +609,9 @@ returns < 604800, the delete falls back to approve-executes and the todo must st
 
 ### Added 2026-08-08 (operator, mid-flight) — re-stamp the collapsed derived types
 
-- [ ] [DATA] P0. **BLOCKED-OPERATOR-DECISION 2026-08-15 (second correction, same day) — the "re-stamp odds_snapshot
-      (16,521) + odds_movement (16,470)" premise is FALSE; both adapters are dead code, never scheduled, 0 real captures
-      (3,234 phantom rows/type only).** Evidence + operator decision options:
+- [ ] [DATA] P0. **BLOCKED-OPERATOR-DECISION 2026-08-15 — re-stamp odds_snapshot/odds_movement premise is FALSE:**
+      both adapters are dead code, never scheduled, 0 real captures (3,234 phantom rows/type only, not the claimed
+      16,521/16,470). Second correction, same day. Evidence + operator decision options:
       `/codex/02-data/sports-data-types-catalog.md` correction banner, this doc's Progress Log below.
 - [x] ✅ [REVIEW] P1. **Assert the vocabulary has collapsed to TWO types — REVISED 2026-08-15.** Live census (slot-20):
       tick bucket ✓ `odds`/`odds_horizon_bucket`/unchanged `arbitrage_opportunity`. **Gap**: IS-bucket SSOT manifest

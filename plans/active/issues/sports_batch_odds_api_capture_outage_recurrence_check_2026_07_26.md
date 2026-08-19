@@ -276,13 +276,12 @@ write a manifest row of any kind — not even `attempted_failed`).
 > checkboxes, and this doc previously carried none despite `assigned_vm: planning`, making its work structurally
 > invisible to the backlog.
 
-- [ ] [DATA] P0. BLOCKED-ON:sports_all_vendor_honest_coverage_convergence_2026_08_07 — **LAUNCHED VIA THE BROADER CHAIN,
-      NOT YET CONVERGED (re-verified live 2026-08-09T09:17Z: `mtds-backfill-odds-smallchunk10-20260809` RUNNING,
-      heartbeat 13s old, real progress at chunk 16/451 — genuinely alive, not stalled). Do not launch a separate VM for
-      this todo's windows — a single guard-respecting chain already covers both; a second launch would race/duplicate
-      the fetch (see the ag-closeout-audit note below). This todo becomes doable again once that chain converges into
-      the 2026-06-27..07-25 target range (currently ~430 chunks away) — until then it is genuinely blocked on that
-      owning doc's already-in-flight campaign, not a decision or ambiguity a worker session can resolve.** Corrected
+- [ ] [DATA] P0. BLOCKED-ON:sports_all_vendor_honest_coverage_convergence_2026_08_07 — **LAUNCHED VIA THE BROADER CHAIN, NOT YET CONVERGED — do NOT launch a separate VM for this todo's windows (a single guard-respecting chain already covers both; a second launch would race/duplicate the fetch).** Re-verified live 2026-08-09T09:17Z:
+      `mtds-backfill-odds-smallchunk10-20260809` RUNNING, heartbeat 13s old, real progress at chunk 16/451 — genuinely
+      alive, not stalled (see the ag-closeout-audit note below for the full citation). This todo becomes doable again
+      once that chain converges into the 2026-06-27..07-25 target range (currently ~430 chunks away) — until then it is
+      genuinely blocked on that owning doc's already-in-flight campaign, not a decision or ambiguity a worker session
+      can resolve. Corrected
       2026-08-02: the prior `[x]` mismarked the launch-decision + credential gate as the whole todo — both are clear,
       but the backfill itself has not run.** UNBLOCKED 2026-07-29 (was `BLOCKED-CREDENTIALS` through 2026-07-28 — a
       2026-07-29 mechanical rephrase pass, commit `6edd4486a`, had once already incorrectly stripped this line's

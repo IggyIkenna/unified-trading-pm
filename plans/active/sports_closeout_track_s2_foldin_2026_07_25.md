@@ -210,7 +210,8 @@ context_scope:
           10,869/489 figure (smaller because the registry grew 94→383 leagues since §U's 2026-07-19 measurement, plus the
           intervening §T/§W backfills and the 2026-07-23 pre-floor wipe). 60 of the 2,111 scoped blobs (all
           `day=2026-04-14`) hit the already-tracked wrong-schema contamination from
-          `sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` — known residue, not a new defect.
+          `plans/archive/2026_08/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (archived 2026-08-19,
+          all 6 todos `[x]`) — known residue, not a new defect.
 
 - [x] ✅ [DIAG] P1. **Sports P2a sub-item (b) — G2 2015-2017 zero-captured diagnosis — DONE 2026-07-27, read-only, no
       fix implemented.** **FINDING: subscription-tier limit (high confidence), not a backfill bug.** This question was

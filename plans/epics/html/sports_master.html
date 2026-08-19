@@ -1,0 +1,648 @@
+<!-- generated: 2026-08-19T03:15:00Z by /plan-reconcile sports_master -->
+<title>Sports Master Ledger</title>
+<style>
+  :root {
+    --bg: #f0f2ec;
+    --surface: #ffffff;
+    --surface-2: #e6e9df;
+    --ink: #16261c;
+    --ink-dim: #4d5d52;
+    --ink-faint: #7c8a80;
+    --accent: #a97c2f;
+    --accent-ink: #ffffff;
+    --accent-2: #2f6b4d;
+    --line: rgba(22, 38, 28, 0.14);
+    --line-strong: rgba(22, 38, 28, 0.28);
+    --good: #4f8f3d;
+    --good-bg: rgba(79, 143, 61, 0.12);
+    --warn: #b5791e;
+    --warn-bg: rgba(181, 121, 30, 0.12);
+    --critical: #b8432c;
+    --critical-bg: rgba(184, 67, 44, 0.12);
+    --shadow: 0 1px 2px rgba(22, 38, 28, 0.06), 0 6px 20px rgba(22, 38, 28, 0.06);
+    --radius: 10px;
+    --font-display: "Arial Black", "Helvetica Neue", Arial, sans-serif;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0d1913;
+      --surface: #16261c;
+      --surface-2: #1e3327;
+      --ink: #eef1ea;
+      --ink-dim: #a9b8ad;
+      --ink-faint: #71857a;
+      --accent: #d4a24e;
+      --accent-ink: #17130a;
+      --accent-2: #6fae8c;
+      --line: rgba(238, 241, 234, 0.12);
+      --line-strong: rgba(238, 241, 234, 0.22);
+      --good: #7fb069;
+      --good-bg: rgba(127, 176, 105, 0.14);
+      --warn: #e0a53c;
+      --warn-bg: rgba(224, 165, 60, 0.14);
+      --critical: #e07a5f;
+      --critical-bg: rgba(224, 122, 95, 0.14);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0d1913;
+    --surface: #16261c;
+    --surface-2: #1e3327;
+    --ink: #eef1ea;
+    --ink-dim: #a9b8ad;
+    --ink-faint: #71857a;
+    --accent: #d4a24e;
+    --accent-ink: #17130a;
+    --accent-2: #6fae8c;
+    --line: rgba(238, 241, 234, 0.12);
+    --line-strong: rgba(238, 241, 234, 0.22);
+    --good: #7fb069;
+    --good-bg: rgba(127, 176, 105, 0.14);
+    --warn: #e0a53c;
+    --warn-bg: rgba(224, 165, 60, 0.14);
+    --critical: #e07a5f;
+    --critical-bg: rgba(224, 122, 95, 0.14);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  a { color: var(--accent-2); text-decoration-thickness: 1px; }
+  code, .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  .tnum { font-variant-numeric: tabular-nums; }
+  h1, h2, h3 { text-wrap: balance; font-family: var(--font-display); letter-spacing: -0.01em; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    background:
+      repeating-linear-gradient(180deg, rgba(255,255,255,0.02) 0 2px, transparent 2px 4px),
+      linear-gradient(160deg, var(--accent-2), var(--ink) 120%);
+    color: #f4f6f1;
+    padding: 56px 24px 44px;
+    border-bottom: 6px solid var(--accent);
+  }
+  .masthead-inner { max-width: 1180px; margin: 0 auto; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: rgba(244, 246, 241, 0.75);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .eyebrow .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 0 3px rgba(212, 162, 78, 0.25);
+  }
+  .masthead h1 {
+    font-size: clamp(34px, 5vw, 54px);
+    line-height: 1.02;
+    margin: 14px 0 10px;
+    text-transform: uppercase;
+    letter-spacing: -0.01em;
+  }
+  .masthead .dek {
+    font-size: 17px;
+    max-width: 66ch;
+    color: rgba(244, 246, 241, 0.86);
+    margin: 0;
+  }
+  .masthead .meta {
+    margin-top: 20px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: rgba(244, 246, 241, 0.65);
+    display: flex; flex-wrap: wrap; gap: 6px 18px;
+  }
+
+  /* ---------- Chips ---------- */
+  .chiprow { display: flex; flex-wrap: wrap; gap: 8px; margin: 28px 0 0; }
+  .chip {
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--surface);
+    color: var(--ink-dim);
+  }
+  .chip.in { border-color: var(--accent-2); color: var(--accent-2); background: var(--good-bg); }
+  .chip.out { color: var(--ink-faint); text-decoration: line-through; opacity: 0.75; }
+
+  section { margin-top: 52px; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  .section-head h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-dim);
+    margin: 0;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-head h2::before {
+    content: "";
+    width: 22px; height: 2px;
+    background: var(--accent);
+    display: inline-block;
+  }
+  .section-note { font-size: 13px; color: var(--ink-faint); }
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--line-strong);
+    border: 1px solid var(--line-strong);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-top: -34px;
+    box-shadow: var(--shadow);
+    position: relative;
+    z-index: 2;
+  }
+  .stat-tile {
+    background: var(--surface);
+    padding: 20px 18px;
+  }
+  .stat-tile .n {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: 34px;
+    color: var(--accent);
+    line-height: 1;
+  }
+  .stat-tile .n small { font-size: 15px; color: var(--ink-faint); font-weight: 500; }
+  .stat-tile .l {
+    margin-top: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-dim);
+  }
+  @media (max-width: 900px) { .stat-strip { grid-template-columns: repeat(2, 1fr); } }
+
+  /* ---------- Plan groups / cards ---------- */
+  .group-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--ink-faint); margin: 30px 0 10px;
+  }
+  .group-label:first-child { margin-top: 0; }
+  .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  @media (max-width: 980px) { .card-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .card-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .card.agg { border-left: 3px solid var(--accent-2); }
+  .card-title { font-size: 13.5px; font-weight: 600; line-height: 1.35; }
+  .card-path { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint); margin-top: 4px; word-break: break-all; }
+  .card-bar-row { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .card-bar { flex: 1; height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; }
+  .card-bar > span { display: block; height: 100%; background: var(--good); }
+  .card-nums { font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-dim); white-space: nowrap; }
+  .card-op {
+    margin-top: 10px; padding-top: 8px; border-top: 1px dashed var(--line);
+    font-size: 11.5px; color: var(--warn);
+  }
+  .card-op b { text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px; }
+  .tag-agg {
+    display: inline-block; font-size: 9.5px; font-family: var(--font-mono);
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent-2);
+    background: var(--good-bg); padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+  }
+  .tag-draft {
+    display: inline-block; font-size: 9.5px; font-family: var(--font-mono);
+    text-transform: uppercase; letter-spacing: 0.05em; color: var(--warn);
+    background: var(--warn-bg); padding: 1px 6px; border-radius: 4px; margin-left: 6px;
+  }
+
+  /* ---------- Desk table ---------- */
+  .desk-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; background: var(--surface); }
+  th, td { text-align: left; padding: 12px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-faint); background: var(--surface-2); border-bottom: 1px solid var(--line-strong);
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+  td.pri { font-family: var(--font-mono); font-weight: 700; }
+  td.pri.p0 { color: var(--critical); }
+  td.pri.p1 { color: var(--warn); }
+  td.pri.p2, td.pri.p3 { color: var(--ink-dim); }
+  td.doclink a { font-family: var(--font-mono); font-size: 11.5px; }
+  td.ask { font-size: 13px; }
+
+  /* ---------- Finding cards ---------- */
+  .finding {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    padding: 16px 18px; margin-bottom: 12px; box-shadow: var(--shadow);
+    border-left: 3px solid var(--warn);
+  }
+  .finding.critical { border-left-color: var(--critical); }
+  .finding h3 { font-family: var(--font-body); font-size: 14.5px; margin: 0 0 6px; }
+  .finding p { margin: 0; font-size: 13.5px; color: var(--ink-dim); }
+  .finding .fmeta { font-family: var(--font-mono); font-size: 11px; color: var(--ink-faint); margin-top: 8px; }
+
+  /* ---------- Closed-out list ---------- */
+  .closed-list { display: grid; gap: 8px; }
+  .closed-row {
+    display: grid; grid-template-columns: 90px 1fr auto; gap: 12px; align-items: baseline;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px;
+  }
+  .closed-row .badge {
+    font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase;
+    color: var(--good); background: var(--good-bg); border-radius: 5px; padding: 2px 7px; text-align: center;
+  }
+  .closed-row .desc { font-size: 13px; }
+  .closed-row .who { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-faint); white-space: nowrap; }
+  @media (max-width: 700px) { .closed-row { grid-template-columns: 1fr; } }
+
+  /* ---------- Lanes ---------- */
+  .lane-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
+  .lanes-table td, .lanes-table th { min-width: 160px; }
+  .lanes-table td.files { font-family: var(--font-mono); font-size: 11px; color: var(--ink-dim); }
+
+  /* ---------- Prompt blocks ---------- */
+  .prompt {
+    background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+    margin-bottom: 14px; overflow: hidden; box-shadow: var(--shadow);
+  }
+  .prompt summary {
+    cursor: pointer; padding: 12px 16px; font-size: 13.5px; font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    background: var(--surface-2);
+  }
+  .prompt summary .lane-n {
+    font-family: var(--font-mono); color: var(--accent-ink); background: var(--accent);
+    border-radius: 5px; padding: 1px 8px; font-size: 11.5px; margin-right: 10px;
+  }
+  .prompt pre {
+    margin: 0; padding: 16px; font-family: var(--font-mono); font-size: 11.5px; line-height: 1.6;
+    white-space: pre-wrap; word-break: break-word; color: var(--ink-dim); max-height: 340px; overflow-y: auto;
+  }
+
+  footer {
+    margin-top: 64px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 12.5px; color: var(--ink-faint);
+  }
+  footer a { color: var(--ink-faint); }
+</style>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow"><span class="dot"></span> unified-trading-pm &middot; epic ledger &middot; L0 asset-group umbrella</div>
+    <h1>Sports Master</h1>
+    <p class="dek">
+      The scoreboard for the sports asset-group pipeline — API-Football fixtures, three live-adapter odds venues
+      (ODDS_API, PINNACLE, BETFAIR), the golden-window-to-100% coverage drive, and the taxonomy P1&ndash;P4
+      canonicalisation chain that closes it out. Generated by an epic-scoped <code>/plan-reconcile sports_master</code>
+      pass, 2026-08-19.
+    </p>
+    <div class="meta">
+      <span>68 child docs swept</span>
+      <span>&middot;</span>
+      <span>41 plans / 26 issues (1 archived this pass)</span>
+      <span>&middot;</span>
+      <span>19 aggregator/satellite plans</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="stat-strip">
+    <div class="stat-tile"><div class="n tnum">119</div><div class="l">Open todos (deduped)</div></div>
+    <div class="stat-tile"><div class="n tnum">201</div><div class="l">Done todos (deduped)</div></div>
+    <div class="stat-tile"><div class="n tnum">14</div><div class="l">Operator-blocked items</div></div>
+    <div class="stat-tile"><div class="n tnum">19</div><div class="l">Aggregator / satellite plans</div></div>
+    <div class="stat-tile"><div class="n tnum">1</div><div class="l">Doc archived this pass</div></div>
+  </div>
+
+  <section>
+    <div class="section-head"><h2>In scope / explicitly excluded</h2></div>
+    <div class="chiprow">
+      <span class="chip in">ODDS_API (raw ticks)</span>
+      <span class="chip in">PINNACLE (sharp benchmark)</span>
+      <span class="chip in">BETFAIR + sub-venues (exchange/lay)</span>
+      <span class="chip in">API-Football fixtures/reference</span>
+      <span class="chip in">Taxonomy P1&ndash;P4 canonicalisation chain</span>
+      <span class="chip in">2020-06-06&rarr;present derived-layer backfill</span>
+      <span class="chip out">14 UK/EU scraper bookmakers &mdash; retired 2026-07-08</span>
+      <span class="chip out">DRAFTKINGS / FANDUEL direct adapters &mdash; deferred-indefinitely</span>
+      <span class="chip out">Pre-2020-06-06 sports data &mdash; fabrication-by-construction, wiped</span>
+      <span class="chip out">Predictions ML training / arb_calculator &mdash; owned by predictions_master</span>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Plan-by-plan breakdown</h2><span class="section-note">67 live children &middot; aggregator plans marked, non-double-counted per /open-task-count</span></div>
+
+    <div class="group-label">Core &amp; canonical-universe plans</div>
+    <div class="card-grid">
+      <div class="card"><div class="card-title">Sports canonical universe + API-Football reference expansion</div><div class="card-path">sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:96%"></span></div><div class="card-nums">27/28</div></div></div>
+      <div class="card"><div class="card-title">sports_catalog_league_grain_only_scope</div><div class="card-path">sports_catalog_league_grain_only_scope_2026_07_08.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:43%"></span></div><div class="card-nums">3/7</div></div></div>
+      <div class="card"><div class="card-title">ODDS bookmaker &times; market coverage enumeration</div><div class="card-path">sports_odds_bookmaker_coverage_enumeration_2026_06_20.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:86%"></span></div><div class="card-nums">6/7</div></div></div>
+      <div class="card"><div class="card-title">Flip odds_api writer off trades onto odds + retire orphaned path</div><div class="card-path">sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:78%"></span></div><div class="card-nums">7/9</div></div><div class="card-op"><b>Operator</b> physically delete orphaned trades objects</div></div>
+      <div class="card"><div class="card-title">Sports/predictions live-mode activation readiness</div><div class="card-path">sports_predictions_live_mode_activation_readiness_2026_07_21.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:67%"></span></div><div class="card-nums">4/6</div></div><div class="card-op"><b>Operator</b> explicit real-money go-ahead, deliberately not defaulted</div></div>
+      <div class="card"><div class="card-title">MTDS live sports arb feeds &mdash; SharpAPI, odds-api.io, Unity</div><div class="card-path">mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:20%"></span></div><div class="card-nums">4/20</div></div><div class="card-op"><b>Operator</b> launch live consolidated VM</div></div>
+      <div class="card"><div class="card-title">Sports live arb &mdash; strategy migration + execution routing</div><div class="card-path">sports_live_arb_strategy_and_execution_routing_2026_08_14.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:16%"></span></div><div class="card-nums">3/19</div></div><div class="card-op"><b>Operator</b> decide the paper&rarr;live promotion gate</div></div>
+    </div>
+
+    <div class="group-label">Consolidated closeout hub &amp; native extract</div>
+    <div class="card-grid">
+      <div class="card agg"><div class="card-title">Sports consolidated close-out<span class="tag-agg">hub</span></div><div class="card-path">sports_consolidated_closeout_2026_07_19.md &middot; 1000L, at hard cap</div><div class="card-bar-row"><div class="card-bar"><span style="width:75%"></span></div><div class="card-nums">52/69</div></div></div>
+      <div class="card agg"><div class="card-title">Native AO extract<span class="tag-agg">agg</span></div><div class="card-path">sports_consolidated_native_ao_extract_2026_07_25.md &middot; 1000L, at hard cap</div><div class="card-bar-row"><div class="card-bar"><span style="width:100%"></span></div><div class="card-nums">33/33 &mdash; archival deferred, see &sect;6</div></div></div>
+      <div class="card agg"><div class="card-title">Native AO extract &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_consolidated_native_ao_extract_2026_07_25_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/4</div></div></div>
+      <div class="card agg"><div class="card-title">Closeout Track S2 fold-in<span class="tag-agg">agg</span></div><div class="card-path">sports_closeout_track_s2_foldin_2026_07_25.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:50%"></span></div><div class="card-nums">6/12</div></div></div>
+      <div class="card agg"><div class="card-title">Closeout Track S2 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_closeout_track_s2_foldin_2026_07_25_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/3</div></div></div>
+    </div>
+
+    <div class="group-label">Taxonomy P1&ndash;P4 canonicalisation chain</div>
+    <div class="card-grid">
+      <div class="card"><div class="card-title">P2 &mdash; migrate GCS + manifest to canonical model</div><div class="card-path">sports_taxonomy_p2_migration_2026_08_08.md &middot; 1000L, at hard cap</div><div class="card-bar-row"><div class="card-bar"><span style="width:96%"></span></div><div class="card-nums">25/26</div></div><div class="card-op"><b>Blocked-operator</b> re-stamp odds_snapshot/movement premise is FALSE</div></div>
+      <div class="card agg"><div class="card-title">P2 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_taxonomy_p2_migration_2026_08_08_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:17%"></span></div><div class="card-nums">1/6</div></div></div>
+      <div class="card"><div class="card-title">P2 &mdash; consumer inventory<span class="tag-agg">record</span></div><div class="card-path">sports_taxonomy_p2_consumer_inventory_2026_08_12.md &middot; zero-checkbox, verified reference doc</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/0</div></div></div>
+      <div class="card"><div class="card-title">P3 &mdash; move consumers onto canonical model</div><div class="card-path">sports_taxonomy_p3_consumers_2026_08_08.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:83%"></span></div><div class="card-nums">15/18</div></div><div class="card-op"><b>Operator</b> split ML PATH-PREFIX loader-migration into own plan</div></div>
+      <div class="card agg"><div class="card-title">P3 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_taxonomy_p3_consumers_2026_08_08_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/6</div></div></div>
+      <div class="card"><div class="card-title">P4 &mdash; backfill derived layer to 2020-06 floor</div><div class="card-path">sports_taxonomy_p4_backfill_2026_08_08.md &middot; gated on P2</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/9</div></div></div>
+      <div class="card agg"><div class="card-title">P4 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_taxonomy_p4_backfill_2026_08_08_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/6</div></div></div>
+    </div>
+
+    <div class="group-label">Track H, O, C/V &mdash; denominator, venue-rename, vocab &amp; delete</div>
+    <div class="card-grid">
+      <div class="card">
+        <div class="card-title">Track H &mdash; registry-aware denominator</div><div class="card-path">sports_track_h_denominator_gated_2026_07_28.md &middot; gated</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card"><div class="card-title">Track H denominator prerequisites</div><div class="card-path">sports_track_h_denominator_prereqs_2026_07_28.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:50%"></span></div><div class="card-nums">1/2</div></div><div class="card-op"><b>Operator</b> cross-repo canonicalization-map design decision</div></div>
+      <div class="card"><div class="card-title">Trace renamed venue keys (Track O follow-on)</div><div class="card-path">sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card agg"><div class="card-title">Track O trace &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_venue_rename_attempted_at_trace_ao_dispatch_2026_08_16_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card"><div class="card-title">Track C vocab cleanup + Track V live-writer check</div><div class="card-path">sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:50%"></span></div><div class="card-nums">1/2</div></div></div>
+      <div class="card agg"><div class="card-title">Track C/V &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_venue_vocab_and_league_id_delete_ao_dispatch_2026_08_16_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card"><div class="card-title">League-alias dispatch anomaly investigation</div><div class="card-path">sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card agg"><div class="card-title">League-alias &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+    </div>
+
+    <div class="group-label">Satellite AO-dispatch batches (aggregator/finalize pairs)</div>
+    <div class="card-grid">
+      <div class="card agg"><div class="card-title">Batch 5 &mdash; fresh triage<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch5_2026_07_26.md &middot; 0 open, archival deferred</div><div class="card-bar-row"><div class="card-bar"><span style="width:100%"></span></div><div class="card-nums">2/2</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 5 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md &middot; gate cleared 2026-08-09, corrected this pass</div><div class="card-bar-row"><div class="card-bar"><span style="width:50%"></span></div><div class="card-nums">2/4</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 9 &mdash; orphan extraction<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch9_2026_08_04.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:71%"></span></div><div class="card-nums">22/31</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 9 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch9_2026_08_04_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/2</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 10 &mdash; orphan extraction<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch10_2026_08_06.md &middot; 0 open</div><div class="card-bar-row"><div class="card-bar"><span style="width:100%"></span></div><div class="card-nums">5/5</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 10 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:20%"></span></div><div class="card-nums">1/5</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 12 &mdash; residual extraction<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch12_2026_08_09.md &middot; 0 open</div><div class="card-bar-row"><div class="card-bar"><span style="width:100%"></span></div><div class="card-nums">4/4</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 12 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch12_2026_08_09_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:40%"></span></div><div class="card-nums">2/5</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 14 &mdash; residual extraction<span class="tag-agg">agg</span><span class="tag-draft">draft</span></div><div class="card-path">sports_satellite_ao_dispatch_batch14_2026_08_16.md &middot; not yet dispatched</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/10</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 14 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch14_2026_08_16_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/11</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 15 &mdash; na-eligibility residual<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch15_2026_08_17.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:36%"></span></div><div class="card-nums">4/11</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 15 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch15_2026_08_17_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/3</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 16 &mdash; na-eligibility residual<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch16_2026_08_17.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/2</div></div></div>
+      <div class="card agg"><div class="card-title">Batch 16 &mdash; finalize<span class="tag-agg">agg</span></div><div class="card-path">sports_satellite_ao_dispatch_batch16_2026_08_17_finalize.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/3</div></div></div>
+    </div>
+
+    <div class="group-label">Issue docs (26)</div>
+    <div class="card-grid">
+      <div class="card"><div class="card-title">ag_closeout_audit_sports_parked<span class="tag-agg">record</span></div><div class="card-path">issues/ag_closeout_audit_sports_parked_2026_08_16.md &middot; zero-checkbox, verified finished record</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/0</div></div></div>
+      <div class="card"><div class="card-title">DP-VM-001 MDPS sports staleness-guard races</div><div class="card-path">issues/dp_vm_001_mdps_sports_2026_staleness_guard_and_timeouts_2026_08_16.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/4</div></div><div class="card-op"><b>Operator</b> wait for sibling year-shard VMs</div></div>
+      <div class="card"><div class="card-title">footystats MATCHES/PREDICTIONS gaps</div><div class="card-path">issues/footystats_matches_predictions_fetch_gaps_2026_07_08.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:83%"></span></div><div class="card-nums">5/6</div></div></div>
+      <div class="card"><div class="card-title">MDPS odds_horizon_bucket shard4 residual</div><div class="card-path">issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:80%"></span></div><div class="card-nums">4/5</div></div></div>
+      <div class="card"><div class="card-title">pipeline_e2e_check declared-violations sports exemption</div><div class="card-path">issues/pipeline_e2e_check_declared_violations_sports_stale_exemption_2026_08_18.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card"><div class="card-title">sports_af_completion_pass</div><div class="card-path">issues/sports_af_completion_pass_2026_08_10.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card"><div class="card-title">All-vendor honest-coverage convergence</div><div class="card-path">issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md &middot; 1017L, over cap &mdash; see &sect;6</div><div class="card-bar-row"><div class="card-bar"><span style="width:87%"></span></div><div class="card-nums">20/23</div></div></div>
+      <div class="card"><div class="card-title">batch_odds_api capture-outage recurrence check</div><div class="card-path">issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:67%"></span></div><div class="card-nums">2/3</div></div></div>
+      <div class="card"><div class="card-title">Canonical batch_odds_api duplicate-rows writer</div><div class="card-path">issues/sports_canonical_batch_odds_api_duplicate_rows_writer_rootcause_2026_08_16.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:75%"></span></div><div class="card-nums">3/4</div></div><div class="card-op"><b>Operator</b> full-corpus backfill-dedup campaign</div></div>
+      <div class="card"><div class="card-title">Catalogue re-roll killed at corpus scale</div><div class="card-path">issues/sports_catalogue_reroll_2019_corpus_scale_killed_2026_08_15.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/2</div></div></div>
+      <div class="card"><div class="card-title">CLV ensemble trainer &mdash; no driver/test coverage</div><div class="card-path">issues/sports_clv_ensemble_trainer_no_driver_or_test_coverage_2026_08_09.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:67%"></span></div><div class="card-nums">2/3</div></div></div>
+      <div class="card"><div class="card-title">Fast T1 recon OOM / live-capture outage</div><div class="card-path">issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:85%"></span></div><div class="card-nums">11/13</div></div></div>
+      <div class="card"><div class="card-title">Fixtures-object wrong-schema instrument-catalog contamination</div><div class="card-path">issues/sports_fixtures_object_wrong_schema_instrument_catalog_contamination_2026_08_09.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:60%"></span></div><div class="card-nums">3/5</div></div></div>
+      <div class="card"><div class="card-title">Halftime odds &mdash; SFI vs in-play</div><div class="card-path">issues/sports_halftime_odds_sfi_vs_inplay_2026_07_16.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:80%"></span></div><div class="card-nums">4/5</div></div></div>
+      <div class="card"><div class="card-title">Honest-coverage gap closure</div><div class="card-path">issues/sports_honest_coverage_gap_closure_2026_08_14.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:95%"></span></div><div class="card-nums">18/19</div></div></div>
+      <div class="card"><div class="card-title">League_id namespace migration</div><div class="card-path">issues/sports_league_id_namespace_migration_2026_07_20.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card"><div class="card-title">MDT odds captured-cells not-found rate</div><div class="card-path">issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:67%"></span></div><div class="card-nums">8/12</div></div><div class="card-op"><b>Operator</b> execute 2 row-removal plans (sign-off pending)</div></div>
+      <div class="card"><div class="card-title">odds_api scattered multi-year gaps</div><div class="card-path">issues/sports_odds_api_scattered_multiyear_gaps_2026_07_27.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:50%"></span></div><div class="card-nums">2/4</div></div></div>
+      <div class="card"><div class="card-title">ODDS/odds data_type casing wider than odds_api</div><div class="card-path">issues/sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:50%"></span></div><div class="card-nums">2/4</div></div><div class="card-op"><b>Operator</b> full unification vs. case-tolerant consumers</div></div>
+      <div class="card"><div class="card-title">odds_horizon_bucket reader/writer path mismatch defeats zombie purge</div><div class="card-path">issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:67%"></span></div><div class="card-nums">4/6</div></div></div>
+      <div class="card"><div class="card-title">Reference-bucket 19-token uppercase regrowth</div><div class="card-path">issues/sports_p2_reference_bucket_uppercase_regrowth_2026_08_15.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:50%"></span></div><div class="card-nums">1/2</div></div></div>
+      <div class="card"><div class="card-title">IS-bucket trades mirror rows unstamped</div><div class="card-path">issues/sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:33%"></span></div><div class="card-nums">1/3</div></div><div class="card-op"><b>Operator</b> execute drafted manifest relabel via VM launch</div></div>
+      <div class="card"><div class="card-title">Stats delayed live-capture still dead post-fix</div><div class="card-path">issues/sports_stats_delayed_live_capture_still_dead_post_fix_2026_07_29.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:80%"></span></div><div class="card-nums">4/5</div></div></div>
+      <div class="card"><div class="card-title">T2h/T6h horizon retrain &mdash; blocked on generic trainer<span class="tag-agg">record</span></div><div class="card-path">issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md &middot; 0 open, archive_exempt set &mdash; see &sect;6</div><div class="card-bar-row"><div class="card-bar"><span style="width:100%"></span></div><div class="card-nums">2/2</div></div></div>
+      <div class="card"><div class="card-title">Track O attempted_at repair &mdash; keys extinct</div><div class="card-path">issues/sports_track_o_attempted_at_keys_extinct_2026_08_14.md &middot; NA twin of the dispatched trace plan above</div><div class="card-bar-row"><div class="card-bar"><span style="width:0%"></span></div><div class="card-nums">0/1</div></div></div>
+      <div class="card"><div class="card-title">Track V raw league_id delete &mdash; 5-part proof status</div><div class="card-path">issues/sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md</div><div class="card-bar-row"><div class="card-bar"><span style="width:89%"></span></div><div class="card-nums">8/9</div></div><div class="card-op"><b>Operator</b> re-tagged this pass &mdash; authorization not actually confirmed, see &sect;6</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>On the operator's desk</h2><span class="section-note">14 items gated on human action</span></div>
+    <div class="desk-scroll">
+      <table>
+        <thead><tr><th>Pri</th><th>Doc</th><th>Gated on</th></tr></thead>
+        <tbody>
+          <tr><td class="pri p2">P2</td><td class="doclink"><a href="#">mtds_sports_live_arb_feeds&hellip;.md</a></td><td class="ask">Launch the sports live consolidated VM and verify capture</td></tr>
+          <tr><td class="pri p2">P2</td><td class="doclink"><a href="#">sports_live_arb_strategy&hellip;.md</a></td><td class="ask">Decide the promotion gate from paper to live for this archetype</td></tr>
+          <tr><td class="pri p2">P2</td><td class="doclink"><a href="#">sports_odds_writer_flip&hellip;.md</a></td><td class="ask">Physically delete the orphaned <code>data_type=trades</code> GCS objects</td></tr>
+          <tr><td class="pri p3">P3</td><td class="doclink"><a href="#">sports_predictions_live_mode&hellip;.md</a></td><td class="ask">Explicit real-money go-ahead &mdash; deliberately not defaulted</td></tr>
+          <tr><td class="pri p0">P0</td><td class="doclink"><a href="#">sports_taxonomy_p2_migration&hellip;.md</a></td><td class="ask">Re-stamp odds_snapshot/odds_movement premise is FALSE &mdash; needs a fresh ruling on what (if anything) to do with the 3,234 phantom rows</td></tr>
+          <tr><td class="pri p3">P3</td><td class="doclink"><a href="#">sports_taxonomy_p3_consumers&hellip;.md</a></td><td class="ask">Split the ML PATH-PREFIX loader-migration todo into its own plan</td></tr>
+          <tr><td class="pri p1">P1</td><td class="doclink"><a href="#">sports_track_h_denominator_prereqs&hellip;.md</a></td><td class="ask">Cross-repo design decision on sourcing league_id canonicalization maps</td></tr>
+          <tr><td class="pri p1">P1</td><td class="doclink"><a href="#">dp_vm_001_mdps_sports&hellip;.md</a></td><td class="ask">Wait for sibling <code>mdps-sports-{2022&hellip;2025}</code> year-shard VMs, then re-run a targeted derive</td></tr>
+          <tr><td class="pri p3">P3</td><td class="doclink"><a href="#">sports_canonical_batch_odds_api_duplicate&hellip;.md</a></td><td class="ask">Full-corpus backfill-dedup of the extrapolated low-thousands of affected cells</td></tr>
+          <tr><td class="pri p1">P1</td><td class="doclink"><a href="#">sports_mdt_odds_captured_cells&hellip;.md</a></td><td class="ask">Execute 2 row-removal plans once sign-off is obtained (dedup + horizon-bucket)</td></tr>
+          <tr><td class="pri p2">P2</td><td class="doclink"><a href="#">sports_odds_data_type_casing&hellip;.md</a></td><td class="ask">Full casing unification vs. case-tolerant consumers &mdash; scope decision</td></tr>
+          <tr><td class="pri p2">P2</td><td class="doclink"><a href="#">sports_p2_trades_mirror&hellip;.md</a></td><td class="ask">Execute the drafted manifest relabel against prod via a dedicated VM launch (15.7M-row manifest)</td></tr>
+          <tr><td class="pri p3">P3</td><td class="doclink"><a href="#">sports_track_v_raw_league_id_delete&hellip;.md</a></td><td class="ask"><b>Found this pass:</b> the doc's own "AUTHORIZED" banner is not corroborated by its Progress Log &mdash; re-tagged <code>[OPERATOR]</code>; confirm via the live escalation queue before any <code>--apply-prod</code> fires on this ~144K&ndash;275K-object delete</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Needs extra scoping</h2><span class="section-note">found this pass, not cleanly "open" or "operator-blocked"</span></div>
+
+    <div class="finding critical">
+      <h3>Prod-delete authorization ambiguity on the Track V league_id population (~144K&ndash;275K objects)</h3>
+      <p>
+        <code>sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md</code>'s sole open todo carried a
+        bolded "AUTHORIZED 2026-08-16" header with no corroborating Progress Log entry &mdash; both the 2026-08-16
+        (slot 30) and 2026-08-17 (slot 27) entries explicitly say the operator's real go-ahead was never confirmed,
+        just filed as a <code>/blocked</code> question. Re-tagged <code>[OPERATOR]</code> this pass as a safety
+        measure; verify the live escalation queue before this fires against production.
+      </p>
+      <div class="fmeta">plans/active/issues/sports_track_v_raw_league_id_delete_5part_proof_status_2026_08_14.md &middot; found &amp; fixed by hunter batch 3</div>
+    </div>
+
+    <div class="finding">
+      <h3>Corpus-wide line-cap gate blind spot: <code>plans/active/issues/*.md</code> never globbed</h3>
+      <p>
+        <code>check_line_caps.sh</code>'s full-corpus mode globs only <code>plans/active/*.md</code> + <code>plans/epics/*.md</code>
+        &mdash; a bash glob that never matches the <code>issues/</code> subdirectory (488 files, confirmed
+        live). <code>sports_all_vendor_honest_coverage_convergence_2026_08_07.md</code> sits at 1017 lines, 17 over
+        the hard cap, completely unflagged by the routine sweep. Corpus-wide gap, not sports-specific; filed as a
+        tracked issue rather than hand-fixed inline.
+      </p>
+      <div class="fmeta">plans/active/issues/check_line_caps_issues_subdir_full_corpus_glob_gap_2026_08_19.md &middot; new, filed this pass</div>
+    </div>
+
+    <div class="finding">
+      <h3>Native AO extract reconciliation is 8+ days overdue, blocked by the hub's own line cap</h3>
+      <p>
+        <code>sports_consolidated_native_ao_extract_2026_07_25.md</code> is 33/33 done and has carried an
+        <code>archive_exempt: true</code> bridge since 2026-08-12 awaiting a "separate follow-on pass." Its finalize
+        plan's todo 1 (reconcile 26 done sub-items back into the hub's own checkboxes) still hasn't run &mdash; the
+        hub itself sits at exactly the 1000-line hard cap with no room, so this needs either a scoped single-checkbox-flip
+        commit per item (the 2026-08-15 <code>BLK-a2710376</code> exception) or a genuine split. Not attempted this
+        pass given the risk to the hub's line-cap state.
+      </p>
+      <div class="fmeta">sports_consolidated_native_ao_extract_2026_07_25_finalize.md todos 1&ndash;3</div>
+    </div>
+
+    <div class="finding">
+      <h3>Batch 5 finalize's BLOCKED gate cleared 10 days ago, unnoticed</h3>
+      <p>
+        <code>sports_satellite_ao_dispatch_batch5_2026_07_26.md</code> reached 0 open todos on 2026-08-09 (its
+        zombie-tick checkbox flipped by a different doc's fix), but its finalize twin still read as if the gate
+        never cleared. Corrected the stale framing this pass &mdash; the substantial reconciliation work itself
+        (25+ source-doc checkboxes) was not attempted, only the status correction.
+      </p>
+      <div class="fmeta">sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md todo 2</div>
+    </div>
+
+    <div class="finding">
+      <h3>Two low-risk archival candidates recommended, not executed</h3>
+      <p>
+        <code>sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md</code> (0/2 done,
+        <code>archive_exempt: true</code> already set) has 7 referrer mentions across 2 live docs &mdash; a real
+        candidate, deferred given this pass's remaining scope. One doc, <code>sports_fixtures_schedule_wrong_schema_day_2026_04_14.md</code>,
+        WAS archived this pass (see &sect;7).
+      </p>
+      <div class="fmeta">plans/active/issues/sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md</div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Closed out this pass</h2><span class="section-note">what actually flipped, with evidence</span></div>
+    <div class="closed-list">
+      <div class="closed-row"><div class="badge">archived</div><div class="desc">sports_fixtures_schedule_wrong_schema_day_2026_04_14.md &mdash; all 6 todos HARD-verified (instruments-service@b3cb6f8c/@a9f42320/@8df301f4), content-verified live after a squash-merge SHA-orphaning false-negative; 4 corpus referrers repointed to the archive path incl. a codex SSOT</div><div class="who">lead session</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">9 line-1-completeness defects across batch14/batch15/batch16/league-alias/S2-finalize/native-extract-finalize todos &mdash; the exact defect class prioritized this run</div><div class="who">hunter 4</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">Frontmatter contradiction: <code>assigned_vm: NA</code> paired with <code>execution_scope: orchestrator-agent</code> in sports_odds_bookmaker_coverage_enumeration &mdash; corrected to local-only</div><div class="who">hunter 4</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">Duplicate-VM-launch safety instruction truncated past line 1 in sports_batch_odds_api_capture_outage_recurrence_check</div><div class="who">hunter 4</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">Re-tagged Track V's prod-delete todo <code>[OPERATOR]</code> after finding its "AUTHORIZED" banner uncorroborated</div><div class="who">hunter 3</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">Stale note in Track H prereqs: header said "neither is OPERATOR-gated" after todo 1 was retagged CODE&rarr;OPERATOR on 2026-08-12</div><div class="who">hunter 5 (fallback)</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">Line-1 truncation of the P0 BLOCKED-OPERATOR-DECISION todo in sports_taxonomy_p2_migration &mdash; the load-bearing "premise is FALSE, dead code, 0 real captures" fact moved onto line 1, net-zero line count on an at-cap doc</div><div class="who">lead session</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">Stale BLOCKED framing on batch5_finalize corrected &mdash; the gate cleared 2026-08-09</div><div class="who">lead session</div></div>
+      <div class="closed-row"><div class="badge">fixed</div><div class="desc">Minor line-1 gating-condition merge on mdps_odds_horizon_bucket_shard4's retry todo</div><div class="who">lead session</div></div>
+      <div class="closed-row"><div class="badge">filed</div><div class="desc">New issue doc: check_line_caps.sh's <code>plans/active/issues/</code> glob gap (corpus-wide, not sports-specific)</div><div class="who">lead session</div></div>
+      <div class="closed-row"><div class="badge">verified</div><div class="desc">10+ contradiction/AO-readiness/hedge-pointer/sports-floor checks across the remaining ~44 docs came back clean &mdash; no action needed, confirmed not just assumed</div><div class="who">hunters 2, 3, 4, fallback</div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Parallel-tab flow for what's left</h2><span class="section-note">non-operator-blocked work, up to 5 disjoint-file lanes</span></div>
+    <div class="lane-scroll">
+      <table class="lanes-table">
+        <thead><tr><th>Lane</th><th>Owns</th><th>Files</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td>Taxonomy P2 finalize &mdash; prove exception sets empty, reconcile AF gate, archive</td><td class="files">sports_taxonomy_p2_migration_2026_08_08_finalize.md</td></tr>
+          <tr><td>2</td><td>Taxonomy P3 finalize &mdash; flip 6 absorbed source docs, prove panel un-masked, cross-AG masking report</td><td class="files">sports_taxonomy_p3_consumers_2026_08_08_finalize.md + 6 source docs</td></tr>
+          <tr><td>3</td><td>Batch 9 / Batch 15 residual reconciliation &mdash; flip source-doc checkboxes citing evidence</td><td class="files">sports_satellite_ao_dispatch_batch9_2026_08_04.md, _finalize.md, batch15_2026_08_17.md, _finalize.md</td></tr>
+          <tr><td>4</td><td>Batch 16 activation + Batch 5 finalize reconciliation (25+ source docs, now unblocked)</td><td class="files">sports_satellite_ao_dispatch_batch16_2026_08_17.md, _finalize.md, batch5_2026_07_26_finalize.md</td></tr>
+          <tr><td>5</td><td>Standing data-quality issue docs &mdash; MDT not-found rate, honest-coverage gap closure, fast-T1 recon residuals</td><td class="files">issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md, sports_honest_coverage_gap_closure_2026_08_14.md, sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Dispatch prompts</h2></div>
+
+    <details class="prompt">
+      <summary><span><span class="lane-n">Lane 1</span>Taxonomy P2 finalize</span></summary>
+      <pre>Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of your context and follow ALL rules before proceeding.
+
+Task: work plans/active/sports_taxonomy_p2_migration_2026_08_08_finalize.md's 5 open [REVIEW] todos.
+1. Prove the 3 sports accepted-exception sets (SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS, SPORTS_VENUE_ACCEPTED_CROSS_AG_BLEED, SPORTS_DATA_TYPE_ACCEPTED_STALE_UPPERCASE_RESIDUE) are measured EMPTY -- read the shipped UAC code, don't assert.
+2. Re-run the distinct-values comparison end to end; report both counts.
+3. Confirm every prod delete this chain ran had a fresh same-run gcs_bucket_soft_delete_retention_seconds() >= 604800 check recorded.
+4. Reconcile the API-Football gate (sports_af_full_entity_completion_2026_08_03.md) and remove its now-stale 2026-08-08 cross-plan banner.
+5. Once all above are true, archive sports_taxonomy_p2_migration_2026_08_08.md via the 6-step ritual.
+QG green before any commit; ship via quickmerge.sh --agent --files.</pre>
+    </details>
+
+    <details class="prompt">
+      <summary><span><span class="lane-n">Lane 2</span>Taxonomy P3 finalize</span></summary>
+      <pre>Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of your context and follow ALL rules before proceeding.
+
+Task: work plans/active/sports_taxonomy_p3_consumers_2026_08_08_finalize.md's 6 open todos -- flip each of the 6 absorbed source docs' own checkboxes with re-verified evidence (git log confirms each cited commit, don't trust the source's own claim), archive any of the six left at 0 open todos, fetch the live distinct-values response and confirm it now lists every raw manifest value (not just 10 of 31 venues), confirm the cross-AG masking report was filed for cefi/defi/tradfi/prediction, confirm the T-2h/T-6h retrain reported a MEASURED delta not an assumed one, then archive the P3 plan itself.
+QG green before any commit; ship via quickmerge.sh --agent --files.</pre>
+    </details>
+
+    <details class="prompt">
+      <summary><span><span class="lane-n">Lane 3</span>Batch 9 / Batch 15 reconciliation</span></summary>
+      <pre>Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of your context and follow ALL rules before proceeding.
+
+Task: sports_satellite_ao_dispatch_batch9_2026_08_04.md has 9 open todos (of 31) -- work the remaining ones with real evidence. Once fully done, its _finalize.md's todo 1 reconciles all 17 distinct source docs' checkboxes citing verified commits (git merge-base --is-ancestor against origin/live-defi-rollout, or content-verify if a squash-merge false-negative is suspected -- see this report's own archival section for the pattern), then archives both docs. Same pattern for sports_satellite_ao_dispatch_batch15_2026_08_17.md (7 open of 11) and its finalize.
+QG green before any commit; ship via quickmerge.sh --agent --files.</pre>
+    </details>
+
+    <details class="prompt">
+      <summary><span><span class="lane-n">Lane 4</span>Batch 16 activation + Batch 5 finalize</span></summary>
+      <pre>Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of your context and follow ALL rules before proceeding.
+
+Task: sports_satellite_ao_dispatch_batch16_2026_08_17.md has 2 open todos -- work them, then its finalize (3 open). Separately: sports_satellite_ao_dispatch_batch5_2026_07_26_finalize.md's gate cleared 2026-08-09 (confirmed by this pass) -- todo 1 needs the 25+ source-doc checkbox reconciliation (each batch-5 todo ends with a "Source:" citation naming its target doc), verify every cited commit, then run the full 6-step archival ritual on both batch5 + its finalize. Read the finalize doc's own extensive Progress Log first -- it documents a known AO-dispatcher bug (never derives a fresh task for a reworded todo) that may still need working around.
+QG green before any commit; ship via quickmerge.sh --agent --files.</pre>
+    </details>
+
+    <details class="prompt">
+      <summary><span><span class="lane-n">Lane 5</span>Standing data-quality issue docs</span></summary>
+      <pre>Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full at the top of your context and follow ALL rules before proceeding.
+
+Task: work the remaining open todos in plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md (2 non-operator of 4), sports_honest_coverage_gap_closure_2026_08_14.md (1 of 19), and sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md (2 of 13). Each is independent, real data-quality follow-up work -- read the doc in full before touching anything, verify current state against fresh queries rather than trusting the doc's own dated claims.
+QG green before any commit; ship via quickmerge.sh --agent --files.</pre>
+    </details>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Notes &amp; methodology</h2></div>
+    <p style="max-width:70ch;color:var(--ink-dim);font-size:13.5px;">
+      Open/done counts follow <code>scripts/plan-hygiene/count_open_tasks.py</code>'s dedup methodology
+      (aggregator-plan exclusion) via <code>epic_report_data.py --epic sports_master</code>, re-run fresh after this
+      pass's edits landed. <code>parent_epic</code> membership is <code>rg "^parent_epic: sports_master$"</code>
+      against real frontmatter, matching what the epic-scoped <code>/plan-reconcile</code> run itself audited &mdash;
+      68 children at Phase 0, 67 after this pass's one archival. Corpus size meant Phase 1&ndash;4 hunting ran as 4
+      parallel batches (batch 4/5 had capacity issues; batch 5's 23-doc share was covered directly by the lead
+      session after a measured stall &mdash; a genuinely flat corpus dirty-file count for 80+ seconds after steady
+      climbing, with only 1 of 23 assigned files touched). Three commit SHAs cited for this pass's one archival hit
+      the corpus's known squash-merge SHA-orphaning trap (not an ancestor of <code>origin/live-defi-rollout</code> by
+      <code>git merge-base</code>) &mdash; resolved via direct content verification (the cited guard function and its
+      regression test both exist, verbatim, in the live checkout) rather than treated as a false claim, matching the
+      same pattern the 2026-08-18 sports-tranche pass documented. Nothing in this run was committed or shipped
+      &mdash; working-tree edits only, per this run's explicit no-ship constraint.
+    </p>
+  </section>
+
+  <footer>
+    Generated by an epic-scoped <code>/plan-reconcile sports_master</code> pass &middot; 2026-08-19 &middot;
+    <a href="https://github.com/IggyIkenna/unified-trading-pm">unified-trading-pm</a>
+  </footer>
+</div>

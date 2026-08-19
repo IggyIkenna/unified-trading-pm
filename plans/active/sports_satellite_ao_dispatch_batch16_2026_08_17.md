@@ -71,8 +71,7 @@ carries an `[OPERATOR]` tag or a design/judgment call; both are bounded, worker-
       `sports_consolidated_closeout_2026_07_19.md` Track S. Repo: instruments-service. Done when: either the legacy
       write path is removed (with a confirming grep/test that nothing still calls it), or a documented reason is
       recorded for why it must stay, and the source doc's checkbox is flipped (via this batch's finalize plan).
-- [ ] [DATA] P2. **Snapshot-then-cull the 16 remaining post-floor day dirs (2024-12-24..2026-04-20) in
-      `sports_reference_v2/by_date/`**, once confirmed no reader consumes the path — the original self-justified gate
+- [ ] [DATA] P2. **Snapshot-then-cull the 16 remaining post-floor day dirs (2024-12-24..2026-04-20) in `sports_reference_v2/by_date/`**, once confirmed no reader consumes the path — the original self-justified gate
       this item carried before a 2026-08-02 operator ruling temporarily broadened it, now restored to this narrower
       scope (the pre-floor portion of the same population, 1,528 objects, was already wiped and verified 0 remaining;
       only this post-floor residual is still open). Reversibility-verified before any delete

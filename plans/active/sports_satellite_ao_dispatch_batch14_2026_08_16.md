@@ -160,9 +160,8 @@ possibly-ripe-once-Phase-1-is-independently-reverified, not guessed at here.
       code change is needed; ship via quickmerge. Source: `sports_cf8_available_at_backfill_regression_2026_07_13.md`
       (repo: market-tick-data-service). Done when: both surfaces' post-run verification is cited by evidence in the
       source doc and its checkbox is flipped.
-- [ ] [DIAG] P2. **Fix `pipeline_e2e_check`-adjacent `odds_features` export gap for 3 named dates + close the Option-C
-      cleanup.** Investigate + fix why the `odds_features` feature-export parquet is entirely missing (404, not
-      honest-absence) for 2025-10-23/2025-11-11/2025-11-13 despite `odds_horizon_bucket` now correctly re-derived (one
+- [ ] [DIAG] P2. **Fix `pipeline_e2e_check`-adjacent `odds_features` export gap for 3 named dates (2025-10-23/2025-11-11/2025-11-13) + close the Option-C cleanup.** Investigate + fix why the `odds_features` feature-export parquet is entirely
+      missing (404, not honest-absence) for those 3 dates despite `odds_horizon_bucket` now correctly re-derived (one
       date is partially investigated — an env=dev anomaly + a manifest-aware-prune false-resolved bug — fix not yet
       attempted). Separately, locate/re-engage the owner of "the bucket-cutover lane" to formally close out the
       ~90,947 preserved-not-migrated legacy `odds_horizon_bucket` objects, or confirm the `reprocess_sports_odds.py`
@@ -194,8 +193,7 @@ possibly-ripe-once-Phase-1-is-independently-reverified, not guessed at here.
       only) (repo: instruments-service). Done when: `build_league_id()` resolves correctly for the previously-broken
       case, with a regression test, cited in the source doc — the doc's Track H / STEP 9 items stay open and
       untouched.
-- [ ] [DIAG] P3. **Live manifest census: is betfair_adapter.py's uppercase "ODDS" write a real or phantom
-      population?** Run a live manifest census to determine whether `betfair_adapter.py:373`'s uppercase `"ODDS"`
+- [ ] [DIAG] P3. **Live manifest census: is betfair_adapter.py's uppercase "ODDS" write a real or phantom population?** Run a live manifest census to determine whether `betfair_adapter.py:373`'s uppercase `"ODDS"`
       write path is producing a real, accruing row population or is phantom/dead. Write the finding back into the
       source doc. Read-only — do not decide the operator's rewrite-vs-accept-normalization question (leave that
       item open, operator-gated). Source: `sports_odds_data_type_casing_wider_than_odds_api_2026_08_15.md` (item 1
@@ -211,8 +209,7 @@ possibly-ripe-once-Phase-1-is-independently-reverified, not guessed at here.
       quickmerge. Source: `sports_honest_coverage_gap_closure_2026_08_14.md` (items 1, 2, 4 only) (repo:
       market-tick-data-service, deployment-service). Done when: all 3 items are cited with evidence in the source doc
       and their checkboxes flipped; items 3 and 5 stay open and untouched.
-- [ ] [CODE] P3. **Add bounded retry-with-backoff to the SPORTS staleness guard + investigate shared timeout root
-      cause.** (a) Add bounded retry-with-backoff to the MDPS SPORTS staleness guard (`process_handler.py`/
+- [ ] [CODE] P3. **Add bounded retry-with-backoff to the SPORTS staleness guard + investigate shared timeout root cause.** (a) Add bounded retry-with-backoff to the MDPS SPORTS staleness guard (`process_handler.py`/
       `dependency_checker.py`), plus a regression test. (b) Investigate whether the 15 subprocess-per-date timeouts
       documented in the source doc share the same manifest-consolidator-contention root cause already diagnosed
       elsewhere in the corpus, or are distinct. Do NOT touch item 1 (waiting on sibling `mdps-sports-{2022..2025}`

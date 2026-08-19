@@ -148,7 +148,8 @@ violation (the Phase-0 fix); see
 > no existing state cleanly fits: not `attempted_failed` (rows genuinely WERE produced, just wrong content). A real fix
 > needs either reclassification off `captured` or a new honest-corruption state — both out of scope where this was
 > found. Full root cause, the affected-league list, and why no existing state fits:
-> `/plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`.
+> `/plans/archive/2026_08/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (archived 2026-08-19, all 6
+> todos done).
 
 ---
 

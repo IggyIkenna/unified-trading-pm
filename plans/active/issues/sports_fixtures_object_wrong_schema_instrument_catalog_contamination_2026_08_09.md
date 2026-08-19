@@ -42,7 +42,7 @@ priority: P1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope: [/plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md, /plans/archive/2026_08/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, instruments-service/instruments_service/engine/orchestrator/sink.py]
+context_scope: [/plans/archive/2026_08/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md, /plans/archive/2026_08/issues/sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, instruments-service/instruments_service/engine/orchestrator/sink.py]
 ---
 
 # Sports fixtures object carries instrument-catalog schema, not fixture data
@@ -175,7 +175,7 @@ transcript available in that session's Progress Log entry on
       `day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures/league=BOLIVIA_PRIMERA_DIVISION/fixtures.parquet`
       instrument-catalog-shaped object. **RESOLVED (2026-08-09, slot-15)** — see the Progress Log entry below for full
       evidence: this is the SAME already-documented-and-fixed incident as
-      `/plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`'s 85 `entity=fixtures_schedule`
+      `/plans/archive/2026_08/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`'s 85 `entity=fixtures_schedule`
       objects (identical burst-write timestamp window, size class, content-type), not a new/separate bug. The exact
       historical calling script is unrecoverable (same GCS Data Access audit-logging gap that doc's own DIAG todo hit),
       but the structural mechanism is fully understood and the fix already shipped (`instruments-service@b3cb6f8c`)
@@ -221,7 +221,7 @@ transcript available in that session's Progress Log entry on
      `gs://instruments-store-sports-prd-central-element-323112/sports_reference/by_date/day=2026-04-14/pipeline_mode=batch_api_football/entity=fixtures/league=BOLIVIA_PRIMERA_DIVISION/fixtures.parquet`
      → `size=8194`, `last_modified=2026-07-16T09:59:20.685Z`, `content_type=application/octet-stream`.
   2. That timestamp falls **inside** the exact `2026-07-16T09:59:21.462Z–09:59:22.039Z` sub-2-second burst window
-     already root-caused in `/plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (slot 12's
+     already root-caused in `/plans/archive/2026_08/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (slot 12's
      2026-07-24 GCS-metadata finding) for the 85 `entity=fixtures_schedule` contaminated objects on the SAME
      `day=2026-04-14` partition — this object lands ~0.8s before that window starts, consistent with one script writing
      multiple entity targets in sequence within a single burst, not two independent incidents. Size (8194B) and

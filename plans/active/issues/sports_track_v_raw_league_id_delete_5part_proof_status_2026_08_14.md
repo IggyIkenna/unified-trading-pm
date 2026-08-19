@@ -242,16 +242,16 @@ already caught once.
       rows reindexed to `expected`'s final column set (post-union) before hashing, or switch the presence check to the
       same natural-key-subset method `verify_stale_raw_league_id_content_2026_08_14.py` already uses. Add a regression
       test with mismatched source/existing schemas (mirrors this session's real case).
-- [ ] [DATA] P3. **AUTHORIZED 2026-08-16 (operator, na-eligibility-audit follow-up)**: the fresh full-range
+- [ ] [DATA][OPERATOR] P3. **CONTRADICTION FLAGGED (`/plan-reconcile sports_master` 2026-08-19) — this todo's own "AUTHORIZED 2026-08-16" header is NOT corroborated by this doc's own Progress Log below and must NOT be read as a live go-ahead to fire `--apply-prod` on this ~144K-275K-object prod GCS delete.** The 2026-08-16 (slot 30) Progress Log entry states verbatim: "Did NOT launch the `full`-mode delete ... filing a `/blocked` question to the operator for that explicit go-ahead rather than treating this 0-FAIL result as authorization by itself." The 2026-08-17 (slot 27) entry reconfirms: "Did NOT execute the delete — that stays gated on the separate `[OPERATOR]` re-authorization slot-30 already filed a `/blocked` question for." No Progress Log entry anywhere in this doc records the operator actually answering that `/blocked` question. **Before dispatching this todo, first check the live escalation-queue/`/blocked`-question state for a genuine operator answer — do not treat the bold "AUTHORIZED" text alone as sufficient.** Re-tagged `[OPERATOR]` as a safety measure pending that confirmation.
+      Once genuine operator authorization is confirmed (not assumed from this header): the fresh full-range
       (`2020-06-06..2026-08-16`) `dry`-mode re-verify (144,276/144,276 PASS, 0 FAIL — see Progress Log entry below)
-      cleared the gating condition. Operator authorized executing the delete. **Before firing `--apply-prod`,
-      the dispatched worker must first confirm the re-verified 144,276 count covers the FULL 275,136-object
-      candidate population this todo targets** (the two numbers don't match 1:1 as recorded — resolve whether
-      144,276 is a subset, a different unit of count, or the population itself shrank since the original 2026-07-22
-      275,136 figure, and say which before proceeding). Once that's confirmed, launch the same
-      `sports-league-id-delete` category in `full` mode (`--apply-prod --confirm-prod-write`) per finding T's
-      carve-out — re-query `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value
-      inline.
+      cleared the 5-part-proof gating-evidence condition. **Before firing `--apply-prod`, the dispatched worker must
+      first confirm the re-verified 144,276 count covers the FULL 275,136-object candidate population this todo
+      targets** (the two numbers don't match 1:1 as recorded — resolve whether 144,276 is a subset, a different unit
+      of count, or the population itself shrank since the original 2026-07-22 275,136 figure, and say which before
+      proceeding). Once that's confirmed, launch the same `sports-league-id-delete` category in `full` mode
+      (`--apply-prod --confirm-prod-write`) per finding T's carve-out — re-query
+      `gcs_bucket_soft_delete_retention_seconds()` fresh at execution time, cite the value inline.
 - [x] [DOC] P2. ✅ Corrected the stale "UNBLOCKED 2026-07-28: Track C's lowercase-revert" citation in
       `/plans/archive/2026_08/sports_satellite_ao_dispatch_batch13_2026_08_13.md`'s Track V todo (same session, same
       commit) — see that plan's Progress Log / todo annotation.
