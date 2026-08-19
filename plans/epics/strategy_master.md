@@ -82,7 +82,15 @@ related_plans:
   - ../active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md
   - /plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
-last_updated: 2026-08-19 # was 2026-08-18 -- /plan-reconcile strategy_master: repointed 2 dangling active/ links to their real archive/2026_08/ paths (carry_strategy_ensemble_productionization, recursive_loop_orchestrator_wiring_finalize), corrected 2 stale "status: active" body claims to the archived docs' real "status: complete", and added 3 currently-active parent_epic:strategy_master plans missing from the auto-populated body (service_config_ownership_and_instruction_contract_2026_08_12, strategy_archetype_latency_deployment_profile_execution_2026_08_10, strategy_service_expansion_overlays_config_and_wizard_2026_08_12) -- see body
+last_updated: 2026-08-19 # was 2026-08-19 (plan-reconcile pass) -- added venue archetype-registration audit +
+  # manual/automated live-mode cross-cutting requirement + instruction/order-type/venue registry cross-reference for
+  # the priority venue/protocol set, see body. Prior entry: was 2026-08-18 -- /plan-reconcile strategy_master:
+  # repointed 2 dangling active/ links to their real archive/2026_08/ paths (carry_strategy_ensemble_productionization,
+  # recursive_loop_orchestrator_wiring_finalize), corrected 2 stale "status: active" body claims to the archived
+  # docs' real "status: complete", and added 3 currently-active parent_epic:strategy_master plans missing from the
+  # auto-populated body (service_config_ownership_and_instruction_contract_2026_08_12,
+  # strategy_archetype_latency_deployment_profile_execution_2026_08_10,
+  # strategy_service_expansion_overlays_config_and_wizard_2026_08_12)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
@@ -154,6 +162,94 @@ epic had accrued 0 corpus references since its 2026-05-21 creation). Full archae
   maturity phases directly
 - **Cross-cutting**: `client_isolation_and_governance_master` (per-client isolation + share-class registry +
   jurisdiction restrictions affect strategy emit)
+
+## Venue archetype-registration + manual/automated live-mode: priority venue/protocol set (2026-08-19 audit)
+
+Audit scope: CeFi (Deribit, Hyperliquid, Binance, OKX, Bybit, Aster), Ethereum DeFi (AAVE V3, Lido, EtherFi), sports
+(Betfair), Polymarket, Kalshi, IBKR, Morpho, Uniswap, CoW Swap. Backed by `archetype_slot_resolver.py` +
+per-asset-group `archetype_slots_{cefi,defi,tradfi,sports}.py` tables. **Verified 2026-08-19**: most venues already
+have at least one archetype slot; the genuine gaps are narrower than "no archetype exists."
+
+| Venue | Status | Evidence |
+| --- | --- | --- |
+| Deribit, Hyperliquid, Binance, OKX, Bybit, Aster | registered | `archetype_slots_cefi.py` / `FUNDING_RATE_DISP_FULL_6_VENUES` (Aster only via the 6-venue slot, no single-venue slot of its own) |
+| AAVE V3 | registered | `AAVE_LENDING`, `BTC_LENDING`, `RECURSIVE_STAKED_BASIS` |
+| Lido | PARTIAL — candidate-protocol mention only, no slot instantiates it | `catalog_yield_defi.py:144` lists it; `STAKED_BASIS`/`RECURSIVE_STAKED_BASIS` both use `etherfi` instead |
+| EtherFi | registered | `STAKED_BASIS`, `RECURSIVE_STAKED_BASIS` |
+| Betfair | registered | `SPORTS_ARBITRAGE`, `SPORTS_HALFTIME_ML`, `SPORTS_MARKET_MAKING` |
+| Polymarket, Kalshi | registered | `PREDICTION_ARB_MLB`/`NFL`/etc. |
+| IBKR | registered | `SPY_MOMENTUM`, `SPY_ML_DIRECTIONAL`, `FX_ML_DIRECTIONAL`, `SPY_MEAN_REVERSION`, `EVENT_MACRO_TRADFI` |
+| Morpho | PARTIAL — candidate-protocol string only, no slot where it is primary/sole venue | `MULTICHAIN_LENDING`/`BTC_LENDING` `candidate_protocols`, flash-loan venue in `RECURSIVE_STAKED_BASIS` |
+| Uniswap | registered | `BASIS_TRADE`, `L2_BASIS` |
+| CoW Swap | absent | zero hits anywhere in `strategy_service/` |
+
+- [ ] [BACKEND] P2. **Lido — give it a real archetype slot, not just a candidate-protocol mention.** Currently
+      `STAKED_BASIS`/`RECURSIVE_STAKED_BASIS` both default to `etherfi`; add a Lido-instantiated slot (or a
+      parameterized staking_protocol selector) so Lido is actually tradable, not just referenced.
+- [ ] [BACKEND] P2. **Morpho — give it a primary-venue archetype slot**, not only a `candidate_protocols` entry
+      inside `MULTICHAIN_LENDING`/`BTC_LENDING` and a flash-loan-venue mention in `RECURSIVE_STAKED_BASIS`.
+      Cross-reference `execution_master.md`'s Morpho flash-loan/atomic-tx reachability todo — the execution-side
+      submission path is stubbed, so this strategy-side slot work and that execution-side fix should land together,
+      not this half alone.
+- [ ] [BACKEND] P1. **CoW Swap — no strategy-service wiring at all, confirmed 2026-08-19.** Gate behind
+      `execution_master.md`'s CoW Swap greenfield build (there is nothing to route trades to yet); once that
+      adapter exists, add an archetype slot using it (closest analog: the existing Uniswap-based `BASIS_TRADE`/
+      `L2_BASIS` slots).
+- [x] [BACKEND] P1. ✅ **Betfair — confirmed already wired 2026-08-19, operator's "use the real adapter" correction
+      matches code reality.** `position_interface/adapters/betfair.py` is real (session-token auth, real HTTP
+      integration), wired into `position_interface/factory.py`, `position_read_mode_availability("betfair")` returns
+      full batch/live/paper coverage, and 3 archetype slots already reference it. No strategy-side gap — the
+      remaining Betfair work is execution-side (see `execution_master.md`).
+
+### Manual-live vs automated-live execution mode — NEW cross-cutting requirement (2026-08-19)
+
+Operator, exact words: "Every strategy should have the option to manually enter our stuff anyway, regardless... the
+whole strategy service and execution need to understand that there's a manual Live mode where everything is our own
+manual execution, and there's an automated Live mode. Strategy service needs to understand those two things." The
+model: **paper mode is manual-entry only** (human books paper trades by hand); **live mode has two sub-modes** —
+manual-live (human executes on the real venue, system just tracks/books the fill) and automated-live (the system's
+adapter executes directly). Applies to every venue in this epic, not just Betfair.
+
+**What already exists** (2026-08-19 audit, don't rebuild these): UAC's `OperationalMode` enum
+(`{LIVE, MANUAL, BACKTEST, PAPER}`) — but `MANUAL` today means "archetype not yet promoted to live" (pre-DART), NOT
+"live, and a human is doing the clicking" — a different concept entirely.
+`strategy_service/api/operational_mode_router.py` gates a whole ARCHETYPE'S automation graduation
+(`MANUAL → DART(≈PAPER) → LIVE`, with `MANUAL → LIVE` rejected), backed by `ArchetypeModeStore`
+(`engine/strategies/v2/mode_store.py`) — this is per-archetype automation gating, not a per-trade manual/automated
+toggle within live. UAC also has `ExecutionTrigger = {AUTOMATED, MANUAL_OPERATOR}` — the closest existing primitive
+to "who executes" — but it has exactly ONE live consumer in strategy-service (`close_all/_template.py`, the
+emergency kill-switch close-all path) and is not wired into `OperationalMode`, `position_read_mode_availability`, or
+any per-archetype live state. The already-shipped **position-mode-table check**
+(`position/position_interface/capabilities.py::position_read_mode_availability` +
+`POSITION_READ_MODE_CAPABILITIES`) is directly relevant infra — it proves the batch/live/paper READ axis per venue
+already exists and is a genuine model for the pattern — but its own docstring already names this exact class of gap
+(citing `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`): it says nothing
+about who/what EXECUTES. There is no analogous `execution_mode_availability()` capability table anywhere.
+
+**What's missing**: no general-purpose "operator manually books a paper or live trade, the system tracks it"
+mechanism exists — `close_all/_template.py` is an emergency-only kill-switch path, not routine manual entry; there
+is no `ManualTradeGateDialog`-equivalent backend hook in strategy-service (0 hits; that's UI-repo-only today).
+
+- [ ] [OPERATOR] P1. **Design the manual-live vs automated-live sub-axis.** Not mechanically derivable — resolve
+      exactly how it's modeled (a new sub-enum orthogonal to `OperationalMode`? reusing/extending `ExecutionTrigger`
+      and wiring it beyond the one close-all call site? a field on the archetype's runtime config?) before any
+      wiring lands. Companion execution-service-side todo in `execution_master.md` — the two sides must agree on
+      ONE shape, not diverge into two.
+- [ ] [BACKEND] P2. **Build the routine manual-trade-entry mechanism** (paper AND live) once the design above is
+      resolved — a human books a trade by hand, strategy-service tracks/reconciles it going forward, distinct from
+      the existing emergency close-all path. `[BACKEND]`-eligible once the `[OPERATOR]` item above is resolved, not
+      before.
+
+### Instruction-type x order-type x venue-capability registry — cross-reference only (2026-08-19)
+
+Operator-requested audit; full detail + code citations live in `execution_master.md`, not restated here — this is
+fundamentally an execution-service concern per the strategy/execution division of labor (strategy emits high-level
+slow instructions, execution owns order-type/algo selection per venue). Confirmed PARTIAL there: a real, enforced
+`OperationType x venue` registry exists in execution-service, but the finer `OrderType x venue` registry
+(`order_semantics.py::VENUE_ORDER_SEMANTICS`) has zero runtime consumers, and `SwapHandler` silently ignores
+`instruction.order_type` entirely. Strategy-service's role is only to emit instructions that are already valid per
+that registry once it's enforced — no strategy-side build todo needed here, only awareness that an instruction it
+emits can become fail-loud rejected once execution-service enforces the cross product.
 
 ## Assigned active plans
 
