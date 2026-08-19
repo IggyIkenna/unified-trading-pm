@@ -410,7 +410,12 @@ STEP 8 — LOOP-AND-WAIT for answers, then APPLY (do NOT exit while questions ar
 one-shot part; resolving what you ASKED is the persistent part:
 
 1. Re-check for answers: `GET $SERVER_URL/api/slots/$SLOT_ID/messages` (and read the `messages` your `/progress`
-   heartbeats return). Each answer maps to a STEP-6 alert you raised.
+   heartbeats return). Each answer maps to a STEP-6 alert you raised. **If your slot gets reassigned before the
+   answer lands, this channel silently orphans it (`blocked_message_orphaned_by_reassign`) — fall back to
+   `GET $SERVER_URL/api/blocked/$BLOCKED_ID` (the `blocked_id` your `/blocked` POST returned): it is a durable
+   point-lookup on the answer row itself, immune to slot/task reassignment** (fixed 2026-08-19,
+   `agent-orchestrator@4a0753791a` — see
+   `plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`).
 2. For each ANSWERED question → APPLY it now (the same verified-fix discipline as STEP 5: flip/banner/edit ONLY per the
    operator's decision — including a ruled codex edit, which is now authorized — checkpoint-commit BY NAME, push
    straight to live-defi-rollout (STEP 5's conditional FF-push), and append it to the run-findings doc).

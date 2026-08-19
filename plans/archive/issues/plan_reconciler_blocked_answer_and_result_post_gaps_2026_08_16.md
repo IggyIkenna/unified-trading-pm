@@ -16,7 +16,7 @@ summary: >-
   "Blocked-question answer retrieval may have a real gap... worth checking whether OTHER plan_reconciler/
   na-eligibility-audit runs' blocked-questions have silently never received their answers either" — this run is a live,
   reproduced instance of exactly that suspected class, not a one-off.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -46,16 +46,10 @@ priority: P1
 assigned_vm: NA
 execution_scope: local-only
 drift_direction: advance-code
-resolved_by:
+resolved_by: "agent-orchestrator@4a0753791a + unified-trading-pm@25d8210ebc"
 locked_by:
 locked_since:
 depends_on: []
-# archive_exempt bridges the cross-repo (mode-2) flip-then-archive split: this commit
-# lands the checkbox flip only (code shipped in agent-orchestrator, a sibling repo), and
-# an immediately-following commit does the git mv archival + drops this field. See
-# /codex/12-agent-workflow/plan-completion-and-archival-discipline.md § "archive_exempt:
-# true is the sanctioned bridge".
-archive_exempt: true
 source: "Live-encountered during ao-tranche plan_reconciler run, dispatch agt-3eb42b, slot 28, 2026-08-16"
 context_scope:
   [
@@ -68,6 +62,17 @@ context_scope:
 ---
 
 # plan_reconciler's own HTTP integration: 2 live gaps found 2026-08-16
+
+> **✅ ARCHIVED 2026-08-19** — both todos are `[x]`, `locked_by:` was already empty. Gap 1
+> (`/api/plan-health/result` auth) resolved via doc-correction: `unified-trading-pm@1600565cd2`. Gap 2
+> (blocked-answer retrieval) resolved via code fix: `agent-orchestrator@4a0753791a` adds a durable
+> `GET /api/blocked/{blocked_id}` point-lookup immune to the `blocked_message_orphaned_by_reassign` orphaning this
+> doc's Progress Log reproduced 4x live, with a regression test proving the fix
+> (`tests/test_blocked_answer_retrieval_survives_reassign.py`). Durable facts migrated to codex:
+> `/codex/04-architecture/agent-orchestrator-overview.md` § "Blocked-questions, authority, and prerequisites"
+> (retrieval mechanism + gotcha) and `agents/plan_reconciler.md` STEP 8 (worker-facing fallback instruction). 4
+> corpus `related:` referrers repointed to the codex doc in this same pass (context_scope-only and prose citations
+> of this doc left as-is — correct historical citations, not the machine-enforced `related:` ratchet target).
 
 ## What happened
 

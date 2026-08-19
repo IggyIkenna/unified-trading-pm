@@ -15,7 +15,7 @@ tags: [ao, ao-dispatch, close-out, batch-23, finalize, satellite-extraction, na-
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch23_2026_08_17.md,
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
     /plans/active/issues/docs_reconcile_findings_2026_08_17.md,
     /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
     /plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,

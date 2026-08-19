@@ -16,7 +16,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
   ]
 created: "2026-08-16"
@@ -38,7 +38,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
     /codex/02-data/external-data-always-available-rule.md,
     /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
