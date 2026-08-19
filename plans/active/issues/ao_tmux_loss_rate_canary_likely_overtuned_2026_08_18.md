@@ -45,6 +45,14 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/tmux_session_loss_rate_canary.py,
+    agent-orchestrator/server/config.py,
+    /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
+    /plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md,
+    /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
+  ]
 ---
 
 # TmuxSessionLossRateCanary likely over-tuned, not under-deduped
@@ -126,3 +134,4 @@ check for this directly rather than only counting raw crossings.
       item 3 — no `depends_on`/`gate_on_depends` links the two, the ordering rests on this prose note only.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:96033122b406632d]: RECLASSIFY (per-todo split) — todo 1 (7-day ActivityRow rate measurement) extracted to `/plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 3. Doc stays NA for todo 2 (the raise-threshold action, correctly conditional on todo 1's own result).
+- **context-scout 2026-08-19**: populated context_scope (5 entries).

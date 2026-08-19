@@ -40,7 +40,11 @@ superseded_by:
 source: >-
   Mandatory finalize companion per task_template.md §4 (operator ruling 2026-07-24) — a finalize plan closes only
   its own plan.
-context_scope: [/plans/active/client_artefact_remediation_nickai_2026_08_18.md]
+context_scope:
+  [
+    /plans/active/client_artefact_remediation_nickai_2026_08_18.md,
+    /plans/audit/results/client_artefact_live_regrade_2026_08_18.md,
+  ]
 ---
 
 # Client artefact remediation (Nick AI) — finalize
@@ -57,3 +61,6 @@ Gated on [`client_artefact_remediation_nickai_2026_08_18.md`](/plans/active/clie
 ## Progress Log
 
 **2026-08-18 — authored** alongside the Nick AI remediation child.
+
+**context-scout 2026-08-19**: populated context_scope (2 entries) — added the live-regrade audit report this
+finalize's "confirm zero live badges" todo verifies against; source-path hunt skipped (finalize gate).

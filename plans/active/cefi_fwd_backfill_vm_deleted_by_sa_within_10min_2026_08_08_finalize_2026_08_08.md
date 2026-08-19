@@ -96,3 +96,7 @@ context_scope:
 - **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — the source issue doc (now 6 of 7 todos
   done, 1 open `[INFRA]` P1 backfill-launch follow-up), its sibling false-positive-provisioning issue doc, the
   vm-launcher runbook, and the archival-discipline codex doc all still resolve.
+- **context-scout 2026-08-19**: re-verified context_scope, no change needed (4 entries) — the 2026-08-19 `/plan-reconcile`
+  fix updated todo 1's dispatch brief to name the real current gate (a 4th, later-dated open item in the source doc),
+  but the reading list itself (source issue doc, sibling false-positive-provisioning issue doc, vm-launcher runbook,
+  archival-discipline codex doc) is unaffected and still the right minimal set.

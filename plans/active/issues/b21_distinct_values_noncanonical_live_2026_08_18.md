@@ -30,6 +30,13 @@ source: >-
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    deployment-api/deployment_api/routes/data_status/_distinct_values.py,
+    /plans/active/issues/b21_defi_venue_5_unregistered_perp_dex_2026_08_19.md,
+    /plans/active/data_pipeline_completion_2026_08_21.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md,
+  ]
 ---
 
 # B21 verification — live result
@@ -162,3 +169,7 @@ sports instrument_type finding above.
       prediction, tradfi (5 occurrences) — confirm these are honest-absence (no chain/instrument_type ever
       stamped for non-chain-bearing asset groups) rather than a writer omission. Done-when: each `<blank>` is
       confirmed expected or traced to a specific writer gap.
+
+## Progress Log
+
+- **context-scout 2026-08-19**: populated context_scope (4 entries).

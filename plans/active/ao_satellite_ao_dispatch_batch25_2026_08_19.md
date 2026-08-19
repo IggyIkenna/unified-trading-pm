@@ -222,3 +222,5 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   in `agent-orchestrator/tests/test_plan_health.py`) and mark item 2 done-by-citation rather than re-implementing it.**
   Durable contract: `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock correlation +
   duplicate-tranche dispatch guard".
+- **context-scout 2026-08-19**: verified the pre-existing context_scope (3 entries, set at authoring) — all paths
+  confirmed resolving on disk, still the correct source-doc reading list; no change needed.

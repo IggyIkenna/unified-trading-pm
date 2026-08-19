@@ -29,6 +29,14 @@ drift_direction: advance-code
 depends_on: []
 resolved_by:
 locked_by:
+context_scope:
+  [
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    cursor-configs/skills/ao-watchdog/SKILL.md,
+    agent-orchestrator/server/plan_health.py,
+    agents/ao_watchdog.md,
+    agent-orchestrator/scripts/install-ao-watchdog-timer.sh,
+  ]
 ---
 
 # Wire /ao-watchdog into the scheduled-job timer family
@@ -126,3 +134,7 @@ same bridge state `escalation-queue-reconcile` and `docs-reconcile` were in befo
 - `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` — the dispatch mechanism this wires into.
 - `unified-trading-pm/cursor-configs/skills/ao-watchdog/SKILL.md` — the skill this schedules; its own "Scheduling
   this skill" section is the canonical statement of this gap, kept in sync with this doc.
+
+## Progress Log
+
+- **context-scout 2026-08-19**: populated context_scope (5 entries).

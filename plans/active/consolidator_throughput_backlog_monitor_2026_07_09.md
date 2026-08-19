@@ -546,3 +546,4 @@ context_scope:
   gates cite the same explicit dated 2026-07-10 operator ruling (Cloud Build deploy deferred until all cockpit plans
   complete); neither is fully done (deploy step + one cross-link check unverified in the Progress Log), so RECLASSIFY
   does not apply. 5th consecutive audit pass reaching this same verdict.
+- **context-scout 2026-08-19**: re-verified context_scope, no change needed (5 entries) — the 2026-08-18 `last_updated` bump was a plan-reconcile metadata-date correction only, no body content changed; all 5 paths still resolve.

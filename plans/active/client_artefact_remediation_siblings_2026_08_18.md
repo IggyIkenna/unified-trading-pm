@@ -50,6 +50,10 @@ context_scope:
   [
     /plans/audit/results/client_artefact_sibling_docs_audit_2026_08_18.md,
     /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
+    /codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html,
+    /codex/14-customer-journeys/commercial-model/platform-architecture.html,
+    /codex/14-customer-journeys/commercial-model/carveout-engineering.html,
+    /codex/14-customer-journeys/commercial-model/ODUM_Elysium_Phase2_Update_2026-07-24.html,
   ]
 ---
 
@@ -117,6 +121,9 @@ codex rule, not a plan's restatement of it.
 per operator direction, to run in parallel with the Elysium and Nick AI children. Deliberately **ungated**
 (`depends_on: []`) while its siblings gate on the parent's evidence-tier spec: these are stop-ship disclosure
 violations and must not wait on a presentation-layer decision.
+
+**context-scout 2026-08-19**: populated context_scope (6 entries) — added the 4 owned HTML files (the remaining
+[REVIEW] grading todo touches all four).
 
 **2026-08-19 (slot 31, infra)** — Dispatched item 2 (performance figures). Fresh-pulled before touching anything and
 found items 2-5 already shipped minutes earlier by slot-6 (`unified-trading-pm@512d5b07a8` +

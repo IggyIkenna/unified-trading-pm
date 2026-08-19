@@ -996,3 +996,4 @@ issue-doc-correction todo (Phase 3c section), and AWS resume (operator/credits-g
   (needs a net-new VM-launch-as-deploy provider), 1 confirmed stale duplicate (misattributed-VM-origin correction,
   already extracted to `ui_satellite_ao_dispatch_batch3_2026_08_09.md` item 3 — that batch's own copy hasn't shipped
   yet either, so not pre-flipped here; its gated finalize twin owns reconciling this checkbox once it does).
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (5 entries), still accurate.

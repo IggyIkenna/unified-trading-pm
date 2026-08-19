@@ -349,3 +349,4 @@ todo's isolated wording. No reclassification.
   source-code scripts + the audit-instructions doc, the vm-launcher runbook, and the parent L3 plan all still resolve
   and remain the right minimal set for the still-open Phase D/E manifest-rebuild+verify work.
 - **na-eligibility-audit 2026-08-16** [body-hash:e6d0725c3e72b6d4]: KEEP-NA, valid — Full end-to-end read confirms the doc's own checkbox state is accurate — no contradiction traps found.
+- **context-scout 2026-08-19**: re-verified context_scope, no change needed (6 entries) — Phase D/E manifest-rebuild+verify remain the only open work; Phase C's gate doc, the 2 source-code scripts, the audit-instructions doc, the vm-launcher runbook, and the parent L3 plan all still resolve.

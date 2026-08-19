@@ -442,3 +442,4 @@ Codex SSOTs: `/codex/05-infrastructure/bucket-isolation-model.md`, `/codex/05-in
   and `bucket_fold_ml_2026_07_17.md` now that today's na-eligibility-audit closed the ml-legacy-variants todo (that
   citation's purpose resolved); the sole remaining open item (recon-bucket E2E chain) is provision/wiring work, not a
   delete, so the recon issue doc + BLRS config.py resolver are the accurate minimal set.
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (2 entries), still accurate.

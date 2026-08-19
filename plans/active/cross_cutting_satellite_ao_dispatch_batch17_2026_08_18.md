@@ -44,6 +44,8 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md,
+    unified-trading-pm/.github/workflows/branch-health.yml,
+    unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml,
     /codex/08-workflows/ci-cd-flow.md,
   ]
 source: >-
@@ -103,3 +105,9 @@ source: >-
   original text pointed at `unified-trading-pm/scripts/workflow-templates/` as the edit location, which no longer
   hosts `main-backmerge-to-ldr.yml` (migrated to `unified-trading-ci` per the 2026-08-06 dedup plan) — corrected
   above rather than propagating the stale pointer forward.
+
+- **context-scout 2026-08-19**: refreshed context_scope (4 entries) — added the 2 real workflow-file targets the 3
+  open todos edit directly: `unified-trading-pm/.github/workflows/branch-health.yml` (items 1 and 3, the fleet-wide
+  dispatch fix and the new failure-detection surface) and
+  `unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml` (item 2, the caller-stub comment fix — confirmed
+  this is the real post-migration hosting location, matching this batch's own drafting-time correction above).

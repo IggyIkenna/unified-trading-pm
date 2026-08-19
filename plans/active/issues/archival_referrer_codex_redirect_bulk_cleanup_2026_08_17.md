@@ -38,6 +38,13 @@ resolved_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    scripts/plan-hygiene/check_active_refs_archived_plans.py,
+    /codex/11-project-management/cross-reference-path-convention.md,
+    /plans/active/infra_satellite_ao_dispatch_batch19_2026_08_18.md,
+  ]
 ---
 
 # Bulk-cleanup dispatch — active-plan referrers still citing archived plans directly
@@ -117,6 +124,7 @@ is independently shippable, no need to clear all 925 in one pass.
   "point at the new path" does not satisfy it), and all 6 target docs were simultaneously dirty with other
   sessions' own unrelated uncommitted WIP at the time — not a safe or genuinely "cheap" fix to force in a tracking
   pass.
+- **context-scout 2026-08-19**: populated context_scope (4 entries).
 
 ## Todos
 

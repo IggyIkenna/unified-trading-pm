@@ -50,6 +50,8 @@ context_scope:
   [
     /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
+    /codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
   ]
 ---
 
@@ -140,3 +142,6 @@ Full evidence for every finding is in the audit reports listed in `related:`. Do
 
 **2026-08-18 — split out** of [`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 per operator direction. Todos moved, not copied.
+
+**context-scout 2026-08-19**: populated context_scope (4 entries) — added the owned HTML file and the
+elysium-delivery plan the two open § P2 todos (§12 capital-budget, §08/§09 equality caveat) cite.

@@ -700,3 +700,4 @@ for a `batch2` on the next pass and rehome then.
   (features-service `registry.py`, instruments-service `engine/orchestrator/`) since prior scope was codex/plan-only;
   dropped README.md + batch2 (batch2 no longer covers the remaining items per the na-eligibility-audit note above).
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (4 entries), all 4 paths still resolve, still accurate.

@@ -47,11 +47,9 @@ source: >-
 context_scope:
   [
     /codex/09-strategy/architecture-v2/capability-wizard.md,
-    /plans/archive/2026_08/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
-    scripts/openapi/generate-unified-openapi.sh,
     unified-trading-system-ui/app/(public)/questionnaire/,
-    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
     /plans/active/issues/capability_wizard_analysis_findings_2026_06_11.md,
+    /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,
   ]
 ---
 
@@ -246,3 +244,9 @@ Residual 2 remains genuinely open.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Only 1 open item remains: Residual 2, the client-lite wizard successor (P3, DEFERRED). Residual 1 (CI-runner-blocked openapi regen) is now [x] — flipped 2026-08-12 per /plan-reconcile citing shipped unified-api-contracts@7896deda, and its own round-11 (2026-08-09) satellite-extraction/RECLASSIFY history is already closed out, not re-litigated here. Residual 2's own stated first step is authoring a brand-new build sub-plan (archetype curtailment tiers, credentials-checklist UX, on-demand...
+
+- **context-scout 2026-08-19**: refreshed context_scope (6→4 entries) — Residual 1 (CI-runner-blocked openapi regen) is
+  now fully done ([x] 2026-08-12), leaving only Residual 2 (client-lite wizard successor) open; dropped the openapi-regen
+  script + venv_workspace findings doc (Residual 1's now-closed targets), kept the capability-wizard codex SSOT, the
+  questionnaire UI dir, and both wizard-scope issue docs (analysis findings + gap discovery) as Residual 2's actual
+  reading list.

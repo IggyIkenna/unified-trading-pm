@@ -327,6 +327,8 @@ reason.** What's genuinely still open:
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: re-verified context_scope (6 entries) unchanged, all resolve on disk — still
+  targets the 2 remaining open todos (concurrency step-to-6, Phase 4 tail-latency).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - 2026-08-16 — Filed from a dedicated opus-tier design investigation (full text preserved in the linked issue doc and
   this session's own record). Operator ruled: human plan, execute today, canary on the live VM.

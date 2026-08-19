@@ -343,6 +343,7 @@ recorded in full in `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: re-verified context_scope (4 entries) unchanged, all resolve on disk.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
   unchanged. Sole open todo (warm git-object cache for JIT-ephemeral runners) still carries its own explicit "Do NOT

@@ -272,3 +272,5 @@ source: >-
     for whoever runs the full 3-doc, ~6-flip reconciliation session todo 2 actually requires; it does not attempt to
     satisfy it in part.
 - **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-19**: re-verified context_scope (4 entries) — all paths confirmed resolving on disk, still
+  the correct archival SSOT + batch pointer; no change needed.

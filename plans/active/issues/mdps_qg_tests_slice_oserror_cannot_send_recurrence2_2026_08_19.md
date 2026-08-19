@@ -20,6 +20,13 @@ repos: [market-data-processing-service]
 scope: [engineer, admin]
 tags: [ci-cd, quality-gates-v2, flaky-test, xdist, harden-the-class, recurrence]
 related: [/plans/active/ci_consolidated_closeout_2026_07_25.md]
+context_scope:
+  [
+    /plans/archive/2026_08/issues/mdps_main_qg_tests_slice_oserror_cannot_send_2026_08_18.md,
+    scripts/quality-gates-base/base-service.sh,
+    /codex/06-coding-standards/quality-gates.md,
+    .github/workflows/quality-gates-v2.yml,
+  ]
 created: "2026-08-19"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -114,3 +121,7 @@ without first doing the deeper dive below.
       `scripts/quality-gates-base/`) — if the intended memory-cap enforcement path is silently
       unavailable fleet-wide (not just on the two runner boxes that hit this), that's a bigger
       finding worth its own doc per CLAUDE.md's "operator notify" bar for cross-cutting CI findings.
+
+## Progress Log
+
+- **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).

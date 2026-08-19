@@ -69,6 +69,15 @@ supersedes:
 superseded_by:
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    execution-service/execution_service/engine/delta_proxy_repricer.py,
+    execution-service/execution_service/engine/quote_maintenance.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/order_semantics.py,
+    execution-service/execution_service/v2/atomic_leg_executor.py,
+    execution-service/execution_service/algorithms/selector.py,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md,
+  ]
 ---
 
 # Generic price-sensitivity contract for fast execution-side repricing
@@ -390,3 +399,4 @@ for the operator, one resolved (credit-tolerance is optional). Nothing in the To
   `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md`. The other 11 stay KEEP-NA — genuine design/judgment
   work or explicitly dependent on it, appropriately NA given this is live execution-critical-path (order
   pricing/repricing) machinery. Doc's own `assigned_vm: NA` unchanged.
+- **context-scout 2026-08-19**: populated context_scope (6 entries).

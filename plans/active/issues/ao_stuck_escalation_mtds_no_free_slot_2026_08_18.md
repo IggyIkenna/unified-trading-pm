@@ -42,6 +42,14 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/server/config.py,
+    /plans/active/ao_human_fleet_integration_2026_08_15.md,
+    /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
+    cursor-configs/skills/escalation-queue-reconcile/SKILL.md,
+  ]
 ---
 
 # Stuck escalation agt-ed7277 — CONFIRMED: the 3 reserved slots are themselves paused
@@ -152,3 +160,4 @@ spawn workers.
       tracked under `ao_human_fleet_integration_2026_08_15.md`. (repo: agent-orchestrator) Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 11 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:4c459f34ca19cf91]: RECLASSIFY (per-todo split) — 2 of 3 remaining todos (pull overage_disabled_reason for the other 21 disabled accounts, investigate /api/agents zero human rows) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 10-11. Doc stays NA for the sole remaining item ([OPERATOR] spread reserve slots 31/32/33 across more than one account instead of triple-booking sub-b).
+- **context-scout 2026-08-19**: populated context_scope (5 entries).

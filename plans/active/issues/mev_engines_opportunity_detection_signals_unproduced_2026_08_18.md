@@ -37,6 +37,15 @@ related:
     /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
     /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-liquidation-bundle.md,
   ]
+context_scope:
+  [
+    strategy-service/strategy_service/engine/strategies/v2/mev/backrun.py,
+    strategy-service/strategy_service/engine/strategies/v2/mev/jit_liquidity.py,
+    strategy-service/strategy_service/engine/strategies/v2/mev/liquidation_bundle.py,
+    /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
+    /plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md,
+    features-service/features_service/onchain/app/calculators/dex_pool_swap_flow_calculator.py,
+  ]
 locked_by:
 locked_since:
 resolved_by:
@@ -175,3 +184,4 @@ specific feature key, not a corpus-wide sweep.
   above by citation). Todos 3-5 (the 3 opportunity-detection calculators) each self-declare an unresolved design
   question — stay genuine build/design work, not bounded. Todo 6 is explicitly gated on 3-5 landing. Doc stays
   `assigned_vm: NA` for the 4 remaining items (3-6).
+- **context-scout 2026-08-19**: populated/refreshed context_scope (6 entries).

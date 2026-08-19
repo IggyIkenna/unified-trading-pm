@@ -213,6 +213,7 @@ to draft-then-catch it.
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (6 entries), still covers the 2 remaining P3 follow-ups (fleet_kpis.py breakdown extension, tmux_pruner.py death_class signal-set extension).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-08-15 (interactive session)**: doc authored; items 1-3's five todos implemented + shipped
   (`agent-orchestrator@c46102b9b5` — `server/tmux_pruner.py`, `server/context_lifecycle.py`, `server/fleet_kpis.py`,

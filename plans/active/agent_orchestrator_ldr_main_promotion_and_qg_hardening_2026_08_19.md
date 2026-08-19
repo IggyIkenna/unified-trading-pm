@@ -58,6 +58,7 @@ context_scope:
     unified-trading-pm/workspace-manifest.json,
     unified-trading-pm/scripts/quickmerge.sh,
     agent-orchestrator/.github/workflows/deploy-dashboard.yml,
+    /plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md,
   ]
 source: >-
   Interactive session 2026-08-19: operator directive, verbatim intent — "since we're gonna start putting parallel
@@ -319,6 +320,9 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: populated/refreshed context_scope (6 entries) — added
+  `ao_ci_aws_to_ionos_migration_2026_08_18.md` (Phase 4 explicitly directs reading it in full before designing the
+  container build).
 - **2026-08-19 (interactive session, checkpointed via `/pre-compact` at ~68% context)**: Plan authored following an
   operator directive to prepare agent-orchestrator for parallel AO-dispatched background agents. Plan destination
   confirmed human/NA via AskUserQuestion. Phase 1 fully scoped from a direct, complete read of

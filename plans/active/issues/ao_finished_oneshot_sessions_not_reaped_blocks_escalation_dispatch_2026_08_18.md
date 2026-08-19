@@ -49,6 +49,14 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/worker_liveness_watchdog.py,
+    agent-orchestrator/server/dedup_state.py,
+    agent-orchestrator/server/escalation.py,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md,
+  ]
 ---
 
 # Finished one-shot sessions never reaped — blocks escalation dispatch onto their own slots
@@ -213,3 +221,4 @@ corrections). Quality gate green (4118 passed) before shipping.
       observability into sub-threshold accumulation) as the next diagnostic step. Repo:
       agent-orchestrator.
 - **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. 2 of 3 todos already shipped with evidence; sole remaining todo (live re-verify + conditional DEBUG logging) is bounded/deterministic. Conflict-check clear: no active planning doc in agent_operating_framework_master claims this ground; the naming-adjacent `one_shot_complete_session_ownership_desync_2026_08_08.md` covers a DIFFERENT, opposite-direction reaper bug (idle-reap over-reclaiming vs. this doc's under-reclaiming) and is already fully shipped/gated by its own finalize plan. Companion gated finalize: `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md`.
+- **context-scout 2026-08-19**: populated context_scope (5 entries).

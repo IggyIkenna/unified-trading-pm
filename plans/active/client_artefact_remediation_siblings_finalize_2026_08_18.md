@@ -40,7 +40,11 @@ superseded_by:
 source: >-
   Mandatory finalize companion per task_template.md §4 (operator ruling 2026-07-24) — every assigned_vm:planning
   plan with more than one todo needs a gated finalize plan that closes only its own plan.
-context_scope: [/plans/active/client_artefact_remediation_siblings_2026_08_18.md]
+context_scope:
+  [
+    /plans/active/client_artefact_remediation_siblings_2026_08_18.md,
+    /plans/audit/results/client_artefact_sibling_docs_audit_2026_08_18.md,
+  ]
 ---
 
 # Client artefact remediation (siblings) — finalize
@@ -61,3 +65,6 @@ Do not start before then.
 ## Progress Log
 
 **2026-08-18 — authored** alongside the sibling remediation child, per the mandatory finalize-companion rule.
+
+**context-scout 2026-08-19**: populated context_scope (2 entries) — added the sibling-docs audit report this
+finalize reconciles findings back into; source-path hunt skipped (finalize gate).

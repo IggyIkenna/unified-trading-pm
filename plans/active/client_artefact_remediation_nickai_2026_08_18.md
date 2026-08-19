@@ -49,6 +49,7 @@ context_scope:
   [
     /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
+    /codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html,
   ]
 ---
 
@@ -124,6 +125,9 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
 
 **2026-08-18 — split out** of [`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 per operator direction. Todos moved, not copied.
+
+**context-scout 2026-08-19**: populated context_scope (3 entries) — added the owned HTML file the remaining
+archetype-readiness todo edits.
 
 **2026-08-18 — 7 fully-absent capability sections shipped, `unified-trading-pm@2b0c327e44`** (slot 3): added
 §18-§24 to `platform-external-api-walkthrough.html` — fees/gas by component, collateral+cross-margin per venue,

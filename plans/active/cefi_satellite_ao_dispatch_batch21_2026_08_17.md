@@ -145,3 +145,7 @@ source: >-
   which documents the SAME DP_CRON_DID_NOT_FIRE storm recurring hours after this batch's item-1 verification —
   added as a 3rd entry so a future reader of this batch sees the current (still-open) state of that residual, not
   just the stale "deploy chain is clean" snapshot in this doc's own Progress Log.
+- **context-scout 2026-08-19**: re-verified context_scope, no change needed (4 entries) — item 3 (OKX-FUTURES crypto
+  xperp) shipped 2026-08-18, leaving only item 2 (annotate the queue-mode script) open; `dp_fetch_009...` issue doc +
+  the target script remain item 2's exact targets, and `dp_cron_did_not_fire_storm_recurred...` (status: open, verified
+  today) still documents the live residual from item 1 — all 4 entries still resolve and remain the right minimal set.

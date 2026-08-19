@@ -41,8 +41,11 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md,
+    /plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md,
+    /plans/active/data_pipeline_completion_2026_08_21.md,
+    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 source: >-
   Mandatory finalize companion per task_template.md §4 ("every AO-dispatched plan needs a gated finalize plan").
@@ -75,3 +78,7 @@ source: >-
 
 - **2026-08-17 (na_eligibility_auditor, dispatch agt-775398, slot 23)**: drafted alongside batch15 per the
   mandatory finalize-plan rule.
+- **context-scout 2026-08-19**: populated context_scope (5 entries) — the gated parent batch plus the 3 named source
+  docs this finalize plan's own todo 2 explicitly re-checks for a since-cleared operator-gate (instruments-catalogue
+  history-log ratification, data-pipeline-completion B20/PAPER-LIVE ratification, venue-coverage Solblaze/Jito
+  write-path), plus the archival-discipline codex SSOT.

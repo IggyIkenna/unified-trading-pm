@@ -62,4 +62,7 @@ source: >-
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: populated/verified context_scope (2 entries) — first scout pass on this doc; both
+  entries (the sweep plan itself and the archival-discipline codex SSOT) confirmed resolving on disk. No
+  source-code paths — this is a pure gated archival-verification finalize doc.
 - **2026-08-18 (na-eligibility-audit, ci tranche)**: authored alongside the sweep plan.

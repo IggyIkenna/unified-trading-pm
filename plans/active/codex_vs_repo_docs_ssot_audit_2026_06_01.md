@@ -993,3 +993,4 @@ named a destination — a dead/malformed leftover from an earlier state of this 
   `check_repo_docs_ssot.py`.
 - **context-scout 2026-08-05, 08-07**: re-scouted both; unchanged (5 entries).
 - **context-scout 2026-08-15**: refreshed; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-19**: re-verified context_scope, no change needed (5 entries) — the 2026-08-18 edit since the last scout (plan_reconciler correcting a stale "Deferred work" section) did not name any new codex/source target; all 5 paths still resolve.

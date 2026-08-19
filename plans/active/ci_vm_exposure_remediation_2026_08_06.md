@@ -146,6 +146,8 @@ operator instruction), verified via AWS SSM — no smoke-test-only claims.
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: re-verified context_scope (5 entries) unchanged, all resolve on disk — still
+  targets the sole remaining open todo (fleet-wide CI concurrency cap).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **2026-08-06 (this session, human-driven per operator instruction)**: All 3 items investigated with live measurements
   against `i-042a6332509482556`. Todos 1-2 fully shipped and live-verified (swap active + persisted; sampler+backup

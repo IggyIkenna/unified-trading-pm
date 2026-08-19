@@ -78,3 +78,7 @@ source: >-
 - **context-scout 2026-08-15**: populated context_scope (3 entries) — gated finalize doc, 3 pure-process todos (evidence
   reconciliation, source-doc archival, self-archival); the gated parent batch + the two directly-cited codex SSOTs
   (6-step archival ritual, evidence-citation format) remain the minimal correct set.
+
+- **context-scout 2026-08-19**: re-verified context_scope (3 entries, unchanged) — the gated parent batch doc and the
+  two archival/commit-flip codex SSOTs remain the minimal correct set for this gated finalize doc; all paths confirmed
+  resolving on disk.

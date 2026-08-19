@@ -39,6 +39,13 @@ tags:
   [ci-reconcile, quality-gates-v2, fleet-wide, single-point-of-failure, self-hosted-runners, workspace-manifest]
 related:
   [/plans/active/ci_consolidated_closeout_2026_07_25.md, /codex/08-workflows/ci-cd-flow.md, /codex/15-runbooks/ci-daily-health.md]
+context_scope:
+  [
+    /plans/archive/2026_08/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md,
+    scripts/quality-gates-base/base-service.sh,
+    scripts/quality-gates-base/base-library.sh,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: "2026-08-19"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -149,3 +156,7 @@ fetch) and warrants direct runner-host log access to resolve definitively.
       occurrence specifically.
 - [x] ✅ [SCRIPT] P1. Harden the retry. DONE — force-reset (`fetch`+`reset --hard`+`clean -fdx`) + 2 retries (5s,
       10s) shipped in both base-service.sh and base-library.sh, `bash -n` clean.
+
+## Progress Log
+
+- **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).

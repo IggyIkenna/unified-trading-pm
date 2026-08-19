@@ -39,9 +39,11 @@ superseded_by:
 source:
 context_scope:
   [
+    agent-orchestrator/server/codex_mcp_proxy.py,
     agent-orchestrator/server/codex_bridge_server.py,
-    agent-orchestrator/.venv/lib/python3.13/site-packages/openai_codex,
-    /codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md,
+    agent-orchestrator/server/routes/accounts.py,
+    /plans/active/codex_luna_flex_bridge_2026_08_14.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -308,3 +310,5 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   operator, per this plan's own Non-goals. Todo 10 (final archival) is gated on that.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:b86998d38ce6877d]: KEEP-NA, valid — doc's own Progress Log records an explicit same-day operator decision (human plan, not AO-dispatched); every todo is part of one multi-file, multi-day rewrite of live-dispatch-critical-path machinery (codex_bridge_server.py) including a prod VM deploy/restart and a live account unpause — exactly the class not to auto-bundle into RECLASSIFY.
+
+- **context-scout 2026-08-19**: populated/refreshed context_scope (5 entries) — first scout for this doc. Swapped in `codex_mcp_proxy.py` (the actual shipped ~330-line module, now the concrete build target) and `routes/accounts.py` (the `enable_account_endpoint` the remaining operator-gated unpause todo needs) alongside the parent bridge plan and the archival-discipline SSOT (the final todo's ritual); dropped the `openai_codex` venv site-packages path and the local-pilot-isolation runbook — both were prototype-investigation aids from before the module shipped, now lower-value than the real artifacts.
