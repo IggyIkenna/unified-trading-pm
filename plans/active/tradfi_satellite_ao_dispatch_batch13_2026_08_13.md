@@ -19,7 +19,7 @@ tags: [tradfi, ao-dispatch, satellite-batch, na-eligibility-audit, ag-closeout-a
 related:
   [
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md,
+    /plans/archive/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md,
     /plans/archive/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md,
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
     /plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md,
