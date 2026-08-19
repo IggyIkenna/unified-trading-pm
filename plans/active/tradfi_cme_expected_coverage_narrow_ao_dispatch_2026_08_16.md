@@ -54,10 +54,11 @@ resolved_by:
 
 ## Todos
 
-- [ ] [DATA] P3. **RULED 2026-08-16 (operator): option 1 — narrow.** Change
+- [ ] [DATA] P3. **Narrow `expected_coverage.py`'s CME entry from `["trades", "ohlcv_1s", "ohlcv_1m", "tbbo"]` to
+      `["ohlcv_1s", "ohlcv_1m"]`, matching `VENUE_DATA_TYPE_CAPABILITIES["CME"]`.** RULED 2026-08-16 (operator):
+      option 1 — narrow. Change
       `unified-api-contracts/unified_api_contracts/registry/expected_coverage.py`'s
-      `EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]["CME"]` from `["trades", "ohlcv_1s", "ohlcv_1m", "tbbo"]` to
-      `["ohlcv_1s", "ohlcv_1m"]`, matching `VENUE_DATA_TYPE_CAPABILITIES["CME"]`. Verify
+      `EXPECTED_COVERAGE_BY_ASSET_GROUP["tradfi"]["CME"]` as above. Verify
       `deployment-api/deployment_api/services/data_status/reference_scope.py`'s denominator math updates
       correctly (CME trades/tbbo drop out of the "expected but uncaptured" gap count). QG both repos. Repo:
       unified-api-contracts, deployment-api.

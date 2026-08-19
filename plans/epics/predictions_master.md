@@ -44,8 +44,8 @@ related_plans:
   - ../archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29.md
   - ../active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md
-  - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md
-  - ../active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md
+  - ../archive/2026_08/prediction_satellite_ao_dispatch_batch7_2026_08_04.md
+  - ../archive/2026_08/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md
   - ../archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08.md
   - ../archive/2026_08/prediction_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
   - ../active/prediction_satellite_ao_dispatch_batch11_2026_08_13.md
@@ -57,6 +57,11 @@ last_updated: 2026-08-15
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/e2eceade-8b65-4b79-a4d3-72a9ba216783 (generated 2026-08-19,
+`/plan-reconcile predictions_master`)
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~30+ open `- [ ]` todos
 > INLINE in its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
@@ -1018,14 +1023,15 @@ creation) · **title**: Betfair back+lay persistence todo's premise invalidated 
 
 ## P3 — backlog; revisit quarterly
 
-### [`prediction_satellite_ao_dispatch_batch7_2026_08_04`](../active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md)
+### [`prediction_satellite_ao_dispatch_batch7_2026_08_04`](../archive/2026_08/prediction_satellite_ao_dispatch_batch7_2026_08_04.md)
 
-**status**: active · **estimate**: 0.18 cal AI-days (class: research)
+**status**: resolved (archived 2026-08-19, `/plan-reconcile predictions_master`) · **estimate**: 0.18 cal AI-days
+(class: research)
 
-### [`prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize`](../active/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md)
+### [`prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize`](../archive/2026_08/prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md)
 
-**status**: active · **estimate**: 0.12 cal AI-days (class: infra) **title**: Prediction satellite AO batch 7 — finalize
-(reconcile source doc + re-check deferrals + archive)
+**status**: resolved (archived 2026-08-19) · **estimate**: 0.12 cal AI-days (class: infra) **title**: Prediction
+satellite AO batch 7 — finalize (reconcile source doc + re-check deferrals + archive)
 
 ## Archived plans
 

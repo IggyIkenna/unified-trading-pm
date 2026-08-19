@@ -26,7 +26,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-last_updated: 2026-06-27
+last_updated: 2026-08-17
 locked_by:
 locked_since:
 supersedes:
@@ -132,9 +132,10 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       actually lands at
       `processed_candles/by_date/day={D}/timeframe={tf}/data_type=ohlcv_1m/instrument_type=continuous_future/venue=CME/underlying=ES/ticks.parquet`.
       Follow-up: `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
-- [ ] [AGENT] P0. **CORRECTED 2026-07-31 (na-eligibility-audit, tradfi tranche) — blocking premise was stale, real
-      remaining gap restated below; item stays open.** Run `features-delta-one-service` for **tradfi/ES** across its
-      calculators (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic). Confirm feature
+- [ ] [AGENT] P0. **Run `features-delta-one-service` for tradfi/ES across its calculators**
+      (continuous-series + roll-adjusted; `FuturesRollAdjuster` already shipped per epic). **CORRECTED 2026-07-31
+      (na-eligibility-audit, tradfi tranche) — blocking premise was stale, real remaining gap restated below; item
+      stays open.** Confirm feature
       parquets land with no NaN-blanket placeholders and `available_at` correctly stamped per row (write-time). (Epic
       L245.) The mismatches (2)+(4) fix + build-continuous landing this item was previously gated on are DONE (see the
       closed item above) — this is no longer blocked on MDPS. **Real remaining gap**: only a single-day smoke has ever
@@ -143,10 +144,11 @@ the ML pipeline must be running on a representative sample so a post-cutover arc
       full-range launch with feature parquets landing clean, no NaN-blanket placeholders, `available_at` correctly
       stamped per row. Follow-up tracker (history):
       `/plans/archive/issues/tradfi_mdps_build_continuous_mismatches_2_and_4_still_open_2026_07_26.md`.
-- [ ] [AGENT] P0. **CORRECTED 2026-07-31 (na-eligibility-audit, tradfi tranche) — blocking premise was stale, real
-      remaining gap restated below; item stays open.** Run `features-volatility-service` for **tradfi/ES +
-      tradfi/CBOE-VIX** (realized-vol + skew; `compute_vix_features()` calculator already shipped per epic — level,
-      contango proxy, momentum, vol-of-vol). Confirm feature parquets land clean. (Epic L247.) The mismatch (2)+(4)
+- [ ] [AGENT] P0. **Run `features-volatility-service` for tradfi/ES + tradfi/CBOE-VIX**
+      (realized-vol + skew; `compute_vix_features()` calculator already shipped per epic — level,
+      contango proxy, momentum, vol-of-vol). **CORRECTED 2026-07-31 (na-eligibility-audit, tradfi tranche) —
+      blocking premise was stale, real remaining gap restated below; item stays open.** Confirm feature parquets
+      land clean. (Epic L247.) The mismatch (2)+(4)
       fix + build-continuous landing this item was previously gated on are DONE (see the closed P0 item above) — this is
       no longer blocked on MDPS. **Real remaining gap**: features-volatility-service has NEVER run even once for tradfi
       (not even a single-day smoke, unlike features-delta-one above) — the launch itself, at any range, has not

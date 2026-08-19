@@ -6,8 +6,10 @@ summary: >-
   findings doc against fresh state (most items still grace-protected). Fanned out 3 read-only hunter sub-agents over
   the 16 currently-writable docs; adversarially verified every candidate (independent spot-checks + 2 external commit
   sha verifications); applied 14 fixes across 11 files (1 flip, 12 contradiction/hygiene corrections, 1 reordering),
-  1 item deferred pending a grace-protected epic, 2 correctly left as no-action.
-status: open
+  1 item deferred pending a grace-protected epic, 2 correctly left as no-action. **RESOLVED 2026-08-19**: the sole
+  remaining open item (batch7+finalize archival referrer-fix) cleared grace and was executed by
+  `/plan-reconcile predictions_master` — 0 open todos remain, archived per the 6-step ritual.
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -48,6 +50,12 @@ context_scope:
 ---
 
 # 2026-08-17 plan_reconciler — prediction tranche
+
+> **📦 ARCHIVED 2026-08-19 — resolved.** All 15 tracked items done: 12 contradiction fixes, 1 flip, 1 hygiene reorder,
+> and the sole remaining Filed item (batch7+finalize archival referrer-fix) executed once its grace window cleared.
+> Working-tree archival by `/plan-reconcile predictions_master` (epic-scoped run) — see that run's own findings doc
+> for the triggering fix. No new durable contract to migrate to codex: this is a routine daily reconciliation record,
+> matching the precedent of the already-archived `plan_reconciler_findings_prediction_2026_08_10.md`.
 
 Dispatch: `agt-2934ac`, slot 30. Tranche = `prediction` (44 docs per `generate_tranche_doc_inventory.py --tranche
 prediction`, up from 41 yesterday — 3 new docs: `nick_ai_audit_data_quality_findings_2026_08_16.md`,
@@ -172,13 +180,18 @@ fan-out's working set:
 
 ## Filed (routed — grace-blocked or standing operator items, not auto-fixable this run)
 
-- [ ] [DOC] P3. `prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` todo 2 (archive batch7 +
+- [x] ✅ [DOC] P3. `prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` todo 2 (archive batch7 +
       this finalize doc) — the content-side blocker cleared (todo 1 flipped above), but the referrer-fix step can't
       safely run: the one REAL active referrer, `plans/epics/predictions_master.md`, was edited 8h ago (inside the
       12h grace window — extended the same caution to it even though it's technically outside `plans/active/`'s
       literal wording, given how recently and clearly it was mid-edit). Fully documented inline in the todo itself
       (exact lines to update named) — discoverable without a separate pointer; no fresh `/blocked` needed, this
-      self-resolves once the epic clears grace.
+      self-resolves once the epic clears grace. **FIXED 2026-08-19 (plan_reconciler, `/plan-reconcile
+      predictions_master`)**: both `predictions_master.md` and this doc pair's own last commit cleared the 12h
+      window. Executed exactly as specified: both files `git mv`'d to `plans/archive/2026_08/`, epic's 4 citation
+      lines repointed with a resolved status note, this finalize doc's own `related:` self-reference also repointed
+      (a 5th referrer this note didn't originally name, caught by a fresh corpus-wide grep before closing).
+      Working-tree edit only (do-not-ship instruction this session).
 - [x] ✅ [OPERATOR] P0. `BLK-e7b0e8da` (governance concern re: an unattributed "operator ruling" entry in
       `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md:127-130`) — carried forward from 2026-08-15/16/17.
       **RESOLVED 2026-08-18** — see the matching entry in `plan_reconciler_findings_prediction_2026_08_16.md`'s

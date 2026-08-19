@@ -83,14 +83,26 @@ resolved_by:
       pre-refactor one-off script already had — reproducing the exact tradfi-prd false CF-2-paths/CF-3-partition
       RED first caught 2026-07-12 (`configs/patches/*.py` sorts ahead of `raw_tick_data/`, carries no
       `asset_group=`/`pipeline_mode=` segment). Fixed + regression-tested + shipped:
-      `unified-trading-library@a5e4765017`. **Next step (tracked, not this todo)**: re-run this exact E7 verify
-      once `mtds_available_at_cross_asset_backfill_2026_07_13.md`'s tradfi CF-8 fix lands and re-check GREEN before
-      attempting the bulk-delete — do not re-attempt the delete off a stale GREEN reading. Scope: complete for the
+      `unified-trading-library@a5e4765017`. **Next step: see Todo 2 below (added 2026-08-19 — was prose-only,
+      "tracked, not this todo", with no actual todo anywhere; corrected per the HARD RULE that every follow-up is
+      a tracked `- [ ]` item, never prose).** Scope: complete for the
       MIGRATED corpus only (~5,553,198 rows as of 2026-07-16, schema_version=9=100%) — the ~2,008 legacy-only
       tradfi days destroyed without migration are irrecoverable and out of scope for this delete's "done" bar; do
       not claim full tradfi completeness from this checkbox. Repo: market-tick-data-service (verify only, no
       MTDS code touched), unified-trading-library (checker fix). Source: `data_completion_tradfi_2026_07_15.md` E7
       (line 211).
+
+- [ ] [DATA] P1. **Re-run the E7 verify once CF-8 clears GREEN, then execute the bulk-delete if the full
+      CF-1..CF-12 gate is met.** Gated on `market-data-tick-tradfi-prd`'s CF-8 (`available_at` fill-rate) turning
+      GREEN — tracked in `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`'s tradfi
+      CF-8 entry; do not re-attempt this todo until that entry shows CF-8 GREEN for this bucket. When it clears:
+      re-run `unified_trading_library.cf_manifest_audit.audit()` against `market-data-tick-tradfi-prd-central-element-323112`,
+      confirm CF-1..CF-12 all GREEN (not just CF-8), then execute the bulk-delete of the 12 `day-*` hyphen 0-row
+      placeholder prefixes (~110k objects) with the pre-delete guard already specified above (re-assert 0-row per
+      object before deleting, abort the prefix on any non-empty object) — irreversible, per
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`. Done when: either the delete executes with a
+      verified pre/post object count, or the gate remains RED and this todo is released `GATED` citing the current
+      CF-8 status. Repo: market-tick-data-service.
 
 ## Progress Log
 
@@ -104,3 +116,8 @@ resolved_by:
   CF-2-paths/CF-3-partition for this exact bucket. No GCS delete of any kind was executed this session — the
   irreversible action stays gated until CF-8 clears.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **plan_reconciler 2026-08-19** (epic-scoped `tradfi_master` pass): found the "Next step (tracked, not this
+  todo)" phrase inside Todo 1 was a HARD RULE violation — real remaining work (re-verify + delete once CF-8
+  clears) described only in prose, no actual todo tracked it anywhere (confirmed via the finalize plan's own
+  Progress Log: "no newer delete-execution task exists"). Added Todo 2 to track it explicitly; corrected the
+  prose reference to point at it.

@@ -162,43 +162,39 @@ source: >-
       `/plans/active/issues/tradfi_catalogue_regen_scheduler_silently_not_paused_2026_08_08.md` item at L120
       (reworded per this audit to mandate the guarded helper, per this doc's own tracked incident history).
 
-- [ ] [DOC] P2. **Archive `tradfi_canonical_path_migration_design_2026_07_19.md`.** Run the standard 6-step
-      archival ritual (`codex/11-project-management/`). All todos already `[x]`, its stale Massive-purge section
-      already corrected in place (2026-08-16), `archive_exempt: true` bridge was only pending this correction + a
-      referrer-sweep pass — both preconditions now met. This doc has 43 corpus referrers (confirmed via
-      corpus-wide grep at time of this audit, 2026-08-17) — the archival + corpus-wide referrer-path fixup is the
-      substantial part of this task; budget for it. `locked_by:` is currently empty (unlocked) — re-verify
-      immediately before starting in case another session has since claimed it. Done when: the doc is `git mv`'d to
-      `plans/archive/2026_08/issues/`, carries the standard archival banner, and every one of its ~43 referrers is
-      repointed to the new path (or, for machine-generated/regen-owned referrers per this corpus's established
-      convention — see `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s own precedent for `INDEX.md`/
-      `infrastructure_master.md`-style referrers — left for their own regen tooling). Source:
+- [ ] [DOC] P2. **BLOCKED — premise stale, do NOT archive yet (corrected 2026-08-19, plan_reconciler epic-scoped
+      tradfi_master pass).** ~~Archive `tradfi_canonical_path_migration_design_2026_07_19.md`. Run the standard
+      6-step archival ritual. All todos already `[x]`~~ — **this is no longer true**: the 2026-08-18 pass converted
+      2 prose-only "Deferred work" items into real tracked `- [ ] [DATA] P2.` todos (lines ~603, ~609 of that doc —
+      a 207,438-object short-code→display-name migration and a broader orphaned-`combo` scoping item), both still
+      open as of 2026-08-19. Its `archive_exempt: true` bridge comment has been corrected in place to flag this.
+      **Revised done-when**: first resolve or explicitly re-scope those 2 open todos (real DATA migration work, not
+      mechanical), THEN run the standard 6-step archival ritual (`codex/11-project-management/`) — `locked_by:` is
+      currently empty, re-verify before starting. This doc has ~43 corpus referrers (confirmed 2026-08-17) — the
+      referrer-path fixup remains the substantial part of the eventual archival task; budget for it. Source:
       `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 1 (L77) — archival half only; the
-      text-correction half was already done 2026-08-16.
+      text-correction half was already done 2026-08-16; this precondition-staleness correction is new 2026-08-19.
 
-- [ ] [DOCS] P3. **Fix the residual reference-path ratchet regression** from the 2026-08-16 plan_reconciler pass's
-      own archivals (baseline 34, was 38 at filing — 2 of the original 6 were fixed same-run).
-      `tradfi_consolidated_closeout_2026_07_18.md` (×2 references) and
-      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` (×2 references) still reference the now-archived
-      `tradfi_satellite_ao_dispatch_batch7_2026_08_06.md` (+ its `_finalize` sibling) at their pre-archival
-      `/plans/active/...` path. Repoint all 4 references to the current archived path (`/plans/archive/2026_08/...`
-      — confirm the exact archived path via `find` before editing, do not guess it). Both source docs were inside
-      the 12h grace window at filing time (2026-08-16) — by dispatch time this is a new day, so re-verify the grace
-      window has cleared before editing (it should have). Done when: `check_reference_paths.py`'s existence-ratchet
-      count drops back toward the 34 baseline (verify the exact post-fix count — don't assume it hits exactly 34 if
-      other regressions occurred independently in the interim). Source:
-      `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 3 (L100).
+- [x] ✅ [DOCS] P3. **DONE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass).** Fix the residual
+      reference-path ratchet regression from the 2026-08-16 plan_reconciler pass's own archivals (baseline 34, was
+      38 at filing — 2 of the original 6 were fixed same-run). Verified live this pass: `grep -n
+      'batch7_2026_08_06' plans/active/tradfi_consolidated_closeout_2026_07_18.md` → both refs (L64-65) already
+      point to `/plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch7_2026_08_06.md`(+`_finalize`) — already
+      fixed by the 2026-08-18 pass (see `plan_reconciler_findings_tradfi_2026_08_18.md` item 7), just never flipped
+      here because this doc was itself inside its own 12h grace window at that time.
+      `tradfi_satellite_ao_dispatch_batch8_2026_08_08.md` is itself now archived (confirmed via `ls
+      plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md`) — its internal refs are historical,
+      no longer live-corpus. Source: `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 3
+      (L100).
 
-- [ ] [DOCS] P3. **Bump stale `last_updated` frontmatter** on the 4 tradfi-tranche docs still outstanding from the
-      2026-08-16 plan_reconciler pass's finding (3 of the original 7 were already fixed that session):
-      `ag_closeout_audit_rollout_2026_07_25.md`, `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`,
-      `estate_orphan_assessment_2026_07_21.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`. For each,
-      set `last_updated` to the doc's real last-git-touch date (`git log -1 --format=%ad --date=short -- <path>`),
-      not today's date. All 4 were inside the 12h grace window at filing time (2026-08-16) — by dispatch time this
-      is a new day, so the grace window should have cleared; re-verify before editing regardless (never edit a doc
-      inside its own 12h grace window). Done when: all 4 docs' `last_updated` fields match their real git last-touch
-      date. Source: `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 4 (L109) — 4/7
-      remaining slice only, the other 3 were already done 2026-08-16.
+- [x] ✅ [DOCS] P3. **DONE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass) — 4/4 complete.** Bump stale
+      `last_updated` frontmatter on the 4 tradfi-tranche docs from the 2026-08-16 plan_reconciler pass's finding.
+      3/4 were already fixed 2026-08-18 (`ag_closeout_audit_rollout_2026_07_25.md`,
+      `estate_orphan_assessment_2026_07_21.md`, `defi_cefi_venue_chain_axis_contamination_2026_07_28.md`, all
+      bumped to `2026-08-17`). The 4th, `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`, was still
+      inside its own 12h grace window as of the 2026-08-18 pass — bumped this pass, `last_updated: 2026-06-27` →
+      `2026-08-17` (real git last-touch date, `git log -1 --format=%ad --date=short`). Source:
+      `/plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md` item 4 (L109).
 
 ## Progress Log
 

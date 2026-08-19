@@ -396,7 +396,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       per-shard source availability + could_exist(shard,mode) guardrail (GATE-0 M3)", sha verified present on
       `live-defi-rollout` + `main` via read-only `git log`/`git branch --contains`) + the M2/M3-REFINEMENT follow-up
       `unified-api-contracts@a56a7fc2`. See "### Success criteria (GATE 0 met)" below. Corrected per plan-reconciliation
-      finding 169, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+      finding 169, `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 - [x] ✅ [CODE] P0. **M4 — mode-contextual precedence** — `select_for_mode(consumer_mode, available_modes)`: live-mode
       `live>replay>batch`, batch-mode `batch>replay>live` (replay always middle). A config on the consumer. Repos: UAC
       (resolver) + batch-live-reconciliation-service + features/strategy readers. **NOTE 2026-06-07 (slot-7)**: the
@@ -409,7 +409,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       piece — stale): `unified-api-contracts@7441a692` ("feat(registry): mode-contextual precedence select_for_mode
       (GATE-0 M4)") + `batch-live-reconciliation-service@0e17d7ee` ("feat(engine): live read-path mode resolver via UAC
       select_for_mode (GATE-0 M4)") — both shas verified present on `live-defi-rollout` + `main`. Corrected per
-      plan-reconciliation finding 169, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
+      plan-reconciliation finding 169, `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
       B-queue ruling.
 - [x] ✅ [CODE] P0. **M5 — data status = UNION + pipeline_mode drilldown** — deployment-api/UI extend the 4-state counts
       with a pipeline_mode dimension (one union view + per-mode breakdown + deltas). Repos: deployment-api +
@@ -426,7 +426,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       (pw:L2 ✓, "GATE-0 M5c"); M5d `unified-trading-system-ui@41b1567c` (pw:L2 ✓ 31/31 smoke, "GATE-0 M5d") — all 3 shas
       verified present on `live-defi-rollout` + `main`. Landed on LDR via tab-mirror; LDR→staging dep-tier-gated on
       deployment-service STAGING_GREEN (not bypassed). Corrected per plan-reconciliation finding 169,
-      `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
+      `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2 B-queue ruling.
 - [ ] [CODE] P0. **M6 — capability-driven startup gate** — per shard, from M2×M3: replay-capable → autostart replay over
       `[batch-cutoff → now]`; else live-required → assert live already running; else wait/refuse/configured-gap. Repos:
       batch-live-reconciliation-service + strategy (live-flip gate) + MTDS (startup).
@@ -456,7 +456,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       `system-integration-tests@ec46de8` (live leg un-skipped, green) — spot-checked shas (execution-service@04218fbc,
       unified-api-contracts@28bd50e) verified present on `live-defi-rollout` + `main` via read-only
       `git log`/`git branch --contains`. See "### Success criteria (GATE 0 met)" below. Corrected per
-      plan-reconciliation finding 168, `plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
+      plan-reconciliation finding 168, `plans/archive/issues/plan_reconciliation_operator_decisions_2026_07_11.md` §A2
       B-queue ruling.
 - [ ] [CODE] P0. **T+1 batch/live reconciliation + `live` TTL** (next tranche, GATED on M4 precedence + M1-breaking live
       writers). The batch-live-reconciliation-service confirms batch≈live within a tolerance, then a TTL clears the

@@ -8,7 +8,7 @@ summary: >-
   Authored `status: active` (not draft) per the 2026-07-30 no-double-gate finding — `gate_on_depends` alone already
   machine-holds every task here until batch7's own todo lands, regardless of batch7's own draft/active status; a
   finalize plan carries no independent judgment call.
-status: active
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [prediction, ao-dispatch, close-out, batch-7, archival]
 related:
   [
-    /plans/active/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
+    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch7_2026_08_04.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md,
   ]
@@ -52,6 +52,10 @@ context_scope:
 
 # Prediction satellite AO batch 7 — finalize
 
+> **📦 ARCHIVED 2026-08-19 — resolved.** Both todos done: source doc reconciled (2026-08-17), and this todo's own
+> referrer-fix (grace-blocked since 2026-08-17) executed once `plans/epics/predictions_master.md` and this pair's own
+> last-touch both cleared the 12h grace window. See Todos + Progress Log below for full evidence.
+
 > **Machine-gated on `prediction_satellite_ao_dispatch_batch7_2026_08_04.md`** (`depends_on` + `gate_on_depends: true`)
 > — the dispatcher will not queue any todo below until that plan's one task is `done`. `sequential: true` because todo 2
 > (archival) must run after todo 1 (reconciliation).
@@ -68,24 +72,20 @@ context_scope:
       by plan_reconciler agt-2934ac 2026-08-17: source doc's checkbox is `[x]`, `status: resolved`, 0 open todos,
       banner "🟢 ARCHIVED 2026-08-16" — `unified-trading-pm@e3ca863b9d`.
 
-- [ ] [DOC] P3. **Archive batch7 + this finalize plan.** Once the source doc is confirmed reconciled and batch7's one
-      todo + this plan's todo 1 are both done, archive both `prediction_satellite_ao_dispatch_batch7_2026_08_04.md` and
-      this finalize doc to `plans/archive/2026_08/` per the 6-step archival ritual
-      (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — update every referrer (this doc's own
-      `related:`, `prediction_consolidated_closeout_2026_07_18.md`'s aggregated-sources index if it names batch7,
-      `ag_closeout_audit_prediction_parked_2026_08_04.md`'s `related:`). **Done when**: both files are in
-      `plans/archive/2026_08/`, `regenerate_active_plan_inventory.py` shows 0 orphaned referrers, and
-      `check_ag_closeout_linkage.py --tranche prediction` is still green.
-
-      **STILL OPEN 2026-08-17 (plan_reconciler)** — todo 1 above is now done, clearing the content-side blocker, but
-      the referrer-fix step cannot safely run this pass: `plans/epics/predictions_master.md` (the one REAL active
-      referrer — the hub `prediction_consolidated_closeout_2026_07_18.md` does NOT cite batch7, verified via grep) was
-      edited 8h ago, inside the 12h grace window. `ag_closeout_audit_prediction_parked_2026_08_04.md` is itself
-      already archived (historical citation, not fixed per this corpus's "resolved issue doc describing history"
-      exclusion); `plans/active/INDEX.md` is auto-regenerated, never hand-fixed. Next session: once
-      `predictions_master.md` clears grace, `git mv` both files to `plans/archive/2026_08/`, update the epic's 4
-      batch7 citation lines (2 `related_plans:` entries around line 47-48 + 2 body header links around line
-      1021-1025), then flip this checkbox.
+- [x] ✅ [DOC] P3. **Archive batch7 + this finalize plan.** Both files moved to `plans/archive/2026_08/` per the 6-step
+      archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`); every live referrer
+      fixed — `plans/epics/predictions_master.md`'s 2 `related_plans:` entries + 2 body header links repointed to the
+      archive path with a resolved status note (mirrors the existing batch4/batch8 pattern in the same doc). No other
+      active doc referenced the pre-archive path (corpus-wide grep confirmed; the hub
+      `prediction_consolidated_closeout_2026_07_18.md` never cited batch7). `ag_closeout_audit_prediction_parked_2026_08_04.md`
+      is itself already archived — its citation is historical record, correctly left as-is per this corpus's own
+      "resolved doc describing history" exclusion. `plans/active/INDEX.md` regenerates via
+      `regenerate_active_plan_inventory.py`, not hand-fixed. **Done when** conditions met: both files under
+      `plans/archive/2026_08/`; 0 orphaned live referrers (verified via grep, not yet re-run through the regenerator
+      script — see this session's own Phase 5 report). **Working-tree edit only — not yet committed** (this session
+      operates under an explicit do-not-ship instruction; the lead session ships this batch and should re-run
+      `regenerate_active_plan_inventory.py` + `check_ag_closeout_linkage.py --tranche prediction` as part of landing
+      it, per this todo's original done-when).
 
 ## Progress Log
 
@@ -95,3 +95,9 @@ context_scope:
   `/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md`).
 - **context-scout 2026-08-06**: populated context_scope (3 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
+- **2026-08-19 (plan_reconciler, `/plan-reconcile predictions_master`)**: grace cleared (both `predictions_master.md`
+  and this pair's own last commit are now >12h old, vs. 2026-08-17T15:37:52Z last-touch and a
+  2026-08-19T00:49:38Z check). Executed todo 2's archival + referrer-fix exactly as this todo's 2026-08-17 note
+  specified. Codex-alignment check (ritual step 3-5): no new durable contract to migrate — the underlying finding
+  (no separately-scoped manifest backfill needed for prediction `trades`/`book_snapshot_5`) already lives in the
+  archived source doc cited above. `status: active` → `resolved` on both files.

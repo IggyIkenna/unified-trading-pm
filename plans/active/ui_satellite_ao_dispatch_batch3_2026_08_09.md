@@ -96,12 +96,13 @@ drift_direction: advance-docs
       sampled images show no actual scan results (parked estate, no push activity since 2026-06-27) — neither side has
       any findings to report. Full detail in the source doc's checkbox + Progress Log:
       `artifact_pipeline_observability_2026_07_17.md`.
-- [ ] [SCRIPT] P3. **Correct the misattributed VM origin** in
-      `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md`. Source: same doc's
-      `[SCRIPT] P3` todo naming this specific correction. Re-verify the VM origin attributed in that issue doc against
-      current evidence (launcher logs / VM metadata / commit history) and correct it if wrong, citing the corrected
-      evidence. Done when: the issue doc's VM-origin claim is verified accurate or corrected with cited evidence. Repo:
-      unified-trading-pm.
+- [ ] [SCRIPT] P3. Correct the misattributed VM origin in
+      `issues/deployment_service_qg_red_qg_snapshot_launcher_live_vm_flake_2026_07_27.md` — re-verify the VM origin
+      attributed there against current evidence (launcher logs / VM metadata / commit history) and correct it if
+      wrong, citing the corrected evidence (corrected 2026-08-19, plan-reconcile observability_master: rewrapped so
+      the target file lands on line 1 — task_template.md §3 line-1 completeness). Source: same doc's `[SCRIPT] P3`
+      todo naming this specific correction. Done when: the issue doc's VM-origin claim is verified accurate or
+      corrected with cited evidence. Repo: unified-trading-pm.
 
 ## Codex SSOTs
 

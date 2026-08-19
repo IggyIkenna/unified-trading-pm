@@ -288,13 +288,121 @@ code/live checks before writing):
   offending line not isolated within budget (many legitimate 2-line-wrapped bold spans make bisection expensive
   relative to this P3 cosmetic finding).
 
+## 2026-08-19 pass — epic-scoped `/plan-reconcile tradfi_master` follow-up (Phase -1 + fresh sweep)
+
+Epic-scoped (not tranche-scoped like the two runs above): every doc where `parent_epic: tradfi_master`
+(45 docs — 20 issues + 25 plans; script: `generate_tranche_doc_inventory.py` doesn't apply here, used
+`rg "^parent_epic: tradfi_master$"` directly per the skill's epic-scoped-mode definition). 5 parallel hunter
+batches (~9 docs/2600 lines each) + direct orchestrator work on batch 5 after a 2-of-2 concurrent-subagent-limit
+retry failure (workspace-wide 20-subagent cap, other sessions active).
+
+**Phase -1 resolution of this doc's own "Filed (grace-protected)" items** (all long past their 12h grace window):
+- Item 7 (reference-path fix, `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 7) — **RESOLVED**, flipped.
+  Underlying fix was already correct (confirmed 2026-08-18); only the tracking checkbox needed flipping.
+- Item 8 (`last_updated` bumps, 4/7 remaining → 1/4 remaining) — **RESOLVED**, flipped. Bumped
+  `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`'s `last_updated` (2026-06-27→2026-08-17); the other 3
+  were already done 2026-08-18.
+- `tradfi_canonical_path_migration_design_2026_07_19.md` archival (item 5's archival half, tracked as batch15
+  Todo 6) — **STILL-OPEN, PREMISE NOW WORSE, not better**: this pass's own hunter found the 2026-08-18 pass's
+  "prose→todo conversion" fix (item that made this doc archive-ready-pending-referrer-sweep) added 2 NEW open
+  todos, so the doc is no longer 0-open-todos at all. Corrected the `archive_exempt:` bridge comment and batch15
+  Todo 6 in place to reflect this — do NOT archive until those 2 real DATA-migration todos resolve.
+- `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` (named in this doc's item 3
+  context) — separately found genuinely fully-resolved (0 open checkboxes, `status:` never flipped); flipped
+  `status: open` → `resolved` this pass. This clears the task-level `depends_on`+`gate_on_depends` gate on
+  `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s sole P1 todo — annotated that
+  todo in place (was framed as blocked; now actionable, pending a fresh fleet-state re-verify).
+- Doc-drift #3 (`tradfi_satellite_ao_dispatch_batch16_2026_08_17.md` reflex-`sequential: true`) — **STILL ROUTED,
+  not auto-applied** (splitting an active/dispatched plan is a planning decision, never autonomous even under
+  trust mode — see Modes § Phase 4). See "Operator-decision items" below.
+- 2 refuted items from this doc's own "Needs a live remeasurement" section resolved by fresh evidence this pass:
+  the BARCHART 4,655-vs-9,119 row-count "discrepancy" — a hunter found both figures coexist stably as two
+  different manifest-field filters (`source=barchart` vs `venue=BARCHART`), not the same metric drifting; not a
+  discrepancy at all.
+
+**New findings this pass, applied directly (AUTO-RESOLVE — provable facts, full detail in each doc's own diff)**:
+stale Databento billing-tier fact (L3→L2, `tradfi_consolidated_closeout_2026_07_18.md`, cross-verified against
+live `databento_subscription_allowlist.py`); a genuinely HIDDEN open todo in
+`tradfi_manifest_content_recovery_completion_2026_07_24.md` (stray backtick-wrapping made a real `- [ ] [INFRA] P2`
+invisible to every checkbox-counting tool — un-hidden, zero content change); a stale CME-billing-still-blocked
+premise on an open P1 todo in the same doc; 7 line-1-completeness fixes across
+`tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md`,
+`tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md`,
+`tradfi_databento_account_billing_suspended_2026_08_09.md`,
+`tradfi_deprecated_etf_manifest_rows_forward_scope_drift_2026_08_18.md`,
+`tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` (×1), `tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`
+(×2); a wrong-file citation in `tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16_finalize.md` (pointed
+at the `depends_on` target instead of the doc that actually carries the P2-OPERATOR-DECISION todo,
+`tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`); a stale title/summary on
+`tradfi_tbbo_unclassified_adapter_error_dp_fetch_009_2026_08_15.md` (original "capability-gate bypass" hypothesis
+superseded by a confirmed MDPS timestamp-column bug, `market-data-processing-service@c5e0d68bcf`); a stale tag
+(`[SCRIPT]`→`[OPERATOR]`) on `tradfi_legacy_twin_candidates_already_absent_unexplained_2026_08_14.md`'s
+BLOCKED-OPERATOR-DECISION todo; a stale archive_exempt-comment rationale on
+`tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md`; a genuinely un-tracked follow-up (HARD RULE
+violation — prose-only "tracked, not this todo") in `tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md`,
+converted to a real `- [ ] [DATA] P1.` todo; an unpaired `**` bold-span + a false arithmetic equation (both
+cosmetic-but-real rendering bugs) in `tradfi_consolidated_closeout_2026_07_18.md` /
+`dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md` respectively.
+
+**Big finding — notifying operator, not resolved this pass**:
+`tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md`'s `BLOCKED-OPERATOR-DECISION` (quickmerge/QG-host
+governor contention) was actually RULED + SHIPPED 2026-08-16 (`qg_host_adaptive_resource_governor_2026_07_14.md`,
+Option 1, 93-min soak validated) but this doc's own escalation was never closed out. Whether the underlying blocked
+MTDS payload itself landed could NOT be confirmed this pass — none of the cited SHAs resolve in a full local
+`market-tick-data-service` clone (consistent with repeated rebase-autostash cycles reassigning SHAs). Flagged
+in-doc; needs a live manifest re-check before this can close either way.
+
+### Operator-decision items (routed this pass — 2, matches `parked` below)
+
+**1. Split `tradfi_satellite_ao_dispatch_batch16_2026_08_17.md`'s reflex `sequential: true`?**
+The whole 8-todo plan is serialized over a single colliding file-pair (Todo4+Todo8, both editing
+`/codex/02-data/non-canonical-path-inventory.md`); Todos 2/3/5/6/7 touch different files/repos entirely and could
+dispatch concurrently. Plan is `status: active`/`assigned_vm: planning`, Todo1 already dispatched+done — this is
+actively costing parallelism today.
+- **A [WORKER REC]**: split Todo4+Todo8 into a new companion plan (e.g.
+  `tradfi_satellite_ao_dispatch_batch16b_noncanonical_path_inventory_2026_08_17.md`) carrying its own
+  `sequential: true`; drop `sequential: true` from the parent, leaving Todos 2/3/5/6/7 to dispatch concurrently.
+- B: Leave as-is (accept the parallelism cost) — simplest, no restructuring risk to a plan possibly mid-dispatch.
+- Other: your call.
+
+**2. `tradfi_consolidated_closeout_2026_07_18.md` — fold + archive, or keep as tranche index?** (pre-existing item,
+carried from `tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 8 — premise corrected this pass:
+the doc is now FULLY done at the top level, 0 open checkboxes, not "near-complete, 1 open todo" as originally
+framed; the underlying fold-vs-keep decision is unchanged and still unresolved)
+- **A [WORKER REC, inherited]**: keep it as the tranche coordination index (`archive_exempt: true`) — it's the
+  linkage anchor `check_ag_closeout_linkage.py` resolves against; archiving would orphan that.
+- B: Fold into `/plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md` and archive the shell.
+- C: Archive now, re-home the linkage anchor onto a new `tradfi_consolidated_closeout_aggregated_sources_*.md`.
+- Other: your call.
+
+### Refuted this pass (checked, found NOT accurate)
+- `tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md` Todo1 missing `[OPERATOR]`/delete-safety tag —
+  refuted: it only edits a Python registry constant + verifies a computed denominator, no GCS delete/`--apply`/VM
+  launch.
+- `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` Todo2 VM-launch tagging — checked against sibling
+  convention corpus-wide; this is consistent tranche practice (routine SPOT backfill relaunches untagged
+  throughout), not a batch12-specific defect. Not fixed in isolation.
+- BARCHART row-count "discrepancy" (see Phase -1 section above) — refuted, two different manifest-field filters.
+
+### Coverage (this pass)
+45/45 epic-scoped docs read in full across 5 hunter batches + direct orchestrator coverage (batch 5, 9 docs, after
+2 consecutive concurrent-subagent-limit failures on the 5th parallel dispatch — handled directly instead of
+retrying, per the "do not retry" guidance on that error). ~13,100 total lines read. `check_line_caps.sh` and
+`check_archive_candidates.sh` both re-run clean after all fixes (0 new candidates/regressions). YAML frontmatter
+re-parsed on all 3 docs with frontmatter edits (`tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md`,
+`tradfi_canonical_path_migration_design_2026_07_19.md`, `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md`)
+— all parse clean.
+
 ## Archive candidates (operator review)
 
-_(pending Phase 1-4)_
+None found this pass within the 45-doc epic scope (`check_archive_candidates.sh` returns 0 corpus-wide as of this
+pass). `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` is fully done (flipped
+`status: resolved` this pass) but not yet archived — the 6-step ritual + referrer sweep is left for a dedicated
+pass, same treatment as `tradfi_canonical_path_migration_design_2026_07_19.md` was given 2026-08-16.
 
 ## Plans not reached
 
-_(pending — updated at Phase 6)_
+None — full 45/45 epic-scoped coverage this pass (see Coverage above).
 
 ## Phase-0 hygiene sweep (corpus-wide, informational — NOT tradfi-tranche-specific, out of scope for this shard)
 

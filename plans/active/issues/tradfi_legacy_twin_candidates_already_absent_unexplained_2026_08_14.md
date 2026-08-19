@@ -122,7 +122,10 @@ protocol asks to be investigated before being waved off.
       separately**: a 2-day audit-log retention on the project handling prod data-pipeline deletes is unusually short
       and was the reason this couldn't be answered — may be worth a deliberate retention bump if this kind of forensic
       question recurs.
-- [ ] [SCRIPT] P2. Once the mechanism is known, spot-check whether the defi and pred legacy-twin-delete candidate sets
+- [ ] [OPERATOR] P2. **Retagged 2026-08-19 (plan_reconciler) — was `[SCRIPT]`, but this item's own 2026-08-16
+      Progress Log entry parks it `BLOCKED-OPERATOR-DECISION`; the tag now matches that disposition, per the HARD
+      RULE that a resolved/changed `[OPERATOR]` state gets retagged in the same edit.** Once the mechanism is
+      known, spot-check whether the defi and pred legacy-twin-delete candidate sets
       (same gated todo, `tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md`'s sibling asset_groups) show the same
       already-vanished pattern BEFORE trusting a future dry-run's twin-coverage number for them — a stale report
       reporting "still there" when the objects are already gone would silently under-count, and one reporting "gone"

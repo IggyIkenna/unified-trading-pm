@@ -9,7 +9,8 @@ summary: >-
   (C1) — a real-empty misclassified as honest-absence, i.e. a code bug not a true gap — and needs a worker to trace the
   adapter path and route to `record_failed`; AMBIGUOUS verdicts need judgment (real-gap vs new-venue) to extend the
   oracle.
-status: open
+status: resolved # corrected 2026-08-19, plan-reconcile observability_master: sole todo is [x] w/ HARD evidence
+  # (market-tick-data-service@bf9fe5c4cc, verified ancestor of origin/live-defi-rollout) -- was stale "open"
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -27,7 +28,7 @@ parent_epic: observability_master
 priority: P1
 source: [reprobe_new_empty_confirmed.py, data_pipeline_hardening_self_monitoring_2026_06_22.md]
 assigned_vm: planning
-resolved_by:
+resolved_by: plan_reconciler 2026-08-19 (epic-scoped observability_master pass) — sole todo [x] w/ HARD evidence
 locked_by: live-defi-rollout
 context_scope:
   [

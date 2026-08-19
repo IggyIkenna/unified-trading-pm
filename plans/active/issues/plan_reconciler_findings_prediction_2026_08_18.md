@@ -20,7 +20,7 @@ related:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/plan_reconciler_findings_prediction_2026_08_16.md,
-    /plans/active/issues/plan_reconciler_findings_prediction_2026_08_17.md,
+    /plans/archive/issues/plan_reconciler_findings_prediction_2026_08_17.md,
   ]
 created: "2026-08-18"
 parent_epic: plan_hygiene_master
@@ -42,7 +42,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/plan_reconciler_findings_prediction_2026_08_17.md,
+    /plans/archive/issues/plan_reconciler_findings_prediction_2026_08_17.md,
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 ---
@@ -219,11 +219,15 @@ separate frontmatter/todo-format mechanical-fixer runs were needed.)
       account-lockout blocker question. Still grace-protected (10h45m at last check).
 - [ ] [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — possible `[OPERATOR]` mistag.
       Still grace-protected (10h53m at last check).
-- [ ] [DOCS] P3. `task_template.md:402` — stale reference to an archived doc (normative ref, corpus-wide ownership,
-      not prediction-specific). Still grace-protected (10h43m at last check).
-- [ ] [DOC] P3. `prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` todo 2 (archive batch7 + finalize) —
+- [x] ✅ [DOCS] P3. `task_template.md:402` — stale reference to an archived doc (normative ref, corpus-wide ownership,
+      not prediction-specific). Still grace-protected (10h43m at last check). **FIXED 2026-08-19 (plan_reconciler,
+      `/plan-reconcile predictions_master`)**: grace cleared; repointed to `plans/archive/issues/...`. Same fix
+      landed in `plan_reconciler_findings_prediction_2026_08_16.md`'s matching entry, not duplicated in full here.
+- [x] ✅ [DOC] P3. `prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` todo 2 (archive batch7 + finalize) —
       dependency `plans/epics/predictions_master.md` cleared grace >24h ago, but the finalize doc + its parent that
-      would need editing are themselves still grace-protected (10h45m at last check).
+      would need editing are themselves still grace-protected (10h45m at last check). **FIXED 2026-08-19
+      (plan_reconciler, `/plan-reconcile predictions_master`)**: both files archived, epic + self-referrer fixed.
+      Full detail in `plan_reconciler_findings_prediction_2026_08_17.md`'s matching entry, not duplicated here.
 - `prediction_live_clob_depth_capture_2026_07_24.md:470` — carried forward as "reviewed, correctly left as ordinary
   work" by the 2026-08-16 run (a real live-code question beyond doc reconciliation, not a doc-hygiene gap) — not
   re-litigated today, doc is grace-protected regardless (0h08m at last check — touched again very recently by a

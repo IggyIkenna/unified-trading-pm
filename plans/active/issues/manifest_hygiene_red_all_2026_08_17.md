@@ -569,47 +569,52 @@ is not, for either candidate CQG-bundle writer that exists today.
       10-row `empty_confirmed`/`SOURCE_RETURNED_ZERO` placeholder, masking what is actually an
       upstream catalogue-availability gap. Split into the instruments-service-scoped todo below
       (different repo than this issue's `repos:` frontmatter — not freelanced here).
-- [ ] [DATA] P2. Check git history on `sentinels.py`/`prediction_tier3_lifecycle.py` (or its
-      pre-split location in the monolithic `sentinels.py`) for whether the `dt == "trades"` guard
-      on the Tier-3 lifecycle map (line ~687, `_emit_tier3_for_dt`) was ever broader (e.g. covered
-      `prediction_canonical_question_group` too) before being narrowed, and whether that narrowing
-      commit left already-stamped CQG rows unrewritten. See "Diagnosis update (2026-08-18,
-      slot-22)" above for why this is the leading hypothesis for the still-unidentified writer of
-      the `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons on CQG cells. `market-tick-data-service`.
-- [ ] [DATA] P2. Find what recurring process touches the POLYMARKET
-      `prediction_canonical_question_group` manifest cell at ~01:32 UTC on dates AFTER the cell's
-      own date (measured live: 2026-07-27's cell rewritten again at 07-30/07-31/08-09, always
-      ~01:32-01:33 UTC) — NOT the documented `0 9 * * *` empty re-probe/auto-flip cron (wrong time,
-      and that cron only re-touches TODAY's new empties per its own spec, not a 3-13-day-old cell).
-      Search Cloud Scheduler job configs / `deployment-service`'s prediction-specific cron
-      registrations for anything firing near 01:3x UTC. See "Diagnosis update (2026-08-18,
-      slot-22)" above. `deployment-service` (or wherever the ~01:32 cron is registered — unconfirmed).
-- [ ] [DATA] P3. Fix the misleading docstring in `_polymarket_helpers.py::_emit_lifecycle_
-      prefetch_skips` (lines ~328-332) — it claims "the downstream Tier-3 sentinel fan-out ...
-      independently re-derives this classification" for `EXPECTED_INSTRUMENT_NOT_LISTED`/
-      `_DELISTED` without scoping the claim to `dt=="trades"`, which reads as if it also covers
-      `prediction_canonical_question_group` — confirmed false by direct read of
-      `sentinels.py::_emit_tier3_for_dt`'s lifecycle-map guard (see "Diagnosis update
-      (2026-08-18, slot-22)" above). This misreading is what led two prior diagnosis rounds
-      (slot-14, slot-9/slot-6) to keep pointing at the Tier-3 fan-out as the CQG-cell writer.
-      `market-tick-data-service`.
-- [ ] [DATA] P1. Trace WHY instruments-service's POLYMARKET instrument-catalogue writer
-      (`instruments_service/engine/orchestrator/process_write.py::_write_prediction_venue`) stopped
-      emitting `instrument_availability/by_date/day={date}/.../venue=POLYMARKET/...` objects starting
-      2026-08-10 (confirmed live via GCS listing — see "Diagnosis update (2026-08-18, slot-19)" above
-      for the per-date blob-count table) while every other venue's catalogue objects kept writing on
-      the same days. Check `instruments-service`'s own orchestrator run logs for `venue=POLYMARKET`
-      around 2026-08-09→2026-08-10 for a source-fetch error, credential/rate-limit failure, or a
-      filter/classification change that now excludes POLYMARKET from the write set. `instruments-service`
-      repo. This is the upstream fix that would resolve the downstream MTDS raw-`trades`
+- [ ] [DATA] P2. Check git history on `sentinels.py::_emit_tier3_for_dt`'s `dt == "trades"` guard on the Tier-3
+      lifecycle map (line ~687) for whether it was ever broader (e.g. covered `prediction_canonical_question_group`
+      too) before being narrowed, and whether that narrowing commit left already-stamped CQG rows unrewritten
+      (corrected 2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness —
+      task_template.md §3). See "Diagnosis update (2026-08-18, slot-22)" above for why this is the leading
+      hypothesis for the still-unidentified writer of the `EXPECTED_INSTRUMENT_DELISTED`/`_NOT_LISTED` reasons on
+      CQG cells. `market-tick-data-service`.
+- [ ] [DATA] P2. Find what recurring process touches the POLYMARKET `prediction_canonical_question_group` manifest
+      cell at ~01:32 UTC on dates AFTER the cell's own date (measured live: 2026-07-27's cell rewritten again at
+      07-30/07-31/08-09, always ~01:32-01:33 UTC) — NOT the documented `0 9 * * *` empty re-probe/auto-flip cron
+      (corrected 2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness). Wrong time,
+      and that cron only re-touches TODAY's new empties per its own spec, not a 3-13-day-old cell. Search Cloud
+      Scheduler job configs / `deployment-service`'s prediction-specific cron registrations for anything firing
+      near 01:3x UTC. See "Diagnosis update (2026-08-18, slot-22)" above. `deployment-service` (or wherever the
+      ~01:32 cron is registered — unconfirmed).
+- [ ] [DATA] P3. Fix the misleading docstring in `_polymarket_helpers.py::_emit_lifecycle_prefetch_skips` (lines
+      ~328-332, corrected 2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness AND
+      closed the backtick span that was split unclosed across the line boundary — task_template.md §3 finding L) —
+      it claims "the downstream Tier-3 sentinel fan-out ... independently re-derives this classification" for
+      `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED` without scoping the claim to `dt=="trades"`, which reads as if
+      it also covers `prediction_canonical_question_group` — confirmed false by direct read of
+      `sentinels.py::_emit_tier3_for_dt`'s lifecycle-map guard (see "Diagnosis update (2026-08-18, slot-22)"
+      above). This misreading is what led two prior diagnosis rounds (slot-14, slot-9/slot-6) to keep pointing at
+      the Tier-3 fan-out as the CQG-cell writer. `market-tick-data-service`.
+- [ ] [DATA] P1. Trace WHY instruments-service's `_write_prediction_venue`
+      (`instruments_service/engine/orchestrator/process_write.py`) stopped emitting POLYMARKET catalogue objects
+      (`instrument_availability/by_date/day={date}/.../venue=POLYMARKET/...`) starting 2026-08-10 (corrected
+      2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness) — confirmed live via GCS
+      listing (see "Diagnosis update (2026-08-18, slot-19)" above for the per-date blob-count table) while every
+      other venue's catalogue objects kept writing on the same days. Check `instruments-service`'s own orchestrator
+      run logs for `venue=POLYMARKET` around 2026-08-09→2026-08-10 for a source-fetch error, credential/rate-limit
+      failure, or a filter/classification change that now excludes POLYMARKET from the write set.
+      `instruments-service` repo. This is the upstream fix that would resolve the downstream MTDS raw-`trades`
       `DIVERGENT_EMPTY` finding — MTDS itself needs no code change (its CF-11 signalling is correct).
-- [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group cefi` (14M+ row
-      manifest OOMs the shared host at a 4GB cap) and get the real per-cell CSV breakdown (not the
-      stdout-tail sample) — determine which venue(s)/data_type(s) actually drive the 58,362
-      DIVERGENT_EMPTY count before triaging real-gap vs code-bug vs oracle-bug. `market-tick-data-service`
-      / `unified-trading-library` (the detector script's home).
-- [ ] [DATA] P2. Same as above for tradfi (`--asset-group tradfi`, 8,468 DIVERGENT_EMPTY,
-      14,464,340-row manifest already confirmed to OOM a 4GB local cap).
+- [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group cefi` (14M+ row manifest OOMs the
+      shared host at a 4GB cap) and get the real per-cell CSV breakdown (not the stdout-tail sample) — determine
+      which venue(s)/data_type(s) actually drive the 58,362 DIVERGENT_EMPTY count before triaging real-gap vs
+      code-bug vs oracle-bug. `market-tick-data-service`/`unified-trading-library` (the detector script's home).
+      No `[OPERATOR]` gate needed (task_template.md finding U — read-only/audit/census todo, writes only a new CSV
+      artifact, touches no existing prod data; corrected 2026-08-19, plan-reconcile observability_master).
+- [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group tradfi` (8,468 DIVERGENT_EMPTY,
+      14,464,340-row manifest already confirmed to OOM a 4GB local cap) — same read-only breakdown as the cefi
+      todo immediately above, same repo, same no-`[OPERATOR]`-needed justification (corrected 2026-08-19,
+      plan-reconcile observability_master: this todo previously read "Same as above" with no restated action —
+      task_template.md §3 line-1 completeness; same-priority todos dispatch independently, so a worker claiming
+      only this line needs the full instruction, not a backward reference).
 
 ## Progress Log
 

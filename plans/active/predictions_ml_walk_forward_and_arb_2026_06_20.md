@@ -70,8 +70,10 @@ downstream of the sports-half FSS feature production (the Group E gate).
       `aggregate_walk_forward_acceptance` (mean across folds + Group-F gate: AUC ≥ 0.55 AND ECE ≤ 5%); 18 unit tests.
       Code + tests only — NOT yet run against real walk-forward output.
 - [ ] [ANALYSIS] P0. Run the acceptance-metrics computation above against the real walk-forward output (BLOCKED-ON line
-      53's walk-forward run, itself BLOCKED-ON `sports_master:Group E` gate — `plans/epics/sports_master.md` line 644
-      as of 2026-08-16 (CORRECTED, plan_reconciler, was stale-cited "line 598"), still unchecked).
+      65's walk-forward run [corrected 2026-08-19 (/plan-reconcile predictions_master) — was mis-cited "line 53", which
+      is this doc's own gate-banner quoting `sports_master.md`, not the walk-forward todo itself], itself BLOCKED-ON
+      `sports_master:Group E` gate — `plans/epics/sports_master.md` line 644 as of 2026-08-16 (CORRECTED,
+      plan_reconciler, was stale-cited "line 598"), still unchecked).
 - [x] ✅ [SCRIPT] P0. Training-config sanity check: feature columns match the FSS schema, label leakage absent,
       walk-forward window correct. — ml-service@872acbb | Fixed: (1) `SPORTS_MODEL_2A_GRID.feature_groups` corrected
       from 15 invalid calculator-level names to `["derived_features","odds_features"]` (the two valid GCS path groups);

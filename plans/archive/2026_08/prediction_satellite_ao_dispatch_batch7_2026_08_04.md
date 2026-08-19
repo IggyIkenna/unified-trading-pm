@@ -17,7 +17,7 @@ summary: >-
   plan (which explicitly defers the question here rather than claiming it). `status: draft` — a skill-drafted AO batch
   is never auto-shipped; flipping to `active` to dispatch is an operator decision (CLAUDE.md "Plan destination — ASK
   BEFORE CREATING").
-status: active
+status: resolved
 nature: process
 asset_group: [prediction]
 stage: [data]
@@ -66,6 +66,14 @@ context_scope:
 ---
 
 # Prediction satellite AO batch 7 — trades/book_snapshot_5 `available_at` consumer check
+
+> **📦 ARCHIVED 2026-08-19 — resolved.** Sole todo (trades/book_snapshot_5 `available_at` consumer check) shipped
+> 2026-08-16 (`unified-trading-pm@e3ca863b9d`); reconciled by `plan_reconciler` 2026-08-17
+> (`prediction_satellite_ao_dispatch_batch7_2026_08_04_finalize.md` todo 1). Archived alongside its finalize sibling
+> per the 6-step ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — see that doc for
+> the finalize record. No new durable contract established: the underlying finding (no separately-scoped manifest
+> backfill needed for prediction `trades`/`book_snapshot_5`) is already fully recorded in the archived source doc
+> `plans/archive/2026_08/issues/mtds_prediction_backfill_targets_wrong_data_type_scope_2026_08_02.md`.
 
 > **Status: active — operator-approved 2026-08-06, dispatching.** This batch was drafted autonomously by the
 > `/ag-closeout-audit prediction` scheduled run (2026-08-04). Per CLAUDE.md's "Plan destination — ASK BEFORE CREATING"
@@ -130,3 +138,9 @@ reasoning: `ag_closeout_audit_prediction_parked_2026_08_04.md`.
   resolved`, 0 open todos, banner "🟢 ARCHIVED 2026-08-16").
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged — still the sole `available_at`
   consumer-check todo's source doc, code target, and manifest-status codex SSOT.
+- **2026-08-19 (plan_reconciler, `/plan-reconcile predictions_master`)**: Phase -1 carried-forward archival — this
+  doc's finalize sibling's todo 2 was grace-blocked on `plans/epics/predictions_master.md` (cleared >2 days ago) and
+  on this pair's own last commit (2026-08-17T15:37:52Z, now >12h old). Archived to `plans/archive/2026_08/` per the
+  6-step ritual; epic's 4 batch7 citations (related_plans + body) repointed to match the batch4/batch8 precedent.
+  **Working-tree edit only — not yet committed/shipped** (this session's checkout is under explicit
+  do-not-ship instruction; the lead session ships this batch).

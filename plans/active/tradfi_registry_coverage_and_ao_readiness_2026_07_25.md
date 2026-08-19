@@ -139,7 +139,11 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
   SEPARATE, still-open design decision — tracked in its own doc's `[DESIGN] P2` item
   (`tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md`), not resolved by the verify todo
   above. Non-dispatchable pointer, not a real checkbox (finding H).
-- [ ] [BACKEND] P2. **VERIFY: KRX equities intraday registry-vs-adapter mismatch fix still holds live, and the FX KRW
+- [x] ✅ [BACKEND] P2. **DONE 2026-08-15 (slot-14, via `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s
+      "VERIFY KRX equities intraday registry-vs-adapter mismatch fix still holds live" todo, which cited this doc
+      as Source and closed the identical check) — flipped 2026-08-19 (plan_reconciler, epic-scoped tradfi_master
+      pass, per `tradfi_registry_coverage_stale_checkboxes_vs_batch13_2026_08_18.md`'s finding).** VERIFY: KRX
+      equities intraday registry-vs-adapter mismatch fix still holds live, and the FX KRW
       cell (`FX:SPOT_PAIR:KRW-USD`, daily) has no analogous registry-vs-adapter gap** —
       `krx_intraday_ohlcv_registry_vs_adapter_mismatch_2026_07_12.md` (RESOLVED — this is about KRX equities
       `ohlcv_1m`/`ohlcv_15m` registry coverage, a separate cell from the FX KRW cell). **IBKR `_SEC_TYPE_MAP` /
@@ -229,7 +233,11 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       (`deployment_api_legacy_instrument_availability_venue_lookup_gap_2026_07_13.md`, RESOLVED — verify tradfi). Gate:
       the "Upcoming expiries" widget + catalogue view render canonical ids for a live sample row (no raw
       `E3AN6 C7960`-style output), and the venue-lookup gap fix is confirmed to hold for tradfi.
-- [ ] [REVIEW] P1. **Run the already-shipped distinct-values/axis-value census for tradfi and verify 0 non-canonical** —
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-15 (slot-6), flipped 2026-08-16 (plan_reconciler) via
+      `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s matching todo, which cited this doc as Source —
+      flipped here 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass, per
+      `tradfi_registry_coverage_stale_checkboxes_vs_batch13_2026_08_18.md`'s finding).** Run the already-shipped
+      distinct-values/axis-value census for tradfi and verify 0 non-canonical** —
       deployment-api `GET /distinct-values/{asset_group}` + `GET /axis-value-census`
       (`deployment-api/deployment_api/routes/data_status/_distinct_values.py` + `_axis_census.py`; tracked corpus-wide
       in `/plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md`). Call both endpoints for
@@ -245,8 +253,9 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       (`tradfi_instrument_type_migration_read_stale_legacy_object_2026_07_17.md`); phantom captures
       (`phantom_captures_tradfi_2026_06_28.md`); expected_reason misclassification P3s. Gate: each of the 3 cited
       findings re-verified against live tradfi state (counts re-measured or explained as stale) and recorded.
-- [ ] [DATA] P2. **NEW 2026-07-29 (operator ruling, interactive decision session: "run the dry-run now, feed result into
-      Phase C") — execute the tradfi phantom-manifest dry-run re-run and feed the result into the todo above.** Run
+- [ ] [DATA] P2. **Execute the tradfi phantom-manifest dry-run re-run and feed the result into the todo above.** NEW
+      2026-07-29 (operator ruling, interactive decision session: "run the dry-run now, feed result into
+      Phase C"). Run
       `reconcile_phantom_manifest_rows_all.py --asset-group tradfi --dry-run`
       (`instruments-service/scripts/reconcile_phantom_manifest_rows_all.py`) — the tradfi v9 object `--apply`
       (`migrate_tradfi_to_v9_canonical.py --apply`, completed 2026-07-06) that gated this re-run has already landed, so
@@ -292,10 +301,14 @@ Fixes applied (verbatim content preserved, only the specific defect corrected):
       residual DeFi coverage-honesty finding):
       `/plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md`. Repos: instruments-service,
       market-tick-data-service, deployment-api.
-- [ ] [DATA] P0. **NEW 2026-07-29 — run the tradfi Databento `by_date` re-feed chain to completion (now-mandatory
+- [ ] [DATA] P0. **STALE PREMISE (corrected 2026-08-19, plan_reconciler) — Databento CME billing recurred-blocked
+      since 2026-08-12, still `status: blocked` per `tradfi_databento_account_billing_suspended_2026_08_09.md` as
+      of its freshest (2026-08-18) entry.** `tradfi_satellite_ao_dispatch_batch13_2026_08_13.md`'s matching todo
+      (cited this doc as Source) was marked NOT ACTIONABLE 2026-08-15 for exactly this reason — do not attempt this
+      re-feed until that billing doc clears. NEW 2026-07-29 — run the tradfi Databento `by_date` re-feed chain to completion (now-mandatory
       precondition ahead of the "Certify tradfi Layer-1" todo + its catalogue rebuild+promote step, immediately
-      below).** **DATABENTO ACCESS CONFIRMED LIVE 2026-08-10** — the account-wide billing suspension is resolved
-      (live-reverified that day, real `GLBX.MDP3`/`XCBF.PITCH` pulls both succeeded); this todo is the exact re-feed
+      below). ~~**DATABENTO ACCESS CONFIRMED LIVE 2026-08-10** — the account-wide billing suspension is resolved
+      (live-reverified that day, real `GLBX.MDP3`/`XCBF.PITCH` pulls both succeeded)~~; this todo is the exact re-feed
       work that gate would have blocked in practice — now genuinely runnable. Operator-ruled 2026-07-29 (interactive
       decision session): run the full Databento re-feed chain to completion FIRST — tradfi's `by_date` capture is
       confirmed still degraded (~10-15 writes/day vs the historical 16-18K/day baseline) since Massive removal (root

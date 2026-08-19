@@ -1,0 +1,615 @@
+<!-- generated: 2026-08-19 by /plan-reconcile tradfi_master (epic-scoped) -->
+<title>TradFi Pit Board</title>
+<style>
+  :root {
+    --bg: #f6f2e9;
+    --surface: #ffffff;
+    --surface-raised: #fbf7ee;
+    --border: #ddd2ba;
+    --border-soft: #e8dfc9;
+    --text: #201c14;
+    --text-dim: #5c5644;
+    --text-faint: #8c8468;
+    --accent: #96631c;
+    --accent-soft: rgba(150, 99, 28, 0.1);
+    --accent-strong: #7a4f16;
+    --good: #1c7a4f;
+    --good-soft: rgba(28, 122, 79, 0.1);
+    --warn: #a5690a;
+    --warn-soft: rgba(165, 105, 10, 0.12);
+    --critical: #a5322a;
+    --critical-soft: rgba(165, 50, 42, 0.1);
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+    --sans: "Avenir Next", "Segoe UI", ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --shadow: 0 1px 2px rgba(32, 28, 20, 0.06), 0 8px 24px rgba(32, 28, 20, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0a0e13;
+      --surface: #121820;
+      --surface-raised: #1a222c;
+      --border: #2a3542;
+      --border-soft: #202a35;
+      --text: #edf1f5;
+      --text-dim: #9aabbc;
+      --text-faint: #627283;
+      --accent: #d1a15a;
+      --accent-soft: rgba(209, 161, 90, 0.14);
+      --accent-strong: #e8bd7e;
+      --good: #4fd18b;
+      --good-soft: rgba(79, 209, 139, 0.12);
+      --warn: #ecb64f;
+      --warn-soft: rgba(236, 182, 79, 0.12);
+      --critical: #f0685c;
+      --critical-soft: rgba(240, 104, 92, 0.12);
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0a0e13;
+    --surface: #121820;
+    --surface-raised: #1a222c;
+    --border: #2a3542;
+    --border-soft: #202a35;
+    --text: #edf1f5;
+    --text-dim: #9aabbc;
+    --text-faint: #627283;
+    --accent: #d1a15a;
+    --accent-soft: rgba(209, 161, 90, 0.14);
+    --accent-strong: #e8bd7e;
+    --good: #4fd18b;
+    --good-soft: rgba(79, 209, 139, 0.12);
+    --warn: #ecb64f;
+    --warn-soft: rgba(236, 182, 79, 0.12);
+    --critical: #f0685c;
+    --critical-soft: rgba(240, 104, 92, 0.12);
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent-soft); }
+
+  a { color: var(--accent); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--surface-raised), var(--bg) 140%);
+  }
+  .masthead-inner { max-width: 1180px; margin: 0 auto; padding: 40px 24px 28px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--good);
+    box-shadow: 0 0 0 3px var(--good-soft);
+  }
+  h1.title {
+    font-size: clamp(32px, 5vw, 48px);
+    line-height: 1.05;
+    margin: 0 0 10px;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+    font-weight: 700;
+  }
+  .dek {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 66ch;
+    margin: 0;
+  }
+  .ticker {
+    margin-top: 24px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    background: var(--surface);
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text-dim);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px 22px;
+    overflow-x: auto;
+  }
+  .ticker b { color: var(--text); font-variant-numeric: tabular-nums; }
+  .ticker .up { color: var(--good); }
+  .ticker .flat { color: var(--warn); }
+
+  /* ---------- Chips row (scope) ---------- */
+  .chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    background: var(--surface);
+  }
+  .chip.in { border-color: color-mix(in srgb, var(--good) 45%, var(--border)); color: var(--good); }
+  .chip.out { border-color: color-mix(in srgb, var(--text-faint) 45%, var(--border)); color: var(--text-faint); text-decoration: line-through; text-decoration-color: var(--text-faint); }
+
+  section { padding: 44px 0; border-bottom: 1px solid var(--border-soft); }
+  section:last-of-type { border-bottom: none; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 22px; flex-wrap: wrap; }
+  .section-num {
+    font-family: var(--mono);
+    color: var(--text-faint);
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+  h2 {
+    font-size: 22px;
+    margin: 2px 0 0;
+    letter-spacing: -0.01em;
+    text-wrap: balance;
+  }
+  .section-sub { color: var(--text-dim); font-size: 14px; max-width: 68ch; }
+
+  /* ---------- Stat strip ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .stat {
+    background: var(--surface);
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat .n {
+    font-family: var(--mono);
+    font-size: 32px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  .stat .n.good { color: var(--good); }
+  .stat .n.warn { color: var(--warn); }
+  .stat .n.critical { color: var(--critical); }
+  .stat .n.accent { color: var(--accent); }
+  .stat .lbl { font-size: 12px; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.06em; }
+  @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, 1fr); } .stat:nth-child(5){grid-column: span 2;} }
+
+  /* ---------- Data table (plan-by-plan) ---------- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  table { border-collapse: collapse; width: 100%; min-width: 760px; background: var(--surface); }
+  thead th {
+    text-align: left;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-faint);
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-raised);
+    position: sticky;
+    top: 0;
+  }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--border-soft); font-size: 13.5px; vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--accent-soft); }
+  .doc-title { font-weight: 600; color: var(--text); }
+  .doc-path { font-family: var(--mono); font-size: 11px; color: var(--text-faint); margin-top: 2px; word-break: break-all; }
+  .bar-wrap { display: flex; align-items: center; gap: 8px; font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 12px; white-space: nowrap; }
+  .bar { width: 64px; height: 6px; border-radius: 3px; background: var(--border-soft); overflow: hidden; flex-shrink: 0; }
+  .bar > span { display: block; height: 100%; background: var(--good); }
+  .pill { display: inline-flex; align-items: center; gap: 5px; font-family: var(--mono); font-size: 10.5px; padding: 3px 8px; border-radius: 5px; text-transform: uppercase; letter-spacing: 0.04em; white-space: nowrap; }
+  .pill.active { background: var(--good-soft); color: var(--good); }
+  .pill.draft { background: var(--border-soft); color: var(--text-faint); }
+  .pill.blocked { background: var(--critical-soft); color: var(--critical); }
+  .pill.resolved { background: var(--accent-soft); color: var(--accent); }
+  .pill.open { background: var(--warn-soft); color: var(--warn); }
+  .tag-agg { font-family: var(--mono); font-size: 10px; color: var(--text-faint); }
+  .op-quote { font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); max-width: 320px; }
+
+  /* ---------- Desk / scoping cards ---------- */
+  .desk-grid { display: grid; gap: 10px; }
+  .desk-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 2.4fr) auto;
+    gap: 14px;
+    align-items: center;
+    padding: 14px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--critical);
+    border-radius: 8px;
+  }
+  .desk-row.scoping { border-left-color: var(--warn); }
+  .desk-row .doc { font-weight: 600; font-size: 13.5px; }
+  .desk-row .doc .p { font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); font-weight: 400; display:block; margin-top:2px;}
+  .desk-row .what { font-size: 13px; color: var(--text-dim); }
+  .desk-row .sev { font-family: var(--mono); font-size: 11px; }
+  @media (max-width: 760px) { .desk-row { grid-template-columns: 1fr; } }
+
+  /* ---------- Closed-out list ---------- */
+  .closed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 16px; }
+  @media (max-width: 800px) { .closed-grid { grid-template-columns: 1fr; } }
+  .closed-item {
+    display: flex; gap: 10px;
+    padding: 12px 14px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+  }
+  .closed-item .mark { color: var(--good); font-family: var(--mono); flex-shrink: 0; }
+  .closed-item .file { font-family: var(--mono); font-size: 11px; color: var(--accent); display: block; margin-bottom: 3px; }
+  .closed-item .desc { color: var(--text-dim); }
+
+  /* ---------- Lanes ---------- */
+  .lanes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+  @media (max-width: 1000px) { .lanes { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 620px) { .lanes { grid-template-columns: 1fr; } }
+  .lane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .lane-num { font-family: var(--mono); font-size: 22px; color: var(--accent); font-weight: 600; }
+  .lane h3 { font-size: 13.5px; margin: 0; text-wrap: balance; }
+  .lane ul { margin: 0; padding-left: 16px; font-size: 12px; color: var(--text-dim); display: flex; flex-direction: column; gap: 4px; }
+  .lane .status { margin-top: auto; font-family: var(--mono); font-size: 10.5px; padding: 3px 8px; border-radius: 5px; align-self: flex-start; }
+  .lane .status.ready { background: var(--good-soft); color: var(--good); }
+  .lane .status.gated { background: var(--warn-soft); color: var(--warn); }
+
+  /* ---------- Dispatch prompts ---------- */
+  .prompt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+  .prompt summary {
+    cursor: pointer;
+    padding: 13px 16px;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    list-style: none;
+  }
+  .prompt summary::-webkit-details-marker { display: none; }
+  .prompt summary::before { content: "▸"; color: var(--accent); transition: transform 0.15s; }
+  .prompt[open] summary::before { transform: rotate(90deg); }
+  .prompt pre {
+    margin: 0;
+    padding: 16px;
+    border-top: 1px solid var(--border-soft);
+    background: var(--surface-raised);
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+  }
+
+  /* ---------- Notes ---------- */
+  .notes { font-size: 13.5px; color: var(--text-dim); display: flex; flex-direction: column; gap: 10px; max-width: 78ch; }
+  .notes code { font-family: var(--mono); font-size: 12px; background: var(--surface-raised); padding: 1px 5px; border-radius: 4px; color: var(--text); }
+
+  footer { padding: 32px 0 60px; color: var(--text-faint); font-size: 12px; font-family: var(--mono); }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">TradFi Master · asset-group epic · live</div>
+    <h1 class="title">TradFi Pit Board</h1>
+    <p class="dek">
+      Dated futures &amp; the Databento pipeline — CME/ICE/NYSE/NASDAQ/CBOE ticks, S&amp;P/VIX ML readiness, and the
+      canonical-path migration off 95 legacy shapes. Generated 2026-08-19 by an epic-scoped
+      <code style="font-family:var(--mono); font-size:0.85em;">/plan-reconcile tradfi_master</code> pass.
+    </p>
+    <div class="ticker" role="note" aria-label="corpus snapshot">
+      <span>DOCS <b>46</b></span>
+      <span>OPEN <b class="warn">67</b></span>
+      <span>DONE <b class="up">122</b></span>
+      <span>ON DESK <b class="flat">9</b></span>
+      <span>FIXED TODAY <b class="up">30</b></span>
+      <span>AGGREGATORS <b>11</b></span>
+      <span>SINCE <b>2026-05-07</b></span>
+    </div>
+    <div class="chip-row">
+      <span class="chip in">CME ES/MES/MBT/MET futures</span>
+      <span class="chip in">VIX via XCBF.PITCH</span>
+      <span class="chip in">ohlcv_1m MVP (Databento-only)</span>
+      <span class="chip in">Treasury &amp; DXY (Yahoo daily)</span>
+      <span class="chip out">SPY / no CME BTC-ETH options</span>
+      <span class="chip out">L1–L3 tick history (post-cutover)</span>
+      <span class="chip out">equities pre-2026 (gated Nov 2026)</span>
+      <span class="chip out">Barchart (retired)</span>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- 3. Headline stat strip -->
+  <section id="stats">
+    <div class="section-head">
+      <div><span class="section-num">01 / DESK SUMMARY</span><h2>Where the tranche stands</h2></div>
+      <div class="section-sub">Deduped per <code style="font-family:var(--mono)">count_open_tasks.py</code> methodology — aggregator plans (batch/finalize/consolidated) excluded from the open/done tallies to avoid double-counting.</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><span class="n warn">67</span><span class="lbl">Open todos</span></div>
+      <div class="stat"><span class="n good">122</span><span class="lbl">Done todos</span></div>
+      <div class="stat"><span class="n critical">9</span><span class="lbl">On operator's desk</span></div>
+      <div class="stat"><span class="n accent">46</span><span class="lbl">Docs in scope</span></div>
+      <div class="stat"><span class="n good">30</span><span class="lbl">Fixed this pass</span></div>
+    </div>
+  </section>
+
+  <!-- 4. Plan-by-plan breakdown -->
+  <section id="plans">
+    <div class="section-head">
+      <div><span class="section-num">02 / THE BOARD</span><h2>Plan-by-plan breakdown</h2></div>
+      <div class="section-sub">Every doc with <code style="font-family:var(--mono)">parent_epic: tradfi_master</code> — 25 plans, 21 issues. Aggregators (batch/finalize/consolidated-shaped) flagged so their totals aren't double-read against the summary above.</div>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr><th>Doc</th><th>Kind</th><th>Status</th><th>Progress</th><th>On the desk</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="doc-title">S&amp;P ML + price-arb backtest readiness</span><span class="doc-path">tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md</span></td><td>plan</td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:36%"></span></div>4/11</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Chain-bundle reverse derivation</span><span class="doc-path">tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md (+finalize)</span></td><td>plan ×2</td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:0%"></span></div>0/2</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Narrow CME expected_coverage.py</span><span class="doc-path">tradfi_cme_expected_coverage_narrow_ao_dispatch_2026_08_16.md (+finalize)</span></td><td>plan ×2</td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:0%"></span></div>0/2</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Consolidated close-out <span class="tag-agg">(index, archive_exempt)</span></span><span class="doc-path">tradfi_consolidated_closeout_2026_07_18.md</span></td><td>plan <span class="tag-agg">agg</span></td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:100%"></span></div>0/2</div></td><td class="op-quote">fold-vs-keep-index [needs scoping]</td></tr>
+          <tr><td><span class="doc-title">Legacy bucket delete — E7</span><span class="doc-path">tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md (+finalize)</span></td><td>plan ×2</td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:33%"></span></div>1/3</div></td><td class="op-quote">irreversible delete, gated on CF-8</td></tr>
+          <tr><td><span class="doc-title">Manifest content recovery completion</span><span class="doc-path">tradfi_manifest_content_recovery_completion_2026_07_24.md (+finalize)</span></td><td>plan ×2</td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:85%"></span></div>22/26</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Phase-D terminal gate</span><span class="doc-path">tradfi_phase_d_terminal_gate_2026_07_24.md (+finalize)</span></td><td>plan ×2</td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:64%"></span></div>7/11</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Registry coverage &amp; AO readiness</span><span class="doc-path">tradfi_registry_coverage_and_ao_readiness_2026_07_25.md (+finalize)</span></td><td>plan ×2</td><td><span class="pill draft">draft</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:11%"></span></div>2/18</div></td><td class="op-quote">flip to active once reconciled</td></tr>
+          <tr><td><span class="doc-title">Satellite AO batches 9 / 12 / 13 / 15 / 16 <span class="tag-agg">(+ finalizes)</span></span><span class="doc-path">tradfi_satellite_ao_dispatch_batch{9,12,13,15,16}_2026_08_1{0,3,6,7}.md</span></td><td>plan ×10 <span class="tag-agg">agg</span></td><td><span class="pill active">active</span>/<span class="pill draft">draft</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:36%"></span></div>20/56</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Backfill-throughput follow-ups</span><span class="doc-path">tradfi_backfill_throughput_followups_2026_07_24.md</span></td><td>plan</td><td><span class="pill active">active</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:96%"></span></div>23/24</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">CBOE discovery floor blocks pre-2020 Treasury</span><span class="doc-path">cboe_venue_level_discovery_floor_blocks_yahoo_treasury_pre_2020_2026_08_09.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:50%"></span></div>1/2</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Line-cap blocks E7 stale-item close</span><span class="doc-path">data_completion_tradfi_line_cap_blocks_e7_stale_item_close_2026_08_16.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:50%"></span></div>1/2</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Duplicate DXY VMs — billing waste</span><span class="doc-path">dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:60%"></span></div>3/5</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">plan_reconciler run-findings — 2026-08-16 / 2026-08-18</span><span class="doc-path">plan_reconciler_findings_tradfi_2026_08_1{6,8}.md</span></td><td>issue ×2</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:89%"></span></div>8/9</div></td><td class="op-quote">missing [OPERATOR] tag on line-cap-blocked doc</td></tr>
+          <tr><td><span class="doc-title">/autonomous session — queued operator decisions</span><span class="doc-path">tradfi_autonomous_session_operator_decisions_2026_07_25.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:100%"></span></div>0/8</div></td><td class="op-quote">item 8 fold-vs-index [needs scoping]</td></tr>
+          <tr><td><span class="doc-title">Canonical path + manifest migration design</span><span class="doc-path">tradfi_canonical_path_migration_design_2026_07_19.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:87%"></span></div>13/15</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">CME FUTURE blank instrument_id (880,933 stale rows)</span><span class="doc-path">tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:75%"></span></div>3/4</div></td><td class="op-quote">retire 880,933 stale manifest rows</td></tr>
+          <tr><td><span class="doc-title">Consolidated close-out over line-cap</span><span class="doc-path">tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:67%"></span></div>2/3</div></td><td class="op-quote">loosen QG hard-cap gate?</td></tr>
+          <tr><td><span class="doc-title">Databento account suspended (non-payment)</span><span class="doc-path">tradfi_databento_account_billing_suspended_2026_08_09.md</span></td><td>issue</td><td><span class="pill blocked">blocked</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:20%"></span></div>1/5</div></td><td class="op-quote">pay the invoice (recurred)</td></tr>
+          <tr><td><span class="doc-title">Deprecated-ETF rows re-accumulating (5,932)</span><span class="doc-path">tradfi_deprecated_etf_manifest_rows_forward_scope_drift_2026_08_18.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:0%"></span></div>0/3</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">instrument_type lowercase residual (381,119 rows)</span><span class="doc-path">tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:82%"></span></div>9/11</div></td><td class="op-quote">stray autostash; big-finding re-verify</td></tr>
+          <tr><td><span class="doc-title">Legacy-twin candidates already absent, unexplained</span><span class="doc-path">tradfi_legacy_twin_candidates_already_absent_unexplained_2026_08_14.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:50%"></span></div>1/2</div></td><td class="op-quote">defi/pred spot-check ambiguity</td></tr>
+          <tr><td><span class="doc-title">Registry-coverage checkboxes stale vs batch13</span><span class="doc-path">tradfi_registry_coverage_stale_checkboxes_vs_batch13_2026_08_18.md</span></td><td>issue <span class="tag-agg">new 08-18</span></td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:0%"></span></div>0/2</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Scope-ruling — legacy fleet relaunch</span><span class="doc-path">tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md</span></td><td>issue</td><td><span class="pill resolved">resolved</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:100%"></span></div>2/2</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">tbbo NYSE+NASDAQ — DP-FETCH-009 (1,584 rows)</span><span class="doc-path">tradfi_tbbo_unclassified_adapter_error_dp_fetch_009_2026_08_15.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:50%"></span></div>2/4</div></td><td class="op-quote">decide disposition (A/B/C)</td></tr>
+          <tr><td><span class="doc-title">Underlying-rename apply — size-only verification gap</span><span class="doc-path">tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:50%"></span></div>1/2</div></td><td class="op-quote">re-run dry-run once hardened</td></tr>
+          <tr><td><span class="doc-title">VIX full-history backfill</span><span class="doc-path">tradfi_vix_full_history_backfill_2026_08_10.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:100%"></span></div>0/2</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">OHLCV fleet resource-utilization downsize</span><span class="doc-path">tradfi_vm_resource_utilization_downsize_2026_08_10.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:0%"></span></div>0/1</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Within-bounds source-zero shard-atom mismatch</span><span class="doc-path">tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:25%"></span></div>1/4</div></td><td>—</td></tr>
+          <tr><td><span class="doc-title">Year-shard backfill launcher — missing-source self-deletes</span><span class="doc-path">tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md</span></td><td>issue</td><td><span class="pill open">open</span></td><td><div class="bar-wrap"><div class="bar"><span style="width:83%"></span></div>5/6</div></td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 5. On the operator's desk -->
+  <section id="desk">
+    <div class="section-head">
+      <div><span class="section-num">03 / DESK</span><h2>On the operator's desk</h2></div>
+      <div class="section-sub">Every open item gated on a human call — 9 total, straight from <code style="font-family:var(--mono)">[OPERATOR]</code>-tagged live todos.</div>
+    </div>
+    <div class="desk-grid">
+      <div class="desk-row"><div class="doc">Databento invoice, again<span class="p">tradfi_databento_account_billing_suspended_2026_08_09.md</span></div><div class="what">P0 — recurred 2026-08-12; CME/GLBX.MDP3 fetches fail account-wide until paid. Still blocked as of 2026-08-18.</div><div class="sev" style="color:var(--critical)">P0</div></div>
+      <div class="desk-row"><div class="doc">CME relaunch wave hitting the same block<span class="p">tradfi_databento_account_billing_suspended_2026_08_09.md</span></div><div class="what">P1 — ~29-VM fleet-wide relaunch confirmed hitting the identical 402 account_delinquent signature.</div><div class="sev" style="color:var(--critical)">P1</div></div>
+      <div class="desk-row"><div class="doc">Retire 880,933 stale FUTURE rows<span class="p">tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md</span></div><div class="what">P2 — live-consolidated manifest delete; rebuild alone can't retire a misclassified row under a stale key.</div><div class="sev" style="color:var(--warn)">P2</div></div>
+      <div class="desk-row"><div class="doc">tbbo disposition (Option A/B/C)<span class="p">tradfi_tbbo_unclassified_adapter_error_dp_fetch_009_2026_08_15.md</span></div><div class="what">P2 — 1,584 rows, root cause fixed; decide whether the backfill activity itself was ever in-scope.</div><div class="sev" style="color:var(--warn)">P2</div></div>
+      <div class="desk-row"><div class="doc">Loosen the QG line-cap hard gate?<span class="p">tradfi_consolidated_closeout_over_line_cap_blocks_routine_edits_2026_08_09.md</span></div><div class="what">P3 — genuine risk/tradeoff call; a sibling-shaped carve-out shipped elsewhere, not confirmed to cover this case.</div><div class="sev" style="color:var(--text-faint)">P3</div></div>
+      <div class="desk-row"><div class="doc">Leftover autostash on MTDS slot-25<span class="p">tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md</span></div><div class="what">P3 — a stash sits on a shared checkout; needs a human to confirm safe-to-drop before anyone clears it.</div><div class="sev" style="color:var(--text-faint)">P3</div></div>
+      <div class="desk-row"><div class="doc">Spot-check legacy-twin ambiguity<span class="p">tradfi_legacy_twin_candidates_already_absent_unexplained_2026_08_14.md</span></div><div class="what">P2 — retagged this pass (was [SCRIPT]); does a later defi/prediction dry-run already cover this question?</div><div class="sev" style="color:var(--warn)">P2</div></div>
+      <div class="desk-row"><div class="doc">[OPERATOR] tag missing, line-cap-blocked target<span class="p">plan_reconciler_findings_tradfi_2026_08_16.md</span></div><div class="what">P3 — the target doc is over its own 1000L cap; the tag-only fix is itself blocked until a split lands.</div><div class="sev" style="color:var(--text-faint)">P3</div></div>
+      <div class="desk-row"><div class="doc">Re-run dry-run after hardening<span class="p">tradfi_underlying_rename_apply_size_only_verification_gap_2026_08_12.md</span></div><div class="what">P2 — content-verification gap on a rename `--apply`; fresh count needed once the compare logic hardens.</div><div class="sev" style="color:var(--warn)">P2</div></div>
+    </div>
+  </section>
+
+  <!-- 6. Needs extra scoping -->
+  <section id="scoping">
+    <div class="section-head">
+      <div><span class="section-num">04 / SCOPING</span><h2>Needs extra scoping — not open, not operator-blocked</h2></div>
+      <div class="section-sub">Two genuine planning/authority calls surfaced this pass; premises were corrected, the decisions themselves stay with the operator per Phase 4's fold/split carve-outs (never auto-applied, even under trust mode).</div>
+    </div>
+    <div class="desk-grid">
+      <div class="desk-row scoping"><div class="doc">Split batch16's reflex sequential:true?<span class="p">tradfi_satellite_ao_dispatch_batch16_2026_08_17.md</span></div><div class="what"><b>[WORKER REC]</b> Split Todo4+Todo8 (the only colliding pair) into a companion plan; drop <code style="font-family:var(--mono)">sequential: true</code> from the parent so Todos 2/3/5/6/7 dispatch concurrently. Costing real parallelism today.</div><div class="sev" style="color:var(--warn)">split?</div></div>
+      <div class="desk-row scoping"><div class="doc">Fold or keep as tranche index?<span class="p">tradfi_consolidated_closeout_2026_07_18.md</span></div><div class="what"><b>[WORKER REC]</b> Keep as the coordination index (<code style="font-family:var(--mono)">archive_exempt: true</code>) — it's what <code style="font-family:var(--mono)">check_ag_closeout_linkage.py</code> resolves against. Premise corrected this pass: doc is fully done at the top level now, not "near-complete."</div><div class="sev" style="color:var(--warn)">fold?</div></div>
+    </div>
+  </section>
+
+  <!-- 7. Closed out this pass -->
+  <section id="closed">
+    <div class="section-head">
+      <div><span class="section-num">05 / SETTLED</span><h2>Closed out this pass</h2></div>
+      <div class="section-sub">30 fixes across 23 docs — 4 checkboxes flipped with hard evidence, 1 status flip, 1 new tracked todo (closing a prose-only HARD RULE violation), 1 genuinely <em>hidden</em> open todo un-hidden, the rest stale-premise/contradiction/line-1-completeness corrections. Full citations live in each doc's own diff.</div>
+    </div>
+    <div class="closed-grid">
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_manifest_content_recovery_completion_2026_07_24.md</span><span class="desc">Un-hid a genuinely open <code>[INFRA] P2</code> todo — stray backtick-wrapping made it invisible to every checkbox-counting tool.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_consolidated_closeout_2026_07_18.md</span><span class="desc">Databento billing-tier fact corrected L3→L2 (<code>mbp-10</code>→L2, <code>mbo</code> is the real L3), cross-verified against live registry.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_scope_ruling_..._2026_08_09.md</span><span class="desc">Flipped <code>status: open</code> → <code>resolved</code> — both action items done, blocked question answered 2026-08-17, status field never updated.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_satellite_ao_dispatch_batch15_2026_08_17.md</span><span class="desc">Flipped Todo 7 (reference-path fix) and Todo 8 (4/4 <code>last_updated</code> bumps) — both had cleared their 12h grace window.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_registry_coverage_and_ao_readiness_2026_07_25.md</span><span class="desc">Flipped 2 checkboxes (KRX verify, distinct-values census) citing batch13's already-shipped evidence; corrected a 3rd's stale "billing confirmed live" premise.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md</span><span class="desc">Added a real tracked todo for "re-run E7 once CF-8 clears" — was prose-only ("tracked, not this todo") with no actual todo anywhere.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_canonical_path_migration_design_2026_07_19.md</span><span class="desc">Corrected a stale <code>archive_exempt</code> bridge comment — 2 new DATA-migration todos landed 2026-08-18, doc is no longer 0-open-todos.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">7 docs, line-1-completeness</span><span class="desc">Reordered todo text so the actionable clause leads the first physical line — the single most common AO-readiness defect found today.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_year_shard_backfill_launcher_..._2026_08_09.md</span><span class="desc">Annotated: its BLOCKED-ON gate is now cleared (scope-ruling doc resolved) — todo is actionable, not genuinely blocked.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md</span><span class="desc">Fixed a false arithmetic equation in a prior correction (10/1379 ≠ 99.3% — that's the <em>overlap</em> %, not the literal fraction).</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_tbbo_unclassified_adapter_error_..._2026_08_15.md</span><span class="desc">Flagged a stale title/summary — original "capability-gate bypass" hypothesis superseded by a confirmed, shipped MDPS bug fix.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">plan_reconciler_findings_tradfi_2026_08_18.md</span><span class="desc">Full Phase-5/6 reconciliation of the prior pass's own "Filed (grace-protected)" ledger — resolved, refuted, or re-routed every item.</span></div></div>
+      <div class="closed-item"><span class="mark">✓</span><div><span class="file">tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md</span><span class="desc">Big finding logged + operator notified: the blocking QG-governor decision shipped 2026-08-16 but this doc's own escalation was never closed.</span></div></div>
+    </div>
+  </section>
+
+  <!-- 8. Parallel-tab flow -->
+  <section id="lanes">
+    <div class="section-head">
+      <div><span class="section-num">06 / DISPATCH</span><h2>Parallel-tab flow for what's left</h2></div>
+      <div class="section-sub">Remaining non-operator-blocked work, split into 5 lanes by file ownership — no two lanes touch the same doc. Lane 1 is a monitor, not a worker: it can't proceed until the Databento invoice clears.</div>
+    </div>
+    <div class="lanes">
+      <div class="lane">
+        <span class="lane-num">01</span>
+        <h3>Billing-gated CME work</h3>
+        <ul>
+          <li>tradfi_manifest_content_recovery_completion (1,328-cell vendor check)</li>
+          <li>tradfi_registry_coverage_and_ao_readiness (by_date re-feed)</li>
+        </ul>
+        <span class="status gated">gated — invoice unpaid</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">02</span>
+        <h3>Manifest data-integrity</h3>
+        <ul>
+          <li>instrument_type_lowercase_residual_381k re-verify</li>
+          <li>within_bounds_source_zero_shard_atom_mismatch</li>
+          <li>deprecated_etf_manifest_rows re-measure</li>
+        </ul>
+        <span class="status ready">ready</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">03</span>
+        <h3>AO satellite batches</h3>
+        <ul>
+          <li>batch12 / batch13 / batch15 / batch16 dispatch queues</li>
+          <li>batch9-finalize (gated on batch9's sole todo)</li>
+        </ul>
+        <span class="status ready">ready — already queued</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">04</span>
+        <h3>Docs &amp; migration hygiene</h3>
+        <ul>
+          <li>canonical_path_migration_design's 2 real DATA todos</li>
+          <li>registry_coverage_stale_checkboxes remaining ~9</li>
+          <li>Phase-D terminal gate residuals</li>
+        </ul>
+        <span class="status ready">ready</span>
+      </div>
+      <div class="lane">
+        <span class="lane-num">05</span>
+        <h3>S&amp;P / ML readiness</h3>
+        <ul>
+          <li>features-delta-one full-range launch (tradfi/ES)</li>
+          <li>features-volatility first-ever launch</li>
+          <li>full 2020–2026 backtest (gated on both above)</li>
+        </ul>
+        <span class="status ready">ready</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Dispatch prompts -->
+  <section id="prompts">
+    <div class="section-head">
+      <div><span class="section-num">07 / PROMPTS</span><h2>Dispatch prompts</h2></div>
+      <div class="section-sub">Copy-pasteable per lane. Each carries the sub-agent mandatory-rules floor at the top — a fresh tab inherits nothing.</div>
+    </div>
+
+    <details class="prompt">
+      <summary>Lane 2 — Manifest data-integrity re-verify</summary>
+      <pre>Read and follow, in full, unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md before your first tool call.
+
+Task: re-verify three open TradFi manifest data-integrity findings against fresh live state (do not trust any cited figure without re-measuring):
+
+1. plans/active/issues/tradfi_instrument_type_lowercase_residual_381k_2026_08_15.md — the doc's BLOCKED-OPERATOR-DECISION (quickmerge/QG-host governor contention) was ruled+shipped 2026-08-16 (qg_host_adaptive_resource_governor_2026_07_14.md) but whether the underlying blocked MTDS payload landed is unconfirmed (cited SHAs 33557c81/22300fdd/f0f7e16a/7de7eae6/85d593bc/31995524 don't resolve in a full local market-tick-data-service clone). Re-run the residual query against the live market-data-tick-tradfi-prd manifest and record a dated finding either way.
+
+2. plans/active/issues/tradfi_within_bounds_source_zero_shard_atom_mismatch_2026_07_28.md — its own table's row-sum runs ~12-14% under the stated Total (disclosed as an estimate, not fully explained); confirm/refute the possible overlap with the archived tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md population (3,048/4,855 rows reportedly share the same error_reason).
+
+3. plans/active/issues/tradfi_deprecated_etf_manifest_rows_forward_scope_drift_2026_08_18.md — the doc's own Todo 2 asks to re-measure its 5,932-row baseline before acting further; do that first, then attempt Todo 1's root-cause investigation (which capture path is still writing ETHE/GBTC/BITO/FBTC/ARKB/FETH).
+
+Commit via quickmerge.sh --agent --files, docs(plans): prefix. Flip checkboxes only with HARD evidence per CLAUDE.md.</pre>
+    </details>
+
+    <details class="prompt">
+      <summary>Lane 4 — Docs &amp; migration hygiene</summary>
+      <pre>Read and follow, in full, unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md before your first tool call.
+
+Task: advance TradFi documentation/migration hygiene, three independent docs (different files, safe to run concurrently with Lane 2/3/5):
+
+1. plans/active/issues/tradfi_canonical_path_migration_design_2026_07_19.md — resolve or re-scope its 2 open [DATA] P2 todos (a 207,438-object short-code→display-name migration; a broader orphaned-combo scoping) so the doc can eventually be archived (43 corpus referrers already inventoried, do NOT archive until both todos close).
+
+2. plans/active/issues/tradfi_registry_coverage_stale_checkboxes_vs_batch13_2026_08_18.md — finish reconciling the remaining ~9 open checkboxes in tradfi_registry_coverage_and_ao_readiness_2026_07_25.md against live state (4 of 13 already closed 2026-08-19); once done, flip that doc + its finalize from status:draft/assigned_vm:NA to active/planning per the operator's 2026-08-07 ruling.
+
+3. plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md + its finalize — work the remaining residual items (post-migration re-smoke-test).
+
+Commit via quickmerge.sh --agent --files, docs(plans): prefix. Never touch a doc with a non-empty locked_by.</pre>
+    </details>
+
+    <details class="prompt">
+      <summary>Lane 5 — S&amp;P / ML readiness launches</summary>
+      <pre>Read and follow, in full, unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md before your first tool call.
+
+Task: plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md — advance the two P0 launch todos:
+
+1. features-delta-one-service full historical range (2020-01-01→present) for tradfi/ES, all calculators — only a single-day smoke has ever landed (features-delta-one-tradfi-20260726-132027, 2024-06-17). Done when feature parquets land clean, no NaN-blanket placeholders, available_at correctly stamped per row.
+
+2. features-volatility-service — has NEVER run for tradfi, not even a smoke. Launch a smoke first (tradfi/ES + tradfi/CBOE-VIX), then the full range if clean.
+
+Follow the vm-launcher-runbook.md heavy-I/O rules (SPOT default, no fire-and-forget, verify STARTED + a terminal state). Both P4 items below (ml-training smoke, full 2020-2026 backtest) are gated on these two landing first — do not attempt them yet.
+
+Commit via quickmerge.sh --agent --files, docs(plans): prefix.</pre>
+    </details>
+  </section>
+
+  <!-- 10. Notes & methodology -->
+  <section id="notes">
+    <div class="section-head">
+      <div><span class="section-num">08 / METHOD</span><h2>Notes &amp; methodology</h2></div>
+    </div>
+    <div class="notes">
+      <p>Corpus baseline: 46 docs carrying <code>parent_epic: tradfi_master</code> (25 plans + 21 issues; one issue doc — <code>tradfi_registry_coverage_stale_checkboxes_vs_batch13_2026_08_18.md</code> — was created by a concurrent session mid-run and is included in the stat strip via a fresh <code>epic_report_data.py</code> pull, but was not independently hunted by this pass's 5 parallel batches; its own content was read directly and partially actioned instead.)</p>
+      <p>Open/done counts and the operator-item list are sourced directly from <code>scripts/plan-hygiene/epic_report_data.py --epic tradfi_master --json</code>, which mirrors <code>count_open_tasks.py</code>'s aggregator-exclusion + dedup methodology — never hand-counted.</p>
+      <p>Every fix in "Closed out this pass" was applied only after re-verifying its own evidence this run (a live <code>grep</code>/<code>git log</code>/direct-code-read, or a fresh commit-ancestry check against <code>origin/live-defi-rollout</code> where a SHA was cited) — no candidate was applied on a hunter's word alone without the orchestrator independently confirming it.</p>
+      <p>Two items in "Needs extra scoping" are deliberately NOT auto-applied even though this run operates under trust mode: splitting an active plan and folding a near-complete plan are both explicitly operator-gated regardless of evidence strength, per the skill's own Phase 4 carve-outs.</p>
+      <p><code>check_line_caps.sh</code> and <code>check_archive_candidates.sh</code> both re-run clean after every fix in this pass (0 new regressions, 3 pre-existing line-cap violations unchanged from the corpus-wide baseline of 17, all outside this epic's scope).</p>
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap" style="padding:0;">
+    tradfi_master · epic-scoped /plan-reconcile · generated 2026-08-19 · plans/epics/html/tradfi_master.html
+  </div>
+</footer>

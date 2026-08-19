@@ -69,8 +69,12 @@ fix depends on a product/architecture call this doc doesn't have the authority t
       state (both keys already resolve directly; the fallback is not needed for it — so answering "yes" clears
       the way to remove the fallback fleet-wide with zero registration changes), or (b) treat it as a state that
       still needs the fallback as a documented, permanent accommodation. Once decided: if (a), remove the
-      `websocket_streaming_handler.py:138-142`-region case-insensitive fallback entirely and update its
-      docstring; if (b), replace the blanket fallback with a narrower, explicitly-commented one scoped only to
+      case-insensitive fallback in `resolve_ws_feed_venue_key()` (module-level) and
+      `WebsocketStreamingHandler._resolve_connector` entirely and update its docstring — corrected 2026-08-19,
+      plan-reconcile observability_master: the prior `:138-142` line-number citation had drifted, those lines are
+      now `_resolve_connector`'s parameter list; the real fallback logic lives in `resolve_ws_feed_venue_key()`
+      (module-level, lines ~63-85 as of this correction, cite the symbol not the line if it moves again); if
+      (b), replace the blanket fallback with a narrower, explicitly-commented one scoped only to
       the polymarket case. Repo: market-tick-data-service.
 
 ## Progress Log

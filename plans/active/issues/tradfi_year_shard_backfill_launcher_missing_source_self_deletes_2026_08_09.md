@@ -53,7 +53,7 @@ depends_on: [tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026
 gate_on_depends: true
 context_scope:
   [
-    /plans/active/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md,
+    /plans/archive/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md,
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
@@ -204,7 +204,13 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 
 ## Action items
 
-- [ ] [DATA] P1. BLOCKED-ON:tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09 **NARROWED
+- [ ] [DATA] P1. **UPDATE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass): the `BLOCKED-ON` gate below
+      is now CLEARED** — `tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md` flipped
+      `status: resolved` this pass (both its action items `[x]`, its 2026-08-17 entry confirms zero `tradfi-bf-*`
+      VMs remain fleet-wide and the `wave_launcher.py` out-of-scope cron stays PAUSED). The singleton-lock
+      precondition this todo describes as the blocker should therefore be clear — this todo is actionable now, not
+      genuinely blocked; the retry (`es-opt-backfill-watcher.sh`) should be re-verified against current fleet
+      state before assuming it already completed on its own. BLOCKED-ON:tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09 **NARROWED
       2026-08-09 (see third finding above) — remaining gap is 2025 (0%) + finishing 2026 (73%), NOT all 5 years.**
       **DISPATCH-SAFETY NOTE (2026-08-16)**: this `BLOCKED-ON:` marker does NOT match AO's
       `regen_backlog_from_plan.py::_BLOCKED_TOKEN_RE` (by design — `BLOCKED-ON:<ref>` is verify.py's SEPARATE,

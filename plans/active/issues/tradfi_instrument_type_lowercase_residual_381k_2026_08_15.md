@@ -882,3 +882,16 @@ AO-eligible follow-up:
   investigate todo. Unrelated to this doc's still-open `BLOCKED-OPERATOR-DECISION` quickmerge/qg-governor escalation
   above — left untouched, that escalation belongs to a different todo lineage and a different owning plan.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **plan_reconciler 2026-08-19** (epic-scoped `tradfi_master` pass) — **BIG FINDING, notifying operator + flagging
+  here, not resolving.** The `BLOCKED-OPERATOR-DECISION` above (option 1 queue-timeout vs option 2, on
+  `qg_host_adaptive_resource_governor_2026_07_14.md`) was RULED (Option 1, default 60min) and SHIPPED
+  2026-08-16 (that plan's own `[x]` RESOLVED entry + a live-validated 93-min soak, 42 runs, 0 OOM) — one day after
+  this doc's last substantive entry above, which was never updated to close out. However, whether THIS doc's own
+  blocked MTDS payload (commits cited above: `33557c81`/`22300fdd`/`f0f7e16a`/`7de7eae6`/`85d593bc`/`31995524`)
+  actually landed could NOT be independently confirmed this pass — none of those SHAs resolve in a full local
+  `market-tick-data-service` clone (consistent with this doc's own repeated `git pull --rebase --autostash` cycles
+  reassigning SHAs; the final landed commit, if any, may carry an SHA never mentioned here). The underlying code
+  fixes this payload depends on (UTL revert `64af7a4e12`, MTDS `b5343275e7`/`e102bf4e36`) ARE confirmed live
+  ancestors of `origin/live-defi-rollout`. **Needs a live re-check** (current `market-data-tick-tradfi-prd` manifest
+  state / re-run the residual query) before this escalation can be closed either way — not done here, flagging for
+  the operator + the next session that touches this doc.

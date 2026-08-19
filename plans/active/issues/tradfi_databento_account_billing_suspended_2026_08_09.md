@@ -154,8 +154,9 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       this doc `status: resolved` but un-archived in the interim per this workspace's own `archive_exempt`-bridge
       precedent (`RULED 2026-08-09` in the archival-discipline SSOT) — the doc also still functions as the standing
       awareness/runbook record for this incident class until the sweep lands.
-- [ ] [OPERATOR] P1. **NEW 2026-08-17 (slot 16, data_pipeline_failure escalation agt-4e1517) — the CURRENT
-      `tradfi-bf-cme-ohlcv-1m-` fleet-wide relaunch wave (~29 instances, launched ~09:01-09:06Z today across
+- [ ] [OPERATOR] P1. **The CURRENT `tradfi-bf-cme-ohlcv-1m-` fleet-wide relaunch wave (~29 instances) is confirmed
+      hitting the same billing block.** NEW 2026-08-17 (slot 16, data_pipeline_failure escalation agt-4e1517) —
+      launched ~09:01-09:06Z today across
       `btc`/`es`/`eth`/`g01-6a-6l`/`g02-6m-cl`/`g03-ct-hg`/`mbt`/`met`/`nq` groups, years 2020-2026) is confirmed
       hitting this SAME billing block from each shard's very first CME date.** Spot-checked
       `tradfi-bf-cme-ohlcv-1m-btc-2020-20260817-090227` directly via GCS SDK read:

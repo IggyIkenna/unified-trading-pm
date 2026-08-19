@@ -46,7 +46,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 locked_since:
-archive_exempt: true # 2026-08-10 slot-21: follow-up (rebuild_tradfi_manifest.py re-run) tracked in batch11 plan
+archive_exempt: true # 2026-08-10 slot-21 (original rationale): follow-up (rebuild_tradfi_manifest.py re-run) tracked in batch11 plan. SUPERSEDED 2026-08-19 (plan_reconciler) -- the rebuild re-run landed directly in this doc 2026-08-16 (slot-6), and the doc's real remaining work (the 880,933-row LIVE-manifest retire todo below) is tracked here directly, not in batch11.
 resolved_by:
 source:
   [

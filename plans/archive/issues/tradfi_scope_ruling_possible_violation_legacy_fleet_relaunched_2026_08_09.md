@@ -17,7 +17,7 @@ summary: >-
   them or why) — flagging for someone with fuller context to check whether this is a genuine violation or a scope I'm
   misreading (e.g. maybe these are ETF-only or otherwise legitimately re-scoped since the ruling). This is a passive
   observation from an unrelated task, not a targeted audit.
-status: open
+status: resolved
 nature: issue
 asset_group: [tradfi]
 stage: [data]
@@ -44,13 +44,18 @@ estimate_class: research
 estimate_baseline: 0.2
 calibrated_ai_days: 0.15
 assigned_role: infra
-resolved_by:
+resolved_by: plan_reconciler 2026-08-19 (epic-scoped tradfi_master pass) — both action items [x], zero remains
+  RUNNING confirmed 2026-08-17, question disposition=final
 locked_by:
 depends_on: []
 context_scope: [/plans/archive/issues/tradfi_mvp_of_mvp_instrument_scope_ruling_2026_08_09.md, /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md, deployment-service/scripts/wave_launcher.py, deployment-service/terraform/gcp/wave_launcher_scheduler.tf]
 ---
 
 # Possible scope-ruling violation — legacy NASDAQ/NYSE fleet relaunched
+
+> **📦 ARCHIVED 2026-08-19 (plan_reconciler, epic-scoped `tradfi_master` pass)** — both action items done, zero
+> `tradfi-bf-*` legacy-fleet VMs remain RUNNING (confirmed 2026-08-17), the scope question is answered with
+> `disposition=final`. No successor doc.
 
 ## Observation
 
@@ -200,6 +205,14 @@ in-flight VMs (which stay hands-off per the separate staleness-check rule).
 
 ## Progress Log
 
+- **plan_reconciler 2026-08-19** (epic-scoped `tradfi_master` pass): flipped `status: open` → `status: resolved` in
+  frontmatter — both action items are `[x]`, the last entry (2026-08-17) confirms zero `tradfi-bf-*` VMs remain and
+  the blocked question was answered `disposition=final`. `status:` had never been updated to match. This doc gates
+  `tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md`'s sole open P1 todo via
+  `depends_on`+`gate_on_depends: true` — that gate is task-level (checkbox completion), already satisfied
+  regardless of this `status:` field, per `plans/PLAN_FORMAT.md`; the status flip here is a hygiene correction, not
+  what unblocks the downstream todo. Not archiving this pass (archival is a separate, heavier ritual with a
+  referrer sweep — left for a dedicated pass).
 - 2026-08-09: filed as a passive observation during an unrelated ES_OPT monitoring session. Not investigated further.
 - 2026-08-09 ~05:20Z: escalating priority context — this NASDAQ/NYSE wave (5 of the 10 `tradfi-bf-*` VMs still RUNNING)
   is now directly co-occupying the shared Databento singleton lock with

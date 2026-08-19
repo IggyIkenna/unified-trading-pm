@@ -104,6 +104,33 @@ so they were left as a follow-up rather than expanded in-scope for a one-shot es
    deployment-service beyond the four files already found (`relaunch_consolidator.py` docstrings fixed this session,
    `cloud_run_job_registry.py`, `consolidator_oom_watcher.py`, `cloud_run_job_failure_watcher.py`).
 
+## Todos
+
+**Added 2026-08-19 (plan-reconcile observability_master, Phase 2 zero-checkbox sweep)** — this P1 doc with confirmed
+LIVE production harm (13+ hour cefi consolidator outage, growing tradfi stall — see Progress Log) had zero `- [ ]`
+tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only parses checkbox lines). Converted the
+4-item "Recommended decision" list above into tracked todos verbatim — same content, same order, now dispatchable.
+
+- [ ] [INFRA] P1. Read `deployment_service/data_pipeline_monitors/consolidator_oom_watcher.py` in full to determine
+      whether it actually queries Cloud Run by the WRONG `manifest-consolidator-{ag}` name (a live gap) or resolves
+      the job list some other way (already correct, only the docstring/log lines are stale). Done when: a stated
+      verdict (live gap vs. docstring-only) with the specific code path cited as evidence. Repo: deployment-service.
+- [ ] [INFRA] P1. Fix `deployment_service/cloud_run_job_registry.py::_MANIFEST_CONSOLIDATOR_JOBS` to emit the real
+      `uts-prod-manifest-consolidator-{service_kind}-{ag}` stems (10 entries across `instruments`/`market-data`, or
+      read `manifest_consolidator_buckets`'s keys directly from terraform-parity rather than hand-listing). Done
+      when: `tests/unit/test_cloud_run_job_registry_guard.py` passes (it parses `*_scheduler.tf` and should catch
+      drift) + `quality-gates.sh` green. Repo: deployment-service.
+- [ ] [INFRA] P1. Re-verify `deployment_service/data_pipeline_monitors/cloud_run_job_failure_watcher.py`'s
+      `manifest-consolidator-*` exclusion list + `consolidator_oom_watcher.py`'s read path against the registry
+      fixed in the todo above; confirm the real per-(service_kind, asset_group) jobs are covered by exactly one of
+      the two watchers, not zero. Done when: a stated coverage verdict per real job stem, evidenced by reading both
+      watchers' current logic against the corrected registry. Repo: deployment-service.
+- [ ] [INFRA] P2. Grep deployment-service for any other `manifest-consolidator-{ag}` / `manifest-consolidator-
+      {asset_group}` literal beyond the four files already found (`relaunch_consolidator.py` docstrings fixed
+      2026-08-15, `cloud_run_job_registry.py`, `consolidator_oom_watcher.py`, `cloud_run_job_failure_watcher.py`).
+      Done when: grep output pasted + any additional hit either fixed or explicitly ruled a non-issue. Repo:
+      deployment-service.
+
 # Progress Log
 
 - 2026-08-15 (agt-d1be49, slot 18): filed during DP-MANIFEST-001 tradfi escalation triage; root cause fixed in

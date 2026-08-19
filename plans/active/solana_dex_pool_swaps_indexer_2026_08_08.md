@@ -109,16 +109,29 @@ context_scope:
       registration pattern (`cli/main.py`). Repo: market-tick-data-service. Done-when: a full unit-test pass (walker +
       decoders + manifest write, mocked Helius responses) writes a real `dex_pool_swaps` shard for at least one ORCA and
       one RAYDIUM pool with correct schema, and `quality-gates.sh` is green.
-- [ ] [DATA] P2. **Backfill VM launch + G2 re-verification** — once the indexer is unit-tested green, launch a bounded
-      SPOT-VM smoke run (a few days, not full history) to prove the walker+decoder+write path against real on-chain
-      data, then re-verify `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s G2 gate now covers ORCA/RAYDIUM
-      `dex_pool_swaps` (that gate's own text currently excludes this as a known, separately-tracked gap — this todo is
-      what lets that gate's language become accurate). Repo: market-tick-data-service + deployment-service (VM launch).
-      Done-when: real `dex_pool_swaps` manifest rows exist for ORCA and RAYDIUM on at least one live day,
-      manifest-counted (not log-activity), and the G2 gate text is updated to drop the exclusion.
+- [ ] [DATA] P2. **Backfill VM launch + G2 re-verification** — once the indexer is unit-tested green, launch a bounded SPOT-VM smoke run (a few days, NOT full history) to prove the walker+decoder+write path against real on-chain data.
+      Then re-verify `mvp_backfill_defi_onchain_v10_2026_06_27.md`'s G2 gate now covers ORCA/RAYDIUM `dex_pool_swaps`
+      (that gate's own text currently excludes this as a known, separately-tracked gap — this todo is what lets that
+      gate's language become accurate). **No `[OPERATOR]` tag needed** (task_template.md §3 findings O/Q/U): this is a
+      bounded, write-only SPOT-VM smoke run that adds NEW `dex_pool_swaps` rows and deletes/overwrites nothing existing
+      in the corpus, matching the standard reversible SPOT-backfill pattern this asset_group already uses
+      (`/codex/05-infrastructure/spot-vms-for-backfill.md`) — register the launcher via `VM_PREFIX_TO_BUCKET` per
+      `/codex/05-infrastructure/vm-launcher-runbook.md`, never hand-roll. Repo: market-tick-data-service +
+      deployment-service (VM launch). Done-when: real `dex_pool_swaps` manifest rows exist for ORCA and RAYDIUM on at
+      least one live day, manifest-counted (not log-activity), and the G2 gate text is updated to drop the exclusion.
 
 ## Progress Log
 
+- **plan-reconcile 2026-08-19 (mtds_mdps_master, hunter batch B)**: fixed the todo-5 (Backfill VM launch + G2
+  re-verification) AO-dispatch-readiness gap flagged by 3 prior `/plan-reconcile` passes through 2026-08-18 (most
+  recently `plan_reconciler_findings_defi_master_epic_2026_08_18.md` item 4) — a VM-launch/data todo on an
+  `assigned_vm: planning` doc with no `[OPERATOR]` tag and no inline safe-idempotent justification (task_template.md §3
+  findings O/T/U). Applied finding Q/U's self-justifying path: added an inline note that this is a bounded, write-only
+  SPOT-VM smoke run (a few days, not full history) that adds NEW `dex_pool_swaps` rows and deletes/overwrites nothing
+  existing, matching the standard reversible SPOT-backfill pattern already used elsewhere in this asset_group, plus a
+  `VM_PREFIX_TO_BUCKET` registration reminder per the vm-launcher-runbook. Also moved the todo's hard constraint
+  ("SPOT-VM... a few days, NOT full history") fully onto the todo's first physical line — the pre-fix wrap split it
+  across lines 1-2, invisible to `regen_backlog_from_plan.py`'s line-1-only brief parser. No code changed; docs-only.
 - **2026-08-08 (slot-33, item 2)**: shipped the ORCA Whirlpool per-signature fetch + swap decoder —
   market-tick-data-service@3619f9e2. Note: this exact task (`solana_dex_pool_swaps_indexer-002`) had wedged 4 other
   slots (11, 9, 33-earlier-incarnation, 7) via the fleet-wide post-compact respawn crash-loop in the ~17:31Z-18:02Z

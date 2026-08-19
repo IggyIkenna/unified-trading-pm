@@ -168,7 +168,7 @@ consolidation).
   non-destructive (skipped rows retain prior state, not corrupted): (a) 35,361 rows carry historical free-text
   `EMPTY_CONFIRMED` reason strings (`EXPECTED_NO_FIXTURE__truthset_*` variants) that don't match the current closed-set
   `EmptyConfirmedReason` enum exactly — **independently found + already filed** by slot 6 (this same plan's
-  twenty-seventh touch) as `plans/active/issues/sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`
+  twenty-seventh touch) as `plans/archive/issues/sports_rebuild_v9_free_text_reason_taxonomy_rejection_2026_07_13.md`
   (full evidence + 3 actionable todos there; not duplicated here); (b) 12,407 rows (captured VENUES/LEAGUES) carry a
   legacy `source='instruments_service'` stamp (the writing SERVICE's own name, not a real data vendor) that isn't in the
   registered `SOURCE_PRIORITY` vendor list for `asset_group=sports` — not yet filed elsewhere, tracked as a todo below.
@@ -347,9 +347,9 @@ consolidation).
       or risk a misapplied direct-push carve-out. **This todo's own substance (the deployment-freshness question) is now
       fully resolved AND live in production** — the digest fix shipped is what matters; who authored the commit is
       incidental given two independent investigations converged on the identical root cause and fix.
-- [ ] [DATA] P1. **STATUS 2026-08-16**: superseded/consolidated by the `[INFRA] P1` "STALE-CHECK CORRECTION 2026-08-09"
-      todo below — that todo is now authoritative for what remains (only sub-item (3), the reviewed maintenance-window
-      execution). Kept here for the investigation trail. Once the TEAMS/STANDINGS deployment question above is resolved (either "was stale, now redeployed" or
+- **[DATA] P1. CANCELLED — SUPERSEDED 2026-08-16** (consolidated into the `[INFRA] P1` "STALE-CHECK CORRECTION
+      2026-08-09" todo below, which is now authoritative for what remains — only sub-item (3), the operator-coordinated
+      maintenance-window execution. Kept below for investigation-trail context only — not independently dispatchable.) Once the TEAMS/STANDINGS deployment question above is resolved (either "was stale, now redeployed" or
       "a residual code bug, now fixed"), run a TARGETED re-emit pass scoped ONLY to `capture_status='captured'` rows on
       both sports surfaces (NOT a full `--force` corpus rebuild, which has already regressed data twice in this doc's
       history) — coordinate the maintenance window with the operator first per Finding 1. Expected volume: ~652K rows on
@@ -934,7 +934,8 @@ Shipped via quickmerge: `agent-orchestrator@22738f6` on `live-defi-rollout`.
 at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and correctly reflected in the doc's own todos
 — but the doc's live-data claim, "CF-8 remains RED on both surfaces," is still true today.
 
-- Corroborating evidence: `plans/active/sports_master_closeout_2026_07_21.md` §C (`ac#6`, 2 days old, no drift since)
+- Corroborating evidence: `plans/archive/2026_07/sports_master_closeout_2026_07_21.md` §C (`ac#6`, 2 days old, no drift
+  since — path corrected 2026-08-19, doc has since been archived)
   independently reconfirms: _"`available_at` fill only ~40-50% on `captured` rows (service_name-scoped dedup); targeted
   re-emit BLOCKED pending per-service_name write-fix design (operator said STOP)."_ — the exact same blocker this doc's
   own last Progress Log entries (slot-12, 2026-07-14) already identified and the backlog parking gate

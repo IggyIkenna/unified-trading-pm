@@ -260,7 +260,10 @@ surface — Phase A1 (writer) → B (migrate `prod/catalog.parquet`) → C (widg
 Everything below is scoped so these cells are canonical, honestly-covered, and smoke-tested green before MVP backfill.
 
 > **Data-type × source priority for MVP backfills (operator, 2026-07-18 — supersedes any "restore mbp_10" framing):**
-> For **Databento** tradfi, the billing entitlement is **1-month L3 + 1-year L1** — so `mbp_10`/`trades`/`tbbo` are
+> For **Databento** tradfi, the billing entitlement is **1-month L2 + 1-year L1** (`mbp-10`→L2, not L3; `mbo` is the
+> real L3 schema — corrected 2026-08-19, plan_reconciler; see `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`'s
+> 2026-08-18 correction, independently re-verified against `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py`)
+> — so `mbp_10`/`trades`/`tbbo` are
 > **billing-gated by design (documented, NOT a bug to fix)**. The MVP backfill data_type for the instruments we care
 > about is **`ohlcv_1m` only** (it has FULL history). The venue capability _declaration_ MAY still enumerate what's
 > _possible_ (mbp_10/trades/tbbo within their limits), but the actual **MVP backfills = 1m candles**. For **daily**
@@ -889,7 +892,7 @@ operator activation.
   (`tradfi_manifest_content_recovery_completion_2026_07_24`, `tradfi_backfill_throughput_followups_2026_07_24`,
   `tradfi_phase_d_terminal_gate_2026_07_24`) gates archival per PLAN_FORMAT.md regardless. `assigned_vm` unchanged.
 - **na-eligibility-audit 2026-08-09** (tradfi tranche, dispatch agt-3df41f) [body-hash:4adac7a23a03a549]: **KEEP-NA,
-  valid -- 0 native open todos confirmed; today's new MVP-of-MVP banner verified an accurate, correctly-scoped redirect
+  valid** -- 0 native open todos confirmed; today's new MVP-of-MVP banner verified an accurate, correctly-scoped redirect
   (narrows near-term dispatch only, doesn't rewrite this doc). FLAGGED not corrected (over-cap doc, append-only budget):
   the "Aggregated source docs" digest entry for `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md` says "0 open
   todos" but that doc actually carries 3 -- see it directly. `assigned_vm` unchanged.

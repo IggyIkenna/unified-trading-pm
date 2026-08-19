@@ -64,12 +64,26 @@ related_plans:
   - ../active/ui_satellite_ao_dispatch_batch3_2026_08_09.md
   - ../active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md
   - ../active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md
-last_updated: 2026-08-18 # was 2026-06-19 -- folded escalation_and_disaster_recovery_master in 2026-08-18, see body
+  - ../active/data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md
+  - ../active/data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15_finalize.md
+  - ../active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md
+  - ../active/deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16.md
+  - ../active/deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16_finalize.md
+  - ../active/deployment_registry_firestore_p5_verify_2026_07_14.md
+  - ../active/dp_audit_escalation_agent_backed_filing_2026_08_18.md
+  - ../active/producer_silence_flatten_protocol_2026_08_14.md
+last_updated: 2026-08-19 # was 2026-08-18 -- plan-reconcile observability_master: related_plans roster was stale, 8
+# parent_epic:observability_master active/draft plans missing (found by 2 independent hunters); added below
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
 # Observability Master
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/d5c03be2-274c-4d4c-aea1-b4c9d144661b (generated 2026-08-19,
+`/plan-reconcile observability_master`)
 
 **Owns**: alerting-service + monitoring + telemetry + **Incident Gateway state machine** + **Agent Recovery Controller
 (Layer-0 deterministic scripts)** + **LLM recovery-audit-signoff agent (Layer-1)** + **reconciliation age tracking** +
@@ -105,8 +119,15 @@ See [`README.md`](README.md) for the canonical epic frontmatter schema + body st
 
 ## Assigned active plans
 
-_13 active plans declare `parent_epic: observability_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_19 plans declare `parent_epic: observability_master` in their frontmatter (18 `status: active` + 1 `status: draft` —
+corrected 2026-08-19, plan-reconcile: was stale at "13", 6 active + the 1 draft were missing from both this count
+and `related_plans:` above). Workers pick up in priority order (P0 first). The P0-P3 breakdown below has not been
+regenerated for the 6 newly-added active plans yet (`scripts/plans/populate_epic_bodies_2026_05_21.py` scope-touches
+every epic in the corpus, out of scope for this epic-only pass) — see `related_plans:` frontmatter for the full
+current roster until the next full regen; the 6 not yet placed into a priority tier: `data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15`
+(+`_finalize`), `data_pipeline_alert_storm_root_cause_batch_2026_08_10`,
+`deployment_api_true_catalogue_expected_universe_projection_ao_dispatch_2026_08_16` (+`_finalize`),
+`dp_audit_escalation_agent_backed_filing_2026_08_18`, `producer_silence_flatten_protocol_2026_08_14`._
 
 ## P0 — must complete before next foundation gate
 
@@ -300,14 +321,16 @@ residue.
 - A new Slack OAuth app (E2, deferred — the MVP keeps the one-way webhook + dashboard-resolve, just scoped +
   stateful).
 
-### Design input awaiting scope (not yet folded into E1)
+### Design input, scoped + shipped 2026-08-10 (was: "awaiting scope")
 
 - [`blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md`](../active/issues/blocked_questions_ux_redesign_context_loss_and_scale_2026_07_24.md)
-  — operator-reported: insufficient context in question/options, scale (~30 open questions), duplicate questions
-  across agents/sessions, and the operator unable to reach the ORIGINATING agent for follow-up once it's dead.
-  Bigger than E1's scoped-link + state-machine work — read it before scoping E1 (or a wider blocked-questions
-  redesign). Deliberately deferred; not actioned. (`parent_epic:` now points here, updated in the same pass as this
-  fold.)
+  — **corrected 2026-08-19, plan-reconcile observability_master: this section was stale.** The operator ruled scope
+  2026-08-08 ("all three: session_id capture + transcript-jump + dedup/similarity") and the doc's own 5 todos were
+  all `[x]` by 2026-08-10, each with a HARD-evidence commit (`agent-orchestrator@37f73f9`/`@c6273b2`/`@514df29c07`,
+  all re-verified ancestors of `origin/live-defi-rollout` this pass; `claude_session_id` column confirmed live in
+  `server/orm.py:176`). `archive_exempt: true` is set deliberately — not because the work is incomplete, but
+  because other active docs still cite it as a reference. Was NOT deferred/not-actioned as this section previously
+  read; fully shipped.
 
 ### Escalation pipeline MVP (P1)
 

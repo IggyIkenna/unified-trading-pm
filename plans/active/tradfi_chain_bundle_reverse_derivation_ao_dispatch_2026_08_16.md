@@ -56,10 +56,11 @@ resolved_by:
 
 ## Todos
 
-- [ ] [DATA] P2. **RULED 2026-08-16 (operator): raw→canonical (`canonicalize_raw_tradfi_id`) stays
-      authoritative — do not change its behavior.** Fix the REVERSE direction instead:
+- [ ] [DATA] P2. **Fix the REVERSE direction of tradfi chain-bundle canonicalization** —
       `derive_canonical_id_for_row` (`rewrite_tradfi_chain_bundle_content_id_2026_07_25.py`) needs to recover
-      the original raw root token (e.g. `XAU` from `XAUH0`) from a sector-identity-mapped canonical name. Build
+      the original raw root token (e.g. `XAU` from `XAUH0`) from a sector-identity-mapped canonical name; it
+      currently gets `QUARANTINE_UNPARSEABLE`. **RULED 2026-08-16 (operator): raw→canonical
+      (`canonicalize_raw_tradfi_id`) stays authoritative — do not change its behavior.** Build
       this as an explicit reverse-lookup DERIVED FROM the authoritative forward mapping's own
       `EXCHANGE_CODE_TO_NAME`-driven output (not a separately hand-maintained reverse function — that's exactly
       what drifted out of sync when `unified-api-contracts@00b2de54`'s sector-identity convergence landed).

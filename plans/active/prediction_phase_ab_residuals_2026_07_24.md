@@ -6,9 +6,11 @@ title:
 summary: >-
   Phases A (get-the-code-ready — capture path, canonical-identity writers, venue-perps residuals, fixture-attribute
   writers) and B (manifest/catalogue migrations) of the prediction consolidated close-out, split out verbatim (line-cap
-  remediation, 2026-07-24) — most items already shipped and verified; residual open work is finishing the
-  capture-incident remediation, the shared canonical-builder QG, the venue-perps/live-CLOB-depth residuals, the
-  historical fixture-match-attribute backfill, and the ambiguous-canonical-value operator-decision gate.
+  remediation, 2026-07-24) — most items already shipped and verified. **Residual open work corrected 2026-08-19
+  (/plan-reconcile predictions_master, was stale — 4 of the 5 previously-named items here had already closed)**: the
+  manifest enumeration-driven canonical/dedupe migration `--apply`, the historical fixture-match-attribute backfill,
+  the `instrument_type` casing re-verify to 100%, and the 3x-cadence reconciliation top-up (4 open `- [ ]` todos,
+  live-recounted 2026-08-19, matching this doc's own 2026-08-18 na-eligibility-audit marker).
 status: active
 nature: process
 asset_group: [prediction]

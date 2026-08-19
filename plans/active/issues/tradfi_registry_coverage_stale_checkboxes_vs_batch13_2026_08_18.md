@@ -110,3 +110,12 @@ leaving the operator's 2026-08-07 "flip all 8" ruling permanently unexecuted for
   `tradfi_autonomous_session_operator_decisions_2026_07_25.md`'s item-5 propagation todo; did not execute either
   todo above directly (out of scope for the audit run that found it — this doc's own content was outside this
   run's incremental-diff scope).
+- **plan_reconciler 2026-08-19** (epic-scoped `tradfi_master` pass) — **Todo 1 PARTIALLY DONE**: flipped the 3
+  specifically-named checkboxes (KRX equities registry-vs-adapter verify, line ~142; distinct-values/axis-value
+  census, line ~232; both `[x]` with batch13 evidence citations) plus corrected the 4th (Databento `by_date`
+  re-feed, line ~296) with a stale-premise annotation matching batch13's own NOT ACTIONABLE disposition (not a
+  flip — the work itself is still gated on the billing block). **Not done**: full reconciliation of the remaining
+  ~9 open checkboxes in `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` against fresh live state (only
+  the 4 batch13-cited items were checked this pass) — Todo 1 stays open for that remainder. Todo 2 (flip
+  `status: draft`→`active`) NOT executed — still gated on Todo 1's full completion, per this doc's own explicit
+  ordering ("once the reconciliation above lands").
