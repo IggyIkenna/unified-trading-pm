@@ -1,9 +1,11 @@
 ---
 doc_type: codex-ssot
 title: "Cross-Cutting: Transfer / Rebalance"
-summary: "Venue-scope capital-movement primitive: moves capital between venues within one strategy via 7 transfer types
-  (INTERNAL_SUBACCOUNT / CEX_WITHDRAWAL_DEPOSIT / ON_CHAIN_TRANSFER / BRIDGE / WRAP_UNWRAP / UNITY_WALLET_OP /
-  IBKR_FUND_MOVE); target-state, idempotent by `instruction_id`, cost-budgeted; bridge paths from `CHAIN_BRIDGE_GRAPH`."
+summary: "Venue-scope capital-movement primitive: moves capital between venues within one strategy via the 13-member
+  `BusTransferType` enum (CEX_WITHDRAW / CEX_DEPOSIT / SUBACCOUNT_MOVE / ON_CHAIN / BRIDGE / WRAP_UNWRAP / DEFI_DEPOSIT /
+  DEFI_WITHDRAW / CUSTODY_TRANSFER / SWEEP / REBALANCE / UNITY_WALLET_OP / IBKR_FUND_MOVE — unioned 2026-08-12 from 4
+  competing enums; the old 7-member `TransferType` names no longer exist as a shared vocabulary); target-state,
+  idempotent by `instruction_id`, cost-budgeted; bridge paths from `CHAIN_BRIDGE_GRAPH`."
 status: current
 nature: ssot
 asset_group: [meta]

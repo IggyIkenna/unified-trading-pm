@@ -221,17 +221,17 @@ Every UI MUST have a backing API service as its data engine. UIs never:
 
 The chain is always: **UI → API (HTTP/SSE) → Service (engine) → Storage/Messaging**
 
-| UI Group                                                    | API Gateway(s)              | Engine (data source) |
-| ----------------------------------------------------------- | --------------------------- | -------------------- |
-| trading-analytics-ui, execution-analytics-ui, settlement-ui | execution-results-api :8002 | execution-service    |
+| UI Group                                                                   | API Gateway(s)                                      | Engine (data source)                                                                 |
+| -------------------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| trading-analytics-ui, execution-analytics-ui, settlement-ui                | execution-results-api :8002                         | execution-service                                                                    |
+| strategy-ui                                                                | strategy-api :8004 ⟪planned⟫                        | strategy-service                                                                     |
+| deployment-ui, unified-trading-system-ui (health, audit, logs, onboarding) | deployment-api :8001, unified-trading-api, auth-api | deployment-engine                                                                    |
+| client-reporting-ui                                                        | client-reporting-api :8003                          | pnl-attribution-service, risk-and-exposure-service, position-balance-monitor-service |
 
 > **Consolidation note:** `trading-analytics-ui` is functionally overlapped by the batch research UIs:
 > `execution-analytics-ui` (provides live fill viewing via `execution-results-api` SSE) and `client-reporting-ui` (P&L).
 > Candidate for consolidation into `execution-analytics-ui` in a future phase. See `consolidated_remaining_work.plan.md`
-> todo `arch-trading-analytics-ui-consolidate`. | strategy-ui | strategy-api :8004 ⟪planned⟫ | strategy-service | |
-> deployment-ui, unified-trading-system-ui (health, audit, logs, onboarding) | deployment-api :8001,
-> unified-trading-api, auth-api | deployment-engine | | client-reporting-ui | client-reporting-api :8005 |
-> pnl-attribution-service, risk-and-exposure-service, position-balance-monitor-service |
+> todo `arch-trading-analytics-ui-consolidate`.
 
 ---
 
@@ -449,10 +449,10 @@ see/experience differently.
 - **Live:** Receives live predictions from ML inference (PubSub), live market data from MDPS (PubSub), live features
   from feature services (PubSub). Generates trade signals. Sends orders to execution-service (PubSub). Receives order
   handshakes from execution-service.
-- **Position:** Gets current position from position-balance-monitor-service (PubSub subscription). At startup, PBM
-  publishes initial position state (from exchange query). Strategy uses this to decide trades. Strategy does NOT query
-  execution-service for position.
-- **Current implementation gap:** Uses internal PositionMonitor. Target: subscribes to PBM. PBM itself is not yet
+- **Position (target design, not yet current — see next bullet):** Gets current position from
+  position-balance-monitor-service (PubSub subscription). At startup, PBM publishes initial position state (from
+  exchange query). Strategy uses this to decide trades. Strategy does NOT query execution-service for position.
+- **Position (current):** Uses internal PositionMonitor. Target: subscribes to PBM. PBM itself is not yet
   a standalone service — its role currently lives inside strategy-service's `position/` package
   (`margin_event_emitter.py` on top of `unified_trading_library.margin_and_liquidation`). **This is deliberate for
   now, not an oversight** (operator, 2026-08-18): the in-process call is the intended current shape; extraction
@@ -460,7 +460,8 @@ see/experience differently.
   in a matter of weeks, ahead of the already-filed target in `/plans/epics/system_readiness_master.md` W7
   (November 2026) — that todo is the decision point, not a completion deadline.
 - **Data produced:** `signals_backtest_results` (GCS), live trade signals (PubSub)
-- **Data consumed:** predictions (PubSub), market data (PubSub), features (PubSub), positions (PubSub from PBM)
+- **Data consumed:** predictions (PubSub), market data (PubSub), features (PubSub), positions (internal
+  PositionMonitor today; target is PubSub from PBM — see "Position" above)
 
 **execution-service**
 

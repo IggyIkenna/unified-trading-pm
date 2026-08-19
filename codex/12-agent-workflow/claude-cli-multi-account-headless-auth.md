@@ -590,22 +590,16 @@ plan.
 
 ## Troubleshooting
 
-| Symptom | Likely cause | Fix | | --------------------------------------------------------- |
-------------------------------------------------------------------- |
----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-| ----------------------------------------- | | `401 authentication_error` immediately | Token invalid or revoked |
-Regenerate with `claude setup-token` | | Billing shows API usage instead of Max | `ANTHROPIC_API_KEY` set |
-`unset ANTHROPIC_API_KEY`, verify with `claude /status` | | `OAuth authentication is currently not supported` | Known
-intermittent CLI bug | Wait + retry; verify token wasn't accidentally revoked | | All accounts hit limit simultaneously
-| Rotation logic wrong OR all accounts genuinely exhausted | `claude /status` per account; if all show limited, wait for
-5h window | | Interactive tmux spawn shows "Select login method" wizard | claude 2.1.145+ onboarding wizard ignores
-`CLAUDE_CODE_OAUTH_TOKEN` | Ensure `tmux_spawn._start_session()` uses `env_file=` path which seeds `CLAUDE_CONFIG_DIR`;
-verify `hasCompletedOnboarding:true` in `$CLAUDE_CONFIG_DIR/.claude.json` | | New VM prompts for browser login | Token
-env var not set OR shell didn't source the env file | `source ~/.claude-accounts/<id>.env` before running `claude` | |
-Token works locally but not in cron/systemd | Env vars not inherited | Source env file in cron command OR systemd
-`EnvironmentFile=` | | Two emails seem to share quota | Aliases on same orgId (not distinct subs) | Check
-`claude auth status | grep orgId`; remove the alias from roster |
+| Symptom                                                   | Likely cause                                                        | Fix                                                                                                                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `401 authentication_error` immediately                    | Token invalid or revoked                                            | Regenerate with `claude setup-token`                                                                                                                                  |
+| Billing shows API usage instead of Max                    | `ANTHROPIC_API_KEY` set                                             | `unset ANTHROPIC_API_KEY`, verify with `claude /status`                                                                                                               |
+| `OAuth authentication is currently not supported`         | Known intermittent CLI bug                                          | Wait + retry; verify token wasn't accidentally revoked                                                                                                                |
+| All accounts hit limit simultaneously                     | Rotation logic wrong OR all accounts genuinely exhausted            | `claude /status` per account; if all show limited, wait for 5h window                                                                                                 |
+| Interactive tmux spawn shows "Select login method" wizard | claude 2.1.145+ onboarding wizard ignores `CLAUDE_CODE_OAUTH_TOKEN` | Ensure `tmux_spawn._start_session()` uses `env_file=` path which seeds `CLAUDE_CONFIG_DIR`; verify `hasCompletedOnboarding:true` in `$CLAUDE_CONFIG_DIR/.claude.json` |
+| New VM prompts for browser login                          | Token env var not set OR shell didn't source the env file           | `source ~/.claude-accounts/<id>.env` before running `claude`                                                                                                          |
+| Token works locally but not in cron/systemd               | Env vars not inherited                                              | Source env file in cron command OR systemd `EnvironmentFile=`                                                                                                         |
+| Two emails seem to share quota                            | Aliases on same orgId (not distinct subs)                           | Check `claude auth status \| grep orgId`; remove the alias from roster                                                                                                |
 
 ## Composes with
 
