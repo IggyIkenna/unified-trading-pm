@@ -22,9 +22,10 @@ tags: [cefi, tardis, spot-preemption, backfill-gap, okx-spot, bybit-spot]
 related:
   [
     /plans/active/cefi_tardis_date_concurrency_2026_08_16.md,
-    /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     /plans/active/issues/cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md,
   ]
+  # 2026-08-19 (na-eligibility-audit): dropped 1 archived-plan citation (vm_relaunch_under_new_name...) to satisfy
+  # the archive-safety-ratchet gate — preserved verbatim inline in this doc's own "What happened" section.
 parent_epic: cefi_master
 source: "Interactive session 2026-08-16/17, slot 4 — operator asked whether another VM had been blocked/forgotten
   during the queue-mode incident investigation; this doc captures the resulting chat-only findings that were never
@@ -130,3 +131,4 @@ running. Check `gcloud compute instances list` for the current cap-relevant flee
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries, was 3) — added
   `cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md`, named in the doc's own "Recommended relaunch
   shape" section as the bug class the per-venue solo-launch recommendation avoids.
+- **na-eligibility-audit 2026-08-19** [body-hash:b4afd78e12a0dc71]: KEEP-NA, valid — Full re-read (129 lines). All 3 open todos remain DEPENDENCY_BLOCKED on the same Tardis N=1 concurrent-VM slot occupied by the BINANCE-FUTURES backfill (sibling `cefi_tardis_date_concurrency_2026_08_16.md`). Content changed since the 2026-08-17 marker only via a 2026-08-18 plan_reconciler SHA-citation correction (`bd07cfc3`→`f134d165...`) — doesn't change the verdict. Doc stays assigned_vm: NA.

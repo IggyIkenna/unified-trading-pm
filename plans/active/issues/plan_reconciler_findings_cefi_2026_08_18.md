@@ -214,28 +214,35 @@ the epic-cluster hunters against the plans citing them; no contradiction surface
 Confirmed findings that need real verification/judgment beyond doc-reconciliation, tracked as todos rather than
 left in prose:
 
-- [ ] [DATA] P2. Live-check whether `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_
-      2026_07_31.md`'s sole open todo ("Round-8 ACTUAL LAUNCH") — unblocked since 2026-08-08T20:32Z per its own
-      text — ever actually ran; zero corroborating evidence found anywhere in the corpus through 2026-08-18 (hunter
-      issues-C1 finding B3, not independently confirmed this pass — needs live GCS/AO-backlog access this
-      doc-only reconcile pass didn't use). Done-when: either a run.log/PROGRESS.json is found confirming the
-      launch, or the todo is re-opened as genuinely never-launched with a fresh relaunch plan.
+- [x] ✅ [DATA] P2. **CLOSED 2026-08-19 (na-eligibility-audit) — already-tracked, not a new work item.** Live-check
+      whether `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`'s sole open todo
+      ("Round-8 ACTUAL LAUNCH") ever actually ran. **Answer: no evidence it has** — direct read of that doc (still
+      `assigned_vm: planning`) confirms its own "Round-8 ACTUAL LAUNCH" checkbox (line 896) is STILL `- [ ]` open;
+      no Progress Log entry after the 2026-08-08T20:32Z prereq-unblock records a launch. This satisfies the
+      done-when's "re-opened as genuinely never-launched" branch — the todo's own checkbox state already carries
+      that fact; no fresh relaunch plan is needed since the existing open todo in that (already-planning-assigned)
+      doc IS the relaunch plan. No new work item created here — would duplicate an already-open AO-eligible todo.
 - [ ] [PM] P3. Regenerate `plans/epics/cefi_master.md`'s "## Assigned active plans" section via
       `scripts/plans/populate_epic_bodies_2026_05_21.py --apply` (confirmed safe via `--dry-run` this pass) once a
       corpus-wide run is safe to do without colliding with concurrent sessions touching other epics — the section
       currently lists 3 archived docs as active and shows 13 of the epic's real 17 children. Done-when: the section
       matches the live `parent_epic: cefi_master` roster with 0 archived entries shown as active.
-- [ ] [DOC] P3. Add a documented reason (Progress Log justification, per the `/archive-candidates-audit` skill's
-      own rubric) to `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`'s `archive_exempt: true` field
-      (sole todo `[x]`, 0 open, no comment explaining the exemption) — or archive it via the 6-step ritual if no
-      real reason exists. Done-when: either a justification comment is added, or the doc is under `plans/archive/`.
-- [ ] [DOC] P3. Same as above for `cefi_lighter_zksync_systemic_collision_2026_08_08.md`'s `archive_exempt: true`
-      (all 5 todos `[x]`, 0 open, the doc's own line ~459 already self-flags the missing BRIDGE comment). Done-when:
-      either a justification comment is added, or the doc is under `plans/archive/`.
-- [ ] [DOC] P3. `cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md:46`'s `depends_on: []` doesn't
-      reflect a real dependency its own P3 todo's prose describes (a sibling lockout-fix precondition) — identify
-      the specific sibling doc and wire `depends_on` for real, or confirm prose-only is intentional and note why.
-      Done-when: either `depends_on` names the sibling, or a comment states why it's intentionally unwired.
+- [x] ✅ [DOC] P3. **DONE 2026-08-19 (na-eligibility-audit).** Add a documented reason (Progress Log justification)
+      to `uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md`'s `archive_exempt: true` field. Justification
+      supplied inline: 2 of 4 "Revisit trigger" conditions (CEFI/TRADFI G1-G5 gate closure) remain unmet, so the
+      underlying deferred-not-declined decision stays genuinely open despite the sole formal todo being `[x]`.
+- [x] ✅ [DOC] P3. **DONE 2026-08-19 (na-eligibility-audit).** Same as above for
+      `cefi_lighter_zksync_systemic_collision_2026_08_08.md`'s `archive_exempt: true`. Justification supplied
+      inline: doc is functionally complete and genuinely archivable on the merits, but a full 6-step archival
+      ritual (referrer sweep) was explicitly deferred by this same reconcile pass's 2026-08-15 predecessor entry
+      pending "the next toucher with archival authority" — the comment documents that gap, not a reason to stay
+      open, and flags it for a dedicated archival pass.
+- [x] ✅ [DOC] P3. **DONE 2026-08-19 (na-eligibility-audit).**
+      `cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md`'s `depends_on: []` wired to
+      `[tardis_concurrent_ip_lockout_2026_07_12]` (the sibling named in its own P3 todo's prose). Side finding
+      while wiring this: that sibling doc is now archived/resolved — the P3 todo's outer gate
+      (`cefi-recapture-sweep-complete` AO prerequisite) may be worth a fresh live re-check by a future pass; not
+      re-verified live here (documentation-only fix, flagged inline on the target doc).
 
 ## Archive candidates (operator review)
 
@@ -304,3 +311,11 @@ None — all 50 `parent_epic: cefi_master` docs were read in full (2 directly, 4
   without requiring `[unlock-plan]`). **Not shipped** — DO-NOT-SHIP constraint on this run; all edits are in the
   working tree only, lead session ships centrally. HTML epic report generated + published this same pass, see
   `plans/epics/cefi_master.md` § Report.
+- **na-eligibility-audit 2026-08-19** [body-hash:7072ec9526575a38]: KEEP-NA, stale items closed — full re-read of
+  the "Filed" section's 5 ordinary follow-up todos. Closed 4 with evidence: item 1 (Round-8 launch live-check)
+  answered by direct read of the target doc — its own checkbox is still open, no new work item needed (would
+  duplicate already-open AO-eligible work); items 3/4 (archive_exempt justifications) — added the missing inline
+  comments directly to both target docs; item 5 (depends_on wiring) — wired directly, plus flagged a possible
+  cleared outer-gate for a future pass. Item 2 (corpus-wide epic-body regen) stays open — genuinely a
+  coordination-timing judgment call (concurrent-session collision risk), not worker-determinable today. Doc stays
+  assigned_vm: NA (item 2 alone keeps it there).

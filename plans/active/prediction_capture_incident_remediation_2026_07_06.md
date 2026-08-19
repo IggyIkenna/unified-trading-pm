@@ -34,16 +34,15 @@ tags:
     remediation,
     observability,
   ]
-related:
-  [
-    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
-    /plans/archive/issues/is_daily_enum_prediction_sports_fail_despite_coercion_2026_07_06.md,
-    /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
-  ]
+related: []
   # STALE-REF FIX (plan_reconciler, cefi tranche, agt-2e82f7, 2026-08-16): first 2 entries repointed to their
   # archived location (both moved, targets confirmed existing there). A 4th entry,
   # `plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20.md`, was removed — confirmed genuinely
   # dangling (not found anywhere in plans/active/ or plans/archive/ after a fresh corpus-wide search).
+  # 2026-08-19 (na-eligibility-audit): all 3 remaining entries were themselves archived-plan citations, dropped to
+  # satisfy the archive-safety-ratchet gate (active docs must not cite /plans/archive/... in `related:`) — all 3
+  # remain preserved as inline body citations (the top blockquote cites the issue doc verbatim; the
+  # is_daily_enum handoff is cited twice in Workstream A's own text). No discoverability lost.
 created: 2026-07-06
 parent_epic: instruments_master
 assigned_vm: NA
@@ -549,3 +548,4 @@ orchestrator-dispatched).
 - **na-eligibility-audit 2026-08-16** [body-hash:e5f5a4cafd09098c]: KEEP-NA, valid — All 7 open todos live inside Workstream B Phases 1-4 (perp-adapter demo repoint + prod cutover), every one explicitly banner-tagged `[DESCOPED-NOT-MVP 2026-07-14]` (Phases 1-3) or `[RESOLVED-BY-RULING 2026-07-14: DESCOPED — perps…
 - **na-eligibility-audit 2026-08-17** [body-hash:ff45c04bcdb44229]: KEEP-NA, valid — Reaffirmed. All 7 open todos remain banner-tagged [DESCOPED-NOT-MVP 2026-07-14]/[RESOLVED-BY-RULING 2026-07-14] under the 2026-07-14 operator ruling that Kalshi/Polymarket perps prod access is not MVP — citation-hold class (a), reaffirmed across 6 prior audit passes. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
+- **na-eligibility-audit 2026-08-19** [body-hash:b21bdecd942fd8b9]: KEEP-NA, valid — Full re-read (552 lines), confirms exactly 7 open checkboxes, all tagged `[DESCOPED-NOT-MVP 2026-07-14]`/`[RESOLVED-BY-RULING 2026-07-14]` under the dated 2026-07-14 operator ruling (Kalshi/Polymarket perps prod access not MVP). Citation-hold class (a), reaffirmed across 7+ prior passes (2026-07-30 through 2026-08-17). Doc stays assigned_vm: NA.

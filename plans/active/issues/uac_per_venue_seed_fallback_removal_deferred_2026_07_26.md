@@ -25,12 +25,12 @@ scope: [engineer, admin]
 tags: [uac, fallback, operator-ruling, honest-coverage, deferred]
 related:
   [
-    /plans/archive/2026_08/cefi_misc_audits_and_hygiene_2026_07_25.md,
-    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
     /plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md,
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
   ]
+  # 2026-08-19 (na-eligibility-audit): dropped 2 archived-plan citations to satisfy the archive-safety-ratchet gate
+  # — both remain preserved in the `source:` field below, which cites each by name.
 created: 2026-07-26
 author: unknown
 last_updated: "2026-08-17"
@@ -48,11 +48,12 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_role: backend_engineer
-archive_exempt: true # FLAGGED 2026-08-18 (plan_reconciler) — no inline justification comment exists for this
-  # exemption (contra the `archive_exempt` convention requiring one), and this doc's sole todo is now [x] with 0
-  # open todos left. Not unilaterally archived this pass (the original reasoning for the exemption is unknown, and
-  # archival is a 6-step ritual with a referrer sweep) — routed to a future `/archive-candidates-audit` pass to
-  # either document the real reason or archive.
+archive_exempt: true # 2026-08-19 (na-eligibility-audit) — justification supplied (was flagged missing 2026-08-18
+  # by plan_reconciler): this is a "deferred, not declined" operator-ruling doc (2026-07-26 ruling) whose durable
+  # purpose is to hold the re-open trigger for the UAC seed-fallback-removal decision — 2 of its 4 "Revisit
+  # trigger" conditions (CEFI/TRADFI G1-G5 gates closing) are still unmet per the doc's own text, so the
+  # underlying decision stays genuinely open even though its sole formal todo is [x]. Archive only once the
+  # removal decision is actually revisited/closed.
 context_scope:
   [
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,

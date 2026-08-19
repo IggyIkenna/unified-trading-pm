@@ -34,10 +34,12 @@ resolved_by:
 locked_by:
 assigned_vm: planning
 assigned_role: data_engineering
-archive_exempt: true # FLAGGED 2026-08-18 (plan_reconciler) — the BRIDGE-comment gap this doc's own line 455 already
-  # self-notes (below) still has no inline reason attached to the field itself. Not unilaterally archived this pass
-  # (original reasoning unknown, archival is a 6-step ritual with a referrer sweep) — routed to a future
-  # `/archive-candidates-audit` pass to either document the real reason or archive.
+archive_exempt: true # 2026-08-19 (na-eligibility-audit) — justification supplied (was flagged missing 2026-08-18
+  # by plan_reconciler): doc is functionally COMPLETE (all 5 todos [x], "Recommended NEXT item: none" per its own
+  # 2026-08-11 Progress Log entry) and genuinely archivable, not exemption-worthy on the merits — a full 6-step
+  # archival ritual (referrer sweep) was explicitly deferred by plan_reconciler's 2026-08-15 pass pending "the
+  # next toucher with archival authority." This comment documents WHY the exemption is still sitting unresolved,
+  # not a substantive reason to keep it open — flagging for a dedicated archival pass.
 code_refs:
   [
     market-tick-data-service/scripts/migrate_cefi_tardis_filename_canonical_2026_07_17.py,

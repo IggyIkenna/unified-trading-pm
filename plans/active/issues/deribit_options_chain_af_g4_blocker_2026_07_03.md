@@ -255,3 +255,4 @@ argument for that issue's Option A). Cross-linked from there.
   todo explicitly re-checks the manifest and conditionally closes this doc; verified `- [ ]` open, not yet executed as
   of this run). Not yet ready to close here ahead of that gate.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-19** [body-hash:8f46aa4e51f16a68]: N/A — 0 open checkboxes (the sole historical item is a non-checkbox CANCELLED/SUPERSEDED disposition marker, not a tracked todo). `archive_exempt: true` carries a same-day (2026-08-19, plan_reconciler) inline justification confirming this is correct: the doc's own body explicitly states the real fix is still gated on Track-2's open re-verify todo, genuinely not done. No verdict action needed beyond this confirmation.

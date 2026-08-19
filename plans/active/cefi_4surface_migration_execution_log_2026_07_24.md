@@ -30,12 +30,13 @@ tags: [cefi, close-out, canonicalisation, manifest, execution-log, progress-log,
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
-    /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,
-    /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part2_2026_07_24.md,
   ]
+  # 2026-08-19 (na-eligibility-audit): dropped 3 archived-plan citations to satisfy the archive-safety-ratchet gate
+  # (active docs must not cite /plans/archive/... in `related:`) — all 3 remain fully preserved as inline body
+  # links (the history-part1/part2 pointers appear verbatim in the header blockquote; the line-cap-remediation
+  # source is cited in the `source:` field below), so no discoverability is lost.
 created: "2026-07-24"
 last_updated: "2026-07-25" # 2026-07-25: appended the parent's 4 remaining DELTA sections (01:30Z/01:20Z/05:55Z/13:35Z) + Deferred-work table + Step 8 verdict, completing the migration this file's header always intended
 parent_epic: cefi_master
@@ -950,3 +951,4 @@ The `/autonomous` loop is now OFF — resuming requires a fresh explicit invocat
   (the cicd-escalation-added Final 4-surface re-proof + archival gate) explicitly names as the doc to read instead of
   duplicate-driving from here.
 - **na-eligibility-audit 2026-08-17** [body-hash:19cf1ba844e6cee9]: KEEP-NA, valid — Reaffirmed. Sole open item (line 881, final 4-surface re-proof + this doc's own archival) is citation-hold class (a): redirects to `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md` as the doc carrying the live work. Doc stays assigned_vm: NA.
+- **na-eligibility-audit 2026-08-19** [body-hash:e93a608b86e0446d]: KEEP-NA, valid — Reaffirmed. Fresh full re-read (2 Read calls, offset-continued, 953 lines) confirms exactly 1 open item unchanged (line 881, final 4-surface re-proof + this doc's own archival), same citation-hold redirect to `issues/cefi_chain_drop_root_cause_and_heavy_io_vm_rule_2026_07_24.md`. Doc stays assigned_vm: NA.
