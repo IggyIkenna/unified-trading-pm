@@ -259,6 +259,15 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P2. Audit other repos for the SAME unscoped-tmux-fixture anti-pattern the bats suite had (any test
       touching real tmux sessions needs its OWN isolated `TMUX_TMPDIR`, never the ambient/inherited one) — this class of
       bug is not unique to `test_slot_git_status_claim_heartbeat.bats`, just the one that happened to be caught.
+    - **Workspace Audit Findings (2026-08-19)**:
+      - Checked: All test files, BATS suites, E2E test runners, Python unit tests, and TypeScript/Playwright test suites across all repositories in the workspace (`unified-trading-pm`, `agent-orchestrator`, `deployment-service`, etc.).
+      - **Safe / Isolated**:
+        - `unified-trading-pm/tests/test_slot_git_status_claim_heartbeat.bats` (isolated via per-test `TMUX_TMPDIR`).
+        - `unified-trading-pm/tests/test_session_start_collision_check.bats` (isolated via per-test `TMUX_TMPDIR`).
+        - All Python unit tests (mock `subprocess.run` / `tmux_spawn`, do not spawn real tmux servers on the host).
+        - All TypeScript/Playwright E2E tests (interact with seeded state / backend APIs, do not directly spawn raw tmux sessions).
+      - **Exposed / Unscoped**:
+        - `agent-orchestrator/dashboard/tests/e2e/run-e2e-backend-chat.sh` (E2E test fixture/backend runner script that spawns real `tmux new-session` / `tmux kill-session` without setting or isolating `TMUX_TMPDIR`, defaulting to the ambient default tmux socket `/tmp/tmux-<uid>/default`).
 - [ ] [INFRA] P3. Once confidence is high (extended clean window, no new `tmux_session_lost` bursts), tear down the
       `strace_tmux_server_supervisor.sh` + `auditctl tmux_exec_watch` diagnostic instrumentation — they were built for
       this investigation, not intended as permanent fixtures, and the strace log alone runs several MB/hour.
