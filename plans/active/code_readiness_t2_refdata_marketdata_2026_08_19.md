@@ -159,17 +159,10 @@ todos only to confirm they are data-movement, then leave it.
       survived — it does not independently re-verify that each row is attached to the right protocol.
       **Both chains are ~99.9% `empty_confirmed`** (SCROLL 122,053/122,183 with 0 captured; PLASMA 198,388/198,424).
       That may be legitimate pre-genesis absence — not investigated here, and deliberately NOT claimed as a defect.
-      Original text below.
-- [ ] [FROM-T1-CONTEXT] P3. _(original request, retained for the record)_ **Re-check chain-scoped output for the
-      four venues `KNOWN_CHAINS` silently dropped.** UAC's
-      `KNOWN_CHAINS` did not recognise the `SCROLL`/`PLASMA` chain tokens until unified-api-contracts@27ebc544b2,
-      so `if chain in KNOWN_CHAINS:` took the else-branch for `AAVE_V3-SCROLL`, `COMPOUND_V3-SCROLL`,
-      `AAVE-PLASMA` and `FLUID-PLASMA` in **instruments-service** `engine/orchestrator/writers.py` +
-      `engine/orchestrator/catalogue.py` and **MTDS** `scripts/rebuild_mtds_manifest.py`. The UAC side is fixed —
-      no code change is needed in your repos for the recognition itself. What T1 cannot check from outside your
-      tranche: whether already-written catalogue/manifest rows for those four venues took the wrong branch and now
-      need re-derivation. Read-only verification first; any actual data movement stays operator-gated per the
-      standing rules.
+- [x] [FROM-T1-CONTEXT] P3. _(T1's original request text, kept so the todo total never shrinks — a checkbox flip
+      must not delete a line.)_ **Re-check chain-scoped output for the four venues `KNOWN_CHAINS` silently
+      dropped.** ✅ 2026-08-20 — answered in full by the `[FROM-T1] P1` item above; this entry is the same request,
+      retained only for provenance.
 - [x] [FROM-T1] P2. **instruments-service hand-rolls its own `KNOWN_CHAINS` literals instead of importing UAC's.**
       ✅ 2026-08-20 — all three now import the UAC set. T1's stated cause (missing SCROLL/PLASMA) did NOT hold on
       measurement; the real drift was a missing `ASTER` plus a phantom `STARKNET`. Evidence:
@@ -207,7 +200,18 @@ todos only to confirm they are data-movement, then leave it.
       supersession. The honest statement today is that 3,962 (3,876 after the 2026-08-20 dedup fix) is the
       `(asset_group, venue, instrument_type, data_type)` projection on 2026-08-19 — chain and league omitted — and
       that the exhaustive count cannot be produced until the next two todos land.
-- [ ] [BACKEND] P0. **Add a chain-joined shard-atom projection so the deepest grain is computable at all.** Today
+- [x] [BACKEND] P0. **Add a chain-joined shard-atom projection so the deepest grain is computable at all.**
+      ✅ 2026-08-20 — shipped `instruments-service@551b25093c` (verified an ancestor of `origin/live-defi-rollout`;
+      landed blob re-read to confirm it carries the projection). `by_venue_instrument_type_data_type_chain` emits
+      `ag -> venue -> instrument_type -> data_type -> chain -> counts`, grouped on the SAME case-folded
+      instrument_type/data_type keys and the SAME level-4 display label as level 5, so the two projections name one
+      shard identically. Null chain spellings collapse to a single `""` via `_normalise_chain_series`, so an
+      inapplicable axis (cefi/tradfi/sports/prediction) is one blank key rather than being omitted — a missing key
+      and an inapplicable axis must not look alike to a reader. Registered in `_MERGEABLE_BY_AG_KEYS` so the
+      per-asset_group streaming merge carries it (omitting that would have silently dropped it on every real run —
+      the unit tests alone would not have caught that). 3 tests; full suite `5370 passed`; QG green (154s).
+      **ADDITIVE: no published number changes.** Re-cutting the headline shard count against it is the separate,
+      operator-gated supersession step, per W3. Today
       no projection crosses `chain` with `(venue, instrument_type, data_type)`, so the exhaustive DeFi shard count
       cannot be derived from the artefact by any consumer. `chain` is already read (`_READ_COLUMNS_WITH_CHAIN`) and
       already grouped marginally (`by_chain`), so this is an ADDITIVE projection, not a change to any published
@@ -319,7 +323,7 @@ todos only to confirm they are data-movement, then leave it.
 
 ### MTDS and MDPS
 
-- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Fix the multi-instrument candle bundle write race — when 2+ underlyings
+- [ ] [BACKEND] P0. **BLOCKED-OPERATOR** — Fix the multi-instrument candle bundle write race — when 2+ underlyings
       land in the same shared `ticks.parquet` bundle each is written via an independent overwrite with no
       download-existing merge. Evidence:
       `/plans/active/issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md`.

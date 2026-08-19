@@ -164,6 +164,25 @@ projection:
 (date, venue, instrument_type, data_type, source[, underlying, chain, league_id])
 ```
 
+> **Projected atom vs declared atom (2026-08-20).** The atom above declares `chain` and `league_id`, but the Layer-2
+> drill-down projections did not emit them: the deepest projection was
+> `by_venue_instrument_type_data_type`, and `chain` appeared only MARGINALLY as `by_chain` (`ag -> chain`), never
+> crossed with the atom. So the artefact under-projected its own declared atom, and no consumer could derive the
+> exhaustive shard count from it. Measured against the live 2026-08-19 payload: DeFi spans 23 chains, yet **2,778 of
+> its 2,804 `(venue, instrument_type, data_type)` cells sat on a BARE venue** (no `-CHAIN` suffix), so a single cell
+> silently covered every chain that protocol runs on; only 26 cells carried a glued `PROTOCOL-CHAIN` venue where the
+> chain was folded in. `cefi`/`tradfi`/`sports`/`prediction` each report exactly one chain and it is the empty string —
+> the axis is genuinely inapplicable there, not missing.
+>
+> - **`chain` — CLOSED 2026-08-20.** `by_venue_instrument_type_data_type_chain` now emits the chain-joined atom. It is
+>   **ADDITIVE**: every existing projection keeps its exact meaning and no published number changes. Re-cutting the
+>   headline shard count against it is a separate, operator-gated step, because per
+>   `/plans/epics/system_readiness_master.md` § W3 a denominator change lands as a dated supersession, never a silent
+>   edit.
+> - **`league_id` — STILL OPEN.** No league axis exists anywhere in the payload, though both this atom and the W3
+>   ruling name it. Sports contributes 822 cells across 46 venues with leagues entirely uncollapsed into them. Whether
+>   league belongs on the shard atom or stays a drill-down is denominator-defining and therefore an operator decision.
+
 `instrument_type` is a **real lowercase writer-grain column** (`spot`, `perpetuals`, `options_chain`, `futures_chain`,
 `pool`, `lending`, `prediction_market`, …) — NOT the UPPERCASE catalogue enum. The v2 harness MUST read
 `instrument_type` (the v1 harness only read `[capture_status, venue, data_type, date]` — adding `instrument_type` is the
@@ -597,6 +616,9 @@ interface marks the v2 additions optional; the route returns verbatim; the test 
   "by_venue_instrument_type_data_type": {
     "<ag>": { "<venue>": { "<instrument_type>": { "<data_type>": { "...counts...": 0 } } } }
   },
+  "by_venue_instrument_type_data_type_chain": {
+    "<ag>": { "<venue>": { "<instrument_type>": { "<data_type>": { "<chain>": { "...counts...": 0 } } } } }
+  },
 
   "by_day": {
     "<ag>": { "<YYYY-MM-DD>": { "...counts...": 0 } }
@@ -608,6 +630,7 @@ Key fields at each Layer-2 count node (`...counts...`): `captured`, `empty_confi
 `expected_unattempted`, `total`, `coverage_pct` (reachable formula), `all_shards_coverage_pct`.
 
 New-in-v2 keys: `schema_version`, `layer_1`, `by_venue_instrument_type`, `by_venue_instrument_type_data_type`, `by_day`;
+new 2026-08-20: `by_venue_instrument_type_data_type_chain` (see "Projected atom vs declared atom" below);
 new-in-v2 per-AG-cell fields: `instrument_gates_download`, `denominator_complete`, `layer1_completeness_pct`. Everything
 the v1 harness already wrote stays byte-for-byte compatible.
 
