@@ -279,6 +279,13 @@ positives: batch1's `[DOC] P1` launcher-naming todo is self-declared "doc-only s
 
 ## 8. `tradfi_consolidated_closeout_2026_07_18.md` is near-complete (1 open todo) — fold + archive, or keep as the index? [RECOMMEND OPTION B]
 
+> **STALE 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass)**: this item's own premise below is out of
+> date — `grep -c '^- \[ \]' plans/active/tradfi_consolidated_closeout_2026_07_18.md` now returns **0**, not 1 (the
+> doc's own frontmatter carries `archive_exempt: true` as of a later pass). The underlying fold-vs-keep-as-index
+> decision below is unaffected (still genuinely operator-gated, still unresolved) — only the "near-complete, 1 open
+> todo" framing is wrong; read it as "fully-done at the top level, decide whether it stays as the tranche index or
+> archives."
+
 **The two sides.** The plan is `status: active`, `locked_by:` empty, and has exactly **1** open todo —
 `plans/active/tradfi_consolidated_closeout_2026_07_18.md:234`: "[DATA] P2. Determine, per MVP cell in the table above,
 whether it has actually been proven wired through backfill=paper=live…". An AO-dispatchable derivative of that same todo

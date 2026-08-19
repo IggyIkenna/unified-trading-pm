@@ -60,6 +60,11 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/f2eae7f5-ac22-4029-9b29-15a379be6bb3 (generated 2026-08-19,
+`/plan-reconcile tradfi_master`)
+
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated open `- [ ]` todos INLINE in
 > its body (a frozen May-07/08 snapshot from when child plans were "folded in"). The backlog regen
 > (`regen_backlog_from_plan.py`) only scans `plans/active/*.md`, never `plans/epics/`, so those inline todos were never

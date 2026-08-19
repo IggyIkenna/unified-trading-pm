@@ -77,6 +77,15 @@ priority: P1
 
 # TradFi tbbo/NYSE+NASDAQ — fresh UNCLASSIFIED_ADAPTER_ERROR batch, DP-FETCH-009
 
+> **CORRECTED 2026-08-19 (plan_reconciler, epic-scoped tradfi_master pass)**: the frontmatter `title:`/`summary:`
+> above still lead with the original "capability-gate bypass suspected" hypothesis. That hypothesis is SUPERSEDED
+> — this doc's own `## UPDATE 2026-08-15` section below says plainly "this is NOT a capability-gate bypass driving
+> fresh Databento fetches"; the real, confirmed root cause is an MDPS `_get_local_timestamp_column` presence-only
+> bug, fixed and shipped (`market-data-processing-service@c5e0d68bcf`, verified ancestor of
+> `origin/live-defi-rollout` this pass). A reader who stops at the title/summary gets a materially wrong picture.
+> Not rewriting the frontmatter `title:`/`summary:` in place (several corpus referrers cite this doc by its exact
+> title text) — flagging here instead, at the point a reader actually lands.
+
 ## What I found
 
 Live-verified via `deployment_service.data_pipeline_monitors.meta_targets.market_data_bucket("tradfi")`'s

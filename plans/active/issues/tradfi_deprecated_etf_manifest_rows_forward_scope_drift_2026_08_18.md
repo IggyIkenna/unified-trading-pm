@@ -95,7 +95,7 @@ recaptured on every subsequent run.
 ## Todos
 
 - [ ] [DATA] P3. **Root-cause which capture path is still fetching/writing the deprecated-ETF tickers
-      (`ETHE`/`GBTC`/`BITO`/`FBTC`/`ARKB`/`FETH` at `NYSE`/`NYSE_ARCA`/`BATS`/`CBOE_BZX`)** going forward — check
+      (`ETHE`/`GBTC`/`BITO`/`FBTC`/`ARKB`/`FETH` at `NYSE`/`NYSE_ARCA`/`BATS`/`CBOE_BZX`) going forward** — check
       whether a venue adapter's own instrument-universe resolution, an MVP scope filter that doesn't cover these
       specific tickers, or a stale reference-data cache is the source. Open-ended investigation, not a bounded
       single action.

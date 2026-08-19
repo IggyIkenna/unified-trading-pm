@@ -703,7 +703,7 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
       `BLOCKED-ON:` itself, to avoid silently flipping that established dispatchable family. Annotated the todo doc
       with a DISPATCH-SAFETY NOTE explaining this.
 - [x] ✅ [REVIEW] P3. (ao-readiness)
-      plans/active/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md — VM-delete/kill
+      plans/archive/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md — VM-delete/kill
       decision tagged `[INFRA]` not `[OPERATOR]`. **DONE (verified 2026-08-16)**: already retagged 2026-08-12
       (/plan-reconcile) — "CORRECTED 2026-08-12 (/plan-reconcile): retagged `[INFRA]` → `[OPERATOR]`" is in the todo
       text itself.

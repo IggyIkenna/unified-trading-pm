@@ -365,7 +365,12 @@ context_scope:
       `ohlcv_1m`(699)/`ohlcv_15m`(342)/ `trades`(178)/`tbbo`(108), spans 677/712 days — looks systemic, not isolated.**
       Handoff: not "genuinely tiny" — flag for BLOCKED-OPERATOR-DECISION in the next todo.
 - [ ] [DATA] P1. **RULED 2026-07-28 — do NOT write off the 1,328-cell (29.8%) unrecoverable population; check the live
-      vendor first.** Was gated on an operator decision (loss is systemic, 677/712 days, concentrated ICE/CME/CBOE) —
+      vendor first.** > **Premise stale as of 2026-08-18 (plan_reconciler, epic-scoped tradfi_master pass, 2026-08-19)**:
+      the CME/GLBX.MDP3 portion (368/1,328 cells, 27.7%) is currently BLOCKED — `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`
+      still shows `status: blocked` as of its freshest entry (2026-08-18). ICE (853 cells) may proceed — that
+      billing doc's own 2026-08-15 test showed ICE succeeding. CBOE (107 cells) untested — verify before
+      proceeding. Do not run the CME-scoped vendor query until the billing doc's `[OPERATOR]` P0/P1 invoice todo
+      resolves. Was gated on an operator decision (loss is systemic, 677/712 days, concentrated ICE/CME/CBOE) —
       but per the theme + "external data is always available" + "Databento billing unblocked": the survey only proved
       absence from OUR GCS, not from Databento's live API. Query Databento for the specific cells; full backfill
       wherever it has the data (cost no object); only what's PROVEN unobtainable after that → permanent loss, citing the
@@ -883,7 +888,13 @@ concurrent load without checking** — if the sentinel doesn't update after a ge
 blindly; check the exact guard condition in `base-library.sh`/`base-service.sh` and/or wait for host contention to drop
 before concluding it's a real blocker.
 
-- `- [ ] [INFRA] P2. Diagnose why unified-api-contracts' full quality-gates.sh run (2026-07-22, under heavy host contention) printed ALL QUALITY GATES PASSED but never wrote .qg_last_passed_sha / .qg_content_sentinel — check the governor/contention-queue interaction with the sentinel-write guard in quality-gates-base/base-library.sh.`
+- [ ] [INFRA] P2. Diagnose why unified-api-contracts' full quality-gates.sh run (2026-07-22, under heavy host
+      contention) printed ALL QUALITY GATES PASSED but never wrote `.qg_last_passed_sha` / `.qg_content_sentinel` —
+      check the governor/contention-queue interaction with the sentinel-write guard in
+      `quality-gates-base/base-library.sh`. **UN-HIDDEN 2026-08-19 (plan_reconciler)** — this line was previously
+      wrapped in a stray leading/trailing backtick (`` - `- [ ] ... ` ``), making it invisible to every
+      checkbox-counting/dispatch tool (`grep -c '^- \[ \]'` never matched it); a real open todo silently dropped
+      from tracking. No content changed, only the malformed markdown fixed.
 
 ### 2026-07-22 continuation — both pending ships landed, KRX backfill launched for real
 

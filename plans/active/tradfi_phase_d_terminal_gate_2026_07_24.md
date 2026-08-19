@@ -515,7 +515,10 @@ tracked below as follow-up, not blocking this plan's core migration/manifest-rec
       tests/unit/test_pipeline_e2e_check.py once mtds_deployment_env_race_survives_single_worker_2026_07_23.md is
       resolved. **(na-eligibility-audit 2026-08-09: un-escaped from an inline-backtick-wrapped line -- was invisible to
       checkbox tooling; content unchanged, `mtds_deployment_env_race_survives_single_worker_2026_07_23.md` confirmed
-      still `status: open`.)**
+      still `status: open`.)** **SUPERSEDED 2026-08-16** — `mtds_deployment_env_race_survives_single_worker_2026_07_23.md`
+      independently re-verified `status: resolved` (see the na-eligibility-audit 2026-08-16 entry elsewhere in this
+      doc); this todo is now genuinely dispatchable, blocked only on the test-addition work itself, not the gating
+      doc's status.
 - `~~- [ ] [SCRIPT] P3. Fix IS's FX force/skip status label~~` — **SUPERSEDED 2026-07-23**: rather than relabel the
   honest-absence status, built the actual missing adapter. `instruments-service` had zero reference-data adapter for FX
   (`NO_ADAPTER_YET`) even though MTDS already has a fully-working Yahoo-sourced FX tick/OHLCV path — a research agent

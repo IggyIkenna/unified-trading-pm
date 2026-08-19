@@ -39,8 +39,11 @@ resolved_by:
 
 # Finalize — TradFi chain-bundle reverse derivation
 
-- [ ] [REVIEW] P2. Confirm the fix landed with evidence (skipped test re-enabled and green); flip the source
-      P2-OPERATOR-DECISION todo to done; archive this plan once done and unlocked.
+- [ ] [REVIEW] P2. Confirm the fix landed with evidence (skipped test re-enabled and green); flip
+      `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`'s P2-OPERATOR-DECISION todo to done (verified
+      2026-08-19: this is the doc that actually carries it, not the `depends_on` target
+      `tradfi_chain_bundle_reverse_derivation_ao_dispatch_2026_08_16.md`, which only references it); archive this
+      plan once done and unlocked.
 
 ## Progress Log
 
