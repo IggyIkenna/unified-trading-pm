@@ -48,8 +48,9 @@ last_updated: "2026-08-11"
 
 ## Todos
 
-- [ ] [REVIEW] P2. Once both of the source doc's remaining todos (N5r/N6r DeFi manifest rebuild-for-real-replace, N1b
-      CEFI ~698k-row reclassify) are done, reconcile their evidence back into
+- [ ] [REVIEW] P2. **Scope narrowed 2026-08-19 (plan_reconciler, cross-cutting) — N1b is done, per this same todo's
+      own 2026-08-11 verification note below; only N5r/N6r remain.** Once the source doc's remaining N5r/N6r (DeFi
+      manifest rebuild-for-real-replace) todo is done, reconcile its evidence back into
       `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`'s own checkboxes — re-verify the cited
       commit/manifest-state exists, don't trust a copied evidence line. Also re-check N1b's Step-4 enumerator dependency
       (flagged as unverified at ruling time) actually cleared before treating it as done.
