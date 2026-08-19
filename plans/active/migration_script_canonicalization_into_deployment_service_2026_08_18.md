@@ -402,15 +402,57 @@ actual leverage point §Pattern clustering's evidence points to.
       function, a path-rewrite rule (old canonical-path segment → new), and a verification pass (old shape absent,
       new shape present, row counts reconcile). Build against `canonicalize_defi_manifest_venue_2026_06_14.py` (an
       instruments-service Phase-3 target) as the worked example. Done-when: same bar as above.
+      **MOSTLY DONE (2026-08-18) — one done-when criterion NOT yet met.** `template_canonicalize.py` exists
+      (`CanonicalizeConfig`/`run_canonicalize`/`CanonicalizeResult`, hooks: `transform` (old-shape → new-shape row
+      rewrite returning `(df, n_changed)`), optional `path_rewrite`, optional `new_shape_predicate` — all routing
+      through `migration_common.py`), with a full worked example (`scripts/migrations/lib/templates/examples/
+      example_canonicalize_defi_manifest_venue.py`) reproducing `canonicalize_defi_manifest_venue_2026_06_14.py`'s
+      venue-spelling rewrite + path-rewrite + verification pass, and unit tests. `quality-gates.sh` green
+      (deployment-service). Shipped `deployment-service@c2557e5dfb`. **NOT done**: no real Phase-1 file was
+      refactored to IMPORT/parameterize the template — the real source script's DEX-factory-registry resolution
+      branch has a hard `instruments_service.*` import, which would violate the tier architecture's "no
+      service↔service deps" rule if folded into the generic (deployment-service-owned) template; documented in the
+      template's own module docstring as a deliberate scope boundary, not an oversight. **Remaining**: once/if a
+      genuinely generic (non-instruments-service-coupled) canonicalize target surfaces, refactor it to import this
+      template instead of hand-rolling.
 - [ ] [INFRA] P2. `template_reconcile.py` (cluster 3 — drift reconciliation & repair, 66 files' worth of precedent).
       Parameterizes: a two-source comparison function (manifest vs. GCS, or manifest vs. a derived-truth
       recomputation), a per-mismatch corrective-write function, and a mismatch-count report. Build against
       `reconcile_phantom_manifest_rows.py` (instruments-service Phase-3 target) as the worked example. Done-when:
       same bar as above.
+      **MOSTLY DONE (2026-08-19) — one done-when criterion NOT yet met.** `template_reconcile.py` exists
+      (`ReconcileConfig`/`run_reconcile`/`ReconcileResult`, hooks: `comparator` (boolean mismatch mask; may do its
+      own read-only GCS lookups since a reconciliation comparator needs a second source of truth
+      `migration_common.py` doesn't wrap), `corrective_write` (fixes only the mismatched subset), optional
+      `group_by_fn` for a per-group mismatch-count report — all template-owned I/O routes through
+      `migration_common.py`), with a full worked example (`scripts/migrations/lib/templates/examples/
+      example_reconcile_phantom_manifest_rows.py`) reproducing `reconcile_phantom_manifest_rows.py`'s bulk-list-
+      then-check comparator + 4-column corrective flip + per-`data_type` breakdown, and 9 unit tests.
+      `quality-gates.sh` green (deployment-service, 216s). Shipped `deployment-service@412482d831`. **NOT done**:
+      no real Phase-1/2/3 file was refactored to IMPORT/parameterize the template — the real source script
+      (`reconcile_phantom_manifest_rows.py`) lives in instruments-service, out of this template's own change scope.
+      **Remaining**: at Phase 3 (instruments-service relocation), refactor the relocated copy to import
+      `template_reconcile.py` instead of its own hand-rolled comparator/corrective-write logic.
 - [ ] [INFRA] P2. `template_backfill.py` (cluster 4 — backfill/populate missing value, 108 files' worth of
       precedent). Parameterizes: a "needs backfill" row predicate, a value-computation function, and an in-place
       write-back. Build against a Phase-2/3 target (`backfill_cefi_source_column.py`, market-tick-data-service) as
       the worked example. Done-when: same bar as above.
+      **MOSTLY DONE (2026-08-19) — one done-when criterion NOT yet met.** `template_backfill.py` exists
+      (`BackfillConfig`/`run_backfill`/`BackfillResult`, hooks: `needs_backfill` (row predicate), `compute_value`
+      (derives the missing value for flagged rows), `target_column` — snapshots before write by default, unlike
+      `template_purge.py`'s opt-in snapshot; built-in `BackfillValueComputationError` fail-closed check + post-write
+      `residual_needs_backfill_rows`/`verification_passed` re-check — all routing through `migration_common.py`),
+      with a full worked example (`scripts/migrations/lib/templates/examples/
+      example_backfill_cefi_source_column.py`) reproducing `backfill_cefi_source_column.py`'s predicate +
+      derivation shape, and unit tests. `quality-gates.sh` green (deployment-service, 216s). Shipped
+      `deployment-service@412482d831`. **NOT done**: no real file was refactored to IMPORT/parameterize the
+      template — the real source script (`backfill_cefi_source_column.py`) lives in market-tick-data-service, out
+      of this template's own change scope; it is already named as a Phase 3 `permanent`/`campaign`/`reusable-*`
+      relocation target. **Remaining**: once relocated by Phase 3, refactor it to import `template_backfill.py`
+      instead of its own hand-rolled chunked read/mask/derive/snapshot/write steps (note its chunked/streaming I/O
+      for CeFi's ~30M-row OOM avoidance and row-count STOP-ON-SURPRISE bound check are NOT part of the generic
+      template — documented in the template's own module docstring — and should stay as a local wrapper around the
+      template's hooks).
 - [ ] [INFRA] P2. `template_audit.py` (cluster 5 — read-only audit/investigation/verification, 74 files' worth of
       precedent — structurally distinct from the other 4: no `--apply`/mutation path needed at all, just a scan +
       structured report). Parameterizes: a scan function and an output formatter (text/JSON/CSV). Build against
@@ -726,3 +768,29 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
   scope. `status` stays `active`; this revision does not change the operator-confirmation-needed status of the
   remaining file-relocation-scope question (§Scope decision), only sharpens what "leave in place" means for the
   ~500-file population.
+- **2026-08-18/19 (autonomous session)**: Under the operator's `/autonomous` directive ("keep going til its all
+  done"), Phase 0 fully landed (10 per-repo `scripts/migrations/` subdirs + `self/` + `lib/`, 6 files moved into
+  `self/`, `migration_common.py` shared helpers, `.gitkeep` placeholders — `deployment-service@b7fb1584`,
+  `@233db8fd9b`, `@d6fed8bb6d`). Phase 0b: `template_purge.py` (`@8a1fdc1bc8` + `@6382489f65` fix-up),
+  `template_canonicalize.py` (`@c2557e5dfb` — **shipped earlier this session but its plan-checkbox annotation was
+  missed at the time; backfilled retroactively just now, no re-work needed, verified still green on disk**),
+  `template_reconcile.py` and `template_backfill.py` (both `@412482d831`, built by two parallel sub-agents scoped
+  to disjoint files within `scripts/migrations/lib/templates/`, independently re-verified via `quality-gates.sh`
+  before shipping — both agents' README "Template roster" row appends merged cleanly with zero conflict). All 4
+  templates share the fallback pattern flagged by every authoring agent: the real source script each template is
+  built against lives in a DIFFERENT repo (instruments-service or market-tick-data-service), so the done-when
+  bar's "at least 1 real file refactored to import it" could not be met without violating either repo-scope
+  discipline or the tier architecture's no-service-imports rule — each is left as a worked-example-only
+  "MOSTLY DONE", to be closed out when Phase 3 relocates the real target file into deployment-service. Phase 1:
+  instruments-service (`@ae66f2147c`, scope grew to cover `.reload()`/`.generation`/`.updated`/`.delete()`/
+  `upload_from_file`/bare `bucket.name`/`bucket.client`, not just the 3 originally-named methods) and
+  strategy-service (`@ca99ab7926`, fixed in place — NOT relocated, hard `strategy_service.*` imports would violate
+  tier architecture) GCS-wrapper-bug fixes; 7 of the 15 instruments-service files subsequently relocated
+  (`instruments-service@8edcfa118d` / `deployment-service@8be2626876`), 8 left in place as archive-in-place
+  candidates. **Remaining**: Phase 0b's `template_audit.py` + README roster table completion (needs all 5 rows);
+  Phase 2 (7 small/medium-repo relocations); Phase 3 (mega-repo recurring-shaped subset); Phase 4 (new
+  `migration-script-ssot.md` codex doc + `script-homes.md` correction + `infrastructure_master.md` update); Phase
+  5 (cross-reference to `repo_scripts_governance_audit_2026_06_18.md`). Sibling plan
+  `alerting_service_escalation_ladder_centralization_2026_08_18.md` reached full completion + archival this same
+  session (`plans/archive/2026_08/`) — unrelated to this plan's scope, noted here only because both were the
+  session's two Priority-2 items.
