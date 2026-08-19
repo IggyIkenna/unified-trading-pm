@@ -65,13 +65,19 @@ rules themselves are owned by
 [show-dont-show-discipline](/codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md) — read the
 codex rule, not a plan's restatement of it.
 
-- [ ] [DOC] P0. **STOP-SHIP: remove the banned client name from `strategy-service-deep-dive.html`** — 6 hits,
+- [x] ✅ [DOC] P0. **STOP-SHIP: remove the banned client name from `strategy-service-deep-dive.html`** — 6 hits,
       independently verified by direct grep 2026-08-18. **One hit is inside an SVG `<text>` element**, so a
       prose-only sweep misses it and a visual read of the rendered page will not show it in the body copy. The name
       is used for Copper's collateral-mirroring service, so it is factually correct and still forbidden: this
       rewrite keeps the mechanism (collateral mirrored to a venue without leaving custody) and drops the product
       name. Not a find-and-replace — the surrounding custody explanation needs rewording to stay readable. **Then
-      grep all six artefacts, not just this one.**
+      grep all six artefacts, not just this one.** — unified-trading-pm@4067ff23da. All 6 hits reworded to
+      describe the mirroring mechanism without naming the product (lede §05, SVG alt text, SVG label, callout
+      heading, callout body ×2 in `strategy-service-deep-dive.html`); re-grepped the full `commercial-model/`
+      directory afterward — the only other `clearloop` hit in the corpus is the internal (non-client-facing)
+      `elysium-carveout-deferral-message-2026-08-11.md`, out of this item's client-artefact scope. Also fixed a
+      blocking archive-safety-ratchet gate hit in an unrelated file
+      (`cefi_consolidated_closeout_aggregated_sources_2026_07_24.md`, repointed to codex) while shipping this.
 - [ ] [DOC] P0. **Remove the performance figures from `platform-architecture.html` and the ODUM Phase2 email** —
       violates the owning plan's "no performance figure anywhere until the overlays land" rule. Verified strings:
       `platform-architecture.html` "consistent positive annualised returns, generally ranging from single digits
