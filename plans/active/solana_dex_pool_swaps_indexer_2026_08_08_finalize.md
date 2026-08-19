@@ -52,16 +52,11 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile evidence into the source scoping doc.** Re-verify every commit cited by
-      `solana_dex_pool_swaps_indexer_2026_08_08.md`'s completed todos actually exists (`git show <sha>` /
-      `git merge-base --is-ancestor`, never trust the plan's own citation blind), then update
-      `/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`'s "Open actions" todo + Progress Log to
+- [ ] [REVIEW] P2. **Reconcile evidence into `/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md`** — re-verify every commit cited by `solana_dex_pool_swaps_indexer_2026_08_08.md`'s completed todos actually exists (`git show <sha>` / `git merge-base --is-ancestor`, never trust the plan's own citation blind), then update that scoping doc's "Open actions" todo + Progress Log to
       point at the finished implementation plan, closing that doc's own sole open item by citation. Repo:
       unified-trading-pm.
-- [ ] [DOC] P2. **Archive both docs.** Once the plan above is fully done (all 5 todos `[x]`, unlocked) and the
-      reconciliation todo above has landed, run the standard 6-step archival ritual on
-      `solana_dex_pool_swaps_indexer_2026_08_08.md` — and separately confirm whether
-      `solana_dex_pool_swaps_indexer_scope_2026_07_12.md` (the source scoping issue doc) now has zero open todos after
+- [ ] [DOC] P2. **Run the standard 6-step archival ritual on `/plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md`** once it is fully done (all 5 todos `[x]`, unlocked) and the reconciliation todo above has landed — and separately confirm whether
+      `/plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md` (the source scoping issue doc) now has zero open todos after
       the reconciliation above; if so, archive it too via the same ritual (task_template.md §4's rule 4: "for a
       batch-style extraction plan, also check each SOURCE doc"). Fix every corpus referrer path in the same pass. Repo:
       unified-trading-pm.
@@ -76,3 +71,9 @@ context_scope:
   "finalize plan stuck at draft" ratchet). Per task_template.md §4 / ag-closeout-audit SKILL.md's 2026-07-30 fix: a
   gated finalize plan should be `active` from authorship.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
+- **plan-reconcile 2026-08-19 (mtds_mdps_master batch A)**: fixed a line-1 completeness defect (task_template.md §3) on
+  both open todos — each todo's raw first physical line trailed off mid-sentence ("Re-verify every commit cited by" /
+  "...unlocked) and the") with the target doc path(s) and archival condition pushed onto continuation lines the AO
+  dispatcher's `_parse_open_todos` never parses. Rewrote both so the target doc, method, and hard constraint are on
+  line 1. No content/scope change, no evidence flip — both todos remain correctly gated by `gate_on_depends: true`
+  (parent plan still 2/5 todos done as of this pass).

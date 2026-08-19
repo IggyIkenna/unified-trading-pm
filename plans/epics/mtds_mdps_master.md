@@ -91,6 +91,11 @@ locked_since: 2026-05-20
 
 # Data pipeline master coordination — 2026-05-20
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/2d3e1593-bafe-4eab-8bb6-df43cdd8b0d4 (generated 2026-08-19,
+`/plan-reconcile mtds_mdps_master`)
+
 > **🔵 CONSOLIDATION 2026-06-26 — live MTDS/MDPS work now runs through 2 themed survivors.** Per the operator's
 > instruments/MTDS amalgamation
 > ([`instruments_mtds_plan_consolidation_2026_06_26`](../archive/2026_06/instruments_mtds_plan_consolidation_2026_06_26.plan.md),
