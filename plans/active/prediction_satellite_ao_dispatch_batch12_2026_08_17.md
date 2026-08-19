@@ -106,7 +106,7 @@ source: >-
       (enrichment script, if recoverable). Source:
       `plans/active/issues/prediction_batch4_deferred_residuals_2026_08_16.md` todo 2 (line 92).
 
-- [ ] [SCRIPT] P2. **Execute the already-implemented, already-held null-`instrument_type` stamp for the 11,540
+- [ ] [OPERATOR][SCRIPT] P2. **Execute the already-implemented, already-held null-`instrument_type` stamp for the 11,540
       re-accumulated prediction manifest rows (9,260 per-CID + 2,280 CQG-bundle) found by todo 1's 2026-08-17
       enumeration.** Run `market-tick-data-service/scripts/canonicalize_prediction_manifest_2026_07_18.py
       --bundle-mode normalize --apply --confirm-prod-write` (additive per-VM-shard write, race-free vs the
@@ -115,6 +115,20 @@ source: >-
       sanctioned maintenance pattern for this durability gap). Verify post-run: a fresh dry-run of the same script
       shows 0 rows in TARGET #2's in-scope count. Do NOT pass `--remove-stragglers` (a separate, higher-risk in-place
       CAS action) unless explicitly re-scoped. Repo: market-tick-data-service.
+      **[OPERATOR] GATE ADDED 2026-08-19 (plan_reconciler, agt-4a2f8b) — CONTRADICTION with
+      `prediction_phase_ab_residuals_2026_07_24.md`'s still-open finding (i):** that doc frames the disposition of
+      the SAME 2,280 CQG-bundle rows as an unresolved 3-way operator decision — "normalize the bundle to
+      `PREDICTION_MARKET` too" (what `--bundle-mode normalize` does) **vs** "enforce SSOT bundle null" (which would
+      instead UN-STAMP the 60,427 already-`PREDICTION_MARKET` + 17,361 lowercase-`prediction` bundle rows) **vs**
+      "leave inconsistent" — no operator ruling on that 3-way choice is cited anywhere in this doc. This todo's own
+      "RESOLVED BY PRECEDENT" reasoning above only actually justifies the PER-CID (9,260-row) half ("a per-CID null
+      is pure defect residue, not a design question") — it does not address why the CQG-bundle (2,280-row) half
+      should bypass phase_ab's still-open decision. **Do NOT run with `--bundle-mode normalize` until the operator
+      rules on phase_ab_residuals' finding (i)** (or a new ruling explicitly supersedes it — cite it here if so). The
+      per-CID-only half of this todo remains safe to run today via `--bundle-mode leave` (the script's own documented
+      `--bundle-mode {normalize,leave}` flag), which stamps only the 9,260 per-CID nulls without touching the
+      disputed CQG-bundle rows — re-scope to `--bundle-mode leave` if picked up before the ruling lands, and drop the
+      `[OPERATOR]` tag once re-scoped that way (a per-CID-only run is not the disputed action).
 
 ## Deferred
 

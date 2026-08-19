@@ -402,7 +402,13 @@ context_scope:
       `instrument_type`/`data_type` are consolidator DEDUP-KEY columns → the additive shard adds the corrected rows but
       leaves ~652k OLD rows as stragglers (doubling); reaching the target % needs an old-row sweep = the "naive direct
       `_index` rewrite" that resurrects on `--force` rebuild → the run needs a tombstone/removal strategy. Both
-      documented in the script docstring + printed by dry-run. **✅ MANIFEST `--apply` APPLIED 2026-07-19 (tick 18) —
+      documented in the script docstring + printed by dry-run. **CROSS-REF added 2026-08-19 (plan_reconciler,
+      agt-4a2f8b)**: `prediction_satellite_ao_dispatch_batch12_2026_08_17.md` todo 4 picks up the execution of the
+      per-CID half of finding (i)'s stamp (9,260 rows) as "resolved by precedent," but does NOT independently resolve
+      the CQG-bundle half (2,280 rows) of this still-open 3-way decision — that todo has been `[OPERATOR]`-gated
+      pending this decision (see its own 2026-08-19 note) rather than left to run `--bundle-mode normalize`
+      unreviewed. Whoever rules on finding (i) should read that todo's note for the narrower per-CID/CQG-bundle scope
+      split before ruling. **✅ MANIFEST `--apply` APPLIED 2026-07-19 (tick 18) —
       `market-data-tick-pred-prd/_index` CAS REPLACE, generation `…161980856`→`…195626006`, 745,107 rows, 12,524
       stragglers removed, `instrument_type` 11.80%→100% / `data_type` 100% / `source` 100%, 0 captured cells lost;
       snapshot `_index/backups/pre_prediction_canonicalize_20260719T103301075148Z.parquet`; consolidator paused→resumed
