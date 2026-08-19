@@ -311,8 +311,31 @@ _(remaining rows populated as each attempt completes)_
   `scripts/dev/bakeoff/run-lane.sh` (sequential per-slot queue runner over `run-attempt.sh`), nohup'd, independent
   of this chat session continuing. Slot 24's remaining 5 tasks will be launched once its task 1 process exits (its
   own `run-attempt.sh` invocation is what I'm waiting on for a completion notification — cannot start task 2 on the
-  same checkout while task 1's subprocess is still mid-edit on task 1's branch). GLM (slots 26/27) and Codex/Luna
-  (slot 29) not yet dispatched — see blockers above.
+  same checkout while task 1's subprocess is still mid-edit on task 1's branch). GLM (slots 26/27) not yet
+  dispatched — see blocker above, unchanged.
+
+- **2026-08-19 (later) — Codex/Luna lane proven + dispatched; task 1 (slot 24) PASSED with full poll data; a
+  pre-existing unrelated frontmatter violation blocks shipping the bake-off scripts themselves.**
+  Task 1 (Gemini 3.5-flash-lite, `ag-closeout-auditor` audit) finished clean: exit 0, real citations for all 4
+  checks, committed locally not pushed, 10.1 min wall-clock, 83 turns, 730K cumulative input tokens — full row in
+  Results table above. Slot 24's remaining 5 tasks launched immediately after.
+  **Codex/Luna de-risked**: its own code warned the tool-use path was unproven; `uv sync` in slot 1's
+  agent-orchestrator pulled the already-declared-but-not-installed `openai-codex` dependency, the bridge server
+  started clean on :8769, and a real tool_use smoke test (same shape as yesterday's Gemini/Kimi/Gemma tests)
+  returned a genuine `tool_use` block, `stop_reason: "tool_use"` — PASS. Codex/Luna lane (slot 29) dispatched
+  against its full 6-task queue.
+  **Could not ship `scripts/dev/bakeoff/{run-attempt,usage-poll,run-lane}.sh` via quickmerge yet**: the tree-wide
+  re-gate step failed on `plans/active/issues/manifest_hygiene_red_all_2026_08_19.md` — a PRE-EXISTING, unrelated
+  auto-filed doc (from `manifest_hygiene_daily.py`) genuinely missing most required frontmatter fields (no
+  `doc_type`/`status`/`nature`/`asset_group`/`tags` at all in real HEAD). Attempted a mechanical fix, but it
+  cascaded into a further `check_ag_closeout_linkage` requirement (needs a `related:` link to the correct AG's
+  consolidated closeout plan) that needs real triage judgment I don't have context for — reverted the attempt
+  cleanly (`git checkout HEAD --`, confirmed clean) rather than leave a half-fixed foreign doc. **Flagging for the
+  operator**: this doc is a RED manifest-hygiene finding across 5 asset groups (cefi/defi/prediction/sports/tradfi)
+  that's also sitting with broken frontmatter — worth someone's attention independent of this bake-off. The
+  bake-off scripts themselves stay uncommitted in slot 1 for now (fully described in this Progress Log, reproducible
+  from the text above if lost) — will retry shipping once that foreign doc is fixed by whoever owns it, or route
+  around it if the tree unblocks another way.
 
 - **2026-08-19 (later, same session) — operator go-ahead received, dispatch unblocked; new polling requirement
   added.** Operator: "yes bro, go ahead and use whatever account you have to use and creds you need. test all these
