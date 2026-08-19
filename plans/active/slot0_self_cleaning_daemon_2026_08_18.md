@@ -182,3 +182,85 @@ liveness check so it never fights a live occupant (including slot 0's own live s
   P2 REVIEW todo above)**: `unified-trading-system-ui` dirty since 2026-08-08,
   `unified-trading-ci` diverged since 2026-08-11, `unified-trading-pm` dirty since 2026-08-10,
   `agent-orchestrator` dirty since 2026-08-12.
+
+## Progress Log
+
+- **2026-08-19 (slot 33)**: Picked up todo 1. Added `slot0_self_clean_interval_seconds: int =
+  Field(default=3600, gt=0)` to `TuningDefaults` in `server/config.py`, immediately after
+  `tmux_prune_interval_seconds` (same shape/comment style). Live-verified:
+  `get_config().tuning.slot0_self_clean_interval_seconds == 3600`. Committed
+  (`agent-orchestrator@4ec54c82`, `Quickmerge: agent` trailer pre-stamped) — **but Pass-1
+  `quality-gates.sh` came back RED on an otherwise-clean tree, for two causes verified
+  pre-existing and unrelated to this one-line diff**: (1) all 6 tests in
+  `tests/test_ao_self_pull_dirty_gate.py` fail because the fixture's synthetic origin repo is
+  created via a bare `git init` and this host has no `init.defaultBranch=main`, so the
+  fixture's own `fetch origin main` step fails before real assertions run; (2) the dashboard's
+  `vitest`/`tsc --noEmit` fail because `recharts` is declared in `dashboard/package.json` but
+  was never `npm install`ed (`dashboard/node_modules/recharts` doesn't exist). Filed
+  `/plans/active/issues/ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19.md` (2 fix
+  todos) and declared repo-blocker **RB-38a23126** (`agent-orchestrator`, `qg_red`, escalation
+  `agt-2beb85`) per RULES.md § 4b. **`agent-orchestrator@4ec54c82` sits committed locally,
+  1 commit ahead of `origin/live-defi-rollout`, NOT yet pushed** — this is the correct,
+  intentional state (pushing an unshipped commit around a red gate is banned); it is
+  recoverable from the slot-33 checkout / git reflog regardless of session boundaries. Todo 1's
+  checkbox stays unflipped until the commit actually lands on origin — do not flip it on the
+  strength of "the code is written and correct."
+
+  **Resume instructions for whoever picks this up next** (goalposts, not just the next step —
+  this plan has 8 more todos untouched, all downstream of todo 1):
+
+  1. **First, check RB-38a23126's status** (`GET /api/repo-blockers` or the dashboard) and
+     whether `agent-orchestrator@4ec54c82` has reached `origin/live-defi-rollout`
+     (`git merge-base --is-ancestor 4ec54c82 origin/live-defi-rollout`). If the blocker
+     resolved and the commit is on origin: flip todo 1's checkbox with that citation, then
+     continue to step 2. If the exact commit `4ec54c82` is somehow gone from the local
+     checkout (unlikely — it's a real git object) but the field is still absent from
+     `server/config.py`, re-apply the same one-line `Field` addition (see the diff shape
+     above) rather than re-deriving it from scratch.
+  2. **Todo 2** — create `server/slot0_self_clean.py` with `Slot0SelfCleanLoop`, mirroring
+     `TmuxPruner`'s daemon-thread shape exactly (`server/tmux_pruner.py` lines ~149-183):
+     `__init__(interval_seconds: int | None = None)` sourcing the new tuning field, a
+     `threading.Event`-gated `.start()`/`.stop(timeout=5.0)`, a named daemon thread
+     (`"orchestrator-slot0-self-clean"`), `_loop()` wrapping `_tick()` in
+     `try/except Exception: logger.exception(...)`.
+  3. **Todo 3** — `_tick()` part 1 (clean no-op path): resolve slot 0's checkout via
+     `worktree_setup.slot_dir(0)`, call `worktree_clean_check.check_slot_clean(0, slot_dir)`,
+     return on `report.is_clean` with no action/no activity-log row.
+  4. **Todo 4** — `_tick()` part 2 (dirty-state resolution): when dirty, call
+     `worktree_clean_check.resolve_dirty_state(slot_dir, 0, mode="commit_and_push",
+     timestamp_iso=<UTC now>)`. Before wiring, read `classify_maker_liveness`'s real signature
+     in `server/worktree_clean_check/_liveness.py` (already read this session — it's the
+     dead-vs-live-session gate the same library uses for a worker respawn) rather than
+     copying `autospawn.py`'s call args blind, since there is no "new occupant replacing an
+     old one" concept for a self-check.
+  5. **Todo 5 (P2)** — `_tick()` part 3, branch-state healing: run AFTER dirty-state
+     resolution (a dirty tree fails `check_slot_branch_state`'s `git merge --ff-only`
+     otherwise). Call `check_slot_branch_state(0, slot_dir, host_operator())`; if
+     `should_stop`, call `heal_dead_slot_branch_quarantine(...)` — never `reset --hard`, never
+     touch a provably-live peer.
+  6. **Todo 6** — activity-log row for every non-no-op tick, event name `slot0_self_clean`,
+     mirroring `autospawn.py`'s `log_activity(db, "slot_dirty_state_resolved", ...)` call
+     shape (`server/autospawn.py` lines ~1017-1022 — the same file already read this session,
+     the exact call is further down past the truncated 1042-line view; grep
+     `slot_dirty_state_resolved` to jump straight to it).
+  7. **Todo 7** — wire `Slot0SelfCleanLoop` into `server/server.py`'s lifespan
+     startup/shutdown, the SAME block as `pruner = tmux_pruner.TmuxPruner()` and
+     `kicker = worker_liveness.WorkerLivenessKicker()` (grep `TmuxPruner()` in `server.py` to
+     find the exact block — not yet located this session, `server.py` is 1392 lines).
+  8. **Todo 8 (P2, [REVIEW])** — live-verify against slot 0's ACTUAL current dirty-repo state
+     at pickup time (do not trust this plan's 2026-08-18 authoring-time snapshot listed
+     above — it is now over a day stale).
+  9. **Todo 9 (P2, [BACKEND])** — unit tests for `Slot0SelfCleanLoop._tick()`'s three branches
+     (clean/dirty-dead/dirty-live), mirroring `TmuxPruner`'s or `ResourceHistoryLoop`'s test
+     file shape (call `_tick()` directly, no real thread/wait needed).
+  10. **Todo 10 (P3, [DOC])** — add `Slot0SelfCleanLoop` alongside
+      `ResourceHistoryLoop`/`TmuxPruner`/`WorkerLivenessKicker` wherever those three are
+      documented together in `/codex/04-architecture/` or `/codex/05-infrastructure/`.
+
+  **Sequencing note**: todos 2-10 do not themselves depend on the QG-red gate being fixed —
+  they can be WRITTEN and locally-verified while RB-38a23126 is still open — but nothing in
+  this plan can actually SHIP (quickmerge push) until `agent-orchestrator`'s quality gate goes
+  green, since every todo lands in the same repo. A worker picking this up while RB-38a23126
+  is still open should keep implementing todos 2-10 and let the shippable-unit commits queue
+  up locally (or coordinate with whichever worker/escalation is fixing the QG-red issue) rather
+  than treating the whole plan as blocked.
