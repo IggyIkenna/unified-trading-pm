@@ -52,8 +52,8 @@ context_scope:
 Gated on [`client_artefact_remediation_nickai_2026_08_18.md`](/plans/active/client_artefact_remediation_nickai_2026_08_18.md).
 
 - [ ] [REVIEW] P1. **Verify every claimed edit against the live HTML** — open the file, do not trust checkbox text.
-- [ ] [REVIEW] P1. **Confirm zero `live` badges remain**, and that the §2/§3 rewrite states the TRADE-only-live /
-      10-of-11-types-501 reality plainly rather than burying it.
+- [x] [REVIEW] P1. ✅ **Confirm zero `live` badges remain**, and that the §2/§3 rewrite states the TRADE-only-live /
+      10-of-11-types-501 reality plainly rather than burying it. **Verified against live HTML 2026-08-19: `class="st st-live"` appears only in the CSS rule (`.st-live {`) + 2 legend entries — zero section badges; §2/§3 names "only the TRADE action is live end-to-end" + "the other 10 action types return HTTP 501" plainly.**
 - [ ] [REVIEW] P1. **Confirm the forward claim is gone**, not merely softened.
 - [ ] [REVIEW] P1. **Reconcile finding status** back into the audit reports' summary tables, open → resolved.
 - [ ] [DOC] P2. **Archive the parent plan** once every todo above is done — standard 6-step ritual.
