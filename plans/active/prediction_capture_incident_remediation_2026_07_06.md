@@ -80,7 +80,7 @@ context_scope:
 > **This plan tracks the ACTIONABLE remediation only. The diagnosis, root-cause evidence (live Kalshi API probe,
 > contamination timeline, why-nothing-alerted), the demo→prod switch-cost analysis, and the operator-decision context
 > are the RECORD and live in the issue doc — this plan references them, it does not duplicate them:**
-> [`plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`](issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md).
+> [`/plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md`](/plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md).
 
 ## Codex SSOTs (read before touching the relevant workstream; post-phase audit updates them)
 

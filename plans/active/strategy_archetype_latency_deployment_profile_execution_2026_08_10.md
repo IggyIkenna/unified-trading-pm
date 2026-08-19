@@ -32,7 +32,7 @@ created: 2026-08-10
 last_updated: "2026-08-19" # retagged strategy_master -> execution_master (execution_master_scope audit) -- this plan
   # is deployment-profile/co-location infra derivation from archetype latency needs, not strategy config/parameterization;
   # matches the operator's named "co-location" execution_master scope. See
-  # /plans/active/issues/execution_master_scope_scattered_across_strategy_and_cross_cutting_2026_08_19.md
+  # /plans/archive/2026_08/issues/execution_master_scope_scattered_across_strategy_and_cross_cutting_2026_08_19.md
 parent_epic: execution_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

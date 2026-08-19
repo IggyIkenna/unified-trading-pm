@@ -14,7 +14,7 @@ summary: >-
   for a single P2 task — audit-scope follow-up.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; generic VM-launcher dedup/collision-check hygiene across all launcher families, not data-pipeline-specific
 stage: [data]
 repos: [deployment-service]
 scope: [engineer, admin]

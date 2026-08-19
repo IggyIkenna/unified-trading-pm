@@ -324,15 +324,16 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       tier they're already dispatching at, which is a DIFFERENT mechanism than what this todo adds.
       If full 3-way parity is wanted, that's real remaining work, not yet scoped. Tests:
       `tests/test_account_failover_resume.py` (10 new/changed).
-- [ ] [BACKEND] P3. **Close the todo-6 scope gap** — give fresh dispatch (AutoSpawn's routine
-      refill) and resume-after-kill (`_resume_pass`) the SAME non-strict cross-tier retry
-      `_handle_usage_cap` now has, via `autospawn.select_account_with_non_strict_retry` (already
-      shipped, agent-orchestrator@204bc8e1fa — the helper exists, just isn't called from these two
-      sites yet). Today they only get the existing, unconditional sonnet-tier DeepSeek-blend for
-      whichever tier they're already dispatching at — not a model_strict-gated cross-tier retry.
-      Not urgent (both already degrade gracefully — queue/retry-next-tick — on total exhaustion,
-      unlike the mid-session case which sat frozen indefinitely before todo 6). Repo:
-      agent-orchestrator.
+- [x] [BACKEND] P3. **Close the todo-6 scope gap — shipped 2026-08-19, agent-orchestrator@539a88d400.**
+      Gave fresh dispatch (AutoSpawn's routine refill) and resume-after-kill (`_resume_pass`) the
+      SAME non-strict cross-tier retry `_handle_usage_cap` already had, via
+      `autospawn.select_account_with_non_strict_retry` (extended with `preferred_provider`/
+      `sequential_preferred_account_id`/`forced_provider`/`task` passthrough so all 3 call sites
+      could share it). Also fixed a latent bug found while wiring this: a substituted account's
+      headroom was only ever confirmed under the sonnet-tier search, but the spawn still requested
+      the original (opus/fable) model string — now spawns at the tier actually confirmed. Tests:
+      `tests/test_autospawn.py` (2 new + 10 fixed for the `_spawn_param_plan` tuple-arity change),
+      `tests/test_account_failover_resume.py` (2 new). Repo: agent-orchestrator.
 - [ ] [DATA] P3. **Once `multi_provider_model_capability_bakeoff_2026_08_19.md`'s synthesis todo
       lands** (its per-(model, complexity-tier) summary table), replace this doc's flat
       "all-but-haiku" equivalence-class placeholder with the real tiering data it produces — update

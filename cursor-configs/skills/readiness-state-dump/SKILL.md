@@ -42,17 +42,36 @@ python derive_readiness.py --verbose --limit 20          # per-venue-per-mode de
 python derive_readiness.py --venue OKX-FUTURES --mode LIVE --verbose
 python derive_readiness.py --asset-group cefi --json
 python derive_readiness.py --skip-strategy-probe         # if strategy-service/.venv is unavailable
+python derive_readiness.py --skip-execution-probe        # if execution-service/.venv is unavailable
+python derive_readiness.py --skip-mtds-probe             # if market-tick-data-service/.venv is unavailable
 ```
 
-The strategy position-adapter half additionally shells out **once** (batched across every venue in scope, not
-per-venue) to `strategy-service/.venv` as a subprocess (`_strategy_position_probe.py`) — never an import, since UAC
-code must not depend on a T4 service and this script itself is UAC-scoped otherwise. If that venv is missing, the
-position-adapter half reports `unverified` for every row, honestly, rather than being silently skipped.
+Three cross-venv subprocess probes back the legs that live outside UAC/instruments-service:
+
+- The strategy position-adapter half shells out **once** (batched across every venue in scope, not per-venue) to
+  `strategy-service/.venv` (`_strategy_position_probe.py`).
+- The four execution-service surfaces (`execution_orders`/`execution_fills`/`execution_trades`/
+  `execution_account_balance`) shell out **once** (batched) to `execution-service/.venv`
+  (`_execution_order_capability_probe.py`).
+- The `market_tick_data` LIVE leg (reused for both PAPER and LIVE rows, see below) shells out **once** (no per-venue
+  input — it reads a global registry) to `market-tick-data-service/.venv` (`_mtds_live_feed_probe.py`).
+
+None of these are imports — UAC code must not depend on a T4 service, and this script itself is UAC-scoped
+otherwise. If a venv is missing, the corresponding leg(s) report `unverified` for every row, honestly, rather than
+being silently skipped.
 
 **Verified live 2026-08-17** against real production data (288 venues x 3 modes = 864 rows, ~20s): e.g.
 `OKX-FUTURES` at `BATCH` correctly derives `strategy=not_ready` even though its archetype half is `ready` — because
 `position_read_mode_availability('OKX-FUTURES').batch == "none"` — a concrete proof the AND-logic (`checks.strategy_leg`)
 does not let a strong archetype signal paper over a missing position adapter.
+
+**Extended 2026-08-19** (W1's two 2026-08-19 P0s) to the full six-surface table and re-verified live against
+`OKX-FUTURES`: `execution_orders` correctly derives `unverified` at `BATCH` (no real check exists for a mode that
+never invokes a real adapter) but `ready` at both `PAPER` and `LIVE` (UAC `validate_operation(place_order,
+env=testnet|mainnet)` resolves supported) — a concrete proof the orders leg is genuinely mode-aware, not a
+mode-invariant proxy repeated three times. `market_tick_data` likewise flips from the `BATCH`-only coverage.json
+verdict to the shared live-feed verdict on `PAPER`/`LIVE` (`unverified` — `OKX-FUTURES` is registered in
+`WS_FEED_CONNECTOR_FACTORIES`), the same verdict on both rows since paper always consumes the live feed.
 
 ## What's real vs. `unverified`, and why (the proxy discipline)
 
@@ -65,23 +84,28 @@ Every leg is one of `ready` / `not_ready` / `unverified`. The policy (see `scrip
   non-readiness; presence of a capability is not hard evidence of operation). Per CLAUDE.md: _"a row count, an exit
   code, a green test, 'the connector exists' are all proxies."_
 
-| Leg                                  | Real check reused                                                                                                                | Why (fact vs. proxy)                                                                                                                                                |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **declared**                         | UAC `VENUE_DATA_TYPE_CAPABILITIES` membership                                                                                    | Fact — the registration itself                                                                                                                                      |
-| **instruments_service**              | `coverage.json`'s `layer_1.by_venue[venue].expected_tuples > 0`                                                                  | Fact — real IS-catalogue enumeration                                                                                                                                |
-| **market_tick_data** (BATCH only)    | `coverage.json` `captured` counts per observed data_type                                                                         | Fact — observed capture. PAPER/LIVE report `unverified`: coverage.json is not mode-partitioned, so live/paper capture state is not observable from this artifact    |
-| **market_data_processing**           | `venue_data_types & MDPS_DERIVABLE_DATA_TYPES`                                                                                   | Proxy — capability only; a future increment should read MDPS's own manifest rows for real observed consumption (absence still gives a real `not_ready`)             |
-| **features**                         | `venue_strategy_consumability.orphaned_data_types()` (the shipped contract-step-17/18 module, reusing `FEATURE_REQUIRED_INPUTS`) | Fact — an authoritative SSOT declaration, same tier as `declared`                                                                                                   |
-| **strategy — archetype half**        | `venue_strategy_consumability.satisfying_archetypes()`                                                                           | Fact — `ARCHETYPE_FEATURE_GROUPS` is a declared SSOT, not a proxy                                                                                                   |
-| **strategy — position-adapter half** | strategy-service's own `position_read_mode_availability(venue)` (mode-aware: batch/live/paper)                                   | Fact — a real, audited per-(venue,mode) table                                                                                                                       |
-| **strategy (overall)**               | AND of both halves above                                                                                                         | Fails if either half fails; `unverified` only if neither fails and at least one is unverified                                                                       |
-| **execution_transfers**              | UAC `VENUE_WALLET_CAPABILITIES` membership                                                                                       | Proxy — declares wallet _structure_, not a proven working rail; absence still gives a real `not_ready`                                                              |
-| **execution_instruction**            | _(none wired yet)_                                                                                                               | Always `unverified` — `execution-service/execution_service/v2/policy_resolver.py` is the real `InstructionActionV2`-adaptor registry a future increment should read |
+| Leg                                       | Real check reused                                                                                                                                                                                                                | Why (fact vs. proxy)                                                                                                                                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **declared**                              | UAC `VENUE_DATA_TYPE_CAPABILITIES` membership                                                                                                                                                                                    | Fact — the registration itself                                                                                                                                      |
+| **instruments_service**                   | `coverage.json`'s `layer_1.by_venue[venue].expected_tuples > 0`                                                                                                                                                                  | Fact — real IS-catalogue enumeration                                                                                                                                |
+| **market_tick_data** (BATCH)              | `coverage.json` `captured` counts per observed data_type                                                                                                                                                                         | Fact — observed capture                                                                                                                                             |
+| **market_tick_data** (PAPER, LIVE)        | MTDS `WS_FEED_CONNECTOR_FACTORIES` registry membership (via `_mtds_live_feed_probe.py`) — the SAME verdict on both rows, since paper always consumes the live feed (§ 0 of the reconciliation SSOT, never a separate paper feed) | Proxy — a registered connector class doesn't confirm the live feed is actually flowing; absence still gives a real `not_ready`                                      |
+| **market_data_processing**                | `venue_data_types & MDPS_DERIVABLE_DATA_TYPES`                                                                                                                                                                                   | Proxy — capability only; a future increment should read MDPS's own manifest rows for real observed consumption (absence still gives a real `not_ready`)             |
+| **features**                              | `venue_strategy_consumability.orphaned_data_types()` (the shipped contract-step-17/18 module, reusing `FEATURE_REQUIRED_INPUTS`)                                                                                                 | Fact — an authoritative SSOT declaration, same tier as `declared`                                                                                                   |
+| **strategy — archetype half**             | `venue_strategy_consumability.satisfying_archetypes()`                                                                                                                                                                           | Fact — `ARCHETYPE_FEATURE_GROUPS` is a declared SSOT, not a proxy                                                                                                   |
+| **strategy — position-adapter half**      | strategy-service's own `position_read_mode_availability(venue)` (mode-aware: batch/live/paper)                                                                                                                                   | Fact — a real, audited per-(venue,mode) table                                                                                                                       |
+| **strategy (overall)**                    | AND of both halves above                                                                                                                                                                                                         | Fails if either half fails; `unverified` only if neither fails and at least one is unverified                                                                       |
+| **execution_orders** (BATCH)              | execution-service adapter presence (`get_supported_venues()`, via `_execution_order_capability_probe.py`)                                                                                                                        | Proxy — BATCH never invokes a real adapter (simulated fills), so presence alone can't confirm order capability; always `unverified` when an adapter is present      |
+| **execution_orders** (PAPER, LIVE)        | UAC `validate_operation(venue, "place_order", env=testnet\|mainnet)`                                                                                                                                                             | Fact — the same declared per-env capability execution-service's own `factory._run_capability_preflight` gates real order placement on                               |
+| **execution_fills**, **execution_trades** | execution-service adapter presence (`BaseCLOBAdapter.get_fills()` is implemented by construction wherever an adapter is registered — no distinct trades-vs-fills method exists)                                                  | Proxy — presence only; absence still gives a real `not_ready`. Mode-invariant: adapter presence doesn't vary by mode                                                |
+| **execution_account_balance**             | execution-service adapter presence (`BaseCLOBAdapter.get_account_state()`)                                                                                                                                                       | Proxy — same tier as fills/trades above                                                                                                                             |
+| **execution_transfers**                   | UAC `VENUE_WALLET_CAPABILITIES` membership                                                                                                                                                                                       | Proxy — declares wallet _structure_, not a proven working rail; absence still gives a real `not_ready`                                                              |
+| **execution_instruction**                 | _(none wired yet)_                                                                                                                                                                                                               | Always `unverified` — `execution-service/execution_service/v2/policy_resolver.py` is the real `InstructionActionV2`-adaptor registry a future increment should read |
 
 **Not covered by this pass, and left honestly `unverified` or absent from the leg set**: ML-published-output
-readiness (Pub/Sub-for-live / GCS-for-batch — no static signal), execution transfers' proof-of-a-working-rail beyond
-declared structure, and error-code-classification coverage (step 10). These are legitimate `unverified` states per
-the operator's own ruling, not gaps this dump papers over.
+readiness (Pub/Sub-for-live / GCS-for-batch — no static signal), execution transfers' and fills/trades/balance's
+proof of real observed operation beyond declared/registered structure, and error-code-classification coverage (step
+10). These are legitimate `unverified` states per the operator's own ruling, not gaps this dump papers over.
 
 ## The overall (rollup) verdict
 
@@ -104,8 +128,11 @@ case.
 
 ## Guardrails
 
-Read-only end to end: reads `coverage.json` via UTL `cloud_interface`, reads UAC registries, runs one bounded
-subprocess into `strategy-service`'s own venv calling a function that itself performs no I/O. Never writes GCS, never
-mutates a registry, never launches a VM, never calls a live venue API. If `coverage.json` cannot be read, the
-`instruments_service`/`market_tick_data` legs report `unverified` for every row rather than aborting the whole dump —
-the other legs (declared, features, strategy, execution) do not depend on it.
+Read-only end to end: reads `coverage.json` via UTL `cloud_interface`, reads UAC registries, and runs three bounded
+subprocess probes (`strategy-service`, `execution-service`, `market-tick-data-service`, each into that service's own
+venv) calling functions that themselves perform no I/O — the execution-service probe never constructs a real adapter
+instance (it only checks registry/capability membership), and the MTDS probe only side-effect-loads connector
+modules to populate a registry, it never opens a socket. Never writes GCS, never mutates a registry, never launches a
+VM, never calls a live venue API. If `coverage.json` cannot be read, the `instruments_service`/`market_tick_data`
+legs report `unverified` for every row rather than aborting the whole dump — the other legs (declared, features,
+strategy, execution) do not depend on it.

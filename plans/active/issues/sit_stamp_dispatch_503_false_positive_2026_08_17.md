@@ -100,9 +100,10 @@ specific class was diagnosed down to the log line rather than assumed to be a re
 
 ## Follow-up
 
-- [ ] [SCRIPT] P3. In `system-integration-tests`' full-workspace-sit stamp-verification step, when `STAMP_FAILURES` is
-      non-empty but the invariant runner's own per-repo results were all PASS (no FAILED/SKIPPED invariants), emit a
-      distinct signal (e.g. a `failure_class=stamp_infra_only` GitHub Actions output/annotation). Have
+- [ ] [SCRIPT] P3. **Line-1 rewritten 2026-08-19 (plan_reconciler, task_template.md §3 line-1-completeness).** Emit a
+      distinct signal (e.g. a `failure_class=stamp_infra_only` GitHub Actions output/annotation) in
+      `system-integration-tests`' full-workspace-sit stamp-verification step when `STAMP_FAILURES` is non-empty but
+      the invariant runner's own per-repo results were all PASS (no FAILED/SKIPPED invariants). Have
       `unified-trading-pm`'s SIT-failure escalation/issue-filing steps (`sit-unlock.yml`) read that signal and include
       the actual per-invariant PASS/FAIL list (or "all green — stamp-dispatch-only failure, likely transient GitHub
       API 503s") in the `escalate-to-orchestrator` `context` payload, instead of the generic "identify which pending

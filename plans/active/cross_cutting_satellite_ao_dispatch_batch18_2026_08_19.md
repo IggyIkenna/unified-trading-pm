@@ -88,12 +88,12 @@ source: >-
       the filing plan_reconciler run). Multi-location edit in a large umbrella doc. Done when: both refs resolve to
       real paths and the rolling-status table reads 6. Source: `plan_reconciler_findings_cross_cutting_2026_08_18.md`
       "Plans not reached" item 1.
-- [ ] [DOC] P3. **`ag_closeout_audit_cross_cutting_parked_2026_08_08.md`** — its own 2026-08-16 "5 archived/6
-      active" summary doesn't match its own itemized list immediately above it (actual, hunter-tallied by the
-      filing plan_reconciler run: 6 archived/4 active/1 resolved-elsewhere). Re-verify the count against the live
-      corpus before correcting (the filing run's tally is a starting point, not a pre-verified fact — confirm
-      before writing it in). Done when: the summary line matches a freshly re-counted itemized list. Source:
-      `plan_reconciler_findings_cross_cutting_2026_08_18.md` "Plans not reached" item 3.
+- [x] ✅ [DOC] P3. ~~**`ag_closeout_audit_cross_cutting_parked_2026_08_08.md`** — its own 2026-08-16 "5 archived/6
+      active" summary doesn't match its own itemized list immediately above it~~ — **SUPERSEDED 2026-08-19
+      (ag-closeout-audit cross-cutting reconciliation pass)**: rather than re-counting a now-stale snapshot, this
+      run verified all 13 mistag targets + the 1 orphan directly against live state, flipped every resulting todo,
+      and archived this doc along with its 3 siblings (`_08_01`, `_08_06`, `_08_07.md`). The count-mismatch this
+      item asked about no longer applies — there is no remaining "active" member of this doc family post-archival.
 - [ ] [DOC] P3. **`is_catalogue_g1_root_audit_log_2026_07_24.md`** — `repos:` frontmatter lists 6 repos
       (agent-orchestrator, batch-live-reconciliation-service, deployment-api, deployment-service, deployment-ui,
       e2e-testing), none of which the doc's actual content touches (it's entirely instruments-service + UAC,

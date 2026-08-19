@@ -171,22 +171,48 @@ Measured against the shipped leg table in `cursor-configs/skills/readiness-state
 surfaces) and `execution_instruction` is explicitly _"none wired yet"_. **Modes are batch (simulated) / paper
 (testnet and-or simulated per declared possibility) / live.**
 
-- [ ] [BACKEND] P0. **Extend the readiness dump to the full surface × mode matrix**, with the service split above —
+- [x] [BACKEND] P0. ✅ **Extend the readiness dump to the full surface × mode matrix**, with the service split above —
       strategy-service owns positions, execution-service owns orders / fills / trades / account balance. Reuse real
       checks per the skill's own fact-vs-proxy policy; a surface with no machine check prints `unverified`, never a
-      silent pass.
-- [ ] [BACKEND] P0. **Add a LIVE-feed leg to `market_tick_data`** — it currently answers batch only, so "can this
+      silent pass. — `unified-trading-pm@6817d944ec`. Added `execution_orders`/`execution_fills`/`execution_trades`/
+      `execution_account_balance` legs to `checks.py` + a new `_execution_order_capability_probe.py` cross-venv
+      probe (execution-service's own `get_supported_venues()` adapter registry + UAC's `validate_operation`
+      per-env `place_order` capability — real checks, not invented proxies). Verified live 2026-08-19 against
+      `OKX-FUTURES`: `execution_orders` derives `unverified` at BATCH, `ready` at PAPER/LIVE (UAC capability
+      resolves supported for both testnet and mainnet); `execution_fills`/`execution_trades`/
+      `execution_account_balance` derive `unverified` (adapter registered, no per-operation capability declaration
+      exists to go further) — no surface silently passes. SKILL.md's leg table updated to match.
+- [x] [BACKEND] P0. ✅ **Add a LIVE-feed leg to `market_tick_data`** — it currently answers batch only, so "can this
       venue's market data be pulled live?" is unanswered for every venue. Paper needs no separate feed leg: per
       [paper-batch-live-reconciliation](/codex/09-strategy/operational/paper-batch-live-reconciliation.md) § 0,
       **paper always consumes the LIVE feed**, never a testnet feed — testnet is an execution sub-mode, and a
       testnet price series would break the determinism proof by construction. So market data is a two-feed
-      question (batch + live), not three.
-- [ ] [BACKEND] P0. **Archetype readiness is CODE completeness, not data availability.** The existing
+      question (batch + live), not three. — `unified-trading-pm@6817d944ec`. Added `checks.mtds_live_feed()` (MTDS's
+      own `WS_FEED_CONNECTOR_FACTORIES` registry, read via a new `_mtds_live_feed_probe.py` cross-venv probe that
+      calls MTDS's own `connectors.register_all()` + `connector_registry.registered_venues()`) and wired
+      `derive_readiness.py` so PAPER and LIVE rows reuse the SAME live-feed verdict, while BATCH keeps the
+      pre-existing coverage.json-observed verdict — no separate paper feed leg was added. Verified live 2026-08-19
+      against `OKX-FUTURES`: BATCH → `not_ready` (coverage.json, zero captured), PAPER and LIVE → identical
+      `unverified` verdict (registered in `WS_FEED_CONNECTOR_FACTORIES`, live data flow itself unconfirmed).
+- [x] [BACKEND] P0. ✅ **Archetype readiness is CODE completeness, not data availability.** The existing
       `strategy — archetype half` leg uses `satisfying_archetypes()`, which answers "which archetypes can this
       venue's DATA satisfy" — a different question from "are this archetype's code paths and hooks complete for
       batch / paper / live". Nothing answers the latter. Build it as a skill or script where the hooks are
       machine-detectable; where they are not, record a dated agent audit rather than leaving the cell blank. This
-      supersedes the vaguer "readiness applies to archetypes too" framing below.
+      supersedes the vaguer "readiness applies to archetypes too" framing below. — `unified-trading-pm@73c9e0036a`
+      (`cursor-configs/skills/archetype-code-completeness/`). Checks 5 machine-detectable hooks across all 60
+      `StrategyArchetype` members: `engine_factory` (`factory.ARCHETYPE_ENGINE_REGISTRY`), `param_schema`
+      (`PARAM_SCHEMA_REGISTRY`), `target_universe_catalog` (`specs_for_archetype()`), `allocator_rank`
+      (`ALLOCATOR_ARCHETYPE_REGISTRY`, mode-invariant), plus one mode-specific dispatch leg per BATCH
+      (`STRATEGY_TYPE_TO_SLOT`) / PAPER (`paper_run_handler.py`'s 9 named tick-loader frozensets) / LIVE
+      (`topology_enforcement.load_topology_requirements()`). Where no clean registry lookup exists (paper's
+      non-DeFi-carry dispatch fallback, live's dispatch below the shared `V2EngineOrchestrator`), emits a DATED
+      AGENT AUDIT record (2026-08-19) rather than guessing. Verified live 2026-08-19 against real strategy-service
+      code (60 archetypes × 3 modes = 180 rows): counts cross-validate exactly against a direct read of every
+      source registry (32 factory-registered engines, 35 param schemas, 8 dedicated allocator ranks, 12 paper
+      tick-loader hits, 60/60 topology docs present). Rollup ~6 ready / ~47 not_ready / ~7 unverified per mode —
+      only 32/60 archetypes have an engine at all today, the `VOL_*`/unbuilt `MARKET_MAKING_*` family accounting
+      for most of the gap.
 - [ ] [DOC] P1. **One shared readiness audit feeds BOTH client artefacts** (operator ruling 2026-08-19) — Elysium
       and Nick AI take the same underlying audit, not two per-artefact ones. It belongs to the shared parent
       remediation plan, not duplicated into the per-file children.
@@ -272,6 +298,36 @@ while still lacking a manual-live path, or vice versa, and today's matrix has no
       check.
 
 ## W3 — Granularity as a first-class dimension
+
+### Coverage denominator — the shard space is NOT a Cartesian product (operator ruling 2026-08-19)
+
+The coverage SSOT already forbids the naive cross-product: per
+[honest-coverage-model](/codex/02-data/honest-coverage-model.md), the expected matrix is keyed by
+**`(asset_group, instrument_type)` at the writer/lowercase grain**, never the broad `DATA_TYPES_BY_ASSET_GROUP`
+superset, "because using it as the denominator over-counts". The operator's 2026-08-19 ruling extends that:
+
+- Take the dimensions that **actually exist for each shard at its deepest granularity** — data_type, chain,
+  instrument_type, and per-AG axes — never a uniform product across all venues.
+- **Sports gets instrument_type and chain too**, with **leagues** as a real axis. **Fixtures are excluded from the
+  shard COUNT** (too noisy) but still belong in the full denominator.
+- The **full denominator = shards × available days**. The **combinatoric view drops days** — that is the
+  human-friendly number. Percentage completion is computed against the full denominator.
+
+- [ ] [BACKEND] P0. **Reconcile the shipped denominator against this ruling.** Today's headline is 48.54% over a
+      119,500,618 volume-weighted denominator across 3,960 shards. Confirm whether 3,960 is the true deepest-grain
+      shard count including per-AG axes (sports leagues especially) or a coarser projection — the operator's
+      expectation is that a genuinely exhaustive count is LARGER. Any change to the denominator is a change to
+      every published coverage number, so land it as a dated supersession, never a silent edit.
+- [ ] [BACKEND] P0. **The readiness dump is coarser than the coverage model — close the gap.**
+      `readiness_pipeline_stage_per_shard_2026_08_18.json` is `venue × asset_group × mode` (864 rows) and its rows
+      carry no `instrument_type` or `data_type`, so it cannot answer the per-shard question at all. Scope is
+      pipeline-only (declared → instruments_service → market_tick_data → MDPS → features), which is CORRECT and
+      should stay: strategy and execution are ephemeral — they scale with config iterations and client count, so a
+      percentage is meaningless there. Coverage % is a statement about the pipeline up to features, and should say so.
+- [ ] [DOC] P1. **Its `grain` field is mislabelled** — it declares `grain: instrument_type` while no row carries an
+      `instrument_type` key. Anyone trusting the label believes they have a finer breakdown than exists. Fix the
+      writer, not just the file.
+
 
 - [ ] [BACKEND] P0. **Model coverage per (venue × instrument_type × data_type × granularity)** — candles versus tick
       entering MTDS are different coverage questions, and coverage may be **better at one granularity and worse at
@@ -660,6 +716,44 @@ tracked item, wherever it lives."**
       coincidence does not scale to ~300–500 agent tasks/day. Fold this into the existing daily
       `/plan-reconcile` sweep rather than adding a new mechanism.
 
+## W22 — Strategy/execution messaging and the external instruction API
+
+Operator ruling 2026-08-19: the bridge from a strategy's decision to execution is currently unmeasured and,
+per a workspace-wide search on 2026-08-19, unbuilt end-to-end — the only live instruction path is the manual one
+(`ManualOperationHandler → LiveOrchestrator.execute_instruction()`), not an automated strategy-to-execution bridge.
+This workstream is that bridge, plus what it takes to expose the same instruction contract to an external client
+two ways: we host it, or they run our container themselves. Surfaced while auditing
+[`platform-external-api-walkthrough.html`](/codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html)
+§25 for [`client_artefact_remediation_nickai_2026_08_18.md`](/plans/active/client_artefact_remediation_nickai_2026_08_18.md).
+
+- [ ] [BACKEND] P0. **Strategy → execution instruction delivery over messaging, not a service dependency.** Same
+      UTL `EventTransport` facade market data already uses — Pub/Sub-backed, keyed on what the subscriber needs.
+      A direct service-to-service call is explicitly out — this is a T4 service boundary.
+- [ ] [BACKEND] P0. **Features-service → execution subscription.** Execution subscribes to only the feature groups
+      it needs, not a broadcast of everything features-service produces.
+- [ ] [BACKEND] P0. **Every strategy-emitted instruction sinked to GCS, one by one, for audit and analysis** —
+      reuse the existing manifest/shard pipeline rather than inventing a parallel one; queryable via BigQuery
+      external tables. Distinct from market-tick-data aggregation (W2/W3), which is a separate axis.
+- [ ] [BACKEND] P0. **Three execution-service deployment topology, one schema, protocol per deployment**:
+      internal (Pub/Sub, our own strategy-service), external-automated (registered/allow-listed clients, HTTP or
+      WebSocket depending on the latency bar), manual (DART or an external trading UI/API, HTTP — manual trading
+      has no latency floor to defend). Same `StrategyInstructionEnvelope` across all three.
+- [ ] [BACKEND] P0. **External hosting, two ways**: we run and maintain the execution-service deployment for a
+      registered client, OR they run the same image themselves (Dockerized, config-driven, our hot-reload config
+      model per W6) — on their infrastructure or ours. The call shape is identical either way.
+- [ ] [BACKEND] P0. **Complete the instruction action vocabulary past TRADE** — the other 10 action types on
+      `StrategyInstructionEnvelope` currently return HTTP 501; wire each for both the internal and external paths.
+- [ ] [BACKEND] P0. **Add kill-switch and flatten-position as instructions**, not only as internal system behaviour
+      (W15/security kill-switches already exist as an operational control) — a caller must be able to send them,
+      scoped the same way the internal kill-switch is (all-live / per-archetype / per-venue).
+- [ ] [BACKEND] P1. **Broker and routing configuration via the existing `venue_constraints` field** — no new
+      schema needed, per operator direction 2026-08-19; population and validation, not design.
+- [ ] [BACKEND] P1. **Registered-client management for the external-automated deployment** — who is allow-listed,
+      and how a new client gets onboarded.
+
+Codex SSOTs: `/codex/02-data/live-data-persistence-and-event-log.md` (EventTransport facade),
+`/codex/04-architecture/tier-and-import-architecture.md` (no service→service dependency).
+
 ---
 
 ---
@@ -721,6 +815,21 @@ the self-inflicted-conflict guard repeatedly) · `unified_trading_ci_ff_pull_cro
       it true is a re-run, not an edit. When a doc closes, drop it from here rather than marking it closed twice.
 
 ## Definition of done for the epic
+
+### The goalpost — the ONLY work that may still be pending (operator ruling 2026-08-19)
+
+When this epic is done, everything is **complete in code**. The only things still outstanding may be:
+
+1. **Backfills still running** — batch data landing.
+2. **Venue connectivity** — private feed and public feed, orders and trades.
+3. **Market data live.**
+4. **Testnets, where they exist.**
+5. **Strategy archetypes code-ready for batch / paper / live — pending testing with real data.**
+
+Anything outside those five that is not code-complete is REMAINING WORK, not an acceptable end state. This is the
+filter to audit against: the question is never "does the document match reality", it is "what is not yet
+code-complete, and is it on this list".
+
 
 - [ ] [BACKEND] P0. **Every venue with a code path has a derived batch / paper / live state**, with `unverified`
       surfaced honestly where a check does not exist.

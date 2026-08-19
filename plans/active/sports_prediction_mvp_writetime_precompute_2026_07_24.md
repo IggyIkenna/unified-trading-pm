@@ -10,7 +10,10 @@ summary: >-
   that established this.
 status: active
 nature: process
-asset_group: [cross-cutting]
+asset_group: [sports, prediction] # corrected 2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass) -- was
+  # [cross-cutting]; content is 100% sports/prediction manifest-schema precompute, filename-prefixed
+  # sports_prediction_ -- classic fork-inherited-tag pattern; parent_epic (deployment_and_user_management_master) is
+  # not one of cross-cutting's 5 data epics either.
 stage: [meta]
 repos:
   [

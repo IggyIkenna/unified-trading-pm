@@ -15,7 +15,7 @@ summary: >-
   live credential.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [defi] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; Glassnode is an on-chain analytics vendor (DeFi-only scope), not multi-AG
 stage: [data]
 repos: [market-tick-data-service, unified-api-contracts]
 scope: [engineer, admin]

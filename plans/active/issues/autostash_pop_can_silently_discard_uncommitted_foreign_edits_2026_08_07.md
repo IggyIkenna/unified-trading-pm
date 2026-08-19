@@ -327,3 +327,20 @@ understanding the root cause to be valuable.
   opportunistic (needs a live reproduction in progress to investigate, not independently schedulable), todo 2 is
   deliberately paired with todo 1's still-open investigation per the 2026-08-10 verdict's own reasoning
   (automating stash-drops while the underlying race is unresolved risks destroying another session's genuine WIP).
+- **ag_closeout_auditor 2026-08-19 (cross-cutting tranche, dispatch agt-ae73cd, slot 27)**: new live corroboration,
+  a NARROWER trigger variant than any prior entry — the two colliding processes were not two independent sessions,
+  but a top-level session and its OWN forked sub-agent sharing the identical `.git` (a `subagent_type: "fork"`
+  Agent-tool spawn, not an isolated worktree). Two separate incidents in ~10 minutes: (1) the top-level session's
+  uncommitted edit to `manifest_consolidator_job_name_registry_mismatch_2026_08_15.md` was silently reverted twice
+  by the fork's own `safe-doc-push.sh`-driven `git pull --rebase --autostash` reconcile cycles running concurrently
+  in the shared worktree (recovered by re-applying the edit and re-shipping); (2) the fork's own uncommitted edits
+  to 2 files (`retirement_completeness_pollutant_reverify_ice_still_live_2026_08_15.md`,
+  `sports_prediction_mvp_writetime_precompute_2026_07_24.md`) were swept into a `safety-snapshot: pre-reconcile
+  quarantine` stash by the TOP-LEVEL session's own reconcile cycle — recovered via `git stash show -p stash@{0} --
+  <path>` per the doc's own documented recovery recipe, re-applied by hand by the fork. Zero data loss (both fully
+  recovered), but real coordination overhead was spent catching and resolving live. Confirms todo 2's DONE
+  reproduction ("needs the SAME `.git` directory two processes operate on concurrently") in the most common
+  possible shape this workspace now has for hitting it — a fork of one's own session is an everyday pattern, not an
+  edge case, so this hazard is broader than "two unrelated concurrent slots." Full incident writeup:
+  `/plans/active/issues/ag_closeout_audit_cross_cutting_parked_2026_08_19.md` Part C. No code changed by this
+  entry — corroboration only, per the doc's own established pattern of logging rather than acting on todo 3 blind.

@@ -25,7 +25,7 @@ related:
 created: 2026-06-16
 parent_epic: strategy_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only # was: orchestrator-agent — corrected 2026-08-19 (plan_reconciler, cross-cutting) — only valid NA-paired value
 priority: P1
 estimate_class: research
 estimate_baseline_ai_days: 3

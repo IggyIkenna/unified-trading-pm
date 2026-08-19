@@ -26,7 +26,12 @@ summary: >-
   catches it, and only after the heartbeat budget is exceeded).
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [cross-cutting] # corrected 2026-08-19 (ag-closeout-audit cross-cutting tranche, meta-sweep) -- was [meta]; content
+  # is manifest-consolidator Cloud Run job-name registry/monitoring drift spanning multiple asset groups
+  # (instruments/market-data consolidator jobs, DP-WATCHER-005/006 alerting gap) -- squarely cross-cutting
+  # data-pipeline scope per /codex/05-infrastructure/manifest-consolidator-ssot.md, not a generic process-level doc.
+  # Already self-dispatched (assigned_vm: planning, status: open) so this retag does not create a new orphan.
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]
@@ -111,10 +116,11 @@ LIVE production harm (13+ hour cefi consolidator outage, growing tradfi stall �
 tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only parses checkbox lines). Converted the
 4-item "Recommended decision" list above into tracked todos verbatim — same content, same order, now dispatchable.
 
-- [ ] [INFRA] P1. Read `deployment_service/data_pipeline_monitors/consolidator_oom_watcher.py` in full to determine
+- [x] ✅ [INFRA] P1. Read `deployment_service/data_pipeline_monitors/consolidator_oom_watcher.py` in full to determine
       whether it actually queries Cloud Run by the WRONG `manifest-consolidator-{ag}` name (a live gap) or resolves
       the job list some other way (already correct, only the docstring/log lines are stale). Done when: a stated
       verdict (live gap vs. docstring-only) with the specific code path cited as evidence. Repo: deployment-service.
+      — deployment-service (see Progress Log 2026-08-19, slot 31).
 - [ ] [INFRA] P1. Fix `deployment_service/cloud_run_job_registry.py::_MANIFEST_CONSOLIDATOR_JOBS` to emit the real
       `uts-prod-manifest-consolidator-{service_kind}-{ag}` stems (10 entries across `instruments`/`market-data`, or
       read `manifest_consolidator_buckets`'s keys directly from terraform-parity rather than hand-listing). Done
@@ -158,3 +164,27 @@ tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only par
   tradfi stall to run with only the slow heartbeat-staleness path (which itself paged PagerDuty/Telegram, not Slack)
   catching it. Given `assigned_vm: planning` is already set, no reclassification needed — flagging for priority
   given the live-incident evidence now attached, and per the "data pipeline correctness is the heartbeat" HARD RULE.
+- **2026-08-19 (slot 31, todo 1 — infra)**: Read `consolidator_oom_watcher.py` in full. **Verdict: LIVE GAP, not just a
+  stale docstring** — and a DIFFERENT bug than this doc's own hypothesis (it isn't the `manifest-consolidator-{ag}`
+  missing-kind/missing-env-prefix stem from `cloud_run_job_registry.py`; it's a missing separator). Evidence:
+  `make_consolidator_execution_oom_reader`'s `_read()` built
+  `job_name = f"{env_prefix}manifest-consolidator-market-data-{ag}"` (no hyphen between `env_prefix` and the stem)
+  when called with `env_prefix=_scheduler_env_prefix()` (`cli.py:823-824`), and `scheduler_env_prefix()` returns the
+  BARE prefix `"uts-{environment}"` with no trailing hyphen (`meta_targets.py:158-174`, e.g. `"uts-prod"`) — every
+  OTHER caller in this codebase that combines the two inserts the hyphen explicitly
+  (`meta_targets.consolidator_cloud_run_job`: `f"{scheduler_env_prefix()}-manifest-consolidator-market-data-{ag}"`;
+  `cloud_run_job_failure_watcher.make_job_execution_reader`'s `_read()` and `stale_image_watcher.make_image_digest_reader`'s
+  `_read()` both do `f"{env_prefix}-{job_stem}"`). So this reader queried `uts-prodmanifest-consolidator-market-data-{ag}`
+  — a job name that has never existed — meaning `executions_client.list_executions(parent=...)` 404s/errors on every
+  call, `oom_diagnostics.get(ag)` is always `None`, and DP-WATCHER-005 can never classify an OOM for ANY asset_group,
+  regardless of the registry fix in todo 2. **Fixed in the same commit** (findings-triage "in your file → fix in same
+  commit"): inserted the missing hyphen (now matches the sibling readers' pattern), corrected the stale module
+  docstring (line ~11, previously said bare `manifest-consolidator-{ag}`) and the emitted-finding `summary` f-string
+  (previously the same bare stem) to the real `market-data`-kind name shape, and added
+  `tests/unit/test_consolidator_oom_watcher.py` (2 tests) asserting the `parent` path built with/without an
+  `env_prefix` — locks in the fix so it can't silently regress. **Residual, NOT fixed here (relevant to todo 3's
+  re-verification)**: this reader is hardcoded to the `market-data` kind only (`f"...-market-data-{ag}"`) — it has no
+  `instruments`-kind branch (unlike `relaunch_consolidator.py`'s `kind_for_bucket`/`job_name(kind=...)`), so even with
+  the hyphen fixed, DP-WATCHER-005 still only ever covers the 5 `market-data` consolidator jobs, never the 5
+  `instruments` ones — todo 3 should confirm whether those are covered by DP-WATCHER-006 or remain a real gap. Shipped:
+  deployment-service (see commit in slot 31's `/done` evidence).

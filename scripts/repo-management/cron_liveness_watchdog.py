@@ -7,8 +7,10 @@
 # PROBLEM: every monitor in this repo (ci-health, branch-health, sit-debounce-trigger,
 # ldr-ci-monitor) is ITSELF a GHA cron — so a GHA-wide
 # outage (Actions billing wall, org-disable) silences the alarms too. This script
-# runs OFF GitHub Actions on the always-up orchestrator VM (planning,
-# i-0c9b283b31d6b5ca7, EIP 13.113.200.22) and alerts Slack when any watched cron's
+# runs OFF GitHub Actions on the always-up orchestrator VM (id `planning`,
+# api.agent-orchestrator.odum-research.com — see orchestrator_vm_registry.yaml for the
+# current instance id/IP, which changes across cloud migrations) and alerts Slack when
+# any watched cron's
 # last successful run is older than its expected interval x STALE_MULTIPLIER.
 #
 # Install on the VM (idempotent):

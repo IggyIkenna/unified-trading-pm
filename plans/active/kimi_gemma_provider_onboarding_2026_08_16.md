@@ -674,3 +674,20 @@ needs the waitlist to activate first) — both correctly operator-gated, not som
   above — not re-investigated in this entry, but flagged so a future reader doesn't trust that line without
   re-checking live. `diffusiongemma-26b-a4b-it` is unaffected by this — stays confirmed working, now with real
   tool-use proof too.
+
+- **2026-08-19 (later, interactive session) — two real state changes, noted so this doc doesn't go stale under
+  concurrent work elsewhere:**
+  1. **Gemini pool is 4 real projects, not 3.** `config/litellm/grok_gemini_proxy.yaml`'s own header comment says
+     "3 pooled GCP/AI-Studio projects" and only wires `GEMINI_API_KEY_PROJ1/2/3` — operator-confirmed
+     (2026-08-19) there are genuinely 4. Cross-checked against GSM: 5 `gemini-api-key-*` secrets exist total
+     (`gen-lang-client-0008266149`, `elated-nectar-440116-e9`, `spring-mix-426915-t9`, `371216509644` — all 4
+     IAM-owned by `ikenna@odum-research.com` — plus `poetic-bongo-456907-e4`, owned by a different identity,
+     `rob@odum-research.com`, likely not part of this fleet's pool). The 4th same-owner project
+     (`371216509644`) is NOT currently wired into the proxy config as a `PROJ4` — real, unclaimed follow-up if
+     the extra headroom is wanted, not done in this entry (doc update only, per this entry's own scope).
+  2. **A parallel Gemma self-hosting effort is underway in a different session/tab (2026-08-19, operator-confirmed
+     — "an agent in another tab is tryna sort out gemma via self hosting").** Not this doc's initiative and not
+     tracked here in detail — noted so a reader of this doc knows the "Gemma via NVIDIA NIM" framing throughout
+     the rest of this file may become one of two live options (hosted API vs. self-hosted) rather than the only
+     one, and so nobody duplicates that effort by starting a second self-hosting attempt. Whichever session
+     finishes first should file the real plan doc for it — this note is a pointer, not a claim of ownership.

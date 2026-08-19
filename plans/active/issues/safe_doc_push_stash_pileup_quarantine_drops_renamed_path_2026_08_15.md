@@ -16,7 +16,7 @@ summary: >-
   in plan-completion-and-archival-discipline.md, so the workaround was safe, but the primary tool should not fail here).
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a safe-doc-push.sh git-tooling bug, not data-pipeline scope
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

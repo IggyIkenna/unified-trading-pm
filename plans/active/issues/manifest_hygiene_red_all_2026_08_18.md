@@ -9,20 +9,20 @@ source:
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
 locked_by: live-defi-rollout
 summary: "The daily manifest-hygiene-vs-GCS orchestrator found non-empty candidate lists for: cefi, defi, prediction, sports, tradfi. ..."
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: []
+repos: [market-tick-data-service]
 scope: [engineer, admin]
 tags: [data-pipeline, daily-audit, manifest-hygiene-red-all]
-related: []
+related: [manifest_hygiene_red_all_2026_08_17]
 execution_scope: orchestrator-agent
 priority: P2
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-18
-resolved_by:
+last_updated: 2026-08-19
+resolved_by: market-tick-data-service@f67a7480b3 (docstring fix); root-cause fix work tracked on manifest_hygiene_red_all_2026_08_17's still-open todos
 ---
 
 # Manifest hygiene RED — 4 AG(s) with findings (2026_08_18)
@@ -55,6 +55,47 @@ Cold-start context: read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_
 in full + `/codex/05-infrastructure/data-pipeline-alerts.md` + the candidate CSV(s)
 above before acting.
 
+## Diagnosis (2026-08-19, slot-7) — DUPLICATE of 2026_08_17's already-open findings; one concrete fix landed, rest cross-referenced not re-diagnosed
+
+Compared this doc's candidate CSVs against `manifest_hygiene_red_all_2026_08_17.md`'s (5 diagnosis rounds already
+recorded there) before doing any fresh investigation, per CLAUDE.md findings-triage ("fits another plan → annotate
+it, don't fix — collision risk") and the sub-agent CLAIM≤MEASUREMENT rule (don't re-derive what's already measured):
+
+- **sports**: `DIVERGENT_EMPTY: 0` — clean, matches 08-17's "clean, no action needed" verdict. No action.
+- **cefi** (58,362 DIVERGENT_EMPTY, sample venue=UPBIT/trades) and **tradfi** (8,477, sample venue=NYSE/ohlcv_1s):
+  same magnitude and same sample shape as 08-17's cefi (58,362) / tradfi (8,468) findings, which 08-17 already
+  determined need a VM-scale re-run of `detect_manifest_divergence.py` (local host OOMs on the manifest read
+  alone) — NOT re-diagnosed here. Tracked by 08-17's still-open P2 todos ("Launch a VM to run
+  `detect_manifest_divergence.py --asset-group {cefi,tradfi}`"); this doc does not duplicate those todos.
+- **prediction** (463 DIVERGENT_EMPTY, sample venue=POLYMARKET/trades, dates 2026-08-15→17): matches the
+  POLYMARKET raw-`trades` gap 08-17 slot-19 already ROOT-CAUSED (see 08-17's "Diagnosis update (2026-08-18,
+  slot-19)") — instruments-service's POLYMARKET instrument-catalogue writer stopped emitting objects starting
+  2026-08-10, still ongoing as of this audit's 2026-08-18 sample dates. NOT an MTDS/adapter bug (CF-11 signalling
+  intact). Tracked by 08-17's still-open P1 todo scoped to `instruments-service`; not re-diagnosed or duplicated
+  here.
+- **Concrete fix shipped this session** (the one piece of NEW, not-yet-tracked work found while cross-checking):
+  08-17's open P3 docstring-fix todo (`market-tick-data-service`) — landed as `market-tick-data-service@f67a7480b3`,
+  flipped on the 08-17 doc. See that doc's Todos for the fix detail; not restated here to avoid drift between the
+  two copies.
+
+No new root-cause diagnosis needed for cefi/tradfi/prediction beyond what 08-17 already has — this todo closes as
+a duplicate-with-cross-reference, per the daily audit's own recurring-refile design (it re-files the same
+candidate list every day until the underlying VM-scale re-run / instruments-service trace actually lands).
+
 ## Todos
 
-- [ ] [CODE] P1. Manifest hygiene RED — 4 AG(s) with findings (2026_08_18) — diagnose + fix the root cause (misclassified-empty vs real gap, not-v9 schema row, or oracle-expects-but-empty divergence) in `market-tick-data-service`. Read `SUB_AGENT_MANDATORY_RULES.md` + the data-pipeline codex SSOT + the candidate CSV(s) above first (source `manifest_hygiene_daily.py`).
+- [x] ✅ [CODE] P1. Manifest hygiene RED — 4 AG(s) with findings (2026_08_18) — 2026-08-19 slot-7. DUPLICATE of
+      `manifest_hygiene_red_all_2026_08_17.md`'s already-open findings for cefi/tradfi/prediction (same magnitude,
+      same sample shape); sports is clean (0). See "Diagnosis (2026-08-19, slot-7)" above for the cross-reference.
+      Root-cause fix work for cefi/tradfi (VM-scale `detect_manifest_divergence.py` re-run) and prediction
+      (instruments-service POLYMARKET catalogue trace) stays tracked on 08-17's still-open P1/P2 todos — not
+      duplicated here. Concrete code fix landed this session: `market-tick-data-service@f67a7480b3` (docstring
+      correction, flipped on 08-17's P3 todo).
+
+## Progress Log
+
+- **slot-7 2026-08-19**: cross-checked this doc's candidate CSVs against `manifest_hygiene_red_all_2026_08_17.md`
+  (same magnitude/sample-shape for cefi/tradfi/prediction, sports clean) — closed as duplicate-with-cross-reference
+  rather than re-diagnosing. Landed the one genuinely new, not-yet-tracked item found during the cross-check (a
+  misleading docstring flagged as an open P3 on the 08-17 doc): `market-tick-data-service@f67a7480b3`, also fixed
+  the same unscoped claim in `kalshi_adapter.py`'s copy (not named in the original todo, found while editing).

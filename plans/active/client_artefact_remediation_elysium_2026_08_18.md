@@ -92,19 +92,37 @@ Full evidence for every finding is in the audit reports listed in `related:`. Do
       named venues are correctly bound in `VENUE_TO_ADAPTER_KEY` — one wrong token, not a systemic problem. **Shipped `unified-trading-pm@171dc40739`.**
 - [x] [DOC] P0. ✅ **Remove the invented family's 2 hits in this file** (see § accuracy above) — the
       `platform-architecture.html` and `carveout-engineering.html` instances belong to the siblings child. **Shipped `unified-trading-pm@171dc40739`.**
-- [ ] [DOC] P2. **Soften §12's capital-budget "enforced by construction" claim** — the wallet-funding framing is
-      narrower and more defensible than the owning plan's still-`UNVERIFIED` enforcement line.
-- [ ] [DOC] P2. **Caveat the hard `paper == batch-rerun` equality near §08/§09** — the now-default-ON dynamic
-      universe lacks the manifest pinning that equality depends on (owning plan § H.8, open P0).
-- [ ] [REVIEW] P1. **Resolve the two re-verification findings that did not confirm** — 4 of 6 came back CONFIRMED;
-      the remaining 2 need a verdict before this document ships.
-- [ ] [REVIEW] P1. **Verify §11's "Manual movement" claim, which likely overstates reachability the same way the
-      automated path did.** It states manual transfers "use the same instruction types and the same rails as
-      automated ones" — but `TransferCoordinator` is never instantiated in production and only `SUBACCOUNT_MOVE` has
-      a registered handler, so "the same rails" may describe a path that does not exist either. Raised 2026-08-18 by
-      the agent that reframed the automated half; it deliberately did **not** fix this, because it had not traced
-      the manual route's actual code path and would have been asserting rather than verifying. Trace the real route
-      first, then correct or confirm.
+- [x] [DOC] P2. ✅ **Soften §12's capital-budget "enforced by construction" claim** — already corrected by the prior
+      slot-5 rewrite: §12 now states the per-slot-wallet enforcement claim "does not hold today," citing
+      `get_trading_wallet()` having zero non-test call sites in either service. **Shipped `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [DOC] P2. ✅ **Caveat the hard `paper == batch-rerun` equality near §08/§09** — present in §09 ("The equality's
+      own precondition"): dynamic universe selection is on by default and the as-of-date manifest pinning the
+      equality depends on is not yet built. **Shipped `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [REVIEW] P1. ✅ **Resolve the two re-verification findings that did not confirm — VERDICT: both already
+      correctly reflected in the shipped file; no further edit needed.** Read
+      `client_artefact_forward_claim_and_reverification_2026_08_18.md` Part (b) in full. Of the six re-verified
+      findings, two touch this file and came back not-clean: item 2 (atomic multi-leg — schema enforces nothing,
+      the "succeed or fail together" guarantee is an execution-service runtime property) and item 6 (capital
+      budget "enforced by construction" — WRONG, neither `capital_budget_amount` nor `get_trading_wallet()` has a
+      production call site). Both are already stated correctly in the live file: §03's `AtomicInstruction` callout
+      says explicitly "the schema itself enforces nothing... an execution-service runtime guarantee," and §12 (see
+      above) states the wallet-enforcement claim does not hold. The other four (targets-not-deltas,
+      cross-client-transfer-impossible, archetype counts, attestation field population) either don't touch this
+      file or are already confirmed accurate here. No text change required — verified, not just grepped.
+- [x] [REVIEW] P1. ✅ **Verify §11's "Manual movement" claim — VERDICT: CONFIRMED accurate, independently traced
+      against current code this session (not just trusting the file's own citation).** Read
+      `execution-service/execution_service/engine/routing/handler_registry.py`: `OperationType.TRANSFER` maps to
+      `TransferHandler` exactly as the file claims. Read `transfer_handler.py`: `execute()` dispatches to five real
+      per-rail methods (`_execute_internal_transfer`, `_execute_cex_withdrawal`, `_execute_onchain_transfer`,
+      `_execute_custody_transfer`, `_execute_bridge_transfer`), confirming "the same per-rail execution methods"
+      for every transfer regardless of origin. Read `manual_pending_queue.py`: `PendingManualInstruction` wraps
+      `orchestrator.StrategyInstruction`, whose fields are exactly `venue`, `instrument_id`, `side`, `quantity` —
+      a verbatim match to the file's "trade-specific — venue, instrument, side, quantity" claim, and structurally
+      incapable of representing a transfer (no `asset`/`venue_from`/`venue_to`/`target_balance_at_destination`).
+      So the two mechanisms are correctly described as genuinely distinct: `TransferHandler` (the real, wired,
+      shared dispatcher for every `TRANSFER`-type instruction, manual or automated) is not the same class as
+      `TransferCoordinator` (the mostly-unwired target-state sweep/gas-topup/rebalance coordinator §11 already
+      describes separately in "Automated movement"). The file's claim does not overstate reachability — it holds.
 
 ## Disclosure and completeness
 
@@ -115,28 +133,46 @@ Full evidence for every finding is in the audit reports listed in `related:`. Do
       reconciliation from custodian-spanning balance/transfer reconciliation, which sits closer to withheld IP. **Shipped `unified-trading-pm@171dc40739`.**
 - [x] [DOC] P2. ✅ **Name the "strategy reads only processed data, never MTDS directly" invariant explicitly** —
       grep-confirmed absent. This document is its natural home. **Shipped `unified-trading-pm@171dc40739`.**
-- [ ] [DOC] P2. **Add mirrored-custody routing content (§11)** — the two-custodian mirroring model, without the
-      banned product name (see the siblings child for why that name never appears).
-- [ ] [DOC] P2. **Add funding-route / per-client custody binding content (§11)**.
-- [ ] [DOC] P2. **Add a capability-wizard boundary note (§04)** — one sentence distinguishing it from §04's
-      per-archetype param-schema wizard.
-- [ ] [DOC] P2. **Add rank-allocator weighting-layer content** — state it as a registered, extensible set rather
-      than a fixed count, so the number cannot rot.
-- [ ] [DOC] P2. **Add book-level overlay content (§12)** — vol-target, beta-hedge, no-trade band, rank-buffer.
-- [ ] [DOC] P2. **Add fee/gas-as-decision-input content (§03/§08)** — currently they appear only as a
-      reconciled/monitored quantity, never as an input to the decision.
-- [ ] [DOC] P3. **Extend §03's `AtomicInstruction` block with a one-line worked example**, connecting it to §12's
-      emergency-flatten reasoning.
+- [x] [DOC] P2. ✅ **Add mirrored-custody routing content (§11)** — present: "Mirrored custody: collateral stays put,
+      the venue gets a credit," with a "Specified, not yet live" callout (venue-side API pending). **Shipped
+      `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [DOC] P2. ✅ **Add funding-route / per-client custody binding content (§11)** — present: "Funding follows the
+      same binding backward through the rail set above: a `CEX_DEPOSIT` or `DEFI_DEPOSIT` targets the specific
+      `(client_id, slot_label)` wallet that will trade it, not a shared pool divided afterward." **Shipped
+      `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [DOC] P2. ✅ **Add a capability-wizard boundary note (§04)** — present: "A separate capability wizard exists
+      too, and the two should not be conflated: it walks readiness gaps across the whole capability graph... rather
+      than one archetype's parameter set, which is what this wizard renders." **Shipped
+      `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [DOC] P2. ✅ **Add rank-allocator weighting-layer content** — present in §08: "made by a registered set of
+      allocator engines, every one a subclass of one shared base... Adding a new weighting scheme is a new
+      subclass, not a new allocation model bolted on beside the others" — stated as an open set, no fixed count.
+      **Shipped `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [DOC] P2. ✅ **Add book-level overlay content (§12)** — present: vol-target overlay and a hysteresis-band
+      pattern confirmed; beta-hedge/rank-buffer at the whole-book level honestly tagged `? check` rather than
+      asserted. **Shipped `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [DOC] P2. ✅ **Add fee/gas-as-decision-input content (§03/§08)** — present in §08: "Fees and gas are priced
+      into the decision, not just reconciled afterward," with the staked-basis `_estimate_gas_fees_apy_bps()`
+      worked example. **Shipped `unified-trading-pm@6a5598e736`, verified this session.**
+- [x] [DOC] P3. ✅ **Extend §03's `AtomicInstruction` block with a one-line worked example**, connecting it to
+      §12's emergency-flatten reasoning — present: "a staked-basis entry pairs the stake and hedge as two legs
+      sharing one `hedge_deadline_ms`... the same ordering concern §12's emergency-flatten unwind reasons about in
+      reverse." **Shipped `unified-trading-pm@6a5598e736`, verified this session.**
 
 ## Evidence tiers and readiness
 
 - [x] [DOC] P0. ✅ **Apply the parent's evidence-tier spec to every claim-bearing section in this file** — default
       `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol inline. **Shipped `unified-trading-pm@171dc40739`.**
-- [ ] [DOC] P1. **Give every claim-bearing section its owner mark** (workstream / plan / epic that closes it), per
-      `system_readiness_master.md` W21's closure invariant.
-- [ ] [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content** — never probed.
-      `ARCHETYPE_FEATURE_GROUPS` declares ~40 of 60 and its docstring refuses to guess the rest, so any claim
-      implying full coverage is wrong.
+- [x] [DOC] P1. ✅ **Give every claim-bearing section its owner mark** (workstream / plan / epic that closes it), per
+      `system_readiness_master.md` W21's closure invariant. Genuinely open going into this session (grep-confirmed
+      zero `.own`/`owner:` hits). Applied rule 13 in full: `.own` CSS block + legend line in the header, plus a
+      badge on every section whose status is `st-part`/`st-plan` (16 of 18 — §01 carries no `.st` pill and is
+      skipped per the rule), naming the closest `system_readiness_master.md` workstream or, where the gap is
+      narrower than a workstream, the owning plan section (§09 → `elysium-disclosure §H.8`, §11 →
+      `elysium-disclosure §C`, per the exact worked examples in rule 13 and W7). **Shipped `unified-trading-pm@8fb70b119b`.**
+- [x] [DOC] P1. ✅ **Audit the archetype-readiness (batch/paper/live) content** — present in §02: derived-never-
+      declared framing, the feature-groups registry now measured at 55 of 60 (up from ~40), and the per-archetype
+      capability audit named explicitly as `planned`, not yet built. **Shipped `unified-trading-pm@6a5598e736`, verified this session.**
 
 ## Progress Log
 
@@ -145,3 +181,22 @@ per operator direction. Todos moved, not copied.
 
 **context-scout 2026-08-19**: populated context_scope (4 entries) — added the owned HTML file and the
 elysium-delivery plan the two open § P2 todos (§12 capital-budget, §08/§09 equality caveat) cite.
+
+**2026-08-19 — reconciliation + owner marks.** Per-instruction Step 1, reconciled every checkbox against the live
+file before starting new work: `git log` showed an unflagged prior commit
+(`unified-trading-pm@6a5598e736`, slot-5, 1549 insertions) had already landed almost every remaining P2/P3 doc todo
+in this plan — mirrored-custody, funding-route/custody binding, the capability-wizard note, the rank-allocator
+content, book-level overlays, fee/gas-as-decision content, the AtomicInstruction worked example, the archetype-
+readiness audit, the paper==batch manifest-pinning caveat, and the softened capital-budget claim. Each was verified
+by opening the section and confirming intent (not just a grep hit) before flipping. Both `[REVIEW]` P1s were
+resolved with an independent code trace this session (handler_registry.py / transfer_handler.py /
+manual_pending_queue.py for §11; the forward-claim-and-reverification audit's Part (b) for the two findings) rather
+than trusting the file's own citations. Net-new work this session: the owner-mark axis (rule 13), applied to all 16
+eligible sections, `unified-trading-pm@8fb70b119b`. **Every todo in this plan is now `[x]`.** Not archived by this
+session — scope was "this file only, nothing else," and archival's referrer-sweep step reaches outside that scope;
+flagging for the orchestrating session to archive per the standard 6-step ritual, gated on `depends_on:
+client_artefact_remediation_2026_08_18` per this plan's own frontmatter. (This session hit heavy git-index
+contention from concurrent peer sessions sharing this checkout — repeated rebases shifted this same commit's SHA
+three times and once fully orphaned it from branch history entirely, silently reverting this file to its pre-edit
+state until a `git cherry-pick` recovered it; re-verified via `git log --grep`/`git merge-base --is-ancestor` before
+every retry and before shipping, rather than trusting a stale citation or an "ahead=0" appearance of landedness.)

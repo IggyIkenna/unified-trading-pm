@@ -8,7 +8,7 @@ summary: >-
   SSOT-vs-live-state contradiction) and are called out explicitly for operator attention, not just parked passively.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [meta] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a docs-reconcile findings digest spanning cefi/ao/ci-tagged items, genuinely process-level not data-pipeline
 stage: [meta]
 repos: [unified-trading-pm, market-tick-data-service, agent-orchestrator, strategy-service, unified-trading-ci]
 scope: [engineer, admin]

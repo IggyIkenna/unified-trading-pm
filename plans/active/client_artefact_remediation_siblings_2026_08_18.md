@@ -111,9 +111,28 @@ codex rule, not a plan's restatement of it.
       unified-trading-pm@512d5b07a8 (slot-6): added a "Why this differs from the SigningSurface code enum" callout
       to `platform-architecture.html`, citing `CEFFU_ROUTES_VIA_COPPER_NOTE` and `SigningSurfaceStatus.OUT_OF_SCOPE`
       without touching the enum itself. Verified present fresh, 2026-08-19.
-- [ ] [REVIEW] P1. **Grade these four documents on the same two axes the other children apply** — status
+- [x] ✅ [REVIEW] P1. **Grade these four documents on the same two axes the other children apply** — status
       (live/partial/planned) and the evidence tier defined by the parent plan. They currently carry neither, which
-      is part of why violations survived in them.
+      is part of why violations survived in them. **Verified 2026-08-19 (slot 1, review): 3 of the 4 already carry
+      full rule-13 status + evidence-tier grading** — landed same session as items 2-5 above, by the same author,
+      just never checkbox-flipped (the identical gap the 2026-08-19 slot-31 Progress Log entry already found and
+      fixed for items 2-5). `unified-trading-pm@a7621fb5e5` (`strategy-service-deep-dive.html`, 12 sections),
+      `unified-trading-pm@a472bdb5fd` (`platform-architecture.html`, 16 sections),
+      `unified-trading-pm@5644680849` (`carveout-engineering.html`, 12 sections) — all three ancestors of
+      `origin/live-defi-rollout`, all carry the `.st`/`.ev` CSS + legend lines matching rule 13 verbatim. Spot-checked
+      grading quality against 3 specific audit findings rather than trusting the commit message alone: (1)
+      `platform-architecture.html` §10 "Running it: isolation, capital, risk" (contains the unconfirmed reserve-ratio
+      mechanism, audit P1) is graded `partial` + `~ assumed`, not over-claimed; (2) `strategy-service-deep-dive.html`
+      §05/§07 (the transfer-wiring overstatement, audit's top P0 for this file) is graded `planned`/`partial` +
+      `? check`/`~ assumed` with an explicit inline caveat ("not yet wired end-to-end in production — see the caveat
+      in §05") added to §07's capability list; (3) `platform-architecture.html` §13 "Where the programme stands"
+      (the self-reported readiness percentages, audit P2) is graded `partial` + `? check`, not `live`/`verified`. All
+      three reflect the audit's findings honestly rather than over-claiming. **`ODUM_Elysium_Phase2_Update_2026-07-24.html`
+      is out of scope for the pill mechanism by document type, not an oversight**: it has no `<style>` block and no
+      numbered `sec-head` sections — it is a plain-prose personal letter (165 lines), not a walkthrough-style
+      artefact rule 13 is built for. Retrofitting `.st`/`.ev` pills would mean inventing a section structure the
+      source document never had. Its one disclosure violation (the performance-figure phrase) was already fixed in
+      item 2 above; the audit found nothing else wrong in it.
 
 ## Progress Log
 
@@ -134,3 +153,15 @@ invented-strategy-family terms all read 0 hits across the affected files; the cu
 Flipped all four checkboxes citing the real SHAs and slot-6 attribution — not claiming this session did the
 underlying edit. Item 6 ([REVIEW] grading) remains genuinely open; out of scope for this dispatch (different task
 type, not what was assigned).
+
+**2026-08-19 (slot 1, review)** — Dispatched item 6 (the grading review). Fresh-pulled first and found the same gap
+pattern as the slot-31 entry above: 3 of the 4 files (`strategy-service-deep-dive.html`, `platform-architecture.html`,
+`carveout-engineering.html`) already carried full rule-13 status + evidence-tier grading, landed by slot-6 in the
+same session as items 2-5 (`a7621fb5e5`, `a472bdb5fd`, `5644680849`, all ~04:5X on 2026-08-19) — checkbox never
+flipped despite the code landing. Independently spot-checked grading quality (not just markup presence) against 3
+specific audit findings — see the flipped checkbox above for detail — all three correctly reflect the audit rather
+than over-claiming. Determined `ODUM_Elysium_Phase2_Update_2026-07-24.html` is out of scope for the pill mechanism
+by document type (plain-prose letter, no `sec-head` sections to attach pills to), not a remaining gap. **Every todo
+in this plan is now `[x]`** — this plan should be archived; per this plan's own structure, that is
+[`client_artefact_remediation_siblings_finalize_2026_08_18.md`](/plans/active/client_artefact_remediation_siblings_finalize_2026_08_18.md)'s
+own P2 todo (gated on this plan, now unblocked) — not done in this session, which was scoped to item 6 only.

@@ -115,7 +115,10 @@ staying on `IggyIkenna` Pro; `june_2026_vintage_audit_findings_2026_07_27.md` §
 (fleet-wide VM-launcher billing-waste audit + pre-flight gate design) ·
 [issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md](/plans/active/issues/cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md)
 (3rd occurrence of green-CI-stale-traffic; drift check + canary-deploy alert shipped, Slack routing open — added
-2026-08-06 closeout-linkage fix).
+2026-08-06 closeout-linkage fix) ·
+[issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md](/plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md)
+(cross-cloud AWS/GCP credential-provisioning gap blocks DP-LIVE-003's agent-orch-planning-vm liveness check — added
+2026-08-19 ag-closeout-audit cross-cutting retag).
 
 **Close-out criterion**: ~~org migration fully verified fleet-wide (no stale `IggyIkenna` refs)~~ — **DROPPED
 2026-07-27**, org migration cancelled by operator ruling, `IggyIkenna` refs are now the permanent correct state, not

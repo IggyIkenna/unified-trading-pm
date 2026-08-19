@@ -428,7 +428,9 @@ which value is measured-reality is needed per venue, not a mechanical merge.
       VM launch only, no code shipped.
 
 - [ ] [DATA] P3. **RE-POINTED 2026-08-16 (slot-23)** — re-verify HYPERLIQUID captured-row coverage for the 2023-06-14..2023-12-31 window (line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master`: verb moved up from line 2; the 2026-08-15 7-shard fleet this todo originally named is confirmed no longer in the fleet, 0/7 match by name) once the NEW, broader `cefi-hyperliquid-{2023,2024,2025,2026}-20260816-*` fleet
-      (19 VMs, `VM_TASK=cefi-hl-aster-backfill`, full-year ranges each covering `trades;book_snapshot_5;
+      (**CORRECTED 2026-08-19, plan_reconciler**: this was actually a 298-VM P0 runaway-billing-waste incident,
+      cleaned to 8 keepers [1/cell] the same day per context-scout 2026-08-17's finding — not a genuine 19-VM fleet;
+      `VM_TASK=cefi-hl-aster-backfill`, full-year ranges each covering `trades;book_snapshot_5;
       derivative_ticker`, `VM_FORCE=false` idempotent — see slot-23's 2026-08-16 Progress Log entry above) reaches
       `DEPLOYMENT_COMPLETED exit_code=0` for its 2023-year VM(s) (or is confirmed no longer in the fleet). Live-probe
       `book_snapshot_5`/`derivative_ticker` `capture_status` over the window (bounded, column-projected manifest

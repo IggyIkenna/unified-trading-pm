@@ -3,7 +3,7 @@ doc_type: issue
 title: MTDS + instruments-service carry an 8-commit-each, month-old, multi-author strict-quickmerge bypass backlog
 status: open
 nature: issue
-asset_group: [cefi, sports, cross-cutting]
+asset_group: [ci] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cefi, sports, cross-cutting]; a quickmerge-provenance CI mechanism finding (parent_epic: ci_master) -- cefi/sports are just the two affected REPOS' primary asset groups, not the finding's own scope
 stage: [meta]
 repos: [market-tick-data-service, instruments-service]
 scope: [engineer, admin]

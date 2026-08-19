@@ -156,10 +156,13 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       notice it. **Done when**: either the script gains this check (with a test fixture reproducing one of the 4
       confirmed instances), or a documented decision that it's not worth adding (e.g. if todo 1 finds this was a
       one-time batch bug already fully remediated, not an ongoing risk). — unified-trading-pm@a4fbf7f61
-- [ ] [OPERATOR] P1. **Human line-cap trim of `data_completion_defi_2026_07_15.md`** (sits at the 1000L hard cap — the
-      one remaining mismatched doc from the sweep), then restore the 2 dropped context_scope entries
-      (`data_completion_to_100_all_ag_2026_06_21.md` + `migrate_defi_full_v9_canonical.py`) and align the 2026-08-01
-      marker's claimed count (repo: unified-trading-pm).
+- [ ] [DOC] P2. **Premise corrected 2026-08-19 (plan_reconciler, cross-cutting) — the `[OPERATOR]` line-cap gate no
+      longer applies.** `data_completion_defi_2026_07_15.md` is now 520L (a 2026-08-15 history-extraction already
+      trimmed it, well under the 1000L cap), and its `context_scope:` already carries 3 entries including
+      `data_completion_to_100_all_ag_2026_06_21.md` (restored by a concurrent edit, per this doc's own 2026-08-07
+      context-scout note). **Only 1 entry remains genuinely missing**: add `migrate_defi_full_v9_canonical.py` to
+      `data_completion_defi_2026_07_15.md`'s `context_scope:` list, and align the 2026-08-01 marker's claimed count
+      to match. Purely mechanical now, no human line-cap trim needed first (repo: unified-trading-pm).
 
 ## Corpus-wide sweep results (2026-08-06)
 

@@ -215,8 +215,10 @@ separate frontmatter/todo-format mechanical-fixer runs were needed.)
 
 **Carried forward from 2026-08-16/17, re-confirmed still open (not new routing — see Phase -1 above):**
 
-- [ ] [DOCS] P3. `prediction_satellite_ao_dispatch_batch6_2026_07_29.md:159` — Betfair item's `[INFRA]` tag vs. the
-      account-lockout blocker question. Still grace-protected (10h45m at last check).
+- [x] ✅ [DOCS] P3. `prediction_satellite_ao_dispatch_batch6_2026_07_29.md:159` — Betfair item's `[INFRA]` tag vs. the
+      account-lockout blocker question. **FIXED 2026-08-19 (ag_closeout_auditor, prediction tranche)** — retagged
+      `[BLOCKED-CREDENTIALS][INFRA]` (landed via `plan_reconciler_findings_predictions_master_2026_08_19.md`'s copy of
+      this same finding; this doc's copy is superseded, not independently re-applied).
 - [ ] [DOCS] P3. `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md:395-397` — possible `[OPERATOR]` mistag.
       Still grace-protected (10h53m at last check).
 - [x] ✅ [DOCS] P3. `task_template.md:402` — stale reference to an archived doc (normative ref, corpus-wide ownership,

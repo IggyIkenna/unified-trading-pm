@@ -13,7 +13,7 @@ summary: >-
   symbiotic already have, per `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md` L361.
 status: open
 nature: issue
-asset_group: [cross-cutting, defi]
+asset_group: [defi] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting, defi]; Pendle is a single DeFi venue execution-wiring gap, not multi-AG
 stage: [strategy, execution]
 repos: [execution-service, unified-api-contracts, strategy-service]
 scope: [engineer]

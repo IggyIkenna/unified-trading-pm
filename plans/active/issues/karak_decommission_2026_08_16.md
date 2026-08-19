@@ -14,7 +14,7 @@ summary: >-
   supported while quietly broken).
 status: open
 nature: issue
-asset_group: [cross-cutting, defi]
+asset_group: [defi] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting, defi]; Karak is a single DeFi restaking venue decommission, not multi-AG
 stage: [data, features, strategy, execution]
 repos:
   [

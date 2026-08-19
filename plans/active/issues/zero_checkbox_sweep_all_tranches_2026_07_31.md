@@ -15,7 +15,7 @@ summary: >-
   a standing owner + cadence so the class stops losing its owner every time a one-off sweep doc archives.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [meta] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a corpus-wide (all 9 tranches) doc-quality sweep, genuinely meta/process, not data-pipeline scope
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

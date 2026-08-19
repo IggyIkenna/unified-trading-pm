@@ -16,7 +16,7 @@ summary: >-
   every re-check, so it stayed inside this corpus's established 12-hour grace window throughout. 0 refuted. DO NOT
   SHIP constraint in effect for this run — every fix landed in the working tree only, no commit/push; a separate lead
   session ships.
-status: open
+status: resolved
 nature: issue
 asset_group: [prediction]
 stage: [meta]
@@ -38,7 +38,8 @@ priority: P2
 assigned_vm: NA
 execution_scope: local-only
 parent_epic: predictions_master
-resolved_by:
+resolved_by: "ag_closeout_auditor 2026-08-19 (prediction tranche) -- fixed the 4 remaining grace-protected findings
+  directly in prediction_satellite_ao_dispatch_batch6_2026_07_29.md once the 12h grace window cleared"
 depends_on: []
 drift_direction: advance-code
 context_scope:
@@ -48,6 +49,10 @@ context_scope:
     /codex/11-project-management/epic-html-report-format.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-19** — status=resolved, 0 open todos (the last 4, all grace-protected findings on
+> `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`, were fixed in-run by ag_closeout_auditor once the 12h
+> grace window cleared). Archived per /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule.
 
 # plan_reconciler predictions_master EPIC-scoped findings — 2026-08-19
 
@@ -191,32 +196,38 @@ hunter's own `git merge-base --is-ancestor` output where it was shown as execute
       above); `check_archive_candidates.sh` flagged it before it could be missed. Archived-banner added; 2 referrers
       in `_2026_08_18.md` repointed (`related:` + `context_scope:`).
 
-## Confirmed, NOT fixed — grace-protected (all on `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`)
+## Confirmed, FIXED 2026-08-19 (ag_closeout_auditor, prediction tranche) — was grace-protected, now applied
 
-That doc's last commit was 2026-08-18T22:06:56+01:00 (21:06:56Z) at run start; re-checked immediately before each
-edit decision (last check: 2026-08-19T01:08:21Z, ~4h elapsed) — still inside the corpus's established 12h grace
-window at every check this run performed. All 4 are hard-evidence-confirmed by Hunter C, none applied:
+That doc's last commit (2026-08-18T22:01:50+01:00 / 21:01:50Z) was ~16h49m before this fix — past the corpus's
+established 12h grace window (re-checked live via `git log -1` immediately before editing). All 4 were
+hard-evidence-confirmed by Hunter C (see below, unchanged) and are now applied together in one edit to
+`prediction_satellite_ao_dispatch_batch6_2026_07_29.md`, per that finding's own "apply them together" instruction:
 
-- [ ] [DOCS] P1. **Stale "next step" text** (lines ~240-251) says egress from `europe-west2` still needs
+- [x] [DOCS] P1. **Stale "next step" text** (lines ~240-251) says egress from `europe-west2` still needs
       provisioning; independently verified (`git merge-base --is-ancestor 7a7e847e origin/live-defi-rollout` in
       `deployment-service` → confirmed ancestor) that it WAS provisioned 2026-08-12 and the blocker moved to a
       Betfair account state (`ACCOUNT_PENDING_PASSWORD_CHANGE`) — already correctly documented 8 days ago in the
       linked issue doc and this same plan's own split-out Progress Log, just not in this specific inline paragraph.
-- [ ] [DOCS] P2. **Stale Deferred-section prose** (lines ~681-690) says `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`
+      **FIXED**: appended a dated correction note directly after the stale paragraph.
+- [x] [DOCS] P2. **Stale Deferred-section prose** (lines ~681-690) says `prediction_satellite_ao_dispatch_batch2_2026_07_25.md`
       is "done but not yet archived" and directs a reader to flip its finalize to active — both `batch2` and its
-      finalize have been `status: complete`, archived, since 2026-07-30.
-- [ ] [DOCS] P2. **LINE-1 completeness** on the Betfair `[INFRA]` P2 todo (lines 159-160) — first physical line ends
+      finalize have been `status: complete`, archived, since 2026-07-30. **FIXED**: appended a dated correction note.
+- [x] [DOCS] P2. **LINE-1 completeness** on the Betfair `[INFRA]` P2 todo (lines 159-160) — first physical line ends
       "Remaining work is provisioning a NEW" with the actual object (`europe-west2` network egress) entirely on
-      line 2.
-- [ ] [DOCS] P1. **Tag mismatch, confirmed live via the actual dispatcher code** — the todo's tag is bare `[INFRA]`;
+      line 2. **FIXED**: reordered the opening sentence so the actionable subject ("Two-sided Betfair odds — persist
+      back+lay, not just one side") leads line 1.
+- [x] [DOCS] P1. **Tag mismatch, confirmed live via the actual dispatcher code** — the todo's tag is bare `[INFRA]`;
       its mirrored issue-doc item carries `[BLOCKED-CREDENTIALS][INFRA]`. Hunter C traced
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_is_non_dispatchable()`/`_has_live_blocked_token()`
       by hand against this doc's todo block and confirmed it currently returns **False** — i.e. this todo reads as
       live-dispatchable today despite being genuinely blocked on an external, worker-unresolvable Betfair account
       state, the exact churn pattern (6+ prior dispatches) that got the ISSUE doc's own copy retagged on 2026-08-10/11.
+      **FIXED**: retagged to `[BLOCKED-CREDENTIALS][INFRA]`.
 
-All 4 are a single coherent fix once grace clears — a future `/plan-reconcile` pass (sharded `prediction` or
-epic-scoped `predictions_master`) should apply them together in one edit to that file.
+All 4 applied in one edit to that file (3 `Edit` calls covering non-overlapping regions: tag+line-1-completeness
+combined, next-step correction, Deferred-section correction). `plan_reconciler_findings_prediction_2026_08_16.md`'s
+and `plan_reconciler_findings_prediction_2026_08_18.md`'s own copies of the same Betfair-tag finding are now stale
+duplicates of this fix — flagged there, not re-applied (same underlying doc, would double-edit).
 
 ## Reviewed, no fix warranted (confirmed candidates, not routed, not refuted)
 

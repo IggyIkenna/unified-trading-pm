@@ -14,7 +14,7 @@ summary: >-
   + AO-readiness + codex-drift backlog, so nothing found by the 46 hunters is silently dropped.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [meta] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a full-corpus /plan-reconcile findings register spanning all tranches (parent_epic: plan_hygiene_master), genuinely meta/process
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]

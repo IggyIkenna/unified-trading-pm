@@ -16,7 +16,7 @@ summary: >-
   shared-worktree/multi-session model produced two parallel solutions to one problem with no collision signal.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ao] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a shared-worktree/multi-agent-session duplicate-work incident (parent_epic: agent_operating_framework_master), not data-pipeline scope
 stage: [meta]
 repos: [market-tick-data-service, unified-trading-pm]
 scope: [engineer, admin]

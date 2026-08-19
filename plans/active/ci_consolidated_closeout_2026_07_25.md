@@ -13,7 +13,10 @@ status:
   # (dual-tagged [ci, infrastructure] P1 plans with no consolidated-closeout coordinator since this doc was
   # archived 2026-07-28)
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci] # corrected 2026-08-19 (ag-closeout-audit cross-cutting-tranche run) -- was [cross-cutting]; this
+  # is the ci tranche's OWN hub/coordinator doc (title, parent_epic: ci_master, assigned_role: cicd all confirm) --
+  # a bare-cross-cutting-tag-on-single-tranche-content mistag invisible to the dual-tag Orthogonality grep since it
+  # carried only one tag
 stage: [meta]
 repos: [unified-trading-pm, deployment-service, agent-orchestrator]
 scope: [engineer, admin]
@@ -96,7 +99,10 @@ source: >-
 [issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md](/plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md)
 (`quickmerge.sh` `ENVIRONMENT` auto-detect bug on `live-defi-rollout`) ·
 [issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md](/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md)
-(GitHub Actions self-hosted-runner WIF job steps overwrite the shared gcloud config fleet-wide).
+(GitHub Actions self-hosted-runner WIF job steps overwrite the shared gcloud config fleet-wide) ·
+[issues/mtds_is_historical_quickmerge_bypass_backlog_2026_08_16.md](/plans/active/issues/mtds_is_historical_quickmerge_bypass_backlog_2026_08_16.md)
+(MTDS + instruments-service 8-commit-each historical strict-quickmerge bypass backlog, operator decision pending —
+added 2026-08-19 ag-closeout-audit cross-cutting retag).
 
 **Close-out criterion**: QG sentinel environment-aware; quickmerge new-file-only ships no longer no-op; provenance gate
 re-enforced + hook installed fleet-wide; `staging_versions` unfreezes; `ENVIRONMENT` auto-detect fixed; WIF job-step
@@ -119,7 +125,7 @@ isolation fixed on self-hosted runners.
 (Cloud Build re-stamps mutable git-sha image tags on rebuild) ·
 [issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md](/plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md)
 (`cassette-drift-check.yml` calls a deleted script, silently green) ·
-[issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md](/plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md)
+[issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md](/plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md)
 (`digest-drift-sweep.yml` `GITHUB_TOKEN` cross-repo scope bug, silent no-op since birth) ·
 [issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md](/plans/archive/issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md)
 (github-actions-deploy SA has over-broad project-wide Secret Manager access) ·

@@ -579,25 +579,21 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       2026-07-27 — this checkbox was stale (real work done, never flipped here).
 - [ ] [CODE] P2. Eliminate (or document) the legacy bare `entity=fixtures/` (no `pipeline_mode=`) write path still
       active today alongside the canonical split writer (5-league subset).
-- [ ] [DATA] [CLEANUP] P2. **RETAGGED self-justified 2026-08-03** (operator ruling on
-      `sports_v2_1492_row_copy_contradicts_floor_wipe_2026_08_03.md`, "agreed" — the sole-surviving-copy carve-out that
-      forced this to `[OPERATOR]` on 2026-08-02 is resolved: the 764 pre-floor cells / 1,528 physical objects were
-      WIPED, not preserved, via
-      `deployment-service/scripts/wipe_pre_floor_sports_2026_07_21.py --root-prefix sports_reference_v2/by_date --apply`
-      — `{'DELETED': 1528, 'ERROR': 0}`, verified 0 pre-floor day dirs remain). **Remaining scope, still needs the
-      original reader-check before proceeding**: 16 post-floor day dirs (2024-12-24..2026-04-20) remain in
-      `sports_reference_v2/by_date/` — snapshot-then-cull THESE once confirmed no reader consumes the path (the original
-      self-justified gate this todo had before 2026-08-02, now restored). Prod-bucket deletes on the remaining objects
-      are still human-only unless reversibility-qualified per
-      [`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`](/codex/02-data/gcs-and-manifest-delete-safety-protocol.md)
-      § 3a.
-- [ ] [DOC] P2. **Finding C correction (2026-07-23): this was mis-scoped, downgraded from the original P1/HIGH.**
-      `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` is `status: resolved` (corpus-destroying
-      risk already remediated, byte-exact GCS soft-delete restore verified) — only its 1 remaining open todo needs
-      merging in: correct the cutover runbook's canonical-is-a-superset premise for raw odds on early dates.
+- [x] ✅ [DATA] [CLEANUP] P2. **DONE 2026-08-04 (slot-12) — `deployment-service@1b63863`.** Reader-check confirmed: 64
+      parquet files across the 16 post-floor day dirs (2024-12-24..2026-04-20) in `sports_reference_v2/by_date/`, all
+      redundant with canonical `sports_reference/by_date/`. Snapshot→delete→verify via
+      `wipe_sports_reference_v2_post_floor_2026_08_04.py --apply`: 64 DELETED, 0 ERROR; post-delete 0 objects under
+      prefix; canonical v1 spot-checked intact. §3a did not qualify (soft-delete=0) — proceeded per the pre-floor
+      operator ruling. Reconciled from `sports_consolidated_native_ao_extract_2026_07_25.md` by plan_reconciler
+      (agt-07473e), 2026-08-19. **Note**: `sports_satellite_ao_dispatch_batch16_2026_08_17.md` re-drafted this exact
+      population as unclaimed on 2026-08-17 — struck there as a duplicate (see that doc).
+- [x] ✅ [DOC] P2. **DONE — `unified-trading-pm@af8355cac`** (Finding C correction, 2026-07-23; mis-scoped, downgraded
+      from the original P1/HIGH). `sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md` is
+      `status: resolved` — its 1 remaining open todo (correct the cutover runbook's canonical-is-a-superset premise for
+      raw odds on early dates) is fixed: cited in the runbook's `related` frontmatter + a body correction note.
       `sports_canonical_migrated_odds_mistamped_footystats` has no standalone issue doc — it's the footystats
-      legacy-bundle mislabel already tracked as its own Track C todo above (venue vocabulary cleanup, `venue=ODDS_API`→
-      `FOOTYSTATS`, 42,476 rows). **Done when**: the cutover runbook is corrected and cites this doc.
+      legacy-bundle mislabel already tracked as its own Track C todo above. Reconciled from
+      `sports_consolidated_native_ao_extract_2026_07_25.md` by plan_reconciler (agt-07473e), 2026-08-19.
 - [x] ✅ [DIAG] P2. **NEW 2026-07-23 (decision 16) — DONE 2026-08-04, `unified-trading-pm@09ce04535`** (batch7 todo 4).
       Both anomalies root-caused: standings cache writes current data to every processing date; transfermarkt writer
       emits Cartesian product of season×trigger-dates; phantom-audit STANDINGS/TEAMS shares the same cause
@@ -850,15 +846,17 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       formally folds its remaining todos into this closeout (archive it, like the Track X fold-ins) or confirms
       satellite-plan status is the intended long-term shape — this bullet only fixes the tracking/visibility gap, it
       does not decide that.
-- [ ] [OPS] P2. Re-roll `build_instrument_catalogue.py --asset-group sports --since 2019-01-01` to pick up the +26,894
-      round rows produced by the pre-2019-scope (§T) + registry-membership (§U) decisions and the 2026-07-18
-      round-derivation sweep — the catalogue snapshot predates all of them.
-- [ ] [CODE] P2. Upgrade the catalogue `player` grain from `entity=injuries` (injured-only) to `entity=fixture_lineups`
-      (full roster, now carries 100% player/coach identity).
-- [ ] [DATA] P2. Determine which launcher ran the most recent sports features backfill — serial
-      `launch-features-sports-backfill-vm.sh` or parallel `launch-features-sports-parallel-backfill-vm.sh` — via VM
-      launch history/logs; if serial, file a follow-up todo requiring the parallel launcher for every future sports
-      features backfill. **Done when**: the launcher used is named with its citing VM log/dispatch record.
+- [x] ✅ [OPS] P2. **DONE 2026-08-05 (slot-6)** — catalogue regenerated 01:09 UTC: 448,816 rows, 427,742 fixtures with
+      populated round, `available_from` 2014..2026-08-05 (GCS `instruments-store-sports-prd` gen `1785892158728886`;
+      idempotent re-roll). Covers pre-2019-scope (§T), registry-membership (§U), and the round-derivation sweep.
+      Reconciled from the extract plan — plan_reconciler (agt-07473e), 2026-08-19.
+- [x] ✅ [CODE] P2. **DONE** — `SPORTS_PLAYER_SOURCE_ENTITY = "fixture_lineups"` live at
+      `build_instrument_catalogue.py:238` (content-verified; cited `f858edb2` doesn't resolve — squash-merge
+      SHA-orphaning, a known corpus trap). Full roster now 100% player/coach identity. Reconciled from the extract
+      plan — plan_reconciler (agt-07473e), 2026-08-19.
+- [x] ✅ [DATA] P2. **DONE — neither launcher has ever been used.** Audit of `vm-logs/` (4,316 entries): zero
+      `fts-backfill-*`/`fss-backfill-vm-*` logs/VMs/`LAUNCH_PARAMS.json` referencing `features-sports`. Reconciled
+      from the extract plan — plan_reconciler (agt-07473e), 2026-08-19.
 
 ## Track K — SMOKE + SPEED + right-days · P1
 

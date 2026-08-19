@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [ci, archival, plan-hygiene, ao-dispatch, na-audit]
 related:
   [
-    /plans/active/issues/plan_reconciler_findings_ci_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_ci_2026_08_16.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -42,7 +42,7 @@ depends_on: []
 context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /plans/active/issues/plan_reconciler_findings_ci_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_ci_2026_08_16.md,
   ]
 source: >-
   Carved out by the ci-tranche /na-eligibility-audit run (2026-08-18, dispatch agt-b10de6) from a convergent finding

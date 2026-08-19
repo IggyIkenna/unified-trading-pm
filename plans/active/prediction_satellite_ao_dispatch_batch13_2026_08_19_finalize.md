@@ -7,8 +7,10 @@ summary: >-
   data_completion_prediction_2026_07_15.md: re-verifies items 1/2's checkboxes were correctly flipped (or correctly
   left open with a FAIL finding) per item 1's PASS/FAIL result, and checks whether item 4's original checkbox should
   close now that its residual has a real diagnosis, or needs a distinct follow-up if object-backed cells were found.
-  Source doc keeps `assigned_vm: NA` — NOT an archival candidate from this batch alone (16 other genuinely-gated items
-  remain there after this batch's items 3/4 close).
+  Source doc keeps `assigned_vm: NA` — NOT an archival candidate from this batch alone (multiple other genuinely-gated
+  items remain there after this batch's own items close; **fixed 2026-08-19, plan_reconciler**: the original "16...
+  items 3/4" phrasing didn't correspond to anything in this 2-todo batch, corrected to avoid citing a stale/miscopied
+  number — re-count fresh at execution time per this doc's own todo 1).
 status: active
 nature: process
 asset_group: [prediction]

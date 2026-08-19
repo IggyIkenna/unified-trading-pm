@@ -37,7 +37,9 @@ summary: >-
   described (a deadlock).
 status: resolved
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci] # corrected 2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass) -- was [cross-cutting].
+  # Content is LDR->main CI/CD provenance-marker range computation (promote_provenance_range.py), squarely ci-tranche.
+  # Archived + resolved already; retag has no downstream routing effect but corrects the record.
 stage: [meta]
 repos:
   [
@@ -89,7 +91,7 @@ context_scope:
 # LDR→main provenance-marker corrupted post-history-rewrite — 3 repos stuck since 2026-08-05
 
 > **Resolved + archived 2026-08-15**: all 3 todos done since 2026-08-08; the archival move itself was blocked by a
-> tooling deadlock (`/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`)
+> tooling deadlock (`/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md`)
 > between the corpus-wide broken-link gate and the line-cap gate, resolved via a `check_line_caps.sh` carve-out
 > (`unified-trading-pm@d765b4cfb1`). Archival completed once that carve-out shipped and 11 active-corpus referrers were
 > repointed to this doc's new path.
@@ -448,7 +450,7 @@ Two reasons, mirroring the UTL-34-bypass precedent
   1. — clears both the structural and content exemptions task_template.md §4 documents.
 - **cicd escalation agt-558c62 2026-08-09**: set `archive_exempt: true`. This doc's own banner (top of file, 2026-08-08)
   already records that all 3 todos are done but the physical `git mv` archival is BLOCKED by a genuine tooling deadlock
-  (`/plans/active/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a markdown-syntax
+  (`/plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md` — a markdown-syntax
   referrer in an over-1000L doc has no scoped carve-out in `check_line_caps.sh` for a same-line link-repoint edit,
   confirmed live by the prior agent who attempted and reverted the archival). This is exactly the `archive_exempt`
   carve-out's intended shape per `check_archive_candidates.sh`'s own header comment: a 0-open-todos state that is

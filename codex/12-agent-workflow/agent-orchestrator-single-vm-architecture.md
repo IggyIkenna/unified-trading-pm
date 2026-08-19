@@ -429,8 +429,10 @@ the fleet's work, and a task's identity is stable across regens.
   out deliberately, pending proof the remediation flow was insufficient. Tracked in
   `plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` — corrected 2026-08-18
   (`/plan-reconcile ao`): that doc is `status: resolved`, 0 open todos; the content-derived-id follow-up itself
-  shipped via `content_derived_backlog_task_ids_2026_08_08.md` (live-applied 2026-08-16, 2037/3782 rows migrated, 0
-  unexplained, 0 dispatched rows touched) — not deferred, done.
+  shipped via `content_derived_backlog_task_ids_2026_08_08.md` — migration applied and holding (2037/2037 planned
+  rows migrated, 0 unexplained); independent verification pending via the finalize plan's
+  (`content_derived_backlog_task_ids_2026_08_08_finalize.md`) 0/6 gate (corrected 2026-08-19, `/plan-reconcile ao`,
+  operator-ruled — the migration mechanism itself is done, but "done" here should not be read as "verified").
 
 ### 5. Dispatch-scope eligibility — bounded outcome only, judgment calls resolved BEFORE dispatch
 

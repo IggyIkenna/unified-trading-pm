@@ -33,7 +33,7 @@ related:
     /plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md,
     /plans/archive/2026_08/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md,
     /plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
-    /plans/active/issues/plan_reconciler_findings_ci_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_ci_2026_08_16.md,
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
     /plans/archive/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
     /plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md,

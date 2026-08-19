@@ -486,6 +486,70 @@
     .plate, figure, table { break-inside: avoid; }
     .contents { display: none; }
   }
+
+  /* ============================================================
+     STATUS + EVIDENCE-TIER MARKS (rule 13) — added for the
+     client-artefact grading pass, matching platform-external-api-
+     walkthrough.html / strategy-service-walkthrough.html.
+     ============================================================ */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink-3);
+    margin: 18px 0 0;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .st {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid currentColor;
+  }
+  .st-live {
+    color: var(--good);
+    background: var(--g-data-wash);
+  }
+  .st-part {
+    color: var(--warn);
+    background: var(--g-post-wash);
+  }
+  .st-plan {
+    color: var(--crit);
+    background: var(--accent-wash);
+  }
+  .ev {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 1px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    border: 1px dashed currentColor;
+    background: transparent;
+  }
+  .ev-verified {
+    color: var(--g-data);
+  }
+  .ev-check {
+    color: var(--ink-3);
+  }
+  .ev-assumed {
+    color: var(--warn);
+  }
 </style>
 
 <div class="shell">
@@ -539,11 +603,25 @@
         <li><a href="#s13"><span class="num">13</span><span class="ttl">Where the programme stands</span></a></li>
       </ol>
     </nav>
+
+    <div class="legend">
+      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
+      <span><b class="st st-part">partial</b> built, reachable for some cases</span>
+      <span><b class="st st-plan">planned</b> specified, not yet built</span>
+    </div>
+    <div class="legend">
+      <span><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named inline</span>
+      <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
+      <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
+    </div>
   </header>
 
   <!-- ==================== 01 ==================== -->
   <section id="s1">
-    <div class="sec-head"><span class="num">01</span><h2>Where you sit in the platform</h2></div>
+    <div class="sec-head"><span class="num">01</span><h2>Where you sit in the platform</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Elysium is the AIFM and fund administrator; POD is the DeFi-specific allocator; the BVI fund is the capital vehicle
@@ -749,7 +827,10 @@
 
   <!-- ==================== 02 ==================== -->
   <section id="s2">
-    <div class="sec-head"><span class="num">02</span><h2>The component map, and how ready each part is</h2></div>
+    <div class="sec-head"><span class="num">02</span><h2>The component map, and how ready each part is</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       The platform is a seven-layer pipeline with one authoritative producer per dataset. Your two strategies occupy a
@@ -1021,7 +1102,10 @@
 
   <!-- ==================== 03 ==================== -->
   <section id="s3">
-    <div class="sec-head"><span class="num">03</span><h2>Your strategies, and what sits beside them</h2></div>
+    <div class="sec-head"><span class="num">03</span><h2>Your strategies, and what sits beside them</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Two archetypes are in Phase 2 acceptance scope. Both are market-neutral carry structures on a USDC share class;
@@ -1307,7 +1391,10 @@
 
   <!-- ==================== 04 ==================== -->
   <section id="s4">
-    <div class="sec-head"><span class="num">04</span><h2>The data behind your venues</h2></div>
+    <div class="sec-head"><span class="num">04</span><h2>The data behind your venues</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Your strategies read a narrow slice of a wide estate. The slice is what the backtest stands on; the estate is what
@@ -1404,7 +1491,10 @@
 
   <!-- ==================== 05 ==================== -->
   <section id="s5">
-    <div class="sec-head"><span class="num">05</span><h2>Batch, paper, live — one program</h2></div>
+    <div class="sec-head"><span class="num">05</span><h2>Batch, paper, live — one program</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       A backtest is only evidence if the live system is the same program. On this platform it literally is: batch, paper
@@ -1593,13 +1683,21 @@
           of the passive accrual legs, and the production shadow run that exercises the live boundary against real venue
           fills at size.
         </p>
+        <p>
+          One precondition worth stating plainly: the equality assumes paper and the batch rerun select from the same
+          venue universe on the same day, and with dynamic universe selection now on by default, the as-of-date
+          manifest pinning that would guarantee both sides see an identical universe is not yet built.
+        </p>
       </details>
     </details>
   </section>
 
   <!-- ==================== 06 ==================== -->
   <section id="s6">
-    <div class="sec-head"><span class="num">06</span><h2>Execution: how the algorithm is chosen</h2></div>
+    <div class="sec-head"><span class="num">06</span><h2>Execution: how the algorithm is chosen</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Your adapters know how to talk to OKX, Bybit, Binance and Lido. What decides <em>how</em> an order is worked — over
@@ -1911,6 +2009,36 @@
       </details>
 
       <div class="callout">
+        <span class="tag">Where the contract is headed — reference price, reference position, credit</span>
+        <p>
+          <b class="st st-live">live</b>
+          The envelope already carries a <span class="mono">reference_price</span> on every instruction — the market
+          level the strategy believed was true the moment it was emitted — together with a mark mode telling
+          execution whether to hold that price fixed as sent or keep marking it against the underlying while the
+          order is worked. It exists because a price is allowed to move between instruction and fill; that is what
+          the reference price accounts for, not a fault condition.
+        </p>
+        <p>
+          <b class="st st-plan">planned</b> <b class="ev ev-assumed">~ assumed</b>
+          A position can go stale in a different way than a price can: a strategy and execution simply disagreeing
+          about what is actually held is not a market move, it is the two sides losing sync. The next layer, designed
+          but not yet built, adds a <span class="mono">reference_position</span> to the same envelope — the
+          strategy's believed position, per venue it is eligible to trade on — checked against what execution
+          actually sees the instant an instruction lands. A mismatch is treated as an integrity failure, using the
+          same block, scale-down or monitor consequence the risk gate already applies to any rule it fires, not a
+          new decision path.
+        </p>
+        <p>
+          Travelling alongside it is <span class="mono">credit</span> — a tolerance band or a fire-or-don't threshold
+          that the strategy computes and owns, with execution only consuming whatever is cached to decide whether and
+          how aggressively to act on it. None of this reaches into how an order is actually worked: it sets the
+          boundary the algorithm library described above operates inside, the same relationship
+          <span class="mono">execution_policy_ref</span> already has with the algorithm it resolves to — strategy
+          states the governing limits, execution's own logic decides the mechanics within them.
+        </p>
+      </div>
+
+      <div class="callout">
         <span class="tag">Stated plainly</span>
         <p>
           For your two archetypes the working orders are not latency-sensitive — carry is captured over hours and days, not
@@ -1931,7 +2059,10 @@
 
   <!-- ==================== 07 ==================== -->
   <section id="s7">
-    <div class="sec-head"><span class="num">07</span><h2>Repositories, tiers and languages</h2></div>
+    <div class="sec-head"><span class="num">07</span><h2>Repositories, tiers and languages</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Twenty-six repositories under one workspace manifest, arranged in a five-tier dependency model that a build check
@@ -2077,7 +2208,10 @@
 
   <!-- ==================== 08 ==================== -->
   <section id="s8">
-    <div class="sec-head"><span class="num">08</span><h2>Infrastructure — how data actually moves</h2></div>
+    <div class="sec-head"><span class="num">08</span><h2>Infrastructure — how data actually moves</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       The engineering choices underneath: how data is stored and read, which messaging pattern carries what, how venue
@@ -2392,7 +2526,10 @@
 
   <!-- ==================== 09 ==================== -->
   <section id="s9">
-    <div class="sec-head"><span class="num">09</span><h2>How the work gets built and CI stays green</h2></div>
+    <div class="sec-head"><span class="num">09</span><h2>How the work gets built and CI stays green</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       This section is about our delivery machinery rather than your deliverable. None of it transfers or is licensed. We
@@ -2540,7 +2677,10 @@
 
   <!-- ==================== 10 ==================== -->
   <section id="s10">
-    <div class="sec-head"><span class="num">10</span><h2>Running it: isolation, capital, risk</h2></div>
+    <div class="sec-head"><span class="num">10</span><h2>Running it: isolation, capital, risk</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-assumed">~ assumed</b>
+    </div>
 
     <p class="lede">
       This is the part that decides whether running the strategies costs you an operations team or costs you nothing.
@@ -2656,7 +2796,10 @@
 
   <!-- ==================== 11 ==================== -->
   <section id="s11">
-    <div class="sec-head"><span class="num">11</span><h2>What we can share, and what we can't</h2></div>
+    <div class="sec-head"><span class="num">11</span><h2>What we can share, and what we can't</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Under Article 4 the Work Product is yours — that is settled, perpetual, and not something this document qualifies.
@@ -3111,7 +3254,10 @@
 
   <!-- ==================== 12 ==================== -->
   <section id="s12">
-    <div class="sec-head"><span class="num">12</span><h2>The wider surface, and where it can go</h2></div>
+    <div class="sec-head"><span class="num">12</span><h2>The wider surface, and where it can go</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Everything described so far is the shape of your mandate. It is worth saying plainly what else the same machinery
@@ -3228,7 +3374,10 @@
 
   <!-- ==================== 13 ==================== -->
   <section id="s13">
-    <div class="sec-head"><span class="num">13</span><h2>Where the programme stands</h2></div>
+    <div class="sec-head"><span class="num">13</span><h2>Where the programme stands</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       What remains is data completion, production integration and operational validation — not research, and not

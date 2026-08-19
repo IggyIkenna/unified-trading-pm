@@ -23,7 +23,7 @@ summary: >-
 status: open
 nature: issue
 scope: [engineer, admin]
-asset_group: [cross-cutting]
+asset_group: [ci] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; content is AO escalation-classifier coverage mechanics (parent_epic: ci_master), not data-pipeline scope
 stage: [meta]
 repos:
   [

@@ -19,7 +19,7 @@ summary: >-
   rule (this run reached only Phase 0-2 + a Phase 3 draft for the disjoint orphaned population — see
   `cross_cutting_satellite_ao_dispatch_batch3_2026_08_01.md` — these 6 mistags are excluded from that batch by
   definition, per Phase 2's "count by verdict, excluding exclude_cross_cutting").
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -199,15 +199,12 @@ member, not just a retag.
       `[ao, ci]` to `[ci]` only, not a discrepancy), and it carries a full `✅ ARCHIVED 2026-08-02` banner citing
       `plan_reconcile_parked_operator_decisions_2026_08_02.md` na-eligibility-audit item 22 as the archival
       authorization (all 8/8 todos done, `locked_by` cleared).
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. ~~Retag
       `plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`'s `asset_group`
-      `[cross-cutting]` → `[ao]` (finding 2). Done when: the tag is corrected and the doc is folded into
-      `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per the 2026-07-31 audit — confirm the
-      retag catches up to that citation). **na-eligibility-audit 2026-08-03**: `ao_consolidated_closeout_2026_07_25.md`
-      is now archived `status: complete` (2026-07-30), but that doesn't close this todo — checked the target doc's
-      current frontmatter and the retag has NOT happened yet:
-      `checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md` still carries
-      `asset_group: [cross-cutting]`. Still genuinely open; not flipping.
+      `[cross-cutting]` → `[ao]` (finding 2).~~ **DONE 2026-08-19 (ag-closeout-audit cross-cutting reconciliation
+      pass)** — verified live: target now `asset_group: [ao]`, `status: resolved`, ARCHIVED to
+      `plans/archive/2026_08/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`. Both
+      done-when halves satisfied (tag corrected + doc closed out).
 - [x] ✅ [DOCS] P3. ~~Retag
       `plans/active/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md`'s `asset_group`
       `[cross-cutting]` → `[ui]` (finding 3).~~ **MOOT — 2026-08-01 (slot 9, review)**: the doc's one remaining todo
@@ -215,11 +212,12 @@ member, not just a retag.
       already correct on trunk — and the doc has been archived to
       `/plans/archive/issues/deployment_api_sigabrt_crash_loop_unresolvable_sha_citation_2026_07_31.md` per the
       archival-discipline HARD RULE (zero open todos, `locked_by:` empty). No retag needed on an archived doc.
-- [ ] [DOCS] P3. Retag
+- [x] ✅ [DOCS] P3. ~~Retag
       `plans/active/issues/gcp_service_accounts_registry_diverged_from_live_provisioning_2026_07_31.md`'s `asset_group`
-      `[cross-cutting]` → `[infrastructure]` (finding 4). Done when: the tag is corrected, the doc is folded into
-      `infra_consolidated_closeout_2026_07_25.md`'s membership, and its 2 AO-eligible items (live SA enumeration;
-      default-compute-SA risk documentation) are considered for the infra tranche's next batch.
+      `[cross-cutting]` → `[infrastructure]` (finding 4).~~ **DONE 2026-08-19 (ag-closeout-audit cross-cutting
+      reconciliation pass)** — verified live: target now `asset_group: [infrastructure]`, `status: open` (doc still has
+      independent open work — only the retag half of this todo was ours to verify). Fold-in into infra's closeout
+      membership and the AO-eligible items are the `infra` tranche's own next-batch consideration, not re-verified here.
 - [x] ✅ [DOCS] P3. ~~Retag `plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md`'s
       `asset_group` `[cross-cutting]` → `[ao]` (finding 5)~~. Done when: the tag is corrected and the doc is folded into
       `ao_consolidated_closeout_2026_07_25.md`'s membership (already named there per 2 independent prior audits).
@@ -275,3 +273,6 @@ member, not just a retag.
   concurrent-sharded-worker rule -- structurally not this tranche's write, not a defaulted-to-NA judgment call.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:e22ed7c9f56bb881]: KEEP-NA, valid -- 2 open items verified via grep, matching inventory. Both remaining items (retag two other tranches' docs' asset_group away from cross-cutting) are explicit rule-(c) redirects to a DIFFERENT tranche's own audit pass, per the doc's own cited concurrent-sharded-worker rule -- even though each retag reads as a clean, bounded, one-line frontmatter edit, the dispatch mechanism is structurally wrong for THIS tranche to execute (would race the owning tranche's worker on the same file). This exact verdict has been reaffirmed by four prior na-eligibility-audit passes (2026-08-02, 08-04, 08-07, 08-08), all citing the identical redirect reasoning -- a standing, repeatedly-confirmed ruling, not re-litigated here.
+- **2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass)**: verified both remaining open todos (2, 4) live —
+  both targets are now correctly retagged (`[ao]` and `[infrastructure]` respectively). Flipped both `[x]`. All 6 todos
+  in this doc are now done — see archival check immediately following this entry.

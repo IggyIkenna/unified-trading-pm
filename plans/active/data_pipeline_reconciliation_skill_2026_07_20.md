@@ -8,8 +8,9 @@ summary: >-
   documented-understanding gap the audit exposed — 33 codex/plan contradictions (4 BLOCKING) and 12 missing codex SSOTs
   — because a skill that encodes its own canonical definition is unauditable by the workspace's own SSOT rule.
   **Standing reference surface, not an archival candidate** (resolved
-  `autonomous_session_operator_decisions_2026_07_25.md` entry #10, 2026-07-26, option A) — 0 open / 42 done as of
-  `unified-trading-pm@7ae64f4c2` is expected here, not a lifecycle signal, per
+  `autonomous_session_operator_decisions_2026_07_25.md` entry #10, 2026-07-26, option A) — 0 open / all done (a
+  specific total is deliberately not restated here — it grows as phases are added and re-rots; `grep -cE
+  '^- \[x\] [0-9]+\.'` for the live count) is expected here, not a lifecycle signal, per
   `cross_cutting_consolidated_closeout_2026_07_25.md` Track 13, which keeps this "as a pure cross-reference, not
   something to close" — it is also the cited home of the D1/D2 rulings `cursor-configs/CLAUDE.md`'s reconciliation
   section leans on. Keep `status: active` in `plans/active/`.
@@ -778,7 +779,7 @@ dry-run→verify→apply→manifest→verify twins. **Stage 3:** todo 32 (launch
   ORCA 14,094 + the 66 Raydium intersection correctly skipped. The dry-run counts matched R5 exactly (raydium 32 write /
   66 skip). **The legacy `dex_pools/`+`lending_indices/` prefixes now have canonical twins for every cell → the delete
   is SAFE, but stays HUMAN-ONLY per the ruling.**
-- **25 ✅ DONE — `execution-service@45628a37`.** Repointed `solana_amm_depth_provider.py` from the legacy `dex_pools/`
+- **25 ✅ DONE — `execution-service@5b85fa70`.** Repointed `solana_amm_depth_provider.py` from the legacy `dex_pools/`
   template to the canonical `dex_pool_state` path (via `build_defi_partition_path`), and fixed the `resolve_bucket_name`
   call that raised `TypeError` (bad `kind`/`env`/`project_id` kwargs, outside the `try` → dead-on-arrival). The ship
   agent caught a spec error: the writer emits `pipeline_mode=batch_onchain_subgraph` (not coarse `batch`), so the reader
@@ -833,7 +834,7 @@ legacy-only Solana instruments** copied to canonical twins where R5 found NONE: 
 ORCA 14,094 + the 66 Raydium intersection skipped (UNION-idempotent). Copy-not-move — **legacy delete is now SAFE but
 HUMAN-ONLY**. Reused `write_defi_rows` (the writer SSOT) so the folded objects are byte-identical to the live writer's.
 
-**25 — Repoint reader ✅** `execution-service@45628a37`. Legacy `dex_pools/` template → canonical `dex_pool_state` via
+**25 — Repoint reader ✅** `execution-service@5b85fa70`. Legacy `dex_pools/` template → canonical `dex_pool_state` via
 `build_defi_partition_path`; fixed the `resolve_bucket_name` call that raised `TypeError` (dead-on-arrival). A
 spec-error catch: the writer emits `pipeline_mode=batch_onchain_subgraph`, not coarse `batch`.
 
@@ -876,7 +877,7 @@ residual: the manifest-row registration follow-up.
 
 - **defi dex_pools/lending_indices FOLD → REPOINT → DELETE — COMPLETE.** 648 legacy-only Solana twins folded
   (`mtds@13b9dac5`) + verified (KAMINO-vault 0→513 · SOLEND 0→59 · KAMINO-lending 0→44 · RAYDIUM 100→132); reader
-  repointed (`execution-service@45628a37`); F6 enumerator vocab 3-repo (`uac@5d83b729` + `is@c781eb0b`); Tier-2 VM 31/32
+  repointed (`execution-service@5b85fa70`); F6 enumerator vocab 3-repo (`uac@5d83b729` + `is@c781eb0b`); Tier-2 VM 31/32
   (`ds@bd7a7bd8`, `ds@00a980e`, `is@ad05e34`); **operator prod-DELETED the legacy prefixes** — re-probed 0 objects,
   twins intact. `defi_dex_pools_delete_order_stale` RESOLVED; codex DO-NOT-DELETE banners flipped (CLAUDE.md + inventory
   rows 7/8). **Residual: the 648 twins' manifest rows are UNREGISTERED**

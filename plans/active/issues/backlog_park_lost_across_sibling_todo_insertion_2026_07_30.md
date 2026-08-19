@@ -13,6 +13,11 @@ summary: >-
   `50` — the hand-tune did not carry forward, even though the todo's own text was unchanged. This is dispatch-shaped,
   not content-shaped: a park survives an in-place regen tick but not a doc edit that adds/removes a SIBLING todo
   above/around it.
+
+  **CORRECTED (this doc's own later investigation, todo 1, DONE)**: traced end-to-end + a regression test
+  (`test_regen_park_survives_sibling_insertion`) added — the "sibling insertion breaks the park" mechanism above does
+  NOT reproduce against current code (matching is content-hash-only, not positional). The original incident's actual
+  trigger remains unexplained; see the Progress Log for the resolved finding and an unproven alternative hypothesis.
 status: open
 nature: issue
 asset_group: [ao] # retagged 2026-07-31 (corpus-sweep meta fold-in) -- was [meta]

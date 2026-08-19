@@ -531,9 +531,21 @@ traffic to count until the migration is finished. What is certain is that their 
       per day and `market-tick-data-service` 49 runs / 256 jobs. Together that is ~54% of all fleet job-minutes. Cutting
       redundant triggers beats any instance-size choice, and no downsizing fixes it.
 
-- [ ] [OPERATOR] P0. **RULED 2026-08-06, option (a): require approval for all outside-contributor fork PRs + restrict
-      `allowed_actions`.** Keep `unified-trading-pm` public and self-hosted; close the fork-PR code-execution hole
-      instead of moving CI or making the repo private. **Two sub-parts, different mechanisms:** (1) `allowed_actions` —
+- [x] ✅ [OPERATOR] P0. ~~**RULED 2026-08-06, option (a): require approval for all outside-contributor fork PRs +
+      restrict `allowed_actions`.** Keep `unified-trading-pm` public and self-hosted; close the fork-PR
+      code-execution hole instead of moving CI or making the repo private.~~ **SUPERSEDED BY A DIFFERENT
+      REMEDIATION — corrected 2026-08-19 (plan_reconciler).** The security GOAL (close the public-repo fork-PR
+      code-execution exposure) was achieved, but via the OPPOSITE mechanism from what this todo scoped: PM's
+      self-hosted runners were fully reverted to `ubuntu-latest` on 2026-08-07 (see this same doc's own
+      L610-620/L702 "Complete the public-repo migration — DONE 2026-08-07"), not hardened-and-kept per the
+      option-(a) ruling below. Codex now documents the revert as the adopted, standing posture:
+      `/codex/07-security/self-hosted-runner-security-posture.md:80-89` — "the `unified-trading-pm` exposure is
+      RESOLVED (2026-08-07)... Standing invariant going forward: never register a self-hosted runner pool on a
+      public repo." Neither `allowed_actions` restriction nor the fork-PR-approval click-through below was ever
+      applied (both remained blocked per the 2026-08-08 operator note) — moot now that self-hosted routing itself
+      is gone from this repo. Flipped `[x]` on the superseding evidence, not the originally-scoped artifact,
+      per this skill's own "close on newer evidence, not the stale cited artifact" convention. **Two sub-parts,
+      different mechanisms (kept for the historical record, neither applied — see above):** (1) `allowed_actions` —
       checked live 2026-08-06, currently `"all"` (any marketplace/third-party action can run); tightening to `selected`
       (an explicit allow-list) is agent-executable via
       `gh api -X PUT repos/IggyIkenna/unified-trading-pm/actions/permissions` — **not yet done**, needs the actual

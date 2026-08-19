@@ -115,6 +115,14 @@ source: >-
       sanctioned maintenance pattern for this durability gap). Verify post-run: a fresh dry-run of the same script
       shows 0 rows in TARGET #2's in-scope count. Do NOT pass `--remove-stragglers` (a separate, higher-risk in-place
       CAS action) unless explicitly re-scoped. Repo: market-tick-data-service.
+      **[OPERATOR] GATE RESOLVED 2026-08-19 (operator ruling, `BLK-2062d75e`, answered 2026-08-19T15:44:13Z) — RULED
+      option A: normalize the CQG-bundle to `PREDICTION_MARKET` too.** The 2026-08-19 gate this line carried (this
+      todo's "RESOLVED BY PRECEDENT" framing only actually covering the per-CID half, not the CQG-bundle half of the
+      SAME contradiction `prediction_phase_ab_residuals_2026_07_24.md` finding (i) flagged as unresolved) is now
+      closed — the operator explicitly chose "normalize the bundle to `PREDICTION_MARKET` too... matching the per-CID
+      precedent" over "enforce SSOT bundle-null" (would have un-stamped 77,788 rows) or "leave inconsistent."
+      **`[OPERATOR]` tag REMOVED below — this todo is dispatchable as originally written** (`--bundle-mode normalize
+      --apply --confirm-prod-write`, both halves: 9,260 per-CID + 2,280 CQG-bundle).
 
 ## Deferred
 

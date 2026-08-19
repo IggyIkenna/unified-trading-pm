@@ -91,6 +91,19 @@ error. The gate suppresses only when it can PROVE the key is within its cooldown
 | `ci-status-update.yml` · `notify`                | a repo's CI **went red** (`client_payload.status=='FAILING'`)                                                   | _(none — per-transition)_   |            n/a | green `CI-RECOVERED` / SIT-pass all-clears are NOT posted (WS-2, 2026-07-13); Firestore CAS + `is_stale_write` order the transitions; Firestore + GCS-ledger writes are unchanged                                                                                                                                                                                                                 |
 | `glue-pool-starvation-monitor.yml`               | a `glue`-labelled job `queued` past threshold while `in_progress == 0` (self-hosted runner pool total collapse) | `glue-pool-starved`         |             60 | SHIPPED 2026-08-09 (`ci_satellite_ao_dispatch_batch1_2026_07_26.md` — archived, see `/plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md`, `unified-trading-pm@80f397278`); decision logic in `scripts/cicd/glue_pool_starvation_monitor.py`; runs on a hosted runner (never `glue` itself, by design — a starved `glue` pool must not also starve its own monitor); cron `*/15` |
 
+## Failure↔resolution linkage — `streak_start_sha`
+
+`notify-qg-fail` (CRITICAL) and its eventual `notify-qg-recovered` (GREEN) counterpart, both in
+`unified-trading-ci/.github/workflows/python-quality-gates-v2.yml`, share a `streak_start_sha` identifier so a reader
+can tell which resolution closes which failure without manually walking a PR-number or sha chain. `record_decide`'s
+existing per-`{repo}:{branch}` Firestore write (`qg_last_conclusion`) carries a `streak_start_sha` field: the sha that
+began the CURRENT run of same-verdict results on that branch, preserved across consecutive same-verdict runs and
+re-seeded the instant the verdict flips. Threaded through as job outputs (`current_streak_start_sha`,
+`resolved_streak_start_sha`) and cited in both alert messages — `notify-qg-fail` as `· incident since \`<sha>\``and`notify-qg-recovered`as`(incident since \`<sha>\`)`— so both messages about one incident carry the identical,
+greppable identifier. Works uniformly for both the LDR-push and promote-PR paths (one mechanism, not two). Shipped`unified-trading-ci@7000ac0`(2026-08-16). **Not yet extended** to`ldr-to-main-promote.yml`'s drain-bot messages or
+`ldr-ci-monitor.yml`'s RED→GREEN posts — both are tracked follow-ups, not yet done. SSOT:
+`/plans/active/issues/ci_alert_failure_resolution_linkage_2026_08_16.md`.
+
 ## Why the three QG/CI-failure reporters show different counts
 
 A recurring question — three workflows report CI failure and their Slack counts never match. They report at **different

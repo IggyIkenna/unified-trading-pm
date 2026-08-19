@@ -133,11 +133,13 @@ interrupted-draft signal — worth the infra-craft triage recognizing both shape
 
 ## Todos
 
-- [ ] [INFRA] P3. Triage the orphaned patch above: either (a) implement the `STAGGER_SECONDS` fan-out-stagger feature
-      it specifies, or (b) confirm the design is superseded and leave that todo open with a note.
-      For (a): implement in `scripts/cicd/ldr_to_main_fleet_promote.sh` (+ its regression test) and flip
-      `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s stagger todo with a real commit sha. Repo: unified-trading-pm. Done when: either
-      the feature ships for real, or the batch15 todo carries an explicit note that this draft was discarded.
+- [x] ✅ [INFRA] P3. Triage the orphaned patch above — option (a) confirmed shipped for real, verified 2026-08-19
+      (plan_reconciler, cross-cutting tranche): `STAGGER_SECONDS` fan-out-stagger genuinely exists at
+      `scripts/cicd/ldr_to_main_fleet_promote.sh:370-372,1400` (env-overridable stagger + the gating `sleep` call)
+      and its regression test `scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh` exists — both
+      on `origin/live-defi-rollout` (not the orphaned patch's `<sha>` placeholder).
+      `ci_satellite_ao_dispatch_batch15_2026_08_16.md:118` already carries the real matching flip ("DONE
+      2026-08-17 (slot 20) — unified-trading-pm@23499c954f"). Done-when satisfied.
 - [x] ✅ [INFRA] P2. DONE 2026-08-17 (slot 5, infra) — Investigate the second occurrence: why is
       `deployment-service@e631240990` (a real, properly-trailed commit by slot-27, 2026-08-17T05:56:16Z, adding
       `scripts/measure_shard_duration_p95.py`) NOT an ancestor of current `live-defi-rollout` HEAD? **Resolution:

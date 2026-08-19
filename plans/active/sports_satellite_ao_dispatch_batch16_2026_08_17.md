@@ -71,16 +71,14 @@ carries an `[OPERATOR]` tag or a design/judgment call; both are bounded, worker-
       `sports_consolidated_closeout_2026_07_19.md` Track S. Repo: instruments-service. Done when: either the legacy
       write path is removed (with a confirming grep/test that nothing still calls it), or a documented reason is
       recorded for why it must stay, and the source doc's checkbox is flipped (via this batch's finalize plan).
-- [ ] [DATA] P2. **Snapshot-then-cull the 16 remaining post-floor day dirs (2024-12-24..2026-04-20) in `sports_reference_v2/by_date/`**, once confirmed no reader consumes the path — the original self-justified gate
-      this item carried before a 2026-08-02 operator ruling temporarily broadened it, now restored to this narrower
-      scope (the pre-floor portion of the same population, 1,528 objects, was already wiped and verified 0 remaining;
-      only this post-floor residual is still open). Reversibility-verified before any delete
-      (`gcs_bucket_soft_delete_retention_seconds()` must return ≥604800s, freshly checked at execution time, per
-      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` §3a) — no `[OPERATOR]` gate needed once that holds.
-      Source: `sports_consolidated_closeout_2026_07_19.md` Track S. Repo: instruments-service. Done when: the
-      reader-check is recorded, the reversibility check is fresh-verified, the 16 day-dirs are snapshotted then
-      deleted (or confirmed not safe to delete with the reason recorded), and the source doc's checkbox is flipped
-      (via this batch's finalize plan).
+- [x] ~~[DATA] P2. Snapshot-then-cull the 16 remaining post-floor day dirs (2024-12-24..2026-04-20) in
+      `sports_reference_v2/by_date/`~~ — **DUPLICATE, already done — struck 2026-08-19 (plan_reconciler, agt-07473e).**
+      This exact population shipped 2026-08-04 (slot-12): `deployment-service@1b63863`,
+      `wipe_sports_reference_v2_post_floor_2026_08_04.py --apply`, 64/64 objects deleted, 0 error, post-delete 0
+      objects under prefix — reconciled into `sports_consolidated_closeout_2026_07_19.md`'s own Track S checkbox in
+      the same pass this todo was struck. Drafted 2026-08-17, 13 days after the work shipped, without checking
+      `sports_consolidated_native_ao_extract_2026_07_25.md`'s already-DONE todo for the same population. No worker
+      should pick this up.
 
 ## Codex SSOTs
 

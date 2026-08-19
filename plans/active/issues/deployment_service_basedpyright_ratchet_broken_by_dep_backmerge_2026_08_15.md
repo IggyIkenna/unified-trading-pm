@@ -18,7 +18,7 @@ summary: >-
   3 known LOCAL_DEPS.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a deployment-service CI/quality-gate ratchet break, own tags already say "ci", not data-pipeline scope
 stage: [meta]
 repos: [deployment-service, unified-api-contracts, unified-trading-library]
 scope: [engineer]

@@ -611,6 +611,34 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
 
 ## Progress Log
 
+- **2026-08-19 (interactive session) — Task Token Usage / Batching Efficiency provider + role-group filter
+  completeness, prompted by an operator screenshot review.** Operator asked whether round-robin dispatch tiering
+  includes planning/escalation and whether analytics treats every model uniformly; the concrete, actionable half of
+  that turned out to be this plan's own dashboard panels. Two real gaps confirmed by direct code read + screenshot:
+  (1) `PROVIDER_MODEL_FILTER_OPTIONS` (`TaskUsageWindows.tsx`) only had DeepSeek/Anthropic buttons while the account
+  row underneath already listed real accounts from Gemini/GLM/Codex-Luna/Kimi/Gemma(NVIDIA) — six providers reachable
+  only by scrolling the account row, never as a top-level filter; (2) `ROLE_GROUP_FILTER_OPTIONS` was missing
+  `quality_gate_resolution` even though the backend (`TASK_ROLE_GROUPS`/`_ESCALATION_ROLES`,
+  `server/state_store/slots.py`) already classifies that role_group independently — counted in "All roles" but never
+  independently filterable.
+  - Also found, same session, a THIRD thing already fixed but uncommitted in this exact working tree (2-hour-stale,
+    no live edit lock — inherited per the liveness-gated dirty-WIP rule): `accountFilterOptions()` scoping the
+    per-account row to the selected provider, plus a new `UsageFilterStore.ts` syncing the provider selection between
+    this panel and `BatchingEfficiencyPanel.tsx`. Both were exactly the operator's own follow-up ask ("filter to
+    accounts under that provider") — already built, just unshipped.
+  - **Shipped, agent-orchestrator@b65f6d42** (landed by a concurrent session sharing this slot's checkout while this
+    session was running its own QG pass — confirmed via `git log`/`git show`, correct slot-6 author identity, pushed
+    to `origin/live-defi-rollout`, ahead=0): the inherited account-scoping/cross-panel-sync fix, this session's
+    6-provider filter addition, plus Playwright coverage for both (`task-usage-provider-account-sync.spec.ts` gained
+    2 new tests: every new provider button renders, and selecting Gemini scopes the account row correctly).
+  - **Shipped separately, agent-orchestrator@d318745830** (verified ancestor of `origin/live-defi-rollout`): the
+    `quality_gate_resolution` role-group addition wasn't
+    covered by the concurrent session's own edits to `task-usage-role-group-filter.spec.ts`, so added one more test
+    there (button renders + filters to a zeroed bucket for this fixture) and shipped via quickmerge in this same
+    session.
+  - Full verification chain run this session: `tsc --noEmit` clean, full dashboard `vitest` (463 tests) green, the
+    3 touched/extended Playwright specs green (18 + 9 + 6 tests) against the real e2e mock backend, then a full
+    `bash scripts/quality-gates.sh --no-fix` pass (4421 python tests + dashboard checks) green.
 - **2026-08-18 (delta investigation, operator ask) — re-investigated existing coverage before adding scope, per
   operator instruction ("investigate the delta ... I'm not sure why there are so many extra to-dos").** Operator's
   original ask ("reconciliation, task usage, batch call usage, terms, reasoning, tokens ... across all providers")

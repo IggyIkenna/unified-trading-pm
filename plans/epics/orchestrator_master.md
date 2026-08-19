@@ -47,6 +47,8 @@ related_plans:
   - ../active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md
   - ../active/ao_satellite_ao_dispatch_batch21_2026_08_16.md
   - ../active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md
+  - ../active/ao_satellite_ao_dispatch_batch23_2026_08_17.md
+  - ../active/ao_satellite_ao_dispatch_batch23_finalize_2026_08_17.md
   - ../active/ao_satellite_ao_dispatch_batch3_2026_07_31.md
   - ../active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md
   - ../active/ao_satellite_ao_dispatch_batch8_2026_08_08.md
@@ -64,7 +66,8 @@ related_plans:
   - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31.md
   - ../active/quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md
   - ../active/review_agent_evidence_gated_write_capability_2026_08_09.md
-last_updated: 2026-07-16
+  - ../active/slot0_self_cleaning_daemon_2026_08_18.md
+last_updated: 2026-08-19 # was 2026-07-16 -- related_plans roster was missing 3 active parent_epic:orchestrator_master plans (batch23_2026_08_17 + its finalize, slot0_self_cleaning_daemon_2026_08_18) despite matching status:active; corrected 2026-08-19 (plan_reconciler ao)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 external_references:

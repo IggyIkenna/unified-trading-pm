@@ -100,7 +100,10 @@ source: >-
       remain; add the archival banner + set `status: complete`; grep the corpus for
       `multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01` and repoint every referrer (including
       `two_agents_slot3_collision_and_yahoo_finance_red_tree_2026_07_15.md`, which explicitly defers its own mechanism
-      build to this doc); clear any lock if set. Then physically move the parent doc under `plans/archive/2026_08/`.
+      build to this doc); clear any lock if set. Then physically move the parent doc under `plans/archive/issues/`
+      (corrected 2026-08-19, plan_reconciler ao — the parent is `doc_type: issue`, which uses the flat
+      `plans/archive/issues/` path per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, not the
+      dated `plans/archive/2026_08/` form this todo previously named).
       **Done when**: `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard,
       `check_reference_paths.py` shows no NEW dangling reference above its baseline, and
       `regenerate_active_plan_inventory.py` reports 0 orphans for this doc. Repo: unified-trading-pm.

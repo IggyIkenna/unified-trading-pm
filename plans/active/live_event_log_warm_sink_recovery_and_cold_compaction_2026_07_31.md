@@ -175,10 +175,11 @@ determinism needs.
       lower-frequency publish batch, not a separate bug). This is the FIRST time any of these 3 venues' book/liquidation
       data has reached the warm tier with real content (previously either the connector produced 100% empty capture, or
       — for `OKX-FUTURES` — the whole WS connector was broken).
-- [ ] [DATA] P1.2. **Line-1 rewritten 2026-08-19 (`/plan-reconcile`, task_template.md §3 line-1-completeness) — the
-      action verb was buried past physical line 1, invisible to `regen_backlog_from_plan.py`'s task-brief parser.**
-      Re-run the `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now that real
-      warm+cold data is confirmed flowing (P1.1). **⏸ PARKED 2026-07-31** (main, Option A — gated behind false prereq
+- [ ] [DATA] P1.2. Re-run the `paper(W)==batch-rerun(W)` determinism test for BINANCE-FUTURES/ASTER/OKX-FUTURES now
+      that real warm+cold data is confirmed flowing (P1.1). **Line-1 fix corrected 2026-08-19 (plan_reconciler,
+      cross-cutting tranche) — a same-day earlier "line-1 rewritten" banner itself cut off mid-clause at "— the",
+      burying the real action 3 lines down; this version puts the actual verb on line 1 for real.** **⏸ PARKED
+      2026-07-31** (main, Option A — gated behind false prereq
       `p1-2-preconditions-met`, priority:999). Doubly-blocked and NOT worker-satisfiable: unpark only once BOTH (a)
       ≥24h since the P1.1 redeploy (`2026-07-31T21:14Z`, i.e. ~`2026-08-01T21:14Z`) have elapsed AND (b) a paper run
       trading these 3 venues is confirmed (see

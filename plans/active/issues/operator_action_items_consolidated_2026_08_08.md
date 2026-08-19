@@ -10,7 +10,11 @@ summary: >-
   nobody else can do. Everything NOT on this list has already been applied autonomously.
 status: open
 nature: issue
-asset_group: [cross-cutting, ao, cefi, ci, defi, infrastructure, sports]
+asset_group:
+  [meta] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting, ao, cefi,
+  # ci, defi, infrastructure, sports]. A pure consolidated operator-hands-only action list spanning many domains
+  # (credentials, GitHub-UI settings, stash cleanup, design reviews, hard-stops) -- genuinely meta/process, not
+  # itself data-pipeline content in any one (or all) of those tranches.
 stage: [meta]
 repos: [unified-trading-pm, features-service, deployment-service]
 scope: [admin]

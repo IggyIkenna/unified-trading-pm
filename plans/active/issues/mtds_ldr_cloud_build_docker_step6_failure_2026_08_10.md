@@ -144,7 +144,14 @@ is why these two MTDS conditions were hard to tell apart from the alert alone.
       UTL's `>=0.110.0` floor locally. First green MTDS image build since 09:22Z, ending 20 consecutive failures. NOTE:
       MTDS builds on `main` stay red until LDR→main promotion carries this sha across — expected, self-resolving, not a
       separate defect.
-- [ ] [BACKEND] P3. **Sibling repos mis-stamp their own package version from the same inherited ENV.** The UTL base
+- [x] ✅ [BACKEND] P3. **DONE — verified shipped 2026-08-19 (plan_reconciler, cross-cutting tranche).** Both fixes
+      landed and both blockers cleared: `strategy-service@b569635c2` and `greeks-service@d4b796dfd` (both
+      2026-08-15, "fix(cloudbuild): pass SETUPTOOLS_SCM_PRETEND_VERSION build-arg to docker build") are reachable
+      on `origin/live-defi-rollout`, and both `cloudbuild.yaml`s now pass `--build-arg
+      SETUPTOOLS_SCM_PRETEND_VERSION=$$VERSION` (confirmed via direct grep). The 2 blockers below are also
+      confirmed cleared: the strategy-service LDR-tip gate doc is archived+resolved; greeks-service's
+      `.github/workflows/semver-agent.yml` shows zero uncommitted state (`git status --porcelain` empty).
+      **Sibling repos mis-stamp their own package version from the same inherited ENV.** The UTL base
       image bakes `ENV SETUPTOOLS_SCM_PRETEND_VERSION`, and every repo that `FROM`s it inherits that value live in each
       `RUN`. Measured 2026-08-10: `strategy-service` and `greeks-service` declare
       `ARG SETUPTOOLS_SCM_PRETEND_VERSION=0.0.0.dev0` but their `cloudbuild.yaml` never passes `--build-arg`, so their

@@ -167,10 +167,12 @@ grace status fresh rather than assuming still-blocked; most are now outside the 
       declines to assert whether the original launch-day-partitioning defect itself has regressed — reopening the
       checkbox would require a fresh live-code check beyond doc reconciliation (the doc's own hedge already achieves
       the misleading-doc fix). Left open as ORDINARY WORK, not a doc-hygiene gap.
-- [ ] [DOCS] P3. `prediction_satellite_ao_dispatch_batch6_2026_07_29.md:159` — Betfair item's tag still reads plain
+- [x] ✅ [DOCS] P3. `prediction_satellite_ao_dispatch_batch6_2026_07_29.md:159` — Betfair item's tag still reads plain
       `[INFRA]` though the newest Progress Log entry (2026-08-12) shows it blocked on an external Betfair
       account-holder action (`ACCOUNT_PENDING_PASSWORD_CHANGE`) with a `/blocked` filed — no `[OPERATOR]`/`BLOCKED-*`
-      tag reflects this. **NOT fixed 2026-08-16 (Phase -1)**: re-checked, could not locate the
+      tag reflects this. **FIXED 2026-08-19 (ag_closeout_auditor, prediction tranche)** — retagged
+      `[BLOCKED-CREDENTIALS][INFRA]` (landed via `plan_reconciler_findings_predictions_master_2026_08_19.md`'s copy of
+      this same finding; this doc's copy is superseded, not independently re-applied). **NOT fixed 2026-08-16 (Phase -1)**: re-checked, could not locate the
       `ACCOUNT_PENDING_PASSWORD_CHANGE` text anywhere in the current doc (grep, 0 hits) — the cited Progress Log
       entry/detail may live in the mirrored issue doc referenced in the tag's own note instead, not independently
       traced further this pass. Low priority (P3), left open, real remaining work.

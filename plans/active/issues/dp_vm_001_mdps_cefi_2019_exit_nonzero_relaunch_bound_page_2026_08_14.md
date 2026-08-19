@@ -25,7 +25,7 @@ related:
   [
     /codex/15-runbooks/incidents/rb_infra_relaunch.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
+    /plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
     /plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
   ]

@@ -391,9 +391,10 @@ on my inference.
       sports 24→755, tradfi 52→70 since 2026-07-03; cefi fell 104→82, prediction fell 17→4) — same
       `(venue × instrument_type × data_type)` grain both measurements, so this is not a grain artifact. Candidates,
       not yet distinguished: real new captures at venues UAC hasn't sanctioned yet, a UAC registry change that
-      narrowed what counts as EXPECTED, or a writer change. Feeds
-      `plans/active/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`, which already tracks the
-      underlying UAC↔writer contract gap this trend sits inside.
+      narrowed what counts as EXPECTED, or a writer change. `/plans/archive/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md`
+      (moved from `plans/active/issues/`, `status: resolved` 2026-07-03, all 5 todos done) tracked a related but
+      already-CLOSED UAC↔writer contract gap — it does NOT track this new stray-tuple growth, which needs its own
+      fresh investigation, not a reopen.
 
 ## Friday-target table — BATCH readiness per asset_group (2026-08-18)
 

@@ -9,7 +9,7 @@ summary: >-
   actually being captured, how completely, or when it last ran.
 status: open
 nature: process
-asset_group: [tradfi, cross-cutting]
+asset_group: [tradfi] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [tradfi, cross-cutting]; macro/calendar data is tradfi-only per the corpus's own prior cross-cutting audit precedent, not multi-AG
 stage: [features]
 repos: [features-service]
 scope: [engineer]

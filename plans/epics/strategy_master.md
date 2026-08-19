@@ -181,6 +181,23 @@ have at least one archetype slot; the genuine gaps are narrower than "no archety
 | Morpho | PARTIAL — candidate-protocol string only, no slot where it is primary/sole venue | `MULTICHAIN_LENDING`/`BTC_LENDING` `candidate_protocols`, flash-loan venue in `RECURSIVE_STAKED_BASIS` |
 | Uniswap | registered | `BASIS_TRADE`, `L2_BASIS` |
 | CoW Swap | absent | zero hits anywhere in `strategy_service/` |
+| Jupiter (spot) | n/a | swap-only venue, no perp surface exists — not an archetype-registration question |
+| Raydium | registered | `CARRY_BASIS_PERP@raydium-hyperliquid-sol-1h-sol-v5-prod` (`spot_venue=raydium`) + `MARKET_MAKING_CONTINUOUS@raydium-sol-usdc-1h-sol-v5-prod` |
+| Drift | removed | operator-killed 2026-07-16, reaffirmed 2026-08-14 — genuine conflict with this session's operator request, flagged as an `[OPERATOR]` item in `execution_master.md`, not duplicated here |
+| Pacifica | registered | `CARRY_FUNDING_DISPERSION` + `CARRY_BASIS_PERP`, full stack shipped 2026-08-14/15 |
+| Jito (LST, jitoSOL) | registered | `CARRY_RECURSIVE_STAKED@kamino-jito-hyperliquid-sol-1h-sol-v2-prod` |
+| Jito Restaking | absent | zero archetype-slot registration found, despite adapters existing at every other layer |
+
+- [x] [BACKEND] P1. ✅ **Solana venue set (Jupiter/Raydium/Drift/Pacifica/Jito) — real per-venue archetype-
+      registration audit, 2026-08-19.** Raydium and Jito(LST) are genuinely registered (real slots, not
+      candidate-only mentions, matching the Uniswap/AAVE V3 pattern rather than the Lido/Morpho partial one). Jito
+      Restaking has zero archetype-slot registration despite adapter coverage everywhere else — tracked as an
+      execution-side scoping question (`execution_master.md`, "Jito Restaking" todos) since building a slot before
+      confirming any archetype needs restaking specifically would be speculative. Drift's removal is real and
+      recent (2026-08-14 reaffirmation) but conflicts with this session's operator instruction — the reconciliation
+      todo lives in `execution_master.md` (`[OPERATOR]` tag), not duplicated here since it's a single cross-cutting
+      decision, not a strategy-specific one. Full per-venue execution/MTDS/features detail: `execution_master.md`'s
+      "Solana venue set" section.
 
 - [ ] [BACKEND] P2. **Lido — give it a real archetype slot, not just a candidate-protocol mention.** Currently
       `STAKED_BASIS`/`RECURSIVE_STAKED_BASIS` both default to `etherfi`; add a Lido-instantiated slot (or a
@@ -229,15 +246,18 @@ about who/what EXECUTES. There is no analogous `execution_mode_availability()` c
 mechanism exists — `close_all/_template.py` is an emergency-only kill-switch path, not routine manual entry; there
 is no `ManualTradeGateDialog`-equivalent backend hook in strategy-service (0 hits; that's UI-repo-only today).
 
-- [ ] [OPERATOR] P1. **Design the manual-live vs automated-live sub-axis.** Not mechanically derivable — resolve
-      exactly how it's modeled (a new sub-enum orthogonal to `OperationalMode`? reusing/extending `ExecutionTrigger`
-      and wiring it beyond the one close-all call site? a field on the archetype's runtime config?) before any
-      wiring lands. Companion execution-service-side todo in `execution_master.md` — the two sides must agree on
-      ONE shape, not diverge into two.
-- [ ] [BACKEND] P2. **Build the routine manual-trade-entry mechanism** (paper AND live) once the design above is
-      resolved — a human books a trade by hand, strategy-service tracks/reconciles it going forward, distinct from
-      the existing emergency close-all path. `[BACKEND]`-eligible once the `[OPERATOR]` item above is resolved, not
-      before.
+- [ ] [BACKEND] P1. **DECIDED 2026-08-19 — build the manual-live vs automated-live sub-axis as a static,
+      per-strategy-instance config flag, same shape as the existing paper-vs-live distinction.** No longer an open
+      design question (was previously `[OPERATOR]`-gated). Set once at strategy-instance launch time, not a
+      dynamic per-order or per-venue-default mechanism. Wire `OperationalMode.MANUAL`/
+      `ExecutionTrigger.MANUAL_OPERATOR` (the partial infra already found in this audit — `ExecutionTrigger` has
+      exactly one live consumer today, `close_all/_template.py`'s emergency kill-switch path) into this concrete
+      shape: the archetype's runtime config carries the new flag, and every live-order code path reads it instead
+      of assuming automated. Companion execution-service-side build in `execution_master.md`'s matching todo — the
+      two sides must land the SAME shape, not diverge into two.
+- [ ] [BACKEND] P2. **Build the routine manual-trade-entry mechanism** (paper AND live) once the flag above exists
+      — a human books a trade by hand, strategy-service tracks/reconciles it going forward, distinct from the
+      existing emergency close-all path. Sequence after the flag lands, not before.
 
 ### Instruction-type x order-type x venue-capability registry — cross-reference only (2026-08-19)
 

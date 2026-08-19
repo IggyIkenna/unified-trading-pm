@@ -261,9 +261,17 @@ and shipped — do NOT re-run those two if resuming from the script (their branc
       whole-corpus run can currently only happen via a manual operator-paused window. **Done when**: the actual branch
       is located (or confirmed absent) and, if absent, either implemented or SKILL.md corrected to match reality.
       Repo: agent-orchestrator (timer/dispatch logic) or unified-trading-pm (SKILL.md, if it's the doc that's stale).
-- [ ] [SCRIPT] P1. Re-run `/na-eligibility-audit` (all 9 tranches + integrate) for a clean STEADY-STATE benchmark —
-      today's run was a cold start (0 of any tranche's docs carried a prior verdict marker), so the ~13-27min/tranche
-      numbers are a ceiling, not steady-state. Should be dramatically cheaper now that markers exist from today's run.
+- [ ] [SCRIPT] P1. **Scope narrowed 2026-08-19 (plan_reconciler, cross-cutting) — the Phase-0 half is already
+      delivered, contradicting this todo's own unqualified framing below.** The 2026-08-16
+      `/na-eligibility-audit` Phase-0 steady-state benchmark (449 `assigned_vm: NA` docs / 1,516 open todos /
+      324-in-scope, full per-tranche table) was delivered via `ao_satellite_ao_dispatch_batch21_2026_08_16.md`
+      todo 3 — already relied on as fact elsewhere in this same doc (line ~309 below). What remains genuinely open
+      is the full **Phase-1 per-doc reclassification pass** across all 9 tranches + integrate, which
+      `ao_satellite_ao_dispatch_batch21_2026_08_16.md`'s own text explicitly says was NOT run. Re-dispatching this
+      todo as originally worded risks duplicating the already-delivered Phase-0 half. Original framing, now
+      superseded: today's run was a cold start (0 of any tranche's docs carried a prior verdict marker), so the
+      ~13-27min/tranche numbers are a ceiling, not steady-state. Should be dramatically cheaper now that markers
+      exist from today's run.
 - [x] [SCRIPT] P1. **Verify/install the `context-scout.timer` on the orchestrator VM** — RESOLVED 2026-08-03 (this item
       was independently worked by two concurrent sessions within the same ~15min window — this entry merges both; no
       duplicate remains). Root cause, confirmed via read-only AWS SSM directly against the orchestrator VM

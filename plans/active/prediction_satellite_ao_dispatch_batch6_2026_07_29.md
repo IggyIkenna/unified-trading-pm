@@ -49,23 +49,18 @@ tags: [prediction, ao-dispatch, close-out, batch-6, satellite-docs, data-correct
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
-    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/archive/2026_08/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
-    /plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
-    /plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
-    /plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
-    /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
+# archive-safety ratchet (2026-08-19, quality_gate_resolution agt-62ee9f): dropped 11 direct
+# /plans/archive/... citations (sibling batch2/3/4/5(+finalize) + 4 now-archived issue docs) --
+# per the archival ritual step 5, related: must not point at plans/archive/ directly. No fact
+# lost: every one was a closed-out sibling AO-dispatch batch or resolved issue, and the load-
+# bearing pointers (e.g. the Betfair item's Source doc) already live in this file's own prose,
+# which the ratchet explicitly exempts. Archived files remain readable at their original paths.
 created: "2026-07-29"
 last_updated: "2026-07-30"
 parent_epic: predictions_master
@@ -156,11 +151,26 @@ sports-tranche-owned).
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
 
-- [ ] [INFRA] P2. **RETAGGED 2026-08-11 (slot-20) — was `[BACKEND]`.** Remaining work is provisioning a NEW
-      `europe-west2` network egress (VM/proxy) — `infra` craft's domain, not `backend_engineer`'s (full rationale in the
+- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **CREDENTIAL APPROVAL REQUEST (filed 2026-08-19, /ci-reconcile)**: Betfair
+      login rejects with `ACCOUNT_PENDING_PASSWORD_CHANGE` (found 2026-08-12, per the todo below) — operator action
+      needed: reset the Betfair account password via their portal, then update the GSM `betfair-password` secret.
+      Not a routable infra/code task. **Correcting a conflicting note from `quality_gate_resolution agt-62ee9f`
+      (also 2026-08-19, merge-conflicted with this one) that claimed the outstanding ask was still `europe-west2`
+      egress provisioning**: verified false against
+      `prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`'s own Progress Log — the egress proxy
+      shipped 2026-08-11 (`deployment-service@7a7e847e`, `betfair-egress-proxy-20260811-211046`) and the geo-block
+      is confirmed gone (no more 403 "Restricted"); the password-change rejection is what Betfair returns NOW,
+      through that already-working proxy. **Two-sided Betfair odds — persist back+lay, not just one side.**
+      **RETAGGED
+      2026-08-19 (ag_closeout_auditor, prediction tranche)** — was bare `[INFRA]`; live-traced against
+      `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_is_non_dispatchable()`/`_has_live_blocked_token()`
+      and confirmed the bare tag read as falsely dispatchable despite the genuine external Betfair-account block
+      documented below — now matches the mirrored issue doc's already-correct tag (finding:
+      `plan_reconciler_findings_predictions_master_2026_08_19.md`). RETAGGED 2026-08-11 (slot-20) — was
+      `[BACKEND]`. Remaining work (as of 2026-08-11) was provisioning a NEW `europe-west2` network egress (VM/proxy)
+      — `infra` craft's domain, not `backend_engineer`'s (full rationale in the
       mirrored issue doc's Progress Log). **OPERATOR-DECIDED 2026-08-11: egress region resolved to `europe-west2`
-      (London) — see updated note below, was BLOCKED-OPERATOR-DECISION.** Two-sided Betfair odds — persist back+lay, not
-      just one side. Item `[5]` under the source doc's "Smaller open items (documented, not blocking paper)" — items
+      (London) — see updated note below, was BLOCKED-OPERATOR-DECISION.** Item `[5]` under the source doc's "Smaller open items (documented, not blocking paper)" — items
       `[1]`-`[4]` shipped 2026-07-20, this one is still open and needs a Betfair-exchange book source. Different
       component (Betfair adapter) from the EventTransport todo above — no file overlap expected, safe to run
       concurrently. **Source**: `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]).
@@ -249,6 +259,14 @@ sports-tranche-owned).
       session). Todos 1-3 shipped and green (`market-tick-data-service@fc9e36cd`/`@85872cab`/`@766e776d`, all
       verified ancestors of origin; `tests/unit/test_betfair_adapter.py` present). Tracking + 4 re-scoped todos:
       `/plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`.
+
+      **CORRECTED 2026-08-19 (ag_closeout_auditor, prediction tranche) — the "Next step" paragraph above is STALE.**
+      The `europe-west2` egress WAS provisioned 2026-08-12 (verified live via the issue doc's own Progress Log) and
+      the HTTP 403 geo-block it describes is resolved. The real current blocker is different: Betfair now rejects
+      login with `ACCOUNT_PENDING_PASSWORD_CHANGE` (found 2026-08-12), an operator/account-holder-only action (reset
+      the password via Betfair's portal, then update the GSM `betfair-password` secret) — not a routable infra task.
+      See `prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md` todo 4. Finding:
+      `plan_reconciler_findings_predictions_master_2026_08_19.md`.
 
 - [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-5, backend_engineer) — `market-tick-data-service@85872cab`.** Sub-item of
       the Betfair back+lay todo above: implement `BetfairAdapter.download_batch()` + `factory.py`/`umi_tick_provider.py`
@@ -688,6 +706,11 @@ sports-tranche-owned).
   `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (batch2_finalize todo 2); (c) archiving batch2 itself
   (todo 3). **Not re-drafted here** — flipping batch2_finalize to `active` (a separate operator action from this batch)
   is the correct next step, not a new batch6 todo. Flagging in this Progress Log so it isn't lost.
+
+- **CORRECTED 2026-08-19 (ag_closeout_auditor, prediction tranche)** — the bullet above is STALE: both
+  `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` and its finalize have been `status: complete`, archived
+  under `plans/archive/2026_07/`, since 2026-07-30. No action remains here. Finding:
+  `plan_reconciler_findings_predictions_master_2026_08_19.md`.
 
 ## Deferred — already self-dispatching (assigned_vm: planning + status: open, not a real orphan)
 

@@ -1184,6 +1184,55 @@
           receipt is queue time, receipt to send is execution's own processing.
         </p>
       </div>
+      <div class="callout">
+        <span class="tag">Target-state: a reference position alongside the reference price</span>
+        <b class="st st-plan">planned</b>
+        <b class="ev ev-assumed">~ assumed</b>
+        <p>
+          <code>reference_price</code> only tells execution what the market looked like at instruction time — it
+          says nothing about whether execution's view of strategy's <em>position</em> agrees with strategy's own
+          view. A price gap is a market observation; a position gap is an integrity problem. The proposed extension
+          adds a per-venue <code>reference_position</code>, shaped like <code>venue_constraints</code> above so it
+          stays meaningful under <code>SOR_AT_EXECUTION</code> routing, and reuses the existing four-way risk
+          consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>)
+          on mismatch rather than a new decision model — default <code>BLOCK</code>.
+        </p>
+        <div class="code">
+          <i># proposed additions to StrategyInstructionEnvelope — not yet on the schema</i>
+          reference_position: dict[str, Decimal] | None = None
+          <i># strategy's believed position, per eligible venue</i>
+          credit: CreditBand | None = None
+          <i># strategy-owned, strategy-computed — band (market-making) or hard threshold (arbitrage)</i>
+          position_adjustment_bps_per_unit_risk: Decimal | None = None
+          <i># one symmetric coefficient, against RAW position — generalizes QuoteInstruction.skew_on_inventory</i>
+
+          <span class="k">class</span> <b>CreditBand</b>:
+          entry_threshold: Decimal | None = None
+          <i># minimum edge to act</i>
+          abandon_threshold: Decimal | None = None
+          <i># max adverse move tolerated once committed — optional even when entry_threshold is set</i>
+        </div>
+        <p>
+          Both fields are governing boundaries strategy sets, not instructions execution must follow mechanically —
+          the same intent-vs-mechanism split <code>execution_policy_ref</code> and <code>AtomicInstruction</code>'s
+          own <code>hedge_deadline_ms</code> already draw above. A cross-instrument version — how a fill in one
+          instrument should move the acceptable adjustment on another — is real but explicitly out of scope here: it
+          would live as a fast-path approximation module inside execution-service, relevant only for non-fungible
+          pairs (a cross-chain staked-basis leg, options across different terms or strikes), and is stubbed, not
+          built. Reconciliation reuses the same idempotent re-emission that refreshes <code>reference_price</code>,
+          plus a separate, slower, venue-dependent SLA watch for whether strategy has seen the trades it expects
+          back — asynchronous, never a gate on execution's own fast path.
+        </p>
+        <p>
+          <b class="ev ev-assumed">~ assumed</b> — design only, resolved 2026-08-19, not yet implemented. Full
+          record:
+          <a
+            href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md"
+            >execution_delta_proxy_repricer_generalization_2026_08_18.md</a
+          >
+          § "Reference position, credit ownership, and the generic per-position adjustment."
+        </p>
+      </div>
     </details>
     <details class="sec-body">
       <summary>The eleven action types, with their real fields</summary>

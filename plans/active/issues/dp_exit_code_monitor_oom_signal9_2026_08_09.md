@@ -46,7 +46,7 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-09
 locked_since:
-context_scope: [/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md, /plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, /codex/05-infrastructure/data-pipeline-alerts.md]
+context_scope: [/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md, /plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, /codex/05-infrastructure/data-pipeline-alerts.md]
 source: >-
   Operator asked whether DP_RUN_MOSTLY_EMPTY (check_high_attempted_failed) genuinely re-fires on the same stale failure
   data despite the 2026-07-15 RenagTracker cooldown fix, or represents new information each time. While pulling live
@@ -111,7 +111,7 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       (`gcloud run jobs executions list` — "Execution completed successfully in 1m.."), so it was NOT OOM-looping. Its
       real failure modes since: **sweep-overlap** (chronic inability to finish within the `*/5` interval — the
       structural root cause, already tracked separately in
-      `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` with the P1 parallelize todo), then
+      `/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` with the P1 parallelize todo), then
       **task timeouts** (08-11 executions "The configured timeout was reached"), then the cron was **PAUSED** (last
       executions 08-11T15:40, "Cancelled by user"). Live job config today = 16Gi/4cpu/1800s (bumped live 2026-08-10 —
       drift vs terraform 8Gi/2/900); cron scheduler = **PAUSED** `0 * * * *` (drift vs terraform `*/5 * * * *`). The
@@ -121,7 +121,7 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       `terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf` — deployment-service@a87831b5 (live job was bumped
       2026-08-10 as an emergency fix; terraform still reads 8Gi/cpu2/900 — pure IaC-vs-live drift). The OOM
       justification is DISPROVEN (see todo 1); the real fix for the sweep being unable to finish is the parallelization
-      todo in `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. This drift backport is
+      todo in `/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`. This drift backport is
       bookkeeping on the existing live config, not a new bump. Ship via `quality-gates.sh` →
       `quickmerge.sh --agent --files`. Repo: deployment-service.
 - [x] ✅ [SCRIPT] P2. **RESULT: verification target NOT met — a fresh, fast OOM regression on the confirmed-latest
@@ -155,7 +155,7 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
       while this is unfixed — same reversible action, verified `state=PAUSED` after. Did not attempt a fix (infra craft
       scope is live-verify here, not a fresh investigate/fix — mirrors this doc's and the sibling doc's own established
       pattern of a NEW P1 investigate/fix todo for a NEW failure mode rather than absorbing unplanned scope). Filed the
-      fix-needed finding as a new todo in `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`
+      fix-needed finding as a new todo in `/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`
       (that doc's own established SSOT for this job's fix chain, `archive_exempt: true` precisely because it stays the
       live fix-chain home even though its own todos are all individually closed). Repo: deployment-service.
 - [x] ✅ [SCRIPT] P2. **CONFIRMED (2026-08-14, slot 11)** — cross-checked `#data-pipeline-alerts`
@@ -211,7 +211,7 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
   timeout in production — the sentinel is still not advancing cleanly.** Leaving this todo UNCHECKED (the
   ≥3-consecutive-clean-cycles target is not met) and did not further touch the cron/job config myself (investigation
   only, no infra state changed this session). Filed a follow-up todo + Progress Log entry in
-  `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` (the sweep-duration SSOT) since its
+  `/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md` (the sweep-duration SSOT) since its
   shipped P1 fix is now empirically disproven-insufficient — that's the right place for the next fix attempt, not this
   P2 verify-only todo.
 
@@ -228,7 +228,7 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
   verification target before it even starts. Resuming now would not reproduce the original signal-9/overlap storm
   (hourly cadence caps concurrent executions to ~1), but it also would not produce the "sentinel advances ≥3 consecutive
   cycles" evidence this todo needs — that requires the sweep to actually finish, which requires the parallelize fix.
-  Skipping this todo GATED on `/plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`'s P1
+  Skipping this todo GATED on `/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`'s P1
   landing; re-attempt resume-verify only after that ships (or after a task-timeout bump well past the sweep's real
   duration, which is unmeasured since every observed run was killed at exactly 1800s).
 

@@ -21,7 +21,7 @@ summary: >-
   full `quality-gates.sh` run.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; generic QG/test-hygiene findings (fallback-import baseline, hardcoded project ID in tests), not data-pipeline scope
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]

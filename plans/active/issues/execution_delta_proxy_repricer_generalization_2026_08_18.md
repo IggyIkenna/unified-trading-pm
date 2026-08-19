@@ -246,16 +246,114 @@ exact concepts this whole design has been reasoning toward from first principles
   real, per-venue, citation-backed ("every entry cites source file:line, nothing invented") capability-gap registry
   already covering TIF, post-only, make/take, ref-pricing mode and multi-leg delta ownership in one place.
 
-## Position vs "effective position" — real, but execution-service's access to it is unconfirmed
+## Position vs "effective position" — real, and execution-service's access to it is now CONFIRMED absent
 
 `strategy-service/strategy_service/risk/core/exposure_aggregator.py`'s `ExposureAggregator` is real: computes
 `gross_exposure`/`net_exposure`/`long_exposure`/`short_exposure` via UTL's `gross_exposure`/`net_signed_exposure`
 helpers, aggregated across venues and instruments. This is exactly "effective position" (what you'd still be
-exposed to after netting correlated/offsetting positions) — already built, not epic-level aspiration. Separately,
-`execution-service/execution_service/engine/risk/preflight_gate.py` exists on the execution-service side. **Not
-confirmed**: whether execution-service's preflight gate actually reads strategy-service's computed net exposure
-(which would be a network call, since T4 forbids a direct import) or maintains its own simpler, possibly
-incomplete view — see judgment call 10.
+exposed to after netting correlated/offsetting positions) — already built, not epic-level aspiration.
+
+**Judgment call 10, RESOLVED by direct verification 2026-08-19** (was "unconfirmed," now confirmed): read
+`execution-service/execution_service/engine/risk/preflight_gate.py` in full. It has its own `gross_exposure_usd` /
+`net_exposure_usd` trigger keys (`MaxGrossExposureTrigger`/`MaxNetExposureTrigger` → field-name mapping, lines
+113-114, 184-185) but **contains no import of, or call into, `ExposureAggregator` or
+`exposure_aggregator`** — grepped directly, zero hits. Same-named fields, no cross-service consumption found. This
+is the fourth instance of the "declared-but-unwired" / dual-path shape `service_config_ownership_and_instruction_contract_2026_08_12.md`'s
+J-register already tracks (alongside `WalletMappingConfig`, `ClientsYaml`, `ExecutionPolicyArtifact`) — a
+same-named field on both sides with no verified single source of truth between them. Whatever populates
+`gross_exposure_usd`/`net_exposure_usd` in execution-service's `RuleEvalContext` today is either a separate,
+possibly-diverging computation, or unpopulated — not yet traced to its source in this pass.
+
+## Reference position, credit ownership, and the generic per-position adjustment — resolved 2026-08-19
+
+Operator-driven design session extending Layer 1/2 above. Core idea: **`reference_price` alone only tells
+execution-service what the world looked like at instruction time — it doesn't tell execution-service whether its
+own view of strategy's POSITION matches strategy's view.** A price can legitimately differ from the reference (the
+underlying moved) but a position mismatch is a real integrity problem — the two services disagree about ground
+truth, not about a moving market. This generalizes the price-only design in Layers 1-2 above into three added
+pieces, all resolved this session:
+
+### 1. `reference_position` — per-venue, on the envelope, mismatch reuses `RiskRuleConsequence`
+
+**Shape: `dict[venue, Decimal]`, matching `venue_constraints`'s existing shape** — RESOLVED over the alternative of
+requiring `target_venue` to be set, specifically to stay meaningful under `venue_routing_mode: SOR_AT_EXECUTION`,
+where the venue isn't chosen until execution time. Strategy states its believed position on every eligible venue;
+whichever one SOR ultimately picks, execution-service can still check it against the venue it actually reads.
+
+**On mismatch: reuse the existing `RiskRuleConsequence` vocabulary** (`BLOCK` / `SCALE_DOWN` / `MONITOR` /
+`TEST_ONLY`, already the four outcomes `preflight_gate.py` supports for any fired `RiskRule`) rather than inventing
+a second decision model. Default consequence is `BLOCK` (per the operator: "if it doesn't see the same position,
+that's an issue"), but treating it as a `RiskRuleTrigger` means a specific rule config can downgrade it later
+without a new mechanism. This is deliberately an INSTANT, per-instruction check — the same-instrument,
+same-venue position execution-service already has to know to route the order at all — not a periodic
+reconciliation (that is a separate, slower mechanism, § 3 below).
+
+**The "hard rule" this rides on**: one strategy instance executes a given instrument on one venue, so the
+same-instrument/same-venue position check is unambiguous — there is exactly one number on each side to compare.
+
+### 2. Credit is strategy-owned and strategy-computed, execution-consumed
+
+Extending Layer 2's `credit: {entry_threshold, abandon_threshold}` (already resolved as optional, a "flavor," not
+mandatory): **strategy-service computes and owns the actual credit numbers**, execution-service just consumes
+whatever is cached and decides HOW to act on it per its own algo config — the same intent-vs-mechanics split
+`execution_policy_ref` already establishes elsewhere. Two worked examples from this session, both real archetype
+shapes, neither requiring a new mechanism beyond what's already proposed:
+- **Market-making**: credit expressed as a band width around the reference price (e.g. "stay within 1bp") —
+  `entry_threshold`/`abandon_threshold` map directly.
+- **Arbitrage**: credit expressed as a hard fire-or-don't threshold — only `entry_threshold` is meaningful,
+  `abandon_threshold` can be unset (consistent with credit already being optional per-field, not just optional as
+  a whole).
+
+### 3. The generic per-position adjustment — one symmetric slope, on RAW position, NOT effective position
+
+**Resolved: one symmetric bps-per-unit-of-risk coefficient** (not two asymmetric add/reduce slopes) — matches the
+existing precedent of `QuoteInstruction.skew_on_inventory` being a single coefficient today, generalized off that
+one field rather than inventing new shape. **Resolved: this coefficient applies against the RAW,
+single-instrument/single-venue position — the same one `reference_position` reconciles against — not the
+`ExposureAggregator`-computed effective/net position.** The strategy↔execution CONTRACT stays single-position; it
+still SENDS whatever effective-position context it has, but nothing on the execution-service main path consumes it
+for this purpose today.
+
+**Effective position is real, but scoped to a different, explicitly-stubbed-for-now module**: the operator's own
+framing — "when another instrument trades, you want a separate module in execution-service that is a quick
+approximation of what strategy-service would do when it comes to the adjustment of position A based on position
+B" — names a FOURTH, distinct mechanism from the three (DeltaProxyRepricer / arb-leg `LEADER_HEDGE` / this
+per-position adjustment): a fast-path **cross-instrument position-impact approximator**, live inside
+execution-service, that estimates how a fill in instrument B should move the acceptable adjustment on instrument
+A, without waiting for strategy-service's own (slower) recomputation. Explicitly **relevant only where A and B are
+non-fungible** — the worked examples: a cross-chain staked-basis leg, or options across different terms/strikes.
+**This module is a stub for this pass, not a build** — only `ExposureAggregator`-style effective-position
+awareness needs to live THERE, and it does not need to exist on the strategy↔execution schema contract at all.
+
+**The named end-state, for the record**: strategy-service computes reference price / reference position / credit /
+adjustment SLOWLY (its own tick cadence); execution-service's fast-path layer (DeltaProxyRepricer today,
+the cross-instrument approximator once built) does the equivalent computation in REAL TIME off live market/trade
+data from every venue and instrument it can see directly (not just the one instrument being traded), feeding a
+final decision into the order-fill algorithm layer. Wiring the actual fast-data routes into that layer is
+out of scope for this pass — same "put in the hooks, not the infrastructure" boundary the rest of this issue
+already draws.
+
+### 4. This is the SAME intent-vs-mechanism split the envelope already draws — restated for the new fields
+
+Clarified 2026-08-19: `credit`, `reference_position`, and the per-position adjustment slope are all strategy-set
+GOVERNING BOUNDARIES, not execution instructions — the identical relationship the existing `hedge_deadline_ms` on
+`AtomicInstruction` already has with the algo layer today (strategy says "I don't want outright exposure for
+longer than this"; the algo decides how it actually operates within that window). None of the three new concepts
+change that split; they extend the same boundary vocabulary strategy already speaks, with execution's own
+per-`(client_id, slot_label)` algo policy (§ B of `service_config_ownership_and_instruction_contract_2026_08_12.md`)
+still deciding mechanics, same as it does for urgency and `execution_policy_ref` today.
+
+### 5. Reconciliation cadence — the SAME idempotent re-emission channel, plus a separate SLA-based staleness escalation
+
+**Resolved: no new transport.** The idempotent re-emission already proposed for refreshing `reference_price`/
+`credit` doubles as the reconciliation heartbeat — every re-emit is also a fresh instant position check (§ 1
+above) once execution-service has processed intervening fills. **A second, explicitly slower mechanism catches
+what the fast check can't**: strategy-service should track, per venue (SLA duration is venue-dependent, not a
+single global constant), whether it has SEEN the trades/position-updates it expects to receive back from
+execution-service within that SLA window. If not — "execution-service thinks it's trading, and strategy-service
+isn't seeing it" — that is the trigger for a heavier reconciliation pass, separate from and slower than the
+per-instruction instant check, and it must never block or slow down execution-service's own fast path (it is a
+strategy-side, asynchronous watch, not a gate execution waits on).
 
 ## Fast-loop cadence vs. strategy's refresh cadence — two different speeds, one already named
 
@@ -381,6 +479,28 @@ POST_ONLY as two independently composable fields.
       should be authored for real if it once existed elsewhere and was lost. **EXTRACTED 2026-08-19
       (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** — see
       `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 3.
+- [ ] [DESIGN] P1. **Design and add `reference_position: dict[venue, Decimal]` to `StrategyInstructionEnvelope`**,
+      shaped like the existing `venue_constraints` dict so it stays meaningful under `SOR_AT_EXECUTION` routing.
+      Resolved 2026-08-19 (§ "Reference position, credit ownership..." above) — this todo is the implementation.
+- [ ] [BACKEND] P1. **Wire `reference_position` mismatch as a `RiskRuleTrigger`** consumed by
+      `preflight_gate.py`, reusing the existing `RiskRuleConsequence` vocabulary (`BLOCK`/`SCALE_DOWN`/`MONITOR`/
+      `TEST_ONLY`), default consequence `BLOCK`. No new decision model — resolved 2026-08-19.
+- [ ] [DESIGN] P2. **Design the generic per-position adjustment field** (one symmetric bps-per-unit-of-risk
+      coefficient, applied against the RAW single-instrument/single-venue position) on the shared envelope,
+      generalizing off `QuoteInstruction.skew_on_inventory` rather than inventing new shape. Resolved 2026-08-19.
+- [ ] [DESIGN] P3. **Stub — do NOT build — the cross-instrument fast-path position-impact approximator** in
+      execution-service (estimates how a fill in instrument B should move the acceptable adjustment on instrument
+      A, for non-fungible pairs only: cross-chain staked-basis legs, cross-term/cross-strike options). This is
+      where `ExposureAggregator`-style effective-position awareness belongs — NOT on the strategy↔execution
+      contract itself. Explicit non-goal for this pass, tracked so it isn't lost.
+- [ ] [BACKEND] P2. **Build the SLA-based staleness reconciliation escalation** — strategy-side, venue-dependent
+      watch for whether expected trades/position-updates have arrived back from execution-service within an SLA
+      window; separate from and strictly slower than the per-instruction instant `reference_position` check; must
+      never block or slow execution-service's own fast path.
+- [ ] [AGENT] P2. **Trace what currently populates execution-service's `gross_exposure_usd`/`net_exposure_usd`
+      `RuleEvalContext` fields**, given the confirmed-2026-08-19 finding that `preflight_gate.py` has zero
+      `ExposureAggregator` imports — either wire it to the real aggregator, or document the independent
+      computation explicitly so the two same-named fields stop reading as one source of truth.
 
 ## Progress Log
 
@@ -400,3 +520,18 @@ for the operator, one resolved (credit-tolerance is optional). Nothing in the To
   work or explicitly dependent on it, appropriately NA given this is live execution-critical-path (order
   pricing/repricing) machinery. Doc's own `assigned_vm: NA` unchanged.
 - **context-scout 2026-08-19**: populated context_scope (6 entries).
+
+**2026-08-19 — extended with `reference_position` + credit ownership + generic per-position adjustment, while
+drafting the strategy-service deep-dive client artefact.** Judgment call 10 moved from "unconfirmed" to
+CONFIRMED: `preflight_gate.py` has zero `ExposureAggregator` imports. Four new operator design decisions resolved
+(§ "Reference position, credit ownership, and the generic per-position adjustment"): `reference_position` is a
+per-venue dict on the envelope, mismatch reuses `RiskRuleConsequence` (default `BLOCK`); credit is strategy-owned
+and strategy-computed; the per-position adjustment is one symmetric bps-per-unit-of-risk coefficient against RAW
+position, with effective/net-position awareness explicitly scoped OUT to a new, stub-only, execution-internal
+cross-instrument position-impact module (non-fungible pairs only); reconciliation reuses the same idempotent
+re-emission channel plus a separate, slower, venue-dependent SLA staleness escalation that never blocks
+execution's fast path. Also confirmed: all of this sits at the same intent-vs-mechanism boundary
+`hedge_deadline_ms`/`execution_policy_ref` already draw — strategy sets governing boundaries, execution's own algo
+policy decides mechanics within them. 6 new todos added. Nothing built yet; this session's output is design only.
+`codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html` §02 is being updated to reflect this
+as explicit target-state (`planned`/`assumed` grading), not as a live claim.

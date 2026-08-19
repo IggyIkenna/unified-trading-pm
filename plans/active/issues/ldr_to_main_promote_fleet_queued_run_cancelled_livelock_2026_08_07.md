@@ -273,10 +273,11 @@ sufficient.
       `glue-pool-starvation-monitor` announces a Slack RECOVERED message once fixed (not yet confirmed either way).
       Dedicated agent dispatched to root-cause + fix + verify + check/add recovery-announcement logic. **This alone
       means the "zero new issues" clean-window clock has NOT started yet as of this entry.**
-- [ ] [DEVOPS] P1. **Blocking the 60-min clean-window bar.** Once ALL of the above (semver-agent regression re-roll,
-      glue-pool-starvation root cause, the two monitor-hardening agents) are confirmed shipped, start/hold a genuinely
-      clean 60-consecutive-minute window with zero new CI/Slack alerts before declaring this incident `resolved`. Per
-      operator directive 2026-08-07: do not declare done on partial signal.
+- [x] ✅ [DEVOPS] P1. **Blocking the 60-min clean-window bar.** — verified MET, `ci_satellite_ao_dispatch_batch13_2026_08_13.md:163`
+      ("CONFIRMED CLEAN 2026-08-14... the 60-min clean-window bar is met — exceeded ~168x over", `unified-trading-pm@e0901407f2`).
+      That entry deferred reconciling this checkbox to `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`, but a
+      grep of that finalize doc found zero mentions — the deferral was never honored. Flipped here directly by
+      plan_reconciler 2026-08-19, independently re-verified both citations before flipping.
 
 ## na-eligibility-audit verdict
 

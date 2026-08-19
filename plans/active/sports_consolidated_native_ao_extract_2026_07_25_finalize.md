@@ -69,51 +69,38 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Reconcile `sports_consolidated_native_ao_extract_2026_07_25.md`'s 26 now-done todos back into `sports_consolidated_closeout_2026_07_19.md`'s own corresponding checkboxes.** For each of the 26 todos: flip the
-      identically-worded (or closely-paraphrased) checkbox at the cited
-      `sports_consolidated_closeout_2026_07_19.md: <line>` location, citing the extract plan's shipped commit(s) —
-      verify the actual shipped commit exists before citing it (`git log`, not the extract plan's own claim alone).
-      **First check whether the parent file is still over the line-cap**
-      (`bash scripts/plan-hygiene/check_line_caps.sh plans/active/sports_consolidated_closeout_2026_07_19.md`) — if
-      still HARD-blocked, do NOT force the edit; record which checkboxes are ready to flip and note the commit is
-      deferred until the cap decision lands (do not silently skip this reconciliation — file it as a tracked follow-up
-      if blocked). For the 4 todos that were scoped DOWN from the source todo's literal text (venue vocabulary re-stamp
-      excluding cross-AG bleed; the T-12h↔T-24h dead-zone scan excluding the T-18h-horizon design choice; the
-      emitter-locate todo dropping the stale "before folding into K2" framing; Sports P2a sub-item (c) only, excluding
-      sub-items (a)/(b)): flip only the portion actually completed, and leave a clear note in the parent checkbox's own
-      text (or a cross-reference) that sub-items (a)/(b)/the excluded design choice remain open and are NOT covered by
-      this flip. **Done when**: all 26 corresponding checkboxes in the parent doc are flipped (or the cap-block is
-      explicitly recorded if still blocking), each citing a verified commit, with the 4 partial-scope todos' remaining
-      sub-items left visibly open.
-- [ ] [DOC] P1. **Archive every doc todo 1 drives to `status: resolved`/`complete` — in the same commit as the flip,
-      never left sitting in `plans/active/`.** `check_terminal_status_archived.py` HARD-fails on any doc whose
-      frontmatter reads a terminal status while it still lives under `plans/active/` (including `plans/active/issues/`)
-      — the omission of this exact step across the sports finalize-plan family already forced one such HARD-fail: the
-      `plan_health` gate's own remediation (`unified-trading-pm@57ed9271c`, escalation `agt-9a5061`, PR #1545)
-      auto-archived 11 docs nobody's plan owned. **This plan's shape differs from the other 4 sports finalize plans**:
-      todo 1 flips checkboxes back into ONE parent doc (`sports_consolidated_closeout_2026_07_19.md`), not into many
-      separate small source docs — so the expected outcome here is usually a no-op, since the master closeout doc is
-      very unlikely to reach 0 open todos from this one extract's reconciliation alone. Still: if todo 1's
-      reconciliation (or a subsequent audit) ever DOES drive `sports_consolidated_closeout_2026_07_19.md`, or any other
-      doc this extraction touches, to a genuine terminal status with 0 open todos, archive it to
-      `plans/archive/2026_07/` IN THE SAME COMMIT as that status flip — fix every corpus referrer of the archived doc's
-      pre-archive path. **Done when**: either (a) an explicit confirmation is recorded that no doc reached a terminal
-      status via todo 1 (the expected case), or (b) every doc that did is archived in the same commit as its flip, and
-      `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports 0 hard failures. Source:
-      `archive/issues/sports_plan_reconcile_operator_decisions_2026_07_26.md` § 2.
-- [ ] [REVIEW] P1. **Re-check whether any of the excluded/scoped-down sub-items' gates have since cleared.**
-      Specifically: (1) the KALSHI/POLYMARKET cross-AG bleed exclusion (venue vocabulary todo) — check whether
-      `sports_satellite_ao_dispatch_batch3_2026_07_25.md:132`'s disposition candidate has shipped; if so, the parent
-      doc's venue-vocabulary checkbox can now flip fully, not partially. (2) The T-18h-horizon/cap-widening design
-      choice (dead-zone scan todo) — check whether an operator ruling has since been made; if so, extract a new tracked
-      todo for the implementation. (3) Sports P2a sub-items (a) G1 noise-wipe and (b) G2 2015-2017 diagnosis — check
-      whether the ambiguity about sub-item (a)'s population overlap with the already-answered §U decision has been
-      resolved (an operator confirmation or a fresh census); if resolved, extract as a new tracked todo. (4) The K1/K2
-      DELETE-gated `DP_RUN_MOSTLY_EMPTY` re-check sub-part — check whether the K1/K2 legacy-object DELETE (Track V,
-      `[OPERATOR]`-gated) has executed; if so, extract the re-check as a new tracked todo. For any of the 4 whose gate
-      has cleared, create the follow-up todo (in this doc's own tracked continuation or a new dated batch) rather than
-      silently leaving it dropped. **Done when**: each of the 4 items has either (a) a new tracked todo created because
-      its gate cleared, or (b) an explicit re-verified confirmation the gate is still closed.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-19 (plan_reconciler, agt-07473e) — `unified-trading-pm@e6e455f6c2`.** The
+      extract's citation line numbers had drifted (closeout doc restructured/trimmed multiple times since); matched
+      by CONTENT/topic instead. Of the closeout's 17 open checkboxes at run start, 5 were confirmed DONE-but-unflipped
+      and flipped (Finding C correction, `sports_reference_v2` post-floor cull, catalogue re-roll, catalogue
+      player-grain upgrade, launcher-used determination — each with verified evidence, 2 shas content-verified
+      instead after hitting the corpus's known squash-merge SHA-orphaning trap). Also caught + struck 1
+      duplicate-dispatch (`sports_satellite_ao_dispatch_batch16_2026_08_17.md` re-drafted the already-shipped
+      `sports_reference_v2` cull as unclaimed work). The remaining ~11 open items were confirmed either genuinely
+      separate scope, already extracted to an owning satellite/gated plan, or (1 item, the line-532 venue-vocabulary
+      cleanup) too entangled with a live separately-tracked contradiction (`STALE 2026-08-14` footystats-mislabel
+      pointer) to safely touch this pass — left open, recommendation recorded in
+      `plan_reconciler_findings_sports_2026_08_19.md`. Line-cap discipline: the parent was at exactly 1000/1000
+      before this edit; flipping + trimming verbose trailers kept it at 998L after. Full detail:
+      `plans/active/issues/plan_reconciler_findings_sports_2026_08_19.md`.
+- [x] ✅ [DOC] P1. **DONE 2026-08-19 (plan_reconciler, agt-07473e) — confirmed (a): no doc reached a terminal status
+      via todo 1's reconciliation.** None of the 5 flips completed `sports_consolidated_closeout_2026_07_19.md` (still
+      12 open todos after) or any other doc to 0-open-todos; the 1 cited-as-resolved doc
+      (`sports_canonical_raw_truncated_rederive_destroys_corpus_2026_07_16.md`) was already `status: resolved` before
+      this pass, not a new transition. No archival triggered by this todo.
+- [x] ✅ [REVIEW] P1. **DONE 2026-08-19 (plan_reconciler, agt-07473e) — all 4 items resolved.** (1) KALSHI/POLYMARKET
+      cross-AG bleed: `sports_satellite_ao_dispatch_batch3_2026_07_25.md`'s disposition candidate shipped DONE
+      2026-07-31 (now archived at `plans/archive/2026_07/`) — gate cleared; the closeout's line-532 venue-vocabulary
+      checkbox could now partially advance, but is left open per todo 1's note above (too entangled with a separate
+      live contradiction to safely edit this pass — recorded as a recommendation, not silently dropped). (2) T-18h
+      horizon/cap-widening design choice: no operator ruling found (`grep -rl "T-18h" plans/active/issues/` — 0
+      hits) — gate still closed, no new todo needed. (3) Sports P2a sub-items (a)/(b): BOTH already resolved AND
+      already tracked+done in `sports_closeout_track_s2_foldin_2026_07_25.md` (line 172: sub-item (a) G1 noise-wipe
+      DONE; line 216: sub-item (b) G2 2015-2017 diagnosis DONE 2026-07-27) — no new todo needed, follow-through
+      already complete. (4) K1/K2 DELETE-gated `DP_RUN_MOSTLY_EMPTY` re-check: the Track V K1/K2 delete executed
+      2026-07-28 (`market-tick-data-service@26201c44`, verified in the closeout doc); the gated re-check was ALREADY
+      extracted AND already completed in `sports_closeout_track_s2_foldin_2026_07_25.md` (line 437-445, DONE
+      2026-08-05 — spike resolved as predicted, no code change needed) — no new todo needed.
 - [ ] [DOC] P1. **Archive `sports_consolidated_native_ao_extract_2026_07_25.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): confirm todo 3 above resolved every excluded/scoped-down item (migrate any
       still-open follow-up to a tracked todo elsewhere) → add the archive banner → run the codex-alignment check (no new
@@ -121,7 +108,16 @@ context_scope:
       the corpus for every referrer of `sports_consolidated_native_ao_extract_2026_07_25` (including this finalize doc's
       own filename) and fix each path to point at the archived location → clear `locked_by` (already empty here,
       confirm). **Done when**: the plan is moved to `plans/archive/2026_07/`, every corpus referrer resolves to the new
-      path, and this finalize doc itself gets archived alongside it in the same commit.
+      path, and this finalize doc itself gets archived alongside it in the same commit. **PRE-CONDITIONS NOW MET
+      (2026-08-19, plan_reconciler agt-07473e) — todos 1-3 above are all DONE, the extract plan is 33/33 verified
+      done, no excluded item remains open.** NOT executed this pass: `grep -rl` found **21 corpus referrers**
+      (excluding this doc and the extract itself) — several require live-vs-historical judgment (dated
+      `plan_reconciler_findings_*` reports should likely stay pointing at the pre-archive path as accurate history;
+      `sports_consolidated_closeout_2026_07_19.md` alone cites the extract plan well over a dozen times, including 5
+      just added this pass, and is already at 998/1000 lines — a bulk repoint there risks the line cap again;
+      `plans/epics/sports_master.md` + `plans/epics/html/sports_master.html` are the epic hub + its generated report).
+      A genuinely separate, bounded pass — full referrer list not re-derived here, re-run
+      `grep -rl "sports_consolidated_native_ao_extract_2026_07_25" plans/active/ plans/epics/` for the current set.
 
 ## Progress Log
 

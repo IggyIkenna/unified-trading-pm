@@ -10,7 +10,7 @@ summary: >-
   /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [meta] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a standing operator-ruling citation register (parent_epic: plan_hygiene_master), zero data-pipeline content
 stage: [meta]
 repos: [unified-trading-pm, agent-orchestrator]
 scope: [admin]

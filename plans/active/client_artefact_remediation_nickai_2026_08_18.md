@@ -110,7 +110,7 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
 - [x] [DOC] P0. ✅ **Apply the parent's evidence-tier spec to every claim-bearing section in this file** — default
       `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol inline. **Shipped `unified-trading-pm@ec08cccad1`.**
 - [x] [DOC] P1. ✅ **Give every claim-bearing section its owner mark**, per W21's closure invariant. **25 `class="own"` marks verified in the file, each citing its owning epic/workstream in a title attribute. Verified 2026-08-19.**
-- [ ] [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content — it asserts a dimension nothing can
+- [x] ✅ [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content — it asserts a dimension nothing can
       derive.** Measured 2026-08-18: the only skill emitting the three modes is `readiness-state-dump`, and it
       derives per **(venue x mode)** only — archetype is NOT one of its dimensions. Per-archetype readiness is an
       OPEN, unchecked `[BACKEND] P0` in [system_readiness_master](/plans/epics/system_readiness_master.md) W1 ("an archetype has its own batch /
@@ -118,6 +118,22 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
       request and was never probed. Per W21, an artefact claim that outruns the derived state is a defect — so
       either mark it `~ assumed` with the gap stated, or cut it until the epic todo lands. Sibling todo in the
       Elysium child covers the other file.
+      **AUDITED, ALREADY COMPLIANT — no edit needed.** `git blame` on the callout (`codex/14-customer-journeys/
+      commercial-model/platform-external-api-walkthrough.html:2518-2531`, "Readiness applies to archetypes as well
+      as venues") shows every line was authored in `unified-trading-pm@832033d0942` — the SAME commit the todo
+      itself cites as "added... and never probed" — not a later fix. The text was hedged from its very first
+      version: `<b class="st st-plan">planned</b> — a capability audit deriving archetype readiness across batch,
+      paper and live is specified and not yet built. Until it runs, that axis reports <code>unverified</code>
+      rather than being assumed.` This already satisfies W21 — it never claims the archetype axis is derived or
+      live, uses the doc's own `st-plan` status badge correctly, and explicitly names the gap (the unbuilt capability
+      audit, citing the same W1 todo this plan item cites). Deliberately did NOT add the doc's `ev-assumed` badge
+      pair (used elsewhere for genuine best-guess claims, e.g. lines 1903/2624/2850) — the text's own wording
+      ("reports unverified rather than being assumed") is a stronger, more accurate framing than `~ assumed` would
+      be: it asserts no best-current-understanding at all, only that the check doesn't exist yet. Cross-checked the
+      rest of §14 ("Readiness: batch, paper, live", lines 2382-2568) for any other archetype-readiness claim outside
+      this one callout — the section's own measured table (2454-2513) is venue×mode only (288 venues × 3 modes =
+      864 rows, matching `readiness-state-dump`'s real dimensions exactly), no archetype axis asserted there either.
+      No HTML commit needed — content already correct as of its original authoring commit.
 - [x] [DOC] P1. ✅ **Audit the glossary / canonical-instrument-ID framing** — check that it presents ONE dispatch
       spanning asset groups, not per-asset-group ID rules, which would invert asset-group-agnosticism. **Framing VERIFIED CORRECT — the artefact reads "a canonical identity built by one dispatcher for every asset group" and "a single dispatch point for instrument identity across every asset group", i.e. one dispatch spanning asset groups, not per-AG rules. Verified 2026-08-19.**
 

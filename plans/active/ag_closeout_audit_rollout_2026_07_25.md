@@ -14,7 +14,11 @@ summary: >-
   future-session must be able to resume losslessly from this doc alone.
 status: active # was: complete (2026-07-25) -- reopened same day, Round 3/4: /plan-reconcile + the 5-AG consolidated-plan split (operator directive)
 nature: process
-asset_group: [cefi, defi, tradfi, prediction, sports, cross-cutting]
+asset_group:
+  [meta] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cefi, defi, tradfi,
+  # prediction, sports, cross-cutting]. Content is plan-corpus governance process (running closeout audits +
+  # AO-dispatch-batch drafting across the AG corpus), not data-pipeline engineering for any AG or cross-cutting --
+  # parent_epic agent_operating_framework_master self-declares asset_group: [meta].
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer]

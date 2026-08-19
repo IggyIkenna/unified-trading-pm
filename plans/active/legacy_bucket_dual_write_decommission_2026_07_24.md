@@ -3,7 +3,7 @@ doc_type: plan
 title: Legacy tick-bucket dual-write remediation — decommission (split from M-1)
 summary: >-
   Extracted 2026-07-24 from data_completion_to_100_all_ag_2026_06_21.md (M-1) per the plan line-cap remediation
-  (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, bucket-(d) split, operator-approved). This is the
+  (/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md, bucket-(d) split, operator-approved). This is the
   still-inline residual of the already-archived `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` (drain ->
   code-fix -> migrate -> decommission of the legacy dual-written tick buckets), migrated VERBATIM — no scope added,
   dropped, or reworded. M-1 remains the coordinator hub for cross-cutting work and owns the shared Progress Log.
@@ -35,7 +35,7 @@ superseded_by:
 depends_on: []
 source: >-
   data_completion_to_100_all_ag_2026_06_21 (M-1) -- extracted 2026-07-24, plan line-cap remediation
-  (plans/active/issues/plan_line_cap_remediation_2026_07_23.md) bucket-(d) split, operator-approved.
+  (/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md) bucket-(d) split, operator-approved.
 drift_direction: advance-code
 context_scope:
   [
@@ -50,7 +50,7 @@ context_scope:
 # Legacy tick-bucket dual-write remediation — decommission
 
 > **Split from M-1 on 2026-07-24** (`data_completion_to_100_all_ag_2026_06_21.md`, plan line-cap remediation,
-> `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` bucket-(d) split, operator-approved). This plan carries
+> `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` bucket-(d) split, operator-approved). This plan carries
 > M-1's still-inline `bucket_name_ssot_legacy_dual_write_remediation_2026_06_01.md` fold-in residual **verbatim**; M-1
 > stays the coordinator hub (measured snapshot, per-AG launch matrix, cross-cutting scope, shared Progress Log).
 >

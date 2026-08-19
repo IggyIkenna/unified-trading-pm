@@ -28,7 +28,7 @@ related:
     /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
     /plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
     /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
-    /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
+    /plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
     /plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md,
     /plans/archive/2026_08/github_actions_operator_gated_followups_progress_log_history_2026_08_03.md,
@@ -263,7 +263,7 @@ prove on ONE caller → only then fan out._
 | #   | Item                                       | Note                                                                                                                                                                                           |
 | --- | ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 9   | ~~`quickmerge.sh --agent` sentinel race~~  | ✅ **RESOLVED 2026-07-22/31** — see the matching `[x]` todo above (`unified-trading-pm@e264b3c9` + `@f93a618e6c`). No longer operator-owned; row kept struck-through for the historical trail. |
-| 10  | MTDS promote PR #601 blocked on QG failure | From the 2026-07-17 #ci-failures triage (operator: "we will take care of the … repos later"). Real, current, NOT this plan's: market-tick-data-service's own QG fails on its promote path.     |
+| 10  | ~~MTDS promote PR #601 blocked on QG failure~~ | ✅ **STALE, corrected 2026-08-19 (plan_reconciler)** — live `market-tick-data-service` git log shows 10 successful `chore(promote): LDR → main` merges in the last 10 log entries alone, including 5 dated TODAY (2026-08-19), tags through `v0.144.20`. MTDS's promote path is not currently blocked. Row kept struck-through for the historical trail; the underlying #ci-failures triage instance this row described has since resolved (whether via the originally-cited QG fix or a later one was not traced).     |
 | 11  | `deployment-api` Cloud Builds failing      | Same triage: 3+ failures/24h (e.g. build `8b581721` at `deployment-api@8c7811f`). Recurring, outside this plan.                                                                                |
 | 12  | `branch-health` PROMOTION-LAG alert noise  | ~24 of 79 #ci-failures messages/24h are this one warning re-firing; a genuinely stuck `system-integration-tests` LDR→main (~4 days) hides inside it. Overlaps the Phase-3 cadence/alert todo.  |
 
@@ -724,7 +724,7 @@ shipped as `test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md`) — n
 valid — Full read (1001 lines, both pages) + grep confirm 4 open todos, matching phase0=4. (1) line 106 STEP 2d
 assert-not-decorative: doc's own D3 table row states 'digest-drift-sweep still unfixed and STEP 2d is still held for it
 (its design depends on this remaining undecided item)' -- dependency-blocked on the still-open
-/plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md investigation. (2) line 188
+/plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md investigation. (2) line 188
 bare-host bootstrap PROVE: container leg done, IMDS/EC2-role + GCP ADC (doc flags this leg 'interactive') + systemd +
 real GH runner registration 'structurally cannot' run in a container -- tied to 'the upcoming planning-VM deploy,' a
 genuine host rebuild.

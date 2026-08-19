@@ -184,32 +184,53 @@ answered. Executing them is still real work; re-deriving the answer is not.
 collected, 4,146 passed / 8 skipped / 0 failed, 421s full run): **77.41% branch coverage / 79.28% statement
 coverage** against `pyproject.toml`'s declared `fail_under = 70`.
 
-- [ ] [INFRA] P0. **The 70% floor is declared but NOT actually enforced — fix the gate itself first.**
+- [x] [INFRA] P0. ✅ **The 70% floor is declared but NOT actually enforced — fix the gate itself first.**
       `scripts/quality-gates.sh` (~line 115) runs `python -m pytest tests/ -q -p no:cacheprovider` with **no
       `--cov` flag at all** — `pyproject.toml`'s `fail_under = 70` never gets checked by the automated gate,
       coverage only reflects reality when someone runs it by hand (as this session's research pass did). This is
       the single highest-value Phase 2 fix: wire `--cov=server --cov-report=term-missing --cov-fail-under=70` (or
       the calibrated new floor from the next todo) into the actual QG pytest invocation. Done-when: a deliberately
-      under-70%-covering change fails `quality-gates.sh` locally.
-- [ ] [BACKEND] P1. **Raise the enforced floor from 70% toward the measured 77.41%, incrementally** — e.g. 72-73%
+      under-70%-covering change fails `quality-gates.sh` locally. **DONE — `agent-orchestrator@7f798432ef`.**
+      Wired `--cov=server --cov-report=term-missing --cov-fail-under=72` directly (combined with the next todo).
+      Verified via a real full `quality-gates.sh` run: `Required test coverage of 72% reached. Total coverage:
+      78.86%`, 4395 passed / 0 failed.
+- [x] [BACKEND] P1. ✅ **Raise the enforced floor from 70% toward the measured 77.41%, incrementally** — e.g. 72-73%
       as a first milestone, not straight to the current number (leaves zero regression headroom) and not an
       arbitrary round figure. Wire into the same `--cov-fail-under` flag as the todo above (one combined change if
       convenient). Done-when: QG passes at today's level and fails on a real regression below the new floor.
-- [ ] [BACKEND] P1. **Zero-coverage files — the highest-value gap, not the lowest-percentage one.**
+      **DONE — `agent-orchestrator@7f798432ef`.** Set to 72% (`pyproject.toml`'s `[tool.coverage.report]
+      fail_under` + the CLI flag, kept in sync). Mechanically guaranteed by pytest-cov's `--cov-fail-under` to fail
+      any run under the floor — real measured total after this batch is 78.86%, real headroom above 72%.
+- [x] [BACKEND] P1. ✅ **Zero-coverage files — the highest-value gap, not the lowest-percentage one.**
       `server/creds_env_poller.py` (0.00%, 106 lines), `server/kimi_balance.py` (0.00%, 46 lines),
       `server/kimi_balance_poller.py` (0.00%, 67 lines) have NO tests at all, not just weak ones. One todo per
-      file: write a real test suite (not a smoke test) for each.
+      file: write a real test suite (not a smoke test) for each. **DONE — `agent-orchestrator@7f798432ef`.** All 3
+      now 100% statement + 100% branch coverage: `creds_env_poller.py` (24 tests, verified stable across 3 runs),
+      `kimi_balance.py` (14 tests), `kimi_balance_poller.py` (14 tests, including real thread lifecycle + `_loop`
+      resilience branches).
 - [ ] [BACKEND] P2. **Worst-covered-by-percentage, split per file** (each gets its own todo when picked up, don't
       batch): `server/routes/vms.py` (20.34%, 177/237 missing), `server/gemini_translation_smoke.py` (31.21%,
       147/228), `server/routes/ops.py` (33.59%, 67/110), `server/routes/resource_watchdog.py` (34.58%, 57/93),
       `server/notifications/telegram.py` (37.96%, 68/115), `server/fleet_slot_snapshot_poller.py` (40.00%, 25/51),
       `server/routes/repo_blockers.py` (41.27%, 29/55), `server/worker_liveness/_respawn.py` (42.28%, 108/192),
       `server/auto_park_reconcile.py` (43.59%, 29/58), `server/worktree_setup.py` (45.33%, 31/63).
-- [ ] [BACKEND] P1. **Worst-covered-by-VOLUME, prioritize these over the percentage list above** — concurrency/
+- [~] [BACKEND] P1. **Worst-covered-by-VOLUME, prioritize these over the percentage list above** — concurrency/
       dispatch-critical, highest absolute missing-line count, exactly what multi-agent-on-itself dispatch stresses
       hardest: `server/server.py` (37.69%, 325 lines missing), `server/gcs_sync.py` (42.45%, 238 missing),
       `server/tmux_spawn.py` (69% cov but 230 missing — large file, worth it despite a decent %),
-      `server/autospawn.py` (83% cov but 216 missing — same reasoning).
+      `server/autospawn.py` (83% cov but 216 missing — same reasoning). **2/4 DONE —
+      `agent-orchestrator@7f798432ef`.** `server.py`: 37.44%→52.05% scoped (66-line reduction; `lifespan()`'s
+      ~685-line async-context-manager body deliberately deferred — booting a real app or hand-mocking ~30
+      background-loop imports judged high-risk/low-ROI for a bounded pass, flagged as its own follow-up below).
+      `gcs_sync.py`: 42.45%→87-88% (also surfaced + fixed a real bug, see Progress Log). `tmux_spawn.py` and
+      `autospawn.py` still open — dispatched in the same wave as the percentage-list todo above, see Progress Log.
+- [ ] [BACKEND] P2. **`server.py`'s `lifespan()` async-context-manager body (~lines 141-826, ~685 lines) — the
+      single largest remaining coverage gap in the repo, deliberately deferred out of the bounded volume-coverage
+      pass above.** Wires ~30 real background loops/watchdogs (tmux, GCS, Slack, DB canaries, etc.) on server
+      startup/shutdown. Closing it needs either a real-app boot test (real threads/subprocess/tmux/GCS calls — high
+      flake/side-effect risk on a shared host) or hand-mocking ~30 imports individually (fragile, low logic-density
+      per line). Scope this properly before attempting — likely wants dependency-injection seams added first
+      rather than mocking `server.py` module globals directly.
 - [ ] [INFRA] P2. **Give the suite a real unit/integration split.** All 274 test files sit flat under
       `tests/test_*.py` — no subdirectories, and the existing `unit`/`integration`/`smoke`/`host_load_sensitive`
       pytest markers are each used in only ~1 file, so there is no cheap way to run a fast subset (confirmed
@@ -241,10 +262,15 @@ the issue-doc filename directly in a comment above its regression test — but 7
 came out of the sample. ~92 more docs in the tightest corpus, plus ~36 co-listed-repo docs and ~130 non-`issues/`
 archived docs, were not yet sampled.
 
-- [ ] [BACKEND] P1. **GAP: operator→agent chat messages silently dropped** — delivery was marked on POLL/drain, not
-      on the agent's actual reply (`ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`). New
-      `tests/test_operator_reply_delivery_ack.py`: assert a chat message stays "undelivered" until the agent's next
-      `/poll` is followed by a recorded reply, not merely drained.
+- [x] [BACKEND] P1. ✅ **FALSE POSITIVE, corrected 2026-08-19 — actually COVERED, not a GAP.** delivery was marked
+      on POLL/drain, not on the agent's actual reply (`ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`).
+      This session's prior research pass claimed a new `tests/test_operator_reply_delivery_ack.py` was needed —
+      **verified false**: `agent-orchestrator/tests/test_agent_message_redelivery.py` already exists (shipped at
+      `ao@8076257`, the same commit that fixed the incident) with 8 tests including
+      `test_reply_acks_whole_batch_641_643_regression` — the exact 641/643 regression this issue doc names, plus
+      `test_redelivered_until_answered`/`test_reply_ack_stops_redelivery` covering precisely "stays undelivered
+      until the agent's reply is recorded." The earlier research sampled the issue doc's narrative without checking
+      the current test suite for an existing regression test — a CLAIM ≤ MEASUREMENT miss. No new test needed.
 - [ ] [INFRA] P1. **GAP: `ao-self-pull.sh` silently stalled 2+ hrs** — untracked `accounts.json` backup files
       blocked `git pull --ff-only` (`ao_self_pull_stalled_by_untracked_backup_files_2026_07_29.md`). No test file
       exists for this script at all — add a shell-level (or subprocess-wrapped pytest) test asserting the script
@@ -265,12 +291,28 @@ archived docs, were not yet sampled.
       tuning every regen cycle** (`backlog_regen_drops_handtuned_prereqs_2026_07_12.md`). Only a stray string match
       exists in `test_regen_backlog_from_plan.py`, not a real assertion — add explicit
       `test_regen_preserves_handtuned_prereqs_and_priority`.
-- [ ] [DOC] P2. **UNCLEAR → resolve: SQLite lock-storm-triggers-stuck-shutdown causal chain**
-      (`ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`) — `test_server_shutdown.py` exists but no
-      keyword ties it to this specific causal chain; read both closely and either confirm COVERED or write the gap.
-- [ ] [DOC] P2. **UNCLEAR → resolve: unpinned `ORCHESTRATOR_JWT_SECRET` invalidating every token on restart**
-      (`orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`) — `jwt_secret` tests exist
-      but restart-persistence of the pinned secret specifically is unconfirmed; read closely and resolve.
+- [x] [DOC] P2. ✅ **RESOLVED 2026-08-19 → COVERED, not unclear.** SQLite lock-storm-triggers-stuck-shutdown causal
+      chain (`ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`) — read `test_server_shutdown.py` closely:
+      its module docstring explicitly names `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`'s P2 todo
+      and describes the exact causal chain (sequential `.stop()` calls each blocking on `thread.join(timeout=5-10s)`
+      under DB-lock-storm/tmux-timeout contention, reproducing the incident's ~20-25s shutdown hang before
+      systemd's SIGKILL) — `test_stops_run_concurrently_not_sequentially` and
+      `test_every_stop_fn_is_called_even_if_one_raises` directly regression-guard the fix
+      (`_stop_loops_concurrently`). The prior pass's "no keyword ties it" claim was checked against the wrong
+      thing (a name-only grep, not the docstring) — a second CLAIM ≤ MEASUREMENT miss this same session. No new
+      test needed.
+- [ ] [BACKEND] P2. **RESOLVED → confirmed GAP, not unclear.** Unpinned `ORCHESTRATOR_JWT_SECRET` invalidating every
+      token on restart (`orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`) — read the
+      full issue doc: the "restart-persistence" verification that closed this incident was 100% LIVE/manual ops
+      (mint a token against the real VM, `systemctl restart`, re-validate the same token by hand) — real and
+      convincing, but not a checked-in regression test, so a future regression (the `.env.local` pin lost on a VM
+      rebuild, the systemd drop-in dropped) has nothing guarding it. `tests/test_authenticate_websocket.py` only
+      documents the CONSEQUENCE of a rotated secret (loopback tolerates a stale token) — it never calls
+      `server/auth.py::_load_secret()` directly or asserts pinning. Confirmed via `grep -rn "_load_secret\b" tests/
+      server/auth.py` — zero direct test coverage of the function itself. Add a real unit test: with
+      `ORCHESTRATOR_JWT_SECRET` (or its GCS fallback) set, two separate `_load_secret()` calls must return the
+      IDENTICAL value (proving pinned/restart-safe); with neither set, two calls must return DIFFERENT random values
+      (documenting the dev-fallback trap this incident hit).
 - [ ] [INFRA] P3. **Sample the remaining ~92 docs in the tightest corpus** (single-repo `repos: [agent-orchestrator]`
       issue docs not yet read) plus a second pass on the ~36 co-listed-repo docs and ~130 non-`issues/`-folder
       archived docs (`plans/archive/2026_08/` in particular has undated-convention incident writeups outside the
@@ -364,3 +406,37 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
   placeholder fix. All 4 Phase 1 todos now `[x]` with inline DONE evidence above. Phases 2-4 not yet started this
   session — pausing here to report back before continuing, given the unplanned infra detour and the size of what's
   left.
+- **2026-08-19 (same session, continued via `/autonomous`)**: Operator directed "do the rest of the work
+  /autonomous" — applying `AUTONOMOUS_AGENT_RULES.md` + `SUB_AGENT_MANDATORY_RULES.md`, driving Phases 2-5 to
+  completion on a self-paced loop, no further check-ins unless a genuine impossibility is hit. Phase 2 wave 1
+  shipped — `agent-orchestrator@7f798432ef`: `--cov` wiring + 72% floor, 3 zero-coverage files to 100%, `gcs_sync.py`
+  42%→88%, `server.py` 37%→52% scoped (real full-suite verification: 4395 passed, 0 failed, 78.86% total coverage).
+  Fanned out via 5 parallel sub-agents (different files each, per the max-5-parallel / gate-and-ship-stays-serial
+  rule) — one sub-agent (server.py) stalled mid-task waiting on a notification it can't receive as a sub-agent
+  (backgrounded its own coverage baseline run, then stopped); resumed it via SendMessage with corrective guidance
+  (run bounded foreground commands only) rather than redispatching from scratch, and it completed successfully on
+  resume. One sub-agent's coverage pass on `gcs_sync.py` surfaced a real bug — `upload_state_to_gcs()` had no
+  try/except around its storage-client call, unlike every sibling upload function and its own S3 mirror's
+  documented "never raises" contract, so a transient GCS outage during a snapshot tick propagated and skipped the
+  S3 mirror + git commit for that tick — fixed directly (small, clear, in-scope per findings-triage) rather than
+  just documented, and updated the sub-agent's own test to assert the corrected behavior. Also had to `uv sync` a
+  stale local `.venv` mid-session (another concurrent session's already-landed `tiktoken`/`mcp` deps weren't
+  installed locally yet — confirmed via `pyproject.toml`/`uv.lock` before syncing, not a real basedpyright
+  regression). Worst-by-volume todo is 2/4 done (`tmux_spawn.py`/`autospawn.py` still open, marked `[~]`); a new
+  P2 todo split out for `server.py`'s `lifespan()` — deliberately deferred as its own scoping problem, not a quick
+  add. Wave 2 (remaining volume files + all 10 worst-by-percentage files) dispatched next, same message.
+- **2026-08-19 (same session, Phase 3 pre-dispatch verification)**: before dispatching sub-agents against Phase 3's
+  8 GAP/UNCLEAR items, read all 8 archived issue docs directly and grepped the current test suite for each claimed
+  gap — CLAIM ≤ MEASUREMENT, per this workspace's own hard rule. Found the prior session's research pass got **2 of
+  8 wrong**: the operator-message "GAP" already has a full regression suite
+  (`tests/test_agent_message_redelivery.py`, 8 tests, shipped in the SAME commit that fixed the incident) — the
+  research sampled the issue doc's narrative without checking the current test tree; and the SQLite lock-storm
+  "UNCLEAR" is actually COVERED — `test_server_shutdown.py`'s own module docstring names the incident doc directly
+  and its 2 tests regression-guard the exact fix. Both corrected to `[x]` with the disproving evidence inline, no
+  code needed. The JWT-secret "UNCLEAR" item resolved the other way — read the full incident doc: its
+  "restart-persistence" verification was 100% live/manual VM ops (mint a token, `systemctl restart`, re-validate by
+  hand), never encoded as an automated test; `_load_secret()` itself has zero direct test coverage. Reframed from
+  UNCLEAR to a confirmed GAP with a precise fix spec. Net: 5 confirmed real gaps remain
+  (self-pull test, pip-audit gate-content test, systemd MemoryMax test, spawn trust-prompt test, regen_backlog
+  hand-tuned-prereqs test) plus the newly-reframed JWT-secret pinning test = 6 real items, dispatched as 5 parallel
+  sub-agents next (JWT-secret combined with the small pip-audit one in a single dispatch).

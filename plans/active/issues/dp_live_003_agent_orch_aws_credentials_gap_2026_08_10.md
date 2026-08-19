@@ -28,7 +28,7 @@ summary: >-
   new DP-LIVE-003 check as a third affected consumer. All three share ONE root cause and would share ONE fix.
 status: open
 nature: issue
-asset_group: [cross-cutting, infrastructure]
+asset_group: [infrastructure] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting, infrastructure]; a cross-cloud AWS/GCP credential-provisioning gap, not data-pipeline scope
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer, admin]
