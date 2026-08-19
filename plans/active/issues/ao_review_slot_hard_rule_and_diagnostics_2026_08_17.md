@@ -131,8 +131,12 @@ own design pass first (see Todo 2), not a copy-paste of this guard.
       it, what guardrails replace the dirty-worktree refusal's safety rationale, how it avoids repeating the exact
       2026-07-17 incident this refusal was built to prevent) before implementation — do not rush a change to this
       code path.
-- [ ] [SCRIPT] P2. **Resume the interrupted IDE-compatible human-fleet heartbeat work**, operator-approved via
-      AskUserQuestion earlier this session ("Build a real IDE-compatible heartbeat too") before the `/autonomous`
+- [ ] [BLOCKED-OPERATOR-DECISION] P2. **Resume the interrupted IDE-compatible human-fleet heartbeat work** —
+      **retagged 2026-08-19 (operator ruling, BLK-cf790dbf)**: the "operator-approved via AskUserQuestion" framing
+      below is STALE. `ao_human_fleet_integration_2026_08_15.md` has an explicit design-decisions section that
+      evaluated and REJECTED `UserPromptSubmit` as a heartbeat carrier, and per the operator's ruling that rejection
+      STANDS — this todo needs a NEW operator ruling before proceeding, not a resumption of the prior approval.
+      Original text preserved below for context if a future ruling does authorize it: before the `/autonomous`
       fleet-crisis pivot took over: `scripts/human_fleet/ao-statusline-heartbeat.sh`'s `statusLine`-based mechanism is
       confirmed terminal-only (does not fire in Cursor/VS Code IDE-extension mode — `COLUMNS`/`LINES` never populate);
       Claude Code's `UserPromptSubmit` hook is confirmed to fire identically across terminal/IDE/Desktop/web (official
