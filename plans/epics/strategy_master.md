@@ -229,15 +229,18 @@ about who/what EXECUTES. There is no analogous `execution_mode_availability()` c
 mechanism exists — `close_all/_template.py` is an emergency-only kill-switch path, not routine manual entry; there
 is no `ManualTradeGateDialog`-equivalent backend hook in strategy-service (0 hits; that's UI-repo-only today).
 
-- [ ] [OPERATOR] P1. **Design the manual-live vs automated-live sub-axis.** Not mechanically derivable — resolve
-      exactly how it's modeled (a new sub-enum orthogonal to `OperationalMode`? reusing/extending `ExecutionTrigger`
-      and wiring it beyond the one close-all call site? a field on the archetype's runtime config?) before any
-      wiring lands. Companion execution-service-side todo in `execution_master.md` — the two sides must agree on
-      ONE shape, not diverge into two.
-- [ ] [BACKEND] P2. **Build the routine manual-trade-entry mechanism** (paper AND live) once the design above is
-      resolved — a human books a trade by hand, strategy-service tracks/reconciles it going forward, distinct from
-      the existing emergency close-all path. `[BACKEND]`-eligible once the `[OPERATOR]` item above is resolved, not
-      before.
+- [ ] [BACKEND] P1. **DECIDED 2026-08-19 — build the manual-live vs automated-live sub-axis as a static,
+      per-strategy-instance config flag, same shape as the existing paper-vs-live distinction.** No longer an open
+      design question (was previously `[OPERATOR]`-gated). Set once at strategy-instance launch time, not a
+      dynamic per-order or per-venue-default mechanism. Wire `OperationalMode.MANUAL`/
+      `ExecutionTrigger.MANUAL_OPERATOR` (the partial infra already found in this audit — `ExecutionTrigger` has
+      exactly one live consumer today, `close_all/_template.py`'s emergency kill-switch path) into this concrete
+      shape: the archetype's runtime config carries the new flag, and every live-order code path reads it instead
+      of assuming automated. Companion execution-service-side build in `execution_master.md`'s matching todo — the
+      two sides must land the SAME shape, not diverge into two.
+- [ ] [BACKEND] P2. **Build the routine manual-trade-entry mechanism** (paper AND live) once the flag above exists
+      — a human books a trade by hand, strategy-service tracks/reconciles it going forward, distinct from the
+      existing emergency close-all path. Sequence after the flag lands, not before.
 
 ### Instruction-type x order-type x venue-capability registry — cross-reference only (2026-08-19)
 
