@@ -90,6 +90,12 @@ concrete **"Action for the next sports pass"** items. Checked each against curre
 
 ## Flips verified
 
+6th flip (contradiction-class, self-correcting): `sports_taxonomy_p2_migration_2026_08_08.md`'s trailing Progress
+Log line wrongly read "closes every open todo except the league=/league_id= path-duplication sweep (still [ ], extent
+census not yet done)" — the doc's own `## Todos` section already shows that census `[x]` DONE 2026-08-15 same
+slot/day; the Progress Log line was written before the todo got flipped and never updated. Corrected in place, not a
+new commit trigger by itself (batched into the Phase-1 commit below).
+
 5 missed-flip todos in `sports_consolidated_closeout_2026_07_19.md` flipped `[ ]` → `[x]`, reconciling
 `sports_consolidated_native_ao_extract_2026_07_25.md`'s already-DONE work back into the hub
 (`sports_consolidated_native_ao_extract_2026_07_25_finalize.md` todo 1) — commit `e6e455f6c2`. **Important
@@ -172,6 +178,10 @@ None — no finding this run met the narrow mechanical carve-out bar.
 
 1. **`check_line_caps_sh_whitespace_only_exemption_false_positive_2026_08_19.md`** (P2) — the `check_line_caps.sh`
    bug described under Doc-drift above (see Progress Log for filing confirmation).
+2. **`BLK-7d1f4a2d`** (P0, big finding) — `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s stalled
+   liquidations re-derive (see Phase 1 batch-7 findings above). Raised via `/api/slots/4/blocked` — durable lookup
+   `GET /api/blocked/BLK-7d1f4a2d`, survives slot reassignment. Options A/B/C given, recommendation A. Answer not
+   yet received as of this write-up — check on next tick.
 
 ## Archive candidates (operator review)
 
@@ -236,10 +246,142 @@ None this run.
   docs tagged into this tranche) was not independently hunted for NEW contradictions/missed-flips this pass. Recommend
   the next sports-tranche dispatch run the standard Phase 1 fan-out over the full non-grace corpus.
 
+## Phase 1 hunter fan-out — 8 parallel batches over the remaining 99 non-grace docs
+
+7/8 batches complete as of this write-up (batch 7 still in flight — its notification will arrive and gets processed
+in a follow-up tick of this same run). Every candidate below is hunter-reported with file:line + verbatim-quote
+citation and, where the hunter could verify independently (git log/show/merge-base, live `gcloud` state), that
+verification is noted — **none of these have been adversarially re-verified by this orchestrator yet** (Phase 3);
+none have been applied except where explicitly marked "APPLIED". Treat everything else as CANDIDATE, not confirmed.
+
+**Contradictions found (not yet applied unless marked)**:
+
+1. **P1** — `sports_cf8_available_at_backfill_regression_2026_07_13.md` (~410-430): open `[INFRA] P1` todo describes
+   sub-item (3) as an unattempted next step; it was actually attempted 2026-08-15, hit a new bug (dropped `timeframe`
+   field), was safely stopped, and spawned `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` +
+   `sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` (6/7 resolved, 1 `[OPERATOR]` remaining). Fix:
+   repoint the stale cross-reference to the newer docs.
+2. **P3** — `dp_cron_did_not_fire_false_positive_burst_2026_08_10.md` (~313-323): trailing Progress Log line names
+   the wrong producer (`mdps-features-live-tradfi-`, already resolved same-escalation) instead of the genuinely
+   still-open one (`prediction-arb-detector-`). Narrative-ordering confusion, not a live regression (verified via
+   `git log -S` in `deployment-service`).
+3. **P2** — `mtds_backfill_odds_smallchunk10_relaunch_budget_bug_and_oom_2026_08_09.md:130`: `[OPERATOR] P2` tag is
+   stale — operator ruled 2026-08-12 (7 days ago), a downstream fix already shipped + verified reachable
+   (`market-tick-data-service@719e4d0dd1`). Per CLAUDE.md's HARD RULE the tag should retag to reflect the ruling is
+   applied; remaining work (if any) is engineering investigation tracked in the sibling
+   `mtds_backfill_vm_memory_hang_large_chunk_2026_07_22.md`, not a pending human decision. **NOT YET APPLIED** — this
+   doc has an extremely dense multi-week Progress Log (I read through 2026-08-12's entry only); needs a full read of
+   its ending before retagging, to avoid retagging over still-genuinely-open engineering work.
+4. **P1 — HIGH VALUE, repeated wasted dispatch** — `sports_taxonomy_p3_consumers_2026_08_08.md:305-310`: describes a
+   target shape ("both `odds_horizon_bucket` types disappear under the P1 horizon-axis model") that a **2026-08-15
+   operator ruling directly reversed** (`git show 4a0f0d6c0d`: "reverse 08-08 collapse-to-odds ruling for sports
+   odds_horizon_bucket" — `odds_horizon_bucket` survives as its own derived type). This todo has sat with a
+   superseded premise for 4+ days across **≥4 confirmed premature AO dispatches** (slots 22/15/10/30) that never
+   caught the reversal. High-value fix — likely needs a full todo rewrite against the reversed ruling, not just a
+   pointer, so treating as a candidate for the next pass rather than a quick inline fix.
+5. **P2** — `sports_track_h_denominator_gated_2026_07_28.md:88-89`: blocker description says "both prerequisites"
+   when live state of `sports_track_h_denominator_prereqs_2026_07_28.md` shows only 1 remains (`[OPERATOR]`-tagged
+   Path-A-vs-B decision). **Note**: a hunter also found evidence of a THIRD concurrent reconciliation process today
+   (a "`/plan-reconcile 2026-08-19 (sports_master hunter pass)`" note already present in the prereqs doc, distinct
+   from both this run and this morning's slot-5 interactive run) — the sports tranche has at least 3 independent
+   reconciliation passes active today; expect some findings below to self-resolve before the next pass reads them.
+6. **P1** — `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md`: two internal arithmetic errors in a P0/big-finding
+   incident doc — (a) per-family VM-kill breakdown sums to 636 vs. the stated headline "320" total (repeated in 2
+   places); (b) "676 simultaneously-running VMs (505 + 148)" where 505+148=653, a 23-VM gap (repeated in summary +
+   body). Operator's actual resolution was count-independent (smoke-test, no relaunch), so no operational impact, but
+   the doc's own numbers are wrong and should be corrected or the discrepancy explained.
+7. **P2** — `sports_taxonomy_p2_consumer_inventory_2026_08_12.md`: same stale-Progress-Log-tail-vs-resolved-body
+   pattern as the applied p2_migration fix above — a 2026-08-16 Progress Log line says a `league=`/`league_id=`
+   finding "needs a fresh, dedicated verification pass," while the doc's own body (RESOLVED banner, 1 day earlier,
+   2026-08-15) already closed it ("two different path builders for two different data domains, no remaining
+   contradiction").
+
+**Missed-flip candidates (evidence cited, several independently verified by the hunter)**:
+
+- `instruments_docs_audit_outstanding_items_2026_07_08.md:621` — D7 sports-odds-ready dead trigger, **verified
+  shipped**: `features-service@1b0d1703` (2026-07-09, ancestor of `origin/live-defi-rollout`), all 4 call sites
+  grep-confirmed repointed. The fix predates this todo's own 2026-08-16 creation by 5+ weeks. High-confidence flip
+  candidate.
+- `sports_fixtures_object_wrong_schema_instrument_catalog_contamination_2026_08_09.md` (2 todos, ~161-186): gating
+  census VM confirmed terminal (`gcloud compute instances describe` → NOT_FOUND, verified live) — but the census
+  report's content can't be read via subprocess GCS tooling (workspace guardrail correctly blocks it); the GATE has
+  cleared, the follow-up report-read hasn't happened. Not a direct flip.
+- `sports_canonical_batch_odds_api_duplicate_rows_writer_rootcause_2026_08_16.md:100-106` — dry-run VM confirmed
+  terminated (gone from `gcloud compute instances list`), 3 days stale, no follow-up sanity-check/apply step taken.
+  Not a direct flip (can't confirm clean-completion without a GCS log read).
+- `sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md:254-262` — the gating Cloud Run Job has now run
+  **twice** past the gate (2026-08-18 and 2026-08-19, both verified via `gcloud run jobs executions list`) with no
+  follow-up manifest read performed yet.
+- `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md` — 3 open todos citing already-done reconciliation
+  work in sibling docs; 1 independently verified by the hunter (the `sports_features_layer_findings_sweep §E` flip
+  is genuinely landed), 2 rest on batch10's own secondhand claim (not independently opened this pass).
+
+**Archive-ready (verified, not yet executed)**:
+
+- `sports_satellite_ao_dispatch_batch12_2026_08_09.md` — **CONFIRMED**: 4/4 todos `[x]` (directly re-read this run,
+  full file), `locked_by:` empty, `status: active`, every item in its own "Deferred work" table says "Nothing —
+  complete", extensively HARD-evidenced (multiple verified shas). 6 corpus referrers found
+  (`sports_league_alias_dispatch_anomaly_investigation_ao_dispatch_2026_08_16.md`, `plans/active/INDEX.md`,
+  `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`,
+  `sports_satellite_ao_dispatch_batch12_2026_08_09_finalize.md`, `plans/epics/sports_master.md`,
+  `plans/epics/html/sports_master.html`) — genuine archive candidate for the next pass; not executed this pass
+  (deferred to keep this ritual's write-up bounded, not a complexity finding like the extract-plan archival above).
+- `sports_satellite_ao_dispatch_batch5_2026_07_26.md` — 2/2 done, `archive_exempt: true` since 2026-08-12 pending its
+  finalize twin's 2 open `[ ]` `BLOCKED` items — worth checking whether those cleared in the 7 days since.
+
+**Escalation-worthy (operator ruling recommended, not yet raised via `/blocked`)**:
+
+- `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` — parked unresolved across 3 consecutive na-eligibility-audit
+  passes (2026-07-30, 2026-08-09, 2026-08-17), each explicitly invoking the "must not sit flagged forever" rule.
+  Independently corroborated by `ag_closeout_audit_sports_parked_2026_08_16.md:138-141` ("Self-dispatched but
+  effectively stalled"). Recommend: raise via `/blocked` next tick — options are (A) scope+dispatch a bounded
+  flip-script for the 2,436-shard manifest reconciliation, or (B) rule it stays human-owned given the regression
+  history on the CF-8 backfill surface.
+- `sports_af_completion_pass_2026_08_10.md` — 8 days with zero live-state verification on a 5-entity serial
+  chain-automator backfill (STANDINGS/TEAMS/FIXTURE_STATS/FIXTURE_LINEUPS/PLAYER_STATS), independently corroborated
+  stalled by `ag_closeout_audit_sports_parked_2026_08_16.md`. Needs a live VM/chain-liveness check before further
+  dispatch assumes it's healthy.
+- `sports_p2_reference_bucket_uppercase_regrowth_2026_08_15.md` — P1 re-stamp gated on a code fix
+  (`instruments-service@b872799efa`) reaching `origin/main`; live-verified this run: **still not an ancestor**, and
+  main is now 1303 commits behind LDR (widening, not narrowing — was 1225 on 2026-08-16, 1219 before that). Gate
+  genuinely still closed, but worth flagging the widening trend.
+
+**Batch 7 (last to report) — additional findings**:
+
+- **BIG FINDING, operator notified via `/blocked` this tick** — `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`:
+  two P0/P1 "liquidations re-derive" todos (~4,113-5,232 shards carrying a knowably-wrong inverse notional already
+  live on GCS and readable downstream; full re-drive of a ~355,818-cell failure population) have had **no
+  substantive progress logged since 2026-08-12** despite the doc being touched several times since (context-scout,
+  na-eligibility-audit, an unrelated ruling) for OTHER sections only. `git log` in `market-data-processing-service`
+  confirms continued liquidations-adapter code work through 2026-08-16 (3 commits, none cited in this doc, none
+  independently confirmed to BE the re-derive). This is a currently-wrong-on-GCS data-correctness gap matching
+  CLAUDE.md's "data pipeline correctness is the heartbeat" HARD RULE, gone quiet for a week. Not a mechanical
+  fix — needs a live-status check + doc update.
+- Missed-flip (uncertain, needs live re-check, not applied): `sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md:468`
+  — 5-date coverage-gap backfill todo, 13 days stale since last (negative) measurement; plausibly superseded by
+  later broader backfill work but not confirmed.
+- **Archive-ready, confirms/completes the batch-8 finding above**: `sports_satellite_ao_dispatch_batch10_2026_08_06.md`
+  — 0/5 open, unlocked, `last_updated` never bumped since finishing — this is the exact parent
+  `sports_satellite_ao_dispatch_batch10_2026_08_06_finalize.md`'s reconciliation todos (batch-8 finding) were
+  waiting on. Both docs are now ready for a reconciliation+archival pass together.
+- Checkbox-vs-prose trap: `sports_t2h_t6h_horizon_retrain_blocked_on_generic_trainer_2026_08_09.md` — 0/0 todos +
+  `archive_exempt: true`, but a real substantive follow-up (re-run 5 VMs once a NaN-handling fix lands, report a
+  performance delta) is only in prose, tracked by no checkbox anywhere.
+- Confirmed NOT stale (cross-checked against batch 8's finding): `sports_track_h_denominator_prereqs_2026_07_28.md`'s
+  stale header note was **already corrected today by a third concurrent `/plan-reconcile` pass** — independently
+  confirms at least 3 separate reconciliation processes touched the sports tranche today (this run, this morning's
+  slot-5 interactive run, and this third one).
+
+**Coverage (Phase 1 fan-out)**: 8/8 hunter batches complete, covering all 99 remaining non-grace sports-tranche docs.
+Zero adversarial (Phase 3) verification applied yet to any candidate above except where marked APPLIED/CONFIRMED —
+that is this run's next step.
+
 ## Plans not reached
 
 The ~95 non-grace sports-tranche docs outside the `sports_consolidated_closeout`/`sports_consolidated_native_ao_extract`/
-`_finalize` chain and `sports_satellite_ao_dispatch_batch16` were not read this pass. See Coverage above.
+`_finalize` chain and `sports_satellite_ao_dispatch_batch16` were not DIRECTLY read by this orchestrator, but ARE now
+covered by the Phase 1 hunter fan-out above (7/8 batches in). None of the fan-out's candidates have been
+adversarially verified (Phase 3) or applied (Phase 5) yet as of this write-up.
 
 ## Progress Log
 

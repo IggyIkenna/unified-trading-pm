@@ -996,5 +996,5 @@ returns < 604800, the delete falls back to approve-executes and the todo must st
 - **2026-08-15 (slot-28)** — final 2 tiny manifest-only fixes CLOSED via one VM (per the batching todo above): SPORT
   residue (8 rows) and blank-venue (2,379 rows, confirmed already-closed by slot-26's sibling script — true no-op) both
   VERIFY PASSED 0 remaining. `market-tick-data-service@7b1e6e87` + `deployment-service@b4aef3e1`, VM
-  `canonical-migration-sport-residue-blank-venue-purge`, exit rc=0, self-deleted. **This closes every open todo in the
-  plan except the `league=`/`league_id=` path-duplication sweep** (still `[ ]`, extent census not yet done).
+  `canonical-migration-sport-residue-blank-venue-purge`, exit rc=0, self-deleted. **CORRECTED (plan_reconciler,
+  2026-08-19)**: old claim path-dup sweep was `[ ]` was stale — `## Todos` line ~576 shows `[x]` DONE 2026-08-15.
