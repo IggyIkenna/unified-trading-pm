@@ -165,13 +165,28 @@ _None at authoring time._
       the classifier itself (bare `COINBASE` → `defi` via false-match on `COINBASE-ETHEREUM`, the same trap its own
       comment documents for `BINANCE`) plus two systematic invariants so the next one fails the suite. Evidence:
       `/plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`.
-- [ ] [BACKEND] P0. Reconcile the three chain registries to ONE authoritative source. `ChainKind` (23, missing
-      `plasma` which has live venues) / `KNOWN_CHAINS` (10, missing `scroll` and `starknet`, both live) /
-      `VENUE_CHAIN_MAP` (4, covering 15 of 192 declared venues) give three different answers. Evidence:
+- [x] ✅ [BACKEND] P0. Chain registries reconciled to ONE vocabulary SSOT — unified-api-contracts@27ebc544b2.
+      `ChainKind` is now declared the vocabulary SSOT in its own docstring, with the other two DERIVING their legal
+      values from it (the issue's own "derive from it or die" option A) — they are NOT merged, because measurement
+      showed they own three genuinely different concerns: `ChainKind` = vocabulary, `KNOWN_CHAINS` = UPPERCASE
+      token recognition for splitting `<PROTOCOL>-<CHAIN>` venue strings, `VENUE_CHAIN_MAP` = venue→chain for
+      shared-wallet routing (which legitimately covers only wallet-sharing venues, so "4 of 192" is its scope, not
+      a gap). Added `ChainKind.PLASMA` and taught `KNOWN_CHAINS` to recognise SCROLL + PLASMA. Six containment
+      invariants now pin all three together. **Two premises in this todo were measured WRONG and corrected in the
+      issue doc**: `KNOWN_CHAINS` held 12 entries, not 10; and `starknet` was NOT added, because its cited
+      justification `EXTENDED-STARKNET` is a **CeFi** venue absent from `ALL_DEFI_VENUES` — it cannot justify an
+      entry in a DeFi-venue token-recognition set. Evidence:
       `/plans/active/issues/three_chain_registries_disagree_none_authoritative_2026_08_19.md`.
-- [ ] [BACKEND] P0. Migrate every consumer of the retired registries to the single SSOT in the SAME change — a token
-      grep misses path-prefix, filename and registry-membership binders. SSOT:
-      `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md`.
+- [x] ✅ [BACKEND] P0. Consumer migration — **a no-op by construction, and that is the correct outcome.** No
+      registry was retired (see above: all three survive, owning different concerns), so there is no renamed or
+      removed entity for a consumer to be migrated off, and
+      `/codex/02-data/entity-rename-and-split-consumer-migration-rule.md` does not apply. Consumers were still
+      enumerated to confirm this: `ChainKind` (6 UAC modules + MTDS `umi_tick_provider.py`), `KNOWN_CHAINS`
+      (instruments-service `writers.py`/`catalogue.py` + MTDS `rebuild_mtds_manifest.py`, all reading membership,
+      none binding the name into a path or filename), `VENUE_CHAIN_MAP` (UAC-internal only). Every one keeps
+      working and now gets a MORE complete answer. The re-check of whether any already-written chain-scoped output
+      was affected by the SCROLL/PLASMA non-recognition is data verification in T2-owned repos — filed as an
+      inbound request on T2's plan, not silently assumed clean.
 - [ ] [BACKEND] P0. `canonical_path_violations()` validates the filename stem. The oracle drops the last path
       segment before validating, so raw venue wire stems and double-wrapped catalogue-miss ids return 0 violations
       == CANONICAL when they are not. Evidence:
@@ -266,6 +281,20 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-19 — **Registry P0 #2 landed: chain registries reconciled — unified-api-contracts@27ebc544b2.** Verified
+  landed (`27ebc544b2` an ancestor of `origin/live-defi-rollout`; landed blobs re-read). The issue's "three
+  registries, three answers" framing is partly a CATEGORY ERROR — measured, they own three different concerns, so
+  they were bound by containment invariants rather than merged (merging would have destroyed real distinctions;
+  `VENUE_CHAIN_MAP`'s "4 chains" is its scope, not a gap). The REAL defect underneath was worse than under-reporting:
+  4 live DeFi venues (`AAVE_V3-SCROLL`, `COMPOUND_V3-SCROLL`, `AAVE-PLASMA`, `FLUID-PLASMA`) parsed to chain tokens
+  `KNOWN_CHAINS` did not contain, so every `if chain in KNOWN_CHAINS:` consumer silently else-branched on them.
+  Three of the issue's own claims corrected by measurement: `KNOWN_CHAINS` was 12 not 10; `starknet` has NO DeFi
+  venue justifying it (`EXTENDED-STARKNET` is CeFi and absent from `ALL_DEFI_VENUES`) so it was deliberately NOT
+  added; and `PLASMA` was missing from `KNOWN_CHAINS` too, which the issue did not mention.
+  **Process note**: this ship needed a recovery — the first `quickmerge` attempt was SIGTERM'd at the 2-minute
+  foreground cap while `--isolated` had the files evacuated from the caller tree. Nothing was lost: the edits were
+  in quickmerge's own `qm-iso-evac-<pid>` stash, restored via `git stash apply` and content-verified before the
+  re-ship. Run quickmerge in the BACKGROUND in this repo — its pre-commit hooks exceed 120s.
 - 2026-08-19 — **Registry P0 #1 landed: `get_venue_asset_group()` fails closed — unified-api-contracts@d4cded41b8.**
   MEASURED, not assumed: the old lookup held 55 capability-declaration `source` keys (`binance`, `databento`) and
   callers pass venue slugs (`BINANCE-SPOT`) — zero overlap, so all 209 registered venues fell through to the

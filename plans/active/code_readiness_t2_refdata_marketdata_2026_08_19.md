@@ -148,7 +148,21 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-_None at authoring time._
+- [ ] [FROM-T1] P1. **Re-check chain-scoped output for the four venues `KNOWN_CHAINS` silently dropped.** UAC's
+      `KNOWN_CHAINS` did not recognise the `SCROLL`/`PLASMA` chain tokens until unified-api-contracts@27ebc544b2,
+      so `if chain in KNOWN_CHAINS:` took the else-branch for `AAVE_V3-SCROLL`, `COMPOUND_V3-SCROLL`,
+      `AAVE-PLASMA` and `FLUID-PLASMA` in **instruments-service** `engine/orchestrator/writers.py` +
+      `engine/orchestrator/catalogue.py` and **MTDS** `scripts/rebuild_mtds_manifest.py`. The UAC side is fixed —
+      no code change is needed in your repos for the recognition itself. What T1 cannot check from outside your
+      tranche: whether already-written catalogue/manifest rows for those four venues took the wrong branch and now
+      need re-derivation. Read-only verification first; any actual data movement stays operator-gated per the
+      standing rules.
+- [ ] [FROM-T1] P2. **instruments-service hand-rolls its own `KNOWN_CHAINS` literals instead of importing UAC's.**
+      Found while enumerating consumers: `scripts/audit_defi_zero_glued_2026_06_25.py` defines a local
+      `KNOWN_CHAINS = {...}` set, `scripts/build_instrument_catalogue.py` defines `_CATALOGUE_KNOWN_CHAINS`
+      ("mirrors the UAC `KNOWN_CHAINS` set"), and `scripts/collapse_defi_drift_to_canonical_2026_06_25.py` defines
+      another. A mirrored copy does not receive the SCROLL/PLASMA fix and will drift again — these should import
+      the UAC set. Not touched by T1: they are your repo.
 
 ## Todos
 
