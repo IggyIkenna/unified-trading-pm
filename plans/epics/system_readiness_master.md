@@ -75,7 +75,8 @@ related_plans:
   - /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md
   - /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md
   - /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md
-last_updated: "2026-08-17"
+last_updated: "2026-08-19" # was 2026-08-17 — added credentials as W1's 7th readiness dimension + manual/automated
+  # live-mode cross-reference + named the priority venue/protocol acceptance cohort, see body
 locked_by:
 locked_since:
 resolved_by:
@@ -162,6 +163,7 @@ Per **venue**, readiness for six surfaces, split by owning service, across three
 | **fills**           | execution-service | ❌ no leg                                                                   |
 | **trades**          | execution-service | ❌ no leg                                                                   |
 | **account balance** | execution-service | ❌ no leg                                                                   |
+| **credentials**     | execution-service | ❌ no leg — added as a 7th dimension 2026-08-19, see "Credentials" below   |
 
 Measured against the shipped leg table in `cursor-configs/skills/readiness-state-dump/SKILL.md`: of 18 cells
 (6 surfaces × 3 modes) we derive **position across all three modes, and market data in batch only**. The
@@ -210,6 +212,46 @@ The spine. Everything else feeds it.
       a real gap this dump now makes visible, not yet named elsewhere in this epic's Definition of done.
 - [ ] [SKILL] P1. **Build a strategy-capability audit skill** — what can each archetype actually trade, given real
       coverage and real venue capability.
+
+### Credentials — first-class readiness dimension (added 2026-08-19)
+
+**Confirmed genuinely missing, not a duplicate tracker** (verified 2026-08-19 against
+`/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`, 3 open / 4 done): the W1 rollup's
+six-surface table had no credentials/IAM dimension at all — a venue could show `ready` on every data/position/
+execution leg while its actual API keys were still unscoped or unprovisioned in Secret Manager, a silent readiness
+gap the matrix could not surface. **Credentials is now a 7th first-class dimension** (see the table above): per
+venue, does the runtime identity hold a scoped (`{read,trade,write}`) GSM secret triple, and has a live authenticated
+call been verified (not just an IAM policy dump)? Cross-reference, don't duplicate: the per-venue grant work itself
+is tracked in `execution_master.md`'s "Venue MVP-readiness" P1 section (CeFi IAM grants for
+bybit/hyperliquid/okx/aster, Kalshi/IBKR extension) — this workstream owns making credential-readiness VISIBLE in the
+derived state, not owning the grants themselves.
+
+- [ ] [BACKEND] P1. **Add a credentials leg to the readiness-state-dump skill** — per venue, `present` / `absent` /
+      `unverified` (never collapsed, matching this epic's own W20 constraint on the venue-registry-completeness
+      skill). `present` requires BOTH a scoped GSM secret AND a dated live-call verification, not either alone.
+- [ ] [DOC] P2. **Name the full MVP-readiness acceptance cohort explicitly.** This epic's readiness matrix is
+      measured on "all venues with a code path" in the abstract; the concrete 2026-08-19 priority set to close
+      first is: CeFi (Deribit, Hyperliquid, Binance, OKX, Bybit, Aster), Ethereum DeFi (AAVE V3, Lido, EtherFi),
+      sports (Betfair), Polymarket, Kalshi, IBKR, Morpho, Uniswap, CoW Swap, custody (Copper, CEFFU), plus a Solana
+      spot+perp basis-trade placeholder bridged to Ethereum (venue names pending an operator decision, tracked in
+      `execution_master.md`; bridge architecture owned by a separate parallel agent in `codex/`, not duplicated
+      here). Naming this cohort here gives the W1
+      dump's "which venues matter most right now" question a stated answer rather than an implicit "all 288".
+
+### Manual execution mode — first-class alongside automated (added 2026-08-19)
+
+Operator (2026-08-19), exact words: "the whole strategy service and execution need to understand that there's a
+manual Live mode where everything is our own manual execution, and there's an automated Live mode." Cross-cutting
+across every venue in the acceptance cohort above, not one venue's concern — full detail + code citations live in
+`execution_master.md` and `strategy_master.md`'s matching todos (cross-reference, not duplicated here). For this
+epic specifically: the W1 matrix's "position" and "orders/fills/trades" surfaces should be understood as being asked
+once per **(venue x mode x manual-or-automated)**, not just per (venue x mode) — a venue can be automated-live-ready
+while still lacking a manual-live path, or vice versa, and today's matrix has no way to express that distinction.
+
+- [ ] [BACKEND] P2. **Fold a manual-vs-automated sub-axis into the readiness-dump extension** (the credentials-leg
+      todo above and the surface x mode matrix todo already in this workstream) once the execution-service/
+      strategy-service modeling decision lands there — do not build a parallel manual-mode concept here; this epic
+      consumes that decision, it does not make it.
 
 ## W2 — Data pipeline integrity
 
