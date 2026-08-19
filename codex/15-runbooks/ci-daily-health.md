@@ -227,3 +227,59 @@ Full writeup, evidence, and todos:
 - **ci-reconcile ran**: yes (ad-hoc interactive session, continuation of the same-day sweep above).
 - **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow recurrence-investigation scope, see
   08-18 entry for the last full check.
+
+## 2026-08-19 (third pass, agt-bbf1cc, scheduled hourly sweep)
+
+**Delta since last run**: fleet fully recovered from the second-pass QG-cascade recurrence — no new occurrences of the
+`base-service.sh`/`base-library.sh` hardened-retry path being exercised found in this window. All items below were
+already self-healed by the time this pass looked; nothing needed shipping.
+
+**Sweep 1 (repo registry, `quality-gates-v2` on `live-defi-rollout`)**: all 25 repos in `workspace-manifest.json`
+green on their latest run. `unified-trading-ci` correctly has zero direct `python-quality-gates-v2` runs — confirmed
+by reading its own header comment: it hosts the _reusable_ workflow definition every other Python repo's
+`quality-gates-v2.yml` calls via `uses:`, not a caller itself; its own CI is `lint.yml` (green). Not a gap.
+
+**Sweep 2 (GH-Actions-native standing monitors, regenerated catalog)**: all ~23 `schedule(...)`+Slack workflows
+checked directly (`branch-health`, `ci-health`, `ldr-ci-monitor`, `ldr-docs-gate`, `ldr-to-main-promote-fleet`,
+`codex-freshness-sweep`, `cloud-build-failure-watcher`, `freeze-deferred-build-replay`, `readiness-verifier`,
+`sit-debounce-trigger`, `reconcile-release-tags`, `cassette-drift-check`, `removed-symbols-workspace-sweep`,
+`ruleset-drift-alert`, `secret-health-check`, `build-smoke-all-repos`, `cold-storage-cleanup`,
+`fix-approval-timeout`, `overnight-agent-orchestrator`, `overnight-dead-man-switch`,
+`promote-fleet-startup-failure-monitor`, `sit-gate-stuck-detector`, `stale-build-watcher`,
+`version-coherence-check`) — every one's most recent run is `success`, on cadence.
+
+**Sweep 3 (host-dispatched watchdogs, `i-042a6332509482556`)**: `glue-runner-crash-loop-watchdog.sh` +
+`ci-vm-resource-watchdog.sh` enumerated via `grep repository_dispatch scripts/self-hosted-runners/*.sh`. Direct SSM
+verification still structurally unavailable — confirmed the exact same `AccessDeniedException` for
+`arn:...:user/ikenna-worker` (not the orchestrator's self-service `uts-orchestrator-epic-role`) already filed in
+`plans/active/issues/ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md` — still open, still accurate, no
+new diagnosis needed. Fallback indirect check: zero `glue-runner-health`/`ci-vm-resource-alert` `repository_dispatch`
+events into `ci-health.yml` in the last 24h (only unrelated `ci-failure-alert` dispatches) — consistent with quiet,
+**not independently confirmed** per the known coverage gap.
+
+**Persistent alerts (non-auto-resolving)**: none. Everything found in the last-6h `#ci-failures` pull had already
+cleared by inspection time: `unified-trading-pm` `ldr-docs-gate` frontmatter violation (09:10Z, on 2 same-day issue
+docs) — frontmatter already complete, gate green again by 10:07Z; 4 separate `unified-trading-pm`
+`python-quality-gates-v2` CRITICALs (04:23/07:26/08:52/09:24Z push+promote-PR) and 2 `agent-orchestrator` QG
+CANCELLED/TIMED-OUT (06:10/08:11Z) — current HEAD green on both repos; `market-data-processing-service` RED→GREEN
+and `deployment-service` `semver-agent` FAILED→RECOVERED — both have an explicit Slack recovery post (§0d
+requirement met); `unified-api-contracts` v0.142.0 dependency-fanout HALT (no v-tag) — tag confirmed present now,
+`update-repo-version` succeeded 09:02Z; `deployment-api`/`deployment-service` auto-merge ARM FAILED (09:02Z) — both
+merged minutes later (PR #695, #1084) via the fleet bot's own retry, verified by actual merge outcome per §0d/(h),
+not just conclusion. One item still **in progress, not stuck**: `agent-orchestrator` LDR→main promotion lag (14
+commits, oldest ~331h) now has an open, clean/mergeable PR #821 (opened 10:09:42Z) with `auto_merge` not yet armed as
+of 10:21Z — within the `*/15` fleet-promote cadence, no ARM FAILED alert fired for it, so treated as in-cadence
+rather than a repeat of the deployment-api/-service pattern; re-check next pass if still unarmed.
+
+**Sweep 4 (open promote PRs on repos touched)**: no fix shipped this pass, so N/A by the skill's own trigger — spot-
+swept anyway: zero non-`CLEAN` open promote PRs found fleet-wide.
+
+**Other observed, out of `/ci-reconcile` scope**: `codex-freshness-sweep` (06:12Z) flagged 4 codex docs >90d stale
+(`defi-venue-protocol-catalogue.md`, `service-contract-audit-template.md`, `ui-architecture.md`,
+`11-project-management/README.md`) — a docs-content review, not a CI/CD pipeline defect; left for `/docs-reconcile`
+or the doc owners rather than fixed here.
+
+- **ci-reconcile ran**: yes (scheduled hourly `ci_reconciler` dispatch, `agt-bbf1cc`, slot 28).
+- **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow hourly-cadence scope; no rightsizing
+  check has run against `i-042a6332509482556` in >24h per §9's own trigger, which is itself worth a future daily-mode
+  pass rather than this one.
