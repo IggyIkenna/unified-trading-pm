@@ -29,7 +29,7 @@ referenced_by:
     /codex/05-infrastructure/ui-setup-checklist.md,
   ]
 owner:
-last_reviewed: 2026-05-13
+last_reviewed: 2026-08-19
 code_refs:
 supersedes: [ui-functionality-requirements.md, ui-dependency-matrix.md]
 ---
@@ -51,10 +51,10 @@ Sweep 2 (UI-17 finding).
 
 Per the workspace-manifest 2026-03 split-UI consolidation:
 
-| UI                              | Primary purpose                                      | Port       | Backend                                                        |
-| ------------------------------- | ---------------------------------------------------- | ---------- | -------------------------------------------------------------- |
-| **`unified-trading-system-ui`** | Consolidated trading, reporting, admin, domain flows | 5173 (dev) | Multi-API gateway (deployment-api, client-reporting-api, etc.) |
-| **`deployment-ui`**             | Deployment orchestration                             | 5183 (dev) | `deployment-api` (port 8004)                                   |
+| UI                              | Primary purpose                                      | Port                            | Backend                                                                             |
+| ------------------------------- | ---------------------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------- |
+| **`unified-trading-system-ui`** | Consolidated trading, reporting, admin, domain flows | 3000 (dev, mock; 3100 real-API) | Multi-API gateway (deployment-api, client-reporting-api, unified-trading-api, etc.) |
+| **`deployment-ui`**             | Deployment orchestration                             | 5183 (dev)                      | `deployment-api` (port 8004)                                                        |
 
 **ARCHIVED (reference only):** former split UIs (`strategy-ui`, `live-health-monitor-ui`, `batch-audit-ui`,
 `client-reporting-ui`, etc.) live under workspace-root `archive/README.md` — **not** in `workspace-manifest.json`
@@ -99,3 +99,7 @@ clear cross-refs to the source docs. Follow-up tracked in:
 
 - **2026-05-13** — Created as consolidated entry point. Source docs (`ui-functionality-requirements.md` +
   `ui-dependency-matrix.md`) tagged `SUPERSEDED BY ui-architecture.md` with cross-links.
+- **2026-08-19** — Re-reviewed (codex-freshness sweep). Corrected `unified-trading-system-ui`'s dev port: the table said
+  5173 (Vite's generic default), but the codified SSOT (`scripts/dev/ui-api-mapping.json`) puts it at 3000 (mock) /
+  3100 (real-API) — the doc's own § "Architectural principles" #3 names that file as authoritative, so this was a
+  self-contradiction. `deployment-ui`'s 5183 was confirmed correct against the same source.

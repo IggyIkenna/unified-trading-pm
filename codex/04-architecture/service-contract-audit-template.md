@@ -22,7 +22,7 @@ created: 2026-05-20
 authoritative_for: [service-contract audit reusable template (7-pattern upstream-downstream matrix)]
 referenced_by:
 owner:
-last_reviewed: 2026-05-20
+last_reviewed: 2026-08-19
 code_refs:
 source: B1 lift from is_mtds_contract_audit_2026_05_20.md (mega audit 2026-05-20)
 ---
