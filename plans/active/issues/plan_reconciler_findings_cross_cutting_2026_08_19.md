@@ -181,6 +181,17 @@ epics: `observability_master` 24, `agent_operating_framework_master` 13, `batch_
    tag/rewrite is the right one given the item's now-narrower remaining scope is a judgment call, not a mechanical
    substitution — filed rather than guessed at.
 
+## Resolved via /blocked (closed same run)
+
+1. **`BLK-f87a4927`** — `venue_e2e_wiring_2026_08_16.md` P0 denominator-drift re-scoping question (see
+   Contradictions #1 above). **ANSWERED 2026-08-19T18:46:58Z: B** (leave the 5 AG batches as-is; open a separate
+   follow-up plan) — NOT my `[WORKER REC]` A, applied as ruled. **Applied same run**: filed
+   `plans/active/issues/venue_e2e_wiring_660_triple_rescoping_2026_08_19.md` (4 tracked `- [ ]` todos: re-derive the
+   660-triple delta list, verdict each delta row, fork fresh AG batches for genuinely-new rows, close out the
+   banner) — `assigned_vm: NA` (default, not explicitly ruled either way this round); updated
+   `venue_e2e_wiring_2026_08_16.md`'s banner to record the ruling + point at the new doc instead of "unresolved".
+   No AG batch file touched, per the ruling. `unified-trading-pm@<this commit>`.
+
 ## Progress Log
 
 - **2026-08-19T18:33Z (run start)**: dispatch `agt-b2fcb2`, slot 11. RULES.md + plan_reconciler.md +
