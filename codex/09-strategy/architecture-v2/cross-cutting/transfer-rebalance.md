@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: "Cross-Cutting: Transfer / Rebalance"
-summary:
-  "Venue-scope capital-movement primitive: moves capital between venues within one strategy via 7 transfer types
+summary: "Venue-scope capital-movement primitive: moves capital between venues within one strategy via 7 transfer types
   (INTERNAL_SUBACCOUNT / CEX_WITHDRAWAL_DEPOSIT / ON_CHAIN_TRANSFER / BRIDGE / WRAP_UNWRAP / UNITY_WALLET_OP /
   IBKR_FUND_MOVE); target-state, idempotent by `instruction_id`, cost-budgeted; bridge paths from `CHAIN_BRIDGE_GRAPH`."
 status: current
@@ -122,7 +121,9 @@ transfer path" finding for exactly those two.
 ## Transfer type router
 
 Each request is classified into one of the 13 members above from source/destination venue + asset + chain, then routed
-by its rail. See [autonomous-recovery-matrix](/codex/04-architecture/autonomous-recovery-matrix.md).
+by its rail. See [autonomous-recovery-matrix](/codex/04-architecture/autonomous-recovery-matrix.md). For `BRIDGE`
+specifically, the decided execution-service-side router is `BridgeRouter` — see
+[transfer-architecture.md § "Bridging execution reality"](/codex/04-architecture/transfer-architecture.md) (2026-08-19).
 
 _(A pointer here to an agent `memory/` file was removed 2026-08-12: agent memory is BANNED workspace-wide, is per-cwd,
 and was never readable by anyone else — so that reference had never resolved for any reader.)_
@@ -223,6 +224,16 @@ rather than hardcoding chain pairs here. Multi-hop paths (e.g. Starknet → Ethe
 | StarkGate          | STARKNET↔ETHEREUM        | Very slow (~8h out) | Low             |
 
 Bridge selection policy is an artifact-versioned rule table similar to execution policies.
+
+**This table's `Across`/`Stargate`/`LayerZero`/`CCTP` row-set is what execution-service's `SocketBridgeConnector`
+already aggregates across today (Socket v2, real + live-capable per its 2026-08-14 fix) — the `Wormhole` row above
+predates any implementation and is now a concrete, decided build.** Per the operator's 2026-08-19 ruling documented in
+`/codex/04-architecture/transfer-architecture.md` § "Bridging execution reality": EVM↔EVM routes through the existing
+`SocketBridgeConnector` (no new build), EVM↔Solana routes through a new `WormholeBridgeConnector` (does not exist yet),
+and both sit behind a new `BridgeRouter` dispatch component at the execution-service layer, gated on extending the
+EIP-155-`int`-typed chain-identifier fields (`TransferIntent.chain_id`/`dest_chain_id`, `BaseBridgeConnector`'s method
+signatures) to represent a Solana destination. Read that section for the full spec — it is the authoritative doc for
+this decision; this table stays the strategy-layer options survey.
 
 ## Pre-funding allocation strategies
 
