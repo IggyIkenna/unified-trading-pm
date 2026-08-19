@@ -132,7 +132,7 @@
 
   /* sections */
   section { padding-top: 72px; scroll-margin-top: 24px; }
-  .sec-head { display: flex; gap: 16px; align-items: baseline; border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 24px; }
+  .sec-head { display: flex; flex-wrap: wrap; gap: 16px; align-items: baseline; border-top: 2px solid var(--ink); padding-top: 16px; margin-bottom: 24px; }
   .sec-head .num { font-family: var(--mono); font-size: 12px; color: var(--accent); padding-top: 0.55em; }
   .sec-head h2 { font-size: clamp(1.5rem, 3vw, 2.05rem); font-weight: 400; line-height: 1.14; letter-spacing: -0.012em; margin: 0; text-wrap: balance; }
   h3 {
@@ -275,6 +275,57 @@
     details { display: block; }
     details > summary { display: none; }
   }
+
+  /* Claim marks — status (what the system does) and evidence tier (how we know), per rule 13.
+     SSOT: /codex/14-customer-journeys/_ssot-rules/13-artefact-claim-marks.md */
+  .st {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid currentColor;
+  }
+  .st-live {
+    color: var(--good);
+    background: var(--g-data-wash);
+  }
+  .st-part {
+    color: var(--warn);
+    background: var(--g-post-wash);
+  }
+  .st-plan {
+    color: var(--crit);
+    background: var(--accent-wash);
+  }
+  .ev {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 1px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    border: 1px dashed currentColor;
+    background: transparent;
+  }
+  .ev-verified {
+    color: var(--g-data);
+  }
+  .ev-check {
+    color: var(--ink-3);
+  }
+  .ev-assumed {
+    color: var(--warn);
+  }
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline;
+    font-family: var(--sans); font-size: 12px; color: var(--ink-3); margin: 18px 0 0;
+  }
+  .legend span { display: flex; gap: 8px; align-items: baseline; }
 </style>
 
 <div class="shell">
@@ -330,11 +381,25 @@
         <li><a href="#s9"><span class="num">09</span><span class="ttl">Appendix — the source estate</span></a></li>
       </ol>
     </nav>
+
+    <div class="legend">
+      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
+      <span><b class="st st-part">partial</b> built, reachable for some cases</span>
+      <span><b class="st st-plan">planned</b> specified, not yet built</span>
+    </div>
+    <div class="legend">
+      <span><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named inline</span>
+      <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
+      <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
+    </div>
   </header>
 
   <!-- ==================== 01 ==================== -->
   <section id="s1">
-    <div class="sec-head"><span class="num">01</span><h2>What "runnable" means — the acceptance bar</h2></div>
+    <div class="sec-head"><span class="num">01</span><h2>What "runnable" means — the acceptance bar</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       "Runnable" is defined narrowly and deliberately. It means a team can take the package, supply credentials and
@@ -443,7 +508,10 @@
 
   <!-- ==================== 02 ==================== -->
   <section id="s2">
-    <div class="sec-head"><span class="num">02</span><h2>The package: 11 components and their ship form</h2></div>
+    <div class="sec-head"><span class="num">02</span><h2>The package: 11 components and their ship form</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       Eleven components, each with a declared ship form. The distinction between them is the substance of the boundary:
@@ -577,7 +645,10 @@
 
   <!-- ==================== 03 ==================== -->
   <section id="s3">
-    <div class="sec-head"><span class="num">03</span><h2>Runtime path through the carved system</h2></div>
+    <div class="sec-head"><span class="num">03</span><h2>Runtime path through the carved system</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       The runtime path is short and auditable by design. Seven steps from a venue event to a persisted decision, each
@@ -685,7 +756,10 @@
 
   <!-- ==================== 04 ==================== -->
   <section id="s4">
-    <div class="sec-head"><span class="num">04</span><h2>The platform seam — 10 interface contracts</h2></div>
+    <div class="sec-head"><span class="num">04</span><h2>The platform seam — 10 interface contracts</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-verified" title="plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md § A — checked 2026-08-12: this section already states each of the ten interfaces resolves to a local, static or mock implementation">✓ verified</b>
+    </div>
 
     <p class="lede">
       The seam is the most useful part of this specification. Ten capabilities the strategy depends on are declared as
@@ -858,7 +932,10 @@
 
   <!-- ==================== 05 ==================== -->
   <section id="s5">
-    <div class="sec-head"><span class="num">05</span><h2>Configuration and parameter snapshot</h2></div>
+    <div class="sec-head"><span class="num">05</span><h2>Configuration and parameter snapshot</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       At the hand-over point the package receives a configuration snapshot. Several values that the configuration format
@@ -942,7 +1019,10 @@
 
   <!-- ==================== 06 ==================== -->
   <section id="s6">
-    <div class="sec-head"><span class="num">06</span><h2>Hand-over acceptance criteria</h2></div>
+    <div class="sec-head"><span class="num">06</span><h2>Hand-over acceptance criteria</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       The hand-over is complete when these nine conditions hold. They are written to be executed and signed off rather
@@ -992,7 +1072,10 @@
 
   <!-- ==================== 07 ==================== -->
   <section id="s7">
-    <div class="sec-head"><span class="num">07</span><h2>Operational responsibilities on self-operation</h2></div>
+    <div class="sec-head"><span class="num">07</span><h2>Operational responsibilities on self-operation</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       The package is software. Running it in production requires an operational estate around it. This is what that
@@ -1044,7 +1127,10 @@
 
   <!-- ==================== 08 ==================== -->
   <section id="s8">
-    <div class="sec-head"><span class="num">08</span><h2>Extension work-items</h2></div>
+    <div class="sec-head"><span class="num">08</span><h2>Extension work-items</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       If the mandate grows, each direction is a defined set of work items. Both columns below contain real engineering —
@@ -1144,7 +1230,10 @@
 
   <!-- ==================== 09 ==================== -->
   <section id="s9">
-    <div class="sec-head"><span class="num">09</span><h2>Appendix — the source estate</h2></div>
+    <div class="sec-head"><span class="num">09</span><h2>Appendix — the source estate</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
+    </div>
 
     <p class="lede">
       For completeness, the mapping in the other direction: the twenty-six repositories the platform comprises, which of
