@@ -71,6 +71,12 @@ context_scope:
 > tranche, agt-2e82f7, 2026-08-16): the doc's own 2026-07-28 entry already measured a real ~30-day ETA at actual
 > throughput, and as of 2026-08-15T21:53Z only ~26% is done after 3+ weeks of repeated preemptions — this banner
 > headline was never revised to match.**
+> **STALE (ag-closeout-audit, cefi tranche, 2026-08-19): the "~14 MB/s" fixed-and-measured-live claim is ALSO stale —
+> the date-serial barrier this paragraph calls fixed was never actually shipped, live-measured 2026-08-16 on the
+> running BINANCE-FUTURES resume VM at only ~4 MB/s (download-leg 4.01 MB/s / upload-leg 3.22 MB/s). See
+> `issues/cefi_tardis_date_serial_barrier_still_open_2026_08_16.md` for the corrected measurement and
+> `cefi_tardis_date_concurrency_2026_08_16.md` for the fix design — this also revises the ~30-day ETA above, which
+> assumed the ~14 MB/s figure held.**
 > (autonomous ruling, 2026-07-18, within documented intent — operator can reverse; see
 > `cefi_consolidated_closeout_2026_07_18.md`'s Headline verdict + Track 2 for the full ruling record). Companion gated
 > finalize: `cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md`.
