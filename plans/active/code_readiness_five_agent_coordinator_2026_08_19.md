@@ -100,13 +100,45 @@ T1 (contracts) ──┬─→ T4 QuoteInstruction: delta / gamma / underlying_i
                  ├─→ T3 + T4 StrategyInstructionEnvelope: reference_position + credit
                  └─→ T4 OrderState 9-state machine
 
-T4 per-venue execution-instruction check ──→ T5 readiness dump  (unblocks 844 of 864 rows)
+T3 strategy position adapters ──→ T5 readiness dump  (gates 840 of the 844 not_ready rows)
+T4 per-venue execution-instruction check ──→ T5 readiness dump  (real, but moves 0 rows on its own)
 T2 instrument_type / data_type coverage axes ──→ T5 coverage dump at finer grain
 ```
 
 **T1 is upstream of everyone and is the smallest spine (11 docs).** Start it first; its contract extensions cost
-nothing unconsumed but stall two agents if missing. T4's instruction-path check is the highest-leverage single item
-in the whole effort — it is the structural reason every readiness row currently reads `unverified`.
+nothing unconsumed but stall two agents if missing.
+
+> ### ⚠️ CORRECTED 2026-08-20 (T5, measured) — the highest-leverage item is T3, not T4
+>
+> This section previously read: _"T4's instruction-path check is the highest-leverage single item in the whole
+> effort — it is the structural reason every readiness row currently reads `unverified`."_ **Both halves are wrong,
+> measured against a live full-fleet dump** (288 venues × 3 modes = 864 rows, `coverage.json` date 2026-08-19,
+> grain `instrument_type`).
+>
+> 1. **The rows do not read `unverified` — they read `not_ready`** (0 ready / 844 not_ready / 20 unverified, which
+>    matches the artefacts' quoted headline exactly).
+> 2. **The dominant failing leg is `strategy`, at 840 `not_ready`** — `position_read_mode_availability(venue).<mode>
+>    = none`, which lives in **strategy-service (T3)**. `execution_instruction` is `unverified` on all 864 rows, but
+>    the rollup lets any `not_ready` dominate, so **closing the instruction leg entirely would move zero rows off
+>    `not_ready`.**
+>
+> Per-leg counts from that run:
+>
+> | leg | ready | not_ready | unverified |
+> | --- | ---: | ---: | ---: |
+> | `strategy` | 24 | **840** | 0 |
+> | `execution_transfers` | 0 | 768 | 96 |
+> | `market_tick_data` | 109 | 470 | 285 |
+> | `execution_instruction` | 0 | 0 | 864 |
+>
+> T4's instruction-path check is still genuinely needed (T5 has filed the request with the groundwork done) — it
+> just is not what unblocks the headline number. **Re-point the effort at strategy position-adapter coverage.**
+> Evidence: `/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md` Progress Log,
+> 2026-08-20.
+>
+> Caveat on the same run: the execution-service capability probe exited 1 (no project ID), so all four
+> execution-service legs reported `unverified=864`. The same probe succeeds single-venue, so those counts are a
+> FLOOR, not a capability measurement. Tracked as a T5 P1.
 
 ## Exclusions — standing, all tranches
 
