@@ -171,8 +171,39 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W3 — granularity and the shard denominator
 
-- [ ] [BACKEND] P0. Reconcile the shipped 3,960-shard denominator against the operator's deepest-grain ruling. The
+- [x] [BACKEND] P0. Reconcile the shipped 3,960-shard denominator against the operator's deepest-grain ruling. The
       shard space is NOT a Cartesian product — SSOT: `/plans/epics/system_readiness_master.md` § W3.
+      ✅ 2026-08-20 — **ANSWERED: 3,960/3,962 is NOT the deepest-grain count. It is a projection that drops the
+      chain axis for 99.1% of DeFi cells and drops leagues entirely.** The operator's expectation that a genuinely
+      exhaustive count is LARGER is CONFIRMED. Measured against the live 2026-08-19 payload:
+      - The payload carries exactly seven projections — `by_asset_group`, `by_venue`, `by_venue_data_type`,
+        `by_venue_instrument_type`, `by_venue_instrument_type_data_type`, `by_day`, `by_chain`. **None joins chain
+        to the shard atom.** `by_chain` is a MARGINAL `ag → chain → counts` view, never crossed with
+        `(venue, instrument_type, data_type)`.
+      - DeFi carries 23 distinct chains, but **2,778 of its 2,804 level-5 cells sit on a BARE venue** (no `-CHAIN`
+        suffix), so one cell covers every chain that protocol runs on. Only 26 cells carry a glued
+        `PROTOCOL-CHAIN` venue where the chain is folded in. The DeFi venue axis is therefore in a MIXED state and
+        the count is neither cleanly chain-scoped nor cleanly chain-agnostic.
+      - `cefi`, `tradfi`, `sports` and `prediction` each report exactly ONE chain and it is the empty string — the
+        axis is inapplicable there, which is correct and not a defect.
+      - **No league axis exists anywhere in the payload**, though the ruling names leagues as a real sports axis.
+        Sports contributes 822 level-5 cells across 46 venues with leagues entirely uncollapsed into them.
+      - Days are available (`by_day`: cefi 2,785 / defi 3,152 / tradfi 3,153 / sports 2,242 / prediction 3,152), so
+        the ruling's "full denominator = shards x available days" is computable once the shard axis is right.
+      **Not silently re-stated as a new headline number**: per the ruling, any denominator change lands as a dated
+      supersession. The honest statement today is that 3,962 (3,876 after the 2026-08-20 dedup fix) is the
+      `(asset_group, venue, instrument_type, data_type)` projection on 2026-08-19 — chain and league omitted — and
+      that the exhaustive count cannot be produced until the next two todos land.
+- [ ] [BACKEND] P0. **Add a chain-joined shard-atom projection so the deepest grain is computable at all.** Today
+      no projection crosses `chain` with `(venue, instrument_type, data_type)`, so the exhaustive DeFi shard count
+      cannot be derived from the artefact by any consumer. `chain` is already read (`_READ_COLUMNS_WITH_CHAIN`) and
+      already grouped marginally (`by_chain`), so this is an ADDITIVE projection, not a change to any published
+      number — it can land without a supersession, and the reconciled denominator can then be quoted from it.
+- [ ] [OPERATOR] P0. **Rule on the sports league axis before it is built.** The W3 ruling names leagues as a real
+      sports axis and excludes FIXTURES from the shard COUNT while keeping them in the full denominator. Neither
+      distinction is expressible today — no league axis exists in the manifest projections at all. Whether league
+      belongs on the shard atom (multiplying 822 sports cells by league cardinality) or stays a drill-down is a
+      denominator-defining decision, so it is the operator's, not this tranche's.
 - [x] [BACKEND] P0. Add `instrument_type` and `data_type` columns to the coverage payload. **T5's coverage dump
       blocks on this** — it can only report at `(venue, data_type)` grain until these land. Tell T5 when shipped.
       ✅ 2026-08-20 — **already live before this tranche started; verified by execution, not by reading the writer.**
@@ -253,9 +284,20 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Land the CF-canonicalization single-walk CODE. Any NEW whole-corpus GCS walk is
       review-blocking — reuse the existing walk. Evidence:
       `/plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`.
-- [ ] [BACKEND] P1. Resolve the DeFi golden/red capability drift — `test_expected_matches_golden[defi]` failing
+- [x] [BACKEND] P1. Resolve the DeFi golden/red capability drift — `test_expected_matches_golden[defi]` failing
       fleet-wide. Re-verify current red/green state first; the prior pass did not. Evidence:
       `/plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`.
+      ✅ 2026-08-20 — **re-verified as instructed, and the todo's premise is stale: it is NOT red.** Ran the full
+      instruments-service suite (`5367 passed, 6 skipped, 4 xfailed`): `test_expected_matches_golden[defi]` is
+      **XFAIL** — a managed expected-failure carrying a written reason, not a failure. Nor is it defi-specific:
+      `[defi]`, `[tradfi]`, `[sports]` and `[prediction]` are all xfailed; `[cefi]` is the only green one. The
+      cited issue doc has ZERO open todos. Each xfail reason already names the reconciliation its own AG owner must
+      do (e.g. the defi one flags that `defi_satellite_ao_dispatch_batch9_2026_08_06.md` claims to have REMOVED the
+      AAVE_V3 rewards seed while the live universe still HAS it — so either the removal is incomplete or the golden
+      was regenerated too early). Regenerating any fixture would silently pick a side of an unresolved question, so
+      nothing was regenerated. **Correction to a claim I nearly made**: `AAVE`, `AAVEV3` and `AAVE_V3` appear as
+      separate DeFi venues in coverage.json, but UAC's `canonicalize_defi_venue_combined()` maps all 105 DeFi
+      venues to 105 distinct keys — zero collapse — so these are distinct venues, NOT spelling drift.
 - [ ] [BACKEND] P1. Close the foundation-completeness and phase-0 cross-cutting CODE items. Evidence:
       `/plans/active/instruments_foundation_completeness_2026_06_24.md`,
       `/plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`.
