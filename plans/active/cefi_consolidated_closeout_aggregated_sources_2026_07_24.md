@@ -28,7 +28,7 @@ tags: [cefi, discoverability, index, aggregated-source-docs, plan-hygiene]
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
+    /codex/11-project-management/plan-hygiene.md,
   ]
 created: "2026-07-24"
 parent_epic: cefi_master
