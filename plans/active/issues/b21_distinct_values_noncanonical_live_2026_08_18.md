@@ -173,3 +173,46 @@ sports instrument_type finding above.
 ## Progress Log
 
 - **context-scout 2026-08-19**: populated context_scope (4 entries).
+- **2026-08-19 (slot-31, data_engineering) — root-caused item 2 (`dex_pools`/`dex_swaps`), mid-flight checkpoint before
+  a `/pre-compact`.** NOT a writer bug and NOT missing from `DATA_TYPES_BY_ASSET_GROUP['defi']` by omission — both are
+  LEGACY pre-2026-06-02 data_type labels superseded by canonical `dex_pool_state`/`dex_pool_swaps`
+  (`/codex/02-data/defi-canonical-naming-ssot.md:88`, operator-locked 2026-06-01). No live writer emits either bare
+  form today (`dex_pools_handler.py`/`dex_swaps_handler.py` const `_DEX_POOLS_DATA_TYPE`/`_DEX_SWAPS_DATA_TYPE` write
+  only the canonical names since `market-tick-data-service@0a3a7071`, 2026-06-02) — confirmed by direct code read this
+  session, not assumed. This exact question was already extensively root-caused and worked across many prior sessions
+  on `/plans/active/issues/defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` +
+  `/plans/active/defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` (both already in this doc's
+  `context_scope`/`related`) — this entry is fresh EXECUTION against those docs' already-scoped, already-safety-proven
+  fix, not new investigation:
+  - **`dex_pools` → `dex_pool_state`**: content-verified safe (zero legacy-only content) and retired once already,
+    2026-08-05 (453,985/454,014 rows, `capture_status: captured→attempted_failed`). **RECURRED** via the 2026-08-10/11
+    DeFi manifest rebuild re-registering the retired rows back to `captured` (same recurrence class as the
+    POOL-uppercase regrowth) — confirmed still present in the live 2026-08-18 rollup this issue doc's own finding is
+    based on. **Re-retired this session**: re-ran the existing, already-proven-safe
+    `market-tick-data-service/scripts/one_offs/retire_dex_pools_legacy_captured_rows_2026_08_05.py --apply` directly
+    (bounded 2-pass row-group read, never a corpus walk; capture_status flip only, GCS objects untouched, fully
+    reversible; snapshot+backup written before the mutating write). Result: **453,985 rows retired, 29 excluded** (no
+    canonical twin — same exact 29 Solana pool/2025-01-17 pairs the 2026-08-05 run found; left untouched, not guessed
+    at), **round-trip verified against the freshly-written index** (remaining captured legacy `dex_pools` rows = 29,
+    matches expected). This is a manifest-only fix — **the durable fix still needs the rebuild-scan-skip-legacy-path
+    change** tracked on `defi_legacy_data_type_names_manifest_migration_scope_2026_08_04.md` (2026-08-12 Progress Log
+    entry) or another rebuild will re-register these rows again; not in this item's scope to build that.
+  - **`dex_swaps` → `dex_pool_swaps`**: the real content migration (fold) this population needed per the 2026-08-04 DIAG
+    completed 2026-08-08 (`backfill-defi-legacy-datatype-fold-20260808-024818`, 27,549/27,549 shards,
+    `written: 1,469,224`). The retirement (flip legacy label away) was never actually run despite a script existing for
+    it (`retire_dex_swaps_legacy_captured_rows_2026_08_09.py`, built 2026-08-09, same proven pattern as the dex_pools
+    script) — confirmed via a fresh dry-run this session: of 3,446,390 legacy `dex_swaps` keys, **3,265,485 (94.75%)
+    have a verified canonical `dex_pool_swaps` twin** (safe to retire) and **180,905 (5.25%) genuinely do not** (real
+    residual content the 2026-08-08 fold didn't reach — left untouched by design, not silently dropped; a smaller,
+    better-scoped follow-up than the pre-fold 100%-open state). **`--apply` launched this session** — first attempt was
+    killed externally partway through (interrupted during the pre-write snapshot upload step, i.e. BEFORE the mutating
+    `_index` write — confirmed safe, live manifest untouched by that attempt); a clean retry is in flight as of this
+    checkpoint (background task, `market-tick-data-service` repo, same script, same host). **If you are resuming this
+    session and the retry's outcome is not yet recorded below: check for a running/completed
+    `retire_dex_swaps_legacy_captured_rows_2026_08_09.py --apply` process before launching another — do not run two
+    concurrent full-manifest-index rewrites against the same bucket.** Once confirmed complete + round-trip verified,
+    flip this item's checkbox with the final retired/excluded counts.
+  - Determination for both: **no registry change** (do not add `dex_pools`/`dex_swaps` to
+    `DATA_TYPES_BY_ASSET_GROUP['defi']` — they are retired legacy names, registering them would misrepresent them as
+    still-current vocabulary) — the fix is manifest retirement of the legacy-labeled rows, which is what this session
+    executed.
