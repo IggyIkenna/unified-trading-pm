@@ -1023,9 +1023,16 @@
         be satisfiable from it. Both, not either.
       </p>
       <p>
-        <b class="st st-plan">planned</b> — a capability audit that derives this per archetype across all three modes is
-        specified but not yet built. Until it exists, archetype readiness reports <code>unverified</code> by
-        construction, which is the honest state rather than a gap being hidden.
+        <b class="ev ev-verified">✓ verified</b> — this now exists as a queryable check, not merely specified. The
+        <code>archetype-code-completeness</code> derivation checks five machine-detectable hooks per archetype per
+        mode — engine registration, parameter schema, target-universe catalogue, allocator rank, and mode-specific
+        dispatch — and falls back to a dated, cited agent-audit record rather than a guess wherever a hook has no
+        clean registry lookup. Measured 2026-08-19 across all 60 archetypes × 3 modes:
+        <b>~6 ready / ~47 not_ready / ~7 unverified</b> per mode, essentially flat across batch, paper and live. The
+        gap is concentrated, not spread evenly: <b>18 of 19 VOL_TRADING</b> archetypes and <b>all 4 PORTFOLIO</b>
+        archetypes have no registered v2 engine at all, against <b>0 of 11</b> in <code>CARRY_AND_YIELD</code> — so an
+        archetype's family is a strong predictor of whether it is runnable today, well before the mode axis is even
+        reached.
       </p>
       <p>
         <b class="ev ev-verified">✓ verified</b> — the input side of that check is itself partial today: the registry
@@ -1103,6 +1110,120 @@
           <b class="ev ev-verified">✓ verified</b> — checked directly against <code>StrategyFamily(StrEnum)</code> in
           <code>unified_api_contracts/internal/architecture_v2/enums.py</code> (2026-08-18); the enum's own docstring
           states "9 orthogonal families."
+        </p>
+      </div>
+    </details>
+    <details class="sec-body">
+      <summary>All 60 archetypes, grouped by their family</summary>
+      <p class="lede">
+        The families above are the 9-member classification; this is every archetype inside them, so "9 families"
+        does not read as a flattened summary of a much larger surface it is quietly hiding.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">StrategyArchetype × StrategyFamily</span>
+          <span class="note"
+            ><code>ARCHETYPE_TO_FAMILY</code>,
+            <code>unified_api_contracts/internal/architecture_v2/strategy_naming.py</code></span
+          >
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>Count</th>
+                <th>Archetypes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>ML_DIRECTIONAL</td>
+                <td>2</td>
+                <td>ML_DIRECTIONAL_CONTINUOUS, ML_DIRECTIONAL_EVENT_SETTLED</td>
+              </tr>
+              <tr>
+                <td>RULES_DIRECTIONAL</td>
+                <td>3</td>
+                <td>RULES_DIRECTIONAL_CONTINUOUS, RULES_DIRECTIONAL_EVENT_SETTLED, TSMOM_BTC_CTA</td>
+              </tr>
+              <tr>
+                <td>CARRY_AND_YIELD</td>
+                <td>11</td>
+                <td>
+                  CARRY_BASIS_DATED, CARRY_BASIS_DATED_INV, CARRY_BASIS_PERP, CARRY_BASIS_PERP_INV,
+                  CARRY_FUNDING_DISPERSION, CARRY_RECURSIVE_BORROW_LENDING_ONLY, CARRY_RECURSIVE_STAKED,
+                  CARRY_STAKED_BASIS, CARRY_STAKED_BASIS_DATED, YIELD_ROTATION_LENDING, YIELD_STAKING_SIMPLE
+                </td>
+              </tr>
+              <tr>
+                <td>ARBITRAGE_STRUCTURAL</td>
+                <td>8</td>
+                <td>
+                  ARBITRAGE_CROSS_DOMAIN_EVENT, ARBITRAGE_MEV_BACKRUN, ARBITRAGE_MEV_JIT_LIQUIDITY,
+                  ARBITRAGE_MEV_LIQUIDATION_BUNDLE, ARBITRAGE_MEV_SANDWICH, ARBITRAGE_PRICE_DISPERSION,
+                  ARBITRAGE_SPORTS_DUTCHING, LIQUIDATION_CAPTURE
+                </td>
+              </tr>
+              <tr>
+                <td>MARKET_MAKING</td>
+                <td>10</td>
+                <td>
+                  DEFI_LP_CONCENTRATED, DEFI_LP_POOL, DEFI_LP_VAULT, MARKET_MAKING_CONTINUOUS,
+                  MARKET_MAKING_EVENT_SETTLED, MARKET_MAKING_INVENTORY_SKEW, MARKET_MAKING_ML_LEAN,
+                  MARKET_MAKING_PASSIVE_SPREAD, MARKET_MAKING_PREDICTION, MARKET_MAKING_QUEUE_MICROSTRUCTURE
+                </td>
+              </tr>
+              <tr>
+                <td>EVENT_DRIVEN</td>
+                <td>1</td>
+                <td>EVENT_DRIVEN</td>
+              </tr>
+              <tr>
+                <td>VOL_TRADING</td>
+                <td>19</td>
+                <td>
+                  VOL_0DTE_GAMMA_SCALPING, VOL_0DTE_PIN_RISK, VOL_ARB_RV_IV, VOL_CARRY, VOL_CROSS_ASSET_SPREAD,
+                  VOL_DISPERSION, VOL_LEAPS_CONVEXITY, VOL_MARKET_MAKING, VOL_ML_LEAN, VOL_OVERLAY_COVERED_CALLS,
+                  VOL_OVERLAY_PROTECTIVE_PUT, VOL_RATIO_SPREAD, VOL_SPREAD_STRUCTURES, VOL_STRADDLE,
+                  VOL_SYNTHETIC_DELTA, VOL_TERM_STRUCTURE_ARB, VOL_TERM_STRUCTURE_SLOPE, VOL_TRADING_OPTIONS,
+                  VOL_VARIANCE_SWAP
+                </td>
+              </tr>
+              <tr>
+                <td>STAT_ARB_PAIRS</td>
+                <td>2</td>
+                <td>STAT_ARB_CROSS_SECTIONAL, STAT_ARB_PAIRS_FIXED</td>
+              </tr>
+              <tr>
+                <td>PORTFOLIO</td>
+                <td>4</td>
+                <td>
+                  PORTFOLIO_FACTOR_ALLOCATION, PORTFOLIO_MULTI_STRATEGY, PORTFOLIO_RISK_PARITY,
+                  PORTFOLIO_TACTICAL_OVERLAY
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Every archetype resolves to exactly one family</span>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — all 60 <code>StrategyArchetype</code> members checked against
+          <code>ARCHETYPE_TO_FAMILY</code> in
+          <code>unified_api_contracts/internal/architecture_v2/strategy_naming.py</code> (2026-08-19): 2 + 3 + 11 + 8 +
+          10 + 1 + 19 + 2 + 4 = 60, none unmapped and none mapped twice. <b>VOL_TRADING</b> is the single largest
+          family at 19 members — nearly a third of the total — and, per the callout above, also the family with the
+          fewest archetypes actually wired to a v2 engine today.
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — the <b>55 of 60</b> <code>ARCHETYPE_FEATURE_GROUPS</code>
+          coverage figure cited above was re-checked against the current registry (2026-08-19, unchanged since
+          2026-08-18): the 5 still undeclared are <code>ARBITRAGE_MEV_BACKRUN</code>,
+          <code>ARBITRAGE_MEV_JIT_LIQUIDITY</code>, <code>ARBITRAGE_MEV_LIQUIDATION_BUNDLE</code>,
+          <code>ARBITRAGE_MEV_SANDWICH</code> and <code>PORTFOLIO_MULTI_STRATEGY</code> — all four MEV archetypes in
+          <code>ARBITRAGE_STRUCTURAL</code>, plus one of the four <code>PORTFOLIO</code> members.
         </p>
       </div>
     </details>
@@ -1466,6 +1587,151 @@
           It is deliberately not restated here, because it has not been re-measured. A number carried forward without
           re-measurement is exactly the failure this document exists to avoid; the sweep is now an automated gate, so
           the next measurement will be a build output rather than a manual count.
+        </p>
+      </div>
+    </details>
+    <details class="sec-body">
+      <summary>Venue and chain breadth, by the numbers</summary>
+      <p class="lede">
+        The two sections above describe how venue support is <em>tracked</em>; this is how large the surface actually
+        <em>is</em>. Every figure below comes from importing the registry directly, never from counting entries by
+        eye.
+      </p>
+      <div class="stat-row">
+        <div class="stat"><span class="v">192</span><span class="k">Venues declared</span></div>
+        <div class="stat"><span class="v">103</span><span class="k">DeFi venues</span></div>
+        <div class="stat"><span class="v">23</span><span class="k">Chains declared in <code class="mono">ChainKind</code></span></div>
+        <div class="stat"><span class="v">13</span><span class="k">Of those with a confirmed DeFi venue today</span></div>
+      </div>
+      <h3>The chains</h3>
+      <p>
+        <code>ChainKind</code> — the canonical chain enum consumed by strategy-service archetype configs,
+        execution-service connector routing and MTDS adapter dispatch — declares <b>23</b> members: ethereum,
+        arbitrum, base, optimism, polygon, avalanche, bsc, gnosis, linea, scroll, zksync, blast, mode, celo, aurora,
+        fantom, mantle, metis, moonbeam, solana, bitcoin, starknet, hyperliquid_l1. Cross-referencing that list
+        against the chain token in every <code>VENUE_DATA_TYPE_CAPABILITIES</code> key finds a confirmed venue on
+        <b>13</b> of the 23 today: arbitrum, avalanche, base, bsc, ethereum, hyperliquid_l1, linea, optimism, polygon,
+        scroll, solana, starknet and zksync. The other <b>10</b> — aurora, bitcoin, blast, celo, fantom, gnosis,
+        mantle, metis, mode, moonbeam — are declared with no venue found on them yet.
+      </p>
+      <p>
+        <b>plasma</b> is the inverse case, and worth naming precisely because it is easy to miss: it carries two live
+        venues (<code>AAVE-PLASMA</code>, <code>FLUID-PLASMA</code>) yet does not appear in <code>ChainKind</code> at
+        all — a chain in production use that the canonical chain enum has no member for.
+      </p>
+      <div class="callout">
+        <span class="tag">Two narrower registries that under-declare this same surface</span>
+        <p>
+          <code>VENUE_CHAIN_MAP</code> — an older, narrower registry used for wallet-grouping logic — covers only
+          <b>15 venues across 4 chains</b> (ethereum, base, plasma, hyperliquid_l1). Separately,
+          <code>KNOWN_CHAINS</code> in the DeFi capability-declarations module lists 12 raw entries, two of which
+          (<code>ASTER</code> — a venue name, not a chain; <code>HYPERLIQUID</code> — spelled differently from
+          <code>ChainKind</code>'s <code>hyperliquid_l1</code>) are not valid <code>ChainKind</code> members at all,
+          leaving 10 real chains declared. That set is missing 13 of <code>ChainKind</code>'s 23 members, including
+          two — <b>scroll and starknet</b> — that already carry a confirmed venue. Neither map is wrong for its own
+          narrow original purpose, but anything that derives chain coverage, or a coverage denominator, from either
+          map specifically, rather than from the venue registry directly, under-reports by construction. This is a
+          live code gap, not a documentation one.
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — <code>ChainKind</code> enumerated directly from
+          <code>unified_api_contracts/canonical/crosscutting/defi.py</code>; the 13/23 venue cross-reference computed
+          directly against <code>VENUE_DATA_TYPE_CAPABILITIES</code> keys plus <code>VENUE_CHAIN_MAP</code> in
+          <code>unified_api_contracts/registry/venue_constants.py</code> (for the hyperliquid_l1 case, which has no
+          chain-suffixed venue key); <code>KNOWN_CHAINS</code> checked in
+          <code>unified_api_contracts/registry/capability_declarations/_defi.py</code>, 2026-08-19.
+        </p>
+        <p>
+          <b
+            class="own"
+            title="plans/audit/results/registry_ground_truth_2026_08_19.md — P0: reconcile VENUE_CHAIN_MAP against the real chain surface (4 declared vs 23 in ChainKind, 15 venues vs 192 declared)"
+            >owner: registry ground-truth P0</b
+          >
+        </p>
+      </div>
+      <h3>The DeFi protocol × chain spread</h3>
+      <p>
+        A DeFi protocol is rarely a single venue — most protocols in the registry are deployed across several chains,
+        and each deployment is its own venue identity with its own capture start date.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Protocol × chain, selected</span>
+          <span class="note"><code>VENUE_DATA_TYPE_CAPABILITIES</code>, <code>market_data_categories.py</code></span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Chains</th>
+                <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>AAVE_V3</td>
+                <td>arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon, scroll, zksync</td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td>AAVE <span class="mono">(legacy/v1 form)</span></td>
+                <td>ethereum, plasma</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>COMPOUND_V3</td>
+                <td>arbitrum, base, ethereum, optimism, polygon, scroll</td>
+                <td>6</td>
+              </tr>
+              <tr>
+                <td>MORPHO</td>
+                <td>arbitrum, base, ethereum, optimism, polygon <span class="mono">(+ MORPHOVAULTS-ETHEREUM)</span></td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td>CURVE</td>
+                <td>avalanche, ethereum, optimism</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td>PENDLE</td>
+                <td>arbitrum, ethereum</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td>Solana-native set</td>
+                <td>
+                  JITO, JITORESTAKING, JUPITER, KAMINO, LIFINITY, MARGINFI, MARINADE, METEORA, ORCA, PHOENIX, PYTH,
+                  RAYDIUM, SANCTUM, SOLANA-NATIVE, SOLBLAZE, SOLEND
+                </td>
+                <td>16</td>
+              </tr>
+              <tr>
+                <td>Single-venue protocols</td>
+                <td>HYPERLIQUID, ASTER, EXTENDED-STARKNET, ETHENA-ETHEREUM, LIDO-ETHEREUM</td>
+                <td>5</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Illustrative, not exhaustive</span>
+        <p>
+          The table above names the protocols with the widest chain spread and the single-chain venues worth calling
+          out individually; it is not the full 103-venue DeFi list.
+        </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — every row checked directly against
+          <code>VENUE_DATA_TYPE_CAPABILITIES</code> keys in
+          <code>unified_api_contracts/registry/market_data_categories.py</code>, and the 103-venue DeFi total against
+          direct membership in <code>VENUES_BY_ASSET_GROUP["defi"]</code> in the same file, 2026-08-19 — a plain
+          dict-key read, not a name filter. A name-prefix filter over the same base registry is unstable and gives a
+          different count depending on exactly which prefixes are treated as "DeFi" (a companion same-day audit
+          tried several and got results ranging from the high 50s past 100; see
+          <code>plans/audit/results/registry_ground_truth_2026_08_19.md</code>). 103 is reported here because it
+          comes from registry membership rather than a filter choice.
         </p>
       </div>
     </details>
