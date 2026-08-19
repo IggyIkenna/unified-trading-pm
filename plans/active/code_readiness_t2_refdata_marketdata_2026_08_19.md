@@ -159,8 +159,8 @@ todos only to confirm they are data-movement, then leave it.
       standing rules.
 - [x] [FROM-T1] P2. **instruments-service hand-rolls its own `KNOWN_CHAINS` literals instead of importing UAC's.**
       ✅ 2026-08-20 — all three now import the UAC set. T1's stated cause (missing SCROLL/PLASMA) did NOT hold on
-      measurement; the real drift was a missing `ASTER` plus a phantom `STARKNET`. See Progress Log for evidence
-      and `<repo>@<sha>`.
+      measurement; the real drift was a missing `ASTER` plus a phantom `STARKNET`. Evidence:
+      `instruments-service@2b482a1247`; verified post-change that `_CATALOGUE_KNOWN_CHAINS is KNOWN_CHAINS`.
       Found while enumerating consumers: `scripts/audit_defi_zero_glued_2026_06_25.py` defines a local
       `KNOWN_CHAINS = {...}` set, `scripts/build_instrument_catalogue.py` defines `_CATALOGUE_KNOWN_CHAINS`
       ("mirrors the UAC `KNOWN_CHAINS` set"), and `scripts/collapse_defi_drift_to_canonical_2026_06_25.py` defines
@@ -173,13 +173,27 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [BACKEND] P0. Reconcile the shipped 3,960-shard denominator against the operator's deepest-grain ruling. The
       shard space is NOT a Cartesian product — SSOT: `/plans/epics/system_readiness_master.md` § W3.
-- [ ] [BACKEND] P0. Add `instrument_type` and `data_type` columns to the coverage payload. **T5's coverage dump
+- [x] [BACKEND] P0. Add `instrument_type` and `data_type` columns to the coverage payload. **T5's coverage dump
       blocks on this** — it can only report at `(venue, data_type)` grain until these land. Tell T5 when shipped.
+      ✅ 2026-08-20 — **already live before this tranche started; verified by execution, not by reading the writer.**
+      Loaded `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` through T5's own
+      `shard_universe.py`: `by_venue_instrument_type` (172 `(ag, venue)` pairs) and
+      `by_venue_instrument_type_data_type` (184 pairs) populated for all 5 asset_groups, `detect_grain()` →
+      `"instrument_type"`, 3,962 cells at `(ag, venue, instrument_type, data_type)`. T5 told, in their plan's
+      `## Inbound requests`, with the two caveats that make the finer grain honest. Evidence:
+      `unified-trading-pm@89fab080bd`. The axes needed no code; making them honest did — next item.
 - [ ] [BACKEND] P0. Fix the mislabelled `grain` field. A wrong grain label silently misstates every denominator
       derived from it.
 - [ ] [BACKEND] P0. Ensure the shard atom is IDENTICAL across writer, manifest, status, gate and UI. Any divergence
       makes two honest components disagree with no error. SSOT:
       `/codex/02-data/availability-manifest-and-data-status.md`.
+      **PARTIAL 2026-08-20 — deliberately left open; the shipped fix covers the projections, not all five surfaces.**
+      Fixed the level-4 ↔ level-5 divergence (3 defects, 86 duplicate cells, each measured on the live payload
+      first and each pinned by a test proven to fail pre-fix): unstable level-5 display label (24 groups), `'nan'`
+      leaking as a real instrument_type key (26 beside 85 blank), and `data_type` never case-folded (6 groups).
+      Evidence: `instruments-service@2b482a1247`, verified an ancestor of `origin/live-defi-rollout`.
+      **Still unmeasured, so still unchecked**: whether the manifest WRITER, the data-status gate and the UI agree
+      with the projections' atom. Checking this box now would exceed what was measured.
 - [ ] [BACKEND] P0. Make honest coverage measurable on EVERY axis and granularity, each figure carrying its
       denominator and date. This is the epic's own definition-of-done item. SSOT:
       `/codex/02-data/honest-coverage-model.md`.
@@ -250,9 +264,28 @@ todos only to confirm they are data-movement, then leave it.
 
 ### MTDS and MDPS
 
-- [ ] [BACKEND] P0. Fix the multi-instrument candle bundle write race — when 2+ underlyings land in the same shared
-      `ticks.parquet` bundle each is written via an independent overwrite with no download-existing merge. Evidence:
+- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Fix the multi-instrument candle bundle write race — when 2+ underlyings
+      land in the same shared `ticks.parquet` bundle each is written via an independent overwrite with no
+      download-existing merge. Evidence:
       `/plans/active/issues/mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md`.
+      **Reason 2026-08-20**: there is no write race to fix. The as-stated hypothesis was already REFUTED by code
+      reading on 2026-08-10 and re-confirmed here — `_blob_matches_data_type_partition` admits only
+      `underlying={U}/ticks.parquet` blobs and `_build_candle_output_path` emits a DISTINCT path per underlying, so
+      BTC and ETH never share an object. The real defect is WITHIN-bundle truncation (7 raw contracts → 1 emitted,
+      on both BYBIT and DERIBIT), and the issue's sole remaining todo is gated on a post-fix VM relaunch completing
+      and being audited — data movement, out of scope per the standing rules. Read the current streaming path
+      (`live_workers_streaming.py::_process_chain_bundle_streaming`): it accumulates every `_iter_chain_symbol_dfs`
+      slice into `candles_by_tf`, and `_streaming_write_per_tf` streams every batch for a true chain
+      (`groups = [(instrument_id, tf_candles)]`), so the current code appears correct and the stale 1-of-7 bundles
+      predate it. The next item is the piece of this that IS code-shaped.
+- [ ] [BACKEND] P0. **Close the multi-symbol survival gap with a unit test so the relaunch stops being the only
+      oracle.** MEASURED 2026-08-20: `tests/unit/test_chain_streaming.py` covers `_iter_chain_symbol_dfs` (the
+      READER yields one slice per symbol) but NOTHING asserts every symbol survives end-to-end into the WRITTEN
+      frame — a grep for a symbol-count/`nunique` assertion over written output returns zero hits across the MDPS
+      test tree. That absence is exactly why the issue doc calls the current code "unverifiable without the live
+      post-fix relaunch". A test driving `_process_chain_bundle_streaming` with a multi-contract bundle, asserting
+      all N contracts reach `_streaming_write_one_group`, turns a VM-gated unknown into a code-level proof at zero
+      data-movement cost.
 - [ ] [BACKEND] P1. Land the MDPS adapter-protocol / polars-seam migration as ONE atomic change across the 18
       adapter files sharing the ABC/Protocol boundary. Evidence:
       `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
