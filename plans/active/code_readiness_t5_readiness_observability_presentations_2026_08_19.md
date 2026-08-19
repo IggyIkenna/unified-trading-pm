@@ -275,7 +275,13 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [BACKEND] P0. Close the `dp_cron_did_not_fire` alert defects — the storm recurring on a stable revision, dedup
       state lost on redeploy, and the volatile dedup field. Evidence: the three
-      `/plans/active/issues/dp_cron_did_not_fire_*` docs.
+      `/plans/active/issues/dp_cron_did_not_fire_*` docs. **2026-08-20 status: all three fixes ARE shipped and
+      tested (`alerting-service` `core/recurring_dedup_persistence.py`, `f48a611` + `ac21303`, 14 tests green, on
+      `main` since 2026-08-19T21:41:59Z) — do NOT re-implement them.** What is open is verification: measured live,
+      the storm was still breaching the 30-min cooldown one hour after the fix reached `main` (41/46 repeating
+      identities). Whether the fixed revision was actually serving is UNVERIFIED (gcloud auth expired; no credential
+      requests in this tranche). Evidence:
+      `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md`.
 - [ ] [BACKEND] P0. Fix the escalation-pool-exhaustion alert being unreachable when halted. Evidence:
       `/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`.
 - [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
@@ -393,6 +399,49 @@ todos only to confirm they are data-movement, then leave it.
   per-venue idiosyncratic — measured `place_order` / `create_order` / `new_order` / `post_order` / `add_order` /
   `submit_order` / `buy`+`sell`, mixed with feed endpoints (`l2_book`, `all_mids`, `ws_trades`) across 47 of 67
   registered sources. Any hand-built map would silently misread venues spelling their order verb differently.
+
+- 2026-08-20 — **W4 alerting: the fixes are shipped; what is missing is verification. Live measurement taken.**
+
+  Went to re-implement the `dp_cron_did_not_fire` dedup fix and found it **already shipped with tests** —
+  `alerting-service/alerting_service/core/recurring_dedup_persistence.py` (`f48a611` GCS-persisted cooldown,
+  `ac21303` merge-before-write closing a lost-update race), 14 tests green, wired into
+  `router._is_duplicate_alert` for `_RECURRING_ALERT_COOLDOWNS`-eligible events only. All three predecessor issue
+  docs still read `status: open`. Re-implementing would have been pure waste.
+
+  **Live ground truth** (`scripts/dev/slack-read-channel.py data-pipeline-alerts 24`, read-only): **3,008 alert
+  messages** over 2026-08-18T23:20Z → 2026-08-19T23:02Z, **2,509 of them `DP_CRON_DID_NOT_FIRE`**. Prior sweeps on
+  08-17 and 08-18 both recorded 150/24h — a **20× increase**, not a residual tail.
+
+  The fix reached `main` at 2026-08-19T21:41:59Z. Split there: PRE-fix 2,826 msgs / 22.5h (126/h), 47 of 61
+  repeating identities breaching the 1800s cooldown; POST-fix 182 msgs / 1.0h (182/h), **41 of 46 still
+  breaching**, typical identity firing every **13.0 min** — one per detector sweep, as if no cooldown engaged.
+
+  **What this does NOT establish, deliberately**: that the fix is ineffective. `gcloud run services describe
+  dp-alerting-subscriber` failed with `Reauthentication failed`, so the serving revision during that hour is
+  **unverified**, and landing on `main` is not deployment. A 1h window spans only ~2 cooldown periods. Recorded as
+  `BLOCKED-CREDENTIALS` rather than guessed at.
+
+  **A correction made mid-investigation**: I first read `origin/main` locally, concluded the fix was NOT on main,
+  and nearly filed a "promotion stalled, 296 commits unpromoted since 2026-08-01" finding. Checking the remote
+  directly (`gh api .../contents/...?ref=main`) showed the file IS on main. The local check was wrong twice over: a
+  stale cached ref, and `merge-base --is-ancestor` cannot see through the squash-style Option-B promote, so it
+  reports NO for a commit whose content did land. Cached `origin/` is a proxy, exactly as CLAUDE.md says.
+
+  Also separated the alert bug from the real conditions underneath: much of the volume is **many distinct
+  identities**, which dedup is correct not to collapse (the 22:51Z burst is 13 different sports books on one VM).
+  Those are real capture gaps — sports odds **never captured**, CME trades **8.0d stale** (5.0d on 08-17, so
+  ageing untouched). Data-movement, out of this tranche by the standing rule; routed, not acted on.
+
+- 2026-08-20 — **Measured instance of the `git stash` drop defect this plan already tracks.** A `safe-doc-push.sh`
+  run naming three doc files reported `✅ Pushed 241933d56e` and landed only TWO. The run began with
+  `🛑 127 entries is extreme — quarantining current dirty tree into a named stash BEFORE the pull`; that quarantine
+  swept this plan's then-uncommitted edits, and the isolated commit went ahead from the pre-edit version. Both the
+  W4 todo annotation and the W4 Progress Log entry above were silently dropped — local and origin both sat at 402
+  lines with zero `W4 alerting` hits. Caught only by grepping origin for the specific text after the ✅.
+  **The push's own success message is not evidence that every `--files` entry landed** — verify per file. Re-applied
+  from source rather than excavating 127 stashes. Direct evidence for
+  `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`, which
+  this plan carries as a P1.
 
 - 2026-08-20 — **Grain auto-detection VERIFIED, not assumed** (the P0 says so explicitly). Not yet shipped.
   `tests/test_shard_universe_grain_detection.py`, 7 tests passing. The case that matters for the T2 handoff is
