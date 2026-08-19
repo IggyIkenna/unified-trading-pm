@@ -318,7 +318,12 @@ A/B-proof). The migration also switched PR authorship from the GitHub App to a P
   the CHANGED-FILE count of `compare/main...live-defi-rollout` (0 files → no-op, immune to squash-accounting noise) plus
   a tree-equality short-circuit, reusing any open PR for the CURRENT ref (never duplicates), closing/replacing a
   superseded-ref PR when LDR's tip has moved on, and self-recovering the v2-never-reported deadlock (close+reopen). So
-  direct pushes (docs(plans) flips, scripts/`.github` carve-out) drain within a ~15-30min SLA.
+  direct pushes (docs(plans) flips, scripts/`.github` carve-out) drain within a ~15-30min SLA. **Doomed-run supersede
+  (2026-08-10 fix, `ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md`)**: before the `inflight_wait`
+  hold (below), the workflow queries the inflight head's check-runs — if any `*QG slice*` run has already concluded
+  `failure`, it supersedes immediately instead of waiting out the still-running sibling slice (up to a 135-min TESTS
+  timeout), since a run with one failed slice cannot pass regardless of what the other slice does. Fail-open on a query
+  error (falls back to the original inflight_wait, never force-supersedes on a broken check).
 - **Manual immediate drain:** trigger `gh workflow run ldr-to-main-promote.yml` (the frozen-head ref/PR creation is
   bot-owned logic, not a one-line `gh pr create` recipe anymore — a manually-opened `--head live-defi-rollout` PR would
   actually be auto-CLOSED by the bot's own "bug#7" stale-head guard on its next tick).

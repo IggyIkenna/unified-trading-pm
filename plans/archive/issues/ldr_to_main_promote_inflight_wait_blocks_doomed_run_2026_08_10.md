@@ -18,7 +18,8 @@ summary: >-
   quickmerge). Manually cancelled the doomed run (`gh run cancel 31395941118`) as the immediate unblock — the next tick
   superseded #2713 and opened fresh PR #2714 on the fixed tip (carries the fix + the AG-closeout baseline fix, QG in
   progress).
-status: open
+status: archived
+superseded_by: /codex/08-workflows/ci-cd-flow.md
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -39,7 +40,6 @@ context_scope:
 created: 2026-08-10
 source: ci-reconciler sweep
 resolved_by:
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
@@ -49,6 +49,11 @@ estimate_class: small
 drift_direction: fix_shipped
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-19** — both follow-ups done, independently re-confirmed by two audit passes
+> (`plan_reconciler_findings_ci_2026_08_16.md`, `na-eligibility-audit` ci tranche). The durable fix (the doomed-run
+> check-runs supersede logic) is now recorded in `/codex/08-workflows/ci-cd-flow.md`; read that doc for current
+> guidance, this one for incident history only.
 
 # PM ldr-to-main-promote inflight_wait wedges on a doomed run
 

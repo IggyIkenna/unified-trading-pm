@@ -36,7 +36,7 @@ scope: [engineer, admin]
 tags: [ci-cd, promotion-lag, contention, github-actions, monitoring-gap]
 related:
   [
-    /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
+    /codex/08-workflows/ci-cd-flow.md,
     /plans/archive/issues/fleet_promoter_glue_runner_stall_2026_08_06.md,
     /plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
   ]
@@ -62,7 +62,7 @@ context_scope:
     .github/workflows/promote-fleet-startup-failure-monitor.yml,
     scripts/cicd/glue_pool_starvation_monitor.py,
     scripts/cicd/promotion_lag_monitor.py,
-    /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
+    /codex/08-workflows/ci-cd-flow.md,
   ]
 ---
 
