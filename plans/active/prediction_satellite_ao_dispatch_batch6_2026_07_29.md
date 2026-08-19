@@ -151,12 +151,17 @@ sports-tranche-owned).
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
 
-- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **Two-sided Betfair odds — persist back+lay, not just one side.**
-      **CREDENTIAL APPROVAL REQUEST** (noted 2026-08-19, quality_gate_resolution agt-62ee9f): outstanding ask is GCP
-      network-egress provisioning in `europe-west2` (operator-decided region, 2026-08-11) so
-      `execution-service/scripts/refresh_betfair_session_token.py` can clear Betfair's geo-block from this
-      workspace's only egress (Tokyo) — not self-serviceable (new regional egress, not an ambient-identity IAM
-      role); full detail in the Progress Log paragraphs below. **RETAGGED
+- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **CREDENTIAL APPROVAL REQUEST (filed 2026-08-19, /ci-reconcile)**: Betfair
+      login rejects with `ACCOUNT_PENDING_PASSWORD_CHANGE` (found 2026-08-12, per the todo below) — operator action
+      needed: reset the Betfair account password via their portal, then update the GSM `betfair-password` secret.
+      Not a routable infra/code task. **Correcting a conflicting note from `quality_gate_resolution agt-62ee9f`
+      (also 2026-08-19, merge-conflicted with this one) that claimed the outstanding ask was still `europe-west2`
+      egress provisioning**: verified false against
+      `prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`'s own Progress Log — the egress proxy
+      shipped 2026-08-11 (`deployment-service@7a7e847e`, `betfair-egress-proxy-20260811-211046`) and the geo-block
+      is confirmed gone (no more 403 "Restricted"); the password-change rejection is what Betfair returns NOW,
+      through that already-working proxy. **Two-sided Betfair odds — persist back+lay, not just one side.**
+      **RETAGGED
       2026-08-19 (ag_closeout_auditor, prediction tranche)** — was bare `[INFRA]`; live-traced against
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_is_non_dispatchable()`/`_has_live_blocked_token()`
       and confirmed the bare tag read as falsely dispatchable despite the genuine external Betfair-account block
