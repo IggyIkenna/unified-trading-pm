@@ -181,11 +181,18 @@ None — no finding this run met the narrow mechanical carve-out bar.
 2. **`BLK-7d1f4a2d`** (P0, big finding) — `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s stalled
    liquidations re-derive (see Phase 1 batch-7 findings above). Raised via `/api/slots/4/blocked` — durable lookup
    `GET /api/blocked/BLK-7d1f4a2d`, survives slot reassignment. Options A/B/C given, recommendation A. **Answered
-   2026-08-19T19:24:44Z by operator: A** (dispatch a live-status check now, update the doc either way). Tracked as a
-   `- [ ]` todo directly on the target plan (new `## Liquidations re-derive live-status check` section, end of
-   `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`) rather than executed inline this pass — the check
-   itself (cross-referencing MDPS commits 2026-08-12→2026-08-16 against current shard counts) is genuinely new
-   scoped work, not a mechanical reconciliation fix.
+   2026-08-19T19:24:44Z by operator: A** (dispatch a live-status check now, update the doc either way). **Executed
+   2026-08-19T19:58Z** — see item 3 below for what the check found.
+3. **`manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md`** (P0, big finding, LIVE ONGOING) — the
+   BLK-7d1f4a2d live-status check (item 2) found the liquidations re-derive is genuinely stalled, but on a brand-new
+   root cause: the `market-data-tick-cefi` manifest consolidator has been stuck on a phantom lock since
+   ~2026-08-18T02:14Z (~41.6h at measurement time), every hourly Cloud Run cycle reporting `success=True` while
+   writing zero rows (`error=locked`). Zero Slack alerts fired in 72h despite a documented liveness watchdog. Full
+   evidence in the new issue doc. Alerted via `/api/slots/4/blocked` — `BLK-336884f2`, durable lookup
+   `GET /api/blocked/BLK-336884f2`. Options A (dispatch investigation now) / B (manual execute + monitor, unlikely
+   alone to fix) / C (defer), recommendation A. Also recorded in
+   `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s own Progress Log (the BLK-7d1f4a2d todo there is now
+   flipped `[x]` with this finding as its answer).
 
 ## Archive candidates (operator review)
 
@@ -431,3 +438,13 @@ adversarially verified (Phase 3) or applied (Phase 5) yet as of this write-up.
   above has the full candidate list); the BLK-7d1f4a2d live-status-check todo on
   `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md` is the single highest-priority actionable-now item
   (operator-ordered, P0) and should be picked up first.
+- **2026-08-19T19:58Z**: Executed the BLK-7d1f4a2d live-status check. Found the margin_type/contract_size work is all
+  correctly shipped and cited (in the sibling `cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`, not this
+  doc — no action needed there). But found a NEW, bigger, currently-LIVE P0: the `market-data-tick-cefi` manifest
+  consolidator stuck on a phantom lock since ~2026-08-18T02:14Z (~41.6h, zero Slack alerts in 72h) — this, not the
+  margin_type bugs, is what actually killed the 2026-08-16→18 re-derive VM. Measured live via UTL blob-metadata +
+  `gcloud run jobs executions list` + Cloud Logging (not guessed): the job runs hourly and reports success while doing
+  zero work (`error=locked`). Filed `manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md` (P0), flipped
+  the BLK-7d1f4a2d todo `[x]` on the target plan with the full answer, and alerted `BLK-336884f2` (options A/B/C,
+  recommendation A: dispatch investigation now — outside this role's plans/\*\*-only write scope to fix directly).
+  Resuming into Phase 3 adversarial verification of the fan-out backlog next; no other P0 currently outranks it.

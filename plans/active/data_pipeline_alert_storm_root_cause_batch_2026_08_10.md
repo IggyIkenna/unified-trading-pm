@@ -973,11 +973,24 @@ no substantive progress logged here since 2026-08-12 despite continued adjacent 
 through 2026-08-16 not cited back to this doc. Full finding detail:
 `plans/active/issues/plan_reconciler_findings_sports_2026_08_19.md`.
 
-- [ ] [DATA] P0. **Run the live-status check the operator ordered** — confirm whether the ~4,113-5,232-shard
-      knowably-wrong-inverse-notional re-derive (line 599) and the full re-drive (line 741) have progressed since
-      2026-08-12 (check `market-data-processing-service` commits 2026-08-12→2026-08-16 for anything touching this
-      path that wasn't cited back here, plus current GCS/manifest shard counts against the 2026-08-17 na-eligibility-
-      audit's cited populations). Update this doc's Progress Log with the answer either way (silently-progressed →
-      cite the shas and correct the stale population counts; genuinely stalled → say so explicitly and either resume
-      it or escalate why it can't proceed). Done when: this doc's open liquidations items (line 599, line 741) reflect
-      verified-current state, not an 8-day-stale snapshot.
+- [x] ✅ [DATA] P0. **DONE 2026-08-19T19:58Z (plan_reconciler, agt-07473e).** Ran the live-status check the operator
+      ordered. **Answer: genuinely stalled — but NOT for either reason this todo anticipated.** It is neither
+      "silently progressed uncited" nor "stalled on the previously-tracked margin_type/contract_size bugs" (those are
+      ALL fixed and correct, shipped 2026-08-12→2026-08-16, tracked in full in
+      `plans/active/issues/cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md` — that doc's own commits
+      (`market-data-processing-service@64221500`, `@bc9706cdb5`, `@d27f3d76`, `@d5a0b6cdc5`) are the
+      2026-08-12→2026-08-16 activity the fan-out flagged as uncited here; they're correctly cited in THAT doc, just
+      not cross-linked into this one — no action needed beyond this note). **The actual, NEW, currently-LIVE blocker**:
+      the `market-data-tick-cefi-prd-central-element-323112` manifest consolidator has been stuck on a phantom lock
+      since ~2026-08-18T02:14Z (~41.6h and counting as of this check) — every hourly Cloud Run cycle reports
+      `success=True` while doing zero work (`error=locked`, "fresh lock present — sibling cron still running"),
+      so the canonical index never updates and every re-derive/backfill attempt against this bucket hits the
+      documented `ManifestConsolidatorStaleError` loud-fail. This is what actually killed the
+      2026-08-16→2026-08-18 relaunch (`mdps-backfill-cefi-20260816-162418`) — its full 2223-date range completed but
+      every date from ~2026-01-22 onward failed on this exact guard, `Handler returned non-zero exit code: 1` at
+      2026-08-18T02:04:52Z. Zero Slack alerts found for this condition across 72h in `#data-pipeline-alerts` despite a
+      documented dedicated liveness watchdog. Full evidence, live measurements, and recommended next steps:
+      `plans/active/issues/manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md` (filed + operator-alerted
+      this pass, P0). **This doc's own liquidations items (line 599, line 741) stay open** — re-derive/re-drive
+      cannot proceed until the consolidator outage clears; re-launch once it does (the code-level fixes are already
+      correct and in place).
