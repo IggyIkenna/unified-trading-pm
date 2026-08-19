@@ -143,7 +143,7 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
 
 ## Todos
 
-- [ ] [DATA] P1. **Join per-task compaction occurrence onto a queryable per-task record.** Whether a given `task_id`
+- [x] ✅ [DATA] P1. **Join per-task compaction occurrence onto a queryable per-task record.** Whether a given `task_id`
       triggered `forced_precompact`/`forced_compact`/`forced_compact_ineffective` during its own run —
       `ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md` already logs these events with a
       timestamp + `slot_id` (`server/fleet_kpis.py`/`server/context_lifecycle.py`, its own `craft_type`-tagging todo 3
@@ -154,6 +154,15 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
       answers "did task X trigger compaction" for a real historical task without hand-correlating timestamps. Source:
       `/plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md` todo "[DATA] P1. New (2026-08-17):
       join per-task compaction occurrence...". Repo: agent-orchestrator.
+      **DONE `agent-orchestrator@4a9cf6258`** — new `TaskUsageRow.compact_count` (nullable int; NULL when
+      `assigned_at` is None — no window to search, distinct from a real computed zero), populated at `/done` time via
+      new `state_store.activity.compaction_event_count_for_window()` — a time-window join against `ActivityRow`
+      (`event_type IN (forced_precompact, forced_compact, forced_compact_ineffective)`, `slot_id` match, `ts` inside
+      `[assigned_at, completed_at]`), since these events carry no `task_id`. Migration entry added to
+      `bootstrap._TASK_USAGE_MIGRATION_COLUMNS`. Evidence: 2 new pytest cases in
+      `tests/test_record_done_task_usage_isolation.py` (in-window vs. out-of-window vs. wrong-slot event counting, and
+      the None-when-no-`assigned_at` case) — full backend suite 4212 passed/2 skipped, `quality-gates.sh` green
+      (dashboard tsc/vitest unaffected, no UI touched).
 - [ ] [INFRA] P1. **Capture the PEAK/high-watermark `context_used_pct` reached during a task.** Not just the
       end-state token sums `TaskUsageRow` already stores — `context_lifecycle.py`'s per-tick reader already sees
       `context_used_pct` live for every active target; nothing records the max value seen during a task's own window
@@ -195,3 +204,14 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
   Phase 3 — 5 conflict-clear, file-disjoint, bounded todos extracted from 2 source docs after Phase 2's conflict-check
   excluded 2 further candidates (both detailed above under "Explicitly excluded"). `status: active` per the skill's
   documented Phase-3 rule.
+- **2026-08-19 (data_engineering, slot 16)**: Item 1 (join per-task compaction occurrence) shipped
+  `agent-orchestrator@4a9cf6258` — see the flipped checkbox above for the full evidence. This was the FIRST of the
+  4 todos sharing the `sequential: true` `TaskUsageRow` migration gate (frontmatter note, "coordinate schema-migration
+  ordering informally") — added `compact_count` to `bootstrap._TASK_USAGE_MIGRATION_COLUMNS` alongside the existing
+  `backfilled`/`dispatch_role`/`reasoning_tokens`/`requested_model`/`tokens_per_second` entries; the next worker
+  picking up items 2-4 should re-fetch this file before adding their own column, per that same coordination note.
+  Also confirmed and fixed an UNRELATED pre-existing `basedpyright` red on this slot's checkout before shipping:
+  `server/codex_mcp_proxy.py` failed to resolve `mcp`/`mcp.server.*` imports — verified byte-identical on a stashed
+  clean tree at LDR HEAD (not caused by this change), root cause was a stale `.venv` never `uv sync`'d since
+  `agent-orchestrator@ea9ecd2b` added the `mcp>=1.0.0` dependency to `pyproject.toml`/`uv.lock` — fixed via `uv sync`
+  (a dep-sync, not a code change), no separate issue doc needed.
