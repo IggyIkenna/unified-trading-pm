@@ -225,11 +225,27 @@ todos only to confirm they are data-movement, then leave it.
       T5 has the frozen contract under their `## Inbound requests` (`unified-trading-pm@34999f0adf`), posted before
       the code landed so they were never idle-waiting. Measured verdicts are in the Progress Log.
 - [ ] [BACKEND] P0. Build the external instruction API surface, coordinating the contract with T1.
-- [ ] [BACKEND] P1. Complete the delta-proxy repricer generalization to the full price + position + credit triple.
-      `DeltaProxyRepricer` + `QuoteMaintainer` implement the price leg only. **Needs T1's `QuoteInstruction`
-      extension first** — build against the agreed shape meanwhile. Note the strategy-side receipt point
-      (`QuoteHandler`) was deleted 2026-08-15 as dead code with no replacement; rebuild it. Evidence:
+- [x] ✅ [BACKEND] P1. **Delta-proxy repricer — PRICE leg generalized + receipt point rebuilt** —
+      **execution-service@dc4fad8de7**. T1's `QuoteInstruction` extension landed
+      (`unified-api-contracts@6be4b136d7`), unblocking this. `quote_instruction_to_delta_proxy_params` now reads
+      `underlying_instrument_id`/`delta`/`gamma` instead of hardcoding `delta=1` + self-underlying, treating each
+      `None` as the self-underlying case UAC documents (so every Spot/Perp quote is byte-identical to before —
+      the existing default tests still pass unchanged). `DeltaProxyRepricer._reprice` already implemented
+      `effective_delta = delta + gamma * underlying_move` with `max_adjustment_pct` clamping; only the converter
+      was discarding the inputs. The deleted `QuoteHandler` receipt point is rebuilt on the DEPLOYED surface:
+      `POST /external/instructions` with `action=QUOTE` registers against `QuoteMaintainer` and answers
+      `REGISTERED` with an explicit "No order was placed" note — registration arms repricing, and no
+      underlying-tick loop exists, so claiming `SUBMITTED` would be false. MEASURED: `delta=0.5` on a `+100`
+      underlying move gives `price_adjustment=+50`; a `-0.38` put delta survives unclamped; the triple survives
+      the HTTP boundary; `CANCEL` still returns 501. Also fixed dead pointers in both engine modules (they named
+      the deleted `v2.handlers.QuoteHandler` as the receipt point, and carried a scope note claiming the UAC
+      fields did not exist). Evidence:
       `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
+- [ ] [BLOCKED-OPERATOR] P1. Delta-proxy — the POSITION and CREDIT legs of the triple. NOT deferred by this
+      tranche: T1 recorded a superseded-shape ruling (Q12-Q16) and retagged `reference_position` / `credit` on
+      `StrategyInstructionEnvelope` as `BLOCKED-OPERATOR` when landing the sensitivity triple
+      (`unified-trading-pm@3353254d7a`). Execution-side work resumes the moment that shape is decided; the price
+      leg above is independent of it and is already shipped. Evidence: same issue doc, plus T1's plan.
 
 ### W11 — order lifecycle and execution state
 
@@ -255,6 +271,21 @@ todos only to confirm they are data-movement, then leave it.
       and real per-venue CLOSE_ALL wiring behind `AccountActionV2.CLOSE_ALL`.
 - [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
+- [ ] [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — fix the registration.**
+      MEASURED 2026-08-20, three facts that only compose into a defect when read together:
+      `manual_instruction_api.py:57` declares `APIRouter(prefix="/manual")`; that router is registered ONLY in
+      `api/app.py:127`; and the container's `Dockerfile` CMD serves `api.main:create_app`, which registers just
+      the health router and `/external/*`. Meanwhile `unified-trading-api`
+      (`unified_trading_api/routes/execution.py:660`, T1's repo — the CALLER is correct, no inbound request
+      needed) POSTs to `f"{exec_url}/manual/instruction"` with
+      `exec_url = _cloud_cfg.live_service_execution_url`. That call is guarded by `if not mock_mode_val`, so it
+      only fires in real mode — which is exactly why nothing has caught it and why it sits on the pre-live-trading
+      critical path. **Registering the router alone is NOT the fix**: `_ensure_orchestrator_ready` (`:284`) then
+      returns 503 unless a handler is set, so `main.py` must also install one — and it must be the SAME
+      `ManualOperationHandler` instance `external_instruction_api.get_external_manual_handler()` returns, or
+      `/manual/instructions/{id}` will not see orders submitted through `/external/instructions`. Not yet
+      confirmed: that `live_service_execution_url` resolves to this Dockerfile's deployment (no second target was
+      found, but absence was not proven).
 - [ ] [BACKEND] P0. **Reconcile the deployed HTTP surface with what this plan and the artefacts claim.** MEASURED
       2026-08-20: `Dockerfile` CMD is `uvicorn execution_service.api.main:create_app --factory`, and
       `execution_service/api/main.py:43-44` registers ONLY the UTL health router and
@@ -411,3 +442,22 @@ todos only to confirm they are data-movement, then leave it.
   remainder of each source issue is either a P3 or an `[OPERATOR]`/`BLOCKED-CREDENTIALS` item outside this
   tranche's reach. Net: the "silently wrong today" section is one real open item (connector reach-test) plus the
   funds-isolation invariant, not four.
+
+- 2026-08-20 — **Delta-proxy price leg + QUOTE receipt point shipped: `execution-service@dc4fad8de7`** (landing
+  verified by an empty `git diff --stat origin/live-defi-rollout` over all five files plus grepping the landed
+  blobs for `_register_quote_instruction` and the triple passthrough). Detail on the checkbox above. Behaviour was
+  measured by driving the real code — converter, repricer and a FastAPI `TestClient` round-trip — before gating,
+  which is also how I learned the ad-hoc harness needs `setup_events(service_name=..., mode=..., sink=...)`; a
+  bare `log_event` raises `RuntimeError: Event logging not initialized` outside `tests/conftest.py`.
+
+- 2026-08-20 — **Cross-repo defect found while answering the entrypoint question: the deployed
+  execution-service has no `/manual/*` routes at all.** Filed as its own P0 above with the three composing facts.
+  Worth stating plainly for whoever picks this up: each of the three pieces is individually reasonable and reads
+  as correct in isolation, which is why a per-file review would not surface it — the defect only exists in the
+  seam between `api/main.py`, `api/app.py` and a caller living in another repo.
+
+- 2026-08-20 — **Note on quickmerge dependency drift.** Run 3's log carries
+  `❌ unified-trading-library: DIFFERS from origin/live-defi-rollout` at STAGE 1. This is NOT a failure: UTL's tree
+  was clean and merely one commit behind origin, and quickmerge proceeded under `--dep-branch` branch-isolation
+  mode. Do not chase it as a gate failure — grep for `Quality gates FAILED` / `Re-gate FAILED` instead, which is
+  what actually blocked run 1.
