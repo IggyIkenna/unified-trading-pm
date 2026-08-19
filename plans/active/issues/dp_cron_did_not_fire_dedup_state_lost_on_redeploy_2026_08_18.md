@@ -177,6 +177,22 @@ affected detectors (`DP-LIVE-004`/`live_stream_watcher`, `DP-WATCHER-002`/`cron_
 both already have source-side renag_tracker wiring per the codebase's existing pattern, so their
 repeat-firing is downstream-only and depends entirely on this doc's root cause getting fixed.
 
+> **CORRECTION (2026-08-19, data_pipeline_failure escalation worker, slot 4, agt-010efb):** the claim
+> immediately above — that DP-LIVE-004 already has source-side renag_tracker wiring — is FALSE, confirmed
+> by direct code read (not inference): `check_live_capture_productivity`
+> (`deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py:542-551`) takes only
+> `miss_tracker` (onset-gate only) — no `renag_tracker` parameter exists on the function at all — and its
+> `cli.py:899-910` call site does not pass one either, unlike the DP-LIVE-003 call site three lines above it
+> (`cli.py:889-896`), which explicitly passes `renag_tracker=renag_tracker`. DP-LIVE-004 therefore re-emits on
+> EVERY sweep once a shard crosses `min_consecutive` misses, with zero source-side suppression, relying
+> entirely on the downstream alerting-service dedup layer this doc is chasing bugs in. New P2 todo added below
+> to close this gap (DP-WATCHER-002's wiring status was not re-checked this session — scoped to DP-LIVE-004
+> only). Separately, also confirmed `check_live_capture_productivity` hardcodes
+> `severity="CRITICAL", tier=EscalationTier.PAGE_OPERATOR` for every finding (:596-598), which contradicts
+> `/codex/05-infrastructure/data-pipeline-alerts.md`'s registry row for DP-LIVE-004 (🟠 WARN, "auto-recover
+> (visibility only)") — flagged only, not changed (ambiguous which side is stale; a severity/tier change is a
+> design decision, not a small/clear fix).
+
 ## Todos
 
 - [x] ✅ [SCRIPT] P1. Wire `RenagTracker`/`apply_cooldown` into `missing_live_producer_watcher`
@@ -325,6 +341,17 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
         follow-up todo (verify a real `captured` row post-relaunch, since this VM needs a
         fresh cycle to pick up the new code — not blocking this todo's resolution, the code
         fix itself is what this todo asked for).
+- [ ] [CODE] P2. **ADDED 2026-08-19 (data_pipeline_failure escalation worker, slot 4, agt-010efb)** —
+      wire `RenagTracker`/`apply_cooldown` into `check_live_capture_productivity` (DP-LIVE-004,
+      `deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py:542`), mirroring
+      the exact pattern already shipped for DP-LIVE-003 in `missing_live_producer_watcher.
+      check_missing_live_producers` (`deployment-service@9abb2d20e4`) — add a `renag_tracker` param to the
+      function signature, pass it through from the `cli.py:899-910` call site (which currently omits it,
+      unlike the DP-LIVE-003 call site 3 lines above), and gate the `emit_finding()` call on
+      `renag_tracker.apply_cooldown(...)` so a shard past `min_consecutive` misses re-nags on a 1800s cooldown
+      instead of re-firing every sweep. Source-side defense-in-depth, independent of (and does not replace)
+      the alerting-service GCS-persistence fix this doc already tracks — closes the corrected claim above.
+      Confirmed by direct code read, not a guess. Repo: deployment-service.
 
 ## Progress Log
 
@@ -502,3 +529,42 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   (out of this dispatch's assigned repo). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id, so
   skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
   covered that FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 4, agt-010efb)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-sports-odds-api-odds-20260816-145019
+  venue=LADBROKES data_type=odds` (no issue slug — alert-carries-the-details path). Confirmed this is the SAME
+  VM + burst already logged by the 2026-08-19 slot-10/slot-14/slot-1 dispatches above — LADBROKES is explicitly
+  named in slot-10's ~30-venue burst list — a duplicate/spam symptom of THIS doc's already-open root cause, not
+  a new failure mode; did not file a separate issue doc, per the established pattern. Unlike the MYBOOKIEAG-class
+  venues the slot-1 dispatch flagged, LADBROKES IS in-scope: it appears in the batch adapter's curated bookmaker
+  list (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:128`, `"ladbrokes_uk"`),
+  so the slot-1 region-vs-bookmakers scope-mismatch theory does not explain this specific venue's alert —
+  LADBROKES would already be included in the live connector's unfiltered `regions=uk,us` fetch too.
+
+  Went one step further than the prior duplicate-confirmations by reading the actual DP-LIVE-004 detector code
+  (`deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py::check_live_capture_
+  productivity`, `cli.py:899-910` call site) to verify this doc's own "Also shipped this sweep" claim that
+  "both already have source-side renag_tracker wiring" (DP-LIVE-004/DP-WATCHER-002). **That claim is FALSE for
+  DP-LIVE-004, confirmed by direct code read, not inference**: `check_live_capture_productivity`'s signature
+  (`live_stream_watcher.py:542-551`) takes only `miss_tracker` (onset-gate only, no re-nag cooldown) — no
+  `renag_tracker` parameter exists at all — and its `cli.py` call site (:899-910) does not pass one either,
+  unlike the DP-LIVE-003 call site three lines above it (:889-896), which explicitly passes
+  `renag_tracker=renag_tracker`. Once a shard crosses `min_consecutive` misses, `check_live_capture_
+  productivity` re-emits on EVERY subsequent sweep with no source-side suppression — it relies entirely on the
+  downstream alerting-service dedup layer this doc is already chasing bugs in. Separately confirmed: the
+  detector hardcodes `severity="CRITICAL", tier=EscalationTier.PAGE_OPERATOR` (:596-598) for every DP-LIVE-004
+  finding, which contradicts `/codex/05-infrastructure/data-pipeline-alerts.md`'s own registry row for
+  DP-LIVE-004 (🟠 WARN, "auto-recover (visibility only)") — flagged, not changed (ambiguous whether the
+  registry doc or the code is the stale side; a severity/tier change is a design decision, not a small/clear
+  fix, `does_not: guess at an ambiguous fix`).
+
+  Corrected the doc's own stale claim inline (banner above "Also shipped this sweep") and added a new P2 todo
+  for the DP-LIVE-004 renag_tracker wiring (mirrors the already-proven DP-LIVE-003 fix pattern exactly —
+  low-risk, additive, does not change detection or severity, only re-fire cadence). Did not attempt the fix
+  myself this session: non-trivial (signature change + cli.py wiring + new tests + a full deployment-service
+  `quality-gates.sh` cycle), outside my assigned repo (`market-tick-data-service`), and this exact issue doc has
+  had 4+ concurrent/recent dispatches touching alerting-service/deployment-service in the last day — real
+  collision risk for an uncoordinated same-day fix, per findings-triage "fits another plan → annotate, don't
+  fix". No code changes shipped this session (repo: market-tick-data-service — no MTDS-side bug found; worktree
+  confirmed clean, 0 ahead, before and after). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id,
+  so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
+  covered the FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
