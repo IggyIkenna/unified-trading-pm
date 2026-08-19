@@ -12,7 +12,9 @@ summary: >-
   (non-growing) CBOE VIX-cash + BARCHART manifest stragglers also found.
 status: open
 nature: issue
-asset_group: [cross-cutting, tradfi]
+asset_group: [tradfi] # corrected 2026-08-19 (ag-closeout-audit cross-cutting reconciliation pass) -- was
+  # [cross-cutting, tradfi]; content is 100% TradFi-databento manifest pollutants (ICE/CBOE/BARCHART) -- fork-inherited
+  # the cross-cutting tag from the batch13 dispatch that spawned this investigation, not genuine cross-AG scope.
 stage: [data]
 repos: [market-tick-data-service, instruments-service]
 scope: [engineer]
