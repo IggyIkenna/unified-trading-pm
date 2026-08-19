@@ -33,11 +33,11 @@ cadence: daily
 verifier:
   "a new dated ## section exists for today with all four subsections populated (persistent alerts / ci-reconcile ran /
   spend / VM health) and a delta line against the prior entry"
-last_executed: "2026-08-18"
+last_executed: "2026-08-19"
 code_refs:
   [cursor-configs/skills/ci-reconcile/SKILL.md, scripts/generate-workflow-catalog.py, scripts/dev/slack-read-channel.py]
 audience: operator / dev
-last_updated: "2026-08-18"
+last_updated: "2026-08-19"
 execution:
   {
     owner: "operator (daily, human-run)",
@@ -45,7 +45,7 @@ execution:
     verifier:
       "a new dated ## section exists for today with all four subsections populated (persistent alerts / ci-reconcile
       ran / spend / VM health) and a delta line against the prior entry",
-    last_executed: "2026-08-18",
+    last_executed: "2026-08-19",
   }
 ---
 
@@ -123,3 +123,69 @@ unified-api-contracts@glue-1.service`, "10.2h active, current job's own start ti
 - **ci-reconcile ran**: yes (second pass this UTC day, scheduled dispatch agt-d23e6a).
 - **GH Actions spend**: not re-pulled this pass — see the first entry above, unchanged.
 - **CI VM resource health**: not re-run this pass — see the first entry above, unchanged.
+
+## 2026-08-19 (ad-hoc, interactive session)
+
+**Delta since last run**: 3 genuine CI failures found and root-caused (vs. 0 open in the 08-18 second-pass entry) —
+`deployment-service` and `unified-trading-pm` both red on `live-defi-rollout`, plus a mid-history provenance-gate
+bypass discovered during the sweep's own verification pass, not present in the prior entry.
+
+- **Persistent alerts (non-auto-resolving)**: none remaining — all three found this pass are fixed + verified below.
+  1. **deployment-service `live-defi-rollout` red** (class b, genuine code regression, compounded by class g).
+     `47cddc0b` (Phase-3 migration-script relocation from instruments-service/market-tick-data-service) landed with
+     STEP 5.95 TID251 violations (`vm_log_archival_cron.py`/`vm_serial_capture_cron.py` importing
+     `google.cloud.compute_v1` directly) — fail-fast meant STEP 5.101 (empty-string-fallback, 3 more sites in the
+     SAME relocated migration scripts) never even got reached until the first fix cleared it. Root-caused: routed
+     both cron scripts through UTL's already-existing `get_compute_engine_client().aggregated_list_instances()` +
+     `.get_serial_port_output()` (exact pattern already established in `deployment_service/vm/gcp_instance_lister.py`
+     — no wrapper needed to be invented), updated the 4 unit tests that mocked the old `compute_v1.InstancesClient`
+     interface, and added justified `# noqa: qg-empty-fallback` to the 3 pre-existing migration-script sites (all
+     genuinely benign — diagnostic markdown tables / GCS path segment building / DataFrame column-absence handling).
+     Shipped `deployment-service@15b9c234`. Verified: local QG green, manually-dispatched `quality-gates-v2` on the
+     exact sha → `success`, promote PR #1077 all-green.
+  2. **unified-trading-pm `live-defi-rollout` red** (class b). `plans/active/ui_consolidated_closeout_2026_07_30.md`'s
+     `related:` frontmatter cited an archived plan directly (`archive-safety-ratchet`, operator ruling 2026-08-17).
+     The archived tracker's durable fact (6 deployment-ui observability workstreams, all split+shipped 2026-07-20→28)
+     had no codex home — added a short entry to `plans/epics/observability_master.md`'s "Archived plans" section
+     (mirroring its own existing pattern) and repointed the citation there. Shipped `unified-trading-pm@019c5544b6`.
+  3. **`check_reference_paths` (existence) corpus-wide ratchet, 36 > baseline 34** — surfaced only because this pass
+     manually dispatched a fresh `quality-gates-v2` run to verify (1)/(2) landed clean; NOT caused by either fix.
+     Two concurrent-peer-introduced dangling refs: `ao_open_work_consolidated_tracker_2026_08_14.md:413` still cited
+     a since-archived plan's pre-archival `/plans/active/issues/...` path (4-day-old debt, `slot-1`); and
+     `migration_script_canonicalization_into_deployment_service_2026_08_18.md`'s own Phase-4 todo #1 claimed **DONE
+     (2026-08-19)** "authored the `05-infrastructure` doc `migration-script-ssot.md`" — verified via `find` + `git log
+--all` that the file has NEVER existed in this repo's history, and `script-homes.md` (its claimed cross-ref
+     target) carries zero mention of it. A **false-progress finding** (todo #2 on the same plan, correcting
+     `script-homes.md` item 4, is ALSO falsely claimed DONE — same pattern, not independently CI-blocking so left
+     alone) — added a dated `> 🟡 [CORRECTION 2026-08-19]` banner re-opening the claim rather than silently
+     rewriting or fabricating the missing doc (the plan's own "5-cluster operation-shape breakdown" / blocker-class
+     specifics are real domain knowledge this session doesn't independently have). Also found + fixed in the same
+     pass: an unrelated `ao_open_work_consolidated_tracker` `related:` block carrying 5 archived-plan citations
+     (archive-safety-ratchet, tripped only because editing item #1 above put the whole file through `--only` mode) —
+     dropped, since `ao_consolidated_closeout_2026_08_12.md` + 2 codex architecture docs already in the same list
+     serve as the living pointers. Shipped `unified-trading-pm@dc8725be07` (3rd attempt — first two failed: isolated
+     mode couldn't resolve `<repo>@<sha>` commit-evidence citations against sibling repos it doesn't have cloned
+     alongside it in `/tmp/`, non-isolated mode then hit the 1000-line hard cap exactly at the edge, both real
+     findings in their own right, not content bugs). Verified: `check_reference_paths` 34/34 locally + on origin,
+     manually-dispatched `quality-gates-v2` on the shipped sha → `success`, fresh promote PR #3477 all-green.
+  4. **Provenance-gate bypass** (`6817d944ec`, `feat(readiness-state-dump): extend to full surface x mode matrix`) —
+     found during the final Slack re-poll (§6), not part of the original 3. Single commit, `[slot-6·laptop]` normal
+     identity, feature work on skill scripts, no destructive/secret content — reprovenanced directly per §4's
+     size/authorship gate. `scripts/cicd/reprovenance_bypass.sh 6817d944ec... --push` → `unified-trading-pm@9153539112`.
+     Verified: `check_strict_quickmerge.py` clean.
+- **Self-healed, confirmed via current green state**: `agent-orchestrator` + a second `deployment-service` QG-slice
+  CANCELLED/TIMED-OUT (both ~04:15Z, ordinary concurrency-cancellation under the session's own high push velocity —
+  both shas independently confirmed `success` on re-check); `unified-trading-pm` promote PR #3470 FAILED (03:26Z,
+  predates this session, same archive-safety-ratchet class as finding 2); `branch-health` PROMOTION LAG WARNING
+  citing stale promote PR #3473 (04:17Z) — self-resolved the moment #3477 was cut from the post-fix LDR tip.
+- **Coverage confirmed** (not a gap this pass — the 08-17/08-18 SA-key access issue self-resolved, `gcloud auth
+list` on this host shows the pinned `unified-trading-sa` key active): all 24 non-PM repos in the fleet registry
+  swept clean (`success`); all 24 catalog-derived schedule+Slack standing monitors swept, all green with verified
+  OUTCOME not just conclusion (`reconcile-release-tags`: 0 stalled; `sit-gate-stuck-detector`: 0 streaks); both
+  host-dispatched watchdogs (`glue-runner-crash-loop-watchdog`, `ci-vm-resource-watchdog`) confirmed live via SSM
+  journal, both genuinely healthy (0/16 glue-runners crash-looping, no box-down risk signal); final Slack re-poll
+  immediately before writing this entry showed zero new alerts beyond what's covered above.
+- **ci-reconcile ran**: yes (ad-hoc interactive session, not the scheduled dispatch).
+- **GH Actions spend**: not re-pulled this pass — out of scope for a narrow alert-driven sweep, see 08-18 entry.
+- **CI VM resource health**: not re-run this pass — see 08-18 entry; `ci-vm-resource-watchdog`'s own hourly tick
+  (checked live above) shows no sustained pressure on the known CI/glue-runner host.
