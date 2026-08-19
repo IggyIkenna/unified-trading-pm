@@ -27,11 +27,12 @@ related_plans:
   - ../active/codex_vs_repo_docs_ssot_audit_2026_06_01_finalize_2026_07_27.md
   - ../active/infra_satellite_ao_dispatch_batch11_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch11_finalize_2026_08_09.md
+  - ../active/issues/na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md
   - ../active/june_2026_vintage_audit_findings_2026_07_27.md
 cadence: daily-cron + on-demand
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
-last_updated: 2026-07-12 # was 2026-05-23 — stale vs newer body entries; corrected 2026-07-12 (finding 326, §A2 B-queue ruling)
+last_updated: 2026-08-19 # was 2026-07-12 -- roster was also missing na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18 (parent_epic match); a sibling doc (plan_reconciler_findings_plan_hygiene_master_2026_08_18.md) independently found ~17 more missing via a grep workaround -- full roster refresh filed as a followup, this pass adds only the doc within its own ao-tranche scope; corrected 2026-08-19 (plan_reconciler ao)
 ---
 
 # Plan Hygiene Master

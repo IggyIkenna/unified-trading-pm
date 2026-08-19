@@ -76,9 +76,10 @@ Directly observed via this session's own live filesystem access to the orchestra
   mechanism requires a WORKER to notice the pattern and manually apply a park, which none of the 8+ prior dispatches did
   (each one only left a prose flag in the Progress Log asking "for main" to fix it -- which is itself the Findings
   Closure HARD RULE violation this doc exists to close: a flagged pattern that never became a tracked, actionable todo).
-- Unlike the sibling issue `backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` (a park WAS applied and then
-  silently lost), this case never had a park attempted at all -- the gap here is dispatch-time collision detection, not
-  park durability.
+- Unlike the sibling issue `backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` (where a park WAS applied;
+  that doc's own later investigation traced the code and did NOT reproduce a durability bug there, so the two cases
+  don't share a mechanism regardless), this case never had a park attempted at all -- the gap here is dispatch-time
+  collision detection, not park durability.
 - At fleet scale, any multi-hour-driver-shaped todo (a common pattern in this craft -- backfills, VM-launching checks,
   manifest consolidations) will hit the identical thrash. This is not sports/IS-specific.
 

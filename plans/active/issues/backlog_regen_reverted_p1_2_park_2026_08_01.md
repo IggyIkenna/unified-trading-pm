@@ -1,9 +1,9 @@
 ---
 doc_type: issue
 title:
-  "Backlog regen silently reverted the manual park on `live_event_log_warm_sink_recovery_and_cold_compaction-011` (P1.2)
-  — task re-dispatched to slot 12 despite unmet preconditions, recurrence of
-  `backlog_regen_drops_handtuned_prereqs_2026_07_12.md`"
+  "Backlog regen appeared to revert a manual park on `live_event_log_warm_sink_recovery_and_cold_compaction-011`
+  (P1.2) — task re-dispatched to slot 12 despite unmet preconditions; traced and CLOSED as a one-time process gap,
+  NOT a recurrence of `backlog_regen_drops_handtuned_prereqs_2026_07_12.md` (see summary)"
 summary: >-
   On 2026-07-31 (~22:20Z) main answered BLK-085fef5e (Option A) and manually parked backlog task
   `live_event_log_warm_sink_recovery_and_cold_compaction-011` ([DATA] P1.2 in
