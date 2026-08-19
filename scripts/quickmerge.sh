@@ -1830,7 +1830,13 @@ fi
 if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ] && [ "$REPO_PMODEL" = "ldr_main" ]; then
   echo "[$REPO_NAME] STAGE 1.5: staging lock SKIPPED — promotion_model=ldr_main (hotfix promotes LDR→main, never staging→main; the staging-cascade lock does not apply)"
 fi
-if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ] && [ "$REPO_PMODEL" != "ldr_main" ]; then
+# ldr_terminal (agent_orchestrator_ldr_terminal_promotion_2026_08_05.md): excluded from BOTH
+# promotion paths, same as ldr_main for this check's purposes — reading an unrelated repo's
+# staging lock here would false-block a --hotfix that was never going anywhere near staging.
+if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ] && [ "$REPO_PMODEL" = "ldr_terminal" ]; then
+  echo "[$REPO_NAME] STAGE 1.5: staging lock SKIPPED — promotion_model=ldr_terminal (this repo never promotes to staging or main; the staging-cascade lock does not apply)"
+fi
+if [ "$HOTFIX" = true ] && [ "$SKIP_CI" = false ] && [ -f "$MANIFEST_PATH" ] && [ "$REPO_PMODEL" != "ldr_main" ] && [ "$REPO_PMODEL" != "ldr_terminal" ]; then
   echo "=========================================="
   echo "STAGE 1.5: Staging Lock Check"
   echo "=========================================="
@@ -3372,6 +3378,7 @@ ISSUE_REFS=$(echo "$COMMIT_MSG" | grep -oE "(Fixes|Closes|Resolves) [^#]*#[0-9]+
 # order still falls through to the staging path in that case.
 PM_OPTION_B=false
 LDR_MAIN=false
+LDR_TERMINAL=false
 if [ "$SKIP_CI" = true ]; then
   PR_BASE="main"
   echo "[$REPO_NAME] [skip ci] detected: PR targets main directly (automation commit)"
@@ -3392,9 +3399,30 @@ elif [ "$REPO_PMODEL" = "ldr_main" ]; then
   PR_BASE="main"
   LDR_MAIN=true
   echo "[$REPO_NAME] promotion_model=ldr_main: lands on LDR trunk; ldr-to-main-promote-fleet.yml drains to main (staging skipped — dead since 2026-06-27)"
+elif [ "$REPO_PMODEL" = "ldr_terminal" ]; then
+  # agent_orchestrator_ldr_terminal_promotion_2026_08_05.md: this repo's LDR branch IS the
+  # deploy target (API self-pulls it directly, dashboard's deploy-dashboard.yml triggers on
+  # push:[live-defi-rollout]) — excluded from BOTH staging and main promotion, independent of
+  # staging_dormant_mode. There is nothing to promote once this lands, so PR_BASE is never
+  # consulted for a PR create/merge — the block right below exits before reaching that code.
+  PR_BASE="none"
+  LDR_TERMINAL=true
+  echo "[$REPO_NAME] promotion_model=ldr_terminal: this repo's LDR branch IS the deploy target — never promotes to staging or main"
 else
   PR_BASE="staging"
   echo "[$REPO_NAME] Staging-first: PR targets staging (semver-agent will validate label vs API diff)"
+fi
+
+# ldr_terminal exits here, before any of the staging/ldr_main-specific hotfix or PR-creation
+# logic below (none of which applies — there is no promotion target to fast-track to).
+if [ "$LDR_TERMINAL" = true ]; then
+  if [ "$HOTFIX" = true ] || [ "$HOTFIX_TO_MAIN" = true ]; then
+    echo "[$REPO_NAME] ⚠️  --hotfix/--hotfix-to-main is a no-op for promotion_model=ldr_terminal — there is no"
+    echo "[$REPO_NAME]    staging or main promotion to fast-track. What you just landed on $BRANCH IS the deploy"
+    echo "[$REPO_NAME]    target already (API self-pull + dashboard both trigger directly off this branch)."
+  fi
+  echo "[$REPO_NAME] ✅ Landed on $BRANCH (LDR trunk) — this repo's LDR branch IS the deploy target; nothing further to promote."
+  exit 0
 fi
 
 if [ "$LDR_MAIN" = true ] && [ "$HOTFIX" = true ] && [ "$HOTFIX_TO_MAIN" != true ]; then
