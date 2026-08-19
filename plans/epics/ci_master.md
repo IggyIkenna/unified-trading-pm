@@ -99,6 +99,12 @@ locked_since:
 
 # CI Master — GitHub Actions delivery pipeline, quickmerge/ship scripts, LDR→main promotion gate set
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/b5491741-4a60-494b-be4d-0e44b5d01830 (generated 2026-08-18,
+`/plan-reconcile ci_master`) — link recovered 2026-08-19 during the Phase 6 link-collection sweep; this epic's own
+`## Report` section was missing despite the report having been published and the HTML file shipped (`580a772372`).
+
 ## Why this epic exists
 
 Created 2026-08-18 as part of the epic-taxonomy restructure (`/codex/11-project-management/epic-taxonomy-2026-08-18.md`)

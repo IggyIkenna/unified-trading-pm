@@ -182,48 +182,51 @@ Epic body MUST organise its referenced active plans into priority-grouped sectio
 The VM main agent reads priority blocks in order — workers pick up P0 items first, P1 only when P0 is empty. Without
 priority blocks, workers cannot self-direct.
 
-## 23 epics in 6 tiers (regenerated 2026-07-12)
+## 22 epics in 6 tiers (regenerated 2026-08-19, post epic-taxonomy restructure)
 
-| #   | Tier | Epic slug                                 | Assigned VM            | Owns                                                                                                           |
-| --- | ---- | ----------------------------------------- | ---------------------- | -------------------------------------------------------------------------------------------------------------- |
-| 1   | L0   | `defi_master`                             | `vm-defi`              | DeFi adapters + on-chain execution + Copper custody + DeFi archetypes                                          |
-| 2   | L0   | `cefi_master`                             | `vm-cefi`              | CeFi adapters + CCXT + CEFFU + perp hedge legs + CeFi archetypes                                               |
-| 3   | L0   | `tradfi_master`                           | `vm-tradfi`            | TradFi adapters + dated futures + TradFi archetypes                                                            |
-| 4   | L0   | `sports_master`                           | `vm-sports`            | Sports adapters + GBP settlement + sports archetypes                                                           |
-| 5   | L0   | `predictions_master`                      | `vm-prediction`        | Polymarket + Kalshi + binary-outcome archetypes                                                                |
-| 6   | L1   | `instruments_master`                      | `vm-cefi` (co-located) | instruments-service IS reference + universe SSOT                                                               |
-| 7   | L1   | `mtds_mdps_master`                        | `vm-ml`                | MTDS adapters + MDPS candles + writegate + raw market data                                                     |
-| 8   | L1   | `features_and_ml_master`                  | `vm-ml`                | features-service (8 families) + ml-service (inference + training)                                              |
-| 9   | L1   | `manifest_master`                         | `vm-defi` (co-located) | Manifest v9 + honest absence + backfill + evolution discipline                                                 |
-| 10  | L2   | `strategy_master`                         | `vm-trading-core`      | strategy-service post-consolidation; 53 archetypes; portfolio_allocator; risk; position; pnl                   |
-| 11  | L2   | `execution_master`                        | `vm-trading-core`      | execution-service handlers + transfers + treasury + custody + flash loan + matching engine                     |
-| 12  | L2   | `trading_agent_master`                    | `vm-trading-core`      | trading-agent-service closed-loop allocator                                                                    |
-| 13  | L2   | `global_ledger_pnl_attribution_master`    | `vm-trading-core`      | Global ledger SSOT (Instruction/Passive/Treasury/Pricing) + derived PnL/Position/Exposure/Attribution views    |
-| 14  | L3   | `dart_and_promote_master`                 | `vm-operator-ops`      | DART + ManualTradeGateDialog + promote workflow + state machine                                                |
-| 15  | L3   | `deployment_and_user_management_master`   | `vm-operator-ops`      | deployment-api + deployment-ui + user-management                                                               |
-| 16  | L4   | `infrastructure_master`                   | `vm-cross-cutting`     | Shard-axis + data-status umbrella; VM launcher/deployment-build maturity; AWS↔GCP parity; LDR→main CI/CD       |
-| 17  | L4   | `observability_master`                    | `vm-cross-cutting`     | alerting-service + monitoring/telemetry; Incident Gateway 13-state + 5-layer recovery; kill-switch alerting    |
-| 18  | L4   | `batch_live_symmetry_master`              | `vm-cross-cutting`     | Per-service batch=live audit; reconciliation                                                                   |
-| 19  | L4   | `client_isolation_and_governance_master`  | `vm-cross-cutting`     | Per-client isolation + funds isolation + jurisdiction + share-class + UAC schema                               |
-| 20  | L4   | `escalation_and_disaster_recovery_master` | `vm-cross-cutting`     | Escalation pipeline (blocked→Slack→human-resolve→UI) + self-healing/auto-recovery substrate                    |
-| 21  | L5   | `orchestrator_master`                     | `vm-orchestrator`      | agent-orchestrator multi-VM runtime + planning VM + dashboard + self-healing safety                            |
-| 22  | L5   | `agent_operating_framework_master`        | `planning`             | Agent dispatch (assigned_vm fail-closed matcher) + grep-native retrieval + role charters + retrieval-eval loop |
-| 23  | L5   | `plan_hygiene_master`                     | `planning`             | Continuous plan-corpus hygiene: check scripts + hygiene sweep + codex-alignment audit                          |
+| #   | Tier | Epic slug                                | Owns                                                                                                    |
+| --- | ---- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| 1   | L0   | `defi_master`                             | DeFi adapters + on-chain execution + Copper custody + DeFi archetypes                                      |
+| 2   | L0   | `cefi_master`                             | CeFi adapters + CCXT + CEFFU + perp hedge legs + CeFi archetypes                                           |
+| 3   | L0   | `tradfi_master`                           | TradFi adapters + dated futures (Databento) + TradFi archetypes                                            |
+| 4   | L0   | `sports_master`                           | Sports adapters + GBP settlement + sports archetypes                                                       |
+| 5   | L0   | `predictions_master`                      | Polymarket + Kalshi + binary-outcome archetypes                                                            |
+| 6   | L1   | `instruments_master`                      | instruments-service IS reference + universe SSOT                                                           |
+| 7   | L1   | `mtds_mdps_master`                        | MTDS adapters + MDPS candles + writegate + raw market data                                                 |
+| 8   | L1   | `features_and_ml_master`                  | features-service (8 families) + ml-service (inference + training)                                          |
+| 9   | L1   | `manifest_master`                         | Manifest v9 + honest absence + backfill + evolution discipline                                             |
+| 10  | L1   | `uac_master`                               | unified-api-contracts schema/registry SSOT + contract-governance correctness                               |
+| 11  | L2   | `strategy_master`                         | strategy-service; archetypes; portfolio_allocator; risk; position; PnL/HWM attribution                     |
+| 12  | L2   | `execution_master`                        | execution-service handlers + transfers + treasury + custody + flash loan + matching engine                 |
+| 13  | L3   | `deployment_and_user_management_master`   | deployment-api + deployment-ui + user-management surfaces                                                  |
+| 14  | L4   | `ci_master`                                | GitHub Actions delivery pipeline, quickmerge/ship scripts, LDR→main promotion gate set                     |
+| 15  | L4   | `observability_master`                    | alerting-service + monitoring/telemetry; Incident Gateway; kill-switch alerting; escalation + DR (folded in) |
+| 16  | L4   | `batch_live_symmetry_master`              | Per-service batch=live audit; reconciliation                                                                |
+| 17  | L4   | `client_isolation_and_governance_master`  | Per-client isolation + funds isolation + jurisdiction + share-class + UAC schema                            |
+| 18  | L4   | `security_and_cross_cutting_master`       | Credentials/secrets + IAM + kill-switch authority; shard/data-status + deployment-build (infra, folded in) |
+| 19  | L4   | `system_readiness_master`                 | Everything gating go-live readiness                                                                        |
+| 20  | L5   | `orchestrator_master`                     | agent-orchestrator single-VM runtime + promote/live-flip gating machinery                                  |
+| 21  | L5   | `agent_operating_framework_master`        | Agent dispatch (assigned_vm fail-closed matcher) + grep-native retrieval + role charters                   |
+| 22  | L5   | `plan_hygiene_master`                     | Continuous plan-corpus hygiene: check scripts + hygiene sweep + codex-alignment audit                       |
 
-Regenerated 2026-07-12 from `epics/*.md` frontmatter per operator ruling (plan-reconciliation finding 339, see
-[`plans/active/issues/plan_reconciliation_operator_decisions_2026_07_11.md`](../active/issues/plan_reconciliation_operator_decisions_2026_07_11.md)
-§A2). Superseded/archived epic files excluded: `cross_cutting_may_23_SUPERSEDED_2026_05_21.md`,
-`manifest_evolution_SUPERSEDED_2026_05_21.md`, `manifest_migration_SUPERSEDED_2026_05_21.md`,
-`strategy_and_dart_master_SUPERSEDED_2026_05_21.md`. Tier count also corrected 5→6 in the heading: the table has always
-spanned `L0`–`L5` (six distinct tiers); the pre-existing "5 tiers" phrasing undercounted.
+Regenerated 2026-08-19 (manual, from live `epics/*.md` frontmatter `title:`/`tier:` fields) as part of the
+epic-taxonomy restructure's Phase 6 close-out — see
+[`plans/active/epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`](../active/epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md).
+23→22: `infrastructure_master` folded into `security_and_cross_cutting_master`, `escalation_and_disaster_recovery_master`
+folded into `observability_master`, `dart_and_promote_master` and `trading_agent_master` folded into their consumers,
+`global_ledger_pnl_attribution_master` folded into `batch_live_symmetry_master`/`system_readiness_master` — net effect
+5 folds, 2 new epics (`uac_master`, `security_and_cross_cutting_master` replacing `infrastructure_master`),
+`ci_master` split out of the old infra umbrella. Superseded/archived epic files excluded (unchanged):
+`cross_cutting_may_23_SUPERSEDED_2026_05_21.md`, `manifest_evolution_SUPERSEDED_2026_05_21.md`,
+`manifest_migration_SUPERSEDED_2026_05_21.md`, `strategy_and_dart_master_SUPERSEDED_2026_05_21.md`.
 
-**Caveat (added 2026-07-25, plan-reconcile)**: this "Assigned VM" column is NOT kept in sync with per-epic `assigned_vm`
-frontmatter corrections made after 2026-07-12 (e.g. `escalation_and_disaster_recovery_master` and `trading_agent_master`
-both had `assigned_vm` corrected to `planning` on 2026-07-21) — consistent with the epic-owns-VM model already being
-SUPERSEDED/archival-only per the top banner. Treat this table's VM column as a 2026-07-12 snapshot, not a live registry.
+**"Assigned VM" column removed 2026-08-19**: the per-epic-VM ownership model was superseded by the single-VM
+role-based-dispatch architecture (2026-06-27) — every current epic's `assigned_vm` frontmatter is `NA` per
+`plans/PLAN_FORMAT.md`:204's operator ruling, so a VM column would carry zero information today. See "VM topology"
+below (already marked SUPERSEDED) for the historical multi-VM model.
 
 - [ ] [SCRIPT] P2. Script this regeneration (scripts/plan-hygiene or scripts/docs) so the registry can't drift again —
-      wire into the hygiene sweep.
+      wire into the hygiene sweep. Still open — this pass was a manual refresh, not the automation.
 
 **Cutover master (NOT an epic)**: `plans/archive/2026_07/master_to_live_defi_2026_05_23.md` is a dated, one-shot plan
 tracking the May-23 live DeFi rollout across all 20 epics. Archives after cutover. Not in `plans/epics/`.

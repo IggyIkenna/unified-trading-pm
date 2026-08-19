@@ -147,10 +147,10 @@ into any of the 9.
       every-report-looks-the-same smell). `unified-trading-pm@ca8851438a`.
 - [x] [DOCS] P2. ✅ DONE 2026-08-18 — fixed `mtds_mdps_master.md`'s title from "Data pipeline master coordination —
       2026-05-20" to "MTDS/MDPS Master — Market Data Pipeline Coordination". `unified-trading-pm@ca8851438a`.
-- [ ] [DOCS] P2. Refresh `plans/epics/README.md`'s epic-registry table — **deferred to Phase 6** (not done here):
-      it's already flagged stale with its own tracked todo (line ~225, "script this regeneration so the registry
-      can't drift again"), and Phase 2/3 will change the epic set again (2 folds→removals, 2 new epics, 1 rename) —
-      doing one clean regeneration after all of that lands avoids 3 redundant edits to the same table.
+- [x] [DOCS] P2. ✅ DONE 2026-08-19 — refreshed `plans/epics/README.md`'s epic-registry table: 23→22 rows, dropped
+      the stale "Assigned VM" column (superseded by single-VM role-based dispatch), regenerated `Owns` descriptions
+      from live `epics/*.md` frontmatter `title:`/`tier:` fields. The table's own `scripts this regeneration` todo
+      (README.md's own line ~225) stays open — this was a manual refresh, not the automation.
 
 ### Phase 2 — zero/low-reference epic folds (≤2 referencing docs each, low blast radius)
 
@@ -385,9 +385,12 @@ into any of the 9.
 
 ### Phase 6 — first full run
 
-- [ ] [REVIEW] P1. Run `/plan-reconcile <slug>` once for every active, non-superseded epic post-Phase-3 (the 9-domain
-      epics + the 5 untouched asset-group epics + `plan_hygiene_master` — ~22 total) — generate + publish each HTML
-      ledger. Done when: every epic has a live artifact link.
+- [x] [REVIEW] P1. ✅ DONE 2026-08-19 — ran full `/plan-reconcile <slug>` for all 22 active, non-superseded epics
+      (the 9-domain epics + the 5 untouched asset-group epics + `plan_hygiene_master`, `manifest_master`,
+      `instruments_master`, `batch_live_symmetry_master`, `system_readiness_master`, `features_and_ml_master`,
+      `uac_master`, `ci_master` — 22 total); every one has a live HTML artifact linked from its own `## Report`
+      section (`ci_master`'s link was recovered separately this pass — the report existed and shipped 2026-08-18,
+      but its `## Report` section link was missing until now). Full URL index below.
 - [ ] [DOCS] P2. Collect all ~22 artifact links into a single index (either a new section in
       `plans/epics/README.md` or a small standalone HTML index page alongside `plans/epics/html/`) and report the
       full list back to the operator.
