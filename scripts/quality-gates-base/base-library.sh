@@ -431,6 +431,51 @@ RUFF_VER=$($RUFF_CMD --version 2>&1 | grep -oE '[0-9]+\.[0-9]+\.[0-9]+' | head -
 BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}' || echo "0")
 [[ "$BP_VER" != "1.38.2" ]] && log_warn "basedpyright 1.38.2 expected, found $BP_VER" || log_success "basedpyright $BP_VER"
 
+# ── [0.5/6] PRODUCTION READINESS VALIDATORS (moved 2026-08-19, was [6/6] last) ─
+# Only needs PM's already-cloned checkout, so it doesn't depend on anything steps 1-5 produce.
+# Runs here, right after basic toolchain sanity, for fail-fast — see base-service.sh's identical
+# block for the full incident writeup + reordering rationale. Kept the "[6/6]"-derived name in
+# prose (not the log_section label) so existing docs/greps for the old identifier still resolve.
+log_section "[0.5/6] PRODUCTION READINESS VALIDATORS"
+VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
+if [ -f "$VSCRIPT" ]; then
+    if ! "$VSCRIPT" --asset-group all --failed-only; then
+        # 2026-08-18 fix (fleet-wide-cascade incident, 13 unrelated repos failed together),
+        # hardened 2026-08-19 (second occurrence, 7 more repos, single ff-only-pull retry not
+        # enough) — see base-service.sh's identical block for the full incident writeup. Up to
+        # 2 retries against a force-reset (not soft ff-only pull, which can silently no-op on a
+        # dirty working tree), freshly re-fetched PM tree absorb a transient PM-manifest race
+        # without weakening detection of a genuinely, persistently broken PM corpus.
+        pm_validators_ok=false
+        for _pm_retry_delay in 5 10; do
+            log_warn "Production readiness validators failed — force-resyncing unified-trading-pm and retrying (transient PM-tree race, not necessarily a defect in this repo)"
+            if git -C "${REPO_ROOT}/unified-trading-pm" fetch origin live-defi-rollout 2>&1 \
+                && git -C "${REPO_ROOT}/unified-trading-pm" reset --hard origin/live-defi-rollout 2>&1 \
+                && git -C "${REPO_ROOT}/unified-trading-pm" clean -fdx 2>&1; then
+                sleep "$_pm_retry_delay"
+                if "$VSCRIPT" --asset-group all --failed-only; then
+                    pm_validators_ok=true
+                    break
+                fi
+            else
+                log_fail "unified-trading-pm force-resync failed — cannot verify production readiness validators"
+                exit 1
+            fi
+        done
+        if [ "$pm_validators_ok" = true ]; then
+            log_warn "Production readiness validators PASSED on retry — confirmed a transient PM-tree race, not a real defect"
+        else
+            log_fail "Production readiness validators FAILED (persisted after 2 force-resync retries) — fix workspace-manifest.json / plans (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
+            exit 1
+        fi
+    else
+        log_ok "Production readiness validators PASSED"
+    fi
+else
+    log_fail "Production readiness validators missing — expected ${VSCRIPT}"
+    exit 1
+fi
+
 # ── [1] AUTO-FIX (prettier + ruff, 30s each) ──────────────────────────────────
 # Prettier runs FIRST on non-Python files to prevent ruff/prettier conflict in pre-commit hooks.
 # Without this, committing JSON/YAML/MD files causes "MM" status and hook stash conflicts.
@@ -1548,47 +1593,6 @@ if [ -f "$_XST_CHECKER" ]; then
         cat ${TMPDIR:-/tmp}/xfail_skip_tracked_qg.log
         exit 1
     fi
-fi
-
-# ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
-log_section "[6/6] PRODUCTION READINESS VALIDATORS"
-VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
-if [ -f "$VSCRIPT" ]; then
-    if ! "$VSCRIPT" --asset-group all --failed-only; then
-        # 2026-08-18 fix (fleet-wide-cascade incident, 13 unrelated repos failed together),
-        # hardened 2026-08-19 (second occurrence, 7 more repos, single ff-only-pull retry not
-        # enough) — see base-service.sh's identical block for the full incident writeup. Up to
-        # 2 retries against a force-reset (not soft ff-only pull, which can silently no-op on a
-        # dirty working tree), freshly re-fetched PM tree absorb a transient PM-manifest race
-        # without weakening detection of a genuinely, persistently broken PM corpus.
-        pm_validators_ok=false
-        for _pm_retry_delay in 5 10; do
-            log_warn "Production readiness validators failed — force-resyncing unified-trading-pm and retrying (transient PM-tree race, not necessarily a defect in this repo)"
-            if git -C "${REPO_ROOT}/unified-trading-pm" fetch origin live-defi-rollout 2>&1 \
-                && git -C "${REPO_ROOT}/unified-trading-pm" reset --hard origin/live-defi-rollout 2>&1 \
-                && git -C "${REPO_ROOT}/unified-trading-pm" clean -fdx 2>&1; then
-                sleep "$_pm_retry_delay"
-                if "$VSCRIPT" --asset-group all --failed-only; then
-                    pm_validators_ok=true
-                    break
-                fi
-            else
-                log_fail "unified-trading-pm force-resync failed — cannot verify production readiness validators"
-                exit 1
-            fi
-        done
-        if [ "$pm_validators_ok" = true ]; then
-            log_warn "Production readiness validators PASSED on retry — confirmed a transient PM-tree race, not a real defect"
-        else
-            log_fail "Production readiness validators FAILED (persisted after 2 force-resync retries) — fix workspace-manifest.json / plans (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
-            exit 1
-        fi
-    else
-        log_ok "Production readiness validators PASSED"
-    fi
-else
-    log_fail "Production readiness validators missing — expected ${VSCRIPT}"
-    exit 1
 fi
 
 # ── [ACT] GITHUB ACTIONS SIMULATION (opt-in via --act) ───────────────────────

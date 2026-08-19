@@ -746,6 +746,68 @@ BASEDPYRIGHT_CMD=".venv/bin/basedpyright"; [ ! -f "$BASEDPYRIGHT_CMD" ] && BASED
 BP_VER=$("$BASEDPYRIGHT_CMD" --version 2>/dev/null | head -1 | awk '{print $NF}' || echo "0")
 [[ "$BP_VER" != "1.38.2" ]] && log_warn "basedpyright 1.38.2 expected, found $BP_VER" || log_success "basedpyright $BP_VER"
 
+# ── [0.5/6] PRODUCTION READINESS VALIDATORS (moved 2026-08-19, was [6/6] last) ─
+# Only needs PM's already-cloned checkout (fetched by the CALLER workflow before this script
+# even starts), so it doesn't depend on anything steps 1-5 produce. Runs here, right after basic
+# toolchain sanity, so a doomed run fails in seconds instead of after paying for lint/type-check/
+# tests/codex-compliance first. Kept the "[6/6]"-derived name in prose (not the log_section label)
+# so existing docs/greps for the old identifier still resolve.
+log_section "[0.5/6] PRODUCTION READINESS VALIDATORS"
+VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
+if [ -f "$VSCRIPT" ]; then
+    if ! "$VSCRIPT" --asset-group all --failed-only; then
+        # 2026-08-18 fix (fleet-wide-cascade incident, 13 unrelated repos failed together);
+        # hardened 2026-08-19 to force-reset + 2 retries after a second same-day cascade (9
+        # repos, same evening) showed a single ff-only-pull retry wasn't always enough — see
+        # fleet_wide_qg_cascade_pm_manifest_race_recurrence_2026_08_19.md. That second incident
+        # was independently root-caused, same day, as a genuinely persistent (~20-40min)
+        # plans/active/*.md dangling-link break during concurrent /plan-reconcile sweeps — not a
+        # race any bounded retry could span — see
+        # pm_corpus_dangling_link_cascade_during_active_reconcile_sweep_2026_08_18.md (archived).
+        # This retry hardening targets the SHORTER race class (sub-minute manifest-write races,
+        # possible runner-workspace staleness — unconfirmed); a break that outlasts an active
+        # multi-minute archival sweep needs the archival ritual's same-commit-referrer-fix
+        # discipline instead of a wider retry window (not a viable trade against every one of the
+        # fleet's daily QG runs, most of which hit this validator with nothing wrong).
+        # this validates PM's OWN workspace-manifest.json/plans/active/*.md via the cloned PM
+        # checkout every repo's QG run carries — a transient invalidity in PM's local clone (e.g.
+        # concurrent version-registry-update manifest-bump commits racing, or a stale/dirty
+        # working tree left behind on a reused runner workspace) fails EVERY downstream repo's
+        # gate simultaneously, even though nothing about THIS repo is wrong. Up to 2 retries
+        # against a force-reset (not soft ff-only pull, which can silently no-op on a dirty
+        # working tree), freshly re-fetched PM tree absorb the race without weakening detection
+        # of a genuinely, persistently broken PM corpus (a real break still fails after every
+        # retry).
+        pm_validators_ok=false
+        for _pm_retry_delay in 5 10; do
+            log_warn "Production readiness validators failed — force-resyncing unified-trading-pm and retrying (transient PM-tree race, not necessarily a defect in this repo)"
+            if git -C "${REPO_ROOT}/unified-trading-pm" fetch origin live-defi-rollout 2>&1 \
+                && git -C "${REPO_ROOT}/unified-trading-pm" reset --hard origin/live-defi-rollout 2>&1 \
+                && git -C "${REPO_ROOT}/unified-trading-pm" clean -fdx 2>&1; then
+                sleep "$_pm_retry_delay"
+                if "$VSCRIPT" --asset-group all --failed-only; then
+                    pm_validators_ok=true
+                    break
+                fi
+            else
+                log_fail "unified-trading-pm force-resync failed — cannot verify production readiness validators"
+                exit 1
+            fi
+        done
+        if [ "$pm_validators_ok" = true ]; then
+            log_warn "Production readiness validators PASSED on retry — confirmed a transient PM-tree race, not a real defect"
+        else
+            log_fail "Production readiness validators FAILED (persisted after 2 force-resync retries) — fix unified-trading-pm/workspace-manifest.json and plans/active/*.md (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
+            exit 1
+        fi
+    else
+        log_ok "Production readiness validators PASSED"
+    fi
+else
+    log_fail "Production readiness validators missing — expected ${VSCRIPT}"
+    exit 1
+fi
+
 # ── WORKFLOW YAML PARSE GATE (shared; 2026-06-29 incident) ────────────────────
 # ONE PM-hosted checker validates THIS repo's .github/workflows/*.yml (it globs the CWD repo). An
 # unparseable workflow on a default branch makes GitHub SILENTLY stop scheduling it (the */15 fleet-
@@ -4380,57 +4442,6 @@ fi
 _RATCHET_FAILS=$(( V - _V_PRE_RATCHET ))
 if [[ $_RATCHET_FAILS -gt 0 ]]; then
     log_fail "Quality gates FAILED: ${_RATCHET_FAILS} hard gate/ratchet step(s) failed. Scroll up to the ❌ line(s) — NOT every hard gate is prefixed \"STEP\" (the file- and function-size gates are not), so search for ❌ rather than ❌ STEP. Sentinel NOT written; fix the root cause and re-run."
-    exit 1
-fi
-
-# ── [6] PRODUCTION READINESS (informational) ──────────────────────────────────
-log_section "[6/6] PRODUCTION READINESS VALIDATORS"
-# SSOT: unified-trading-pm/codex/scripts (not a separate unified-trading-codex clone)
-VSCRIPT="${REPO_ROOT}/unified-trading-pm/codex/scripts/run-all-validators.sh"
-if [ -f "$VSCRIPT" ]; then
-    if ! "$VSCRIPT" --asset-group all --failed-only; then
-        # 2026-08-18 fix (fleet-wide-cascade incident, 13 unrelated repos failed together),
-        # hardened 2026-08-19 (second occurrence hit 7 more repos; a single ff-only-pull retry
-        # was not enough — see fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md
-        # follow-up evidence: the exact PM commit live at the failure moment validated clean in
-        # isolation, pointing at a stale/dirty local PM clone on a reused self-hosted-runner
-        # workspace rather than only a bad-content race window).
-        # this validates PM's OWN workspace-manifest.json/plans/active/*.md via the cloned PM
-        # checkout every repo's QG run carries — a transient invalidity in PM's local clone (e.g.
-        # concurrent version-registry-update manifest-bump commits racing, or a stale/dirty
-        # working tree left behind on a reused runner workspace) fails EVERY downstream repo's
-        # gate simultaneously, even though nothing about THIS repo is wrong. Up to 2 retries
-        # against a force-reset (not soft ff-only pull, which can silently no-op on a dirty
-        # working tree), freshly re-fetched PM tree absorb the race without weakening detection
-        # of a genuinely, persistently broken PM corpus (a real break still fails after every
-        # retry).
-        pm_validators_ok=false
-        for _pm_retry_delay in 5 10; do
-            log_warn "Production readiness validators failed — force-resyncing unified-trading-pm and retrying (transient PM-tree race, not necessarily a defect in this repo)"
-            if git -C "${REPO_ROOT}/unified-trading-pm" fetch origin live-defi-rollout 2>&1 \
-                && git -C "${REPO_ROOT}/unified-trading-pm" reset --hard origin/live-defi-rollout 2>&1 \
-                && git -C "${REPO_ROOT}/unified-trading-pm" clean -fdx 2>&1; then
-                sleep "$_pm_retry_delay"
-                if "$VSCRIPT" --asset-group all --failed-only; then
-                    pm_validators_ok=true
-                    break
-                fi
-            else
-                log_fail "unified-trading-pm force-resync failed — cannot verify production readiness validators"
-                exit 1
-            fi
-        done
-        if [ "$pm_validators_ok" = true ]; then
-            log_warn "Production readiness validators PASSED on retry — confirmed a transient PM-tree race, not a real defect"
-        else
-            log_fail "Production readiness validators FAILED (persisted after 2 force-resync retries) — fix unified-trading-pm/workspace-manifest.json and plans/active/*.md (run: python3 unified-trading-pm/scripts/run_validators.py --scope all)"
-            exit 1
-        fi
-    else
-        log_ok "Production readiness validators PASSED"
-    fi
-else
-    log_fail "Production readiness validators missing — expected ${VSCRIPT}"
     exit 1
 fi
 

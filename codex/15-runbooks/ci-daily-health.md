@@ -224,6 +224,18 @@ dependency checkout. `bash -n` clean on both files.
 Full writeup, evidence, and todos:
 `plans/active/issues/fleet_wide_qg_cascade_pm_manifest_race_recurrence_2026_08_19.md`.
 
+**Correction (found after the above was written)**: this is the SAME incident (identical 9 shas) already
+independently investigated and archived same-day as
+`pm_corpus_dangling_link_cascade_during_active_reconcile_sweep_2026_08_18` — a pre-task plan/issue-conflict-check
+miss on my part. That doc has direct raw-log evidence (2 of 9 repos) of a genuinely persistent (~20-40min)
+`plans/active/*.md` dangling-link break during concurrent `/plan-reconcile` sweeps, not an instant race — no retry
+window shipped here claims to span that; the "runner-workspace-staleness" hypothesis above is now secondary, not
+primary. Full reconciliation of both docs' evidence is in the issue doc's "Correction" section. Also shipped this
+pass, at operator request: reordered `[6/6] PRODUCTION READINESS VALIDATORS` to run FIRST as `[0.5/6]` (right after
+`[0/6] ENVIRONMENT`, before the repo's own lint/type-check/test/codex-compliance steps) in both base-service.sh and
+base-library.sh — a pure fail-fast win independent of root cause, since the section only needs PM's already-cloned
+checkout.
+
 - **ci-reconcile ran**: yes (ad-hoc interactive session, continuation of the same-day sweep above).
 - **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow recurrence-investigation scope, see
   08-18 entry for the last full check.
