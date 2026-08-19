@@ -154,6 +154,16 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
+      `deployment-service/configs/strategy/<archetype_lowercase>/` for the 27 archetypes T3 registered on
+      2026-08-19 (18 `VOL_*`, 5 granular `MARKET_MAKING_*`, 4 `PORTFOLIO_*`). strategy-service's
+      `clients_yaml_coverage.py` gate requires one or the other for every factory-registered archetype;
+      T3 cannot create them because `deployment-service` is a T5 repo. The exact 27 values are listed in
+      `strategy_service/engine/strategies/v2/clients_yaml_coverage.py`'s `PENDING_CROSS_REPO_WAIVER`
+      frozenset — T3 deletes each entry from that set as its file lands, so the set doubles as the
+      shrinking worklist. A waiver is the expected answer for most of them (they are seed-only slots with
+      no client allocation yet); a `clients.yaml` is only needed where a client actually subscribes.
+
 - [ ] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
       "re-run at the finer grain the moment T2 lands `instrument_type` / `data_type`" todo below is waiting on
       something that is already true in production, so the wait is the only thing left to remove. MEASURED
