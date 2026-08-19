@@ -258,11 +258,16 @@ derived state, not owning the grants themselves.
 - [ ] [DOC] P2. **Name the full MVP-readiness acceptance cohort explicitly.** This epic's readiness matrix is
       measured on "all venues with a code path" in the abstract; the concrete 2026-08-19 priority set to close
       first is: CeFi (Deribit, Hyperliquid, Binance, OKX, Bybit, Aster), Ethereum DeFi (AAVE V3, Lido, EtherFi),
-      sports (Betfair), Polymarket, Kalshi, IBKR, Morpho, Uniswap, CoW Swap, custody (Copper, CEFFU), plus a Solana
-      spot+perp basis-trade placeholder bridged to Ethereum (venue names pending an operator decision, tracked in
-      `execution_master.md`; bridge architecture owned by a separate parallel agent in `codex/`, not duplicated
-      here). Naming this cohort here gives the W1
-      dump's "which venues matter most right now" question a stated answer rather than an implicit "all 288".
+      sports (Betfair), Polymarket, Kalshi, IBKR, Morpho, Uniswap, CoW Swap, custody (Copper, CEFFU), plus the
+      Solana spot+perp basis-trade set — **venue names now resolved 2026-08-19**: Jupiter, Raydium, Pacifica, and
+      Jito (LST) per the real per-venue audit in `execution_master.md`'s "Solana venue set" section (Raydium and
+      Jito confirmed genuinely registered/live-capable, not just referenced; Pacifica already fully shipped).
+      **Drift is explicitly NOT part of this cohort pending resolution** — it was named in this session's operator
+      instruction but conflicts with a standing, twice-stated codex kill ruling (last reaffirmed 2026-08-14); see
+      the `[OPERATOR]` reconciliation todo in `execution_master.md`, don't add Drift here until that resolves. The
+      Solana↔Ethereum BRIDGE architecture itself remains a separate, still-open placeholder (owned by a parallel
+      agent in `codex/`, not duplicated here). Naming this cohort here gives the W1 dump's "which venues matter
+      most right now" question a stated answer rather than an implicit "all 288".
 
 ### Manual execution mode — first-class alongside automated (added 2026-08-19)
 
@@ -296,6 +301,17 @@ while still lacking a manual-live path, or vice versa, and today's matrix has no
 - [ ] [BACKEND] P1. **Cheap and safe coverage increase** — the download path must be both. Spot where possible, resume
       from measured progress, never replay from `START_DATE`, and never let a cost optimisation weaken a correctness
       check.
+- [ ] [DOC] P2. **Historical replay data is itself a readiness gate, not just a nice-to-have — general principle,
+      2026-08-19.** Operator's own framing (verbatim, re: CoW Swap): "we also need to have historical data for CoW
+      batch-live symmetry, right? Otherwise we can't replay the market data... Should we simulate how that would
+      have looked historically by having the data we would have got from that thing?" This is a direct instance of
+      this workspace's own hard invariant (CLAUDE.md "Live = batch (event-log spine)...
+      paper(W)==batch-rerun(W) epsilon=0"): a venue with a live execution adapter but no MTDS/MDPS historical
+      capture cannot be backtested or paper-simulated, so it can never actually reach `ready` on the W1 matrix's
+      paper/batch legs regardless of how complete its live leg looks. Pointer only, not a duplicate SSOT — the
+      concrete instance (CoW Swap) and the general-principle todo are tracked in `mtds_mdps_master.md`; this note
+      exists so "has historical replay data" is visible as a readiness dimension from this epic too, not just
+      discoverable by reading the MTDS epic.
 
 ## W3 — Granularity as a first-class dimension
 
