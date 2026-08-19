@@ -868,9 +868,25 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 8 — follow-up from Harsh's 2026-08-19 onboarding (not yet actioned)
 
-- [ ] [SCRIPT] P2. **Check whether Ikenna's stale `ikenna-tabN` rows (observed 2026-08-19, `GET /api/agents?kind=human`
+- [x] ✅ [SCRIPT] P2. **Check whether Ikenna's stale `ikenna-tabN` rows (observed 2026-08-19, `GET /api/agents?kind=human`
       showing tab3/4/5/6 all `status=stale`/`online=false`) were caused by the `ao-fleet-sync-tick.sh` GNU/BSD `stat`
       ordering bug fixed this session (`agent-orchestrator@1e80d160e0`)** — if his cron was installed before this fix
       and his machine is Linux, every tick since would have silently crashed before reaching the heartbeat call.
       Check his crontab log (`/tmp/ao-fleet-sync-9001.log`) for the failure signature, confirm the fix resolves it on
-      his machine too, not just Harsh's. Repo: agent-orchestrator.
+      his machine too, not just Harsh's. Repo: agent-orchestrator. **Resolved 2026-08-19 (same session)**: not the
+      `stat` bug — a SEPARATE, bigger bug found checking Harsh's own log: `ao-fleet-sync-tick.sh` called bare
+      `python3` for both `ao-usage-push.py` and `ao-liveness-heartbeat.py`. Under cron's real minimal PATH that
+      resolves to system Python (no `pydantic` installed), not this repo's `.venv` — so **every single scheduled
+      tick, for BOTH operators, since the cron was first installed, silently crashed** (`/tmp/ao-fleet-sync-9002.log`
+      full of `ModuleNotFoundError: No module named 'pydantic'`; confirmed by reproducing under
+      `env -i PATH=/usr/bin:/bin`). Fixed by pinning to `${SCRIPT_DIR}/../../.venv/bin/python3` explicitly (fallback
+      to bare `python3` only if the venv is missing) — verified under the same simulated cron-minimal-PATH before
+      shipping. Evidence: `agent-orchestrator@6e5c8ccc57`. Live-verified after shipping:
+      `ikenna-tab2/4/6` all now `status=active` with fresh timestamps — his fleet-sync is genuinely healthy now, not
+      just no-longer-crashing. **Separately confirmed, not a bug**: `harsh-tabN` rows still don't appear for THIS
+      session specifically — `resolve_tab_number()` only matches a `-tabs-(\d+)-` cwd-slug segment, and this
+      session's own transcript lives under the bare `-active-unified-trading-system-repos` project slug (no
+      `.tabs/N` segment), unlike Ikenna's, whose active tabs are each opened with `.tabs/N` as their own VS Code
+      workspace root. Per-tab visibility is working as designed; it requires each window to actually be opened at
+      its own `.tabs/N` folder (this workspace's own existing "an interactive session IS slot N" rule), which at
+      least this session isn't. Not fixed here — flagged to Harsh directly, his call how to restructure his windows.
