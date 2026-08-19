@@ -256,7 +256,13 @@ where it writes.
 | GLM 5-Turbo | `context-scout` audit (Easy) | 0 | 38 | 37 (3) | 163,346 / 18,998 | 4,439,424 | 0.30% (corrected, real window 200K) | 10.0 min | PASS | 3 tool_errors recorded, non-blocking (task still completed clean). |
 | GLM 5-Turbo | `death_class` teardown-signal extend (Easy #2) | 0 | 59 | 58 (10) | 270,291 / 20,931 | 7,670,784 | 2.50% (corrected, real window 200K) | 14.3 min | PASS | 10 tool_errors recorded (highest error count of any attempt so far), still completed clean — worth checking during Gate-2 review whether these reflect real friction with this task's shape. |
 
-_(remaining rows populated as each attempt completes)_
+| GLM 5.2 | `death_class` teardown-signal extend (Easy #2) | 1 | 90 | 88 (0) | 464,142 / 250,313 | 12,423,680 | 0.59% (real 200K window) | 32.8 min | INFRA-INTERRUPTED — 90 real turns, $6.30 spent, before Z.ai's 5-hour Coding Plan usage limit hit (`[1308] Usage limit reached for 5 hour`, resets 2026-08-20 00:22:34 UTC) | Substantial real work done, not a clean pass/fail — excluded from Gate-1/2 scoring like the Gemini quota-interrupted rows above. |
+| GLM 5.2 | Tasks 3-6 (peak-context-pct, pool-exhaustion-decouple, check-active-refs-baseline, sequential-ordering) | 1 (×4) | 1 (×4) | — | $0 (×4) | — | ~2-3s each | INFRA-BLOCKED — same 5-hour usage limit, already exhausted by task 2, every subsequent request rejected instantly | Zero usable data for these 4. **The 5-hour window is a SHARED account-level quota, not per-model** — confirmed: GLM 5-Turbo (running concurrently on the SAME account) hit the identical error with the identical reset timestamp on its own task 3. Running both GLM models concurrently split one shared budget rather than getting two independent ones. |
+| GLM 5-Turbo | `context-scout` audit (Easy) | 0 | 38 | 37 (3) | 163,346 / 18,998 | 4,439,424 | 0.30% (real 200K window) | 10.0 min | PASS | 3 tool_errors recorded, non-blocking. |
+| GLM 5-Turbo | `death_class` teardown-signal extend (Easy #2) | 0 | 59 | 58 (10) | 270,291 / 20,931 | 7,670,784 | 2.50% (real 200K window) | 14.3 min | PASS | 10 tool_errors recorded (highest of any attempt so far), still completed clean. |
+| GLM 5-Turbo | Capture peak `context_used_pct` (Medium #1) | 1 | 81 | 80 (13) | 274,191 / 23,877 | 11,947,264 | 0.54% | 21.1 min | INFRA-INTERRUPTED — same shared 5-hour quota, $4.40 spent on real work first | Excluded from scoring, same as GLM 5.2's task 2. |
+
+_(GLM 5-Turbo tasks 4-6 still resolving as the shared quota window; likely instant-INFRA-BLOCKED like GLM 5.2's — updated once confirmed. Remaining rows populated as each attempt completes.)_
 
 ## Progress Log
 
@@ -583,3 +589,15 @@ _(remaining rows populated as each attempt completes)_
   the 6 queued tasks instead of 30s spacing would have avoided most of the washout, matching this plan's own earlier
   conclusion. Not opening a `GeminiQuotaPoller` todo unilaterally — flagging as a real, buildable gap for the
   operator to decide is worth tracking, given this bake-off is close to done.
+
+- **2026-08-19 (later) — GLM lane result: both models produced real signal before hitting a SHARED 5-hour
+  account-level usage quota, not a per-model one.** GLM 5.2's full lane: 1 clean PASS (task 1), 1
+  INFRA-INTERRUPTED with substantial real work (task 2, 90 turns/$6.30 before the cutoff), 4 instant
+  INFRA-BLOCKED. GLM 5-Turbo: 2 clean PASS (tasks 1-2), 1 INFRA-INTERRUPTED (task 3, 81 turns/$4.40), tasks 4-6
+  still resolving but expected to be instant-blocked like GLM 5.2's tail. **Confirmed the quota is shared across
+  BOTH models, not independent per-model budgets**: GLM 5-Turbo's task 3 hit the identical `[1308] Usage limit
+  reached for 5 hour` error with the EXACT same reset timestamp (2026-08-20 00:22:34 UTC) as GLM 5.2's — running
+  both models concurrently split one account's budget rather than getting two separate ones, the same lesson as
+  the Gemini free-tier concurrency finding above. Real value delivered regardless: this is the fleet's first-ever
+  confirmed real tool-use dispatch through GLM's native endpoint, with 3 full clean completions and 2 substantial
+  partial ones as real evidence, not just a smoke test.
