@@ -76,3 +76,6 @@ source: >-
       referrer-path fixup for every `related:`/citation pointing at either.
 
 ## Progress Log
+
+- **context-scout 2026-08-19**: verified the pre-existing context_scope (3 entries) — all paths confirmed resolving
+  on disk, still the correct gated-parent + archival-discipline reading list; no change needed.

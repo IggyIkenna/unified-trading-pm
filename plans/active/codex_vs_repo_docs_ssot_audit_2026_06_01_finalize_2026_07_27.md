@@ -82,3 +82,4 @@ context_scope:
   code-free (dispatch/archival coordination only), all entries still resolve.
 - **context-scout 2026-08-07**: re-confirmed context_scope (3 entries) unchanged -- still gated on the parent plan (3
   open todos there), all entries still resolve.
+- **context-scout 2026-08-19**: re-confirmed context_scope (3 entries) unchanged -- still gated on the parent plan, all entries still resolve.

@@ -42,6 +42,13 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    /plans/active/ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md,
+    agent-orchestrator/server/tmux_pruner.py,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md,
+  ]
 ---
 
 # Scheduled-job reaped-stale rate — 36% fleet-wide, not evenly distributed
@@ -92,3 +99,4 @@ just that this doc's numbers should not be read as evidence for the other doc's 
       (repo: agent-orchestrator)
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:92319e5e5f802a59]: KEEP-NA, valid (conflict-parked) — both open todos (per-job reaped-stale-rate measurement + root-cause) read as bounded in isolation, but Track B of `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` already claims this exact ground (per-job reaped-stale/timeout/error measurement across all 7 non-review-gate scheduled jobs) under an explicit 2026-08-17 operator ruling that Track B 'requires real judgment'. Conflict-check: NOT cleared — parked rather than reclassified or extracted, per the shared conflict-check protocol's verbatim-overlap rule (do not draft a competing todo, do not silently prefer either side). Flagging for an explicit operator ruling on whether this doc's narrower, already-partially-measured claim (3 jobs done this session) is exempt from Track B's broader NA ruling, or should simply feed its results into Track B when that audit runs.
+- **context-scout 2026-08-19**: populated context_scope (4 entries).

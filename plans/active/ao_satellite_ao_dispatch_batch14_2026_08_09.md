@@ -281,3 +281,5 @@ A 1-item batch is sanctioned by `task_template.md` §4 ("Fewer is fine; group RE
 - **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added the finalize plan and
   `deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md` (the issue doc carrying the durable root cause + fix,
   repeatedly cited across this doc's own re-derivation history).
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (4 entries), still accurate — dispatch-batch
+  coordinator doc, sole todo CANCELLED-SUPERSEDED, no source path needed.

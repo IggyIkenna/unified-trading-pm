@@ -40,8 +40,9 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
 source: >-
   Paired finalize for cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md, authored the same
@@ -59,3 +60,6 @@ source: >-
 
 - **2026-08-19**: drafted alongside `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md`, na-eligibility-audit
   cross-cutting tranche (dispatch agt-dc3dbe, slot 30).
+- **context-scout 2026-08-19**: populated context_scope (3 entries) — the gated parent batch plus the archival-
+  discipline and commit-push-flip codex SSOTs; this finalize doc's single todo is pure citation-verification plus
+  archival, needing no source doc beyond its gated parent.

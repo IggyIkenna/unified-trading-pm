@@ -128,3 +128,5 @@ source: >-
   in place), added the gated parent batch plan as a 4th entry — refreshed (4 entries).
 - **context-scout 2026-08-03**: re-verified context_scope (4 entries) — still the correct archival SSOT + batch pointer;
   no change needed. Gated finalize doc, no source path.
+- **context-scout 2026-08-19**: re-verified context_scope (4 entries) — all paths confirmed resolving on disk, still
+  the correct archival SSOT + batch pointer; no change needed.

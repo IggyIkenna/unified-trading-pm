@@ -43,6 +43,14 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/scheduled_dispatch_pause.py,
+    agent-orchestrator/server/state_store/scheduled_jobs.py,
+    agent-orchestrator/server/plan_health.py,
+    cursor-configs/skills/ao-watchdog/SKILL.md,
+    /plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18_finalize_2026_08_19.md,
+  ]
 ---
 
 # Recorded reasons for the three currently-paused scheduled-dispatch modes
@@ -155,3 +163,4 @@ itself "done," so the next natural tick after unpause dispatches normally with n
       untouched. Not archiving the doc/section since `ag_closeout`/`cefi_mtds_smoke` and follow-up 1
       are still open.
 - **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. 2 of 3 follow-up items already shipped same-day with evidence; sole remaining todo (add reason + paused_at field, surface on API + dashboard) is a scoped, deterministic schema/code change. Conflict-check clear: grepped plans/active/*.md for `scheduled_dispatch_pause` — zero hits outside this doc. Companion gated finalize: `ao_scheduled_dispatch_pause_reasons_2026_08_18_finalize_2026_08_19.md`.
+- **context-scout 2026-08-19**: populated context_scope (5 entries).

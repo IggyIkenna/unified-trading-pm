@@ -72,6 +72,14 @@ depends_on: []
 locked_by:
 locked_since:
 resolved_by:
+context_scope:
+  [
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
+    agents/main.md,
+    agent-orchestrator/server/server.py,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
+    /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
+  ]
 ---
 
 # Account-failover monitor ignores `overage_status` — recurring slot-2 kills fleet-wide
@@ -223,3 +231,4 @@ either way.
   proposes extending.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:cf5ec6b8ba855a80]: RECLASSIFY (per-todo split) — 3 of 4 remaining todos (add the 5th failover trigger, investigate rotation-pool exclusion, classify the failure shape) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 7-9. Doc stays NA for the sole remaining item ([OPERATOR] immediate remediation decision: top up vs. accept unusable until weekly reset 2026-08-23).
+- **context-scout 2026-08-19**: populated context_scope (5 entries).

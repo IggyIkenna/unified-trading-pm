@@ -99,10 +99,10 @@ their source doc archived since original selection 2026-08-18 — swapped, see t
 |---|---|---|
 | Easy | Audit `ag-closeout-auditor` timer (sharding, run time, review-gate, escalation trace) | `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` |
 | Easy | Audit `docs-reconcile` timer (same 4 checks) — *swapped in 2026-08-19, replaces the now-shipped `ao_watchdog.md` wrapper task* | same doc |
-| Medium | Join per-task compaction occurrence onto `TaskUsageRow` | `ao_satellite_ao_dispatch_batch24_2026_08_18.md` |
+| Medium | Audit `escalation-queue-reconciler` timer (4 checks + cross-check whether it would've caught the plan_reconciler PR-backlog problem itself) | `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` — *re-swapped 2026-08-19 (2nd pass), replaces "join per-task compaction onto TaskUsageRow", which shipped `agent-orchestrator@4a9cf6258` between plan authoring and dispatch* |
 | Medium | Audit other repos for the same unscoped-tmux-fixture test anti-pattern | `issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` — *swapped in 2026-08-19, replaces `DirtyStateResolution.COMMIT_AND_PUSH` fix whose source doc is now fully archived* |
 | Hard | Capture which repo(s) a task touched, from real commit/push evidence (no existing mechanism to mirror) | `ao_satellite_ao_dispatch_batch24_2026_08_18.md` — *shared with Codex/Luna, see below* |
-| Hard | Build `GET /api/backlog/graph` + hand-rolled-SVG dependency-graph dashboard view (no d3/mermaid allowed) | `issues/ao_residuals_after_dispatch_hardening_2026_07_17.md` |
+| Hard | Audit `na-eligibility-auditor` timer (4 checks); if a review-gate or escalation-trace gap is found, design AND implement the fix, not just flag it | `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` — *re-swapped 2026-08-19 (2nd pass), replaces the `GET /api/backlog/graph` dashboard task, which shipped `agent-orchestrator@003aafb608` between plan authoring and dispatch; scope widened from plain-audit to audit+fix to keep it Hard-shaped like this task's siblings* |
 
 ### GLM lane (models 3 + 4, run independently — 12 attempts total)
 
@@ -197,17 +197,30 @@ not yet built anywhere) — approximated as peak reported token usage ÷ that mo
 approximation, not a true AO-grade measurement. No attempt's diff auto-merges — Gate 1/2 scoring + the shared-task
 diff comparison decide what (if anything) actually ships via normal `quickmerge.sh`.
 
+**Usage-stats polling (operator requirement, 2026-08-19)**: every attempt runs with a companion poller at ≤60s
+cadence for the attempt's full duration — see the `[INFRA] P1` poller todo below for exactly what it captures and
+where it writes.
+
 ## Todos
 
-- [ ] [OPERATOR] P0. Temporarily enable `account_status` for exactly the accounts this bake-off needs (1 Gemini
-      project pair per model variant tested, the GLM Coding Plan account, 1 NVIDIA/Gemma account, the Codex/Luna
-      account) — every one is currently paused per standing 2026-08-16 operator instruction ("fully shipped ready
-      to use but on pause mode"). Re-disable each account once its 6 attempts are recorded. Done when: all 6 models'
-      accounts show `account_status: enabled` for the duration of their own run only.
+- [x] [OPERATOR] P0. ✅ Operator go-ahead given 2026-08-19 ("yes bro, go ahead and use whatever account you have to
+      use and creds you need. test all these 6 models properly") — resolves the policy question above: the
+      operator's explicit answer supersedes the 2026-08-16 pause instruction for the scope of this bake-off.
+      `account_status` itself needs no change (confirmed AO-internal-only, doesn't gate direct dispatch). Dispatch
+      is unblocked.
 - [ ] [INFRA] P1. Stand up the isolated-branch-per-attempt dispatch mechanism described in Mechanics above (36
       branches off `live-defi-rollout`, one `claude` subprocess per attempt, env pointed at the right
       proxy/endpoint). Done when: one real end-to-end attempt (any model, any task) produces an isolated branch
       with a real diff and no collision with the base branch.
+- [ ] [INFRA] P1. Build a per-attempt usage-stats poller, cadence ≤60s (operator requirement, 2026-08-19), capturing:
+      (a) the running `claude -p` session's own transcript jsonl (`~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`)
+      — cumulative input/output/cache tokens, turn count, tool-call count, approx context-fill%; (b) each provider
+      account's own usage/quota surface where one exists (litellm proxy spend log for Gemini/Gemma, GLM/z.ai account
+      usage, Codex/Luna account usage) — message count and/or % of plan/quota consumed, stated as "not available" per
+      account if the provider exposes none. Snapshots appended to a per-attempt poll-log file referenced from the
+      Results table. Done when: one real attempt (paired with the INFRA todo above) has a complete poll-log from
+      launch to exit at ≤60s cadence, covering both the jsonl-transcript stats and whatever account-usage surface
+      exists for that provider.
 - [ ] [BACKEND] P2. Run Gemini 3.5 Flash-Lite against all 6 Gemini-lane tasks; record Gate 1/2 scores + tokens/
       context-fill/turns/time per attempt. Done when: 6 rows exist in the Results table below (or a stated
       pass/fail/blocked reason per attempt).
@@ -227,7 +240,19 @@ diff comparison decide what (if anything) actually ships via normal `quickmerge.
 
 ## Results
 
-_(populated as each model's run completes)_
+| Model | Task (tier) | Exit | Turns | Tool calls (err) | Cumulative in/out tokens | Cache-read tokens | Peak approx context-fill% | Wall-clock | Gate 1 | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Gemini 3.5-flash-lite | `ag-closeout-auditor` audit (Easy) | 0 | 83 | 29 (4) | 730,196 / 11,248 | 2,607,683 | 1.61% | 10.1 min | PASS (clean tree, real citations, committed not pushed) | 4/4 checks answered with specific file/line + log citations (sharding via `MAX_CONCURRENT_TRANCHES=4`, runtime range 6.5-63.9 min measured, no PR/review-branch gate found, a real 2026-08-16 escalation traced through to a produced batch plan). Full poll history: `usage_poll.jsonl` under this attempt's out-dir. |
+| Gemini 3.5-flash-lite | tmux-fixture anti-pattern audit (Medium) | 0 | 67 | 26 (1) | 475,123 / 13,869 | 3,355,399 | 0.56% | 11.3 min | PASS (clean tree, committed not pushed) | 1 real tool_error recorded (not a Gate-1 blocker — recovered same task). Not yet content-reviewed for depth (that's a separate Gate-2 pass, tracked as pending). |
+| Gemini 3.5-flash-lite | `docs-reconcile` audit (Easy #2) | 1 | 2 | — | — | — | — | ~1 min | INFRA-BLOCKED (Gemini free-tier `RESOURCE_EXHAUSTED`, $0.25 spent, not a real result) | Excluded — quota, not model quality. |
+| Gemini 3.5-flash-lite | `escalation-queue-reconciler` audit+gap-check (Medium #1) | 1 | 13 | — | — | — | — | — | INFRA-BLOCKED (Gemini free-tier `RESOURCE_EXHAUSTED`, $1.31 spent, not a real result) | Excluded — quota, not model quality. |
+| Gemini 3.5-flash-lite | repo-touched-capture (Hard #1) | 1 | 56 | 48 (3) | 1,016,388 / 27,506 | 7,202,385 | 0.74% | 26.3 min | INFRA-INTERRUPTED (quota-driven 403 after substantial real work, $6.45 spent — NOT a clean fail, NOT a clean pass) | 56 real turns / 48 tool calls before hitting the same `RESOURCE_EXHAUSTED`-class 403. Working tree confirmed clean afterward (`git status --porcelain` empty) — no lost/uncommitted work, the model simply never reached its own commit step. Excluded from Gate-1/2 scoring (incomplete), but the depth reached is itself a useful signal this model can sustain long tool-use chains before failing. |
+| Gemini 3.5-flash-lite | `na-eligibility-auditor` audit+fix (Hard #2) | 1 | 42 | 39 (5) | 696,473 / 21,680 | 4,258,544 | 2.4% | 15.5 min | INFRA-INTERRUPTED (same quota-driven 403, $4.13 spent) | 42 real turns before failing identically to Hard #1. Same clean-tree confirmation, same exclusion from scoring. |
+| **Gemini 3.7-flash** | **all 6 assigned tasks** | 1 (×6) | 9,1,1,1,1,1 | — | — | — | — | — | **INFRA-BLOCKED, entire lane** — 20 req/min free-tier quota exhausted on task 1 ($0.74 spent), never recovered before tasks 2-6's turn (30s spacing too short) | Zero usable data for this model this run. Re-run needed (ideally paced/serialized or on a higher quota tier) before drawing any conclusion about Gemini 3.7-flash's real capability. |
+| **DiffusionGemma 26B** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~5s each | **INFRA-BLOCKED, entire lane** — NVIDIA NIM `InternalServerError`(500)/`BadGatewayError`(502) on every attempt; a simple single-turn smoke test against the SAME endpoint succeeded (200 OK) immediately after, isolating the failure to the full real Claude Code request shape (real CLAUDE.md system prompt + full multi-tool schema), not a dead endpoint | Zero usable data. Root cause not yet pinned to a specific payload/tool-count limit — flagged, not fixed. Re-run needs that fixed first. |
+| **Codex/Luna** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~0.1s each | **INFRA-BLOCKED, entire lane** — bridge rejects any `system`-role message (HTTP 400), root-caused in `codex_luna_flex_bridge_2026_08_14.md` | Zero usable data. Needs a real bridge-code fix, not a config/retry issue. |
+
+_(remaining rows populated as each attempt completes)_
 
 ## Progress Log
 
@@ -257,3 +282,164 @@ _(populated as each model's run completes)_
   Asked the operator directly whether their session-long cooperation (fetching keys, approving the proxy/tests) already
   counts as that go-ahead, or whether they want the todo kept as an explicit checkpoint before any of the 36 attempts
   start. **Not yet resolved — do not start dispatching any attempt until this is answered.**
+
+- **2026-08-19 (later) — operator go-ahead received; dispatch mechanism + poller built and proven; 2 more tasks
+  caught stale on a SECOND re-verification pass; GLM/Codex lanes blocked/at-risk.** Operator gave explicit
+  go-ahead + a new requirement: poll every account's usage stats at <=60s cadence during each attempt, capturing
+  context/jsonl/token stats. Built `unified-trading-pm/scripts/dev/bakeoff/{run-attempt.sh,usage-poll.sh}`
+  (isolated-branch dispatch + a companion poller reading the running `claude -p` session's own transcript jsonl via
+  a fixed `--session-id`). **First bug caught by actually running it**: Claude Code's project-dir naming is
+  per-EXACT-cwd (e.g. `-active-...-tabs-24-agent-orchestrator`), not one shared dir per top-level workspace as
+  assumed — fixed by deriving the encoded path from the real repo dir instead of hardcoding it. Proven end-to-end
+  on a real attempt (Gemini 3.5-flash-lite, slot 24, `ag-closeout-auditor` audit task): real poll data captured
+  (23 turns, 7 tool_use calls, 0 tool errors, ~230K cumulative input tokens at the ~90s mark, 1.07% approx
+  context-fill) — both `[INFRA] P1` todos' "done when" criteria met.
+  **Re-verifying the rest of the matrix before dispatching it turned up 2 more already-shipped tasks** (same
+  failure class as the first re-verification pass): Gemini Medium#1 ("join per-task compaction onto
+  `TaskUsageRow`") shipped `agent-orchestrator@4a9cf6258`, and Gemini Hard#2 (`GET /api/backlog/graph` dashboard)
+  shipped `agent-orchestrator@003aafb608` — both landed AFTER this plan was authored a few hours ago and BEFORE
+  dispatch. Swapped for `escalation-queue-reconciler` audit (Medium) and `na-eligibility-auditor` audit-plus-fix
+  (Hard) — task tables above updated. **Lesson**: this fleet ships fast enough that even same-session task
+  selections can go stale within hours — a real pre-dispatch check immediately before each attempt launches
+  (not just once at plan-authoring time) would be more robust than a manual sweep; noted as a possible follow-up,
+  not built this session (time-boxed).
+  **GLM lane blocked**: fetching the `glm-coding-plan-api-key` GSM secret failed — `ikenna@odum-research.com`'s
+  gcloud OAuth session now needs interactive reauthentication ("Reauthentication failed: cannot prompt during
+  non-interactive execution"), despite this same identity successfully fetching 9 other secrets earlier in the
+  session. Needs the operator to run `gcloud auth login --account=ikenna@odum-research.com` interactively — cannot
+  self-resolve. GLM lane (slots 26/27) on hold until then.
+  **Codex/Luna lane at risk, not yet attempted**: `codex_bridge_server.py`'s own module docstring states the
+  tool-use path "has not yet been proven against the actual `claude` CLI end to end" and its `openai_codex` SDK
+  import is deliberately lazy/optional ("this not-yet-deployed bridge process") — real risk this lane simply
+  doesn't work yet. `~/.codex/auth.json` confirmed present. Have not yet attempted starting the bridge server
+  locally on :8769 for slot 29 — next action for that lane.
+  **Dispatched**: slot 24 (Gemini 3.5-flash-lite) running task 1/6 (`ag-closeout-auditor` audit, proof attempt,
+  poller confirmed live at ~7min elapsed); slot 25 (Gemini 3.7-flash) launched against the full corrected 6-task
+  queue; slot 28 (DiffusionGemma 26B) launched against the full 6-task Gemma queue. All via
+  `scripts/dev/bakeoff/run-lane.sh` (sequential per-slot queue runner over `run-attempt.sh`), nohup'd, independent
+  of this chat session continuing. Slot 24's remaining 5 tasks will be launched once its task 1 process exits (its
+  own `run-attempt.sh` invocation is what I'm waiting on for a completion notification — cannot start task 2 on the
+  same checkout while task 1's subprocess is still mid-edit on task 1's branch). GLM (slots 26/27) not yet
+  dispatched — see blocker above, unchanged.
+
+- **2026-08-19 (later) — Codex/Luna lane proven + dispatched; task 1 (slot 24) PASSED with full poll data; a
+  pre-existing unrelated frontmatter violation blocks shipping the bake-off scripts themselves.**
+  Task 1 (Gemini 3.5-flash-lite, `ag-closeout-auditor` audit) finished clean: exit 0, real citations for all 4
+  checks, committed locally not pushed, 10.1 min wall-clock, 83 turns, 730K cumulative input tokens — full row in
+  Results table above. Slot 24's remaining 5 tasks launched immediately after.
+  **Codex/Luna de-risked**: its own code warned the tool-use path was unproven; `uv sync` in slot 1's
+  agent-orchestrator pulled the already-declared-but-not-installed `openai-codex` dependency, the bridge server
+  started clean on :8769, and a real tool_use smoke test (same shape as yesterday's Gemini/Kimi/Gemma tests)
+  returned a genuine `tool_use` block, `stop_reason: "tool_use"` — PASS. Codex/Luna lane (slot 29) dispatched
+  against its full 6-task queue.
+  **Could not ship `scripts/dev/bakeoff/{run-attempt,usage-poll,run-lane}.sh` via quickmerge yet**: the tree-wide
+  re-gate step failed on `plans/active/issues/manifest_hygiene_red_all_2026_08_19.md` — a PRE-EXISTING, unrelated
+  auto-filed doc (from `manifest_hygiene_daily.py`) genuinely missing most required frontmatter fields (no
+  `doc_type`/`status`/`nature`/`asset_group`/`tags` at all in real HEAD). Attempted a mechanical fix, but it
+  cascaded into a further `check_ag_closeout_linkage` requirement (needs a `related:` link to the correct AG's
+  consolidated closeout plan) that needs real triage judgment I don't have context for — reverted the attempt
+  cleanly (`git checkout HEAD --`, confirmed clean) rather than leave a half-fixed foreign doc. **Flagging for the
+  operator**: this doc is a RED manifest-hygiene finding across 5 asset groups (cefi/defi/prediction/sports/tradfi)
+  that's also sitting with broken frontmatter — worth someone's attention independent of this bake-off. The
+  bake-off scripts themselves stay uncommitted in slot 1 for now (fully described in this Progress Log, reproducible
+  from the text above if lost) — will retry shipping once that foreign doc is fixed by whoever owns it, or route
+  around it if the tree unblocks another way.
+
+- **2026-08-19 (later, same session) — operator go-ahead received, dispatch unblocked; new polling requirement
+  added.** Operator: "yes bro, go ahead and use whatever account you have to use and creds you need. test all these
+  6 models properly and make sure that we are also checking the usage stats of each of those accounts every one
+  minute when the models are doing some tasks on them ... capture all the context related stats and all the jsonl
+  related stats and all the stats that we can get frequently, 30s or 1 min at the most." `[OPERATOR] P0` flipped
+  done. New `[INFRA] P1` poller todo added (spec above); building it now, proving it end-to-end on the first real
+  attempt alongside the existing isolated-branch-mechanism todo, before scaling to the remaining 35.
+
+- **2026-08-19 (later) — Codex/Luna lane's real dispatch immediately exposed the exact gap its own plan already
+  flagged as open: HARD FAIL, not a model-quality result.** All 6 tasks in slot 29's queue ran and exited within
+  seconds each (0 real turns, 0 tokens) — every single one hit an identical `API Error: 400` from the bridge:
+  `AnthropicMessagesRequest` validation rejects a `system`-role message (`codex_bridge_server.py`'s
+  `AnthropicMessage.role: Literal["user", "assistant"]` has no `"system"` case). This is
+  `codex_luna_flex_bridge_2026_08_14.md`'s own still-open `[INFRA] P0. Translate system-prompt injection correctly`
+  todo, now sharpened to a precise root cause and written back there (its own "smoke-test gate DONE" claim likely
+  didn't exercise this workspace's real, full CLAUDE.md as system content the way a genuine dispatched attempt
+  does — flagged there for the bridge's own owner to double-check). **Codex/Luna lane is INFRA-BLOCKED, not a real
+  Gate-1 result** — all 6 attempts excluded from the Results table below (would misrepresent Codex/Luna's actual
+  capability if scored as 6 fails; the model never got a chance to attempt any task). Re-run once the bridge fix
+  lands; no further action on this lane from the bake-off side until then.
+
+- **2026-08-19 (later) — Gemini/Gemma free-tier quota wall hit, real $ already spent on failed attempts; a
+  paid-tier key exists but is NOT wired into the proxy nor spend-capped — flagging rather than switching myself.**
+  Running slots 24+25 concurrently (both hitting Gemini's API) surfaced real free-tier ceilings that are too low
+  for a full multi-turn agentic coding task: gemini-3.7-flash slot 25 task 1 hit `RESOURCE_EXHAUSTED` (20
+  requests/min free-tier limit) after 9 turns, real cost **$0.74** incurred before failing; gemini-3.5-flash-lite
+  slot 24 task 3 hit the free-tier 250K-input-tokens/min cap after 13 turns, **$1.31** incurred. Both are genuine
+  infra/quota failures, not real Gate-1 results — do not read either as "the model failed the task." Separately,
+  diffusiongemma-26b slot 28 task 2 hit a transient NVIDIA NIM 500 (0 turns, $0 — likely just retry-worthy, not a
+  quota issue).
+  **A real fix already exists but is NOT applied**: `grok_gemini_translation_proxy_2026_08_14.md` records an
+  operator-approved decision (`[x] [OPERATOR] P1`) to add project `371216509644` (confirmed **Paid Tier 3**, vastly
+  higher ceilings) as a 4th Gemini project — its key (`GEMINI_API_KEY_PROJ5`) is already fetched into
+  `~/.claude-accounts/litellm-proxy.env` from yesterday, but `config/litellm/grok_gemini_proxy.yaml` only wires up
+  proj1/proj2/proj3 (all free-tier) — proj5 was never added to the actual proxy config, confirmed by reading the
+  file directly. **Deliberately NOT wiring it in myself right now**: switching to a paid, real-money-per-token tier
+  for the remaining ~13 free-tier Gemini/Gemma attempts is a real financial-exposure decision, and the source plan
+  itself flags an unresolved step — setting a spend-limit on project 371216509644 via the AI Studio console (a
+  human/browser action, line ~443 of that plan) — with no evidence that's actually been done. Running the paid tier
+  unmetered is the wrong call to make unilaterally while the operator is away, even under the broad go-ahead
+  already given for this bake-off. **Letting the already-launched free-tier queues run to completion as-is** (the
+  remaining attempts are bounded, worst case another ~$10-15 if every remaining Gemini/Gemma task also hits the
+  wall) rather than intervening mid-flight and risking a broken checkout. **Recommendation for the operator**:
+  confirm a spend cap is set on project 371216509644, then wire `proj5` into the proxy yaml (mirrors the existing
+  proj1-3 block exactly) and re-run whichever Gemini/Gemma tasks failed on quota through the paid tier for a real
+  result.
+
+- **2026-08-19 (later) — slot 25 (Gemini 3.7-flash) is a COMPLETE quota washout: 6/6 tasks failed, zero real
+  signal.** Confirmed via each attempt's own `result.json`: task 1 ran 9 real turns before `RESOURCE_EXHAUSTED`
+  ($0.74 spent), tasks 2-6 each failed on their VERY FIRST request (1 turn, $0 each) — the 20-req/min free-tier
+  quota never had time to recover in the 30s between queued tasks. **Gemini 3.7-flash produced literally zero
+  usable Gate-1/Gate-2 data this run** — every row would be quota-noise, not model signal. Excluded from the
+  Results table entirely (same treatment as Codex/Luna) pending a paid-tier re-run.
+  **Gemini 3.5-flash-lite (slot 24) faring better** (larger free-tier ceiling: 250K tokens/min vs. 3.7-flash's 20
+  req/min): 2 real completions so far (task 1 PASS already in Results table; task 4 tmux-fixture-audit also
+  completed clean, `is_error:false`, 27 turns, $3.05 — pending a Results row once reviewed), 2 quota fails (tasks
+  2 and 3), task 5 still running.
+  **Gemma (slot 28, DiffusionGemma 26B) hitting a DIFFERENT wall — NVIDIA NIM `InternalServerError` on every real
+  attempt so far (4/4), but NOT a dead endpoint**: a direct simple single-turn smoke test against the same
+  `diffusiongemma-26b-a4b-it` endpoint just now returned a clean 200 — the failure is specific to the FULL real
+  Claude Code request shape (real CLAUDE.md system prompt + the full multi-tool schema array Claude Code sends),
+  not the model being down. Likely a payload-size or tool-schema-count limit on this free-hosted NIM endpoint, not
+  yet root-caused precisely — flagging the pattern, not yet diagnosed to the same depth as the Codex bug. 2 tasks
+  remain; if they fail identically, this lane's results need the same "infra-blocked, not a real result" treatment
+  once confirmed.
+
+- **2026-08-19 (later) — Gemma lane confirmed 6/6 complete washout (same pattern, now proven not a one-off);
+  slot 24 task 4 (tmux-fixture audit) landed a second real PASS.** All 6 diffusiongemma-26b attempts failed
+  identically (1 turn, $0 each) — 4 with `InternalServerError` (500), 2 with `BadGatewayError` (502), both
+  "server-side issue, usually temporary" per the error text itself. Same lane treatment as Codex/Luna: zero usable
+  data, excluded from real results, root cause not yet pinned down (flagged for a future pass, not this session).
+  Slot 24 (gemini-3.5-flash-lite) task 4 (tmux-fixture-audit, Medium) finished clean: 27 turns, 1 tool_error
+  (non-blocking), $3.05, 11.3 min, `is_error:false` — second real PASS for this model. Full Results table above
+  now reflects every attempt's true status (real pass/fail vs. infra-blocked) rather than conflating them.
+  **Running total so far**: only Gemini 3.5-flash-lite has produced any real signal this run (2 PASS, 2
+  quota-blocked, 2 still in flight) — every other model's lane is either 100% infra-blocked or still pending. This
+  bake-off's infra had more real bugs waiting in it than expected; that is itself the most useful thing found
+  today, arguably more valuable than the model-quality data it was designed to produce.
+
+- **2026-08-19 (later) — slot 24 (Gemini 3.5-flash-lite) finished all 6 tasks; a real `run-attempt.sh` bug found
+  and fixed; every unblocked lane is now COMPLETE.** Tasks 5 and 6 (both Hard) each did substantial REAL work — 56
+  and 42 real turns, $6.45 and $4.13 spent — before hitting the same quota-driven 403 that killed tasks 2/3.
+  Confirmed via a direct `git status --porcelain` on slot 24's live checkout that the tree is clean (no
+  lost/uncommitted work — the model simply never reached its own `git commit` step before failing), so nothing was
+  lost, but neither task produced a scoreable Gate-1 result. **Final gemini-3.5-flash-lite tally: 2 clean PASS
+  (Easy #1, Medium #2), 4 quota-interrupted at varying depth (2 instant, 2 after 40-60 real turns)** — every row
+  now in the Results table above.
+  **Real infra bug found while investigating why tasks 5/6 had no `exit_code.txt`/`finished_at.txt`/
+  `git_status.txt`**: `run-attempt.sh` ran under `set -euo pipefail`, and `wait "$CLAUDE_PID"` returning the
+  `claude` process's own non-zero exit code triggered errexit immediately — skipping every postprocessing line
+  after it (including the very evidence needed to diagnose the failure) on ANY attempt that ends in error. Fixed
+  (`set +e` around just the `wait`, restore `set -e` after) — applies to every future attempt including once GLM
+  unblocks. Not yet re-shipped (blocked on the same pre-existing foreign-doc quickmerge issue noted above).
+  **Session status: all 4 unblocked lanes (Gemini 3.5-flash-lite, Gemini 3.7-flash, DiffusionGemma 26B, Codex/Luna)
+  have now run their full 6-task queues to completion.** Only GLM (slots 26/27) remains fully undispatched, still
+  blocked on the operator's gcloud reauth. Nothing further to auto-dispatch until either GLM unblocks or a decision
+  is made on the paid-tier Gemini re-run — pausing autonomous work on this plan here pending operator input on
+  both open items.

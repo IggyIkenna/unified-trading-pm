@@ -20,7 +20,7 @@ related:
     /codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md,
   ]
 created: "2026-08-18"
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -39,9 +39,11 @@ superseded_by:
 source:
 context_scope:
   [
+    agent-orchestrator/server/codex_mcp_proxy.py,
     agent-orchestrator/server/codex_bridge_server.py,
-    agent-orchestrator/.venv/lib/python3.13/site-packages/openai_codex,
-    /codex/15-runbooks/agent-orchestrator-local-pilot-isolation-runbook.md,
+    agent-orchestrator/server/routes/accounts.py,
+    /plans/active/codex_luna_flex_bridge_2026_08_14.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 ---
 
@@ -184,11 +186,14 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
       `HTTP 200, stop_reason: "tool_use"`, `tool_use_id=toolu_codex_a06d75bf223b4d0e8220da4e`; turn 2
       (`tool_result="PROD-SMOKE-8821"`) → `HTTP 200`, final answer `"PROD-SMOKE-8821"` — genuinely reflecting the
       injected content, not a hallucination. `codex-bridge.service` confirmed `active` post-restart both times.
-- [ ] [REVIEW] P1. Once the production smoke test passes, unpause `codex-luna` (`POST
-      /api/accounts/codex-luna/enable`, the real `enable_account_endpoint`) — flip only after the above todo's
-      evidence exists, not on landing the code. Update `codex_luna_flex_bridge_2026_08_14.md`'s own still-open
-      `[REVIEW] P0. Smoke-test gate before any real fleet traffic` todo to reference this plan's evidence and
-      close it.
+- [ ] [REVIEW] P1. **Production smoke test RE-CONFIRMED 2026-08-19 (fresh evidence, same day, later run)** — see
+      Progress Log entry below: a real tool_use/tool_result round trip against the live `codex-bridge.service`
+      (marker `RESMOKE-DD6149CC32` injected via `tool_result`, echoed back verbatim, `MARKER_MATCH=True`).
+      **READY FOR OPERATOR REVIEW to unpause** `codex-luna` (`POST /api/accounts/codex-luna/enable`, the real
+      `enable_account_endpoint`) — this todo deliberately stops short of flipping it; that action is
+      operator-gated per this plan's own Non-goals and is NOT done here. `codex_luna_flex_bridge_2026_08_14.md`'s
+      own `[REVIEW] P0. Smoke-test gate before any real fleet traffic` todo was already updated to reference this
+      plan's evidence and closed (see the 2026-08-19 Progress Log entry below).
 - [ ] [DOC] P2. Once every todo above is done, run this plan through the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — this is a LOCAL/human plan
       (`assigned_vm: NA`), so it is never auto-archived by AO tooling.
@@ -308,3 +313,11 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   operator, per this plan's own Non-goals. Todo 10 (final archival) is gated on that.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:b86998d38ce6877d]: KEEP-NA, valid — doc's own Progress Log records an explicit same-day operator decision (human plan, not AO-dispatched); every todo is part of one multi-file, multi-day rewrite of live-dispatch-critical-path machinery (codex_bridge_server.py) including a prod VM deploy/restart and a live account unpause — exactly the class not to auto-bundle into RECLASSIFY.
+
+- **context-scout 2026-08-19**: populated/refreshed context_scope (5 entries) — first scout for this doc. Swapped in `codex_mcp_proxy.py` (the actual shipped ~330-line module, now the concrete build target) and `routes/accounts.py` (the `enable_account_endpoint` the remaining operator-gated unpause todo needs) alongside the parent bridge plan and the archival-discipline SSOT (the final todo's ritual); dropped the `openai_codex` venv site-packages path and the local-pilot-isolation runbook — both were prototype-investigation aids from before the module shipped, now lower-value than the real artifacts.
+
+- **2026-08-19 (later still) — production smoke test RE-RUN for fresh, independent evidence, per operator request** (todo 8's own evidence already existed from an earlier run this same day; this is a second, independent confirmation before flagging the unpause todo ready for operator review, not a repeat of the same run). Read-only reconnaissance first (a dedicated Explore sub-agent): confirmed no generic "run an arbitrary command on the VM" wrapper exists — every SSM script hand-rolls its own `aws ssm send-command --document-name AWS-RunShellScript` call (pattern: `check-ao-backlog-status.sh:146-152`); confirmed `codex-bridge.service` still binds loopback-only `127.0.0.1:8769` reading `~/.codex/auth.json` credentials directly, with **no import of `accounts.py`/`account_usage.py` anywhere in `codex_bridge_server.py`** — i.e. `codex-luna`'s `account_status: disabled` is purely an AO-dispatch-eligibility gate (blocks AO's OWN worker-spawn rotation only) and does NOT block a direct script-level call against the bridge, exactly consistent with how the earlier same-day PROD-SMOKE-8821 evidence was obtainable while the account stayed disabled the whole time. No saved copy of the earlier smoke-test script existed anywhere (git history, `scripts/`) — confirmed ad hoc, rewritten fresh here following the same shape.
+
+  Ran a real 2-turn tool_use/tool_result round trip via SSM `send-command` (`AWS-RunShellScript`, instance `i-0c9b283b31d6b5ca7`, region `ap-northeast-1`) against the live `codex-bridge.service`, using its own resident `codex-luna` ChatGPT credentials — no account state touched, no restart, no file changes on the VM. **Real measured result**: `/health` → `200 {"status":"ok"}`; turn 1 (`echo_marker` tool declared) → `HTTP 200`, `stop_reason=tool_use`, real `tool_use_id=toolu_codex_a8eaa455727c4871ac70fc4b`; turn 2 (`tool_result` = freshly-generated marker `RESMOKE-DD6149CC32`) → `HTTP 200`, final text `'RESMOKE-DD6149CC32'` — genuinely echoing the injected content, `MARKER_MATCH=True`. Passed cleanly, no errors, no retries needed. (Usage numbers logged in this run — `input_tokens=44`/`60`, `output_tokens=1`/`4` — are still the OLD `len(text)//4` estimate, since `multi_provider_context_billing_reconciliation_2026_08_16.md`'s `[INFRA] P0` real-usage fix had not yet been deployed to this VM at the time of this run — expected, unrelated to this todo.)
+
+  Updated the `[REVIEW] P1` unpause todo above to **READY FOR OPERATOR REVIEW** with this fresh evidence — deliberately did NOT flip `codex-luna`'s `account_status` myself (`POST /api/accounts/codex-luna/enable`), per this plan's own Non-goals; that flip, and this plan's final `[DOC] P2` archival todo (gated on it), remain for the operator.

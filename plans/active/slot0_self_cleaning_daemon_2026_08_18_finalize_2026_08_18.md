@@ -22,6 +22,12 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
+context_scope:
+  [
+    /plans/active/slot0_self_cleaning_daemon_2026_08_18.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+  ]
 created: "2026-08-18"
 last_updated: "2026-08-18"
 parent_epic: orchestrator_master
@@ -68,3 +74,7 @@ drift_direction: advance-code
       `plans/archive/2026_08/`, fix any referrer paths pointing at its old `plans/active/...`
       location, then archive THIS finalize plan too. Done-when: `plans/active/` lists neither
       slug, and nothing under `plans/active/`/`codex/` still points at either old path.
+
+## Progress Log
+
+- **context-scout 2026-08-19**: populated/refreshed context_scope (3 entries).

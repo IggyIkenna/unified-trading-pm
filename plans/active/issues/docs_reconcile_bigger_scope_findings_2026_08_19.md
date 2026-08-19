@@ -34,6 +34,15 @@ priority: P1
 depends_on: []
 execution_scope: local-only
 drift_direction: advance-code
+context_scope:
+  [
+    /codex/04-architecture/cefi-batch-live.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/tradfi/tardis_batch_download.py,
+    /codex/06-coding-standards/adr-qg-offload-self-hosted-runners-2026-06-02.md,
+    /plans/epics/ci_master.md,
+    /codex/04-architecture/runtime-deployment-topology.md,
+    /codex/05-infrastructure/launcher-script-ssot.md,
+  ]
 ---
 
 # docs-reconcile 2026-08-19 — bigger-scope findings
@@ -171,3 +180,7 @@ is a hybrid that evolved after both sections were written.
   `deployment-service/scripts/vm/launch-features-*.sh` file list** (rewrite to describe the real hybrid shape: one
   generic launcher + several family-specific ones) rather than either of the two stale narratives.
 - B. Lower priority — doesn't affect correctness of any running system, purely a documentation-accuracy gap.
+
+## Progress Log
+
+- **context-scout 2026-08-19**: populated context_scope (6 entries).

@@ -57,6 +57,7 @@ context_scope:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md,
   ]
 source: >-
   Drafted by the 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full-corpus sweep (interactive session). status:
@@ -483,4 +484,7 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: refreshed context_scope (5 entries) — added
+  `/plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`, the confirmed
+  blocker for this doc's sole remaining open todo (the bare-host CI bootstrap proof); all 5 entries resolve on disk.
 - **context-scout 2026-08-15**: refreshed context_scope (4 entries), still accurate.

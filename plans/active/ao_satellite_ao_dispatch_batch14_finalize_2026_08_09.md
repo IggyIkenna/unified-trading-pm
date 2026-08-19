@@ -221,3 +221,5 @@ source: >-
   remaining item — a full 6-step archival ritual (corpus-wide referrer fixup, inventory regen script) is left for
   the AO fleet's normal dispatch rather than executed here, to avoid a heavy multi-file corpus-wide operation
   colliding with the other concurrent `/plan-reconcile` hunters working the same corpus simultaneously.
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (4 entries), still accurate — sole remaining todo
+  is the batch plan's own archival ritual, already covered by the archival-discipline codex doc.

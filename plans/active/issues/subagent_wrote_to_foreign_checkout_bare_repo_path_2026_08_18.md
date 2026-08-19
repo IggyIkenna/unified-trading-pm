@@ -22,6 +22,12 @@ related:
     /plans/active/client_artefact_remediation_elysium_2026_08_18.md,
     /plans/epics/system_readiness_master.md,
   ]
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    cursor-configs/SUB_AGENT_MANDATORY_RULES.md,
+    /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
+  ]
 created: 2026-08-18
 last_updated: "2026-08-18"
 parent_epic: agent_operating_framework_master
@@ -97,3 +103,4 @@ checkout was deliberately left alone rather than cleaned, per the hard rule agai
 working tree.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:4a9dbc02450782c8]: KEEP-NA-STALE (items closed) — todo 1 (harden SUB_AGENT_MANDATORY_RULES.md) verified done: unified-trading-pm@34ebb7e5f, clause confirmed present, file 9893 bytes < 10KB cap. Todo 3 (bounded, GENUINE_WORK) extracted to plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md item 1 (RECLASSIFY per-todo split). Todo 2 (mechanical guard) stays NA — explicit judgment/cost tradeoff, no determinable outcome.
+- **context-scout 2026-08-19**: populated/refreshed context_scope (3 entries).

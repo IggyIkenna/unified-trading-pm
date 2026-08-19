@@ -53,11 +53,9 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/data_pipeline_completion_2026_08_21.md,
-    /plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
-    /cursor-configs/skills/na-eligibility-audit/SKILL.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    execution-service/execution_service/defi_execution/protocols/kamino.py,
+    execution-service/execution_service/defi_execution/protocols/aave.py,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17_finalize.md,
   ]
 source: >-
@@ -318,3 +316,9 @@ source: >-
   investigation (B20 sign-off, L9 DR-drill, etc.). First live run against production `coverage.json`: 1 PASS
   (B16), 2 FAIL (B1: 222/3,962 zero-coverage shards; B8: 48.73% reachable coverage, consistent with the
   already-recorded per-AG Friday-target figures), 50 UNVERIFIED. See the flipped checkbox above for full detail.
+
+- **context-scout 2026-08-19**: refreshed context_scope (4 entries) — all 13 items sourced from
+  `data_pipeline_completion_2026_08_21.md` and `instruments_catalogue_definitions_and_field_history_2026_08_17.md`
+  are now done; the 3 items still open all come from `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`'s
+  Kamino/Aave connector fixes, so narrowed to that source doc plus its two confirmed execution-service code targets
+  (`defi_execution/protocols/kamino.py`, `defi_execution/protocols/aave.py`) and the companion finalize plan.

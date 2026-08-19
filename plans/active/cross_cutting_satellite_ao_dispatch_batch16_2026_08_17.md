@@ -139,3 +139,6 @@ source: >-
 
 - **2026-08-17 (na_eligibility_auditor, dispatch agt-7e78e2, slot 28)**: drafted alongside the mandatory finalize
   companion, `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md`.
+- **context-scout 2026-08-19**: re-verified context_scope (5 entries, unchanged) — all 5 open todos still map 1:1 to
+  the 3 already-cited source docs plus the 2 already-cited code targets (`generate_na_doc_tranche_inventory.py` for
+  the hash-fix items, `venue_granularity.py` for the granularity-view item); all paths confirmed resolving on disk.

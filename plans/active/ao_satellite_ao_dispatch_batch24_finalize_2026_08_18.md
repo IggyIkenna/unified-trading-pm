@@ -81,3 +81,5 @@ source: >-
 
 - **2026-08-18** — Authored in the same turn as batch24, per the mandatory finalize-twin rule. `sequential: true`
   since the 3 todos are a genuine reconcile → archive-source → archive-self chain.
+- **context-scout 2026-08-19**: verified the pre-existing context_scope (3 entries) — all paths confirmed resolving
+  on disk, still the correct gated-parent + archival-discipline reading list; no change needed.

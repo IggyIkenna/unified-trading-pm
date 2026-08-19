@@ -38,20 +38,12 @@ locked_by:
 locked_since:
 context_scope:
   [
+    agent-orchestrator/scripts/human_fleet,
     agent-orchestrator/server/routes/slots_worker.py,
-    agent-orchestrator/server/dispatch.py,
-    agent-orchestrator/server/state_store/slots.py,
-    agent-orchestrator/server/orm.py,
     agent-orchestrator/server/config.py,
-    agent-orchestrator/server/worker_liveness/__init__.py,
-    agent-orchestrator/server/worker_liveness_watchdog.py,
-    agent-orchestrator/server/autospawn.py,
-    agent-orchestrator/server/auth.py,
     agent-orchestrator/server/deepseek_usage.py,
-    agent-orchestrator/dashboard/src/App.tsx,
-    agent-orchestrator/dashboard/src/layout.tsx,
-    agent-orchestrator/dashboard/src/TaskUsageWindows.tsx,
-    /plans/archive/2026_08/issues/review_agent_rate_limit_blind_kill_2026_08_14.md,
+    /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
   ]
 supersedes:
 superseded_by:
@@ -801,6 +793,14 @@ investigation confirmed are both achievable with existing primitives:
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: refreshed context_scope, trimmed 14→6 entries — remaining open work is now
+  E2E-verification-shaped (the `scripts/human_fleet/` claim/done/usage-push tooling, a live `GET /api/agents?kind=human`
+  contradiction to resolve, `config.py`'s human-slot-exclusion pattern for the main Fleet-table todo) rather than the
+  broad implementation surface the original 14-entry list covered; dropped the now-shipped-and-stable
+  `dispatch.py`/`state_store/slots.py`/`orm.py`/`worker_liveness*`/`autospawn.py`/`auth.py`/dashboard files and the
+  archived `review_agent_rate_limit_blind_kill` issue doc (unrelated to the remaining todos), added the corrected
+  single-vm-architecture codex doc and the `ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md` issue doc (the
+  live-state contradiction this plan's own last open todo must resolve).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (14 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ffc453bde60eb30a]: KEEP-NA, valid — all 6 open todos are Harsh's (explicit 2026-08-15/08-16 operator ruling: physically impossible from this session) or Ikenna's (blocked on all 314 live backlog tasks currently carrying a blocked_reason). Note: the 6 checkboxes are 3 near-verbatim duplicate pairs from repeated autonomous-loop ticks — a housekeeping dedup is worth a future pass, not actioned here (content not wrong, no hard evidence one supersedes another).
 - **2026-08-18 (interactive session, operator asked to complete the plan)**: Re-checked Ikenna's blocked task-cycle todo

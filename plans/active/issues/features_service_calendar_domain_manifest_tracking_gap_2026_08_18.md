@@ -31,6 +31,14 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-coverage-model.md,
   ]
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    features-service/features_service/calendar/engine/calendar_orchestrator.py,
+    features-service/features_service/calendar/cli/handlers/corporate_actions_handler.py,
+    market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
+  ]
 locked_by:
 locked_since:
 resolved_by:
@@ -108,3 +116,4 @@ confirmation across 4 handler files, not a corpus-wide sweep of every features-s
   todos re-read end-to-end (count reconciled, 2/2), unchanged since the 08-18 pass. Todo 1 (Layer-1 EXPECTED-universe
   design question) is a genuine architectural judgment call; todo 2 is textually gated on todo 1's unresolved
   outcome. `assigned_vm` unchanged.
+- **context-scout 2026-08-19**: populated/refreshed context_scope (5 entries).

@@ -29,6 +29,13 @@ related:
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
     /plans/archive/2026_08/client_reporting_api_promote_wedge_backmerge_dead_2026_08_06.md,
   ]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md,
+    unified-trading-pm/.github/workflows/branch-health.yml,
+    unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml,
+  ]
 created: 2026-08-18
 last_updated: 2026-08-18
 parent_epic: ci_master
@@ -116,6 +123,7 @@ checked clean before auto-merge was armed, per `ldr_to_main_fleet_promote.sh`'s 
 `tier_a_merge_gate_ok()`.
 
 - **na-eligibility-audit 2026-08-18** [body-hash:ef6e0dc9d0973bd1]: RECLASSIFY (per-todo split) -- 3 of 4 open todos are bounded/deterministic with cited existing patterns (workspace-manifest.json repo-list read, notify-slack.yml dedup_key carrier). Conflict-checked against 7 other active-plan hits on main-backmerge-to-ldr/branch-health.yml (different axes: git-ref hygiene, CI cost/billing, stuck-queued-run cleanup, template-hosting location, self-hosted-runner migration cost, an already-shipped different-DECISION escalation-resolution poll) -- none claims this scope/comment/detection-surface work. Extracted to cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md items 1-3. Remaining 1 item stays assigned_vm: NA: todo 4 (evaluate a warm local action-cache), explicitly self-framed in-doc as an open investigation with an uncertain answer. Corrected a stale fix-location pointer in todo 2 while extracting (unified-trading-pm/scripts/workflow-templates/ no longer hosts main-backmerge-to-ldr.yml; migrated to unified-trading-ci 2026-08-07/08). Cross-cutting tranche audit.
+- **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).
 ## Triage recipe for the next instance of this class
 
 A promote PR reported as `merge_conflict` is NOT necessarily a code conflict. Before resolving anything, spend three

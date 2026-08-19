@@ -47,6 +47,8 @@ context_scope:
   [
     /plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf,
+    strategy-service/strategy_service/cli/handlers/batch_rerun.py,
   ]
 source: >-
   /na-eligibility-audit cross-cutting tranche, dispatch agt-dc3dbe, slot 30, 2026-08-19. Each item's own Source:
@@ -82,3 +84,5 @@ source: >-
 - **2026-08-19**: drafted by na-eligibility-audit (cross-cutting tranche, dispatch agt-dc3dbe, slot 30). Both items
   conflict-checked clear against the archived batch1 + finalize, the consolidated closeout, and every active
   satellite batch corpus-wide.
+- **context-scout 2026-08-19**: populated context_scope (4 entries) — added the two source-code targets each item's
+  own text names (the terraform module and the strategy-service CLI handler).

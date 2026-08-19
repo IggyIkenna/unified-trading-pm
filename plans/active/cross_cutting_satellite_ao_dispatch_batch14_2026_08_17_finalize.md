@@ -75,3 +75,6 @@ source: >-
 
 - **na-eligibility-audit 2026-08-17**: authored alongside its batch, same pass.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-19**: re-verified context_scope (3 entries, unchanged) — the gated parent batch plus the
+  archival-discipline and commit-push-flip codex SSOTs remain the minimal correct set; all paths confirmed resolving
+  on disk.

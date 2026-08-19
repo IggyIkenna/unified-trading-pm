@@ -109,6 +109,10 @@ and verify via `git status --porcelain` that the commit didn't drop the rename's
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: populated/verified context_scope (2 entries) — first scout pass on this doc; both
+  entries (the archival-discipline codex SSOT and the source `plan_reconciler_findings_ci_2026_08_16.md` issue doc)
+  confirmed resolving on disk. No source-code paths added — this is a pure archival-ritual sweep over 6 already-done
+  docs, matching the process/meta-audit skip-source carve-out.
 - **2026-08-18 (na-eligibility-audit, ci tranche, dispatch agt-b10de6)**: carved out this worklist after Phase-1
   classification independently re-confirmed `plan_reconciler_findings_ci_2026_08_16.md`'s own "5 additional docs
   deliberately NOT archived this pass... ready-to-archive worklist" finding, plus found a 6th

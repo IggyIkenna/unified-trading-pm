@@ -254,3 +254,5 @@ MDPS candle coverage to the 4 venues) is explicitly NOT started.
   only the `book_depth.py` P3 stretch item remains open; dropped `pnl-attribution.md` and the aster-coverage issue doc
   (background context for the now-closed phases) in favor of the two source files the remaining stretch item directly
   touches.
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (3 entries), still accurate — sole remaining open
+  item (Phase 3 `book_depth.py` stretch) unchanged since 2026-08-15.

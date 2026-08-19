@@ -225,3 +225,9 @@ choice (human-executed, not AO-dispatched).
   tracked verbatim in `ao_satellite_ao_dispatch_batch3_2026_07_31.md`, already the last entry here.
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries) -- today's na-eligibility-audit
   reaffirmed the same sole duplicate todo; existing set remains accurate.
+- **2026-08-19 (interactive session)**: this doc's own context_scope re-verified UP_TO_DATE (6 entries, unchanged) --
+  the session's actual backfill work is recorded on the live tracking home,
+  `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s own todo 1 Progress Log (same date): 97 docs scouted via a 9-agent
+  `Workflow` fan-out (22 `NEVER_SCOUTED` + a 77-doc `STALE` slice), shipped `unified-trading-pm@e88ab02465`, corpus
+  moved 22/581 `NEVER_SCOUTED`/`STALE` -> 2/511. Sole open todo here (`[SCRIPT] P0`) remains the same duplicate item,
+  not reclassified.

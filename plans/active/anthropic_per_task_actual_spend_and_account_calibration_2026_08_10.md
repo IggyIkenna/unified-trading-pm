@@ -48,10 +48,8 @@ context_scope:
     agent-orchestrator/server/deepseek_usage.py,
     agent-orchestrator/server/state_store/slots.py,
     agent-orchestrator/server/accounts.py,
-    agent-orchestrator/server/orm.py,
     agent-orchestrator/scripts/orchestrator/backfill_task_usage.py,
-    agent-orchestrator/scripts/orchestrator/measure-claude-usage-value.py,
-    agent-orchestrator/dashboard/src/TaskUsageWindows.tsx,
+    /plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_operator_items_2026_08_19.md,
   ]
 supersedes:
 superseded_by:
@@ -566,6 +564,10 @@ which answers "where did the money go" for a metered wallet and surfaces the una
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: refreshed context_scope, trimmed 8→6 entries (dropped `orm.py`,
+  `measure-claude-usage-value.py`, `TaskUsageWindows.tsx` — generic/lower-value vs. the todos actually still open) and
+  added the new `..._operator_items_2026_08_19.md` companion doc (today's operator-item fork, the one item explicitly
+  out of this plan's own dispatchable scope).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (8 entries)
 - **2026-08-19 (Track-A/B classification pass, ao_open_work_consolidated_tracker_2026_08_14.md Track 7, per
   task_template.md §3 finding Y)**: the sole open `[OPERATOR] P2` item (laptop login-identity logging) forked into a

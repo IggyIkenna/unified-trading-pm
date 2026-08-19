@@ -215,3 +215,5 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
   clean tree at LDR HEAD (not caused by this change), root cause was a stale `.venv` never `uv sync`'d since
   `agent-orchestrator@ea9ecd2b` added the `mcp>=1.0.0` dependency to `pyproject.toml`/`uv.lock` — fixed via `uv sync`
   (a dep-sync, not a code change), no separate issue doc needed.
+- **context-scout 2026-08-19**: verified the pre-existing context_scope (4 entries, set at authoring) — all paths
+  confirmed resolving on disk, still the correct source-doc reading list; no change needed.

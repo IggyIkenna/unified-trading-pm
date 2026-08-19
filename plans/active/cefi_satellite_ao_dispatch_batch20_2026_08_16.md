@@ -278,3 +278,6 @@ source: >-
 - **2026-08-18 (slot-17, backend_engineer)**: Shipped item 8 (Bybit unscoped-key fallback in
   `validate_api_keys_for_venues`) — `unified-trading-library@e7c2baee5f`, `quality-gates.sh` green, 7 new unit tests.
   See the checkbox's own entry for full detail.
+- **context-scout 2026-08-19**: re-verified context_scope, no change needed (3 entries) — genuinely code-free dispatch-batch
+  coordinator doc (each todo cites its own source doc); the consolidated-closeout hub, the na-eligibility-audit SKILL,
+  and the batch-naming/conflict-check codex doc remain the right minimal set.

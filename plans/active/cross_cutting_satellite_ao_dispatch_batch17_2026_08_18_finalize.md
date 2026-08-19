@@ -39,8 +39,10 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md,
+    /plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
 source: >-
   Mandatory finalize companion per task_template.md §4 ("every AO-dispatched plan needs a gated finalize plan").
@@ -64,3 +66,6 @@ source: >-
 
 - **2026-08-18 (na_eligibility_auditor, dispatch agt-4d9716, slot 19)**: drafted alongside batch17 per the
   mandatory finalize-plan rule.
+- **context-scout 2026-08-19**: populated context_scope (4 entries) — the gated parent batch plus its source issue
+  doc (whose remaining todo 4, the local action-cache investigation, this finalize plan's todo 2 checks against),
+  plus the archival-discipline and commit-push-flip codex SSOTs.

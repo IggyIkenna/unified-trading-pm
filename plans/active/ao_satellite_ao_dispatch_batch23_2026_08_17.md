@@ -203,3 +203,5 @@ are bounded, already-decided, and conflict-clear:
   which merely records the finding's own discovery (its own todo already closed), not a competing dispatch of the
   fix. Source doc's checkbox flipped citing this extraction; still `status: draft`, no re-approval needed for an
   additive same-status edit.
+- **context-scout 2026-08-19**: verified the pre-existing context_scope (5 entries, set at authoring) — all paths
+  confirmed resolving on disk, still the correct source-doc reading list; no change needed.

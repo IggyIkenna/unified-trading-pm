@@ -40,7 +40,11 @@ superseded_by:
 source: >-
   Mandatory finalize companion per task_template.md §4 (operator ruling 2026-07-24) — a finalize plan closes only
   its own plan.
-context_scope: [/plans/active/client_artefact_remediation_elysium_2026_08_18.md]
+context_scope:
+  [
+    /plans/active/client_artefact_remediation_elysium_2026_08_18.md,
+    /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
+  ]
 ---
 
 # Client artefact remediation (Elysium) — finalize
@@ -58,3 +62,6 @@ Gated on [`client_artefact_remediation_elysium_2026_08_18.md`](/plans/active/cli
 ## Progress Log
 
 **2026-08-18 — authored** alongside the Elysium remediation child.
+
+**context-scout 2026-08-19**: populated context_scope (2 entries) — added the audit report this finalize
+reconciles findings back into; source-path hunt skipped (finalize gate).

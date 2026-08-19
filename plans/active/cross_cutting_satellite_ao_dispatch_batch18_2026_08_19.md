@@ -50,6 +50,8 @@ context_scope:
   [
     /plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md,
     /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_18.md,
+    execution-service/execution_service/engine/risk/preflight_gate.py,
+    strategy-service/strategy_service/risk/core/exposure_aggregator.py,
   ]
 source: >-
   /na-eligibility-audit cross-cutting tranche, dispatch agt-dc3dbe, slot 30, 2026-08-19. Each item's own Source:
@@ -126,3 +128,9 @@ source: >-
 
 - **2026-08-19**: drafted by na-eligibility-audit (cross-cutting tranche, dispatch agt-dc3dbe, slot 30). All 10
   items conflict-checked clear (see this doc's own `summary:` for surfaces checked).
+- **context-scout 2026-08-19**: refreshed context_scope (4 entries) — added the two real code targets for the
+  "does preflight_gate read ExposureAggregator" fact-finding todo
+  (`execution-service/execution_service/engine/risk/preflight_gate.py`,
+  `strategy-service/strategy_service/risk/core/exposure_aggregator.py`); the 7 doc-hygiene items from
+  `plan_reconciler_findings_cross_cutting_2026_08_18.md` each fully name their own single target doc inline, so no
+  further per-item entries added (would exceed the curated-list budget for marginal value).

@@ -18,6 +18,15 @@ related:
     /plans/active/data_pipeline_completion_2026_08_21.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md,
   ]
+context_scope:
+  [
+    unified-api-contracts/unified_api_contracts/internal/domain/instruments/_instruments_parquet_schema.py,
+    unified-api-contracts/scripts/check_schema_versions.py,
+    unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py,
+    unified-api-contracts/unified_api_contracts/internal/schemas/_instrument_catalogue_contract.py,
+    instruments-service/instruments_service/engine/orchestrator/sink.py,
+    /plans/active/data_pipeline_completion_2026_08_21.md,
+  ]
 created: "2026-08-18"
 last_updated: "2026-08-18"
 parent_epic: uac_master
@@ -99,3 +108,4 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
   item 3 (B23 determination). Determination recorded in `data_pipeline_completion_2026_08_21.md`'s B23 blockquote.
   The 4-part fix is new discovered scope beyond that item's own done-when (determination + proposal only) — filed
   here per findings-triage rather than absorbed into the determination task.
+- **context-scout 2026-08-19**: populated/refreshed context_scope (6 entries).

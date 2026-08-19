@@ -21,6 +21,13 @@ related:
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
+context_scope:
+  [
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    agents/plan_reconciler.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
+  ]
 created: "2026-08-18"
 author: main (Claude Code, interactive session, slot-3)
 parent_epic: agent_operating_framework_master
@@ -168,3 +175,4 @@ post-sync-only enforcement), then ran the 6-step archival ritual on
   hunters 1/2/4/7 report and as Phase 3 cross-hunter synthesis surfaces anything additional.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:c8a117c5b155ae00]: KEEP-NA, valid — trust-mode operator-ruling decision log for an in-flight interactive /plan-reconcile ao run; by design carries zero checkbox-style todos (judgment calls already applied under trust-mode, each with reasoning). Doc explicitly states it is not yet final (hunters 1/2/4/7 still pending) — neither archivable nor reclassifiable; content is the record itself.
+- **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).

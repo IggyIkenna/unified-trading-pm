@@ -280,3 +280,5 @@ UAC facade `canonical/gcs_paths.py::strategy_store_bucket` (must return the flat
   operator ruling (2026-07-17, "all 5 bucket folds as HUMAN plans") governs the AWS-leg/IAM+lifecycle/alias-sunset
   residuals — bounded work but explicitly held out of AO dispatch by that ruling, not re-litigated here.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 3 residual infra todos (AWS leg+terraform drift-assert, IAM+lifecycle, alias sunset) on an otherwise NEAR-COMPLETE fold (6/6 primary todos DONE, delete executed 2026-07-18) — all 3 governed by the explicit 2026-07-17.
+- **context-scout 2026-08-19**: re-scouted; context_scope unchanged (5 entries), still accurate — same 3 residual
+  infra todos (AWS leg/IAM/alias-sunset) as the prior scout pass.

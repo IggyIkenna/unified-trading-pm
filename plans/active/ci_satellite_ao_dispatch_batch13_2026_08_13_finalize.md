@@ -72,4 +72,5 @@ source: >-
 
 ## Progress Log
 
+- **context-scout 2026-08-19**: re-verified context_scope (3 entries) unchanged, all resolve on disk.
 - **context-scout 2026-08-15**: refreshed context_scope (3 entries), still accurate.

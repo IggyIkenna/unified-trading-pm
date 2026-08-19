@@ -28,6 +28,14 @@ related:
     /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
     /codex/06-coding-standards/README.md,
   ]
+context_scope:
+  [
+    features-service/features_service/calendar/adapters/polygon_corporate_actions_adapter.py,
+    features-service/features_service/calendar/engine/calculators/corporate_actions_calculator.py,
+    features-service/features_service/calendar/cli/handlers/corporate_actions_handler.py,
+    unified-api-contracts/unified_api_contracts/canonical/domain/features/required_inputs.py,
+    /codex/06-coding-standards/README.md,
+  ]
 locked_by:
 locked_since:
 resolved_by:
@@ -107,3 +115,4 @@ independently re-derived, this is a direct-read confirmation of the adapter's re
   todos re-read end-to-end (count reconciled, 2/2), unchanged since the 08-18 pass. Todo 2 ([OPERATOR] vendor
   re-sourcing decision — yfinance vs. a paid contract for corporate-actions dividends/splits) is genuine
   diligence/judgment work; todo 3 is contingent on todo 2's outcome. `assigned_vm` unchanged.
+- **context-scout 2026-08-19**: populated/refreshed context_scope (5 entries).
