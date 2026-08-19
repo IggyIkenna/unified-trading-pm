@@ -1342,7 +1342,8 @@ unified-trading-pm/codex/06-coding-standards/quality-gates-template.sh
 2. **Test Execution**
    - Git-aware mode (test only changed files when uncommitted changes detected)
    - `pytest-xdist` for parallel test execution (`-n auto`)
-   - `pytest-cov` for coverage reporting (`--cov-fail-under=70`)
+   - `pytest-cov` for coverage reporting (reads `fail_under` from `pyproject.toml`'s `[tool.coverage.report]` — never a
+     `--cov-fail-under` CLI flag, which would shadow the toml value; see "Config SSOT" below)
    - All 4 test tiers: unit, integration, e2e, smoke
    - Quick mode support (`--quick` skips e2e/smoke)
 

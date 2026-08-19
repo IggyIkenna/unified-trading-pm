@@ -620,7 +620,7 @@ Step 2: Land the execution-service wiring on live-defi-rollout
   bash scripts/quickmerge.sh "feat: wire new UTL API" --agent --files 'src/...'
 
 Step 3: The LDR→main fleet promoter promotes (no manual step)
-  # ldr-to-main-promote-fleet.yml (every 15m) opens each LDR→main PR; its quality-gates-v2
+  # ldr-to-main-promote-fleet.yml (every 30m) opens each LDR→main PR; its quality-gates-v2
   # (head=LDR, base=main) is the server gate + sit-gate/fleet-green + provenance.
 ```
 

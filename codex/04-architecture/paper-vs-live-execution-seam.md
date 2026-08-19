@@ -37,10 +37,10 @@ owner:
 last_reviewed: 2026-08-09
 code_refs:
 overview:
-  Pins the principle that batch / paper / live differ ONLY at the execution layer — strategy / risk / P&L / position /
-  alerting / instructions are identical across modes. Pricing has no real "paper" concept (just right data); mock-data
-  is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is operator-discipline only (no
-  enforcement).
+  Pins the principle that batch / paper / live / manual differ ONLY at the execution layer — strategy / risk / P&L /
+  position / alerting / reconciliation / instructions are identical across modes. Pricing has no real "paper" concept
+  (just right data); mock-data is for risk simulations + dev fixtures (NOT paper-trading); mock-vs-paper is
+  operator-discipline only (no enforcement).
 type: codex-ssot
 locked_by: live-defi-rollout
 locked_since: 2026-05-09

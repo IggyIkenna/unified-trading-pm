@@ -82,7 +82,7 @@ migration — this runbook assumes they still work as they did pre-migration, an
 
 - AWS CLI access with the `uts-orchestrator-epic` profile/role (same one used throughout the box's AWS-era life).
 - Confirm which cloud DNS currently points at: `dig api.agent-orchestrator.odum-research.com` — if it already resolves
-  to the IONOS floating IP, this is a real failback (DNS needs re-pointing in step 4); if it still resolves to
+  to the IONOS floating IP, this is a real failback (DNS needs re-pointing in step 5); if it still resolves to
   `13.113.200.22`, IONOS's own cutover never completed and this runbook doesn't apply yet.
 
 ## Steps — AO

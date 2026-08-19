@@ -238,8 +238,8 @@ AlertSeverity.INFO` whenever `details.get("resolved")` is truthy, before the CRI
 > horizontal fragmentation) still redeploys far more often than the 1800s cooldown window (5 revisions in 3.25h
 > observed, one gap only 17min) — every redeploy is a fresh process that silently wipes `_seen`, defeating every
 > `_RECURRING_ALERT_COOLDOWNS` entry fleet-wide, not just `DP_CRON_DID_NOT_FIRE`. Recommended fix: GCS-persist the
-> `_RECURRING_ALERT_COOLDOWNS` subset of dedup state, mirroring `RenagTracker` (`deployment_service.data_pipeline_
-monitors.renag_tracker`) — not yet implemented, see the issue doc. Source-side defense-in-depth shipped for
+> `_RECURRING_ALERT_COOLDOWNS` subset of dedup state, mirroring
+> `RenagTracker` (`deployment_service.data_pipeline_monitors.renag_tracker`) — not yet implemented, see the issue doc. Source-side defense-in-depth shipped for
 > DP-LIVE-003 (`deployment-service@9abb2d20e4`, `RenagTracker`/`apply_cooldown` wired into
 > `missing_live_producer_watcher`); DP-LIVE-004/DP-WATCHER-002 already have source-side renag_tracker wiring, so their
 > repeat-firing depends entirely on the alerting-service fix landing.

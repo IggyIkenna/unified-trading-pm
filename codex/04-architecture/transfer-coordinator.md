@@ -162,10 +162,10 @@ Per `/codex/04-architecture/client-funds-isolation.md` HARD RULE:
 
 ## Sub-account moves
 
-`SUBACCOUNT_MOVE` is not yet implemented in execution-service. `TransferCoordinator` raises `NotSupportedError` with
-message pointing to `subaccount_transfers_phase_2_2026_06_01.md` for all venues except Binance + OKX. When Binance/OKX
-subaccount APIs are added, they land as new branches inside `TransferCoordinator`'s routing table — no facade change
-required.
+`SUBACCOUNT_MOVE` is implemented for Binance + OKX only (May-23 stub scope). `TransferCoordinator` raises
+`NotSupportedTransferError` with message pointing to `subaccount_transfers_phase_2_2026_06_01.md` for every other
+venue. When more venues' subaccount APIs are added, they land as new branches inside `TransferCoordinator`'s routing
+table — no facade change required.
 
 ---
 

@@ -3,7 +3,9 @@ doc_type: codex-ssot
 title: Epic taxonomy — 9-domain service layer (2026-08-18)
 summary:
   Decision record for the non-asset-group epic layer, replacing the prior implicit L1-L5 tier framing. Maps 9 named
-  service/subsystem domains onto the 24 active epics, with each epic's disposition stated explicitly (kept,
+  service/subsystem domains onto the 22 active epics (16 in the 9 domains + 6 listed as not in this taxonomy — 5
+  asset-group L0 + plan_hygiene_master; the 4 `*_SUPERSEDED_*.md` files are historical, not counted as active), with
+  each epic's disposition stated explicitly (kept,
   renamed, folded into a sibling, or split). The 5 asset-group L0 epics (cefi, defi, tradfi, predictions, sports)
   are a separate, orthogonal axis and are not part of this taxonomy.
 status: current

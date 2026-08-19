@@ -117,11 +117,11 @@ Applied to all reconciliation row models (shipped unified-api-contracts@ae5771e2
 
 Thresholds in UAC `ALERT_THRESHOLDS` registry (shipped alerting-service@9c47947):
 
-| Band        | Threshold                                      | Action                                             |
-| ----------- | ---------------------------------------------- | -------------------------------------------------- |
-| Warn        | `recon_age_warn_seconds = 300` (5 min)         | Internal log + Slack warning + agent investigation |
-| Investigate | `recon_age_investigate_seconds = 900` (15 min) | SEV1 (human investigation required)                |
-| Critical    | `recon_age_critical_seconds = 1800` (30 min)   | SEV0 + recon freeze armed                          |
+| Band        | Threshold                                      | Action                                                                                |
+| ----------- | ---------------------------------------------- | ------------------------------------------------------------------------------------- |
+| Warn        | `recon_age_warn_seconds = 300` (5 min)         | Internal log + Slack warning + agent investigation                                    |
+| Investigate | `recon_age_investigate_seconds = 900` (15 min) | SEV1 (human investigation required)                                                   |
+| Critical    | `recon_age_critical_seconds = 1800` (30 min)   | SEV0 + recon freeze armed **in spec — NOT WIRED live, see Component Ownership above** |
 
 Per-venue / per-strategy / per-instrument-type / per-account overrides supported via UAC `per_archetype_overrides`
 matching the existing `AlertThreshold` pattern.

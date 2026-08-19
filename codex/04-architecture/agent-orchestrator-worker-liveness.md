@@ -460,10 +460,10 @@ The three wedge modes above (stuck / silent / context-full) are all a worker tha
 is a **fourth** mode the watchdog was blind to: a `one_shot`/`scheduled` agent that has **finished** its work but never
 dies.
 
-**Symptom (measured 2026-07-21).** 15 finished typed agents (9 `cicd` one*shot + 6 `plan_health` scheduled) sat
+**Symptom (measured 2026-07-21).** 15 finished typed agents (9 `cicd` one_shot + 6 `plan_health` scheduled) sat
 `status=active` for up to 19 h, pinning 15/16 slots → the daily reconciler got `503 no free slot`. Their JSONLs show
-none errored — each completed its task, then idle-polled forever. The role docs already say *"then EXIT, do NOT loop"_,
-but \*\*"EXIT" only ends the Claude \_turn_\*\*; the tmux session lingers at an idle `❯` prompt, `WorkerLivenessKicker`
+none errored — each completed its task, then idle-polled forever. The role docs already say _"then EXIT, do NOT loop"_,
+but **"EXIT" only ends the Claude _turn_**; the tmux session lingers at an idle `❯` prompt, `WorkerLivenessKicker`
 re-nudges it, and it responds → idles → is nudged again (one agent logged its "179th poll").
 
 **Why every cleanup path is blind.** The finish is NOT a session death, so:

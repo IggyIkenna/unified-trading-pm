@@ -54,9 +54,10 @@ first two marks verbatim (already shipped, included here only for a single sourc
 | **Evidence tier**    | `.ev`     | How do we know?          | Dashed colour-bordered pill, transparent, monospace, symbol prefix | `✓ verified` / `? check` / `~ assumed`         |
 | **Owner** (this doc) | `.own`    | Who closes the gap?      | Solid neutral-filled chip, no colour border, sans                  | A workstream/plan/epic short-ref (see grammar) |
 
-Three different shapes on purpose — a reader must be able to tell which axis they're looking at without reading the
-text inside the badge. `.st` and `.ev` are pills (rounded, bordered); `.own` is a chip (small corner radius, filled,
-neutral hairline border) so it never gets misread as a fourth status color.
+Three different treatments on purpose — a reader must be able to tell which axis they're looking at without reading
+the text inside the badge. By radius, `.ev` is the pill (10px, dashed border) while `.st` and `.own` share a tighter
+chip radius (3px) — but they stay visually distinct: `.st` carries a colour-matched border + tinted wash per status
+value, `.own` a neutral hairline border and neutral fill, so `.own` never gets misread as a fourth status color.
 
 ### Status pill — `.st` (already shipped, restated for completeness)
 
