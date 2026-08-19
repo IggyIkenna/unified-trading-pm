@@ -232,10 +232,27 @@ _None at authoring time._
       not mandatory — pure-passive, fire-immediately and patient-then-escalate are all valid consumers) and
       strategy-OWNED/strategy-COMPUTED with execution merely consuming it.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [BACKEND] P1. Advance `OrderStatus` to the full 9-state `OrderState` machine the 23-doc SSOT describes. Ruled
-      2026-08-06 (Option A — advance the contract), reconfirmed 2026-08-12; the CODE and TEST todos are both still
-      open. Evidence: `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
-
+- [x] ✅ [BACKEND] P1. `OrderStatus` advanced to the full 9-state machine — unified-api-contracts@a3c572f8.
+      **T4 is unblocked on this edge.** `FAIL_OUTBOUND` and `RECONCILED` now exist, and the machine ships with
+      them — `ORDER_STATUS_TRANSITIONS` (transcribed edge-for-edge from the codex diagram),
+      `TERMINAL_ORDER_STATUSES`, `is_terminal_order_status()`, `is_legal_order_transition()` — exported at all
+      four package levels so consumers reach them through the top-level `unified_api_contracts` facade.
+      **The rename shipped WITHOUT breaking anything, by design**: `PENDING`/`OPEN` became `PENDING_NEW`/`NEW`
+      with the old names retained as enum ALIASES (`OrderStatus.PENDING is OrderStatus.PENDING_NEW` is True,
+      wire values byte-identical), so nothing already persisted or published is re-encoded and none of the 24
+      execution-service call sites break. That aliasing is a deliberate, tracked exception to the no-shims rule,
+      taken because the entity-rename SSOT demands consumers migrate in the SAME change while this tranche is
+      forbidden from editing execution-service — resolution is filed as a `[FROM-T1]` request on T4's plan, not
+      left open-ended. MEASURED basis for calling aliasing safe: fleet-wide there is NO `.name`-based,
+      `OrderStatus[...]`, `len(OrderStatus)` or iteration coupling, so no consumer can observe the rename.
+      9 tests pin the enum against the codex state table (incl. that the original seven wire values are
+      unchanged, and that aliases resolve by IDENTITY rather than merely comparing equal). QG green — real exit
+      0 captured without a pipe, 273s; landing verified by `merge-base --is-ancestor`, not by exit code.
+      **Deliberately NOT widened**: the codex diagram draws exactly one edge out of `PARTIALLY_FILLED` (full
+      fill), so that is what the map encodes — real venues do cancel partially-filled orders, but the doc is the
+      SSOT and the map is its projection, so amending it is a codex change first. Filed as a `[FROM-T1]` P2
+      question on T4's plan rather than guessed at. Evidence:
+      `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
 ### W5 — venue registry completeness
 
 - [ ] [BACKEND] P0. Populate `VenueCapabilityV2.collateral_rules` / `MarginSpec` for EVERY venue. The schema exists
@@ -316,7 +333,36 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
-- 2026-08-20 — **T1 SESSION HANDOVER — second agent took over the tranche under an explicit operator ruling.**
+- 2026-08-20 — **Contract edge #3 landed: `OrderStatus` is now the 9-state machine — unified-api-contracts@a3c572f8.
+  T4 unblocked.** Verified on origin, not by exit code: 9 canonical members + 2 aliases present in the landed blob,
+  transition map + test file present, top-level export present, and `a3c572f8` confirmed via
+  `merge-base --is-ancestor`. QG real exit 0 (273s), captured WITHOUT a pipe.
+  **Design call worth re-reading before anyone "cleans up" the aliases**: option A (rename in place) was ruled and
+  twice reconfirmed, but a literal rename breaks 24 execution-service call sites, and the entity-rename SSOT
+  requires consumers to migrate in the SAME change — impossible from a tranche forbidden to edit that repo. The
+  aliases resolve that conflict without shipping the rejected alternative: they are enum aliases (identity, not
+  copies), so the state space cannot split in two. Removal is a filed `[FROM-T1]` todo on T4's plan, not a
+  someday-note. MEASURED before choosing this: zero `.name`-based / `OrderStatus[...]` / `len()` / iteration
+  coupling fleet-wide — that measurement is the whole basis for calling it behaviour-preserving, so if it is ever
+  refuted the alias decision must be revisited.
+  **What I deliberately did NOT do**: widen `PARTIALLY_FILLED` beyond the single edge the codex diagram draws.
+  Real venues cancel partially-filled orders, so the map is probably incomplete — but the doc is the SSOT and this
+  map is its projection, so the fix is a codex amendment first. Filed as a P2 question on T4's plan.
+- 2026-08-20 — **Cross-tranche handoffs shipped — unified-trading-pm@617670c965.** T4 got three `[FROM-T1]` items
+  (alias migration, the never-written `test_state_machine.py` verifier the codex doc has declared since 2026-05-12,
+  and the `PARTIALLY_FILLED` edge question). T3 got a warning NOT to wait on `reference_position`/`credit`, since
+  that edge is operator-gated on Q12-Q16 and will not clear on its own — with the two points that ARE settled
+  (`credit` optional; strategy-owned/strategy-computed) called out so T3 can design against them today.
+  **Also rescued 3 issue docs that existed ONLY in this slot's local clone** (defi SCE-suffix strategy_ids,
+  health-factor monitor with no production entrypoint, MTDS availability data_type-without-venue) — they were
+  sitting in an unpushed local commit the outgoing agent never landed, one `git` accident from gone.
+  **Process findings, recorded because they cost real time tonight**: (1) `exit 0` lied THREE times — a
+  safe-doc-push refusal, a failed lint, and a plan-hygiene block all surfaced as exit 0 through a pipe. Capture
+  `$?` directly and grep the log for the verdict; never `| tail` a ship command, which is also how the first
+  hygiene failure's own detail got truncated out of view. (2) The PM checkout carries **67 autostash entries** and
+  safe-doc-push now calls that "extreme" — it is what produced tonight's merge conflict. (3) Writing
+  `BLOCKED-OPERATOR` mid-sentence in a todo silently HOLDS that todo; the hygiene gate is right to fail it. Say
+  "gated on an operator ruling" in prose and keep the marker in the leading tag cluster.- 2026-08-20 — **T1 SESSION HANDOVER — second agent took over the tranche under an explicit operator ruling.**
   Not a normal resume: two Claude sessions were live in slot 6 at once. MEASURED at takeover — the incumbent T1
   agent (PID 19387, started 23:13:08) was mid-`quickmerge` (children 26702/26708/27231) shipping the
   QuoteInstruction edge, with `--isolated` holding `schemas.py` evacuated into `stash qm-iso-evac-26708`. The
