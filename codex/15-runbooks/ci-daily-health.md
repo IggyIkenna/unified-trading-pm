@@ -189,3 +189,40 @@ list` on this host shows the pinned `unified-trading-sa` key active): all 24 non
 - **GH Actions spend**: not re-pulled this pass — out of scope for a narrow alert-driven sweep, see 08-18 entry.
 - **CI VM resource health**: not re-run this pass — see 08-18 entry; `ci-vm-resource-watchdog`'s own hourly tick
   (checked live above) shows no sustained pressure on the known CI/glue-runner host.
+
+## 2026-08-19 (second pass, fleet-wide QG cascade recurrence)
+
+**Trigger**: operator pasted 9 raw `#ci-failures` CRITICAL alerts (2026-08-18 evening) and asked whether these meant
+agents were pushing without running QG. They were not — root cause is a recurrence of the shared-PM-validator single
+point of failure first documented in
+`plans/archive/2026_08/issues/fleet_wide_qg_cascade_pm_manifest_race_plus_silent_webhook_gap_2026_08_18.md`
+(2026-08-18 morning incident, 13 repos, fixed via `unified-trading-pm@176ff63dab` — one retry: `pull --ff-only` +
+`sleep 5`).
+
+**What happened this time**: 7 repos (deployment-service, ml-service, trading-agent-service, strategy-service,
+instruments-service, unified-trading-library, market-tick-data-service) failed within a ~20:33-21:14 UTC window, all
+`uts-backmerge-bot` merge commits, 6 of 7 sharing the identical `"Production readiness validators FAILED (persisted
+after re-pull + retry)"` signature — meaning the 08-18 fix's one retry ran and still wasn't enough. Every alerted
+commit's own code was confirmed clean (current HEAD green on all 9 originally-alerted repos, before and after this
+fix).
+
+**New evidence beyond the archived doc**: bisected the exact PM commit (`304f95484`) that was `live-defi-rollout`
+HEAD at both confirmed failure timestamps (instruments-service 21:13:20Z, strategy-service 21:14:15Z — same commit,
+confirmed no other PM commit landed in that window) and replayed the identical CI-invoked validator script against
+it in an isolated `git worktree`: clean pass. This rules out "PM content was transiently invalid" as the mechanism
+for THIS occurrence (unlike the 08-18 incident, where that genuinely was the cause) — pointing instead at a
+stale/dirty local PM clone surviving between jobs on the `[self-hosted, glue]` runners, which a soft `pull
+--ff-only` doesn't reliably correct. **Not independently confirmed** (no runner-host filesystem access from this
+session) — flagged as an open question with a P3 operator-owned follow-up todo.
+
+**Fix shipped**: hardened the retry in `scripts/quality-gates-base/base-service.sh` + `base-library.sh` — force
+`fetch` + `reset --hard origin/live-defi-rollout` + `clean -fdx` (instead of soft `pull --ff-only`), with 2 retries
+(5s, 10s backoff) instead of 1. Safe regardless of the exact mechanism, since PM's CI-side clone is a disposable
+dependency checkout. `bash -n` clean on both files.
+
+Full writeup, evidence, and todos:
+`plans/active/issues/fleet_wide_qg_cascade_pm_manifest_race_recurrence_2026_08_19.md`.
+
+- **ci-reconcile ran**: yes (ad-hoc interactive session, continuation of the same-day sweep above).
+- **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow recurrence-investigation scope, see
+  08-18 entry for the last full check.
