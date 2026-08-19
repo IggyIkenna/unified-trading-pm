@@ -636,3 +636,24 @@ where it writes.
   resets 2026-08-20 00:22:34 UTC — the remaining 7 blocked GLM tasks (4 for 5.2, 3 for 5-Turbo) could be re-run
   serially (not concurrently) after that to get full 6/6 coverage on both models. Gate-2 quality scoring on the
   Gate-1 passers, and the final per-(model, tier) synthesis table, are the two todos still not started.
+
+- **2026-08-19 (later) — REAL root cause found for why the "paid tier" Gemini re-run still failed: `gcloud alpha
+  services quota list` shows the Paid Tier 3 quota bucket is genuinely provisioned (20,000 req/min for BOTH
+  `gemini-3.5-flash-lite` and `gemini-3.7-flash` on project `central-element-323112`) — the ceiling was never the
+  problem. Free-tier limits on the SAME project, for comparison: `gemini-3.7-flash` = 5 req/min,
+  `gemini-3.5-flash-lite` = 15 req/min (both lower than the `RESOURCE_EXHAUSTED` messages' own stated "limit: 20"
+  suggested — there are multiple overlapping bucket rules, the per-model dimension is the binding one).** The real
+  problem: our actual requests were still being billed against `generate_content_free_tier_requests`, not
+  `generate_content_paid_tier_3_requests`, despite using `GEMINI_API_KEY_PROJ5`. This matches a known Google AI
+  Studio gotcha — an API key generated BEFORE Cloud Billing was enabled on its project can stay classified as
+  free-tier indefinitely; the quota bucket gets provisioned but the key doesn't automatically re-associate with
+  it. **Fix, not yet done**: regenerate the API key for project 371216509644 via
+  https://aistudio.google.com/app/apikey (after confirming billing is genuinely active), swap the regenerated
+  value into `GEMINI_API_KEY_PROJ5`, and re-test before trusting `proj5` for any further dispatch — the current
+  key is not reliably drawing on the paid pool it's nominally provisioned for.
+  **Live status snapshot (2026-08-19T12:44 UTC)**: Gemini (both free proj1 and paid proj5) — both respond 200 OK
+  to a single lightweight probe right now (a single request never trips a per-minute limit either way, so this
+  confirms nothing about tier routing, only that neither key is dead). NVIDIA/Gemma — also 200 OK on a
+  trivial single-turn probe right now, consistent with the earlier finding that it fails specifically on full-size
+  real requests, not universally. GLM — still inside its 5-hour lockout, **11h38m remaining** at check time,
+  resets 2026-08-20T00:22:34Z.
