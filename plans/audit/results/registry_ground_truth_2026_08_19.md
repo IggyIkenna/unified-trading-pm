@@ -81,6 +81,17 @@ optimism/polygon/scroll · MORPHO across arbitrum/base/ethereum/optimism/polygon
 CURVE across avalanche/ethereum/optimism · PENDLE across arbitrum/ethereum · Solana: JUPITER, KAMINO, METEORA,
 ORCA, RAYDIUM · plus HYPERLIQUID, ASTER, EXTENDED-STARKNET, ETHENA-ETHEREUM, LIDO-ETHEREUM.
 
+
+> **CORRECTION 2026-08-19 (second).** Two further numbers here were wrong or unresolved:
+> **(a) Unbucketed venues are 24, not 15.** I derived 15 by subtracting 177 from 192; the real answer needs a
+> set-difference, because the bucket set and the capability set are not nested. Measured by an agent that ran it
+> properly.
+> **(b) Chains-with-live-DeFi-venues is still UNRESOLVED.** Four independent derivations gave 11, 12, 13 and 14.
+> The most rigorous pass (importing `ChainKind`, `DEFI_VENUE_DATA_TYPE_CAPABILITIES`, `ALL_DEFI_VENUES`,
+> `DEFI_VENUE_TO_PROTOCOL`, `VENUE_TO_ADAPTER_KEY`) got **11 of 23**, with a best-effort union topping out at 12,
+> and could not reproduce 14 at all. Do not quote a single figure until the filter is settled — this is a symptom
+> of the three-disagreeing-chain-registries defect, not of sloppy counting.
+
 ## What the artefacts actually show
 
 | Artefact                                 | Chain names | Families named |
