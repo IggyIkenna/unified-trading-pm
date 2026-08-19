@@ -202,17 +202,54 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
       re-sample deferred, not yet done this session** — the doc's own verify bar (≥2 observed redeploys
       within one 30-min cooldown window post-fix) needs a follow-up dispatch once `dp-alerting-subscriber`
       picks up this deploy; tracked as the new todo below rather than closed on unit-test evidence alone.
-- [ ] [SCRIPT] P2. **ADDED 2026-08-19** — live-verify the `RecurringCooldownState` fix
-      (`alerting-service@f48a61193f`) actually holds a `DP_CRON_DID_NOT_FIRE`/`DP_RUN_MOSTLY_EMPTY`/
-      `CONSOLIDATOR_DOWN` cooldown across a real `dp-alerting-subscriber` redeploy: confirm the deploy
-      reached `dp-alerting-subscriber` (`gcloud run revisions list`, digest/content-check per this doc's
-      own established discipline — not SHA-ancestor alone, Option-B direct-promote rewrites commits),
-      then sample the SAME previously-repeat-firing identity (BYBIT-FUTURES on
-      `mtds-live-cefi-consolidated-*`, or whatever is currently firing) across ≥2 observed redeploys
-      within one 30-min window and confirm it stays suppressed for the full cooldown instead of
-      re-firing on every redeploy. Also spot-check `alerting/state/cooldowns.json` in the
-      `alerting-service-<project>` bucket actually gets written (confirms the wiring reaches real GCS,
-      not just the unit-test-mocked path). Repo: alerting-service.
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-08-19 (data_pipeline_alerts_reconciler, slot 30, agt-6764e9)** —
+      live-verified the `alerting-service@f48a61193f` fix does NOT actually hold the cooldown, root-caused
+      why, and shipped the fix. `slack-read-channel.py data-pipeline-alerts 24` (2026-08-19, ~19:00Z) still
+      showed `DP_CRON_DID_NOT_FIRE` firing 2,516 times/24h across 39 distinct (vm, venue, data_type)
+      identities — e.g. `mtds-live-tradfi-cme-trades-20260809-163443`/CME/trades fired 63x with a
+      13.6-45.7min interval (avg 23min), and even restricted to ONLY fires after the `-00130` revision's
+      `06:16:07Z` deploy (36 fires, `06:21Z`-`20:35Z`), the avg interval was still 24.4min — well under the
+      1800s (30min) cooldown, 14h+ post-deploy. Root cause (NEW, distinct from every prior
+      investigation's hypothesis in this doc): `RecurringCooldownState.record()`
+      (`alerting_service/core/recurring_dedup_persistence.py`) persisted cooldown state via a BLIND
+      full-blob overwrite — `write_cooldown_state(dict(self._last_emitted_at))` — of only the calling
+      process's own local `_last_emitted_at` cache, which is loaded ONCE per process/container lifetime
+      (`_ensure_loaded()`). Any concurrent process with a divergent local view (old+new Cloud Run revision
+      overlapping during a redeploy, or two sibling in-flight requests within the same revision) has its
+      OWN just-recorded identities silently dropped the moment the OTHER process's write lands —
+      defeating the cooldown for exactly those identities, the same failure shape as the pre-GCS
+      in-process-only dict this fix was built to replace, just intermittent instead of total (which
+      explains this doc's own confusing prior samples: "some identities show continued leaking post-deploy,
+      others show clean compliant cadence" — that split IS the race, not measurement noise). This also
+      explains why the mixed-result 2026-08-19 slot-21 sample above could not resolve the discrepancy by
+      tracing one identity's hash — the bug isn't per-identity, it's a write-write race across ALL
+      identities sharing the same `cooldowns.json` blob.
+      Fix: `record()` now re-reads `read_cooldown_state()` and merges before writing, instead of writing
+      only its own local cache — closes the lost-update window (a residual read-then-write race between
+      two SIMULTANEOUS writers remains possible but self-heals within one cycle, unlike the prior
+      guaranteed-clobber-on-every-write design). Same shared `RecurringCooldownState` layer backs
+      `DP_RUN_MOSTLY_EMPTY` (369 fires/24h) and `DP_VM_EXIT_NONZERO` (124 fires/24h) too, so this fix
+      applies to all `_RECURRING_ALERT_COOLDOWNS`-eligible events, not just `DP_CRON_DID_NOT_FIRE`.
+      Evidence: `alerting-service@ac21303714`, `quality-gates.sh --no-fix` ALL GATES PASSED (52s, full
+      suite incl. 2 updated/new regression tests in `tests/unit/test_recurring_dedup_persistence.py`
+      proving a blind overwrite would have dropped a sibling instance's recorded identity and the merge
+      fix prevents it); verified `ac21303714` is an ancestor of `origin/live-defi-rollout` post-push.
+      **Live-behavior re-verification not done this session** (would need to wait out a fresh ≥30min
+      post-deploy window, out of scope for a one-shot reconciler dispatch) — tracked as the new todo below
+      for the next `/data-pipeline-alerts-reconcile` sweep (fires every 6h) to confirm.
+- [ ] [SCRIPT] P2. **ADDED 2026-08-19 (data_pipeline_alerts_reconciler, slot 30)** — after
+      `alerting-service@ac21303714` (the merge-before-write fix above) reaches a live
+      `dp-alerting-subscriber` revision (`gcloud run revisions list`, content-check not SHA-ancestor
+      alone), re-sample `DP_CRON_DID_NOT_FIRE`'s fire interval for any currently-repeat-firing identity
+      over a window that spans ≥2 real redeploys (or, if redeploys have quieted down, just confirm the
+      interval is now consistently ≥1800s for at least 2 consecutive fires) and confirm it no longer dips
+      below the 1800s cooldown the way this todo's own evidence showed pre-fix. Also spot-check
+      `alerting/state/cooldowns.json` in the `alerting-service-<project>` bucket contains entries for
+      multiple DIFFERENT identities recorded close together in time (proof the merge, not a last-write-wins
+      overwrite, is what's live). If the storm persists even after this fix, the residual
+      simultaneous-writers race (two processes reading-then-writing in the same instant) may need a real
+      compare-and-swap (GCS `if_generation_match`) rather than read-then-write — note that as the next
+      escalation if so. Repo: alerting-service.
 - [x] ✅ [OPERATOR] P1. (carried over) Investigate the 2 genuine live-capture stalls first
       flagged 2026-08-17 (BYBIT-FUTURES on `mtds-live-cefi-consolidated-20260817-025031`; CME
       trades on `mtds-live-tradfi-cme-trades-20260809-163443`) — both VMs running, both
@@ -391,3 +428,21 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   worktree confirmed clean (`git status` on `live-defi-rollout`, 0 ahead) both before and after, no code change
   needed or shipped here. Did not re-ping the authoring slot (`dp-fleet-monitor` is not a numeric slot id — no
   real originator to notify per the boot-prompt's skip rule). Completing via `/done`.
+- **2026-08-19 (data_pipeline_alerts_reconciler, slot 30, agt-6764e9, scheduled 6-hourly sweep)**: found this
+  doc via the pre-task plan/issue conflict check while running `/data-pipeline-alerts-reconcile`. Fresh
+  `slack-read-channel.py data-pipeline-alerts 24` (3,041 msgs/24h: 2,516 `DP_CRON_DID_NOT_FIRE`, 369
+  `DP_RUN_MOSTLY_EMPTY`, 124 `DP_VM_EXIT_NONZERO`, plus single-digit counts of 8 other event types) confirmed
+  the storm continues well past the `-00130` deploy this doc already traced. Root-caused the actual mechanism
+  (see the flipped P2 todo above): `RecurringCooldownState.record()` performed a blind full-dict overwrite of
+  `cooldowns.json` using only the calling process's own local cache, so any concurrent writer (redeploy
+  overlap, or two in-flight requests on the same revision) clobbers the other's freshly-recorded identities —
+  this is a NEW, distinct root cause from every earlier hypothesis in this doc, and explains the "some
+  identities compliant, some still leaking" mixed-sample pattern the 2026-08-19 slot-21 entry logged as
+  inconclusive. Shipped `alerting-service@ac21303714` (`record()` now re-reads + merges durable state before
+  writing) with 2 updated/new regression tests; `quality-gates.sh --no-fix` ALL GATES PASSED (52s);
+  `quickmerge --agent` landed clean, post-push ancestry verified against `origin/live-defi-rollout`. Did not
+  wait out a live post-deploy window to re-confirm compliance (one-shot dispatch, ~30min+ observation is out
+  of scope) — added a fresh P2 todo for the next scheduled sweep (fires every 6h) to close the loop. No new
+  DP-`*` registry entry needed (same already-registered `DP_CRON_DID_NOT_FIRE`/`DP_RUN_MOSTLY_EMPTY`/
+  `DP_VM_EXIT_NONZERO` event names, same already-documented dedup-defeat failure class — this is a fix to
+  the mechanism, not a newly discovered alert type). Completing via `/done`.
