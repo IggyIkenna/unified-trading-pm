@@ -231,21 +231,39 @@ coverage** against `pyproject.toml`'s declared `fail_under = 70`.
       flake/side-effect risk on a shared host) or hand-mocking ~30 imports individually (fragile, low logic-density
       per line). Scope this properly before attempting — likely wants dependency-injection seams added first
       rather than mocking `server.py` module globals directly.
-- [ ] [INFRA] P2. **Give the suite a real unit/integration split.** All 274 test files sit flat under
-      `tests/test_*.py` — no subdirectories, and the existing `unit`/`integration`/`smoke`/`host_load_sensitive`
-      pytest markers are each used in only ~1 file, so there is no cheap way to run a fast subset (confirmed
-      live: a full-coverage run took 421s with no faster alternative available). This is also why Phase 2's own
-      coverage-measurement research pass got stuck twice this session waiting on a full run it had no way to
-      shrink. Done-when: a `pytest -m unit` (or equivalent) run completes in well under a minute and covers the
-      bulk of fast, non-integration logic.
-- [ ] [INFRA] P2. **No coverage baseline/ratchet file exists** (repo-wide grep for one came up empty) — once the
-      floor-raising todo above lands, add a shrinking-ratchet baseline (mirrors this workspace's existing pattern
-      elsewhere, e.g. `line_caps_baseline.yaml`) so coverage is enforced to only ever go up, not just clear a
-      static floor.
-- [ ] [INFRA] P3. **Dashboard (`dashboard/`) has no coverage measurement at all** — 19 vitest `*.test.ts` files run
-      with no coverage provider configured, plus a separate 36-spec Playwright e2e layer. Lower priority than the
-      Python backend (per CLAUDE.md's UI rule, dashboard tests are already tsc/ESLint/vitest/Playwright-only, no
-      Python gate applies) but worth a follow-up decision on whether a vitest coverage number is worth adding.
+- [x] [INFRA] P2. ✅ **DONE — `agent-orchestrator@cfd1a47753`.** Unit/integration split — 3781 test functions
+      across 280/302 files auto-marked `@pytest.mark.unit` by MEASURED per-test runtime (not manual per-file
+      classification — a one-off script cross-referenced `--co -q` + `--durations=0` output via `ast` parsing,
+      inserting only decorator lines, never touching test logic). Threshold 0.05s, chosen from the real timing
+      distribution's density inflection. `pytest -m unit` verified at 26-48s across 3 runs under real host
+      contention (target: well under 60s) — 3952/4897 collected items. Found + correctly excluded (not silently
+      forced green) one pre-existing, unrelated test-isolation bug — see new follow-up todo below.
+- [x] [INFRA] P2. ✅ **DONE — `agent-orchestrator@cfd1a47753`.** Coverage baseline/ratchet — new
+      `scripts/quality_gates/check_coverage_ratchet.py` + `coverage_baseline.yaml`, wired into `quality-gates.sh`
+      right after the existing `--cov-fail-under=72` step (reuses the same `--cov-report=json` output, no second
+      pytest run); `--update-baseline`/`--allow-lower` mirrors this workspace's established ratchet pattern.
+      Caught + fixed a real precision bug in its own first version before shipping it: 3 consecutive full-suite
+      runs of IDENTICAL code measured 82.6823%/82.6797%/82.6770% total coverage (real run-to-run coverage.py
+      noise on this ~4900-test suite, not regressions) — the original narrow tolerance against a 2-decimal-
+      rounded baseline would have permanently flapped the gate red; fixed to full-precision storage + a tolerance
+      sized to the measured noise floor, verified both that real noise now passes and a fabricated regression
+      still correctly fails.
+- [x] [INFRA] P3. ✅ **DONE (decided yes) — `agent-orchestrator@cfd1a47753`.** Dashboard vitest coverage — added
+      `@vitest/coverage-v8` (2/2 sibling UI repos in this workspace already use it, so this wasn't a novel
+      package ask) + a coverage config block, wired into `quality-gates.sh`'s existing dashboard test step.
+      Baseline measured: 12.88% statements / 89.77% branches / 33.79% functions across `src/` — the low
+      statement% is structural (this harness runs DOM-less, testing pure `.ts` logic only; `.tsx` component
+      render coverage is the Playwright e2e layer's job by design, same split `unified-trading-system-ui` already
+      makes explicit). No enforcement floor wired yet, deliberately — flagged as its own follow-up decision once
+      the baseline is accepted, not built in this pass.
+- [ ] [INFRA] P2. **NEW — pre-existing test-isolation/order-dependency bug found (not caused by this session's
+      changes): `tests/test_pane_tree_reap.py::test_kill_session_reaps_before_tmux_kill` fails both standalone
+      and under `pytest -m unit` (extra spurious `subprocess.run` call recorded) despite passing in the full
+      unfiltered suite** — confirmed unrelated to the unit-marking pass since the test body is fully mocked via
+      `monkeypatch` and only a decorator line was ever added to it; it implicitly relies on state left by some
+      earlier test in the default full-suite collection order. Currently excluded from the `unit` marker (kept
+      out of the fast subset rather than either ignored or force-included) so the fast subset stays trustworthy-
+      green. Needs a real fix: find and neutralize the leaking global/fixture state, then re-add the marker.
 - [x] [INFRA] P2. ✅ **RESOLVED 2026-08-19 — already covered by existing generic machinery, no new gap.** Audit
       whether a check is needed against no-two-open-AO-tasks-targeting-the-same-agent-orchestrator-file risk.
       Found `server/regen_backlog_from_plan.py::_derive_script_collision_group()` — built specifically from a real
