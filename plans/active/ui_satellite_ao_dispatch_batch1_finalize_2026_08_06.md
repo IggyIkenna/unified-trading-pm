@@ -28,7 +28,8 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-08"
+last_updated: "2026-08-19" # (was: 2026-08-08 -- plan_reconciler epic-scoped run 2026-08-19: applied a grace-cleared
+  # doc-drift correction from plan_reconciler_findings_ui_2026_08_18.md, see Progress Log)
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -294,6 +295,18 @@ source: >-
       NEW dangling reference above its baseline, and `regenerate_active_plan_inventory.py` reports 0 orphans. Repo:
       unified-trading-pm.
 
+      **Correction (2026-08-19, plan_reconciler epic-scoped run)** — 2 of this todo's own premises are now stale,
+      per `plan_reconciler_findings_ui_2026_08_18.md`'s Doc-drift #4 (grace-cleared, applied here): (a) the
+      "named standalone-plan todo for ... `data_status_tab_and_downloads_remediation`" clause is MOOT for that doc
+      — all 6 items this finalize's own todo 2/3 identified as cleared were shipped `[x]` directly in the source
+      doc (2026-08-14 through 08-16, via `pw:L2` + a `/plan-reconcile` pass), not via a new satellite-batch
+      extraction as originally anticipated; only `artifact_pipeline_observability`'s "dedicated closer-read
+      session" recommendation still genuinely stands, unconfirmed either way. (b) The "Also fix the two stale-prose
+      findings... trim `ui_consolidated_closeout_2026_07_30.md`'s Track 3/Track 4 close-out-criterion prose" clause
+      is now DONE — fixed directly in that doc by this same 2026-08-19 session (both criteria corrected + the
+      Track-3 "in progress" staleness fixed). Remaining live scope for whoever executes this todo: steps 2-6 of the
+      6-step ritual, plus confirming whether `artifact_pipeline_observability` still needs its own standalone plan.
+
 ## Why this finalize plan looks different from the infra one
 
 Infra's batch 1 finalize re-checked 10 purely CONFLICT-GATED deferrals (the one category that clears without a human
@@ -353,3 +366,9 @@ every category, not just conflicts) to match that.
   optional.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **plan_reconciler 2026-08-19 (epic-scoped `deployment_and_user_management_master` run)**: applied
+  `plan_reconciler_findings_ui_2026_08_18.md`'s Doc-drift #4 (grace-cleared since this doc's own 2026-08-17 last
+  touch, 34+h prior) — annotated todo 4 above with a correction: the `data_status_tab_and_downloads_remediation`
+  standalone-plan clause is moot (all 6 cleared items already shipped directly in the source doc), and the
+  `ui_consolidated_closeout` Track-3/4 stale-prose trim clause is now done (fixed this same session, see that
+  doc's own Progress Log). No checkbox flipped — todo 4 itself (steps 2-6 of the archival ritual) remains open.

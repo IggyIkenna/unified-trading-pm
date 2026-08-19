@@ -32,7 +32,8 @@ related:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-08-09"
+last_updated: "2026-08-19" # (was: 2026-08-09 -- plan_reconciler epic-scoped run 2026-08-19: applied 3 grace-cleared
+  # doc-drift corrections from plan_reconciler_findings_ui_2026_08_18.md, see Progress Log)
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -119,7 +120,9 @@ gets an independent polling schedule, not just dashboard-open-triggered.
 
 **Sources**:
 [artifact_pipeline_observability_2026_07_17.md](/plans/active/artifact_pipeline_observability_2026_07_17.md) (the
-`/artifacts` page — build→artifact→deploy lineage across both clouds; mock-first done, real API+UI wiring in progress) ·
+`/artifacts` page — build→artifact→deploy lineage across both clouds; mock-first done, all 5 real API+UI wiring
+vertical slices shipped `deployment-ui@3210bb5` 2026-07-23 — **updated 2026-08-19**, was stale "in progress"; 10
+further items remain open, per that plan's own batch1-finalize closer-read findings) ·
 [consolidator_throughput_backlog_monitor_2026_07_09.md](/plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md)
 (Consolidators cockpit tab — per-AG backlog + throughput monitor) ·
 [issues/cost_observability_deferred_followups_2026_07_10.md](/plans/active/issues/cost_observability_deferred_followups_2026_07_10.md)
@@ -134,9 +137,11 @@ operational data, Fleet-tab consolidation) — all archived complete 2026-07-20�
 distinct epic from this tranche's `deployment_and_user_management_master`, both real and both covering overlapping
 deployment-ui/deployment-api ground; no action needed, cited for continuity).
 
-**Close-out criterion**: the `/artifacts` page's real API+UI wiring ships; the Consolidators tab's v2
-truthful-throughput histogram lands (or stays intentionally descoped per its own doc); the Cost Observability deferred
-followups triaged; the alerts N+1 read pattern fixed at the root, not just the two stopgaps.
+**Close-out criterion** (**updated 2026-08-19**, plan_reconciler — 2 of 4 sub-criteria were stale-open, see Sources
+above/below for evidence): the `/artifacts` page's real API+UI wiring ships — **DONE** 2026-07-23; the Consolidators
+tab's v2 truthful-throughput histogram lands (or stays intentionally descoped per its own doc); the Cost Observability
+deferred followups triaged; the alerts N+1 read pattern's reader-side fix ships — **DONE**, and its writer-side
+batching is **resolved-by-decision** (WONT-DO'd 2026-08-01 as a cost/list-latency tradeoff, not a correctness bug).
 
 ## Track 4 — Nav / smoke-test / mock-parity hygiene · P1
 
@@ -155,11 +160,16 @@ tranche's home instead; RESOLVED + ARCHIVED 2026-08-10**) ·
 (mock mode has drifted from live on 12 of 111 endpoints, incl. an empty coverage-summary — directly relevant to this
 session's own local-dev live-vs-mock confusion) ·
 [issues/deployment_api_sigabrt_crash_loop_2026_07_24.md](/plans/archive/2026_08/issues/deployment_api_sigabrt_crash_loop_2026_07_24.md)
-(deployment-api container SIGABRT roughly every 20-40 min, undiagnosed, compounding the reaper-drain P0).
+(deployment-api container SIGABRT roughly every 20-40 min, undiagnosed, compounding the reaper-drain P0) ·
+[issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md](/plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md)
+(**added here 2026-08-19, plan_reconciler** — a genuine live `[ui]`-tagged orphan cited by zero Track 1-4 Sources list
+before this; sole open `[ENGINEER] P1` todo is a dead `drift`-venue E2E fixture ID in `strategy-registry.ts` + an
+unresolved UI/generator structural-skew investigation — mock/test-fixture hygiene is the closest fit of the 4 tracks).
 
-**Close-out criterion**: the operator nav-surface decisions (dropdown-vs-bar, the 7 duplicate routes) made; the
-smoke-gate failures fixed with `pw:L2 ✓` regression specs; mock/live contract parity restored on all 12 drifted
-endpoints; the SIGABRT crash-loop root-caused and fixed.
+**Close-out criterion — DONE, verified 2026-08-16** (updated 2026-08-19, plan_reconciler — was stale open-tense prose
+despite the Track 4 Todo below already being `[x]`; see that Todo for the evidence citation): the operator nav-surface
+decisions (dropdown-vs-bar, the 7 duplicate routes) made; the smoke-gate failures fixed with `pw:L2 ✓` regression
+specs; mock/live contract parity restored on all 12 drifted endpoints; the SIGABRT crash-loop root-caused and fixed.
 
 ## Codex SSOTs (read before touching a track)
 
@@ -381,3 +391,11 @@ endpoints; the SIGABRT crash-loop root-caused and fixed.
   `last_updated: 2026-08-09` lags the doc's own more recent edits by about a week — worth a bump next legitimate
   touch.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **plan_reconciler 2026-08-19 (epic-scoped `deployment_and_user_management_master` run)**: applied the 3 grace-
+  protected doc-drift items `plan_reconciler_findings_ui_2026_08_18.md` had already diagnosed but couldn't apply
+  (this doc was inside its 12h grace window at that run's write time; now 34+h past last touch, clear). Track 3
+  Sources' "`/artifacts`... in progress" corrected to shipped (`deployment-ui@3210bb5`, 2026-07-23); Track 3's
+  close-out criterion corrected (both the `/artifacts` wiring and the alerts-N+1 reader-side halves are DONE, the
+  writer-side half is WONT-DO'd-by-decision, not still-open); Track 4's close-out criterion corrected to match its
+  own already-`[x]` Todo (was stale open-tense prose). Also added `architecture_v2_drift_leg_specs_and_manifest_
+  residue_2026_07_16.md` to Track 4 Sources — a genuine live ui-tranche orphan with zero prior Track citation.
