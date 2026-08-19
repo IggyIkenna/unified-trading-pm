@@ -171,16 +171,29 @@ Measured against the shipped leg table in `cursor-configs/skills/readiness-state
 surfaces) and `execution_instruction` is explicitly _"none wired yet"_. **Modes are batch (simulated) / paper
 (testnet and-or simulated per declared possibility) / live.**
 
-- [ ] [BACKEND] P0. **Extend the readiness dump to the full surface × mode matrix**, with the service split above —
+- [x] [BACKEND] P0. ✅ **Extend the readiness dump to the full surface × mode matrix**, with the service split above —
       strategy-service owns positions, execution-service owns orders / fills / trades / account balance. Reuse real
       checks per the skill's own fact-vs-proxy policy; a surface with no machine check prints `unverified`, never a
-      silent pass.
-- [ ] [BACKEND] P0. **Add a LIVE-feed leg to `market_tick_data`** — it currently answers batch only, so "can this
+      silent pass. — `unified-trading-pm@4c92cd5b45`. Added `execution_orders`/`execution_fills`/`execution_trades`/
+      `execution_account_balance` legs to `checks.py` + a new `_execution_order_capability_probe.py` cross-venv
+      probe (execution-service's own `get_supported_venues()` adapter registry + UAC's `validate_operation`
+      per-env `place_order` capability — real checks, not invented proxies). Verified live 2026-08-19 against
+      `OKX-FUTURES`: `execution_orders` derives `unverified` at BATCH, `ready` at PAPER/LIVE (UAC capability
+      resolves supported for both testnet and mainnet); `execution_fills`/`execution_trades`/
+      `execution_account_balance` derive `unverified` (adapter registered, no per-operation capability declaration
+      exists to go further) — no surface silently passes. SKILL.md's leg table updated to match.
+- [x] [BACKEND] P0. ✅ **Add a LIVE-feed leg to `market_tick_data`** — it currently answers batch only, so "can this
       venue's market data be pulled live?" is unanswered for every venue. Paper needs no separate feed leg: per
       [paper-batch-live-reconciliation](/codex/09-strategy/operational/paper-batch-live-reconciliation.md) § 0,
       **paper always consumes the LIVE feed**, never a testnet feed — testnet is an execution sub-mode, and a
       testnet price series would break the determinism proof by construction. So market data is a two-feed
-      question (batch + live), not three.
+      question (batch + live), not three. — `unified-trading-pm@4c92cd5b45`. Added `checks.mtds_live_feed()` (MTDS's
+      own `WS_FEED_CONNECTOR_FACTORIES` registry, read via a new `_mtds_live_feed_probe.py` cross-venv probe that
+      calls MTDS's own `connectors.register_all()` + `connector_registry.registered_venues()`) and wired
+      `derive_readiness.py` so PAPER and LIVE rows reuse the SAME live-feed verdict, while BATCH keeps the
+      pre-existing coverage.json-observed verdict — no separate paper feed leg was added. Verified live 2026-08-19
+      against `OKX-FUTURES`: BATCH → `not_ready` (coverage.json, zero captured), PAPER and LIVE → identical
+      `unverified` verdict (registered in `WS_FEED_CONNECTOR_FACTORIES`, live data flow itself unconfirmed).
 - [ ] [BACKEND] P0. **Archetype readiness is CODE completeness, not data availability.** The existing
       `strategy — archetype half` leg uses `satisfying_archetypes()`, which answers "which archetypes can this
       venue's DATA satisfy" — a different question from "are this archetype's code paths and hooks complete for
