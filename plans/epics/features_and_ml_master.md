@@ -50,7 +50,8 @@ related_plans:
   - ../active/bigquery_feature_ml_compute_engine_option_2026_06_08.md
   - ../active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md
   - ../active/features_service_e2e_pipeline_test_2026_05_26.md
-last_updated: 2026-07-12
+last_updated: 2026-08-19 # was 2026-07-12 — added AAVE/Lido/EtherFi + Hyperliquid/Aster funding-feature audit for
+  # the priority venue/protocol set, see body
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
@@ -964,3 +965,46 @@ authorization post-cutover). · **estimate**: 2.4 cal AI-days (class: infra)
 - **Sports features (P0)**: Gate: `sports_master` Phase 3+4.
 - **Prediction features (P0)**: Gate: operator authorization.
 - **Calendar + XInstrument cross-cutting (P0)**: Gate: phases 1-5 GREEN.
+
+## AAVE/Lido/EtherFi + Hyperliquid/Aster funding-feature audit (2026-08-19)
+
+Audit scope: Ethereum DeFi (AAVE V3, Lido, EtherFi) + CeFi perp funding-rate features specifically for Hyperliquid
+and Aster (funding matters for perp/basis strategies on these two venues). **Verified 2026-08-19**: AAVE V3 / Lido /
+EtherFi feature coverage is mature and essentially DONE — the genuine gap in this audit is funding-rate features,
+where Hyperliquid is a narrow-MVP parameterization gap and Aster is a net-new calculator gap.
+
+- [x] [DATA] P2. ✅ **AAVE V3 features — confirmed covered end-to-end, no gap.** 5 registered calculators in
+      `features_service/onchain/app/calculators/`: `aave_lending_calculator.py` (supply/borrow APY + spread),
+      `aave_utilization_calculator.py`, `aave_rate_impact_calculator.py` (UAC `AaveInterestRateModel`-based
+      trade-impact projection), `aave_risk_calculator.py`, `aave_liquidation_risk_scanner.py` (health-factor-based).
+      Nothing to build here.
+- [x] [DATA] P3. ✅ **Lido features — confirmed covered, no gap.** `lst_staking_calculator.py` (DefiLlama-proxy APY
+      + rate) plus a more precise native-oracle path (`lst_features.py`/`staking_apy_total.py`, reads on-chain
+      exchange rates via UAC `LST_TOKEN_TO_PROTOCOL_ASSET`, not a proxy). Both layers exist.
+- [x] [DATA] P3. ✅ **EtherFi features — confirmed covered, MORE mature than a prior pass assumed** (correction:
+      NOT the weakest of the three LSTs). Base APY/rate (`lst_staking_calculator.py`), native on-chain exchange
+      rate (`lst_features.py::DEFI_FEATURE_WEETH_ETH_RATE`), EigenLayer restaking rewards
+      (`eigen_rewards_calculator.py`), AND seasonal points tracking (`lst_seasonal_rewards_collector.py`/
+      `lst_seasonal_rewards_live.py`) — arguably the most feature-rich of the three. One caveat: `lst_staking_
+      calculator.py`'s `weeth_rate` is a documented DefiLlama-APY-derived proxy (not RPC-read) — `lst_features.py`'s
+      `DEFI_FEATURE_WEETH_ETH_RATE` is the real oracle-based figure and doesn't share this caveat.
+- [ ] [DATA] P2. **Hyperliquid funding features — narrow-MVP gap, parameterization not a rebuild.**
+      `features_service/onchain/calculators/perp_funding_rates_defi.py` is dedicated to Hyperliquid but hardcoded to
+      `_DEFI_VENUE = "hyperliquid"` / `_DEFI_SYMBOL = "ETH"` only — its own docstring says "multi-venue DeFi fan-out
+      deferred" and references a plan that **does not currently exist in this repo**
+      (`funding_rate_apy_bps_multi_venue_2026_06.md` — confirmed via corpus-wide grep, no file with that name or a
+      close variant found under `plans/`; a stale pointer inside the code comment, not a broken PM link — noted here
+      so the next agent doesn't chase a phantom plan; out of scope for this session to fix the code comment itself).
+      `venue`/`symbol` are already function parameters on `compute_defi_funding_rates`, so extending to other
+      Hyperliquid-listed coins is parameterization/orchestration work, not new machinery. Author a real tracking
+      doc for this (the referenced-but-missing plan), scoped to multi-coin Hyperliquid funding rather than the
+      vague "multi-venue" framing the stale comment implies.
+- [ ] [DATA] P1. **Aster funding features — genuinely absent, net-new calculator needed.** Zero calculator files
+      reference Aster (confirmed via case/word-boundary grep — every hit is mock-data seeds, a coverage-probe
+      script, test fixtures, or docstring mentions). Same architectural class as Hyperliquid (on-chain-perp CeFi
+      venue, `features_service/onchain/` module, not the traditional-CeFi `features_service/cefi/` path) — build a
+      calculator analogous to `perp_funding_rates_defi.py`, parameterized for `venue="aster"`. **Upstream dependency
+      to verify first**: `adv.py`'s docstring (as of 2026-07-20) states MDPS had not yet built processed candles for
+      ASTER — cross-check against `mtds_mdps_master.md`'s 2026-08-19 priority-venue audit (Aster is confirmed
+      MDPS-wired there) before assuming this is purely a features-service-side gap; if MDPS has since caught up
+      this todo is unblocked, otherwise sequence behind the MDPS side.

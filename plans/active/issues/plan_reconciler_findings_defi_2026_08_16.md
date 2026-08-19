@@ -22,7 +22,9 @@ locked_by:
 priority: P2
 assigned_vm: NA
 execution_scope: local-only
-parent_epic: defi_master
+parent_epic: plan_hygiene_master # was: defi_master (epic-assignment audit 2026-08-19) -- doc is a plan-reconciliation
+  # run report (flips, contradictions, hygiene fixes, archival) over the defi tranche, not defi asset-group content
+  # itself -- same class as plan_reconciler_findings_cefi_2026_08_16.md's already-corrected retag
 resolved_by:
 depends_on: []
 drift_direction: advance-code

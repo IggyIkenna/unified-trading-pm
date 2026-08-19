@@ -29,6 +29,7 @@ authoritative_for:
   [
     five-transfer-type taxonomy + per-venue wallet capabilities,
     mirrored-custody routing model (per-client binding + multi-hop route + manual acknowledgement),
+    decided BRIDGE execution architecture (BridgeRouter + SocketBridgeConnector for EVM + new WormholeBridgeConnector for Solana),
   ]
 referenced_by:
   [
@@ -38,7 +39,7 @@ referenced_by:
     /codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md,
   ]
 owner:
-last_reviewed: 2026-09-13
+last_reviewed: 2026-08-19
 code_refs:
 ---
 
@@ -55,13 +56,22 @@ execution-service package, even though its UAC sub-path is named after the consu
 
 ## Transfer Types
 
-| Type               | Mechanism                                                        | Latency                          | Fees              | Use Case                                         |
-| ------------------ | ---------------------------------------------------------------- | -------------------------------- | ----------------- | ------------------------------------------------ |
-| `ON_CHAIN`         | Direct blockchain transfer, signed via Copper (MPC) or local key | Minutes (confirmation-dependent) | Gas               | DeFi<>DeFi same-chain, DeFi<>CeFi                |
-| `CEX_WITHDRAWAL`   | Exchange withdrawal to external address via CCXT `withdraw()`    | Minutes to hours                 | Withdrawal fee    | CeFi->CeFi cross-exchange, CeFi->DeFi            |
-| `CEX_INTERNAL`     | Exchange internal transfer between wallet types via exchange API | Instant                          | None              | Funding->trading, spot->futures on same exchange |
-| `CUSTODY_TRANSFER` | Transfer via custody provider (Copper MPC signing)               | 1-5s signing + blockchain time   | Gas               | Treasury->trading wallet, custodied moves        |
-| `BRIDGE`           | Cross-chain bridge (Across protocol)                             | Minutes                          | Bridge + gas fees | Cross-chain capital movement                     |
+> **⚠️ Re-verified 2026-08-19: this local 5-member taxonomy no longer exists in code.** The `execution_service
+.transfer_types.TransferType` enum this table mirrored was **deleted 2026-08-14** — resolved as a strict subset of
+> `BusTransferType` (the transfer-type SSOT, `unified_api_contracts.canonical.crosscutting.transfer_events`, 13
+> members) per the workspace's shadow-SSOT-type rule, with the source-value mapping preserved verbatim in that
+> module's header comment. The table below is kept as a simplified execution-path summary for the five mechanisms
+> still meaningfully distinct at this doc's level of detail, but for the authoritative type list use
+> `/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md` § "Transfer types — `BusTransferType`, 13
+> members" — do not cite this table as "the" enum.
+
+| Type               | Mechanism                                                                                                                                                                                                                                                                                       | Latency                          | Fees              | Use Case                                         |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------- | ----------------- | ------------------------------------------------ |
+| `ON_CHAIN`         | Direct blockchain transfer, signed via Copper (MPC) or local key                                                                                                                                                                                                                                | Minutes (confirmation-dependent) | Gas               | DeFi<>DeFi same-chain, DeFi<>CeFi                |
+| `CEX_WITHDRAWAL`   | Exchange withdrawal to external address via CCXT `withdraw()`                                                                                                                                                                                                                                   | Minutes to hours                 | Withdrawal fee    | CeFi->CeFi cross-exchange, CeFi->DeFi            |
+| `CEX_INTERNAL`     | Exchange internal transfer between wallet types via exchange API                                                                                                                                                                                                                                | Instant                          | None              | Funding->trading, spot->futures on same exchange |
+| `CUSTODY_TRANSFER` | Transfer via custody provider (Copper MPC signing)                                                                                                                                                                                                                                              | 1-5s signing + blockchain time   | Gas               | Treasury->trading wallet, custodied moves        |
+| `BRIDGE`           | **corrected 2026-08-19** — `SocketBridgeConnector`, a Socket v2 aggregator selecting the best route across Across / Stargate / Hop / CCTP / LayerZero / LiFi (previously mis-stated as "Across protocol" directly — Across is one of the six protocols Socket routes across, not the mechanism) | Minutes                          | Bridge + gas fees | Cross-chain capital movement                     |
 
 ## CEX Internal Transfer Endpoints
 
@@ -151,7 +161,8 @@ Operates on the share class architecture (one treasury wallet per share class: U
    - Excess capital deployed to strategies
    - Strategy emits TransferInstruction
 5. Treasury -> trading wallet: CUSTODY_TRANSFER via Copper create_transfer()
-6. Cross-chain moves: BRIDGE via Across protocol
+6. Cross-chain moves: BRIDGE via SocketBridgeConnector (Socket v2 aggregator across Across/Stargate/Hop/CCTP/LayerZero/LiFi;
+   corrected 2026-08-19 -- previously named "Across protocol" directly, see § "Transfer Types" above)
    - Cost estimated via bridge_cost_model.py
 ```
 
@@ -298,17 +309,108 @@ executed_, so the two must stay separate fields.
 
 ### Known gaps as of 2026-08-12 (audited, tracked, NOT yet built)
 
-| Gap                                                                                                                                                                                                      | Where it bites                                                                                                          |
-| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| **CEFFU absent from every routing surface** — `custody_provider` is `copper`/`fireblocks`/`''`; zero venues bound to ceffu; `WalletMappingConfig.custodian` is `copper`/`fireblocks`/`mock`              | Binance cannot be routed via CEFFU at all                                                                               |
-| **No mirroring in `CustodyProvider`** — Ceffu's `oes_*` methods sit OUTSIDE the protocol; Copper has no ClearLoop path (`clearloop` = zero source hits)                                                  | Callers using mirroring are coupled to Ceffu concretely, defeating agnosticism                                          |
-| **No mirrored-vs-held distinction in `WalletType`** (`FUNDING`/`TRADING`/`SPOT`/`UNIFIED`/`ON_CHAIN`)                                                                                                    | A balance mirrored onto Binance is custodied at CEFFU — double-counting it misstates available margin and client assets |
-| **No custody↔custody route**; no multi-hop representation                                                                                                                                                | The OKX→Binance row above is unexecutable                                                                               |
-| **No manual/acknowledged transfer path** — `UNITY_WALLET_OP` and `IBKR_FUND_MOVE` are declared with ZERO consumers fleet-wide                                                                            | SMA and bookmaker moves are unrepresentable                                                                             |
-| **FOUR overlapping transfer-type enums** — `transfer_types.TransferType` (5, this doc's SSOT), `architecture_v2.enums.TransferType` (7), `domain.defi.transfers.TransferType` (6), `BusTransferType` (5) | Any reader can cite a different "the" taxonomy; `architecture_v2`'s has no member docstrings at all                     |
+| Gap                                                                                                                                                                                                                                                                                                                                              | Where it bites                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| **CEFFU absent from every routing surface** — `custody_provider` is `copper`/`fireblocks`/`''`; zero venues bound to ceffu; `WalletMappingConfig.custodian` is `copper`/`fireblocks`/`mock`                                                                                                                                                      | Binance cannot be routed via CEFFU at all                                                                               |
+| **No mirroring in `CustodyProvider`** — Ceffu's `oes_*` methods sit OUTSIDE the protocol; Copper has no ClearLoop path (`clearloop` = zero source hits)                                                                                                                                                                                          | Callers using mirroring are coupled to Ceffu concretely, defeating agnosticism                                          |
+| **No mirrored-vs-held distinction in `WalletType`** (`FUNDING`/`TRADING`/`SPOT`/`UNIFIED`/`ON_CHAIN`)                                                                                                                                                                                                                                            | A balance mirrored onto Binance is custodied at CEFFU — double-counting it misstates available margin and client assets |
+| **No custody↔custody route**; no multi-hop representation                                                                                                                                                                                                                                                                                        | The OKX→Binance row above is unexecutable                                                                               |
+| **No manual/acknowledged transfer path** — `UNITY_WALLET_OP` and `IBKR_FUND_MOVE` are declared with ZERO consumers fleet-wide                                                                                                                                                                                                                    | SMA and bookmaker moves are unrepresentable                                                                             |
+| ~~**FOUR overlapping transfer-type enums**~~ — **RESOLVED 2026-08-12/14.** Unioned onto `BusTransferType` (13 members, `unified-api-contracts@4663daf908`); `transfer_types.TransferType` (the local 5-member enum this row used to call "this doc's SSOT") was then deleted 2026-08-14 as a strict subset. See § "Transfer Types" banner above. | n/a — closed                                                                                                            |
 
 Tracked in
 [the Elysium readiness plan](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md) § H.11.
+
+## Bridging execution reality (verified 2026-08-19) — the DECIDED architecture
+
+### Current state: three dispatch surfaces, zero live production bridge execution
+
+A workspace-wide re-verification found `BRIDGE` genuinely modeled end-to-end on the **emit** side —
+`strategy-service/strategy_service/transfer_coordinator.py`'s netting logic carries `BusTransferType.BRIDGE` generically
+(rail=`on_chain`, `chain_id`/`dest_chain_id` fields), real and tested. On the **consume** side (execution-service), there
+are three separate surfaces that could plausibly dispatch a bridge, and as of this pass none of them do, for three
+different reasons:
+
+1. **`TransferCoordinator`** (`execution_service/transfer_coordinator.py`) — the intended single entry point, but it has
+   **zero production construction sites workspace-wide** (grep-confirmed: not imported, not built, not referenced in
+   `app.py` or any wiring module — only its own unit tests construct it). Its `BRIDGE` routing-table row also named a
+   fabricated target; see `/codex/04-architecture/transfer-coordinator.md`'s routing table for that fix.
+2. **`TransferWiring` / `CompositeTransferAdapter`** (`execution_service/engine/transfers/{wiring,factory}.py`) — real
+   production wiring, genuinely called at startup (`api/app.py` calls `build_transfer_wiring(config)`). But
+   `CompositeTransferAdapter` only implements `execute_internal_transfer` / `execute_withdrawal` /
+   `execute_onchain_transfer` / `get_transfer_status` / `get_balance` — **no bridge method exists on it at all.**
+3. **`SocketBridgeConnector` / `CCTPBridgeConnector`** (`defi_execution/protocols/bridge.py`, `cctp.py`) — real and
+   live-capable: `SocketBridgeConnector.bridge()` was fixed 2026-08-14 (per its own docstring) to call Socket's
+   `/build-tx` endpoint, approve the input token, and sign+broadcast a real transaction — no longer the quote-only
+   silent-success stub it used to be. Both connectors implement the `BaseBridgeConnector` ABC
+   (`bridge()`/`get_bridge_status()`/`get_bridge_quotes()`/`get_supported_chains()`). But **zero production call sites**
+   dispatch into either connector — the only references outside `bridge.py`/`cctp.py` themselves are comments in
+   `kamino.py` and `bridge_cost_model.py` pointing at them as a future integration.
+
+**Net effect:** the bridge is built and adapter-injectable, but nothing in the live dispatch path calls it. This is the
+same shape as `/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md`'s IMPLEMENTATION STATUS box
+("the whole rail below it is built and adapter-injected; the near end is disconnected") — that box tracks the
+producer-side gap (nothing emits `TransferIntent`), this section tracks the matching consumer-side gap (nothing routes
+`BRIDGE` once emitted).
+
+### The decision (operator ruling 2026-08-19) — this replaces the prior pass's "genuine open questions" 1 and 2
+
+The operator has now decided the two open bridge-provider questions the prior pass flagged. This is buildable spec, not
+an open question anymore:
+
+1. **EVM↔EVM bridging: wire up the EXISTING `SocketBridgeConnector`.** It is already correctly built — a Socket v2
+   aggregator picking the best route across Across / Stargate / Hop / CCTP / LayerZero / LiFi — the gap is purely that
+   nothing calls it in production (§ above). **No new bridge connector is needed for EVM↔EVM.**
+2. **EVM↔Solana bridging: build a NEW `WormholeBridgeConnector`.** Verified zero hits for this name or for "Wormhole" as
+   an implemented connector anywhere in the workspace today (the only prior mention is a docstring example on an
+   unrelated ledger-event enum). Wormhole was chosen because it is the most liquid, most battle-tested EVM↔Solana
+   bridge with general token support — unlike CCTP, which is USDC-only and already has its own connector
+   (`CCTPBridgeConnector`) reserved for that narrower EVM↔EVM/USDC-native use.
+3. **Routing: a new `BridgeRouter`** at the execution-service dispatch layer selects the adapter by destination chain
+   family — EVM destination → `SocketBridgeConnector`, Solana destination → `WormholeBridgeConnector` — both behind one
+   common interface so the provider choice stays swappable later (operator's explicit requirement: "it can change
+   because it's an adapter"). `BaseBridgeConnector` already exists as that common interface for the EVM case; extending
+   it (or its replacement) to also cover a Solana destination is the prerequisite below, not a separate design.
+   `BridgeRouter` is what `TransferCoordinator`'s `BRIDGE` row should ultimately target once `TransferCoordinator`
+   itself gets a production construction site (a distinct, still-open gap — see
+   `/codex/04-architecture/transfer-coordinator.md`).
+
+### Prerequisite: the chain-identifier type is EIP-155-only and cannot represent Solana
+
+This is the structural blocker item 2 depends on, verified at every layer that would need to carry a Solana
+destination:
+
+- **`TransferIntent.chain_id` / `dest_chain_id`** (UAC `canonical/crosscutting/transfer_events.py`) — both typed plain
+  `int`, docstring says "EIP-155". Same shape independently in strategy-service's own `TransferRequest`
+  (`strategy_service/transfer_coordinator.py`).
+- **`BaseBridgeConnector.bridge()` / `get_bridge_quotes()`** (`defi_execution/protocols/bridge.py`) — `source_chain_id:
+int`, `dest_chain_id: int` baked into the ABC's method signatures. Every chain reference throughout `bridge.py` is
+  `int`-typed — the connector's chain tables are EVM-only by construction, not by omission.
+- **`BridgeProtocol`** (UAC `internal/domain/defi/transfers.py`) — 8 members (`NATIVE`, `STARGATE`, `ACROSS`, `HOP`,
+  `LAYERZERO`, `SOCKET`, `LIFI`, `CCTP`). No `WORMHOLE` member.
+- **`CHAIN_BRIDGE_GRAPH`** (UAC `canonical/crosscutting/defi.py`) — has **zero edges touching `ChainKind.SOLANA`**,
+  even though `ChainKind.SOLANA` already exists as an enum member one layer up (used by strategy archetype configs'
+  `allowed_chains` and MTDS adapter dispatch — the enum's own docstring already describes Solana as a "non-EVM chain...
+  with separate RPC template dicts"). The chain-family split this project needs already exists at the archetype/adapter
+  layer; it simply never propagated down into the transfer/bridge layer's `int`-typed fields.
+
+**What needs building, concretely:** a broader chain-identifier type replacing the bare `int` on `TransferIntent
+.chain_id`/`dest_chain_id` and on `BaseBridgeConnector`'s bridge-facing method signatures — e.g. a discriminated union
+or a `(chain_family, chain_specific_address)` pair (EVM branch carries the existing EIP-155 `int`; Solana branch carries
+a base58 program/wallet address) — plus a `WORMHOLE` member on `BridgeProtocol` and the corresponding
+`CHAIN_BRIDGE_GRAPH` edges. The exact shape is an implementation call for whoever builds it, but it must land in BOTH
+the UAC contract layer (`TransferIntent`, `BridgeProtocol`, `CHAIN_BRIDGE_GRAPH`) and the execution-service connector
+layer (`BaseBridgeConnector`, the new `WormholeBridgeConnector`) — extending only one side leaves the other unable to
+express a Solana-destined intent end-to-end.
+
+### Still genuinely open (operator has NOT decided these — do not treat as resolved)
+
+- Whether fixing `RecursiveLoopOrchestrator._submit_flash_loan()`'s live-mode stub (see
+  `/codex/04-architecture/flash-loan-receiver.md` § "Live-mode flash-loan submission is stubbed") is in scope now. This
+  is atomic on-chain flash-loan execution, a structurally different mechanism from the venue-to-venue `BRIDGE` transfers
+  this section covers — not the same gap, and not decided.
+- Whether a dedicated atomic-execution SSOT doc (covering `AtomicBundleExecutor` + the `RecursiveLeverageReceiver` flash
+  flows together) should be created. Not decided.
 
 ## Related Docs
 

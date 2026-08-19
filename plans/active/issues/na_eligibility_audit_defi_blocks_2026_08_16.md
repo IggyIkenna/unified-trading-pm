@@ -21,7 +21,10 @@ related:
   ]
 created: 2026-08-16
 last_updated: 2026-08-17
-parent_epic: defi_master
+parent_epic: plan_hygiene_master # was: defi_master (epic-assignment audit 2026-08-19) -- doc is a na-eligibility-audit
+  # Phase 1b consolidation run report (operator-questions index + MISCLASSIFIED carry-forward list) over the defi
+  # tranche, not defi asset-group content itself -- same class as plan_reconciler_findings_cefi_2026_08_16.md's
+  # already-corrected retag
 assigned_vm: NA
 execution_scope: local-only
 priority: P3

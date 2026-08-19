@@ -22,7 +22,9 @@ locked_by:
 priority: P2
 assigned_vm: NA
 execution_scope: local-only
-parent_epic: defi_master
+parent_epic: plan_hygiene_master # was: defi_master (epic-assignment audit 2026-08-19) -- same as its 2026-08-16
+  # predecessor: a plan-reconciliation run report (contradictions, hygiene fixes, process self-critique) over the
+  # defi tranche, not defi asset-group content itself
 archive_exempt: true # dated run-journal, not a standing plan -- na-eligibility-audit 2026-08-19 closed its last
   # open item (0 open todos now) but this doc follows the same disposition as its 08-16/08-18 siblings (a
   # completed dispatch's own report, not archived per established precedent for this doc family) rather than a
