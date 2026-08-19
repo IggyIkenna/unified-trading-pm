@@ -156,11 +156,16 @@ sports-tranche-owned).
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
 
-- [ ] [INFRA] P2. **RETAGGED 2026-08-11 (slot-20) — was `[BACKEND]`.** Remaining work is provisioning a NEW
-      `europe-west2` network egress (VM/proxy) — `infra` craft's domain, not `backend_engineer`'s (full rationale in the
+- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **Two-sided Betfair odds — persist back+lay, not just one side.** **RETAGGED
+      2026-08-19 (ag_closeout_auditor, prediction tranche)** — was bare `[INFRA]`; live-traced against
+      `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_is_non_dispatchable()`/`_has_live_blocked_token()`
+      and confirmed the bare tag read as falsely dispatchable despite the genuine external Betfair-account block
+      documented below — now matches the mirrored issue doc's already-correct tag (finding:
+      `plan_reconciler_findings_predictions_master_2026_08_19.md`). RETAGGED 2026-08-11 (slot-20) — was
+      `[BACKEND]`. Remaining work (as of 2026-08-11) was provisioning a NEW `europe-west2` network egress (VM/proxy)
+      — `infra` craft's domain, not `backend_engineer`'s (full rationale in the
       mirrored issue doc's Progress Log). **OPERATOR-DECIDED 2026-08-11: egress region resolved to `europe-west2`
-      (London) — see updated note below, was BLOCKED-OPERATOR-DECISION.** Two-sided Betfair odds — persist back+lay, not
-      just one side. Item `[5]` under the source doc's "Smaller open items (documented, not blocking paper)" — items
+      (London) — see updated note below, was BLOCKED-OPERATOR-DECISION.** Item `[5]` under the source doc's "Smaller open items (documented, not blocking paper)" — items
       `[1]`-`[4]` shipped 2026-07-20, this one is still open and needs a Betfair-exchange book source. Different
       component (Betfair adapter) from the EventTransport todo above — no file overlap expected, safe to run
       concurrently. **Source**: `plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md` (item [5]).
@@ -249,6 +254,14 @@ sports-tranche-owned).
       session). Todos 1-3 shipped and green (`market-tick-data-service@fc9e36cd`/`@85872cab`/`@766e776d`, all
       verified ancestors of origin; `tests/unit/test_betfair_adapter.py` present). Tracking + 4 re-scoped todos:
       `/plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md`.
+
+      **CORRECTED 2026-08-19 (ag_closeout_auditor, prediction tranche) — the "Next step" paragraph above is STALE.**
+      The `europe-west2` egress WAS provisioned 2026-08-12 (verified live via the issue doc's own Progress Log) and
+      the HTTP 403 geo-block it describes is resolved. The real current blocker is different: Betfair now rejects
+      login with `ACCOUNT_PENDING_PASSWORD_CHANGE` (found 2026-08-12), an operator/account-holder-only action (reset
+      the password via Betfair's portal, then update the GSM `betfair-password` secret) — not a routable infra task.
+      See `prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md` todo 4. Finding:
+      `plan_reconciler_findings_predictions_master_2026_08_19.md`.
 
 - [x] ✅ [BACKEND] P2. **DONE 2026-08-09 (slot-5, backend_engineer) — `market-tick-data-service@85872cab`.** Sub-item of
       the Betfair back+lay todo above: implement `BetfairAdapter.download_batch()` + `factory.py`/`umi_tick_provider.py`
@@ -688,6 +701,11 @@ sports-tranche-owned).
   `prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md` (batch2_finalize todo 2); (c) archiving batch2 itself
   (todo 3). **Not re-drafted here** — flipping batch2_finalize to `active` (a separate operator action from this batch)
   is the correct next step, not a new batch6 todo. Flagging in this Progress Log so it isn't lost.
+
+- **CORRECTED 2026-08-19 (ag_closeout_auditor, prediction tranche)** — the bullet above is STALE: both
+  `prediction_satellite_ao_dispatch_batch2_2026_07_25.md` and its finalize have been `status: complete`, archived
+  under `plans/archive/2026_07/`, since 2026-07-30. No action remains here. Finding:
+  `plan_reconciler_findings_predictions_master_2026_08_19.md`.
 
 ## Deferred — already self-dispatching (assigned_vm: planning + status: open, not a real orphan)
 
