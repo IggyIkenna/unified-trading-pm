@@ -240,7 +240,11 @@ where it writes.
 
 ## Results
 
-_(populated as each model's run completes)_
+| Model | Task (tier) | Exit | Turns | Tool calls (err) | Cumulative in/out tokens | Cache-read tokens | Peak approx context-fill% | Wall-clock | Gate 1 | Notes |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Gemini 3.5-flash-lite | `ag-closeout-auditor` audit (Easy) | 0 | 83 | 29 (4) | 730,196 / 11,248 | 2,607,683 | 1.61% | 10.1 min | PASS (clean tree, real citations, committed not pushed) | 4/4 checks answered with specific file/line + log citations (sharding via `MAX_CONCURRENT_TRANCHES=4`, runtime range 6.5-63.9 min measured, no PR/review-branch gate found, a real 2026-08-16 escalation traced through to a produced batch plan). Full poll history: `usage_poll.jsonl` under this attempt's out-dir. |
+
+_(remaining rows populated as each attempt completes)_
 
 ## Progress Log
 
