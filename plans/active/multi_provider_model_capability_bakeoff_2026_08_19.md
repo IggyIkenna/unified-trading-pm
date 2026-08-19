@@ -246,6 +246,8 @@ where it writes.
 | Gemini 3.5-flash-lite | tmux-fixture anti-pattern audit (Medium) | 0 | 67 | 26 (1) | 475,123 / 13,869 | 3,355,399 | 0.56% | 11.3 min | PASS (clean tree, committed not pushed) | 1 real tool_error recorded (not a Gate-1 blocker — recovered same task). Not yet content-reviewed for depth (that's a separate Gate-2 pass, tracked as pending). |
 | Gemini 3.5-flash-lite | `docs-reconcile` audit (Easy #2) | 1 | 2 | — | — | — | — | ~1 min | INFRA-BLOCKED (Gemini free-tier `RESOURCE_EXHAUSTED`, $0.25 spent, not a real result) | Excluded — quota, not model quality. |
 | Gemini 3.5-flash-lite | `escalation-queue-reconciler` audit+gap-check (Medium #1) | 1 | 13 | — | — | — | — | — | INFRA-BLOCKED (Gemini free-tier `RESOURCE_EXHAUSTED`, $1.31 spent, not a real result) | Excluded — quota, not model quality. |
+| Gemini 3.5-flash-lite | repo-touched-capture (Hard #1) | 1 | 56 | 48 (3) | 1,016,388 / 27,506 | 7,202,385 | 0.74% | 26.3 min | INFRA-INTERRUPTED (quota-driven 403 after substantial real work, $6.45 spent — NOT a clean fail, NOT a clean pass) | 56 real turns / 48 tool calls before hitting the same `RESOURCE_EXHAUSTED`-class 403. Working tree confirmed clean afterward (`git status --porcelain` empty) — no lost/uncommitted work, the model simply never reached its own commit step. Excluded from Gate-1/2 scoring (incomplete), but the depth reached is itself a useful signal this model can sustain long tool-use chains before failing. |
+| Gemini 3.5-flash-lite | `na-eligibility-auditor` audit+fix (Hard #2) | 1 | 42 | 39 (5) | 696,473 / 21,680 | 4,258,544 | 2.4% | 15.5 min | INFRA-INTERRUPTED (same quota-driven 403, $4.13 spent) | 42 real turns before failing identically to Hard #1. Same clean-tree confirmation, same exclusion from scoring. |
 | **Gemini 3.7-flash** | **all 6 assigned tasks** | 1 (×6) | 9,1,1,1,1,1 | — | — | — | — | — | **INFRA-BLOCKED, entire lane** — 20 req/min free-tier quota exhausted on task 1 ($0.74 spent), never recovered before tasks 2-6's turn (30s spacing too short) | Zero usable data for this model this run. Re-run needed (ideally paced/serialized or on a higher quota tier) before drawing any conclusion about Gemini 3.7-flash's real capability. |
 | **DiffusionGemma 26B** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~5s each | **INFRA-BLOCKED, entire lane** — NVIDIA NIM `InternalServerError`(500)/`BadGatewayError`(502) on every attempt; a simple single-turn smoke test against the SAME endpoint succeeded (200 OK) immediately after, isolating the failure to the full real Claude Code request shape (real CLAUDE.md system prompt + full multi-tool schema), not a dead endpoint | Zero usable data. Root cause not yet pinned to a specific payload/tool-count limit — flagged, not fixed. Re-run needs that fixed first. |
 | **Codex/Luna** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~0.1s each | **INFRA-BLOCKED, entire lane** — bridge rejects any `system`-role message (HTTP 400), root-caused in `codex_luna_flex_bridge_2026_08_14.md` | Zero usable data. Needs a real bridge-code fix, not a config/retry issue. |
@@ -421,3 +423,23 @@ _(remaining rows populated as each attempt completes)_
   quota-blocked, 2 still in flight) — every other model's lane is either 100% infra-blocked or still pending. This
   bake-off's infra had more real bugs waiting in it than expected; that is itself the most useful thing found
   today, arguably more valuable than the model-quality data it was designed to produce.
+
+- **2026-08-19 (later) — slot 24 (Gemini 3.5-flash-lite) finished all 6 tasks; a real `run-attempt.sh` bug found
+  and fixed; every unblocked lane is now COMPLETE.** Tasks 5 and 6 (both Hard) each did substantial REAL work — 56
+  and 42 real turns, $6.45 and $4.13 spent — before hitting the same quota-driven 403 that killed tasks 2/3.
+  Confirmed via a direct `git status --porcelain` on slot 24's live checkout that the tree is clean (no
+  lost/uncommitted work — the model simply never reached its own `git commit` step before failing), so nothing was
+  lost, but neither task produced a scoreable Gate-1 result. **Final gemini-3.5-flash-lite tally: 2 clean PASS
+  (Easy #1, Medium #2), 4 quota-interrupted at varying depth (2 instant, 2 after 40-60 real turns)** — every row
+  now in the Results table above.
+  **Real infra bug found while investigating why tasks 5/6 had no `exit_code.txt`/`finished_at.txt`/
+  `git_status.txt`**: `run-attempt.sh` ran under `set -euo pipefail`, and `wait "$CLAUDE_PID"` returning the
+  `claude` process's own non-zero exit code triggered errexit immediately — skipping every postprocessing line
+  after it (including the very evidence needed to diagnose the failure) on ANY attempt that ends in error. Fixed
+  (`set +e` around just the `wait`, restore `set -e` after) — applies to every future attempt including once GLM
+  unblocks. Not yet re-shipped (blocked on the same pre-existing foreign-doc quickmerge issue noted above).
+  **Session status: all 4 unblocked lanes (Gemini 3.5-flash-lite, Gemini 3.7-flash, DiffusionGemma 26B, Codex/Luna)
+  have now run their full 6-task queues to completion.** Only GLM (slots 26/27) remains fully undispatched, still
+  blocked on the operator's gcloud reauth. Nothing further to auto-dispatch until either GLM unblocks or a decision
+  is made on the paid-tier Gemini re-run — pausing autonomous work on this plan here pending operator input on
+  both open items.
