@@ -730,7 +730,11 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       (cs) is the single worst leg in the 2026 selloff (the XS signal mis-bets when dispersion collapses). The span-7
       EWMA denoise (shipped) is the 80% cheap fix; the proper fix is retraining the pooled LightGBM on a longer-horizon
       return target so the signal is less whipsawed by the noisy 15m next-bar label. No lookahead (trailing features,
-      shifted target; IS-select 2023-24 / OOS-validate 2025-26). Repo: features/strategy research (`_panel.py`).
+      shifted target; IS-select 2023-24 / OOS-validate 2025-26). **`_panel.py` is NOT an in-repo path** — it's part of
+      the 234-script research corpus deliberately never committed to git (verified 2026-08-19: absent from every repo's
+      working tree and git history); restore it via `e2e-testing/scripts/paper_trading/RECOVERY.md`'s documented
+      `gcloud storage rsync -r gs://backtest-results-central-element-323112/paper_engine/research_archive/code
+      ./research_code`, then apply the retrain against the maintained engine in `e2e-testing/scripts/paper_trading/`.
 
 - **[UI] P2.14.** Prod UI selector resolves the 14-strategy run, not the 145-run (found 2026-06-21). The CRA API
   correctly resolves + serves the newest run `paper-20260621225959-e86237f7` (145 strategies / 7 archetypes — verified
@@ -955,3 +959,8 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   work (P2.7.3 live-reconcile via the same engine machinery; P2.11.15/P2.11.18(b) ML retrain, no in-workspace
   `_panel.py` target found) does not shift the existing SSOT/epic/engine-code list.
 - **na-eligibility-audit 2026-08-17** [body-hash:b71a12f0d634c013]: KEEP-NA, valid -- 3 open todos confirmed via grep, matches inventory. Caught a stale-summary-vs-body contradiction: the doc's own 'Remaining-work register' header (dated 2026-08-08) claims '4 items still tracked here as real open checkboxes are P2.7.3 (operator-gated), P9.2 (dependency-blocked), P2.11.15..., and P2.11.18 sub-part (b)' -- but P9.2's actual checkbox in Phase 9 is already [x] checked, with a 2026-08-14 'RE-VERIFIED -- self-resolved, no fix needed' entry. The true open count is 3 (matching the given inventory), not the stale header's 4; this is prose that misled a reader but does not affect the actual checkbox state or verdict. Of the 3 genuinely open items: P2.7.3 (live -> reconcile to paper) is explicitly BLOCKED-OPERATOR-DECISION pending an approved live wallet + custody, reaffirmed 2026-07-28 as a PERMANENT CLAUDE.md hard-stop (wallet keys are human-only) -- citable on this alone. P2.11.15 and P2.11.18(b) are both ML research/retrain work (longer-horizon target retrain to fix a 2026 cs-leg drag) requiring research judgment, not bounded outcomes.
+- **2026-08-19**: fixed the stale `_panel.py` pointer flagged by this session's `/context-scout` pass — P2.11.15's todo
+  now states plainly it's GCS-archived research corpus, not an in-repo path (confirmed absent from every repo's working
+  tree + git history), with the exact `RECOVERY.md` rsync restore command. Same fix applied to
+  `crypto_alpha_research_2026_07_24.md`'s 3 own live `_panel.py` references (the actual owning doc per the
+  near-verbatim-duplicate citation above).
