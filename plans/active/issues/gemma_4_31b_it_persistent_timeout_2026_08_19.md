@@ -168,3 +168,36 @@ not already done. That key is not reproduced here.
     to actually render in production — a manual operator/dispatch step, same category as the original
     `POST /api/accounts/{id}/disable` pause, not something this pilot session did or should do from a slot
     checkout.
+
+- **2026-08-19 (operator, live browser session) — real DevTools evidence, likely root cause identified.** Operator
+  opened `build.nvidia.com/google/gemma-4-31b-it/playground` with DevTools Network tab open. Two real findings:
+  1. **The playground itself failed this session** ("Error / Retries exhausted: 3/3" on a trivial weather prompt) —
+     the FIRST time the playground has been observed failing (the original control test, 2026-08-18/19, succeeded:
+     48.15s, "1+1=2"). Directly contradicts treating the playground as a reliable "always works" control.
+  2. **Real NVCF (NVIDIA Cloud Functions) queue-status telemetry captured** — one of the `gemma-4-31b-it`-named
+     Network requests returned: `{"functionId": "48c619ec-c254-48da-8fcc-6ef8a04fed6e", "queues": [{"functionVersionId":
+     "c27f9810-ac0d-469b-b5c7-446c7ff5799e", "functionName": "ai-gemma-4-31b-it", "functionStatus": "ACTIVE",
+     "queueDepth": 148}]}`. Operator confirmed `queueDepth` fluctuates across requests (goes down, then back up) —
+     real, live queue congestion, not a static/cached number. Operator also reports most `gemma-4-31b-it` requests in
+     the same session returned real `200`s, with one real `500` — i.e., the playground gets through MOST of the time,
+     just not always, consistent with variable real-time queue depth rather than a dead function.
+
+  **Working theory**: the playground does NOT make a single synchronous call the way our direct curl does — the
+  `functionId`/`queueDepth` JSON shape is NVCF's own real async submit+poll status-check API. Likely flow: submit →
+  poll this queue-status endpoint repeatedly → fetch the real completion once the function executes. The public
+  OpenAI-compatible `integrate.api.nvidia.com/v1/chat/completions` endpoint is supposed to do this polling
+  server-side and just hold the HTTP connection open for the caller — but for this specific heavily-queued function,
+  that server-side wait appears to silently hang/drop rather than ever completing.
+
+  **Real test of "is it just slow" — NEGATIVE, rules out patience alone**: re-ran the direct curl (new/3rd key, same
+  as prior attempts) with a 300s (5 min) bounded timeout instead of the prior 60-150s range. Result: **still a real
+  zero-byte timeout** (`curl: (28) Operation timed out after 300002 milliseconds with 0 bytes received`,
+  `HTTP_STATUS:000`). This is now a **7th real failed attempt across 3 keys**, and it rules out "the synchronous
+  endpoint just needs more time" — 5 real minutes of patience did not produce a response. Combined with the
+  playground's own frequent 200s (which return in well under 5 minutes per the earlier 48s control), this points
+  toward a real MECHANISM difference (async submit+poll vs. a naive synchronous hold that gets dropped), not merely
+  "wait longer." **Next real step**: capture the actual SUBMIT request (the first `gemma-4-31b-it`-named POST in a
+  successful playground turn) and its response headers/status (looking for a `202`/`NVCF-REQID`/`Location`-style
+  marker), plus the exact queue-status polling endpoint URL/headers — this would confirm or refute the submit+poll
+  theory directly and point at a concrete, buildable fix (switch the proxy/client to the real async flow) rather
+  than an NVIDIA-side wait.
