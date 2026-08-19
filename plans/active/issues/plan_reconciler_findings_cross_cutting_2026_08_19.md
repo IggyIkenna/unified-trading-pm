@@ -198,11 +198,18 @@ structural, and hygiene classes.
    `plan_reconciler_findings_all_2026_08_12.md` §2's entry already reads `[x]` "ALREADY SHIPPED." 0 open todos of
    its own (13/13 `[x]`), unlocked, not grace-protected (46h old). No unmigrated deferred work (the "Fix
    (deferred...)" section heading is stale styling over content the Todos section below fully implemented and
-   shipped — left as historical record, not edited). Referrer sweep: 7 corpus hits, all historical Progress-Log
-   prose describing past events (spot-checked the 2 most relevant), none a live structural dependency — left
-   unrepointed per this corpus's established proportionality precedent (dedicated `/archive-candidates-audit`
-   handles bulk referrer sweeps). Moved to `plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`.
+   shipped — left as historical record, not edited). Moved to
+   `plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`.
    `unified-trading-pm@67b8bae7d5`. Verified at HEAD: `status: resolved`, file present at new path, absent at old.
+   **Referrer sweep — corrected after exit-gate check caught what the initial spot-check missed**: 7 corpus hits
+   found by an initial prose-relevance spot-check (2 of 7 checked, judged historical narrative, not live
+   dependency) — that judgment was right about narrative RELEVANCE but wrong about the MECHANICAL path-existence
+   check, which doesn't distinguish prose from structure. The exit-gate `check_reference_paths.py` existence count
+   jumped 34→42 (+8, across 3 referrer docs, more than the 7 initially found — a 4th citation was in a doc outside
+   the original grep's scope). 7 of 8 fixed same run across 2 non-grace docs (`unified-trading-pm@83846c34ec`,
+   count back to 35); 1 in a grace-protected doc filed as a tracked follow-up (see Filed, "Exit-gate residual").
+   **Lesson for the next archival**: the mechanical reference-path checker must be re-run after ANY archival,
+   not substituted for by a narrative spot-check — the two catch different things.
 
 ## Hygiene fixes
 
@@ -237,7 +244,17 @@ structural, and hygiene classes.
 
 Tracked as checkboxes per the workspace HARD RULE, grouped by why each wasn't fixed directly.
 
-**Line-cap-blocked (needs an operator-gated split first):**
+**Exit-gate residual (self-inflicted by this run's own archival, 1 grace-protected referrer):**
+
+- [ ] [DOC] P3. `dp_exit_code_monitor_cadence_stale_after_hourly_reconcile_2026_08_19.md:50` — still cites
+      the pre-archival path `plans (active/issues)/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`, which this run archived to
+      `/plans/archive/2026_08/issues/`. **Grace-protected this run** (created 2026-08-19, ~5.3h old at discovery —
+      cannot edit until it ages out of the 12h window, ~2026-08-20T00:35Z). This is the ONE of 8 broken referrers
+      this run's archival caused that could NOT be fixed in-run (the other 7, across 2 docs, were fixed — see
+      Hygiene fixes). Exit-gate `check_reference_paths.py` existence check consequently reads 35 vs. baseline 34
+      (+1, not +8) until this single line is repointed to the archive path. Not self-resolving by time alone —
+      needs an actual edit once grace clears; the fix is a 1-line path substitution, same pattern as the 7 already
+      applied.
 
 - [ ] [DOC] P2. `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` — 2 confirmed findings ready to apply
       but the doc is 1092L (over the 1000L hard cap, blocks any staged commit): (a) stale `parent_epic:
