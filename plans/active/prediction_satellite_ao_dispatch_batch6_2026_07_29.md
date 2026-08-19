@@ -691,7 +691,7 @@ sports-tranche-owned).
 
 ## Deferred — already self-dispatching (assigned_vm: planning + status: open, not a real orphan)
 
-- **`plans/active/issues/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`** — 1 open `[DATA] P2` item
+- **`plans/archive/2026_08/prediction_phantom_reconciler_wipes_bundle_atom_2026_07_10.md`** — 1 open `[DATA] P2` item
   (investigate the KALSHI-venue scaffold-row provenance mislabel, 129,227 rows). Confirmed via a live re-read mid-audit:
   `assigned_vm: planning`, `status: open`, proper `- [ ]` checkbox format — this is ALREADY its own independent
   AO-dispatch surface via `regen_backlog_from_plan.py`'s direct `issues/`-directory scan (its predecessor P1 todo in
@@ -762,7 +762,7 @@ tranche, excluded here to avoid duplicate dispatch." Re-confirmed by this run, n
 
 - `plans/active/sports_arb_decay_window_and_alpha_gate_design_2026_07_21.md` (8 open `[DESIGN]` todos + 3 unanswered
   operator sign-off questions — design-gated, not AO-eligible).
-- `plans/active/sports_group_c_execution_backtest_harness_2026_07_21.md` (5 open todos, design-gated on an unresolved
+- `plans/archive/2026_08/sports_group_c_execution_backtest_harness_2026_07_21.md` (5 open todos, design-gated on an unresolved
   SportsMatchingEngine-vs-L0Matcher duplication call + a plan-wide operator sign-off gate).
 - `plans/active/issues/sports_odds_feature_naming_four_way_mismatch_2026_07_21.md` (residual: strategy-service
   migration + a cross-repo parity test — genuinely uncovered, but should be drafted as a SPORTS-tranche batch item).

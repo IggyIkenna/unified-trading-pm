@@ -34,6 +34,8 @@ priority: P1
 severity: P1
 source: >-
   Observed live 2026-08-18 during the client-artefact remediation, interactive session in slot 6.
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Sub-agent wrote to a foreign checkout despite being given an absolute slot path

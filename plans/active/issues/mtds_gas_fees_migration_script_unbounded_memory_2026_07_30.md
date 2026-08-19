@@ -38,7 +38,7 @@ related:
   ]
 created: "2026-07-30"
 author: unknown
-last_updated: "2026-08-02"
+last_updated: "2026-08-17"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -181,7 +181,17 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
       is fixed + self-healing per `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`) — consider
       whether a per-slot subprocess RSS ceiling (e.g. a `cgroup`/`ulimit` scoped to each slot's OWN spawned children,
       not just the whole `orchestrator.service` cgroup) would contain a future buggy script to ITS OWN slot instead of
-      starving the entire fleet. Out of scope to design/implement here — flagging the pattern.
+      starving the entire fleet. **REFRAMED 2026-08-18 (plan_reconciler)**: a mechanism matching this shape already
+      exists — `agent-orchestrator/server/tmux_spawn.py`'s `_worker_mem_scope_prefix()` /
+      `ORCHESTRATOR_WORKER_MEMORY_MAX` (`server/config.py`, default `""` = unarmed) wraps a worker's tmux pane in
+      `systemd-run --user --scope` with `MemoryMax`/`MemorySwapMax`, built 2026-06-12, predating this incident. A
+      repo-wide grep found zero references to `ORCHESTRATOR_WORKER_MEMORY_MAX` in agent-orchestrator's own
+      configs/scripts/systemd units — consistent with it being unarmed, which would explain why this incident's
+      runaway subprocess (living directly inside `orchestrator.service`'s cgroup, not a separate capped scope)
+      wasn't contained. Not closing this todo — still open whether (a) it's armed fleet-wide, and (b) it would even
+      cover a directly-invoked ad-hoc script subprocess vs. only the top-level `claude` invocation it wraps — but
+      "out of scope to design" no longer applies; the design exists, the open question is narrower (is it armed +
+      does it cover this subprocess class).
 
 ## Codex SSOTs
 
@@ -212,7 +222,10 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   `assigned_vm: NA` overall.
 - **na-eligibility-audit 2026-08-02** (tranche=defi, autonomous, scheduled): KEEP-NA valid (2026-08-01 verdict re-
   affirmed) — re-read end to end, 2 open items (down from 3; the sibling-scripts audit closed 2026-08-02 via batch7 todo
-  4, `market-tick-data-service@e4cc07b7` + `instruments-service@d0e4e5a3` + `market-data-processing- service@6593011`).
+  4, `market-tick-data-service@e4cc07b7` + `instruments-service@d0e4e5a3` + `market-data-processing-service@5bc11b8`
+  (was `6593011` — corrected 2026-08-18, plan_reconciler: `6593011` is not an ancestor of
+  market-data-processing-service's live branch, a dangling pre-history-rewrite hash; `5bc11b8` is the real,
+  currently-reachable commit, matching this same doc's own line 179 citation).
   Both remainders stay judgment calls exactly as the 2026-08-01 verdict found: the `ManifestWriter.__init__` safety
   check is an undecided design fork in its own text ("log a loud one-time warning ... OR refuse construction outside a
   recognized deployed-service context"), and the per-slot RSS-ceiling item is self- flagged "Out of scope to

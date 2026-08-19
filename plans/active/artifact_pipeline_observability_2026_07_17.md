@@ -677,7 +677,7 @@ this: a top banner (GCP active / AWS parked), a Health `deferred` tier (blue, "n
       `create-code-tarballs.sh:45`, ~48 launchers), contradicting both the workspace storage rule and the codex SSOT's
       own description of this path. Combine with the two-point AWS-lane breakage into one deployment-bucket-resolution
       issue doc. — DONE via `ui_satellite_ao_dispatch_batch3_2026_08_09.md`'s own todo 1 (unified-trading-pm@commit
-      cited there): filed `plans/active/issues/deployment_bucket_resolution_gaps_2026_08_09.md` (confirmed on disk) —
+      cited there): filed `plans/archive/2026_08/issues/deployment_bucket_resolution_gaps_2026_08_09.md` (confirmed on disk) —
       verified by plan_reconciler 2026-08-10, checkbox was never flipped in this source doc.
 - [x] ✅ [BACKEND] P3. **DONE 2026-08-15** — "built but never deployed" + build→deploy latency join shipped.
       deployment-api@764db37c33.

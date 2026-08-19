@@ -106,3 +106,23 @@ canonical checkout other slots read from, or simply confuse git state in a clone
 - [ ] [BACKEND] P3. Decide + implement one of: (a) actually export the boot-message session variables into the spawned
       shell environment, or (b) correct `agents/plan_reconciler.md`/`agents/RULES.md` wording to stop presenting them
       as real env vars. Done when: the doc and the runtime behavior agree.
+
+## Progress Log
+
+- **plan_reconciler 2026-08-18 (ao tranche, hunter #3, Phase -1 pass)**: root-caused todo 1 by reading the live
+  dispatch call chain directly (not trusting either occurrence's own diagnosis alone). Confirmed exact origin:
+  `agent-orchestrator/scripts/install-plan-reconciler-timer.sh:88` — `PM_REPO="${PM_REPO:-/home/${OPERATOR}/unified-trading-system-repos/unified-trading-pm}"`
+  — defaults to the ROOT clone, and line 281's per-tranche curl body passes this literal `${PM_REPO}` value straight
+  into `POST /api/plan-health/dispatch`'s `pm_repo_path` field, unconditionally, for every one of the (up to 10)
+  concurrent tranche dispatches. Traced the Python side too: `plan_health.dispatch()` (`server/plan_health.py`)
+  never rewrites `pm_repo_path` after `_pick_free_slot()` resolves the actual target slot — the value flows
+  verbatim from the caller straight into `autospawn.do_spawn(..., extra_vars={"pm_repo_path": pm_repo_path, ...})`
+  (lines ~784/803), which becomes the boot message's literal `PM_REPO_PATH` session var. So this is not a timing
+  race or a stale-default edge case — it is structural: the shell script cannot know the slot in advance (the slot
+  is picked inside the Python call), and nothing on the Python side substitutes the picked slot's own
+  `.tabs/{slot_id}/unified-trading-pm` path once it IS known. Confirms the doc's own recommended-fix direction is
+  the only viable one — the correction has to happen inside `dispatch()`, after slot pick, not in the calling shell
+  script. Not fixed here (real `agent-orchestrator` engineering, out of scope for a plans-corpus reconciliation
+  pass) — todo 1 stays open, now with the exact file:line evidence needed to implement it directly. Todo 2 not
+  independently re-verified this pass (the doc's own live `env | grep` evidence from 2 separate dispatches already
+  stands; no new information to add).

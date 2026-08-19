@@ -45,14 +45,18 @@ context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active
 
 ## Needs direct operator attention (surfaced here, not silently filed)
 
-- **ACTIVE P0 INCIDENT — fleet paused at reduced capacity.** `ao_fleet_regression_triad_2026_08_16.md` (Finding 2):
-  agents dying mid-task for ~4h as of 2026-08-16 evening after ~2 days clean; live lead is `orphan_reap sweep: slot
-  <N> pid <P> ... KILLED` entries in the exact window, genuine-orphan-vs-false-positive-reap undetermined. Fleet
-  deliberately held to 4 backlog slots (20/21/22/24) + ci_escalation (32/33) for controlled diagnosis per operator
-  directive — **must be resumed once fixed, do not leave at reduced capacity indefinitely.** This is a live-diagnosis
-  task, not a bounded batch todo — needs a human or a dedicated investigation session with judgment, not casual
-  AO-dispatch. The same doc's Findings 1 (scheduled-reserve slot-set drift) and 3 (human-fleet dashboard
-  misrepresentation) are lower-severity but also unclaimed by anything active.
+- **RESOLVED since filing (corrected 2026-08-18, `/plan-reconcile` ao tranche)** — was: "ACTIVE P0 INCIDENT — fleet
+  paused at reduced capacity." `ao_fleet_regression_triad_2026_08_16.md` is now `status: resolved` and archived
+  (`plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md`) — Finding 2 (agents dying mid-task) was
+  root-caused (`context_lifecycle.py::_tick_target`'s boundary-confirmed compaction path never wrote the corrected
+  pct back, re-arming a forced compact every ~3.5min indefinitely) and fixed, `resolved_by: agent-orchestrator@
+  9ba4391e60` (fix) + `@1b2dddffc9` (UI). Fleet resumed to full capacity (0 paused) — confirmed via
+  `/plans/active/ao_open_work_consolidated_tracker_2026_08_14.md` Track 1's own evidence entry for the same commit.
+  Findings 1 (scheduled-reserve slot-set drift) and 3 (human-fleet dashboard misrepresentation) are also both
+  resolved per the same source doc's `resolved_by:` (`agent-orchestrator@54f8fc5811` and `@1b2dddffc9`
+  respectively). This finding's parked classification (too-large-or-risky, needs a dedicated session) was correct
+  AT FILING TIME — the incident has since been fully resolved by a dedicated session, exactly as recommended. No
+  remaining operator action on this item.
 - **`orchestrator_vm_e2e_hardening_2026_07_24.md`'s dirty-worktree-policy deliverables** — design fully resolved
   (operator discussion, 2026-08-15), the tracker itself calls this "highest-value remaining bounded work," and it is
   technically bounded (2 deliverables: a worker prompt template + dispatch hook for the resolved 3-step flow; a
@@ -86,8 +90,9 @@ take. Not re-triageable by a future audit re-run — needs an actual operator ru
   account-console access) + keep sub-e excluded pending its own clean weekly reset.
 - `defi_compute_gcp_migration_009_repeat_wedge_parked_2026_08_08.md` — operator unpark decision, explicitly still
   "NOT YET, stays parked" per a 2026-08-16 `/plan-reconcile` re-check.
-- `fleet_venv_drift_after_pull_no_resync_2026_08_11.md` — two shared-clone git conflicts explicitly flagged
-  "NOT mine to fix" by the doc's own text; needs the owning session or an operator call.
+- `fleet_venv_drift_after_pull_no_resync_2026_08_11.md` — RESOLVED + archived 2026-08-18 (`/plan-reconcile ao`):
+  the two shared-clone git conflicts were live-verified clean (both checkouts, no `UU` state, no in-progress
+  rebase/merge), 0/9 open, moved to `plans/archive/2026_08/issues/`.
 - `fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md` — operator decision on reverting the
   `tuning.deepseek_opus_emergency_fallback` flag (the P1 half — root-causing the tmux-death mechanism — needs
   external DeepSeek engagement, see the time/external-gated category below).

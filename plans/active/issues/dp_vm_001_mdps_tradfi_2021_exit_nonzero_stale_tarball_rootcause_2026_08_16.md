@@ -220,3 +220,7 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   audit's split, no change.** Todo 1 (operator relaunch-now decision) and todo 3 (tarball-refresh-cadence design
   question) both still genuinely operator/design-gated; todo 2 already extracted+archived via batch14. `assigned_vm`
   unchanged.
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — reaffirmed.** Only
+  intervening change was plan_reconciler's 2026-08-18 retag of todo 3 from `[SCRIPT]` to `[DESIGN]` (it's an open
+  "consider whether..." question, not a bounded script task) — doesn't change the gated disposition. Both remaining
+  todos stay operator/design-gated. `assigned_vm` unchanged.

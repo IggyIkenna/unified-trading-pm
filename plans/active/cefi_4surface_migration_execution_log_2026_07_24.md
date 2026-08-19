@@ -244,7 +244,7 @@ context_scope:
 ### CROSS-REFERENCE TODO ADDED (closing the gap found during this pre-compact audit)
 
 - [x] ✅ [DATA] P1. DERIBIT combo mispartition — read the design doc
-      `plans/active/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` in full before touching this. Two
+      `plans/archive/2026_08/issues/deribit_combo_perpetual_partition_move_2026_07_21.md` in full before touching this. Two
       DISTINCT actions: (a) **[WRITER] fix the still-open write-path leak** (widen the combo-shape guard in
       `tardis_cefi_shards.py` so new captures stop landing mispartitioned — safe to ship alone, no data motion) — **PART
       (a) DONE (re-verified 2026-08-05, slot-15)**: `mtds@2ddc6d4a` confirmed ancestor of `origin/live-defi-rollout`;

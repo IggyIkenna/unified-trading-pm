@@ -47,7 +47,7 @@ code_refs:
 > `ALL_FRESHNESS_CONTRACTS`. This doc describes the registry as the canonical feed-SLA contract; do NOT re-declare
 > freshness thresholds anywhere else in the codebase.
 
-Shipped 2026-06-19/20 per `plans/active/data_feed_sla_registry_and_active_self_healing_2026_06_19.md`.
+Shipped 2026-06-19/20 per `plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md`.
 
 ---
 

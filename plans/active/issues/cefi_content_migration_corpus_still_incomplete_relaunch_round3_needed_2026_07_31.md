@@ -276,15 +276,17 @@ needs an explicit next relaunch round, and none is currently dispatched.
   | 20    | 2025-04-06        | 2025-05-03           | monotonic checkpoint (orig start 2025-03-18)                                                  |
   | 22    | 2025-07-08        | 2025-09-06           | monotonic checkpoint (orig start 2025-06-27)                                                  |
   | 23    | 2025-09-07        | 2026-01-01           | non-monotonic checkpoint → original start                                                     |
-  | 24    | 2026-01-06        | 2026-01-15           | monotonic checkpoint from the last attempt that DID write one (`-032606`; the                 |
+  | 24    | 2026-01-06        | 2026-01-15           | monotonic checkpoint from the last attempt that DID write one (`-032606`; the latest `-065001` attempt wrote no `run.log`/`PROGRESS.json` at all — died before startup, so its predecessor's checkpoint is the real frontier, not the original start 2026-01-02) |
+  | 25    | 2026-01-18        | 2026-02-01           | monotonic checkpoint (orig start 2026-01-16)                                                  |
+  | 40    | 2024-05-19        | 2024-06-11           | monotonic checkpoint (orig start 2024-05-12)                                                  |
+  | 42    | 2024-12-27        | 2025-01-09           | non-monotonic checkpoint → original start                                                     |
+  | 43    | 2025-01-30        | 2025-02-06           | monotonic checkpoint (orig start 2025-01-23)                                                  |
+  | 44    | 2025-07-31        | 2025-09-06           | monotonic checkpoint (orig start 2025-07-30)                                                  |
 
-      latest `-065001` attempt wrote no `run.log`/`PROGRESS.json` at all — died before startup, so its predecessor's
-      checkpoint is the real frontier, not the original start 2026-01-02) |
-
-  | 25 | 2026-01-18 | 2026-02-01 | monotonic checkpoint (orig start 2026-01-16) | | 40 | 2024-05-19 | 2024-06-11 |
-  monotonic checkpoint (orig start 2024-05-12) | | 42 | 2024-12-27 | 2025-01-09 | non-monotonic checkpoint → original
-  start | | 43 | 2025-01-30 | 2025-02-06 | monotonic checkpoint (orig start 2025-01-23) | | 44 | 2025-07-31 | 2025-09-06
-  | monotonic checkpoint (orig start 2025-07-30) |
+  **CORRECTED 2026-08-18 (plan_reconciler)**: rows 24-25/40/42-44 above had collapsed into unrendered run-on prose
+  (a table row wrapping across a blank line, same defect class as task_template.md §3 finding L but on a table row
+  rather than a heading/bold-span) — reconstructed as proper one-row-per-line table syntax; no data changed, only
+  the markdown structure.
 
   Verified STARTED at T+60s: all 13 VMs `RUNNING` in `gcloud compute instances list`. Filed the budget-blocked-shards
   follow-up as a new `[OPERATOR]` todo above rather than silently deferring — 4 consecutive same-symptom deaths

@@ -40,7 +40,7 @@ related:
 created: "2026-08-16"
 author: main (Claude Code, interactive session, operator-reported)
 parent_epic: orchestrator_master
-resolved_by: agent-orchestrator (uncommitted working-tree diff — operator to confirm before ship)
+resolved_by: agent-orchestrator@d13788ec2f
 locked_by:
 source: >-
   Operator report, 2026-08-16: "the AO fleet's review role agent keeps disappearing" — asked to investigate, track, and

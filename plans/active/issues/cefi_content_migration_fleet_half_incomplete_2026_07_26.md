@@ -128,7 +128,15 @@ canonicalised by this fleet. The migration's own `# Delete-when:` marker on
       re-run those date ranges from scratch. **Done when**: all 21 shards' `run.log` show the terminal summary (feeds
       directly into the P2 todo below).
 - [ ] [SCRIPT] P2. BLOCKED-ON:cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31 (still
-      open — slot-4 confirmed round-3 remains in flight, see below) Once relaunched shards complete, re-run this same
+      open — slot-4 confirmed round-3 remains in flight, see below). **EXTRACTED 2026-08-18 (plan_reconciler,
+      hedge-pointer confirmed)**: this exact todo (re-run the corpus-wide grep across all 44 shards, flip both
+      target docs, delete the migration script) is now the LIVE dispatchable copy at
+      `cefi_satellite_ao_dispatch_batch20_2026_08_16.md`'s open `[SCRIPT] P2` todo ("Re-run the corpus-wide GCS
+      VM-log grep (Script 1, cefi content-migration summary) across all 44 cefi-content-migration shards...") —
+      neither this doc nor `cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md`
+      (its BLOCKED-ON target) previously reflected the extraction, so both still read as independently open. This
+      line stays open here as the accounting record; the dispatchable copy lives in batch20 — do not re-dispatch
+      both. Once relaunched shards complete, re-run this same
       corpus-wide `run.log` grep to confirm all 44/44 show the terminal summary, THEN delete
       `migrate_cefi_content_instrument_id_catalogue_2026_07_17.py` per its own `# Delete-when:` marker. Repo:
       market-tick-data-service. **2026-07-31T08:05Z (slot-15)**: re-ran grep (fleet empty, 392 objects) — 27/44 (was

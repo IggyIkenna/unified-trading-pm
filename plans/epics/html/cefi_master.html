@@ -1,0 +1,643 @@
+<title>CeFi Master Ledger</title>
+<!-- generated: 2026-08-18T23:50:00Z by /plan-reconcile cefi_master (epic-scoped) -->
+<style>
+  :root {
+    --ink: #f3f5f7;
+    --panel: #ffffff;
+    --panel-raised: #eef1f4;
+    --hairline: #d6dce3;
+    --text: #1a2028;
+    --text-dim: #5c6773;
+    --text-faint: #8a94a1;
+    --amber: #b3792a;
+    --amber-strong: #8f5e1c;
+    --green: #2f8f5c;
+    --green-bg: #e4f3ea;
+    --rust: #b34a30;
+    --rust-bg: #fbe9e4;
+    --mono: ui-monospace, "SF Mono", "Berkeley Mono", Menlo, Consolas, "Liberation Mono", monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ink: #0a0d12;
+      --panel: #141a22;
+      --panel-raised: #1c232d;
+      --hairline: #2b3440;
+      --text: #e7ebf0;
+      --text-dim: #8d98a8;
+      --text-faint: #626d7a;
+      --amber: #d9a441;
+      --amber-strong: #eec06a;
+      --green: #4fae7c;
+      --green-bg: #163425;
+      --rust: #d9694b;
+      --rust-bg: #3a2019;
+    }
+  }
+  :root[data-theme="dark"] {
+    --ink: #0a0d12;
+    --panel: #141a22;
+    --panel-raised: #1c232d;
+    --hairline: #2b3440;
+    --text: #e7ebf0;
+    --text-dim: #8d98a8;
+    --text-faint: #626d7a;
+    --amber: #d9a441;
+    --amber-strong: #eec06a;
+    --green: #4fae7c;
+    --green-bg: #163425;
+    --rust: #d9694b;
+    --rust-bg: #3a2019;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--ink);
+    color: var(--text);
+    font-family: var(--serif);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--amber); color: #1a1206; }
+
+  a { color: var(--amber-strong); text-decoration: none; border-bottom: 1px solid transparent; }
+  a:hover, a:focus-visible { border-bottom-color: var(--amber-strong); }
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px 96px; }
+
+  code, .mono, .tabular { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    border-bottom: 1px solid var(--hairline);
+    padding: 40px 0 28px;
+    margin-bottom: 40px;
+  }
+  .ticker-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 18px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-faint);
+    letter-spacing: 0.06em;
+  }
+  .ticker-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 0 3px var(--green-bg);
+    flex: none;
+  }
+  h1 {
+    font-family: var(--serif);
+    font-weight: 700;
+    font-size: clamp(34px, 5vw, 52px);
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+  .dek {
+    color: var(--text-dim);
+    font-size: 18px;
+    max-width: 62ch;
+    margin: 0;
+  }
+
+  /* ---------- Section shell ---------- */
+  section { margin-bottom: 56px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  h2 {
+    font-family: var(--mono);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  h2::before {
+    content: "";
+    width: 18px; height: 2px;
+    background: var(--amber);
+    display: inline-block;
+  }
+  .section-note { color: var(--text-faint); font-size: 13px; font-family: var(--mono); }
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+  .stat-tile {
+    background: var(--panel);
+    padding: 20px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .stat-num {
+    font-family: var(--mono);
+    font-size: 30px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    color: var(--text);
+    line-height: 1;
+  }
+  .stat-num.amber { color: var(--amber-strong); }
+  .stat-num.green { color: var(--green); }
+  .stat-num.rust { color: var(--rust); }
+  .stat-label { font-size: 12px; color: var(--text-dim); }
+
+  @media (max-width: 800px) {
+    .stat-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  /* ---------- Plan table ---------- */
+  .plan-table-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 3px; }
+  table.plans { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 760px; }
+  table.plans th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 10px 14px;
+    background: var(--panel-raised);
+    border-bottom: 1px solid var(--hairline);
+    position: sticky; top: 0;
+  }
+  table.plans td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--hairline);
+    vertical-align: top;
+  }
+  table.plans tr:last-child td { border-bottom: none; }
+  table.plans tr:hover td { background: var(--panel-raised); }
+  .plan-title { color: var(--text); font-weight: 600; }
+  .plan-path { color: var(--text-faint); font-family: var(--mono); font-size: 11px; display: block; margin-top: 2px; }
+  .bar { display: flex; align-items: center; gap: 8px; min-width: 140px; }
+  .bar-track { flex: 1; height: 6px; background: var(--panel-raised); border-radius: 3px; overflow: hidden; display: flex; }
+  .bar-done { background: var(--green); height: 100%; }
+  .bar-open { background: var(--amber); height: 100%; }
+  .bar-count { font-family: var(--mono); font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+  .agg-flag {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.05em; text-transform: uppercase;
+    color: var(--text-faint); border: 1px solid var(--hairline); border-radius: 2px; padding: 1px 5px;
+  }
+  .op-quote { font-size: 12px; color: var(--rust); font-family: var(--mono); }
+
+  /* ---------- Alert panels ---------- */
+  .alert-panel {
+    border: 1px solid var(--hairline);
+    border-left: 3px solid var(--rust);
+    background: var(--panel);
+    border-radius: 0 3px 3px 0;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .alert-panel.scoping { border-left-color: var(--amber); }
+  .alert-panel .who { font-family: var(--mono); font-size: 11px; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+  .alert-panel p { margin: 0; color: var(--text); font-size: 14.5px; }
+  .alert-panel code { font-size: 12.5px; color: var(--amber-strong); }
+
+  /* ---------- Closed-out list ---------- */
+  .closed-list { display: flex; flex-direction: column; gap: 10px; }
+  .closed-item {
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+  }
+  .closed-item .check { color: var(--green); font-family: var(--mono); }
+  .closed-item .body { font-size: 14px; }
+  .closed-item .doc { font-family: var(--mono); font-size: 12px; color: var(--text-faint); }
+
+  /* ---------- Lanes ---------- */
+  .lanes-table-wrap { overflow-x: auto; border: 1px solid var(--hairline); border-radius: 3px; }
+  table.lanes { width: 100%; border-collapse: collapse; font-size: 13.5px; min-width: 900px; }
+  table.lanes th {
+    text-align: left; font-family: var(--mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--text-faint); padding: 10px 14px; background: var(--panel-raised); border-bottom: 1px solid var(--hairline);
+  }
+  table.lanes td { padding: 12px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  table.lanes tr:last-child td { border-bottom: none; }
+  .lane-id {
+    font-family: var(--mono); font-weight: 700; color: var(--amber-strong);
+    font-size: 15px;
+  }
+  .lane-files { font-family: var(--mono); font-size: 11.5px; color: var(--text-dim); }
+  .lane-files li { margin-bottom: 2px; }
+
+  /* ---------- Dispatch prompts ---------- */
+  .prompt-card {
+    background: var(--panel);
+    border: 1px solid var(--hairline);
+    border-radius: 3px;
+    margin-bottom: 16px;
+    overflow: hidden;
+  }
+  .prompt-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; background: var(--panel-raised); border-bottom: 1px solid var(--hairline);
+  }
+  .prompt-head .lane-id { font-size: 13px; }
+  .prompt-head .title { font-size: 13px; color: var(--text-dim); font-family: var(--serif); }
+  pre.prompt-body {
+    margin: 0; padding: 16px; font-family: var(--mono); font-size: 12.5px; line-height: 1.6;
+    color: var(--text-dim); white-space: pre-wrap; word-break: break-word; overflow-x: auto;
+  }
+  pre.prompt-body strong { color: var(--text); }
+
+  /* ---------- Notes ---------- */
+  .notes { color: var(--text-dim); font-size: 14px; }
+  .notes ul { padding-left: 20px; }
+  .notes li { margin-bottom: 8px; }
+
+  footer {
+    border-top: 1px solid var(--hairline);
+    margin-top: 64px;
+    padding-top: 20px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-faint);
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  }
+</style>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="ticker-row">
+      <span class="ticker-dot"></span>
+      <span>ASSET_GROUP=CEFI</span><span>·</span><span>TIER=L0</span><span>·</span><span>PRIORITY=P0</span><span>·</span>
+      <span>REPORT GENERATED 2026-08-18</span>
+    </div>
+    <h1>CeFi Master Ledger</h1>
+    <p class="dek">
+      The centralized-exchange asset-group umbrella — Bybit, Deribit, Binance, OKX live-perp core plus the
+      Bitfinex/Bitget/Kraken/Coinbase/Hyperliquid/Upbit/Aster extended book, DERIBIT options/futures bundles, and
+      the continuous ML directional signal. This is the state of its 50-doc plan/issue corpus after an epic-scoped
+      <code>/plan-reconcile cefi_master</code> pass — every child doc read in full, every contradiction candidate
+      adversarially re-verified before being applied.
+    </p>
+  </div>
+
+  <section>
+    <div class="section-head"><h2>Headline</h2><span class="section-note">source: epic_report_data.py --epic cefi_master</span></div>
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="stat-num tabular">84</div>
+        <div class="stat-label">Open todos (deduped)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num green tabular">219</div>
+        <div class="stat-label">Done todos (deduped)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num tabular">50</div>
+        <div class="stat-label">Child docs (17 plans + 33 issues)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num rust tabular">4</div>
+        <div class="stat-label">On the operator's desk</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num amber tabular">20</div>
+        <div class="stat-label">Docs corrected this pass</div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Plan-by-plan</h2>
+      <span class="section-note">6 aggregator plans flagged — their open counts overlap child work, excluded from the dedup total above</span>
+    </div>
+    <div class="plan-table-wrap">
+      <table class="plans">
+        <thead>
+          <tr><th>Doc</th><th>Open / Done</th><th style="width:1%"></th><th>Note</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><span class="plan-title">CeFi consolidated close-out</span><span class="plan-path">cefi_consolidated_closeout_2026_07_18.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:83%"></div><div class="bar-open" style="width:17%"></div></div><span class="bar-count tabular">6 / 30</span></div></td>
+            <td><span class="agg-flag">hub</span></td><td>id-canonicalization DONE; coverage + Track-0 side-quest still open</td></tr>
+          <tr><td><span class="plan-title">4-surface migration execution log</span><span class="plan-path">cefi_4surface_migration_execution_log_2026_07_24.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:89%"></div><div class="bar-open" style="width:11%"></div></div><span class="bar-count tabular">1 / 8</span></div></td>
+            <td></td><td>sole open item gated on chain-drop's re-verify+archive todo</td></tr>
+          <tr><td><span class="plan-title">Chain-relabel migration (options/futures)</span><span class="plan-path">cefi_chain_relabel_migration_options_futures_2026_08_15.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:64%"></div><div class="bar-open" style="width:36%"></div></div><span class="bar-count tabular">5 / 9</span></div></td>
+            <td></td><td class="op-quote">carries an [OPERATOR] Phase-3 delete-safety todo</td></tr>
+          <tr><td><span class="plan-title">Chain-relabel — finalize</span><span class="plan-path">cefi_chain_relabel_migration_options_futures_2026_08_15_finalize.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:0%"></div><div class="bar-open" style="width:100%"></div></div><span class="bar-count tabular">4 / 0</span></div></td>
+            <td><span class="agg-flag">gated</span></td><td>blocked on parent</td></tr>
+          <tr><td><span class="plan-title">DERIBIT+BINANCE-FUTURES bundle verification</span><span class="plan-path">cefi_deribit_binance_futures_bundle_verification_2026_06_20.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:100%"></div><div class="bar-open" style="width:0%"></div></div><span class="bar-count tabular">0 / 7</span></div></td>
+            <td></td><td>success-criteria gap remains, not archived by design</td></tr>
+          <tr><td><span class="plan-title">Bundle verification — finalize</span><span class="plan-path">cefi_deribit_binance_futures_bundle_verification_2026_06_20_finalize_2026_07_27.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:100%"></div><div class="bar-open" style="width:0%"></div></div><span class="bar-count tabular">0 / 1</span></div></td>
+            <td></td><td>archive_exempt (documented reason)</td></tr>
+          <tr><td><span class="plan-title">ML_DIRECTIONAL_CONTINUOUS live archetype</span><span class="plan-path">cefi_ml_directional_continuous_live_2026_06_20.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:70%"></div><div class="bar-open" style="width:30%"></div></div><span class="bar-count tabular">3 / 7</span></div></td>
+            <td></td><td>≥7-day live-run gate; wallet-key hard-stop confirmed permanent</td></tr>
+          <tr><td><span class="plan-title">Satellite AO dispatch — batch 20</span><span class="plan-path">cefi_satellite_ao_dispatch_batch20_2026_08_16.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:31%"></div><div class="bar-open" style="width:69%"></div></div><span class="bar-count tabular">11 / 5</span></div></td>
+            <td><span class="agg-flag">aggregator</span></td><td>2 line-1 defects fixed this pass</td></tr>
+          <tr><td><span class="plan-title">Batch 20 — finalize</span><span class="plan-path">cefi_satellite_ao_dispatch_batch20_2026_08_16_finalize.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:0%"></div><div class="bar-open" style="width:100%"></div></div><span class="bar-count tabular">3 / 0</span></div></td>
+            <td><span class="agg-flag">gated</span></td><td>blocked on batch 20 (11 open)</td></tr>
+          <tr><td><span class="plan-title">Satellite AO dispatch — batch 21</span><span class="plan-path">cefi_satellite_ao_dispatch_batch21_2026_08_17.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:67%"></div><div class="bar-open" style="width:33%"></div></div><span class="bar-count tabular">1 / 2</span></div></td>
+            <td><span class="agg-flag">aggregator</span></td><td>near-complete; remaining item is [DATA], doesn't qualify for auto-fold</td></tr>
+          <tr><td><span class="plan-title">Batch 21 — finalize</span><span class="plan-path">cefi_satellite_ao_dispatch_batch21_2026_08_17_finalize.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:0%"></div><div class="bar-open" style="width:100%"></div></div><span class="bar-count tabular">3 / 0</span></div></td>
+            <td><span class="agg-flag">gated</span></td><td>blocked on batch 21</td></tr>
+          <tr><td><span class="plan-title">Tardis date-concurrency</span><span class="plan-path">cefi_tardis_date_concurrency_2026_08_16.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:91%"></div><div class="bar-open" style="width:9%"></div></div><span class="bar-count tabular">2 / 20</span></div></td>
+            <td></td><td>~1.5x speedup shipped; Tardis N=1 slot occupied by a real 316-day backfill</td></tr>
+          <tr><td><span class="plan-title">Track-2 coverage backfill checkpoints</span><span class="plan-path">cefi_track2_coverage_backfill_checkpoints_2026_07_25.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:50%"></div><div class="bar-open" style="width:50%"></div></div><span class="bar-count tabular">3 / 3</span></div></td>
+            <td></td><td>~26% done after 3+ weeks of repeated preemptions</td></tr>
+          <tr><td><span class="plan-title">Track-2 checkpoints — finalize</span><span class="plan-path">cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:0%"></div><div class="bar-open" style="width:100%"></div></div><span class="bar-count tabular">4 / 0</span></div></td>
+            <td><span class="agg-flag">gated</span></td><td>stale hardcoded "5 todos" count fixed this pass</td></tr>
+          <tr><td><span class="plan-title">Crypto-venue equity perps + tokenized stocks</span><span class="plan-path">cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:73%"></div><div class="bar-open" style="width:27%"></div></div><span class="bar-count tabular">10 / 27</span></div></td>
+            <td></td><td>847L, approaching the 1000L cap — extract oldest closed Progress Log section soon</td></tr>
+          <tr><td><span class="plan-title">Aggregated source docs (discoverability index)</span><span class="plan-path">cefi_consolidated_closeout_aggregated_sources_2026_07_24.md</span></td>
+            <td><div class="bar"><div class="bar-track"><div class="bar-done" style="width:0%"></div><div class="bar-open" style="width:100%"></div></div><span class="bar-count tabular">1 / 0</span></div></td>
+            <td><span class="agg-flag">aggregator</span></td><td class="op-quote">headline fix: 24-row stale-digest correction table added this pass</td></tr>
+          <tr><td colspan="4" style="padding-top:16px;"><span class="eyebrow">+ 33 issue docs</span> <span style="color:var(--text-faint); font-size:13px;">— instrument-type casing, Tardis-cap relaunch queue, DERIBIT options_chain blocker, MDPS candle regen, UPBIT gap, and 28 more; full list in the findings doc.</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>On the operator's desk</h2></div>
+    <div class="alert-panel">
+      <div class="who">cefi_chain_relabel_migration_options_futures_2026_08_15.md · Phase 3</div>
+      <p>Measure the blast radius (dry-run/count-only pass over the manifest + a GCS listing) before the
+        legacy-shape delete — 6+ years of vintage shards, no established reversibility check yet.</p>
+    </div>
+    <div class="alert-panel">
+      <div class="who">cefi_residual_followups_after_honest_done_2026_07_17.md</div>
+      <p>586 marker-less <code>VENUE:PERPETUAL:BASE-QUOTE</code> catalogue rows need an operator disposition
+        (blueprint open-question #19).</p>
+    </div>
+    <div class="alert-panel">
+      <div class="who">okx_futures_instid_marker_convention_mismatch_2026_07_30.md</div>
+      <p>NEW 2026-08-18 (slot 15) — a live behavioral gap surfaced while closing the prior item needs an operator
+        call on scope.</p>
+    </div>
+    <div class="alert-panel">
+      <div class="who">cefi_content_migration_fleet_half_incomplete_2026_07_26.md</div>
+      <p>Marked as needing no operator gate by its own source doc (VM launches are AO-dispatchable by default) —
+        surfaced here because the mechanical scan still flags it; content confirms it is <strong>not</strong> a
+        live blocker.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Needs extra scoping</h2></div>
+    <div class="alert-panel scoping">
+      <div class="who">cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md</div>
+      <p>The unblocked "Round-8 actual launch" todo has zero corroborating evidence anywhere in the corpus that it
+        ever ran, through today's cutoff — flagged, not confirmed; needs a live GCS/AO-backlog check this
+        doc-only pass couldn't perform.</p>
+    </div>
+    <div class="alert-panel scoping">
+      <div class="who">2 docs — <code>archive_exempt: true</code> with no justification comment</div>
+      <p><code>uac_per_venue_seed_fallback_removal_deferred_2026_07_26.md</code> and
+        <code>cefi_lighter_zksync_systemic_collision_2026_08_08.md</code> — both 0 open todos, both exempted from
+        the archive-candidates check with no stated reason. Flagged in-doc; routed to a future
+        <code>/archive-candidates-audit</code> pass.</p>
+    </div>
+    <div class="alert-panel scoping">
+      <div class="who">plans/epics/cefi_master.md § Assigned active plans</div>
+      <p>Auto-populated section is stale (lists 3 archived docs as active). The regenerator tool works
+        (confirmed via <code>--dry-run</code>) but touches all 26 epics corpus-wide — deferred past this
+        epic-scoped run's safe blast radius given today's cross-session contention.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Closed out this pass</h2></div>
+    <div class="closed-list">
+      <div class="closed-item"><span class="check">✓</span><div class="body">Wrong commit SHA citation corrected (<code>bd07cfc3</code> → <code>f134d165…</code>), git-verified ancestor both sides.<div class="doc">cefi_okx_spot_bybit_spot_backfill_never_relaunched_2026_08_16.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">2 checkboxes marked <code>[x]</code> whose own text read "STILL OPEN" reconciled against their now-resolved spin-off target.<div class="doc">cefi_residual_followups_after_honest_done_2026_07_17.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">Stale hardcoded "5 todos" gate count deleted at 4 sites (parent plan now has 6).<div class="doc">cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">A "← SUPERSEDED" todo reformatted into the required non-checkbox CANCELLED disposition marker.<div class="doc">deribit_options_chain_af_g4_blocker_2026_07_03.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">1-day date discrepancy on the bare-OKX-key registry removal resolved via <code>git log</code> (2026-08-04, not -05).<div class="doc">tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">DERIBIT <code>futures_chain</code> ↔ <code>options_chain</code> cross-reference added both directions — same vulnerable write path, previously undiscoverable from either doc.<div class="doc">cefi_window_scoped_coverage_gap… ↔ deribit_options_chain_af_g4_blocker</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">A resume-frontier table (shards 24/25/40/42-44) that had collapsed into unrendered run-on prose reconstructed as proper markdown rows.<div class="doc">cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">Hedge-pointer confirmed: the "re-run the 44-shard grep" todo was silently extracted to batch20 with no back-reference — added.<div class="doc">cefi_content_migration_fleet_half_incomplete_2026_07_26.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">9 AO-dispatch-readiness line-1-truncation defects rewritten so the essential verb+object survives the dispatcher's first-line-only parse.<div class="doc">batch20 (×2), lighter-zksync-tardis-cap, track2-preempted, mdps-force-flag, mdps-write-race, mtds-cold-start, tardis-options-finalize</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body">Added <code>sequential: true</code> — 3 prose-gated todos (dry-run → apply → consolidator rebuild → re-audit) had no machine-enforced ordering.<div class="doc">cefi_instrument_type_casing_active_writer_regression_2026_08_17.md</div></div></div>
+      <div class="closed-item"><span class="check">✓</span><div class="body"><strong>Headline fix</strong> — 22 over-counted + 1 under-counted + 1 misfiled digest entry corrected in one evidence-cited table (16-day-stale index, 6/25 rows independently spot-verified before accepting the rest).<div class="doc">cefi_consolidated_closeout_aggregated_sources_2026_07_24.md</div></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Parallel-tab flow for what's left</h2><span class="section-note">up to 5 lanes, no shared files</span></div>
+    <div class="lanes-table-wrap">
+      <table class="lanes">
+        <thead><tr><th>Lane</th><th>Workstream</th><th>Owned files</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="lane-id">A</td>
+            <td>Content-migration corpus completion — settle 44/44 shards, delete the retired migration script.</td>
+            <td class="lane-files"><ul><li>cefi_content_migration_fleet_half_incomplete_2026_07_26.md</li><li>cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md</li><li>market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py</li></ul></td>
+          </tr>
+          <tr>
+            <td class="lane-id">B</td>
+            <td>Tardis-cap relaunch prep — 4 VMs queued behind the SAME hard N=1 cap; prep/monitoring parallelizes, launches themselves cannot.</td>
+            <td class="lane-files"><ul><li>cefi_lighter_zksync_preempted_relaunch_blocked_tardis_cap_2026_08_17.md</li><li>cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md</li><li>cefi_okx_spot_bybit_spot_backfill_never_relaunched_2026_08_16.md</li><li>upbit_cefi_data_gap_may_2026_2026_08_04.md</li></ul></td>
+          </tr>
+          <tr>
+            <td class="lane-id">C</td>
+            <td>Manifest/writer correctness — casing-fix apply chain, instrument_type leakage, blank-on-failure residual.</td>
+            <td class="lane-files"><ul><li>cefi_instrument_type_casing_active_writer_regression_2026_08_17.md</li><li>cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md</li><li>cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md</li><li>market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py</li></ul></td>
+          </tr>
+          <tr>
+            <td class="lane-id">D</td>
+            <td>DERIBIT bundle + book_snapshot5 schema — options_chain blocker cross-check, 1080L line-cap split.</td>
+            <td class="lane-files"><ul><li>deribit_options_chain_af_g4_blocker_2026_07_03.md</li><li>cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md</li><li>cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md</li></ul></td>
+          </tr>
+          <tr>
+            <td class="lane-id">E</td>
+            <td>MDPS candle regen + write-race follow-through — BYBIT bundle audit, per-day relaunch.</td>
+            <td class="lane-files"><ul><li>mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md</li><li>mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md</li><li>cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md</li></ul></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Dispatch prompts</h2></div>
+
+    <div class="prompt-card">
+      <div class="prompt-head"><span class="lane-id">Lane A</span><span class="title">Content-migration corpus completion</span></div>
+      <pre class="prompt-body">Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before any tool call.
+
+<strong>Task</strong>: settle whether the 44-way sharded cefi content-canonicalisation --apply fleet is genuinely
+44/44 complete. Read plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md and
+plans/active/issues/cefi_content_migration_corpus_still_incomplete_relaunch_round3_needed_2026_07_31.md in full
+first — both track the same fleet from different angles. Re-run the corpus-wide gs://deployment-scripts-central-
+element-323112/vm-logs/canonical-migration-cefi-content-*/run.log grep for the "SCRIPT 1 CONTENT MIGRATION
+SUMMARY" terminal banner across all 44 shards (the live dispatchable copy of this exact todo is
+plans/active/cefi_satellite_ao_dispatch_batch20_2026_08_16.md's open [SCRIPT] P2 item — do this ONCE, not twice).
+If 44/44, flip both source docs' remaining todos with the evidence and delete
+market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py per its own
+Delete-when marker. If not 44/44, relaunch the remainder per the existing idempotent script (no [OPERATOR] gate
+needed — see the source doc's own reasoning). Verify STARTED + PROGRESS before considering any relaunch done.
+
+<strong>Done when</strong>: 44/44 confirmed with cited evidence, both source docs' checkboxes flipped, and either
+the script is deleted or a fresh reason it can't be yet is recorded.
+
+Quality-gates.sh green if you touch code. Implement + verify, then stop — don't ship (quickmerge is a separate,
+explicit step).</pre>
+    </div>
+
+    <div class="prompt-card">
+      <div class="prompt-head"><span class="lane-id">Lane B</span><span class="title">Tardis-cap relaunch prep</span></div>
+      <pre class="prompt-body">Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before any tool call.
+
+<strong>Task</strong>: 4 docs each have a VM relaunch queued behind the workspace's hard Tardis N=1-concurrent-VM
+cap (both clouds) — plans/active/issues/cefi_lighter_zksync_preempted_relaunch_blocked_tardis_cap_2026_08_17.md,
+cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md,
+cefi_okx_spot_bybit_spot_backfill_never_relaunched_2026_08_16.md, upbit_cefi_data_gap_may_2026_2026_08_04.md.
+Read all 4 in full. Check `tardis_running_vm_count asia-northeast1-c central-element-323112`
+(deployment-service/scripts/vm/tardis-concurrency-guard.sh) for the current cap holder. Only ONE of these 4 can
+actually launch at a time — prioritize by each doc's own stated P0/P1 urgency and days-since-last-attempt, not
+file order. Fetch each target VM's own LAUNCH_PARAMS.json before relaunching (never blind-reproduce an older
+attempt's params — this chain has repeatedly hit env-drift bugs). Verify STARTED@T+60s + PROGRESS@T+10min before
+closing any todo.
+
+<strong>Done when</strong>: the cap-clear VM is relaunched and confirmed progressing, cited in that doc's own
+Progress Log; the other 3 stay correctly gated, not touched further this session.
+
+Implement + verify, then stop — don't ship.</pre>
+    </div>
+
+    <div class="prompt-card">
+      <div class="prompt-head"><span class="lane-id">Lane C</span><span class="title">Manifest / writer correctness</span></div>
+      <pre class="prompt-body">Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before any tool call.
+
+<strong>Task</strong>: plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md's
+3 remaining todos (now machine-sequenced via `sequential: true`) — review the dry-run VM's disposition, launch
+the FULL --apply if sane, trigger the manifest consolidator rebuild, then re-run
+market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py to confirm the casing
+residual is 0. Also read cefi_enumeration_audit_instrument_type_leakage_and_catalogue_orphans_2026_07_27.md's
+open Class-A --apply todo (same manifest-correctness family, different shard population) and
+cefi_batch_manifest_blank_instrument_type_on_failure_2026_07_12.md's P3 sibling-lockout-gated item.
+
+<strong>Done when</strong>: the casing residual audit shows 0, the Class-A --apply is confirmed applied with a
+post-run count, and the P3 sibling-dependency is either wired via depends_on or documented as intentionally
+prose-only.
+
+Quality-gates.sh green on any code change. Implement + verify, then stop — don't ship.</pre>
+    </div>
+
+    <div class="prompt-card">
+      <div class="prompt-head"><span class="lane-id">Lane D</span><span class="title">DERIBIT bundle + book_snapshot5 schema</span></div>
+      <pre class="prompt-body">Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before any tool call.
+
+<strong>Task</strong>: plans/active/issues/deribit_options_chain_af_g4_blocker_2026_07_03.md's DERIBIT
+options_chain blocker (af=10,114, captured=1) was just cross-linked to a confirmed same-class fix for DERIBIT
+futures_chain (cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md's 2026-08-09 entry) —
+check whether that fix covers options_chain too before assuming a separate resolution is needed. Also read
+cefi_deribit_futures_chain_canonical_write_path_exposure_2026_08_09.md (blocked on the same Tardis N=1 cap
+Lane B is managing — coordinate, don't duplicate a launch). Separately,
+cefi_book_snapshot5_schema_contract_ts_event_levels_mismatch_2026_07_28.md is 1080 lines (80 over the hard cap)
+with 2 genuine design/judgment todos — this needs a real split (extract into a child doc), not a mechanical trim;
+this is a planning decision, flag it rather than resolving unilaterally if the split shape isn't obvious.
+
+<strong>Done when</strong>: the options_chain/futures_chain relationship is confirmed either way with evidence,
+and the line-cap split is either done or clearly scoped as its own follow-up.
+
+Implement + verify, then stop — don't ship.</pre>
+    </div>
+
+    <div class="prompt-card">
+      <div class="prompt-head"><span class="lane-id">Lane E</span><span class="title">MDPS candle regen + write-race</span></div>
+      <pre class="prompt-body">Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before any tool call.
+
+<strong>Task</strong>: plans/active/issues/cefi_track7_candle_bundle_regeneration_vm_2026_08_04.md's per-day-scoped
+relaunch (6-8 target days, see its own SCOPE CORRECTION widening 6→8 — the AO dispatcher only sees line 1, so
+read the full todo, not just the first line) — launch once
+plans/active/issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md's blocking VM
+(mdps-backfill-cefi-20260808-095136) reaches a terminal state. After it completes and is audited, check
+mdps_multi_instrument_bundle_write_race_hypothesis_2026_08_09.md's open todo: do BYBIT 15s/1m bundles still show
+only 1 instrument_id despite Force: True confirmed in the per-date child log? If yes, the fix is in the streaming
+symbol-accumulation path (live_workers_streaming.py, candle_write_mixin.py), not merge-on-write.
+
+<strong>Done when</strong>: the per-day relaunch is confirmed complete, and the write-race question is closed
+either as a non-issue (bundles correct) or scoped as a new P1 fix todo.
+
+Quality-gates.sh green on any code change. Implement + verify, then stop — don't ship.</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Notes & methodology</h2></div>
+    <div class="notes">
+      <ul>
+        <li>Open/done counts are the exact <code>scripts/plan-hygiene/count_open_tasks.py</code> dedup methodology
+          (aggregator-plan exclusion, identical checkbox regexes), via <code>epic_report_data.py --epic
+          cefi_master --json</code> — never hand-counted.</li>
+        <li><code>parent_epic</code> membership is <code>rg "^parent_epic: cefi_master$"</code> against real
+          frontmatter (50 docs), not the filename-substring inventory-script definition — see
+          <code>epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md</code> for why that distinction
+          matters (a same-line grep or filename match both under/over-count against this corpus).</li>
+        <li>Every "closed out this pass" item was independently re-verified by the reconciling session — not
+          trusted at hunter-report face value — via direct <code>grep</code>/<code>git log</code>/<code>git
+          merge-base --is-ancestor</code>/<code>wc -l</code> re-derivation before being applied.</li>
+        <li>This run's population (50 docs, <code>parent_epic: cefi_master</code>) is narrower than the cefi
+          <em>tranche</em> (116 docs, <code>asset_group: cefi</code>) the two prior dated findings docs swept —
+          the two scoping axes overlap but aren't identical; a doc can be asset_group-cefi-tagged without
+          declaring this specific epic as its parent.</li>
+        <li>Nothing on this page was shipped — every fix lives in the working tree only. A concurrent session
+          (heavy contention on this checkout today) reviews and ships centrally.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>plan_reconciler · epic-scoped · cefi_master</span>
+    <span>plans/active/issues/plan_reconciler_findings_cefi_2026_08_18.md</span>
+  </footer>
+
+</div>

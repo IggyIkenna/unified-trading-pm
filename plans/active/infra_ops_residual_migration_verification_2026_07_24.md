@@ -184,7 +184,7 @@ source: >-
       `scope=mvp|could_exist|all` + UI tick + features/strategy/model sections). Schedule, do not re-file. **(Pointer
       item — the actual work lives in `mvp_scope_catalogue_tagging_2026_06_08.md`; carried here unmodified from the
       parent rather than dropped, per lossless-relocation.)** -- CLOSED (na-eligibility-audit 2026-08-01): duplicate of
-      the actively-progressing owner `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` (most recent update
+      the actively-progressing owner `plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md` (most recent update
       2026-07-28, `unified-api-contracts@0fb9821b`, ModelsMvpRule P2b, with an open P2b-2 follow-on already tracked
       there) — this was a lossless-relocation pointer, not primary work for this plan, so closing here is a
       citation-fix, not a scope drop.

@@ -68,7 +68,7 @@ sibling todo already filed today.** Attempted a direct in-process call to
 `get_data_status_turbo_impl(service= "market-tick-data-handler", start_date="2026-07-16", end_date="2026-08-15", include_sub_dimensions=True, check_upstream_availability=False)`
 (all 5 asset groups, no venue/data_type filter — the natural first measurement step) — it did not complete within a 120s
 budget and was killed. This is the same failure class
-`plans/active/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already filed today for a sibling
+`plans/archive/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` already filed today for a sibling
 MDPS-scoped axis-census call (that one root-caused to an unbounded full-bucket read + client-side filter where a
 pushdown filter measured 8.6s for the same result). Did not further diagnose this specific call's root cause (would need
 its own investigation of `query_specific_prefixes_for_asset_group`'s cost at `include_sub_dimensions=True` scale) —

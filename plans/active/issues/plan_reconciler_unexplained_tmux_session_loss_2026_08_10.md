@@ -42,6 +42,8 @@ related:
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
+    /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
+    /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
   ]
 created: 2026-08-10
 author: agent
@@ -172,3 +174,17 @@ which would tear down sibling sessions with no per-session trace. This is offere
 the evidence gap already documented above, not as a definitive resolution of this doc's UNDETERMINED root cause.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **2026-08-18 (convergence audit, operator-requested)**: read against the other 2 open tmux-loss docs. **Verdict:
+  converges with `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`** — that doc's confirmed root cause (shared
+  ambient tmux default socket, killable by any process's bare `kill-server`/`rm -rf` on the shared tmpdir) is the
+  most-likely mechanism behind this doc's 2026-08-10 incident, per the 2026-08-15 note above; not independently
+  provable for THIS specific incident since the forensic evidence that would confirm it (`pane_death_info`) was itself
+  lost to the `remain-on-exit` bug this doc separately found and fixed. Not merged into that doc: this doc stays
+  `archive_exempt: true` as its own standing incident record (KEEP-NA, na-eligibility-audit 2026-08-17) and the origin
+  of the `tmux_session_lost` rate-canary recommendation below — the root-cause mechanism itself is documented ONCE,
+  in that doc, and this entry just strengthens the cross-link (added to `related:` above, was previously only cited in
+  body text). **Does NOT converge with `ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md`** on root cause —
+  that doc investigates the canary's ALERT-threshold tuning (whether 3-in-10-min is too tight for normal fleet churn),
+  a genuinely distinct statistics/observability question from why sessions die; it IS the direct follow-on to the
+  canary this doc recommended and got shipped (`agent-orchestrator@cc3b5b4`), so cross-linked as lineage, not as the
+  same mechanism.

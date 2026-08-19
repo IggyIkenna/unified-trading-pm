@@ -106,7 +106,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-02"
+last_updated: "2026-08-18"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -995,3 +995,5 @@ live 2026-07-26 by `/plan-reconcile defi`: the real figure is **2** — `…aggr
   frontmatter `status: active`, prerequisite still open) — citation still real, not re-litigated. Doc stays
   `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-18** (agt-2c8a26): KEEP-NA, valid — 10 open todos match Phase 0; `depends_on`+`gate_on_depends` gate re-verified live (defi_track01 freshly re-read same run, still 2 open, infra-gated). Content change since 08-17 was plan_reconciler's `[OPERATOR]` note on the Track-3 PURGE todo only. No new RECLASSIFY/stale-done items. Doc stays `assigned_vm: NA`.
+- **ci-reconcile 2026-08-18** (agt-d23e6a): AG-closeout-linkage QG flagged
+  `defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04_finalize_2026_08_08` (gated HYPERLIQUID forward-write finalize) as an unlinked orphan — citation added here to close the gate, no content change to the finalize doc.

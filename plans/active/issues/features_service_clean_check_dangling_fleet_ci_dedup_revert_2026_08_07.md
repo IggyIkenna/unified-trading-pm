@@ -26,7 +26,7 @@ scope: [engineer]
 tags: [ci-cd, features-service, dangling-wip, stash, git-hygiene, fleet-workflow-dedup]
 related:
   - /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
-  - /plans/active/issues/features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md
+  - /plans/archive/2026_08/issues/features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
 created: "2026-08-07"
 author: unknown
@@ -46,7 +46,7 @@ resolved_by:
 context_scope:
   [
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
-    /plans/active/issues/features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md,
+    /plans/archive/2026_08/issues/features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md,
     features-service/.github/workflows,
   ]
 ---

@@ -33,7 +33,7 @@ code_refs:
 ---
 
 > **OWNERSHIP CORRECTED 2026-05-27 (BLRS audit D1, decision A —
-> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: earlier revisions of this doc
+> `plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: earlier revisions of this doc
 > attributed live continuous reconciliation (the recovery-verification callback + a daily `check_oldest_age.py`) to
 > `batch-live-reconciliation-service`. **That is wrong.** BLRS is a **T+1 batch auditor only** — it does NOT perform
 > live reconciliation, owns no recovery callback, and ships no age script. Live reconciliation is implemented by the

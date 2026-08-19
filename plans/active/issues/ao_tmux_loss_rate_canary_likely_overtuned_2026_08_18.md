@@ -27,6 +27,8 @@ related:
   [
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
+    /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
+    /plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md,
   ]
 created: "2026-08-18"
 parent_epic: agent_operating_framework_master
@@ -87,13 +89,33 @@ canary is fine, these were real transient incidents") or routinely brushed (supp
 threshold and/or require N consecutive over-threshold ticks before paging, not a single rolling
 snapshot").
 
+## Convergence note (2026-08-18, cross-doc audit)
+
+This is NOT the same mechanism as `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` (that doc's confirmed root
+cause — a shared ambient tmux socket killable by any process's bare `kill-server`/`rm -rf` — explains why a session
+DIES; this doc is about whether the ALERT correctly counts deaths that already happened, a distinct statistics
+question) — not merging into it. It IS the direct follow-on to the canary
+`plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md` recommended and shipped
+(`agent-orchestrator@cc3b5b4`), and it shares a specific, previously-unlinked insight with the root-cause doc: that
+doc's own still-open P3 todo notes `check-ao-recent-deaths.sh`'s `burst_size` conflates ordinary `reason="manual"`
+`one_task_per_session` recycle-teardowns with genuine losses — proven for its 2026-08-14 23:33 cluster, where 3 of 5
+counted "losses" were confirmed benign recycles, not crashes. `_count_excluded_losses` already excludes
+`one_shot`/`scheduled` agents and `idle`-status slots, but per that same finding may NOT exclude a benign recycle on
+an otherwise-active slot — the exact gap this doc's own hypothesis needs measured. The follow-up below is revised to
+check for this directly rather than only counting raw crossings.
+
 ## Follow-up
 
 - [ ] [SCRIPT] P2. Query `ActivityRow` for `tmux_session_lost` events over the last 7 days,
       bucket into rolling 10-min windows the same way `_count_excluded_losses` does, and plot/
       count how often the count crosses 3. If it crosses routinely (say, >5x/day) outside any
-      known incident window, that's direct evidence for raising the threshold. (repo:
-      agent-orchestrator)
+      known incident window, that's direct evidence for raising the threshold. **For each
+      crossing, also cross-reference every member against a preceding `reason="manual"`
+      `SESSION-TEARDOWN` log line within ~60s** (the method
+      `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` already proved out for its
+      2026-08-14 23:33 cluster) — if crossings are dominated by benign recycles rather than genuine
+      losses, that's a DIFFERENT fix (exclude `reason="manual"` from the count) than raising the
+      raw threshold. (repo: agent-orchestrator)
 - [ ] [SCRIPT] P2. If confirmed over-tuned, raise `tmux_session_loss_rate_min_count` and/or
       `tmux_session_loss_rate_window_seconds`, OR add a "sustained N consecutive ticks over
       threshold" requirement (the interval is 120s — even 2 consecutive over-threshold ticks

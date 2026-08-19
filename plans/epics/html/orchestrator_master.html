@@ -1,0 +1,678 @@
+<title>Orchestrator Signal Board</title>
+<style>
+  :root {
+    --bg: #f3f2ef;
+    --surface: #fdfdfc;
+    --surface-2: #ebe9e4;
+    --ink: #1e2222;
+    --ink-muted: #5b6360;
+    --ink-faint: #8a908c;
+    --line: #dad7d0;
+    --accent: #b06a17;
+    --accent-ink: #6e3e0c;
+    --accent-soft: #f1e2cd;
+    --data: #2c6e7f;
+    --data-soft: #dceaec;
+    --good: #3f7d4a;
+    --good-soft: #e1ede2;
+    --warn: #b8862e;
+    --warn-soft: #f3ead4;
+    --critical: #b23a2e;
+    --critical-soft: #f5e0dd;
+    --radius: 3px;
+    --shadow: 0 1px 2px rgba(30, 34, 34, 0.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171a;
+      --surface: #1b1f22;
+      --surface-2: #22262a;
+      --ink: #e8e6e0;
+      --ink-muted: #9ca3a0;
+      --ink-faint: #6b716e;
+      --line: #2a2f33;
+      --accent: #e0a54b;
+      --accent-ink: #f6d9a5;
+      --accent-soft: #3a2c17;
+      --data: #6cb6c4;
+      --data-soft: #1c333a;
+      --good: #6fbf73;
+      --good-soft: #1c2e1f;
+      --warn: #d9a94a;
+      --warn-soft: #332a15;
+      --critical: #e0685a;
+      --critical-soft: #35211e;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171a;
+    --surface: #1b1f22;
+    --surface-2: #22262a;
+    --ink: #e8e6e0;
+    --ink-muted: #9ca3a0;
+    --ink-faint: #6b716e;
+    --line: #2a2f33;
+    --accent: #e0a54b;
+    --accent-ink: #f6d9a5;
+    --accent-soft: #3a2c17;
+    --data: #6cb6c4;
+    --data-soft: #1c333a;
+    --good: #6fbf73;
+    --good-soft: #1c2e1f;
+    --warn: #d9a94a;
+    --warn-soft: #332a15;
+    --critical: #e0685a;
+    --critical-soft: #35211e;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .mono {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", "Menlo", monospace;
+  }
+  .tnum { font-variant-numeric: tabular-nums; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 32px 24px 96px; }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 24px;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 18px;
+    margin-bottom: 6px;
+    flex-wrap: wrap;
+  }
+  .masthead .eyebrow {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  h1 {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: clamp(28px, 4vw, 38px);
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    margin: 4px 0 0;
+    text-wrap: balance;
+  }
+  .dek {
+    color: var(--ink-muted);
+    font-size: 14.5px;
+    max-width: 62ch;
+    margin-top: 6px;
+  }
+  .masthead-meta {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: 12px;
+    color: var(--ink-faint);
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  /* ---------- Section scaffolding ---------- */
+  section { margin-top: 44px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .section-num {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 12px;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  h2 {
+    font-family: ui-monospace, "SF Mono", "Cascadia Code", monospace;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ink);
+  }
+  .section-note { color: var(--ink-faint); font-size: 12.5px; margin-left: auto; }
+
+  /* ---------- Stat strip ---------- */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .stat-tile {
+    background: var(--surface);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat-value {
+    font-family: ui-monospace, "SF Mono", monospace;
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+  }
+  .stat-value.accent { color: var(--accent); }
+  .stat-value.good { color: var(--good); }
+  .stat-value.data { color: var(--data); }
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- Chips ---------- */
+  .chipline { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: ui-monospace, monospace;
+    font-size: 11.5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--surface);
+    color: var(--ink-muted);
+  }
+
+  /* ---------- Table (plan-by-plan ledger) ---------- */
+  .ledger-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--radius); }
+  table.ledger { width: 100%; border-collapse: collapse; background: var(--surface); min-width: 760px; }
+  table.ledger caption { text-align: left; padding: 10px 14px; font-size: 12px; color: var(--ink-faint); border-bottom: 1px solid var(--line); }
+  table.ledger th {
+    text-align: left;
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface-2);
+    position: sticky;
+    top: 0;
+  }
+  table.ledger th[data-sort] { cursor: pointer; user-select: none; }
+  table.ledger th[data-sort]:hover { color: var(--ink); }
+  table.ledger th[data-sort]:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .sort-ind { display: inline-block; margin-left: 5px; opacity: 0.35; font-size: 9px; }
+  th[data-sort].sort-active { color: var(--ink); }
+  th[data-sort].sort-active .sort-ind { opacity: 1; color: var(--accent); }
+  table.ledger td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    vertical-align: top;
+  }
+  table.ledger tr:last-child td { border-bottom: none; }
+  table.ledger tr:hover td { background: var(--surface-2); }
+  .doc-title { font-weight: 600; }
+  .doc-path { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-faint); margin-top: 2px; }
+  .bar-cell { display: flex; align-items: center; gap: 8px; min-width: 150px; }
+  .bar { flex: 1; height: 6px; border-radius: 4px; background: var(--surface-2); overflow: hidden; display: flex; }
+  .bar > span { display: block; height: 100%; }
+  .bar .open { background: var(--accent); }
+  .bar .done { background: var(--good); }
+  .bar-count { font-family: ui-monospace, monospace; font-size: 11.5px; white-space: nowrap; }
+  .pill {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    font-weight: 700;
+  }
+  .pill.plan { background: var(--data-soft); color: var(--data); }
+  .pill.issue { background: var(--warn-soft); color: var(--warn); }
+  .pill.agg { background: var(--surface-2); color: var(--ink-faint); }
+  .pill.dispatched { background: var(--good-soft); color: var(--good); }
+  .pill.local { background: var(--surface-2); color: var(--ink-muted); }
+  .pill.draft { background: var(--critical-soft); color: var(--critical); }
+
+  /* ---------- Desk cards ---------- */
+  .desk-grid { display: grid; grid-template-columns: 1fr; gap: 10px; }
+  .desk-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--accent);
+    border-radius: var(--radius);
+    padding: 12px 16px;
+    box-shadow: var(--shadow);
+  }
+  .desk-card .desk-doc { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-faint); margin-bottom: 4px; }
+  .desk-card .desk-line { font-size: 13.5px; }
+  .desk-card .desk-line b { color: var(--accent-ink); }
+
+  /* ---------- Scoping cards ---------- */
+  .scope-card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--data);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow);
+  }
+  .scope-card h3 { margin: 0 0 6px; font-size: 14px; font-family: ui-monospace, monospace; }
+  .scope-card .rec { color: var(--good); font-weight: 700; }
+  .scope-card .options { font-size: 13px; color: var(--ink-muted); margin-top: 6px; }
+
+  /* ---------- Closed-out list ---------- */
+  .closed-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+  .closed-list li {
+    background: var(--good-soft);
+    border-radius: var(--radius);
+    padding: 10px 14px;
+    font-size: 13.5px;
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+  .closed-list .tick { color: var(--good); font-family: ui-monospace, monospace; font-weight: 700; flex-shrink: 0; }
+  .closed-list .sha { font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--ink-muted); }
+
+  /* ---------- Lanes ---------- */
+  .lane-scroll { overflow-x: auto; }
+  .lane-grid { display: grid; grid-template-columns: repeat(5, minmax(200px, 1fr)); gap: 12px; min-width: 900px; }
+  .lane {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+  .lane-num { font-family: ui-monospace, monospace; font-size: 11px; color: var(--data); font-weight: 700; letter-spacing: 0.06em; }
+  .lane h4 { margin: 4px 0 8px; font-size: 13.5px; }
+  .lane ul { margin: 0; padding-left: 16px; font-size: 12.5px; color: var(--ink-muted); }
+  .lane li { margin-bottom: 4px; }
+
+  /* ---------- Prompts ---------- */
+  .prompt-block {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: var(--radius);
+    padding: 16px 18px;
+    font-family: ui-monospace, monospace;
+    font-size: 12px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin-bottom: 14px;
+    white-space: pre-wrap;
+  }
+  :root:not([data-theme="light"]) .prompt-block { background: #0e1113; color: #d8dfe0; }
+  :root[data-theme="dark"] .prompt-block { background: #0e1113; color: #d8dfe0; }
+  .prompt-label { font-family: ui-monospace, monospace; font-size: 11px; color: var(--data); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+
+  /* ---------- Notes ---------- */
+  .notes { font-size: 13px; color: var(--ink-muted); }
+  .notes p { margin: 0 0 10px; }
+  .notes code, p code, li code, td code { font-family: ui-monospace, monospace; font-size: 0.92em; background: var(--surface-2); padding: 1px 5px; border-radius: 3px; }
+
+  footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line); color: var(--ink-faint); font-size: 11.5px; font-family: ui-monospace, monospace; }
+</style>
+
+<div class="wrap">
+  <!-- Section 1: Masthead -->
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">orchestrator_master — epic ledger</div>
+      <h1>Orchestrator Signal Board</h1>
+      <div class="dek">Fleet dispatch, worker lifecycle, escalation, provider routing, and scheduled-job health for the
+        agent-orchestrator epic — regenerated by <span class="mono">/plan-reconcile ao</span>.</div>
+    </div>
+    <div class="masthead-meta">generated 2026-08-18<br />unified-trading-pm@4c9549a1eb</div>
+  </div>
+  <!-- generated: 2026-08-18T21:15:00Z by /plan-reconcile ao -->
+
+  <!-- Section 3: Headline stat strip -->
+  <section>
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="stat-value tnum accent">185</div>
+        <div class="stat-label">open todos (deduped)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value tnum good">307</div>
+        <div class="stat-label">done todos (deduped)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value tnum data">20</div>
+        <div class="stat-label">operator-blocked items</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value tnum">64</div>
+        <div class="stat-label">child docs (33 plan · 31 issue)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-value tnum">15</div>
+        <div class="stat-label">aggregator plans (excluded from counts)</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Plan-by-plan breakdown (table form given 64 children) -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">§4</span>
+      <h2>Plan-by-plan ledger</h2>
+      <span class="section-note">64 child docs · sorted plans then issues, open-count descending</span>
+    </div>
+    <div class="ledger-scroll">
+      <table class="ledger">
+        <caption>Aggregator plans (batch/satellite/finalize/tracker) are flagged AGG and excluded from the deduped stat-strip counts, matching <code>/open-task-count</code>'s methodology.</caption>
+        <thead>
+          <tr id="ledger-head">
+            <th data-sort="doc" tabindex="0" role="button" aria-label="Sort by document title">Doc<span class="sort-ind">▲</span></th>
+            <th data-sort="type" tabindex="0" role="button" aria-label="Sort by plan, aggregated plan, or issue">Type<span class="sort-ind">▲</span></th>
+            <th data-sort="dispatch" tabindex="0" role="button" aria-label="Sort by dispatch status">Dispatch<span class="sort-ind">▲</span></th>
+            <th data-sort="progress" tabindex="0" role="button" aria-label="Sort by open/done progress">Progress<span class="sort-ind">▼</span></th>
+          </tr>
+        </thead>
+        <tbody id="ledger-body"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- Section 5: On the operator's desk -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">§5</span>
+      <h2>On the operator's desk</h2>
+      <span class="section-note">20 open items gated on human action</span>
+    </div>
+    <div class="desk-grid" id="desk-grid"></div>
+  </section>
+
+  <!-- Section 6: Needs extra scoping -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">§6</span>
+      <h2>Needs extra scoping</h2>
+      <span class="section-note">flagged this pass, not yet resolved</span>
+    </div>
+    <div class="scope-card">
+      <h3>multi_provider_context_billing_reconciliation — sub-e-odum3default vs sub-e-odum2default</h3>
+      <p style="font-size:13.5px; margin:0;">The account id in the doc's own inventory and the id the live registration path actually returns don't
+        match — possibly a genuine rename after 2026-08-12. Neither this run's hunter nor main had live VM/SSM access to check
+        the current registration record.</p>
+      <div class="options"><b>Stays parked</b> — needs a session with orchestrator-VM access to query the real state; not a
+        preference call this run's trust mode can resolve without the underlying fact.</div>
+    </div>
+    <div class="scope-card">
+      <h3>ao_satellite_ao_dispatch_batch24 — <code>TaskUsageRow</code> concurrent-migration risk</h3>
+      <p style="font-size:13.5px; margin:0;">Todos 1-4 each add a different column to the same ORM model via separate migrations
+        against the same table. <span class="rec">Resolved this pass</span>: confirmed via direct read that this is a genuine
+        shared-resource risk (not file-disjoint), <code>sequential: true</code> applied to the plan's frontmatter.</p>
+    </div>
+  </section>
+
+  <!-- Section 7: Closed out this pass -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">§7</span>
+      <h2>Closed out this pass</h2>
+      <span class="section-note">/plan-reconcile ao, 2026-08-18 — unified-trading-pm@4c9549a1eb</span>
+    </div>
+    <ul class="closed-list">
+      <li><span class="tick">✓</span> Archived <code>ao_park_wiring_dropped_repeats_premature_gated_dispatch_2026_08_11.md</code>
+        (resolved, HARD-evidence verified) <span class="sha">→ plans/archive/2026_08/issues/</span></li>
+      <li><span class="tick">✓</span> Archived <code>fleet_venv_drift_after_pull_no_resync_2026_08_11.md</code> (0/9 open,
+        unlocked) after adding the missing codex documentation for its shipped <code>qg_assert_venv_fresh</code> gate
+        <span class="sha">→ /codex/06-coding-standards/quality-gates.md</span></li>
+      <li><span class="tick">✓</span> Corrected a stale codex claim: the content-derived-backlog-id follow-up was marked
+        "deferred, not resolved" — actually shipped 2026-08-16, 2037/3782 rows migrated
+        <span class="sha">→ /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md</span></li>
+      <li><span class="tick">✓</span> <code>ao_satellite_ao_dispatch_batch23</code> flipped <code>draft → active</code>
+        (todos already fully vetted; draft was a template artifact)</li>
+      <li><span class="tick">✓</span> <code>ao_satellite_ao_dispatch_batch24</code> gained <code>sequential: true</code>
+        (genuine same-table migration collision risk, verified)</li>
+      <li><span class="tick">✓</span> <code>ao_satellite_ao_dispatch_batch8_finalize</code> todo 3's dangling "recorded
+        baseline" reference rewritten to establish one live at pickup time</li>
+      <li><span class="tick">✓</span> Fixed a silently-reverted checkbox/field caused by a concurrent session's
+        <code>safe-doc-push.sh</code> stash-quarantine cycle hitting this exact checkout mid-run — logged as an 8th
+        corroborating data point on the known issue
+        <span class="sha">→ safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content_2026_08_15.md</span></li>
+      <li><span class="tick">✓</span> Confirmed via independent code read: the "escalation-reserve concentration" bug
+        (<code>account_failover_ignores_overage_rejected</code>) and the "slot-reaper gap" bug
+        (<code>ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch</code>) are genuinely distinct root
+        causes, not duplicate write-ups of one incident</li>
+    </ul>
+  </section>
+
+  <!-- Section 8: Parallel-tab flow for what's left -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">§8</span>
+      <h2>Parallel-tab flow for what's left</h2>
+      <span class="section-note">up to 5 lanes, file-disjoint</span>
+    </div>
+    <div class="lane-scroll">
+      <div class="lane-grid">
+        <div class="lane">
+          <div class="lane-num">LANE 1</div>
+          <h4>Slot-reaper + escalation reserve</h4>
+          <ul>
+            <li><code>ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch</code></li>
+            <li><code>account_failover_ignores_overage_rejected</code></li>
+            <li><code>escalation_pool_exhaustion_alert_unreachable_when_halted</code></li>
+          </ul>
+        </div>
+        <div class="lane">
+          <div class="lane-num">LANE 2</div>
+          <h4>tmux-death root cause</h4>
+          <ul>
+            <li><code>ao_tmux_session_loss_mid_task_root_cause</code></li>
+            <li><code>ao_tmux_loss_rate_canary_likely_overtuned</code></li>
+            <li><code>plan_reconciler_unexplained_tmux_session_loss</code></li>
+          </ul>
+        </div>
+        <div class="lane">
+          <div class="lane-num">LANE 3</div>
+          <h4>Provider billing gaps</h4>
+          <ul>
+            <li><code>multi_provider_context_billing_reconciliation</code> (7-provider schema, Gates 1-8b)</li>
+            <li><code>claude_anthropic_flat_rate_billing_calibration</code> (sub-d outlier)</li>
+          </ul>
+        </div>
+        <div class="lane">
+          <div class="lane-num">LANE 4</div>
+          <h4>Scheduled-job / watchdog</h4>
+          <ul>
+            <li><code>ao_scheduled_job_reaped_stale_rate</code></li>
+            <li><code>ao_watchdog_scheduled_timer_wiring</code></li>
+            <li><code>autospawn_fleet_cap_headroom_throttling_routine_sla_miss</code></li>
+          </ul>
+        </div>
+        <div class="lane">
+          <div class="lane-num">LANE 5</div>
+          <h4>Slot-0 daemon + human fleet</h4>
+          <ul>
+            <li><code>slot0_self_cleaning_daemon</code> (10 open)</li>
+            <li><code>ao_human_fleet_integration</code> (Harsh-gated items)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 9: Dispatch prompts -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">§9</span>
+      <h2>Dispatch prompts</h2>
+      <span class="section-note">copy-paste, self-contained</span>
+    </div>
+    <div class="prompt-label">Lane 1 — slot-reaper + escalation reserve</div>
+    <div class="prompt-block">Paste cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full first, then:
+
+Root-cause why finished one-shot escalation workers (slots 31/32/33 confirmed 2026-08-18) keep a live
+tmux session after /done, permanently shrinking the escalation-reserve free pool
+(ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md). Read tmux_pruner.py
+(confirm it's the real reaper module) to find root cause live, not from the docstring's stated intent.
+Separately verify account_failover_ignores_overage_rejected_2026_08_18.md's proposed 5th failover-trigger
+condition (overage_status=="rejected") doesn't collide with this same reserve pool. Repo: agent-orchestrator.</div>
+
+    <div class="prompt-label">Lane 2 — tmux-death root cause</div>
+    <div class="prompt-block">Paste cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full first, then:
+
+Converge the 3 open tmux-session-loss docs (ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
+ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md, plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md)
+into one root-cause finding. Decide the orphaned ambient-socket session cleanup (pid 2934337) per the first
+doc's open [OPERATOR] todo. Repo: agent-orchestrator.</div>
+  </section>
+
+  <!-- Section 10: Notes & methodology -->
+  <section>
+    <div class="section-head">
+      <span class="section-num">§10</span>
+      <h2>Notes &amp; methodology</h2>
+    </div>
+    <div class="notes">
+      <p>Open/done counts follow <code>count_open_tasks.py</code>'s dedup methodology exactly (aggregator-plan
+      exclusion, same checkbox regexes) via <code>scripts/plan-hygiene/epic_report_data.py --epic orchestrator_master</code>
+      — not hand-counted. <code>parent_epic</code> membership is the frontmatter-driven definition
+      (<code>rg "^parent_epic: orchestrator_master$"</code>), never the filename-substring inventory-script heuristic.</p>
+      <p><b>This run's coverage</b>: 5 of 9 dispatched hunter sub-agents reported genuine, verified completions
+      (escalation/dispatch-adjacent findings folded above came from cross-referencing those reports against this
+      epic's own child docs). 4 hunters (tmux/slot lifecycle, scheduled-jobs/watchdog, todo/gate mechanics, and a
+      second escalation/dispatch batch) did not report within this run's session window — their assigned docs are
+      reflected here at their CURRENT on-disk state, not re-verified against those hunters' in-flight work. A
+      corpus-wide pre-existing hard gate failure (<code>assigned_vm:NA</code> corpus-size ratchet) was found at this
+      run's Phase 0 entry check, unrelated to any doc in this epic — owned by <code>/na-eligibility-audit</code>, out
+      of this run's fixing scope.</p>
+      <p>Sibling epic <code>agent_operating_framework_master</code> (16 plan + 51 issue children, 167 open / 217 done
+      deduped, 40 operator items) was also touched substantially by this run but its own HTML report is deferred to
+      the next <code>/plan-reconcile</code> pass given this session's time budget — its report data is already
+      gathered and cached, ready for a fast follow-up generation.</p>
+    </div>
+  </section>
+
+  <footer>/plan-reconcile ao · unified-trading-pm@4c9549a1eb · scripts/plan-hygiene/epic_report_data.py --epic orchestrator_master</footer>
+</div>
+
+<script>
+  const children = [{"path": "plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md", "doc_type": "plan", "title": "anthropic_per_task_actual_spend_and_account_calibration_2026_08_10", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 28, "done_count": 24, "operator_lines": ["- [ ] [OPERATOR] P2. **LAPTOP-ONLY \u2014 log the laptop's login identity on change, as ASSURANCE that the reservation held"]}, {"path": "plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_finalize_2026_08_10.md", "doc_type": "plan", "title": "anthropic_per_task_actual_spend_and_account_calibration_2026_08_10_finalize_2026_08_10", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 3, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_human_fleet_integration_2026_08_15.md", "doc_type": "plan", "title": "Human Fleet \u2014 integrate operator laptops into agent-orchestrator as self-reporting, non-dispatched slots", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 6, "done_count": 24, "operator_lines": ["- [ ] [OPERATOR] P1. **Harsh \u2014 hand to Harsh, pure verification, no coding (unchanged from the 2026-08-15 ruling).**", "- [ ] [OPERATOR] P1. **DEFERRED-BY-DESIGN \u2014 hand to Harsh, pure verification, no coding.** Issue a long-lived worker-role JWT"]}, {"path": "plans/active/ao_open_work_consolidated_tracker_2026_08_14.md", "doc_type": "plan", "title": "AO subject-matter open-work consolidated tracker", "status": "active", "assigned_vm": "na", "is_aggregator": true, "open_count": 7, "done_count": 64, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch14_2026_08_09.md", "doc_type": "plan", "title": "AO satellite AO batch 14 \u2014 re-source ANTHROPIC_AUTH_TOKEN from the now-live GSM secret (orchestrator_master epic)", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 0, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch14_finalize_2026_08_09.md", "doc_type": "plan", "title": "AO satellite AO batch 14 \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 1, "done_count": 4, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md", "doc_type": "plan", "title": "AO satellite AO batch 21 \u2014 bounded open-work extraction from the consolidated AO tracker", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 0, "done_count": 7, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md", "doc_type": "plan", "title": "AO satellite AO batch 21 \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 1, "done_count": 3, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch22_2026_08_16.md", "doc_type": "plan", "title": "AO satellite AO batch 22 \u2014 conflict-clear bounded extraction from the 2026-08-16 closeout audit", "status": "draft", "assigned_vm": "planning", "is_aggregator": true, "open_count": 6, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch22_finalize_2026_08_16.md", "doc_type": "plan", "title": "AO satellite AO batch 22 \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 3, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch23_2026_08_17.md", "doc_type": "plan", "title": "AO satellite AO batch 23 \u2014 conflict-clear bounded extraction from the 2026-08-17 na-eligibility-audit ao run", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 6, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch23_finalize_2026_08_17.md", "doc_type": "plan", "title": "AO satellite AO batch 23 \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 3, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch24_2026_08_18.md", "doc_type": "plan", "title": "AO satellite AO batch 24 \u2014 conflict-clear bounded extraction from the 2026-08-18 na-eligibility-audit ao run", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 5, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch24_finalize_2026_08_18.md", "doc_type": "plan", "title": "AO satellite AO batch 24 \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 3, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md", "doc_type": "plan", "title": "AO satellite AO batch 3 \u2014 third dispatch batch extracted from the AO tranche's satellite docs", "status": "active", "assigned_vm": "na", "is_aggregator": true, "open_count": 1, "done_count": 2, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md", "doc_type": "plan", "title": "AO satellite AO batch 3 \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 5, "done_count": 0, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch8_2026_08_08.md", "doc_type": "plan", "title": "AO satellite AO batch 8 \u2014 eighth dispatch batch extracted from the AO tranche's satellite docs", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 0, "done_count": 4, "operator_lines": []}, {"path": "plans/active/ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md", "doc_type": "plan", "title": "AO satellite AO batch 8 \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": true, "open_count": 3, "done_count": 3, "operator_lines": []}, {"path": "plans/active/ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md", "doc_type": "plan", "title": "AO scheduled-jobs review-gate backlog drain + cross-job sharding/health audit", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 8, "done_count": 26, "operator_lines": []}, {"path": "plans/active/codex_luna_flex_bridge_2026_08_14.md", "doc_type": "plan", "title": "Codex/Luna bridge \u2014 ChatGPT Pro subscription as an Anthropic-compatible AO provider", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 10, "done_count": 4, "operator_lines": ["- [ ] [OPERATOR] P3. Upgrade ChatGPT Plus \u2192 Pro once the bridge is validated (smoke-test gate passed, real dispatch"]}, {"path": "plans/active/content_derived_backlog_task_ids_2026_08_08.md", "doc_type": "plan", "title": "content_derived_backlog_task_ids_2026_08_08", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 3, "done_count": 17, "operator_lines": []}, {"path": "plans/active/content_derived_backlog_task_ids_2026_08_08_finalize.md", "doc_type": "plan", "title": "Content-derived backlog task ids \u2014 gated finalize (verify the migration actually held, then archive)", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 6, "done_count": 0, "operator_lines": []}, {"path": "plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md", "doc_type": "plan", "title": "DeepSeek/Claude blended provider routing for agent-orchestrator", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 8, "done_count": 42, "operator_lines": ["- [ ] [OPERATOR] P3. Upgrade GLM Coding Plan Lite \u2192 Max once the Lite-tier pipeline validation above is complete and the"]}, {"path": "plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md", "doc_type": "plan", "title": "deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 1, "done_count": 18, "operator_lines": ["- [ ] [OPERATOR] P3. **Optional \u2014 fold the now-explained -$16.93 into the frozen `opening_balance` (or record a"]}, {"path": "plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_finalize.md", "doc_type": "plan", "title": "DeepSeek wallet residual root-cause + windowed reconciliation \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 2, "done_count": 0, "operator_lines": []}, {"path": "plans/active/grok_gemini_translation_proxy_2026_08_14.md", "doc_type": "plan", "title": "Gemini translation proxy \u2014 self-hosted Anthropic-format facade", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 3, "done_count": 13, "operator_lines": []}, {"path": "plans/active/kimi_gemma_provider_onboarding_2026_08_16.md", "doc_type": "plan", "title": "Kimi (Moonshot) + Gemma (NVIDIA NIM) provider onboarding", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 5, "done_count": 10, "operator_lines": ["- [ ] [OPERATOR] P0. Reconcile the Kimi re-add against the 2026-08-03/08-06 rejection ruling above \u2014 narrowed by the", "- [ ] [OPERATOR] P3. **New, operator 2026-08-16**: track the Moonshot membership-plan waitlist the operator joined"]}, {"path": "plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md", "doc_type": "plan", "title": "Multi-provider context accuracy + unified billing reconciliation", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 20, "done_count": 9, "operator_lines": ["- [ ] [OPERATOR] P3. **Gate 8b \u2014 final model/provider recommendation.** Once Gates 1-7 close out (tracked in"]}, {"path": "plans/active/quality_gates_quickmerge_timing_baseline_2026_07_31.md", "doc_type": "plan", "title": "quality-gates.sh / quickmerge.sh timing baseline (PM repo) \u2014 single-host vs planning-vm", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 1, "done_count": 15, "operator_lines": []}, {"path": "plans/active/quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md", "doc_type": "plan", "title": "quality-gates.sh / quickmerge.sh timing baseline \u2014 finalize", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 2, "done_count": 0, "operator_lines": []}, {"path": "plans/active/review_agent_evidence_gated_write_capability_2026_08_09.md", "doc_type": "plan", "title": "Review agent gets evidence-gated write capability \u2014 revert false-done claims + patch small fixes", "status": "active", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 6, "operator_lines": []}, {"path": "plans/active/slot0_self_cleaning_daemon_2026_08_18.md", "doc_type": "plan", "title": "Slot 0 self-cleaning daemon \u2014 auto-heal dirty/diverged repos on the persistent main agent", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 10, "done_count": 0, "operator_lines": []}, {"path": "plans/active/slot0_self_cleaning_daemon_2026_08_18_finalize_2026_08_18.md", "doc_type": "plan", "title": "slot0_self_cleaning_daemon_2026_08_18_finalize_2026_08_18", "status": "active", "assigned_vm": "planning", "is_aggregator": false, "open_count": 3, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02.md", "doc_type": "issue", "title": "ao_backlog_no_collision_gate_long_running_driver_todos_2026_08_02", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 2, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md", "doc_type": "issue", "title": "CredsEnvPoller is disabled fleet-wide \u2014 a rotated Claude Code token never reaches the live VM without manual intervention", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 2, "done_count": 0, "operator_lines": ["- [ ] [OPERATOR] P2. Decide whether to enable `CredsEnvPoller` by setting `ORCHESTRATOR_CREDS_S3_BUCKET` (or"]}, {"path": "plans/active/issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md", "doc_type": "issue", "title": "ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 0, "done_count": 2, "operator_lines": []}, {"path": "plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md", "doc_type": "issue", "title": "ao_human_claim_reserved_slot_bypass_2026_08_16", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 2, "done_count": 1, "operator_lines": ["- [ ] [OPERATOR] P2. Decide whether the currently-live review slot (slot 2 on the orchestrator VM) needs a manual"]}, {"path": "plans/active/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md", "doc_type": "issue", "title": "agents/main.md's per-tick poll loop is written as sequential numbered steps that teach the batching anti-pattern", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17.md", "doc_type": "issue", "title": "agent-orchestrator's pre-spawn dirty-state gate committed + reset a LIVE interactive session's mid-edit WIP", "status": "open", "assigned_vm": "planning", "is_aggregator": false, "open_count": 3, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17_finalize_2026_08_17.md", "doc_type": "issue", "title": "Finalize \u2014 AO pre-spawn dirty-state gate fired against a live interactive session", "status": "open", "assigned_vm": "planning", "is_aggregator": false, "open_count": 2, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md", "doc_type": "issue", "title": "ao_residuals_after_dispatch_hardening_2026_07_17", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 3, "done_count": 2, "operator_lines": []}, {"path": "plans/active/issues/ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md", "doc_type": "issue", "title": "ao_review_slot_hard_rule_and_diagnostics_2026_08_17", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 6, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md", "doc_type": "issue", "title": "ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 4, "done_count": 11, "operator_lines": []}, {"path": "plans/active/issues/ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md", "doc_type": "issue", "title": "ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 2, "operator_lines": ["- [ ] [OPERATOR] P2. Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` so future"]}, {"path": "plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md", "doc_type": "issue", "title": "ao_tmux_session_loss_mid_task_root_cause_2026_08_10", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 11, "done_count": 39, "operator_lines": ["- [ ] [OPERATOR] P2. Once `sweep_orphan_tmux_servers`'s dry-run logging shows zero false positives across a real", "- [ ] [OPERATOR] P1. Decide how to clean up the orphaned ambient-socket session (pid 2934337 as of 2026-08-13, live"]}, {"path": "plans/active/issues/ao_tranche_full_content_audit_findings_2026_07_31.md", "doc_type": "issue", "title": "ao_tranche_full_content_audit_findings_2026_07_31", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 4, "operator_lines": []}, {"path": "plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md", "doc_type": "issue", "title": "Wire /ao-watchdog into the scheduled-job timer family (mode=ao_watchdog)", "status": "open", "assigned_vm": "planning", "is_aggregator": false, "open_count": 3, "done_count": 3, "operator_lines": []}, {"path": "plans/active/issues/ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05.md", "doc_type": "issue", "title": "ao_worker_unbatched_tool_calls_inflate_turn_count_2026_08_05", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 2, "operator_lines": []}, {"path": "plans/active/issues/autospawn_fleet_cap_headroom_throttling_routine_sla_miss_2026_08_09.md", "doc_type": "issue", "title": "autospawn_fleet_cap_headroom_throttling_routine_sla_miss_2026_08_09", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 0, "operator_lines": ["- [ ] [OPERATOR] P3. Decide the fleet_worker_cap/SLA trade-off above (raise cap further / design priority-aware headroom"]}, {"path": "plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md", "doc_type": "issue", "title": "backlog_park_lost_across_sibling_todo_insertion_2026_07_30", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 1, "operator_lines": []}, {"path": "plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md", "doc_type": "issue", "title": "Claude/Anthropic flat-rate billing calibration \u2014 derive a real $-per-token multiplier for Max/Pro subscriptions", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 3, "done_count": 5, "operator_lines": ["- [ ] [OPERATOR] P1. **Investigate the sub-d 1047x outlier** \u2014 is Pro's weekly_pct denominator measuring something", "- [ ] [OPERATOR] P3. **sub-e stays excluded** from calibration until it goes untouched interactively through a full"]}, {"path": "plans/active/issues/dashboard_deepseek_e2e_specs_red_stale_fixture_expectations_2026_08_08.md", "doc_type": "issue", "title": "dashboard_deepseek_e2e_specs_red_stale_fixture_expectations_2026_08_08", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 1, "operator_lines": []}, {"path": "plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md", "doc_type": "issue", "title": "dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 2, "operator_lines": []}, {"path": "plans/active/issues/e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06.md", "doc_type": "issue", "title": "e2e_deepseek_poller_overwrites_hand_seeded_account_blob_2026_08_06", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 0, "done_count": 3, "operator_lines": []}, {"path": "plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md", "doc_type": "issue", "title": "Fleet-wide DeepSeek spawn crash loop went undetected \u2014 root mechanism still unconfirmed", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 1, "operator_lines": ["- [ ] [OPERATOR] P2. **Decide whether `tuning.deepseek_opus_emergency_fallback` should be turned back off** once"]}, {"path": "plans/active/issues/gate_on_depends_checks_completion_not_outcome_2026_08_17.md", "doc_type": "issue", "title": "gate_on_depends dispatches on the dependency's checkbox being flipped, not on its recorded outcome", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md", "doc_type": "issue", "title": "Operator ruling record \u2014 gcloud WIF-poisoning durable-direction decision, 2026-08-08", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 0, "operator_lines": ["- [ ] [OPERATOR] P2. **Confirm this ruling is accurate as transcribed, or correct it.** It is quoted verbatim from the"]}, {"path": "plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md", "doc_type": "issue", "title": "orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 5, "operator_lines": []}, {"path": "plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md", "doc_type": "issue", "title": "orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 1, "done_count": 5, "operator_lines": ["- [ ] [OPERATOR] P2. **Confirm or rule out kernel-level OOM-killer activity via `dmesg`/`journalctl -k` with root access"]}, {"path": "plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md", "doc_type": "issue", "title": "plan_reconciler's own HTTP integration has 2 live gaps: /api/plan-health/result rejects the documented no-auth path, and a blocked-question answer never became retrievable via /api/slots/N/messages", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 2, "done_count": 1, "operator_lines": []}, {"path": "plans/active/issues/plan_reconciler_boot_pm_repo_path_points_at_root_clone_2026_08_18.md", "doc_type": "issue", "title": "plan_reconciler's boot message sets $PM_REPO_PATH to the ROOT PM clone (read-only) instead of the dispatched slot's clone -- 2nd confirmed occurrence", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 2, "done_count": 0, "operator_lines": []}, {"path": "plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md", "doc_type": "issue", "title": "plan_reconciler_dead_run_no_lock_ttl_2026_08_12", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 3, "done_count": 2, "operator_lines": []}, {"path": "plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md", "doc_type": "issue", "title": "plan_reconciler_unexplained_tmux_session_loss_2026_08_10", "status": "open", "assigned_vm": "planning", "is_aggregator": false, "open_count": 0, "done_count": 2, "operator_lines": []}, {"path": "plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md", "doc_type": "issue", "title": "slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25", "status": "open", "assigned_vm": "na", "is_aggregator": false, "open_count": 4, "done_count": 5, "operator_lines": []}];
+
+  function pct(open, done) {
+    const total = open + done;
+    if (total === 0) return { openPct: 0, donePct: 0 };
+    return { openPct: (open / total) * 100, donePct: (done / total) * 100 };
+  }
+
+  function rowHtml(c) {
+    const p = pct(c.open_count, c.done_count);
+    const typePill = c.doc_type === "plan" ? '<span class="pill plan">plan</span>' : '<span class="pill issue">issue</span>';
+    const aggPill = c.is_aggregator ? '<span class="pill agg">agg</span>' : "";
+    let dispatchPill;
+    if (c.status === "draft") dispatchPill = '<span class="pill draft">draft</span>';
+    else if (c.assigned_vm === "planning") dispatchPill = '<span class="pill dispatched">planning</span>';
+    else dispatchPill = '<span class="pill local">na</span>';
+    const opBadge = c.operator_lines.length ? ` · <span style="color:var(--accent-ink); font-family:ui-monospace,monospace; font-size:11px;">${c.operator_lines.length} operator</span>` : "";
+    return `<tr>
+      <td>
+        <div class="doc-title">${c.title.length > 90 ? c.title.slice(0, 87) + "…" : c.title}</div>
+        <div class="doc-path">${c.path}</div>
+      </td>
+      <td>${typePill} ${aggPill}</td>
+      <td>${dispatchPill}${opBadge}</td>
+      <td>
+        <div class="bar-cell">
+          <div class="bar"><span class="open" style="width:${p.openPct}%"></span><span class="done" style="width:${p.donePct}%"></span></div>
+          <span class="bar-count tnum">${c.open_count}/${c.done_count}</span>
+        </div>
+      </td>
+    </tr>`;
+  }
+
+  // ---------- §4 ledger: click-to-sort columns ----------
+  // "Type" ranks plan < aggregated plan < issue, matching how the table's own pills read left to
+  // right; "Dispatch" ranks by how close to executing: planning (AO-dispatched) < draft < na.
+  const typeRank = (c) => (c.doc_type === "issue" ? 2 : c.is_aggregator ? 1 : 0);
+  const dispatchRank = (c) => (c.status === "draft" ? 1 : c.assigned_vm === "planning" ? 0 : 2);
+  const SORT_ACCESSORS = {
+    doc: (c) => c.title.toLowerCase(),
+    type: typeRank,
+    dispatch: dispatchRank,
+    progress: (c) => c.open_count,
+  };
+  // Each column's sensible first click: Progress opens on "most open work first" (matching the
+  // page's original default view), the rest open alphabetically/rank-ascending.
+  const DEFAULT_DIR = { doc: "asc", type: "asc", dispatch: "asc", progress: "desc" };
+
+  let sortState = { key: "progress", dir: "desc" };
+
+  function applySort(rows, key, dir) {
+    const accessor = SORT_ACCESSORS[key];
+    const sign = dir === "asc" ? 1 : -1;
+    return rows.slice().sort((a, b) => {
+      const av = accessor(a), bv = accessor(b);
+      if (av < bv) return -1 * sign;
+      if (av > bv) return 1 * sign;
+      return b.open_count - a.open_count; // stable secondary: most-open-work-first
+    });
+  }
+
+  function renderLedger() {
+    const rows = applySort(children, sortState.key, sortState.dir);
+    document.getElementById("ledger-body").innerHTML = rows.map(rowHtml).join("");
+    document.querySelectorAll("#ledger-head th[data-sort]").forEach((th) => {
+      const active = th.dataset.sort === sortState.key;
+      th.classList.toggle("sort-active", active);
+      th.querySelector(".sort-ind").textContent = active ? (sortState.dir === "asc" ? "▲" : "▼") : "▲";
+    });
+  }
+
+  function toggleSort(key) {
+    if (sortState.key === key) {
+      sortState.dir = sortState.dir === "asc" ? "desc" : "asc";
+    } else {
+      sortState = { key, dir: DEFAULT_DIR[key] };
+    }
+    renderLedger();
+  }
+
+  document.querySelectorAll("#ledger-head th[data-sort]").forEach((th) => {
+    th.addEventListener("click", () => toggleSort(th.dataset.sort));
+    th.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggleSort(th.dataset.sort); }
+    });
+  });
+
+  renderLedger();
+
+  const deskItems = [];
+  children.forEach((c) => {
+    (c.operator_lines || []).forEach((line) => {
+      deskItems.push({ doc: c.path, line });
+    });
+  });
+  document.getElementById("desk-grid").innerHTML = deskItems
+    .map(
+      (d) => `<div class="desk-card">
+        <div class="desk-doc">${d.doc}</div>
+        <div class="desk-line">${d.line.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/`(.+?)`/g, "<code>$1</code>")}</div>
+      </div>`
+    )
+    .join("");
+</script>

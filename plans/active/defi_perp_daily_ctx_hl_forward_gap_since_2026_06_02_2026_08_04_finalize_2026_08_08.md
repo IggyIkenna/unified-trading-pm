@@ -2,7 +2,7 @@
 doc_type: plan
 title: Finalize — HYPERLIQUID perp_daily_ctx forward-write gap close-out
 summary: >-
-  Gated finalize companion for issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md (reclassified
+  Gated finalize companion for /plans/archive/2026_08/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md (reclassified
   NA→planning, na-eligibility-audit round7 RECLASSIFY sweep, 2026-08-08) — re-verifies the forward-write build's
   evidence (the new HL `/info` mark-price fetch, the CeFi partition-path write, the manifest registration, and the
   follow-up CeFi Tardis writer diagnostic), then archives both docs per plan-completion-and-archival-discipline once
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [defi, perp-daily-ctx, hyperliquid, finalize, archival, ao-build]
 related:
   [
-    /plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md,
     /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
   ]
 created: "2026-08-08"
@@ -43,7 +43,7 @@ source: >-
   gated finalize companion (/plans/active/task_template.md §4).
 context_scope:
   [
-    /plans/active/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_hyperliquid.py,
     strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
@@ -53,7 +53,7 @@ context_scope:
 # Finalize — HYPERLIQUID perp_daily_ctx forward-write gap close-out
 
 Machine-held (`gate_on_depends: true`) until every todo in
-`issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` is done. Do not start manually before then.
+`/plans/archive/2026_08/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` is done. Do not start manually before then.
 
 ## Todos
 
@@ -101,7 +101,7 @@ Machine-held (`gate_on_depends: true`) until every todo in
          rather than duplicated here, per that entry's own note.
 - [ ] [DOC] P2. Run the standard 6-step plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
-      `issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` and this finalize doc itself: archive
+      `/plans/archive/2026_08/issues/defi_perp_daily_ctx_hl_forward_gap_since_2026_06_02_2026_08_04.md` and this finalize doc itself: archive
       both to `plans/archive/2026_08/issues/` (or `plans/archive/2026_08/` for this finalize doc, matching this corpus's
       existing split convention), and fix every corpus referrer path (grep the repo for the old paths —
       `defi_cefi_venue_chain_axis_contamination_2026_07_28.md` and `defi_satellite_ao_dispatch_batch6_2026_07_30.md`

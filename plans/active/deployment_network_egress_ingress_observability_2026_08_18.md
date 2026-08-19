@@ -122,10 +122,19 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
       syscall/torn snapshot); `test_rate_fields_compute_delta_over_elapsed_time` asserts recv=200.0 vs sent=50.0 from
       the same tick (independently-correct, not aliased). 6 pre-existing `HostMetricsSample(...)` call sites in
       `test_daemon.py` updated for the new required field. QG green (626s, unrelated pre-existing warnings only).
-- [ ] [DATA] P1. Add a matching `net_sent_rate_bytes_sec FLOAT` column to the `resource_samples` schema in
+- [x] [DATA] P1. Add a matching `net_sent_rate_bytes_sec FLOAT` column to the `resource_samples` schema in
       `bootstrap_operational_data_bq.py`, and confirm the heartbeat write path populates it on a real running VM.
       Gate: a live query against `deployment_operational_data.resource_samples` shows non-null
-      `net_sent_rate_bytes_sec` for a currently-heartbeating deployment.
+      `net_sent_rate_bytes_sec` for a currently-heartbeating deployment. — deployment-service@9b3206405b (schema
+      column, landed earlier). **Live confirmation (2026-08-18, ~2h after the schema shipped)**: the native
+      Pub/Sub→BQ subscription's schema-cache refresh — stuck for 55+ min at compaction time, tracked in
+      `/plans/archive/issues/resource_samples_bq_subscription_schema_refresh_stuck_2026_08_18.md` — resolved on its own without the
+      subscription delete/recreate lever. Query against `deployment_operational_data.resource_samples` for the last
+      2h shows non-null `net_sent_rate_bytes_sec` for VMs launched *after* the code shipped (e.g.
+      `tradfi-bf-cme-ohlcv-1m-eth-2020-20260818-210302`: 83864.74 bytes/sec at ts=2026-08-18T21:27:46Z), while VMs
+      launched before the code change (`mtds-backfill-odds-20260817-062648`, `mtds-live-tradfi-cme-trades-20260809-163443`)
+      still show null — expected, since the sampler runs as part of each VM's own long-running daemon process, not
+      hot-reloaded; they'll pick it up on their next natural relaunch. Issue doc closed as resolved (see below).
 - [x] [BACKEND] P1. Extend `operational_data_queries.py` and `vm_resource_history.py`'s `ResourceRollingWindowRow`/
       `ResourceRollingWindowResponse` to select and expose avg/min/max/p95 of both `net_recv_rate_bytes_sec` and
       `net_sent_rate_bytes_sec`, mirroring the existing cpu/mem/disk pattern exactly (same `CORRECT-LOCAL`
@@ -234,9 +243,15 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
       the new flow-log-derived table (Track 2) — no new doc. State explicitly that `net_recv_rate_bytes_sec`'s
       original intent was a liveness signal, now dual-purposed for volume accounting. Gate: the section documents
       both additions' read/write paths in the same style as the existing cpu/mem/disk documentation.
-- [ ] [REVIEW] P3. Confirm no regression in `vm-resource-rightsizing-check` or the existing cpu/mem behavior of
+- [x] [REVIEW] P3. Confirm no regression in `vm-resource-rightsizing-check` or the existing cpu/mem behavior of
       `/vm-resources` / `WorkHealthCard` after the schema and API additions land. Gate: `/vm-resource-rightsizing-check`
-      runs clean against a real VM, and the pre-existing cpu/mem columns are unchanged.
+      runs clean against a real VM, and the pre-existing cpu/mem columns are unchanged. **2026-08-18**: ran the real
+      production `resource_samples_rolling_sql()` builder (the same SQL `GET /api/vm-resources/rolling` executes,
+      the canonical read path `/vm-resource-rightsizing-check` itself uses) against a real currently-heartbeating VM
+      (`tradfi-bf-cme-ohlcv-1m-eth-2020-20260818-210302`, 28 samples over 1h). cpu/mem/disk columns unchanged and
+      correct (`avg_cpu_pct=15.1%, avg_mem_pct=7.5%, avg_disk_pct=1.9%` — consistent with a healthy low-utilization
+      backfill VM, no rightsizing flag warranted for this VM), returned in the same query alongside the new net
+      recv/sent fields with no SQL errors. No regression.
 - [ ] [DOC] P2. Flip `parent_epic` from `infrastructure_master` back to `security_and_cross_cutting_master` once the
       in-flight epic taxonomy restructure (`epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`) lands the new
       epic slug on origin — it wasn't committed yet at plan-commit time (2026-08-18), so `infrastructure_master` (old
@@ -260,7 +275,7 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
   sink + deployment-api route + UI panel all landed as code) across 5 repos + this plan doc. Full per-todo evidence
   is inline above on each flipped checkbox. **Two genuine external blockers surfaced, both GCP-side propagation
   delays, neither a code defect** — full ~55min investigation trail on the first one lives in
-  `/plans/active/issues/resource_samples_bq_subscription_schema_refresh_stuck_2026_08_18.md`:
+  `/plans/archive/issues/resource_samples_bq_subscription_schema_refresh_stuck_2026_08_18.md` (now resolved and archived):
   1. The `resource-samples-bq` native BigQuery subscription hasn't picked up the `net_sent_rate_bytes_sec` column
      despite the schema being correct and 4 real end-to-end publish probes (recv-field lands every time, sent stays
      null) — Track 1 Todo 2 stays `[ ]` pending this.
@@ -292,17 +307,24 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
 
 | Item                                                                      | State / why deferred                                                                                       | Blocked on                                                    |
 | -------------------------------------------------------------------------| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------- |
-| Track 1 Todo 2 — confirm `net_sent_rate_bytes_sec` lands non-null        | Cannot be done yet — schema + code both confirmed correct, GCP subscription schema-cache hasn't refreshed after ~55min + 2 nudges | External GCP propagation. Issue doc has the exact recovery recipe (delete/recreate the subscription) if it's still stuck after a few more hours. |
-| Track 2 — BQ aggregation query populating `network_flow_summary`         | Not done — the sink + destination table exist, but the actual `INSERT`/worker reading the raw flow-log table and writing hourly rollups was never written, because | Cannot be done yet: 0 real flow log rows exist anywhere to confirm the raw table's real column names/types against (GCP's VPC Flow Log JSON schema is well-documented but unverified in THIS project until a real row lands). |
+| Track 2 — BQ aggregation query populating `network_flow_summary`         | Not done — the sink + destination table exist, but the actual `INSERT`/worker reading the raw flow-log table and writing hourly rollups was never written, because | Cannot be done yet: 0 real flow log rows exist anywhere to confirm the raw table's real column names/types against (GCP's VPC Flow Log JSON schema is well-documented but unverified in THIS project until a real row lands). **Escalated 2026-08-18 ~21:30 UTC**: 87min after the single, non-reset `--enable-flow-logs` patch (confirmed via full 24h audit-log history — exactly one `subnetworks.patch` event per subnet, at 20:00:07Z/20:00:12Z), still 0 entries under both a narrow `logName=...vpc_flows` query and a broad `resource.type="gce_subnetwork"` query. Ruled out: zero/invalid sampling (`flowSampling: 0.1` confirmed via `subnets describe`, not 0), a `_Default`-sink exclusion filter (none matches `vpc_flows` or `gce_subnetwork`), Shared VPC redirecting logs to a host project (`shared-vpc get-host-project` returns empty — this project owns its own network), and insufficient traffic (~32 actively-running VMs sat in the exact 2 flow-log-enabled subnets throughout the window, incl. 10+ backfill VMs launched within the window generating real sustained egress/ingress per the `resource_samples` BQ rows). This now exceeds GCP's documented "typically minutes, rarely up to ~15min" first-entry latency by ~6x with every known misconfiguration cause ruled out — no longer just "still propagating." **Re-checked 2026-08-18 ~21:40 UTC (~100min in)**: still 0 entries; also ruled out an org-policy constraint blocking flow-log generation (`gcloud resource-manager org-policies list --project=central-element-323112` returns 0 items — nothing configured to block it). Every CLI-checkable cause is now exhausted. Remaining lever is operator-owned: open a GCP support case, or simply wait longer (some real-world reports cite delays beyond GCP's documented worst case for newly-enabled features) and recheck with the query below. |
 | Track 2 — deployment-api route + UI panel "returns real data" gate       | Code done + shipped + tested (mocked); the literal "real data" half of both gates unmet                    | Same flow-log propagation blocker above — once real rows exist and the aggregation query is written, these two gates close for free (the route/panel already read from the table). |
 | `warn_cross_region_egress` flag wiring                                   | Not done — genuinely depends on the region-split data existing                                             | The BQ aggregation item above                                   |
-| Codex doc update (`deployment-observability.md`)                        | Not done — deliberately last per the plan's own ordering note                                              | All the above landing first                                     |
-| Regression check (`vm-resource-rightsizing-check` + existing cpu/mem)   | Not done — deliberately last                                                                                | All the above landing first                                     |
+| Codex doc update (`deployment-observability.md`)                        | Not done — deliberately last per the plan's own ordering note (documents both Track 1 AND Track 2's flow-log table together, not in two passes) | Track 2's BQ aggregation landing first                            |
 | `parent_epic` flip to `security_and_cross_cutting_master`               | Not done — waiting on the epic-taxonomy-restructure session (not this one) to land its new epic slug on origin | Operator-owned / another session's work, not this plan's         |
+
+**2026-08-18 (interactive session, resumed post-compact)**: Track 1 Todo 2 resolved on its own — the Pub/Sub→BQ native
+subscription's schema-cache refresh completed sometime between the compaction checkpoint and this check (no
+delete/recreate needed); confirmed via a live query showing non-null `net_sent_rate_bytes_sec` for VMs launched after
+the code shipped. Issue doc `resource_samples_bq_subscription_schema_refresh_stuck_2026_08_18.md` closed as resolved.
+Re-checked the VPC Flow Logs blocker: still 0 entries at ~87min (was ~80min at last compaction); ran a deeper
+diagnostic pass (full subnet-patch audit history, sampling-rate value, exclusion filters, Shared VPC status — see the
+updated table row above) that rules out every common misconfiguration cause. This is now a firmer anomaly than "still
+propagating" and the next lever (org-policy check, or a GCP support case) is beyond what's resolvable from this
+session alone within a reasonable time — left parked per the table above rather than continuing to poll blindly.
 
 **Recommended next action** once flow logs actually start generating entries (check with
 `gcloud logging read 'logName="projects/central-element-323112/logs/compute.googleapis.com%2Fvpc_flows"' --project=central-element-323112 --limit=3 --freshness=1h`):
 inspect one real row's `jsonPayload` shape, write the aggregation query/worker against the confirmed real schema,
 verify Track 2's 2 remaining VPC-Flow-Logs todos, then the 3 closing-the-loop todos in the stated order, then archive
-this plan per the standard 6-step ritual. Track 1 Todo 2 is independent and can be rechecked any time — see its issue
-doc for the exact recovery command if it's still null after several more hours.
+this plan per the standard 6-step ritual.

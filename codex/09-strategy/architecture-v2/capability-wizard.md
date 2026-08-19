@@ -162,7 +162,7 @@ consequence" subsection.
 - **Escalation emitter** (append `[AGENT] P2.` todos for unannotated needs_code_scan gaps — idempotent): from
   `unified-trading-pm/scripts/openapi/`, UAC venv: `python emit_capability_gap_todos.py` (reads
   `unified-api-contracts/openapi/capability-manifest.json`, appends under `## Escalated needs_code_scan (auto-emitted)`
-  in `plans/active/issues/capability_wizard_gap_discovery_2026_06_11.md`).
+  in `plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md`).
 - **Backtest-on-demand** (GroupBRunner over wizard config, honest data precheck — CLOUD_MOCK_MODE always returns
   PRECHECK_UNAVAILABLE): from `e2e-testing/`, strategy-service venv, credential-free:
   `python scripts/strategy/backtest_from_wizard_config.py --steps scripts/strategy/scenarios/apd_price_dispersion_btc.json`

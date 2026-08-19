@@ -42,6 +42,11 @@ locked_since: 2026-05-21
 
 # Batch Live Symmetry Master
 
+## Report
+
+Live HTML ledger: <https://claude.ai/code/artifact/4f11f651-009d-415f-83ea-3a00c862de98> (generated 2026-08-19,
+`/plan-reconcile batch_live_symmetry_master`)
+
 **Owns**: per-service batch=live audit; reconciliation; codifies CLAUDE.md HARD RULE 'Batch = Live'
 
 **Status**: populated (was: "stub created 2026-05-21 by `migrate_epics_2026_05_21.py`. Operator fills body with
@@ -86,6 +91,19 @@ Pub/Sub subscriptions + build the cold-compaction job
 
 **status**: active · **estimate**: 38 cal AI-days (class: infra) **title**: Citadel-grade Paper ⟷ Batch ⟷ Live
 Reconciliation — the Determinism Spine
+
+### [`cross_ag_live_capture_parity_2026_08_14`](../active/cross_ag_live_capture_parity_2026_08_14.md)
+
+**status**: active · **estimate**: 3.2 cal AI-days (class: infra) **title**: Cross-AG live capture parity — wired but
+not producing. **Added 2026-08-19 (`/plan-reconcile batch_live_symmetry_master`)** — this doc declares
+`parent_epic: batch_live_symmetry_master` and was missing from this body (epic body last auto-populated 2026-07-12,
+doc created 2026-08-14).
+
+### [`venue_capability_route_axis_and_cross_ag_declarations_2026_08_14`](../active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md)
+
+**status**: active · **estimate**: 4.8 cal AI-days (class: infra) **title**: Venue capability matrix route/mode axis +
+cross-AG venue declarations. **Added 2026-08-19 (`/plan-reconcile batch_live_symmetry_master`)** — same gap as above
+(doc created 2026-08-14, epic body never refreshed since 2026-07-12).
 
 ### [`citadel_satellite_ao_dispatch_batch1_2026_08_08`](../archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md)
 

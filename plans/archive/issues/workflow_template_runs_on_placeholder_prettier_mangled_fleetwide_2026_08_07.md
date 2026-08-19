@@ -52,7 +52,8 @@ summary: >-
   `rollout-workflow-templates.sh` (no `--repo` filter) run would also work in one pass since it's idempotent (skips
   repos already current) — but that touches every repo's `.github/workflows/`, so scope/sequence per operator
   preference.
-status: open
+status: archived
+superseded_by: /codex/06-coding-standards/quality-gates.md
 nature: issue
 asset_group:
   [ci] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 9, meta_plan_corpus_hygiene_ao_dispatch_batch1)
@@ -100,17 +101,25 @@ assigned_role: cicd
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
-archive_exempt: true # 2026-08-18 (na-eligibility-audit) -- 0 open todos as of this pass's extraction (see Progress Log), but NOT archived: deliberately deferred to a dedicated archival sweep rather than rushed in this audit pass, same caution plan_reconciler_findings_ci_2026_08_16.md applied to sibling zero-checkbox docs on this same hot corpus.
+resolved_by: unified-trading-pm@300fe3aaf
 source: cicd-escalation-agt-62ba62
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/quality-gates.md,
     scripts/workflow-templates/rollout-workflow-templates.sh,
-    /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
-    /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-18** — root cause fixed at the template SSOT (`unified-trading-pm@300fe3aaf`, the
+> `{{RUNS_ON}}` -> `__RUNS_ON__` token switch) and the fleet-wide rollout item was extracted to its own doc
+> (`plans/active/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md` per this doc's own final
+> todo), 0 open todos remaining here. **Durable fact not yet in codex**: `/codex/06-coding-standards/quality-gates.md`
+> documents the general "never invoke bare `npx prettier`" rule but does not yet name the specific mechanism this
+> incident found — `prettier --write` deterministically reformats a bare double-brace `{{X}}` template placeholder
+> into an invalid nested YAML flow-mapping, silently, on every commit — nor the `__X__` (double-underscore) token
+> convention this incident switched GHA `runs-on:` templates to as the fix. Recommended future codex addition,
+> **not applied here** (new codex authorship stays operator-gated under this workspace's Trust-Mode carve-out).
 
 # Fleet-wide `runs-on:` placeholder break — root-caused + template SSOT fixed
 

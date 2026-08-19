@@ -477,7 +477,7 @@ source: >-
           todo's own scope). Separately, the MDPS-scoped axis-census call did not complete within a 480s budget (2
           attempts) — isolated to an unbounded full-bucket read + client-side pandas filter where a pushdown
           `service_name` filter measured 8.6s for the same result; filed as
-          `plans/active/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` (P2, `assigned_vm:
+          `plans/archive/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md` (P2, `assigned_vm:
           planning`). Todo's own "0 non-canonical, or only explicitly-accepted exceptions... must be 0 or explained"
           bar is satisfied: every non-canonical value found is either accepted-exception-explained or now tracked as
           an actionable, evidenced follow-up. — unified-trading-pm@d302e45cc6

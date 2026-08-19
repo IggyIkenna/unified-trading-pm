@@ -447,6 +447,23 @@ bash unified-trading-pm/scripts/workspace/sync-workspace-venv.sh --force  # full
 This is distinct from `workspace-bootstrap.sh`, which is the **new machine** entry point (clone repos + system deps +
 venv + per-repo setup). `sync-workspace-venv.sh` is for day-to-day refresh only.
 
+### Per-repo QG venv-freshness preflight (`qg_assert_venv_fresh`, added 2026-08-12)
+
+`scripts/quality-gates-base/qg-common.sh`'s `qg_assert_venv_fresh(phase)` is a per-repo gate-time check, distinct
+from the workspace-level `sync-workspace-venv.sh` above — it runs `uv sync --frozen --inexact --check` (read-only;
+`--inexact` deliberately ignores extra packages a repo's `LOCAL_DEPS` siblings drag in, so it only flags a
+genuinely MISSING or WRONG-VERSION package, not sibling-install noise) at two points in every gate run:
+
+- **`pre-sync`** (early in the gate, before the gate's own `uv sync --frozen` runs): NEVER aborts — a stale venv
+  here just means "drifted when we walked in," which the gate's own sync is about to repair.
+- **`post-sync`** (after the gate's `uv sync --frozen` + editable re-pin): **blocking by default** since
+  2026-08-12 (`QG_ENFORCE_FRESH_VENV=1`) — if the venv still doesn't match the lock at this point, the gate's own
+  sync silently failed (`|| log_warn`, non-fatal by design) and the suite would otherwise run against a mismatched
+  env. This is exactly the failure class that let agent-orchestrator run its suite against `fastapi==0.136.3`
+  while `uv.lock` pinned `0.140.7`, with the whole suite unable to COLLECT.
+- **Escape hatch**: `QG_ENFORCE_FRESH_VENV=0` or `QG_ALLOW_STALE_VENV=1` downgrades the post-sync abort to a
+  warning.
+
 ### Version Alignment Pipeline — Step 5 (Workspace Venv)
 
 The version alignment pipeline in `run-version-alignment.sh` has a Step 5 (pending implementation):

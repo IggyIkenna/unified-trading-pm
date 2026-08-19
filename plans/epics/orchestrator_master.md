@@ -77,6 +77,11 @@ external_references:
 
 # Orchestrator Master (L5)
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/e441dbdd-4447-4416-8f09-520e2a1e9cd5 (generated 2026-08-18,
+`/plan-reconcile ao`)
+
 > **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
 > [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
 > phases: `utl_reuse_phase1_strategy_risk_hwm_2026_07_13` (strategy risk/HWM),

@@ -99,23 +99,23 @@ source: >-
 - [x] ✅ [CODE] P2. Diagnose strategy-service LDR gate-red (not actually red; host-contention mis-triage) — full
       evidence extracted verbatim (2026-08-15) to
       `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
-      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+      `plans/archive/2026_08/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [x] ✅ [CODE] P2. Recorded justified `# CORRECT-LOCAL` exemptions (9 real classes) — strategy-service@621858344d
       (2026-08-14). Full evidence extracted verbatim (2026-08-15) to
       `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
-      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+      `plans/archive/2026_08/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [x] ✅ [CODE] P2. Resolved STEP 5.37 inline HF/LTV/margin thresholds — unified-api-contracts@31b4ad958e +
       strategy-service@ac5cab7edb (2026-08-14). Full evidence extracted verbatim (2026-08-15) to
       `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
-      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+      `plans/archive/2026_08/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [x] ✅ [CODE] P2. RESOLVED — already fixed by the 2026-08-10 CPU-vs-wall billing rework, no code change needed
       (strategy-service@ac5cab7edb, 2026-08-14). Full evidence extracted verbatim (2026-08-15) to
       `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
-      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+      `plans/archive/2026_08/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [x] ✅ [CODE] P2. Fixed the gate's stale SCHEMA_CONTRACTS_AUDIT.md pointer fleet-wide — unified-trading-pm@144a18fed5
       (2026-08-14). Full evidence extracted verbatim (2026-08-15) to
       `plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch13_history_2026_08_15.md`. Source:
-      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
+      `plans/archive/2026_08/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md`
 - [x] ✅ [CODE] P3. **DONE 2026-08-15 (slot-24·infra) — unified-trading-pm@a0689afd34.** `scripts/quickmerge.sh`'s STAGE
       3 re-gate guard (`_qm_other_fail`, ~L2482) now anchors on the re-gate log's own verdict lines instead of
       raw-grepping every ❌: if the log contains a hard `❌ Codex compliance FAILED` line, the script already `exit 1`'d
@@ -135,7 +135,7 @@ source: >-
       (same as the original 2026-08-10 fix it extends — no dedicated test seam exists for logic embedded in the
       sentinel-retry loop); correctness was verified via the 3 standalone mock-log scenarios above instead. Repo:
       unified-trading-pm. Source:
-      `plans/active/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md` (new
+      `plans/archive/2026_08/issues/strategy_service_ldr_tip_fails_own_quality_gate_blocks_all_commits_2026_08_10.md` (new
       finding, 2026-08-14 diagnosis)
 - [x] ✅ [CODE] P2. Split the remaining MTDS >900L files + extract oversized fns/methods —
       market-tick-data-service@21b2f7193a (2026-08-15, slot-30·infra). 0 files >900L already (prior wave); the real
@@ -509,7 +509,7 @@ source: >-
       `sonnet` + "every-2h even-hour fire ... retry-until-capacity" — the opus/01:00-UTC-daily and hourly-retry
       staleness this todo targets was corrected 2026-08-09 (`unified-trading-pm@879b8e9907` fixed opus/schedule;
       `unified-trading-pm@717a17bdfa` fixed the hourly-retry phrasing that first fix had carried forward stale), per
-      `plans/active/issues/plan_reconciler_findings_2026_08_08.md:212-220`. Verified live against current HEAD — the
+      `plans/archive/2026_08/issues/plan_reconciler_findings_2026_08_08.md:212-220`. Verified live against current HEAD — the
       row's own inline note cites both corrections by date and SHA. No further edit needed. Source:
       `plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md`
 - [x] ✅ [CODE] P2. **Step 2 IS-store backfill — premise mostly STALE, real gap found + closed.** (2026-08-15,
@@ -868,7 +868,7 @@ source: >-
 - [x] ✅ [CODE] P2. add --no-renames to the 4 git show call sites in agent-orchestrator/server/verify.py (option-B fix,
       plus a regression test pinning bundled-rename+flip detection) — agent-orchestrator@7889a7c683 (2026-08-15: all 4
       sites fixed + pinning regression test added, QG green) Source:
-      `plans/active/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`
+      `plans/archive/2026_08/issues/checkbox_flip_bundled_with_archival_git_mv_evades_flip_guard_2026_07_31.md`
 - [x] ✅ [CODE] P2. **Authored — AO-dispatched, per operator-approved BLK-3f47f1af (2026-08-15).** Routing confirmed
       with the operator before authoring (option A: AO-dispatched, since the 2026-08-12 ruling already fully specifies
       the shape — no open design call remained). New 12-todo implementation plan:
@@ -945,7 +945,7 @@ source: >-
 - [ ] [CODE] P2. Bisect test_dp_recovery_actuators.py's full-suite contamination against predecessor test files
       (candidates: _\_relaunch_/fleet-monitor/dp-alerts suites; regression window b501a5e5, b34e85a2, 4ca051ea,
       dd7b62e1), find the shared-state leak, add cleanup Source:
-      `plans/active/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`
+      `plans/archive/2026_08/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`
 - [x] ✅ [CODE] P2. **STALE DUPLICATE — this exact cross-check was already done and closed.** (2026-08-15,
       slot-19·backend) The source issue doc's own todo 4 was closed 2026-08-14 (slot 11): read `#data-pipeline-alerts`
       via `scripts/dev/slack-read-channel.py data-pipeline-alerts 132` (132h window, 12,599 messages) for

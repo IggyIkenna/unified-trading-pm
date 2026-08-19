@@ -242,7 +242,7 @@ as "still waiting". Worse, the awaited mechanism **could never fire**: the stagi
      (not `nohup &`) so its own exit is the tracked wake, and the watcher is only for a worker you cannot relaunch.
 
 5. **`run_in_background` alone does not make a long job immune to a session kill (codified 2026-07-28,
-   `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`).** A worker background-
+   `plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`).** A worker background-
    monitored a multi-hour GCS enrichment backfill via harness-native `run_in_background` (the correct fix for the
    `nohup`-detachment/`orphan_reap` trap above) but went **>25 minutes without a `/progress` heartbeat** while doing
    local-only bash progress checks. The orchestrator's `WorkerLivenessWatchdog` read the slot as stale and triggered

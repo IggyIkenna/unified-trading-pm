@@ -93,3 +93,8 @@ completion" in any live sense.
   open-ended, unscoped investigations explicitly flagged (not root-caused) by the filing session itself. First audit
   pass, no established ruling to defer to. `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — reaffirmed.** Both
+  todos remain open-ended root-cause investigations. Only intervening change was plan_reconciler's 2026-08-18 fix
+  identifying the source of Finding 2's "self-sufficient to completion" claim
+  (`macro_micro_econ_data_capture_audit_2026_06_05.md:515`) — a citation improvement, not new work. `assigned_vm`
+  unchanged.

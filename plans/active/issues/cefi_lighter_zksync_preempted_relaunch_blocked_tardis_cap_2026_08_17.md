@@ -134,10 +134,10 @@ state at current preemption volume?).
 
 ## Todos
 
-- [ ] [INFRA] P2. Once `tardis_running_vm_count asia-northeast1-c central-element-323112` (source
-      `deployment-service/scripts/vm/tardis-concurrency-guard.sh`) returns `0`, relaunch
-      `cefi-lighter-zksync-2026` per option A above. Verify STARTED@T+60s + PROGRESS@T+10min before closing this
-      todo. Repo: deployment-service.
+- [ ] [INFRA] P2. Relaunch `cefi-lighter-zksync-2026` (per option A above) once
+      `tardis_running_vm_count asia-northeast1-c central-element-323112` (source
+      `deployment-service/scripts/vm/tardis-concurrency-guard.sh`) returns `0`. Verify STARTED@T+60s +
+      PROGRESS@T+10min before closing this todo. Repo: deployment-service.
 - [ ] [DATA] P3. Sample ~20 of the 414 `DP_VM_PREEMPTED_NO_RELAUNCH` messages posted to `#data-pipeline-alerts` in the
       last 30h (as of 2026-08-17) and classify each by failure reason (Tardis cap-1 guard refusal vs. something else)
       to confirm/refute that this is the dominant class at current volume — informs whether option B (a cap-aware

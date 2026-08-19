@@ -31,6 +31,8 @@ related:
   - /plans/active/issues/fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md
   - /codex/15-runbooks/isolated-deepseek-crash-debug-sandbox.md
   - /plans/active/ao_consolidated_closeout_2026_08_12.md
+  - /plans/active/issues/plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md
+  - /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md
 context_scope: [agent-orchestrator/server/tmux_spawn.py, agent-orchestrator/server/orphan_reap.py, agent-orchestrator/scripts/orchestrator/strace_tmux_server_supervisor.sh, scripts/self-hosted-runners/tmpfs-disk-cleanup.sh, /codex/15-runbooks/safe-service-restart-procedures.md]
 created: "2026-08-10"
 author: main (Claude Code, interactive session)
@@ -298,9 +300,14 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [x] [INFRA] P0. Root-cause + fix the `ExecStartPre`-only-runs-once gap that let the isolation directory silently
       degrade to the unprotected ambient socket for ~3h (split-brain) — DONE 2026-08-13, `tmux_spawn.py` now self-heals
       the `TMUX_TMPDIR` directory before every spawn attempt, not just at service start.
-- [ ] [OPERATOR] P1. Decide how to clean up the orphaned ambient-socket session (pid 2934337 as of 2026-08-13, live
-      since 14:09:09, AO-invisible, wasteful but not actively harmful) — NOT manually killed per the standing "never
-      manually kill tmux" rule; needs an operator decision or AO-native reconciliation, not an ad-hoc kill.
+- [x] ✅ [OPERATOR] P1. **STALE, corrected 2026-08-18 (convergence audit)** — this was a duplicate of the item already
+      marked DONE above ("2026-08-16 (plan_reconciler)... found and killed 3 confirmed-dead zombie tmux servers...
+      2934337"). That earlier correction flipped one occurrence but missed this second one, still asking for a decision
+      already made and executed on 2026-08-13. Fresh live re-verification today (read-only SSM against
+      i-0c9b283b31d6b5ca7): `ps -p 2934337` — not found; `/tmp/tmux-1000/default` (the ambient default socket) — "no
+      server running", zero `lsof` handles on the path; the only live tmux server on the host is pid 3514516 on the
+      isolated fleet socket, `ELAPSED=448991s` (~124.7h / ~5.2 days) — unbroken since the 2026-08-13 17:14:35Z respawn
+      this doc's own Progress Log already tracks. No further operator judgment needed on this item.
 - [ ] [INFRA] P2. Consider whether AO needs its own periodic self-check that the fleet's actual live server pid matches
       the isolated socket (not just per-slot `has-session`) — the split-brain here persisted ~3h because nothing was
       cross-checking "is the CURRENT server on the path we think it's on."
@@ -319,7 +326,12 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       and both count toward `burst_size`. The 2026-08-14 23:33:47-48Z "5-slot burst" (below) was actually 3 benign
       recycles + 2 genuine losses; the raw diagnostic made it look like one homogeneous event. Consider
       cross-referencing each burst member against a preceding `reason="manual"` `SESSION-TEARDOWN` log line (or the
-      `slot_done` event) within the same ~60s window before classifying it as "genuine."
+      `slot_done` event) within the same ~60s window before classifying it as "genuine." **Cross-link 2026-08-18**:
+      `/plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md` is very likely the SAME
+      undercounting gap manifesting in a second consumer (`TmuxSessionLossRateCanary`'s rolling-window breach count,
+      not just `check-ao-recent-deaths.sh`'s `burst_size`) — that doc's own measurement todo should reuse this
+      doc's already-proven method (the 2026-08-14 23:33 cluster below, where 3/5 counted losses were confirmed
+      benign `reason="manual"` recycles) rather than re-deriving it from scratch.
 
 ## Progress Log
 
@@ -661,3 +673,34 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
     close that gap in the tool itself.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:861ed334074db2b1]: KEEP-NA, valid — status: open, active live-incident investigation with a documented history of premature-closure self-corrections; remaining items are genuine unresolved root-cause work plus operator-gated live-infra decisions.
+- **2026-08-18 — convergence audit against the other 2 open tmux-loss docs** (operator-requested consolidation pass):
+  read `plan_reconciler_unexplained_tmux_session_loss_2026_08_10.md` and
+  `ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md` in full. **Verdict: NOT a 3-way merge.** This doc and
+  `plan_reconciler_...` converge on the SAME underlying mechanism — that doc's own 2026-08-15 note already
+  self-identifies this doc's confirmed root cause (shared ambient tmux socket, reachable by any process's bare
+  `kill-server`/`rm -rf`) as the most-likely (not provable, forensic evidence was itself lost to that doc's own
+  separately-real `remain-on-exit` bug) explanation for its 2026-08-10 incident. Not merged in: that doc is
+  `archive_exempt: true` (na-eligibility-audit KEEP-NA 2026-08-17) serving as a standing incident record + the origin
+  of the `TmuxSessionLossRateCanary` recommendation, and this doc is already 660+ lines against a 1000-line hard cap —
+  merging would blow past size discipline for no gain over a clean cross-link. Added it to `related:` above; the
+  shared root cause stays stated once, here. `ao_tmux_loss_rate_canary_likely_overtuned_...` does NOT converge on
+  root cause — it investigates the `TmuxSessionLossRateCanary` ALERT's threshold tuning (a statistics/observability
+  question), not why sessions die; that mechanism is real and genuinely distinct from this doc's. It IS related in a
+  previously-unlinked way: this doc's own still-open P3 todo about `check-ao-recent-deaths.sh`'s `burst_size`
+  conflating benign `reason="manual"` recycle-teardowns with genuine losses (proven for the 2026-08-14 23:33 cluster,
+  3/5 members benign) is very likely the SAME undercounting gap now inflating the canary's rolling-window breach
+  count in a second consumer of the same `tmux_session_lost` event stream — cross-linked both directions (see the
+  todo above and that doc's own follow-up). Added both docs to `related:`.
+  **Also resolved this doc's own open `[OPERATOR]` todo** (pid 2934337 cleanup): re-verified live via read-only SSM
+  against `i-0c9b283b31d6b5ca7` — `ps -p 2934337` not found, `/tmp/tmux-1000/default` (ambient default socket) reports
+  "no server running", zero `lsof` handles on that path; the only live tmux server on the host is pid 3514516 on the
+  isolated fleet socket (`ELAPSED=448991s`, ~124.7h/~5.2 days, unbroken since the 2026-08-13 17:14:35Z respawn already
+  tracked above). This confirms the operator-directed kill documented in the 2026-08-13 17:46Z-18:10Z entry actually
+  covered this PID (same number, same "ambient socket"/"split-brain slot 1" description) — the still-open todo asking
+  for a fresh operator decision was a stale duplicate of the item already marked DONE earlier in this list; flipped to
+  `[x]` with this evidence rather than re-escalating a decision the operator already made and that AO already executed
+  on. **Not touching `status`**: the ~5.2-day single-pid uptime is materially beyond every prior (contradicted)
+  closure bar this doc has set for itself, but per this doc's own established discipline (2026-08-13 19:49Z: "not
+  flipping status/archiving unprompted... surfacing this milestone to the operator as a checkpoint rather than
+  unilaterally closing") this stays a checkpoint for the operator, not a unilateral re-declaration of closure — doc
+  stays `status: open`.

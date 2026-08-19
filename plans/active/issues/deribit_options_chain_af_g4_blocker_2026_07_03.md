@@ -27,6 +27,11 @@ locked_by:
 context_scope: [/plans/archive/issues/cefi_high_attempted_failed_batch_cluster_2026_07_23.md, /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md, /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md, /plans/archive/issues/dp_escalation_worker_dispatch_no_open_issue_check_2026_07_29.md, market-tick-data-service/market_tick_data_service/scripts/reclass_cefi_futures_chain_no_tardis_source.py, deployment-service/scripts/vm/launch-cefi-sharded-backfill.sh]
 locked_since:
 resolved_by:
+archive_exempt: true # 2026-08-19 (plan_reconciler) — 0 open checkboxes only because the sole real item was
+  # reformatted from a bare "- [ ]" into the non-checkbox CANCELLED/SUPERSEDED disposition format (task_template.md
+  # §3); the doc's own body (line ~229) explicitly says "Do NOT close it as done. Real fix is gated on Track-2." —
+  # genuinely still blocked pending cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md's open
+  # re-verify todo, not fully done. Re-check for real archival once that gate clears.
 ---
 
 # DERIBIT `options_chain` af=10,114 (cap=1) — G4 gate blocker
@@ -37,6 +42,11 @@ The cefi prd manifest (2026-07-03T10:41Z) shows DERIBIT options_chain:
 
 - `attempted_failed` = 10,114
 - `captured` = 1
+
+**CROSS-LINK added 2026-08-18 (plan_reconciler)**: `cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`
+(2026-08-09 entry) confirms DERIBIT `futures_chain` shares the SAME canonical-write-only vulnerable path fixed for
+BINANCE-FUTURES/BYBIT, but explicitly does not confirm whether DERIBIT `options_chain` (this doc's own blocker) is
+covered by the same fix — worth checking against that fix before assuming this blocker needs a separate resolution.
 
 This means the wave-1 Deribit options_chain backfill nearly completely failed. The G4 gate requires "Deribit OPTION
 present as options_chain ONLY" — options_chain af>0 blocks G4.
@@ -91,9 +101,12 @@ machine sizing for Deribit bundling.
 > `reclass_cefi_futures_chain_no_tardis_source.py` are built on the same confusion and must NOT be re-run for
 > futures_chain.
 
-- [ ] [DATA] P0. **`futures_chain` retry path must STOP attempting a structurally-absent channel** (re-opened
-      2026-07-15, plan-reconcile §1, operator ruling A — this doc now owns it). **← SUPERSEDED by the correction banner
-      above (2026-07-18): it is our bundle, not a source absence; fix = capture, not reclass.**
+- **[DATA] P0. CANCELLED — SUPERSEDED 2026-07-18 (correction banner above: `futures_chain`/`options_chain` are OUR
+  bundles, not source absence; the fix is capture via the Track-2 coverage backfill, not a retry-gate/reclass).
+  Reformatted 2026-08-18 (plan_reconciler) from a bare `- [ ]` into the required non-checkbox disposition marker per
+  `task_template.md` §3 — the checkbox previously stayed open despite the doc's own inline "← SUPERSEDED" note.
+  Original text retained below for archaeology.** `futures_chain` retry path must STOP attempting a
+      structurally-absent channel (re-opened 2026-07-15, plan-reconcile §1, operator ruling A — this doc now owns it).
       `cefi_deribit_binance_futures_bundle_verification_2026_06_20.md` recorded 66,007 `attempted_failed` cells
       reclassed to `empty_confirmed`/`EXPECTED_SOURCE_DOES_NOT_OFFER_DATA_TYPE` on 2026-07-12, treating it as settled.
       It is **NOT durable**: this doc's own 2026-07-15 triage reads **112,727 / 112,727 attempted_failed (100.0%, 0

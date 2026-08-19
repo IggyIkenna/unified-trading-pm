@@ -13,7 +13,7 @@ summary:
   Confirmed via diff: the two files have already diverged in other ways too (unified-trading-ci is ahead), so they are
   not kept in sync automatically. Out of scope for the batch-9 plan (its own `repos: [unified-trading-pm]` frontmatter),
   so filed here rather than expanding that plan''s scope.'
-status: open
+status: archived
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -33,7 +33,6 @@ assigned_vm: planning
 author: slot-11 (infra)
 source: ["plans/archive/2026_08/infra_satellite_ao_dispatch_batch9_2026_08_09.md"]
 resolved_by: unified-trading-ci@6aa50d2
-archive_exempt: true
 locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -45,6 +44,11 @@ context_scope:
     unified-trading-pm/scripts/workspace/resolve-canonical-versions.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-18** — fix shipped and independently confirmed (`unified-trading-ci@6aa50d2`), 0 open todos.
+> Narrow single-repo remediation (a UV_VERSION centralization pass missed the copy in `unified-trading-ci`'s live
+> reusable workflow) with no forward-looking pattern currently codified in codex — this is incident-closure content,
+> not a durable contract, so no codex addition was made as part of this archival.
 
 ## What I found
 

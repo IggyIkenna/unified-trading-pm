@@ -149,3 +149,8 @@ this could be a systemic issue in the launcher/capture path rather than two unre
 [OPERATOR] relaunch-vs-wait judgment call. Genuinely operator-gated. assigned_vm unchanged. No code changed this
   session.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid.** Both open todos
+  confirmed SUPERSEDED by plan_reconciler's same-day correction (billing-caused, see
+  `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`) —
+  correctly left unflipped pending the family's normal relaunch sweep once billing clears (not a fresh RECLASSIFY
+  candidate; nothing dispatchable right now). `assigned_vm` unchanged.

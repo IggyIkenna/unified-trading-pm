@@ -46,7 +46,10 @@ assigned_vm: planning
 resolved_by:
 locked_by:
 context_scope: [scripts/openapi/generate_strategy_prospectus.py, unified-api-contracts/openapi/prospectus, /codex/06-coding-standards/script-homes.md, /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md]
-execution_scope: local-only
+execution_scope: orchestrator-agent # was local-only — corrected 2026-08-18 (plan_reconciler): this doc flipped
+  # assigned_vm NA->planning 2026-08-08 but the paired execution_scope field was never updated; count_open_tasks.py's
+  # AO-dispatch-eligible gate requires execution_scope != local-only, so this doc was silently excluded from the
+  # dispatch-eligible count despite the intended flip
 model_tier: sonnet-doable
 thinking_tier: medium
 estimate_class: refactor

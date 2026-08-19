@@ -3,7 +3,7 @@ doc_type: plan
 title: CeFi Track-2 coverage backfill checkpoints — finalize (reconcile checkboxes + archive)
 summary: >-
   Gated closeout for cefi_track2_coverage_backfill_checkpoints_2026_07_25.md — machine-held via depends_on +
-  gate_on_depends: true until all 5 of that plan's sequential todos are done. Reconciles the parent
+  gate_on_depends: true until every one of that plan's sequential todos is done. Reconciles the parent
   (cefi_consolidated_closeout_2026_07_18.md) Track-2 checkboxes, cross-checks the 2 PRE-BACKFILL baselines (drafted
   separately in cefi_consolidated_native_ao_extract_2026_07_25.md) actually landed, then archives.
 status: active
@@ -55,7 +55,7 @@ context_scope:
 # CeFi Track-2 coverage backfill checkpoints — finalize
 
 > **Machine-gated on `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`** (`depends_on` +
-> `gate_on_depends: true`) — the dispatcher will not queue any todo below until all 5 tasks in that plan are `done`.
+> `gate_on_depends: true`) — the dispatcher will not queue any todo below until every task in that plan is `done`.
 > `sequential: true` because todo 2 needs todo 1's reconciliation done first, and todo 3 (archival) must run last.
 
 ## Todos
@@ -64,7 +64,7 @@ context_scope:
       resume-backfill checkbox and the 4 checkpoint-cadence checkboxes (`/data-pipeline-check-is` MID/POST,
       `/data-pipeline-check-mtds` MID/POST), citing the shipped evidence (report paths, run dates) — verify each cited
       report actually exists before citing it. Record the new coverage % superseding the archived 50.79% in the Track-2
-      section. Repo: unified-trading-pm. **Done when**: all 5 named checkboxes are flipped with verified evidence and
+      section. Repo: unified-trading-pm. **Done when**: every named checkbox is flipped with verified evidence and
       the new coverage % is recorded.
 - [ ] [REVIEW] P1. **Cross-check the 2 PRE-BACKFILL baseline checkpoints landed.**
       `cefi_consolidated_native_ao_extract_2026_07_25.md` drafted the `/data-pipeline-check-is`/`-mtds` PRE-BACKFILL
@@ -85,7 +85,10 @@ context_scope:
       That plan's own todos are all `[x]`, but its Success Criteria were NOT met as of 2026-07-31: DERIBIT
       `options_chain`/`futures_chain` were still ~100% `attempted_failed` (see
       `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md`), gated on THIS Track-2 backfill actually completing.
-      Once this plan's own 5 todos are `done` (this finalize plan's `depends_on` gate having fired confirms that),
+      Once this plan's own todos are all `done` (this finalize plan's `depends_on` gate having fired confirms that,
+      **CORRECTED 2026-08-18 (plan_reconciler): the parent now has 6 todos, not the "5" this doc previously
+      hardcoded — the parent's own INFRA targeted-supplement todo added 2026-08-09 grew the count; deleted the
+      restated count here rather than re-updating it, since a hardcoded number re-stales on the next change**),
       re-read the DERIBIT `options_chain`/`futures_chain` manifest cells: if `attempted_failed` has genuinely dropped to
       ~0 (or the residual is honestly `empty_confirmed`), update
       `issues/deribit_options_chain_af_g4_blocker_2026_07_03.md` to closed, then re-run the

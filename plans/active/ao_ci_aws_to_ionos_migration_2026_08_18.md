@@ -229,15 +229,20 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       bucket) — called **once, at migration time, not on a periodic cadence** (operator directive 2026-08-18: this
       data only needs a one-time capture when actually moving clouds, not a standing 30-min backup). Note transcripts
       carry full conversation content (code, tool output, anything typed) — reuse the existing bucket's access
-      boundary rather than widening it, but flag if tighter scoping is wanted. Done-when: running the new function
-      against the live VM uploads every transcript file present to its GCS/S3 key.
+      boundary rather than widening it, but flag if tighter scoping is wanted. **Code shipped
+      `agent-orchestrator@946eeaba51`** (2026-08-18): `upload_claude_transcripts_to_gcs`/`_s3` +
+      `_iter_claude_transcript_files` added to `gcs_sync.py`, unit-tested (`tests/test_migration_backup_uploads.py`,
+      `quality-gates.sh --no-fix` green: 4118 passed, basedpyright 0 errors). **Not yet checked off** — Done-when
+      specifically requires running it against the live VM, which needs `vm-winddown.sh` to exist and call it (see the
+      wiring todo below); the function itself is done, its live invocation isn't.
 - [ ] [INFRA] P1. Close the second gap found this session: `omniroute-eval/results/` — the live model-provider
       bake-off's actual output (`provider-matrix.sh`, one JSONL row per model×task cell; this is the in-progress
       "compare context tokens/turns across providers" work) — is git-ignored
       (`agent-orchestrator/.gitignore:193`) and uploaded nowhere; local-only. Add a GCS/S3 upload (same key-layout
       pattern, `eval-results/<vm_id>/<date>/...`) — also a **one-time, migration-time call only**, not wired into any
-      periodic loop or per-run hook (same operator directive as above). Done-when: running the new function uploads
-      every results file currently on disk to GCS/S3.
+      periodic loop or per-run hook (same operator directive as above). **Code shipped `agent-orchestrator@946eeaba51`**
+      (2026-08-18): `upload_eval_results_to_gcs`/`_s3` added to `gcs_sync.py`, same unit-test file, same green gate run.
+      **Not yet checked off** — same reason as above, Done-when needs the live-VM run via `vm-winddown.sh`.
 - [ ] [INFRA] P1. Wire BOTH of the above into `vm-winddown.sh` (§2's new decommission script) as the one-time
       pre-stop backup step — this is the ONLY invocation point for either upload (no periodic `SnapshotLoop` wiring,
       per operator directive). Done-when: running `vm-winddown.sh` against a test box confirms its transcripts and
@@ -390,3 +395,17 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
   IONOS box needs a new metrics/recovery mechanism). Estimate bumped +1 baseline/+1 calibrated day for the new runbook
   + dry-run work. CI-runner's remote-access-model question (previous entry) remains open regardless of this change —
   it's about the admin-exec channel's auth model, orthogonal to the stop-vs-terminate decision.
+- **2026-08-18**: Operator directive — do as much of §1/§2's build work as possible before IONOS credentials exist
+  (account signup in progress, §3). Authored + shipped `/codex/15-runbooks/aws-dr-standby-failback-ao-ci.md` (the new
+  §6 runbook todo — `unified-trading-pm@6ff00d4ca7`), then shipped the two credential-independent §2 backup functions:
+  `upload_claude_transcripts_to_gcs`/`_s3` and `upload_eval_results_to_gcs`/`_s3` in `gcs_sync.py`
+  (`agent-orchestrator@946eeaba51`), unit-tested via `tests/test_migration_backup_uploads.py`, full
+  `quality-gates.sh --no-fix` green (4118 passed, basedpyright 0 errors). Both §2 todos annotated but left unchecked —
+  Done-when needs a live-VM run, which is gated on `vm-winddown.sh` existing. Evaluated the "fix hardcoded EIP
+  references" §2 todo and held off: none of the 5 named files actually use the IP as a live connection target
+  (`orchestrator_vm_registry.yaml`'s `public_ip:` field structurally needs to hold whichever IP is current, not a DNS
+  string; the rest are code comments) — not the safe mechanical find-replace the todo implied, needs a more careful
+  pass rather than a rushed mass-edit. Remaining credential-independent §2 work (`bootstrap_vm.sh`'s `ionos` branch,
+  the AWS-Secrets-Manager-to-GCP-only replacement, `vm-launch.sh`/`vm-winddown.sh` themselves) needs either real IONOS
+  API knowledge to do well or touches AO's live bootstrap script directly — higher blast-radius, held for the
+  operator's go-ahead rather than rushed.

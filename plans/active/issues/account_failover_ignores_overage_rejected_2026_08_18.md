@@ -165,6 +165,56 @@ list detects that state.
       rather than `unexplained`, so this doesn't read as a mystery crash on the next occurrence
       (on this or any other account).
 
+## Interaction analysis vs. the CI-escalation-reserve pool (2026-08-18, later same day)
+
+**Question**: would adding `overage_status=="rejected"` as a 5th failover trigger (feeding
+`rotate_all_slots_off_account`) collide with the CI-escalation/scheduled-task reserve pool (slots
+29-33), which a sibling investigation
+(`/plans/active/issues/ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md`)
+was independently live-debugging the same day? Read `rotate_all_slots_off_account`
+(`server/server.py:1014`) directly to ground this rather than reason from the docstring alone.
+
+**Conclusion: no destructive collision on the currently-observed symptom; net positive for one
+population, with one narrow unconfirmed race worth flagging.**
+
+- `rotate_all_slots_off_account` explicitly SKIPS any slot that is `paused`/`killed` or has no live
+  `tmux_session` (`if slot.account_id != account_id or slot.status in ("paused", "killed") or not
+  slot.tmux_session: continue`). The sibling reserve-pool incident this same day
+  (`ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`) found all 3 reserve slots `status=paused`,
+  `worker_alive=false` — that exact population is **outside the proposed trigger's reach entirely**.
+  Adding the trigger would not rescue an already-paused reserve slot; that still needs the manual
+  `POST /api/slots/{id}/resume` path the operator used. So there is no regression risk to today's
+  paused-slot remediation.
+- For a reserve slot that is LIVE (has a tmux session) and bound to an overage-rejected account —
+  confirmed live this same session: slot 33 currently reads `status=idle`,
+  `account_id=sub-b-iggy2london`, `overage_status=rejected`/`overage_disabled_reason=out_of_credits`
+  — the proposed trigger WOULD be eligible to fire and would proactively kill+respawn that slot onto
+  a healthy account via `spawn_with_account_bg`. This is a net improvement over today: it evicts a
+  doomed reserve slot BEFORE it dies mid-escalation-dispatch (today's failure mode), rather than
+  leaving it to die silently and read as `death_class: unexplained`.
+- **Genuine but unconfirmed race worth flagging**: `spawn_with_account_bg` kills the OLD session
+  first, then spawns a new one on a background thread — not atomic. `_pick_free_slot`'s freedom check
+  (`not tmux_spawn.has_session(...)`) reads the live tmux state directly, so in the brief window
+  between the old session's kill and the new one's spawn, a reserve slot mid-rotation would read as
+  "free" to a concurrently-dispatching escalation. Whether the escalation dispatcher and the
+  rotation's own background spawn can then race to claim the SAME slot (and what happens if they
+  do) was NOT verified in this session — a genuine code question for whoever implements the trigger,
+  not something to guess at.
+- **Resource-contention consideration, not a collision**: if implemented, a mass rotation firing on
+  an account with many bound slots at once (main's own session + reserve + workers, per this doc's
+  fleet-wide evidence) would compete for the same scarce headroom-account pool the reserve pool also
+  needs. `rotate_all_slots_off_account` already degrades gracefully here — `select_account_for_spawn`
+  returning `None` logs `account_rotation_no_fallback` and skips (leaves the slot on the bad account,
+  i.e. no worse than today), it does not corrupt state or crash. So the worst case under pool
+  scarcity is "no-op", not a new failure mode — but it does mean the trigger's actual effectiveness
+  for the reserve pool specifically is bounded by how much headroom the account pool has at the
+  moment it fires, which ties directly into this doc's own P2 todo ("spread 31/32/33 across more
+  than one account instead of triple-booking sub-b").
+
+**Verdict**: implement-safe with respect to the reserve pool as currently understood; the one open
+item (mid-rotation free-slot race) should be checked by whoever writes the trigger, not assumed
+either way.
+
 ## Codex SSOTs
 
 - `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md` — the multi-account auth

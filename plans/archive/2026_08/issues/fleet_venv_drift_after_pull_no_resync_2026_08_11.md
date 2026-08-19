@@ -12,7 +12,7 @@ summary: >-
   one-off - `slot-cron-ff-pull.sh` keeps code current every 5 min and has no venv counterpart, and no gate compared the
   environment against the lock. A fail-closed stale-venv check shipped in agent-orchestrator@f9a61ebf62; promoting it to
   the shared gate base is the open decision.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -43,7 +43,11 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: >-
+  /plan-reconcile ao (2026-08-18) — the fail-closed stale-venv preflight (`qg_assert_venv_fresh`, shipped
+  agent-orchestrator@f9a61ebf62 + unified-trading-pm@5c373663c8) is documented at
+  /codex/06-coding-standards/quality-gates.md § "Per-repo QG venv-freshness preflight"; the 2 remaining OPERATOR
+  todos (shared-clone git conflicts) were live-verified clean in both affected checkouts.
 depends_on:
 context_scope:
   [
@@ -56,6 +60,10 @@ source: found 2026-08-11 while shipping the DeepSeek wallet sampler — the repo
 ---
 
 # Fleet venv drift — nothing re-syncs an environment after a pull moves `uv.lock`
+
+> **RESOLVED 2026-08-18.** The structural fix (fail-closed `qg_assert_venv_fresh` preflight) shipped and is now
+> documented at `/codex/06-coding-standards/quality-gates.md` § "Per-repo QG venv-freshness preflight". Both
+> remaining OPERATOR todos (shared-clone git conflicts) verified clean. Archived via `/plan-reconcile ao`.
 
 ## What was measured (2026-08-11)
 
@@ -153,15 +161,16 @@ leaves the environment behind, silently, forever.
       `--inexact` across every live repo (the only stragglers are abandoned `*.stale-pre-history-rewrite-*` backup
       dirs); unit-tested all four phase/enforce combinations; and a full PM gate with enforcement ON against a
       DELIBERATELY drifted venv did NOT abort and left the venv CLEAN.
-- [ ] [OPERATOR] P2. **Two shared PM clones are left with unresolved conflicts that are NOT mine to fix.** (a) The main
-      clone `unified-trading-system-repos/unified-trading-pm` has `UU scripts/dev/ff-starvation-detect.sh` with 4
-      conflict markers and NO merge/rebase in progress — a peer's stuck state that makes that clone's gate fail on
-      unrelated post-gate checks. (b) In `.tabs/6/unified-trading-pm`, my own `git pull --ff-only` autostashed a peer's
-      dirty files and the pop conflicted, leaving
-      `UU plans/active/elysium_october_delivery_and_code_disclosure_ readiness_2026_08_11.md` plus two dangling
-      `autostash` entries in `git stash list`. Their content is preserved in those stashes and I deliberately did NOT
-      drop, pop or resolve either — foreign WIP. **Done when**: the owning sessions resolve both, or the operator
-      confirms the stashes are safe to discard. (repo: unified-trading-pm)
+- [x] ✅ [OPERATOR] P2. **RESOLVED — both shared PM clones re-verified clean 2026-08-18 (/plan-reconcile ao).** Was:
+      "Two shared PM clones are left with unresolved conflicts that are NOT mine to fix." (a) The main
+      clone `unified-trading-system-repos/unified-trading-pm` had `UU scripts/dev/ff-starvation-detect.sh` with 4
+      conflict markers and NO merge/rebase in progress. (b) `.tabs/6/unified-trading-pm` had
+      `UU plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` plus two dangling
+      `autostash` entries. Re-checked live 2026-08-18: main clone — `git status --short -- scripts/dev/ff-starvation-detect.sh`
+      empty (no `UU`), 0 conflict-marker tokens in the file, no `.git/rebase-merge`/`.git/rebase-apply`/`MERGE_HEAD`.
+      `.tabs/6/unified-trading-pm` — the elysium file is present, tracked, and clean (not in `git status --short`
+      output at all), no rebase/merge in progress. Both meet this todo's own "Done when: the owning sessions resolve
+      both" criterion — resolved by a peer/owning session sometime between 2026-08-11 and 2026-08-18, not by this pass.
 
 ## Codex SSOTs
 

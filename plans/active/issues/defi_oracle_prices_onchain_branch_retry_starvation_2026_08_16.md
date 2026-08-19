@@ -207,7 +207,7 @@ staged).
       mechanism~~ — RESOLVED, not a mystery.** `journalctl` around the death timestamp
       (08:53:36-38) shows `orphan_reap sweep: slot 5 pid <N> age=315-318s KILLED` — this is
       the exact, already-documented anti-pattern in
-      `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`:
+      `plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`:
       `nohup cmd & echo $!` / `setsid nohup ... & disown` inside a Bash-tool call detaches the
       real process from the tracked session tree, so `agent-orchestrator/server/orphan_reap.py`
       classifies it as an orphan and SIGKILLs it ~300-355s later — exactly the technique this

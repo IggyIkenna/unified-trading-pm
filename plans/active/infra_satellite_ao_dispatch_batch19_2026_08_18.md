@@ -90,7 +90,7 @@ context_scope:
       `plans/active/issues/cve_affected_pinned_deps_remediation_2026_06_18.md`,
       `plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`,
       `plans/active/issues/deployment_service_meta_watchers_adapter_contract_regression_blocks_mtds_quickmerge_2026_08_12.md`,
-      `plans/active/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`. Clearing THESE 10 first (not
+      `plans/archive/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`. Clearing THESE 10 first (not
       necessarily the whole 925 in order) directly unblocks a shipped fix — worth prioritizing over an arbitrary
       batch slice. Not attempted by the tracking session that added this note: all 6 docs were, at the time,
       simultaneously dirty in the shared checkout with OTHER sessions' own unrelated uncommitted edits (confirmed

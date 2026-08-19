@@ -12,8 +12,12 @@ summary: >-
   repo declares a repository_dispatch listener for, so it fails GREEN by reading the pre-existing ci_status. Instance 1
   (uac@a2beed46, massive removed from SOURCE_PRIORITY) reddened UTL main for ~9h undetected and was then laundered green
   by SIT. Instance 2 (SPORTS key dropped from cloud-providers.yaml) is FIXED in utl@c26a5297 — and on investigation was
-  intra-workspace fixture drift rather than a UAC-ref divergence. The CLASS (todos 2-5) remains open.
-status: open
+  intra-workspace fixture drift rather than a UAC-ref divergence. The CLASS's remaining action items (todos 2-5) were
+  reviewed and CANCELLED 2026-08-16 (not built — the general registry-blind-spot class is already tracked and partially
+  closed via the `# @contract-surface` tagging + consumer-QG-gate mechanism in `/codex/08-workflows/ci-cd-flow.md`; see
+  the archived-banner below).
+status: archived
+superseded_by: /codex/08-workflows/ci-cd-flow.md
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -41,7 +45,6 @@ source:
   [
     "discovered 2026-07-20 while root-causing the overnight T0 FAILURE + CI REGRESSION alerts on unified-trading-library",
   ]
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 resolved_by:
@@ -55,6 +58,15 @@ context_scope:
     /plans/epics/ci_master.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-18** — all todos done/CANCELLED, independently re-confirmed by three audit passes
+> (`plan_reconciler_findings_ci_2026_08_16.md`, `na-eligibility-audit` ci tranche 2026-08-16/17, `/plan-reconcile
+> ci_master` 2026-08-18). Instance 1 (massive/SOURCE_PRIORITY) and instance 2 (SPORTS bucket key) are both closed;
+> the general registry-value-blind-spot class this doc surfaced is tracked in `/codex/08-workflows/ci-cd-flow.md`
+> ("Breaking = public-surface change" section — the `# @contract-surface` tagging + consumer-QG-gate fan-out
+> mechanism), though that mechanism does not yet name UTL specifically among covered consumers (a possible future
+> codex refinement, not applied here — new codex authorship stays operator-gated per this workspace's Trust-Mode
+> carve-out). Read that codex doc for current guidance, this one for incident history only.
 
 # UAC value-only config changes break UTL with no gate able to see it
 

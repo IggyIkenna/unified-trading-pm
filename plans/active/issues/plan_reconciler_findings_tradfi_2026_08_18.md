@@ -311,3 +311,14 @@ _(pending — updated at Phase 6)_
   well outside a single-shard's scope.
 - `Delete/VM-launch todo tagging` (soft WARN) — candidate signal only, adjudicated per-doc during Phase 1 if any
   tradfi doc is flagged.
+
+## na-eligibility-audit note (2026-08-18, tradfi tranche, dispatch agt-31bfcb)
+
+**KEEP-NA — 0 checkbox todos on this doc itself, nothing to reclassify.** This is a `/plan-reconcile` run-findings
+artifact, not a work-tracking doc — its "Filed (grace-protected this run — deferred to the next tradfi pass)"
+section lists prose findings that point at OTHER target docs (several already grace-cleared and independently
+audited this same pass: `data_completion_tradfi_line_cap_blocks_e7_stale_item_close_2026_08_16.md`,
+`databento_ice_opra_subscription_ask_2026_08_09.md`, `tradfi_fred_forward_capture_and_backfill_gap_2026_08_13.md`).
+Resolving the remaining corpus-wide contradiction/false-unchecked findings listed here is `/plan-reconcile`'s own
+job on its next tradfi pass, not this skill's remit (per this skill's own `does_not` scope boundary) — converting
+them into checkboxes on THIS doc would duplicate that skill's tracking, not fix anything. `assigned_vm` unchanged.

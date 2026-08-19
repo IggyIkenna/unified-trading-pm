@@ -18,7 +18,7 @@ created: 2026-06-10
 authoritative_for: [script-homes placement decision tree, repo scripts/ lifecycle markers (Epic/Lifecycle/Delete-when)]
 referenced_by:
   [
-    plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md,
+    plans/archive/2026_08/issues/features_service_coverage_and_script_canon_2026_06_10.md,
     plans/audit/results/repo_scripts_characterization_2026_06_18.md,
   ]
 owner:

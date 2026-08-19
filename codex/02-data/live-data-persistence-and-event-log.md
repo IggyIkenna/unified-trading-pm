@@ -31,7 +31,7 @@ referenced_by:
   [
     /codex/05-infrastructure/pubsub-topic-inventory.md,
     plans/audit/results/vm_deployment_events_audit_2026_05_15.md,
-    plans/active/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
+    plans/archive/2026_08/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
     plans/archive/issues/mtds_plan_reconciliation_2026_06_29.md,
   ]
 owner:

@@ -787,7 +787,7 @@ task rather than forcing it through, per this doc's established disposition.
 
 Slot 5 (data_engineering craft adopting review for this task) was dispatched
 `ao_satellite_ao_dispatch_batch11_finalize-dd3fa33044f1` (plan_ref
-`plans/active/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`,
+`plans/archive/2026_08/ao_satellite_ao_dispatch_batch11_finalize_2026_08_09.md`,
 `depends_on: [ao_satellite_ao_dispatch_batch11_2026_08_09]`, `gate_on_depends: true`). Verified live:
 
 ```

@@ -1,6 +1,6 @@
 ---
 doc_type: issue
-status: open
+status: resolved
 nature: issue
 scope: [engineer, admin]
 related: []
@@ -32,7 +32,6 @@ repos: [agent-orchestrator]
 tags: [ao, auto-park, dispatch, gated, sports]
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true
 ---
 
 # AO durable park wiring missing from task entry → false condition does not gate dispatch
@@ -132,3 +131,8 @@ recorded in the P3 plan's Progress Log (slots 15/22/10).
   `status: resolved` + performs the real 6-step archival ritual + drops this exemption key.
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **plan-reconcile ao 2026-08-18 (hunter #1)**: performed the deferred follow-up commit named above — flipped
+  `status: resolved`, dropped `archive_exempt: true`, archived via the standard 6-step ritual (moved to
+  `plans/archive/2026_08/issues/`, repointed 3 corpus referrers: `ao_consolidated_closeout_2026_08_12.md`,
+  `venue_e2e_wiring_2026_08_16.md`, `plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md`). The fix
+  (agent-orchestrator@153c0a0f3f) has been live+verified since 2026-08-11 with no further action pending.

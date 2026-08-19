@@ -14,8 +14,8 @@ scope: [engineer, admin]
 tags: [monitoring, orchestrator, vm-bootstrap, watchdog, e2e, plan-hygiene, plan-split]
 related:
   [
-    plans/active/monitoring_control_plane_master_2026_06_10.md,
-    plans/active/issues/plan_line_cap_remediation_2026_07_23.md,
+    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: observability_master
@@ -35,7 +35,7 @@ superseded_by:
 source: >-
   Split out of monitoring_control_plane_master_2026_06_10.md (§ "Orchestrator e2e control-plane validation + main-agent
   first-responder" + § "VM-from-scratch e2e") per the plan line-cap remediation triage
-  (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row #19; operator-approved unlock+split 2026-07-23).
+  (/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md, row #19; operator-approved unlock+split 2026-07-23).
   This content was a scope-creep section covering agent-orchestrator bootstrap/watchdog/memory-guardrail hardening,
   file-disjoint from the parent's CI-dashboard/fleet-git-health mission — moved verbatim, nothing summarized or dropped.
 last_updated: 2026-06-27
@@ -51,7 +51,7 @@ context_scope:
 # Orchestrator e2e control-plane validation + VM-from-scratch hardening
 
 > Split verbatim (2026-07-24) out of `monitoring_control_plane_master_2026_06_10.md` per the plan line-cap remediation
-> triage (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md`). This doc carries the parent's entire
+> triage (`/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md`). This doc carries the parent's entire
 > "Orchestrator e2e control-plane validation + main-agent first-responder" section (through "VM-from-scratch e2e" and
 > its live run) unchanged — no content was rewritten or summarized. See `monitoring_control_plane_master_2026_06_10.md`
 > for the CI-dashboard/fleet-git-health mission this scope-creep section was split away from.

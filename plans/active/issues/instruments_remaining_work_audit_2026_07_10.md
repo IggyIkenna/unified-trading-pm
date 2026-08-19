@@ -453,7 +453,7 @@ Manifest correctness / denominator / honest-coverage work (excludes pure backfil
     down-sizing not implemented, dead YAML key, hardcoded per-LST spot venue, wizard exposes ~0 of the numeric param
     surface. D1 explicitly INTENTIONAL.
 
-14. **mvp_scope_catalogue_tagging** — 2 of 10 unchecked `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md`
+14. **mvp_scope_catalogue_tagging** — 2 of 10 unchecked `plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md`
     Features/strategy/model MVP sections not started (no consumer endpoint yet); full real-data MVP-toggle verify
     blocked on a paused manifest consolidator behind a held migration.
 

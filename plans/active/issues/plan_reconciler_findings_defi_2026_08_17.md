@@ -157,11 +157,13 @@ Reapplied the previously-reverted §I table fix on top (elysium_carveout 16/2→
 Tracked as todos (HARD RULE — every deferral is a `- [ ]`, never prose-only) for the next reconciler pass or an
 operator to pick up:
 
-- [ ] [DOC] P2. **`data_pipeline_check_mdps_features_2026_07_20.md`** — annotate/resolve its still-open `[REVIEW] P2`
+- [x] ✅ [DOC] P2. **`data_pipeline_check_mdps_features_2026_07_20.md`** — annotate/resolve its still-open `[REVIEW] P2`
       todo (line ~255, "split the P0 item into its own plan gated on `shared_host_ram_exhaustion_kills_background_qg_2026_07_27`").
       That gating doc was found resolved/archived 19 days ago by an EARLIER entry in this SAME doc (hunter batch A),
-      but the todo itself was never updated. Whether a companion plan is still needed at all (and if so, ungated) is
-      a scope/design call — resolve that first, then either drop the gate or the whole todo.
+      but the todo itself was never updated. **CLOSED 2026-08-18 (plan_reconciler, epic-scoped defi_master pass)**:
+      the same-day tranche run (`plan_reconciler_findings_defi_2026_08_18.md` Phase -1) already confirmed this todo
+      is now `- [x] ✅ [REVIEW] P2` at line 295 of the target doc — that finding was never propagated back to flip
+      THIS checkbox, closing that gap now.
 - [x] ✅ [DIAG] P3. **CLOSED 2026-08-16 (slot-32)** — `defi_by_date_capture_cron_stale_2026_08_16.md`'s
       `[DIAG]` todo has been dispatched and resolved; `gcloud scheduler jobs list` disambiguated the target as
       `is-daily-enum-defi` (neither of the two candidates this todo named — both are unrelated/legacy jobs). The
@@ -172,11 +174,13 @@ operator to pick up:
       subsequent Progress Log entries never re-verified it. Check `.tabs/2`'s current state (out of THIS run's
       scope — reading another slot's live tree needs that slot to be confirmed dead first, per multi-agent-safety
       rules) and update the claim.
-- [ ] [OPERATOR] P2. **`strategy_service_centralization_fixes_2026_08_16.md`** — rule on whether `sequential: true`
+- [x] ✅ [OPERATOR] P2. **`strategy_service_centralization_fixes_2026_08_16.md`** — rule on whether `sequential: true`
       + todo 1's `[OPERATOR]` gate should keep serializing the whole 18-todo plan, given several todos read as
       semantically independent of todo 1's decision (GCS config-loader unification, venue-literal audit, a
-      docstring fix, a 69-candidate inventory/classify task). Restructuring the dependency is a plan-authoring
-      preference call, operator-gated per SKILL.md Modes § Calibration even under trust mode.
+      docstring fix, a 69-candidate inventory/classify task). **RULED + CLOSED 2026-08-18 (plan_reconciler,
+      epic-scoped defi_master pass)**: the same-day tranche run (`plan_reconciler_findings_defi_2026_08_18.md`
+      Phase -1) already confirmed todo 1 is now `- [x] [OPERATOR] P0. ✅ RULED 2026-08-17` — that finding was never
+      propagated back to flip THIS checkbox, closing that gap now.
 - [x] [DOC] P3. EXTRACTED 2026-08-17 → `defi_satellite_ao_dispatch_batch16_2026_08_17.md`.** `defi_satellite_ao_dispatch_batch3_2026_07_26_finalize.md` — correct its `sequential: true`
       justification ("todo 4/archival must run last"): todo 4 already ran and archived batch3 on 2026-08-06 while
       todo 1 (source-doc reconciliation) is still open ~3 weeks later — the declared process order was violated in
@@ -282,10 +286,14 @@ Tracked as todos (HARD RULE — every deferral is a `- [ ]`, never prose-only):
       still carry no reciprocal cross-link note, and the 2 that do have one disagree on membership (one lists only
       2 of the other 3 docs). Add/complete 4 cross-reference notes so a worker landing on any one of the 4 sees the
       others.
-- [ ] [DOC] P3. **AO-dispatch-readiness tagging gaps on 2 still-`status: draft` docs** —
-      `defi_satellite_ao_dispatch_batch14_2026_08_16.md`'s VM-launch todos are untagged `[OPERATOR]`;
-      `solana_dex_pool_swaps_indexer_2026_08_08.md` todo 5 is similar (lower-confidence per the hunter that found
-      it). Add tags or a stated safe-idempotent justification before either doc flips from draft to active.
+- [ ] [DOC] P3. **AO-dispatch-readiness tagging gaps — SPLIT 2026-08-18 (plan_reconciler), 1 of 2 halves fixed.**
+      `defi_satellite_ao_dispatch_batch14_2026_08_16.md`'s VM-launch todo — **FIXED**, same-day tranche run
+      (`plan_reconciler_findings_defi_2026_08_18.md` Hygiene fix #5): added a safe-idempotent justification (standard
+      SPOT backfill relaunch, resumes from measured progress, no data deleted). `solana_dex_pool_swaps_indexer_2026_08_08.md`
+      todo 5 — **STILL OPEN, confirmed LIVE** (that same 2026-08-18 run's own Batch G + Grace-window-deferred list:
+      the doc is `status: active` + `assigned_vm: planning`, already AO-dispatched, so this is a live gap, not a
+      pre-flip one as this doc originally framed it). Remaining work: add `[OPERATOR]` tag or a stated
+      safe-idempotent justification to that one todo.
 
 Corroborating only — already tracked elsewhere, no new todo (would duplicate existing tracking):
 
@@ -310,3 +318,15 @@ Corroborating only — already tracked elsewhere, no new todo (would duplicate e
   each is a genuine design/operator call per its own text. This doc's own remaining open work is now 0 items in
   this session's population (all 8 resolved to extraction/conflict-citation/correctly-gated).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **2026-08-18 (`/plan-reconcile defi_master`, epic-scoped, Phase -1)**: closed the specific gap this doc's own
+  process-finding section warned about — the same-day defi-tranche run's Phase -1 (`plan_reconciler_findings_defi_2026_08_18.md`)
+  had already independently VERIFIED 2 of this doc's "Doc-drift / routed" items were resolved
+  (`data_pipeline_check_mdps_features_2026_07_20.md`'s `[REVIEW] P2` todo; `strategy_service_centralization_fixes_2026_08_16.md`'s
+  `sequential`/`[OPERATOR]` question) but never flipped THIS doc's own checkboxes to reflect that — a "routed
+  finding never delivered back" gap, exactly the Phase 5.9(a) class this skill's NO-MISS LEDGER exists to catch.
+  Flipped both to `[x]` with citations. Also split the AO-dispatch-readiness-tagging item: the `batch14` half was
+  fixed by that same tranche run (Hygiene fix #5); the `solana_dex_pool_swaps_indexer_2026_08_08.md` half is
+  confirmed still genuinely open (and now a LIVE gap, not pre-flip, per that run's own Grace-window-deferred
+  finding). Remaining open items in this doc (the `[DOC] P2` REVIEW-scope call, the batch11-count fix already
+  applied at the corpus level this same run) are genuine ordinary work or already closed elsewhere — not
+  independently re-derived here.

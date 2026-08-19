@@ -75,7 +75,7 @@ drift_direction: advance-docs
 ## Todos
 
 - [x] ✅ [REVIEW] P3. **File the deployment-bucket-resolution issue doc.** — `unified-trading-pm` (this commit). Filed
-      `plans/active/issues/deployment_bucket_resolution_gaps_2026_08_09.md`. (a) VM tarball `resolve_bucket_name()`
+      `plans/archive/2026_08/issues/deployment_bucket_resolution_gaps_2026_08_09.md`. (a) VM tarball `resolve_bucket_name()`
       bypass CONFIRMED still open — live-verified: neither `setup-data-pipeline-vm.sh:47` nor
       `create-code-tarballs.sh:46` calls `resolve_bucket_name()`; the literal
       `deployment-scripts-central-element-323112` is duplicated across 21 `.sh` files under
@@ -116,7 +116,7 @@ drift_direction: advance-docs
   risk against the doc's live, dense, operator-reviewed in-flight build). Conflict-checked against
   `ui_satellite_ao_dispatch_batch1_2026_08_06.md` and `batch2_2026_08_08.md` (both grepped clean for these 3 items). The
   7 implementation-shaped items batch1 already declined remain declined here too — not re-litigated.
-- **2026-08-09 (slot 20)**: Todo 1 done — filed `plans/active/issues/deployment_bucket_resolution_gaps_2026_08_09.md`.
+- **2026-08-09 (slot 20)**: Todo 1 done — filed `plans/archive/2026_08/issues/deployment_bucket_resolution_gaps_2026_08_09.md`.
   Live re-verification found the plan's premise half-stale: the resolve_bucket_name() bypass is still real (21 files),
   but the "two-point AWS-lane breakage" it named alongside it had already been fixed 2026-08-07 in a different issue doc
   — recorded accordingly rather than duplicating closed work.
@@ -126,7 +126,7 @@ drift_direction: advance-docs
   archived+resolved at `plans/archive/issues/`; SOFT-evidence of moot-ness (archived=closed, content reads accurate on
   spot-check) but no HARD verification of whether the claimed misattribution was corrected before archival. Source doc
   (`artifact_pipeline_observability_2026_07_17.md`) is grace-blocked this run — cannot flip its corresponding checkbox.
-  Full findings: `plans/active/issues/plan_reconciler_findings_ui_2026_08_11.md`.
+  Full findings: `plans/archive/2026_08/issues/plan_reconciler_findings_ui_2026_08_11.md`.
 - **2026-08-16 (slot 12, infra)**: Todo 2 done. Live-checked GCP Artifact Registry + AWS ECR scanning config: AR
   `vulnerabilityScanningConfig.enablementState=SCANNING_DISABLED` on `unified-trading-system`
   (`containerscanning.googleapis.com` not enabled project-wide, not flipped — not a trivial/in-scope change); ECR

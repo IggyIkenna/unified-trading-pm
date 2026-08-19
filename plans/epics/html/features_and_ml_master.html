@@ -1,0 +1,927 @@
+<!-- generated: 2026-08-19T00:00:00Z by /plan-reconcile features_and_ml_master -->
+<title>Feature-DAG Ledger</title>
+<style>
+  :root {
+    color-scheme: light dark;
+
+    /* -- light (default) -- */
+    --bg: #f3f4f0;
+    --bg-line: #e4e7de;
+    --surface: #ffffff;
+    --surface-2: #ecefe6;
+    --border: #d9ddd0;
+    --border-strong: #b7bfab;
+    --ink: #1b2119;
+    --ink-muted: #5c6555;
+    --ink-faint: #8b937f;
+    --amber: #a9642a;
+    --amber-soft: #f2e2cd;
+    --teal: #2c7a5f;
+    --teal-soft: #d9ebe2;
+    --indigo: #3f4d6b;
+    --indigo-soft: #e3e6ee;
+    --shadow: 0 1px 2px rgba(27, 33, 25, 0.06), 0 6px 20px rgba(27, 33, 25, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #12150f;
+      --bg-line: #191d14;
+      --surface: #191d15;
+      --surface-2: #20251b;
+      --border: #2c3325;
+      --border-strong: #3e4735;
+      --ink: #e9ece2;
+      --ink-muted: #a7af9a;
+      --ink-faint: #737b68;
+      --amber: #e0975a;
+      --amber-soft: #3a2c1c;
+      --teal: #5cbc9b;
+      --teal-soft: #1c352c;
+      --indigo: #97a4c9;
+      --indigo-soft: #232a3d;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #12150f;
+    --bg-line: #191d14;
+    --surface: #191d15;
+    --surface-2: #20251b;
+    --border: #2c3325;
+    --border-strong: #3e4735;
+    --ink: #e9ece2;
+    --ink-muted: #a7af9a;
+    --ink-faint: #737b68;
+    --amber: #e0975a;
+    --amber-soft: #3a2c1c;
+    --teal: #5cbc9b;
+    --teal-soft: #1c352c;
+    --indigo: #97a4c9;
+    --indigo-soft: #232a3d;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--bg);
+    background-image: linear-gradient(var(--bg-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--bg-line) 1px, transparent 1px);
+    background-size: 28px 28px;
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .mono {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .wrap {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 40px 24px 96px;
+  }
+
+  a {
+    color: var(--indigo);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-weight: 700;
+    margin: 0;
+  }
+
+  .eyebrow {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- masthead ---------- */
+
+  .masthead {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: 30px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .masthead::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--indigo), var(--teal) 55%, var(--amber));
+  }
+
+  .masthead-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  .masthead h1 {
+    font-size: clamp(28px, 4vw, 38px);
+    letter-spacing: -0.01em;
+    margin-top: 6px;
+  }
+
+  .dek {
+    max-width: 62ch;
+    color: var(--ink-muted);
+    margin-top: 10px;
+    font-size: 15.5px;
+  }
+
+  .stamp {
+    border: 1px solid var(--border-strong);
+    border-radius: 4px;
+    padding: 10px 14px;
+    text-align: right;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+
+  .stamp b {
+    color: var(--ink);
+    font-size: 12.5px;
+  }
+
+  .meta-row {
+    display: flex;
+    gap: 22px;
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    flex-wrap: wrap;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  .meta-row span b {
+    color: var(--ink);
+  }
+
+  /* ---------- section shell ---------- */
+
+  section {
+    margin-top: 40px;
+  }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .section-head .num {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    color: var(--ink-faint);
+    font-size: 13px;
+  }
+
+  .section-head h2 {
+    font-size: 19px;
+  }
+
+  .section-note {
+    color: var(--ink-muted);
+    font-size: 13.5px;
+    margin: -6px 0 16px;
+    max-width: 72ch;
+  }
+
+  /* ---------- stat strip ---------- */
+
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 12px;
+  }
+
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 14px;
+    box-shadow: var(--shadow);
+  }
+
+  .stat .n {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 30px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .stat .n.amber {
+    color: var(--amber);
+  }
+  .stat .n.teal {
+    color: var(--teal);
+  }
+  .stat .n.indigo {
+    color: var(--indigo);
+  }
+
+  .stat .l {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--ink-muted);
+    line-height: 1.35;
+  }
+
+  /* ---------- dag strip ---------- */
+
+  .dag {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    padding: 20px 16px 16px;
+    position: relative;
+  }
+
+  .dag-stage {
+    text-align: center;
+    padding: 0 8px;
+    position: relative;
+  }
+
+  .dag-stage:not(:first-child)::before {
+    content: "→";
+    position: absolute;
+    left: -2px;
+    top: 6px;
+    color: var(--border-strong);
+    font-size: 15px;
+  }
+
+  .dag-stage .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    margin: 0 auto 8px;
+  }
+
+  .dag-stage .t {
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  .dag-stage .s {
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 3px;
+  }
+
+  /* ---------- plan cards ---------- */
+
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 18px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .card-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .card-top a {
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--ink);
+    font-size: 14.5px;
+  }
+
+  .card-top a:hover {
+    text-decoration: underline;
+  }
+
+  .chip {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 10.5px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid var(--border-strong);
+    color: var(--ink-muted);
+  }
+
+  .chip.p0 {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: var(--amber-soft);
+  }
+  .chip.p1 {
+    border-color: var(--indigo);
+    color: var(--indigo);
+    background: var(--indigo-soft);
+  }
+
+  .bar {
+    display: flex;
+    height: 6px;
+    border-radius: 3px;
+    overflow: hidden;
+    background: var(--surface-2);
+  }
+
+  .bar .done {
+    background: var(--teal);
+  }
+  .bar .open {
+    background: var(--amber);
+  }
+
+  .card-counts {
+    display: flex;
+    justify-content: space-between;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  .card p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  .card .gate {
+    font-size: 12px;
+    background: var(--surface-2);
+    border-left: 2px solid var(--amber);
+    padding: 7px 10px;
+    color: var(--ink);
+    border-radius: 0 3px 3px 0;
+  }
+
+  /* ---------- tables ---------- */
+
+  .tbl-wrap {
+    overflow-x: auto;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+  }
+
+  th,
+  td {
+    text-align: left;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  th {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 10.5px;
+    color: var(--ink-faint);
+    background: var(--surface-2);
+    white-space: nowrap;
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  td code,
+  p code,
+  li code {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 0.92em;
+  }
+
+  /* ---------- lane table ---------- */
+
+  .lanes {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+
+  .lane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 18px;
+    box-shadow: var(--shadow);
+  }
+
+  .lane .name {
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--teal);
+    font-weight: 600;
+  }
+
+  .lane .trig {
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    margin: 6px 0 10px;
+  }
+
+  .lane .owns {
+    font-size: 12px;
+  }
+
+  .lane .owns code {
+    display: block;
+    margin-top: 4px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 4px 7px;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    width: fit-content;
+  }
+
+  /* ---------- prompt blocks ---------- */
+
+  .prompt {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+    margin-bottom: 14px;
+    overflow: hidden;
+  }
+
+  .prompt-head {
+    background: var(--surface-2);
+    padding: 8px 14px;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    color: var(--ink-muted);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .prompt pre {
+    margin: 0;
+    padding: 14px;
+    overflow-x: auto;
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11.5px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  /* ---------- notes ---------- */
+
+  .notes {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  .notes ul {
+    padding-left: 20px;
+  }
+
+  .notes li {
+    margin: 6px 0;
+  }
+
+  footer {
+    margin-top: 48px;
+    padding-top: 16px;
+    border-top: 1px dashed var(--border);
+    font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--ink-faint);
+  }
+
+  @media (max-width: 760px) {
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .dag {
+      grid-template-columns: 1fr;
+    }
+    .dag-stage:not(:first-child)::before {
+      content: "↓";
+      left: 50%;
+      top: -14px;
+    }
+    .cards,
+    .lanes {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .masthead,
+    .stat,
+    .card {
+      animation: rise 0.4s ease both;
+    }
+    @keyframes rise {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="masthead-top">
+      <div>
+        <div class="eyebrow">unified-trading-pm · epic ledger · L1 · P1</div>
+        <h1>Feature-DAG Ledger</h1>
+        <p class="dek">
+          The UAC feature-DAG → features-service writers → ml-training reader → ml-inference → strategy-consumption
+          chain — feature_group→required_inputs registry, no-lookahead gating, feature-data consolidation, and the
+          ML model lifecycle. Batch compute only (live compute lives in the live-pipeline plan).
+        </p>
+      </div>
+      <div class="stamp">
+        <div><b>features_and_ml_master</b></div>
+        <div>generated 2026-08-19</div>
+        <div>/plan-reconcile (epic-scoped)</div>
+      </div>
+    </div>
+    <div class="meta-row">
+      <span>epic doc: <b>plans/epics/features_and_ml_master.md</b></span>
+      <span>children: <b>4</b> (3 plans + 1 issue)</span>
+      <span>locked_by: <b>live-defi-rollout</b></span>
+      <span>assigned_vm: <b>vm-ml</b> (legacy id, retained on record)</span>
+    </div>
+  </header>
+
+  <section aria-label="headline stats">
+    <div class="section-head"><span class="num">01</span><h2>Headline</h2></div>
+    <p class="section-note">
+      Counts are the deduped, aggregator-excluded figures from <code>epic_report_data.py</code> — the same
+      methodology <code>/open-task-count</code> uses. Re-measured after this pass's fixes; unchanged (this run
+      touched reference paths, not checkboxes).
+    </p>
+    <div class="stats">
+      <div class="stat"><div class="n amber">8</div><div class="l">open todos<br />across 4 children</div></div>
+      <div class="stat"><div class="n teal">49</div><div class="l">done todos<br />hard-evidence flipped</div></div>
+      <div class="stat"><div class="n indigo">4</div><div class="l">children docs<br />3 plans + 1 issue</div></div>
+      <div class="stat">
+        <div class="n amber">0<span class="mono" style="font-size: 15px; color: var(--ink-faint)">/8</span></div>
+        <div class="l">open items currently<br />dispatchable — all 8 gated</div>
+      </div>
+      <div class="stat"><div class="n teal">7</div><div class="l">dangling refs<br />repointed this pass</div></div>
+    </div>
+  </section>
+
+  <section aria-label="pipeline stages">
+    <div class="section-head"><span class="num">02</span><h2>What this epic owns</h2></div>
+    <p class="section-note">
+      Context, not a live status readout — the epic's own five-phase execution DAG (phase order per
+      <code>plans/epics/features_and_ml_master.md</code>). Phases 1–2 are substantially shipped; Phase 4D
+      (strategy-service calibrated-signal consumption) is the one hard floor still open for live trading.
+    </p>
+    <div class="dag">
+      <div class="dag-stage">
+        <div class="dot" style="background: var(--teal)"></div>
+        <div class="t">1 · UAC + UTL</div>
+        <div class="s">feature-DAG SSOT</div>
+      </div>
+      <div class="dag-stage">
+        <div class="dot" style="background: var(--teal)"></div>
+        <div class="t">2 · Writers</div>
+        <div class="s">features-* + reader pre-join</div>
+      </div>
+      <div class="dag-stage">
+        <div class="dot" style="background: var(--amber)"></div>
+        <div class="t">3 · Read perf</div>
+        <div class="s">row-group + DuckDB joins</div>
+      </div>
+      <div class="dag-stage">
+        <div class="dot" style="background: var(--amber)"></div>
+        <div class="t">4 · ML lifecycle</div>
+        <div class="s">calibration → strategy</div>
+      </div>
+      <div class="dag-stage">
+        <div class="dot" style="background: var(--ink-faint)"></div>
+        <div class="t">5 · Phantom audit</div>
+        <div class="s">sanity replay</div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="plan by plan breakdown">
+    <div class="section-head"><span class="num">03</span><h2>Children, one card each</h2></div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-top">
+          <a href="https://github.com/IggyIkenna/unified-trading-pm/blob/live-defi-rollout/plans/active/features_service_e2e_pipeline_test_2026_05_26.md" target="_blank" rel="noopener">features_service_e2e_pipeline_test</a>
+          <span class="chip p0">P0</span>
+        </div>
+        <div class="bar"><div class="done" style="flex: 44"></div><div class="open" style="flex: 1"></div></div>
+        <div class="card-counts"><span>44 done</span><span>1 open</span></div>
+        <p>
+          Real-GCS e2e harness (read → calculate → write → read-back) proven across delta_one, volatility,
+          cross_instrument and multi_timeframe; the WRITE-blocker + timeframe-coverage bugs it found are all fixed.
+        </p>
+        <div class="gate">
+          Last open item: <code>usdc_idle_yield_apy_bps</code> wiring — gated on features-onchain shipping
+          <code>venue_funding_yield</code> (re-grepped this pass: still 0 hits in features-service).
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-top">
+          <a href="https://github.com/IggyIkenna/unified-trading-pm/blob/live-defi-rollout/plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md" target="_blank" rel="noopener">bigquery_feature_ml_compute_engine_option</a>
+          <span class="chip">P2</span>
+        </div>
+        <div class="bar"><div class="done" style="flex: 2"></div><div class="open" style="flex: 5"></div></div>
+        <div class="card-counts"><span>2 done</span><span>5 open</span></div>
+        <p>
+          Optional third compute-engine tier (in-process polars → DuckDB → BigQuery) over the hive-partitioned GCS
+          corpus. Engine-selection doc + Terraform external tables already shipped.
+        </p>
+        <div class="gate">
+          All 5 open items gated on 3 unresolved operator design questions (feature-SQL scope, BQML-vs-feature-store,
+          sequencing behind the canonical-v9 migration) — reaffirmed KEEP-NA by na-eligibility-audit four times since
+          2026-07-30.
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-top">
+          <a href="https://github.com/IggyIkenna/unified-trading-pm/blob/live-defi-rollout/plans/active/colocated_feature_pipeline_in_memory_handoff_2026_06_21.md" target="_blank" rel="noopener">colocated_feature_pipeline_in_memory_handoff</a>
+          <span class="chip">P3</span>
+        </div>
+        <div class="bar"><div class="done" style="flex: 3"></div><div class="open" style="flex: 1"></div></div>
+        <div class="card-counts"><span>3 done</span><span>1 open</span></div>
+        <p>
+          In-memory DAG handoff, one-parquet-per-(day,fg,tf) consolidation, and basedpyright-strictness restore — 3
+          of 4 items shipped via the cross-cutting satellite batch.
+        </p>
+        <div class="gate">
+          Last open item: 1.5b column pruning — gated on <code>features_service_e2e_pipeline_test</code> reaching a
+          fully-closed end-to-end-green state (it isn't yet — see card at left, still 1 open).
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-top">
+          <a href="https://github.com/IggyIkenna/unified-trading-pm/blob/live-defi-rollout/plans/active/issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md" target="_blank" rel="noopener">onchain_staking_apy_bps_single_day_annualization_noise</a>
+          <span class="chip p1">P1</span>
+        </div>
+        <div class="bar"><div class="done" style="flex: 0"></div><div class="open" style="flex: 1"></div></div>
+        <div class="card-counts"><span>0 done</span><span>1 open</span></div>
+        <p>
+          <code>staking_apy_bps</code>'s single-day-delta annualization amplifies routine LST exchange-rate noise —
+          5/60 sampled rows negative (down to −3453 bps). <code>CARRY_STAKED_BASIS</code> consumes it raw.
+        </p>
+        <div class="gate">
+          One open item: pick + implement a fix (widen lookback / rolling-window fit / clamp+flag) — an explicit
+          quant-math methodology call, not a data-pipeline bug.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="on the operators desk">
+    <div class="section-head"><span class="num">04</span><h2>On the operator's desk</h2></div>
+    <p class="section-note">
+      No line here carries a formal <code>[OPERATOR]</code> checkbox tag, but every one of this epic's 8 open items
+      resolves to one of these four gates — which is why the headline tile above reads 0/8 dispatchable.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Item</th><th>Gated on</th><th>Doc</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>3 BigQuery design questions (feature-SQL scope, BQML-vs-feature-store, sequencing)</td>
+            <td>~30 min operator decision</td>
+            <td><code>bigquery_feature_ml_compute_engine_option_2026_06_08.md</code></td>
+          </tr>
+          <tr>
+            <td><code>staking_apy_bps</code> annualization-noise fix</td>
+            <td>quant-math methodology call</td>
+            <td><code>onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md</code></td>
+          </tr>
+          <tr>
+            <td>1.5b column pruning</td>
+            <td><code>features_service_e2e_pipeline_test</code> reaching fully-closed green</td>
+            <td><code>colocated_feature_pipeline_in_memory_handoff_2026_06_21.md</code></td>
+          </tr>
+          <tr>
+            <td><code>usdc_idle_yield_apy_bps</code> wiring</td>
+            <td>features-onchain shipping <code>venue_funding_yield</code> (not yet — confirmed live this pass)</td>
+            <td><code>features_service_e2e_pipeline_test_2026_05_26.md</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-label="closed out this pass">
+    <div class="section-head"><span class="num">05</span><h2>Closed out this pass</h2></div>
+    <p class="section-note">
+      Zero checkbox flips — every open item is genuinely still open (verified above). What this pass found and
+      fixed instead: 7 dangling references across 3 docs, all in the "target moved to archive, referrer never
+      updated" class. None were caught by the standing hygiene gate — it runs
+      <code>check_reference_paths.py --quiet</code>, which suppresses the itemized list, and the shrinking-ratchet
+      baseline already carries enough slack to absorb a handful of new dangling refs unnoticed.
+    </p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>Doc</th><th>Reference</th><th>Fix</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td rowspan="5"><code>plans/epics/features_and_ml_master.md</code></td>
+            <td><code>related:</code> → features_service_qg_cleanup_2026_05_11</td>
+            <td>repointed <code>../active/</code> → <code>../archive/2026_05/</code></td>
+          </tr>
+          <tr>
+            <td><code>related:</code> → ml_repo_consolidation_2026_05_19</td>
+            <td>repointed <code>../active/</code> → <code>../archive/2026_05/</code></td>
+          </tr>
+          <tr>
+            <td><code>related:</code> → regime_clustering_structure_allocator_2026_05_29</td>
+            <td>repointed <code>../active/</code> → <code>../archive/2026_06/</code></td>
+          </tr>
+          <tr>
+            <td>body link → writegate_honest_coverage_endtoend_2026_05_06</td>
+            <td>repointed <code>../active/</code> → <code>../archive/2026_05/</code> (Phase 2.D citation)</td>
+          </tr>
+          <tr>
+            <td>Sub-plans blurb → ml_repo_consolidation + strategy_repo_consolidation</td>
+            <td>repointed to <code>../archive/2026_05/</code>, marked <b>✅ DONE</b> (both <code>status: complete</code>,
+              source repos <code>gh repo archive</code>d) — was read as still in-progress ("Pre-cutover race")</td>
+          </tr>
+          <tr>
+            <td><code>plans/epics/strategy_and_dart_master_SUPERSEDED_2026_05_21.md</code></td>
+            <td>sibling mention → ml_repo_consolidation_2026_05_19</td>
+            <td>repointed to <code>../archive/2026_05/</code> (found while tracing the fix above)</td>
+          </tr>
+          <tr>
+            <td><code>plans/active/features_service_e2e_pipeline_test_2026_05_26.md</code></td>
+            <td><code>related:</code> → features_input_manifest_migration + cefi_processed_candles_manifest_file_disconnect</td>
+            <td>repointed both to their archive locations (<code>2026_06/</code> and <code>archive/issues/</code>)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section aria-label="parallel lanes">
+    <div class="section-head"><span class="num">06</span><h2>Parallel-tab flow for what's left</h2></div>
+    <p class="section-note">
+      Full parallelism isn't available today — all 8 open items are gated (§04), so there are 0 lanes a worker can
+      start on right now without an answer landing first. Below is the split for the moment each gate clears; the
+      other two gated items (1.5b, the yield-stub wiring) stay externally blocked either way and aren't lane-
+      assignable yet.
+    </p>
+    <div class="lanes">
+      <div class="lane">
+        <div class="name">LANE A — once the 3 BQ questions are answered</div>
+        <div class="trig">Trigger: operator picks feature-SQL scope / BQML-vs-feature-store / sequencing.</div>
+        <div class="owns">Owns:<code>plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md</code></div>
+      </div>
+      <div class="lane">
+        <div class="name">LANE B — once an annualization methodology is picked</div>
+        <div class="trig">Trigger: quant_dev picks widen-lookback / rolling-fit / clamp+flag.</div>
+        <div class="owns">
+          Owns:<code>features-service/features_service/onchain/engine/lst_features.py</code>
+          <code>plans/active/issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md</code>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section aria-label="dispatch prompts">
+    <div class="section-head"><span class="num">07</span><h2>Dispatch prompts</h2></div>
+    <p class="section-note">
+      Copy-paste once the corresponding gate in §06 clears. Each carries the sub-agent mandatory-rules floor and the
+      workspace's standard "implement + verify QG genuinely green, don't ship without asking" discipline.
+    </p>
+    <div class="prompt">
+      <div class="prompt-head">LANE A — bigquery_feature_ml_compute_engine_option_2026_06_08.md</div>
+      <pre>Paste and follow, in full, cursor-configs/SUB_AGENT_MANDATORY_RULES.md (unified-trading-pm) as your
+governing rules for this task.
+
+The operator has now answered the 3 open design questions in
+plans/active/bigquery_feature_ml_compute_engine_option_2026_06_08.md ("Open questions (operator)" section).
+Read that doc in full, apply the ruling to the 5 open todos (Feature compute on BQ / ML path / Output back
+to canonical GCS / Cost guardrails / Benchmark), and implement the ones the ruling unblocks. Repos:
+deployment-service, ml-service, unified-trading-pm. Implement + verify quality-gates.sh genuinely green in
+each touched repo. Do not ship (quickmerge/commit) without asking — report back for review first.</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-head">LANE B — onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md</div>
+      <pre>Paste and follow, in full, cursor-configs/SUB_AGENT_MANDATORY_RULES.md (unified-trading-pm) as your
+governing rules for this task.
+
+A quant_dev has picked the annualization-noise fix approach for staking_apy_bps in
+plans/active/issues/onchain_staking_apy_bps_single_day_annualization_noise_2026_08_09.md (widen lookback /
+rolling-window fit / clamp+flag — see that doc's todo 2 for the chosen option). Implement it in
+features-service/features_service/onchain/engine/lst_features.py, add regression coverage against the
+5 negative / 2 >+5000bps rows already on record in the issue doc, and verify features-service
+quality-gates.sh is genuinely green. Do not ship without asking — report back for review first.</pre>
+    </div>
+  </section>
+
+  <section aria-label="notes and methodology">
+    <div class="section-head"><span class="num">08</span><h2>Notes &amp; methodology</h2></div>
+    <div class="notes">
+      <ul>
+        <li>
+          Corpus baseline: exactly 4 docs carry <code>parent_epic: features_and_ml_master</code> in frontmatter
+          (<code>rg "^parent_epic: features_and_ml_master$" plans/active/*.md plans/active/issues/*.md</code>),
+          cross-checked against <code>epic_report_data.py --epic features_and_ml_master --json</code> — both agree.
+          This is a genuinely small, historically-stable epic; no hunter sub-agents were needed for this pass.
+        </li>
+        <li>
+          Open/done counts follow <code>count_open_tasks.py</code>'s dedup methodology (aggregator-plan exclusion) —
+          same numbers <code>/open-task-count</code> would report for this epic's slice.
+        </li>
+        <li>
+          <code>assigned_vm: vm-ml</code> on the epic hub is a retained legacy value, not stale drift — an
+          on-the-record 2026-08-10 ruling (documented inline in the epic's own frontmatter) keeps legacy
+          <code>vm-&lt;id&gt;</code> epic values workspace-wide rather than migrating them.
+        </li>
+        <li>
+          <code>plans/active/features_service_e2e_pipeline_test_2026_05_26.md</code> sits at ~822 lines — over the
+          500-line soft cap, under the 1000-line hard cap. Informational only; not a split finding.
+        </li>
+        <li>
+          Phase −1 (reconcile this skill's own prior findings first): no existing
+          <code>plan_reconciler_findings_*.md</code> doc names this epic — checked via corpus-wide grep before this
+          pass began, nothing to reconcile.
+        </li>
+        <li>Zero contradictions, zero false-unchecked checkboxes, zero AO-dispatch-readiness defects found in this
+          epic's 8 open todos (all <code>assigned_vm: NA</code> — none are AO-dispatched, and all already carry
+          repeated na-eligibility-audit KEEP-NA verdicts on record).</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>plan-reconcile · features_and_ml_master · epic-scoped run · 2026-08-19</footer>
+</div>

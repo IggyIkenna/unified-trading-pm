@@ -136,3 +136,7 @@ this file cleanly (`git checkout --`, verified clean, 1000L).
   (2 hunks) — SINGLE_TODO_FLIP requires `HUNK_COUNT=1`, so a combined diff qualifies for neither carve-out even
   though each half alone does. Item 2 (confirm `>=` vs `>` with the script owner) can very likely close now citing
   this live proof — recommend the owner do that rather than reopening it as a fresh design question.
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid.** Sole open todo
+  (split `data_completion_tradfi_2026_07_15.md`) remains real content-judgment work — how to divide 1000L+ of dense
+  tradfi history — explicitly out of scope for an incidental audit-run fix per this doc's own "What was NOT done"
+  section (better suited to a dedicated `/plan-reconcile` or manual split pass). `assigned_vm` unchanged.

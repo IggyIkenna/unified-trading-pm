@@ -134,7 +134,7 @@ Execution-service routes per `decompose(mode)`:
 ## Reconciliation
 
 > **SHIPPED 2026-05-27 (was DESIGN-ONLY DEFERRED 2026-05-12 per slot 8 audit PB-5; un-deferred per BLRS audit
-> `plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: 3-way reconciliation (batch ↔ paper ↔
+> `plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md`)**: 3-way reconciliation (batch ↔ paper ↔
 > live) is **implemented today**. The `batch-live-reconciliation-service` stage DAG ships `stage0_config_pull` +
 > `stage0_manifest_reason_check` + `stage0_data_pipeline_recon` + `stage1_ml_recon` + `stage2_strategy_recon` +
 > `stage3_execution_recon` + **`stage3b_paper_live_recon`** + **`stage3c_batch_paper_recon`** +

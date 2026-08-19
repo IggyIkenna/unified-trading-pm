@@ -44,6 +44,11 @@ depends_on: []
 archive_exempt: true # na-eligibility-audit 2026-08-16: this run's edit dropped every open checkbox (extraction citation / stale-item close) -- 0-open-todos state is intentional, archival deferred to a separate follow-on pass per the sanctioned flip-then-mv two-commit pattern (scripts/plan-hygiene/check_archive_candidates.sh).
 ---
 
+> **✅ ARCHIVED 2026-08-18 (plan_reconciler)** — 0 genuinely open items: the sole todo is CANCELLED/extracted to
+> `defi_satellite_ao_dispatch_batch14_2026_08_16.md` (confirmed live), and the remaining lines are audit-trail
+> entries, not open work. `archive_exempt: true` here was a "not yet archived" bridge marker, not a genuine
+> standing-reference-hub exemption — this run executes the deferred archival pass.
+
 # DeFi dex_pool density drop — pool-level follow-up
 
 ## What I found

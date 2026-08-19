@@ -1,0 +1,1297 @@
+<!-- generated: 2026-08-19T00:00:00Z by /plan-reconcile system_readiness_master -->
+<title>Readiness Gate Board</title>
+<style>
+  :root {
+    --bg: #eef1f4;
+    --bg-alt: #e4e9ee;
+    --surface: #ffffff;
+    --surface-2: #f6f8fa;
+    --ink: #121821;
+    --ink-muted: #4c5a6b;
+    --ink-faint: #7c8a9a;
+    --border: #d6dde5;
+    --border-strong: #b9c4cf;
+
+    --accent: #a56a1f;
+    --accent-ink: #4a3009;
+    --accent-soft: #f3e3cc;
+
+    --ok: #1c7a52;
+    --ok-soft: #dcf0e6;
+    --warn: #b8650f;
+    --warn-soft: #f7e6d2;
+    --critical: #a3271f;
+    --critical-soft: #f6dcda;
+    --unverified: #5f5480;
+    --unverified-soft: #e7e3f2;
+
+    --font-mono:
+      ui-monospace, "SFMono-Regular", "Berkeley Mono", "Cascadia Mono", Menlo, Consolas, "Liberation Mono",
+      monospace;
+    --font-body:
+      -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+    --radius: 3px;
+    --shadow-card: 0 1px 2px rgba(18, 24, 33, 0.06), 0 1px 1px rgba(18, 24, 33, 0.04);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0f1319;
+      --bg-alt: #141a22;
+      --surface: #171e27;
+      --surface-2: #1c242f;
+      --ink: #e7ecf2;
+      --ink-muted: #a3b0c0;
+      --ink-faint: #6d7a8b;
+      --border: #2a3441;
+      --border-strong: #3b4859;
+
+      --accent: #dda13c;
+      --accent-ink: #241703;
+      --accent-soft: #3a2c11;
+
+      --ok: #35b880;
+      --ok-soft: #113527;
+      --warn: #e2952e;
+      --warn-soft: #3a2a10;
+      --critical: #ef6a5f;
+      --critical-soft: #3a1815;
+      --unverified: #b1a1e8;
+      --unverified-soft: #251f3d;
+
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(0, 0, 0, 0.25);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0f1319;
+    --bg-alt: #141a22;
+    --surface: #171e27;
+    --surface-2: #1c242f;
+    --ink: #e7ecf2;
+    --ink-muted: #a3b0c0;
+    --ink-faint: #6d7a8b;
+    --border: #2a3441;
+    --border-strong: #3b4859;
+
+    --accent: #dda13c;
+    --accent-ink: #241703;
+    --accent-soft: #3a2c11;
+
+    --ok: #35b880;
+    --ok-soft: #113527;
+    --warn: #e2952e;
+    --warn-soft: #3a2a10;
+    --critical: #ef6a5f;
+    --critical-soft: #3a1815;
+    --unverified: #b1a1e8;
+    --unverified-soft: #251f3d;
+
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.35), 0 1px 1px rgba(0, 0, 0, 0.25);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  code,
+  .mono {
+    font-family: var(--font-mono);
+  }
+
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 600;
+  }
+
+  /* ── Masthead ─────────────────────────────────────────────────────── */
+
+  .masthead {
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(180deg, var(--bg-alt), var(--bg) 70%);
+    padding: 40px 0 30px;
+  }
+
+  .masthead .wrap {
+    padding-bottom: 0;
+  }
+
+  .masthead-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .beacon {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ok);
+    box-shadow: 0 0 0 3px var(--ok-soft);
+    flex: none;
+  }
+
+  h1 {
+    font-family: var(--font-mono);
+    font-weight: 700;
+    font-size: clamp(28px, 4vw, 40px);
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+    text-wrap: balance;
+  }
+
+  .dek {
+    max-width: 62ch;
+    color: var(--ink-muted);
+    font-size: 16px;
+    margin: 0 0 18px;
+  }
+
+  .masthead-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 20px;
+    font-family: var(--font-mono);
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .masthead-meta strong {
+    color: var(--ink-muted);
+    font-weight: 600;
+  }
+
+  /* ── Scope chips ──────────────────────────────────────────────────── */
+
+  .scope-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 22px 0 0;
+  }
+
+  @media (max-width: 720px) {
+    .scope-row {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .scope-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    padding: 14px 16px;
+  }
+
+  .scope-card.in {
+    border-left: 3px solid var(--ok);
+  }
+
+  .scope-card.out {
+    border-left: 3px solid var(--ink-faint);
+  }
+
+  .scope-card .eyebrow {
+    margin-bottom: 8px;
+  }
+
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    border: 1px solid var(--border-strong);
+    color: var(--ink-muted);
+    background: var(--surface-2);
+  }
+
+  /* ── Section shell ────────────────────────────────────────────────── */
+
+  section {
+    padding-top: 44px;
+  }
+
+  section > .eyebrow {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  h2 {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 6px;
+    text-wrap: balance;
+  }
+
+  .section-sub {
+    color: var(--ink-muted);
+    font-size: 13.5px;
+    margin: 0 0 20px;
+    max-width: 70ch;
+  }
+
+  /* ── Stat strip ───────────────────────────────────────────────────── */
+
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  @media (max-width: 900px) {
+    .stat-strip {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  .stat-tile {
+    background: var(--surface);
+    padding: 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .stat-num {
+    font-family: var(--font-mono);
+    font-size: 30px;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .stat-num.ok {
+    color: var(--ok);
+  }
+  .stat-num.warn {
+    color: var(--warn);
+  }
+  .stat-num.accent {
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  /* ── Plan cards ───────────────────────────────────────────────────── */
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 820px) {
+    .card-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .plan-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border-strong);
+    border-radius: var(--radius);
+    padding: 15px 16px;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
+
+  .plan-card.gated {
+    border-left-color: var(--unverified);
+  }
+  .plan-card.stopship {
+    border-left-color: var(--critical);
+  }
+  .plan-card.open {
+    border-left-color: var(--warn);
+  }
+  .plan-card.na {
+    border-left-color: var(--ink-faint);
+  }
+
+  .plan-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .plan-title {
+    font-weight: 700;
+    font-size: 14.5px;
+    line-height: 1.35;
+  }
+
+  .plan-path {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-top: 3px;
+    word-break: break-all;
+  }
+
+  .tag {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    padding: 2px 7px;
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+
+  .tag.stopship {
+    background: var(--critical-soft);
+    color: var(--critical);
+  }
+  .tag.gated {
+    background: var(--unverified-soft);
+    color: var(--unverified);
+  }
+  .tag.na {
+    background: var(--surface-2);
+    color: var(--ink-faint);
+    border: 1px solid var(--border-strong);
+  }
+  .tag.ao {
+    background: var(--ok-soft);
+    color: var(--ok);
+  }
+
+  .plan-desc {
+    font-size: 13px;
+    color: var(--ink-muted);
+    margin: 0;
+  }
+
+  .bar-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+  }
+
+  .bar {
+    flex: 1;
+    height: 6px;
+    border-radius: 3px;
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    overflow: hidden;
+    display: flex;
+  }
+
+  .bar-done {
+    background: var(--ok);
+    height: 100%;
+  }
+  .bar-open {
+    background: var(--warn);
+    height: 100%;
+  }
+
+  .op-quote {
+    font-size: 12px;
+    background: var(--surface-2);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 8px 10px;
+    color: var(--ink-muted);
+  }
+
+  .op-quote b {
+    color: var(--ink);
+  }
+
+  /* ── Desk table ───────────────────────────────────────────────────── */
+
+  .table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 13px;
+    min-width: 560px;
+  }
+
+  th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--surface-2);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--ink);
+  }
+
+  tr:last-child td {
+    border-bottom: none;
+  }
+
+  td.mono-cell {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+    white-space: nowrap;
+  }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+  }
+
+  .pill.p0 {
+    background: var(--critical-soft);
+    color: var(--critical);
+  }
+
+  /* ── Scoping / closed-out lists ───────────────────────────────────── */
+
+  .note-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .note-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+    font-size: 13px;
+    display: flex;
+    gap: 10px;
+  }
+
+  .note-item .mk {
+    flex: none;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    padding-top: 2px;
+  }
+
+  .note-item p {
+    margin: 0;
+    color: var(--ink-muted);
+  }
+
+  .note-item code {
+    background: var(--surface-2);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-size: 12px;
+  }
+
+  .closed-item {
+    border-left: 3px solid var(--ok);
+  }
+  .scope-item {
+    border-left: 3px solid var(--unverified);
+  }
+
+  /* ── Lane board ───────────────────────────────────────────────────── */
+
+  .lane-board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .lane-board {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .lane {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .lane-head {
+    background: var(--accent-soft);
+    color: var(--accent-ink);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    padding: 9px 12px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .lane-body {
+    padding: 12px;
+    font-size: 12.5px;
+    color: var(--ink-muted);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .lane-file {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink);
+    background: var(--surface-2);
+    padding: 5px 8px;
+    border-radius: 3px;
+    word-break: break-all;
+  }
+
+  .lane-queue {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+
+  @media (max-width: 900px) {
+    .lane-queue {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .lane-queue .lane .lane-head {
+    background: var(--surface-2);
+    color: var(--ink-faint);
+  }
+
+  .lane-other {
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--ink-muted);
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 12px 14px;
+  }
+
+  /* ── Dispatch prompts ─────────────────────────────────────────────── */
+
+  .prompt-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .prompt-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+  }
+
+  .prompt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 9px 14px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink-muted);
+  }
+
+  .prompt-head .dot {
+    display: inline-flex;
+    gap: 5px;
+    margin-right: 10px;
+  }
+
+  .prompt-head .dot span {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--border-strong);
+  }
+
+  pre.prompt-body {
+    margin: 0;
+    padding: 14px 16px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--ink);
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  pre.prompt-body .k {
+    color: var(--accent);
+  }
+
+  /* ── Notes / methodology ──────────────────────────────────────────── */
+
+  .methodology {
+    font-size: 13px;
+    color: var(--ink-muted);
+  }
+
+  .methodology ul {
+    padding-left: 18px;
+    margin: 10px 0;
+  }
+
+  .methodology li {
+    margin-bottom: 6px;
+  }
+
+  footer {
+    margin-top: 64px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    font-family: var(--font-mono);
+    font-size: 11.5px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+
+<div class="masthead">
+  <div class="wrap">
+    <div class="masthead-eyebrow">
+      <span class="beacon" aria-hidden="true"></span>
+      <span class="eyebrow">system_readiness_master &middot; L4 epic &middot; P0</span>
+    </div>
+    <h1>Readiness Gate Board</h1>
+    <p class="dek">
+      Every venue with a code path carries a derived batch / paper / live state across six services — this board
+      tracks the epic's own corpus of plans and issues toward that target, not the venue readiness numbers
+      themselves. Generated 2026-08-19 by <code>/plan-reconcile system_readiness_master</code>.
+    </p>
+    <div class="masthead-meta">
+      <span><strong>Target completion</strong> 2026-08-25</span>
+      <span><strong>Owner</strong> Ikenna</span>
+      <span><strong>Child docs</strong> 11 (10 plans + 1 issue)</span>
+      <span><strong>Parent</strong> master_to_live_defi_2026_05_23</span>
+    </div>
+
+    <div class="scope-row">
+      <div class="scope-card in">
+        <div class="eyebrow">In scope this pass</div>
+        <div class="chip-row">
+          <span class="chip">batch / paper / testnet</span>
+          <span class="chip">readiness derivation</span>
+          <span class="chip">honest coverage</span>
+          <span class="chip">strategy scaffolding</span>
+          <span class="chip">reconciliation</span>
+          <span class="chip">security</span>
+          <span class="chip">client artefacts</span>
+        </div>
+      </div>
+      <div class="scope-card out">
+        <div class="eyebrow">Deliberately excluded</div>
+        <div class="chip-row">
+          <span class="chip">going live with capital</span>
+          <span class="chip">AO orchestration (own umbrella)</span>
+          <span class="chip">CI/CD (own umbrella)</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+  <section id="stats">
+    <span class="eyebrow">Board state</span>
+    <h2>Headline numbers</h2>
+    <p class="section-sub">
+      Deduped, aggregator-excluded — same methodology as <code>/open-task-count</code>. Measured live this run via
+      <code>epic_report_data.py --epic system_readiness_master</code>.
+    </p>
+    <div class="stat-strip">
+      <div class="stat-tile">
+        <div class="stat-num warn tabular">68</div>
+        <div class="stat-label">open todos</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num ok tabular">47</div>
+        <div class="stat-label">done todos</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num accent tabular">3</div>
+        <div class="stat-label">operator-gated</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num tabular">11</div>
+        <div class="stat-label">child docs (10 plan + 1 issue)</div>
+      </div>
+      <div class="stat-tile">
+        <div class="stat-num ok tabular">7</div>
+        <div class="stat-label">fixed this pass</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="plans">
+    <span class="eyebrow">Corpus</span>
+    <h2>Plan-by-plan breakdown</h2>
+    <p class="section-sub">
+      Every doc with <code>parent_epic: system_readiness_master</code> in frontmatter — the docspec-aligned
+      definition, not a filename-substring inventory. Zero are aggregator plans.
+    </p>
+    <div class="card-grid">
+      <div class="plan-card stopship">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation — the four sibling documents</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_siblings_2026_08_18.md</div>
+          </div>
+          <span class="tag stopship">P0 stop-ship</span>
+        </div>
+        <p class="plan-desc">
+          Ungated — banned client name (6 live hits, re-verified this pass), performance figures, invented strategy
+          family, a false present-tense capability claim. Do not send these documents while open.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">0/6</span>
+          <span class="bar"><span class="bar-open" style="width: 100%"></span></span>
+          <span>6 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card open">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation — Elysium walkthrough</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_elysium_2026_08_18.md</div>
+          </div>
+          <span class="tag ao">AO planning</span>
+        </div>
+        <p class="plan-desc">
+          Owns <code>strategy-service-walkthrough.html</code> exclusively. 9 accuracy fixes already shipped; capital-budget
+          softening, manual-movement verification and 8 disclosure additions remain.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">12/25</span>
+          <span class="bar"><span class="bar-done" style="width: 48%"></span><span class="bar-open" style="width: 52%"></span></span>
+          <span>13 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card open">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation — Nick AI walkthrough</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_nickai_2026_08_18.md</div>
+          </div>
+          <span class="tag ao">AO planning</span>
+        </div>
+        <p class="plan-desc">
+          Owns <code>platform-external-api-walkthrough.html</code> exclusively. 9 accuracy fixes + 7 absent-capability
+          sections shipped; 4 thin sections, owner marks and 2 audits remain.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">12/16</span>
+          <span class="bar"><span class="bar-done" style="width: 75%"></span><span class="bar-open" style="width: 25%"></span></span>
+          <span>4 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation — spec + tooling parent</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_2026_08_18.md</div>
+          </div>
+          <span class="tag ao">AO planning</span>
+        </div>
+        <p class="plan-desc">
+          Fully done (0 open) — evidence-tier spec, owner-mark spec, disclosure checker and enum-drift checker all
+          shipped and wired into the hygiene sweep. Correctly not archived yet: its gated finalize companion still
+          has open reconciliation work.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">7/7</span>
+          <span class="bar"><span class="bar-done" style="width: 100%"></span></span>
+          <span>0 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card gated">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation — finalize</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_finalize_2026_08_18.md</div>
+          </div>
+          <span class="tag gated">gated</span>
+        </div>
+        <p class="plan-desc">
+          Reconciles evidence into the audit report, re-checks the "real system gaps" list, archives the parent.
+          Gated on the parent plan (done) — queued, not yet started.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">0/3</span>
+          <span class="bar"><span class="bar-open" style="width: 100%"></span></span>
+          <span>3 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card gated">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation (Elysium) — finalize</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_elysium_finalize_2026_08_18.md</div>
+          </div>
+          <span class="tag gated">gated</span>
+        </div>
+        <p class="plan-desc">
+          Verifies edits against the live HTML, confirms zero <code>live</code> badges remain, reconciles finding
+          status, archives the Elysium child. Gated on that child completing.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">0/4</span>
+          <span class="bar"><span class="bar-open" style="width: 100%"></span></span>
+          <span>4 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card gated">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation (Nick AI) — finalize</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_nickai_finalize_2026_08_18.md</div>
+          </div>
+          <span class="tag gated">gated</span>
+        </div>
+        <p class="plan-desc">
+          Verifies the TRADE-only-live / 10-of-11-501 framing lands plainly, confirms the forward claim is gone,
+          reconciles findings, archives the Nick AI child. Gated on that child completing.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">0/5</span>
+          <span class="bar"><span class="bar-open" style="width: 100%"></span></span>
+          <span>5 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card gated">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Client artefact remediation (siblings) — finalize</div>
+            <div class="plan-path">plans/active/client_artefact_remediation_siblings_finalize_2026_08_18.md</div>
+          </div>
+          <span class="tag gated">gated</span>
+        </div>
+        <p class="plan-desc">
+          Re-runs the banned-term sweep across all six artefacts, verifies fixes, archives the siblings child. Gated
+          on that child completing.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">0/3</span>
+          <span class="bar"><span class="bar-open" style="width: 100%"></span></span>
+          <span>3 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card na">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Data pipeline completion — BATCH/PAPER/LIVE gate register</div>
+            <div class="plan-path">plans/active/data_pipeline_completion_2026_08_21.md</div>
+          </div>
+          <span class="tag na">NA · local</span>
+        </div>
+        <p class="plan-desc">
+          53 gates (B1–B26, P1–P13, L1–L14), all cross-linked to an owning doc or explicitly unowned. Friday-target
+          table (2026-08-18) found the residual is NOT B8-only — two fresh registry-gap todos filed this week.
+        </p>
+        <div class="op-quote"><b>[OPERATOR]</b> Sign off B20's shard-name orthogonality.</div>
+        <div class="bar-row">
+          <span class="tabular">14/21</span>
+          <span class="bar"><span class="bar-done" style="width: 67%"></span><span class="bar-open" style="width: 33%"></span></span>
+          <span>7 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card na">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Instruments catalogue — definitions + field history</div>
+            <div class="plan-path">plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md</div>
+          </div>
+          <span class="tag na">NA · local</span>
+        </div>
+        <p class="plan-desc">
+          Roll-up catalogue is EMPTY in all 4 asset groups — a build, not a fix. Proposed current-state + narrow
+          change-log design awaits ratification; 6 of 9 open items are directly gated on that decision.
+        </p>
+        <div class="op-quote"><b>[OPERATOR]</b> Ratify or replace this design.</div>
+        <div class="bar-row">
+          <span class="tabular">2/11</span>
+          <span class="bar"><span class="bar-done" style="width: 18%"></span><span class="bar-open" style="width: 82%"></span></span>
+          <span>9 open</span>
+        </div>
+      </div>
+
+      <div class="plan-card na">
+        <div class="plan-card-head">
+          <div>
+            <div class="plan-title">Generic price-sensitivity contract for execution-side repricing</div>
+            <div class="plan-path">plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md</div>
+          </div>
+          <span class="tag na">NA · issue</span>
+        </div>
+        <p class="plan-desc">
+          Real, unwired <code>DeltaProxyRepricer</code> infra spanning 3 execution-service layers. 11 judgment calls
+          for the operator (1 resolved); nothing in the 12-item todo list has been built yet.
+        </p>
+        <div class="bar-row">
+          <span class="tabular">0/14</span>
+          <span class="bar"><span class="bar-open" style="width: 100%"></span></span>
+          <span>14 open</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="desk">
+    <span class="eyebrow">Blocked on a human</span>
+    <h2>On the operator's desk</h2>
+    <p class="section-sub">3 open items, unchanged by this pass — none are new; all were already correctly tagged.</p>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Doc</th>
+            <th>Gated on</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="pill p0">P0</span>&nbsp; Sign off B20's shard-name orthogonality</td>
+            <td class="mono-cell">data_pipeline_completion</td>
+            <td>Human judgment — explicitly not delegable to a checker.</td>
+          </tr>
+          <tr>
+            <td><span class="pill p0">P0</span>&nbsp; Review and ratify the PAPER/LIVE gate sets + 12 <code>+ADDED</code> BATCH gates</td>
+            <td class="mono-cell">data_pipeline_completion</td>
+            <td>Drafted, not ruled — 53 gates need an operator read before they bind.</td>
+          </tr>
+          <tr>
+            <td><span class="pill p0">P0</span>&nbsp; Ratify or replace the catalogue history-log design</td>
+            <td class="mono-cell">instruments_catalogue</td>
+            <td>Choice among 3 mechanisms (change-log / monthly-only / full-row versioning) — the requirement is the operator's, the mechanism is a proposal.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="scoping">
+    <span class="eyebrow">Surfaced, not resolved</span>
+    <h2>Needs extra scoping</h2>
+    <p class="section-sub">Found this pass, confirmed real, deliberately not touched — see why in each item.</p>
+    <div class="note-list">
+      <div class="note-item scope-item">
+        <div class="mk">1</div>
+        <p>
+          <b>execution_delta_proxy_repricer_generalization_2026_08_18.md</b>'s <code>[DESIGN] P1</code> todo still
+          bundles operator judgment-call resolution (calls 1–5, 9) with worker-executable design — exactly the
+          bundling the epic's own W7 <code>[PROCESS] P1</code> todo already flags for a re-tag/split. Re-confirmed
+          accurate this pass; not split here because the file carried live, concurrent, uncommitted edits
+          (&lt;120s old) at scan time — touching it risked colliding with an in-flight session. Deferred to the next
+          pass or whichever session owns that edit.
+        </p>
+      </div>
+      <div class="note-item scope-item">
+        <div class="mk">2</div>
+        <p>
+          Two further line-1-completeness candidates were found in the same protected file (the venue-scope object
+          split on <code>… end-to-end for / at least one real venue</code>). Lower confidence than the fixes applied
+          elsewhere this pass, and same live-edit protection applies — left for a follow-up sweep once the file is
+          quiescent.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="closed">
+    <span class="eyebrow">This run</span>
+    <h2>Closed out this pass</h2>
+    <p class="section-sub">
+      7 line-1-completeness defects (task_template.md §3) — a hard constraint or scope object split across a
+      markdown line-wrap, invisible to a first-physical-line-only read. Mechanical reflow, no wording change.
+    </p>
+    <div class="note-list">
+      <div class="note-item closed-item">
+        <div class="mk mono">epic:253</div>
+        <p>
+          <b>"do NOT author a new one"</b> — the prohibition on the slow/fast boundary todo previously split
+          <code>do / NOT author a new one</code> across the wrap. Reflowed onto one physical line.
+        </p>
+      </div>
+      <div class="note-item closed-item">
+        <div class="mk mono">epic:275</div>
+        <p><b>"do not re-derive it"</b> — same class, the tick-cache-fold todo's prohibition. Reflowed.</p>
+      </div>
+      <div class="note-item closed-item">
+        <div class="mk mono">epic:181</div>
+        <p>
+          Consumer object (<code>MDPS or features</code>) for the shard-orphan-check todo was entirely on line 2.
+          Reflowed.
+        </p>
+      </div>
+      <div class="note-item closed-item">
+        <div class="mk mono">epic:206</div>
+        <p>The 4th named system (<code>features</code>) in the coverage-rollup todo was entirely on line 2. Reflowed.</p>
+      </div>
+      <div class="note-item closed-item">
+        <div class="mk mono">epic:243</div>
+        <p>The location constraint (<code>in the same place</code>) for the config-centralisation todo split across the wrap. Reflowed.</p>
+      </div>
+      <div class="note-item closed-item">
+        <div class="mk mono">instruments_catalogue:230</div>
+        <p><b>"never derive or hardcode it"</b> — the second half of the twin prohibition (<code>hardcode</code>) was entirely on line 2. Reflowed.</p>
+      </div>
+      <div class="note-item closed-item">
+        <div class="mk mono">siblings:84</div>
+        <p>
+          One of two in-scope target files (<code>carveout-engineering.html</code>) for the invented-family removal
+          todo was entirely on line 2 — a worker reading line 1 alone could miss that file. Reflowed.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section id="lanes">
+    <span class="eyebrow">Parallel dispatch</span>
+    <h2>Parallel-tab flow for what's left</h2>
+    <p class="section-sub">
+      3 lanes are AO-dispatchable now — each owns a disjoint HTML file, so they never collide. Their finalize
+      companions are gated (<code>depends_on</code> + <code>gate_on_depends</code>) and queue behind, not concurrent
+      yet.
+    </p>
+    <div class="lane-board">
+      <div class="lane">
+        <div class="lane-head"><span>LANE A</span><span>13 open</span></div>
+        <div class="lane-body">
+          <div class="lane-file">strategy-service-walkthrough.html</div>
+          Elysium child — capital-budget softening, manual-movement verification, owner marks, archetype-readiness
+          audit.
+        </div>
+      </div>
+      <div class="lane">
+        <div class="lane-head"><span>LANE B</span><span>4 open</span></div>
+        <div class="lane-body">
+          <div class="lane-file">platform-external-api-walkthrough.html</div>
+          Nick AI child — 4 thin capability sections, owner marks, archetype-readiness and glossary audits.
+        </div>
+      </div>
+      <div class="lane">
+        <div class="lane-head"><span>LANE C</span><span>6 open · P0</span></div>
+        <div class="lane-body">
+          <div class="lane-file">4 sibling HTML files</div>
+          Siblings child — banned name, performance figures, invented family, false capability claim. Ungated,
+          stop-ship.
+        </div>
+      </div>
+    </div>
+
+    <div class="lane-queue">
+      <div class="lane">
+        <div class="lane-head"><span>QUEUED · A→A′</span><span>3 open</span></div>
+        <div class="lane-body">Elysium finalize — starts once Lane A reaches 0 open.</div>
+      </div>
+      <div class="lane">
+        <div class="lane-head"><span>QUEUED · B→B′</span><span>5 open</span></div>
+        <div class="lane-body">Nick AI finalize — starts once Lane B reaches 0 open.</div>
+      </div>
+      <div class="lane">
+        <div class="lane-head"><span>QUEUED · C→C′</span><span>3 open</span></div>
+        <div class="lane-body">Siblings finalize — starts once Lane C reaches 0 open.</div>
+      </div>
+    </div>
+
+    <div class="lane-other">
+      <b>Not AO-dispatch lanes</b> — the remaining 3 child docs (data_pipeline_completion, instruments_catalogue,
+      execution_delta_proxy_repricer_generalization) are <code>assigned_vm: NA</code>: local/operator work,
+      transitively gated on the operator items above or on unresolved judgment calls. Forcing them into a parallel
+      lane would overstate what can actually run unattended right now.
+    </div>
+  </section>
+
+  <section id="prompts">
+    <span class="eyebrow">Copy-paste ready</span>
+    <h2>Dispatch prompts</h2>
+    <p class="section-sub">
+      One self-contained prompt per live lane. Docs-only work (HTML content edits) — no code, so no QG gate; the
+      "implement + verify, don't ship" discipline still applies.
+    </p>
+    <div class="prompt-stack">
+      <div class="prompt-card">
+        <div class="prompt-head"><span><span class="dot"><span></span><span></span><span></span></span>lane-a-elysium.prompt</span><span>unified-trading-pm</span></div>
+        <pre class="prompt-body"><span class="k"># Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full first — fresh agent, nothing inherited.</span>
+
+Work plans/active/client_artefact_remediation_elysium_2026_08_18.md end to end.
+File owned: codex/14-customer-journeys/commercial-model/strategy-service-walkthrough.html — nothing else.
+Open todos: soften §12's capital-budget claim; caveat the paper==batch-rerun equality near §08/§09;
+resolve the 2 unconfirmed re-verification findings; verify §11's "Manual movement" claim by tracing the
+real code path (do not assert); 6 disclosure/completeness additions (§03/§04/§09/§11/§12); give every
+claim-bearing section an owner mark per W21; audit archetype-readiness content (~40/60 archetypes only).
+Cite evidence for every claim. Flip each checkbox with the file/commit evidence in the SAME edit.
+Implement + verify — do not ship (docs(plans): commit + push is a separate, later step for this repo's
+normal flow, but do not run quickmerge/safe-doc-push yourself unless explicitly told to for this task).</pre>
+      </div>
+      <div class="prompt-card">
+        <div class="prompt-head"><span><span class="dot"><span></span><span></span><span></span></span>lane-b-nickai.prompt</span><span>unified-trading-pm</span></div>
+        <pre class="prompt-body"><span class="k"># Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full first — fresh agent, nothing inherited.</span>
+
+Work plans/active/client_artefact_remediation_nickai_2026_08_18.md end to end.
+File owned: codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html — nothing else.
+Open todos: add the 4 present-thin capability sections (transfer rails/custody, batch=live mechanism named,
+order-lifecycle vocabulary, TWAP); give every claim-bearing section an owner mark per W21; audit the
+archetype-readiness content (readiness-state-dump has no archetype dimension — mark ~assumed or cut);
+audit the glossary/canonical-ID framing for asset-group-agnosticism. Cite evidence for every claim.
+Flip each checkbox with the file/commit evidence in the SAME edit. Implement + verify — do not ship.</pre>
+      </div>
+      <div class="prompt-card">
+        <div class="prompt-head"><span><span class="dot"><span></span><span></span><span></span></span>lane-c-siblings.prompt</span><span>unified-trading-pm</span></div>
+        <pre class="prompt-body"><span class="k"># Paste unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full first — fresh agent, nothing inherited.</span>
+
+Work plans/active/client_artefact_remediation_siblings_2026_08_18.md end to end — P0 STOP-SHIP, ungated.
+Files owned: codex/14-customer-journeys/commercial-model/{strategy-service-deep-dive,platform-architecture,
+carveout-engineering,ODUM_Elysium_Phase2_Update_2026-07-24}.html — nothing else.
+Todos: remove the banned client name (6 hits incl. 1 inside an SVG &lt;text&gt; element — raw-text grep, not a
+rendered-page read) from strategy-service-deep-dive.html, keeping the collateral-mirroring mechanism and
+dropping only the product name; remove performance figures from platform-architecture.html + the ODUM
+Phase2 email (do NOT strip legitimate "annualised" uses — market facts and metric labels stay); re-frame
+platform-architecture.html's staked-basis claim to target-state or cut it; remove the invented strategy
+family (4 hits platform-architecture.html, 1 hit carveout-engineering.html); reconcile the 3-way custody
+contradiction via an explanatory note, never an enum edit; grade all 4 docs on status + evidence tier.
+Re-run scripts/plan-hygiene/check_artefact_disclosure.py and confirm 0 HARD hits before calling this done.
+Implement + verify — do not ship.</pre>
+      </div>
+    </div>
+  </section>
+
+  <section id="methodology">
+    <span class="eyebrow">How this was built</span>
+    <h2>Notes &amp; methodology</h2>
+    <div class="methodology">
+      <ul>
+        <li>
+          Corpus-wide baseline for context: this epic declares 11 direct child docs against roughly ~845 non-epic
+          docs corpus-wide (per the epic's own closure-invariant section) — deliberately narrow by design, since
+          the artefacts' claim surface legitimately spans ~30 other epics.
+        </li>
+        <li>
+          Open/done counts and the operator-item list are sourced live from
+          <code>scripts/plan-hygiene/epic_report_data.py --epic system_readiness_master --json</code>, which shares
+          <code>count_open_tasks.py</code>'s dedup methodology (aggregator-plan exclusion, identical checkbox
+          regexes) — not hand-counted.
+        </li>
+        <li>
+          Corpus size (11 docs) was read directly rather than fanned out to hunter sub-agents, per this run's own
+          scoping — the threshold for spawning parallel review agents is a corpus &gt;20 docs.
+        </li>
+        <li>
+          Every commit SHA cited as shipped-evidence across the 11 docs (11 distinct SHAs, spanning
+          unified-trading-pm, unified-api-contracts, unified-trading-library and execution-service) was verified
+          this run as an ancestor of <code>origin/live-defi-rollout</code> via <code>git merge-base
+          --is-ancestor</code> against each repo's local clone — all 11 confirmed. Two shipped skills
+          (readiness-state-dump, honest-coverage-dump) and two shipped QG checkers (artefact disclosure, artefact
+          enum drift) were additionally confirmed to physically exist and be wired into
+          <code>run_hygiene_sweep.sh</code>.
+        </li>
+        <li>
+          The siblings plan's 3 open P0 stop-ship findings were re-verified live against the actual HTML files this
+          run (raw-text grep, including the SVG-embedded hit) rather than trusted from the plan's prose — all
+          confirmed still accurate, not stale.
+        </li>
+        <li>
+          Zero cross-doc contradictions and zero dangling <code>/plans/</code> or <code>/codex/</code> references
+          were found across the 11-doc corpus (67 unique references checked) — this corpus had already been swept
+          by <code>na-eligibility-audit</code> and <code>context-scout</code> passes within the prior 48 hours.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    <span>system_readiness_master · Readiness Gate Board</span>
+    <span>/plan-reconcile · 2026-08-19</span>
+  </footer>
+</div>

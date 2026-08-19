@@ -82,6 +82,11 @@ depends_on: []
 
 # CeFi Master — asset_group umbrella
 
+## Report
+
+Live HTML ledger: <https://claude.ai/code/artifact/44cac072-a90c-4604-97f2-a87929fe5533> (generated 2026-08-18,
+`/plan-reconcile cefi_master`)
+
 > **🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping** (coordinated by
 > `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Re-verify per-adapter `available_at` stamping wiring
 > before adding new adapters to this plan.

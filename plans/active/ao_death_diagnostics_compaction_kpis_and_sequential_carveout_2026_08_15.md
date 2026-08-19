@@ -44,7 +44,10 @@ context_scope:
 supersedes:
 superseded_by:
 depends_on:
-source:
+source: >-
+  Operator-driven follow-up from an interactive session (2026-08-15) investigating a 2026-08-14
+  tmux_session_lost cluster (see "Why this doc exists" below) — the operator confirmed all four
+  follow-up asks as work to do, explicitly directing the KPI-dashboard piece stay a human plan.
 assigned_role: infra
 drift_direction: advance-code
 ---

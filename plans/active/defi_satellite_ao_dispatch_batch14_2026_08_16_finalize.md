@@ -62,11 +62,12 @@ release these until batch14 is fully done.**
 - [ ] [REVIEW] P1. **Source-doc reconciliation**: for each of batch14's 8 todos, confirm the cited source doc's own
       item was flipped or annotated with the closing citation as that todo's Done-when specified. The 8 source docs
       to check: `plans/active/issues/mtds_qg_red_morpho_url_and_sports_contract_regression_2026_08_15.md` (todo 1),
-      `plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md` (todos 1 and 3),
+      `plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md` (todos 1 and 2 — was "1 and
+      3", corrected 2026-08-18 per plan_reconciler: that doc's Todos section has only 2 items),
       `plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md` (all 3 items),
       `plans/active/issues/dp_vm_001_mdps_defi_2022_exit_nonzero_singledate_hang_2026_08_15.md` (the BACKEND item
       only — leave the OPERATOR item open), `plans/active/issues/dp_vm_001_mdps_defi_2026_lock_ttl_staleness_budget_mismatch_2026_08_15.md`
-      (the full doc), `plans/active/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md` (the full
+      (the full doc), `plans/archive/2026_08/issues/defi_dex_pool_density_drop_pool_level_followup_2026_08_14.md` (the full
       doc), `plans/active/issues/pendle_venue_onboarding_2026_08_16.md` (the 2 P2 wiring items + config item only —
       leave the P3 archetype-inclusion item open), `plans/active/issues/defi_lst_yields_backfill_blocked_manifest_consolidator_and_hyperliquid_perp_funding_gap_2026_08_08.md`
       (todo 3). Repo: unified-trading-pm. Done when: every one of the 8 source docs shows the corresponding item(s)

@@ -243,7 +243,7 @@ the rest of history.
       81 deployment unit tests pass incl. new envelope-unwrap + explain-block + log-snippet regression tests | image
       builds c2beac49 (alerting-service:latest) + c0f6dc2f (deployment-api:latest) → redeploy dp-alerting-subscriber +
       uts-prod-dp-exit-code-monitor + e2e verify. Gap-4 root-cause + deploy todo:
-      `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md`
+      `plans/archive/2026_08/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md`
 - [x] ✅ [DATA] P0. **XG/understat backfill is OOMing (exit 137, MemoryError) — surfaced by the now-actionable alerts
       2026-06-23.** The `instr-backfill-sports-xg-*` VMs (understat) hit `MemoryError`/`Killed`/rc=137 — memory-bound,
       so a blind restart re-OOMs. Remediation: relaunch XG/understat with a higher-memory machine type OR batch/stream
@@ -580,7 +580,7 @@ heartbeat-stall auto-kill) + `@e754c9f` (the canonical `launch_budget_registry` 
       hung-process rules (CLAUDE.md §Background-task honesty) are the contract; verify the alert actually FIRES for each
       failure class before trusting "the VMs ran". (deployment-service + alerting-service) —
       deployment-service@OOM-fix-shipped + alerting-service code-audit | 3 gaps filed →
-      `plans/active/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md` | e2e chain confirmed: exit-code
+      `plans/archive/2026_08/issues/backfill_vm_slack_alert_e2e_verification_2026_06_23.md` | e2e chain confirmed: exit-code
       monitor runs ✅ non_clean sentinel ✅ events reach Pub/Sub ✅ alerting-service consuming ✅; heartbeat OOM fix
       shipped but image rebuild needed; Python stdout not in Cloud Logging (P1); Slack delivery inferred via PubSub
       consumption (operator spot-check #data-pipeline-alerts to close loop)

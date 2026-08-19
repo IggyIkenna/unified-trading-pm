@@ -90,6 +90,11 @@ estimate_calibrated_ai_days: 48.0
 
 # System Readiness Master
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/5a00f0e6-7480-4001-8cab-398e8a40fe34 (generated 2026-08-19,
+`/plan-reconcile system_readiness_master`)
+
 > **Target completion: 2026-08-25.** Everything in this epic except **going live with capital**. Paper, testnet,
 > batch, readiness derivation, coverage, scaffolding, reconciliation, security — all in scope. Live capital is not.
 
@@ -178,9 +183,9 @@ The spine. Everything else feeds it.
       re-run must not silently re-fetch what is already captured, and must not silently skip what is absent.
 - [ ] [BACKEND] P0. **Manifest consolidators must be running, or VMs exit** — a launcher that proceeds against a stale
       index writes into a lie. Gate on index freshness and fail loudly rather than degrade.
-- [ ] [BACKEND] P0. **Every venue's shards (instrument_type × chain × data_type) must be consumed by at least one of
-      MDPS or features.** If nothing consumes it, storing it has no purpose — the shard is either a missing consumer or
-      a data type that should not exist. Orphan output is a finding, never a footnote.
+- [ ] [BACKEND] P0. **Every venue's shards (instrument_type × chain × data_type) must be consumed by at least one of MDPS or features.**
+      If nothing consumes it, storing it has no purpose — the shard is either a missing consumer or a data type that
+      should not exist. Orphan output is a finding, never a footnote.
 - [ ] [BACKEND] P1. **Cheap and safe coverage increase** — the download path must be both. Spot where possible, resume
       from measured progress, never replay from `START_DATE`, and never let a cost optimisation weaken a correctness
       check.
@@ -203,8 +208,8 @@ The spine. Everything else feeds it.
 
 - [ ] [BACKEND] P0. **Data-pipeline alerts for deployment health across VMs and Cloud Run**, with auto-escalation and
       auto-reconciliation. Standing conditions dedup by state transition; automatic lifecycle events never page.
-- [ ] [BACKEND] P0. **Data-status honest-coverage rollup AND drilldown for instruments-service, MTDS, MDPS and
-      features** — the rollup is the headline, the drilldown is what makes it believable.
+- [ ] [BACKEND] P0. **Data-status honest-coverage rollup AND drilldown for instruments-service, MTDS, MDPS and features** —
+      the rollup is the headline, the drilldown is what makes it believable.
 - [ ] [BACKEND] P0. **Spot preemption auto-recovery resumes at the right place** — from measured progress, never a
       replay. A recovery that restarts from the beginning is a cost bug wearing a correctness mask.
 - [ ] [BACKEND] P0. **No duplicate VMs running.** Detect and prevent, do not merely alert.
@@ -217,10 +222,21 @@ The spine. Everything else feeds it.
 
 The registry must answer commercial and operational questions, not just "does this venue exist".
 
-- [ ] [BACKEND] P0. **Collateral that can actually be used**, per venue.
-- [ ] [BACKEND] P0. **Cross-margin logic where it exists**, declared rather than discovered.
+- [ ] [BACKEND] P0. **Collateral that can actually be used, per venue — POPULATE, don't design.** Re-verified
+      2026-08-18 (client_artefact_remediation_2026_08_18.md § E research todo): the schema already exists —
+      `VenueCapabilityV2.collateral_rules` (`CollateralRulesV2`: per-asset LTV/haircut, `cross_margin_supported`,
+      `portfolio_margin_supported`) in `unified-api-contracts/unified_api_contracts/internal/architecture_v2/
+      schemas.py` — and is already consumed by `strategy-service/strategy_service/risk/v2/{margin_sim,preflight,
+      orchestrator}.py`. Zero venues have a populated `collateral_rules`/`margin_spec` today, so every risk-v2
+      read degrades silently to "no data." See
+      [research findings](/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md).
+- [ ] [BACKEND] P0. **Cross-margin logic where it exists**, declared rather than discovered — same
+      `MarginSpec`/`CollateralRulesV2` population gap as above, not a separate design task.
 - [ ] [BACKEND] P0. **Transfer capability per venue as explicit eligibility flags**: Copper-eligible, Ceffu-eligible,
       manual-transfer-eligible, automated prime-broker-eligible (per prime broker), IBKR / Alpaca eligible.
+      Re-verified 2026-08-18: genuinely absent — no existing field on `VenueCapabilityV2` or elsewhere declares
+      this, unlike collateral/margin above (which at least has an unpopulated schema). This one needs new fields,
+      not just population.
 - [ ] [BACKEND] P0. **Manual trade capability for EVERY venue** — no exceptions. This is the disaster path.
 - [ ] [BACKEND] P1. **All of the above in UAC**, as declarations — not inferred at runtime.
 
@@ -229,8 +245,8 @@ The registry must answer commercial and operational questions, not just "does th
 - [ ] [BACKEND] P0. **Scaffold ALL strategy archetypes, not just the MVP ones.** The MVP set must be understood
       deeply, but the scaffolding of every archetype is what prevents a heavy refactor each time another comes online.
       The structure is the deliverable here, not the alpha.
-- [ ] [BACKEND] P0. **Every archetype / family / slot fully configurable, with all config in `config*.py` in the same
-      place**, hot-reloadable **including credentials**.
+- [ ] [BACKEND] P0. **Every archetype / family / slot fully configurable, with all config in `config*.py` in the same place**,
+      hot-reloadable **including credentials**.
 - [ ] [BACKEND] P0. **Configuration must be fully derivable from the strategy wizard** — the wizard is not a
       convenience layer, it is the sanctioned way config comes into being, and an agent must be able to drive it.
 - [ ] [BACKEND] P0. **Complete the strategy wizard.** Every stage, constrained by the layer beneath it, emitting config
@@ -239,8 +255,8 @@ The registry must answer commercial and operational questions, not just "does th
 
 ## W7 — Centralisation and anti-drift
 
-- [ ] [DOC] P0. **Generalise the slow-path/fast-path boundary beyond venue routing — EXTEND the existing SSOT, do
-      NOT author a new one.** Operator ruling 2026-08-18 restated the boundary as: *strategy decides WHAT we want to
+- [ ] [DOC] P0. **Generalise the slow-path/fast-path boundary beyond venue routing — EXTEND the existing SSOT, do NOT author a new one.**
+      Operator ruling 2026-08-18 restated the boundary as: *strategy decides WHAT we want to
       do (slow path) and hands execution a cache it can react to fast on a tick basis; execution decides HOW (fast
       path).* Measured 2026-08-18: that boundary IS owned, but only for venue routing —
       [/codex/04-architecture/slow-fast-routing-split.md](/codex/04-architecture/slow-fast-routing-split.md) is
@@ -261,8 +277,8 @@ The registry must answer commercial and operational questions, not just "does th
       slow-path into the cache; execution handlers only execute a pre-computed decision. Same question applies to
       "capital budget enforced by construction" — a per-tick budget check in execution is a slow-path concern
       leaking into the fast path.
-- [ ] [DOC] P1. **Fold the tick-cache mechanism into the boundary SSOT — the design work is ALREADY DONE, do not
-      re-derive it.** The operator's "strategy hands execution a cache it reacts to on a tick basis" framing is
+- [ ] [DOC] P1. **Fold the tick-cache mechanism into the boundary SSOT — the design work is ALREADY DONE, do not re-derive it.**
+      The operator's "strategy hands execution a cache it reacts to on a tick basis" framing is
       real and has real code, independently established by a concurrent session on 2026-08-18
       (`unified-trading-pm@219a310df0`):
       [/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md](/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md)
@@ -539,7 +555,11 @@ section maps to a tracked item, wherever it lives."**
       epic that closes the gap. With the status mark (what the system does) and § E's evidence tier (how we know),
       the artefact becomes an index INTO the corpus: scroll it, and every non-`live` claim names who is delivering
       it. **A section with no owner is the orphan class that actually threatens this epic's promise** — an artefact
-      claim nobody is tracking — and nothing currently measures it.
+      claim nobody is tracking — and nothing currently measures it. **Spec defined**:
+      [rule 13 — artefact claim marks](/codex/14-customer-journeys/_ssot-rules/13-artefact-claim-marks.md)
+      (`unified-trading-pm`, client_artefact_remediation_2026_08_18.md § E) — exact CSS, markup and the owner-mark
+      content grammar (workstream shorthand vs plan short-tag vs epic slug). Applying it to the two lead artefacts
+      is tracked in the elysium/nickai children of that plan; this item stays open until both apply it.
 - [ ] [SCRIPT] P0. **Bidirectional closure check between the artefacts and the corpus.** Forward: every
       claim-bearing section resolves to a live tracked item (fail on an unowned section). Reverse: every workstream
       here is either referenced by an artefact section or explicitly marked internal-only — so a capability we hold

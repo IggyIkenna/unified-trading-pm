@@ -134,13 +134,20 @@ safe outcome was a timing accident, not a property of the current design.
 
 ## Open questions for the operator / a dispatched investigation (not resolved by this doc)
 
-- [ ] [OPERATOR] P2. **Root-cause why the per-tranche idempotency guard did not prevent this.** Read
-      `agent-orchestrator/scripts/install-na-eligibility-auditor-timer.sh` and the dispatch endpoint
-      (`POST /api/plan-health/dispatch {"mode": "na_eligibility", "tranche": "defi"}`) to determine: was this two
-      separate trigger sources (the scheduled timer plus a manual/interactive invocation) both targeting `defi`
-      independently (a design gap — the guard was never meant to cover manual dispatches), or a genuine bug in the
-      "first success of the day" tracking (a race where both dispatches started before either could mark success)?
-      Different root causes need different fixes.
+- [x] ✅ [BACKEND] P2. **Root-caused 2026-08-18 (plan_reconciler, ao tranche, hunter #3) — was mistagged
+      `[OPERATOR]`, retagged: this was pure code-reading investigation, not a credential/judgment call.** Read
+      `server/plan_health.py`'s `dispatch()` directly: its only at-most-one-live-dispatch coalescing mechanism,
+      `_report_dispatch_gate()`, is called exclusively when `mode == "report"`; the function's own docstring lists
+      `mode="na_eligibility"` explicitly among the modes "exempt from the whole gate (their own scheduled call, not
+      promotion-triggered)". **Verdict: a design gap, not a race in the tracking** — there is no server-side
+      duplicate/live-dispatch guard for this mode at all, so it doesn't matter whether the two triggers were the
+      scheduled timer + a manual call or two scheduled fires; neither would have been coalesced. The "per-tranche
+      idempotency guard" SKILL.md describes is a WORKER-side behavior (Phase 0's incremental-skip via each doc's
+      own already-verdicted content), not a dispatch-level lock. Evidence: `agent-orchestrator/server/plan_health.py`
+      (`dispatch()`'s `if mode == "report": ... _report_dispatch_gate(...)` gate + its docstring's explicit
+      exemption list). Same root cause independently confirmed to also affect `mode="reconcile"` (the
+      `plan_reconciler` skill) — see `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4, cross-linked.
+      Todo 2 below (the actual hardening fix) remains open and is now unblocked with a concrete, evidenced target.
 - [ ] [BACKEND] P2. **Harden the same-tranche concurrent-dispatch case regardless of root cause**, once the above is
       answered — options include: a dispatch-time lock per tranche (reject/queue a second `defi` dispatch while one
       is already live), or narrowing every na-eligibility-audit Phase-3 file-touching step to `Edit`-only (never
@@ -158,3 +165,18 @@ safe outcome was a timing accident, not a property of the current design.
   reconciling the collision described above. No corpus content lost. Both incorrect slot-18 edits (the FOLD-3
   extraction and the blocks-doc overwrite) reverted/restored to slot 26's correct state; one small addendum left on
   `na_eligibility_audit_defi_blocks_2026_08_18.md` documenting the incident for anyone reading its history later.
+- **plan_reconciler 2026-08-18 (ao tranche, hunter #3)**: read the live `agent-orchestrator` dispatch code directly
+  to answer this doc's own open todo 1 ("was this a design gap or a race in the tracking?"). Answer: **design gap,
+  not a race.** `plan_health.py`'s ONLY at-most-one-live-dispatch coalescing mechanism, `_report_dispatch_gate()`,
+  is wired into `dispatch()` exclusively for `mode == "report"`; the function's own docstring explicitly lists
+  `mode="na_eligibility"` (this skill's own dispatch mode) among the modes "exempt from the whole gate" — there is
+  no server-side duplicate/live-dispatch check for this mode at all, regardless of whether the two triggering calls
+  came from the scheduled timer, a manual invocation, or both. The "per-tranche idempotency guard" SKILL.md
+  describes is a WORKER-side behavior (Phase 0's incremental-skip via each doc's own already-verdicted content), not
+  a dispatch-level lock — so when two dispatches fire close enough together that neither's Phase-0 read reflects the
+  other's in-flight work, both proceed as full runs, exactly as observed here. **Same root cause, same file, as
+  `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4** (which found the identical gate exemption for
+  `mode="reconcile"`, the `plan_reconciler` skill's own mode) — cross-linked there too. Not fixed here (real
+  `agent-orchestrator` engineering); this doc's own todo 1 can now be considered answered (the two options it
+  posed — "design gap" vs "race in tracking" — resolve to "design gap," confirmed via code, not requiring the
+  operator investigation it originally called for) even though todo 2 (the actual hardening fix) remains open.

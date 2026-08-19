@@ -31,7 +31,7 @@ related:
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-08-14
-last_updated: "2026-08-14"
+last_updated: "2026-08-17"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only
@@ -461,4 +461,10 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   that a background worker executing todos alone wouldn't have surfaced.
 - **context-scout 2026-08-15**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified all 5 still resolve; unchanged.
-- **na-eligibility-audit 2026-08-16** [body-hash:ec51030e15c009f5]: KEEP-NA, valid — Full end-to-end read (462 lines) confirms the doc is 26/27 todos done with hard evidence (commit SHAs across unified-api-contracts/instruments-service/market-tick-data-service/execution-service/strategy-service/unified-trading-pm,…
+- **na-eligibility-audit 2026-08-16** [body-hash:ec51030e15c009f5]: KEEP-NA, valid — full end-to-end read confirms
+  the doc is 27/28 todos done with hard evidence (commit SHAs across
+  unified-api-contracts/instruments-service/market-tick-data-service/execution-service/strategy-service/unified-trading-pm).
+  **CLOSED 2026-08-18 (plan_reconciler)**: this Progress Log entry ended mid-sentence in the file on disk (verified
+  via raw `tail`, not a display artifact) — closed honestly without fabricating the missing detail; the "26/27"
+  count was also off by one against a fresh `grep -cE` recount (27 done + 1 open = 28 total, not 27). See the
+  doc's own Todos section for the actual per-item evidence citations rather than this summary line.

@@ -52,11 +52,12 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P3. Once the yahoo_finance_adapter.py `get_write_bucket_name("tick-data", ...)` fix in
-      `tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md` is `[x]` with a real commit sha + a live
-      bucket-resolution verification (mirroring the deribit_options_chain_handler.py fix already shipped in the same
-      doc), run the standard 6-step archival ritual on that doc (dated destination is flat `plans/archive/issues/`
-      per its `doc_type: issue`) and archive this finalize plan alongside it. Also re-check the doc's own
+- [ ] [REVIEW] P3. Run the standard 6-step archival ritual on
+      `tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md` (dated destination flat
+      `plans/archive/issues/` per its `doc_type: issue`) and archive this finalize plan alongside it, once that
+      doc's yahoo_finance_adapter.py `get_write_bucket_name("tick-data", ...)` fix is `[x]` with a real commit sha +
+      a live bucket-resolution verification (mirroring the deribit_options_chain_handler.py fix already shipped in
+      the same doc). Also re-check the doc's own
       "Recommended next step" prose section (the unlaunched DERIBIT options_chain historical backfill) — if the
       operator has since authorized that VM dispatch, spin it into a new tracked todo/plan rather than letting it
       evaporate as prose. Done when: both docs are under `plans/archive/`, and

@@ -32,6 +32,11 @@ locked_by:
 resolved_by:
 drift_direction: advance-code
 depends_on: []
+sequential: true # added 2026-08-18 (plan_reconciler) — the 3 remaining open todos are already written as a
+  # prose-gated chain ("once the dry-run reaches a terminal state, review... then launch the FULL --apply", "after
+  # the --apply VM reaches a terminal state, trigger the consolidator rebuild", "once the consolidator rebuild is
+  # confirmed complete, re-run the audit script") with no machine enforcement — an AO worker could otherwise
+  # dispatch them out of order (e.g. trigger the consolidator rebuild before the --apply VM actually finished).
 context_scope:
   [
     /plans/archive/2026_08/cefi_casing_residual_ao_dispatch_2026_08_16.md,

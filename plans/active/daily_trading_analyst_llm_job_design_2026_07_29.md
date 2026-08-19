@@ -78,7 +78,7 @@ today only builds a markdown prompt (`_build_agent_prompt()`) aggregating every 
 writes it to `t1-recon/recon/agent_report_{date}.md`. **It never calls an LLM, never dispatches anywhere, and nothing
 downstream reads the file's content** — the module docstring's claim ("Dispatches ... to trading-agent-service ...
 Publishes ... alert to alerting-service → Slack") is stale/aspirational, contradicted by the code and independently
-confirmed by the parent audit (`plans/active/issues/batch_live_reconciliation_service_audit_2026_05_27.md:167`: "no
+confirmed by the parent audit (`plans/archive/2026_08/issues/batch_live_reconciliation_service_audit_2026_05_27.md:167`: "no
 dispatch").
 
 But BLRS's actual reconciliation engine (stages 0.5 through 3c) is not redundant with this new job — it answers a

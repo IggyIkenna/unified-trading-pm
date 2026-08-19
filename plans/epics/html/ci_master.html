@@ -1,0 +1,854 @@
+<!-- Generated: 2026-08-18T00:00:00Z by /plan-reconcile ci_master -->
+<title>CI Yard Board</title>
+<style>
+  /* ============ DESIGN TOKENS ============ */
+  :root {
+    --bg: #eef1ee;
+    --surface: #ffffff;
+    --surface-raised: #f7f6f2;
+    --border: #d8d4c9;
+    --border-strong: #c3beae;
+    --text: #23262b;
+    --text-dim: #5b6470;
+    --text-faint: #8b93a0;
+    --accent: #b9781f;
+    --accent-ink: #ffffff;
+    --go: #2f8a54;
+    --go-bg: rgba(47, 138, 84, 0.1);
+    --stop: #b8382d;
+    --stop-bg: rgba(184, 56, 45, 0.09);
+    --hold: #4a5da8;
+    --hold-bg: rgba(74, 93, 168, 0.09);
+    --track-rail: #d8d4c9;
+    --shadow: 0 1px 2px rgba(20, 20, 15, 0.06), 0 8px 24px -12px rgba(20, 20, 15, 0.18);
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10141a;
+      --surface: #171d25;
+      --surface-raised: #1c232c;
+      --border: #2b3542;
+      --border-strong: #3a4756;
+      --text: #e8ecef;
+      --text-dim: #93a3b3;
+      --text-faint: #5c6b7a;
+      --accent: #e0a545;
+      --accent-ink: #10141a;
+      --go: #4fae72;
+      --go-bg: rgba(79, 174, 114, 0.13);
+      --stop: #e2685c;
+      --stop-bg: rgba(226, 104, 92, 0.13);
+      --hold: #8b9fe0;
+      --hold-bg: rgba(139, 159, 224, 0.13);
+      --track-rail: #2b3542;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10141a;
+    --surface: #171d25;
+    --surface-raised: #1c232c;
+    --border: #2b3542;
+    --border-strong: #3a4756;
+    --text: #e8ecef;
+    --text-dim: #93a3b3;
+    --text-faint: #5c6b7a;
+    --accent: #e0a545;
+    --accent-ink: #10141a;
+    --go: #4fae72;
+    --go-bg: rgba(79, 174, 114, 0.13);
+    --stop: #e2685c;
+    --stop-bg: rgba(226, 104, 92, 0.13);
+    --hold: #8b9fe0;
+    --hold-bg: rgba(139, 159, 224, 0.13);
+    --track-rail: #2b3542;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 12px 32px -16px rgba(0, 0, 0, 0.6);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ============ MASTHEAD ============ */
+  .masthead {
+    background: var(--surface);
+    border-bottom: 3px solid var(--accent);
+    padding: 40px 0 28px;
+    margin-bottom: 40px;
+  }
+  .masthead-inner { max-width: 1180px; margin: 0 auto; padding: 0 24px; }
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--go);
+    box-shadow: 0 0 0 3px var(--go-bg);
+    flex-shrink: 0;
+  }
+  h1 {
+    font-size: clamp(30px, 4vw, 44px);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 10px;
+    text-wrap: balance;
+  }
+  .dek {
+    color: var(--text-dim);
+    font-size: 16px;
+    max-width: 74ch;
+    margin: 0;
+  }
+  .dek code { font-family: var(--mono); font-size: 0.92em; background: var(--surface-raised); padding: 1px 5px; border-radius: 3px; }
+
+  /* ============ SECTION SHELL ============ */
+  section { margin-bottom: 52px; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+  .section-label {
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.005em;
+  }
+  .section-note { color: var(--text-dim); font-size: 14px; margin: -6px 0 18px; max-width: 78ch; }
+
+  /* ============ STAT STRIP ============ */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .stat {
+    background: var(--surface);
+    padding: 20px 20px 18px;
+    position: relative;
+  }
+  .stat-val {
+    font-family: var(--mono);
+    font-variant-numeric: tabular-nums;
+    font-size: 34px;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .stat.go .stat-val { color: var(--go); }
+  .stat.stop .stat-val { color: var(--stop); }
+  .stat.hold .stat-val { color: var(--hold); }
+  .stat.accent .stat-val { color: var(--accent); }
+  .stat-label {
+    margin-top: 8px;
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 600;
+  }
+
+  /* ============ CHIP ROW (in-scope / excluded) ============ */
+  .chip-groups { display: flex; flex-wrap: wrap; gap: 28px; }
+  .chip-group { flex: 1 1 320px; }
+  .chip-group h3 {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 0 0 10px;
+    font-weight: 700;
+  }
+  .chip-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface-raised);
+    color: var(--text-dim);
+  }
+  .chip.in { border-color: var(--go); color: var(--go); background: var(--go-bg); }
+  .chip.out { border-color: var(--border-strong); color: var(--text-faint); text-decoration: line-through; text-decoration-color: var(--text-faint); }
+
+  /* ============ MANIFEST TABLE ============ */
+  .manifest { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .manifest-scroll { overflow-x: auto; }
+  table.roster { width: 100%; border-collapse: collapse; min-width: 760px; }
+  table.roster thead th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    font-weight: 600;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface-raised);
+    position: sticky;
+    top: 0;
+  }
+  table.roster tbody tr { border-bottom: 1px solid var(--border); }
+  table.roster tbody tr:last-child { border-bottom: none; }
+  table.roster tbody tr:hover { background: var(--surface-raised); }
+  table.roster td { padding: 11px 14px; vertical-align: top; font-size: 13.5px; }
+  .car-title { font-weight: 600; color: var(--text); }
+  .car-sub { color: var(--text-faint); font-size: 12px; margin-top: 2px; }
+  .tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.04em;
+    padding: 1px 6px;
+    border-radius: 4px;
+    margin-right: 6px;
+    font-weight: 700;
+  }
+  .tag.plan { background: var(--hold-bg); color: var(--hold); }
+  .tag.issue { background: var(--surface-raised); color: var(--text-dim); border: 1px solid var(--border-strong); }
+  .tag.agg { background: var(--accent); color: var(--accent-ink); }
+  .bar-cell { min-width: 130px; }
+  .bar { display: flex; align-items: center; gap: 8px; }
+  .bar-track { flex: 1; height: 7px; border-radius: 4px; background: var(--border); overflow: hidden; display: flex; }
+  .bar-done { background: var(--go); height: 100%; }
+  .bar-open { background: var(--stop); height: 100%; opacity: 0.55; }
+  .bar-nums { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 12px; color: var(--text-dim); white-space: nowrap; }
+  .op-flag { color: var(--hold); font-family: var(--mono); font-size: 11px; }
+
+  /* ============ DESK / SCOPING LIST ============ */
+  .desk-list { display: flex; flex-direction: column; gap: 10px; }
+  .desk-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--hold);
+    border-radius: 0 8px 8px 0;
+    padding: 14px 16px;
+    box-shadow: var(--shadow);
+  }
+  .desk-item.scope { border-left-color: var(--accent); }
+  .desk-item-head { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; margin-bottom: 4px; }
+  .desk-doc { font-family: var(--mono); font-size: 12px; color: var(--text-faint); }
+  .desk-gate { font-family: var(--mono); font-size: 11px; padding: 1px 7px; border-radius: 10px; background: var(--hold-bg); color: var(--hold); }
+  .desk-item.scope .desk-gate { background: rgba(184, 120, 31, 0.12); color: var(--accent); }
+  .desk-body { font-size: 13.5px; color: var(--text-dim); }
+  .desk-body code { font-family: var(--mono); font-size: 0.93em; background: var(--surface-raised); padding: 1px 4px; border-radius: 3px; color: var(--text); }
+  .desk-rec { margin-top: 6px; font-size: 12.5px; color: var(--go); }
+
+  /* ============ CLEARED LEDGER ============ */
+  .cleared-list { display: flex; flex-direction: column; gap: 0; border: 1px solid var(--border); border-radius: 10px; overflow: hidden; background: var(--surface); box-shadow: var(--shadow); }
+  .cleared-item { display: flex; gap: 14px; padding: 13px 16px; border-bottom: 1px solid var(--border); align-items: flex-start; }
+  .cleared-item:last-child { border-bottom: none; }
+  .cleared-check { color: var(--go); font-family: var(--mono); font-size: 15px; flex-shrink: 0; margin-top: 1px; }
+  .cleared-text { font-size: 13.5px; color: var(--text); }
+  .cleared-text strong { font-weight: 700; }
+  .cleared-text .ev { color: var(--text-faint); font-family: var(--mono); font-size: 12px; }
+
+  /* ============ TRACKS (parallel lanes) ============ */
+  .tracks { display: flex; flex-direction: column; gap: 0; }
+  .track {
+    position: relative;
+    padding: 18px 20px 18px 34px;
+    border-left: 3px solid var(--track-rail);
+    margin-left: 8px;
+  }
+  .track::before {
+    content: "";
+    position: absolute;
+    left: -8px;
+    top: 24px;
+    width: 13px;
+    height: 13px;
+    border-radius: 50%;
+    background: var(--surface);
+    border: 3px solid var(--accent);
+  }
+  .track-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .track-id { font-family: var(--mono); font-size: 12px; color: var(--accent); font-weight: 700; letter-spacing: 0.06em; }
+  .track-title { font-weight: 700; font-size: 15px; }
+  .track-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .file-chip { font-family: var(--mono); font-size: 11.5px; padding: 3px 8px; border-radius: 5px; background: var(--surface-raised); border: 1px solid var(--border); color: var(--text-dim); }
+  .track-desc { font-size: 13.5px; color: var(--text-dim); margin-top: 6px; }
+
+  /* ============ TICKETS (dispatch prompts) ============ */
+  .tickets { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; }
+  .ticket {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .ticket-head {
+    background: var(--surface-raised);
+    padding: 10px 14px;
+    border-bottom: 1px dashed var(--border-strong);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .ticket-head .track-id { font-size: 11px; }
+  .ticket-head .copy-hint { font-size: 10.5px; color: var(--text-faint); font-family: var(--mono); }
+  .ticket pre {
+    margin: 0;
+    padding: 14px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    line-height: 1.55;
+    color: var(--text-dim);
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  /* ============ NOTES ============ */
+  .notes { font-size: 13.5px; color: var(--text-dim); }
+  .notes ul { padding-left: 20px; margin: 10px 0; }
+  .notes li { margin-bottom: 8px; }
+  .notes code { font-family: var(--mono); font-size: 0.93em; background: var(--surface-raised); padding: 1px 4px; border-radius: 3px; color: var(--text); }
+
+  footer { text-align: center; padding: 40px 0 10px; color: var(--text-faint); font-size: 12px; font-family: var(--mono); }
+
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">Signal healthy &middot; generated 2026-08-18</div>
+    <h1>CI Yard Board</h1>
+    <p class="dek">
+      Everything that moves a commit from a developer's tree onto <code>main</code> and keeps that track
+      clear&nbsp;&mdash; quickmerge/safe-doc-push, the LDR&rarr;main gate set, GitHub Actions template rollout,
+      self-hosted-runner capacity, release tagging, and Cloud Build/Cloud Run deploy verification. Carved out of
+      <code>infrastructure_master</code> 2026-08-18. This ledger is the output of that day's first
+      <code>/plan-reconcile ci_master</code> pass.
+    </p>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- ============ SCOPE CHIPS ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">Track boundary</div>
+        <h2>What's on this line, what isn't</h2>
+      </div>
+    </div>
+    <div class="chip-groups">
+      <div class="chip-group">
+        <h3>On this track</h3>
+        <div class="chip-list">
+          <span class="chip in">quickmerge / safe-doc-push</span>
+          <span class="chip in">sit-gate/fleet-green</span>
+          <span class="chip in">quality-gates-v2 (promote PR)</span>
+          <span class="chip in">quickmerge-provenance</span>
+          <span class="chip in">GH Actions template rollout</span>
+          <span class="chip in">self-hosted-runner capacity</span>
+          <span class="chip in">semver-agent / release tags</span>
+          <span class="chip in">breaking-change differ blind spots</span>
+          <span class="chip in">Cloud Build / Cloud Run deploy verify</span>
+        </div>
+      </div>
+      <div class="chip-group">
+        <h3>Diverted to another yard</h3>
+        <div class="chip-list">
+          <span class="chip out" title="quality-gates.sh's static-check/ratchet content (basedpyright, codex-freshness, NA-corpus) stays with security_and_cross_cutting_master">
+            QG ratchets &rarr; security_and_cross_cutting_master
+          </span>
+          <span class="chip out" title="UAC's own schema/registry correctness stays with uac_master; only the CI gate's blindness to it lives here">
+            UAC schema correctness &rarr; uac_master
+          </span>
+          <span class="chip out" title="an incident doc that merely mentions CI/quickmerge in passing while being fundamentally asset-group data content stays with its asset-group epic">
+            asset-group data incidents &rarr; their AG epic
+          </span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STAT STRIP ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">Board reading, as of this pass</div>
+        <h2>Headline count</h2>
+      </div>
+    </div>
+    <div class="stats">
+      <div class="stat stop">
+        <div class="stat-val">88</div>
+        <div class="stat-label">Open todos</div>
+      </div>
+      <div class="stat go">
+        <div class="stat-val">171</div>
+        <div class="stat-label">Done todos</div>
+      </div>
+      <div class="stat hold">
+        <div class="stat-val">18</div>
+        <div class="stat-label">Operator-blocked lines</div>
+      </div>
+      <div class="stat accent">
+        <div class="stat-val">55</div>
+        <div class="stat-label">Active cars (55 = 58 &minus; 3 archived)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-val">5</div>
+        <div class="stat-label">Aggregator plans (excluded above)</div>
+      </div>
+    </div>
+    <p class="section-note" style="margin-top:14px;">
+      Counts are deduped per <code>count_open_tasks.py</code>'s methodology (aggregator batch/finalize/closeout plans
+      excluded from the headline so their child items aren't counted twice) &mdash; measured fresh via
+      <code>epic_report_data.py --epic ci_master</code> after this pass's fixes landed, not carried forward from the
+      carve-out snapshot.
+    </p>
+  </section>
+
+  <!-- ============ MANIFEST (plan-by-plan) ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">Every car on this track &middot; 55 docs</div>
+        <h2>Yard manifest</h2>
+      </div>
+    </div>
+    <p class="section-note">
+      One row per <code>parent_epic: ci_master</code> child. <span class="tag agg" style="margin-right:4px;">AGG</span>
+      = aggregator (batch/satellite/finalize/closeout) &mdash; its todos roll up into the headline count above
+      only once, via its own children, not double-counted here either.
+    </p>
+    <div class="manifest">
+      <div class="manifest-scroll">
+        <table class="roster">
+          <thead>
+            <tr>
+              <th style="width:36%;">Car</th>
+              <th style="width:10%;">Type</th>
+              <th class="bar-cell" style="width:18%;">Open / done</th>
+              <th>Operator flag</th>
+            </tr>
+          </thead>
+          <tbody id="roster-body">
+            <!-- rows injected below as static markup -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ OPERATOR'S DESK ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">18 lines, held on the siding</div>
+        <h2>On the operator's desk</h2>
+      </div>
+    </div>
+    <p class="section-note">Every open line tagged <code>[OPERATOR]</code> across the 55-doc set &mdash; a human decision, not a worker-determinable outcome. Grouped by what they're actually waiting on.</p>
+    <div class="desk-list" id="desk-list"></div>
+  </section>
+
+  <!-- ============ NEEDS EXTRA SCOPING ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">Found this pass, not yet routed anywhere</div>
+        <h2>Needs extra scoping</h2>
+      </div>
+    </div>
+    <p class="section-note">
+      Genuinely ambiguous or under-specified items this reconcile pass found &mdash; each is a real judgment call, not
+      a provable fact, so none were auto-applied (this workspace's Trust-Mode carve-out keeps codex/CLAUDE.md edits
+      gated regardless of evidence strength; the rest are authority/preference calls per this skill's own
+      calibration bar).
+    </p>
+    <div class="desk-list" id="scope-list"></div>
+  </section>
+
+  <!-- ============ CLEARED THIS PASS ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">2026-08-18 &middot; /plan-reconcile ci_master</div>
+        <h2>Cleared this pass</h2>
+      </div>
+    </div>
+    <div class="cleared-list" id="cleared-list"></div>
+  </section>
+
+  <!-- ============ PARALLEL TRACKS ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">Up to 5 lanes &middot; no two share a file</div>
+        <h2>Parallel-tab flow for what's left</h2>
+      </div>
+    </div>
+    <p class="section-note">
+      Divides the remaining open, non-operator-blocked work into independent lanes. Beyond these 5, the ~25 smaller
+      single-file P2/P3 issue docs are each independently pickable &mdash; any free lane absorbs one next, no 6th
+      lane needed for true file-level parallelism.
+    </p>
+    <div class="tracks">
+
+      <div class="track">
+        <div class="track-head">
+          <span class="track-id">TRACK 1</span>
+          <span class="track-title">Self-hosted-runner capacity cluster</span>
+        </div>
+        <div class="track-desc">The connected I/O-starvation incident: audit findings, the exposure remediation, and the two capacity-crisis docs.</div>
+        <div class="track-files">
+          <span class="file-chip">ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md</span>
+          <span class="file-chip">ci_vm_exposure_remediation_2026_08_06.md</span>
+          <span class="file-chip">fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md</span>
+          <span class="file-chip">fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md</span>
+        </div>
+      </div>
+
+      <div class="track">
+        <div class="track-head">
+          <span class="track-id">TRACK 2</span>
+          <span class="track-title">Batch 15 drain</span>
+        </div>
+        <div class="track-desc">13 open todos, one AO-dispatch batch; its finalize is machine-gated behind it (dispatches once batch15 hits 0 open).</div>
+        <div class="track-files">
+          <span class="file-chip">ci_satellite_ao_dispatch_batch15_2026_08_16.md</span>
+          <span class="file-chip">ci_satellite_ao_dispatch_batch15_2026_08_16_finalize.md</span>
+        </div>
+      </div>
+
+      <div class="track">
+        <div class="track-head">
+          <span class="track-id">TRACK 3</span>
+          <span class="track-title">Batch 13 drain</span>
+        </div>
+        <div class="track-desc">1 remaining todo &mdash; a bare-VM CI-bootstrap proof, currently <code>BLOCKED-ON</code> an SSM IAM grant (per this pass's fix); finalize gated behind it.</div>
+        <div class="track-files">
+          <span class="file-chip">ci_satellite_ao_dispatch_batch13_2026_08_13.md</span>
+          <span class="file-chip">ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md</span>
+        </div>
+      </div>
+
+      <div class="track">
+        <div class="track-head">
+          <span class="track-id">TRACK 4</span>
+          <span class="track-title">Promotion-pipeline livelock/flake cluster</span>
+        </div>
+        <div class="track-desc">Five docs describing the same shape from different angles &mdash; the gate-treadmill/livelock/silent-collateral-merge family. Independent files, safe to run in parallel with each other.</div>
+        <div class="track-files">
+          <span class="file-chip">ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md</span>
+          <span class="file-chip">sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md</span>
+          <span class="file-chip">silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md</span>
+          <span class="file-chip">main_ldr_backmerge_silently_reapplies_collateral_frontmatter_deletion_2026_08_17.md</span>
+          <span class="file-chip">main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md</span>
+        </div>
+      </div>
+
+      <div class="track">
+        <div class="track-head">
+          <span class="track-id">TRACK 5</span>
+          <span class="track-title">Ship-script mechanism bugs</span>
+        </div>
+        <div class="track-desc">Direct bugs in the quickmerge / safe-doc-push mechanism itself &mdash; four independent scripts, four independent fixes.</div>
+        <div class="track-files">
+          <span class="file-chip">safe_doc_push_unrecognized_flag_silently_becomes_branch_name_2026_08_18.md</span>
+          <span class="file-chip">quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md</span>
+          <span class="file-chip">pm_version_split_blocks_all_quickmerge_code_commits_2026_08_10.md</span>
+          <span class="file-chip">quickmerge_isolated_worktree_missing_sibling_pm_checkout_2026_08_10.md</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ DISPATCH TICKETS ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">Copy-paste, self-contained</div>
+        <h2>Dispatch tickets</h2>
+      </div>
+    </div>
+    <div class="tickets" id="tickets"></div>
+  </section>
+
+  <!-- ============ NOTES & METHODOLOGY ============ -->
+  <section>
+    <div class="section-head">
+      <div>
+        <div class="section-label">Read before trusting a number above</div>
+        <h2>Notes &amp; methodology</h2>
+      </div>
+    </div>
+    <div class="notes">
+      <ul>
+        <li><strong>Scope</strong>: every doc where <code>rg "^parent_epic: ci_master$" plans/active/*.md plans/active/issues/*.md</code> matches &mdash; frontmatter-driven, not the filename-substring method <code>regenerate_active_plan_inventory.py</code> uses.</li>
+        <li><strong>Open/done counts</strong>: <code>scripts/plan-hygiene/epic_report_data.py --epic ci_master --json</code>, re-run AFTER this pass's fixes landed (not the carve-out snapshot) &mdash; mirrors <code>count_open_tasks.py</code>'s dedup methodology.</li>
+        <li><strong>Coverage this pass</strong>: 32 of 55 docs read in full by 4 parallel read-only hunters (zero-checkbox archival candidates, the 9 docs created 2026-08-16/17, the 7 docs + 1 gated pair created 2026-08-18, and an AO-dispatch-readiness pass over the 6 currently-dispatched plans). The remaining ~23 were covered by the whole-ci-tranche <code>/plan-reconcile</code> pass 2 days earlier (2026-08-16) &mdash; not re-read line-by-line this run, per Phase&nbsp;&minus;1's mandate to reconcile prior findings against fresh state rather than redundantly re-sweep a corpus already swept days ago.</li>
+        <li><strong>3 archivals</strong> (0 open todos, HARD evidence, unlocked): <code>uac_value_only_config_change_breaks_utl_untested_2026_07_20</code>, <code>workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07</code>, <code>uv_version_pin_live_ci_reusable_workflow_still_hardcoded_2026_08_09</code> &mdash; all three now under <code>plans/archive/issues/</code>.</li>
+        <li><strong>2 zero-checkbox traps closed</strong>, not archived: <code>fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27</code> and <code>strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06</code> both sat at 0 open checkboxes while genuinely open work survived only in prose &mdash; converted to real tracked <code>- [ ]</code> todos rather than left invisible to every mechanical check.</li>
+        <li><strong>Assumption flagged</strong>: the "5 lanes" in the parallel-flow section above are drawn from the epic doc's own stated incident clusters, not a fresh clustering algorithm &mdash; a doc could reasonably sit in more than one lane; picked the tightest fit.</li>
+        <li>This is this epic's <strong>first-ever</strong> HTML report (epic carved out today). No prior version to diff against.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+
+<footer>ci_master &middot; /plan-reconcile &middot; regenerate via <code>scripts/plan-hygiene/epic_report_data.py --epic ci_master</code></footer>
+
+<script>
+(function () {
+  "use strict";
+
+  function el(tag, attrs, html) {
+    var e = document.createElement(tag);
+    if (attrs) for (var k in attrs) e.setAttribute(k, attrs[k]);
+    if (html !== undefined) e.innerHTML = html;
+    return e;
+  }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // ---------- ROSTER (plan-by-plan manifest) ----------
+  var roster = [
+    ["ci_consolidated_closeout_2026_07_25", "CI/CD consolidated close-out coordination hub", "plan", false, 0, 1, null],
+    ["ci_pipeline_speed_and_cost_redesign_2026_08_05", "Fast LDR→main target, needs-driven triggering, cost right-sizing", "plan", false, 1, 8, null],
+    ["ci_satellite_ao_dispatch_batch13_2026_08_13", "AO dispatch batch 13", "plan", true, 1, 23, null],
+    ["ci_satellite_ao_dispatch_batch13_2026_08_13_finalize", "Batch 13 — finalize (gated)", "plan", true, 3, 0, null],
+    ["ci_satellite_ao_dispatch_batch15_2026_08_16", "AO dispatch batch 15", "plan", true, 13, 12, null],
+    ["ci_satellite_ao_dispatch_batch15_2026_08_16_finalize", "Batch 15 — finalize (gated)", "plan", true, 3, 0, null],
+    ["ci_tranche_zero_checkbox_archive_sweep_2026_08_18", "Zero-checkbox archive sweep (6 docs)", "plan", true, 5, 1, null],
+    ["ci_tranche_zero_checkbox_archive_sweep_2026_08_18_finalize", "Archive sweep — finalize (gated)", "plan", true, 1, 0, null],
+    ["ci_vm_exposure_remediation_2026_08_06", "Close 3 remaining exposure items from the I/O-starvation audit", "plan", false, 1, 2, null],
+    ["fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06", "Convert remaining fleet workflow templates to reusable", "plan", false, 1, 10, null],
+    ["ag_closeout_audit_ci_parked_2026_08_16", "ag-closeout-audit ci delta report", "issue", false, 5, 1, "[OPERATOR] gcloud-WIF ruling; workflow-template-drift rule"],
+    ["autostash_pop_can_silently_discard_uncommitted_foreign_edits_2026_08_07", "Concurrent rebase --autostash can discard foreign WIP", "issue", false, 2, 3, null],
+    ["breaking_change_differ_blind_to_registry_data_dicts_2026_07_09", "Differ blind to UAC registry data-dicts", "issue", false, 1, 8, null],
+    ["build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21", "Build/deploy provenance gaps — 2 AWS bugs + 2 GCP gaps", "issue", false, 1, 3, null],
+    ["ci_alert_failure_resolution_linkage_2026_08_16", "CI-failures alerts carry no CRITICAL→resolution identity", "issue", false, 2, 1, null],
+    ["ci_reconcile_overnight_batch_2026_08_11", "/ci-reconcile overnight batch — 17-item reconciliation", "issue", false, 3, 2, null],
+    ["ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16", "ci_reconciler ambient AWS identity is a static IAM user", "issue", false, 1, 0, "[OPERATOR] grant scoped ssm:SendCommand"],
+    ["ci_registry_drift_uac_utl_stale_tag_version_conflict_2026_07_26", "UI registry-drift CI job silently broken since 07-21", "issue", false, 1, 3, null],
+    ["ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05", "CI VM cost + I/O audit — downsizing path", "issue", false, 8, 11, "[OPERATOR] fork-PR approval policy (RULED)"],
+    ["cloud_build_router_failure_escalation_undercoverage_2026_08_16", "wall_type fired for only 1 of 5 repos hit by same cascade", "issue", false, 1, 0, null],
+    ["cloud_build_router_fallback_region_same_as_primary_2026_08_14", "“Regional fallback” retried the same region since 04-15", "issue", false, 1, 0, "[OPERATOR] regional-redundancy shape"],
+    ["cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05", "deployment-api traffic pinned stale ~24h despite green CI", "issue", false, 1, 4, "[OPERATOR] populate GSM webhook secret"],
+    ["deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06", "Promote-PR test hits real GCE metadata probe despite mocking", "issue", false, 1, 1, null],
+    ["digest_drift_sweep_silent_noop_github_token_scope_2026_07_16", "digest-drift-sweep silent no-op since birth", "issue", false, 1, 0, null],
+    ["features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07", "Uncommitted staged revert of fleet-dedup thin-caller-stubs", "issue", false, 1, 1, "[OPERATOR] drop ruled-abandoned stash"],
+    ["ff_pull_fleet_drift_rca_2026_08_11", "FF-pull fleet drift RCA — actor/detector divergence", "issue", false, 2, 2, "[OPERATOR] x2 (uv.lock scope; 43 archived repos)"],
+    ["fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29", "Fleet-wide QG self-hosted-runner capacity crisis, day 2", "issue", false, 2, 11, null],
+    ["fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27", "v2 self-hosted flip outran the operator-paced capacity plan", "issue", false, 3, 7, "[OPERATOR] throughput vs. concurrency-reduction"],
+    ["ibkr_gateway_infra_release_tag_stall_2026_08_11", "Release-tag-stall, root-caused past the false-alarm verdict", "issue", false, 2, 1, "[OPERATOR] complete breaking_scan_dir audit"],
+    ["image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07", "Hardcoded self-hosted runners were deregistered", "issue", false, 1, 1, null],
+    ["instruments_service_defi_golden_red_capability_drift_2026_08_14", "defi golden red — blocks fleet-wide IS quickmerge (see scoping)", "issue", false, 0, 0, null],
+    ["ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10", "ldr-docs-gate red 10h+, zero pages — inherited -e trap", "issue", false, 2, 3, null],
+    ["ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10_finalize_2026_08_17", "Finalize — silent -e trap (gated)", "issue", true, 2, 0, null],
+    ["ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07", "Single concurrency group starves under heavy trigger volume", "issue", false, 2, 10, "[OPERATOR] re-attempt gh run cancel on 3 runs"],
+    ["main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18", "Failed backmerge strands LDR indefinitely, non-PM repos", "issue", false, 1, 3, null],
+    ["main_ldr_backmerge_silently_reapplies_collateral_frontmatter_deletion_2026_08_17", "Clean auto-merge silently re-applies a dropped frontmatter key", "issue", false, 2, 1, "[OPERATOR] author: required-vs-elective"],
+    ["mtds_is_historical_quickmerge_bypass_backlog_2026_08_16", "MTDS + IS carry an 8-commit-each strict-quickmerge bypass backlog", "issue", false, 3, 0, "[OPERATOR] x2 (bless-vs-reship, both repos)"],
+    ["mtds_ldr_cloud_build_docker_step6_failure_2026_08_10", "MTDS LDR Cloud Build fails at docker step 6", "issue", false, 2, 3, "[OPERATOR] confirm no -prod trigger is intentional"],
+    ["plan_reconciler_findings_ci_2026_08_10", "plan_reconciler findings — ci tranche — 2026-08-10", "issue", true, 1, 8, null],
+    ["plan_reconciler_findings_ci_2026_08_16", "plan_reconciler findings — ci tranche — 2026-08-16", "issue", true, 0, 0, null],
+    ["pm_version_split_blocks_all_quickmerge_code_commits_2026_08_10", "PM VERSION_SPLIT blocks every quickmerge CODE commit", "issue", false, 3, 0, null],
+    ["promote_pr_non_supersession_after_greeks_service_fix_2026_08_18", "Promote-PR non-supersession after a gate-passing re-run", "issue", false, 1, 0, null],
+    ["qg_sentinel_environment_blind_2026_07_23", "QG sentinel environment-blind — quickmerge vs. standalone", "issue", false, 0, 5, null],
+    ["quickmerge_isolated_worktree_missing_sibling_pm_checkout_2026_08_10", "Isolated worktree fails every non-PM repo ship", "issue", false, 1, 2, null],
+    ["quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09", "quickmerge re-enters setup.sh, exits without committing", "issue", false, 2, 2, null],
+    ["safe_doc_push_unrecognized_flag_silently_becomes_branch_name_2026_08_18", "No --agent flag — unrecognized flag silently becomes BRANCH", "issue", false, 3, 0, null],
+    ["semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07", "Semver-agent mints ZERO tags on a no-export-change promote", "issue", false, 0, 31, null],
+    ["silent_failures_surfacing_as_generic_promotion_lag_2026_07_17", "3 unrelated failures surfaced as one generic PROMOTION LAG", "issue", false, 3, 3, null],
+    ["sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08", "SIT-gate treadmill recurs under high LDR commit velocity", "issue", false, 1, 6, null],
+    ["sit_stamp_dispatch_503_false_positive_2026_08_17", "SIT “failures” were GitHub API 503s, not broken checks", "issue", false, 1, 0, null],
+    ["strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06", "v2 red on promote PR #490 was a CI infra flake", "issue", false, 2, 9, null],
+    ["unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14", "New consumer-qg-gate job never forward-ported to SSOT template", "issue", false, 1, 0, null],
+    ["unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14_finalize_2026_08_18", "Finalize — template lag (gated)", "issue", true, 1, 0, null],
+    ["unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17", "slot-cron-ff-pull's branch-override registry missing a row", "issue", false, 3, 3, "[OPERATOR] x2 (registry collapse; slot 6-11 reconcile)"],
+    ["workflow_template_drift_repeated_during_phase7_rollout_2026_07_27", "Parity gate drifted, blocked every PM commit 3x in ~1h", "issue", false, 2, 1, null]
+  ];
+
+  var tbody = document.getElementById("roster-body");
+  roster.sort(function (a, b) {
+    if (a[2] !== b[2]) return a[2] === "plan" ? -1 : 1;
+    return (b[4]) - (a[4]);
+  });
+  roster.forEach(function (r) {
+    var slug = r[0], title = r[1], type = r[2], agg = r[3], open = r[4], done = r[5], opLine = r[6];
+    var total = open + done;
+    var donePct = total ? Math.round((done / total) * 100) : 0;
+    var tr = el("tr");
+    var pathPrefix = type === "plan" ? "../active/" : "../active/issues/";
+    tr.appendChild(el("td", null,
+      '<div class="car-title"><a href="' + pathPrefix + esc(slug) + '.md">' + esc(slug) + "</a></div>" +
+      '<div class="car-sub">' + esc(title) + "</div>"
+    ));
+    tr.appendChild(el("td", null,
+      '<span class="tag ' + type + '">' + type.toUpperCase() + "</span>" +
+      (agg ? '<span class="tag agg">AGG</span>' : "")
+    ));
+    var barHtml = '<div class="bar"><div class="bar-track">' +
+      (total ? '<div class="bar-done" style="width:' + donePct + '%"></div><div class="bar-open" style="width:' + (100 - donePct) + '%"></div>' : "") +
+      '</div><span class="bar-nums">' + open + " / " + total + "</span></div>";
+    tr.appendChild(el("td", { class: "bar-cell" }, barHtml));
+    tr.appendChild(el("td", null, opLine ? '<span class="op-flag">' + esc(opLine) + "</span>" : "&mdash;"));
+    tbody.appendChild(tr);
+  });
+
+  // ---------- OPERATOR'S DESK ----------
+  var desk = [
+    ["ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md", "P0 · RULED", "Fork-PR self-hosted-runner exposure policy — already RULED 2026-08-06 (option a: require approval for outside-contributor fork PRs + restrict). Listed here because the checkbox itself is still open pending the mechanical follow-through, not because the decision is unmade."],
+    ["ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md", "P2", "Grant <code>ikenna-worker</code> a scoped <code>ssm:SendCommand</code> IAM permission, or pick an alternate resolution path — the doc names the options, waiting on which one."],
+    ["cloud_build_router_fallback_region_same_as_primary_2026_08_14.md", "P3", "Decide the intended shape of Cloud Build regional redundancy — provision a real fallback region, or accept single-region and remove the misleading “fallback” framing."],
+    ["cloud_run_traffic_pin_silent_freeze_alert_wiring_2026_08_05.md", "P2", "Populate the GSM secret with the #ci-failures Slack incoming webhook URL and verify end-to-end — a credential-provisioning ask, not a design question."],
+    ["features_service_clean_check_dangling_fleet_ci_dedup_revert_2026_08_07.md", "P2", "Drop the ruled-abandoned <code>git stash</code> entry — waiting on explicit sign-off before a destructive stash op."],
+    ["ff_pull_fleet_drift_rca_2026_08_11.md", "P2 × 2", "Whether <code>uv.lock</code> auto-clean should widen scope beyond pure <code>version =</code> drift; and what to do about 43 archived repos still carrying a stale inlined reference."],
+    ["fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md", "P3 · new this pass", "Throughput-provisioning vs. concurrency-reduction (or both) for glue-runner capacity — touches fleet-wide CI capacity, needs explicit sign-off. Converted from prose to a real todo this pass (see Cleared, below)."],
+    ["ibkr_gateway_infra_release_tag_stall_2026_08_11.md", "P2", "Audit/complete <code>workspace-manifest.json</code>'s <code>breaking_scan_dir</code> curated per-repo list."],
+    ["ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md", "P3", "Re-attempt <code>gh run cancel</code> / run-delete on 3 named strategy-service run IDs — a specific manual GH Actions action, not a design call."],
+    ["main_ldr_backmerge_silently_reapplies_collateral_frontmatter_deletion_2026_08_17.md", "P3 · retagged this pass", "Whether <code>author:</code> should be REQUIRED rather than elective on generator-emitted issue docs — a schema-owner call. Retagged from <code>[DOCS]</code> to <code>[OPERATOR]</code> this pass (was sharing a file with 2 dispatchable AO todos, unlabeled)."],
+    ["mtds_is_historical_quickmerge_bypass_backlog_2026_08_16.md", "P2 × 2", "Bulk-bless-after-review vs. re-ship-each-individually vs. show-and-wait, for 8 MTDS + 8 instruments-service historical bypass commits."],
+    ["mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md", "P3", "Confirm MTDS having no <code>-prod</code> Cloud Build trigger is intentional (pre-cutover), not an oversight."],
+    ["unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md", "P3 × 2", "Whether to collapse two branch-override registries into one manifest-driven lookup; and reconciling 6 MacBook-Pro slots' local <code>main</code> divergence."]
+  ];
+  var deskList = document.getElementById("desk-list");
+  desk.forEach(function (d) {
+    var item = el("div", { class: "desk-item" });
+    item.appendChild(el("div", { class: "desk-item-head" },
+      '<span class="desk-doc">' + esc(d[0]) + "</span><span class=\"desk-gate\">" + esc(d[1]) + "</span>"));
+    item.appendChild(el("div", { class: "desk-body" }, d[2]));
+    deskList.appendChild(item);
+  });
+
+  // ---------- NEEDS EXTRA SCOPING ----------
+  var scoping = [
+    ["instruments_service_defi_golden_red_capability_drift_2026_08_14.md", "epic ownership", "This doc's trigger was a CI-blocking quickmerge failure, but its substantive fix (audit + regen the defi expected-universe golden) already redirected to <code>defi_satellite_ao_dispatch_batch14_2026_08_16.md</code>, a DeFi-tranche batch. The epic's own scope note excludes “asset-group data content” incidents that merely mention CI in passing — this doc plausibly fits that exclusion (parent_epic &rarr; defi_master). <strong>Not reclassified this pass</strong>: a concurrent 2026-08-18 defi-tranche <code>/plan-reconcile</code> session is already citing this doc (<code>plan_reconciler_findings_defi_2026_08_18.md</code>), and a parent_epic move on a file another live session is touching is exactly the collision this workspace's multi-agent-safety rules warn against."],
+    ["/codex/08-workflows/ci-cd-flow.md", "new codex content", "The archived <code>uac_value_only_config_change_breaks_utl_untested_2026_07_20</code> doc's class (UAC registry VALUE edits break UTL untested, no gate sees it) is generally covered by the existing “Breaking = public-surface change” section, but that section's consumer-QG-gate fan-out list doesn't name UTL specifically among not-yet-covered consumers. A one-line addition would close the gap. Not applied — new codex authorship stays operator-gated under Trust Mode regardless of evidence strength."],
+    ["/codex/06-coding-standards/quality-gates.md", "new codex content", "The archived <code>workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07</code> doc found a specific, previously-undocumented mechanism: <code>prettier --write</code> deterministically mangles a bare double-brace <code>{{X}}</code> GHA template placeholder into invalid YAML, and the fix (<code>__X__</code> double-underscore convention) isn't recorded anywhere in codex. Recommended addition, not applied — same Trust-Mode carve-out."],
+    ["ci_satellite_ao_dispatch_batch15_2026_08_16.md:186", "undefined parameter", "Todo cites building a backstop check for “mover did-work-counter isn't 0 for N days” without stating a concrete value for N in its own text (only possibly in the un-restated source doc, <code>github_actions_operator_gated_followups_2026_07_17.md</code> line ~106) — not independently checked this pass whether the source doc actually resolves it."],
+    ["ci_satellite_ao_dispatch_batch15_2026_08_16.md:275,350", "possibly-stale duplicate", "Two open todos (reconcile <code>semver_agent_squash_promote_blind_to_patch_fixes</code>'s residuals; reconcile <code>codex_freshness_ratchet_trips_on_calendar</code>'s remaining items) may already be moot — <code>ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md</code> independently confirms both target docs now at 0 open todos. Not independently re-verified/closed this pass; flagged for the next pickup to confirm-and-close rather than dispatch fresh."],
+    ["ci_satellite_ao_dispatch_batch15_2026_08_16.md (9 todos)", "systemic line-number citations", "9 of the doc's 13 open todos cite <code>(line ~NNN)</code> into a source doc instead of a grep-able symbol/heading, banned by <code>task_template.md</code> §3. Each is individually AUTO-FIXABLE (quote the actual cited text) but labor-intensive across 9 items in one pass — not fixed this run; a mechanical, no-judgment sweep for a future pass, not an authority call."]
+  ];
+  var scopeList = document.getElementById("scope-list");
+  scoping.forEach(function (s) {
+    var item = el("div", { class: "desk-item scope" });
+    item.appendChild(el("div", { class: "desk-item-head" },
+      '<span class="desk-doc">' + esc(s[0]) + "</span><span class=\"desk-gate\">" + esc(s[1]) + "</span>"));
+    item.appendChild(el("div", { class: "desk-body" }, s[2]));
+    scopeList.appendChild(item);
+  });
+
+  // ---------- CLEARED THIS PASS ----------
+  var cleared = [
+    ["Archived 3 fully-done docs (6-step ritual)", "uac_value_only_config_change_breaks_utl_untested_2026_07_20, workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07, uv_version_pin_live_ci_reusable_workflow_still_hardcoded_2026_08_09 → plans/archive/issues/, epic listing + related_plans updated, corpus referrers repointed"],
+    ["Closed 2 zero-checkbox traps", "fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27 (3 prose items → real todos), strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06 (2 prose items → real todos)"],
+    ["Fixed 3 finalize-plan tag collisions", "ci_satellite_ao_dispatch_batch13/15_finalize + ci_tranche_zero_checkbox_archive_sweep — all had multiple todos sharing one [TAG] P&lt;n&gt;, the exact shape that broke /done's disambiguator once before (sports_satellite_ao_dispatch_batch3_finalize_2026_07_25)"],
+    ["Fixed 1 self-contradicting arithmetic claim", "ag_closeout_audit_ci_parked_2026_08_16.md — “25/25 done” corrected to “2/25 done”, matching its own next clause (0+2=2, 2+23=25)"],
+    ["Fixed 2 asset_group / parent_epic mismatches", "main_ldr_backmerge_silently_reapplies_collateral_frontmatter_deletion_2026_08_17 and quickmerge_isolated_worktree_missing_sibling_pm_checkout_2026_08_10 — both invisible to ci-tranche tooling despite parent_epic: ci_master"],
+    ["Retagged 1 unlabeled operator item + added BLOCKED-ON markers", "main_ldr_backmerge's author:-required todo → [OPERATOR]; safe_doc_push and batch13's bare-VM-proof todos now carry BLOCKED-ON pointers to their real blockers"],
+    ["Fixed 1 finalize-doc overclaim", "ldr_docs_gate_red_but_silent...finalize_2026_08_17.md said “3 landed todos” when only 1 of 3 had actually landed — corrected wording, machine gate itself was never wrong"],
+    ["Fixed 5 dangling/format referrer issues", "ci_satellite_ao_dispatch_batch15, todo_cancelled_disposition_format doc, ci_consolidated_closeout, promote_pr_non_supersession, ag_closeout_audit_ci_parked — stale related:/context_scope pointers to the 3 newly-archived docs"],
+    ["Corrected 1 stale cross-run cross-reference", "plan_reconciler_findings_ci_2026_08_10.md's Filed-9 note now cites the real root-cause mechanism doc (blocked_message_orphaned_by_reassign) instead of a bare “still unresolved”"]
+  ];
+  var clearedList = document.getElementById("cleared-list");
+  cleared.forEach(function (c) {
+    var item = el("div", { class: "cleared-item" });
+    item.appendChild(el("div", { class: "cleared-check" }, "✓"));
+    item.appendChild(el("div", { class: "cleared-text" }, "<strong>" + esc(c[0]) + "</strong> &mdash; <span class=\"ev\">" + c[1] + "</span>"));
+    clearedList.appendChild(item);
+  });
+
+  // ---------- DISPATCH TICKETS ----------
+  var mandatoryHead =
+    "Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before any tool call. If you cannot read it, STOP.\n\n";
+
+  var tickets = [
+    ["TRACK 1", "Self-hosted-runner capacity cluster",
+      mandatoryHead +
+      "Work the connected self-hosted-runner I/O-starvation incident in unified-trading-pm:\n" +
+      "  - plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md (8 open)\n" +
+      "  - plans/active/ci_vm_exposure_remediation_2026_08_06.md (1 open)\n" +
+      "  - plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md (3 open, incl. 1 new [OPERATOR] todo)\n" +
+      "  - plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md (2 open)\n" +
+      "Do NOT touch any other doc in this epic. Implement + verify each fix genuinely works (re-run the relevant check, don't just read code), flip checkboxes with a real commit sha, quality-gates.sh green before shipping via quickmerge. Stop when this cluster's non-operator-blocked todos are done; leave [OPERATOR] items open."],
+    ["TRACK 2", "Batch 15 drain",
+      mandatoryHead +
+      "Work plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md's 13 open todos in unified-trading-pm, one at a time, per its own priority ordering. Its finalize plan (ci_satellite_ao_dispatch_batch15_2026_08_16_finalize.md) is machine-gated behind it — do not hand-edit the gate. Note: 2 of its todos (:275, :350) may already be moot per this report's “Needs extra scoping” section — verify against ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md before dispatching fresh work on them. Quality-gates.sh green + real evidence before any checkbox flip."],
+    ["TRACK 3", "Batch 13 drain",
+      mandatoryHead +
+      "plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13.md has 1 open todo: a bare-VM CI-bootstrap proof, currently BLOCKED-ON check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09 (an SSM IAM grant gap). Read that doc first — if the IAM grant has landed since, resume the VM-launch verification from its documented resume point (do not restart from zero). If not, this todo stays blocked; do not force it. Finalize plan is gated behind this one."],
+    ["TRACK 4", "Promotion-pipeline livelock/flake cluster",
+      mandatoryHead +
+      "Work these 5 independent unified-trading-pm docs (same underlying gate-treadmill/livelock shape, different angles — read all 5 before touching any one, they cross-reference):\n" +
+      "  - plans/active/issues/ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md (2 open)\n" +
+      "  - plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md (1 open)\n" +
+      "  - plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md (3 open)\n" +
+      "  - plans/active/issues/main_ldr_backmerge_silently_reapplies_collateral_frontmatter_deletion_2026_08_17.md (2 open, 1 is [OPERATOR])\n" +
+      "  - plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md (1 open)\n" +
+      "Do not touch any doc outside this list. Real evidence (commit sha, live re-verification) before any checkbox flip."],
+    ["TRACK 5", "Ship-script mechanism bugs",
+      mandatoryHead +
+      "Fix 4 independent quickmerge/safe-doc-push mechanism bugs in unified-trading-pm (one script each, no file overlap):\n" +
+      "  - plans/active/issues/safe_doc_push_unrecognized_flag_silently_becomes_branch_name_2026_08_18.md — scripts/dev/safe-doc-push.sh's argument-parsing loop\n" +
+      "  - plans/active/issues/quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md\n" +
+      "  - plans/active/issues/pm_version_split_blocks_all_quickmerge_code_commits_2026_08_10.md\n" +
+      "  - plans/active/issues/quickmerge_isolated_worktree_missing_sibling_pm_checkout_2026_08_10.md — the one open todo is confirming an already-shipped fix's E2E behavior, not writing new code\n" +
+      "These are ship-pipeline scripts — test each fix directly (a broken quickmerge/safe-doc-push blocks every future commit on this repo). Quality-gates.sh green before shipping."]
+  ];
+  var ticketsEl = document.getElementById("tickets");
+  tickets.forEach(function (t) {
+    var card = el("div", { class: "ticket" });
+    card.appendChild(el("div", { class: "ticket-head" },
+      '<span class="track-id">' + t[0] + " &middot; " + esc(t[1]) + '</span><span class="copy-hint">select all &middot; copy</span>'));
+    card.appendChild(el("pre", null, esc(t[2])));
+    ticketsEl.appendChild(card);
+  });
+})();
+</script>

@@ -34,7 +34,7 @@ related:
     /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
-    /plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
+    /plans/archive/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md,
     /plans/active/issues/ldr_to_main_promote_inflight_wait_blocks_doomed_run_2026_08_10.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
@@ -310,7 +310,7 @@ source: >-
 
 - [x] ✅ [REVIEW] P2. **CHECKBOX RECONCILIATION 2026-08-17 (slot-18, review craft) — already resolved before this
       batch was drafted.** The two `[OPERATOR]`-retagged SUPERSEDED/DO-NOT items in
-      `plans/active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` were already converted from
+      `plans/archive/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md` were already converted from
       `- [OPERATOR]`-tagged bullets to the non-checkbox `CANCELLED —` disposition format by
       `unified-trading-pm@09cb20bf5a` (2026-08-16, `/plan-reconcile Phase -1`) — this batch's own Source line (~305)
       still described them as pending a `[x]`-flip, missing that the reconcile pass had already closed them out in a
@@ -338,7 +338,7 @@ source: >-
       ancestor of `origin/live-defi-rollout` (`git merge-base --is-ancestor` passes), and
       `find_dropped_substitution_keys()` is present and live in `scripts/propagation/rollout-cloudbuild.py:240`,
       called from the `--apply` write path at line ~413. The source issue doc
-      (`plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`) already carries 0 open
+      (`plans/archive/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`) already carries 0 open
       `- [ ]` checkboxes — every one of its todos is independently marked `[x]` done. No further code change
       needed; this item was pure checkbox-reconciliation.
 

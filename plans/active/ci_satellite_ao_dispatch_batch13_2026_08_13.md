@@ -271,7 +271,7 @@ source: >-
       flipped, follow-up branch-protection-wiring todo added). See the source issue doc's own checkbox for full detail.
 - [x] ✅ [CODE] P2. fix or prove rollout-cloudbuild.py's --apply preserves consumer-only `substitutions` keys (currently
       invisible to _cloudbuild_markers()), per the doc's own stated done-when Source:
-      `plans/active/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — ✅ **DONE 2026-08-14 (slot
+      `plans/archive/issues/cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md` — ✅ **DONE 2026-08-14 (slot
       26, infra).** Fixed via a new, SEPARATE guard (`find_dropped_substitution_keys()`,
       `unified-trading-pm@b167edbaf4`) rather than folding `substitutions` into `_cloudbuild_markers()`/
       `find_dropped_markers()` — those two are reused by `check_cloudbuild_template_drift.py`'s baseline-gated ratchet,
@@ -460,7 +460,7 @@ source: >-
       $0/unmetered) and the
       self-hosted VM's steady-state load average before vs. after, via the already-proven github-billing-token GSM
       secret + aws ce get-cost-and-usage procedure Source:
-      `plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md` — ✅ **DONE 2026-08-14 (slot 20, infra), no
+      `plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md` — ✅ **DONE 2026-08-14 (slot 20, infra), no
       code change (PM-only, docs).** Billing: pulled real Aug-2026 GitHub Enhanced Billing usage data
       (`github-billing-token` GSM secret) for all 18 target repos — `netAmount` was **$0.00
       every day 08-06 through 08-13** (8 consecutive clean days), confirming the public-repo-unmetered premise held in
@@ -473,7 +473,7 @@ source: >-
       (not attempted here; GitHub billing needed no AWS CE call at all, since it reads GSM + the GitHub API directly).
       Full write-up: `plans/active/issues/fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` 2026-08-14
       Progress Log entry; source plan's own todo 20 flipped in the same turn
-      (`plans/active/self_hosted_runner_public_repo_revert_2026_08_05.md`).
+      (`plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md`).
 
 ## Deferred
 

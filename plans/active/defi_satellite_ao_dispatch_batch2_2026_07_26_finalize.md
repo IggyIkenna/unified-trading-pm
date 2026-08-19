@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-08-18"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -81,19 +81,22 @@ context_scope:
 - [ ] [DOC] P2. **Action batch2's 3 non-batched findings.** (1) Retag
       `mtds_empty_string_fallback_codex_gate_blocking_pushes_2026_07_08.md` (batch2's "Note — 1 mistag found") — read
       the doc's real content to decide the correct `asset_group` (likely `cross-cutting` or `infra`, confirm), fix the
-      frontmatter, and re-run `scripts/plan-hygiene/check_ag_closeout_linkage.py` after the retag. (2) Read
+      frontmatter, and re-run `scripts/plan-hygiene/check_ag_closeout_linkage.py` after the retag. Still open as of
+      2026-08-18 (plan_reconciler re-check): the archived doc's frontmatter still reads `asset_group: [defi]`, never
+      retagged. (2) **DONE 2026-08-02** — Read
       `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md` in full (batch2's "Note — a second mistag
       found during Phase-0 discovery") to resolve the defi-vs-cross-cutting ambiguity, check whether it is still
-      `locked_by: live-defi-rollout` (if still locked, defer this sub-item to a later finalize iteration rather than
-      editing a locked doc), and retag if the lock has cleared and the content confirms one side. (3) Archive
+      `locked_by: live-defi-rollout`, and retag if the lock has cleared and the content confirms one side.
+      **CONFIRMED 2026-08-18 (plan_reconciler)**: live frontmatter now reads
+      `asset_group: [defi] # retagged 2026-08-02 (ag-closeout-audit defi, Orthogonality HARD CHECK, pattern-3
+      fork-inherits-parent-tag class) — was [cross-cutting]`, and `locked_by:` is empty — the retag landed and the
+      lock cleared. (3) Archive
       `mtds_perp_funding_backfill_hang_2026_07_14.md` (batch2's "Note — 1 doc found archivable_now") — **DONE,
       verified 2026-08-18 (plan_reconciler)**: confirmed live at `plans/archive/issues/mtds_perp_funding_backfill_hang_2026_07_14.md`
       (34207 bytes), archived per the sibling batch3-finalize's cited commit `bec54efeb` ("archive 35
-      confirmed-resolved/superseded/complete docs"). Sub-items (1) and (2) below remain unverified/likely open — the
-      containing checkbox stays unflipped until all 3 sub-items are confirmed done. via the standard
-      6-step ritual. **Done when**: item (1) is retagged with `check_ag_closeout_linkage.py` passing 0 new orphans; item
-      (2) is either retagged (lock cleared) or explicitly re-deferred with the lock status re-checked and cited; item
-      (3) is moved to `plans/archive/2026_07/` with every corpus referrer fixed.
+      confirmed-resolved/superseded/complete docs") via the standard 6-step ritual. Sub-item (1) above remains the
+      only genuinely open sub-item — the containing checkbox stays unflipped until it closes too. **Done when**:
+      item (1) is retagged with `check_ag_closeout_linkage.py` passing 0 new orphans (items 2 and 3 are done).
 - [ ] [DOC] P1. **Archive `defi_satellite_ao_dispatch_batch2_2026_07_26.md`** via the standard 6-step ritual (per
       CLAUDE.md's plan-archival rule): migrate any remaining Deferred items to a tracked todo elsewhere (todo 2 above
       should have already resolved or re-confirmed all 20 — verify none silently vanish) → add the archive banner → run

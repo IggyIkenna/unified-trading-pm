@@ -38,8 +38,11 @@ summary: |
   Corrected a stale operator-ping claim while at it: `ikenna_orchestrator/pings/slot_1.md`'s 2026-08-08
   round5-cross-cutting-audit line asserted "DERIBIT-COMBO + OKX options_chain Tardis data flowing" — that was
   already incorrect when written (`DERIBIT-COMBO` was deregistered from `VENUES_BY_ASSET_GROUP` 2026-07-23, BEFORE
-  that audit ran; bare `OKX` was deregistered 2026-08-05 with no `OKX-OPTIONS` successor — there is no registered
-  OKX options venue at all as of 2026-08-16).
+  that audit ran; bare `OKX` was deregistered 2026-08-04 with no `OKX-OPTIONS` successor — there is no registered
+  OKX options venue at all as of 2026-08-16). **CORRECTED 2026-08-18 (plan_reconciler)**: date was previously
+  2026-08-05; the actual removal commit is `unified-api-contracts@d67a226f` ("fix(cefi): remove bare OKX from the
+  venue registry...", verified via `git log`) timestamped 2026-08-04T08:38:12Z — matches
+  `cefi_window_scoped_coverage_gap_okx_binance_bybit_2024_2026_2026_08_09.md`'s independently-cited 2026-08-04 date.
 status: open
 nature: issue
 asset_group: [cefi]

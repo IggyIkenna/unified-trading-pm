@@ -15,7 +15,7 @@ summary: >-
   #ci-failures — the other 9 (confirmed on alerting-service, deployment-api) had a stale/invalid
   SLACK_CI_WEBHOOK_URL / SLACK_WEBHOOK_URL secret, so their notify job ran "successfully" (best-effort, never fails
   the build) but silently never posted.
-status: open
+status: resolved
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -39,12 +39,19 @@ source: >-
   /ci-reconcile interactive investigation, 2026-08-18 (this session) — operator asked "was there a huge blockage
   somewhere?" after seeing the 13-repo mass-recovery ldr-ci-monitor alert; root-caused via direct gh run/log
   inspection across 4 repos, confirmed via GSM + gh secret list, fixed both findings live.
-resolved_by:
+resolved_by: >-
+  unified-trading-pm@176ff63dab (validator retry) + gh secret sync across all 26 registry repos
+  (cloud-monitoring-slack-ci-failures-webhook) — see Findings 3-5 for the follow-up confirmation/audit/hardening
+  investigation outcomes.
 locked_by:
 depends_on: []
 ---
 
 # 13-repo simultaneous QG cascade — root cause + two fixes shipped
+
+> **🗄️ ARCHIVED 2026-08-18** — `status: resolved`, all todos `[x]`, `locked_by:` empty. Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, a doc with every todo done archives
+> immediately. Successor: none (all 5 findings closed out in this doc; no follow-up work remains open).
 
 ## What I found
 
@@ -129,23 +136,86 @@ gap is separately serious: any repo missing a valid webhook can go RED for an ar
 signal in `#ci-failures`, discoverable only by directly reading `gh run list` — exactly the failure mode `/ci-reconcile`
 exists to catch, but only when someone thinks to run it.
 
+### Finding 3 — the 7 "proactive" webhook fixes: 6 confirmed genuinely broken, 1 was a red herring
+
+Pulled each of the 7 repos' own failed-run notify-job log from the 11:08-11:09 UTC incident window (same method as
+alerting-service/deployment-api):
+
+- **6 confirmed genuinely broken** — identical `SLACK_WEBHOOK_URL is not an https URL` signature on
+  `client-reporting-api` (run 32130210529), `fund-administration-service` (32130238714), `greeks-service`
+  (32130244297), `market-data-processing-service` (32130256980), `ml-service` (32130266624),
+  `trading-agent-service` (32130278632). The re-propagation fixed a real defect on all 6.
+- **`unified-trading-pm` was NOT broken** — its own failed run (32130292495, sha `95a51158`, matching the
+  "incident since 95a51158" the recovery alert cited) shows the notify job's dedup gate correctly computed
+  `should_post=false (key 'qg-fail:unified-trading-pm:live-defi-rollout' last posted 119m ago < 120m cooldown —
+  suppressed)` — a legitimate, working-as-designed cooldown suppression (PM had already posted a CRITICAL for the
+  same dedup key ~119 minutes earlier, per its multiple RED cycles today), not a webhook defect. The proactive
+  re-propagation there was a harmless no-op, not a fix.
+
+### Finding 4 — fleet-wide webhook audit: one more confirmed-empty repo, 12 unverifiable-but-synced
+
+Checked `gh secret list` across the 13 repos NOT in the original incident (`batch-live-reconciliation-service`,
+`features-service`, `ibkr-gateway-infra`, `instruments-service`, `system-integration-tests`,
+`unified-api-contracts`, `unified-trading-library`, `unified-trading-api`, `unified-trading-system-ui`,
+`deployment-ui`, `e2e-testing`, `agent-orchestrator`, `unified-trading-ci`):
+
+- **`unified-trading-ci` had ZERO webhook secrets defined** (neither `SLACK_CI_WEBHOOK_URL` nor
+  `SLACK_WEBHOOK_URL` existed as a secret name at all) — a confirmed gap, now fixed.
+- The other 12 all had both secret names present. Checked each for a recent failed CI run to verify the stored
+  VALUE the same way as Findings 2/3 — almost none had one: most of these repos have been consistently green for
+  their last 15+ runs, and several (`unified-trading-system-ui`, `deployment-ui`, `unified-trading-ci`) run an
+  entirely different CI system (JS/TS-based) that may not even route through `notify-slack.yml` the same way.
+  **Could not independently confirm these 12 were actually broken** — secret presence alone doesn't prove a valid
+  value, and no real failure event existed to check against without manufacturing one (which would have meant
+  either a fake CI failure or a live test post to `#ci-failures`, both avoided as unnecessary noise).
+- **Action taken**: proactively synced `SLACK_CI_WEBHOOK_URL` + `SLACK_WEBHOOK_URL` from the same GSM source
+  (`cloud-monitoring-slack-ci-failures-webhook`) across all 13 — safe/idempotent regardless of prior state, closes
+  the confirmed `unified-trading-ci` gap, and removes the uncertainty for the other 12 going forward even though
+  their prior state is unconfirmed. **All 26 repos in `workspace-manifest.json`'s registry now carry the same
+  verified-current webhook.**
+
+### Finding 5 — the manifest-bump pipeline is already heavily hardened; the P3 todo's premise was wrong
+
+Read `update-repo-version.yml` (the actual `workspace-manifest.json` writer — `version-registry-update.yml` only
+writes to Firestore, a separate SSOT). It already has: a dedicated serialized `concurrency: group: version-bump,
+cancel-in-progress: false` (one pending slot, no eviction), a 5×-retry-with-rebase push loop, CUSTOM git merge
+drivers registered specifically to auto-resolve the deterministic conflict classes (version keys → max-semver,
+`breaking_pending` → union, audit jsonl → union), atomic tmp-file+rename writes, and a corruption
+detect-and-revert (`assert 'versions' in d` → `git checkout -- workspace-manifest.json` on failure). This directly
+contradicts this doc's original Finding-1 hypothesis that the manifest-bump pipeline itself was an unhardened
+race — it demonstrably is not.
+
+Given that, the more likely actual culprit for the transient `run_validators.py --scope all` failure is the
+OTHER half of what it checks — `validate_plan_links.py` (broken-link scanning across `plans/active/*.md`), which
+has no retry/serialization protection of its own and runs against whatever git state happens to be checked out at
+scan time. This session independently produced strong corroborating evidence: multiple `plans/active/*.md`
+archive-safety-ratchet and AG-closeout-linkage violations were hit and fixed live during this exact investigation,
+confirming the plans corpus was under heavy concurrent-edit churn in the same window (dozens of docs
+archived/edited by concurrent slot-3/slot-6/dp-audit-bot sessions).
+
+**No further source-side fix is being shipped for this.** The consumer-side retry already landed
+(`unified-trading-pm@176ff63dab`) wraps the ENTIRE `run-all-validators.sh --asset-group all` call — it re-pulls
+PM and retries regardless of which specific sub-validator (manifest or plan-links) flaked, so it already covers
+this class without needing to know which one it was. Adding a duplicate retry inside `validate_plan_links.py`
+itself would be redundant with what's already shipped. If this recurs with QG-level visibility into which
+specific validator failed (not available this session — the log only surfaces the generic "Production readiness
+validators FAILED" line), re-open this with the precise sub-check identified.
+
 ## Todos
 
-- [ ] [SCRIPT] P2. Independently confirm (via each repo's own notify-job log, same method used for alerting-service/
-      deployment-api) that the other 7 repos whose webhook secret was proactively re-set this session
-      (client-reporting-api, fund-administration-service, greeks-service, market-data-processing-service,
-      ml-service, trading-agent-service, unified-trading-pm) were actually broken before the fix — or confirm the
-      re-propagation was a no-op/idempotent correction on an already-working secret. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P2. Audit the remaining ~12 repos in the fleet NOT covered by this incident's 13-repo list (e.g.
-      instruments-service, features-service, ibkr-gateway-infra, unified-api-contracts, unified-trading-library,
-      unified-trading-api, system-integration-tests, e2e-testing, agent-orchestrator,
-      unified-trading-system-ui, deployment-ui, batch-live-reconciliation-service) for the same
-      SLACK_CI_WEBHOOK_URL/SLACK_WEBHOOK_URL validity gap — this session only checked/fixed the 13 that happened to
-      be visible in this specific incident. (repo: unified-trading-pm)
-- [ ] [SCRIPT] P3. Consider whether `run-all-validators.sh --asset-group all --failed-only`'s underlying
-      `validate_workspace_manifest.py` topological check should also get retry/backoff at ITS OWN invocation site
-      (PM's own CI, and the `version-registry-update.yml` bump-commit workflow itself) rather than only downstream
-      at the consumer side — the retry shipped here treats the symptom in every consumer; hardening the
-      version-registry-update race at its source (atomic manifest writes, or a lock) would prevent the transient
-      invalidity from ever existing on PM's trunk in the first place. Scope this as its own investigation, not a
-      quick follow-on — touches the automated version-bump pipeline every repo publish goes through.
+- [x] ✅ [SCRIPT] P2. Independently confirm (via each repo's own notify-job log) that the 7 proactively-fixed repos
+      were actually broken. DONE — see Finding 3: 6 of 7 confirmed genuinely broken (identical webhook-invalid
+      signature); `unified-trading-pm` was a false positive (legitimate dedup/cooldown suppression, not a broken
+      webhook) — the fix there was a harmless no-op.
+- [x] ✅ [SCRIPT] P2. Audit the remaining 13 fleet repos for the same webhook gap. DONE — see Finding 4:
+      `unified-trading-ci` had zero webhook secrets defined (confirmed gap, fixed); the other 12 have secret names
+      present but unverifiable without a real failure event (none existed this session) — proactively synced from
+      GSM for full-fleet consistency rather than left unconfirmed. All 26 registry repos now carry the same
+      verified-current webhook.
+- [x] ✅ [SCRIPT] P3. Investigated hardening the manifest-bump pipeline at its source. DONE — see Finding 5: found
+      `update-repo-version.yml` is already extensively hardened (serialized concurrency, 5× retry-with-rebase,
+      custom merge drivers, atomic writes, corruption revert) — the original premise (this pipeline is an
+      unhardened race) was wrong. The more likely culprit (`validate_plan_links.py`, no retry of its own) is
+      already covered by the consumer-side retry shipped in Finding 1's fix — no additional source-side code
+      change is warranted without more precise per-sub-validator failure evidence than was available this
+      session.

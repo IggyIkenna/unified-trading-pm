@@ -539,7 +539,8 @@ ui-1a-walkthrough-audit + ui-2a-batch-live in consolidated). One umbrella resolv
   freshness, ONE CLI with `--operation` discriminating risk-monitor / position-recon / pnl-attribution / strategy-batch
   / strategy-live / backtest. Mirrors `features_repo_consolidation_2026_05_08.md` 10-phase pattern. Pre-cutover race;
   flips to `BLOCKED-CUTOVER` if Phase 6 parity slips. Soft freeze on structural changes in the 4 affected repos for
-  duration. Sibling: `plans/active/ml_repo_consolidation_2026_05_19.md` (independent execution).
+  duration. Sibling: `plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md` (independent execution, now archived —
+`status: complete`).
 
 **MVP scope SSOT for backtest config-grid + ML training sizing**:
 [`/codex/09-strategy/mvp-universe-per-asset-group.md`](/codex/09-strategy/mvp-universe-per-asset-group.md) defines Tier

@@ -287,3 +287,12 @@ once this doc is split.
   Continuing to today's fresh `defi`-tranche sweep in `plan_reconciler_findings_defi_2026_08_17.md`.
 - **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — 0 open todos confirmed (this is plan_reconciler's own run-journal, not a task-tracking doc); today's plan_reconciler Phase -1 pass (dispatch agt-5dedc7) re-checked every still-open item with no drift found. Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **2026-08-18 (`/plan-reconcile defi_master`, epic-scoped, Phase -1)**: re-checked every STILL-OPEN item once more.
+  No drift beyond what the 2026-08-18 defi-tranche run (`plan_reconciler_findings_defi_2026_08_18.md`) already
+  independently confirmed for the overlapping items (the `dex_swaps` row-count-conflict docs stay unresolved/needs
+  live manifest read; `defi_manifest_index_catastrophic_shrink_2026_08_16.md` stays resolved+archived, no new
+  action). `uac_data_type_validity_combinator_fragmentation_2026_07_07.md` and
+  `defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md` are outside this epic-scoped pass's
+  `parent_epic: defi_master` corpus (defi-tranche-only docs) — not independently re-verified here, left to the
+  tranche-scoped cadence. This doc still carries genuine open work outside this epic-scoped pass's corpus — stays
+  in `plans/active/issues/`, unlocked.

@@ -563,11 +563,22 @@ investigation confirmed are both achievable with existing primitives:
       task shows up correctly in the "Human Fleet" dashboard page and
       `GET /api/backlog/usage/windows?role_group=human` returns a real row.
 - [ ] [OPERATOR] P1. **Harsh — hand to Harsh, pure verification, no coding (unchanged from the 2026-08-15 ruling).**
-      Same steps as Ikenna's todo above, but `machine='harsh-laptop'`, `AO_SLOT_ID=9002`. Done when: `ao-register.sh`
+      Same steps as Ikenna's todo above, but `machine='harsh-laptop'`, `AO_SLOT_ID=9002`:
+      `python3 -c "from server.auth import issue_token; t,e = issue_token('harsh', role='worker', machine='harsh-laptop'); print(t); print('expires', e)"`,
+      then `mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token` (paste the
+      token), then `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh harsh`. Done when: `ao-register.sh`
       returns `{"ok": true, ...}` and `harsh` shows up in AO's `GET /api/agents`.
 - [ ] [SCRIPT] P2. **Harsh — run one real, low-stakes task end-to-end (unchanged from the 2026-08-15 ruling).** Same
       steps as Ikenna's task todo above, `AO_SLOT_ID=9002`. Done when: the task shows up correctly in the "Human
-      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it.
+      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
+      (`GET /api/backlog/usage/windows?role_group=human`).
+- **[OPERATOR] P1. CANCELLED — SUPERSEDED 2026-08-18 (Ikenna, interactive session), duplicate of the "Harsh —
+  hand to Harsh, pure verification" register todo above, accumulated from a repeated autonomous-loop tick and
+  flagged (not actioned) by the 2026-08-17 na-eligibility-audit; deduped this session.**
+- **[SCRIPT] P2. CANCELLED — SUPERSEDED 2026-08-18 (Ikenna, interactive session), duplicate of the "Harsh — run
+  one real, low-stakes task" todo above, same accumulation and dedup pass as the entry directly above.**
+- **[SCRIPT] P2. CANCELLED — SUPERSEDED 2026-08-18 (Ikenna, interactive session), a second duplicate of the
+  "Harsh — run one real, low-stakes task" todo above, same accumulation and dedup pass.**
 - [x] 21. ✅ [INFRA] P2. **Phase 4b — preview the fully-populated dashboard via the mock demo backend, zero production
       connectivity.** Added `seed_human_slots()` to `scripts/populate_demo.py` — seeds `SlotRow`/`AgentRow`/
       `TaskUsageRow` for both reserved human slots (9001=ikenna, role_group="human", claimed task B-004; 9002=harsh,
@@ -594,33 +605,6 @@ investigation confirmed are both achievable with existing primitives:
       `TaskUsageWindows` panel return the seeded, server-priced usage numbers ($0.68 spend, matching the raw API
       response exactly) — confirming the "toggles and splits on the existing pages, not a new billing page" design
       holds. Full `quality-gates.sh` green (3985 passed). Evidence: `agent-orchestrator@609e4ea377`.
-      `python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)" mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token # paste the token AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name> # 9001=Ikenna, 9002=Harsh`
-      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and the operator shows up in AO's
-      `GET /api/agents`.
-- [ ] [SCRIPT] P2. **Operator-gated — hand to Harsh, pure verification, no coding.** Run one real, low-stakes task
-      end-to-end: `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable),
-      then without `--check-only` to actually claim, do the real work, commit+push, then
-      `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`. Optionally run
-      `ao-usage-push.py` afterward to confirm a usage row appears. Done when: the task shows up correctly in the "Human
-      Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
-      (`GET /api/backlog/usage/windows?role_group=human`).
-- [ ] [OPERATOR] P1. **DEFERRED-BY-DESIGN — hand to Harsh, pure verification, no coding.** Issue a long-lived worker-role JWT
-      (`issue_token(role="worker", machine="<name>-laptop")`, `server/auth.py:323-341`) and register. From the
-      `agent-orchestrator` repo root:
-      ```
-      python3 -c "from server.auth import issue_token; t,e = issue_token('<name>', role='worker', machine='<name>-laptop'); print(t); print('expires', e)"
-      mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token   # paste the token
-      AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh <name>   # 9001=Ikenna, 9002=Harsh
-      ```
-      Done when: `ao-register.sh` returns `{"ok": true, ...}` (not a 401) and the operator shows up in AO's
-      `GET /api/agents`.
-- [ ] [SCRIPT] P2. **DEFERRED-BY-DESIGN — hand to Harsh, pure verification, no coding.** Run one real, low-stakes task
-      end-to-end: `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-claim.sh <task_id> --check-only` (confirm claimable),
-      then without `--check-only` to actually claim, do the real work, commit+push, then
-      `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-done.sh <task_id> <sha> "<evidence>"`. Optionally run
-      `ao-usage-push.py` afterward to confirm a usage row appears. Done when: the task shows up correctly in the
-      "Human Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
-      (`GET /api/backlog/usage/windows?role_group=human`).
 - [x] 20. ✅ [INFRA] P3. **Document the human-slot contract as a durable codex SSOT** — new "Human slots" section
       appended to `/codex/04-architecture/agent-orchestrator-worker-liveness.md` covering both hard guarantees
       (never-killable, never-competing), what's reused vs. genuinely new, and a standing instruction that a future
@@ -704,7 +688,56 @@ investigation confirmed are both achievable with existing primitives:
       both positive/negative outcomes, using a real temp git repo for the checkbox-flip detection, not a mock), full
       `quality-gates.sh` green (3995 passed). Evidence: `agent-orchestrator@1af50054cf`.
 
+### Phase 7 — main Fleet table exclusion + registration re-verification (found 2026-08-18, not yet fixed)
+
+- [ ] [UI] P2. **Exclude human-kind slots from the main dashboard Fleet table's generic role-badge rendering** —
+      slot 9001 currently renders there with a role badge from the generic worker/reserve pool ("CI reserve"),
+      confirmed live via dashboard screenshot 2026-08-18. Phase 3's `AgentKind`/`KINDS_ORDER`/`AGENT_KIND_LABEL`
+      work (`dashboard/src/layout.tsx`, `agent-orchestrator@6b50caa795cfede5ecac6e91125a5284cad3a68e`) only ever
+      wired human slots into the DEDICATED `HumanFleet.tsx` page — find wherever the main Fleet table computes its
+      per-slot role badge and add the same `human_slot_ids()`-style exclusion the liveness/kill sites already use
+      (`server/config.py:316-331` pattern), so a human slot renders nowhere in the generic table at all (not
+      mislabeled, not present). Done when: a live dashboard check shows slot 9001 absent from the main Fleet
+      table's rows entirely, still correctly present on the Human Fleet page. Repo: agent-orchestrator.
+- [ ] [SCRIPT] P2. **Re-verify live whether `GET /api/agents?kind=human` still returns Ikenna's registered row** —
+      this plan's own 2026-08-16 Progress Log confirmed `agent_id=agt-f6b475`, `slot_id=9001`, `agent_kind=human`
+      live in production. A same-day sibling issue doc (`plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`)
+      reported a live check on 2026-08-18 finding ZERO human rows from that same endpoint — a direct contradiction
+      neither doc has reconciled. Pull `GET /api/agents?kind=human` live (SSM read-only against the orchestrator
+      VM, `i-0c9b283b31d6b5ca7`) and determine which claim is currently true — if the row is genuinely gone,
+      root-cause why (a restart clearing state? a TTL/expiry? a bug regression?) rather than just re-registering
+      over it. Done when: the live state is confirmed one way or the other with fresh evidence, and if a real
+      regression is found, it's root-caused (not just patched by re-running `ao-register.sh`). Repo:
+      agent-orchestrator.
+
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (14 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ffc453bde60eb30a]: KEEP-NA, valid — all 6 open todos are Harsh's (explicit 2026-08-15/08-16 operator ruling: physically impossible from this session) or Ikenna's (blocked on all 314 live backlog tasks currently carrying a blocked_reason). Note: the 6 checkboxes are 3 near-verbatim duplicate pairs from repeated autonomous-loop ticks — a housekeeping dedup is worth a future pass, not actioned here (content not wrong, no hard evidence one supersedes another).
+- **2026-08-18 (interactive session, operator asked to complete the plan)**: Re-checked Ikenna's blocked task-cycle todo
+  live via `GET /api/backlog` (706 queued tasks now, up from 314 on 2026-08-16) — **still 0 tasks without a
+  `blocked_reason`**, same wall as before, just grown. Correctly left un-forced again (same reasoning as 2026-08-16:
+  force-claiming a gated task means working against an unmet prerequisite). Did the housekeeping dedup the
+  2026-08-17 audit flagged but didn't action: Harsh's Phase 4 todos had accumulated to 5 entries across repeated
+  autonomous-loop ticks (2 near-identical "register" copies, 3 near-identical "run one task" copies) representing
+  only 2 distinct pieces of work, plus a garbled/orphaned command-line fragment + duplicate "Done when" clause stuck
+  onto the tail of already-checked-off todo 21 (Phase 4b) from an apparent copy-paste corruption in an earlier tick.
+  Collapsed to exactly 2 clean Harsh todos (register, task-cycle) and removed the stray tail from todo 21 — no
+  content lost, every removed copy was a verbatim or near-verbatim duplicate of a kept one. **Remaining open work,
+  confirmed accurate**: Ikenna's task-cycle (blocked on live backlog state, re-check anytime, or operator names a
+  task directly to override), and Harsh's entire Phase 4 (physically requires his own machine).
+- **2026-08-18 (interactive session, slot 3)**: Two new gaps found live, not yet fixed — captured as todos below
+  rather than left in chat. (1) The main agent-orchestrator dashboard Fleet table (NOT the dedicated Human Fleet
+  page this plan built) still renders slot 9001 with a role badge from the generic worker/reserve pool ("CI
+  reserve") instead of excluding human-kind slots from that computation entirely — confirmed via a live dashboard
+  screenshot. Phase 3's `AgentKind`/`KINDS_ORDER` work only ever touched the DEDICATED Human Fleet page; nothing
+  excludes a human slot from the separate, generic Fleet table's own role-badge logic. (2) A same-day sibling issue
+  doc (`ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`) reported `GET /api/agents` returning zero human rows
+  when it checked live on 2026-08-18 — directly contradicting this plan's own 2026-08-16 confirmation that
+  Ikenna's `agent_id=agt-f6b475`/`slot_id=9001` row was live and correctly typed. Not independently re-verified
+  this session; could be a real regression or a stale/wrong claim in the other doc — needs a fresh live check to
+  settle which. Design fork surfaced but NOT resolved this session (operator asked to scope it, then the
+  conversation moved on before an answer landed): should the Human Fleet content move to a same-page subsection
+  below the main Fleet table, or stay the existing separate `/human-fleet` page with just the exclusion bug (1)
+  fixed? Todos below are written to be answerable either way — resolving the fork changes WHERE the fix in (1)
+  renders, not whether it's needed.

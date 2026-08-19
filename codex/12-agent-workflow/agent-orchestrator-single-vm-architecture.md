@@ -410,8 +410,10 @@ the fleet's work, and a task's identity is stable across regens.
   both `backlog.yaml` AND the full historical `tasks` table) while leaving the original done row's audit fields
   byte-for-byte untouched — no longer "until someone notices." The real fix (content-derived ids) remains deliberately
   out of scope; re-open only if the remediation flow proves insufficient. Tracked in
-  `plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` (still open — one todo, the
-  content-derived-id follow-up, is deliberately deferred, not resolved).
+  `plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md` — corrected 2026-08-18
+  (`/plan-reconcile ao`): that doc is `status: resolved`, 0 open todos; the content-derived-id follow-up itself
+  shipped via `content_derived_backlog_task_ids_2026_08_08.md` (live-applied 2026-08-16, 2037/3782 rows migrated, 0
+  unexplained, 0 dispatched rows touched) — not deferred, done.
 
 ### 5. Dispatch-scope eligibility — bounded outcome only, judgment calls resolved BEFORE dispatch
 

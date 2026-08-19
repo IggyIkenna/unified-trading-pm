@@ -113,7 +113,7 @@ context_scope:
 - [ ] [SCRIPT] P2. **features-service coverage/script-canon cleanup** — three bounded follow-ups from the 2026-06-10
       coverage session: (1) ~~fix the per-module `pytest --cov=features_service.<module>` scipy/numpy/pytest-cov
       double-import crash on Python 3.13~~ **DONE 2026-07-31 — features-service@60992d3e** (see
-      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` line ~84 for the full root-cause +
+      `plans/archive/2026_08/issues/features_service_coverage_and_script_canon_2026_06_10.md` line ~84 for the full root-cause +
       fix writeup: an early pytest plugin, `tests/_native_lib_early_preimport.py`, pre-imports
       numpy/scipy/talib/`unified_trading_library` before `coverage.start()` runs, so its `source=` probe-import never
       purges-then-reloads their C-extension/pydantic-schema state; the whole-package `--cov=features_service` CI gate
@@ -150,7 +150,7 @@ context_scope:
       HEAD on its next ~15min tick, no manual PR action needed.** (3) run the `script-homes.md` "Per-repo cleanup sweep"
       (classify → relocate/fold-into-CLI/delete-dead, GCS-orphan-verify before any migration-script delete) across every
       repo's `scripts/` EXCLUDING features-service's smoke/e2e harnesses already handled in (2). Source:
-      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md`. Done when: per-module coverage
+      `plans/archive/2026_08/issues/features_service_coverage_and_script_canon_2026_06_10.md`. Done when: per-module coverage
       runs green on Python 3.13 locally; the 8 smoke_matrix.py + e2e/\* files exist under
       `e2e-testing/scripts/<domain>/` and no longer under features-service, wired to that repo's QG; every repo's
       `scripts/` directory has been classified per the script-homes canon with dead scripts deleted and relocatable
@@ -191,7 +191,7 @@ context_scope:
       feature buckets are currently empty in prod (per the source doc, no live data affected today), so this is safe to
       land now without a data-correctness blast radius. Repo: features-service
       (`features_service/sports/exporters/odds_features_exporter.py`). Source:
-      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` (line ~71-75, previously DEFERRED
+      `plans/archive/2026_08/issues/features_service_coverage_and_script_canon_2026_06_10.md` (line ~71-75, previously DEFERRED
       pending owner sign-off on NaN/fallback semantics — operator ruling 2026-07-27,
       `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 35: this is now agent-owned scoped
       work, not parked on a human). Done when: both fixes land with a new/extended unit test asserting (a) the elif/else
@@ -219,7 +219,7 @@ context_scope:
       of a pre-built instance), so calling the session-construction path from a non-async context either works safely or
       raises a clear, intentional error instead of an opaque `asyncio.get_running_loop()` crash. Repo: features-service
       (`features_service/onchain/app/core/data_loader.py`). Source:
-      `plans/active/issues/features_service_coverage_and_script_canon_2026_06_10.md` (line ~76-79, previously DEFERRED
+      `plans/archive/2026_08/issues/features_service_coverage_and_script_canon_2026_06_10.md` (line ~76-79, previously DEFERRED
       pending owner sign-off on the DNS-resolver config change — operator ruling 2026-07-27,
       `/plans/active/june_2026_vintage_audit_findings_2026_07_27.md` §5-RESOLVED item 35: this is now agent-owned scoped
       work, not parked on a human). Done when: the fix lands with a new/extended test confirming the

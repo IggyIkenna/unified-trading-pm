@@ -92,9 +92,15 @@ its todos define the marks the children apply, and build the tooling that stops 
       apply it to their own file, so defining it once here is what keeps the two documents consistent. Rule:
       default is `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol
       inline, which is what makes a later re-audit cheap. **Shipped `unified-trading-pm@171dc40739 + ec08cccad1`.**
-- [ ] [DOC] P0. **Define the owner-mark spec** — how a section names the workstream/plan/epic that closes it, per
+- [x] [DOC] P0. ✅ **Define the owner-mark spec** — how a section names the workstream/plan/epic that closes it, per
       `system_readiness_master.md` W21's closure invariant. Keep it terse enough to sit beside two other marks.
-- [ ] [SCRIPT] P0. **Build a banned-term / disclosure checker over the artefact directory, and wire it into QG.**
+      **Shipped `unified-trading-pm` —**
+      [rule 13 — artefact claim marks](/codex/14-customer-journeys/_ssot-rules/13-artefact-claim-marks.md): exact
+      CSS (`.own`, a solid neutral chip — distinct from `.st`'s solid colour-bordered pill and `.ev`'s dashed
+      colour-bordered pill), section-head markup, legend copy, and the content grammar (workstream shorthand `W<N>`
+      / plan short-tag `§<section>` / epic slug, omitted once status reaches `live`). `_ssot-rules/README.md`
+      index also fixed to list rules 11-13 (was silently stuck at "the ten rules").
+- [x] [SCRIPT] P0. ✅ **Build a banned-term / disclosure checker over the artefact directory, and wire it into QG.**
       Measured 2026-08-18: **no checker anywhere greps client artefacts for the banned client name** — the
       six-hit stop-ship in `strategy-service-deep-dive.html` was found only because an audit was commissioned, and
       nothing would catch a recurrence tomorrow. Must scan **raw file text, not rendered prose** (one original hit
@@ -103,18 +109,49 @@ its todos define the marks the children apply, and build the tooling that stops 
       [show-dont-show-discipline](/codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md) — the
       codex SSOT — rather than restating them. Also flag performance-figure patterns; note that legitimate uses
       exist ("net carry (annualised, bps)"), so this warns for review rather than hard-failing on the word alone.
-- [ ] [SCRIPT] P1. **Build the enum-drift check** validating artefact-quoted enum data against the UAC enums.
+      **Shipped**: `scripts/plan-hygiene/check_artefact_disclosure.py` (+ `artefact_disclosure_baseline.yaml`),
+      wired into `run_hygiene_sweep.sh`. Raw-text scan (no HTML parser, so an SVG `<text>` hit is caught
+      identically). HARD zero-tolerance class: banned client name, `CODE_NOT_WRITTEN`/`CODE_WRITTEN` maturity
+      leaks, internal `/admin/`,`/ops/`,`/config/`,`/devops/` route leaks. WARN shrinking-ratchet class:
+      performance-figure patterns (seeded baseline 1, from one legitimate "2.5% APR" hit). **Live-ran against the
+      corpus at ship time: HARD class is currently RED — 6 real ClearLoop hits in `strategy-service-deep-dive.html`,
+      owned by `client_artefact_remediation_siblings_2026_08_18.md`, not a regression from this wiring.** The
+      hygiene-sweep gate will stay red until that sibling todo lands — expected, not a defect in this checker.
+- [x] [SCRIPT] P1. ✅ **Build the enum-drift check** validating artefact-quoted enum data against the UAC enums.
       Root cause of two P0s: enum contents are hand-transcribed into six HTMLs, so one concern lives in seven
       places. Proof it recurs — the invented strategy family reached three documents, and
       `/codex/04-architecture/strategy-execution-protocol.md` correctly said "11 actions" while the artefact said
       9. Cover all six artefacts; ratchet-baseline it; name which enum each claim derives from.
-- [ ] [RESEARCH] P1. **Research real per-venue transfer rails / custody eligibility / collateral / cross-margin.**
+      **Shipped**: `scripts/plan-hygiene/check_artefact_enum_drift.py` (+ `artefact_enum_drift_baseline.yaml`),
+      wired into `run_hygiene_sweep.sh`. AST-parses ground truth from UAC source (no import dependency); tracks
+      `StrategyFamily` (9 members) and `StrategyInstructionEnvelope` (11 subclasses) to start, extensible.
+      Count-based (not per-member-name — documented as a deliberate, non-silent scope limit in the script's
+      docstring). Caught and required fixing one false positive during build: "the other 10 action types" in
+      `platform-external-api-walkthrough.html` §2 is correct prose (11 total minus the 1 already named, TRADE),
+      not a drift — added an "other N" exclusion so the check doesn't flag total-minus-N phrasing. Live-ran clean
+      (0 violations) at ship time; baseline seeded at 0.
+- [x] [RESEARCH] P1. ✅ **Research real per-venue transfer rails / custody eligibility / collateral / cross-margin.**
       Measured: **no UAC registry field answers these** — `VenueCapabilityRecord` is market-data only (`route` +
       `data_types`), `VenueCapability` covers actions, and a registry-wide grep for
-      `cross_margin|collateral_eligib|transfer_rail|withdraw_enabled|margin_asset` returns empty. Per operator
-      ruling the best current answer goes into the artefacts marked `assumption`/`needs-check` rather than being
-      withheld — **and this todo's output must spawn a registry-extension todo under W5**, so the artefact ends up
-      downstream of a machine SSOT instead of becoming one.
+      `cross_margin|collateral_eligib|transfer_rail|withdraw_enabled|margin_asset` returns empty. Per the operator
+      ruling recorded in this plan's own § E preamble
+      ([`/plans/active/client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
+      § E, "do NOT withhold full system functionality"), the best current answer goes into the artefacts marked
+      `assumption`/`needs-check` rather than being withheld — **and this todo's output must spawn a
+      registry-extension todo under W5**, so the artefact ends up downstream of a machine SSOT instead of becoming
+      one.
+      **CORRECTION found during research 2026-08-18**: the premise above is only half right. A grep for
+      `cross_margin` (no `_eligib` suffix) DOES hit — `VenueCapabilityV2.collateral_rules`/`.margin_spec`
+      (`CollateralRulesV2`/`MarginSpec` in `unified-api-contracts/.../architecture_v2/schemas.py`) is a real,
+      actively-consumed schema (`strategy-service/strategy_service/risk/v2/{margin_sim,preflight,orchestrator}.py`)
+      that already covers per-asset LTV/haircut collateral and cross-/portfolio-margin flags — populated for
+      **zero** real venues. Custody-eligibility and transfer-rail-eligibility per venue remain genuinely absent
+      (no field anywhere). Full findings + suggested `assumption`/`needs-check` artefact copy:
+      [venue transfer/custody/collateral research](/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md).
+      **Registry-extension todos added to `system_readiness_master.md` W5** — refined the existing "Collateral
+      that can actually be used" and "Cross-margin logic" P0 items to point at the specific unpopulated schema
+      (population, not design), and clarified the "Transfer capability per venue" P0 item still needs new fields
+      (no existing type to extend, unlike collateral/margin).
 - [x] [REVIEW] P1. ✅ **Audit the four sibling artefacts** — delivered by the second-pass audit,
       `unified-trading-pm@8b7e78e21f`; findings in
       [sibling-docs audit](/plans/audit/results/client_artefact_sibling_docs_audit_2026_08_18.md). Remediation
@@ -207,3 +244,15 @@ because every todo touches one of only two files. Deliberately excludes any todo
 functionality — those gaps are cross-referenced to their existing tracked items (§ "Real system gaps") rather than
 duplicated, per the workspace's plan-authoring HARD RULE that a plan references other plans/epics rather than
 re-deriving their content.
+
+**2026-08-18 — all 4 spec/tooling todos shipped; plan now fully done (0 open todos).** Owner-mark spec (rule 13),
+disclosure checker + enum-drift checker (both wired into `run_hygiene_sweep.sh`), and the transfer/custody/
+collateral research doc all landed — see each todo's own evidence above. Note the "sequential: true because every
+todo touches one of only two files" sentence two paragraphs up is now stale prose left over from before the
+2026-08-18 split — this plan hasn't held an HTML-editing todo since the split table above was introduced; kept
+unedited here as historical record of why the plan was originally authored that way, not as current guidance. The
+gated finalize companion,
+[`client_artefact_remediation_finalize_2026_08_18.md`](/plans/active/client_artefact_remediation_finalize_2026_08_18.md),
+is now unblocked — its own todos (reconcile evidence back into the audit report, re-check the "Real system gaps"
+list, archive this plan) are outside this session's scope (spec/tooling only, no artefact HTML) and were not
+started here.

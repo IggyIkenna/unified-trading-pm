@@ -131,10 +131,18 @@ source: >-
           `715f0bb8...` == GSM secret `deepseek-v4-pro-api-key` hash, `claude -p` probe HTTP 200 (balance was topped up).
           Flagging here so todo 3 below reconciles from the CURRENT durable fix, not this superseded 2026-08-10 record.
 
-- [ ] [REVIEW] P0. **Reconcile the verified todo's evidence into
-      `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own `[INFRA] P2` checkbox** — replace the
-      redirect-pointer text batch14 left behind with the real completion evidence (both hosts, verified). **Done when**:
-      the source checkbox carries real evidence, not a bare redirect pointer.
+- [x] ✅ [REVIEW] P0. **DONE 2026-08-18 (/plan-reconcile).** Reconciled the verified fix into
+      `deepseek_claude_blended_provider_routing_2026_07_28.md`'s own `[INFRA] P2` checkbox — replaced the
+      redirect-pointer text with the real completion evidence, drawing from THIS finalize plan's own corrected
+      2026-08-12 record (todo 2's correction paragraph), not the superseded 2026-08-10 claim: the durable fix is the
+      issue doc `deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md`'s S3+local+proxy-token-resolution fix
+      (confirmed live 2026-08-12, slot 2 — `gcloud secrets versions access` indirection present, sha256 differs from
+      the old literal, mtime 19:44 UTC). Also converted `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s own todo 1
+      from a `- [ ]` checkbox to a `CANCELLED — SUPERSEDED` non-checkbox marker (task_template.md §3's disposition
+      marker for "re-scoped or dead, nothing left to complete") — that checkbox had been re-derived into a
+      dispatchable task 7 times (2026-08-09 through 2026-08-12) with each dispatch costing a full worker
+      re-diagnosis, since `regen_backlog_from_plan.py` has no way to know an open `- [ ]` is intentionally permanent.
+      **Done when met**: the source checkbox carries real evidence (not a bare redirect pointer), verified above.
 - [x] ✅ [REVIEW] P1. **DONE 2026-08-10 (slot 18) — confirmed doc stays `active`, but the "4 other open items" claim
       undercounts by 1.** Re-grepped every top-level `- [ ]` in `deepseek_claude_blended_provider_routing_2026_07_28.md`
       (fresh-pulled tree). Excluding line 448 (the item this batch itself handles, currently mid-reconciliation via todo
@@ -202,3 +210,14 @@ source: >-
 - **context-scout 2026-08-15**: refreshed context_scope (4 entries) — added
   `deepseek_v4_pro_token_gsm_resourcing_reverted_2026_08_12.md` (holds the current durable fix this plan's own todo 2
   correction points to).
+- **2026-08-18 (`/plan-reconcile ao` hunter #8)**: Worked todo 3 (reconcile into source doc) — flipped
+  `deepseek_claude_blended_provider_routing_2026_07_28.md`'s `[INFRA] P2` checkbox with the real durable-fix evidence
+  (drawing from this plan's own corrected todo 2 record, not the superseded 2026-08-10 claim). Also converted
+  `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s sole todo from an open `- [ ]` checkbox to a
+  `CANCELLED — SUPERSEDED` marker (task_template.md §3 disposition-marker syntax) to stop the repeated re-derivation
+  loop flagged 7 times by prior workers (slots 18/20/16/7/2, 2026-08-09 through 2026-08-12) — each re-derivation cost
+  a full worker re-diagnosis with no way to close the checkbox, since the real fix's evidence lived on this finalize
+  plan, not the batch's own file. Todo 5 (archive the batch plan + regenerate the inventory) is now the sole
+  remaining item — a full 6-step archival ritual (corpus-wide referrer fixup, inventory regen script) is left for
+  the AO fleet's normal dispatch rather than executed here, to avoid a heavy multi-file corpus-wide operation
+  colliding with the other concurrent `/plan-reconcile` hunters working the same corpus simultaneously.

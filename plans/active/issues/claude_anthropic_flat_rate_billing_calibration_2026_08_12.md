@@ -369,7 +369,15 @@ investigation the next time an account is onboarded.
 - [ ] [OPERATOR] P1. **Investigate the sub-d 1047x outlier** — is Pro's weekly_pct denominator measuring something
       fundamentally different from Max20's (message-count-weighted vs token-volume-weighted), or is Pro genuinely this
       much more "boosted"? Needs either an Anthropic-side answer or more Pro-tier samples to know if 1047x is typical or
-      a fluke of this specific window's workload mix.
+      a fluke of this specific window's workload mix. **Cross-checked 2026-08-16 by the sibling
+      `/plans/active/anthropic_per_task_actual_spend_and_account_calibration_2026_08_10.md` plan (its own Todo 1 +
+      2026-08-16 Progress Log entry) — REFUTED as the same bug as that doc's separate `sub-d` denominator-mislabeling
+      fix**: that plan's tables had wrongly priced `sub-d` against a $200/mo max20 denominator instead of the correct
+      $20/mo Pro one (a straight arithmetic bug, since fixed); THIS doc's 1047x already uses the correct $20/mo Pro
+      budget (`23% x $4.52 ≈ $1.04`) and is scaled down further by a low observed `weekly_pct` that looks
+      disproportionate to the account's real token consumption — a genuine measurement anomaly in the Pro meter, not
+      a denominator error. Does not resolve this todo; recorded so the "same root cause?" question isn't
+      re-investigated from scratch.
 - [ ] [INVESTIGATE] P3. **Re-run once sub-f's window resets** (~2026-08-13 22:00 UTC, confirmed live via
       `weekly_window_start=2026-08-06 22:00`) for a genuinely clean full-week Max sample — the pre-reset window is real
       but partial (sub-f was already at weekly_pct=100% mid-window as of this check).

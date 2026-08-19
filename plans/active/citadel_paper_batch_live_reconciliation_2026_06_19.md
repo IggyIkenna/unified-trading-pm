@@ -285,7 +285,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       shipped 2026-06-20 per P2.7.1/P2.7.2 above but never wired into this terraform — the header comment claiming
       it "is NOT yet implemented" was stale), which honest-no-ops (`status: ok, skipped: no_run_configured`) instead
       of crashing when `paper_ledger_root`/`batch_ledger_root` are unset. Repo: deployment-service. Issue:
-      `plans/active/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`. **Deployed + live-verified**
+      `plans/archive/issues/blrs_daily_determinism_wrong_cli_operation_2026_08_18.md`. **Deployed + live-verified**
       2026-08-18: `tofu plan -target=module.blrs_daily_determinism_job` showed "1 to add" (not "1 to change") —
       local terraform state doesn't track this resource, so a blind `tofu apply` risked conflicting with however
       the live job is actually managed; applied directly instead (`gcloud run jobs update`, safe/idempotent,
@@ -492,7 +492,18 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       (`backtest_v2/smart_fill_replay.py` + `--operation smart-fill-replay` CLI + peripheral-QG wiring; 12/12 tests, QG
       exit-0) + e2e-testing@0e421c08 (`scripts/defi/execution_alpha_replay_e2e.py` → writes
       `ledger_type=execution_alpha`, `execution_alpha_bps = smart − benchmark`; QG exit-0). Both verified on
-      origin/live-defi-rollout 2026-06-21. Ship was blocked by 3 PRE-EXISTING fleet conditions, all cleared: (1)
+      origin/live-defi-rollout 2026-06-21. **SHA-citation note, added 2026-08-19 (`/plan-reconcile`, adversarial
+      verification)**: both `3d7d760c` and `0e421c08` predate the 2026-08-05 fleet-wide history rewrite
+      (`execution-service`/`e2e-testing` are among the rewritten repos —
+      `.stale-pre-history-rewrite-20260805T112453Z` clones exist for them) and no longer resolve as ancestors of the
+      current `origin/live-defi-rollout` via `git merge-base --is-ancestor`. This is a citation-staleness artifact of
+      the rewrite, not a false-progress signal: `execution-service`'s rewritten history carries an identical-message
+      commit `68a9a70ea` that IS a verified ancestor of the current `origin/live-defi-rollout`
+      (`git merge-base --is-ancestor 68a9a70ea origin/live-defi-rollout` — confirmed), and
+      `scripts/defi/execution_alpha_replay_e2e.py` genuinely exists on the current e2e-testing
+      `origin/live-defi-rollout` tip today (confirmed via `git show`) even though `0e421c08` itself is orphaned. Same
+      established handling as `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md:131`'s
+      shipped-SHA-differs-from-original-SHA note. Ship was blocked by 3 PRE-EXISTING fleet conditions, all cleared: (1)
       execution-service codex ratchet 4>3 → cleared 2 classes to 2 (empty-string fallback in smart_fill_replay.py:276 +
       the back-compat docstring in v2/benchmark_fills.py:12) + fixed a net-new STEP-5.69 inline-gs:// flag (error-msg
       noqa on smart_fill_replay.py:224) → QG exit-0; (2) PM manifest `versions{}` promotion-lag did NOT block service

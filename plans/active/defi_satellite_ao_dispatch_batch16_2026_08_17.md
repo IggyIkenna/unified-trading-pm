@@ -64,7 +64,6 @@ source: >-
   `/na-eligibility-audit defi` (2026-08-17). Every item below cleared the shared conflict-check
   (`/codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md` §3) against every active defi covering
   doc. Per-item Source: citations below point at the exact originating doc + todo.
-effort: high
 sequential: false
 drift_direction: advance-code
 ---
@@ -211,7 +210,7 @@ the working tree, both regression tests pass. So the real fix is the pair of cha
 
 **Blocked from shipping**: `unified-trading-library` has a pre-existing, unrelated QG-red test
 (`test_manifest_writer_v6.py::TestManifestWriterRecordEmptyV6::test_record_empty_with_v6_key` — see
-`plans/active/issues/utl_manifest_writer_v6_record_empty_options_chain_path_2026_08_17.md`), so the UTL half can't be
+`plans/archive/issues/utl_manifest_writer_v6_record_empty_options_chain_path_2026_08_17.md`), so the UTL half can't be
 committed under the green-tree HARD RULE, and MTDS's own quickmerge pre-flight refuses to ship while a path dependency
 carries uncommitted changes. A second, independent session (interactive slot-27, different feature) hit the exact same
 UTL red and was told by the operator to park locally and wait for AO to clear it — same resolution applies here.
