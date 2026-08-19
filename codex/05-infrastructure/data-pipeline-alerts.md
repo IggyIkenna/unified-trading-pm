@@ -31,7 +31,7 @@ referenced_by:
     plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md,
   ]
 owner:
-last_reviewed: 2026-06-22
+last_reviewed: 2026-08-19
 code_refs:
 ---
 
@@ -353,8 +353,9 @@ When `auto_recover` is exhausted or N/A, the tier escalates: **`file_issue`** wr
 **`page_operator`** is the terminal tier (CRITICAL → Slack page).
 
 > **RESOLVED (was "PARTIAL" 2026-06-23, corrected 2026-08-18 — the note had gone stale):** both actionable-frontmatter
-> halves shipped long ago (deployment-service's `escalation.py::_write_issue_doc` + e2e-testing's
-> `_dp_common.file_escalation_issue`, the latter landing `e2e-testing@821b73a` 2026-06-23). What was NOT resolved: the
+> halves shipped long ago (deployment-service's `escalation_issue_writer.py::write_issue_doc` — split out of
+> `escalation.py` on 2026-08-14, imported back in via `from ...escalation_issue_writer import write_issue_doc` — +
+> e2e-testing's `_dp_common.file_escalation_issue`, the latter landing `e2e-testing@821b73a` 2026-06-23). What was NOT resolved: the
 > e2e-testing half filed its doc by writing + `git commit`/`push`-ing directly from inside its own ephemeral Cloud Run
 > Job — no quality gates, no agent — which silently dropped a genuine RED finding three separate times in one week
 > (git identity, frontmatter drift, same-day filename collision;
@@ -376,9 +377,19 @@ recovery if the commit silently fails when the container exits. Two correct shap
 escalate-to-orchestrator` (`wall_type=data_pipeline_failure`) fast path described above so a real dispatched worker
   files the doc from the payload instead. The dispatched `data_pipeline_failure` boot prompt
   (`unified-trading-pm/agents/data_pipeline_failure.md`) now handles both cases — a pre-filed slug, or a bare
-  candidate payload it must file itself before diagnosing.
+  candidate payload it must file itself before diagnosing. **e2e-testing's `_dp_common.py::file_escalation_issue`
+  now takes ONLY this second shape** (`e2e-testing@aa6e8a1498`, 2026-08-18) — it derives zero frontmatter itself
+  anymore, it just emits `DP_ESCALATION_DEFERRED` + dispatches.
 
-Full design + the incident history that motivated it: `/plans/active/dp_audit_escalation_agent_backed_filing_2026_08_18.md`.
+**Shared frontmatter-template location — investigated, closed without extracting (2026-08-19).** With the e2e-testing
+side reduced to event-emit-only above, `escalation_issue_writer.py::write_issue_doc` is the only remaining Python
+implementation of the docspec-issue-schema frontmatter template (test-covered:
+`deployment-service/tests/unit/test_escalation_issue_writer.py`) — no second Python caller exists to converge with,
+and neither UTL (trading-domain shared infra) nor UAC (external/internal API-contract schemas) is a domain fit for
+PM-doc frontmatter serving a single T4 consumer. The boot prompt's own hand-written mirror of the same field list is
+prose for a one-shot LLM worker, not a Python import, so "extraction" doesn't reduce it the same way. Revisit only if
+a second genuine Python consumer appears. Full reasoning:
+`/plans/archive/2026_08/dp_audit_escalation_agent_backed_filing_2026_08_18.md`.
 
 ## Alert-driven dependency revocation (2026-08-14, `alert_driven_dependency_revocation_2026_08_12.md`)
 
