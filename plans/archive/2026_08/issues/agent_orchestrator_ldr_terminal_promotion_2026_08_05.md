@@ -59,6 +59,13 @@ context_scope:
 > **🟢 ARCHIVED 2026-08-07 — RESOLVED** (all todos `[x]`, unlocked; status flipped from `open` to `resolved` — content
 > verified complete, not just checkbox count). Archived by cicd wall-resolution (`agt-6f2b99`) as part of the
 > `check_archive_candidates` ratchet fix.
+>
+> **⚠️ SUPERSEDED IN PRACTICE 2026-08-19** by
+> `/plans/active/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md` — agent-orchestrator is
+> `promotion_model: ldr_main` again (fleet parity restored ahead of parallel AO-dispatched agents landing on its
+> own LDR). The deploy-side facts below are still historically accurate (the dashboard trigger fix, the original
+> root cause) — but the "What changed" section's `promotion_model: ldr_terminal` state is no longer current. Read
+> the superseding plan's Phase 1 for the full re-flip rationale and verified live state.
 
 # agent-orchestrator: `promotion_model: ldr_terminal` — opted out of LDR→main promotion
 
@@ -160,7 +167,7 @@ Confirmed by direct code/config reading before changing anything (not assumed):
 
       **Blocker cleared**: this item was parked as conflict-gated in
                                                   `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` because it
-                                                  targets the same files as `/plans/active/shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18. **That todo
+                                                  targets the same files as `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18. **That todo
                                                   is now `[x]` done** (verified at HEAD 2026-08-06), so the file collision no longer exists.
 
                                                   **Gap re-measured 2026-08-06, and it is narrower than this todo's original wording implies — but real.**

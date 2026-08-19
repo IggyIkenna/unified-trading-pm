@@ -440,14 +440,18 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
 
 ## Phase 5 — Finalize
 
-- [ ] [DOC] P1. **Post-phase codex audit** — once Phases 1-4 are shipped, do the standing "read the codex docs this
-      plan depends on and check them against what actually shipped" pass named in CLAUDE.md's plan-authoring rules.
-      Update any contract that changed, SUPERSEDED-banner anything invalidated.
-- [ ] [DOC] P1. **Archive `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s live-state claims are now
-      historical, not current** — it's already archived with a resolved banner, so no un-archiving needed, but add
-      a one-line dated note at its top ("SUPERSEDED IN PRACTICE 2026-0X-XX by <this plan> — agent-orchestrator is
-      ldr_main again") so a future reader doesn't mistake its "What changed" section for current state. Do this
-      LAST, only once Phase 1 has actually shipped.
+- [x] [DOC] P1. ✅ **DONE 2026-08-19.** Post-phase codex audit — checked every codex doc this plan's `related:`/
+      `context_scope:` cites against everything actually shipped: `ci-cd-flow.md` (repo counts + the `ldr_terminal`
+      mention, both already correctly updated in Phase 1 and re-verified accurate here, correctly framed as
+      historical — "restored 2026-08-19 after a 2-week detour" — not asserting it as current state anywhere),
+      `runtime-deployment-topology.md` (confirmed still accurate, deploy mechanism never changed). Repo-wide
+      `rg -l "ldr_terminal\|promotion_model.*agent-orchestrator" codex/` returns only `ci-cd-flow.md`, correctly
+      framed. No contract invalidated by this plan's shipped work; nothing needed a SUPERSEDED banner in codex
+      itself (the archived issue doc below is a plan/issue doc, not codex — handled by the next todo).
+- [x] [DOC] P1. ✅ **DONE 2026-08-19.** Archive `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s
+      live-state claims are now historical, not current — added the dated SUPERSEDED note at its top pointing to
+      this plan's Phase 1, noting the deploy-side facts (dashboard trigger fix, root cause) are still accurate
+      history but the `promotion_model: ldr_terminal` state itself is superseded.
 - [ ] [DOC] P0. **Archive this plan** once every todo above is `[x]` and unlocked — standard 6-step ritual, corpus-
       wide referrer-path fixup included.
 
