@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.67",
-    "deployment-api": "0.92.5",
+    "deployment-api": "0.93.0",
     "deployment-service": "0.154.32",
     "deployment-ui": "0.1.0",
     "execution-service": "0.82.9",
@@ -83,7 +83,7 @@
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.30.25",
     "e2e-testing": "0.41.27",
-    "agent-orchestrator": "0.100.7",
+    "agent-orchestrator": "0.100.9",
     "greeks-service": "0.18.68",
     "trading-agent-service": "0.13.12",
     "strategy-service": "0.76.6",
@@ -350,7 +350,7 @@
         "coverage_pct": null,
         "warn_file_count": 17
       },
-      "ldr_ci_status_sha": "df766d5db547420d82d8887fb57e5580cfb390d0"
+      "ldr_ci_status_sha": "37373e3f49a549fd206f9754107e84fb0be4d58d"
     },
     "deployment-service": {
       "promotion_model": "ldr_main",
@@ -608,7 +608,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "8d2e93852f97201024564e381eb34d361ea9d6d5"
+      "ldr_ci_status_sha": "812aaf5487e54c781305389472eb774d097ea573"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "ba27fa0656e25d084624b2c06fcf501acdbf417c"
+      "ldr_ci_status_sha": "8bb6fbb2445cae95f45860212fba0610c9aabb70"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -1297,7 +1297,7 @@
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "abb0fc05e50a8a1cd256af2cf83d59bbfdf41ab1"
+      "ldr_ci_status_sha": "3d345d34e65d84044580bdaafd4d7445b78fc739"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "013a1d013cfffe7e55bd7993dcbacb09cd015eb9"
+      "ldr_ci_status_sha": "68b457da76945c82eb54d8733bd89a1b39cff099"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
