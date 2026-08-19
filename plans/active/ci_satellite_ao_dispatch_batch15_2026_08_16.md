@@ -21,7 +21,7 @@ related:
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
     /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
-    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    /codex/03-observability/monitoring-control-plane.md,
     /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
     /plans/active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md,
     /plans/active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md,

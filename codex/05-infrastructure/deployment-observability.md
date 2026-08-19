@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Deployment Observability — live/batch/paper × GCP/AWS at /repos grade (SSOT)
-summary:
-  SSOT for classifying every compute unit (VM or Cloud Run job) into a DeploymentUmbrella (LIVE / BATCH / PAPER /
+summary: SSOT for classifying every compute unit (VM or Cloud Run job) into a DeploymentUmbrella (LIVE / BATCH / PAPER /
   EXPERIMENT) × cloud × kind and surfacing it at /repos grade in deployment-ui /deployments + /cockpit + Slack —
   classify_deployment_target resolver, the CLOUD_RUN_JOBS registry, CI guard tests, and the 3-layer out-of-band deadman
   monitoring.
@@ -23,15 +22,14 @@ related:
     /plans/archive/2026_07/deployment_ui_cost_per_day_accuracy_2026_07_20.md,
     /plans/archive/2026_07/deployment_ui_fleet_tab_consolidation_2026_07_21.md,
     /plans/archive/issues/deployment_ui_fleet_tab_removal_2026_07_27.md,
-    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    /codex/03-observability/monitoring-control-plane.md,
     /plans/archive/deployment_api_cache_oom_and_ui_latency_remediation_2026_07_13.md,
     /codex/05-infrastructure/vm-preemption-and-billing-waste-monitoring.md,
     /plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md,
     /plans/archive/2026_08/watchdog_kill_events_deployment_observability_2026_08_05.md,
   ]
 created: 2026-06-22
-authoritative_for:
-  [
+authoritative_for: [
     DeploymentUmbrella classification (live/batch/paper/experiment) + deployment-target inventory API + health/cockpit
     rollup,
     deployment-api bounded-cache architecture + manifest live-build OOM guard,

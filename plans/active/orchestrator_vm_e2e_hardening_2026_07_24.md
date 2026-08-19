@@ -14,7 +14,7 @@ scope: [engineer, admin]
 tags: [monitoring, orchestrator, vm-bootstrap, watchdog, e2e, plan-hygiene, plan-split]
 related:
   [
-    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    /codex/03-observability/monitoring-control-plane.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
@@ -41,7 +41,7 @@ source: >-
 last_updated: 2026-06-27
 context_scope:
   [
-    /plans/active/monitoring_control_plane_master_2026_06_10.md,
+    /codex/03-observability/monitoring-control-plane.md,
     agent-orchestrator/scripts/bootstrap_vm.sh,
     agent-orchestrator/server/worktree_clean_check/_resolve.py,
     agent-orchestrator/scripts/refresh_env_from_sm.sh,

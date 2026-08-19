@@ -4,7 +4,7 @@ title: Monitoring control-plane master — CI dashboard (deployment-ui) + fleet 
 summary:
   Master coordinator for the monitoring control plane — CI dashboard in deployment-ui and fleet git-health in the
   orchestrator, providing a single-pane view of repo pipeline state and slot health.
-status: active
+status: complete
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -52,6 +52,14 @@ context_scope:
     scripts/quality_gates/detect_template_drift.py,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-19 (na-eligibility-audit, ci tranche).** All work complete — every sub-plan, smart-extra, and
+> credential item shipped; the sole remaining open item ("Runtime-level deploy signal v2") was found already shipped
+> under a different plan (`/plans/active/artifact_pipeline_observability_2026_07_17.md`) and closed here with
+> citation in this same pass. Durable contracts (division of surfaces, alert-parity principle, click-through rule,
+> the fleet-tab-removal supersession, the v1-vs-v2 deploy-signal split) live in
+> `/codex/03-observability/monitoring-control-plane.md` — read that for current state, not this archived doc.
+> Original body preserved below.
 
 ## Deferred work — migrated to:
 
@@ -266,8 +274,20 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       full evidence chain in
       `/plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`.
       Reconciled back to this source doc — plan-reconcile observability_master, 2026-08-19.
-- [ ] [CODE] P0. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
+- [x] ✅ [CODE] P0. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
       Cloud Run revisions / VM heartbeats) and diff its SHA vs `main` HEAD. Repo: deployment-api + deployment-ui.
+      **CHECKBOX RECONCILIATION 2026-08-19 (na-eligibility-audit, ci tranche)** — already shipped via a DIFFERENT
+      plan, never cited back here: `/plans/active/artifact_pipeline_observability_2026_07_17.md`'s live "What's
+      running" runtime join (Cloud Run revisions + GCE VM-launch join), DONE 2026-07-23 —
+      deployment-api@a13c667 + deployment-ui@3210bb5 — plus the main-HEAD-diff extension
+      (`main_head_drift.py`: `attach_main_head_drift` / `RunningVersion.main_head_sha` / `.behind_main`) shipped as
+      deployment-api@a2963906ab, surfaced as deployment-ui@173e66ecab's running-vs-HEAD SHA-diff widget. Both
+      independently re-verified as live `live-defi-rollout` ancestors 2026-08-18 per
+      `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s own reconciliation note; source re-confirmed present this
+      pass (`main_head_drift.py` reads real `gcp_cloud_run_revisions` data, honest-unknown on lookup failure — not a
+      stub). Minor residual, not blocking this closure: the main-HEAD diff is Cloud-Run(image)-lane-scoped per the
+      source plan's own text — VM-tarball-lane coverage is that plan's scope, not this one's. Durable v1-vs-v2
+      signal split now recorded in `/codex/03-observability/monitoring-control-plane.md` § "Deploy signal v1 vs v2".
   > **🚫 Per-repo freeze-streak signal (AO half) + fleet-tab surface (deployment-ui half) — DESCOPED 2026-07-21
   > (operator).** The `deployment-ui` fleet tab is being handled by the agent already working on the deployment-ui side;
   > both halves of the per-repo freeze-streak feature (the `slot-cron-ff-pull.sh` per-repo signal and its fleet-tab
@@ -774,3 +794,12 @@ re-confirming.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 764-line CI/fleet-git-health monitoring master, almost entirely shipped (dozens of [x] items each with pw:L2 + a cited regression spec). grep confirms exactly 3 open checkboxes, all P0 [CODE][UI] smart-extras: rollout-ratchet panels (L260), runtime-level deploy signal v2 (L262), and G4 ruleset/branch-protection drift (L465, explicitly stated to fold into item 1 as a third column). 7 consecutive na-eligibility-audit passes (2026-07-30 through 2026-08-10) have kept all 3 KEEP_NA on a...
+
+**na-eligibility-audit 2026-08-19 (ci tranche) — ARCHIVING.** Since the 2026-08-18 marker, plan-reconcile
+(observability_master) flipped 2 of the 3 open items (rollout-ratchet panels L261, G4 ruleset-drift L472) with
+citation to `ci_satellite_ao_dispatch_batch15_2026_08_16.md`, leaving exactly 1 open item. That item's own
+long-standing "needs a scoping pass" citation (batch2's E14) was never actually resolved by a dedicated scoping
+session — instead the work was independently built under `artifact_pipeline_observability_2026_07_17.md` and never
+cited back here. Closed with evidence (see the flipped checkbox above) rather than re-confirming KEEP-NA an 8th
+time. Doc now 0/0 open, unlocked — archiving to `plans/archive/2026_08/` per the standard 6-step ritual; durable
+contracts migrated to `/codex/03-observability/monitoring-control-plane.md`.
