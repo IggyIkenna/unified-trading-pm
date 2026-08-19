@@ -15,7 +15,7 @@ summary: >-
   also race on the GCS census blob. This is NOT primarily a dedup/cooldown bug (those exist and merely cap the
   per-execution rate) — it is a wall-clock-vs-cadence structural mismatch: the sweep cannot finish within its own cron
   interval.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -36,9 +36,11 @@ assigned_role:
 drift_direction: advance-code
 depends_on: []
 locked_by:
-archive_exempt: true
-resolved_by:
-last_updated: 2026-08-17
+archive_exempt: false # was: true (2026-08-13) -- ARCHIVED 2026-08-19 (plan_reconciler, cross-cutting), see body
+resolved_by: deployment-service@069ced1412 (P1 parallelization), all 3 archive_exempt blockers independently
+  reconciled 2026-08-19 (plan_reconciler, cross-cutting) -- batch13b flipped+archived,
+  plan_reconciler_findings_all_2026_08_12.md Section 2 already [x], batch13 has zero remaining open references
+last_updated: 2026-08-19
 locked_since:
 context_scope: [/plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py, /codex/05-infrastructure/data-pipeline-alerts.md]
 source: >-
@@ -734,14 +736,24 @@ GCS reads in both `exit_code_fleet_monitor.sweep()` (running-census captured rea
 classify/route/emit + auto-kill stay sequential (shared `finding_sink` + PubSub + per-sweep kill cap preserved).
 `deployment-service@069ced1412`, QG green.
 
-**archive_exempt: true reason (slot-28, 2026-08-13)** — this doc's only todo (the P1 above) is now shipped, so it reads
-0-open/some-done and `check_archive_candidates --only` would demand immediate archival. It is NOT being `git mv`'d in
-this task because it remains the SOURCE doc for still-open DERIVED todos in OTHER active plans — the duplicate
-"parallelize sweep()" dispatches in `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (P2) and
-`..._batch13b_2026_08_13.md` (P2), and the "genuine unresolved" entry in `plan_reconciler_findings_all_2026_08_12.md`
-§2. Archiving the source out from under those would orphan their references; closing/retiring them is a
-`/plan-reconcile` coordination, not a single-worker flip. Drop `archive_exempt: true` and `git mv` to
-`plans/archive/2026_08/issues/` once those derived todos are reconciled.
+**archive_exempt: true reason (slot-28, 2026-08-13) — RESOLVED, ARCHIVED 2026-08-19 (plan_reconciler, cross-cutting
+tranche).** This doc's only todo (the P1 above) shipped, so it read 0-open/some-done and
+`check_archive_candidates --only` would have demanded immediate archival. It was NOT `git mv`'d at the time because
+it remained the SOURCE doc for still-open DERIVED todos in OTHER active plans — the duplicate "parallelize sweep()"
+dispatches in `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (P2) and `..._batch13b_2026_08_13.md`
+(P2), and the "genuine unresolved" entry in `plan_reconciler_findings_all_2026_08_12.md` §2. **All 3 independently
+verified resolved this run**: `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` has zero remaining open
+items referencing this doc (grep-verified); `..._batch13b_2026_08_13.md` is archived, its parallelize-sweep todo
+`[x]`; `plan_reconciler_findings_all_2026_08_12.md` §2's entry already reads `[x]` "ALREADY SHIPPED, reconciled
+from cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md". The exemption's own stated trigger condition has
+fired — archived to `plans/archive/2026_08/issues/`.
+
+## Deferred work — migrated to: none
+
+No unmigrated deferred/nice-to-have items found — every todo in this doc is `[x]`, and the "Fix (deferred...)"
+section heading near the top describes the original proposal that the Todos section below fully implemented and
+shipped (stale heading text, harmless historical framing, left as-is per the archive convention of preserving the
+record rather than editing it).
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 
