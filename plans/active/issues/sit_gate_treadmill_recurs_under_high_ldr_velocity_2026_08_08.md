@@ -449,3 +449,27 @@ high-edit-velocity incident tracker (7 dated cicd-escalation entries through tod
 pass to avoid any edit-collision risk with an in-flight escalation. Flagging for extraction on a calmer day rather
 than dispatching against a hot file. See the archive_exempt frontmatter note above for why that field is currently
 stale-but-harmless.
+
+**cicd escalation agt-4a1594, 2026-08-19 ~21:45Z** (`sit_gate_stuck` wall, `agent-orchestrator` 4 straight
+SIT-gate-blocked ticks on `ldr-to-main-promote-fleet.yml`, escalating run
+`https://github.com/IggyIkenna/unified-trading-pm/actions/runs/32304931686`): Live-diagnosed via `gh run view --log`
+on the fleet-promote ticks + `sit_gate_stuck_detector.py` (no `--slack`), not assumed from the alert text. **Same
+documented moving-tree treadmill — self-converged ~17 min after dispatch, no code fix needed, nothing to push.**
+Sequence: agent-orchestrator promoted to main at 20:32Z (`7e989ab28e6a`; that tick logged `SIT GATE PASS ...:
+non-breaking delta`), then took **7 new LDR commits in ~70 min** (20:33→21:39Z — `fix: switch_slot_account missing
+model_flag_for_provider guard`, `fix(fleet): typed one-shot agents...`, `fix: close 4th recurrence of regen-dispatch
+pattern-matching gap`, `chore(deps): refresh base-image digest pin`, etc.). The AST differ classified the fresh
+main..LDR delta **breaking=true** on `breaking_scan_dir=server` (a genuine verdict — a real public-surface change in
+`server`, no fail-closed "source-dir absent" flip), so the per-repo SIT gate part 2 fail-CLOSED every tick:
+`SIT GATE BLOCK agent-orchestrator: true-delta not SIT-validated on this tree`, with `sit_validated_tree` (read LIVE
+from Firestore) always one tree behind LDR — across the 4 blocked ticks: `52b71222→94a469f0→39ae2139→39ae2139` while
+LDR raced `94a469f0→39ae2139→ac882955→114cbecb`. **NOT a genuinely stuck SIT run**: the fleet-green signal stayed
+GREEN throughout (full-workspace-sit success 21:01Z + 21:08Z), `sit_validated_tree` was *advancing* (SIT rounds
+completing + stamping), no `ERR_LDR`, no orphaned promote PR, no red SIT. Convergence verified concretely, not just
+inferred from the detector: SIT run `32305107127` (dispatched by the 21:41Z BLOCK, pinned to
+agent-orchestrator@`7c3dde18bcf1`/tree `114cbecb`) completed **success** at 22:00:56Z, and the next fleet tick
+(`32306688952`, 22:02:21Z) logged `SIT GATE PASS agent-orchestrator: true-delta SIT-validated on this tree
+(sit_validated_tree == LDR tree 114cbecb...)` — main advanced to `ea33b6fcbfeb` (chore(promote)) @ 22:02:19Z, no
+orphaned PR left. Bounded background poll of the detector (every 3 min, 40-min cap, self-heartbeating) confirmed
+`sit-gate stuck detector: healthy` at 22:04Z. Open todos unchanged — this occurrence exercised neither the P3
+swallowed-error gap nor a stale PR.
