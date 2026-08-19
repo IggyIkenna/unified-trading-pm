@@ -23,6 +23,11 @@ priority: P2
 assigned_vm: NA
 execution_scope: local-only
 parent_epic: defi_master
+archive_exempt: true # dated run-journal, not a standing plan -- na-eligibility-audit 2026-08-19 closed its last
+  # open item (0 open todos now) but this doc follows the same disposition as its 08-16/08-18 siblings (a
+  # completed dispatch's own report, not archived per established precedent for this doc family) rather than a
+  # full 6-step archival + referrer sweep across its 12 referrers -- flagging as a good /archive-candidates-audit
+  # target for a dedicated pass, not doing it inline here.
 resolved_by:
 depends_on: []
 drift_direction: advance-code
@@ -286,7 +291,7 @@ Tracked as todos (HARD RULE — every deferral is a `- [ ]`, never prose-only):
       still carry no reciprocal cross-link note, and the 2 that do have one disagree on membership (one lists only
       2 of the other 3 docs). Add/complete 4 cross-reference notes so a worker landing on any one of the 4 sees the
       others.
-- [ ] [DOC] P3. **AO-dispatch-readiness tagging gaps — SPLIT 2026-08-18 (plan_reconciler), 1 of 2 halves fixed.**
+- [x] ✅ [DOC] P3. **CLOSED-BY-CITATION (na-eligibility-audit 2026-08-19)** — AO-dispatch-readiness tagging gaps — SPLIT 2026-08-18 (plan_reconciler), 1 of 2 halves fixed.**
       `defi_satellite_ao_dispatch_batch14_2026_08_16.md`'s VM-launch todo — **FIXED**, same-day tranche run
       (`plan_reconciler_findings_defi_2026_08_18.md` Hygiene fix #5): added a safe-idempotent justification (standard
       SPOT backfill relaunch, resumes from measured progress, no data deleted). `solana_dex_pool_swaps_indexer_2026_08_08.md`
@@ -294,6 +299,11 @@ Tracked as todos (HARD RULE — every deferral is a `- [ ]`, never prose-only):
       the doc is `status: active` + `assigned_vm: planning`, already AO-dispatched, so this is a live gap, not a
       pre-flip one as this doc originally framed it). Remaining work: add `[OPERATOR]` tag or a stated
       safe-idempotent justification to that one todo.
+      **CLOSED-BY-CITATION 2026-08-19**: the remaining `solana_dex_pool_swaps_indexer_2026_08_08.md` todo-5 gap is
+      already tracked with more detail (and a `[WORKER REC]`) as Parked item 4 in
+      `plan_reconciler_findings_defi_master_epic_2026_08_18.md` — this pointer duplicated tracking rather than
+      adding new information. This journal's own copy is closed; the live gap itself is unaffected (still open on
+      the source doc, still owned by whoever next dispatches `solana_dex_pool_swaps_indexer_2026_08_08.md`).
 
 Corroborating only — already tracked elsewhere, no new todo (would duplicate existing tracking):
 
@@ -330,3 +340,8 @@ Corroborating only — already tracked elsewhere, no new todo (would duplicate e
   finding). Remaining open items in this doc (the `[DOC] P2` REVIEW-scope call, the batch11-count fix already
   applied at the corpus level this same run) are genuine ordinary work or already closed elsewhere — not
   independently re-derived here.
+- **na-eligibility-audit 2026-08-19** (tranche=defi, dispatch agt-88e4bb): KEEP-NA-STALE, applied — 1 open item
+  confirmed (matches Phase-0). Closed the remaining "AO-dispatch-readiness tagging gaps" pointer by citation: the
+  same gap is already tracked with more detail in `plan_reconciler_findings_defi_master_epic_2026_08_18.md`'s
+  Parked item 4, so this journal's own copy was pure duplication, not additional information. This doc's own
+  remaining open work is now 0 items. Doc stays `assigned_vm: NA` (a run-journal, not archived per prior precedent).
