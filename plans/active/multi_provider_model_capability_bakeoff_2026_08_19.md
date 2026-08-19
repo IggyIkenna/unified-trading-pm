@@ -264,6 +264,15 @@ where it writes.
 
 _(GLM 5-Turbo tasks 4-6 still resolving as the shared quota window; likely instant-INFRA-BLOCKED like GLM 5.2's — updated once confirmed. Remaining rows populated as each attempt completes.)_
 
+**Gemini 3.5-flash-lite paid-tier backfill (slot 24, `proj5`) — SUPERSEDES the 4 free-tier quota-blocked rows above for the same 4 tasks:**
+
+| Gemini 3.5-flash-lite | `docs-reconcile` audit (Easy #2, paid-tier retry) | 1 | 33 | — | 549,049 / 20,805 | 2,694,348 | 4.48% | 15.3 min | INFRA-INTERRUPTED (quota again, $3.21 spent) | Paid tier helped (more turns than the free-tier instant fail) but still hit a wall — same partial-signal treatment as before. |
+| Gemini 3.5-flash-lite | `escalation-queue-reconciler` audit+gap-check (Medium #1, paid-tier retry) | 0 | 23 | — | 777,085 / 19,418 | 1,699,282 | **66.7%** (peak mid-task — a real spike, not the poller's usual sub-5% range) | 11.7 min | **PASS** | First clean completion for this task — the free-tier attempt never got past 13 turns. |
+| Gemini 3.5-flash-lite | repo-touched-capture (Hard #1, paid-tier retry) | 0 | 75 | — | 1,342,762 / 40,378 | 10,031,112 | 5.98% | 60.5 min | **PASS** | First clean completion of ANY Hard-tier task for this model — the free-tier attempt died at 56 turns on quota. Longest single attempt in the whole bake-off so far (60.5 min). |
+| Gemini 3.5-flash-lite | `na-eligibility-auditor` audit+fix (Hard #2, paid-tier retry) | 1 | 27 | — | 659,320 / 18,347 | 1,832,982 | 1.43% | 6.6 min | INFRA-INTERRUPTED (quota again, $2.66 spent) | Same as Easy #2 retry — helped but didn't fully clear the wall. |
+
+**Gemini 3.5-flash-lite final tally, all 6 tasks**: 4 clean PASS (Easy #1, Medium #2, Medium #1-retry, Hard #1-retry), 2 INFRA-INTERRUPTED with real partial work (Easy #2-retry, Hard #2-retry). The only model in this bake-off with real coverage across every tier including Hard.
+
 ## Progress Log
 
 - **2026-08-19 (interactive session, slot 1)**: Plan authored. Task pool re-verified against the live corpus —
