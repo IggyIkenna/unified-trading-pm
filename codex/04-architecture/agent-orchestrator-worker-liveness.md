@@ -996,7 +996,8 @@ own interactive Claude Code session on their own laptop — never a tmux-spawned
 `pick_next_task`, and structurally exempt from every liveness/kill mechanism AO has. Full design:
 `plans/active/ao_human_fleet_integration_2026_08_15.md` (Phases 0-3 shipped
 `agent-orchestrator@c5e6018`/`@5516874`/`@e9bb4aa`/`@6b50caa`; Phase 4 — per-operator credential issuance + first live
-run — is the operator-gated tail, not autonomous by design).
+run — is the operator-gated tail, not autonomous by design). Operator-facing "what do I run" runbook:
+`/codex/05-infrastructure/human-fleet-operator-setup.md`.
 
 **Two hard guarantees, both structural, not policy:**
 

@@ -23,6 +23,7 @@ related:
     /plans/archive/2026_08/issues/review_agent_rate_limit_blind_kill_2026_08_14.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /codex/05-infrastructure/human-fleet-operator-setup.md,
   ]
 created: "2026-08-15"
 last_updated: "2026-08-15"
