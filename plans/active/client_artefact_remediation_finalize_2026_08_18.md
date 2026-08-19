@@ -53,14 +53,16 @@ context_scope:
 Gated on [`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 being fully done. Do not start before then.
 
-- [ ] [REVIEW] P1. **Reconcile completed-todo evidence back into source docs.** For every checked todo in the
+- [x] ✅ [REVIEW] P1. **Reconcile completed-todo evidence back into source docs.** For every checked todo in the
       parent plan, re-verify the cited HTML section/commit actually reflects the claimed edit (open the live file,
       don't trust the checkbox text alone) and update the corresponding finding's status in
       [`nick_ai_and_elysium_artefact_audit_2026_08_18.md`](/plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md)'s
       summary table from open to resolved. Also check whether either owning artefact plan
       ([`nick_ai_platform_disclosure_artifact_2026_08_16.md`](/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md),
       [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md))
-      needs its own Progress Log updated to reflect that this remediation pass ran.
+      needs its own Progress Log updated to reflect that this remediation pass ran. — **Done 2026-08-19** (evidence:
+      all 13 audit summary-table findings RESOLVED after live re-verification of both walkthroughs + both wired
+      checkers green; owning plans' Progress Logs updated — see Progress Log below).
 - [ ] [REVIEW] P1. **Re-check every item in the parent plan's "Real system gaps — already tracked, not duplicated
       here" section.** If transfer-handler wiring, capital-budget enforcement, dynamic-universe pinning, or any of
       `system_readiness_master.md` W5/W10/W12/W13/W16/W17/W18 has landed since this plan was authored, the
@@ -77,3 +79,19 @@ being fully done. Do not start before then.
 
 **context-scout 2026-08-19**: reviewed; context_scope unchanged (2 entries) — parent plan + audit report already
 cover this gate's reconcile/re-check/archive todos; source-path hunt skipped (finalize gate).
+
+**2026-08-19 — todo 1 (reconcile evidence) done.** Re-verified every checked parent-plan todo against the live repo,
+not the checkbox text alone: all 14 cited SHAs resolve (`171dc40739, ec08cccad1, 8b7e78e21f, 2b0c327e44, 6a5598e736,
+8fb70b119b, 832033d0942, 4067ff23da, 512d5b07a8, 98ee4fdc70, a7621fb5e5, a472bdb5fd, 5644680849, 19724f5e69`); both
+hygiene checkers (`scripts/plan-hygiene/check_artefact_disclosure.py`, `check_artefact_enum_drift.py`) exist, are
+wired into `run_hygiene_sweep.sh`, and run green (0 hard disclosure violations / 0 enum-drift violations — real enum
+counts 9 strategy families, 11 instruction envelopes); `_ssot-rules/` 11/12/13 + all cited audit-result docs present.
+Live-verified both walkthroughs carry the claimed edits (eleven action types; §02's 9 real families; §11
+target-state framing; TRADE-only / 501 disclosure; §14 8-leg; `.ev-*` legend + `.own` owner marks in both files).
+Updated
+[`nick_ai_and_elysium_artefact_audit_2026_08_18.md`](/plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md)'s
+summary table — all 13 findings marked RESOLVED, `status` flipped `partial`→`pass` (audit-result status enum), Progress Log entry added;
+appended remediation-pass entries to both owning artefact plans'
+([`nick_ai_platform_disclosure_artifact_2026_08_16.md`](/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md)
++ [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md))
+Progress Logs. Todos 2 (re-check "Real system gaps") and 3 (archive parent) remain for subsequent dispatches.
