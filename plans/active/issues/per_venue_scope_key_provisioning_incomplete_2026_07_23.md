@@ -95,10 +95,13 @@ can't move funds out):
 
 No code change or deploy is needed once these exist — `execution-service`'s `_load_venue_trade_credentials` already
 checks for them first and only falls back to the current unscoped `bybit-api-key`/`bybit-api-secret` if they're absent
-(**shipped `execution-service@3f550b14` "feat(credentials): wire Bybit trade-scope secret with safe fallback",
-2026-07-24 — corrected 2026-07-25, was stale "commit pending push" text; verified reachable on
-`origin/live-defi-rollout`**). The switch to the scoped key happens automatically the next time the service reads Secret
-Manager.
+(**shipped "feat(credentials): wire Bybit trade-scope secret with safe fallback", 2026-07-24 — corrected 2026-08-19
+(`/plan-reconcile execution_master`): the previously-cited SHA `execution-service@3f550b14` is a pre-rewrite artifact of
+the 2026-08-05 history rewrite (`git merge-base --is-ancestor 3f550b14 origin/live-defi-rollout` fails) — the same
+commit (identical message + author date 2026-07-24 11:30:36) is reachable today as `execution-service@da5803912`, since
+re-provenanced as `execution-service@d473a6477` ("chore(provenance): re-provenance da580391..."); both verified
+`git merge-base --is-ancestor` ancestors of `origin/live-defi-rollout` 2026-08-19**). The switch to the scoped key
+happens automatically the next time the service reads Secret Manager.
 
 ## Aster — execution adapter doesn't exist; build-scope estimate
 
@@ -144,13 +147,15 @@ All three are real design/priority calls, not something determinable from code o
 - [x] [AGENT] P2. **Wire Bybit's trade-scope credential lookup with safe fallback** — execution-service
       `_load_venue_trade_credentials` now prefers `bybit-trade-api-key`/`-secret`, falls back to the unscoped pair; 3
       new unit tests.
-- [ ] [HUMAN] P1. **RULED 2026-07-28 (applying the operator's general theme — recurring cost here is $0, this is a
-      security-hardening control reducing a compromised-key's blast radius, and the theme favors full completion of
-      exactly this kind of item — DIRECTION APPROVED, proceed).** Create `bybit-trade-api-key`/
-      `bybit-trade-api-key-secret` in GCP per the checklist above — the one remaining step to actually complete Bybit's
-      scope split. The decision to do this is no longer open; only the credential-creation ACTION remains, and only the
-      operator's own Bybit exchange login can perform it (no cloud identity or automation can create a new exchange-side
-      API key) — that is why the tag stays `[HUMAN]` rather than moving to an AO execution tag.
+- [ ] [HUMAN] P1. **Create `bybit-trade-api-key`/`bybit-trade-api-key-secret` in GCP** per the checklist above — the
+      one remaining step to actually complete Bybit's scope split. **RULED 2026-07-28** (applying the operator's
+      general theme — recurring cost here is $0, this is a security-hardening control reducing a compromised-key's
+      blast radius, and the theme favors full completion of exactly this kind of item — DIRECTION APPROVED, proceed).
+      The decision to do this is no longer open; only the credential-creation ACTION remains, and only the operator's
+      own Bybit exchange login can perform it (no cloud identity or automation can create a new exchange-side API key)
+      — that is why the tag stays `[HUMAN]` rather than moving to an AO execution tag. **[plan-reconcile 2026-08-19:
+      reordered so the action leads physical line 1 — task_template.md §3 line-1-completeness; the prior ordering put
+      the entire actionable instruction on physical line 3, invisible to any first-line-only reader/parser.]**
 - [x] [SCRIPT] P2. EXTRACTED — na-eligibility-audit 2026-08-16, conflict-cleared, live todo now
       `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` item 8. Original text: **MTDS's own key-reload preflight
       (`unified_trading_library.startup_validation.validate_api_keys_for_venues`, called via
@@ -254,3 +259,14 @@ All three are real design/priority calls, not something determinable from code o
   shipment.
 - **na-eligibility-audit 2026-08-16** [body-hash:65255e7671dec15f]: RECLASSIFY-SPLIT — extracted bounded item(s) 8 to `cefi_satellite_ao_dispatch_batch20_2026_08_16.md` (see that plan + this doc's own checkbox citations for exact mapping). 3 items remain genuinely NA (2 [HUMAN] exchange-login-only credential/priority calls, 1 [BACKEND] P2 design call gated on an unresolved per-venue mechanism choice). Doc stays assigned_vm: NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **plan-reconcile execution_master 2026-08-19**: adversarial verification of this doc's cited evidence (this epic's
+  only `parent_epic: execution_master`-matched child doc). Found + fixed one stale-SHA citation: the Bybit fallback
+  todo's evidence cited `execution-service@3f550b14`, which `git merge-base --is-ancestor` shows is NOT an ancestor of
+  `origin/live-defi-rollout` — it is a pre-2026-08-05-history-rewrite artifact of the same commit, now reachable as
+  `da5803912`/`d473a6477` (verified). Corrected the citation in place. Also fixed a task_template.md §3
+  line-1-completeness defect on the `[HUMAN] P1` Bybit todo (the entire actionable instruction sat on physical line 3
+  behind a bolded "RULED..." qualifier on line 1) — reordered so the action leads. Independently re-verified the 2
+  other cited SHAs (`e3f447e37`, `05b425e6`) — both genuine ancestors of `origin/live-defi-rollout`, no drift. The 3
+  remaining open todos (`[HUMAN] P1` Bybit, `[BACKEND] P2` OKX/Hyperliquid, `[HUMAN] P3` Upbit/Kraken/Bitfinex/Bitget)
+  are unchanged and correctly still open — no new done-but-unchecked or contradiction found. See the epic's own
+  `## Report` section for the full run's findings.
