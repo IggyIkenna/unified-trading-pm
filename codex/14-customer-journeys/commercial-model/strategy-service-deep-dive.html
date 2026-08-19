@@ -894,7 +894,7 @@
     <p class="lede">
       This service decides. It consumes features and market state, evaluates archetypes on each tick, sizes and hedges,
       and emits typed instructions. It does not connect to venues, work orders into the market, or move funds itself —
-      those are execution-service concerns, reached through the contracts in §02.
+      those are execution-service concerns, reached through the contracts in <a href="#s2">§02</a>.
     </p>
     <div class="keypoints">
       <div>
@@ -931,14 +931,14 @@
         <li><b>position/</b><span>position monitor, treasury monitor, reconciliation, NAV, margin health</span></li>
         <li><b>risk/</b><span>pre-trade risk gates and limit evaluation</span></li>
         <li><b>pnl/</b><span>attribution — decision vs execution vs funding</span></li>
-        <li><b>circuit_breakers/</b><span>automatic protective actions (see §04)</span></li>
+        <li><b>circuit_breakers/</b><span>automatic protective actions (see <a href="#s4">§04</a>)</span></li>
         <li><b>portfolio_allocator/</b><span>capital allocation across instances</span></li>
         <li><b>compliance/</b><span>attestation and evidence trail</span></li>
         <li><b>allocation_sizer.py</b><span>position sizing against capital budget</span></li>
-        <li><b>transfer_coordinator.py</b><span>intra-client rebalance netting (see §05)</span></li>
-        <li><b>archetype_kill_switch_subscriber.py</b><span>halt semantics (see §04)</span></li>
+        <li><b>transfer_coordinator.py</b><span>intra-client rebalance netting (see <a href="#s5">§05</a>)</span></li>
+        <li><b>archetype_kill_switch_subscriber.py</b><span>halt semantics (see <a href="#s4">§04</a>)</span></li>
         <li><b>config_reloaders.py</b><span>typed hot-reload of configuration</span></li>
-        <li><b>api/</b><span>read + control surfaces (see §06)</span></li>
+        <li><b>api/</b><span>read + control surfaces (see <a href="#s6">§06</a>)</span></li>
       </ul>
       <p>
         <strong>The governing rule is the tier model:</strong> imports only ever point downward, and no service imports
@@ -1023,7 +1023,7 @@
         <p>
           Execution algorithms and order routing, venue adapters and connectivity, custody signing, market-data capture,
           and feature computation all live in other services. Where this repository needs one of them it holds an
-          interface, not an implementation. Those seams are the subject of §02 and §05.
+          interface, not an implementation. Those seams are the subject of <a href="#s2">§02</a> and <a href="#s5">§05</a>.
         </p>
       </div>
     </details>
@@ -1183,7 +1183,7 @@
       <p>
         Note what is absent: neither carries a rail, a custodian or a mechanism. The strategy asks for a balance to
         exist at a destination within a cost bound; how that is achieved — an internal venue transfer, an exchange
-        withdrawal, an on-chain send through custody — is resolved downstream. §05 covers what actually happens.
+        withdrawal, an on-chain send through custody — is resolved downstream. <a href="#s5">§05</a> covers what actually happens.
       </p>
 
       <h3>Multi-leg and cancellation</h3>
@@ -1401,7 +1401,7 @@
               All are <code>TypedDict</code> declarations, so configuration is checked statically rather than at first
               use. A malformed config fails at load with a typed error naming the field, not at 3am with a
               <code>KeyError</code>. Per-asset-group blocks (<code>Defi…</code>, <code>Ml…</code>, <code>Cex…</code>,
-              <code>Sports…</code>) are how one engine serves multiple asset groups — see §08.
+              <code>Sports…</code>) are how one engine serves multiple asset groups — see <a href="#s8">§08</a>.
             </p>
           </div>
         </div>
@@ -1959,7 +1959,7 @@
         1. An archetype module that evaluates on each tick and returns zero or more StrategyInstructionV2
            (the union of the 11 types)
         2. A config YAML declaring instruments, thresholds and capital budget, validated against the typed
-           schemas in §03
+           schemas in <a href="#s3">§03</a>
         3. A registry entry naming the archetype and its family
 
         <i># What applies without you writing it</i>
@@ -1975,7 +1975,7 @@
       </div>
       <p style="font-size: 0.95rem; color: var(--ink-3)">
         Transfer netting and custody routing, listed above, are not yet wired end-to-end in production — see the
-        caveat in §05.
+        caveat in <a href="#s5">§05</a>.
       </p>
       <p>
         Because the envelope carries <code>eligible_venues</code> and <code>execution_policy_ref</code>, your strategy
@@ -2027,7 +2027,7 @@
     <details class="sec-body">
       <summary>How one engine serves five asset groups, and what expansion costs</summary>
       <p>
-        The mechanism is visible in the configuration schemas from §03: <code>DefiRiskConfig</code>,
+        The mechanism is visible in the configuration schemas from <a href="#s3">§03</a>: <code>DefiRiskConfig</code>,
         <code>CexRiskConfig</code>, <code>MlRiskConfig</code> and <code>SportsRiskConfig</code> are per-asset-group
         blocks against a common engine, not separate engines. The same pattern runs through attribution
         (<code>DefiAttributionConfig</code>, <code>MlAttributionConfig</code>) and mode (<code>DefiModeConfig</code>,
@@ -2070,7 +2070,7 @@
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Another archetype</strong></td>
-                <td>One module and a config, per §07</td>
+                <td>One module and a config, per <a href="#s7">§07</a></td>
                 <td>The entire operational estate</td>
               </tr>
               <tr>
@@ -2129,7 +2129,7 @@
       <div class="code">
         <i># What a research contribution looks like in practice</i>
         1. You describe the idea — a parameter variation on an existing archetype, or a new decision rule
-        2. It becomes a config (a variation) or a module (a new rule), per §07
+        2. It becomes a config (a variation) or a module (a new rule), per <a href="#s7">§07</a>
         3. It launches as a backtest through the deployment API, against the same history and feature
            versions our own research uses
         4. Results come back as the standard ledgers and attribution — so they are directly comparable
@@ -2138,7 +2138,7 @@
            pre-flight gates at each step
       </div>
       <p>
-        What you would see is the attribution surface from §06 applied to your idea: P&amp;L split across decision,
+        What you would see is the attribution surface from <a href="#s6">§06</a> applied to your idea: P&amp;L split across decision,
         execution and funding, per venue and per leg. That split is usually the interesting part, because it separates
         "the idea was right" from "the idea was implementable".
       </p>
