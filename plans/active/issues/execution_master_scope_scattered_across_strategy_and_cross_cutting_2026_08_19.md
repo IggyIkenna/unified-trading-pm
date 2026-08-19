@@ -17,7 +17,7 @@ summary: >-
   (`/codex/11-project-management/epic-assignment-decision-rule.md`), needs its own audit pass.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [meta] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; an epic-taxonomy/plan-authoring finding (parent_epic: plan_hygiene_master), not data-pipeline scope
 stage: [meta]
 repos: [execution-service, strategy-service, unified-trading-pm]
 scope: [engineer, admin]

@@ -99,7 +99,10 @@ source: >-
 [issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md](/plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md)
 (`quickmerge.sh` `ENVIRONMENT` auto-detect bug on `live-defi-rollout`) ·
 [issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md](/plans/archive/issues/orchestrator_gcloud_active_account_wif_poisoning_2026_07_25.md)
-(GitHub Actions self-hosted-runner WIF job steps overwrite the shared gcloud config fleet-wide).
+(GitHub Actions self-hosted-runner WIF job steps overwrite the shared gcloud config fleet-wide) ·
+[issues/mtds_is_historical_quickmerge_bypass_backlog_2026_08_16.md](/plans/active/issues/mtds_is_historical_quickmerge_bypass_backlog_2026_08_16.md)
+(MTDS + instruments-service 8-commit-each historical strict-quickmerge bypass backlog, operator decision pending —
+added 2026-08-19 ag-closeout-audit cross-cutting retag).
 
 **Close-out criterion**: QG sentinel environment-aware; quickmerge new-file-only ships no longer no-op; provenance gate
 re-enforced + hook installed fleet-wide; `staging_versions` unfreezes; `ENVIRONMENT` auto-detect fixed; WIF job-step

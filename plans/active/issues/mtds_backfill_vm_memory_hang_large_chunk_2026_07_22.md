@@ -17,10 +17,10 @@ summary: >-
 status: open
 nature: issue
 asset_group:
-  [cross-cutting] # corrected 2026-08-13 (/ag-closeout-audit full sweep) -- was [cefi, meta]. The CeFi Tardis
-  # portion (2026-07-22 original finding) is fully resolved; the doc's remaining bulk (2026-07-29+ Progress Log)
-  # is a still-open cross-AG sports/odds_api native-memory-leak investigation, independently confirmed by
-  # cefi_satellite_ao_dispatch_batch10's own Phase-3 exclude_cross_cutting verdict on this exact doc.
+  [sports] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]
+  # (corrected 2026-08-13 from [cefi, meta]). The CeFi Tardis portion is fully resolved; the doc's remaining 2 open
+  # items are BOTH scoped specifically to the sports odds_api adapter
+  # (market_interface/adapters/sports/odds_api_adapter.py), not a generic cross-AG mechanism -- genuinely sports-only.
 stage: [data]
 repos: [market-tick-data-service, deployment-service, unified-trading-pm]
 scope: [engineer]

@@ -16,7 +16,7 @@ summary: >-
   WIP to push blind.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [infrastructure] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a per-tab-worktree/multi-agent-safety git-hygiene incident (repo: unified-trading-ci), not data-pipeline scope
 stage: [meta]
 repos: [unified-trading-ci]
 scope: [engineer, admin]

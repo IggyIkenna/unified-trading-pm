@@ -26,7 +26,12 @@ summary: >-
   catches it, and only after the heartbeat budget is exceeded).
 status: open
 nature: issue
-asset_group: [meta]
+asset_group:
+  [cross-cutting] # corrected 2026-08-19 (ag-closeout-audit cross-cutting tranche, meta-sweep) -- was [meta]; content
+  # is manifest-consolidator Cloud Run job-name registry/monitoring drift spanning multiple asset groups
+  # (instruments/market-data consolidator jobs, DP-WATCHER-005/006 alerting gap) -- squarely cross-cutting
+  # data-pipeline scope per /codex/05-infrastructure/manifest-consolidator-ssot.md, not a generic process-level doc.
+  # Already self-dispatched (assigned_vm: planning, status: open) so this retag does not create a new orphan.
 stage: [meta]
 repos: [deployment-service]
 scope: [engineer]

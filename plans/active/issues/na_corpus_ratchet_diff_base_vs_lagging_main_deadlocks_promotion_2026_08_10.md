@@ -17,7 +17,7 @@ summary: >-
   corpus growth rather than a base-selection bug.
 status: open
 nature: issue
-asset_group: [cross-cutting]
+asset_group: [ci] # corrected 2026-08-19 (ag-closeout-audit cross-cutting, Phase 1 Workflow) -- was [cross-cutting]; a promotion-gate/ratchet deadlock mechanism finding, own tags already say "ci", not data-pipeline scope
 stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
