@@ -295,3 +295,66 @@ or the doc owners rather than fixed here.
 - **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow hourly-cadence scope; no rightsizing
   check has run against `i-042a6332509482556` in >24h per §9's own trigger, which is itself worth a future daily-mode
   pass rather than this one.
+
+## 2026-08-19 (fourth pass, agt-e141c7, scheduled hourly sweep)
+
+**Delta since last run**: between the third pass (checked ~11:xxZ window) and this one (13:25Z), two genuine CRITICALs
+fired and both had already self-healed by the time this pass looked — `agent-orchestrator` QG slice CANCELLED/TIMED-OUT
+twice (11:13Z sha `9176f44`, 12:08Z sha `bfb8a49`) and `unified-trading-pm` LDR went RED 12:09Z (sha `a28d9a73`, doc-only
+commit `37ea6a0c` from `[slot-5·laptop]`) with its promote PR #3503 failing too (11:17Z) then closed-as-superseded by
+the auto-drain bot at 12:12Z. New this pass: two AO escalations opened for that PM incident (`agt-ea4cbc`
+`ldr_qg_failure`, `agt-5ee348` `ldr_main_qg_failure`/PR#3503) are still `status=dispatched`/`resolved_at=null` even
+though the conditions they were opened for are both now moot — see finding below.
+
+**Sweep 1 (repo registry, `quality-gates-v2` on `live-defi-rollout`)**: all 25 repos in `workspace-manifest.json`
+green on their latest run (`unified-trading-ci` again correctly shows zero direct runs — reusable-workflow host, own
+gate is `lint.yml`, not a gap). `agent-orchestrator` latest push (`bfb8a49`, 12:08:18Z) and `unified-trading-pm` latest
+push (`da7e069`, 13:19:58Z) both green — both CRITICALs above are confirmed self-healed by direct current-state check,
+not inferred from Slack silence.
+
+**Sweep 2 (GH-Actions-native standing monitors, regenerated catalog)**: catalog regenerated clean (60 workflows).
+Spot-checked the 11 highest-signal `schedule(...)`+Slack monitors directly (`ldr-ci-monitor`, `branch-health`,
+`ci-health`, `sit-gate-stuck-detector`, `ldr-to-main-promote-fleet`, `reconcile-release-tags`, `ldr-docs-gate`,
+`stale-build-watcher`, `version-coherence-check`, `cloud-build-failure-watcher`) — all `success`, all within the last
+~10-15 min of dispatch time, on cadence. `codex-freshness-sweep`'s last run (06:11Z) still shows `conclusion=failure`
+— unchanged from the third pass's finding, that's its by-design fail-to-flag behavior for the same 4 stale docs, not a
+new CI defect (docs-content issue, out of this skill's scope). The remaining ~12 of the ~23-workflow population were
+not individually re-polled this pass (all were confirmed clean in the third pass ~75 min prior with no intervening
+alert naming any of them) — full individual re-poll deferred to the next pass if the gap grows.
+
+**Sweep 3 (host-dispatched watchdogs, `i-042a6332509482556` / actually `i-0c9b283b31d6b5ca7` per this run's SSM
+target)**: `glue-runner-crash-loop-watchdog.sh` + `ci-vm-resource-watchdog.sh` enumerated via
+`grep repository_dispatch scripts/self-hosted-runners/*.sh`. Direct SSM verification still structurally unavailable —
+same `AccessDeniedException` for `arn:...:user/ikenna-worker` (not the orchestrator's self-service
+`uts-orchestrator-epic-role`) already tracked in
+`plans/active/issues/ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md` — still open, still accurate, no new
+diagnosis needed. Indirect fallback unchanged: no new `glue-runner-health`/`ci-vm-resource-alert` dispatches into
+`ci-health.yml` this window — consistent with quiet, not independently confirmed.
+
+**Sweep 4 (open promote PRs on repos touched)**: no fix shipped this pass (everything found was already self-healed),
+so N/A by the skill's own trigger — spot-checked anyway: zero open promote PRs on `unified-trading-pm` right now
+(`#3503` closed, nothing reopened yet).
+
+**AO escalation-queue cross-check (§5)**: 3 active escalations. `agt-2e69b4` (`data_pipeline_failure`,
+`market-tick-data-service`, 87 attempts, dispatched to slot 31) is outside this skill's CI/CD domain — data-pipeline
+territory, not chased here. The two CI-domain ones are both **stale-condition, not stuck-worker**: `agt-ea4cbc`
+(`ldr_qg_failure`, dispatched to slot 27 at 13:06:39Z, only ~19min in-flight at check time) and `agt-5ee348`
+(`ldr_main_qg_failure`/PR#3503, dispatched to slot 32 at 12:48:08Z — **after** the auto-drain bot had already closed
+PR#3503 as superseded at 12:12Z, confirmed via `gh pr view 3503` → `state: CLOSED`) both target conditions that were
+already resolved (LDR is green again; the PR under review no longer exists) before or shortly after dispatch. This is
+the (m)/(p) failure shape this skill's classification list already names — an escalation scoped to an ephemeral
+unit (one PR, one red-streak) that a DIFFERENT automated process (the drain bot) recycled out from under it — but
+both are still within normal in-flight worker time (17-37 min), not yet a confirmed stuck-loop, and both are actively
+assigned to peer slots whose live work this role does not interfere with. Not filing a new issue doc this pass since
+`agt-5ee348`'s specific shape (PR closed before/shortly after dispatch, escalation not yet auto-resolved) is the exact
+symptom (m)/(p) already describe with a documented root-cause pattern — worth a follow-up check next pass to confirm
+slot 32 actually resolves it rather than looping on a closed PR; escalate as a fresh finding only if it's still
+`dispatched`/unresolved on the next hourly tick.
+
+**Persistent alerts (non-auto-resolving)**: none — both this window's CRITICALs (agent-orchestrator QG
+cancel/timeout x2, unified-trading-pm LDR RED) are confirmed self-healed by direct current-HEAD-green check per § 0.
+
+- **ci-reconcile ran**: yes (scheduled hourly `ci_reconciler` dispatch, `agt-e141c7`, slot 30).
+- **GH Actions spend / CI VM resource health**: not re-pulled this pass — narrow hourly-cadence scope, same as the
+  third pass; still no rightsizing check run against the CI host in >24h (§9 trigger), still deferred to a future
+  daily-mode pass.
