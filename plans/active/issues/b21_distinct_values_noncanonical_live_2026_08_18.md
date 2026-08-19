@@ -204,14 +204,24 @@ sports instrument_type finding above.
     script) — confirmed via a fresh dry-run this session: of 3,446,390 legacy `dex_swaps` keys, **3,265,485 (94.75%)
     have a verified canonical `dex_pool_swaps` twin** (safe to retire) and **180,905 (5.25%) genuinely do not** (real
     residual content the 2026-08-08 fold didn't reach — left untouched by design, not silently dropped; a smaller,
-    better-scoped follow-up than the pre-fold 100%-open state). **`--apply` launched this session** — first attempt was
-    killed externally partway through (interrupted during the pre-write snapshot upload step, i.e. BEFORE the mutating
-    `_index` write — confirmed safe, live manifest untouched by that attempt); a clean retry is in flight as of this
-    checkpoint (background task, `market-tick-data-service` repo, same script, same host). **If you are resuming this
-    session and the retry's outcome is not yet recorded below: check for a running/completed
-    `retire_dex_swaps_legacy_captured_rows_2026_08_09.py --apply` process before launching another — do not run two
-    concurrent full-manifest-index rewrites against the same bucket.** Once confirmed complete + round-trip verified,
-    flip this item's checkbox with the final retired/excluded counts.
+    better-scoped follow-up than the pre-fold 100%-open state). **`--apply` attempted twice this session via the
+    harness's tracked background-task mechanism (`run_in_background`) — BOTH attempts were killed at the identical
+    point** (`Writing snapshot + backup (re-reading from temp file)...`, ~9min in, BEFORE the mutating `_index` write —
+    confirmed safe both times, live manifest untouched). Root-caused (not assumed): `free -h`/`dmesg`/`journalctl -k`
+    showed no OOM signal either time (24Gi+ available, no oom-kill log lines) and disk had 152G free — ruled out
+    resource exhaustion. The kills lined up with this session's `/pre-compact`→`/compact` cycles; **the harness's
+    tracked background-task appears to get torn down across a compact boundary**, not a script defect. **Lesson for any
+    future long-running (>10min) one-off in this workspace**: don't rely on `run_in_background` tracking across a
+    session that may compact mid-run — launch fully detached instead
+    (`setsid nohup <cmd> > <logfile> 2>&1 < /dev/null & disown`) and monitor via `ps`/log-tail directly, since a
+    detached process has no controlling session for a compact cycle to tear down. **Third attempt launched this way**
+    (PID 704760, parent `uv run` PID 704683, own session via `setsid`, log at
+    `market-tick-data-service/.tmp/` is NOT used — logging to a scratchpad file instead since the process is no longer
+    harness-tracked). **If you are resuming this session and this item's checkbox is still unchecked below: first check
+    for a running `retire_dex_swaps_legacy_captured_rows_2026_08_09.py --apply` process
+    (`pgrep -af retire_dex_swaps`) — do not launch a 4th attempt while one is still alive; only start a new one if none
+    is running AND no completed-with-VERIFY-passed log exists.** Once confirmed complete + round-trip verified, flip
+    this item's checkbox with the final retired/excluded counts.
   - Determination for both: **no registry change** (do not add `dex_pools`/`dex_swaps` to
     `DATA_TYPES_BY_ASSET_GROUP['defi']` — they are retired legacy names, registering them would misrepresent them as
     still-current vocabulary) — the fix is manifest retirement of the legacy-labeled rows, which is what this session
