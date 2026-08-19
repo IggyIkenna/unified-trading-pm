@@ -102,6 +102,49 @@ epics: `observability_master` 24, `agent_operating_framework_master` 13, `batch_
   tranche+non-grace population — found and verified ready-to-apply, but blocked by a pre-existing line-cap overage,
   so filed rather than landed.
 
+## Contradictions
+
+**Fixed the drift, routed the remediation (P0):**
+
+1. **P0** `venue_e2e_wiring_2026_08_16.md` — scoped and partly-executed (5 dependent AG batch plans, 4 already
+   archived done) against a **353 `(venue, data_type)`-pair** denominator, but that model was superseded 2026-08-17
+   by a shipped, operator-ruled `unified-api-contracts@d19866d339`: the real unit is now **660 `(venue,
+   instrument_type, data_type)` triples** (12 cells unresolved, 3.4%) — HARD evidence:
+   `nick_ai_platform_readiness_remediation_finalize_2026_08_16.md`'s 2026-08-18 Progress Log entry ("W6's blocker
+   cleared... denominator re-measured 353 → 660"). Independently corroborates a P1 finding already surfaced (not yet
+   applied) by today's epic-scoped `security_and_cross_cutting_master` sweep. **Fixed**: added a prominent, dated
+   staleness banner directly under the doc's "Universe denominator" heading (citing the exact shipped commit + the
+   nick_ai doc), so no future reader/worker cites "353"/"192 declared venues" as current without seeing the flag —
+   `unified-trading-pm@c0ca00144f`. **NOT fixed, routed**: whether/how the 5 AG batches' already-in-flight/archived
+   scope needs re-deriving under the 660-triple unit is a genuine engineering re-scoping question, not a text
+   substitution — no source of truth settles the REMEDIATION (only the fact that 660 supersedes 353). Alerted via
+   `/blocked` (`BLK-f87a4927`, 3 options + `[WORKER REC]` A — re-derive the AG-batch row-lists under the new axis
+   now; `can_continue: true`) and filed durably here — see "Resolved via /blocked" below once answered.
+
+**Verified already-current (no action needed):**
+
+2. `deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md` — BOTH prior cross-cutting
+   findings docs (08-16, 08-18) carried this forward as "genuinely unresolved, needs an engineer to re-bisect." Read
+   fresh this run: **already resolved doc-wise by a concurrent sibling run** — its own summary now reads "Root cause
+   is genuinely UNKNOWN as of this correction (2026-08-19, plan-reconcile `observability_master`... previously
+   stated the falsified theory as settled fact, already flagged twice by prior `/plan-reconcile` passes and left
+   unfixed)" — i.e. a sibling `observability_master`-epic-scoped `plan_reconciler` run fixed exactly the drift both
+   my predecessor tranche runs flagged, earlier today. **Also reclassified out of my tranche**: `asset_group`
+   corrected `[cross-cutting] → [ci]` in the same pass (own comment: "a deployment-service CI/quality-gate ratchet
+   break, own tags already say 'ci', not data-pipeline scope") — no longer cross-cutting-tranche population, a
+   sibling `ci`-tranche worker's doc now. The underlying `[OPERATOR]` BLOCKED-OPERATOR-DECISION (relax
+   `BASEDPYRIGHT_MAX_ERRORS` 1259→1261, or hold shipping) remains genuinely open — already correctly parked with
+   options + a recommendation, not re-parked here (would be a duplicate escalation for an already-surfaced
+   question, now outside my scope besides).
+3. `issues/dp_watcher_stale_003_identity_after_registry_id_bump_to_004_2026_07_31.md` (still `parent_epic:
+   security_and_cross_cutting_master`, covered by today's epic sweep) — its Filed AO-readiness finding (worst
+   line-1-completeness instance + stale line-number citations) verified real but P3/cosmetic (doc's own words:
+   "Cosmetic only... no data loss, no functional regression"). Its actual fix is already WRITTEN (per the doc's own
+   2026-08-15 Progress Log, sitting uncommitted in a slot-15 working tree as of that date) but blocked on the SAME
+   basedpyright ratchet operator-decision as #2 above — already correctly parked there, nothing new to add. Not
+   re-fixing the stale line-number citations myself this run (P3, would need a fresh live grep against
+   currently-drifted line numbers to do safely, and the doc is not in this run's fresh-hunt population).
+
 ## Hygiene fixes
 
 (none landed this run — see Filed #1 below for the one candidate found, blocked by a pre-existing line-cap)
