@@ -28,8 +28,7 @@ related:
     ../architecture-v2/cross-cutting/pnl-attribution.md,
   ]
 created: 2026-06-19
-authoritative_for:
-  [
+authoritative_for: [
     paper↔batch↔live determinism spine (trade-by-trade reconciliation + four as-if-filled ledgers + two-fill-realities
     model),
   ]
@@ -78,6 +77,13 @@ the fill and into the ledger**:
   instructions AND fills. The paper↔batch reconciliation is therefore a **determinism PROOF, not a tolerance check** —
   any non-zero diff is a **bug** (one of: non-determinism in the decision path, an input-capture gap, or fill-model
   drift), never "within threshold".
+- **Corollary — PAPER ALWAYS CONSUMES THE LIVE MARKET-DATA FEED, never a testnet feed (operator ruling
+  2026-08-19).** Testnet is a paper _execution_ sub-mode: it changes where orders go, never where prices come from.
+  A testnet market-data feed is a different price series from live, so paper run against it could not reconcile
+  against a batch rerun over live history — the determinism proof above would fail by construction, and the
+  `live↔paper` delta would stop measuring execution quality and start measuring feed divergence. Where a venue
+  offers a testnet data feed, it is **still not** the paper input. This is what makes "testnet is a sub-mode of
+  paper" coherent rather than a fourth mode.
 - **The only intentional divergence lives at the LIVE fill boundary.** Live introduces real venue fills (real slippage /
   fees / partials / latency); the **`live↔paper` delta IS the execution-quality measurement** (alpha decay), expected
   non-zero — not a bug.

@@ -150,6 +150,45 @@ this epic carries its denominator and measurement date.
 
 ## W1 — Readiness derivation and the state dump
 
+### The readiness matrix the operator actually wants (ruling 2026-08-19) — measured gap
+
+Per **venue**, readiness for six surfaces, split by owning service, across three modes:
+
+| Surface             | Owning service    | Mode coverage today                                                        |
+| ------------------- | ----------------- | -------------------------------------------------------------------------- |
+| **market data**     | MTDS              | ⚠️ `market_tick_data` leg is **BATCH ONLY** — no live-feed check exists     |
+| **position**        | strategy-service  | ✅ `position_read_mode_availability(venue)` — genuinely batch/paper/live     |
+| **orders**          | execution-service | ❌ no leg                                                                   |
+| **fills**           | execution-service | ❌ no leg                                                                   |
+| **trades**          | execution-service | ❌ no leg                                                                   |
+| **account balance** | execution-service | ❌ no leg                                                                   |
+
+Measured against the shipped leg table in `cursor-configs/skills/readiness-state-dump/SKILL.md`: of 18 cells
+(6 surfaces × 3 modes) we derive **position across all three modes, and market data in batch only**. The
+`execution_transfers` leg checks `VENUE_WALLET_CAPABILITIES` membership (transfers, not the four operational
+surfaces) and `execution_instruction` is explicitly _"none wired yet"_. **Modes are batch (simulated) / paper
+(testnet and-or simulated per declared possibility) / live.**
+
+- [ ] [BACKEND] P0. **Extend the readiness dump to the full surface × mode matrix**, with the service split above —
+      strategy-service owns positions, execution-service owns orders / fills / trades / account balance. Reuse real
+      checks per the skill's own fact-vs-proxy policy; a surface with no machine check prints `unverified`, never a
+      silent pass.
+- [ ] [BACKEND] P0. **Add a LIVE-feed leg to `market_tick_data`** — it currently answers batch only, so "can this
+      venue's market data be pulled live?" is unanswered for every venue. Paper needs no separate feed leg: per
+      [paper-batch-live-reconciliation](/codex/09-strategy/operational/paper-batch-live-reconciliation.md) § 0,
+      **paper always consumes the LIVE feed**, never a testnet feed — testnet is an execution sub-mode, and a
+      testnet price series would break the determinism proof by construction. So market data is a two-feed
+      question (batch + live), not three.
+- [ ] [BACKEND] P0. **Archetype readiness is CODE completeness, not data availability.** The existing
+      `strategy — archetype half` leg uses `satisfying_archetypes()`, which answers "which archetypes can this
+      venue's DATA satisfy" — a different question from "are this archetype's code paths and hooks complete for
+      batch / paper / live". Nothing answers the latter. Build it as a skill or script where the hooks are
+      machine-detectable; where they are not, record a dated agent audit rather than leaving the cell blank. This
+      supersedes the vaguer "readiness applies to archetypes too" framing below.
+- [ ] [DOC] P1. **One shared readiness audit feeds BOTH client artefacts** (operator ruling 2026-08-19) — Elysium
+      and Nick AI take the same underlying audit, not two per-artefact ones. It belongs to the shared parent
+      remediation plan, not duplicated into the per-file children.
+
 The spine. Everything else feeds it.
 
 - [ ] [BACKEND] P0. **Auto-derive readiness per (venue × mode) across all six services** per the table above. Not a
