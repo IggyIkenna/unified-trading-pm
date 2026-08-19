@@ -165,12 +165,25 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
       to promote). Files: `pyproject.toml`, `uv.lock`, `server/codex_bridge_server.py`,
       `server/codex_mcp_proxy.py` (new), `tests/test_codex_bridge_server.py`, `tests/test_codex_mcp_proxy.py`
       (new).
-- [ ] [INFRA] P0. Deploy to the live orchestrator VM and verify — restart `codex-bridge.service` (the gitignored
-      `accounts.json`/systemd-config gotcha means `ao-self-pull.sh`'s "restart on HEAD move" does NOT cover this
-      automatically per the Kimi/Gemma onboarding plan's own documented finding; a manual
-      `systemctl restart codex-bridge` is required), then re-run the same real tool-call smoke test directly
-      against the production bridge (127.0.0.1:8769 on the VM). Done when: a dated Progress Log entry records the
-      real production response, not just the local pilot's.
+- [x] [INFRA] P0. ✅ Deploy to the live orchestrator VM and verify — **DONE 2026-08-19**, instance
+      `i-0c9b283b31d6b5ca7` (region `ap-northeast-1`, EIP 13.113.200.22, id `planning`), accessed via
+      documented read/write SSM `send-command` (per `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`'s
+      own header comment — no inbound firewall change, every call CloudTrail-audited). Confirmed `git HEAD` on the
+      VM already matched `agent-orchestrator@ea9ecd2b4e` (`ao-self-pull.sh`'s 2-minute cron had already pulled
+      it). **A SECOND real deployment gap found and fixed, beyond the already-documented "manual restart
+      required" one**: the first `systemctl restart codex-bridge` came back healthy (`/health` 200) but a real
+      tool-use smoke test immediately 502'd with `Codex SDK call failed: No module named 'mcp'` — `ao-self-pull.sh`
+      pulls CODE but does not `uv sync` a NEW python dependency into the service's `.venv`; restarting alone
+      replays the OLD dependency set. Fixed with `sudo -u ubuntu uv sync` (installed `mcp==2.0.0` +
+      transitive deps, matching the local `uv.lock` exactly) followed by a second restart. **Worth carrying
+      forward**: any future plan shipping a NEW python dependency to a VM-deployed service needs an explicit
+      `uv sync` step on that VM, not just a restart — not yet promoted to a standing codex SSOT, flagging here so
+      a future session/audit can decide whether `runtime-deployment-topology.md` or `vm-tarball-deployment.md`
+      should own it. **Real production evidence** (via a self-contained remote Python script executed through
+      SSM, using the VM's own real `codex-luna` ChatGPT credentials, not mine): turn 1 →
+      `HTTP 200, stop_reason: "tool_use"`, `tool_use_id=toolu_codex_a06d75bf223b4d0e8220da4e`; turn 2
+      (`tool_result="PROD-SMOKE-8821"`) → `HTTP 200`, final answer `"PROD-SMOKE-8821"` — genuinely reflecting the
+      injected content, not a hallucination. `codex-bridge.service` confirmed `active` post-restart both times.
 - [ ] [REVIEW] P1. Once the production smoke test passes, unpause `codex-luna` (`POST
       /api/accounts/codex-luna/enable`, the real `enable_account_endpoint`) — flip only after the above todo's
       evidence exists, not on landing the code. Update `codex_luna_flex_bridge_2026_08_14.md`'s own still-open
@@ -268,5 +281,30 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   **Honestly still open after this entry**: todos 8 (deploy to the live VM + verify), 9 (operator-gated
   `codex-luna` unpause — NOT mine to do, per this plan's own Non-goals and the operator's 2026-08-16 "disabled"
   instruction), and 10 (final archival, gated on everything above) remain open, in that order.
+
+- **2026-08-19 (later still) — todo 8 (VM deploy + verify) done, real evidence, on the ACTUAL production
+  orchestrator VM (instance `i-0c9b283b31d6b5ca7`).** Accessed via the documented read/write SSM `send-command`
+  path (`agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh`'s own header comment — the
+  established, already-audited mechanism; no ad-hoc access invented). Confirmed the VM's `git HEAD` already
+  matched `agent-orchestrator@ea9ecd2b4e` (`ao-self-pull.sh` had already pulled it). First
+  `systemctl restart codex-bridge` came back healthy on `/health`, but a real tool-use smoke test immediately
+  502'd: `Codex SDK call failed: No module named 'mcp'` — a SECOND real deployment gap, distinct from the
+  already-documented "restart isn't automatic" one: `ao-self-pull.sh` pulls code but does not `uv sync` a NEW
+  python dependency into the service's `.venv`. Fixed with `sudo -u ubuntu uv sync` (installed `mcp==2.0.0` +
+  transitive deps) + a second restart. **Real production evidence** (self-contained remote Python script via
+  SSM, using the VM's own real `codex-luna` ChatGPT credentials): turn 1 → `HTTP 200, stop_reason: "tool_use"`
+  (`tool_use_id=toolu_codex_a06d75bf223b4d0e8220da4e`); turn 2 (`tool_result="PROD-SMOKE-8821"`) → `HTTP 200`,
+  final answer genuinely `"PROD-SMOKE-8821"`. Also updated `codex_luna_flex_bridge_2026_08_14.md`'s own
+  `[REVIEW] P0. Smoke-test gate before any real fleet traffic` todo to reference this evidence and close it (a
+  documentation-only change — does not touch the account's `enable`/`disable` state).
+
+  **Worth carrying forward, not yet promoted to a standing codex SSOT**: any future plan shipping a NEW python
+  dependency to a VM-deployed service needs an explicit `uv sync` step on that VM as part of its own deploy
+  todo, not just a restart — flagging here so a future session/audit can decide whether
+  `runtime-deployment-topology.md` or `vm-tarball-deployment.md` should own this as a general rule.
+
+  **Honestly still open**: todo 9's actual account-enable flip (`POST /api/accounts/codex-luna/enable`) is
+  UNCHANGED, real production-state-affecting, and deliberately NOT done here — that is the one step left for the
+  operator, per this plan's own Non-goals. Todo 10 (final archival) is gated on that.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:b86998d38ce6877d]: KEEP-NA, valid — doc's own Progress Log records an explicit same-day operator decision (human plan, not AO-dispatched); every todo is part of one multi-file, multi-day rewrite of live-dispatch-critical-path machinery (codex_bridge_server.py) including a prod VM deploy/restart and a live account unpause — exactly the class not to auto-bundle into RECLASSIFY.
