@@ -82,9 +82,11 @@ related_plans:
   - ../active/solana_dex_pool_swaps_indexer_2026_08_08.md
   - ../active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md
 last_updated:
-  2026-07-15 # (was: 2026-06-26 — corrected 2026-07-14, doc-reconciliation finding 174: body carried
-  # dated 2026-07-12/2026-07-13 banners weeks after this field was last bumped; corrected 2026-07-15,
-  # plan-reconcile: related:/related_plans: repointed 4 folded plans from ../active/ to ../archive/2026_07/)
+  2026-08-19 # was 2026-07-15 — added priority-venue live-feed + candle-derivation audit section for the
+  # CeFi/Ethereum-DeFi/Betfair/prediction/Morpho/Uniswap/CoW-Swap set, see body. Prior entry: was 2026-06-26 —
+  # corrected 2026-07-14, doc-reconciliation finding 174: body carried dated 2026-07-12/2026-07-13 banners weeks
+  # after this field was last bumped; corrected 2026-07-15, plan-reconcile: related:/related_plans: repointed 4
+  # folded plans from ../active/ to ../archive/2026_07/
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
 ---
@@ -888,3 +890,53 @@ AI-days (class: infra)
       2026-05-23)**: MDPS scanner `_DEFI_DEX_VENUE_SEGMENTS` now includes ORCA-SOLANA and RAYDIUM-SOLANA venue path
       segments (MDPS@305677e). Current on-disk data is `dex_pools` (pool state snapshots), not `dex_swaps` events — MTDS
       Solana swap-event backfill is still needed before MDPS can produce candles.
+
+## MTDS/MDPS priority-venue live-feed + candle-derivation audit (2026-08-19)
+
+Audit scope: CeFi (Deribit, Hyperliquid, Binance, OKX, Bybit, Aster), Ethereum DeFi (AAVE V3, Lido, EtherFi), sports
+(Betfair), Polymarket, Kalshi, IBKR, Morpho, Uniswap, CoW Swap. **Verified 2026-08-19**: batch/REST adapter coverage
+is essentially complete for this set — every venue except CoW Swap has an MTDS batch adapter file, and MDPS has real
+(non-test) candle-derivation wiring for all of them except CoW Swap and (unverified) IBKR. The genuine gap is
+**live-feed** coverage, not batch:
+
+| Venue class | Live-feed status |
+| --- | --- |
+| Deribit, Binance, OKX, Bybit, Hyperliquid, Aster, Kalshi, Polymarket, Morpho, Uniswap V3 | real, unauthenticated live WS/polling — confirmed working, not scaffolds |
+| AAVE V3 | live leg exists but is **liquidations-only** (no live rate/market-state stream) |
+| Lido, EtherFi, Betfair | **BLOCKED-CREDENTIALS scaffolds** — registered in the WS factory so a naive check reports "live-wired," but `stream()` yields zero real ticks pending paid credentials (The Graph key + Ethereum RPC WS for the two LSTs; a subscribed Betfair Developer app key + SSO session for Betfair) |
+| Uniswap V2 / V4 | no confirmed live leg (only V3 is wired) |
+| IBKR | no live leg at all — architecturally can't be public WS (local TWS/IB Gateway socket only); MDPS candle path is UNVERIFIED — the generic tradfi candle adapters are written against Databento's raw schema, no test/wiring names IBKR specifically |
+| CoW Swap | absent end-to-end — no MTDS adapter, no MDPS wiring, batch or live |
+
+- [ ] [DATA] P2. **AAVE V3 — extend the live leg beyond liquidations-only.** `live/connectors/aave_liquidations_
+      ethereum_ws.py` is real (OnChainEventPoller on `eth_getLogs`, ~12s poll) but only serves liquidation events; no
+      live rate/market-state stream exists. Scope: does a live rate/utilization stream matter for the MVP archetype
+      set, or is liquidations-only sufficient? If it matters, build it; if not, state that explicitly rather than
+      leaving the gap unexplained.
+- [ ] [DATA] P1. **Lido / EtherFi / Betfair — the live-WS scaffolds are dated 2026-07-07 and still credential-
+      gated.** All three share `live/connectors/_defi_ws_blocked_credentials_base.py`'s pattern (Lido/EtherFi need a
+      paid The Graph key + Ethereum-RPC WS; Betfair needs a subscribed Developer app key + SSO session — "no
+      public/free tier"). Per the External-data-always-available rule, the scaffold itself is correct (built ahead
+      of credentials); this is a credential-provisioning ask, not a build gap. Betfair specifically cross-references
+      `/plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md` (1 open / 3 done) —
+      that doc's live routing/fixture-mapping scope is broader than just the credential unblock, don't duplicate its
+      tracking, just note the credential dependency here.
+- [ ] [DATA] P2. **Uniswap V2 / V4 — no confirmed live leg, only V3 is wired** (`dex_swap_uniswap_v3_ws.py`
+      deliberately polls the same subgraph the batch adapter reads, not raw `eth_subscribe`, to keep
+      paper(W)==batch-rerun(W) parity — the other 21 scaffold venues in `dex_swap_scaffold_ws.py` remain untouched).
+      Scope: does the MVP archetype set trade V2/V4 pools, or is V3-only sufficient for now? State explicitly either
+      way rather than leaving V2/V4 silently uncovered.
+- [ ] [DATA] P2. **IBKR — MDPS candle-derivation path is UNVERIFIED, not confirmed passing.** MTDS's IBKR batch
+      adapter (`market_interface/adapters/tradfi/ibkr_adapter.py`) is marked `ENDPOINT_STATUS: IMPLEMENTED` (via a
+      local TWS/IB Gateway socket, not a public API — architecturally can never have a live WS leg the way other
+      venues do). MDPS's generic tradfi candle adapters (`tradfi/{trades_adapter,tbbo_adapter,ohlcv_passthrough}.py`)
+      are registered by `MarketAssetGroup.TRADFI` + data_type (venue-agnostic) but their docstrings are explicitly
+      written against Databento's raw schema — no test or wiring names IBKR at all. Done-when: either a passing
+      test proves IBKR's `IBKRBar`/`IBKRTicker` shard shape parses cleanly through the generic tradfi adapters, or a
+      dedicated IBKR candle path is built.
+- [ ] [DATA] P1. **CoW Swap — genuinely greenfield end-to-end, confirmed 2026-08-19** (zero hits for
+      "cowswap"/"cow_swap"/"cow swap" anywhere in MTDS or MDPS — no batch adapter, no live connector, no candle
+      wiring; nothing to process since MTDS never writes CoW Swap raw shards). Build the MTDS batch adapter +
+      candle-derivation wiring once the execution-service CoW Swap adapter (see `execution_master.md`) establishes
+      what data shape is needed; sequence data build after or alongside execution build, not before it's clear what
+      the venue's actual quote/settlement data shape looks like.
