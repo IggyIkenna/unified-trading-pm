@@ -266,9 +266,15 @@ todos only to confirm they are data-movement, then leave it.
       no-op — `v2/account_orchestrator.py:48` `AccountInstructionOrchestrator.dispatch()` validates
       `authorization_id`, logs, appends to `_history` and returns `accepted=True` **without closing anything**; its
       own module docstring says "real venue wiring lands in follow-up commits once each venue adapter exposes the
-      right account-ops surface". An emergency close-all therefore reports success while closing zero positions,
-      which is the more dangerous half. Fix needs BOTH: a route on the DEPLOYED app (see the entrypoint todo below)
-      and real per-venue CLOSE_ALL wiring behind `AccountActionV2.CLOSE_ALL`.
+      right account-ops surface".
+      **CORRECTION to an earlier reading in this plan's log**: I first wrote that this "reports success while
+      closing nothing" in production. Re-measured — `AccountInstructionOrchestrator` has **ZERO production
+      callers**: the only references anywhere are its own module and the `v2/__init__.py` re-export
+      (`grep -rn "AccountInstructionOrchestrator" execution_service/`). So today it is an unreachable latent trap,
+      NOT a live failure. That lowers the urgency but not the requirement: the moment a route is put in front of
+      it, `accepted=True` becomes a lie about an emergency stop. Fix needs BOTH, in this order: real per-venue
+      CLOSE_ALL wiring behind `AccountActionV2.CLOSE_ALL` (and a loud rejection for any action with no runner),
+      THEN a route on the deployed app. Never the route first.
 - [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
 - [ ] [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — fix the registration.**
@@ -461,3 +467,35 @@ todos only to confirm they are data-movement, then leave it.
   was clean and merely one commit behind origin, and quickmerge proceeded under `--dep-branch` branch-isolation
   mode. Do not chase it as a gate failure — grep for `Quality gates FAILED` / `Re-gate FAILED` instead, which is
   what actually blocked run 1.
+
+- 2026-08-20 — **CORRECTION, recorded because the earlier claim was too strong.** I logged the emergency
+  close-all path as "reports success while closing nothing", which overstated it: `dispatch()` does return
+  `accepted=True` after only logging, but `AccountInstructionOrchestrator` has **zero production callers** (only
+  its own module and the `v2/__init__.py` re-export), so nothing invokes it today. It is an unreachable trap, not
+  a live defect. The todo above now carries the corrected reading and the required fix ORDER — wiring before
+  route, never the reverse.
+
+- 2026-08-20 — **Unit 3 (`/manual` 404 fix) FAILED its first gate, and the failure is worth keeping.** Wiring
+  `set_manual_handler` + `set_limiter_instance` inside `create_app()` broke four pre-existing tests
+  (`test_manual_instruction_close_all_contract`, `test_manual_instruction_live_orchestrator_protocol`). Cause:
+  `api/main.py` runs `app = create_app()` **at import**, so the factory mutated `manual_instruction_api`'s module
+  globals for every importer — including tests that build a bare `FastAPI()` with no `app.state.limiter`, which
+  then 500 inside slowapi's `_limiter.limit(...)`. Fixed by moving the wiring into a `lifespan`, which runs only
+  when the app is actually served. **General lesson for this repo**: `api/main.py` constructs its app at import,
+  so ANY global mutation in `create_app()` is really an import-time side effect on every test in the suite.
+  Re-verified: importing `main` now leaves both globals `None`; a bare app with a patched handler answers 422 not
+  500; served, the manual surface works.
+
+- 2026-08-20 — **W12 work IN PROGRESS, uncommitted, in `batch-live-reconciliation-service`.** A successor should
+  either finish or discard it — it is NOT shipped. New file
+  `batch_live_reconciliation_service/api/resolution_state.py` implements all three W12 P0s:
+  pause-before-manual-entry (`PauseRequiredError` as a real interlock on `book_correction`, not a note), virtual
+  vs persistent delta exclusion (VIRTUAL scoped to one `run_date` and process-local; PERSISTENT written to
+  `t1-recon/recon/exclusions.json` in the recon bucket so it survives restart — that asymmetry IS the feature),
+  and a soft-delete audit trail (revoke stamps `revoked_at`/`revoked_by`/`revoke_reason`; `all_pauses()` /
+  `all_exclusions()` return active and revoked alike). `resolution_api.py` has the store, request/response models
+  and `_require_break` helper wired in. **Still to do**: the endpoints themselves
+  (`POST /t1-recon/pause`, `/pause/revoke`, `GET /pauses`, `POST /exclusions`, `/exclusions/revoke`,
+  `GET /exclusions`), gating `book_correction` on `require_pause`, filtering `list_breaks` by
+  `excluded_break_ids`, and tests. Note `client.upload_bytes` returns a value — this repo's convention is
+  `_ = client.upload_bytes(...)`.
