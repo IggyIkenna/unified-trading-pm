@@ -402,7 +402,14 @@ had already run. Treat every todo below as net-new work, not a resume.
       plan's Why section). Done when: a real breakeven table exists in the Progress Log, citing the rates gathered
       in the live-verify todos, not re-derived from memory. **DONE 2026-08-16** — table added to the Progress Log
       below, citing the exact rates already registered in `model_pricing.py`.
-- [ ] [INFRA] P1. **New, 2026-08-19 — self-hosted Gemma is now real infra, needs wiring into AO.** A persistent
+- [x] [INFRA] P1. **DONE 2026-08-19 — shipped `agent-orchestrator@5598fd0412`, quality-gates.sh green (463
+      dashboard tests + full pytest suite passed).** LiteLLM entry added (`ollama_chat/gemma3:27b`), both NVIDIA
+      entries removed from `grok_gemini_proxy.yaml`; `"ollama"` added to `AccountProvider` with a docstring
+      explaining it supersedes `"nvidia"`; new `RateCard("gemma-self-hosted", ...)` at $0/token (real cost is the
+      fixed EC2 bill, documented as such, not fabricated per-token pricing); `"ollama"` deliberately left OUT of
+      `_BILLING_SHAPE_BY_PROVIDER` (returns `None`, same honest-non-categorization treatment as
+      openrouter/groq/sambanova/omniroute — but for a distinct reason: it doesn't fit any of the 5 shapes, not
+      just "not yet onboarded"). Original ask below, preserved for context: A persistent
       self-hosted `gemma3:27b` server is live (see Progress Log below for full evidence: instance, IP, cost, fix
       details) — operator instruction: replace BOTH `nvidia-diffusiongemma` and `nvidia-gemma-4-31b-it` with a
       single account pointing at this self-hosted server, don't run both hosted+self-hosted in parallel. Steps:
