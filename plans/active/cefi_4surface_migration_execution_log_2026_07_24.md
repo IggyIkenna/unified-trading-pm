@@ -31,7 +31,7 @@ related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md,
   ]
   # 2026-08-19 (na-eligibility-audit): dropped 3 archived-plan citations to satisfy the archive-safety-ratchet gate
   # (active docs must not cite /plans/archive/... in `related:`) — all 3 remain fully preserved as inline body
@@ -65,7 +65,7 @@ umbrella: true
 context_scope:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md,
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
     /plans/archive/2026_07/cefi_4surface_migration_execution_log_history_part1_2026_07_24.md,
     market-tick-data-service/scripts/verify_cefi_canonical_4surface_2026_07_20.py,

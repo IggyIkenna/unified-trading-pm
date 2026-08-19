@@ -36,7 +36,7 @@ related:
   [
     /plans/archive/2026_07/cefi_migration_cutover_and_track8_completion_2026_07_25.md,
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /plans/active/cefi_4surface_migration_execution_log_2026_07_24.md,
   ]

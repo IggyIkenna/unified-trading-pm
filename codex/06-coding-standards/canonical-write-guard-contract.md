@@ -61,7 +61,7 @@ All `file:line` citations below were read, not grepped, on 2026-07-20.
 
 ## 0. The dangling `canonical-write-conventions.md` pointer — resolved
 
-`plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md:558` cites, as **codex**, the triple
+`/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md:558` cites, as **codex**, the triple
 `chart-candle-delivery-flow.md:274`, `canonical-write-conventions.md:128-134`, `per-asset-group-bucket-layouts.md:135`.
 
 | Cited path                          | Reality                                                                                                                                                  |

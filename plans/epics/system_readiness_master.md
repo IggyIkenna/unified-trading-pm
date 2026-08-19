@@ -572,11 +572,13 @@ rg -N --no-filename '^parent_epic:' plans/active/*.md plans/active/issues/*.md \
 for f in plans/active/*.md plans/active/issues/*.md; do rg -qN '^parent_epic:' "$f" || echo "$f"; done
 ```
 
-**True orphans are already near-zero** — the last check found 3 active docs with no `parent_epic` key, none a real
-plan (`INDEX.md`, `_agent_pings.md`, `_cefi_canonical_blueprint_2026_07_17.md`), and the restructure did not change
-that. So corpus-level orphan hygiene is not the gap. **The gap is directional** — nothing checks that every artefact
-CLAIM has a tracked owner. Invert the invariant: not "every plan hangs under this epic" (wrong direction, ~850 docs)
-but **"every claim-bearing artefact section maps to a tracked item, wherever it lives."**
+**True orphans are already zero** — corrected 2026-08-19: the 3rd exemption cited below
+(`_cefi_canonical_blueprint_2026_07_17.md`) was a real gap, not a legitimate exclusion — renamed (dropped the stale
+underscore-prefix), given a `parent_epic: cefi_master`, and archived (0 open todos, resolved-by-reference to an
+already-completed forked plan). Only `INDEX.md` and `_agent_pings.md` remain as genuine, non-plan exemptions. So
+corpus-level orphan hygiene is not the gap. **The gap is directional** — nothing checks that every artefact CLAIM has
+a tracked owner. Invert the invariant: not "every plan hangs under this epic" (wrong direction, ~850 docs) but
+**"every claim-bearing artefact section maps to a tracked item, wherever it lives."**
 
 **This invariant has already failed once, measurably.** The 2026-08-18 second-pass audit found P0 disclosure
 violations in four sibling client artefacts (`strategy-service-deep-dive.html`, `platform-architecture.html`,
@@ -584,11 +586,11 @@ violations in four sibling client artefacts (`strategy-service-deep-dive.html`, 
 remediation plan, because the only such plan scopes to the two audited documents. Four client-sendable documents
 carrying hard-rule violations, with no owning plan, is exactly the orphan class this section exists to catch.
 
-**True orphans are already near-zero**: exactly 3 active docs lack a `parent_epic` key, and none is a real plan
-(`INDEX.md`, `_agent_pings.md`, `_cefi_canonical_blueprint_2026_07_17.md`). So corpus-level orphan hygiene is not
-the gap. **The gap is directional** — nothing checks that every artefact CLAIM has a tracked owner. Invert the
-invariant: not "every plan hangs under this epic" (wrong direction, 845 docs) but **"every claim-bearing artefact
-section maps to a tracked item, wherever it lives."**
+**True orphans are already zero**: exactly 2 active docs lack a `parent_epic` key, both genuine non-plan exemptions
+(`INDEX.md`, `_agent_pings.md`) — see the correction above. So corpus-level orphan hygiene is not the gap. **The gap
+is directional** — nothing checks that every artefact CLAIM has a tracked owner. Invert the invariant: not "every
+plan hangs under this epic" (wrong direction, 851 docs) but **"every claim-bearing artefact section maps to a
+tracked item, wherever it lives."**
 
 - [ ] [DOC] P0. **Give every claim-bearing artefact section a third mark: its OWNER** — the workstream, plan or
       epic that closes the gap. With the status mark (what the system does) and § E's evidence tier (how we know),

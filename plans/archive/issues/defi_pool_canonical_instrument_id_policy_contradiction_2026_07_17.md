@@ -24,7 +24,7 @@ tags: [defi, canonical-instrument-id, pool, ssot-contradiction, catalogue, instr
 related:
   [
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md,
   ]
 created: 2026-07-17
 last_updated: 2026-07-17

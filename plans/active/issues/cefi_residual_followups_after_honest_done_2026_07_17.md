@@ -67,7 +67,7 @@ source: CeFi completion program /autonomous close-out (slot-3, 2026-07-17) — a
 resolved_by:
 context_scope:
   [
-    /plans/active/issues/_cefi_canonical_blueprint_2026_07_17.md,
+    /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md,
     /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md,
     /codex/02-data/per-asset-group-bucket-layouts.md,
     /codex/02-data/availability-manifest-and-data-status.md,
@@ -197,7 +197,7 @@ pairs stay honest-unresolved (reported, never guessed).
 > **⚠️ REDESIGN (2026-07-17, blueprint workflow).** The adversarial design review returned `NEEDS-REDESIGN` and caught
 > **5 data-corruption risks** in the naive plan — chiefly that a 2-tuple `(venue, raw_symbol)` key silently
 > under-resolves the BYBIT/OKX/BINANCE-FUTURES majors (spot vs perp wire clash) into NON-JOINING ids. The corrected,
-> apply-ready blueprint is `_cefi_canonical_blueprint_2026_07_17.md`. **Binding contract changes on every todo below:**
+> apply-ready blueprint is `/plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md`. **Binding contract changes on every todo below:**
 > (1) ONE **3-tuple** key `(venue, instrument_type, raw_symbol)→instrument_id` via ONE shared builder; (2) filename stem
 > = the FULL canonical `instrument_id` (matches on-chain precedent — NOT the bare symbol; codex "bare symbol" docs are
 > stale → Phase 2); (3) shard atom = `[date, venue, data_type, instrument_type, instrument_id, pipeline_mode]`; (4)
