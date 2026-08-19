@@ -167,10 +167,31 @@ source: >-
       asset_group (2026-08-18)". Verdict: the residual is NOT B8-only — B20-B25 (already tracked) plus two new
       registry-gap findings (`declared=not_ready`, `features=not_ready`) flagged as a separate finding there, each
       with a fresh P1 follow-up todo.
-- [ ] [SKILL] P1. Build the gate-evaluation skill so `data_pipeline_completion_2026_08_21.md`'s register is
+- [x] ✅ [SKILL] P1. Build the gate-evaluation skill so `data_pipeline_completion_2026_08_21.md`'s register is
       re-runnable rather than a point-in-time snapshot, mirroring the readiness-state-dump shape already used in
       the parent epic's W1/W20. Source: `/plans/active/data_pipeline_completion_2026_08_21.md`. Done-when: the
-      skill exists and one full run against the register is reported.
+      skill exists and one full run against the register is reported. **Shipped
+      `cursor-configs/skills/gate-evaluation/`** (`SKILL.md` + `scripts/gate_registry.py` +
+      `scripts/evaluate_gates.py`, mirroring the `honest-coverage-dump`/`readiness-state-dump` split between a pure
+      registry module and an evaluator). `gate_registry.py` transcribes all 53 gates (26 BATCH + 13 PAPER + 14
+      LIVE) verbatim from the register doc's own tables, with a drift-guard assertion pinning the 29-of-53
+      no-owning-doc count the 2026-08-18 cross-link pass found. Readiness is DERIVED, never declared (same
+      2026-08-16 operator ruling `readiness-state-dump` follows, per
+      `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`): only 3 gates (B1 availability, B8
+      honest-coverage-100%, B16 denominator-declared) have a genuine machine oracle wired — all three reuse
+      `honest-coverage-dump`'s already-shipped `dump_coverage.build_report()` verbatim, never recomputed. Every
+      other gate honestly reports `unverified`, tagged with its owning doc (or its confirmed absence) so a reader
+      sees at a glance whether the gap is "go read `<doc>`" or genuinely untracked anywhere.
+
+      **First live run (2026-08-19, slot 31, infra), production `coverage.json` (`2026-08-19`, 3,962 shards):**
+      `TOTAL: 53 gates -- PASS=1 FAIL=2 UNVERIFIED=50`. **B1 FAIL**: 222/3,962 shards have zero honest coverage and
+      are not a confirmed-empty absence. **B8 FAIL**: `reachable_coverage_pct=48.73%` (denom=120,035,432) — order-
+      of-magnitude consistent with the per-AG Friday-target table this same doc's batch15-item-9 entry recorded on
+      2026-08-18 (cefi 45.51%, defi 40.68%, tradfi 86.96%, sports 99.26%, prediction 92.78% — this run's 48.73% is
+      the corpus-wide weighted figure across all 5 AGs together, not a re-measurement disagreement). **B16 PASS**:
+      all 4 capture-state labels present + denominator carried on every percentage. The 50 `unverified` gates split
+      23 BATCH / 13 PAPER / 14 LIVE, matching the register's own 23/13/14 non-automated gate counts exactly.
+      Repo: unified-trading-pm (this repo; no separate service repo touched).
 
 ## From `instruments_catalogue_definitions_and_field_history_2026_08_17.md`
 
@@ -286,3 +307,14 @@ source: >-
   resolved to a real plan/issue doc or codex SSOT; 29 (55%) recorded as "no owning doc found" rather than forced onto
   a weak keyword match — summarised in a new blockquote finding under that doc's "Tie-in to existing plans" section.
   `unified-trading-pm@<pending>`.
+- **2026-08-19 (infra, slot 31)**: item 10 (gate-evaluation skill) done. Shipped
+  `cursor-configs/skills/gate-evaluation/` mirroring the `honest-coverage-dump`/`readiness-state-dump` split
+  (pure `gate_registry.py` data module + `evaluate_gates.py` evaluator), transcribing all 53 gates from
+  `data_pipeline_completion_2026_08_21.md`'s own tables with a drift-guard assertion on the 29-no-owning-doc
+  count. Wired 3 real machine checks (B1/B8/B16, all reusing `honest-coverage-dump`'s already-shipped
+  `dump_coverage.build_report()`); every other gate honestly reports `unverified` per the same "readiness is
+  derived, never declared" discipline `readiness-state-dump` already established — deliberately did not attempt
+  to fabricate checks for the 50 gates needing human judgment, a live drill, or deep service-internal
+  investigation (B20 sign-off, L9 DR-drill, etc.). First live run against production `coverage.json`: 1 PASS
+  (B16), 2 FAIL (B1: 222/3,962 zero-coverage shards; B8: 48.73% reachable coverage, consistent with the
+  already-recorded per-AG Friday-target figures), 50 UNVERIFIED. See the flipped checkbox above for full detail.
