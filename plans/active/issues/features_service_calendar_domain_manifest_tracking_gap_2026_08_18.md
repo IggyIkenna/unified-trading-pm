@@ -104,3 +104,7 @@ confirmation across 4 handler files, not a corpus-wide sweep of every features-s
   `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 2 (conflict-cleared, zero existing coverage). Todo 1
   (Layer-1 EXPECTED-universe design question) and todo 2 (contingent `record_captured` wiring, gated on todo 1)
   stay genuinely design/contingent-gated. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — reaffirmed.** 2 open
+  todos re-read end-to-end (count reconciled, 2/2), unchanged since the 08-18 pass. Todo 1 (Layer-1 EXPECTED-universe
+  design question) is a genuine architectural judgment call; todo 2 is textually gated on todo 1's unresolved
+  outcome. `assigned_vm` unchanged.

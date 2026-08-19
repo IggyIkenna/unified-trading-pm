@@ -1,0 +1,421 @@
+<!-- generated: 2026-08-19T00:00:00Z by /plan-reconcile agent_operating_framework_master -->
+<title>Agent Operating Framework Ledger</title>
+<style>
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #10141b; --surface: #171d27; --surface-2: #1f2731; --surface-3: #2a3340;
+      --ink: #e6ebf2; --ink-dim: #93a4b6; --ink-faint: #5c6b7d;
+      --accent: #5fd0e0; --accent-ink: #08262b; --accent-dim: #2f6b76;
+      --operator: #eab04a; --operator-ink: #2a1c00; --good: #5fbf8a; --good-ink: #06210f;
+      --line: rgba(95,208,224,0.16); --card-shadow: rgba(0,0,0,0.4);
+    }
+  }
+  :root[data-theme="dark"] {
+    --ground: #10141b; --surface: #171d27; --surface-2: #1f2731; --surface-3: #2a3340;
+    --ink: #e6ebf2; --ink-dim: #93a4b6; --ink-faint: #5c6b7d;
+    --accent: #5fd0e0; --accent-ink: #08262b; --accent-dim: #2f6b76;
+    --operator: #eab04a; --operator-ink: #2a1c00; --good: #5fbf8a; --good-ink: #06210f;
+    --line: rgba(95,208,224,0.16); --card-shadow: rgba(0,0,0,0.4);
+  }
+  :root {
+    --ground: #f3f6f9; --surface: #ffffff; --surface-2: #edf2f6; --surface-3: #e0e7ee;
+    --ink: #121923; --ink-dim: #4c5d6e; --ink-faint: #8695a5;
+    --accent: #157988; --accent-ink: #ffffff; --accent-dim: #cdeaee;
+    --operator: #a2650a; --operator-ink: #ffffff; --good: #1f7a52; --good-ink: #ffffff;
+    --line: rgba(21,121,136,0.18); --card-shadow: rgba(20,40,60,0.08);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--ground); color: var(--ink);
+    font-family: ui-sans-serif, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size: 15px; line-height: 1.55; -webkit-font-smoothing: antialiased;
+  }
+  .mono { font-family: ui-monospace, "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace; }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px 96px; }
+  a { color: var(--accent); }
+
+  /* ---- masthead ---- */
+  .masthead {
+    position: relative; padding: 56px 28px 36px; border-bottom: 1px solid var(--line);
+    background:
+      linear-gradient(180deg, var(--surface) 0%, var(--ground) 100%);
+  }
+  .masthead::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: .5;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 44px 44px;
+    -webkit-mask-image: linear-gradient(180deg, black, transparent 85%);
+            mask-image: linear-gradient(180deg, black, transparent 85%);
+  }
+  .masthead-inner { max-width: 1180px; margin: 0 auto; position: relative; }
+  .eyebrow {
+    font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 12px; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--accent); display: flex; gap: 10px; align-items: center;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  h1.title {
+    font-family: ui-monospace, "JetBrains Mono", monospace; font-weight: 600;
+    font-size: clamp(28px, 4vw, 40px); margin: 14px 0 10px; text-wrap: balance; letter-spacing: -0.01em;
+  }
+  .dek { color: var(--ink-dim); max-width: 62ch; font-size: 16px; }
+  .genline { margin-top: 18px; font-size: 12px; color: var(--ink-faint); font-family: ui-monospace, monospace; }
+
+  /* ---- sections ---- */
+  section { padding: 40px 0; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: none; }
+  h2.sec-title {
+    font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 13px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--ink-faint); margin: 0 0 20px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  h2.sec-title::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+  h2.sec-title .idx { color: var(--accent); }
+
+  /* ---- chips (scope) ---- */
+  .chiprow { display: flex; flex-wrap: wrap; gap: 10px; }
+  .chip {
+    font-size: 13px; padding: 7px 13px; border-radius: 999px; border: 1px solid var(--line);
+    background: var(--surface); color: var(--ink-dim);
+  }
+  .chip.reject { color: var(--ink-faint); text-decoration: line-through; text-decoration-color: var(--ink-faint); }
+
+  /* ---- stat strip ---- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; }
+  .stat {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 18px 18px 16px;
+    box-shadow: 0 1px 2px var(--card-shadow);
+  }
+  .stat .n {
+    font-family: ui-monospace, "JetBrains Mono", monospace; font-variant-numeric: tabular-nums;
+    font-size: 30px; font-weight: 600; color: var(--ink);
+  }
+  .stat .n.accent { color: var(--accent); }
+  .stat .n.operator { color: var(--operator); }
+  .stat .n.good { color: var(--good); }
+  .stat .l { margin-top: 4px; font-size: 12.5px; color: var(--ink-dim); }
+
+  /* ---- plan cards ---- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 16px 14px;
+    position: relative; box-shadow: 0 1px 2px var(--card-shadow);
+  }
+  .card .tag {
+    position: absolute; top: 12px; right: 12px; font-family: ui-monospace, monospace; font-size: 10.5px;
+    color: var(--ink-faint); border: 1px solid var(--line); border-radius: 5px; padding: 2px 6px;
+  }
+  .card h3 { font-size: 14.5px; margin: 0 22px 8px 0; line-height: 1.4; }
+  .card .path { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-faint); word-break: break-all; }
+  .bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; margin: 12px 0 8px; background: var(--surface-3); }
+  .bar .done { background: var(--good); }
+  .bar .open { background: var(--accent); }
+  .card .counts { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-dim); font-variant-numeric: tabular-nums; }
+  .card .opline { margin-top: 10px; font-size: 12.5px; color: var(--operator); border-left: 2px solid var(--operator); padding-left: 8px; }
+
+  /* ---- tables ---- */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 13.5px; }
+  th, td { text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { font-family: ui-monospace, monospace; font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-faint); background: var(--surface-2); position: sticky; top: 0; }
+  tr:last-child td { border-bottom: none; }
+  td.doc { font-family: ui-monospace, monospace; font-size: 12px; color: var(--ink-dim); white-space: nowrap; }
+  .p0 { color: var(--operator); font-weight: 600; }
+  .p1 { color: var(--accent); }
+  .p2, .p3 { color: var(--ink-faint); }
+  .tallwrap { max-height: 460px; overflow-y: auto; }
+
+  /* ---- closed-out list ---- */
+  .closed { display: flex; flex-direction: column; gap: 10px; }
+  .closed .row { display: grid; grid-template-columns: 130px 1fr; gap: 14px; padding: 10px 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 8px; align-items: start; }
+  .closed .class { font-family: ui-monospace, monospace; font-size: 11px; color: var(--good); text-transform: uppercase; letter-spacing: .04em; padding-top: 2px; }
+  .closed .desc { font-size: 13.5px; color: var(--ink); }
+  .closed .desc .ev { display: block; margin-top: 3px; font-family: ui-monospace, monospace; font-size: 11.5px; color: var(--ink-faint); }
+
+  /* ---- lanes ---- */
+  .lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; }
+  .lane { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; }
+  .lane h4 { margin: 0 0 8px; font-family: ui-monospace, monospace; font-size: 13px; color: var(--accent); }
+  .lane ul { margin: 0; padding-left: 18px; font-size: 12.5px; color: var(--ink-dim); }
+  .lane li { margin-bottom: 4px; }
+
+  /* ---- dispatch prompts ---- */
+  .promptbox { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+  .promptbox h4 { margin: 0 0 8px; font-family: ui-monospace, monospace; font-size: 13px; color: var(--accent); }
+  .promptbox pre {
+    margin: 0; white-space: pre-wrap; word-break: break-word; font-family: ui-monospace, "JetBrains Mono", monospace;
+    font-size: 11.5px; line-height: 1.5; color: var(--ink-dim); max-height: 220px; overflow-y: auto;
+    background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 10px 12px;
+  }
+
+  .notes { color: var(--ink-dim); font-size: 13.5px; }
+  .notes ul { padding-left: 20px; }
+  .notes li { margin-bottom: 8px; }
+  footer { text-align: center; padding: 30px 0 10px; color: var(--ink-faint); font-size: 12px; font-family: ui-monospace, monospace; }
+</style>
+
+<div class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow"><span class="dot"></span>AGENT_OPERATING_FRAMEWORK_MASTER · L5 EPIC</div>
+    <h1 class="title">Agent Operating Framework Ledger</h1>
+    <p class="dek">How agents work: strict per-plan dispatch, grep-native frontmatter retrieval (no vector-RAG), the role/autonomy
+      model, and the audit loop that keeps the index honest — the meta-rules every other epic's agents run under.</p>
+    <div class="genline">GENERATED 2026-08-19 · /plan-reconcile agent_operating_framework_master · 72 child docs (18 plans + 54 issues) · 5 parallel hunter batches</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section>
+    <h2 class="sec-title"><span class="idx">02</span> Scope</h2>
+    <div class="chiprow">
+      <span class="chip">strict <code class="mono">assigned_vm</code> fail-closed dispatch</span>
+      <span class="chip">grep-native L0–L4 frontmatter retrieval</span>
+      <span class="chip">role charters + autonomy gradient</span>
+      <span class="chip">audit-as-gate-staging eval loop</span>
+      <span class="chip reject">embeddings / vector-RAG</span>
+      <span class="chip reject">AGENTS.md filename standard</span>
+      <span class="chip reject">separate authority/freshness field</span>
+      <span class="chip reject">plan-level worked_by/executor</span>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">03</span> Headline</h2>
+    <div class="stats">
+      <div class="stat"><div class="n accent">167</div><div class="l">open todos (deduped)</div></div>
+      <div class="stat"><div class="n good">232</div><div class="l">done todos (deduped)</div></div>
+      <div class="stat"><div class="n operator">44</div><div class="l">operator-blocked open items</div></div>
+      <div class="stat"><div class="n">49</div><div class="l">corrections applied this pass</div></div>
+      <div class="stat"><div class="n">8</div><div class="l">aggregator plans (excluded from dedup)</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">04</span> Plan-by-plan</h2>
+    <div class="cards">
+      <!-- 18 plan-type children, open/done as of this pass -->
+      <div class="card"><span class="tag">P1</span><h3>AG closeout-audit rollout — cefi/defi/tradfi/prediction</h3>
+        <div class="path">ag_closeout_audit_rollout_2026_07_25.md · aggregator</div>
+        <div class="bar"><div class="done" style="width:93%"></div><div class="open" style="width:7%"></div></div>
+        <div class="counts">1 open / 13 done</div></div>
+      <div class="card"><span class="tag">P2</span><h3>ao_consolidated_closeout</h3>
+        <div class="path">ao_consolidated_closeout_2026_08_12.md · aggregator</div>
+        <div class="bar"><div class="done" style="width:67%"></div><div class="open" style="width:33%"></div></div>
+        <div class="counts">2 open / 4 done</div></div>
+      <div class="card"><span class="tag">P1</span><h3>AO Death Diagnostics, Compaction KPIs, Sequential Carve-out</h3>
+        <div class="path">ao_death_diagnostics_compaction_kpis_and_sequential_carveout_2026_08_15.md</div>
+        <div class="bar"><div class="done" style="width:82%"></div><div class="open" style="width:18%"></div></div>
+        <div class="counts">2 open / 9 done</div></div>
+      <div class="card"><span class="tag">P2</span><h3>AO-dispatch corpus sweep — operator/worker item separation</h3>
+        <div class="path">ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md</div>
+        <div class="bar"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts">12 open / 0 done</div></div>
+      <div class="card"><span class="tag">LIVE</span><h3>AO satellite batch 25 — na-eligibility-audit conflict-clear extraction</h3>
+        <div class="path">ao_satellite_ao_dispatch_batch25_2026_08_19.md · aggregator</div>
+        <div class="bar"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts">11 open / 0 done</div></div>
+      <div class="card"><span class="tag">LIVE</span><h3>AO satellite batch 25 — finalize</h3>
+        <div class="path">ao_satellite_ao_dispatch_batch25_finalize_2026_08_19.md · aggregator · gated on batch25</div>
+        <div class="bar"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts">3 open / 0 done</div></div>
+      <div class="card"><span class="tag">P2</span><h3>AssetClass → AssetGroup rename</h3>
+        <div class="path">asset_class_to_asset_group_rename_2026_07_21.md</div>
+        <div class="bar"><div class="done" style="width:14%"></div><div class="open" style="width:86%"></div></div>
+        <div class="counts">6 open / 1 done</div></div>
+      <div class="card"><span class="tag">P2</span><h3>context_scout completion + plan-brainstorm skill</h3>
+        <div class="path">context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md</div>
+        <div class="bar"><div class="done" style="width:91%"></div><div class="open" style="width:9%"></div></div>
+        <div class="counts">1 open / 10 done</div></div>
+      <div class="card"><span class="tag">LIVE</span><h3>cross-cutting satellite AO dispatch batch 16</h3>
+        <div class="path">cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md · aggregator</div>
+        <div class="bar"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts">5 open / 0 done</div></div>
+      <div class="card"><span class="tag">LIVE</span><h3>cross-cutting satellite AO dispatch batch 16 — finalize</h3>
+        <div class="path">cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md · aggregator</div>
+        <div class="bar"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts">4 open / 0 done</div></div>
+      <div class="card"><span class="tag">DONE</span><h3>Data-pipeline E2E milestones gate (14 cross-AG criteria)</h3>
+        <div class="path">data_pipeline_e2e_milestones_gate_2026_07_24.md · archive_exempt</div>
+        <div class="bar"><div class="done" style="width:100%"></div></div>
+        <div class="counts">0 open / 65 done</div></div>
+      <div class="card"><span class="tag">DONE</span><h3>check_doc_body_links backtick blind spot — finalize</h3>
+        <div class="path">doc_body_link_checker_blind_to_backtick_citations_2026_08_02_finalize_2026_08_08.md · archive_exempt</div>
+        <div class="bar"><div class="done" style="width:100%"></div></div>
+        <div class="counts">0 open / 3 done</div></div>
+      <div class="card"><span class="tag">P1</span><h3>Meta-plan corpus hygiene AO dispatch batch 1</h3>
+        <div class="path">meta_plan_corpus_hygiene_ao_dispatch_batch1_2026_08_10.md · aggregator</div>
+        <div class="bar"><div class="done" style="width:89%"></div><div class="open" style="width:11%"></div></div>
+        <div class="counts">2 open / 16 done</div></div>
+      <div class="card"><span class="tag">P3</span><h3>Meta-plan corpus hygiene AO dispatch batch 1 — finalize</h3>
+        <div class="path">meta_plan_corpus_hygiene_ao_dispatch_batch1_finalize_2026_08_10.md · aggregator</div>
+        <div class="bar"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+        <div class="counts">4 open / 0 done</div></div>
+      <div class="card"><span class="tag">P2</span><h3>Multi-agent slot collision + safe-doc-push hardening — finalize</h3>
+        <div class="path">multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md</div>
+        <div class="bar"><div class="done" style="width:67%"></div><div class="open" style="width:33%"></div></div>
+        <div class="counts">1 open / 2 done</div></div>
+      <div class="card"><span class="tag">P2</span><h3>NA docs validity + AO-eligibility audit</h3>
+        <div class="path">na_docs_validity_and_ao_eligibility_audit_2026_07_26.md</div>
+        <div class="bar"><div class="done" style="width:52%"></div><div class="open" style="width:48%"></div></div>
+        <div class="counts">12 open / 13 done</div>
+        <div class="opline">1 done-but-unchecked flip + 1 line-1 fix landed this pass</div></div>
+      <div class="card"><span class="tag">P1</span><h3>one_shot_complete session-ownership desync — finalize</h3>
+        <div class="path">one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md</div>
+        <div class="bar"><div class="done" style="width:50%"></div><div class="open" style="width:50%"></div></div>
+        <div class="counts">1 open / 1 done</div></div>
+      <div class="card"><span class="tag">REF</span><h3>Task Template — How to Author a Plan</h3>
+        <div class="path">task_template.md · normative SSOT, by design 0 tracked todos</div>
+        <div class="bar"></div>
+        <div class="counts">0 open / 0 done</div>
+        <div class="opline">2 self-issues flagged, not auto-edited — see §6</div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">05</span> On the operator's desk</h2>
+    <div class="tablewrap tallwrap">
+      <table>
+        <thead><tr><th style="width:60px">Pri</th><th style="width:340px">Doc</th><th>What it's gated on</th></tr></thead>
+        <tbody>
+          <tr><td class="p0">P0</td><td class="doc">docs_reconcile_operator_decisions</td><td>Reconcile Fireblocks RSA rotation cadence between two SSOTs — pick the number, fix the other doc</td></tr>
+          <tr><td class="p0">P0</td><td class="doc">per_client_config_surface</td><td>Confirm which of leverage / venue selection / coin universe become per-client axes (UAC schema + consumer impact)</td></tr>
+          <tr><td class="p1">P1</td><td class="doc">docs_reconcile_operator_decisions</td><td>Decide disposition of two duplicated plan-hygiene.md SSOTs (merge / split / re-scope authoritative_for)</td></tr>
+          <tr><td class="p1">P1</td><td class="doc">gate_on_depends_wiring_gap_finalize</td><td>Purge the now-superseded old lst_rates data + orphaned migration markers</td></tr>
+          <tr><td class="p1">P1</td><td class="doc">operator_action_items_consolidated</td><td>GitHub outside-collaborator PR-approval setting (security posture)</td></tr>
+          <tr><td class="p1">P1</td><td class="doc">operator_action_items_consolidated</td><td>Complete or re-park the 2026-08-07 ruling's remaining 2/8 + 0/1 items</td></tr>
+          <tr><td class="p1">P1</td><td class="doc">operator_ruling_record_ao_round5</td><td>Confirm 6 transcribed rulings are accurate as written, or correct them</td></tr>
+          <tr><td class="p1">P1</td><td class="doc">per_client_config_surface</td><td>Confirm tighten-vs-loosen asymmetry for risk limits (recommendation: tightening only)</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">account_failover_ignores_overage</td><td>Top up / raise the overage limit, or re-route to another account</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">ao_stuck_escalation_mtds</td><td>Spread reserve slots 31/32/33 across more than one account</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">check_agent_orchestrator_ssm_access</td><td>Grant ikenna-worker ssm:SendCommand + ssm:GetCommandInvocation IAM roles</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">docs_reconcile_findings</td><td>Resolve plan-completion-and-archival-discipline.md's archival-path self-consistency gap</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">docs_reconcile_operator_decisions</td><td>REOPENED — what is cursor-rules/ for (2026-08-08 resolution premise found false)</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">docs_reconcile_operator_decisions</td><td>Decide whether .cursor/rules/core/ membership should match alwaysApply: true, or vice versa</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">gate_on_depends_wiring_gap_finalize</td><td>Purge orphaned lst_rates _migrated_* markers</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">operator_action_items_consolidated</td><td>Set AGENT_ORCHESTRATOR_SLACK_WEBHOOK in the planning VM's .env.local</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">operator_action_items_consolidated</td><td>Honest-coverage mockup design reviews (4 related sub-questions)</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">operator_action_items_consolidated</td><td>tradfi_catalogue_regen_scheduler — Cloud Scheduler job disposition</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">operator_action_items_consolidated</td><td>Confirm 6 transcribed rulings in a separate record</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">operator_action_items_consolidated</td><td>Rule on tradfi_forexfactory_econ_calendar_consensus_capture disposition</td></tr>
+          <tr><td class="p2">P2</td><td class="doc">operator_action_items_consolidated</td><td>Decide whether /ag-closeout-audit all should budget for the full candidates-generator pass</td></tr>
+          <tr><td class="p3">P3</td><td class="doc">+23 more</td><td>Wallet-key provisioning, live-trading kill-switch arming, .tabs/N stash-drop batches, credential provisioning
+            (bybit / glassnode / sportradar / ICE-OPRA), design-fork rulings — see each doc directly for full text</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">06</span> Needs extra scoping</h2>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th style="width:340px">Doc</th><th>Why it's ambiguous</th></tr></thead>
+        <tbody>
+          <tr><td class="doc">operator_ruling_record_plan_reconcile_ao_2026_08_18</td><td>The prior 2026-08-18 <code class="mono">/plan-reconcile ao</code> run's own hunters 1/2/4/7 never reported — this run cannot fabricate their findings, only flag the gap.</td></tr>
+          <tr><td class="doc">meta_plan_corpus_hygiene_ao_dispatch_batch1</td><td>Todo 13 points at an archived doc's stale premise; ~20 fresh tradfi reconcile passes ran since, but a grep for the 5 named candidates in the newer findings docs returns zero hits — inconclusive without a full re-read.</td></tr>
+          <tr><td class="doc">ag_closeout_audit_rollout</td><td>Repeatedly recommends "a dedicated cross-cutting close+archive pass" — the one candidate doc found has a different apparent scope; may need authoring, not locating.</td></tr>
+          <tr><td class="doc">(class-level, ~40 lines)</td><td>Bare <code class="mono">plans/...</code> citations missing their leading slash — real per CLAUDE.md, but <code class="mono">check_reference_paths.py</code>'s format check only validates <code class="mono">codex/</code>, so this class has no mechanical gate yet.</td></tr>
+          <tr><td class="doc">task_template.md</td><td>Duplicate blockquote paragraph + 4 bare refs in the plan-authoring SSOT itself — flagged, not auto-edited, given its blast radius.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">07</span> Closed out this pass</h2>
+    <div class="closed">
+      <div class="row"><div class="class">flip · 5</div><div class="desc">Done-but-unchecked checkboxes flipped with HARD SHA-ancestry evidence
+        <span class="ev">per_client_config_surface (×4) @ strategy-service@c55b586c — verified ancestor of origin/live-defi-rollout · na_docs_validity (×1) @ unified-trading-pm@99e725a679</span></div></div>
+      <div class="row"><div class="class">ao-readiness · 21</div><div class="desc">Line-1-completeness rewrites — bolded/parenthetical clauses that wrapped past physical line 1, invisible to the dispatcher's parser
+        <span class="ev">git_stash_push_pop (×3) · safe_doc_push_stash_pileup (×1) · ao_tmux_loss_rate_canary (×1) · multi_agent_slot_collision (×1) · prosewrap_padding (×1) · ao_satellite_batch25 (×2) · cross_cutting_batch16 (×3) · safe_doc_push_orphaned_patch (×2) · escalation_pool_exhaustion_finalize (×2) · ao_scheduled_dispatch_pause_finalize (×2) · na_audit_multi_tranche (×1) · na_docs_validity (×1) · ao_finished_oneshot_finalize (×1)</span></div></div>
+      <div class="row"><div class="class">dispatch-safety · 5</div><div class="desc">Retagged <code class="mono">[DOCS]</code>/<code class="mono">[SCRIPT]</code> → <code class="mono">[OPERATOR]</code> where the checkbox line itself carried no non-dispatchable marker despite a heading/Progress-Log framing it as operator-only
+        <span class="ev">docs_reconcile_operator_decisions (×4) · ao_stuck_escalation_mtds (×1)</span></div></div>
+      <div class="row"><div class="class">reference-format · 8</div><div class="desc">Bare <code class="mono">plans/...</code> body citations given their leading slash (highest-visibility instances)
+        <span class="ev">git_stash_push_pop · safe_doc_push_stash_pileup · ao_tmux_loss_rate_canary (×2) · operator_ruling_record_plan_reconcile_ao (×2) · ag_closeout_audit_ao_parked · plan_quality_four_line_defense</span></div></div>
+      <div class="row"><div class="class">dangling-ref · 1</div><div class="desc">Repointed a moved-target mention to its archived path
+        <span class="ev">docs_reconcile_operator_decisions → doc_body_link_checker_blind_to_backtick_citations (now archived)</span></div></div>
+      <div class="row"><div class="class">ordering · 2</div><div class="desc">Added explicit "NOT machine-enforced" notes where a todo claimed sequencing on prose alone with no <code class="mono">sequential:</code>/<code class="mono">gate_on_depends</code>
+        <span class="ev">ao_tmux_loss_rate_canary · cross_cutting_satellite_batch16 (real same-file concurrency risk: two P2 todos both touch generate_na_doc_tranche_inventory.py)</span></div></div>
+      <div class="row"><div class="class">contradiction · 2</div><div class="desc">Corrected a stale/misleading claim in the same turn it was found
+        <span class="ev">slot2_wedged: "active" sibling plan is actually status:draft, never dispatched · backlog_regen_reverted: title/summary claims a code regression its own resolved todo 2 disproved</span></div></div>
+      <div class="row"><div class="class">structural · 2</div><div class="desc">Markdown well-formedness fixes
+        <span class="ev">na_audit_progress_log_extracted: context-scout marker moved under ## Progress Log · data_pipeline_e2e_milestones_gate: table cell wrap collapsed onto one physical line</span></div></div>
+      <div class="row"><div class="class">zero-checkbox · 1</div><div class="desc">Converted a plain numbered "suggested next step" list into real, dispatchable checkboxes
+        <span class="ev">workspace_quickmerge_validation_phantom_stale_uac_citation_failure — 3 todos, BLOCKED-ON chained</span></div></div>
+      <div class="row"><div class="class">index regen · 1</div><div class="desc">Epic roster was stale (claimed 15 active plans; live count 18) — regenerated via the real populator module, scoped to only this epic's file
+        <span class="ev">plans/epics/agent_operating_framework_master.md — 4 new plans added, 1 archived plan dropped</span></div></div>
+      <div class="row"><div class="class">phase -1 · 1</div><div class="desc">Reconciled a prior run's own stale P3 backlog line — confirmed a transient hunter-batch artifact from 2026-08-12 with no live corpus target, not an open defect
+        <span class="ev">plan_reconciler_findings_all_2026_08_12.md:203</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">08</span> Parallel-tab flow — what's left</h2>
+    <div class="lanes">
+      <div class="lane"><h4>Lane A — AO batch 25</h4>
+        <ul><li>ao_satellite_ao_dispatch_batch25_2026_08_19.md</li><li>ao_satellite_ao_dispatch_batch25_finalize_2026_08_19.md (gated)</li></ul></div>
+      <div class="lane"><h4>Lane B — cross-cutting batch 16</h4>
+        <ul><li>cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md</li><li>..._finalize.md (gated)</li></ul></div>
+      <div class="lane"><h4>Lane C — operator-item separation sweep</h4>
+        <ul><li>ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md (12 open, single file)</li></ul></div>
+      <div class="lane"><h4>Lane D — docs-reconcile remainder</h4>
+        <ul><li>docs_reconcile_remaining_broken_links_2026_08_02.md (16 open)</li><li>docs_reconcile_findings_2026_08_17.md</li></ul></div>
+      <div class="lane"><h4>Lane E — bare-ref + self-issue sweep</h4>
+        <ul><li>plan_reconciler_findings_agent_operating_framework_master_2026_08_19.md §3/§4</li><li>task_template.md (2 flagged self-issues)</li></ul></div>
+    </div>
+    <p class="notes" style="margin-top:14px">Real parallelism is limited here: most remaining large-open-count docs
+      (na_docs_validity at 12 open, operator_action_items_consolidated at 27 open, per_client_config_surface at 8
+      open) are single-file, single-owner work that doesn't split across lanes — only Lanes A-E above are genuinely
+      file-disjoint; everything else stays a single-worker doc.</p>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">09</span> Dispatch prompts</h2>
+    <div class="promptbox"><h4>Lane E — bare-ref + self-issue sweep (docs-only, no code)</h4>
+<pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: fix the remaining bare (missing-leading-slash) /plans/... body citations enumerated in
+plans/active/issues/plan_reconciler_findings_agent_operating_framework_master_2026_08_19.md section 3, plus the two
+task_template.md self-issues in section 4 (verbatim duplicate blockquote at lines ~166-180; 4 bare refs at lines
+~55/135/402/525). Each fix is a small text edit: add a leading slash to a bare plans/... citation, or delete the
+duplicate paragraph. Verify with: .venv/bin/python scripts/plan-hygiene/check_reference_paths.py --only &lt;path&gt;
+after each file. Do NOT touch codex/** or CLAUDE.md. Stage by name; do not run quickmerge.sh or git push — implement
+and verify only, per this workspace's ship-from-lead-session convention. Flip both parked todos in the findings doc
+to [x] with evidence once done.</pre></div>
+    <div class="promptbox"><h4>Lane C — operator-item separation sweep</h4>
+<pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: work plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md's 12 open todos — separating
+operator-gated items from worker-dispatchable ones across the AO-dispatch plan corpus, per that doc's own Phase
+structure. Read the whole doc first. Follow task_template.md §3 for every todo you touch or add (line-1
+completeness, cited symbol, definition-of-done). Verify with run_hygiene_sweep.sh --ci --no-regen before finishing.</pre></div>
+  </section>
+
+  <section>
+    <h2 class="sec-title"><span class="idx">10</span> Notes &amp; methodology</h2>
+    <div class="notes">
+      <ul>
+        <li>Open/done counts use <code class="mono">count_open_tasks.py</code>'s dedup methodology (aggregator-plan
+          exclusion) via <code class="mono">epic_report_data.py --epic agent_operating_framework_master</code>,
+          re-measured AFTER this pass's edits (167 open / 232 done, up from 194 open before flips + new-doc todos +
+          zero-checkbox conversion netted against 5 flips — see §7 for the reconciling arithmetic).</li>
+        <li><code class="mono">parent_epic</code> membership is the frontmatter-driven definition
+          (<code class="mono">rg "^parent_epic: agent_operating_framework_master$"</code>), not the filename-substring
+          inventory script — see <code class="mono">epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md</code>'s
+          Why section for why that distinction matters.</li>
+        <li>5 parallel read-only hunter batches (~14 docs / ~300KB each) covered all 71 pre-existing child docs with
+          zero overlap; each hunter ran independent git/code verification (SHA ancestry, live grep) rather than
+          trusting cross-doc claims — see the run's chat report for the full per-hunter breakdown.</li>
+        <li>Every fix in §7 landed in the working tree only — this run does not ship (quickmerge/commit is the lead
+          session's job on this shared, heavily-contended checkout).</li>
+        <li>The 44-row operator-item table in §5 is generated verbatim from
+          <code class="mono">epic_report_data.py</code>'s own <code class="mono">operator_items</code> field — not
+          hand-curated, so it stays accurate on the next regen even if this HTML goes stale.</li>
+      </ul>
+    </div>
+  </section>
+
+</div>
+<footer>agent_operating_framework_master · /plan-reconcile · unified-trading-pm</footer>

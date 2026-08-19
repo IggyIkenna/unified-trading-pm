@@ -260,3 +260,8 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
 - **context-scout 2026-08-17**: refreshed context_scope (6 entries) — added `/plans/epics/sports_master.md`, the
   doc this doc's own P0 walk-forward work is gated on (Group E gate), alongside the prior 5 unchanged.
 - **na-eligibility-audit 2026-08-18** [body-hash:688998084735e73e]: KEEP-NA, valid -- all 4 open items chained on the still-open sports_master:Group E gate (plans/epics/sports_master.md line 644, re-verified live, still unchecked). Doc stays NA on the citation alone.
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:9e23e6eb9bd8f2b1]: KEEP-NA,
+  valid — all 4 open items re-confirmed chained on the still-open cross-plan `sports_master:Group E` gate (line 644,
+  re-verified live, still unchecked) — a genuine cross-asset-group prerequisite not resolvable by an isolated prediction-
+  tranche worker. Once that gate clears, item 1 (the walk-forward run itself) may become bounded/RECLASSIFY-eligible —
+  not re-derived further while the gate stays open, per the never-relitigate rule. Doc stays NA.

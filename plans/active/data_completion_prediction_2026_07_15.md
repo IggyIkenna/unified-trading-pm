@@ -74,7 +74,10 @@ context_scope:
 
 - [ ] [DATA] P0. C-pipeline_mode RIDER: the `pipeline_mode=` partition for prediction lands in THIS walk (satisfies
       `pipeline_mode_partition_migration_2026_06_01.md` for prediction — do NOT run it separately). **(MIGRATED FROM:
-      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** **[na-eligibility-audit
+      2026-08-19: SUBSUMED, not independently dispatchable — this item's own text says not to run it separately; answered
+      by `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1's `pipeline_mode non-null` pass criterion. Stays
+      open pending that batch's result — do not extract or close separately.]**
 
 - [ ] [DATA] P1. C-source RIDER: stamp `source` = the data-source API (`polymarket_clob` / `polymarket_gamma_api` /
       `kalshi_*`) on every prediction cell in THIS walk (path/`pipeline_mode` → `source` column), re-consolidate into
@@ -92,13 +95,20 @@ context_scope:
       the parquet's own `data_source` (or let `default_source` auto-stamp `polymarket_clob`), no writer code change
       needed. The stale "prediction N/A" line was corrected in CLAUDE.md + `data_source_provenance` row (slot-5
       2026-06-03). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
+      consolidation ruling.)** **[na-eligibility-audit 2026-08-19: SUBSUMED, not independently dispatchable — no writer
+      code change needed per this item's own text; answered by
+      `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1's `source populated on every cell` pass criterion.
+      Stays open pending that batch's result — do not extract or close separately.]**
 
-- [ ] [DATA] P0. Post-walk: re-run the `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical
+- [x] ✅ [DATA] P0. Post-walk: re-run the `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical
       `_index` all v9; `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank; the API source
       per venue) — closes `data_source_provenance` Phase 6 prediction**. This is the C-GREEN signal `bucket_name_ssot…`
       Phase 6/7 waits on for the prediction legacy bucket decommission. **(MIGRATED FROM:
-      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
+      `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** —
+      **na-eligibility-audit 2026-08-19: RECLASSIFY-SPLIT, extracted to
+      `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1** (closing the "closer per-item read" the
+      2026-08-10 pass deferred — this is a bounded, read-only comparison with 4 stated pass criteria, conflict-checked
+      clear). Closing this tracking copy; the actual work + its PASS/FAIL result live in the batch now.
 
 - [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
       path transforms BEFORE dedup: `venue UNKNOWN/blank → POLYMARKET` (prediction is single-venue today; Kalshi lands
@@ -482,3 +492,15 @@ range never overlaps a still-in-flight per-market-only day).
   consistent with 6 prior audit passes (2026-07-30, 08-06, 08-07, round11 08-09, 08-10, and this run) and 4-5
   independent `/ag-closeout-audit` "0 AO-eligible" rulings on the same Phase-B migration. Not re-litigated. No
   reclassification.
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:1d1978c5961528d3]: RECLASSIFY-SPLIT — closed the loop on
+  the 4-item MISCLASSIFIED_LIKELY_AO_ELIGIBLE flag the 2026-08-10 pass deferred (never delivered by the 3 passes since).
+  Items 3 (post-walk comparison) and 4's residual (CF-7 blank-data_type/UNKNOWN-venue diagnosis) are genuine
+  read-only, bounded audits — extracted to `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` (conflict-checked
+  clear against parent_epic: predictions_master + manifest_master active planning docs, the consolidated closeout, and
+  satellite batches 1-12), closed here `[x]` citing the batch. Items 1/2 (pipeline_mode/source riders) have no
+  independent action per their own text and are fully covered by the batch's item 1 criteria — annotated SUBSUMED,
+  left open (not extracted separately — would be duplicate dispatch). Remaining 14 items (5, 6-18) re-confirmed
+  genuinely NA (design/VM/delete-gated cross-repo CQG-bundle migration + downstream C-walks), consistent with 7 prior
+  audit passes and 4-5 `/ag-closeout-audit` "0 AO-eligible" rulings on the Phase-B migration — not re-litigated. 18
+  open todos -> 16 (2 extracted/closed here; net corpus todo count unchanged until the batch itself closes, since the
+  2 extracted items now live there instead).

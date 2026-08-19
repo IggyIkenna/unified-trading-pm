@@ -1,0 +1,830 @@
+<!-- generated 2026-08-19T00:00:00Z by /plan-reconcile execution_master -->
+<title>Execution Master Ledger</title>
+<style>
+  :root {
+    --ground: #0e1620;
+    --surface: #16202e;
+    --surface-raised: #1c2838;
+    --line: rgba(233, 228, 216, 0.12);
+    --line-strong: rgba(233, 228, 216, 0.22);
+    --ink: #e9e4d8;
+    --ink-dim: #9aa7b4;
+    --ink-faint: #6c7a88;
+    --brass: #c39b62;
+    --brass-dim: #8a734f;
+    --verdigris: #7aab9c;
+    --verdigris-dim: #4d6e64;
+    --amber: #d8ab5c;
+    --rust: #cf6249;
+    --rust-dim: #4a2a24;
+    --shadow: rgba(4, 8, 13, 0.45);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    background: var(--ground);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background: var(--brass);
+    color: #16120a;
+  }
+
+  a {
+    color: var(--verdigris);
+  }
+
+  .display {
+    font-family: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  }
+
+  .mono {
+    font-family: "SF Mono", ui-monospace, "Menlo", "Consolas", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+    font-weight: 600;
+  }
+
+  .wrap {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+
+  /* ---------- ticker rule ---------- */
+  .ticker-rule {
+    height: 3px;
+    background-image: repeating-linear-gradient(
+      90deg,
+      var(--brass) 0px,
+      var(--brass) 10px,
+      transparent 10px,
+      transparent 18px
+    );
+    opacity: 0.55;
+    margin: 0;
+  }
+
+  /* ---------- masthead ---------- */
+  .masthead {
+    padding: 56px 0 36px;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .eyebrow {
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-size: 12.5px;
+    color: var(--brass);
+    font-weight: 600;
+  }
+
+  .masthead h1 {
+    font-size: clamp(2.2rem, 4.4vw, 3.1rem);
+    margin: 10px 0 14px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+
+  .dek {
+    color: var(--ink-dim);
+    font-size: 1.08rem;
+    max-width: 62ch;
+    margin: 0 0 18px;
+  }
+
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px;
+    font-size: 13px;
+    color: var(--ink-faint);
+  }
+
+  .meta-row span b {
+    color: var(--ink-dim);
+    font-weight: 600;
+  }
+
+  /* ---------- section scaffolding ---------- */
+  section {
+    padding: 48px 0;
+    border-bottom: 1px solid var(--line);
+  }
+
+  section:last-of-type {
+    border-bottom: none;
+  }
+
+  .section-label {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 22px;
+  }
+
+  .section-label .num {
+    font-family: "SF Mono", ui-monospace, monospace;
+    font-size: 12px;
+    color: var(--brass-dim);
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    padding: 2px 6px;
+  }
+
+  .section-label h2 {
+    font-size: 1.28rem;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .section-note {
+    color: var(--ink-faint);
+    font-size: 13.5px;
+    margin: -10px 0 24px;
+    max-width: 68ch;
+  }
+
+  /* ---------- stat strip ---------- */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 14px;
+  }
+
+  .stub {
+    background: var(--surface);
+    border: 1px dashed var(--line-strong);
+    border-radius: 6px;
+    padding: 18px 16px;
+    position: relative;
+  }
+
+  .stub::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: -1px;
+    width: 6px;
+    height: 6px;
+    background: var(--ground);
+    border: 1px dashed var(--line-strong);
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .stub .n {
+    font-family: "SF Mono", ui-monospace, monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1;
+  }
+
+  .stub.brass .n {
+    color: var(--brass);
+  }
+  .stub.verdi .n {
+    color: var(--verdigris);
+  }
+  .stub.amber .n {
+    color: var(--amber);
+  }
+  .stub.rust .n {
+    color: var(--rust);
+  }
+
+  .stub .l {
+    margin-top: 8px;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+  }
+
+  /* ---------- plan card ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 24px 26px;
+  }
+
+  .card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .card-head h3 {
+    margin: 0 0 4px;
+    font-size: 1.08rem;
+    color: var(--ink);
+  }
+
+  .card-path {
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .bar {
+    display: flex;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 16px 0 6px;
+    background: var(--surface-raised);
+  }
+
+  .bar .done {
+    background: var(--verdigris);
+  }
+  .bar .open {
+    background: var(--amber);
+  }
+
+  .bar-legend {
+    display: flex;
+    gap: 18px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+  }
+
+  .bar-legend b {
+    color: var(--ink-dim);
+  }
+
+  .card p.summary {
+    margin: 18px 0 0;
+    color: var(--ink-dim);
+    font-size: 14.5px;
+  }
+
+  blockquote.pull {
+    margin: 16px 0 0;
+    padding: 10px 16px;
+    border-left: 3px solid var(--brass);
+    background: var(--surface-raised);
+    font-size: 13.5px;
+    color: var(--ink-dim);
+    font-family: "SF Mono", ui-monospace, monospace;
+    line-height: 1.5;
+  }
+
+  /* ---------- desk table ---------- */
+  .desk {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+
+  .desk-wrap {
+    overflow-x: auto;
+  }
+
+  .desk th {
+    text-align: left;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-faint);
+    font-weight: 600;
+    padding: 0 14px 10px 0;
+    border-bottom: 1px solid var(--line-strong);
+  }
+
+  .desk td {
+    padding: 14px 14px 14px 0;
+    border-bottom: 1px solid var(--line);
+    vertical-align: top;
+    color: var(--ink-dim);
+  }
+
+  .desk td.item {
+    color: var(--ink);
+    font-weight: 500;
+    max-width: 260px;
+  }
+
+  .chip {
+    display: inline-block;
+    font-size: 11px;
+    font-family: "SF Mono", ui-monospace, monospace;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .chip.human {
+    background: rgba(216, 171, 92, 0.16);
+    color: var(--amber);
+    border: 1px solid rgba(216, 171, 92, 0.4);
+  }
+
+  .chip.p0 {
+    background: rgba(207, 98, 73, 0.16);
+    color: var(--rust);
+    border: 1px solid rgba(207, 98, 73, 0.45);
+  }
+
+  .chip.p1 {
+    background: rgba(216, 171, 92, 0.14);
+    color: var(--amber);
+    border: 1px solid rgba(216, 171, 92, 0.35);
+  }
+
+  .chip.p2 {
+    background: rgba(122, 171, 156, 0.14);
+    color: var(--verdigris);
+    border: 1px solid rgba(122, 171, 156, 0.35);
+  }
+
+  .chip.p3 {
+    background: rgba(154, 167, 180, 0.14);
+    color: var(--ink-dim);
+    border: 1px solid var(--line-strong);
+  }
+
+  .chip.scope {
+    background: rgba(195, 155, 98, 0.14);
+    color: var(--brass);
+    border: 1px solid rgba(195, 155, 98, 0.4);
+  }
+
+  /* ---------- closed-out list ---------- */
+  .closed-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .closed-item {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 12px;
+  }
+
+  .closed-item .mark {
+    color: var(--verdigris);
+    font-size: 15px;
+    line-height: 1.6;
+  }
+
+  .closed-item .body b {
+    color: var(--ink);
+  }
+
+  .closed-item .body .ev {
+    display: block;
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--ink-faint);
+    font-family: "SF Mono", ui-monospace, monospace;
+  }
+
+  /* ---------- lanes ---------- */
+  .lanes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 16px;
+  }
+
+  .lane {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 20px 20px 22px;
+  }
+
+  .lane .lane-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+
+  .lane .lane-head .lane-name {
+    font-weight: 600;
+    color: var(--ink);
+    font-size: 14.5px;
+  }
+
+  .lane ul {
+    margin: 10px 0 0;
+    padding-left: 18px;
+    color: var(--ink-dim);
+    font-size: 13.5px;
+  }
+
+  .lane .files {
+    margin-top: 12px;
+    font-size: 12px;
+    color: var(--ink-faint);
+    font-family: "SF Mono", ui-monospace, monospace;
+    line-height: 1.6;
+  }
+
+  /* ---------- dispatch prompts ---------- */
+  .prompt {
+    background: var(--surface-raised);
+    border: 1px solid var(--line-strong);
+    border-radius: 8px;
+    margin-bottom: 18px;
+    overflow: hidden;
+  }
+
+  .prompt-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    color: var(--brass);
+    font-weight: 600;
+  }
+
+  .prompt pre {
+    margin: 0;
+    padding: 18px;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: "SF Mono", ui-monospace, monospace;
+    font-size: 12.3px;
+    line-height: 1.55;
+    color: var(--ink-dim);
+    overflow-x: auto;
+  }
+
+  /* ---------- notes ---------- */
+  .notes {
+    color: var(--ink-dim);
+    font-size: 13.8px;
+  }
+
+  .notes ul {
+    padding-left: 20px;
+  }
+
+  .notes li {
+    margin-bottom: 10px;
+  }
+
+  footer {
+    padding: 40px 0 10px;
+    color: var(--ink-faint);
+    font-size: 12px;
+    text-align: center;
+  }
+
+  @media (max-width: 720px) {
+    .stat-strip {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+</style>
+
+<div class="wrap">
+  <div class="masthead">
+    <div class="eyebrow">Plan-reconcile · Epic ledger · execution_master</div>
+    <h1 class="display">Execution Master</h1>
+    <p class="dek">
+      Order &amp; transfer handlers, treasury coordinator, custody integration, flash loans, the matching engine,
+      MEV protection, and per-incident recon-freeze signal emission — the execution-service domain epic. Generated
+      2026-08-19 by <span class="mono">/plan-reconcile execution_master</span>.
+    </p>
+    <div class="meta-row">
+      <span><b>Tier</b> L2 · P0</span>
+      <span><b>Repos</b> execution-service, alerting-service, trading-agent-service</span>
+      <span><b>Locked by</b> live-defi-rollout</span>
+      <span><b>Doc</b> plans/epics/execution_master.md</span>
+    </div>
+  </div>
+  <div class="ticker-rule"></div>
+
+  <!-- 3. Headline stat strip -->
+  <section>
+    <div class="section-label"><span class="num">03</span><h2>Headline</h2></div>
+    <p class="section-note">
+      Counts below are the <code>parent_epic: execution_master</code>-matched child-doc surface only (1 issue doc,
+      the same dedup methodology as <code>/open-task-count</code>). The epic file's own body carries 2 further open
+      items outside this count — see the callout under §10.
+    </p>
+    <div class="stat-strip">
+      <div class="stub amber">
+        <div class="n">3</div>
+        <div class="l">Open todos</div>
+      </div>
+      <div class="stub verdi">
+        <div class="n">4</div>
+        <div class="l">Done, verified</div>
+      </div>
+      <div class="stub brass">
+        <div class="n">2</div>
+        <div class="l">On operator's desk</div>
+      </div>
+      <div class="stub">
+        <div class="n">1</div>
+        <div class="l">Child docs (issue)</div>
+      </div>
+      <div class="stub rust">
+        <div class="n">1</div>
+        <div class="l">P0 safety gap open</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4. Plan-by-plan breakdown -->
+  <section>
+    <div class="section-label"><span class="num">04</span><h2>Child-doc breakdown</h2></div>
+    <div class="card">
+      <div class="card-head">
+        <div>
+          <h3>Per-venue read/trade/withdraw scope key provisioning stalled at 2/10 venues</h3>
+          <div class="card-path mono">plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md</div>
+        </div>
+        <span class="chip scope">issue · NA</span>
+      </div>
+      <div class="bar"><div class="done" style="width:57%"></div><div class="open" style="width:43%"></div></div>
+      <div class="bar-legend"><span><b>4</b> done</span><span><b>3</b> open</span></div>
+      <blockquote class="pull">
+        "The plan's own archival note flagged this as [BLOCKED-OPERATOR] — 'Agent cannot provision venue sub-keys' —
+        and it appears that operator step was only carried out for 2 of the 10 named venues."
+      </blockquote>
+      <p class="summary">
+        Enforcement (<span class="mono">AdapterScope</span>/<span class="mono">ScopedCLOBAdapter</span>) shipped and
+        verified live. Provisioning is the gap: Binance + Deribit have the full read/trade/write split, Bybit's
+        fallback code shipped (key creation still pending), OKX/Hyperliquid need their own scope-separation design
+        (operator-approved to build), and Upbit/Kraken/Bitfinex/Bitget have zero credentials at all.
+      </p>
+    </div>
+  </section>
+
+  <!-- 5. On the operator's desk -->
+  <section>
+    <div class="section-label"><span class="num">05</span><h2>On the operator's desk</h2></div>
+    <div class="desk-wrap">
+      <table class="desk">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>Gated on</th>
+            <th>Priority</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="item">Create <span class="mono">bybit-trade-api-key</span> / <span class="mono">bybit-trade-api-key-secret</span> in GCP Secret Manager</td>
+            <td>Operator's own Bybit exchange login — no cloud identity or automation can mint a new exchange-side API key. Direction already approved 2026-07-28; only the credential-creation action remains.</td>
+            <td><span class="chip p1">P1</span></td>
+          </tr>
+          <tr>
+            <td class="item">Decide whether to provision Upbit / Kraken / Bitfinex / Bitget credentials at all</td>
+            <td>Zero live trading volume on any of the 4 today (no adapter has ever authenticated). Open priority call, needs the operator's own exchange logins regardless of the answer.</td>
+            <td><span class="chip p3">P3</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. Needs extra scoping -->
+  <section>
+    <div class="section-label"><span class="num">06</span><h2>Needs extra scoping</h2></div>
+    <div class="desk-wrap">
+      <table class="desk">
+        <thead>
+          <tr>
+            <th>Item</th>
+            <th>What's unresolved</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="item">OKX / Hyperliquid scope-separation design</td>
+            <td>
+              Operator-approved to build (2026-08-08), but the todo's own text still asks the worker to "scope the
+              exact per-venue mechanism... before estimating" — OKX is client-scoped only (no pooled/house key, needs
+              a per-client design) and Hyperliquid is a wallet-style EIP-712 agent-wallet blob (needs a
+              multi-wallet design), neither fits the Binance/Deribit pooled-key pattern this doc's enforcement layer
+              assumes. Flagged as an unbounded design call by na-eligibility-audit 2026-08-08 round7; still true.
+            </td>
+            <td><span class="chip p2">P2</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 7. Closed out this pass -->
+  <section>
+    <div class="section-label"><span class="num">07</span><h2>Closed out this pass</h2></div>
+    <div class="closed-list">
+      <div class="closed-item">
+        <span class="mark">&#10003;</span>
+        <div class="body">
+          <b>Repointed a stale evidence SHA.</b> The Bybit-fallback todo cited
+          <span class="mono">execution-service@3f550b14</span> as "verified reachable on
+          <span class="mono">origin/live-defi-rollout</span>" — that SHA is a pre-2026-08-05-history-rewrite
+          artifact and is no longer an ancestor. The same commit (identical message + author timestamp) is reachable
+          today as <span class="mono">da5803912</span>, since re-provenanced as <span class="mono">d473a6477</span>.
+          <span class="ev">git merge-base --is-ancestor da5803912 origin/live-defi-rollout &amp;&amp; d473a6477 origin/live-defi-rollout → both true, 2026-08-19</span>
+        </div>
+      </div>
+      <div class="closed-item">
+        <span class="mark">&#10003;</span>
+        <div class="body">
+          <b>Fixed a task_template.md §3 line-1-completeness defect.</b> The Bybit key-creation todo's first
+          physical line was entirely a bolded "RULED 2026-07-28 (...)" qualifier with zero action content — the
+          actual instruction sat on physical line 3. Reordered so the action leads line 1.
+        </div>
+      </div>
+      <div class="closed-item">
+        <span class="mark">&#10003;</span>
+        <div class="body">
+          <b>Removed a stale in-flight-refactor banner.</b> The epic doc's top banner warned concurrent slots off
+          the strategy risk-eval / ml-registry / features-builder-registry surfaces pending 4 named phase plans —
+          all 4 have carried <span class="mono">status: complete</span> since 2026-07-15. Banner removed.
+        </div>
+      </div>
+      <div class="closed-item">
+        <span class="mark">&#10003;</span>
+        <div class="body">
+          <b>Re-verified G12 (execution-side recon-freeze subscriber) and F-32 (size-based MEV auto-escalation).</b>
+          Both remain genuinely open, not stale — <span class="mono">execution_service/preflight/recon_freeze.py</span>
+          exists but <span class="mono">ReconFreezeChecker</span>/<span class="mono">assert_not_frozen</span> are
+          referenced only from its own unit test; no production subscriber or preflight call site wires it up. No
+          size-based MEV escalation code found anywhere in execution-service. No checkbox change — both correctly
+          still <span class="mono">[ ]</span>.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. Parallel-tab flow for what's left -->
+  <section>
+    <div class="section-label"><span class="num">08</span><h2>Parallel-tab flow for what's left</h2></div>
+    <p class="section-note">
+      3 lanes, disjoint files — the 2 human-only desk items (§5) need no lane, they're single operator actions with
+      nothing to parallelize against.
+    </p>
+    <div class="lanes">
+      <div class="lane">
+        <div class="lane-head"><span class="lane-name">Lane A — OKX/Hyperliquid scope design</span><span class="chip p2">P2</span></div>
+        <ul>
+          <li>Scope the per-client OKX sub-key mechanism vs. multi-wallet Hyperliquid design (§6)</li>
+          <li>Wire the chosen design into the credential loader once scoped</li>
+        </ul>
+        <div class="files">execution-service/execution_service/trade_execution/base_adapter.py<br />execution-service/.../cli/handlers/live_execution_handler.py</div>
+      </div>
+      <div class="lane">
+        <div class="lane-head"><span class="lane-name">Lane B — G12 recon-freeze subscriber</span><span class="chip p0">P0</span></div>
+        <ul>
+          <li>Build the RECON_FREEZE_ARMED subscriber that calls <span class="mono">ReconFreezeChecker.arm()</span></li>
+          <li>Wire <span class="mono">assert_not_frozen()</span> into the real order-submission preflight path</li>
+          <li>No dedicated dispatch plan owns this yet — needs one authored before AO dispatch (recommend to lead session, not authored here)</li>
+        </ul>
+        <div class="files">execution-service/execution_service/preflight/recon_freeze.py<br />(new subscriber module, TBD on scoping)</div>
+      </div>
+      <div class="lane">
+        <div class="lane-head"><span class="lane-name">Lane C — F-32 MEV auto-escalation</span><span class="chip p2">P2</span></div>
+        <ul>
+          <li>Add size-based auto-escalation on top of the existing directive-driven MEV mode</li>
+          <li>Opportunistic / post-cutover, no urgency</li>
+        </ul>
+        <div class="files">execution-service/execution_service/v2/mev_router.py</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. Dispatch prompts -->
+  <section>
+    <div class="section-label"><span class="num">09</span><h2>Dispatch prompts</h2></div>
+    <div class="prompt">
+      <div class="prompt-head"><span>Lane A — OKX/Hyperliquid scope-separation design</span><span class="chip p2">P2</span></div>
+      <pre>Read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules before your
+first tool call.
+
+Task: scope, then build, per-venue credential scope-separation for OKX and Hyperliquid in execution-service, per
+the operator's 2026-08-08 "build both" ruling recorded in
+plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md (todo "Decide on OKX/Hyperliquid's
+scope-separation design").
+
+Context: the existing pattern (Binance/Deribit pooled read/trade/write keys, enforced via execution-service's
+AdapterScope/ScopedCLOBAdapter in base_adapter.py) does NOT fit either venue — OKX is client-scoped only
+(`exec-{client}-okx-*`, no pooled/house key), Hyperliquid is a wallet-style EIP-712 agent-wallet blob
+(`hyperliquid-trade-key`), not a REST key pair. Design the per-venue mechanism (client-scoped OKX sub-keys;
+multi-wallet Hyperliquid authorizations) before estimating implementation — this is genuinely undetermined, not a
+config change.
+
+Definition of done: a design doc or plan section naming the concrete mechanism per venue, then (if scope allows in
+the same pass) the credential-loader wiring in live_execution_handler.py mirroring the existing fallback pattern.
+Implement + verify quality-gates.sh genuinely green, then STOP — do not ship (quickmerge is the lead session's
+call unless you're told otherwise).</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-head"><span>Lane B — G12 recon-freeze subscriber (P0 safety gap)</span><span class="chip p0">P0</span></div>
+      <pre>Read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules before your
+first tool call.
+
+Task: this is a scoping task first, not a direct-implementation dispatch. G12 (execution-side recon-freeze
+subscriber) is currently a bare P0 bullet inside plans/epics/execution_master.md's own body — it has no
+`parent_epic`-linked child plan carrying it, so it is not yet in AO-dispatchable shape per the
+"AO-eligible = outcome determinable by the worker alone" bar.
+
+Confirmed still open (verified 2026-08-19): execution-service's `execution_service/preflight/recon_freeze.py`
+defines `ReconFreezeChecker` (arm/lift/assert_not_frozen) but it is referenced ONLY from its own unit test — no
+production PubSub subscriber consumes the alerting-service-published RECON_FREEZE_ARMED event and calls `.arm()`,
+and no order-submission preflight path calls `assert_not_frozen()`. Live orders are not currently blocked by
+recon-freeze state at all.
+
+Definition of done for THIS dispatch: author a properly-scoped plan doc (ask the operator first: AO-dispatched
+`assigned_vm: planning` vs. human `NA`, per the plan-destination hard rule) naming the concrete subscriber wiring
+(event consumption point, where `assert_not_frozen()` gets called in the real order-submission path) with
+task_template.md §3-compliant todos. Do not silently implement ahead of that plan existing — this is a real safety
+gap, escalated P0 since 2026-07-12; get the scope right before code lands.</pre>
+    </div>
+  </section>
+
+  <!-- 10. Notes & methodology -->
+  <section>
+    <div class="section-label"><span class="num">10</span><h2>Notes &amp; methodology</h2></div>
+    <div class="notes">
+      <ul>
+        <li>
+          <b>Corpus baseline.</b> Exactly one doc matches
+          <span class="mono">rg "^parent_epic: execution_master$" plans/active/*.md plans/active/issues/*.md</span>
+          (verified 2026-08-19) — the epic-scoped definition this report and <span class="mono">/plan-reconcile</span>
+          use, not the filename-substring inventory script. Small corpus: read directly, no hunter fan-out needed.
+        </li>
+        <li>
+          <b>Epic-body items outside the count.</b> The stat strip in §3 reflects only the
+          <span class="mono">parent_epic</span>-linked child doc. The epic file itself
+          (<span class="mono">plans/epics/execution_master.md</span>) separately carries 2 open bullets in its own
+          P0/P2 sections — G12 (recon-freeze subscriber, P0) and F-32 (MEV auto-escalation, P2) — which
+          <span class="mono">count_open_tasks.py</span>/<span class="mono">epic_report_data.py</span> do not count,
+          since neither is a <span class="mono">parent_epic</span>-linked child doc. Both re-verified genuinely
+          still open against current execution-service code this run (§7).
+        </li>
+        <li>
+          <b>Six other execution-titled docs checked, none reclassified.</b>
+          <span class="mono">execution_delta_proxy_repricer_generalization</span>,
+          <span class="mono">execution_order_tracker_missing_cancelled_amended_status</span>,
+          <span class="mono">execution_service_live_orchestrator_protocol_mismatch_untested</span>,
+          <span class="mono">mev_engines_opportunity_detection_signals_unproduced</span>,
+          <span class="mono">exec_tenderly</span>, and
+          <span class="mono">order_state_machine_ssot_vs_uac_orderstatus</span> all carry valid, currently-registered
+          <span class="mono">parent_epic</span> values pointing elsewhere (<span class="mono">system_readiness_master</span>,
+          <span class="mono">security_and_cross_cutting_master</span>, <span class="mono">defi_master</span>,
+          <span class="mono">uac_master</span>) — a fold-target preference call this run leaves untouched per the
+          calibration bar (no provable error, just a plausible alternative classification).
+        </li>
+        <li>
+          <b>Codex alignment spot-check.</b> <span class="mono">/codex/04-architecture/defi-execution-overview.md</span>'s
+          "DefiErrorCode (35 codes)" claim re-counted via <span class="mono">ast.parse</span> against
+          <span class="mono">unified_api_contracts.canonical.crosscutting.errors.defi.DefiErrorCode</span> — exact
+          match, no drift. The custody <span class="mono">CloudKmsCustodyProvider</span> SHA
+          (<span class="mono">execution-service@d45d24b4</span>) reverified as a genuine ancestor of
+          <span class="mono">origin/live-defi-rollout</span>. Neither is cited by this epic's own child doc, so this
+          was due-diligence context, not a §1/§4 contradiction hunt against in-corpus claims.
+        </li>
+        <li>
+          <b>Corpus-wide hygiene sweep.</b> <span class="mono">run_hygiene_sweep.sh --ci --no-regen</span> was run
+          as this pass's Phase-0 entry check; it is corpus-wide (500+ docs) and takes 45–70 minutes on this
+          workspace's own prior measurement, so its full result is reported separately in the chat summary rather
+          than blocking this report — nothing it surfaced so far falls inside this epic's own child-doc scope.
+        </li>
+        <li>
+          Counts follow <span class="mono">/open-task-count</span>'s dedup methodology (aggregator-plan exclusion,
+          identical open/done checkbox regexes) via <span class="mono">epic_report_data.py --epic execution_master</span>.
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>Execution Master · epic ledger · plans/epics/execution_master.md · regenerate via <span class="mono">/plan-reconcile execution_master</span></footer>
+</div>

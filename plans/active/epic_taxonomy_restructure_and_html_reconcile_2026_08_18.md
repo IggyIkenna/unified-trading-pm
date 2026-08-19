@@ -147,10 +147,10 @@ into any of the 9.
       every-report-looks-the-same smell). `unified-trading-pm@ca8851438a`.
 - [x] [DOCS] P2. ✅ DONE 2026-08-18 — fixed `mtds_mdps_master.md`'s title from "Data pipeline master coordination —
       2026-05-20" to "MTDS/MDPS Master — Market Data Pipeline Coordination". `unified-trading-pm@ca8851438a`.
-- [ ] [DOCS] P2. Refresh `plans/epics/README.md`'s epic-registry table — **deferred to Phase 6** (not done here):
-      it's already flagged stale with its own tracked todo (line ~225, "script this regeneration so the registry
-      can't drift again"), and Phase 2/3 will change the epic set again (2 folds→removals, 2 new epics, 1 rename) —
-      doing one clean regeneration after all of that lands avoids 3 redundant edits to the same table.
+- [x] [DOCS] P2. ✅ DONE 2026-08-19 — refreshed `plans/epics/README.md`'s epic-registry table: 23→22 rows, dropped
+      the stale "Assigned VM" column (superseded by single-VM role-based dispatch), regenerated `Owns` descriptions
+      from live `epics/*.md` frontmatter `title:`/`tier:` fields. The table's own `scripts this regeneration` todo
+      (README.md's own line ~225) stays open — this was a manual refresh, not the automation.
 
 ### Phase 2 — zero/low-reference epic folds (≤2 referencing docs each, low blast radius)
 
@@ -385,14 +385,60 @@ into any of the 9.
 
 ### Phase 6 — first full run
 
-- [ ] [REVIEW] P1. Run `/plan-reconcile <slug>` once for every active, non-superseded epic post-Phase-3 (the 9-domain
-      epics + the 5 untouched asset-group epics + `plan_hygiene_master` — ~22 total) — generate + publish each HTML
-      ledger. Done when: every epic has a live artifact link.
-- [ ] [DOCS] P2. Collect all ~22 artifact links into a single index (either a new section in
-      `plans/epics/README.md` or a small standalone HTML index page alongside `plans/epics/html/`) and report the
-      full list back to the operator.
+- [x] [REVIEW] P1. ✅ DONE 2026-08-19 — ran full `/plan-reconcile <slug>` for all 22 active, non-superseded epics
+      (the 9-domain epics + the 5 untouched asset-group epics + `plan_hygiene_master`, `manifest_master`,
+      `instruments_master`, `batch_live_symmetry_master`, `system_readiness_master`, `features_and_ml_master`,
+      `uac_master`, `ci_master` — 22 total); every one has a live HTML artifact linked from its own `## Report`
+      section (`ci_master`'s link was recovered separately this pass — the report existed and shipped 2026-08-18,
+      but its `## Report` section link was missing until now). Full URL index below.
+- [x] [DOCS] P2. ✅ DONE 2026-08-19 — collected all 22 artifact links (grepped directly from each shipped epic's own
+      `## Report` section, not from memory) and reported the full list back to the operator in-chat, grouped by
+      tier. `ci_master`'s link was missing from its own file (report shipped 2026-08-18 but the `## Report` section
+      link never got added) — recovered from the published-artifacts list and added.
 
 ## Progress Log
+
+- **2026-08-19 (Phase 6 + final cross-epic sweep, lead session)**: closed out Phase 6 — full `/plan-reconcile <slug>`
+  ran for all 22 active epics (dispatched via background Agent-tool sub-agents in 5 batches, sonnet-5, DO-NOT-SHIP
+  constraint; every finding independently ratified by the lead session — file-list cross-check against
+  `git status`, SHA claims re-verified via `git merge-base --is-ancestor` against real local repo clones,
+  cross-doc citations spot-checked — before shipping). All 22 shipped, all publish a live HTML report linked from
+  their own `## Report` section. Caught and recovered a genuine content-loss incident mid-run:
+  `agent_operating_framework_master`'s sub-agent's ~49 corrections across 26 files got swept into a stash by an
+  overlapping ship's quarantine mechanism (this checkout's 70+-entry stash pile triggers a full-tree quarantine on
+  every ship) — recovered in full via `git stash show --name-only "stash@{0}"` + targeted `git checkout` per file,
+  cross-verified the recovered content didn't clobber an already-landed sibling fix. Also caught a real safety
+  finding in `sports_master`'s pass (a ~144K-275K-object prod GCS delete todo marked "AUTHORIZED" that the doc's own
+  Progress Log showed was never actually operator-confirmed — retagged `[OPERATOR]` before it could ship as
+  false-authorized). README registry refreshed (23→22, dropped the stale "Assigned VM" column). Final cross-epic
+  sweep (narrower than a full per-epic pass, per the operator's own guidance — "capture the high-level
+  contradictions... it's easier") found + fixed: a fold-destination contradiction (README said
+  `global_ledger_pnl_attribution_master` folded into `batch_live_symmetry_master`/`system_readiness_master`;
+  `strategy_master.md`'s own "Folded-in epic" section says `strategy_master` — corrected to match the two
+  authoritative primary sources), `infrastructure_master.md` left `status: active` with no SUPERSEDED-BY banner
+  unlike its 4 sibling folds (fixed), 3 stale `epic-keyword-surface.yaml` entries for folded epics (removed), and 4
+  docs still anchoring `parent_epic: infrastructure_master` (3 retargeted to `security_and_cross_cutting_master`, 1
+  to `plan_hygiene_master`). One of those 4 (`cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`) could NOT
+  ship — its parent_epic fix is a same-line comment addition (0 new lines), which passes the corpus-wide
+  baseline-ratcheted `check_line_caps.sh`, but the file is 1092L (over the 1000L hard cap) and the STAGED-file
+  pre-commit variant of the same check has no baseline tolerance — blocks unconditionally regardless of whether the
+  violation predates this commit. Reverted that one file's edit and shipped the other 6; this parent_epic fix
+  remains open, same class as the plan's own pre-existing tracked follow-up for this exact file (needs a real
+  content split or a 5th narrow `check_line_caps.sh` carve-out — not something to force through same-line-comment
+  tricks). Aggregate sanity check (corpus-wide `count_open_tasks.py` vs. summed per-epic `epic_report_data.py`
+  figures) came back +78%/+92% over — expected DIRECTION (epic sums include aggregator/batch plans the corpus-wide
+  count excludes by filename pattern) but flagged, not silently accepted, since the magnitude is large; root-causing
+  the exact double-count source is out of this pass's scope. All ships independently gate-checked
+  (`check_line_caps.sh`, `check_archive_candidates.sh`, `check_reference_paths.py`, `check_frontmatter_schema.py`,
+  `check_ag_closeout_linkage.py`, YAML parse) before shipping — several ship-time-only gate failures were found and
+  fixed live (a `resolved_by:`-required-but-empty frontmatter gap on 2 separate `status: resolved` flips triggering
+  a genuine 6-step archival, an `[OPERATOR]`-ruling-evidence citation pushed >300 chars from its source doc by an
+  edit's own added length, 2 missing-leading-slash reference paths, 2 missing `check_ag_closeout_linkage` links on
+  new issue docs, and a stale-vs-live-`origin` dangling reference caused by a peer session archiving a doc between
+  ship attempts). Epic-taxonomy restructure initiative is now COMPLETE — all 22 epics reconciled + reported, README
+  regenerated, cross-epic contradictions resolved. Remaining open items, all pre-existing/tracked, none new: this
+  plan's own batch13 parent_epic fix (above), the aggregate-sanity-check double-count root cause, and each epic's
+  own individually-filed findings docs (operator-decision items, out of trust-mode scope by design).
 
 - **2026-08-18 (design research)**: general-purpose sub-agent surveyed the full epic corpus (29 files, 15,669
   lines), the current `/plan-reconcile` SKILL.md, all epic-structural QG scripts, and exact `parent_epic` coverage

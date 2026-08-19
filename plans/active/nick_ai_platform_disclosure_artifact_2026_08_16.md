@@ -371,8 +371,7 @@ that path *designed*, not just funded.
 
 ## Build
 
-- [ ] [DOC] P0. **Re-grade every section mark in BOTH artefacts against the STRICTER `live` definition** (operator,
-      2026-08-18): `live` now means reachable on a production path **AND validated with real capital**. The definition
+- [ ] [DOC] P0. **Re-grade every section mark in BOTH artefacts against the STRICTER `live` definition** (operator, 2026-08-18): `live` now means reachable on a production path **AND validated with real capital**. The definition
       landed (`unified-trading-pm@832033d094`); **the section marks did not change.** Since the epic excludes going live
       with capital before 2026-08-25, expect most `live` marks to drop to `partial` — a section can be complete, wired
       and paper-exercised and still not earn `live`. Do not leave the two documents grading on different definitions.

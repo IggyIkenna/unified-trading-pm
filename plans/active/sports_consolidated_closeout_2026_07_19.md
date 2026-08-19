@@ -779,9 +779,9 @@ manifest-atom fix (C-track) and the ODDS-LEAK shard cleanup — else the re-run 
       `plans/archive/issues/sports_fixtures_schedule_noncanonical_raw_league_id_folders_2026_07_24.md` (status: open at
       the time, 1 open todo, correctly not resolved by this todo's scope — that remaining todo was itself resolved
       separately 2026-07-26, `unified-trading-pm@554be628c`; doc now `status: resolved`, archived). Also spun off (found
-      incidentally): `plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (status: open, 1 open
-      todo). The mechanism itself ran to full closure with zero remaining ambiguity — every row has a specific, verified
-      reason.
+      incidentally): `plans/archive/2026_08/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md` (all 6
+      todos `[x]`, archived 2026-08-19). The mechanism itself ran to full closure with zero remaining ambiguity — every
+      row has a specific, verified reason.
 - [x] [DATA] P1. ✅ **RETAGGED 2026-07-28 (stale-tag audit — already answered + executed, `[OPERATOR]` never removed).**
       §U decision — ANSWERED 2026-07-20 (decision 2): stop capturing non-registry leagues; the 489-pair/10,869-row
       population is excluded from the denominator, a purge candidate. **UNBLOCKED 2026-07-24**, **CORRECTED

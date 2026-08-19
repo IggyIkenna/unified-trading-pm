@@ -23,12 +23,14 @@ scope: [engineer, admin]
 tags: [honest-coverage, denominator-audit, layer-1, data-correctness, cefi, manifest, mvp-backfill-v10]
 related:
   [
-    /plans/archive/2026_07/mvp_backfill_cefi_tick_v10_2026_06_27.md,
-    /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,
-    /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
+  # 2026-08-19 (na-eligibility-audit): dropped 3 archived-plan citations to satisfy the archive-safety-ratchet gate
+  # (active docs must not cite /plans/archive/... in `related:`) — all 3 remain preserved elsewhere: the MVP
+  # backfill doc is cited in `source:` below, `tardis_concurrent_ip_lockout_2026_07_12` is now the `depends_on:`
+  # target (see below) plus cited dozens of times in this doc's own Progress Log, and `cefi_layer1_denominator_gaps`
+  # remains discoverable via corpus grep. No discoverability lost.
 created: 2026-07-12
 author: unknown
 parent_epic: cefi_master
@@ -43,7 +45,11 @@ assigned_role: data_engineering
 model_tier: sonnet-doable
 thinking_tier: high
 drift_direction: advance-code
-depends_on: []
+depends_on: [tardis_concurrent_ip_lockout_2026_07_12] # wired 2026-08-19 (na-eligibility-audit) per plan_reconciler's
+  # 2026-08-18 finding — the sole open P3 todo's own prose names this as the inner gate of its two-part
+  # dependency chain. NOTE: the sibling doc is now archived/resolved (`plans/archive/issues/`) — worth a fresh
+  # live check of the actual outer gate (`cefi-recapture-sweep-complete` AO prerequisite condition) before
+  # assuming the P3 todo is still genuinely blocked; not re-verified live in this pass (documentation-only fix).
 context_scope:
   [
     /plans/archive/issues/tardis_concurrent_ip_lockout_2026_07_12.md,

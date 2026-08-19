@@ -59,8 +59,8 @@ source: >-
 
 ## From `git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
 
-- [ ] [SCRIPT] P2. **Attempt a clean repro of the suspected stash-pathspec-staleness defect, and the
-      transient-empty-pathspec no-op-push variant, in a scratch repo.** Two distinct hypotheses to test, both
+- [ ] [SCRIPT] P2. **Attempt a clean repro of BOTH the stash-pathspec-staleness defect AND the transient-empty-pathspec
+      no-op-push variant, in a scratch repo.** Two distinct hypotheses to test, both
       already fully specified by the source doc: (a) stash push a static file list → pull → pop with conflict →
       resolve → stash push the SAME static list again without re-querying `git status` → pull → pop — confirm or
       rule out that a stale, non-re-derived pathspec is what dropped content across repeated cycles; (b) a
@@ -77,7 +77,8 @@ source: >-
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
       todo 1. Repo: unified-trading-pm (scratch repro, not shipped code).
 - [ ] [SCRIPT] P2. **Promote the CONFIRMED `git pull --rebase --autostash` per-batch fix into the durable recovery
-      guidance.** Not a hypothesis — the source doc's own "Third incident" section confirms `git pull --ff-only`
+      guidance** (reconcile with the existing nuanced `--ff-only`-from-a-clean-tree guidance already at
+      `/codex/05-infrastructure/per-tab-worktrees.md:602`, don't blanket-override it). Not a hypothesis — the source doc's own "Third incident" section confirms `git pull --ff-only`
       can permanently stall once local history has genuinely diverged (a categorical git constraint), and that
       switching a per-batch reconciliation loop's pull to `git pull --rebase --autostash` fixed it, validated
       empirically across ~9 further batches with zero further loss. Add this as explicit guidance to
@@ -102,8 +103,12 @@ source: >-
       necessarily all the same cause). Source:
       `/plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md` todo 1. Repo:
       unified-trading-pm.
-- [ ] [SCRIPT] P2. **Once item 3 above is fully root-caused, implement the complete fix and audit the 5 other
-      importers.** Fix `body_content_hash()` / `_VERDICT_MARKER_LINE_RE` / `_latest_verdict_marker()` in
+- [ ] [SCRIPT] P2. **Once item 3 above is fully root-caused, implement the complete fix in `generate_na_doc_tranche_inventory.py`
+      and audit the 5 other importers for a duplicated reimplementation.** **Ordering NOT machine-enforced**: no
+      `sequential:`/`gate_on_depends` links this todo to item 3 above — both are P2 same-priority in this plan and
+      would dispatch concurrently under the default same-priority-concurrent rule, risking two workers editing
+      `generate_na_doc_tranche_inventory.py` at once despite the stated "sequentially gated" intent below.
+      Fix `body_content_hash()` / `_VERDICT_MARKER_LINE_RE` / `_latest_verdict_marker()` in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` for every confirmed cause (not a partial fix —
       the source doc is explicit that shipping a fix that isn't fully correct forces a full unscoped corpus
       re-audit for no complete-correctness payoff). Then audit the 5 other declared importers

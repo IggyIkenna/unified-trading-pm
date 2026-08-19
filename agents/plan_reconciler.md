@@ -98,6 +98,11 @@ Dynamic per-session values are delivered in your **boot message** — never inli
   here**; `cursor-configs/skills/plan-reconcile/SKILL.md` § "Topic-scoped (sharded) runs" and the tranche list it defers
   to (`/ag-closeout-audit`'s "The 10 tranches + `all` default") are the SSOT for which tranches exist.
 
+**Every `$VARNAME` above is literal-substitution shorthand, not a real exported shell env var** — see RULES.md § "Your
+worktree — read from root, operate only in your slot" for why (`plan_reconciler_boot_pm_repo_path_points_at_root_
+clone_2026_08_18`). Read your own boot message and substitute each value by hand; a copy-pasted `$PM_REPO_PATH` in a
+Bash tool call will NOT resolve to anything (confirmed live, `env | grep` empty across 3 independent dispatches).
+
 `ORCHESTRATOR_INTERNAL_SECRET` must be set in your shell before you POST a result. There is no loopback bypass for
 `/api/plan-health/result` — it is gated by `auth.verify_internal_secret()` (`agent-orchestrator/server/auth.py`),
 which returns `False` on any missing/empty secret regardless of source IP (confirmed by reading
@@ -410,7 +415,12 @@ STEP 8 — LOOP-AND-WAIT for answers, then APPLY (do NOT exit while questions ar
 one-shot part; resolving what you ASKED is the persistent part:
 
 1. Re-check for answers: `GET $SERVER_URL/api/slots/$SLOT_ID/messages` (and read the `messages` your `/progress`
-   heartbeats return). Each answer maps to a STEP-6 alert you raised.
+   heartbeats return). Each answer maps to a STEP-6 alert you raised. **If your slot gets reassigned before the
+   answer lands, this channel silently orphans it (`blocked_message_orphaned_by_reassign`) — fall back to
+   `GET $SERVER_URL/api/blocked/$BLOCKED_ID` (the `blocked_id` your `/blocked` POST returned): it is a durable
+   point-lookup on the answer row itself, immune to slot/task reassignment** (fixed 2026-08-19,
+   `agent-orchestrator@4a0753791a` — see
+   `plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`).
 2. For each ANSWERED question → APPLY it now (the same verified-fix discipline as STEP 5: flip/banner/edit ONLY per the
    operator's decision — including a ruled codex edit, which is now authorized — checkpoint-commit BY NAME, push
    straight to live-defi-rollout (STEP 5's conditional FF-push), and append it to the run-findings doc).

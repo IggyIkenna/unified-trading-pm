@@ -253,3 +253,11 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
   shows no new `unified-trading-ci` preserve branches since the 2026-08-17 incident's own. Confirms main's
   hypothesis: this is residual local-only content from the pre-fix cron bug, not active re-divergence. Added a
   tracked `[OPERATOR]` todo above since the actual laptop-local checkouts aren't reconcilable from this session.
+- **/ao-watchdog 2026-08-19 (interactive, Harsh)**: live `GET /api/state` on the orchestrator VM (host
+  `ip-172-31-5-118`, not a laptop) shows slot 0's `unified-trading-ci` still `state=diverged, ahead=3, behind=3,
+  not_clean_since=2026-08-11T07:12:03Z` — same shape, same VM host as this doc already tracks, still unresolved
+  8 days later. Consistent with the 2026-08-18 "residual, not active re-divergence" verdict above (no new
+  `wip-preserve/*` branches, no fresh autospawn-quarantine pages this session) — not treating as a new incident,
+  just confirming the residual state persists and the `[OPERATOR]` collapse-registries todo is still the real
+  fix. Not touched (slot 0 is `main`, status `working` — live, per this skill's own § 3g rule 1, its own worker
+  reconciles in due course, not an outside session).

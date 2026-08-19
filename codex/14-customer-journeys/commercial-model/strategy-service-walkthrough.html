@@ -777,6 +777,27 @@
   .ev-assumed {
     color: var(--warn);
   }
+  /* Owner mark — the THIRD mark, alongside status (what the system does) and evidence
+     tier (how we know). Names who closes the gap. Solid neutral-filled chip with a plain
+     hairline border — no colour border, no dash, no wash — so it reads as metadata, not
+     a fourth status colour, and is never confused with .st or .ev at a glance.
+     Spec: /codex/14-customer-journeys/_ssot-rules/13-artefact-claim-marks.md */
+  .own {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    color: var(--ink-2);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    cursor: help;
+  }
+  .sec-head .own {
+    align-self: center;
+  }
 </style>
 
 <div class="shell">
@@ -811,6 +832,13 @@
       >
       <span><b class="ev ev-check">? check</b> stated in good faith, not yet validated — the default mark</span>
       <span><b class="ev ev-assumed">~ assumed</b> best current understanding, explicitly not verified</span>
+    </div>
+    <div class="legend">
+      <span
+        ><b class="own" title="Example — hover any owner mark for the full reference">owner: W5</b> the workstream,
+        plan or epic that closes this gap — hover for the full citation; omitted once status reaches
+        <b class="st st-live">live</b>, because a live claim has no open gap to own</span
+      >
     </div>
 
     <div class="callout">
@@ -969,6 +997,10 @@
         ><b class="st st-part">partial</b
         ><b class="ev ev-verified" title="unified_api_contracts/internal/architecture_v2/enums.py — StrategyFamily"
           >✓ verified</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W20: Skills and automation (strategy capability audit skill; ARCHETYPE_FEATURE_GROUPS coverage)"
+          >owner: W20</b
         ></span
       >
     </div>
@@ -1086,6 +1118,10 @@
           class="ev ev-verified"
           title="unified_api_contracts/internal/architecture_v2/schemas.py — StrategyInstructionV2 union"
           >✓ verified</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W18: Canonical output paths for strategy-service (incl. strategy instructions)"
+          >owner: W18</b
         ></span
       >
     </div>
@@ -1227,7 +1263,14 @@
     <div class="sec-head">
       <span class="num">04</span>
       <h2>Configuration surface and the wizard</h2>
-      <span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard"
+          >owner: W6</b
+        ></span
+      >
     </div>
     <p class="lede">
       Every archetype declares its parameters in a schema registry rather than in free-form configuration, so the wizard
@@ -1277,7 +1320,12 @@
       <span class="num">05</span>
       <h2>Batch, paper and live — the mode axis</h2>
       <span class="marks"
-        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span
+        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W1: Readiness derivation and the state dump (mode axis: batch/paper/live)"
+          >owner: W1</b
+        ></span
       >
     </div>
     <p class="lede">
@@ -1313,7 +1361,12 @@
       <span class="num">06</span>
       <h2>Venue coverage: three surfaces, tracked apart</h2>
       <span class="marks"
-        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span
+        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W5: Venue registry completeness (on-chain connector wiring; 27/33 zero-caller measured 2026-08-15)"
+          >owner: W5</b
+        ></span
       >
     </div>
     <p class="lede">
@@ -1374,7 +1427,12 @@
       <span class="num">07</span>
       <h2>Reading positions back</h2>
       <span class="marks"
-        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span
+        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W1: Readiness derivation and the state dump (position-read leg; bespoke stateful-protocol readers not yet built)"
+          >owner: W1</b
+        ></span
       >
     </div>
     <p class="lede">
@@ -1424,7 +1482,14 @@
     <div class="sec-head">
       <span class="num">08</span>
       <h2>How a strategy picks: coins, venues, funding</h2>
-      <span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W8: Weightings, declared not inferred; W17: Fees and gas"
+          >owner: W8, W17</b
+        ></span
+      >
     </div>
     <p class="lede">
       A staked-basis or basis strategy is not one trade — it is a choice among many possible (coin × spot venue × hedge
@@ -1514,7 +1579,14 @@
     <div class="sec-head">
       <span class="num">09</span>
       <h2>Reconciliation — the engines and the scenarios</h2>
-      <span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md § H.8 — as-of-date manifest pinning for dynamic universe selection"
+          >owner: elysium-disclosure §H.8</b
+        ></span
+      >
     </div>
     <p class="lede">
       Reconciliation is not one comparison. Nine engines cover different surfaces and different moments, and their
@@ -1624,7 +1696,14 @@
     <div class="sec-head">
       <span class="num">10</span>
       <h2>The execution seam and its config loop</h2>
-      <span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W7: Centralisation and anti-drift (slow-path/fast-path execution-seam boundary)"
+          >owner: W7</b
+        ></span
+      >
     </div>
     <p class="lede">
       Execution turns an instruction into orders. What matters from the strategy side is what it optimises for, and what
@@ -1677,6 +1756,10 @@
           class="ev ev-verified"
           title="execution-service/execution_service/transfer_coordinator.py; unified_api_contracts/internal/architecture_v2/custody_surfaces.py"
           >✓ verified</b
+        ><b
+          class="own"
+          title="/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md § C — transfer-handler policy (gas top-up, reserve threshold, automated-movement wiring)"
+          >owner: elysium-disclosure §C</b
         ></span
       >
     </div>
@@ -1888,7 +1971,14 @@
     <div class="sec-head">
       <span class="num">12</span>
       <h2>Risk: drawdown, leverage, delta, position caps</h2>
-      <span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W5: Venue registry completeness; W10: Risk and exposure (per-slot wallet funding, capital_budget_amount enforcement)"
+          >owner: W5, W10</b
+        ></span
+      >
     </div>
     <p class="lede">
       Risk rules sit between a strategy's intent and its execution. A rule that fires can warn, or block the instruction
@@ -2002,7 +2092,12 @@
       <span class="num">13</span>
       <h2>Auto-resolution and escalation</h2>
       <span class="marks"
-        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span
+        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W4: Observability, alerting and auto-recovery"
+          >owner: W4</b
+        ></span
       >
     </div>
     <p class="lede">
@@ -2048,7 +2143,12 @@
       <span class="num">14</span>
       <h2>Orders and the audit record</h2>
       <span class="marks"
-        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span
+        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W11: Order lifecycle and execution state (in-flight vs post-confirmation distinguishability across automated orders/fills/instructions)"
+          >owner: W11</b
+        ></span
       >
     </div>
     <p class="lede">
@@ -2082,7 +2182,10 @@
     <div class="sec-head">
       <span class="num">15</span>
       <h2>PnL, ledgers and the high-water mark</h2>
-      <span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
+        ><b class="own" title="system_readiness_master.md — W13: PnL attribution">owner: W13</b></span
+      >
     </div>
     <p class="lede">
       Performance is attributed across parallel ledgers rather than collapsed into one number, so the source of a
@@ -2112,7 +2215,14 @@
     <div class="sec-head">
       <span class="num">16</span>
       <h2>Backtest fidelity</h2>
-      <span class="marks"><b class="st st-part">partial</b><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W3: Granularity as a first-class dimension (fill-fidelity tier depends on venue/instrument data granularity)"
+          >owner: W3</b
+        ></span
+      >
     </div>
     <p class="lede">
       A backtest is only as honest as its fill assumptions. Fidelity is explicit: the system knows what data quality a
@@ -2153,7 +2263,12 @@
       <span class="num">17</span>
       <h2>How this is kept honest</h2>
       <span class="marks"
-        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b></span
+        ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="system_readiness_master.md — W21: Presentation artefacts (every artefact regenerates from measurement, not prose)"
+          >owner: W21</b
+        ></span
       >
     </div>
     <p class="lede">
@@ -2212,7 +2327,14 @@
     <div class="sec-head">
       <span class="num">18</span>
       <h2>What is still open</h2>
-      <span class="marks"><b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b></span>
+      <span class="marks"
+        ><b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b
+        ><b
+          class="own"
+          title="/plans/epics/system_readiness_master.md — spans multiple workstreams (on-chain execution, position reading, audit, cross-repo invariants, venue readiness)"
+          >owner: system_readiness_master</b
+        ></span
+      >
     </div>
     <p class="lede">
       Stated plainly, because the distinction between built and reachable is the whole point of this walkthrough.

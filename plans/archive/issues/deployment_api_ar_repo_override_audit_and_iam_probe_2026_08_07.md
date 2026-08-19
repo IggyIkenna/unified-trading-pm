@@ -9,7 +9,7 @@ summary: >-
   live bugs are fixed + verified, but these two audit/hardening items were explicitly flagged as NOT chased in that
   session). Per the archival ritual (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` § 1 step 1),
   a deferred item must migrate into a real tracked todo, not evaporate with the archived doc.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ci] # corrected 2026-08-16 (/ag-closeout-audit cross-cutting parked finding 4, meta_plan_corpus_hygiene_ao_dispatch_batch1)
@@ -30,8 +30,8 @@ estimate_class: infra
 estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.24
 assigned_role: infra
-archive_exempt: true
-resolved_by:
+archive_exempt: false
+resolved_by: unified-trading-pm (this doc's own 2 todos, both [x] since 2026-08-08)
 drift_direction: advance-code
 depends_on: []
 source:
@@ -41,6 +41,12 @@ locked_by:
 locked_since:
 context_scope: [/plans/archive/2026_08/issues/deploy_api_cloud_run_deploy_iam_and_ar_repo_gaps_2026_08_07.md, deployment-api/deployment_api/routes/builds.py, alerting-service/alerting_service/notifiers/pagerduty.py, /plans/active/issues/image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md]
 ---
+
+> **🟢 ARCHIVED 2026-08-19** — both todos `[x]` since 2026-08-08, unlocked. Already independently confirmed a
+> "zero-checkbox archive candidate" by `plan_reconciler_findings_ci_2026_08_16.md` (2026-08-16) but deliberately
+> deferred there; 3 days later with no change, archived here by the epic-scoped `/plan-reconcile
+> security_and_cross_cutting_master` Phase 4 pass per CLAUDE.md's "fully-done + unlocked MUST archive immediately"
+> HARD RULE. Archived per `doc_type: issue` → flat `plans/archive/issues/` convention.
 
 # deployment-api: AR-repo-override audit + IAM capability probe
 

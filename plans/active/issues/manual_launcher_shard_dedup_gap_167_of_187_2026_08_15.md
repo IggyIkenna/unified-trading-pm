@@ -20,7 +20,7 @@ repos: [deployment-service]
 scope: [engineer, admin]
 tags: [billing-waste, vm-duplicate, dedup, singleton-lock, vm-launcher]
 related:
-  - /plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md
+  - /plans/archive/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md
   - /codex/05-infrastructure/vm-launcher-runbook.md
   - /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md
 parent_epic: security_and_cross_cutting_master
@@ -37,7 +37,7 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md,
+    /plans/archive/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh,

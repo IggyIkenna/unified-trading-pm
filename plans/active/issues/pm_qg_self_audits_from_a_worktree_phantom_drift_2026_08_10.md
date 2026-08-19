@@ -17,8 +17,8 @@ tags: [quality-gates, worktrees, false-positive, ratchet-safety]
 related: [/codex/05-infrastructure/per-tab-worktrees.md, /codex/06-coding-standards/quality-gates.md]
 created: 2026-08-10
 parent_epic: security_and_cross_cutting_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: refactor
 estimate_baseline_ai_days: 0.2
@@ -114,3 +114,9 @@ the full gate.
   `assigned_vm: NA` → `planning`. Sole open todo is a precisely-scoped code fix (detect missing `LOCAL_DEPS` import
   up front, print one clear line, exit) with an explicit done-when; root cause already diagnosed and the primary fix
   already shipped. No conflict found against the active corpus.
+- **2026-08-19** (`/plan-reconcile security_and_cross_cutting_master` Phase 1, contradiction fix, independently
+  corroborated by 2 separate hunter batches): the RECLASSIFY_WHOLE decision above was never actually applied to
+  frontmatter — `assigned_vm`/`execution_scope` still read `NA`/`local-only` 2 days later, silently keeping the sole
+  open todo out of the AO backlog despite the audit's own explicit, reasoned decision to dispatch it. Applied the
+  frontmatter flip this pass (`assigned_vm: planning`, `execution_scope: orchestrator-agent`) — mechanical, the
+  judgment call was already made and documented above, just never landed.

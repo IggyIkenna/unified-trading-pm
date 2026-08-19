@@ -103,3 +103,7 @@ independently re-derived, this is a direct-read confirmation of the adapter's re
   `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 1 (conflict-cleared, zero existing coverage). Todos 2
   (OPERATOR re-sourcing decision) and 3 (contingent registry declaration, gated on todo 2) stay genuinely
   operator-gated / contingent. Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — reaffirmed.** 2 open
+  todos re-read end-to-end (count reconciled, 2/2), unchanged since the 08-18 pass. Todo 2 ([OPERATOR] vendor
+  re-sourcing decision — yfinance vs. a paid contract for corporate-actions dividends/splits) is genuine
+  diligence/judgment work; todo 3 is contingent on todo 2's outcome. `assigned_vm` unchanged.

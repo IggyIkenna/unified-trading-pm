@@ -192,6 +192,21 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
       cover a directly-invoked ad-hoc script subprocess vs. only the top-level `claude` invocation it wraps — but
       "out of scope to design" no longer applies; the design exists, the open question is narrower (is it armed +
       does it cover this subprocess class).
+      **LIVE-VERIFIED 2026-08-19 (na-eligibility-audit, from a slot on the same host)**: (a) NOT armed — `env | grep
+      ORCHESTRATOR_WORKER_MEMORY_MAX` on a live worker process returns empty, and `cat /proc/self/cgroup` for that
+      same process shows `0::/system.slice/orchestrator.service` (the shared top-level service cgroup, not an
+      individual `systemd-run --user --scope`) — confirms the 2026-08-18 repo-grep finding with live process state,
+      not just code absence. (b) Architecturally WOULD cover an ad-hoc script subprocess IF armed —
+      `_worker_mem_scope_prefix()`'s own docstring says it wraps "the worker command" in `systemd-run --user
+      --scope`, and cgroup-scope membership propagates to all children by default (a subprocess doesn't escape its
+      parent's cgroup without deliberate unsharing) — not independently stress-tested with a real over-limit child
+      process. Separately, `systemctl show orchestrator.service --property=MemoryMax` shows the TOP-LEVEL service
+      itself IS capped (`MemoryAccounting=yes`, `MemoryMax=~26GiB`) — but that is one shared budget across the whole
+      fleet, exactly consistent with how the original 2026-07-30 incident starved the whole API rather than just one
+      worker. Net: this todo's own remaining open question is answered — not armed, so a re-run of this exact
+      incident today would reproduce identically. What's left is no longer an investigation, it's a sizing/rollout
+      decision (what per-worker cap, and whether to arm it now) — genuinely operator-gated (changes a live
+      production safety config for the whole fleet), so this stays `KEEP-NA` rather than closing.
 
 ## Codex SSOTs
 
@@ -245,3 +260,9 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   forks in their own text (a loud-warning-vs-refuse-construction choice; an out-of-scope-flagged RSS-ceiling pattern).
   Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **na-eligibility-audit 2026-08-19** (tranche=defi, dispatch agt-88e4bb): KEEP-NA, valid — read end to end, 2 open
+  items confirmed (matches Phase-0). Item 1 (ManifestWriter safety-check warn-vs-refuse) remains an undecided design
+  fork, unchanged. Item 2 (per-slot RSS ceiling) got a live verification this pass (see the inline update above) —
+  the investigative half is now answered with certainty (not armed; would architecturally cover the subprocess
+  class if armed), but the remaining decision (arm it, and at what cap) is a live production-safety sizing call,
+  genuinely operator-gated, not worker-determinable alone. Doc stays `assigned_vm: NA`.

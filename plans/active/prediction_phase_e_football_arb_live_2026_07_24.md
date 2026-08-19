@@ -218,3 +218,8 @@ context_scope:
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
 - **na-eligibility-audit 2026-08-18** [body-hash:63051a8a737811e0]: KEEP-NA, valid -- depends_on+gate_on_depends:true on both prediction_phase_ab_residuals_2026_07_24 and prediction_phase_d_formal_smoke_and_backfill_2026_07_24 re-confirmed live still open (4 and 5 open todos respectively). The 2 remaining items are also independently genuine multi-file design/build work on live dispatch-critical arb-matching machinery. Doc stays NA.
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:420870758404c9b5]: KEEP-NA,
+  valid — double `depends_on` + `gate_on_depends: true` gate re-confirmed live still open (both prerequisites
+  independently re-verified this same run: 4 and 5 open todos respectively). Both remaining items (E3 fixture-wiring,
+  3-way arb correctness guards) independently confirmed as genuine multi-file design/build work on live
+  dispatch-critical arb-matching machinery — not RECLASSIFY-eligible even setting the gate aside. Doc stays NA.

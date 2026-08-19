@@ -130,9 +130,12 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
 
 ## Rules for every worker on this plan
 
-- All 5 todos below are file-disjoint (todos 1-4 touch `agent-orchestrator/server/orm.py` + `context_lifecycle.py` +
-  `dispatch.py` in different, non-overlapping ways per todo; todo 5 touches a `unified-trading-pm` codex doc entirely)
-  — safe to run concurrently, no `sequential: true`.
+- **Superseded 2026-08-18 (see frontmatter `sequential: true`, corrected 2026-08-19 /plan-reconcile
+  orchestrator_master)**: todos 1-4 touch different files (`agent-orchestrator/server/orm.py` + `context_lifecycle.py`
+  + `dispatch.py`) but all four migrate the SAME `TaskUsageRow` table's schema state — a genuine shared-resource risk
+  the "different files" concurrency rule doesn't cover, so this plan runs `sequential: true`, not concurrently. Todo 5
+  (a `unified-trading-pm` codex doc) is unrelated to the migration and safe on its own, but stays inside the same
+  `sequential: true` gate rather than carving out a partial-parallelism exception this plan doesn't otherwise express.
 - Todos 1-4 all read from the `TaskUsageRow` model (`agent-orchestrator/server/orm.py` — symbol, not a line number,
   corrected 2026-08-18 /plan-reconcile per task_template.md §3) but each ADDS a different column/field — coordinate
   schema-migration ordering informally (check for an in-flight migration from a sibling todo before adding your own)

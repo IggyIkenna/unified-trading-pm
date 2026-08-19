@@ -108,7 +108,7 @@ quarantine trigger and confirms the retry loop succeeds instead of exhausting.
       archival rename, force the quarantine path (16+ synthetic stash entries), confirm the retry loop succeeds instead
       of exhausting all 6 attempts. (repo: unified-trading-pm)
 - [ ] [DATA] P3. **Re-derive and reapply a lost citation-fix edit to
-      `plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`** (a KEEP-NA-STALE-DUPLICATE checkbox
+      `/plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`.** (a KEEP-NA-STALE-DUPLICATE checkbox
       pointing at wherever the corresponding item's real extraction landed) — dropped by the SEVENTH data point below,
       the exact content was never committed and is not preserved anywhere outside this todo's own description. The
       doc is currently 1092L, over the 1000-line hard cap (pre-existing, not caused by the lost edit, which was

@@ -26,8 +26,8 @@ related:
   ]
 created: 2026-08-18
 parent_epic: tradfi_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.3
@@ -98,11 +98,19 @@ leaving the operator's 2026-08-07 "flip all 8" ruling permanently unexecuted for
       least 4) confirmed-done items citing batch13's evidence directly (mirroring each item's real disposition:
       DONE with a commit/verify citation, or NOT ACTIONABLE with the blocking reason), leave genuinely still-open
       items as-is. Done when: every checkbox's state matches live reality, with citations.
-- [ ] [PM] P2. **Once the reconciliation above lands, flip `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md`
-      + its `_finalize` from `status: draft`/`assigned_vm: NA` to `status: active`/`assigned_vm: planning`**, per
-      the operator's 2026-08-07 ruling (`tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 5,
-      "Option A, flip all 8... unqualified"). This closes out the last 2 of the original 8. Done when: both docs'
-      frontmatter reflects the flip and the remaining genuinely-open todos are live in the AO backlog.
+- [ ] [PM] P2. **Once the reconciliation above lands: FIRST fork the `BLOCKED-INFRA`-tagged "Certify tradfi Layer-1"
+      item (line ~328, "post the v9 migration + rebuild + IS catalogue...") out of
+      `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` into its own companion `assigned_vm: NA` doc**
+      (`task_template.md` §3 finding Y — an AO-dispatched plan must not carry a `BLOCKED-<TOKEN>` item alongside
+      dispatchable todos; cross-link both directions via `related:`), **THEN flip
+      `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` + its `_finalize` from `status: draft`/
+      `assigned_vm: NA` to `status: active`/`assigned_vm: planning`**, per the operator's 2026-08-07 ruling
+      (`tradfi_autonomous_session_operator_decisions_2026_07_25.md` item 5, "Option A, flip all 8... unqualified").
+      This closes out the last 2 of the original 8. Done when: the `BLOCKED-INFRA` item lives in its own NA doc,
+      both remaining docs' frontmatter reflects the flip, and the remaining genuinely-open todos are live in the AO
+      backlog. **Todo text corrected 2026-08-19 (na-eligibility-audit, dispatch agt-5d34f9) — added the fork-out
+      step; the original wording would have flipped the `BLOCKED-INFRA` item straight into an AO-dispatched plan
+      file, a fresh finding-Y violation.**
 
 ## Progress Log
 
@@ -119,3 +127,18 @@ leaving the operator's 2026-08-07 "flip all 8" ruling permanently unexecuted for
   the 4 batch13-cited items were checked this pass) — Todo 1 stays open for that remainder. Todo 2 (flip
   `status: draft`→`active`) NOT executed — still gated on Todo 1's full completion, per this doc's own explicit
   ordering ("once the reconciliation above lands").
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **RECLASSIFY, whole-doc → planning.**
+  Both open todos re-read end-to-end and independently re-verified bounded: todo 1 (reconcile checkboxes vs
+  batch13) is the same worker-determinable checklist-verification class batch13 itself already dispatched, and
+  `plan_reconciler`'s 2026-08-19 pass already executed 3 of ~13 items with zero judgment call, evidencing
+  worker-determinability; todo 2 (flip the target doc's frontmatter) executes an already-decided 2026-08-07
+  operator ruling, no new judgment needed once gated. Conflict-check clear (shared protocol § 3): no other
+  active/draft doc independently claims this reconciliation+flip; `tradfi_consolidated_closeout_2026_07_18.md`'s
+  own digest doesn't track it at this granularity. **Before flipping, fixed a real gap todo 2's original text would
+  have reproduced**: `tradfi_registry_coverage_and_ao_readiness_2026_07_25.md` carries a `BLOCKED-INFRA`-tagged
+  "Certify tradfi Layer-1" item (line ~328) mixed with its dispatchable todos — flipping that doc to
+  `assigned_vm: planning` as originally worded would have created a fresh `task_template.md` finding-Y violation
+  (an AO-dispatched plan carrying an operator-gated item in the same file). Added an explicit fork-out-first step
+  to todo 2's text. `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`. Companion
+  finalize plan authored:
+  `tradfi_registry_coverage_stale_checkboxes_vs_batch13_2026_08_18_finalize_2026_08_19.md`.

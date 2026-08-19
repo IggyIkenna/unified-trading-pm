@@ -89,7 +89,7 @@ locked_by: live-defi-rollout
 locked_since: 2026-05-20
 ---
 
-# Data pipeline master coordination — 2026-05-20
+# MTDS/MDPS Master — Market Data Pipeline Coordination
 
 ## Report
 

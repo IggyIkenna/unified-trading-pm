@@ -575,17 +575,22 @@ questions queue without a real answer from the operator present.
 
 ## Scheduling this skill
 
-**Not yet wired to a systemd timer as of this skill's creation (2026-08-17)** — it runs manually / via
-`/autonomous` today. To make it a standing scheduled job (matching the other 9 timers documented in
-`/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`), the remaining work is genuine backend engineering,
-not something to half-wire here without tests: a new `mode="ao_watchdog"` branch in
-`agent-orchestrator/server/plan_health.py`'s dispatch handler (mirroring `escalation_reconcile`'s wiring — the
-`_MODE_TO_ROLE` dict + the `role: escalation_queue_reconciler`-style thin wrapper role file, which this skill
-already has a sibling for at `unified-trading-pm/agents/ao_watchdog.md`), an `install-ao-watchdog-timer.sh`
-following the existing installer pattern (pick an unused fire-minute offset — see the existing minute table in
-`agent-orchestrator-scheduled-jobs.md`), and backend tests for the new dispatch branch. **File this as a tracked
-plan todo, not prose** — this note itself is not the todo (per the workspace's own "every follow-up is a `- [ ]`
-todo" HARD RULE).
+**Repo-side wiring is done, but the live systemd timer is NOT yet installed on the VM** (corrected 2026-08-19 by a
+live `/ao-watchdog` run — the previous text here claiming "are all live" was stale/wrong, confirmed via
+`systemctl status ao-watchdog.timer` on the orchestrator VM returning "Unit ao-watchdog.timer could not be found").
+What IS live: `mode="ao_watchdog"` in `agent-orchestrator/server/plan_health.py`'s dispatch handler (the
+`_MODE_PROMPT_TEMPLATE`/`_MODE_AGENT_KIND` dicts, mirroring `escalation_reconcile`'s wiring), the thin wrapper role
+file `unified-trading-pm/agents/ao_watchdog.md`, and the installer script itself
+`agent-orchestrator/scripts/install-ao-watchdog-timer.sh` (targeting daily 00:47 UTC — midnight-adjacent per the
+operator's 2026-08-18 cadence decision, staggered against `ci_reconciler`/`plan_reconciler`) — but that script has
+never actually been RUN on the central orchestrator VM, so no `ao-watchdog.timer`/`.service` unit exists there yet.
+This is tracked as the sole remaining open todo in `ao_watchdog_scheduled_timer_wiring_2026_08_17.md`
+(`[OPERATOR] P2. Re-run install-ao-watchdog-timer.sh on the central orchestrator VM`) — it needs either operator
+action or an explicitly-authorized AO-dispatched-worker/SSM run (the script itself needs no `sudo` per the
+2026-08-08 hard rule, so technically runnable via the same read-only-adjacent SSM `RunShellScript` path this skill
+already uses for its own live checks — but installing a unit is a real mutating change, not read-only, so get
+explicit go-ahead before running it). Until that lands, this skill runs manually / via `/autonomous` only — there
+is no additive timer path yet.
 
 ## Under `/autonomous` / one-shot dispatch contract
 

@@ -220,9 +220,9 @@ stabilize. Left untracked, this manifest residual would silently persist forever
       attempt (0 rows, 0 credits used, all 4 dates) that the vendor's historical endpoint has NO odds data for these
       4 dates; it's a genuine PERMANENT absence, not a pending backfill. These 4 dates will stay `attempted_failed`
       forever and that is the correct honest state.**
-- [ ] [DATA] P3. Re-run shard4's range (2025-01-01..2026-07-25) on a future `full`-mode resume-friendly pass once the
-      remaining `2025-02-16` `LOSS_GUARD_BLOCKED` date's observation count stabilizes and/or any of the 12
-      `ADAPTER_RETURNED_EMPTY_OUTPUT` dates naturally resolve (as 07-31/08-26/09-04/10-07/10-14/11-13 already did
+- [ ] [DATA] P3. Re-run shard4's range (2025-01-01..2026-07-25) on a future `full`-mode resume-friendly pass, gated on
+      EITHER the remaining `2025-02-16` `LOSS_GUARD_BLOCKED` date's observation count stabilizing OR any of the 12
+      `ADAPTER_RETURNED_EMPTY_OUTPUT` dates naturally resolving (as 07-31/08-26/09-04/10-07/10-14/11-13 already did
       across earlier re-runs). **Excludes** the 4 permanent `RAW_ODDS_SHAPE_UNRECOGNIZED` dates (2026-06-21..24) —
       do not gate this retry on them; they will never resolve (see stale-gating note above). Repo:
       market-data-processing-service.

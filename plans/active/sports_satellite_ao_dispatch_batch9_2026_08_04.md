@@ -533,10 +533,10 @@ re-triage. Too-large-or-risky entries need their own dedicated plan.
   authoring[citation truncated — conflict-claim not fully recoverable from this record; re-verified in batch10 Progress
   Log (2026-08-06)]
 - **sports_fixtures_schedule_wrong_schema_day_2026_04_14.md** — OPERATOR decision: register (or leave unmapped) the 35
-  leagues with no canonical UAC registry entry as LeagueDefinitions (P3): Verified in the live doc
-  (plans/active/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md, 'Open work' section, line 453-458): the
-  todo is explicitly tagged[citation truncated — conflict-claim not fully recoverable from this record; re-verified in
-  batch10 Progress Log (2026-08-06)]
+  leagues with no canonical UAC registry entry as LeagueDefinitions (P3). **RULED 2026-08-09: LEAVE UNMAPPED** — doc
+  now `status: resolved`, archived 2026-08-19 to
+  `plans/archive/2026_08/issues/sports_fixtures_schedule_wrong_schema_day_2026_04_14.md`, all 6 todos `[x]`[citation
+  truncated — conflict-claim not fully recoverable from this record; re-verified in batch10 Progress Log (2026-08-06)]
 - **sports_legacy_duplicate_triage_2026_07_22.md** — Todo 7 [REVIEW] P3 — policy decision: 5,028
   non-Prediction-tier-league v2 legacy rows have no canonical per-league write target at all: The doc's own text names
   this explicitly as 'a genuine judgment call, not a mechanical migration' with a stated two-option fork and no

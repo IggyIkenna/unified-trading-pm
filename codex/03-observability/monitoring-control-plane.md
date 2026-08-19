@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Monitoring control plane — CI dashboard + fleet git-health
-summary:
-  "SSOT for the monitoring read surfaces: the CI/CD repo dashboard (deployment-ui /repos + deployment-api
+summary: "SSOT for the monitoring read surfaces: the CI/CD repo dashboard (deployment-ui /repos + deployment-api
   /api/repo-ci/*; hybrid GitHub-live + workspace-manifest) and fleet git-health (agent-orchestrator /fleet-git +
   deployment-ui /fleet). Alert-parity principle — anything alerted on generically must be a continuously observable
   dashboard state; every status atom deep-links to the authoritative UI."
@@ -13,24 +12,20 @@ stage: [meta]
 repos: [agent-orchestrator, deployment-api, deployment-ui]
 scope: [engineer, admin]
 tags: [monitoring, observability, ci, quality-gates, orchestrator, ui]
-related:
-  [
-    /codex/03-observability/alerting.md,
-    plans/active/monitoring_control_plane_master_2026_06_10.md,
-    /codex/08-workflows/ci-cd-flow.md,
-  ]
+related: [/codex/03-observability/alerting.md, /codex/08-workflows/ci-cd-flow.md]
 created: 2026-06-10
 authoritative_for: [monitoring control plane read surfaces, CI dashboard + fleet git-health]
 referenced_by:
 owner:
-last_reviewed: 2026-08-10
+last_reviewed: 2026-08-19
 code_refs:
 ---
 
 # Monitoring control plane — CI dashboard + fleet git-health
 
-> SSOT for the monitoring read surfaces (codified 2026-06-10). Plans:
-> `plans/active/monitoring_control_plane_master_2026_06_10.md` (master) + `ci_dashboard_deployment_ui_2026_06_10.md` +
+> SSOT for the monitoring read surfaces (codified 2026-06-10; master plan
+> `/plans/archive/2026_08/monitoring_control_plane_master_2026_06_10.md` archived complete 2026-08-19 — this codex
+> doc now carries the durable contract). Sub-plans: `ci_dashboard_deployment_ui_2026_06_10.md` +
 > `fleet_git_health_orchestrator_2026_06_10.md`.
 
 ## Alert-parity principle (operator, 2026-06-10)
@@ -87,6 +82,24 @@ response; ONLY rate-limit (503) propagates. Checks-API 403 (PAT missing `Checks:
 **Tests**: deployment-api `tests/unit/test_repo_ci_{stuck,manifest,routes}.py` (mock fixtures cover EVERY stuck class —
 pinned against the UI contract); deployment-ui `src/lib/repoCi.test.ts` + playwright `tests/smoke/repos-tab.spec.ts` +
 `tests/e2e/repos-stuck-panel.spec.ts` (regression: all five stuck classes + stuck-in-SIT + SIT-run jobs).
+
+## Deploy signal v1 vs v2 (image-level vs runtime-level)
+
+**v1 — IMAGE-LEVEL (shipped 2026-06-10)**: `image_stale` = main HEAD sha ≠ last successful Cloud Build/CodeBuild sha
+("is main's code built into the latest image") — see the Cloud builds bullet above.
+
+**v2 — RUNTIME-LEVEL (what's actually RUNNING right now)**: built under a SEPARATE plan,
+`/plans/active/artifact_pipeline_observability_2026_07_17.md`'s `/artifacts/running` view — a live join of Cloud Run
+revisions (`gcp_cloud_run_revisions`) + GCE VM launches (the tarball-lane deploy), DONE 2026-07-23
+(deployment-api@a13c667, deployment-ui@3210bb5). `main_head_drift.py` extends it with a git-source-of-truth diff:
+`RunningVersion.main_head_sha`/`.behind_main` (deployment-api@a2963906ab), surfaced as a running-vs-HEAD SHA-diff
+widget (deployment-ui@173e66ecab). Distinct from `DRIFT_STALE` (behind a currently-deployed SIBLING) — this compares
+against `main`'s own tip. Scoped to the Cloud Run (image) lane; VM-tarball-lane main-head diff is a named residual
+in the artifact-pipeline-observability plan, not here.
+
+**Rollout-ratchet panel** (workflow-template drift + Dockerfile digest-pin + ruleset/branch-protection drift, folded
+into one `RolloutRatchetPanel.tsx` on `/repos`): `GET /api/rollout-ratchet/overview` (deployment-api@46e04e0757) +
+the panel (deployment-ui@173e66ecab).
 
 ## Fleet git-health (agent-orchestrator) — SHIPPED 2026-06-10
 

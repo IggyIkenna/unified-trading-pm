@@ -50,7 +50,7 @@ related:
     /plans/archive/issues/one_shot_worker_completes_but_no_clean_exit_signal_watchdog_rekicks_2026_07_25.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/archive/issues/plan_reconciler_findings_ao_2026_08_16.md,
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
   ]
 created: "2026-08-12"
 author: unknown

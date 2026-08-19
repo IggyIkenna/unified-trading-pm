@@ -228,7 +228,20 @@ context_scope:
       instruction); 9 items confirmed still genuinely deferred (2, 3, 4, 8, 9, 10, 11, 12, 14). Every one of the 15 real
       items now carries either a ready-for-extraction note or a re-verified still-open confirmation. Repo:
       unified-trading-pm.
-- [ ] [DOC] P1. **BLOCKED 2026-07-29 (slot-8, `data_engineering`) — batch5 is NOT archivable yet; premature (operator
+- [ ] [DOC] P1. **CORRECTED 2026-08-19 (`/plan-reconcile sports_master`): the gate below cleared 2026-08-09, ten
+      days ago — this BLOCKED framing is stale.** Direct re-read of `sports_satellite_ao_dispatch_batch5_2026_07_26.md`
+      today: both its `## Todos` items are now `[x]` (line 79's odds-api backfill done 2026-07-29 per that doc's own
+      text; the zombie-tick/ML-readiness todo flipped 2026-08-09 per
+      `sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`'s Progress Log,
+      "Flipping `sports_satellite_ao_dispatch_batch5_2026_07_26.md`'s zombie-tick checkbox now"). Batch5 itself
+      already carries a matching 2026-08-12 banner confirming 0 open todos, but explicitly left the archival to
+      "whoever clears the finalize twin's remaining gates" — this doc is that clearing, not yet executed. The gate
+      condition below (`sports_satellite_ao_dispatch_batch5_2026_07_26` reaching 0 open todos) IS satisfied — what
+      remains is the substantial reconciliation work itself (25+ distinct source-doc checkboxes per todo 1 above),
+      which this pass did not attempt (out of scope for a doc-reconciliation audit). Flagging as ready-to-dispatch,
+      not archiving unilaterally.
+      **Original BLOCKED note (2026-07-29 (slot-8, `data_engineering`), superseded by the correction above, kept for
+      history):** batch5 is NOT archivable yet; premature (operator
       ruling Option A, BLK-c6efc083).** `sports_satellite_ao_dispatch_batch5_2026_07_26.md` still carries **2
       genuinely-open active `[ ]` todos** in its `## Todos` section (NOT the Deferred sections todo 3 re-confirmed), so
       archiving it now would violate the plans-run-to-actual-completion HARD RULE ("not smoke-test green"): (line 79)

@@ -5,7 +5,7 @@ summary: >-
   Daily deep plan-reconciliation run-findings doc for the cross-cutting topic tranche, dispatch agt-3cc834 (slot 11).
   Records hunter-detected candidates, adversarial-verification outcomes, applied fixes, routed operator questions, and
   coverage for this run. Also the progress journal for the run itself.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -16,7 +16,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
   ]
 created: "2026-08-16"
@@ -31,14 +31,14 @@ estimate_baseline: 0.1
 calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
-resolved_by:
+resolved_by: plan_reconciler_findings_cross_cutting_2026_08_18.md (epic-scoped /plan-reconcile security_and_cross_cutting_master Phase -1, 2026-08-19)
 locked_by:
 locked_since:
 depends_on: []
 context_scope:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
     /codex/02-data/external-data-always-available-rule.md,
     /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_10.md,
@@ -46,6 +46,13 @@ context_scope:
 ---
 
 # plan_reconciler findings — cross-cutting tranche — 2026-08-16
+
+> **SUPERSEDED by `/plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_18.md` (2026-08-19)**: the
+> 2026-08-18 cross-cutting run explicitly hunted all 5 unhunted batches (5-9, ~57 docs) this doc left uncovered plus
+> all 7 of this doc's own named carry-forward items to a resolution, and states in its own "Next steps" section
+> "there is no unfinished 'continue this run' work." Archived by the epic-scoped `/plan-reconcile
+> security_and_cross_cutting_master` Phase -1 pass (2026-08-19) per the same precedent this doc's own 2026-08-16
+> Phase -1 pass used to archive its 2026-08-10 predecessor once superseded.
 
 Dispatch `agt-3cc834`, slot 11, tranche `cross-cutting`. PM head at run start: `effde0f7d5`.
 

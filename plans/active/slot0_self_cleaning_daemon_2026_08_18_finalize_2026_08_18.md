@@ -20,7 +20,7 @@ related:
   [
     /plans/active/slot0_self_cleaning_daemon_2026_08_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    ao_consolidated_closeout_2026_08_12,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-18"
 last_updated: "2026-08-18"

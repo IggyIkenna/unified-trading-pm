@@ -166,52 +166,10 @@ A new `select_account_for_spawn(task_context)` function sits in front of the exi
 > trimmed the essay-length rationale now redundant with the shipped code + tests. Nothing removed changes done-when
 > status of any todo.
 
-**2026-07-28** — Todos 1-5 implemented, QG green (1905 passed), held per operator instruction until the real DeepSeek
-account was registered and smoke-tested. `provider` field added to `AccountDef`; `usage_poller.py` excludes any
-non-anthropic account from the token probe entirely; `select_account_for_spawn()` implemented (eligibility + round-robin
-split + health gate + `preferred_provider` pin for resumes); all 3 automatic spawn call sites rewired; new tunables on
-`TuningDefaults`; new `tests/test_deepseek_provider_routing.py`.
-
-**2026-07-29 — DeepSeek account registered + smoke-tested; 6-task local pilot.** Env file + `accounts.json` entry
-created (gitignored, no sha). First smoke hit `402` (balance $0); operator topped up $5; `AUTH_OK` confirmed via the
-real DeepSeek endpoint. Full pilot via an isolated local backend (slots 1-5 paused, review loop disabled, spare slots
-21-30): all 6 tasks completed with verified-correct reasoning (spot-checked by hand), genuine concurrent dispatch
-proven, $0.09 total spend. No live Claude spawn — all 4 real accounts were genuinely rate-limited at the time.
-**Self-caused incident, contained**: an unset `ORCHESTRATOR_SERVER_URL` meant every spawned worker's boot prompt
-defaulted to the PRODUCTION URL; one worker attempted an unauthenticated curl toward the real prod heartbeat endpoint
-before its session ended (no confirmed response captured). Separately, the always-on spawn-liveness watchdog (ungated by
-`ORCHESTRATOR_AUTOSPAWN_ENABLED`) began auto-killing+respawning silently-unreachable workers in a loop. Caught within
-minutes; isolated backend + throwaway sessions killed; a real, unrelated production session verified undisturbed
-throughout. Closed by the `[INFRA] P1 server_url()` guard todo below. Adjacent gap found, no real damage this run:
-`AgentKeeper`/`ensure_review_agents` stay always-on regardless of `ORCHESTRATOR_AUTOSPAWN_ENABLED` and read some
-unscoped state (`STATE_DIR`, Slack webhook, `pm_repo_path`) — documented via the isolation-runbook todo.
-
-**2026-07-29 — Model-selection policy redesigned per operator ruling** (DeepSeek-first, quota-adaptive, mutual fallback;
-supersedes the original 30%-experiment framing): opus/fable get an unconditional hard pin to Claude (no DeepSeek
-fallback ever, even at zero Claude headroom); sonnet-tier is DeepSeek-first by default (`deepseek_route_fraction`
-0.3→0.8); new plan-level `provider: claude` frontmatter override; a quota-adaptive nudge shades the fraction by real
-Claude headroom; a `provider: claude` override still falls back to DeepSeek at zero Claude quota so sonnet-tier work
-never stalls — distinct from the hard kill-switch (`fraction<=0`, no fallback either direction). Real bug found+fixed:
-the old modulo split formula couldn't represent fractions above 0.5 (0.8 silently fired 100%) — replaced with a
-Bresenham-style fair-share accumulator (1e-9 epsilon for float drift). 34 tests, QG green (1923 passed). Confirmed:
-CLAUDE.md/`agents/*.md` need no DeepSeek special-casing — both load identically regardless of which backend
-`ANTHROPIC_BASE_URL` points at.
-
-**2026-07-29 (afternoon) — SHIPPED.** Rebased onto 33 incoming commits, re-piloted (`provider_override` end-to-end
-verified; could not validate Claude-headroom-dependent paths from a machine with no `api.claude.ai` access).
-`agent-orchestrator@7076283` on `live-defi-rollout`, ahead=0. `accounts.json` stays gitignored, so the code merge alone
-does not activate DeepSeek in production.
-
-**2026-07-30 — env-leak incident found+fixed** (unrelated to the routing code itself, same plan's setup-guide artifact).
-A shell that directly-sourced the DeepSeek env file (bypassing the `deepseek()`/`deepseek-code()` wrappers) poisoned a
-long-lived VS Code Electron process for most of a day, silently routing every subsequent `claude`/`code` launch to
-DeepSeek. Fixed: `agent-orchestrator@02c8d7f` — wrappers now `unset` the relevant env vars before sourcing; setup guide
-gained a `[!CAUTION]` block. (Same investigation also fixed an unrelated orphaned e2e test fixture, same commit.)
-
-**2026-07-30 — `[INFRA] P1` server_url() guard SHIPPED.** `config.server_url()` now raises instead of silently
-defaulting to the prod URL when standalone and unconfigured; all 5 real call sites walked and confirmed fail-safe. New
-autouse fixture clears `ORCHESTRATOR_STANDALONE` in tests. `agent-orchestrator@fcc7f24`, ahead=0, QG green (2068
-passed).
+**2026-07-28..2026-07-30 entries extracted 2026-08-19** (line-cap relief, file was at 1027/1000 lines after real
+GLM-ceiling-correction edits) → `/plans/archive/2026_08/deepseek_claude_blended_provider_routing_history_2026_08_19.md`
+— initial DeepSeek registration/pilot, the model-selection policy redesign, the env-leak incident, and the
+`server_url()` guard ship, all fully closed at extraction time.
 
 **2026-07-30 — `[DATA] P1` spend-guard ceiling SHIPPED.** No real DeepSeek billing telemetry exists, so used a
 route-selection COUNT (rolling 24h/30d, not calendar-boundary) as a spend proxy via a new `deepseek_spawn_selected`
@@ -686,7 +644,11 @@ We'll calibrate everything").
 pay-per-token API billing. Do not register a separate metered GLM rate card unless the operator later decides to also
 run pay-per-token GLM alongside the subscription.
 
-**Staged tier start (operator ruling, 2026-08-15):** sign up for the **Lite** tier ($18/mo, ~80 prompts/5h + 400/wk),
+**Staged tier start (operator ruling, 2026-08-15):** sign up for the **Lite** tier ($18/mo — real confirmed name
+"GLM Coding Lite-Monthly Plan", real confirmed ceiling per Zhipu's own dashboard 2026-08-19: **2,000 credits/5h +
+10,000 credits/week**, NOT the "~80 prompts/5h + 400/wk" this doc originally guessed — that figure was never
+verified against a real dashboard and used the wrong UNIT entirely, prompt-count instead of credits; corrected
+2026-08-19, see Progress Log),
 not Max, to validate the whole pipeline (registration, native-endpoint routing, usage-capture proxy, dispatch gating)
 before committing to Max spend — same pattern applied to Codex/Luna below, mirroring the Claude Pro→Max staging. All
 three Coding Plan tiers (Lite/Pro/Max) ship the identical model lineup including GLM-5.2 — only the 5h/weekly prompt
@@ -700,8 +662,23 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
       live call: `https://api.z.ai/api/anthropic`.
 - [ ] [OPERATOR] P3. Upgrade GLM Coding Plan Lite → Max once the Lite-tier pipeline validation above is complete and the
       operator decides to scale. Done when: the Zhipu dashboard shows Max active and the UI headroom-gate todo's ceiling
-      constants (currently Lite's ~80/5h + 400/wk) are updated to Max's ~1,600/5h + 8,000/wk — same key, same endpoint,
+      constants (currently Lite's real confirmed 2,000 credits/5h + 10,000 credits/week — corrected 2026-08-19, was
+      wrongly "~80/5h + 400/wk", see Progress Log) are updated to Max's real credit ceiling — the "~1,600/5h + 8,000/wk"
+      figure here was ALSO never verified against a real dashboard and is likely the same wrong prompt-count unit; get
+      the real number from Zhipu's dashboard at upgrade time, don't trust this figure — same key, same endpoint,
       no other code change expected.
+- [ ] [INFRA] P2. Fix `server/glm_quota_poller.py`'s ceiling constants — real bug found 2026-08-19: the poller's
+      "count-based estimate" (comment: "GLM exposes no rate-limit headers, verified live") was built against the
+      wrong assumed ceiling ("~80 prompts/5h + 400/wk") and the wrong UNIT (prompt-count instead of credits). Real
+      Zhipu dashboard (2026-08-19) confirms the actual quota is 2,000 credits/5h + 10,000 credits/week, with
+      per-message credit cost varying by model/turn (not 1 credit per prompt) — so a prompt-COUNT-based estimate
+      cannot accurately track a credit-based ceiling regardless of the constant's value. Either (a) find whether
+      Z.ai's API exposes real credit-consumption data anywhere in the response despite "no rate-limit headers" (worth
+      re-checking given this real dashboard proves credits ARE tracked server-side), or (b) recalibrate the
+      count-based estimate's assumed credits-per-request using real observed data (this session's real test: a
+      5-turn task consumed a measurable, recordable credit delta — see Progress Log for the real before/after
+      numbers to calibrate against). Done when: `_pick_headroom_account`'s GLM gating reflects the real credit unit,
+      not prompt-count, verified against a real dashboard reading before/after a test dispatch.
 - [x] [INFRA] P1. ✅ Register the GLM Coding Plan account end to end. **DONE 2026-08-16** — env files for both
       variants (`~/.claude-accounts/glm-5-2.env`, `glm-5-turbo.env`) + `accounts.json` entries + GSM secret
       `glm-coding-plan-api-key`, mirroring the DeepSeek pattern exactly. `AUTH_OK` verified via real live
@@ -735,7 +712,9 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
       test (~7.7k-token system block, immediate repeat) showed GLM correctly reports `cache_read_input_tokens` on the
       hit for both `glm-5.2`/`glm-5-turbo` — the test that would have caught DeepSeek's under-report. See Progress Log.
 - [x] [UI] P2. ✅ Surface GLM's subscription-quota usage reusing the SAME `five_hour_pct`/`weekly_pct` fields Claude
-      already uses (Lite's ~80/5h + 400/wk at signup, Max's ~1,600/5h + 8,000/wk after the later upgrade) — GATE
+      already uses (real confirmed ceiling 2026-08-19: 2,000 credits/5h + 10,000 credits/week at Lite; the
+      "~80/5h + 400/wk" this line originally said was wrong-unit and never dashboard-verified — see the new
+      `glm_quota_poller.py` fix todo above and Progress Log) — GATE
       dispatch on it in `_pick_headroom_account()`/`select_account_for_spawn()`, not just display it. Read the
       ceiling from config, not hardcoded. Done when: a simulated-near-ceiling test shows the account excluded from
       selection. — `agent-orchestrator@79c42aaade`. New `server/glm_quota_poller.py` (count-based estimate — GLM
@@ -1004,3 +983,17 @@ edits in `agent-orchestrator` for the lead session to review and ship.
 to stay under the 1000-line hard cap (this file was already at 995 lines). See that doc's "Gate 4" section for the
 tasks-remaining formula, poll-cadence-vs-reset-window audit, and restart-survivability todos, which reference this
 plan's `select_account_for_spawn()`/stratified-rotation mechanism as their integration point.
+
+- **2026-08-19 — real GLM dashboard reconciliation, isolated pilot session.** Real "GLM Coding Lite-Monthly Plan"
+  dashboard checked (operator screenshot): confirms 2,000 credits/5h + 10,000 credits/week — corrects the wrong
+  "~80 prompts/5h + 400/wk" guess this doc carried since 2026-07-28 (never previously dashboard-verified; see the
+  new `[INFRA] P2` `glm_quota_poller.py` fix todo above). Real per-model credit breakdown (last 7 days): GLM-5.3
+  42.26 credits, GLM-5-Turbo 2.8, GLM-4.7 0.03 — **directly confirms the already-known aliasing finding** (a
+  `glm-5.2` request gets served by `glm-5.3`) from real billing data, not just a response header. Cache hit rate
+  80.4%. Real System Health panel: decode speed (tokens/s) Lite tier peaked ~98 tok/s (currently ~60), Max&Pro
+  tier peaked ~115 tok/s (currently ~80) over the last 7 days — first real throughput numbers recorded for GLM;
+  worth comparing against other providers once the tok/s-tracking todo in
+  `multi_provider_context_billing_reconciliation_2026_08_16.md` lands. Same session also ran a real end-to-end
+  `claude` CLI task through GLM (isolated pilot, not production): 5 turns, real file edit completed, CLI-reported
+  `total_cost_usd: $0.0491` (a computed equivalent, not a real Zhipu bill — Lite is subscription/credit-based, not
+  $-metered).

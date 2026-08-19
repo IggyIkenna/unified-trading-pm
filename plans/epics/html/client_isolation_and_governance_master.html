@@ -1,0 +1,1154 @@
+<!-- generated 2026-08-19 by /plan-reconcile client_isolation_and_governance_master -->
+<title>Client Isolation &amp; Governance Docket</title>
+<style>
+  :root {
+    --paper: #f3ede0;
+    --paper-2: #fbf7ee;
+    --paper-3: #ece3cd;
+    --ink: #221f1a;
+    --ink-soft: #5c564a;
+    --ink-faint: #8d8574;
+    --line: #d8cdb3;
+    --line-strong: #b8ab84;
+    --brass: #a9772c;
+    --brass-ink: #7a5620;
+    --verdigris: #4c7466;
+    --verdigris-ink: #365347;
+    --oxblood: #9c3b2e;
+    --shadow: 0 1px 2px rgba(34, 31, 26, 0.06), 0 8px 24px -12px rgba(34, 31, 26, 0.18);
+    --serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua", Georgia, serif;
+    --sans:
+      ui-sans-serif, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Mono", "Roboto Mono", Menlo, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #17181a;
+      --paper-2: #1e2023;
+      --paper-3: #26282c;
+      --ink: #ece6d6;
+      --ink-soft: #a49c8a;
+      --ink-faint: #736c5e;
+      --line: #34363a;
+      --line-strong: #484b50;
+      --brass: #d3a355;
+      --brass-ink: #f0c988;
+      --verdigris: #7eab99;
+      --verdigris-ink: #a3c9b8;
+      --oxblood: #d97363;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px -12px rgba(0, 0, 0, 0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17181a;
+    --paper-2: #1e2023;
+    --paper-3: #26282c;
+    --ink: #ece6d6;
+    --ink-soft: #a49c8a;
+    --ink-faint: #736c5e;
+    --line: #34363a;
+    --line-strong: #484b50;
+    --brass: #d3a355;
+    --brass-ink: #f0c988;
+    --verdigris: #7eab99;
+    --verdigris-ink: #a3c9b8;
+    --oxblood: #d97363;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 28px -12px rgba(0, 0, 0, 0.55);
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15.5px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection {
+    background: var(--brass);
+    color: var(--paper);
+  }
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 28px 96px;
+  }
+  a {
+    color: var(--brass-ink);
+  }
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: var(--paper-3);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+  }
+  .tabular {
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- Masthead ---------- */
+  .masthead {
+    padding: 56px 0 30px;
+    border-bottom: 3px double var(--line-strong);
+    margin-bottom: 40px;
+  }
+  .masthead .docket {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    margin-bottom: 22px;
+  }
+  .masthead .docket span.id {
+    color: var(--brass-ink);
+  }
+  .masthead h1 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: clamp(34px, 4.6vw, 54px);
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+    margin: 0 0 16px;
+    text-wrap: balance;
+  }
+  .masthead .dek {
+    max-width: 62ch;
+    font-size: 17px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .seal {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 15px;
+    height: 15px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    margin-right: 6px;
+    position: relative;
+    flex: none;
+  }
+  .seal::after {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  /* ---------- Chips (in-scope / excluded) ---------- */
+  .scope-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 44px;
+  }
+  @media (max-width: 760px) {
+    .scope-row {
+      grid-template-columns: 1fr;
+    }
+  }
+  .scope-block {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 20px;
+    background: var(--paper-2);
+  }
+  .scope-block h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin: 0 0 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .scope-block.in h3 {
+    color: var(--verdigris-ink);
+  }
+  .scope-block.out h3 {
+    color: var(--ink-faint);
+  }
+  .chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .chip {
+    font-size: 12.5px;
+    padding: 5px 11px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    background: var(--paper);
+    color: var(--ink-soft);
+  }
+  .scope-block.in .chip {
+    border-color: var(--verdigris);
+    color: var(--verdigris-ink);
+  }
+  .scope-block.out .chip {
+    color: var(--ink-faint);
+  }
+  .chip.hard {
+    border-style: dashed;
+    font-weight: 600;
+  }
+
+  /* ---------- Stat strip ---------- */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 48px;
+  }
+  @media (max-width: 760px) {
+    .stats {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+  .stat {
+    position: relative;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 18px 18px 16px;
+    background: var(--paper-2);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .stat::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent, var(--line-strong));
+  }
+  .stat.brass {
+    --accent: var(--brass);
+  }
+  .stat.verdigris {
+    --accent: var(--verdigris);
+  }
+  .stat.ink {
+    --accent: var(--ink-faint);
+  }
+  .stat .n {
+    font-family: var(--serif);
+    font-size: 34px;
+    font-weight: 500;
+  }
+  .stat .l {
+    margin-top: 4px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+
+  section {
+    margin-bottom: 52px;
+  }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+  }
+  .section-head h2 {
+    font-family: var(--serif);
+    font-weight: 500;
+    font-size: 23px;
+    margin: 0;
+  }
+  .section-head .n {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    letter-spacing: 0.06em;
+  }
+  .section-note {
+    font-size: 13.5px;
+    color: var(--ink-soft);
+    margin: -10px 0 20px;
+  }
+
+  /* ---------- Plan cards ---------- */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .plan-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+  .plan-card {
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--brass);
+    border-radius: 8px;
+    background: var(--paper-2);
+    padding: 16px 18px 18px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .plan-card.issue {
+    border-left-color: var(--oxblood);
+  }
+  .plan-card .kind {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .plan-card h4 {
+    margin: 0;
+    font-size: 14.5px;
+    font-family: var(--mono);
+    font-weight: 600;
+    line-height: 1.4;
+    word-break: break-word;
+  }
+  .plan-card .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--ink-soft);
+  }
+  .pill {
+    display: inline-block;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--line-strong);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .pill.active {
+    border-color: var(--verdigris);
+    color: var(--verdigris-ink);
+  }
+  .pill.draft {
+    border-color: var(--ink-faint);
+    color: var(--ink-faint);
+  }
+  .pill.open {
+    border-color: var(--oxblood);
+    color: var(--oxblood);
+  }
+  .bar {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--paper-3);
+    overflow: hidden;
+    display: flex;
+  }
+  .bar .done {
+    background: var(--verdigris);
+  }
+  .bar .open {
+    background: var(--brass);
+  }
+  .plan-card .counts {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .plan-card .summary {
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+  .plan-card .keyop {
+    font-size: 12.5px;
+    border-top: 1px dashed var(--line);
+    padding-top: 8px;
+    margin-top: 2px;
+  }
+  .plan-card .keyop .tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--oxblood);
+    letter-spacing: 0.05em;
+  }
+
+  /* ---------- Desk table ---------- */
+  .desk-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+  table.desk {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 780px;
+  }
+  table.desk th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    background: var(--paper-3);
+    padding: 10px 14px;
+    position: sticky;
+    top: 0;
+  }
+  table.desk td {
+    padding: 11px 14px;
+    border-top: 1px solid var(--line);
+    vertical-align: top;
+  }
+  table.desk tr:nth-child(even) td {
+    background: var(--paper-2);
+  }
+  table.desk .p {
+    font-family: var(--mono);
+    font-weight: 700;
+    font-size: 11.5px;
+  }
+  table.desk .p0 {
+    color: var(--oxblood);
+  }
+  table.desk .p1 {
+    color: var(--brass-ink);
+  }
+  table.desk .p2,
+  table.desk .p3 {
+    color: var(--ink-faint);
+  }
+  table.desk .doc {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    white-space: nowrap;
+  }
+  table.desk .gate {
+    font-size: 12px;
+    color: var(--ink-soft);
+    white-space: nowrap;
+  }
+
+  /* ---------- Scoping / closed-out lists ---------- */
+  .card-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .flag-card,
+  .closed-card {
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 14px 16px;
+    background: var(--paper-2);
+    font-size: 13.5px;
+  }
+  .flag-card {
+    border-left: 4px solid var(--ink-faint);
+  }
+  .closed-card {
+    border-left: 4px solid var(--verdigris);
+  }
+  .closed-card .file {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--verdigris-ink);
+    margin-bottom: 4px;
+  }
+  .flag-card .file {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    margin-bottom: 4px;
+  }
+  .flag-card p,
+  .closed-card p {
+    margin: 4px 0 0;
+    color: var(--ink-soft);
+  }
+  .flag-card strong,
+  .closed-card strong {
+    color: var(--ink);
+  }
+
+  /* ---------- Lanes ---------- */
+  .lane-note {
+    border: 1px dashed var(--line-strong);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    margin-bottom: 18px;
+  }
+  .lanes {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 900px) {
+    .lanes {
+      grid-template-columns: 1fr;
+    }
+  }
+  .lane {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: var(--paper-2);
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .lane .lane-h {
+    font-family: var(--serif);
+    font-size: 16.5px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .lane .lane-h .seal {
+    color: var(--brass);
+  }
+  .lane .file {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    word-break: break-word;
+  }
+  .lane ul {
+    margin: 6px 0 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+  }
+  .lane li {
+    margin-bottom: 5px;
+  }
+
+  /* ---------- Dispatch prompts ---------- */
+  .prompt {
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .prompt-h {
+    background: var(--paper-3);
+    padding: 10px 16px;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--ink-soft);
+    display: flex;
+    justify-content: space-between;
+  }
+  .prompt pre {
+    margin: 0;
+    padding: 16px;
+    background: var(--paper-2);
+    font-family: var(--mono);
+    font-size: 12px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-x: auto;
+  }
+
+  /* ---------- Notes ---------- */
+  .notes {
+    font-size: 13px;
+    color: var(--ink-soft);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .notes .n-row {
+    padding-left: 16px;
+    border-left: 2px solid var(--line);
+  }
+
+  footer {
+    margin-top: 60px;
+    padding-top: 20px;
+    border-top: 3px double var(--line-strong);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-faint);
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+</style>
+
+<div class="wrap">
+  <header class="masthead">
+    <div class="docket">
+      <span>Docket <span class="id">CIG-2026-08-19</span> &middot; L4 cross-cutting epic</span>
+      <span>Filed 2026-08-19 &middot; <code>/plan-reconcile</code> epic-scoped pass</span>
+    </div>
+    <h1>Client Isolation &amp; Governance</h1>
+    <p class="dek">
+      Owns the cross-client funds-isolation HARD RULE (<code>CrossClientTransferForbiddenError</code>, one
+      <code>client_id</code> per transfer), per-client subprocess isolation, jurisdiction restrictions, and
+      share-class/UAC governance &mdash; anchored today by one live engagement: the Elysium carve-out, October
+      delivery readiness, and SLA reconciliation.
+    </p>
+  </header>
+
+  <div class="scope-row">
+    <div class="scope-block in">
+      <h3><span class="seal"></span>In scope</h3>
+      <div class="chips">
+        <span class="chip hard">funds isolation HARD RULE</span>
+        <span class="chip">per-client subprocess isolation</span>
+        <span class="chip">jurisdiction restrictions</span>
+        <span class="chip">share-class reconciliation</span>
+        <span class="chip">hardcoded-value cleanup</span>
+        <span class="chip">Elysium carve-out &amp; disclosure governance</span>
+      </div>
+    </div>
+    <div class="scope-block out">
+      <h3>Excluded</h3>
+      <div class="chips">
+        <span class="chip">general UAC contract-governance &rarr; <code>uac_master</code> (moved 2026-08-18)</span>
+        <span class="chip">instrument-id / instrument-type schema &rarr; <code>instruments_master</code></span>
+        <span class="chip hard">cross-client fund movement of any kind &mdash; structurally forbidden, not merely excluded</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat brass">
+      <div class="n tabular">123</div>
+      <div class="l">open todos (deduped, aggregator-excluded)</div>
+    </div>
+    <div class="stat verdigris">
+      <div class="n tabular">29</div>
+      <div class="l">done todos</div>
+    </div>
+    <div class="stat ink">
+      <div class="n tabular">32</div>
+      <div class="l">gated on operator action (26% of open)</div>
+    </div>
+    <div class="stat ink">
+      <div class="n tabular">3 / 3</div>
+      <div class="l">child docs read in full this pass</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <h2>Plan-by-plan breakdown</h2>
+      <span class="n">parent_epic: client_isolation_and_governance_master</span>
+    </div>
+    <div class="plan-grid">
+      <div class="plan-card">
+        <div class="kind">Plan</div>
+        <h4>elysium_carveout_stubbed_strategy_service_2026_08_12</h4>
+        <div class="status-row">
+          <span class="pill draft">draft</span>
+          <span>gated on the expansion plan landing first</span>
+        </div>
+        <div class="bar"><span class="done" style="flex:5"></span><span class="open" style="flex:17"></span></div>
+        <div class="counts">5 done &middot; 17 open</div>
+        <p class="summary">
+          Specifies which of the ten disclosed interfaces stay real vs. resolve to static/mock for the Elysium
+          hand-over &mdash; only <code>CARRY_BASIS_PERP</code> and <code>CARRY_STAKED_BASIS</code> carry real
+          decision logic; everything else ships as an identifiable stub.
+        </p>
+        <div class="keyop">
+          <div class="tag">[OPERATOR] P0</div>
+          Full E2E connector + data completeness for the two real archetypes, on the exact &sect;A3 scope, before
+          anything ships.
+        </div>
+      </div>
+      <div class="plan-card">
+        <div class="kind">Plan</div>
+        <h4>elysium_october_delivery_and_code_disclosure_readiness_2026_08_11</h4>
+        <div class="status-row">
+          <span class="pill active">active</span>
+          <span>1000-line hard cap, currently 964L</span>
+        </div>
+        <div class="bar"><span class="done" style="flex:19"></span><span class="open" style="flex:88"></span></div>
+        <div class="counts">19 done &middot; 88 open</div>
+        <p class="summary">
+          Closes the gap between what client-facing documents assert and what the code contains, before the
+          strategy-service repository ships in October &mdash; claims audit, custody/transfer completion, risk
+          thresholds, disclosure review.
+        </p>
+        <div class="keyop">
+          <div class="tag">[OPERATOR] P0</div>
+          Confirm no other client's identifiers, configuration or capital data are present anywhere &mdash;
+          including in git history, not just the working tree.
+        </div>
+      </div>
+      <div class="plan-card issue">
+        <div class="kind">Issue</div>
+        <h4>elysium_sla_v4_support_period_and_stale_dates_2026_08_08</h4>
+        <div class="status-row">
+          <span class="pill open">open</span>
+          <span>contract-term reconciliation</span>
+        </div>
+        <div class="bar"><span class="done" style="flex:5"></span><span class="open" style="flex:18"></span></div>
+        <div class="counts">5 done &middot; 18 open</div>
+        <p class="summary">
+          Contract-term and stale-date defects found reconciling the signed Elysium consulting agreement / SLA
+          against every client-facing summary and artefact.
+        </p>
+        <div class="keyop">
+          <div class="tag">[OPERATOR] P0</div>
+          The published <code>platform-architecture.html</code> still states a 30-day support period, contradicting
+          this issue's own ruling that 60 days is binding.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>On the operator's desk</h2>
+      <span class="n">32 items &middot; 26% of open work</span>
+    </div>
+    <p class="section-note">
+      Every open item this pass found gated on human action &mdash; contract terms, IP/disclosure calls, and
+      commercial sequencing that no source of truth can settle by itself.
+    </p>
+    <div class="desk-wrap">
+      <table class="desk">
+        <thead>
+          <tr>
+            <th>P</th>
+            <th>Doc</th>
+            <th>Item</th>
+            <th>Gated on</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">carveout</td>
+            <td>Full E2E connector + data completeness for the two real archetypes before anything ships.</td>
+            <td class="gate">data-pipeline sign-off</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">carveout</td>
+            <td>Land the lazy-loading (factory) refactor before or alongside the carve-out.</td>
+            <td class="gate">sequencing call</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">october</td>
+            <td>Approve the real risk thresholds for <code>configs/carry_staked_basis.yaml</code> (currently placeholders).</td>
+            <td class="gate">risk approval</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">october</td>
+            <td>Decide whether ClearLoop is modelled explicitly or stays opaque behind Copper.</td>
+            <td class="gate">custody design</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">october</td>
+            <td>CODE completeness only &mdash; define "does everything we need" for strategy-service as a falsifiable checklist.</td>
+            <td class="gate">scope definition</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">october</td>
+            <td>Enumerate what the repository discloses before it goes &mdash; confirm non-carry families shown voluntarily.</td>
+            <td class="gate">disclosure review</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">october</td>
+            <td>Confirm no other client's identifiers, configuration or capital data are present anywhere, including git history.</td>
+            <td class="gate">disclosure review</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">october</td>
+            <td>Decide the transfer mechanism &mdash; snapshot, read-only mirror, or time-boxed grant &mdash; for the repository.</td>
+            <td class="gate">hand-over mechanism</td>
+          </tr>
+          <tr>
+            <td class="p p2">P2</td>
+            <td class="doc">october</td>
+            <td>Decide which documentation accompanies the repository (the venue-integration reference is the sensitive one).</td>
+            <td class="gate">disclosure scope</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">october</td>
+            <td>Reissue or side-letter the SLA to make 30 days binding (client copy currently entitles them to 60).</td>
+            <td class="gate">contract correction</td>
+          </tr>
+          <tr>
+            <td class="p p3">P3</td>
+            <td class="doc">october</td>
+            <td>DO NOT START &mdash; the eleven-package extraction structure (external-trigger only).</td>
+            <td class="gate">CTO request trigger</td>
+          </tr>
+          <tr>
+            <td class="p p3">P3</td>
+            <td class="doc">october</td>
+            <td>DO NOT START &mdash; <code>contracts-platform</code>, the ten-interface seam.</td>
+            <td class="gate">CTO request trigger</td>
+          </tr>
+          <tr>
+            <td class="p p3">P3</td>
+            <td class="doc">october</td>
+            <td>DO NOT START &mdash; local, static and mock implementations behind the ten interfaces.</td>
+            <td class="gate">CTO request trigger</td>
+          </tr>
+          <tr>
+            <td class="p p3">P3</td>
+            <td class="doc">october</td>
+            <td>DO NOT START &mdash; the nine-condition hand-over acceptance test.</td>
+            <td class="gate">CTO request trigger</td>
+          </tr>
+          <tr>
+            <td class="p p3">P3</td>
+            <td class="doc">october</td>
+            <td>DO NOT START &mdash; carve-out estimate stands at ~1 week concentrated for a beta.</td>
+            <td class="gate">CTO request trigger</td>
+          </tr>
+          <tr>
+            <td class="p p2">P2</td>
+            <td class="doc">october</td>
+            <td>Decide the commercial and IP treatment of client-contributed research.</td>
+            <td class="gate">commercial terms</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">october</td>
+            <td>SOL-side staked-basis bundle has ZERO eligible (LST, perp_venue) pairs &mdash; re-admit a venue, accept USDC-buffered, or retire.</td>
+            <td class="gate">venue policy</td>
+          </tr>
+          <tr>
+            <td class="p p2">P2</td>
+            <td class="doc">october</td>
+            <td>Decide whether to scope Jupiter PERPS integration.</td>
+            <td class="gate">venue re-admission</td>
+          </tr>
+          <tr>
+            <td class="p p2">P2</td>
+            <td class="doc">october</td>
+            <td>Confirm the ClearLoop venue set and whether Binance is reachable through Copper at all.</td>
+            <td class="gate">custodian confirmation</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">sla</td>
+            <td>Decide how to correct five stale June/May-2026 dates &mdash; reissue as v5, or side letter.</td>
+            <td class="gate">reissue mechanism</td>
+          </tr>
+          <tr>
+            <td class="p p2">P2</td>
+            <td class="doc">sla</td>
+            <td>Confirm the actual send date of the delay letter (codex says 2026-07-20; attachments say 2026-07-29).</td>
+            <td class="gate">fact confirmation</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">sla</td>
+            <td>Locate the $90k &rarr; $135k variation document, or stop citing $135k.</td>
+            <td class="gate">document production</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">sla</td>
+            <td>Resolve the entity position before any SLA is signed as "Odum Research" (unsigned subcontract, not a novation).</td>
+            <td class="gate">counsel + novation</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">sla</td>
+            <td>Obtain Elysium's Art. 1.4 prior written consent for the Odum Research subcontract.</td>
+            <td class="gate">counterparty consent</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">sla</td>
+            <td>Confirm which contract version was executed &mdash; 1 or 3 March 2025.</td>
+            <td class="gate">counterparty confirmation</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">sla</td>
+            <td>Get a written reading of Art. 6.2's 24-month exclusivity clock.</td>
+            <td class="gate">counsel</td>
+          </tr>
+          <tr>
+            <td class="p p2">P2</td>
+            <td class="doc">sla</td>
+            <td>Raise Art. 4.4's "mimic" wording &mdash; reaches beyond the non-compete as drafted.</td>
+            <td class="gate">counsel / variation</td>
+          </tr>
+          <tr>
+            <td class="p p2">P2</td>
+            <td class="doc">sla</td>
+            <td>Reconcile Annex A Phase One against the carve-out's "excluded IP" list &mdash; positions are in tension.</td>
+            <td class="gate">contract reconciliation</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">sla</td>
+            <td>The carve-out package cannot produce <code>funding_rate_apy_bps</code> &mdash; the strategy requires it and nothing in the package supplies it.</td>
+            <td class="gate">package-scope decision</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">sla</td>
+            <td>Decide the carve-out presentation sequencing (build-now-demo-deliver-on-election is the recommendation).</td>
+            <td class="gate">sequencing call</td>
+          </tr>
+          <tr>
+            <td class="p p1">P1</td>
+            <td class="doc">sla</td>
+            <td>Decide which documentation ships with a carve-out, separately from the code.</td>
+            <td class="gate">disclosure scope</td>
+          </tr>
+          <tr>
+            <td class="p p0">P0</td>
+            <td class="doc">sla</td>
+            <td>Published <code>platform-architecture.html</code> still states 30-day support, contradicting the 60-day ruling on this doc.</td>
+            <td class="gate">contract correction (same as above)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Needs extra scoping</h2>
+      <span class="n">2 items</span>
+    </div>
+    <div class="card-list">
+      <div class="flag-card">
+        <div class="file">plans/epics/client_isolation_and_governance_master.md &sect; P1 &middot; F-25</div>
+        <strong>"Build the FULL unified <code>ClientConfig</code> type" may already be partly obsolete.</strong>
+        <p>
+          Checked this pass: <code>unified_api_contracts/internal/reporting/client_config.py::ClientConfig</code>
+          (a <code>TypedDict</code> carrying secret names, fees, pool flags) and
+          <code>unified_api_contracts/internal/domain/strategy_service/client_config.py::ClientConfigRegistry</code>
+          (per-client strategy-param overrides) both already exist &mdash; but neither is the single SSOT F-25 asks
+          for (KMS refs, venue-creds shape, isolation policy, portfolio/wallet topology). Not enough to flip the
+          todo; enough to warrant re-scoping it against what's already there rather than building fresh.
+        </p>
+      </div>
+      <div class="flag-card">
+        <div class="file">plans/epics/client_isolation_and_governance_master.md &sect; "Deferred from &hellip;2026_05_20"</div>
+        <strong>Two named follow-up docs from the 2026-05-22 archival were never created.</strong>
+        <p>
+          <code>auto_shard_supervisor_signal_2026_05_28.md</code> (target 2026-05-28) and
+          <code>subaccount_transfers_phase_2_2026_06_01.md</code> confirmed absent from the corpus. Not a
+          reconciliation defect &mdash; both checkboxes correctly read <code>[ ]</code> &mdash; but the work is
+          roughly three months past its named target with no owning doc; worth a decision on whether it's still
+          wanted before it rots further.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Closed out this pass</h2>
+      <span class="n">4 fixes &middot; working tree, unshipped</span>
+    </div>
+    <p class="section-note">
+      Applied directly under trust mode &mdash; mechanical, evidence-backed, no codex/CLAUDE.md edits. Left in the
+      working tree; this session does not ship (shared-checkout contention).
+    </p>
+    <div class="card-list">
+      <div class="closed-card">
+        <div class="file">plans/epics/client_isolation_and_governance_master.md &middot; frontmatter <code>related:</code></div>
+        <strong>Repointed 2 dangling refs.</strong>
+        <p>
+          Both entries pointed at <code>../active/&hellip;</code> paths for docs since archived
+          (<code>per_client_isolation_and_venue_fanout_topology_2026_05_20.md</code>,
+          <code>global_ledger_pnl_attribution_discovery_2026_05_21.md</code>) &mdash; confirmed via <code>ls</code>
+          against <code>plans/archive/2026_05/</code>, both exist there. Converted to the required leading-slash
+          <code>/plans/&hellip;</code> format in the same edit; <code>check_reference_paths.py --only</code> now
+          returns 0 violations.
+        </p>
+      </div>
+      <div class="closed-card">
+        <div class="file">plans/epics/client_isolation_and_governance_master.md &middot; &sect; P1 &middot; uac_coverage_90pct</div>
+        <strong>Corrected a stale "near-complete" status claim.</strong>
+        <p>
+          Body read "near-complete&hellip; only the final confirm-and-flip todo remains open." The plan is actually
+          <code>status: superseded</code>, fully archived, 0 open / 12 done &mdash; a later untracked pass raised the
+          UAC coverage gate again (90&rarr;94, 2026-06-20), reaching 94.62%. Verified live against
+          <code>quality-gates.md</code> lines 505-506 and <code>pyproject.toml</code>'s <code>fail_under = 94</code>.
+        </p>
+      </div>
+      <div class="closed-card">
+        <div class="file">plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md &middot; &sect;D</div>
+        <strong>Line-1-completeness: front-loaded a severed hard constraint.</strong>
+        <p>
+          "&hellip;falsifiable checklist &mdash; CODE" was where the bold span broke across the physical line, with
+          "completeness only" &mdash; the actual scope-limiting word &mdash; stranded on line 2. Reworded to
+          "CODE completeness only &mdash; define &hellip;" so the constraint reads on line 1 alone.
+        </p>
+      </div>
+      <div class="closed-card">
+        <div class="file">plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md &middot; &sect;E</div>
+        <strong>Line-1-completeness: same class, on a disclosure-safety check.</strong>
+        <p>
+          "&hellip;are present &mdash; including in" broke the line with "git history" &mdash; the entire point of
+          the check &mdash; stranded on line 2. Reworded so "including in git history, not just the working tree"
+          reads on line 1.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Parallel-tab flow for what's left</h2>
+      <span class="n">3 lanes &middot; file-bounded</span>
+    </div>
+    <div class="lane-note">
+      Full 5-lane parallelism is not achievable here: 88 of the ~121 remaining non-operator-blocked items live in
+      one 964-line file. Lanes below are one per document &mdash; the real safe boundary &mdash; not five
+      independently-workable slices.
+    </div>
+    <div class="lanes">
+      <div class="lane">
+        <div class="lane-h"><span class="seal"></span>Lane 1 &mdash; carve-out spec</div>
+        <div class="file">plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md</div>
+        <ul>
+          <li>Write the per-interface resolution table (&sect;A)</li>
+          <li>Specify <code>UniverseService</code> / <code>ConfigVersionService</code> as frozen</li>
+          <li>Define + apply one stub shape across non-carved archetypes (&sect;A2)</li>
+        </ul>
+      </div>
+      <div class="lane">
+        <div class="lane-h"><span class="seal"></span>Lane 2 &mdash; October delivery</div>
+        <div class="file">plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md</div>
+        <ul>
+          <li>Verify capital-budget enforcement, or build it (&sect;B)</li>
+          <li>Replace stub <code>TransferHandler</code> implementations (&sect;C)</li>
+          <li>H.2/H.11 custody &amp; multi-hop transfer build set</li>
+        </ul>
+      </div>
+      <div class="lane">
+        <div class="lane-h"><span class="seal"></span>Lane 3 &mdash; SLA reconciliation</div>
+        <div class="file">plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md</div>
+        <ul>
+          <li>Almost entirely [OPERATOR] &mdash; see the desk table above</li>
+          <li>[AGENT] P3: correct the recorded "WhatsApp massager" typo only on reissue</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Dispatch prompts</h2>
+      <span class="n">one per lane</span>
+    </div>
+    <div class="prompt">
+      <div class="prompt-h"><span>Lane 1 &mdash; carve-out spec</span><span>strategy-service</span></div>
+      <pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your
+first tool call.
+
+Task: plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md is status:draft, gated on
+strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md landing first -- confirm that plan's status
+before starting any work here. Once unblocked, work section A's open todos (per-interface resolution table,
+UniverseService/ConfigVersionService freeze specs) and section A2 (uniform stub shape for non-carved archetypes).
+Every claim must be verified against source, not asserted -- this doc's own history shows two same-day
+self-corrections on exactly this failure mode. Implement + verify quality-gates.sh genuinely green in
+strategy-service, then STOP -- do not ship (quickmerge/commit is the lead session's job in this pass).</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-h"><span>Lane 2 &mdash; October delivery</span><span>execution-service, strategy-service, UAC</span></div>
+      <pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your
+first tool call.
+
+Task: plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md, section B (verify
+capital-budget enforcement or build it in allocation_sizer.py -- no new component) and section C (replace the stub
+TransferHandler implementations in execution-service/execution_service/transfer_coordinator.py -- a stub returning
+success on a funds-movement path reports money moved that did not move, the highest-risk item in this plan). Do
+NOT touch section D/E/G (operator-gated) or H.11's build set (explicitly deferred to the code phase, not yet
+started). Fix within the existing handler protocol per this plan's own hard constraint: no new abstraction.
+Implement + verify quality-gates.sh genuinely green, then STOP -- do not ship.</pre>
+    </div>
+    <div class="prompt">
+      <div class="prompt-h"><span>Lane 3 &mdash; SLA reconciliation</span><span>docs only, unified-trading-pm</span></div>
+      <pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your
+first tool call.
+
+Task: plans/active/issues/elysium_sla_v4_support_period_and_stale_dates_2026_08_08.md is almost entirely
+[OPERATOR]-gated (see the docket's "on the operator's desk" table) -- there is no bounded AO-eligible work to
+dispatch here beyond the one [AGENT] P3 typo-correction todo, which is explicitly deferred to "any future reissue
+only." Do not attempt to resolve any [OPERATOR] item unilaterally. If dispatched anyway, confirm this and report
+back rather than guessing at a contract-term ruling.</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <h2>Notes &amp; methodology</h2>
+    </div>
+    <div class="notes">
+      <div class="n-row">
+        Open/done counts and the operator-item list are sourced verbatim from
+        <code>scripts/plan-hygiene/epic_report_data.py --epic client_isolation_and_governance_master --json</code>,
+        which scopes <code>/open-task-count</code>'s exact dedup methodology (aggregator-plan exclusion, identical
+        open/done checkbox regexes) to this epic's <code>parent_epic</code>-matched children.
+      </div>
+      <div class="n-row">
+        Corpus-wide baseline, not epic-specific &mdash; not treated as findings this pass: the epic frontmatter's
+        <code>assigned_vm: vm-cross-cutting</code> and <code>locked_by: live-defi-rollout</code> are legacy
+        conventions shared by essentially every epic doc in <code>plans/epics/</code>, predating the 2026-06-27
+        single-VM dispatch architecture. Fixing them is a cross-epic ruling, out of this single-epic-scoped run.
+      </div>
+      <div class="n-row">
+        Cross-client-transfer language was checked specifically per this run's brief: all 6 hits of "cross-client"
+        across the 3 child docs are compliant usages (explicitly stating cross-client fund movement is never in
+        scope, or citing <code>CrossClientTransferForbiddenError</code> as structurally enforced). Zero violations
+        found &mdash; genuinely checked, not a default pass.
+      </div>
+      <div class="n-row">
+        <code>/na-eligibility-audit</code> independently re-verified both plan children as <code>KEEP-NA valid</code>
+        as recently as 2026-08-17/18 (content-hash reconciliation, no reclassify candidates) &mdash; this pass did
+        not re-litigate that separate question, per this skill's disjoint remit from that sibling skill.
+      </div>
+      <div class="n-row">
+        Phase -1 checked for prior <code>plan_reconciler_findings_*.md</code> docs naming this epic: none found
+        (only the SLA issue doc itself, which is a child, not a findings doc) &mdash; this is this epic's first
+        <code>/plan-reconcile</code>-scoped pass.
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Generated 2026-08-19 &middot; /plan-reconcile client_isolation_and_governance_master</span>
+    <span>plans/epics/client_isolation_and_governance_master.md</span>
+  </footer>
+</div>

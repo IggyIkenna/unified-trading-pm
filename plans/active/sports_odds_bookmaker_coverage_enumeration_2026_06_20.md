@@ -23,7 +23,10 @@ related:
 created: "2026-06-12"
 parent_epic: sports_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only # corrected 2026-08-19 (/plan-reconcile) -- was orchestrator-agent, mismatched with
+# assigned_vm: NA (task_template.md §1's pairing table: NA -> local-only, planning -> orchestrator-agent). This doc has
+# been repeatedly reaffirmed KEEP-NA by 5+ audit passes (2026-07-30 through 2026-08-17) -- assigned_vm: NA is the
+# settled value, execution_scope was the stale/mismatched field.
 priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 3

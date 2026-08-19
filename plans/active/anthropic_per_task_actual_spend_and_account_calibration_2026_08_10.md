@@ -114,10 +114,14 @@ This resolves the contamination problem the plan was working around, and it chan
 | **Ikenna — sub A** (`ikennaigboaka@…`) | **pro**   | $20              | **$24**                   | **Wednesday 13:00** |
 | **Ikenna — sub E** (`odum3default@…`)  | **max20** | $200             | **$240**                  | **Wednesday 22:00** |
 
-**CORRECTED 2026-08-12 (/plan-reconcile, operator-confirmed)**: this row's `odum3default` label was correct; the
-calibration tables below (lines ~561, 639, 686) previously labeled the same account `sub-e-odum2default`, colliding with
-`sub-f`'s distinct `odum2default` suffix — fixed to `sub-e-odum3default` throughout, matching the sequential
-odum1default/odum2default/odum3default pattern already used for sub-d/sub-f/sub-e elsewhere in this doc.
+**CORRECTED 2026-08-12 (/plan-reconcile, operator-confirmed), then RE-CORRECTED 2026-08-19 (/plan-reconcile
+orchestrator_master)**: the 2026-08-12 fix conflated this account's EMAIL suffix (`odum3default@...`, genuinely
+correct) with its SLUG id and renamed every `sub-e-odum2default` occurrence to `sub-e-odum3default` — but the live
+`accounts.json`/`state.db` slug is `sub-e-odum2default` (email `odum3default@gmail.com`), independently confirmed by
+`claude_anthropic_flat_rate_billing_calibration_2026_08_12.md` todo 1 (DONE 2026-08-13, queried directly against
+accounts.json). Every `sub-e-odum3default` occurrence in this doc has been reverted to `sub-e-odum2default` to match
+the live id; the email/slug suffix mismatch (email says `odum3default`, slug says `odum2default`) is a real,
+confirmed-cosmetic quirk of the live system, not a doc error to "fix" again.
 
 Every OTHER Claude account is paused, so the AO pool is exactly DeepSeek + these two. Three consequences:
 
@@ -245,7 +249,7 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       4017 backend + 387 dashboard tests.
 - [ ] [DATA] P0. **Verify the reservation actually held over the first post-reset window — the operator has RESERVED the
       accounts, so what remains is measurement, not a decision.** Operator ruling 2026-08-10 (evening, see the ruling
-      section above): `sub-a-ikenna` (pro) and `sub-e-odum3default` (max20) are dedicated to agent-orchestrator and
+      section above): `sub-a-ikenna` (pro) and `sub-e-odum2default` (max20) are dedicated to agent-orchestrator and
       every other Claude account is paused, so the AO pool is exactly DeepSeek + those two. This closes the
       contamination class the plan was working around — the earlier `sub-d-odum1default` suggestion is SUPERSEDED, and
       it was reasoned from a false premise anyway (the absent `~/.claude-accounts/*.env` proves nothing, since env files
@@ -261,7 +265,7 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
       available, and an offline check confirms the per-task costs sum to the window's subscription cost within rounding.
 - [x] ✅ CANCELLED [DATA] P2. **Laptop-to-VM usage export — not needed; the reservation was adopted instead.** This was
       the explicit fallback for todo 11 ("either todo 11 is adopted and this is CANCELLED"), and todo 11 was adopted on
-      2026-08-10: `sub-a-ikenna` + `sub-e-odum3default` are AO-exclusive, so no cross-machine channel has to exist.
+      2026-08-10: `sub-a-ikenna` + `sub-e-odum2default` are AO-exclusive, so no cross-machine channel has to exist.
       Cancelled on the merits, not deferred — the export was strictly worse by design, since it introduces a data path
       that fails SILENTLY whenever the laptop is off, and a silently-stale denominator is exactly the failure this plan
       exists to eliminate. Re-open only if the reservation is ever withdrawn.
@@ -333,7 +337,7 @@ they serve as a cross-check, and a mismatch between the two is itself a finding 
 - [x] ✅ CANCELLED [BACKEND] P0. **Fleet-aggregate calibration — no longer needed; the operator's reservation removed
       the problem it existed to route around.** This was a workaround for one specific defect: laptop consumption
       landing on an unknown account, making per-account denominators untrustworthy, with no recoverable login history to
-      repair them. As of 2026-08-10 evening `sub-a-ikenna` and `sub-e-odum3default` are AO-exclusive and every other
+      repair them. As of 2026-08-10 evening `sub-a-ikenna` and `sub-e-odum2default` are AO-exclusive and every other
       Claude account is paused, so a per-account denominator is exact BY CONSTRUCTION for any window after the Wednesday
       resets — no aggregation needed. Cancelled on the merits rather than deferred: summing across accounts would now
       DESTROY the very signal we want, since the whole point of running both a Pro and a max20 account is to compare
@@ -587,11 +591,13 @@ meter, promo rates (Sonnet-5 promo through 2026-08-31).
 | sub-f-odum2default | max20 | 0->99%   |  $2,664.85 | $45.16            | **60x**                                           |
 | sub-g-alpavolt     | max20 | 5->99%   |    $469.13 | $4.52 (5h-bound, stale — reset since) | 11x                    |
 
-**Naming discrepancy (flagged, not resolved here)**: this doc's tables use `sub-e-odum3default`; the LIVE
-`accounts.json`/`state.db` id for that same account is `sub-e-odum2default` (confirmed via direct query). The
-2026-08-12 "fixed to sub-e-odum3default throughout" note fixed the doc's internal consistency, not a match to the
-live id — every prior `sub-e-odum3default` row is this account under the doc's own wrong name. Human call needed:
-fix the doc's id, or the live account was genuinely renamed after 08-12.
+**Naming discrepancy — RESOLVED 2026-08-19 (/plan-reconcile orchestrator_master)**: this doc's tables previously used
+`sub-e-odum3default`; the LIVE `accounts.json`/`state.db` id for that same account is `sub-e-odum2default`
+(independently confirmed by `claude_anthropic_flat_rate_billing_calibration_2026_08_12.md` todo 1, DONE 2026-08-13,
+direct accounts.json query). No human call needed and no account rename occurred — the 2026-08-12 "fixed to
+sub-e-odum3default throughout" note (see line ~117) itself introduced the error by conflating the email suffix
+(`odum3default@...`, genuinely correct) with the slug id. Every occurrence in this doc has been reverted to
+`sub-e-odum2default` to match the live id.
 
 **`sub-g-alpavolt`** is live but absent from every prior table (the 08-10 roster only covers a-f) — a 6th max20
 account added after 2026-08-10. Recorded for completeness, not folded into the "5 max20 accounts" framing elsewhere
@@ -639,7 +645,7 @@ Dispatched todo 11 ("Verify the reservation actually held over the first post-re
 blockers, neither self-fixable from here:
 
 1. **Live VM data is unreachable from this identity.** Attempted `calibrate_account_value.py --account sub-a-ikenna`
-   and `--account sub-e-odum3default` (since 2026-08-12, the first Wednesday reset after the reservation) via a direct
+   and `--account sub-e-odum2default` (since 2026-08-12, the first Wednesday reset after the reservation) via a direct
    `aws ssm send-command` against the central orchestrator VM — `AccessDeniedException` on `ssm:SendCommand` for
    `ikenna-worker`, the same fleet-wide gap already tracked (13 independent confirmations now) in
    `/plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md`. Also checked the authed
@@ -669,7 +675,7 @@ to this session — this slot runs directly on the orchestrator VM (same as the 
 entry above), so `agent-orchestrator/data/state/state.db` and `account_usage_history` are readable with no SSM hop.
 **But blocker #2 is unchanged and is the one that actually gates this todo**: the done-when requires todo 21's
 laptop-side login sampler (`~/.claude/laptop_login_identity_log.jsonl`) to show zero laptop sessions on
-`sub-a-ikenna`/`sub-e-odum3default` for the first post-reset window. That file lives on the OPERATOR'S LAPTOP, not
+`sub-a-ikenna`/`sub-e-odum2default` for the first post-reset window. That file lives on the OPERATOR'S LAPTOP, not
 on this VM, under any identity — grepped this whole plan file plus every `plans/` doc for
 `laptop_login_identity_log` and found only todo 21's own description (script shipped 2026-08-16); no run output has
 been posted anywhere in the corpus. `account_usage_history` alone still cannot distinguish an AO turn from a laptop

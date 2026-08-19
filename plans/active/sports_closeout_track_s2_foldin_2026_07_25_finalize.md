@@ -60,8 +60,7 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Flip `sports_consolidated_closeout_2026_07_19.md`'s Track S2 "MOVED 2026-07-25" pointer to a ✅
-      DONE (or partial-DONE) line**, citing the Track S2 plan's shipped commits for every completed item — verify each
+- [ ] [REVIEW] P1. **Flip `sports_consolidated_closeout_2026_07_19.md`'s Track S2 "MOVED 2026-07-25" pointer to a ✅ DONE (or partial-DONE) line**, citing the Track S2 plan's shipped commits for every completed item — verify each
       cited commit exists (`git log`, not the source plan's own claim alone). If any `BLOCKED-PREREQUISITES`/
       `[OPERATOR]` item is still unresolved when this finalize plan runs, the parent's pointer stays partial and must
       name exactly which items remain open. **Done when**: the parent's Track S2 pointer line accurately reflects done

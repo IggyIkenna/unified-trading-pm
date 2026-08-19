@@ -79,8 +79,8 @@ external_references:
 
 ## Report
 
-Live HTML ledger: https://claude.ai/code/artifact/e441dbdd-4447-4416-8f09-520e2a1e9cd5 (generated 2026-08-18,
-`/plan-reconcile ao`)
+Live HTML ledger: https://claude.ai/code/artifact/e441dbdd-4447-4416-8f09-520e2a1e9cd5 (generated 2026-08-19,
+`/plan-reconcile orchestrator_master` — first epic-scoped pass, distinct from the prior tranche-scoped `ao` runs)
 
 > **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
 > [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose

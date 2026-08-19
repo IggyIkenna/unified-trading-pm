@@ -30,7 +30,6 @@ related:
     ../archive/2026_05/physical_pager_research_and_webhook_prototype_2026_05_23.md,
     ../archive/2026_05/incident_runbooks_and_evidence_store_2026_05_23.md,
     ../archive/2026_05/deployment_ui_safety_ops_tab_2026_05_23.md,
-    /plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
     ../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
     /plans/epics/escalation_and_disaster_recovery_master.md,
   ]
@@ -389,6 +388,12 @@ fully-scoped, AO-dispatchable work — un-paused 2026-07-28 (operator gated-deci
   provenance.
 
 ## Archived plans
+
+### [`deployment_ui_observability_ux_tracker_2026_07_17`](../archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md)
+
+**status**: ✅ ARCHIVED 2026-07-30 — operator-dictated tracker for 6 deployment-ui observability/UX workstreams
+(cost/day accuracy, date-range filter + search, VM log viewer, alerts ingestion + page rebuild, durable
+resource-metrics timeline, Fleet-tab consolidation), split into 7 child plans, all shipped + archived 2026-07-20→28.
 
 ### [`data_pipeline_alerts_batch_remediation_closeout_2026_07_24`](../archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md)
 

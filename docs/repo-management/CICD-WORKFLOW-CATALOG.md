@@ -17,7 +17,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `cloud-build-failure-watcher` | schedule(*/30 * * * *) · manual | — | Slack | escalate-to-orchestrator |
 | `cloud-build-router` | dispatch:qg-passed | `cloud-build-router-<var>` | Firestore, Slack | change-freeze-check, escalate-to-orchestrator* |
 | `deterministic-promotion-conflict-resolve` | dispatch:promotion-conflict · manual | `det-resolve-<var>-<var>` | Slack | conflict-resolution-agent* |
-| `ldr-to-main-promote` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote` | manifest, →LDR, opens-PR, merges-PR, Slack | escalate-to-orchestrator* |
+| `ldr-to-main-promote` | schedule(*/30 * * * *) · manual | `ldr-to-main-promote` | manifest, →LDR, opens-PR, merges-PR, Slack | escalate-to-orchestrator* |
 | `ldr-to-staging-promote` | manual | `ldr-to-staging-promote` | manifest, opens-PR, merges-PR, Firestore, Slack | deterministic-promotion-conflict-resolve*, quality-gates-v2 |
 | `main-backmerge-to-ldr` | push[main] · manual | `backmerge-to-ldr` | read-only | — |
 | `publish-package` | dispatch:publish-package | `publish-package-<var>` | manifest→main, Slack | — |
@@ -59,7 +59,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `ci-status-update` | dispatch:ci-status-update | — | manifest, Firestore, Slack | — |
 | `ldr-ci-monitor` | schedule(0 * * * *) · manual | — | manifest, Slack | escalate-to-orchestrator |
 | `removed-symbols-workspace-sweep` | schedule(0 3 * * *) · manual | `<wf>-<ref>` cancel | Slack | — |
-| `ruleset-drift-alert` | schedule(0 6 * * 1) · manual | — | Slack | — |
+| `ruleset-drift-alert` | schedule(0 6 * * 1) · manual | — | Firestore, Slack | — |
 | `secret-health-check` | schedule(0 6 * * 1) · manual | `<wf>-<ref>` cancel | Slack | — |
 
 ## Agents, orchestration & alerts (12)
@@ -92,7 +92,7 @@ Columns: **Triggers** (schedule / push / PR / `after:` run / `dispatch:` event /
 | `glue-pool-starvation-monitor` | manual | `glue-pool-starvation-monitor` cancel | Slack | escalate-to-orchestrator* |
 | `glue-runner-health-monitor` | manual | `glue-runner-health-monitor` cancel | Slack | — |
 | `ldr-docs-gate` | schedule(0 * * * *) · manual | `ldr-docs-gate` | Slack | escalate-to-orchestrator |
-| `ldr-to-main-promote-fleet` | schedule(*/15 * * * *) · manual | `ldr-to-main-promote-fleet` | merges-PR, Firestore, Slack | — |
+| `ldr-to-main-promote-fleet` | schedule(*/30 * * * *) · manual | `ldr-to-main-promote-fleet` | merges-PR, Firestore, Slack | — |
 | `promote-fleet-startup-failure-monitor` | schedule(*/15 * * * *) · manual | `promote-fleet-startup-failure-monitor` cancel | Slack | — |
 | `reconcile-staging-versions` | manual | `manifest-staging-versions-reconcile` | manifest | — |
 | `sit-gate-stuck-detector` | schedule(*/30 * * * *) · manual | `sit-gate-stuck-detector` cancel | Slack | escalate-to-orchestrator* |

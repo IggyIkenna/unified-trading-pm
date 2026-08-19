@@ -858,6 +858,27 @@
   .sec-head .ev {
     align-self: center;
   }
+
+  /* Owner mark — the THIRD mark, alongside status (what the system does) and evidence
+     tier (how we know). Names who closes the gap. Solid neutral-filled chip with a plain
+     hairline border — no colour border, no dash, no wash — so it reads as metadata, not
+     a fourth status colour, and is never confused with .st or .ev at a glance. */
+  .own {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    color: var(--ink-2);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    cursor: help;
+  }
+  .sec-head .own {
+    align-self: center;
+  }
 </style>
 
 <div class="shell">
@@ -894,6 +915,13 @@
       >
       <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
       <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
+    </div>
+    <div class="legend">
+      <span
+        ><b class="own" title="Example — hover any owner mark for the full reference">owner: W5</b> the workstream,
+        plan or epic that closes this gap — hover for the full citation; omitted once status reaches
+        <b class="st st-live">live</b>, because a live claim has no open gap to own</span
+      >
     </div>
   </header>
 
@@ -1046,6 +1074,7 @@
       <span class="num">01</span>
       <h2>The platform, end to end</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="plans/epics/system_readiness_master.md — the epic closing every readiness gap this overview describes">owner: system_readiness_master</b>
     </div>
     <p class="lede">
       Five layers. You can take any one of them without the others — the contracts between them are the same contracts
@@ -1188,6 +1217,7 @@
       <span class="num">02</span>
       <h2>How you connect</h2>
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b class="own" title="plans/epics/execution_master.md — non-TRADE instruction actions (swap/lend/borrow/stake/...) return HTTP 501; strategy-service has no counterparty-facing surface yet">owner: execution_master</b>
     </div>
     <p class="lede">
       You call the same contracts our services call. There is no separate "external" API with reduced fidelity, because
@@ -1299,6 +1329,7 @@
       <span class="num">03</span>
       <h2>Contracts and reference data</h2>
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b class="own" title="plans/epics/instruments_master.md — reference-data completeness for the canonical instrument/venue registry">owner: instruments_master</b>
     </div>
     <p class="lede">
       One definition of what an instrument is, shared by every layer above it. This is the layer that makes the others
@@ -1427,6 +1458,7 @@
       <span class="num">04</span>
       <h2>The coverage model</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W2: Data pipeline integrity; W3: Granularity as a first-class dimension">owner: W2, W3</b>
     </div>
     <p class="lede">
       The most important section in this document. How we state what we have, and — more importantly — how we state what
@@ -1538,6 +1570,7 @@
       <span class="num">05</span>
       <h2>Coverage by asset group</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W2: Data pipeline integrity; W3: Granularity as a first-class dimension">owner: W2, W3</b>
     </div>
     <p class="lede">
       The full hierarchy, collapsed. Open only the asset group you care about; inside it, only the venue; inside that,
@@ -1713,6 +1746,7 @@
       <span class="num">06</span>
       <h2>Getting the data</h2>
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b class="own" title="system_readiness_master.md — W1: Add a LIVE-feed leg to market_tick_data (currently batch-only)">owner: W1</b>
     </div>
     <p class="lede">
       Two modes, one availability model: ask what exists, then take it as a daily batch file or as a live stream.
@@ -1758,6 +1792,7 @@
       <span class="num">07</span>
       <h2>Shard schemas</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W2: Data pipeline integrity (canonical shard schemas for every data type)">owner: W2</b>
     </div>
     <p class="lede">
       Exactly what is in each file, per data type. Collapsed by data type so you can read only the ones you would
@@ -1805,6 +1840,7 @@
       <span class="num">08</span>
       <h2>The instruction contract</h2>
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b class="own" title="system_readiness_master.md — W11: Order lifecycle and execution state">owner: W11</b>
     </div>
     <p class="lede">
       One envelope for every action, on every asset class. Swap, lend, transfer, stake, withdraw, back, lay — the same
@@ -1883,6 +1919,29 @@
         A caller that can express a buy can express a lay, or a stake, without new plumbing — only a different action on
         the same envelope.
       </p>
+      <h3>The lifecycle, once submitted</h3>
+      <p>
+        The action vocabulary above is what you can ask for. What happens after is a separate, target-state contract:
+        every incremental step — create, update, cancel, amend — is stored in the order table in a normalised format,
+        with the exchange reason derived from the request, response and error codes.
+        <b class="st st-plan">planned</b> — not built today.
+      </p>
+      <div class="keypoints">
+        <div>
+          <b>In-flight versus confirmed</b
+          ><span
+            >A cancel attempted before confirmation and one issued after are different events with different outcomes,
+            and the record must be able to tell them apart</span
+          >
+        </div>
+        <div>
+          <b>Restart recovery</b
+          ><span
+            >Execution-service restarting must not lose in-flight order state — a restart that does is an incident
+            generator, not a maintenance event</span
+          >
+        </div>
+      </div>
     </details>
   </section>
 
@@ -1891,6 +1950,7 @@
       <span class="num">09</span>
       <h2>Archetypes and registry scope</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard">owner: W6</b>
     </div>
     <p class="lede">
       A strategy is an archetype plus configuration. Archetypes declare what they need through registry contracts, and
@@ -1938,6 +1998,7 @@
       <span class="num">10</span>
       <h2>The strategy wizard</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard">owner: W6</b>
     </div>
     <p class="lede">
       Configuration is the real surface area of a strategy platform. The wizard generates it — validated against the
@@ -2025,6 +2086,7 @@
       <span class="num">11</span>
       <h2>Configuration surface</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard">owner: W6</b>
     </div>
     <p class="lede">
       Every service declares its configuration in one place, with a schema, hot-reloadable and centrally stored. What a
@@ -2055,6 +2117,7 @@
       <span class="num">12</span>
       <h2>Execution: routing and algos</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="plans/epics/execution_master.md — algo selection, routing and chained-sequence completeness">owner: execution_master</b>
     </div>
     <p class="lede">
       Execution decides <em>how</em>. It selects an algorithm from policy, routes to a venue adaptor, and can chain
@@ -2087,7 +2150,10 @@
               </tr>
               <tr>
                 <td><b>2. Algorithms</b></td>
-                <td>Policy-selected execution algos rather than straight market orders</td>
+                <td>
+                  Policy-selected execution algos — <code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code> — rather
+                  than straight market orders
+                </td>
                 <td>You want execution quality without building it</td>
               </tr>
               <tr>
@@ -2104,6 +2170,11 @@
         Algorithms are chosen by a versioned, content-hashed policy table gated on the instruction's action and urgency
         — not hard-coded per strategy. Changing execution behaviour is a policy change, and because policies are
         versioned, any fill can be traced to the exact policy that governed it.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly: <code>execution-service/execution_service/algorithms/registry.py</code> maps algorithm IDs
+        (<code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code>) to their execution and config classes; a straight
+        market order is the default when no policy names an algo.
       </p>
       <h3>Chained sequences</h3>
       <p>
@@ -2132,7 +2203,13 @@
     <div class="sec-head">
       <span class="num">13</span>
       <h2>Treasury, wallets, transfers</h2>
-      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="system_readiness_master.md — W5: Venue registry completeness (collateral, cross-margin, transfer eligibility, manual-trade fallback)"
+        >owner: W5</b
+      >
     </div>
     <p class="lede">
       Both halves are available: querying balances, and instructing movement. They are separable, and most integrations
@@ -2149,7 +2226,44 @@
       <h3>Moving</h3>
       <p>
         Transfers are expressed as instructions on the same envelope as trades, and route to a rail appropriate to the
-        movement — exchange-internal, on-chain, or custody.
+        movement — exchange-internal, on-chain, or custody. Rail by rail, today:
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Transfer rails</span><span class="note">Wired versus specified</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Rail</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SUBACCOUNT_MOVE</code></td>
+                <td>The only rail with a registered, auto-wired handler today</td>
+              </tr>
+              <tr>
+                <td><code>CEX_WITHDRAW</code></td>
+                <td>Specified, marked <code>NOT WIRED</code> in source</td>
+              </tr>
+              <tr>
+                <td><code>REBALANCE</code></td>
+                <td>Enum-only — no handler</td>
+              </tr>
+              <tr>
+                <td>Gas top-up / floor</td>
+                <td>No implementation anywhere in the codebase</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
+        <code>TransferCoordinator</code> itself is never instantiated in production code today — every rail above is
+        target-state until it is, regardless of which handlers exist.
       </p>
       <div class="callout">
         <span class="tag">A guarantee worth stating plainly</span>
@@ -2170,6 +2284,58 @@
         Signing is pluggable — local keys, cloud-KMS-encrypted keys, or MPC custody providers — declared per deployment
         rather than assumed. Which surface is in use is part of the audit record.
       </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Custody providers</span><span class="note">Shipped versus stubbed</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>CLOUD_KMS_ENCRYPTED</code></td>
+                <td>Shipped — HSM-backed CMK envelope encryption</td>
+              </tr>
+              <tr>
+                <td><code>COPPER_MPC</code></td>
+                <td>
+                  Production MPC provider for every DeFi chain and non-Binance CeFi, per-wallet flip on credentials
+                </td>
+              </tr>
+              <tr>
+                <td>Ceffu</td>
+                <td>
+                  A custody provider, but not a distinct signing surface — its signing routes <em>via Copper</em>; the
+                  Ceffu integration itself is a stub pending its API spec
+                </td>
+              </tr>
+              <tr>
+                <td><code>FIREBLOCKS_MPC</code></td>
+                <td>Enum member retained for future flexibility — out of scope for the current custody stack</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code> and
+        <code>execution-service/execution_service/transfer_coordinator.py</code>.
+      </p>
+      <div class="callout">
+        <span class="tag">What's genuinely absent — custody and transfer eligibility, per venue</span>
+        <p>
+          <b class="ev ev-assumed">~ assumed</b>. No field, in any registry, declares which venues are Copper-eligible,
+          Ceffu-eligible, manual-transfer-eligible or automated-prime-broker-eligible. A workspace-wide search
+          confirmed this is a genuine gap, not an unread field — the fix is a new registry field, not a query
+          rewrite. Not a per-venue matrix here for the same reason <a href="#s19">§19</a> declines to invent one.
+        </p>
+      </div>
     </details>
   </section>
 
@@ -2178,6 +2344,7 @@
       <span class="num">14</span>
       <h2>Readiness: batch, paper, live</h2>
       <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b class="own" title="system_readiness_master.md — W1: Readiness derivation and the state dump">owner: W1</b>
     </div>
     <p class="lede">
       Three modes, stated per venue rather than as a platform-wide claim. What separates them is which accounts exist,
@@ -2235,6 +2402,17 @@
         The same code path serves batch and live, and paper is compared against a batch re-run of the same window. If
         they disagree, that is a defect to fix rather than an expected difference — which is what makes a backtest
         result meaningful as a forward-looking claim.
+      </p>
+      <p>
+        The mechanism is one transport facade, not a parallel implementation per mode. MTDS, MDPS, features, strategy
+        and execution all publish and read through the UTL <code>EventTransport</code> facade
+        (<code>unified_trading_library.streaming.event_facade</code>): <code>InMemoryTransport</code> backs paper and
+        colocated runs, Pub/Sub backs live — same call sites, same schemas, a different transport underneath. That is
+        what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against <code>unified_trading_library/streaming/event_facade.py</code>'s
+        <code>get_transport()</code> dispatch.
       </p>
       <h3>Measured readiness — 2026-08-18</h3>
       <div class="plate">
@@ -2358,6 +2536,7 @@
       <span class="num">15</span>
       <h2>Security and the audit record</h2>
       <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W15: Security (audit of every venue adaptor for vulnerabilities, especially DeFi)">owner: W15</b>
     </div>
     <p class="lede">
       Treated as a prerequisite of delivery rather than a later hardening pass, because it is a control layer this has
@@ -2406,6 +2585,7 @@
       <span class="num">16</span>
       <h2>Integration path</h2>
       <b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b>
+      <b class="own" title="system_readiness_master.md — W14: Exchange contract fidelity (test accounts with credentials per venue)">owner: W14</b>
     </div>
     <p class="lede">
       What connecting actually involves, in the order it would happen, and what is needed from each side.
@@ -2474,6 +2654,7 @@
       <span class="num">17</span>
       <h2>Measured versus projected</h2>
       <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W21: Presentation artefacts (every artefact regenerates from measurement, not prose)">owner: W21</b>
     </div>
     <p class="lede">
       A single place listing every figure in this document, how it was obtained, and when. If a number is not here, it
@@ -2553,6 +2734,7 @@
       <span class="num">18</span>
       <h2>Fees and gas, by component</h2>
       <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W17: Fees and gas">owner: W17</b>
     </div>
     <p class="lede">
       A cost that is not broken into its components cannot be reasoned about. This section describes the target shape
@@ -2629,6 +2811,7 @@
       <span class="num">19</span>
       <h2>Collateral and cross-margin, per venue</h2>
       <b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b>
+      <b class="own" title="system_readiness_master.md — W5: Venue registry completeness (collateral that can actually be used, per venue — populate, don't design)">owner: W5</b>
     </div>
     <p class="lede">
       Two questions every venue's margin-eligible capital has to answer: what can be used as collateral, and does it net
@@ -2676,6 +2859,7 @@
       <span class="num">20</span>
       <h2>Manual trade — the disaster path</h2>
       <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W5: Venue registry completeness (manual trade capability for EVERY venue, no exceptions)">owner: W5</b>
     </div>
     <p class="lede">
       Automation fails sometimes. When it does, the requirement is a human able to place a trade directly on the venue,
@@ -2713,6 +2897,7 @@
       <span class="num">21</span>
       <h2>Reconciliation framework</h2>
       <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W12: Reconciliation">owner: W12</b>
     </div>
     <p class="lede">
       What we believe we hold has to be checked against what the venue says we hold, on a defined cadence, with a
@@ -2781,6 +2966,7 @@
       <span class="num">22</span>
       <h2>PnL attribution, across every dimension</h2>
       <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W13: PnL attribution">owner: W13</b>
     </div>
     <p class="lede">
       If exposure can be sliced a certain way, PnL has to be attributable the same way, in the same buckets — otherwise
@@ -2823,6 +3009,7 @@
       <span class="num">23</span>
       <h2>Risk: native, share-class, and Greeks</h2>
       <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W10: Risk and exposure">owner: W10</b>
     </div>
     <p class="lede">
       Risk stated only in each instrument's own units cannot be summed across a book. Risk stated only in one normalised
@@ -2883,6 +3070,7 @@
       <span class="num">24</span>
       <h2>Latency, preflight, and staleness SLAs</h2>
       <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W16: Triggers, latency and preflight">owner: W16</b>
     </div>
     <p class="lede">
       Two failure modes matter more than most: a strategy that starts without everything it needs, and one that cannot

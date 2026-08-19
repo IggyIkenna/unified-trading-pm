@@ -67,6 +67,8 @@ locked_since:
 resolved_by:
 supersedes:
 superseded_by:
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Generic price-sensitivity contract for fast execution-side repricing

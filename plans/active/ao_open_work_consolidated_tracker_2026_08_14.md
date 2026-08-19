@@ -19,16 +19,11 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycle, dispatch]
 related:
   [
-    /plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md,
     /plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md,
     /plans/active/task_template.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
-    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
@@ -400,7 +395,7 @@ context_scope:
       batch21_finalize todo 2). Original peak best-effort-exhausted (predates resource-watchdog); redirected to
       resource-watchdog's own kill corpus — 187 kills/7d, 25 >10GB RSS, all tracing to 4 unbounded CEFI-manifest scripts
       in `market-tick-data-service/scripts/` (new follow-up filed there). Source:
-      `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`.
+      `/plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`.
 - [x] [REVIEW] P2. **DONE — confirmed live 2026-08-15 (this session, direct SSM check).** Zero kernel OOM-killer hits
       host-wide in the last 30 days (`journalctl -k`, no root needed — the orchestrator's own service user,
       `ubuntu`/group `adm`, can already read this). Ruled out cleanly. Source: same doc.
@@ -410,7 +405,7 @@ context_scope:
       no `systemd-notify`/`sd_notify` convention exists anywhere in this repo, and `orchestrator.service` is
       `Type=simple` with `Restart=on-failure`/`RestartSec=10` already declared, so a process exit is the correct
       trigger. Wired into `server.py`'s lifespan; new `notify_readiness_watchdog_restart` Slack alert. Source:
-      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` — flip its checkbox too.
+      `/plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` — flip its checkbox too.
 - [ ] [BACKEND] P3. **Confirmed still open + genuine design fork 2026-08-15 (reconciliation sweep).** Right-size/harden
       the DB pool — `pool_size`/`max_overflow` raise correctly stays un-bumped (disproven, matches the SQLAlchemy
       defaults still in `server/db.py`); `pool_timeout` was raised to 125s for a separate P2 issue, not this one. Two
@@ -529,9 +524,10 @@ before touching the source doc directly._
       a sibling panel, collapsed state survives a reload, a header action button stays clickable and does not
       trigger collapse) plus 10 pre-existing wallet/blocked specs re-run green to confirm no regression. Source:
       operator request, this session (not from the 2026-08-14 audit sweep).
-- [ ] [TEST] P3. **New finding, 2026-08-16, adjacent to the collapsibility work above — NOT caused by it, isolated
-      and confirmed independently.** `dashboard/tests/e2e/task-usage-account-filter.spec.ts` has 2 pre-existing,
-      reproducible failures ("All accounts sums every task..." expects `17.0K`, gets `22.0K`; "tasks on an
+- [ ] [TEST] P3. **Root-cause 2 pre-existing, reproducible failures in
+      `dashboard/tests/e2e/task-usage-account-filter.spec.ts`** (both bleed +5000, likely `window_task_usage_totals`
+      double-counting/mis-attribution — see below). New finding, 2026-08-16, adjacent to the collapsibility work
+      above — NOT caused by it, isolated and confirmed independently. Failures: ("All accounts sums every task..." expects `17.0K`, gets `22.0K`; "tasks on an
       unregistered account are unreachable..." expects a `0` shortfall, gets `5.0K` bleeding into a registered
       account's slice) — the +5000 in both cases exactly matches the fixture's "unregistered account" oneoff rows
       (2000 cicd + 3000 scheduled), suggesting those rows are being double-counted or mis-attributed somewhere in

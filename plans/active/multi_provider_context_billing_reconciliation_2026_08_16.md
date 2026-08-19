@@ -49,7 +49,12 @@ estimate_calibrated_ai_days: 6
 assigned_role: infra
 effort: max
 drift_direction: advance-code
-depends_on: [deepseek_claude_blended_provider_routing, grok_gemini_translation_proxy, codex_luna_flex_bridge]
+depends_on:
+  [
+    deepseek_claude_blended_provider_routing_2026_07_28,
+    grok_gemini_translation_proxy_2026_08_14,
+    codex_luna_flex_bridge_2026_08_14,
+  ]
 locked_by:
 locked_since:
 supersedes:
@@ -222,24 +227,74 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       lifetime view spanning a tier change is not. Depends on the tier-per-segment tracking in the todo above (the
       flag can't be computed until segment tier identity is actually tracked). Done when: a real window with a tier
       change renders visibly flagged, and a real window without one renders normally, side by side.
-- [ ] [DATA] P1. Design the unified per-task billing schema — normalized input/output/cache-read/cache-write token
-      counts as the common denominator across every provider's billing shape (metered-$, first-party-token,
-      subscription-flat-rate, rate-limited-free-tier), each priced at the provider's PUBLISHED rate (not a computed
-      effective rate) for the "bang for the buck" comparison. Must generalize DeepSeek's existing `task_usage` table
-      rather than create a second, parallel per-task ledger. Done when: a design doc or schema proposal covers all 7
-      currently-registered providers (Anthropic, DeepSeek, Gemini, GLM, Codex, Kimi, NVIDIA/Gemma) with a concrete
-      field mapping for each (Grok decommissioned 2026-08-18, dropped from scope; count+list corrected 2026-08-18
-      per `/plan-reconcile ao` — NVIDIA/Gemma is a genuinely separate `AccountProvider` value per
-      `kimi_gemma_provider_onboarding_2026_08_16.md`, was omitted from this count; Kimi's own schema coverage is
-      still pending per that same doc's todo, not yet designed despite being counted here).
+- [ ] [DATA] P1. Design the unified per-task billing schema — draft below, from real pilot evidence (isolated local
+      pilot, 2026-08-19: real `claude` CLI dispatches against GLM/Gemini/Codex/Gemma, plus real dashboard
+      cross-checks), not a from-scratch guess. Must generalize DeepSeek's existing `task_usage` table rather than
+      create a second, parallel per-task ledger.
+
+      **Common per-task fields (confirmed uniform across every provider's `claude --output-format json` output —
+      this shape already exists today, nothing to invent here):** `task_id`, `provider`, `requested_model` (what
+      the account config asked for), `served_model` (what the response's own `model` field reports — MUST be
+      tracked separately from `requested_model`: GLM's server-side aliasing, confirmed both by a live response
+      header AND by real Zhipu billing data 2026-08-19, means a `glm-5.2` request is actually billed as `glm-5.3` —
+      any schema keyed on the requested model alone will misattribute cost), `num_turns`, `duration_ms`,
+      `input_tokens`, `output_tokens`, `cache_creation_input_tokens`, `cache_read_input_tokens`.
+
+      **`tokens_per_second` (decode speed) — new field, operator ask 2026-08-19**: track this alongside token
+      counts wherever a provider exposes it. Confirmed real and provider-published for GLM (Zhipu's own "System
+      Health" dashboard panel: Lite tier peaked ~98 tok/s over the last 7 days, currently ~60; Max&Pro tier peaked
+      ~115, currently ~80) — first real throughput numbers on record for any of the newer providers. Check
+      per-provider availability (Gemini/NVIDIA's `nvext.timing`-style response metadata, per the Gemma onboarding
+      plan's own real telemetry finding, is a likely second real source) rather than assuming every provider
+      exposes it the same way.
+
+      **Per-provider billing-SHAPE categorization (real, not assumed — 5 distinct shapes, not 2)**:
+      1. `metered_dollar` (DeepSeek — real, existing `task_usage` precedent; Kimi — real $ wallet exists per
+         `kimi_gemma_provider_onboarding_2026_08_16.md`, not yet schema-integrated).
+      2. `subscription_boost_multiplier` (Anthropic/Claude — real, existing, `ClaudeWalletPanel.tsx`).
+      3. `subscription_credits` (GLM — **confirmed 2026-08-19, a genuinely distinct third shape**: Zhipu's own
+         dashboard tracks a "Credits" unit directly — 2,000/5h + 10,000/week on the real Lite-Monthly plan — that is
+         neither a dollar figure NOR a raw prompt-count; `server/glm_quota_poller.py` currently estimates against
+         the WRONG unit, prompt-count, per the real bug found and filed in
+         `deepseek_claude_blended_provider_routing_2026_07_28.md`'s new `[INFRA] P2` todo — fix that first, this
+         schema should read the corrected poller, not re-derive credits itself).
+      4. `rate_limited_free` (Gemini, NVIDIA/Gemma — no $ or credits from the vendor at all, only RPD/RPM/TPM
+         consumed against a real ceiling; Gemini's real numbers checked 2026-08-19 via Google AI Studio's own
+         dashboard: 3.5 Flash Lite sat at 21/500 RPD, 4/15 peak RPM, 164.37K/250K peak TPM over the trailing 28
+         days — real, low-headroom-risk evidence this tier has room, not a guess).
+      5. `subscription_unknown` (Codex/Luna's ChatGPT Plus — NOT YET checked against a real dashboard this session;
+         do not assume it matches GLM's credits shape or Claude's boost-multiplier shape without verifying against
+         OpenAI's own usage page first).
+
+      Every non-`metered_dollar` shape should ALSO carry a `computed_usd_equivalent` (using `model_pricing.py`'s
+      published per-token rate) purely for cross-provider comparison — clearly labeled as computed, never presented
+      as a real bill, per this plan's own "PUBLISHED rate, not a computed effective rate" rule above.
+
+      Done when: a design doc or schema proposal covers all 7 currently-registered providers with a concrete field
+      mapping for each, incorporating the 5-shape categorization and `tokens_per_second` field above (Grok
+      decommissioned 2026-08-18, dropped from scope).
+- [ ] [DATA] P1. Build a minimal v0 capture mechanism so real testing stops losing its own history — operator ask
+      2026-08-19, after a pilot session's real GLM/Gemini reconciliation had to be done entirely by hand (CLI JSON
+      output cross-checked against vendor dashboards manually, nothing persisted anywhere in AO). Scope: FIRST
+      investigate how AO's real dispatch path currently captures a worker's completion evidence today (is
+      `--output-format json`'s structured output already parsed anywhere, or only tmux pane text watched? — check
+      before assuming) — extend whatever that real mechanism is to persist the common per-task fields above into a
+      generic `task_usage`-shaped row for every provider, not just DeepSeek. This is v0: persistence only, not the
+      full reconciliation/UI work the other todos here cover — but it's the prerequisite that makes every later
+      todo here actually possible instead of a one-off manual exercise each time. Done when: a real AO-dispatched
+      task against a non-DeepSeek provider leaves a real, queryable row behind with no manual capture step.
 - [ ] [DATA] P1. Reconciliation proof: sum of every task's attributed billing (once the schema above is populated for
       a real window) must equal the fleet's real total spend for that window, per provider. Done when: a dated
       Progress Log entry shows this reconciling within a stated tolerance for at least DeepSeek + one new provider.
 - [ ] [REVIEW] P2. Gemini free-tier capacity-as-proxy methodology: design and run a real test that translates
       "remaining RPD/RPM capacity in a given window" into a spend-equivalent comparison figure, the way
       `gemini_headroom.py`'s ceilings are already tracked for dispatch-gating — this is the same underlying data,
-      repurposed for the reconciliation/comparison goal rather than just the dispatch gate. Done when: a documented,
-      tested methodology exists, not just the raw ceiling numbers already recorded.
+      repurposed for the reconciliation/comparison goal rather than just the dispatch gate. Real starting data point
+      (2026-08-19): a single real 5-turn CLI task against `gemini-3.5-flash-lite` consumed 16,204 input +
+      16,211 cache-read tokens per the CLI's own report — cross-reference against Google's real TPM-peak reading in
+      the same window (~120-130K, i.e. several real calls stacked in one minute) to calibrate the methodology
+      against, rather than starting from zero. Done when: a documented, tested methodology exists, not just the raw
+      ceiling numbers already recorded.
 - [ ] [REVIEW] P2. Verify the "manual/interactive Claude usage sits on separate accounts from AO dispatch" assumption
       is actually true today, not just believed — this is the stated precondition for treating AO's own usage
       tracking as clean/isolated from personal usage. Done when: the account roster is checked against what AO
@@ -591,3 +646,21 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       blocks the data-gathering work behind it. **Done when**: every dependency this recommendation needs is either
       done or explicitly named as still-missing, and the recommendation itself is recorded with its own dated
       Progress Log entry, not folded silently into another todo's evidence.
+
+- **2026-08-19 — isolated pilot session, two findings that had only existed in chat, captured here so they aren't
+  lost.**
+  1. **Real Gemini CLI task result** (companion data point to the GLM one already in
+     `deepseek_claude_blended_provider_routing_2026_07_28.md`'s Progress Log): a real end-to-end `claude` CLI task
+     against `gemini-3.5-flash-lite-proj1` — 5 turns, real file edit completed, CLI-reported
+     `total_cost_usd: $0.1617` (computed equivalent — Gemini's free tier has no real $ bill; see the
+     `subscription_credits`/`rate_limited_free` shape split in the schema todo above).
+  2. **Full-system model-existence sweep (2026-08-19, isolated pilot, free list-endpoints only — no generation
+     cost)**: every currently-registered model across every provider confirmed real and listed, nothing
+     deprecated — `deepseek-v4-flash`/`deepseek-v4-pro` (DeepSeek `/models`); `glm-5.2`→served-as-`glm-5.3`,
+     `glm-5-turbo` (Z.ai `/v1/models`); `gemini-3.5-flash-lite`, `gemini-3.7-flash` ×3 pooled keys each, all keys
+     individually valid (Google `/v1beta/models`); `diffusiongemma-26b-a4b-it`, `gemma-4-31b-it` (NVIDIA
+     `/v1/models` — both listed; `gemma-4-31b-it`'s real problem is the persistent timeout in
+     `plans/active/issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md`, not a missing/dead model); `kimi-k3`,
+     `kimi-k2.6`, `kimi-k2.7-code` (Moonshot `/v1/models` — bonus: `kimi-k2.7-code-highspeed` exists too,
+     unregistered, FYI only); `gpt-5.6-luna` (Codex/Luna — already proven live). No action needed from this
+     finding alone; recorded so a future session doesn't re-run the same free sweep from scratch.

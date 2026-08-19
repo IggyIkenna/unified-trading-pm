@@ -81,6 +81,25 @@ def mtds_captured(venue_data_type_cells: list[tuple[str, int, int]]) -> Verdict:
 
 
 # ---------------------------------------------------------------------------
+# market-tick-data-service -- LIVE feed leg (system_readiness_master.md W1,
+# 2026-08-19 P0: market data is a two-feed question, batch + live, not three
+# -- paper always consumes the live feed per paper-batch-live-reconciliation.md
+# § 0, so this SAME verdict is reused for both the PAPER and LIVE rows; only
+# BATCH keeps the separate coverage.json-observed verdict above.
+# WS_FEED_CONNECTOR_FACTORIES membership is a CAPABILITY proxy: a registered
+# connector class doesn't confirm the live feed is actually flowing.)
+# ---------------------------------------------------------------------------
+def mtds_live_feed(venue: str, live_registered_venues: frozenset[str]) -> Verdict:
+    if venue in live_registered_venues:
+        return Verdict(
+            "unverified",
+            f"{venue} present in MTDS WS_FEED_CONNECTOR_FACTORIES (a live WSFeedConnector is registered -- "
+            "actual data flow is not independently verified by this pass)",
+        )
+    return Verdict("not_ready", f"{venue} absent from MTDS WS_FEED_CONNECTOR_FACTORIES -- no live connector wired")
+
+
+# ---------------------------------------------------------------------------
 # market-data-processing-service -- raw shard consumed into something derived
 # (MDPS_DERIVABLE_DATA_TYPES membership is a CAPABILITY proxy, not observed
 # consumption -- see module docstring on the proxy-asymmetry policy.)
@@ -167,6 +186,84 @@ def strategy_leg(archetype_verdict: Verdict, adapter_verdict: Verdict) -> Verdic
 
 
 # ---------------------------------------------------------------------------
+# execution-service -- orders / fills / trades / account balance
+# (system_readiness_master.md W1, 2026-08-19 P0: the four execution-service-
+# owned surfaces in the six-surface readiness table). The one real per-venue
+# signal available for all four is execution-service's own order-adapter
+# registry (execution_service.trade_execution.factory.get_supported_venues(),
+# read via the _execution_order_capability_probe.py subprocess -- BaseCLOBAdapter's
+# place_order/get_fills/get_account_state/get_positions are abstract methods,
+# so wherever an adapter is registered all four are implemented by
+# construction). `orders` additionally layers the UAC capability registry's
+# per-env place_order declaration on top, since that is the one operation with
+# real mode-aware supported/not-supported data (see the probe's docstring).
+# ---------------------------------------------------------------------------
+def _execution_probe_row(venue: str, probe: dict[str, dict] | None) -> dict | None:
+    if probe is None:
+        return None
+    return probe.get(venue)
+
+
+def execution_orders(venue: str, mode: str, probe: dict[str, dict] | None) -> Verdict:
+    row = _execution_probe_row(venue, probe)
+    if row is None:
+        return Verdict("unverified", "execution-service order-capability probe unavailable for this venue")
+    if not row.get("adapter_present"):
+        return Verdict(
+            "not_ready", f"{venue} absent from execution-service get_supported_venues() -- no order adapter registered"
+        )
+    if mode == "BATCH":
+        return Verdict(
+            "unverified",
+            "order adapter registered, but BATCH never invokes a real adapter (simulated fills) -- no real "
+            "check exists for batch order capability",
+        )
+    env = "testnet" if mode == "PAPER" else "mainnet"
+    supported = row.get("place_order", {}).get(env)
+    ref = f"UAC validate_operation(place_order, env={env})"
+    if supported is True:
+        return Verdict("ready", f"{ref} = supported")
+    if supported is False:
+        return Verdict("not_ready", f"{ref} = NOT supported")
+    return Verdict("unverified", f"order adapter registered, but {ref} has no capability declaration")
+
+
+def _execution_adapter_capability_leg(venue: str, probe: dict[str, dict] | None, real_method: str) -> Verdict:
+    """Shared proxy for fills/trades/account_balance -- BaseCLOBAdapter's abstract
+    methods are implemented by construction wherever an adapter is registered, so
+    adapter presence is the one real (mode-invariant) signal available; presence
+    does not confirm the method has ever actually been called against the venue."""
+    row = _execution_probe_row(venue, probe)
+    if row is None:
+        return Verdict("unverified", "execution-service order-capability probe unavailable for this venue")
+    if row.get("adapter_present"):
+        return Verdict(
+            "unverified",
+            f"{venue} has a registered execution-service adapter (BaseCLOBAdapter.{real_method}() implemented "
+            "by construction) -- real observed operation is not verified by this pass",
+        )
+    return Verdict(
+        "not_ready", f"{venue} absent from execution-service get_supported_venues() -- no adapter, no {real_method}()"
+    )
+
+
+def execution_fills(venue: str, probe: dict[str, dict] | None) -> Verdict:
+    return _execution_adapter_capability_leg(venue, probe, "get_fills")
+
+
+def execution_trades(venue: str, probe: dict[str, dict] | None) -> Verdict:
+    # execution-service has no distinct trades-vs-fills method -- get_fills() is
+    # the one account-trade-history read; a historical "trades tape" concept
+    # exists downstream at the ledger layer (InstructionLedger, UTL
+    # ledger/materialize.py), not as a per-venue-mode adapter capability.
+    return _execution_adapter_capability_leg(venue, probe, "get_fills")
+
+
+def execution_account_balance(venue: str, probe: dict[str, dict] | None) -> Verdict:
+    return _execution_adapter_capability_leg(venue, probe, "get_account_state")
+
+
+# ---------------------------------------------------------------------------
 # execution-service -- transfers (VENUE_WALLET_CAPABILITIES presence is a
 # CAPABILITY proxy: it declares wallet structure/custody, not a proven rail.)
 # ---------------------------------------------------------------------------
@@ -198,6 +295,10 @@ LEG_ORDER: tuple[str, ...] = (
     "market_data_processing",
     "features",
     "strategy",
+    "execution_orders",
+    "execution_fills",
+    "execution_trades",
+    "execution_account_balance",
     "execution_transfers",
     "execution_instruction",
 )

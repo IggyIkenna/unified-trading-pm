@@ -99,9 +99,14 @@ recaptured on every subsequent run.
       whether a venue adapter's own instrument-universe resolution, an MVP scope filter that doesn't cover these
       specific tickers, or a stale reference-data cache is the source. Open-ended investigation, not a bounded
       single action.
-- [ ] [DATA] P3. **Re-measure the current re-accumulated row count** against the 2026-08-18 baseline (5,932 rows)
+- [x] ✅ [DATA] P3. **Re-measure the current re-accumulated row count** against the 2026-08-18 baseline (5,932 rows)
       before acting further — the figure is from a same-day live read during an unrelated audit and should not be
-      trusted without a fresh confirmation if meaningfully more time has passed.
+      trusted without a fresh confirmation if meaningfully more time has passed. — **EXTRACTED 2026-08-19
+      (na-eligibility-audit, tradfi tranche, dispatch agt-5d34f9) →
+      `tradfi_satellite_ao_dispatch_batch18_2026_08_19.md` todo 1** (conflict-cleared: corpus-wide grep confirms
+      no other active/draft doc tracks this re-accumulation). Fully-specified deterministic query (exact tickers,
+      exact venues, exact target manifest named above), bounded worker-determinable outcome (a number) — clears
+      the dispatch-scope-eligibility bar on its own, unlike todos 1/3 below which stay genuinely open-ended/gated.
 - [ ] [DATA] P3. **Once root-caused: fix the forward-going source AND re-purge** the re-accumulated rows — a second
       one-off purge without fixing the source would just re-accumulate again, per the same mechanism that produced
       this count in the first place. Gated on the root-cause todo above.
@@ -116,3 +121,9 @@ recaptured on every subsequent run.
   done" section named 3 real follow-up items that existed only as prose — added as tracked checkboxes above,
   content unchanged. All 3 are genuine open-ended investigation/execution work (root cause unknown, needs
   exploration), not a single worker-determinable outcome. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **RECLASSIFY, per-todo split.** 3 open
+  todos re-read end-to-end. Todo 2 (re-measure the row count) is a fully-specified, deterministic read-only query —
+  bounded/worker-determinable, conflict-checked clean — extracted to
+  `tradfi_satellite_ao_dispatch_batch18_2026_08_19.md` todo 1. Todos 1 (root-cause which capture path, open-ended,
+  multiple unresolved hypotheses) and 3 (fix + re-purge, gated on todo 1's unknown outcome) stay genuinely
+  investigation/judgment work. Doc stays `assigned_vm: NA` — 2 of 3 todos remain genuinely NA.

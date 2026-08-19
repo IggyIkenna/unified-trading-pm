@@ -56,6 +56,16 @@ review session will ever read it. SSOT: `/cursor-configs/skills/pre-compact/SKIL
 The dynamic values below — your slot id, workspace root, server URL, account, model — all arrive in your **boot
 message**. This file is the static playbook; your boot message carries the per-session specifics.
 
+**These are literal text, not exported shell env vars (plan_reconciler_boot_pm_repo_path_points_at_root_clone\_
+2026_08_18).** Every `$VARNAME` / `${VARNAME}` you see here or in any role file (`$PM_REPO_PATH`, `$SERVER_URL`,
+`$SLOT_ID`, `$DISPATCH_ID`, `$TRANCHE`, `${WORKSPACE_ROOT}`, …) is shorthand for "substitute the literal value your
+own boot message printed" — the orchestrator's boot-stub composer (`agent-orchestrator/server/prompts.py`) renders a
+plain `- KEY=VALUE` text block, it never `export`s anything into your tmux pane's shell. Confirmed live 3x (`env |
+grep` returned nothing across 3 independent dispatches): even a literal `export` at boot wouldn't help — each Bash
+tool call starts a FRESH shell with no state persisted from a prior call, so a copy-pasted `$PM_REPO_PATH` would
+silently expand to an EMPTY string rather than error. Read your own boot message's session-variables block and
+substitute every value by hand into every command that names one.
+
 You do your work inside a per-slot git clone at `${WORKSPACE_ROOT}/.tabs/<your-slot>/`, which holds sibling clones of
 every repo: `unified-api-contracts/`, `market-tick-data-service/`, `agent-orchestrator/`, etc.
 

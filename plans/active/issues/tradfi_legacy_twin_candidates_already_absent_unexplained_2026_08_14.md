@@ -145,3 +145,9 @@ protocol asks to be investigated before being waved off.
   **PARKING as BLOCKED-OPERATOR-DECISION** rather than guessing which side is right: does the 2026-08-15 doc's dry-run
   already cover this, or does P2 still need a fresh, targeted check? `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — parked status
+  reaffirmed.** Sole open todo (P2 [OPERATOR], spot-check whether defi/pred legacy-twin-delete candidates show the
+  same already-vanished pattern) is unchanged since the 08-16 conflict-check PARK. Genuine ambiguity re-confirmed:
+  whether `/plans/archive/2026_08/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md`'s
+  existing dry-run already answers this specific question is still an open operator call, not guessed at.
+  `assigned_vm` unchanged; stays PARKED BLOCKED-OPERATOR-DECISION.

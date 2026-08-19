@@ -57,7 +57,7 @@ live `AgentRow` to show real-time run status. A row labelled `dispatched` is a S
 
 ---
 
-## The 9 timers
+## The 10 timers
 
 Each installer (`scripts/install-<name>-timer.sh`) creates a systemd **`--user`** `.service` + `.timer` pair under
 `~/.config/systemd/user/` and copies `scripts/scheduled_job_already_ran.py` to `~/.local/bin/`. The already-ran guard
@@ -76,6 +76,7 @@ row) prevents duplicate work in the same window (the same DAY for every job exce
 | `cefi-reconciliation-auditor.service`     | `cefi_reconciliation`            | `cefi_reconciliation_auditor`     | No                                          | every 2 h (even hours)     | 5950 s          | 6000 s                  |
 | `ci-reconciler.service`                   | `ci_reconcile`                   | `ci_reconciler`                   | No                                          | every 15 min, hourly guard | 5950 s          | 6000 s                  |
 | `data-pipeline-alerts-reconciler.service` | `data_pipeline_alerts_reconcile` | `data_pipeline_alerts_reconciler` | No                                          | every 60 min, 6h guard     | 5950 s          | 6000 s                  |
+| `ao-watchdog.service`                     | `ao_watchdog`                    | `ao_watchdog`                     | No                                          | daily, 00:47 UTC           | 5950 s          | 6000 s                  |
 
 **RETIRED 2026-08-15 — `cefi-mtds-smoke-tester.service` (mode `cefi_mtds_smoke`, job_name `cefi_mtds_smoke_tester`,
 every 2h odd hours).** Operator decision: the underlying `/data-pipeline-check-mtds` sweep it dispatched has no

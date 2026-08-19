@@ -41,11 +41,11 @@ tags:
   ]
 related:
   [
-    /plans/archive/2026_07/cefi_completion_program_2026_07_15.md,
     /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md,
-    /plans/archive/issues/cefi_mtds_writer_raw_symbol_vs_canonical_eu_namespace_mismatch_2026_07_15.md,
-    /plans/archive/issues/phantom_captures_cefi_2026_06_28.md,
   ]
+  # 2026-08-19 (na-eligibility-audit): dropped 3 archived-plan citations to satisfy the archive-safety-ratchet gate
+  # — all 3 remain preserved as inline body citations (cefi_completion_program in the opening context blockquote;
+  # cefi_mtds_writer_raw_symbol.../phantom_captures_cefi in the "Residuals" section's own item detail lines).
 created: 2026-07-17
 author: unknown
 last_updated: 2026-07-30
@@ -782,3 +782,4 @@ pairs stay honest-unresolved (reported, never guessed).
   FORCE default) flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE by a prior pass and reaffirmed here, not claimed on its own.
 - **na-eligibility-audit 2026-08-16** [body-hash:a06e896be162a31f]: KEEP-NA, valid — Full 780-line read (two Read calls, offset-continued) confirms exactly 5 open checkboxes, grep-verified. The doc carries an explicit dated 2026-07-17 operator ruling ("assigned_vm: NA retained ...
 - **context-scout 2026-08-17**: re-scouted; context_scope unchanged (6 entries), still accurate.
+- **na-eligibility-audit 2026-08-19** [body-hash:f3740568247b5936]: KEEP-NA, valid — Full re-read (2 Read calls, offset-continued, 785 lines). Confirms exactly 5 open checkboxes, grep-verified (the 586 marker-less-rows `[OPERATOR]` item; the features raw-groups schema-shape design gap + its dependent OOM-bound item; the Parquet CONTENT backfill + its Progress-Log-discipline sibling, both already correctly citation-fixed to the live in-flight `cefi_content_migration_fleet_half_incomplete_2026_07_26.md`). All operator-gated/dependency-blocked or already-duplicated-elsewhere. Reaffirms the 2026-08-16 full-read verdict.

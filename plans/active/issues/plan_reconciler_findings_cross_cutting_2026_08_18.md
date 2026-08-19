@@ -15,7 +15,7 @@ tags: [role, plan_reconciler, reconciliation, plan-hygiene, cross-cutting, shard
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_16.md,
   ]
 created: "2026-08-18"
 author: plan_reconciler
@@ -36,7 +36,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/issues/plan_reconciler_findings_cross_cutting_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_findings_cross_cutting_2026_08_16.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---

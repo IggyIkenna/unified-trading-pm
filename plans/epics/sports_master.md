@@ -135,6 +135,11 @@ locked_since: 2026-05-07
 
 # Sports Master — asset_group umbrella
 
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/09b4fccf-5900-48e3-8150-56942e0f13cd (generated 2026-08-19,
+`/plan-reconcile sports_master`)
+
 > **🟡 IN-FLIGHT REFACTOR — `available_at` adapter stamping** (coordinated by
 > `available_at_lookahead_bias_completion_2026_05_08` Phase 1). Re-verify per-adapter `available_at` stamping wiring
 > before adding new adapters to this plan.

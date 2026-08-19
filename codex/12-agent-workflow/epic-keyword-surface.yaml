@@ -303,68 +303,14 @@ execution_master:
     - unified-trading-library
     - unified-trading-api
 
-trading_agent_master:
-  keywords:
-    - trading-agent-service
-    - trading_agent_service
-    - closed-loop
-    - closed loop
-    - allocator
-    - allocation
-    - position-sizing
-    - position sizing
-    - signal-aggregator
-    - signal aggregator
-    - trading_agent_master
-    - trading-agent
-  repos:
-    - trading-agent-service
-    - unified-api-contracts
-    - unified-trading-library
-
-global_ledger_pnl_attribution_master:
-  keywords:
-    - global-ledger
-    - global ledger
-    - global_ledger
-    - pnl-attribution
-    - pnl attribution
-    - pnl_attribution
-    - instruction-ledger
-    - passive-ledger
-    - treasury-ledger
-    - pricing-ledger
-    - exposure
-    - attribution
-    - ledger-ssot
-    - ledger ssot
-    - global_ledger_pnl_attribution_master
-  repos:
-    - execution-service
-    - strategy-service
-    - unified-api-contracts
-    - unified-trading-library
-
-dart_and_promote_master:
-  keywords:
-    - dart
-    - promote
-    - promotion
-    - promote-workflow
-    - promote workflow
-    - manual-trade-gate
-    - manual trade gate
-    - ManualTradeGate
-    - state-machine
-    - state machine
-    - dart_and_promote_master
-    - promote-dialog
-    - promote dialog
-  repos:
-    - strategy-service
-    - execution-service
-    - unified-trading-system-ui
-    - deployment-api
+# trading_agent_master, global_ledger_pnl_attribution_master, and dart_and_promote_master entries REMOVED
+# 2026-08-19 (cross-epic sweep) — all 3 folded 2026-08-18 (epic-taxonomy-2026-08-18.md) into execution_master
+# (trading_agent_master), strategy_master (global_ledger_pnl_attribution_master + dart_and_promote_master), same
+# treatment already applied here to infrastructure_master (renamed in place, see security_and_cross_cutting_master
+# below) and escalation_and_disaster_recovery_master (folded into observability_master, key removed). These 3 keys
+# were left behind stale after the same 2026-08-18 restructure — found because 2 sibling folds got this treatment
+# and these 3 didn't. No keyword migration performed (matches the escalation_and_disaster_recovery_master
+# precedent in this same file: clean removal, no merge into the absorbing epic's keyword list).
 
 deployment_and_user_management_master:
   keywords:

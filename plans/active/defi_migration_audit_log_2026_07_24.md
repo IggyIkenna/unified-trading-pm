@@ -584,7 +584,7 @@ P1 redirect todo below.)
       DeFi arb/carry net-of-gas is wired (execution `estimate_gas` for gas_units × the gas_fees price); if missing, the
       gas data is collected but unused for profitability. Repos: strategy-service / execution-service. parent_epic:
       defi_master. Provenance: slot-2 gas-fees audit 2026-06-08.
-- [ ] [DATA] P2. **VERIFY-then-MIGRATE the UNIQUE orphan gaps into the canonical dedicated buckets BEFORE any legacy
+- [x] ✅ [DATA] P2. **VERIFY-then-MIGRATE the UNIQUE orphan gaps into the canonical dedicated buckets BEFORE any legacy
       delete** (else data loss on the irreversible cutover): (a) `evm-defi-prd` Aave V3 **`2022-03-12…2022-10-31`**
       range → backfill into `lending-indices-` (confirm absent there first via cf_manifest_audit); (b) `solana-defi-prd`
       **`marinade`** (mSOL LST) → confirm absent in `lst-rates-`, migrate if unique; (c) `market-data-tick-defi-prd`
@@ -996,3 +996,5 @@ speed-note (both deferred optimisations, non-blocking).
   `/plans/archive/2026_08/defi_instruments_store_v9_gate_c_reverify_ao_dispatch_2026_08_16.md`.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17**: RECLASSIFY (per-todo split), applied — 969-line hub, read end to end (12 open todos, grep-confirmed). 5 items extracted (conflict-checked against every active defi covering doc, zero prior claims found) to `defi_satellite_ao_dispatch_batch16_2026_08_17.md` (+ finalize, status: active): the ruled Solana/multi-venue source-label fix (lines ~320+663, combined into one batch item), the gas net-cost consumer verify (line ~552), and 2 P3 nice-to-haves (POOL union-coarse line ~772, L1-find speed-note line ~780). 2 items assessed but NOT extracted — flagged, not edited, consistent with this doc's own established practice for complex items: line ~406 (FOLD-3-orphan-data_types — premise now inverted per the retired-dedicated-bucket-architecture finding, needs rewording before a clean extraction) and line ~412 (collection-gaps retag — mostly-resolved, needs narrowing to its residual scope, a low-confidence edit given the long cross-referenced text). Remaining 5 open items (lines ~146, ~155, ~558, ~620, ~643) stay correctly gated: GATE C v9 write, Era-B legacy retirement, destructive-delete operator sign-off. Doc stays assigned_vm: NA, 7 open todos remaining.
+- **na-eligibility-audit 2026-08-19**: 7→6 open todos, 1 closed by citation; MISCLASSIFIED item flagged in this
+  run's blocks doc (doc at line cap). Doc stays `assigned_vm: NA`.

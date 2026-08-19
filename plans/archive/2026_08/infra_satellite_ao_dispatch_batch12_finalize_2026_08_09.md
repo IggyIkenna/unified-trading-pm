@@ -6,7 +6,7 @@ summary: >-
   `gate_on_depends: true` until that plan's single todo is done. Batch 12 is a single-item batch (the last
   cleared-but-unbatched Deferred item from batch 1), so this finalize is a lean single-todo archival, not a multi-source
   reconciliation like batch 1's own finalize.
-status: active
+status: complete
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -52,6 +52,16 @@ source: >-
 ---
 
 # Infra satellite AO batch 12 — finalize
+
+> **SUPERSEDED — archived (2026-08-19)**: this finalize plan's own sole todo is `[x]` done (archived batch 12 on
+> 2026-08-10) and it is a single-repo (`repos: [unified-trading-pm]`) finalize, so per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md:195-229`'s mode-1/mode-2 distinction it
+> should have SELF-ARCHIVED same-commit rather than sitting on the `archive_exempt: true` bridge (that bridge is
+> reserved for cross-repo/mode-2 finalize plans, e.g. its sibling `infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md`
+> which IS cross-repo and correctly keeps the exemption). Flagged but not applied by the 2026-08-18 infra
+> plan-reconcile run ("possible minor non-compliance, not independently verified this run"); archived here by the
+> epic-scoped `/plan-reconcile security_and_cross_cutting_master` Phase 4 pass (2026-08-19) per the ratified rule.
+> Moved to `plans/archive/2026_08/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md`.
 
 > **`status: active`, but machine-gated** (`depends_on` + `gate_on_depends: true`) — per the no-double-gate ruling, the
 > finalize twin stays `active` even while its parent batch (`infra_satellite_ao_dispatch_batch12_2026_08_09.md`) is

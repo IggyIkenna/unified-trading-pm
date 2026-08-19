@@ -73,6 +73,14 @@ FF_STARVE_COMMIT_THRESHOLD="${FF_STARVE_COMMIT_THRESHOLD:-25}"
 FF_STARVE_AGE_HOURS="${FF_STARVE_AGE_HOURS:-6}"
 STARVE_DETECTOR="$(dirname "${BASH_SOURCE[0]}")/ff-starvation-detect.sh"
 
+# Auto-reconcile a starved repo BEFORE paging (2026-08-19, built from a manual reconcile session
+# on slots 4/5/6). auto-reconcile-starved-repo.sh re-derives starvation itself, gates on liveness
+# + pre-existing conflict markers, uses the confirmed-safe `pull --rebase --autostash` pattern,
+# and verifies survival by CONTENT before ever calling it a silent success — see that script's own
+# header for the full incident + safety-gate rationale. Toggle off with AUTO_RECONCILE_STARVED=0.
+AUTO_RECONCILE_STARVED="${AUTO_RECONCILE_STARVED:-1}"
+AUTO_RECONCILE_SCRIPT="$(dirname "${BASH_SOURCE[0]}")/auto-reconcile-starved-repo.sh"
+
 # Stash-pile regrowth watchdog (stash_pile_workspace_cleanup_2026_06_03.md Phase 5).
 # Same detector/alerter split as the starvation watchdog above: this reporter only
 # WARNS, it never touches `git stash` (no drop, no apply, no clear — that stays the
@@ -664,7 +672,24 @@ check_starvation_for_slot() {
                   INTEGRATION_BRANCH="${INTEGRATION_BRANCH}" \
                   bash "${STARVE_DETECTOR}" "${repo_dir}" --slot "${slot_id}" 2>/dev/null || echo "")
         if [[ -n "${payload}" ]]; then
-            # STARVED. Ping once per episode (skip if already marked).
+            # STARVED. Attempt safe auto-reconcile BEFORE paging — see auto-reconcile-starved-
+            # repo.sh's header for its safety gates. Empty output = reconciled + content verified
+            # (skip the ping, clear the marker); non-empty output = the original starve payload
+            # plus an AUTO-RECONCILE section (declined, or needs manual resolution) — ping with
+            # THAT instead of the bare starve message so the page carries what was already tried.
+            if [[ "${AUTO_RECONCILE_STARVED}" -eq 1 && ( -x "${AUTO_RECONCILE_SCRIPT}" || -f "${AUTO_RECONCILE_SCRIPT}" ) ]]; then
+                recon_payload=$(FF_STARVE_COMMIT_THRESHOLD="${FF_STARVE_COMMIT_THRESHOLD}" \
+                                 FF_STARVE_AGE_HOURS="${FF_STARVE_AGE_HOURS}" \
+                                 INTEGRATION_BRANCH="${INTEGRATION_BRANCH}" \
+                                 bash "${AUTO_RECONCILE_SCRIPT}" "${repo_dir}" --branch "${INTEGRATION_BRANCH}" --slot "${slot_id}" 2>/dev/null || echo "")
+                if [[ -z "${recon_payload}" ]]; then
+                    log "[auto-reconcile-ok] slot ${slot_id}/${repo_name} — starved repo reconciled automatically, content verified"
+                    [[ -f "${marker}" ]] && rm -f "${marker}" 2>/dev/null || true
+                    continue
+                fi
+                payload="${recon_payload}"
+            fi
+            # Ping once per episode (skip if already marked).
             if [[ ! -f "${marker}" ]]; then
                 if post_starve_ping "${slot_id}" "${repo_name}" "${payload}" "${token}" "starve-ping"; then
                     : > "${marker}" 2>/dev/null || true

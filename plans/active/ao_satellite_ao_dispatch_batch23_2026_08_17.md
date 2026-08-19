@@ -27,10 +27,10 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch23_finalize_2026_08_17.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /codex/04-architecture/agent-orchestrator-overview.md,
     /plans/active/issues/docs_reconcile_findings_2026_08_17.md,
     /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
-    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
+    /plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-17"
@@ -52,10 +52,10 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
+    /plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/docs_reconcile_findings_2026_08_17.md,
     /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
-    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
+    /plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 source: >-
@@ -132,7 +132,7 @@ are bounded, already-decided, and conflict-clear:
       operator answer but no corresponding worker-side pickup, across recent runs. **Done when**: a count of
       affected historical rows is reported (0 is a valid, good answer) and, if any are found, each is individually
       resolved (apply the answer now, or re-ask if too stale to trust). Source:
-      `/plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md` todo "[BACKEND] P2.
+      `/plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md` todo "[BACKEND] P2.
       Audit whether other plan_reconciler/na-eligibility-audit runs...". Repo: agent-orchestrator (+ unified-trading-pm
       for the source doc's own historical-scan scope).
 - [ ] [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic**
@@ -180,7 +180,7 @@ are bounded, already-decided, and conflict-clear:
       manifest/index into memory rather than a streamed/chunked read. **Done when**: each script either reads its
       manifest/index in a bounded/streamed fashion or is wrapped in `scripts/dev/run-bounded-analysis.sh`, and a
       7-day post-fix `journalctl -u resource-watchdog` check shows zero kills attributable to these script names.
-      Source: `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` todo
+      Source: `/plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` todo
       "[INFRA] P2. Wrap or streamify the CEFI-manifest-scale scripts...". Repo: market-tick-data-service.
 
 ## Codex SSOTs (read before starting)

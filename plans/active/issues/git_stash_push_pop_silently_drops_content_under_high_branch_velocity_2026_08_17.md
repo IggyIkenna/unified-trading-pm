@@ -214,7 +214,7 @@ mechanism inside a call that is already being backgrounded by the tool itself.
 
 `grind_v4.sh`'s batch 1 failed 5 identical consecutive `plan-hygiene` pre-commit rejections before this was
 diagnosed (rather than blindly retried further, per this workspace's "two identical failures means diagnose, don't
-keep retrying" discipline). Root cause: `plans/active/artifact_pipeline_observability_2026_07_17.md` was already at
+keep retrying" discipline). Root cause: `/plans/active/artifact_pipeline_observability_2026_07_17.md` was already at
 998 lines; adding the standard 3-line context-scout Progress Log marker pushed it to 1001, one over this workspace's
 hard plan line cap, and the `check_line_caps.sh` pre-commit hook correctly rejected the whole batch every time (all
 10 of batch 1's files were blocked by this one file's violation). The `/context-scout` skill's own SKILL.md already
@@ -261,22 +261,22 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
       `stash pop` unconditionally after a `stash push` -- compare `git stash list | wc -l` before/after the push and
       only pop if the count actually grew, otherwise the push was a no-op and popping is popping someone else's
       stash. Both should be added explicitly to that guidance once confirmed.
-- [ ] [DATA] P3. If this branch's commit velocity in the observed window (2026-08-17 ~13:45-15:15 UTC) turns out to
-      recur regularly (check via `git log --since=... --until=... --oneline | wc -l` on a future date), consider
-      whether the double branch-drift pre-commit check is worth relaxing to a single check for small (<20 file)
-      commits specifically, to reduce the race window -- not urgent, no action needed unless this recurs and starts
-      costing real agent time again.
+- [ ] [DATA] P3. If this branch's commit velocity recurs regularly in future windows, consider relaxing the double
+      branch-drift pre-commit check to a single check for small (<20 file) commits specifically, to reduce the race
+      window. Check recurrence via `git log --since=... --until=... --oneline | wc -l` against the observed baseline
+      window (2026-08-17 ~13:45-15:15 UTC) -- not urgent, no action needed unless this recurs and starts costing real
+      agent time again.
 - [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` item 2 (na-eligibility-audit 2026-08-17). Promote the confirmed `git pull --rebase --autostash` per-batch fix (Third incident above) into
       the durable recovery guidance in `/codex/05-infrastructure/per-tab-worktrees.md` and/or
       `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md` -- this is now a CONFIRMED fix (not a
       hypothesis, unlike todo 1 above): any multi-cycle commit loop on a shared branch should default to
       `--rebase --autostash`, never `--ff-only`, for its per-cycle reconciliation pull.
 - [ ] [SCRIPT] P3. If a future task promotes a grind-style bulk-doc-edit tool to `scripts/`, port over the
-      `/context-scout` skill's line-cap pre-check (Fifth finding above) so it does not need to be hand-diagnosed
-      and manually patched per-file again.
-- [ ] [REVIEW] P2. Decide whether this workspace's grind-style hand-rolled commit loops should be retired in favor
-      of routing bulk doc/plan-flip backfills through `scripts/dev/safe-doc-push.sh` (Sixth finding above) -- the
-      hand-rolled approach worked empirically this session once fixed, but duplicates safety properties
+      `/context-scout` skill's line-cap pre-check (Fifth finding above).
+      This is so it does not need to be hand-diagnosed and manually patched per-file again.
+- [ ] [REVIEW] P2. Decide whether this workspace's grind-style hand-rolled commit loops should be retired in favor of
+      routing bulk doc/plan-flip backfills through `scripts/dev/safe-doc-push.sh` (Sixth finding above).
+      The hand-rolled approach worked empirically this session once fixed, but duplicates safety properties
       (isolated-worktree commits) the prescribed tool already provides.
 
 ## Progress Log

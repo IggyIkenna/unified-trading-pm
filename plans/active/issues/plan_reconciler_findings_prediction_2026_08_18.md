@@ -358,3 +358,9 @@ fixing 11 other tranches' concurrent NA growth would defeat the sharded-run desi
   the batch7+finalize archival referrer-fix). None is a bounded worker-determinable outcome; the grace items
   self-resolve on their own schedule and the routing note needs a skill-owner decision, not a per-doc dispatch. Doc
   stays NA.
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:bca4cb0c5c213285]: KEEP-NA,
+  stale-items — 3 open items reconciled (grep + manual count both match Phase-0's given 3). Item 2 (Betfair `[INFRA]`
+  tag, identical to `_2026_08_16.md`'s item 2) is superseded by the fuller version in
+  `plan_reconciler_findings_predictions_master_2026_08_19.md:200-216` — same non-action reasoning as that sibling
+  doc's marker. Item 1 (systemic `last_updated` staleness routing note) and item 3 (mdps_fleet mistag pointer) remain
+  correctly non-dispatchable. Doc stays NA.

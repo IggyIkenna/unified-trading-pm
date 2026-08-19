@@ -53,13 +53,13 @@ completes.
 ## Todos
 
 - [ ] [REVIEW] P2. Reconcile: confirm the decoupling fix's regression test genuinely asserts the alert path fires
-      during a halted tick (not just that the function is reachable), and that the live-verify todo's `journalctl`
+      DURING A HALTED TICK (not just that the function is reachable), and that the live-verify todo's `journalctl`
       check actually captured a real halted-tick "pool ceiling (transient)" line before treating either as closed —
       the source doc's own honest framing (BLK-94d07b76, filed for design review, not a blind live fix) means this
       needs a real check, not a rubber stamp.
 - [ ] [DOC] P2. Once reconciled, run the standard 6-step archival ritual on
-      `escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`, fixing every corpus referrer
-      (including `escalation_watchdog_retune_and_reconcile_2026_08_07.md` and
+      `escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`.
+      Fix every corpus referrer (including `escalation_watchdog_retune_and_reconcile_2026_08_07.md` and
       `escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md`'s `related:` links).
 
 ## Progress Log

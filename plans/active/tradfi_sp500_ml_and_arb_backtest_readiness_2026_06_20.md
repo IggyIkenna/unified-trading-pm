@@ -373,3 +373,11 @@ here.
   re-litigated (5th consecutive pass).** 6 of 7 open todos covered by the standing multi-times-reaffirmed ruling; the
   7th stays flagged, not promoted, same reasoning. `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-19** (tradfi tranche, dispatch agt-5d34f9): **KEEP-NA, valid — established ruling
+  not re-litigated (6th consecutive pass).** All 7 open todos re-read end-to-end; count reconciled (7/7). No content
+  change since the 08-16 marker (only the 08-17 context-scout touch). The 4 P0/P2 feature-pipeline items (delta-one
+  full-range launch, features-volatility launch, realized_vol CLI wiring, VIX sub-todo) and 3 P3 backtest items
+  (gated on master Group-F harness) remain genuine engineering/design-risk work on live-dispatch-adjacent ML
+  machinery, not mis-defaulted NA — the sibling archived tracker's own history (landing even one single-day smoke
+  required finding+fixing 9 distinct bugs across 2 repos) is the standing basis, not re-derived this pass.
+  `assigned_vm` unchanged.

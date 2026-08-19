@@ -79,7 +79,7 @@ layers, each catching what the previous layer misses, each backing up the one be
 
 ## The four lines of defense
 
-1. **`plans/active/task_template.md` — LOCAL, pre-write check (line 1).** The template an author reads BEFORE writing a
+1. **`/plans/active/task_template.md` — LOCAL, pre-write check (line 1).** The template an author reads BEFORE writing a
    plan should already encode, as directly-followable rules, pretty much everything `/plan-reconcile` checks for after
    the fact — line-1-truncation discipline (§3 already has this — audit whether it's followed in practice),
    ordering-dependency encoding (`sequential:`/`depends_on`+`gate_on_depends`, not prose — §4 already has this too),

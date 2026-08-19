@@ -894,3 +894,4 @@ family (all classified by the 2026-08-10 `/ag-closeout-audit cefi` run, slot 27,
   discoverability-index doc (its own body IS the reading list); the parent closeout plan + the line-cap-remediation
   source doc remain the right minimal set.
 - **na-eligibility-audit 2026-08-16** [body-hash:299542f08529c1c3]: KEEP-NA, valid — Read the full 851-line doc end-to-end (two Read calls covering 1-510 and 511-851).
+- **na-eligibility-audit 2026-08-19** [body-hash:46beee079ef5dc24]: KEEP-NA, valid — Fresh full re-read (2 Read calls, 897 lines) confirms the sole open checkbox is unchanged (the standing "keep this index synced" non-terminal maintenance duty). The 2026-08-18 plan_reconciler pass added a large stale-digest correction table (headline finding, 24 rows) since the last marker — pure content/citation hygiene, doesn't change the verdict. Reaffirms 8+ prior passes.

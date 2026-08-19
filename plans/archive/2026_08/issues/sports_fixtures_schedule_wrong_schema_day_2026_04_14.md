@@ -7,7 +7,7 @@ summary:
   fixtures schema (`af_league_id`, `season`, `round`, ...) and instead resolve to an instrument-catalogue/registry
   schema (`instrument_key`, `venue`, `instrument_type`, `raw_symbol`, `base_asset`, `quote_asset`, `tick_size`, ...).
   Discovered incidentally while scanning the sports fixtures corpus for the round-derivation residual backfill.
-status: open
+status: resolved
 nature: issue
 asset_group: [sports]
 stage: [data]
@@ -33,6 +33,13 @@ drift_direction: advance-code
 depends_on: []
 context_scope: [instruments-service/instruments_service/engine/orchestrator/writers.py, instruments-service/scripts/recover_fixtures_schedule_wrong_schema_day_2026_04_14.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/archive/2026_07/sports_closeout_batch1_ao_ready_2026_07_24.md]
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-19 (`/plan-reconcile sports_master`).** All 6 todos HARD-verified `[x]` (commits
+> `instruments-service@b3cb6f8c`, `@a9f42320`, `@8df301f4`; operator ruling 2026-08-09 LEAVE UNMAPPED). `status`
+> flipped `open`→`resolved` and moved to `plans/archive/2026_08/issues/` in this same pass (the flip-then-mv
+> two-commit gate this doc's `archive_exempt: true` bridge existed for). Referrers repointed:
+> `sports_consolidated_closeout_2026_07_19.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`,
+> `sports_satellite_ao_dispatch_batch9_2026_08_04.md`, `sports_fixtures_object_wrong_schema_instrument_catalog_contamination_2026_08_09.md`.
 
 # Sports fixtures_schedule day=2026-04-14 — wrong-schema shards (instrument-catalogue content in a fixtures path)
 
@@ -483,7 +490,10 @@ correct schema (verified live, this pass). No PROD GCS object was written, moved
       `honest-coverage-model.md` naming this doc as the explanation, so a future reconciliation pass greps straight to
       the answer instead of re-discovering and re-investigating this exact same thing from scratch.
 
-      **DONE via option (b) (2026-08-09, slot 17, data_engineering) — `unified-trading-pm@<pending>`.** Chose (b) over
+      **DONE via option (b) (2026-08-09, slot 17, data_engineering) — `unified-trading-pm@b2cf5ab193`** (verified via
+      `git show --stat b2cf5ab193`: touches `/codex/02-data/honest-coverage-model.md` + this doc, matching the
+      description below; citation corrected 2026-08-19 `/plan-reconcile` — was a stale literal `<pending>` placeholder
+      never filled in). Chose (b) over
           (a) deliberately, not just as the cheaper fallback: neither existing non-`captured` state actually fits these 90
           rows — `attempted_failed` means "attempt raised before producing rows" and these rows genuinely WERE produced
           (wrong content, not a failed attempt), so reclassifying to it would trade one dishonest label for another.

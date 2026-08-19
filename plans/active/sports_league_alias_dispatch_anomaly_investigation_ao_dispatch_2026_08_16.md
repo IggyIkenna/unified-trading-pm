@@ -56,8 +56,7 @@ resolved_by:
 
 ## Todos
 
-- [ ] [DATA] P2. **Root-cause the league-alias dispatch anomaly (SEGUNDA_DIVISION→LA_LIGA_2 and similar) found in
-      the 2026-08-10 sports-drop-stale dry-run's no-twin population**, as a bounded step SEPARATE from Big Finding
+- [ ] [DATA] P2. **Root-cause the league-alias dispatch anomaly (SEGUNDA_DIVISION→LA_LIGA_2 and similar) found in the 2026-08-10 sports-drop-stale dry-run's no-twin population**, as a bounded step SEPARATE from Big Finding
       #3's league-vocabulary contamination (`sports_peripheral_bucket_league_vocabulary_contamination_2026_07_20.md`).
       Determine: is this a real DISPATCH BUG (the writer routes SEGUNDA_DIVISION-labeled odds under a
       LA_LIGA_2-keyed canonical path or vice versa, producing a spurious no-twin SKIP), or is it purely the

@@ -1,0 +1,622 @@
+<!-- generated: 2026-08-19T02:30:00Z by /plan-reconcile deployment_and_user_management_master (epic-scoped) -->
+<title>Deployment &amp; User Management</title>
+<style>
+  :root{
+    --ink:#F4F6F9; --panel:#FFFFFF; --panel-2:#EEF1F6; --line:#D7DEE8;
+    --accent:#B5720F; --accent-ink:#FFFFFF; --accent-2:#0E7E73;
+    --text:#16202E; --text-dim:#5B6B80; --text-faint:#8493A6;
+    --ok:#187A46; --ok-bg:#E3F5EB; --warn:#9A6300; --warn-bg:#FBF0D6;
+    --crit:#B22B48; --crit-bg:#FBE3E9;
+    --led-glow: 0 0 0 rgba(0,0,0,0);
+    --shadow: 0 1px 2px rgba(20,30,45,.06), 0 8px 24px -12px rgba(20,30,45,.18);
+    --radius: 3px;
+    --font-mono: ui-monospace,"SF Mono","IBM Plex Mono","Cascadia Code","Roboto Mono",Menlo,Consolas,monospace;
+    --font-body: -apple-system,BlinkMacSystemFont,"Segoe UI","Inter",system-ui,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --ink:#090C12; --panel:#121826; --panel-2:#1A2233; --line:#2B3650;
+      --accent:#F5A623; --accent-ink:#1A1204; --accent-2:#4FD1C5;
+      --text:#E9EEF6; --text-dim:#9AA8BE; --text-faint:#6B7893;
+      --ok:#4ADE80; --ok-bg:rgba(74,222,128,.12); --warn:#FBBF24; --warn-bg:rgba(251,191,36,.12);
+      --crit:#FB7185; --crit-bg:rgba(251,113,133,.13);
+      --led-glow: 0 0 8px currentColor;
+      --shadow: 0 1px 0 rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --ink:#090C12; --panel:#121826; --panel-2:#1A2233; --line:#2B3650;
+    --accent:#F5A623; --accent-ink:#1A1204; --accent-2:#4FD1C5;
+    --text:#E9EEF6; --text-dim:#9AA8BE; --text-faint:#6B7893;
+    --ok:#4ADE80; --ok-bg:rgba(74,222,128,.12); --warn:#FBBF24; --warn-bg:rgba(251,191,36,.12);
+    --crit:#FB7185; --crit-bg:rgba(251,113,133,.13);
+    --led-glow: 0 0 8px currentColor;
+    --shadow: 0 1px 0 rgba(0,0,0,.4), 0 12px 32px -16px rgba(0,0,0,.6);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--ink); color:var(--text);
+    font-family:var(--font-body); line-height:1.55;
+    font-variant-numeric:tabular-nums;
+  }
+  ::selection{ background:var(--accent); color:var(--accent-ink); }
+  a{ color:var(--accent-2); text-decoration:none; }
+  a:hover{ text-decoration:underline; }
+  a:focus-visible, button:focus-visible, summary:focus-visible{
+    outline:2px solid var(--accent-2); outline-offset:2px;
+  }
+  code, .mono{ font-family:var(--font-mono); }
+  .wrap{ max-width:1180px; margin:0 auto; padding:0 clamp(16px,4vw,40px) 96px; }
+  .eyebrow{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--accent); display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before{ content:""; width:7px; height:7px; border-radius:50%; background:var(--accent); box-shadow:var(--led-glow); }
+  h1,h2,h3{ text-wrap:balance; font-family:var(--font-mono); font-weight:600; letter-spacing:-.01em; margin:0; }
+  .section-tag{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--text-faint); display:flex; align-items:center; gap:12px; margin:0 0 18px;
+  }
+  .section-tag::before,.section-tag::after{ content:""; height:1px; background:var(--line); flex:1; }
+  .section-tag .lbl{ white-space:nowrap; color:var(--text-dim); }
+  section{ margin-top:72px; }
+  .card-shadow{ box-shadow:var(--shadow); }
+
+  /* ---------- masthead ---------- */
+  .masthead{
+    padding:56px 0 36px; border-bottom:1px solid var(--line);
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--accent) 6%, transparent), transparent 60%);
+  }
+  .masthead h1{ font-size:clamp(30px,4.6vw,46px); margin-top:14px; color:var(--text); }
+  .masthead .dek{
+    font-family:var(--font-body); font-size:16px; color:var(--text-dim); max-width:64ch; margin-top:14px;
+  }
+  .masthead .meta-row{
+    margin-top:22px; display:flex; flex-wrap:wrap; gap:10px 22px;
+    font-family:var(--font-mono); font-size:12px; color:var(--text-faint);
+  }
+  .masthead .meta-row b{ color:var(--text-dim); font-weight:600; }
+
+  /* ---------- chips ---------- */
+  .chip-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:20px; }
+  .chip{
+    font-family:var(--font-mono); font-size:12px; padding:6px 12px; border-radius:999px;
+    border:1px solid var(--line); background:var(--panel); color:var(--text-dim);
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .chip.in{ border-color:color-mix(in srgb, var(--ok) 45%, var(--line)); color:var(--ok); }
+  .chip.out{ border-color:color-mix(in srgb, var(--crit) 40%, var(--line)); color:var(--crit); text-decoration:line-through; text-decoration-color:color-mix(in srgb, var(--crit) 60%, transparent); }
+  .chip .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; }
+
+  /* ---------- stat strip ---------- */
+  .stat-strip{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:1px; background:var(--line); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; }
+  .stat{ background:var(--panel); padding:22px 20px; }
+  .stat .n{ font-family:var(--font-mono); font-size:34px; font-weight:700; color:var(--text); line-height:1; }
+  .stat .n.accent{ color:var(--accent); }
+  .stat .n.ok{ color:var(--ok); }
+  .stat .n.warn{ color:var(--warn); }
+  .stat .lbl{ margin-top:9px; font-family:var(--font-mono); font-size:11px; letter-spacing:.09em; text-transform:uppercase; color:var(--text-faint); }
+  .stat .sub{ margin-top:4px; font-size:12px; color:var(--text-dim); }
+
+  /* ---------- plan cards ---------- */
+  .cluster{ margin-top:34px; }
+  .cluster:first-child{ margin-top:0; }
+  .cluster-h{
+    font-family:var(--font-mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--accent-2); margin-bottom:14px; display:flex; align-items:baseline; gap:10px;
+  }
+  .cluster-h .count{ color:var(--text-faint); font-weight:400; text-transform:none; letter-spacing:0; }
+  .cards-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(310px,1fr)); gap:14px; }
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius);
+    padding:18px 18px 16px; display:flex; flex-direction:column; gap:10px;
+  }
+  .card-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .card h3{ font-size:14.5px; line-height:1.4; font-weight:600; }
+  .card h3 a{ color:var(--text); }
+  .card h3 a:hover{ color:var(--accent-2); }
+  .led{ width:9px; height:9px; border-radius:50%; margin-top:5px; flex-shrink:0; box-shadow:var(--led-glow); }
+  .led.dispatched{ background:var(--accent-2); }
+  .led.gated{ background:var(--warn); }
+  .led.aggregator{ background:var(--text-faint); box-shadow:none; }
+  .card .path{ font-family:var(--font-mono); font-size:10.5px; color:var(--text-faint); word-break:break-all; }
+  .progress{ height:6px; border-radius:3px; background:var(--panel-2); overflow:hidden; display:flex; }
+  .progress .done{ background:var(--ok); }
+  .progress .open{ background:var(--warn); }
+  .progress.done-full .done{ background:var(--text-faint); }
+  .count-row{ display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--text-dim); }
+  .count-row .open-n{ color:var(--warn); font-weight:600; }
+  .count-row .done-n{ color:var(--ok); font-weight:600; }
+  .badges{ display:flex; gap:6px; flex-wrap:wrap; }
+  .badge{ font-family:var(--font-mono); font-size:10px; padding:2px 7px; border-radius:3px; border:1px solid var(--line); color:var(--text-faint); text-transform:uppercase; letter-spacing:.05em; }
+  .badge.agg{ color:var(--text-dim); border-color:var(--text-faint); }
+  .badge.dispatched{ color:var(--accent-2); border-color:color-mix(in srgb, var(--accent-2) 45%, var(--line)); }
+  .quote{
+    font-size:12.5px; color:var(--text-dim); border-left:2px solid var(--warn); padding-left:10px;
+    background:var(--warn-bg); border-radius:0 3px 3px 0; padding:7px 10px; font-family:var(--font-body);
+  }
+  .card .summary{ font-size:12.5px; color:var(--text-dim); }
+
+  /* ---------- operator desk ---------- */
+  .table-wrap{ overflow-x:auto; border:1px solid var(--line); border-radius:var(--radius); }
+  table{ width:100%; border-collapse:collapse; min-width:640px; }
+  th{
+    text-align:left; font-family:var(--font-mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--text-faint); background:var(--panel-2); padding:11px 14px; border-bottom:1px solid var(--line);
+  }
+  td{ padding:13px 14px; border-bottom:1px solid var(--line); font-size:13px; vertical-align:top; background:var(--panel); }
+  tr:last-child td{ border-bottom:none; }
+  td.mono{ font-family:var(--font-mono); font-size:12px; color:var(--text-dim); white-space:nowrap; }
+  .pill{ font-family:var(--font-mono); font-size:10.5px; padding:2px 8px; border-radius:999px; display:inline-block; }
+  .pill.p2{ background:var(--warn-bg); color:var(--warn); }
+  .pill.p3{ background:var(--panel-2); color:var(--text-dim); }
+
+  /* ---------- closed out ---------- */
+  .fix-list{ display:flex; flex-direction:column; gap:10px; }
+  .fix{
+    display:grid; grid-template-columns:22px 1fr; gap:12px; padding:14px 16px; background:var(--panel);
+    border:1px solid var(--line); border-radius:var(--radius); align-items:start;
+  }
+  .fix .check{ color:var(--ok); font-family:var(--font-mono); font-size:15px; line-height:1.3; }
+  .fix .t{ font-size:13.5px; color:var(--text); font-weight:600; }
+  .fix .d{ font-size:12.5px; color:var(--text-dim); margin-top:3px; }
+  .fix .d code{ font-size:11.5px; background:var(--panel-2); padding:1px 5px; border-radius:2px; color:var(--accent-2); }
+
+  /* ---------- lanes ---------- */
+  .lane-card{
+    background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); padding:16px 18px;
+    display:flex; flex-direction:column; gap:8px;
+  }
+  .lane-id{ font-family:var(--font-mono); font-size:11px; color:var(--accent); letter-spacing:.08em; }
+  .lane-card h4{ font-size:14px; margin:0; font-family:var(--font-body); font-weight:700; color:var(--text); }
+  .lane-files{ font-family:var(--font-mono); font-size:11px; color:var(--text-faint); }
+  .lane-files b{ color:var(--text-dim); font-weight:600; }
+
+  /* ---------- dispatch prompts ---------- */
+  details.prompt{ background:var(--panel); border:1px solid var(--line); border-radius:var(--radius); margin-bottom:12px; }
+  details.prompt summary{
+    padding:14px 18px; cursor:pointer; list-style:none; display:flex; align-items:center; justify-content:space-between;
+    font-family:var(--font-mono); font-size:12.5px; color:var(--text); gap:12px;
+  }
+  details.prompt summary::-webkit-details-marker{ display:none; }
+  details.prompt summary .car{ color:var(--text-faint); transition:transform .15s; }
+  details.prompt[open] summary .car{ transform:rotate(90deg); }
+  details.prompt pre{
+    margin:0; padding:16px 18px 20px; border-top:1px solid var(--line); overflow-x:auto;
+    font-family:var(--font-mono); font-size:11.5px; line-height:1.6; color:var(--text-dim); white-space:pre-wrap;
+    background:var(--panel-2);
+  }
+  .copy-btn{
+    font-family:var(--font-mono); font-size:10.5px; padding:4px 10px; border-radius:3px;
+    border:1px solid var(--line); background:transparent; color:var(--text-dim); cursor:pointer;
+  }
+  .copy-btn:hover{ border-color:var(--accent-2); color:var(--accent-2); }
+
+  /* ---------- notes ---------- */
+  .notes{ font-size:13px; color:var(--text-dim); }
+  .notes ul{ padding-left:20px; }
+  .notes li{ margin-bottom:8px; }
+  .notes code{ background:var(--panel-2); padding:1px 5px; border-radius:2px; color:var(--accent-2); font-size:12px; }
+  footer{ margin-top:80px; padding-top:22px; border-top:1px solid var(--line); font-family:var(--font-mono); font-size:11px; color:var(--text-faint); }
+
+  @media (max-width:640px){
+    .cards-grid{ grid-template-columns:1fr; }
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- 1. MASTHEAD -->
+  <header class="masthead">
+    <div class="eyebrow">Epic Ledger &middot; live console</div>
+    <h1>Deployment &amp; User Management</h1>
+    <p class="dek">
+      Owns deployment-api + deployment-ui: the data-status/honest-coverage surface, deployment registry &amp;
+      lifecycle health, cost/observability panels, and CI cost-reduction machinery — everything that puts a build
+      on the pad and tells the operator whether it's actually flying. Regenerated by an epic-scoped
+      <code>/plan-reconcile</code> pass.
+    </p>
+    <div class="meta-row">
+      <span><b>Generated</b> 2026-08-19</span>
+      <span><b>Tier</b> L3</span>
+      <span><b>Priority</b> P0</span>
+      <span><b>Repos</b> deployment-api &middot; deployment-ui &middot; unified-trading-system-ui</span>
+      <span><b>Source</b> parent_epic-matched, 17 docs</span>
+    </div>
+  </header>
+
+  <!-- 2. IN-SCOPE / EXCLUDED CHIPS -->
+  <section style="margin-top:26px;">
+    <div class="chip-row">
+      <span class="chip in"><span class="dot"></span>deployment-api</span>
+      <span class="chip in"><span class="dot"></span>deployment-ui</span>
+      <span class="chip in"><span class="dot"></span>unified-trading-system-ui (DART/auth-flow surfaces)</span>
+      <span class="chip out"><span class="dot"></span>user-management-ui — ARCHIVED 2026-07-12</span>
+      <span class="chip out"><span class="dot"></span>user-management-service — never existed as a repo</span>
+    </div>
+  </section>
+
+  <!-- 3. HEADLINE STAT STRIP -->
+  <section>
+    <p class="section-tag"><span class="lbl">Telemetry</span></p>
+    <div class="stat-strip">
+      <div class="stat"><div class="n warn">22</div><div class="lbl">Open todos</div><div class="sub">deduped, aggregator-excluded</div></div>
+      <div class="stat"><div class="n ok">71</div><div class="lbl">Done todos</div><div class="sub">deduped</div></div>
+      <div class="stat"><div class="n accent">3</div><div class="lbl">On operator desk</div><div class="sub">[OPERATOR]-tagged open lines</div></div>
+      <div class="stat"><div class="n">17</div><div class="lbl">Child docs</div><div class="sub">12 plans (5 aggregators) + 5 issues</div></div>
+      <div class="stat"><div class="n">76%</div><div class="lbl">Done rate</div><div class="sub">71 / (71+22)</div></div>
+    </div>
+  </section>
+
+  <!-- 4. PLAN-BY-PLAN BREAKDOWN -->
+  <section>
+    <p class="section-tag"><span class="lbl">Fleet manifest</span></p>
+
+    <div class="cluster">
+      <div class="cluster-h">Data-status &amp; catalogue <span class="count">(5 docs)</span></div>
+      <div class="cards-grid">
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">Data-status catalogue explorer — Phase 2 true-catalogue source</a></h3><span class="led gated" title="NA — operator/design-gated"></span></div>
+          <div class="path">plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md</div>
+          <div class="progress"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">0 done</span></div>
+          <div class="summary">Sole todo is self-described "architecturally open-ended" — gated on the prediction <code>/catalogue</code> 79-row dedupe-collapse being decided first. KEEP-NA valid, 5th consecutive audit.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">Data-status manifest cell-grid re-architecture</a></h3><span class="led gated" title="NA — design gate unmade"></span></div>
+          <div class="path">plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md</div>
+          <div class="progress"><div class="done" style="width:14%"></div><div class="open" style="width:86%"></div></div>
+          <div class="count-row"><span class="open-n">6 open</span><span class="done-n">1 done</span></div>
+          <div class="summary">Fixes the ~18-81GB full-manifest-load OOM behind repeated deployment-api crashes. Todo 1 (measurement) shipped; todo 2's bound/stream/precompute 3-way design choice still unmade, gating todos 3-7.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">Data-status tab + instruments download remediation</a></h3><span class="led gated" title="NA — APPLY-GATE HOLD"></span></div>
+          <div class="path">plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md</div>
+          <div class="progress"><div class="done" style="width:94%"></div><div class="open" style="width:6%"></div></div>
+          <div class="count-row"><span class="open-n">2 open</span><span class="done-n">31 done</span></div>
+          <div class="summary">31 of 33 shipped — venue filters, honest-coverage headline fix, CSV downloads, TradFi canonical naming. Remaining 2: defi/sports v9 APPLY-GATE sign-off (operator HOLD) + a phantom-row audit gated on it.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">Sports fixtures browser — single catalogue source</a></h3><span class="led gated" title="NA — resolved via sibling doc"></span></div>
+          <div class="path">plans/active/sports_fixtures_browser_single_catalogue_source_2026_07_24.md</div>
+          <div class="progress"><div class="done" style="width:67%"></div><div class="open" style="width:33%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">2 done</span></div>
+          <div class="summary">Backend + UI relabel shipped. Sole open item (regen-freshness caveat) is already resolved by operator ruling 2026-08-08, implemented in a sibling doc — checkbox flips there, not here.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">Sports/prediction MVP write-time precompute</a></h3><span class="led gated" title="NA — fleet-wide schema-bump risk"></span></div>
+          <div class="path">plans/active/sports_prediction_mvp_writetime_precompute_2026_07_24.md</div>
+          <div class="progress"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">0 done</span></div>
+          <div class="summary">Traced + designed, deliberately not shipped: a manifest schema v9→10 bump on the ONE shared <code>AvailabilityRecord</code> every asset_group writes needs a full-fleet redeploy — explicit scope-risk STOP, not an oversight.</div>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="cluster">
+      <div class="cluster-h">CI cost &amp; test-impact <span class="count">(2 docs)</span></div>
+      <div class="cards-grid">
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">GitHub Actions CI cost reduction — operator-gated followups</a></h3><span class="led gated" title="NA — 1 desk item + design/time gates"></span></div>
+          <div class="path">plans/active/github_actions_operator_gated_followups_2026_07_17.md</div>
+          <div class="progress"><div class="done" style="width:83%"></div><div class="open" style="width:17%"></div></div>
+          <div class="count-row"><span class="open-n">4 open</span><span class="done-n">20 done</span></div>
+          <div class="quote">"RULED 2026-07-28 (retagged from [OPERATOR]) — scheduled, not blocked: operator has already…"</div>
+          <div class="summary">Fleet self-hosted-runner migration landed −64% billed spend. Remaining: STEP 2d dependency-blocked, bare-host bootstrap structurally needs a real VM, org-migration explicitly not-recommended.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">Test-impact / selective execution — fleet-wide rollout</a></h3><span class="led gated" title="NA — sequential judgment gates"></span></div>
+          <div class="path">plans/active/test_impact_fleet_wide_measurement_and_rollout_2026_08_03.md</div>
+          <div class="progress"><div class="done" style="width:82%"></div><div class="open" style="width:18%"></div></div>
+          <div class="count-row"><span class="open-n">2 open</span><span class="done-n">9 done</span></div>
+          <div class="summary">Selector + golden-set tests shipped; MDPS promoted to a real gate on explicit operator risk-accept. Open: a deprioritized divergence-analysis tool, and the fleet-wide evidence-sufficiency call (reviewer judgment).</div>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="cluster">
+      <div class="cluster-h">UI tranche operations <span class="count">(5 docs)</span></div>
+      <div class="cards-grid">
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">UI consolidated close-out (tranche hub)</a></h3><span class="led aggregator" title="Aggregator — rollup, not primary work"></span></div>
+          <div class="path">plans/active/ui_consolidated_closeout_2026_07_30.md</div>
+          <div class="progress"><div class="done" style="width:29%"></div><div class="open" style="width:71%"></div></div>
+          <div class="count-row"><span class="open-n">5 open</span><span class="done-n">2 done</span></div>
+          <div class="badges"><span class="badge agg">aggregator</span></div>
+          <div class="summary">The <code>ui</code> tranche's own closeout digest — Track 4 fully done; Tracks 1-3 verification-only rollups. Corrected 3 stale close-out criteria this pass (see Closed out this pass, below).</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">UI satellite AO batch 1</a></h3><span class="led dispatched" title="assigned_vm: planning"></span></div>
+          <div class="path">plans/active/ui_satellite_ao_dispatch_batch1_2026_08_06.md</div>
+          <div class="progress done-full"><div class="done" style="width:100%"></div></div>
+          <div class="count-row"><span class="done-n">3 / 3 done</span></div>
+          <div class="badges"><span class="badge agg">aggregator</span><span class="badge dispatched">AO-dispatched</span></div>
+          <div class="summary">Fully shipped — cell-grid memory profiling, an artifact-pipeline codex correction, a stale-checkbox reconciliation. Its finalize plan owns the archival.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">UI satellite AO batch 1 — finalize</a></h3><span class="led dispatched" title="assigned_vm: planning, ready now"></span></div>
+          <div class="path">plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md</div>
+          <div class="progress"><div class="done" style="width:75%"></div><div class="open" style="width:25%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">3 done</span></div>
+          <div class="badges"><span class="badge agg">aggregator</span><span class="badge dispatched">AO-dispatched</span></div>
+          <div class="summary">Reconciliation + deferred-item re-check + orphan re-measure all done. Last step: the 6-step archival ritual — annotated this pass with a correction (2 of its premises were stale, now moot/done).</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">UI satellite AO batch 4</a></h3><span class="led dispatched" title="assigned_vm: planning, ready now"></span></div>
+          <div class="path">plans/active/ui_satellite_ao_dispatch_batch4_2026_08_17.md</div>
+          <div class="progress"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">0 done</span></div>
+          <div class="badges"><span class="badge agg">aggregator</span><span class="badge dispatched">AO-dispatched</span></div>
+          <div class="summary">Denominator-freshness / coverage-% staleness trust annotation for the data-status tab — bounded, conflict-checked clean, ready to dispatch now.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">UI satellite AO batch 4 — finalize</a></h3><span class="led dispatched" title="assigned_vm: planning, gated on batch 4"></span></div>
+          <div class="path">plans/active/ui_satellite_ao_dispatch_batch4_finalize_2026_08_17.md</div>
+          <div class="progress"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+          <div class="count-row"><span class="open-n">2 open</span><span class="done-n">0 done</span></div>
+          <div class="badges"><span class="badge agg">aggregator</span><span class="badge dispatched">AO-dispatched</span></div>
+          <div class="summary">Machine-gated on batch 4 landing. Citation upgrade + 6-step archival, in order.</div>
+        </article>
+
+      </div>
+    </div>
+
+    <div class="cluster">
+      <div class="cluster-h">Issues &amp; findings <span class="count">(5 docs)</span></div>
+      <div class="cards-grid">
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">architecture_v2 strategy-archetype — live Drift-venue residue</a></h3><span class="led gated" title="NA — bundled sub-parts"></span></div>
+          <div class="path">plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md</div>
+          <div class="progress"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">0 done</span></div>
+          <div class="summary">UAC-source residue fully resolved 2026-07-16/26. Remaining: a dead <code>drift</code>-venue E2E fixture ID + an unresolved UI/generator structural-skew probe. Newly linked into the tranche hub this pass — was cited by zero Tracks before.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">Cost Observability — deferred follow-up enhancements</a></h3><span class="led gated" title="NA — scoping bar not cleared"></span></div>
+          <div class="path">plans/active/issues/cost_observability_deferred_followups_2026_07_10.md</div>
+          <div class="progress"><div class="done" style="width:86%"></div><div class="open" style="width:14%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">6 done</span></div>
+          <div class="summary">6 of 7 shipped (CUR backfill closed final, 4 P3 chips/units/discounts items live). Business-context/<code>asset_group</code> enrichment ruled "proceed" but fails the bounded-outcome bar — only 45/149 launchers directly migratable.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">plan_reconciler findings — ui tranche, 2026-08-10</a></h3><span class="led gated" title="NA — 2 [OPERATOR] items"></span></div>
+          <div class="path">plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md</div>
+          <div class="progress"><div class="done" style="width:50%"></div><div class="open" style="width:50%"></div></div>
+          <div class="count-row"><span class="open-n">2 open</span><span class="done-n">2 done</span></div>
+          <div class="badges"><span class="badge">findings doc</span></div>
+          <div class="quote">"Scope the 3 orphaned 'Out of scope (named successors)' items in…" / "Define 'the agreed window' soak duration in…"</div>
+          <div class="summary">~20 fixes applied that run. Both remaining items are named-human-decision calls, re-confirmed open by 3+ subsequent audits.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">plan_reconciler findings — ui tranche, 2026-08-18</a></h3><span class="led aggregator" title="0 open — grace items applied elsewhere this pass"></span></div>
+          <div class="path">plans/active/issues/plan_reconciler_findings_ui_2026_08_18.md</div>
+          <div class="progress done-full"><div class="done" style="width:0%"></div></div>
+          <div class="count-row"><span class="done-n">0 open / 0 done (findings doc)</span></div>
+          <div class="badges"><span class="badge">findings doc</span></div>
+          <div class="summary">Yesterday's run. Its 4 grace-protected doc-drift diagnoses were all APPLIED this pass (grace window cleared, 20-34h past last touch) — see Closed out this pass, below.</div>
+        </article>
+
+        <article class="card">
+          <div class="card-top"><h3><a href="#">quickmerge.sh ENVIRONMENT auto-detect forces dev off main</a></h3><span class="led gated" title="NA — fleet-wide gate ownership contention"></span></div>
+          <div class="path">plans/active/issues/quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md</div>
+          <div class="progress"><div class="done" style="width:0%"></div><div class="open" style="width:100%"></div></div>
+          <div class="count-row"><span class="open-n">1 open</span><span class="done-n">0 done</span></div>
+          <div class="summary">Test-isolation fix + alias-precedence fix both shipped, fleet-grepped clean. Sole remaining step (broaden the LDR-branch check) is a design call on shared ship infra, gated on file-ownership contention with a CI batch.</div>
+        </article>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. ON THE OPERATOR'S DESK -->
+  <section>
+    <p class="section-tag"><span class="lbl">On the operator's desk</span></p>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Priority</th><th>Item</th><th>Doc</th><th>Gated on</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="pill p2">P2</span></td>
+            <td>Raise slot concurrency 12→16 once the remaining Claude account credentials free up</td>
+            <td class="mono">github_actions_operator<br>_gated_followups</td>
+            <td>Operator's own account provisioning (self-provisioned 2 of 4 as of 2026-07-28; do not re-raise before ~2026-08-02, already past)</td>
+          </tr>
+          <tr>
+            <td><span class="pill p3">P3</span></td>
+            <td>Scope the 3 orphaned Firestore-migration successor items (real-time listeners, lifecycle-event archival, run.log rotation)</td>
+            <td class="mono">plan_reconciler_findings<br>_ui_2026_08_10</td>
+            <td>Human call on whether/when each becomes its own plan</td>
+          </tr>
+          <tr>
+            <td><span class="pill p2">P2</span></td>
+            <td>Define "the agreed window" soak duration for the Firestore P3 cutover</td>
+            <td class="mono">plan_reconciler_findings<br>_ui_2026_08_10</td>
+            <td>No duration ever stated in-doc; moot while Phase 3's GO/NO-GO precondition stays unmet regardless</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 7. CLOSED OUT THIS PASS -->
+  <section>
+    <p class="section-tag"><span class="lbl">Closed out this pass</span></p>
+    <div class="fix-list">
+      <div class="fix">
+        <div class="check">✓</div>
+        <div>
+          <div class="t">Epic body + <code>related_plans:</code> refreshed to the real 12 children</div>
+          <div class="d"><code>plans/epics/deployment_and_user_management_master.md</code> — <code>ui_satellite_ao_dispatch_batch4_2026_08_17</code> + its finalize (created 2026-08-17, never folded in) added to the P3 tier; the archived <code>batch4_2026_08_13</code> pair (superseded 2026-08-17) removed. Cross-verified via <code>populate_epic_bodies_2026_05_21.py --dry-run</code> (P0=2/P1=5/P2=3/P3=2 matches child frontmatter exactly).</div>
+        </div>
+      </div>
+      <div class="fix">
+        <div class="check">✓</div>
+        <div>
+          <div class="t">3 grace-cleared doc-drift items applied from yesterday's findings doc</div>
+          <div class="d"><code>plans/active/ui_consolidated_closeout_2026_07_30.md</code> — Track 3's "<code>/artifacts</code>… in progress" corrected to shipped (<code>deployment-ui@3210bb5</code>); Track 3's close-out criterion corrected (alerts-N+1 reader-side DONE, writer-side WONT-DO'd-by-decision, not open); Track 4's close-out criterion corrected to match its own already-<code>[x]</code> Todo.</div>
+        </div>
+      </div>
+      <div class="fix">
+        <div class="check">✓</div>
+        <div>
+          <div class="t">Orphaned issue doc linked into the tranche hub</div>
+          <div class="d"><code>architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md</code> added to Track 4 Sources — a genuine live ui-tranche orphan cited by zero Tracks before this pass.</div>
+        </div>
+      </div>
+      <div class="fix">
+        <div class="check">✓</div>
+        <div>
+          <div class="t">Stale archival-todo premise annotated (not force-flipped)</div>
+          <div class="d"><code>ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md</code> — its archival todo's "draft a migration-batch plan" clause is now moot for <code>data_status_tab_and_downloads_remediation</code> (all 6 cleared items already shipped directly); the "trim the hub's stale prose" clause is now done (this pass, see above).</div>
+        </div>
+      </div>
+      <div class="fix">
+        <div class="check">✓</div>
+        <div>
+          <div class="t">New tooling-bug finding filed</div>
+          <div class="d"><code>issues/na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md</code> — na-eligibility-audit's own Progress Log marker text is silently cut mid-sentence with a bare "…" on at least 2 of this epic's docs (confirmed via raw byte read, not a display artifact). Distinct from the already-tracked <code>body_hash</code> instability bug. Parented to <code>plan_hygiene_master</code>, not counted in this epic's own child total.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. PARALLEL-TAB FLOW -->
+  <section>
+    <p class="section-tag"><span class="lbl">Parallel-tab flow for what's left</span></p>
+    <p class="notes" style="margin-bottom:16px;">
+      This epic is heavily audited already — 5+ rounds of na-eligibility-audit have converged most open work onto
+      genuine operator/design gates. Only 3 lanes are honestly independent and dispatch-ready right now; the
+      remaining ~16 open todos are judgment- or time-gated (see cards above) and do not belong in a parallel batch.
+    </p>
+    <div class="cards-grid">
+      <div class="lane-card">
+        <div class="lane-id">LANE A</div>
+        <h4>Ship the denominator-freshness annotation</h4>
+        <div class="lane-files"><b>Owns:</b> deployment-api data-status rollup route + deployment-ui data-status tab component (new files, untouched by any other lane)</div>
+        <div class="summary" style="margin-top:2px;">ui_satellite_ao_dispatch_batch4_2026_08_17 — 1 bounded todo, conflict-checked clean, ready now.</div>
+      </div>
+      <div class="lane-card">
+        <div class="lane-id">LANE B</div>
+        <h4>Archive batch 1 (steps 2-6 of the ritual)</h4>
+        <div class="lane-files"><b>Owns:</b> ui_satellite_ao_dispatch_batch1_2026_08_06.md (archival target) + corpus-wide referrer grep-fix, PM repo only</div>
+        <div class="summary" style="margin-top:2px;">ui_satellite_ao_dispatch_batch1_finalize_2026_08_06 — freshly annotated this pass; step 1 (checkbox reconciliation) already done.</div>
+      </div>
+      <div class="lane-card">
+        <div class="lane-id">LANE C</div>
+        <h4>Delete the dead Drift E2E fixture ID</h4>
+        <div class="lane-files"><b>Owns:</b> unified-trading-system-ui/tests/e2e/_shared/strategy-registry.ts (single file, no other lane touches it)</div>
+        <div class="summary" style="margin-top:2px;">architecture_v2_drift's genuinely bounded sub-part — the generator/UI structural-skew half of the same todo stays deferred (needs the repo .venv, unverified).</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. DISPATCH PROMPTS -->
+  <section>
+    <p class="section-tag"><span class="lbl">Dispatch prompts</span></p>
+
+    <details class="prompt">
+      <summary><span>LANE A — denominator-freshness annotation</span><span class="car">&#9656;</span></summary>
+      <pre>Read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules — fresh context, nothing inherited. If you cannot read it, STOP.
+
+Task: execute the single open todo in `unified-trading-pm/plans/active/ui_satellite_ao_dispatch_batch4_2026_08_17.md`
+("Denominator-freshness / coverage-% staleness trust annotation") — add a UI trust/staleness indicator to the
+deployment-ui data-status tab showing how fresh the coverage-% denominator computation is, mirroring the pattern
+`consolidator_throughput_backlog_monitor_2026_07_09.md` already ships. First confirm whether deployment-api already
+exposes a "denominator last computed" timestamp for the data-status rollup; if not, add it as part of this same todo
+(small, bounded backend addition).
+
+Done when: the coverage-% headline shows the staleness annotation live, `[UI]` + `pw:L2 ✓` + a regression spec
+covering it. Flip the checkbox with `&lt;repo&gt;@&lt;sha&gt; | pw:L2 ✓ | regression: &lt;path&gt;`, commit via
+`quickmerge.sh --agent --files &lt;paths&gt;`, then flip the plan checkbox in the SAME turn per the
+commit-push-flip HARD RULE.</pre>
+    </details>
+
+    <details class="prompt">
+      <summary><span>LANE B — archive batch 1</span><span class="car">&#9656;</span></summary>
+      <pre>Read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules — fresh context, nothing inherited. If you cannot read it, STOP.
+
+Task: execute `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md`'s open todo 4 ("Archive batch 1 per the
+6-step ritual"). Step 1 (source-doc checkbox reconciliation) is already done. Read the todo's own 2026-08-19
+correction note first — 2 of its original premises are now stale/moot (data_status_tab_and_downloads_remediation's
+cleared items already shipped directly; the ui_consolidated_closeout stale-prose trim is already fixed). Then run
+steps 2-6: archival banner + `status: superseded`, codex-alignment check, CLAUDE.md/codex durable-contract check
+(unlikely for this batch, confirm not assume), corpus-wide referrer repoint (leading-slash form), lock-clear
+confirmation (no-op, batch 1 has none). Physically move to `plans/archive/2026_08/`.
+
+Done when: `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci --no-regen` is 0 hard, `check_reference_paths.py`
+shows no NEW dangling reference above baseline, `regenerate_active_plan_inventory.py` reports 0 orphans.
+Commit via `docs(plans):` prefix, PM-repo doc edits only, prek-only gate (no full QG needed).</pre>
+    </details>
+
+    <details class="prompt">
+      <summary><span>LANE C — delete the dead Drift E2E fixture</span><span class="car">&#9656;</span></summary>
+      <pre>Read `unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md` in full and follow ALL rules — fresh context, nothing inherited. If you cannot read it, STOP.
+
+Task: in `unified-trading-system-ui/tests/e2e/_shared/strategy-registry.ts:158`, `CARRY_STAKED_BASIS.instanceIds`
+lists `"CARRY_STAKED_BASIS@jito-kamino-drift-sol-usdc-prod"` — the underlying Drift-venue strategy slot was already
+removed from the UAC source (`archetype_capability_manifest.json`, `archetype_leg_spec_seeds.py`, both fixed
+2026-07-16). Confirm the ID is genuinely dead (grep the UAC capability manifest for it — it should NOT appear) then
+either delete it from the array or re-point it to the surviving `jito-kamino-bybit-sol-usdt-prod` slot label used
+elsewhere in that same array — pick whichever keeps the E2E suite's own coverage intent intact, and say which you
+chose and why in the commit message. Run `unified-trading-system-ui`'s quality-gates.sh (TS strict + Playwright, no
+Python tools) before shipping.
+
+Do NOT touch the separate generator/UI structural-skew sub-part of this todo (unverified, needs the repo .venv) —
+leave that half of `architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md`'s todo open, flip only the
+E2E-fixture half with evidence.
+
+Ship via `quickmerge.sh --agent --files &lt;path&gt;`, then flip the relevant sub-part in the issue doc same turn.</pre>
+    </details>
+  </section>
+
+  <!-- 10. NOTES & METHODOLOGY -->
+  <section>
+    <p class="section-tag"><span class="lbl">Notes &amp; methodology</span></p>
+    <div class="notes">
+      <ul>
+        <li>Open/done counts and the dedup methodology mirror <code>scripts/plan-hygiene/count_open_tasks.py</code>
+          exactly (aggregator-plan exclusion, identical checkbox regexes) via <code>epic_report_data.py --epic
+          deployment_and_user_management_master --json</code>, re-run this pass — nothing here is hand-counted.</li>
+        <li><code>parent_epic</code> membership is the frontmatter-exact match
+          (<code>rg "^parent_epic: deployment_and_user_management_master$"</code>), never the filename-substring
+          "orphan" heuristic — that heuristic has confirmed false positives on this exact corpus shape.</li>
+        <li>This epic's own <code>locked_by: live-defi-rollout</code> value is the known corpus-wide placeholder-lock
+          artifact (root-caused in <code>issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md</code>,
+          operator-confirmed safe to edit despite the field being set) — not a genuine active claim.</li>
+        <li>The fleet-wide <code>populate_epic_bodies_2026_05_21.py --apply</code> regenerator was deliberately NOT
+          run this pass — its dry-run shows it would rewrite ~25 other epic files at once, 2 of which already carry
+          foreign uncommitted work on this shared checkout. This epic's body was hand-edited to match its exact
+          output instead.</li>
+        <li>Card LED key: <span style="color:var(--accent-2)">&#9679;</span> AO-dispatched (<code>assigned_vm:
+          planning</code>) &middot; <span style="color:var(--warn)">&#9679;</span> NA, operator/design-gated &middot;
+          <span style="color:var(--text-faint)">&#9679;</span> aggregator/rollup doc.</li>
+        <li>This session did not ship — every edit lives in the working tree only, per an explicit
+          shared-checkout-contention constraint. The lead session commits + pushes.</li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    plan-reconcile &middot; epic-scoped &middot; deployment_and_user_management_master &middot; regenerated 2026-08-19
+  </footer>
+</div>

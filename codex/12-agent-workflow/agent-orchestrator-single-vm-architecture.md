@@ -173,6 +173,23 @@ outranks a scheduled task's capacity floor. See `server/config.py`'s reserve/par
 mechanics; SSOT for the historical single-combined-reserve incident this replaces:
 `plans/archive/issues/ao_escalation_and_scheduled_dispatch_slot_starvation_2026_07_27.md`.
 
+**`pm_repo_path` always resolves to the DISPATCHED SLOT's own clone, never the caller's default (RULED 2026-08-19,
+`plan_reconciler_boot_pm_repo_path_points_at_root_clone_2026_08_18`)**: `plan_health.dispatch()` rewrites
+`pm_repo_path` to `str(Path(slot.worktree or f".tabs/{slot_id}/") / "unified-trading-pm")` immediately after
+`_pick_free_slot()` resolves the actual slot — the caller-supplied value (e.g. `install-plan-reconciler-timer.sh`'s
+`PM_REPO` default, the shared READ-ONLY root clone) is unconditionally overwritten before it ever reaches
+`autospawn.do_spawn`'s `extra_vars`. One shared rewrite site covers every `mode` in `_MODE_PROMPT_TEMPLATE`
+(`report`/`reconcile`/`docs_reconcile`/`ag_closeout`/`na_eligibility`/`context_scout`/etc.), not a plan_reconciler-only
+patch — confirmed 3x broken live before this fix (2026-08-16 slot 10, 2026-08-18 slot 31, 2026-08-19 slot 30) and
+verified fixed via an executed test against 2 distinct modes. **Boot-message "session variables" (`$PM_REPO_PATH`,
+`$SERVER_URL`, `$SLOT_ID`, `$DISPATCH_ID`, `$TRANCHE`, `${WORKSPACE_ROOT}`, …) are literal text, never real exported
+shell env vars** — `server/prompts.py::_compose` renders a plain `- KEY=VALUE` block and never `export`s into the
+tmux pane's shell; even if it did, a worker's Bash tool calls each start a FRESH shell with no state persisted from a
+prior call (confirmed live: `env | grep` returns nothing across 3 independent dispatches), so a copy-pasted `$VAR` in
+a command would silently expand to empty rather than error. Full explanation + the worker-facing HARD RULE text lives
+in `unified-trading-pm/agents/RULES.md` § "Your worktree — read from root, operate only in your slot" (read FIRST by
+every role per `expected_read_files()`, so this reaches every plan_health-family role uniformly).
+
 **Report-mode dispatch throttle** (`plan_health._report_dispatch_gate`, AF-2
 `plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md`, `agent-orchestrator@d098970`) — a SEPARATE,
 plan_health-local mechanism from the fleet-wide dispatch-cooldown store above, no shared state: `mode="report"`

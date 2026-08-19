@@ -156,10 +156,11 @@ rather than a new invention.
       isolation is one subprocess per client), so a param edit maps to exactly one client's subprocess with no diffing
       to work out whose values moved. Under archetype-first, one client's edit touches a file shared by every client on
       that archetype, giving a reload a blast radius of N clients. See § "Dynamic param updates" below.
-- [ ] [AGENT] P0. **Implement the client-first layout** — `configs/clients/{client_id}.yaml` with a per-archetype block,
-      a `ClientsYaml` schema change to match, and the supervisor-side loader that filters to its own (archetype, shard).
-      Migrate the two existing files (`carry_staked_basis`, `arbitrage_price_dispersion`) which today duplicate both
-      `client_id`s and restate `venue_creds_kms_path` per archetype.
+- [x] N. ✅ [AGENT] P0. Implement the client-first layout — strategy-service@c55b586c9c74d654ffacff24c04288595585b7cf
+      (`ClientConfigStore`, `configs/clients/{client_id}.yaml`, `load_client_archetype`/`load_for_archetype_shard`).
+      Migration tool shipped (`client_config_migration.py` + CLI wrapper); **not independently confirmed that the two
+      legacy files (`carry_staked_basis`, `arbitrage_price_dispersion`) were actually migrated in production** — verify
+      before treating this as fully closed (`/plan-reconcile agent_operating_framework_master` 2026-08-19).
 - [ ] [OPERATOR] P0. **Confirm which of leverage / venue selection / coin universe become per-client axes**, since each
       is a UAC schema change plus a consumer, and each has an architectural interaction: **leverage** must reconcile
       with `max_position_usd` (two overlapping notional controls invite contradiction — decide whether leverage is
@@ -343,14 +344,16 @@ same tick. That is the difference between an implementation that works and one t
 
 ### Todos
 
-- [ ] [AGENT] P0. **Move the per-client config instance to GCS**, schema + defaults staying in code per the operator's
-      centralisation ruling. This is the change that makes leverage dynamic; everything below depends on it.
-- [ ] [AGENT] P0. **Add `register_param_change_callback()` + an engine param setter**, mirroring
-      `register_instrument_change_callback()`. Without it the value reaches the process and the running engine still
-      cannot see it.
-- [ ] [AGENT] P0. **Emit a config-change EVENT with a `config_version` bump at a tick boundary**, never a silent
-      in-place swap — otherwise the ε=0 batch-rerun proof breaks. Add a reconciliation test that changes a param
-      mid-window and asserts `paper(W) == batch-rerun(W)` still holds.
+- [x] N. ✅ [AGENT] P0. Move the per-client config instance to GCS, schema + defaults staying in code per the
+      operator's centralisation ruling — strategy-service@c55b586c9c74d654ffacff24c04288595585b7cf (`ClientConfigStore`,
+      GCS-backed).
+- [x] N. ✅ [AGENT] P0. Add `register_param_change_callback()` + an engine param setter, mirroring
+      `register_instrument_change_callback()` — strategy-service@c55b586c9c74d654ffacff24c04288595585b7cf
+      (`config_reloaders.py:152` + `orchestrator.py` `queue_param_change()`).
+- [x] N. ✅ [AGENT] P0. Emit a config-change event with a `config_version` bump at a tick boundary + a reconciliation
+      test that changes a param mid-window and asserts `paper(W) == batch-rerun(W)` still holds —
+      strategy-service@c55b586c9c74d654ffacff24c04288595585b7cf (`orchestrator.py` `queue_param_change()`/B5,
+      `test_orchestrator_param_change_determinism.py::TestMidWindowParamChangeReconciliation`).
 - [ ] [OPERATOR] P1. **Confirm the tighten-vs-loosen asymmetry for risk limits.** Recommendation: **tightening** (lower
       leverage, lower caps) applies immediately as a protective action; **loosening** waits for a clean boundary or
       needs explicit authorisation. This mirrors the existing direction-and-scope-aware kill-switch philosophy

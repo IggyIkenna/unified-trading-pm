@@ -16,6 +16,17 @@ Strategy leg, stated precisely (per the task): a position adapter must exist
 for this venue in this mode, AND at least one archetype must be registered
 for this venue in this mode -- both, not either (checks.strategy_leg).
 
+The six-surface table (system_readiness_master.md W1, 2026-08-19 ruling):
+market data (MTDS) / position (strategy-service) / orders, fills, trades,
+account balance (execution-service). Market data is answered by TWO checks,
+not three: BATCH (coverage.json-observed) and LIVE (MTDS's own
+WS_FEED_CONNECTOR_FACTORIES registry) -- PAPER reuses the LIVE verdict,
+since paper always consumes the live market-data feed
+(/codex/09-strategy/operational/paper-batch-live-reconciliation.md § 0), never
+a separate paper feed. Orders/fills/trades/account_balance are answered by
+execution-service's own order-adapter registry (see
+_execution_order_capability_probe.py).
+
 Shares its shard enumeration with the honest-coverage-dump skill --
 ../../honest-coverage-dump/scripts/shard_universe.py is the single source for
 reading coverage.json and picking the current grain. This dump does not
@@ -36,8 +47,12 @@ dump reads):
 The strategy position-adapter leg additionally shells out to
 strategy-service/.venv (a separate subprocess, never an import -- see
 _strategy_position_probe.py) because that registry lives in strategy-service,
-not UAC. If that venv is absent, the position-adapter half reports
-"unverified" honestly rather than being skipped silently.
+not UAC. The execution-service order/fills/trades/balance legs shell out to
+execution-service/.venv (_execution_order_capability_probe.py) for the same
+reason, and the market_tick_data LIVE leg shells out to
+market-tick-data-service/.venv (_mtds_live_feed_probe.py). If a venv is
+absent, the corresponding leg(s) report "unverified" honestly rather than
+being skipped silently.
 
 Usage:
     python derive_readiness.py                              # full dump, summary view
@@ -128,11 +143,67 @@ def _query_strategy_position_availability(
     return result, f"queried {len(result)} venues via strategy-service/.venv"
 
 
+def _query_execution_order_capability(
+    venues: list[str], workspace_root: Path, skip: bool
+) -> tuple[dict[str, dict], str]:
+    """Returns ({venue: {"adapter_present":.., "place_order": {"mainnet":.., "testnet":..}}}, note)."""
+    if skip:
+        return {}, "skipped via --skip-execution-probe"
+    execution_python = workspace_root / "execution-service" / ".venv" / "bin" / "python3"
+    if not execution_python.exists():
+        return {}, f"{execution_python} not found -- execution-service venv unavailable in this environment"
+    probe_script = _HERE.parent / "_execution_order_capability_probe.py"
+    proc = subprocess.run(
+        [str(execution_python), str(probe_script)],
+        input=json.dumps(venues),
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=str(workspace_root / "execution-service"),
+    )
+    if proc.returncode != 0:
+        return {}, f"execution-service probe subprocess failed (exit {proc.returncode}): {proc.stderr.strip()[:300]}"
+    try:
+        result = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        return {}, f"execution-service probe returned non-JSON output: {exc}"
+    return result, f"queried {len(result)} venues via execution-service/.venv"
+
+
+def _query_mtds_live_feed(workspace_root: Path, skip: bool) -> tuple[frozenset[str], str]:
+    """Returns (frozenset of venues with a registered live WSFeedConnector, note)."""
+    if skip:
+        return frozenset(), "skipped via --skip-mtds-probe"
+    mtds_python = workspace_root / "market-tick-data-service" / ".venv" / "bin" / "python3"
+    if not mtds_python.exists():
+        return frozenset(), f"{mtds_python} not found -- market-tick-data-service venv unavailable in this environment"
+    probe_script = _HERE.parent / "_mtds_live_feed_probe.py"
+    proc = subprocess.run(
+        [str(mtds_python), str(probe_script)],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=str(workspace_root / "market-tick-data-service"),
+    )
+    if proc.returncode != 0:
+        return (
+            frozenset(),
+            f"MTDS live-feed probe subprocess failed (exit {proc.returncode}): {proc.stderr.strip()[:300]}",
+        )
+    try:
+        result = json.loads(proc.stdout)
+    except json.JSONDecodeError as exc:
+        return frozenset(), f"MTDS live-feed probe returned non-JSON output: {exc}"
+    return frozenset(result), f"{len(result)} venues registered in MTDS WS_FEED_CONNECTOR_FACTORIES"
+
+
 def build_dump(
     venues: list[str],
     modes: list[str],
     coverage_payload: dict | None,
     position_avail: dict[str, dict[str, str]],
+    execution_probe: dict[str, dict],
+    mtds_live_registered: frozenset[str],
 ) -> tuple[list[dict], dict]:
     grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
     cov_venue_ag = venue_asset_group_map(coverage_payload) if coverage_payload else {}
@@ -169,6 +240,7 @@ def build_dump(
         venue_cells = cells_by_venue.get(venue, [])
         mtds_cells = [(c.data_type, c.count("captured"), c.reachable_total()) for c in venue_cells]
         vd_mtds_batch = checks.mtds_captured(mtds_cells)
+        vd_mtds_live = checks.mtds_live_feed(venue, mtds_live_registered)
 
         vd_mdps = checks.mdps_consumed(venue_dts, MDPS_DERIVABLE_DATA_TYPES)
         vd_features = checks.features_consumed(venue_dts, step17.orphaned_data_types)
@@ -176,26 +248,26 @@ def build_dump(
         vd_transfers = checks.execution_transfers(venue, wallet_capability_venues)
         vd_instruction = checks.execution_instruction()
 
+        # Mode-invariant execution-service legs -- adapter presence doesn't vary
+        # by mode (see checks.py's module comment on the execution surfaces).
+        vd_fills = checks.execution_fills(venue, execution_probe)
+        vd_trades = checks.execution_trades(venue, execution_probe)
+        vd_balance = checks.execution_account_balance(venue, execution_probe)
+
         mode_avail = position_avail.get(venue)
 
         for mode in modes:
             mode_status = mode_avail.get(mode.lower()) if mode_avail else None
             vd_adapter = checks.strategy_position_adapter(venue, mode, mode_status)
             vd_strategy = checks.strategy_leg(vd_archetype, vd_adapter)
+            vd_orders = checks.execution_orders(venue, mode, execution_probe)
 
             # instruments-service / declared / features-consumability / MDPS-capability are
-            # structural (mode-invariant) facts; MTDS capture is BATCH-observed today (see
-            # SKILL.md "What's real vs unverified, and why"). Live/paper capture state is not
-            # observable from coverage.json -- report unverified honestly rather than reusing
-            # the batch verdict.
-            if mode == "BATCH":
-                vd_mtds = vd_mtds_batch
-            else:
-                vd_mtds = checks.Verdict(
-                    "unverified",
-                    f"coverage.json is not mode-partitioned; {mode.lower()} capture state is not observable "
-                    "from this artifact",
-                )
+            # structural (mode-invariant) facts; MTDS capture is a TWO-feed question (see
+            # SKILL.md "What's real vs unverified, and why"): BATCH is coverage.json-observed,
+            # PAPER and LIVE both reuse the SAME live-feed verdict, since paper always consumes
+            # the live market-data feed (never a separate paper feed, operator ruling 2026-08-19).
+            vd_mtds = vd_mtds_batch if mode == "BATCH" else vd_mtds_live
 
             legs = {
                 "declared": vd_declared,
@@ -204,6 +276,10 @@ def build_dump(
                 "market_data_processing": vd_mdps,
                 "features": vd_features,
                 "strategy": vd_strategy,
+                "execution_orders": vd_orders,
+                "execution_fills": vd_fills,
+                "execution_trades": vd_trades,
+                "execution_account_balance": vd_balance,
                 "execution_transfers": vd_transfers,
                 "execution_instruction": vd_instruction,
             }
@@ -275,6 +351,8 @@ def main() -> int:
     parser.add_argument("--date", default=None, help="coverage.json date (YYYY-MM-DD); defaults to latest")
     parser.add_argument("--workspace-root", default=None, help="Override the multi-repo checkout root")
     parser.add_argument("--skip-strategy-probe", action="store_true", help="Skip the strategy-service subprocess")
+    parser.add_argument("--skip-execution-probe", action="store_true", help="Skip the execution-service subprocess")
+    parser.add_argument("--skip-mtds-probe", action="store_true", help="Skip the market-tick-data-service subprocess")
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON instead of the human report")
     parser.add_argument("--verbose", action="store_true", help="Print the full per-venue-per-mode table")
     parser.add_argument("--limit", type=int, default=40, help="Max rows to print in --verbose mode (default 40)")
@@ -315,10 +393,16 @@ def main() -> int:
     modes = list(args.mode) if args.mode else list(MODES)
 
     position_avail, probe_note = _query_strategy_position_availability(venues, workspace_root, args.skip_strategy_probe)
+    execution_probe, execution_probe_note = _query_execution_order_capability(
+        venues, workspace_root, args.skip_execution_probe
+    )
+    mtds_live_registered, mtds_probe_note = _query_mtds_live_feed(workspace_root, args.skip_mtds_probe)
 
-    rows, summary = build_dump(venues, modes, coverage_payload, position_avail)
+    rows, summary = build_dump(venues, modes, coverage_payload, position_avail, execution_probe, mtds_live_registered)
     summary["coverage_source"] = coverage_note
     summary["strategy_probe"] = probe_note
+    summary["execution_probe"] = execution_probe_note
+    summary["mtds_live_probe"] = mtds_probe_note
 
     if args.json:
         json.dump({"summary": summary, "rows": rows}, sys.stdout, indent=2)
@@ -326,6 +410,8 @@ def main() -> int:
     else:
         print(f"Coverage source: {coverage_note}")
         print(f"Strategy position-adapter probe: {probe_note}")
+        print(f"Execution order-capability probe: {execution_probe_note}")
+        print(f"MTDS live-feed probe: {mtds_probe_note}")
         print()
         _print_human(rows, summary, args.verbose, args.limit)
 

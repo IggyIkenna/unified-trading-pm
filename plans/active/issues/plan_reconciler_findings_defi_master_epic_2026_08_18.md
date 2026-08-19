@@ -106,7 +106,7 @@ shared checkout under heavy contention today (a concurrent session's `ci`-tranch
     the doc from the AO-dispatch-eligible count despite the intended 2026-08-08 NA→planning flip. Fixed to
     `orchestrator-agent`, matching the corpus-wide pattern (369/372 planning docs use it).
 11. **[P3]** `mtds_gas_fees_migration_script_unbounded_memory_2026_07_30.md:215` cited
-    `market-data-processing-service@6593011` — git-verified NOT an ancestor of that repo's live branch (a
+    `market-data-processing-service@5bc11b8` — git-verified NOT an ancestor of that repo's live branch (a
     pre-history-rewrite dangling hash); the doc's OWN line 179 already cites the correct `@5bc11b8`. Fixed.
 12. **[P2]** Same doc's `[REVIEW] P2` "per-slot RSS ceiling, out of scope to design" todo — a matching mechanism
     (`ORCHESTRATOR_WORKER_MEMORY_MAX` / `_worker_mem_scope_prefix()`, built 2026-06-12) already exists but is
@@ -210,3 +210,10 @@ used).
 - [ ] [DOCS] P2. Ship `defi_track01_per_instrument_and_canon_id_2026_07_24.md`'s mis-cited-VM correction (see
       above) — needs the doc split under its own 1000L cap first, or a `check_line_caps.sh` carve-out for a
       bounded multi-line content correction.
+
+- **na-eligibility-audit 2026-08-19** (tranche=defi, dispatch agt-88e4bb): KEEP-NA, valid — read end to end, 1 open
+  item confirmed (matches Phase-0). The remaining todo needs either splitting `defi_track01_per_instrument_and_canon_id_2026_07_24.md`
+  under its own line cap, or an operator-ruled `check_line_caps.sh` carve-out — both squarely operator-gated per
+  this same corpus's own established precedent (`plan_reconciler_findings_defi_2026_08_16.md`'s identical
+  1000L-cap class of finding: "splitting a plan is an operator-gated planning decision per CLAUDE.md, not a
+  mechanical trim"). Doc stays `assigned_vm: NA`.

@@ -234,6 +234,15 @@ Three concepts kept apart in the model (agents conflating them is a recurring bu
 - **Blocked-question** (`BlockedRow` / `blocked_queue`): an agent needs a human/main answer to proceed. Carries an
   `authority` field (`main_agent` | `operator`). The main agent auto-answers only `authority=main_agent`; an
   `authority=operator` row is a hard-stop that must reach a human (rich Slack payload on creation).
+  - **Answer retrieval, durable path (2026-08-19)**: `GET /api/slots/{slot_id}/messages` delivers the answer as a
+    task-scoped `SlotMessageRow` notification — if the slot's `current_task` gets reassigned (force-reassign/
+    skip-current-task) between posting `/blocked` and the answer landing, `take_pending_messages` orphans that
+    notification permanently (`blocked_message_orphaned_by_reassign` in `state_store/activity.py`; reproduced live
+    4x, `plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`). The underlying
+    `BlockedRow.answer`/`answered_by`/`answered_at` is never deleted once answered, so
+    `GET /api/blocked/{blocked_id}` (`server/routes/backlog.py::get_blocked_endpoint`, `agent-orchestrator@4a0753791a`)
+    is a durable point-lookup by the row's own primary key — poll it by the `blocked_id` captured from the original
+    `/blocked` POST response whenever `/messages` comes back empty/absent for a question you know was answered.
 - **Prerequisite** (`PrerequisiteRow` / task `prereqs`): a task gated by EARLIER tasks WAITS — it does not escalate.
 - The `condition`→`prerequisite` rename (agent-orchestrator@9758270) is end-to-end across ORM/API/dashboard; English
   prose ("race condition") is preserved.

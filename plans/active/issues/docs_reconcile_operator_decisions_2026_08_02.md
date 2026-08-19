@@ -59,12 +59,13 @@ drift_direction: advance-docs
 Both items below were found during the 2026-08-02 autonomous `/docs-reconcile` sweep. Per the skill's own
 autonomous-mode contract, a genuine authority call is parked here rather than decided unilaterally. Everything else the
 sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed as a separate report-only issue doc
-(see `related` analogues: `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`,
+(see `related` analogues: `doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md` (archived, now at
+`/plans/archive/2026_08/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md`),
 `docs_reconcile_remaining_broken_links_2026_08_02.md`).
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 1 — what is `cursor-rules/` for?
 
-- [ ] [DOCS] P2. **REOPENED 2026-08-12 (/plan-reconcile) — was checked `[x]` RESOLVED 2026-08-08, but this doc's own
+- [ ] [OPERATOR] P2. **REOPENED 2026-08-12 (/plan-reconcile) — was checked `[x]` RESOLVED 2026-08-08, but this doc's own
       same-day CORRECTION below (round5 ao investigation) found the resolution's premise FALSE and explicitly states
       "NOT resolving this item, re-flagging it" — the checkbox was never reverted to match. See the CORRECTION paragraph
       below for the materially new evidence (a live CI consumer, `.github/workflows/rules-alignment-agent.yml`, was
@@ -182,7 +183,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 4 — Fireblocks custody credential rotation cadence: two SSOTs disagree (added 2026-08-08)
 
-- [ ] [DOCS] P0. **Reconcile the Fireblocks RSA rotation cadence between `credentials-matrix.md` and
+- [ ] [OPERATOR] P0. **Reconcile the Fireblocks RSA rotation cadence between `credentials-matrix.md` and
       `credential-rotation-runbook.md` — pick the correct number and fix the other doc to match.**
 
   Found by the 2026-08-08 `/docs-reconcile --autonomous` sweep's `authoritative_for` collision hunter, independently
@@ -214,7 +215,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 5 — `plan-hygiene.md` duplicated verbatim in two dirs, both `authoritative_for` "plan hygiene" (added 2026-08-09)
 
-- [ ] [DOCS] P1. **Decide the disposition of `/codex/12-agent-workflow/plan-hygiene.md` vs
+- [ ] [OPERATOR] P1. **Decide the disposition of `/codex/12-agent-workflow/plan-hygiene.md` vs
       `/codex/11-project-management/plan-hygiene.md` — merge, split with cross-links, or re-scope one's
       `authoritative_for` claim.**
 
@@ -252,7 +253,7 @@ sweep found was either auto-fixed (4 commits shipped, see Progress Log) or filed
 
 ## 🚧 BLOCKED-OPERATOR-DECISION 6 — `alwaysApply: true` doesn't track the `core/` directory it's meant to (added 2026-08-10)
 
-- [ ] [DOCS] P2. **Decide whether `.cursor/rules/core/`'s membership should be reconciled to match `alwaysApply: true`,
+- [ ] [OPERATOR] P2. **Decide whether `.cursor/rules/core/`'s membership should be reconciled to match `alwaysApply: true`,
       or the flag reconciled to match the directory — then apply that decision fleet-wide.**
 
   Found while fixing a docs-reconcile doctrine-consistency finding (a misplaced rule file,

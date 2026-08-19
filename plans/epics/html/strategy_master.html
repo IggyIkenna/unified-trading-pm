@@ -1,0 +1,500 @@
+<!-- generated: 2026-08-19T00:00:00Z by /plan-reconcile strategy_master -->
+<title>Strategy Master Ledger</title>
+<style>
+  :root {
+    --bg: #f4f2ec;
+    --surface: #ffffff;
+    --surface-2: #ebe8de;
+    --border: #d8d3c4;
+    --ink: #1c1a14;
+    --ink-dim: #635e4f;
+    --ink-faint: #8c8672;
+    --accent: #9a6a12;
+    --accent-ink: #ffffff;
+    --good: #2f7a52;
+    --good-bg: #e4f0e6;
+    --warn: #a8641b;
+    --warn-bg: #f5e8d6;
+    --crit: #a83b32;
+    --crit-bg: #f6e2df;
+    --plan: #4a5d8a;
+    --plan-bg: #e6eaf4;
+    --font-mono: ui-monospace, "SF Mono", "IBM Plex Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+    --font-sans: ui-sans-serif, "IBM Plex Sans", "Helvetica Neue", Arial, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0e0f0c;
+      --surface: #17180f;
+      --surface-2: #1f2116;
+      --border: #33341f;
+      --ink: #ece7d4;
+      --ink-dim: #a8a184;
+      --ink-faint: #726c53;
+      --accent: #d9a441;
+      --accent-ink: #14150c;
+      --good: #5ecb92;
+      --good-bg: #16261c;
+      --warn: #e0a73e;
+      --warn-bg: #2a2313;
+      --crit: #e2685c;
+      --crit-bg: #2a1613;
+      --plan: #8ea3d6;
+      --plan-bg: #171b28;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0e0f0c;
+    --surface: #17180f;
+    --surface-2: #1f2116;
+    --border: #33341f;
+    --ink: #ece7d4;
+    --ink-dim: #a8a184;
+    --ink-faint: #726c53;
+    --accent: #d9a441;
+    --accent-ink: #14150c;
+    --good: #5ecb92;
+    --good-bg: #16261c;
+    --warn: #e0a73e;
+    --warn-bg: #2a2313;
+    --crit: #e2685c;
+    --crit-bg: #2a1613;
+    --plan: #8ea3d6;
+    --plan-bg: #171b28;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  a { color: var(--accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 28px 96px; }
+
+  /* ---------- masthead ---------- */
+  header.masthead {
+    border-bottom: 1px solid var(--border);
+    padding: 40px 28px 28px;
+    background: linear-gradient(180deg, var(--surface-2), var(--bg));
+  }
+  .masthead-inner { max-width: 1180px; margin: 0 auto; }
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .eyebrow .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--good); box-shadow: 0 0 0 3px var(--good-bg); }
+  h1 {
+    font-family: var(--font-mono);
+    font-weight: 600;
+    font-size: clamp(1.9rem, 3.4vw, 2.6rem);
+    letter-spacing: -0.01em;
+    margin: 10px 0 8px;
+    text-wrap: balance;
+  }
+  .dek { color: var(--ink-dim); max-width: 74ch; font-size: 1.02rem; margin: 0 0 14px; }
+  .meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    font-family: var(--font-mono);
+    font-size: 0.78rem;
+    color: var(--ink-faint);
+  }
+  .meta-row b { color: var(--ink-dim); font-weight: 600; }
+
+  section { padding: 36px 0; border-bottom: 1px solid var(--border); }
+  section:last-of-type { border-bottom: none; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+  h2 {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin: 0;
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+  }
+  h2 .num { color: var(--accent); font-weight: 700; }
+  .section-sub { color: var(--ink-faint); font-size: 0.85rem; max-width: 60ch; }
+
+  /* ---------- stat strip ---------- */
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+  .stat { background: var(--surface); padding: 20px 20px 18px; }
+  .stat .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 2.1rem; font-weight: 600; line-height: 1; }
+  .stat .l { color: var(--ink-faint); font-size: 0.78rem; margin-top: 8px; letter-spacing: 0.02em; }
+  .stat.good .n { color: var(--good); }
+  .stat.warn .n { color: var(--warn); }
+  .stat.accent .n { color: var(--accent); }
+
+  /* ---------- plan cards ---------- */
+  .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px 14px; display: flex; flex-direction: column; gap: 10px; }
+  .card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .card-title { font-weight: 600; font-size: 0.96rem; line-height: 1.3; }
+  .card-path { font-family: var(--font-mono); font-size: 0.68rem; color: var(--ink-faint); word-break: break-all; }
+  .pill { font-family: var(--font-mono); font-size: 0.66rem; padding: 3px 8px; border-radius: 999px; white-space: nowrap; letter-spacing: 0.03em; text-transform: uppercase; font-weight: 600; }
+  .pill-issue { background: var(--warn-bg); color: var(--warn); }
+  .pill-plan { background: var(--plan-bg); color: var(--plan); }
+  .pill-agg { background: var(--border); color: var(--ink-faint); }
+  .bar { height: 7px; border-radius: 4px; background: var(--surface-2); overflow: hidden; display: flex; }
+  .bar .done { background: var(--good); }
+  .bar .open { background: var(--accent); opacity: 0.85; }
+  .card-counts { font-family: var(--font-mono); font-size: 0.74rem; color: var(--ink-dim); display: flex; gap: 14px; font-variant-numeric: tabular-nums; }
+  .card-counts .done-n { color: var(--good); }
+  .card-counts .open-n { color: var(--accent); }
+  .card-op { font-size: 0.78rem; color: var(--ink-dim); border-left: 2px solid var(--warn); padding-left: 10px; }
+  .card-op b { color: var(--warn); font-family: var(--font-mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 3px; }
+
+  /* ---------- tables ---------- */
+  .tblwrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 10px; }
+  table { width: 100%; border-collapse: collapse; background: var(--surface); font-size: 0.88rem; min-width: 640px; }
+  thead th {
+    text-align: left; font-family: var(--font-mono); font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-faint); padding: 10px 14px; border-bottom: 1px solid var(--border); background: var(--surface-2); white-space: nowrap;
+  }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface-2); }
+  td.mono, th.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+  td.quote { font-style: italic; color: var(--ink-dim); }
+  .tag { font-family: var(--font-mono); font-size: 0.66rem; padding: 2px 7px; border-radius: 4px; background: var(--warn-bg); color: var(--warn); white-space: nowrap; }
+
+  /* ---------- lane grid ---------- */
+  .lanes { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+  .lane { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; }
+  .lane h3 { margin: 0 0 8px; font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); }
+  .lane p { margin: 0 0 8px; font-size: 0.85rem; color: var(--ink-dim); }
+  .lane .files { font-family: var(--font-mono); font-size: 0.72rem; color: var(--ink-faint); }
+
+  pre.prompt {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px;
+    font-family: var(--font-mono); font-size: 0.76rem; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+    color: var(--ink-dim); overflow-x: auto; margin: 0 0 14px;
+  }
+  pre.prompt b { color: var(--ink); }
+
+  .note { font-size: 0.85rem; color: var(--ink-dim); background: var(--surface-2); border-left: 3px solid var(--accent); padding: 10px 14px; border-radius: 0 8px 8px 0; margin-bottom: 12px; }
+  .empty { font-size: 0.85rem; color: var(--ink-faint); font-style: italic; }
+  footer { padding: 30px 0 10px; color: var(--ink-faint); font-size: 0.75rem; font-family: var(--font-mono); }
+</style>
+
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow"><span class="dot"></span> EPIC LEDGER · L2 EVERLASTING · UNIFIED-TRADING-PM</div>
+    <h1>Strategy Master</h1>
+    <p class="dek">
+      Strategy-service post-consolidation: the 59-archetype engine, per-client isolation, the capability wizard,
+      global-ledger PnL attribution, and the DART/promote workflow — reconciled 2026-08-19 by <code>/plan-reconcile
+      strategy_master</code>.
+    </p>
+    <div class="meta-row">
+      <span><b>10</b> plans + <b>4</b> issues</span>
+      <span><b>140</b> open · <b>138</b> done</span>
+      <span><b>3</b> operator-gated</span>
+      <span>Codex: <code>codex/09-strategy/architecture-v2/</code></span>
+      <span>Generated 2026-08-19</span>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- 3. Headline stat strip -->
+  <section id="stats">
+    <div class="section-head">
+      <h2><span class="num">01</span> Headline</h2>
+      <div class="section-sub">Deduped, aggregator-excluded — matches <code>/open-task-count</code> methodology (0 aggregator plans in this epic).</div>
+    </div>
+    <div class="stats">
+      <div class="stat warn"><div class="n">140</div><div class="l">open todos</div></div>
+      <div class="stat good"><div class="n">138</div><div class="l">done todos</div></div>
+      <div class="stat accent"><div class="n">3</div><div class="l">operator-gated items</div></div>
+      <div class="stat"><div class="n">14</div><div class="l">child docs (10 plans, 4 issues)</div></div>
+      <div class="stat"><div class="n">1</div><div class="l">AO-dispatched plan (rest: NA)</div></div>
+    </div>
+  </section>
+
+  <!-- 4. Plan-by-plan breakdown -->
+  <section id="breakdown">
+    <div class="section-head">
+      <h2><span class="num">02</span> Plan-by-plan</h2>
+      <div class="section-sub">One card per doc declaring <code>parent_epic: strategy_master</code> — no aggregator/satellite roll-ups live in this epic today.</div>
+    </div>
+    <div class="cards">
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Capability wizard — client-lite + CI regen follow-up</div><div class="card-path">capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:1"></div><div class="open" style="flex:1"></div></div>
+        <div class="card-counts"><span class="done-n">1 done</span><span class="open-n">1 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">carry_staked_basis funding-carry scan — harness + journal</div><div class="card-path">carry_staked_basis_funding_scan_experiment_2026_06_16.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:2"></div><div class="open" style="flex:26"></div></div>
+        <div class="card-counts"><span class="done-n">2 done</span><span class="open-n">26 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">carry_staked_basis — cross-venue funding-reversion research</div><div class="card-path">cross_venue_funding_reversion_research_2026_07_24.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:2"></div><div class="open" style="flex:13"></div></div>
+        <div class="card-counts"><span class="done-n">2 done</span><span class="open-n">13 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Crypto Alpha Research — book construction, signal research, paper POC</div><div class="card-path">crypto_alpha_research_2026_07_24.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:13"></div><div class="open" style="flex:20"></div></div>
+        <div class="card-counts"><span class="done-n">13 done</span><span class="open-n">20 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Collateral-aware sizing + opportunity-checker + wizard parameterization</div><div class="card-path">defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:9"></div><div class="open" style="flex:1"></div></div>
+        <div class="card-counts"><span class="done-n">9 done</span><span class="open-n">1 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Deeper-than-L5 order book capture (queue-microstructure)</div><div class="card-path">l2_book_microstructure_capture_2026_07_13.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:7"></div><div class="open" style="flex:1"></div></div>
+        <div class="card-counts"><span class="done-n">7 done</span><span class="open-n">1 open</span></div>
+        <div class="card-op"><b>operator</b>BLOCKED-DATA-CORRECTNESS — gated on the MDPS column-pipeline extension being greenlit</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Service config ownership — instruction contract + hot reload</div><div class="card-path">service_config_ownership_and_instruction_contract_2026_08_12.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:20"></div><div class="open" style="flex:26"></div></div>
+        <div class="card-counts"><span class="done-n">20 done</span><span class="open-n">26 open</span></div>
+        <div class="card-op"><b>operator</b>Transfers do not execute in production — decide the path to live before funds move</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Execution — archetype-declared deployment profiles</div><div class="card-path">strategy_archetype_latency_deployment_profile_execution_2026_08_10.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:12"></div><div class="open" style="flex:1"></div></div>
+        <div class="card-counts"><span class="done-n">12 done</span><span class="open-n">1 open</span></div>
+        <div class="card-op"><b>operator</b>Residual gaps (2)(3)(4) — isolation-policy + SLA-tier judgment calls, re-confirmed not-AO-eligible 4× independently</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Strategy-service expansion — overlays, config surface, wizard</div><div class="card-path">strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:5"></div><div class="open" style="flex:24"></div></div>
+        <div class="card-counts"><span class="done-n">5 done</span><span class="open-n">24 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">v2 Engine + Venue Build-Out — 22 engineless archetypes, 9 venues</div><div class="card-path">v2_engine_venue_buildout_2026_06_15.md</div></div><span class="pill pill-plan">plan</span></div>
+        <div class="bar"><div class="done" style="flex:28"></div><div class="open" style="flex:23"></div></div>
+        <div class="card-counts"><span class="done-n">28 done</span><span class="open-n">23 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">Capability wizard — analysis findings (bugs / conflicts)</div><div class="card-path">issues/capability_wizard_analysis_findings_2026_06_11.md</div></div><span class="pill pill-issue">issue</span></div>
+        <div class="bar"><div class="done" style="flex:13"></div><div class="open" style="flex:1"></div></div>
+        <div class="card-counts"><span class="done-n">13 done</span><span class="open-n">1 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">DeFi archetype universe — curtailment mechanism</div><div class="card-path">issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md</div></div><span class="pill pill-issue">issue</span></div>
+        <div class="bar"><div class="done" style="flex:13"></div></div>
+        <div class="card-counts"><span class="done-n">13 done</span><span class="open-n">0 open</span></div>
+        <div class="card-op"><b>archive_exempt</b>0 open todos, archive-ready per its own 2026-08-17 note — deferred to the dedicated archive-candidates-audit pass</div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">strategy-service catalog/engine config-key contract drift</div><div class="card-path">issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md</div></div><span class="pill pill-issue">issue</span></div>
+        <div class="bar"><div class="done" style="flex:6"></div><div class="open" style="flex:1"></div></div>
+        <div class="card-counts"><span class="done-n">6 done</span><span class="open-n">1 open</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><div><div class="card-title">e2e DeFi strategy configs — wizard round-trip fidelity</div><div class="card-path">issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md</div></div><span class="pill pill-issue">issue</span></div>
+        <div class="bar"><div class="done" style="flex:7"></div><div class="open" style="flex:2"></div></div>
+        <div class="card-counts"><span class="done-n">7 done</span><span class="open-n">2 open</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 5. On the operator's desk -->
+  <section id="operator">
+    <div class="section-head">
+      <h2><span class="num">03</span> On the operator's desk</h2>
+      <div class="section-sub">Every open item this pass found genuinely gated on human action, verbatim.</div>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Doc</th><th>Gated on</th><th>Item (verbatim)</th></tr></thead>
+        <tbody>
+          <tr>
+            <td class="mono">l2_book_microstructure_capture_2026_07_13.md</td>
+            <td><span class="tag">DATA-CORRECTNESS</span></td>
+            <td class="quote">BLOCKED-DATA-CORRECTNESS — MDPS column-pipeline extension for CanonicalBookMicrostructure not yet greenlit; retagged from BLOCKED-OPERATOR-DECISION 2026-07-28 once the underlying architecture question resolved.</td>
+          </tr>
+          <tr>
+            <td class="mono">service_config_ownership_and_instruction_contract_2026_08_12.md</td>
+            <td><span class="tag">FUNDS PATH</span></td>
+            <td class="quote">Transfers do not execute in production — decide the path to live before funds move. Three independent breaks on the emit side, no producer on the consume side; every downstream sweep/rebalance is inert until ruled.</td>
+          </tr>
+          <tr>
+            <td class="mono">strategy_archetype_latency_deployment_profile_execution_2026_08_10.md</td>
+            <td><span class="tag">JUDGMENT</span></td>
+            <td class="quote">Residual gaps (2)(3)(4) — isolation-policy default vs. co-located archetype docs; VOL_* SLA-tier premium-vs-distributed; portfolio/yield basic-vs-standard tier. Re-confirmed not-AO-eligible by 4 independent slot dispatches 2026-08-12 → 2026-08-14; a backlog guard against re-dispatching self-declared non-eligible todos has since shipped.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 6. Needs extra scoping -->
+  <section id="scoping">
+    <div class="section-head">
+      <h2><span class="num">04</span> Needs extra scoping</h2>
+      <div class="section-sub">Found ambiguous or under-specified this pass — neither a clean "open" nor a clean "operator-blocked."</div>
+    </div>
+    <div class="note">
+      <b>Status:draft on two live plans.</b> <code>service_config_ownership_and_instruction_contract_2026_08_12.md</code>
+      and <code>strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md</code> both carry
+      <code>status: draft</code> despite substantial already-shipped work (each has 20 and 5 done todos respectively,
+      cross-reconciled from a separate batch dispatch). Per PLAN_FORMAT, draft is inert here regardless
+      (<code>assigned_vm: NA</code> on both — never AO-ingested either way), so nothing is mechanically broken, but
+      it's not provably wrong either — both were split from the Elysium readiness plan and may be deliberately holding
+      draft pending a final artifact-writing gate. Flagged, not auto-flipped.
+    </div>
+    <div class="note">
+      <b>Non-standard checkbox markup, deliberately.</b> <code>crypto_alpha_research_2026_07_24.md</code> §C uses
+      literal <code>- [BLOCKED-OPERATOR-DECISION]</code> prefixes instead of standard <code>- [ ]</code> checkbox
+      syntax for 5 permanently-parked trading-judgment bullets. Re-confirmed present this pass; independently triaged
+      as low-severity/intentional three times already (2026-07-28, 2026-08-12, 2026-08-16) — not re-actioned, since a
+      fourth pass reaching the same "leave open" conclusion would just be re-litigation, not new evidence.
+    </div>
+  </section>
+
+  <!-- 7. Closed out this pass -->
+  <section id="closed">
+    <div class="section-head">
+      <h2><span class="num">05</span> Closed out this pass</h2>
+      <div class="section-sub">No child-doc todos were false-unchecked this run (the corpus is swept by <code>na-eligibility-audit</code>/<code>context-scout</code> almost daily and is unusually clean). What landed instead: epic-doc hygiene on <code>plans/epics/strategy_master.md</code> itself.</div>
+    </div>
+    <div class="tblwrap">
+      <table>
+        <thead><tr><th>Fix</th><th>Evidence</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Repointed 2 dangling <code>../active/…</code> links to their real <code>../archive/2026_08/…</code> paths (<code>carry_strategy_ensemble_productionization_2026_07_24</code>, <code>recursive_loop_orchestrator_wiring_finalize_2026_08_09</code>) — frontmatter <code>related_plans</code> + body links.</td>
+            <td class="mono">os.path.exists() both directions, verified via find</td>
+          </tr>
+          <tr>
+            <td>Corrected 2 stale "status: active" body claims to "status: complete" (<code>recursive_loop_orchestrator_wiring_finalize_2026_08_09</code>, <code>family2_position_registry_unwind_consumption_2026_08_09</code>).</td>
+            <td class="mono">target doc's own frontmatter <code>status:</code> field</td>
+          </tr>
+          <tr>
+            <td>Added 3 currently-active <code>parent_epic: strategy_master</code> plans that were missing from the auto-populated body roster entirely (<code>service_config_ownership_and_instruction_contract_2026_08_12</code>, <code>strategy_archetype_latency_deployment_profile_execution_2026_08_10</code>, <code>strategy_service_expansion_overlays_config_and_wizard_2026_08_12</code>).</td>
+            <td class="mono">rg "^parent_epic: strategy_master$" vs body roster diff</td>
+          </tr>
+          <tr>
+            <td>Corrected the "13 active plans declare parent_epic" comment to the real count of 10.</td>
+            <td class="mono">direct count, re-derived at report time</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- 8. Parallel-tab flow -->
+  <section id="lanes">
+    <div class="section-head">
+      <h2><span class="num">06</span> Parallel-tab flow for what's left</h2>
+      <div class="section-sub">Honest read: this epic's remaining open work is overwhelmingly NA-assigned trading-judgment/research or operator-gated design — the corpus's own audit cadence has already extracted essentially everything bounded-and-dispatchable into satellite batches. Full 5-lane parallelism is not achievable today.</div>
+    </div>
+    <div class="lanes">
+      <div class="lane">
+        <h3>Lane A — ML model-variant training</h3>
+        <p>Train + register the vol-direction and MM short-horizon-direction ML model variants that 3 already-built,
+        wired strategy engines (<code>VOL_ML_LEAN</code>, <code>MARKET_MAKING_PREDICTION</code>,
+        <code>MARKET_MAKING_ML_LEAN</code>) are blocked on. Genuinely separate files from every other lane.</p>
+        <div class="files">ml-service/ (new) → strategy-service (consume only, no strategy-service edits)</div>
+      </div>
+      <div class="lane">
+        <h3>Lane B — codex SSOT catch-up</h3>
+        <p>Doc-only: fold the two now-shipped 2026-08-19 corrections (epic body roster, dangling refs) into any
+        codex doc that still cites the old "13 active plans" figure or the archived docs by their old active/ path.</p>
+        <div class="files">codex/09-strategy/architecture-v2/ (grep-first, likely 0-1 files)</div>
+      </div>
+    </div>
+    <p class="section-sub" style="margin-top:14px;">Everything else — the ~136 remaining open items across
+    <code>carry_staked_basis_funding_scan_experiment</code>, <code>cross_venue_funding_reversion_research</code>,
+    <code>crypto_alpha_research</code>, <code>v2_engine_venue_buildout</code>'s VOL_*/MARKET_MAKING_* backtest-pending
+    engines, and both 08-12 config/overlay plans — is either explicit trading-judgment (<code>§C</code>
+    BLOCKED-OPERATOR-DECISION), gated on an operator backfill-authorization ("no backfill authorised yet"), or design
+    work a single AO worker cannot bound without a human first picking a direction. None of it is safe to
+    fan out today without re-litigating decisions this corpus has already made and re-verified multiple times.</p>
+  </section>
+
+  <!-- 9. Dispatch prompts -->
+  <section id="prompts">
+    <div class="section-head">
+      <h2><span class="num">07</span> Dispatch prompts</h2>
+      <div class="section-sub">Self-contained — paste as-is into a fresh tab/agent.</div>
+    </div>
+    <pre class="prompt"><b>Lane A — ML model-variant training</b>
+
+Read cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules before your first tool call.
+
+Task: train + register two short-horizon ML classifier variants that three already-built strategy-service v2
+engines are blocked on for any live/backtest signal:
+  1. Vol-direction classifier (VOL_ML_LEAN, strategy-service/.../vol_trading/ml_lean.py) — classes 1=vol-up,
+     2=vol-down, 0=flat, consuming the shipped vol-surface/greeks feature dict.
+  2. MM short-horizon direction classifier (MARKET_MAKING_PREDICTION + MARKET_MAKING_ML_LEAN,
+     strategy-service/.../market_making/{prediction,ml_lean}.py) — same class shape, consuming the shipped
+     L5 book-microstructure feature dict.
+Both engines are wired + unit-tested against constructed MLPrediction fixtures already — they degrade honestly
+(symmetric quote / no signal) when the model is absent, so this is additive, not a rewrite. Owner repo: ml-service
+(model + registration) → strategy-service (consume only). Full context:
+/plans/active/v2_engine_venue_buildout_2026_06_15.md, "Follow-ups discovered during Phase D / template wave" section.
+
+Implement, run strategy-service's + ml-service's quality-gates.sh genuinely green, then STOP — do not ship
+(quickmerge/commit) without an explicit go-ahead from the operating session.</pre>
+  </section>
+
+  <!-- 10. Notes & methodology -->
+  <section id="notes">
+    <div class="section-head">
+      <h2><span class="num">08</span> Notes &amp; methodology</h2>
+    </div>
+    <ul style="color:var(--ink-dim); font-size:0.88rem; padding-left:20px; margin:0;">
+      <li>Counts sourced from <code>scripts/plan-hygiene/epic_report_data.py --epic strategy_master --json</code>,
+        which scopes <code>count_open_tasks.py</code>'s exact dedup methodology down to this epic's
+        <code>parent_epic</code>-matched children — never hand-counted.</li>
+      <li>Membership = <code>rg "^parent_epic: strategy_master$" plans/active/*.md plans/active/issues/*.md</code>
+        (14 hits, 10 plans + 4 issues) — not the filename-substring inventory method, which this workspace's own
+        epic-taxonomy-restructure plan found false-positives 3 of 4 real dispatch-batch plans on.</li>
+      <li>Corpus-wide <code>run_hygiene_sweep.sh --ci</code> run alongside this pass: all hard checks green except
+        the pre-existing, corpus-wide <code>assigned_vm:NA</code> size ratchet (owned by <code>/na-eligibility-audit</code>'s
+        shrink discipline, not this epic specifically) — 0 archive candidates, 0 reference-path violations, line
+        caps clean.</li>
+      <li>This epic's own reconciliation history is unusually dense — nearly every child doc has 3-8+ independent
+        <code>na-eligibility-audit</code>/<code>context-scout</code> passes on record, most within the last two
+        weeks. The low yield of NEW contradictions this run (2 dangling refs + 1 stale roster, all in the epic doc
+        itself, zero in the 14 child docs) reflects that maintenance cadence, not a shallow read — every child doc
+        was read in full this pass, not sampled.</li>
+    </ul>
+  </section>
+
+</div>
+
+<footer>
+  <div class="wrap" style="padding:0;">/plan-reconcile strategy_master · unified-trading-pm · generated 2026-08-19</div>
+</footer>

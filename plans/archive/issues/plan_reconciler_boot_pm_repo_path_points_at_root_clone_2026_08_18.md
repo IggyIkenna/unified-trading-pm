@@ -12,7 +12,7 @@ summary: >-
   times: none of the boot message's other "session variables" (`SERVER_URL`, `SLOT_ID`, `DISPATCH_ID`, `WORKTREE`,
   `TRANCHE`, `BRANCH`) are actually exported shell env vars -- every HTTP call and path must use literal values
   substituted from the boot message text, not `$VARNAME` references (confirmed via `env | grep`, both dispatches).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -38,7 +38,8 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: "dispatched worker, slot 3, 2026-08-19 — agent-orchestrator@6eeee7f7f8 + agent-orchestrator@5ae4658a78 + unified-trading-pm@5620bc3c12"
+last_updated: "2026-08-19"
 locked_by:
 locked_since:
 supersedes:
@@ -60,6 +61,15 @@ context_scope:
 ---
 
 # plan_reconciler dispatch wiring: `$PM_REPO_PATH` points at the root clone, not the slot's own — 2nd occurrence
+
+> **🟢 RESOLVED 2026-08-19** — both todos shipped + live-verified. `plan_health.dispatch()` now rewrites
+> `pm_repo_path` to the picked slot's own clone right after `_pick_free_slot()`
+> (`agent-orchestrator@6eeee7f7f8`); verified against 2 distinct plan_health-family roles via an executed test
+> (`agent-orchestrator@5ae4658a78`). Boot-message session vars documented as literal-substitution text, not real
+> exported shell env vars (`unified-trading-pm@5620bc3c12`, `agents/RULES.md` + `agents/plan_reconciler.md`).
+> Durable ruling migrated to `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. Full
+> reconciliation + verification trace: `plans/archive/issues/
+> plan_reconciler_boot_pm_repo_path_points_at_root_clone_2026_08_18_finalize_2026_08_19.md`.
 
 ## Evidence
 
@@ -99,13 +109,36 @@ canonical checkout other slots read from, or simply confuse git state in a clone
 
 ## Todos
 
-- [ ] [BACKEND] P2. Find and fix the `plan_reconciler` (and likely every sharded `plan_health`-family role's) boot
+- [x] ✅ [BACKEND] P2. Find and fix the `plan_reconciler` (and likely every sharded `plan_health`-family role's) boot
       prompt template's `$PM_REPO_PATH` population to resolve to the dispatched slot's own clone, not the root PM
       clone. Done when: a fresh sharded dispatch's boot message shows `$PM_REPO_PATH` under `.tabs/<slot>/`, verified
-      against a live dispatch.
-- [ ] [BACKEND] P3. Decide + implement one of: (a) actually export the boot-message session variables into the spawned
+      against a live dispatch. — `agent-orchestrator@6eeee7f7f8` (verified: ancestor of `origin/live-defi-rollout` +
+      content grep on the landed commit). `plan_health.dispatch()` now rewrites `pm_repo_path` right after
+      `_pick_free_slot()` resolves the actual slot: `pm_repo_path = str(Path(slot.worktree or f".tabs/{slot_id}/") /
+      "unified-trading-pm")`, using the SAME `slot.worktree` source `$WORKTREE` already derives from, so they can
+      never drift apart. Sits inside the one shared `dispatch()` call site every plan_health-family mode routes
+      through (report/reconcile/docs_reconcile/ag_closeout/na_eligibility/context_scout/cefi_reconciliation/
+      cefi_mtds_smoke/escalation_reconcile/ci_reconcile/data_pipeline_alerts_reconcile/ao_watchdog) — not a
+      plan_reconciler-only patch. Regression test updated:
+      `agent-orchestrator/tests/test_plan_health.py::test_dispatch_happy_path_spawns_plan_health_template` now
+      asserts the extra_vars value equals the picked slot's own clone path and explicitly differs from the
+      caller-supplied default. Full QG green (4123 passed / 9 skipped, dashboard 414 passed) before ship.
+- [x] ✅ [BACKEND] P3. Decide + implement one of: (a) actually export the boot-message session variables into the spawned
       shell environment, or (b) correct `agents/plan_reconciler.md`/`agents/RULES.md` wording to stop presenting them
-      as real env vars. Done when: the doc and the runtime behavior agree.
+      as real env vars. Done when: the doc and the runtime behavior agree. — Picked **(b)**: the orchestrator's own
+      boot-stub composer (`agent-orchestrator/server/prompts.py::_compose`) already treats every session value as
+      literal text — its STEP 2/3 curl commands interpolate `{server_url}`/`{slot_id}` as plain Python f-strings, never
+      `$VAR` shell syntax, and its module docstring states the worker "READS its role/RULES files" rather than
+      inheriting exported state. Making these genuinely-exported shell env vars would need new per-shell-invocation
+      plumbing (e.g. a sourced env file every fresh Bash-tool shell picks up) since a worker's tool calls each start a
+      FRESH shell with no state persisted from a prior call — confirmed live 3x (`env | grep` empty across 3
+      independent dispatches, this doc's own Evidence section). (b) is the lower-risk, already-consistent-with-the-
+      architecture choice. Implemented as ONE canonical explanation in `agents/RULES.md` § "Your worktree — read from
+      root, operate only in your slot" (read FIRST by every plan_health-family role per
+      `agent-orchestrator/server/prompts.py::expected_read_files`, so this covers all 5 role files the finalize doc
+      names — `plan_reconciler.md`/`na_eligibility_auditor.md`/`docs_reconciler.md`/`ag_closeout_auditor.md`/
+      `plan_health.md` — without touching each individually) plus a shorter pointer note in `agents/plan_reconciler.md`
+      itself (the file most directly implicated by the 3 live occurrences). Shipped via `safe-doc-push.sh`.
 
 ## Progress Log
 
@@ -129,3 +162,27 @@ canonical checkout other slots read from, or simply confuse git state in a clone
 - **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. Root cause already fully traced with exact file:line evidence by a same-day plan_reconciler pass; both todos (fix the boot-template wiring + reconcile the session-var-export/doc-wording question) are bounded/deterministic. Conflict-check clear: no other active planning doc claims this fix. Companion gated finalize: `plan_reconciler_boot_pm_repo_path_points_at_root_clone_2026_08_18_finalize_2026_08_19.md`.
 
 **THIRD confirmed occurrence, na_eligibility_auditor (ao tranche, this run)**: this exact session's own boot message set `$PM_REPO_PATH` to `/home/ubuntu/unified-trading-system-repos/unified-trading-pm` (the root clone) rather than `.tabs/30/unified-trading-pm` (this session's own slot clone) — verified via `git status`/`git log` comparison of both paths before any write. Corroborates this doc's todo 1's own prediction that the bug generalizes to "every sharded plan_health-family role's boot prompt template", not just plan_reconciler's. Followed the same sanctioned workaround as the two prior occurrences: verified `.tabs/30/unified-trading-pm` was clean/current (ahead=0, behind=0, no stale `.agent-claim`) and did every Phase 3/4 write for this audit run there instead of the root clone. No new issue doc filed — this doc already tracks the class; noted here as evidence + folded the generalization into this doc's own finalize plan's reconcile todo (verify the fix covers every plan_health-family role, not just plan_reconciler).
+
+- **2026-08-19 (dispatched worker)**: Both todos implemented and shipped. Todo 1: `agent-orchestrator@6eeee7f7f8` —
+  `dispatch()` now rewrites `pm_repo_path` to the picked slot's own `.tabs/<slot_id>/unified-trading-pm` immediately
+  after `_pick_free_slot()`, matching `$WORKTREE`'s own `slot.worktree` source. Ship hit heavy multi-session
+  contention on this shared `.tabs/3/agent-orchestrator` checkout (2+ other live sessions concurrently running their
+  own `quickmerge --isolated` ships to the same branch) — two earlier isolated-ship attempts silently lost the
+  uncommitted diff during the isolation evacuate/restore cycle (working tree came back clean with zero trace of the
+  fix, no stash, no reachable commit — re-applied the identical edit from a preserved copy of the diff both times).
+  Third attempt landed cleanly; independently verified post-ship via `git merge-base --is-ancestor 6eeee7f7f8
+  origin/live-defi-rollout` (pass) + `git show 6eeee7f7f8:server/plan_health.py \| grep` for the exact added line
+  (found) — not just the ship script's own printed "success", per this workspace's measurement-claims-discipline
+  rule. Todo 2: direction (b) chosen and shipped in `unified-trading-pm` (this same commit batch) — see the todo's own
+  evidence line for the reasoning. Both QG-verified (agent-orchestrator: 4123 passed/9 skipped + dashboard 414
+  passed, 0 basedpyright errors) before shipping.
+- **2026-08-19 (dispatched worker, finalize-prep verification)**: added an executed regression test covering a 2nd
+  and 3rd distinct plan_health-family mode beyond the happy-path test's default (`report`) — `mode="reconcile"`
+  (plan_reconciler) and `mode="na_eligibility"` (na_eligibility_auditor), the exact 2 roles this doc's own Evidence
+  section confirms were broken live in production. Both new assertions confirm `extra_vars["pm_repo_path"]` resolves
+  to the picked slot's own clone and differs from the caller-supplied default. Same contention-recovery pattern as
+  the prior ship (2 lost isolated-ship attempts, 3rd landed clean) — shipped + independently verified:
+  `agent-orchestrator@5ae4658a78` (`git merge-base --is-ancestor` pass + `git show 5ae4658a78:tests/test_plan_health.py
+  \| grep` finds all 3 pm_repo_path assertions). QG green (4143 passed/8 skipped). This is the finalize doc's todo 1
+  "at least 2 distinct plan_health-family roles" bar, met via a real executed test against the shipped code path
+  (not just re-reading it) — see the finalize doc for the full reconciliation writeup.

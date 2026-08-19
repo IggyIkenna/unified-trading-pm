@@ -133,10 +133,10 @@ interrupted-draft signal — worth the infra-craft triage recognizing both shape
 
 ## Todos
 
-- [ ] [INFRA] P3. Triage the orphaned patch above: either implement the `STAGGER_SECONDS` fan-out-stagger
-      feature it specifies in `scripts/cicd/ldr_to_main_fleet_promote.sh` (+ its regression test) and flip
-      `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s stagger todo with a real commit sha, or confirm the
-      design is superseded and leave that todo open with a note. Repo: unified-trading-pm. Done when: either
+- [ ] [INFRA] P3. Triage the orphaned patch above: either (a) implement the `STAGGER_SECONDS` fan-out-stagger feature
+      it specifies, or (b) confirm the design is superseded and leave that todo open with a note.
+      For (a): implement in `scripts/cicd/ldr_to_main_fleet_promote.sh` (+ its regression test) and flip
+      `ci_satellite_ao_dispatch_batch15_2026_08_16.md`'s stagger todo with a real commit sha. Repo: unified-trading-pm. Done when: either
       the feature ships for real, or the batch15 todo carries an explicit note that this draft was discarded.
 - [x] ✅ [INFRA] P2. DONE 2026-08-17 (slot 5, infra) — Investigate the second occurrence: why is
       `deployment-service@e631240990` (a real, properly-trailed commit by slot-27, 2026-08-17T05:56:16Z, adding
@@ -152,9 +152,9 @@ interrupted-draft signal — worth the infra-craft triage recognizing both shape
       `plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md`'s Phase 0 measurement todos are
       all closed (line 642: "Phase 0 — preconditions and measurement — DONE — all 7 todos, p95/max shard-duration
       table landed 2026-08-17"). No code change needed; no correction needed to either plan.
-- [ ] [INFRA] P3. Given this exact bug class (`safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`,
-      status: resolved) recurred TWICE in one session on slot 9 within minutes of each other, re-open or
-      cross-reference that resolution — the fix may not fully hold under the current ~21-entry autostash-pile
+- [ ] [INFRA] P3. Re-open or cross-reference `safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md`
+      (status: resolved) — this exact bug class recurred TWICE in one session on slot 9 within minutes of each
+      other, so the fix may not fully hold under the current ~21-entry autostash-pile
       contention level this slot is running under. Repo: unified-trading-pm / agent-orchestrator (wherever
       safe-doc-push.sh's stash/restore logic lives). Done when: either the fix is confirmed still sufficient
       under high-contention load, or a follow-up fix lands.

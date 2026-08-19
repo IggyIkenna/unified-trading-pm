@@ -322,3 +322,13 @@ Operator reported agents "keep respawning without finishing their tasks and burn
   diagnostic fields captured after 08-12.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:ee781ee3c4c9540d]: KEEP-NA, valid — the original P1 INVESTIGATE todo is already closed (root-caused 2026-08-18, same ambient-tmux-socket kill-server mechanism as the sibling doc, DeepSeek incidental, 5+ days zero recurrence). Sole remaining open item is an explicit [OPERATOR]-tagged tuning-flag revert decision with no decision on record. Converges with the 2026-08-17 na-eligibility-audit verdict (updated for the since-closed investigation item).
+- **2026-08-19 (interactive session, live check via SSM against `i-0c9b283b31d6b5ca7`)**: pulled `GET /api/accounts`
+  filtered to every `sub-*`/`provider:anthropic` account (8 total). **Capacity has NOT recovered** —
+  `sub-a-ikenna`/`sub-c..f-*` all `rate_limited` with `rate_limited_until` spanning 2026-08-19T13:59Z through
+  2026-08-21T18:59Z; `sub-b-iggy2london`/`sub-g-alpavolt` `high_usage`; every one of the 8 carries
+  `overage_status: "rejected"`. **Decision (trust-mode, operator's "apply your recommendation" ruling): keep
+  `tuning.deepseek_opus_emergency_fallback` ON — do not revert.** Reverting now would route opus-tier work back onto
+  accounts that are still rejected/rate-limited fleet-wide, recreating the exact starvation this flag exists to
+  avoid. Re-check trigger (unchanged from the todo's own framing): once every `sub-*` account shows
+  `overage_status` other than `rejected` for a sustained period, this is safe to revert — not yet met. Todo stays
+  open (this is a status check-in against a still-unmet condition, not a final answer).

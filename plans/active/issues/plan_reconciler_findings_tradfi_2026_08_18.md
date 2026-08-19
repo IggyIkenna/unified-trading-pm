@@ -430,3 +430,12 @@ audited this same pass: `data_completion_tradfi_line_cap_blocks_e7_stale_item_cl
 Resolving the remaining corpus-wide contradiction/false-unchecked findings listed here is `/plan-reconcile`'s own
 job on its next tradfi pass, not this skill's remit (per this skill's own `does_not` scope boundary) — converting
 them into checkboxes on THIS doc would duplicate that skill's tracking, not fix anything. `assigned_vm` unchanged.
+
+## na-eligibility-audit note (2026-08-19, tradfi tranche, dispatch agt-5d34f9)
+
+**KEEP-NA, valid — reaffirmed, independently re-derived.** 0 checkbox todos on this doc itself (grep-confirmed,
+matching the 08-18 verdict). Still a `/plan-reconcile` run-findings artifact, not a work-tracking doc — every
+finding it records is either already applied, routed as a `/blocked` escalation, parked as an explicit
+operator-decision item, or a grace-protected pointer, none of which is expressible as a bounded todo on THIS doc.
+Resolving the remaining corpus-wide contradiction/false-unchecked findings is `/plan-reconcile`'s own remit, not
+this skill's. `assigned_vm` unchanged.

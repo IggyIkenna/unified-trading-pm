@@ -131,11 +131,11 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    `SHARD_AXIS_MATRIX` — regression-tested). 3 new tests
    (`tests/unit/test_pipeline_e2e_check_defi_chain_axis.py`): composed-key match, no-chain-column fallback,
    blank-chain fallback. QG green (64s). **Evidence: market-data-processing-service@fae666bef2.**
-3. `[SCRIPT] P2.` Still open. Separately, `_read_input_index_frame` should genuinely bound its read (date-range or
+- [ ] [SCRIPT] P2. Still open. Separately, `_read_input_index_frame` should genuinely bound its read (date-range or
    asset_group-scoped row-group pushdown, not just column pushdown) rather than relying on a bigger VM — the
    160.4M-row full-manifest read is real waste even once (1)/(2) are fixed, and the next AG whose manifest grows
    past DEFI's current size will re-hit the same OOM ceiling on `e2-highmem-8` too.
-4. `[DATA] P1.` Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
+- [ ] [DATA] P1. Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
    --auto-day` matrix again to get a REAL (non-"PROVED NOTHING") verdict, then consolidate all 5 AGs' reports per
    `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo. **2026-08-17 note**: the plan's own CEFI driver
    (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) was STILL RUNNING (not terminal) as of this check — do not
@@ -168,7 +168,23 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    this relaunch): explicit `del`/`gc.collect()` of each leg's large intermediate structures
    (`_captured_days_by_cell`'s frame/groupby results) in `pipeline_e2e_check.py` between legs, or run each leg
    in its own subprocess so OS-level cleanup is guaranteed.
+- [ ] [SCRIPT] P2. Extracted from item 5's own "Real fix still needed" tail (was prose-only, not a tracked
+      checkbox — converted 2026-08-19 by `/plan-reconcile security_and_cross_cutting_master` Phase 2.4 zero-checkbox
+      sweep). Explicit `del`/`gc.collect()` of each leg's large intermediate structures
+      (`_captured_days_by_cell`'s frame/groupby results) between legs in `pipeline_e2e_check.py`, or run each leg
+      in its own subprocess, so RSS doesn't accumulate leg-over-leg (the item-5 relaunch used a bigger VM as a
+      mitigation, not a fix — this is the real fix).
 
 ## Progress Log
 
+- **2026-08-19** (`/plan-reconcile security_and_cross_cutting_master` Phase 2.4, zero-checkbox sweep): this entire
+  "Recommended decision" list used numbered-prose format (`1. `[TAG] P1.` ...`) instead of canonical `- [ ] [TAG]
+  P<n>.` checkboxes — invisible to every mechanical checkbox scanner (`check_todo_format.sh`,
+  `count_open_tasks.py`, AO backlog regen) despite carrying 2 genuinely open items (3, 4) plus one more extracted
+  from item 5's own prose tail (now the new item above). Converted items 3, 4 to `- [ ]`; items 1, 2 already
+  carried explicit ✅ DONE markers and item 5's completed relaunch action was left as historical numbered narrative
+  (its own still-open remainder extracted to the new item above). No content changed beyond the format/visibility
+  fix — the doc's own claims were not re-verified this pass; whoever picks up item 4 should first check whether
+  the 2026-08-17 02:42 UTC relaunch (`pipeline-e2e-check-mdps-20260817-024215-f56c11`) reached a terminal verdict
+  before assuming it's still pending.
 - **context-scout 2026-08-17**: populated context_scope (5 entries).

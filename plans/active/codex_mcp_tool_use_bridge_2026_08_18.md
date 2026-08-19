@@ -31,7 +31,7 @@ estimate_calibrated_ai_days: 4
 assigned_role: infra
 effort: high
 drift_direction: advance-code
-depends_on: [codex_luna_flex_bridge]
+depends_on: [codex_luna_flex_bridge_2026_08_14]
 locked_by:
 locked_since:
 supersedes:

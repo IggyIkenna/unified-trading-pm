@@ -14,7 +14,7 @@ summary: >-
   state/poll endpoints were down. The condition self-recovered after ~10min (first pool error ~02:0x, last 02:12:38) as
   the connection-holding requests completed and released connections; /api/state returned to 0.05s and poll to 0.34s
   with no restart. Confirmed on-host 2026-07-25 by main orchestrator (agt-52bb99) during the poll loop.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -30,7 +30,7 @@ related:
   ]
 created: 2026-07-25
 author: unknown
-last_updated: 2026-07-25
+last_updated: 2026-08-19
 priority: P1
 parent_epic: orchestrator_master
 source: "main orchestrator (agt-52bb99) on-host diagnosis during poll loop, 2026-07-25 ~02:12"
@@ -39,6 +39,9 @@ execution_scope: local-only
 estimate_class: refactor
 drift_direction: advance-code
 resolved_by:
+  "agent-orchestrator@996e98ef73 (+ stale-comment follow-up agent-orchestrator@da056d128e), 2026-08-19 — sole
+  remaining [BACKEND] P3 todo closed: serialised the per-slot git-status write path through a single-worker queue.
+  See the flipped todo below for the full disposition."
 locked_by:
 depends_on: []
 context_scope:
@@ -52,6 +55,16 @@ context_scope:
 ---
 
 # Orchestrator DB pool exhaustion stalls /api/state + /api/poll; /health-green blind spot hides it from auto-restart
+
+> **RESOLVED + ARCHIVED 2026-08-19.** All 5 todos done, none `locked_by`. The root cause (spawn holding SQLite's write
+> lock across a ~75s cold-start + read-only endpoints unnecessarily taking the write lock) shipped via
+> `plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md` (`agent-orchestrator@361e0fe`); the leak-vs-concurrency
+> formal proof shipped `agent-orchestrator@54b86a9`; the DB-aware readiness probe shipped `agent-orchestrator@3b4a329`.
+> The sole remaining `[BACKEND] P3` defense-in-depth todo — batch/serialise the per-slot git-status writes — shipped
+> `agent-orchestrator@996e98ef73` (+ stale-comment follow-up `agent-orchestrator@da056d128e`): every
+> `POST /api/slots/{id}/git-status` write now routes through a single-worker `ThreadPoolExecutor`
+> (`_GIT_STATUS_WRITER` in `server/routes/git_health.py`) so at most ONE DB connection is ever held for that route at
+> a time, regardless of concurrent slot fan-in. Regression coverage: `tests/test_git_status_write_serialized.py`.
 
 ## What happened (on-host evidence, ip-172-31-5-118 :8765, 2026-07-25)
 
@@ -154,10 +167,18 @@ re-triggers AutoSpawn's spawn-in-txn on restart).
       `os._exit(1)` so `orchestrator.service`'s `Restart=on-failure` fires — exactly the DB-aware readiness signal
       this todo asked for. New `notify_readiness_watchdog_restart` Slack alert. Independently verified live: the
       commit exists on `origin/live-defi-rollout`.
-- [ ] [BACKEND] P3. Right-size / harden the pool for the known concurrency: raise `pool_size`/`max_overflow` to cover
-      peak concurrent slot git-status + poll fan-in, and/or lower `pool_timeout` so a starved request fails fast (loud)
-      instead of hanging 30s (silent). Consider batching/serialising the per-slot git-status writes so N slots don't
-      each hold a connection simultaneously.
+- [x] [BACKEND] P3. **DONE 2026-08-19.** `agent-orchestrator@996e98ef73` serialises the per-slot git-status write path
+      (`POST /api/slots/{id}/git-status`, `server/routes/git_health.py`) through a new single-worker
+      `ThreadPoolExecutor` (`_GIT_STATUS_WRITER`) — the resize-`pool_size`/`max_overflow` and lower-`pool_timeout`
+      directions stayed deprioritized per this doc's own occurrence #6/#7 evidence (already ruled insufficient — see
+      `server/db.py`'s `BUSY_TIMEOUT_MS`/`POOL_TIMEOUT_S` comment, itself corrected to point here via follow-up
+      `agent-orchestrator@da056d128e`). Every write now routes through the single-worker queue, so at most ONE
+      `session_scope()` (DB connection) is ever open for this route at a time regardless of how many slots POST
+      concurrently — other request threads block on `Future.result()`, not on a held connection. New
+      `tests/test_git_status_write_serialized.py` drives the real route from `_N_SLOTS=12` concurrent threads (lined
+      up on a `threading.Barrier`) and asserts `max_active == 1` on a tracked `session_scope()` wrapper — proving
+      serialization, not just asserting it. `quality-gates.sh` green (4120 passed, 9 skipped, basedpyright 0 errors)
+      on this SHA (dashboard tsc/vitest also green, 414 passed).
 
 ## Occurrences (frequency is increasing — escalation trigger)
 

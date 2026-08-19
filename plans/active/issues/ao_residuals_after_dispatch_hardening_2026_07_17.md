@@ -28,7 +28,7 @@ related:
     ../../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
     ../../epics/escalation_and_disaster_recovery_master.md,
     ../../epics/orchestrator_master.md,
-    ao_consolidated_closeout_2026_08_12,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: 2026-07-17
 author: unknown
@@ -88,7 +88,15 @@ source:
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Resolve the `/api/escalate` vs proposed `/api/escalation/{id}` name collision — BEFORE any
+- [x] [BACKEND] P2. ✅ **DONE — verified 2026-08-19 (/plan-reconcile orchestrator_master) directly against
+      `agent-orchestrator` code, not just the tracker's claim: `server/routes/agents.py:440-448`'s
+      `GET /api/escalations/{escalation_id}` docstring explicitly confirms the namespaced-plural route
+      (`/api/escalations/{id}`) has no collision with `/api/escalate` (unchanged CI-wall dispatch), satisfying this
+      todo's own gate ("one of the two routes is renamed/namespaced"). Repo: agent-orchestrator (code unchanged by
+      this pass — the fix already shipped; only the checkbox was stale). Mirrors
+      `ao_open_work_consolidated_tracker_2026_08_14.md`'s already-`[x]` 2026-08-15 verdict, which this same evidence
+      now also lands here per its own "flip both" instruction.**
+      Resolve the `/api/escalate` vs proposed `/api/escalation/{id}` name collision — BEFORE any
       escalation code is written.** Two unrelated concepts one character apart: `/api/escalate` already exists and is
       the **GHA→orchestrator CI-wall judgment dispatch**; the proposed `/api/escalation/{id}` is **operator
       escalation**. Whoever implements the second without noticing the first will either collide on the route or, worse,
@@ -98,7 +106,8 @@ source:
       escalation pipeline MVP" (the design detail is in the archived child plan
       [`escalation_pipeline_mvp_2026_06_25`](../../archive/2026_07/escalation_pipeline_mvp_2026_06_25.md), archived
       2026-07-23). Blocked-by: that **epic** is `status: paused` on an operator ruling — this only needs doing if/when
-      it un-pauses. (was: blocked-by the child plan's own pause, before its todos moved to the epic.)
+      it un-pauses (see [`escalation_and_disaster_recovery_master`](../../epics/escalation_and_disaster_recovery_master.md)
+      for the pause/un-pause ruling record). (was: blocked-by the child plan's own pause, before its todos moved to the epic.)
       **na-eligibility-audit 2026-08-03**: the stated blocker has changed — the epic
       [`escalation_and_disaster_recovery_master`](../../epics/escalation_and_disaster_recovery_master.md) UN-PAUSED
       2026-07-28 (operator gated-decision closeout ruling, `status: paused → active`, full completion of all P1 todos
@@ -109,8 +118,8 @@ source:
       `escalation_and_disaster_recovery_master`'s own `## P1 — escalation pipeline MVP` § `[BACKEND] P0` "Prerequisite —
       resolve the `/api/escalate` vs `/api/escalation/{id}` route-naming collision" todo (that epic is `status: active`,
       `assigned_vm: planning`) — same gate, same two routes, same "land BEFORE the role-agnostic escalation record todo"
-      sequencing. Do not duplicate work here; the epic is the live tracking home. This checkbox stays open pending that
-      epic's own todo, not re-derived independently.
+      sequencing. **Superseded by the 2026-08-19 DONE marker above** — this checkbox is no longer pending the
+      epic's own todo, both are now flipped on the same evidence.
 - [x] [BACKEND] P2. ✅ **RESOLVED 2026-07-23 — the doc's own gate command was run on the live VM and PASSES.**
       `sudo -u ubuntu env -u ORCHESTRATOR_DB_PATH -u ORCHESTRATOR_STATE_JSON .venv/bin/python -c "from server import config; print(config.db_path())"`
       → `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/state.db`, and that path holds the LIVE

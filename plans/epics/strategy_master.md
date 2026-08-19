@@ -68,7 +68,7 @@ codex_ssots:
 related_plans:
   - ../active/capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md
   - ../active/carry_staked_basis_funding_scan_experiment_2026_06_16.md
-  - ../active/carry_strategy_ensemble_productionization_2026_07_24.md
+  - ../archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md
   - ../archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09.md
   - ../archive/2026_08/cefi_satellite_ao_dispatch_batch13_2026_08_09_finalize.md
   - ../active/cross_venue_funding_reversion_research_2026_07_24.md
@@ -76,15 +76,23 @@ related_plans:
   - ../active/defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md
   - ../archive/2026_08/family2_position_registry_unwind_consumption_2026_08_09.md
   - ../active/l2_book_microstructure_capture_2026_07_13.md
-  - ../active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md
+  - ../archive/2026_08/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md
+  - ../active/service_config_ownership_and_instruction_contract_2026_08_12.md
+  - ../active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md
+  - ../active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md
   - /plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
-last_updated: 2026-08-18 # was 2026-06-11 -- folded dart_and_promote_master + global_ledger_pnl_attribution_master in 2026-08-18, see body
+last_updated: 2026-08-19 # was 2026-08-18 -- /plan-reconcile strategy_master: repointed 2 dangling active/ links to their real archive/2026_08/ paths (carry_strategy_ensemble_productionization, recursive_loop_orchestrator_wiring_finalize), corrected 2 stale "status: active" body claims to the archived docs' real "status: complete", and added 3 currently-active parent_epic:strategy_master plans missing from the auto-populated body (service_config_ownership_and_instruction_contract_2026_08_12, strategy_archetype_latency_deployment_profile_execution_2026_08_10, strategy_service_expansion_overlays_config_and_wizard_2026_08_12) -- see body
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
 # Strategy Master (L2)
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/fce4c37d-d0bf-42d5-a78b-f2b6136ddb13 (generated 2026-08-19,
+`/plan-reconcile strategy_master`)
 
 > **🟡 IN-FLIGHT REFACTOR — UTL/UAC reuse consolidation** (guardrails phase:
 > [`utl_reuse_phase0_guardrails_2026_07_13`](../archive/2026_07/utl_reuse_phase0_guardrails_2026_07_13.md); compose
@@ -149,8 +157,11 @@ epic had accrued 0 corpus references since its 2026-05-21 creation). Full archae
 
 ## Assigned active plans
 
-_13 active plans declare `parent_epic: strategy_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_10 active plans currently declare `parent_epic: strategy_master` in their frontmatter (corrected 2026-08-19,
+/plan-reconcile -- was stale at "13", counting 3 entries below that have since archived). Workers pick up in priority
+order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py` -- a handful of recently-archived
+entries below are kept in place (status/path corrected) rather than deleted, matching this doc's existing convention for
+`cefi_satellite_ao_dispatch_batch13_2026_08_09` and `strategy_service_family2_close_unwind_emission_2026_08_09`._
 
 ## P0 — must complete before next foundation gate
 
@@ -168,9 +179,10 @@ successor + CI-runner openapi regen follow-up
 **status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis funding-carry scan —
 exploratory analysis harness + journal
 
-### [`carry_strategy_ensemble_productionization_2026_07_24`](../active/carry_strategy_ensemble_productionization_2026_07_24.md)
+### [`carry_strategy_ensemble_productionization_2026_07_24`](../archive/2026_08/carry_strategy_ensemble_productionization_2026_07_24.md)
 
-**status**: active · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis — ensemble
+**status**: active (archived 2026_08, but the doc's own frontmatter still reads `status: active` -- unchanged, not this
+pass's to correct) · **estimate**: 3.6 cal AI-days (class: research) **title**: carry_staked_basis — ensemble
 orchestrator engine + strategy-service productionization
 
 ### [`crypto_alpha_research_2026_07_24`](../active/crypto_alpha_research_2026_07_24.md)
@@ -178,10 +190,21 @@ orchestrator engine + strategy-service productionization
 **status**: active · **estimate**: 18 cal AI-days (class: research) **title**: Crypto Alpha Research — Book
 Construction, Signal Research & Paper-Trading POC
 
-### [`recursive_loop_orchestrator_wiring_finalize_2026_08_09`](../active/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md)
+### [`recursive_loop_orchestrator_wiring_finalize_2026_08_09`](../archive/2026_08/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Finalize — RecursiveLoopOrchestrator
+**status**: complete (corrected 2026-08-19, /plan-reconcile — was stale "active"; the archived doc's own frontmatter
+reads `status: complete`) · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Finalize — RecursiveLoopOrchestrator
 wiring plan reconciliation + archival
+
+### [`service_config_ownership_and_instruction_contract_2026_08_12`](../active/service_config_ownership_and_instruction_contract_2026_08_12.md)
+
+**status**: draft · **estimate**: 5.0 cal AI-days (class: refactor) **title**: Service config ownership — the
+instruction contract, per-service config.py, and hot reload everywhere
+
+### [`strategy_service_expansion_overlays_config_and_wizard_2026_08_12`](../active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md)
+
+**status**: draft · **estimate**: 4.0 cal AI-days (class: refactor) **title**: Strategy-service expansion — overlay
+placement, one schema-backed config surface, and the capability wizard
 
 ## P2 — useful; opportunistic
 
@@ -210,6 +233,12 @@ opportunity-checker + wizard full-parameterization
 **status**: active · **estimate**: 5.0 cal AI-days (class: brand-new) **title**: Deeper-Than-L5 Order Book Capture —
 populate queue_position_* for MARKET_MAKING_QUEUE_MICROSTRUCTURE
 
+### [`strategy_archetype_latency_deployment_profile_execution_2026_08_10`](../active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md)
+
+**status**: active (`assigned_vm: planning`, AO-dispatched) · **estimate**: 4.0 cal AI-days (class: brand-new)
+**title**: Execution — wire archetype-declared deployment-profile requirements into runtime-topology.yaml + derive
+deployments from active archetypes
+
 ### [`strategy_service_family2_close_unwind_emission_2026_08_09`](/plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md)
 
 **status**: complete · **estimate**: 0.6 cal AI-days (class: design) **title**: Family-2 (CARRY_BASIS_PERP_INV)
@@ -224,8 +253,9 @@ engineless archetypes + 9 unwired venues
 
 ### [`family2_position_registry_unwind_consumption_2026_08_09`](../archive/2026_08/family2_position_registry_unwind_consumption_2026_08_09.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Family2PositionRegistry — consume the
-Family-2 close/unwind event once it exists
+**status**: complete (corrected 2026-08-19, /plan-reconcile — was stale "active"; the archived doc's own frontmatter
+reads `status: complete`) · **estimate**: 0.2 cal AI-days (class: refactor) **title**: Family2PositionRegistry — consume
+the Family-2 close/unwind event once it exists
 
 ## Folded-in epic: DART + Promote Workflow Master (folded 2026-08-18)
 

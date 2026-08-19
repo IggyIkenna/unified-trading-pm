@@ -43,6 +43,12 @@ source: >-
   incremental-skip doc (defi_migration_audit_log_2026_07_24.md's FOLD-3 residual).
 ---
 
+> **SUPERSEDED 2026-08-19** by
+> [`na_eligibility_audit_defi_blocks_2026_08_19.md`](/plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_19.md)
+> — that doc carries the fresh Phase-1b consolidation for today's run, including this doc's still-genuinely-open
+> carry-forward items re-assessed. Kept here (not archived) as the historical record for this specific run; archival
+> deferred to a dedicated hygiene pass.
+
 # na-eligibility-audit defi tranche 2026-08-18 — blocks + carry-forward index
 
 ## Headline this run: a full whole-set KEEP-NA-STALE closure

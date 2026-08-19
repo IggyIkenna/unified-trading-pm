@@ -136,8 +136,7 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
       backfill-batch issue, not a live-writer regression; flagged here for visibility, not fixed as part of this item
       (out of scope). Source doc's checkbox flipped in the same session (see
       `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 1).
-- [ ] [DIAG] P2. **Confirm with `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`'s owner whether to
-      run its drafted IS-bucket relabel now.** Phase 0/1 of the writer-flip plan have both landed, so per that plan's
+- [ ] [DIAG] P2. **Confirm with `sports_p2_trades_mirror_unstamped_instruments_store_2026_08_15.md`'s owner whether to run its drafted IS-bucket relabel now.** Phase 0/1 of the writer-flip plan have both landed, so per that plan's
       own text ("running before the flip means re-running after"), "run now" is the self-consistent answer. Source:
       `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 2. Done when: the issue doc is updated
       with the decision + evidence, and the source doc's checkbox is flipped.
@@ -160,8 +159,7 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
       (need restamping first). Read-only, no delete. Source:
       `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 3. Repo: market-tick-data-service.
       Done when: the census report cites both population counts, and the source doc's checkbox is flipped.
-- [ ] [SCRIPT] P2. **Re-run `restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py`
-      against census population (b) from the item above**, so 100% of remaining `trades`-labeled content has a
+- [ ] [SCRIPT] P2. **Re-run `restamp_sports_trades_to_odds_2026_08_12.py` + `manifest_swap_trades_to_odds_2026_08_12.py` against census population (b) from the item above**, so 100% of remaining `trades`-labeled content has a
       verified `odds`-labeled twin before any deletion proceeds. Sequenced after the census item above (same-doc
       dependency — both touch the same population, run the census first). Source:
       `sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md` Phase 3. Repo: market-tick-data-service.
