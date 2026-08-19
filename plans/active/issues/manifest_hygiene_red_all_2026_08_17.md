@@ -584,15 +584,14 @@ is not, for either candidate CQG-bundle writer that exists today.
       Scheduler job configs / `deployment-service`'s prediction-specific cron registrations for anything firing
       near 01:3x UTC. See "Diagnosis update (2026-08-18, slot-22)" above. `deployment-service` (or wherever the
       ~01:32 cron is registered — unconfirmed).
-- [ ] [DATA] P3. Fix the misleading docstring in `_polymarket_helpers.py::_emit_lifecycle_prefetch_skips` (lines
-      ~328-332, corrected 2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness AND
-      closed the backtick span that was split unclosed across the line boundary — task_template.md §3 finding L) —
-      it claims "the downstream Tier-3 sentinel fan-out ... independently re-derives this classification" for
-      `EXPECTED_INSTRUMENT_NOT_LISTED`/`_DELISTED` without scoping the claim to `dt=="trades"`, which reads as if
-      it also covers `prediction_canonical_question_group` — confirmed false by direct read of
-      `sentinels.py::_emit_tier3_for_dt`'s lifecycle-map guard (see "Diagnosis update (2026-08-18, slot-22)"
-      above). This misreading is what led two prior diagnosis rounds (slot-14, slot-9/slot-6) to keep pointing at
-      the Tier-3 fan-out as the CQG-cell writer. `market-tick-data-service`.
+- [x] ✅ [DATA] P3. Fixed 2026-08-19 slot-7 — `market-tick-data-service@f67a7480b3`. Scoped the misleading claim
+      in `_polymarket_helpers.py::_emit_lifecycle_prefetch_skips`'s docstring to `data_type="trades"` ONLY (it now
+      states the Tier-3 fan-out's lifecycle-map load is guarded on `dt == "trades"`, so `book_snapshot_5` and the
+      CQG-bundle cell `prediction_canonical_question_group` never get this re-derivation) — confirmed the guard
+      live at `sentinels.py::_emit_tier3_for_dt` (`venue.upper() in {"POLYMARKET","KALSHI"} and dt == "trades"`)
+      before editing. Found the SAME unscoped claim, verbatim, in `kalshi_adapter.py`'s own copy of
+      `_emit_lifecycle_prefetch_skips` while fixing this (not named in the original todo) — fixed both in the
+      same commit per CLAUDE.md "a doc/comment that misled you is a finding, fix it in the same turn".
 - [ ] [DATA] P1. Trace WHY instruments-service's `_write_prediction_venue`
       (`instruments_service/engine/orchestrator/process_write.py`) stopped emitting POLYMARKET catalogue objects
       (`instrument_availability/by_date/day={date}/.../venue=POLYMARKET/...`) starting 2026-08-10 (corrected
@@ -629,3 +628,11 @@ is not, for either candidate CQG-bundle writer that exists today.
   slot-14 round 2's "near-live, not frozen" reading. Flipped the LIVE-verify todo, filed two P2
   follow-ups (git-history check on the Tier-3 guard; find the ~01:32 UTC recurring writer) plus a
   P3 docstring-fix todo.
+- **slot-7 2026-08-19**: flipped the P3 docstring-fix todo — `market-tick-data-service@f67a7480b3`
+  scopes `_emit_lifecycle_prefetch_skips`'s Tier-3-re-derivation claim to `dt=="trades"` in BOTH
+  `_polymarket_helpers.py` (the originally-named file) and `kalshi_adapter.py` (same unscoped claim
+  found verbatim there while editing, not named in the original todo). Also cross-referenced this
+  doc's still-open findings (cefi/tradfi VM-scale re-run, prediction instruments-service trace)
+  against `manifest_hygiene_red_all_2026_08_18.md`'s duplicate daily-audit refile — closed that
+  doc's todo as a cross-reference rather than re-diagnosing; the two P2 and one P1 todos above
+  remain the tracked fix work for cefi/tradfi/prediction.
