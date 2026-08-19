@@ -69,11 +69,11 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.49.67",
     "deployment-api": "0.93.0",
-    "deployment-service": "0.154.32",
+    "deployment-service": "0.154.33",
     "deployment-ui": "0.1.0",
-    "execution-service": "0.82.9",
-    "features-service": "0.90.11",
-    "fund-administration-service": "0.9.82",
+    "execution-service": "0.82.11",
+    "features-service": "0.90.12",
+    "fund-administration-service": "0.9.83",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.103.26",
     "market-tick-data-service": "0.144.20",
@@ -84,7 +84,7 @@
     "market-data-processing-service": "0.30.25",
     "e2e-testing": "0.41.29",
     "agent-orchestrator": "0.100.11",
-    "greeks-service": "0.18.68",
+    "greeks-service": "0.18.69",
     "trading-agent-service": "0.13.12",
     "strategy-service": "0.76.6",
     "ml-service": "0.58.44",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "3fedc96b2c918e57e36a6b3c47241f82fb1af57d"
+      "ldr_ci_status_sha": "39b95ee24e701f60aeafc8a83647d923f3dae854"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "14d9b16eca64f35fb7aea8501c5ec87e1a3161c9"
+      "ldr_ci_status_sha": "c202cdc0304dcd1e28a6c269b34478a22733dd14"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -544,7 +544,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "d1e69ea671b2e7551b25cd96e5221d7961754c8f"
+      "ldr_ci_status_sha": "2cb10ff80744050803ee74b642709a1d20e4348b"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -608,7 +608,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "8d2e93852f97201024564e381eb34d361ea9d6d5"
+      "ldr_ci_status_sha": "985de715e5d447fc7868e3889a88af7bd81905cb"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -670,7 +670,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "eeb9f0e24eef91459466ed2add871cd9fc8571d5"
+      "ldr_ci_status_sha": "4037d02195775b81e62008c434b2bd4c485ab501"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
