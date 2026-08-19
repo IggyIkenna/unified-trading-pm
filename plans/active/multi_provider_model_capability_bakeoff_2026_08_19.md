@@ -542,3 +542,19 @@ _(remaining rows populated as each attempt completes)_
   round, on top of the earlier free-tier spend) for a fix that is not yet reliably working; not continuing to burn
   spend on a partially-broken paid tier without the operator's input on whether to pursue the quota-increase path
   or accept the current data as-is.
+
+- **2026-08-19 (later) — GLM finally unblocked: operator re-authenticated as `harshkantariya@odum-research.com`,
+  real funded credential fetched, both models tool_use-verified, both lanes dispatched.** `gcloud auth login
+  --account=harshkantariya@odum-research.com` (operator, interactive) plus `gcloud config set account` resolved
+  what 3 other identities (`ikenna@odum-research.com` reauth-blocked, `harshkantariya.work@gmail.com` and the VM's
+  own `github-actions-deploy@...` both permission-denied) could not: a clean fetch of the real
+  `glm-coding-plan-api-key` secret (49 bytes). Built `~/.claude-accounts/glm-5-2.env`/`glm-5-turbo.env` with this
+  real key (static value this time, not the VM files' live-gcloud-lookup pattern). Both smoke-tested clean before
+  any real dispatch: plain-text (200 OK, real content, GLM 5.2's response confirms the known 5.2→5.3
+  server-aliasing) AND a real tool_use exchange on GLM 5.2 (200 OK, real `tool_use` block, `stop_reason:
+  "tool_use"`) — this fleet's first-ever confirmation that GLM's native endpoint handles tool-calling correctly,
+  closing a gap the source onboarding plan had left explicitly open. Re-verified all 6 GLM-lane tasks' checkboxes
+  still open (unchanged from original selection). Dispatched: slot 26 (GLM 5.2) and slot 27 (GLM 5-Turbo), both
+  against the full 6-task queue, poller at 30s/128K-context-window (Z.ai's real window not yet confirmed via a
+  `modelUsage`-equivalent field the way Gemini's was — 128K is an estimate, flag any correction the same way the
+  Gemini one was caught). Results will land in the Results table as both lanes complete.
