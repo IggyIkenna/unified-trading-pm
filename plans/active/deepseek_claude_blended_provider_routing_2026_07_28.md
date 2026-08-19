@@ -679,6 +679,7 @@ side beyond updating the ceiling constants the UI headroom-gate todo below reads
       5-turn task consumed a measurable, recordable credit delta — see Progress Log for the real before/after
       numbers to calibrate against). Done when: `_pick_headroom_account`'s GLM gating reflects the real credit unit,
       not prompt-count, verified against a real dashboard reading before/after a test dispatch.
+      **PARTIAL `agent-orchestrator@4e2d3797fb`** — ceilings fixed; live verification still blocked.
 - [x] [INFRA] P1. ✅ Register the GLM Coding Plan account end to end. **DONE 2026-08-16** — env files for both
       variants (`~/.claude-accounts/glm-5-2.env`, `glm-5-turbo.env`) + `accounts.json` entries + GSM secret
       `glm-coding-plan-api-key`, mirroring the DeepSeek pattern exactly. `AUTH_OK` verified via real live
