@@ -141,12 +141,22 @@ resolved_by:
       merge. 4× 2h executions today: 10:51, rsgbc, nfgs5, rdlhn. Canonical still frozen gen=1787019237694916 /
       02:13:57Z; 20:00 cycle `error_reason=locked`. Reap not applicable (current holder is live; clearing under it is
       unsafe + the loop re-arms anyway) — the fix is the todo-2 code change.**
-- [ ] [SCRIPT] P0. **If the zombie-execution check doesn't explain it, read `unified_trading_library/manifest_consolidator.py`'s
+- [x] [SCRIPT] P0. ✅ **If the zombie-execution check doesn't explain it, read `unified_trading_library/manifest_consolidator.py`'s
       lock acquire/release + staleness-check code**, confirm whether it has any TTL/expiry at all, and fix the gap
       (this workspace's own `manifest-consolidator-ssot.md` already documents a structurally similar "no fallback /
       fails closed" fix for the content-write-marker — the lock most likely needs the same kind of TTL-based
       self-healing, so a crashed/killed holder can't wedge every future cycle forever). Ship via quickmerge, gate
       green. Done when: the fix is live and a fresh hourly cycle genuinely merges (not just reports `success=True`).
+      **SHIPPED 2026-08-19T21:4xZ — `unified-trading-library@af783d92e4` (QG green: tests + typecheck + codex PASS;
+      sentinel + post-push ancestry verified). Premise CONTRADICTED by measurement: the lock ALREADY has TTL
+      (`_LOCK_TTL_SECONDS` 300s default / 9000s cefi) — the real gap was the missing-marker → doomed-full-merge →
+      timeout-SIGKILL → orphan → re-arm loop. Fix: `_UNPROVABLE_MERGE_MAX_SHARDS` (env
+      `CONSOLIDATOR_UNPROVABLE_MERGE_MAX_SHARDS`, default 50000) — the cron refuses a corpus-wide unprovable merge
+      over that size and skips-with-loud-alert (`success=False` → CLI exit 1 + `MANIFEST_CONSOLIDATION_FAILED`
+      severity=ERROR) instead of wedging. Regression test
+      `test_unprovable_cutoff_oversized_merge_skips_instead_of_doomed_full_merge` (QG's initial red was a hardcoded
+      prod bucket name in that test — fixed to `-prd-test-project`). Deploy to the cron image (MTDS BASE_IMAGE_DIGEST
+      bump + rebuild) + the marker-restore recovery + "fresh hourly cycle genuinely merges" verification = todo 3.**
 - [ ] [SCRIPT] P0. **Verify recovery end-to-end**: confirm the canonical
       `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` blob's `generation`/
       `last_modified` has advanced (via UTL `get_storage_client().get_blob_metadata(...)`, never a subprocess
@@ -221,3 +231,12 @@ resolved_by:
   QG re-run in progress; repo-blocker RB-959c7b8d was resolved via watcher_green and is moot. `/plans/active/issues/
   utl_codex_schema_provenance_qg_red_2026_08_19.md` corrected + demoted to P2 (schema-provenance mis-application to a
   library repo is a quality-of-life warning, not a blocker). Ship via quickmerge once QG is green.
+- **2026-08-19T21:4xZ (slot-4 worker, todo-2 ship)**: **Fix SHIPPED `unified-trading-library@af783d92e4` via quickmerge —
+  QG green (tests + typecheck + codex PASS, sentinel + ancestry verified), landed on LDR.** The initial QG red was my
+  own test's hardcoded prod bucket name (`market-data-tick-cefi-prd-central-element-323112` → tripped "Hardcoded prod
+  project ID in tests"); renamed to `-prd-test-project` in the amended commit. **Remaining for the done-when's "fix is
+  live + fresh hourly cycle genuinely merges"** (tracked in todo 3): (1) deploy the UTL fix to the cron image — MTDS
+  `BASE_IMAGE_DIGEST` bump + rebuild (`market-tick-data-service:latest`), then the consolidator job picks up the new
+  digest on its next execution; (2) the safe marker-restore recovery (restore `consolidator_content_write_at` to the
+  last genuine merge's LISTING time from Cloud Logging, pause cron → cancel/kill holder → metadata-only restamp →
+  resume → next cycle merges only the ~10.7k newer shards, fits the 7200s budget).**
