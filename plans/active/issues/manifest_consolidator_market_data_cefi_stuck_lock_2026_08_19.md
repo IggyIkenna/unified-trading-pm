@@ -213,3 +213,11 @@ resolved_by:
   next cycle does an incremental merge of only ~10.7k shards (~10 min, fits the 7200s budget) and re-stamps the marker.
   Current holder at filing: `rdlhn` (19:34Z, still running, will hit its 7200s timeout ~21:34Z and orphan the lock a 4th
   time).**
+- **2026-08-19T21:3xZ (slot-4 worker, todo-2 fix — CORRECTION)**: the "BLOCKED ON SHIP: pre-existing schema-provenance"
+  claim in the entry above was a **first-person misdiagnosis**. The codex-py `schema-provenance` check is a `log_warn`
+  in `base-library.sh` — it does NOT fail `quality-gates.sh`. The actual QG red was the "Hardcoded prod project ID in
+  tests" check, tripped by my OWN regression test's bucket name (`market-data-tick-cefi-prd-central-element-323112`).
+  Fixed by renaming to `market-data-tick-cefi-prd-test-project` → amended commit `unified-trading-library@af783d92`.
+  QG re-run in progress; repo-blocker RB-959c7b8d was resolved via watcher_green and is moot. `/plans/active/issues/
+  utl_codex_schema_provenance_qg_red_2026_08_19.md` corrected + demoted to P2 (schema-provenance mis-application to a
+  library repo is a quality-of-life warning, not a blocker). Ship via quickmerge once QG is green.

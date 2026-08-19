@@ -1,29 +1,27 @@
 ---
 doc_type: issue
-title: "unified-trading-library quality-gates codex-py schema-provenance check is RED (no baseline) — blocks ALL UTL ships incl. the consolidator phantom-lock fix"
+title: "codex-py schema-provenance check mis-applied to unified-trading-library (library repo) — noisy log_warn on every QG run (P2; NOT a ship blocker)"
 summary: >-
-  LIVE, BLOCKING (as of 2026-08-19T21:2xZ). `bash scripts/quality-gates.sh` in unified-trading-library fails at the
-  codex-py `schema-provenance` sub-check ("Codex compliance FAILED: 1 violations (max allowed: 0)"). The check
-  (`unified-trading-pm/scripts/validation/check_schema_provenance.py`, wired via
-  `unified-trading-pm/scripts/quality_gates/run_codex_py_checks.py`) flags ~30 local `BaseModel`/`TypedDict`/`dataclass`
-  definitions across `unified_trading_library/` (e.g. `walk_forward.py:WalkForwardReport`, `per_leaf_failure.py:PerLeafFailureRouter`,
-  `models/schemas.py:DownloadTarget/OrchestrationResult/ValidationConfig`, `ml/models.py:*`, `core/error_handling.py:*`, …)
-  as "should import from UAC or UIC". The check has NO baseline (returns 1 if ANY local schema types exist), so it fails
-  on the pre-existing corpus. The offenders pre-date the discovering worker's commit (`git show HEAD~1:unified_trading_library/walk_forward.py`
-  carries `class WalkForwardReport`; the worker's own commit `d8f05a5d` touched only `manifest_consolidator.py` + its test,
-  neither flagged). This is the direct blocker for shipping the consolidator phantom-lock guard fix
-  (`manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md` todo 2) under the green-tree rule.
+  P2 (corrected 2026-08-19T21:3xZ). `check_schema_provenance.py` flags ~30 local
+  BaseModel/TypedDict/dataclass definitions across `unified_trading_library/` (e.g.
+  `walk_forward.py:WalkForwardReport`, `models/schemas.py:*`, `ml/models.py:*`) as "should import from UAC or UIC".
+  In `base-library.sh`'s codex block this check is a `log_warn` — it does NOT increment the gate's V count and does
+  NOT block `quality-gates.sh`. It is mis-applied: UTL is the type-DEFINING library (services import contract types
+  from UAC/UIC; UTL's internal data structures — performance metrics, reconcile results, feature-calculator outputs —
+  are legitimately local). INITIAL REPORT (21:2xZ) claimed this check blocks UTL ships — CORRECTED: the actual QG red
+  was a hardcoded prod project ID in a regression test (`bucket = "market-data-tick-cefi-prd-central-element-323112"`
+  in `test_manifest_consolidator.py`), which trips the "Hardcoded prod project ID in tests" check. Fixed by renaming to
+  `-prd-test-project` (UTL@af783d92).
 status: open
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
 repos: [unified-trading-library]
 scope: [engineer, admin]
-tags: [quality-gates, codex, schema-provenance, ci, blocking, infrastructure]
+tags: [quality-gates, codex, schema-provenance, quality-of-life, infrastructure]
 related:
   [
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
-    /plans/active/codex_violations_ratchet_to_five_2026_06_10.md,
     /plans/active/issues/manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
@@ -34,8 +32,8 @@ context_scope:
   ]
 created: 2026-08-19
 author: claude-agent
-source: "slot-4 worker (manifest_consolidator todo-2), quality-gates.sh run on commit d8f05a5d, 2026-08-19"
-priority: P1
+source: "slot-4 worker (manifest_consolidator todo-2), quality-gates.sh QG-red investigation on UTL commit d8f05a5d, 2026-08-19"
+priority: P2
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -47,67 +45,54 @@ locked_by:
 resolved_by:
 ---
 
-# unified-trading-library codex-py schema-provenance QG red — 2026-08-19
+# codex-py schema-provenance check mis-applied to UTL — 2026-08-19
 
 ## What I found
 
-1. **`quality-gates.sh` fails at the codex-py `schema-provenance` sub-check, pre-existing.** A full Pass-1 QG run on
-   unified-trading-library at `d8f05a5d` exited 1 with `❌ Codex compliance FAILED: 1 violations (max allowed: 0)`. The
-   direct invocation
-   (`unified-trading-pm/scripts/quality_gates/run_codex_py_checks.py --repo-path <utl> …`) reports
-   `[codex-py] schema-provenance: FAIL (rc=1)` / `__CODEX_PY_FAILURES__=2` and prints ~30 offender
-   `repo:file:Symbol` lines.
-2. **The offenders are pre-existing, not from the discovering commit.** `check_schema_provenance.py` scans the source
-   dir for local `BaseModel`/`TypedDict`/`dataclass` definitions and flags them ("should import from UAC or UIC"). It has
-   NO baseline (`return 1 if all_violations else 0`). Every flagged symbol is in a file the worker's commit did not touch
-   (`git show --name-only d8f05a5d` = `manifest_consolidator.py` + `test_manifest_consolidator.py` only; neither flagged;
-   `ConsolidationReport` predates the change). `git show HEAD~1:unified_trading_library/walk_forward.py` carries the
-   offender, so the red predates the worker's work and the tree was already red at the freshly-pulled LDR head.
-3. **This blocks every unified-trading-library ship** under the green-tree rule (commit only from a `quality-gates.sh`-
-   green tree; quickmerge's `--agent` sentinel refuses a non-green HEAD). Concretely it is blocking the consolidator
-   phantom-lock guard fix (`manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md` todo 2, `d8f05a5d`).
+1. **`check_schema_provenance.py` flags ~30 local schema types across UTL on every `quality-gates.sh` run — as a
+   WARNING, not a failure.** In `unified-trading-pm/scripts/quality-gates-base/base-library.sh`'s `[5] CODEX COMPLIANCE`
+   block, the check (`validation/check_schema_provenance.py --repo <pkg>`) is invoked in an `if/else` that logs
+   `log_success` on pass / `log_warn` on fail — it does **NOT** do `V=$(( V + 1 ))`. So it never fails the gate. The
+   `run_codex_py_checks.py` orchestrator that reports `schema-provenance: FAIL (rc=1)` / `__CODEX_PY_FAILURES__=2` is a
+   base-SERVICE.sh mechanism; base-library.sh does not invoke it.
+2. **The initial "QG red" diagnosis was WRONG.** The full `quality-gates.sh` run on `d8f05a5d` actually failed on a
+   DIFFERENT, V-counted check: `❌ Hardcoded prod project ID in tests — use 'test-project'` — caused by
+   `tests/unit/test_manifest_consolidator.py: bucket = "market-data-tick-cefi-prd-central-element-323112"` (the real
+   prod bucket name). The schema-provenance offender list was printed as a warning in the same run and misread as the
+   cause. **This is a first-person misdiagnosis, corrected here: the blocker was my own test, fixed by renaming the
+   bucket to `market-data-tick-cefi-prd-test-project` (UTL@af783d92).**
+3. **The underlying observation still holds (P2): the schema-provenance check is mis-applied to a library repo.** UTL
+   DEFINES the types services consume; its internal dataclasses are not UAC-contract types. The check is written for
+   SERVICE repos that should import contract types from UAC/UIC. It produces a noisy `log_warn` on every UTL QG run.
 
 ## Why it matters
 
-- A red `quality-gates.sh` on the integration branch means no code reaches UTL LDR (and thus no service image picks up
-  UTL fixes). The consolidator phantom-lock guard — the durable fix for the ~41h market-data-cefi outage — cannot ship
-  until this clears.
-- The check appears mis-applied to a LIBRARY repo: UTL is the schema/type DEFINING library (services consume UAC/UIC
-  types; UTL's internal dataclasses are its own legitimate data structures, not consumer-facing UAC-contract types).
-  `check_schema_provenance.py` is written for SERVICE repos that should import schema types from UAC/UIC. Either the
-  check needs a UTL-scoped exemption/baseline for internal (non-exported, non-UAC-contract) types, or the ~30 offenders
-  need a large migration to UAC/UIC — an operator/gate-owner decision.
-- Not independently checked this pass: whether CI (quality-gates-v2 on the LDR→main promote PR) is likewise red and
-  whether the fleet is already firefighting this (a recent merge from `main` — `3d345d34` — and the strict-basedpyright
-  refactor `22eb0ba0` are the plausible introducers of the schema types).
+- P2 quality-of-life only: the check adds warning noise to every UTL QG run and flags legitimate internal types.
+  It does not block shipping (verified: the QG's V-counted failure was the hardcoded project ID, now fixed).
+- No data-correctness or shipping impact.
 
 ## Recommended decision
 
-1. **Immediately**: confirm whether the schema-provenance check is meant to apply to UTL at all. If not, scope it out of
-   the library gate (or add a UTL exemption for internal non-UAC types) and re-run QG — this unblocks the whole fleet's
-   UTL shipping.
-2. **Or**: add a ratchet baseline for UTL's pre-existing offenders (mirroring the `codex_violations_ratchet_to_five`
-   pattern) so new violations are caught but the legacy corpus doesn't block shipping; then migrate the offenders to
-   UAC/UIC types in tracked follow-ups.
-3. The consolidator fix (`d8f05a5d`) ships as soon as the gate is green.
+- Optionally scope the schema-provenance check to skip library repos (e.g. a `--skip-schema-provenance` flag wired in
+  base-library.sh's codex block), or add a ratchet baseline for UTL's pre-existing internal types so new (service-style)
+  violations are still caught. P2; do whenever convenient.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Resolve the unified-trading-library codex-py `schema-provenance` QG red** — either scope the check
-      out of the library gate (UTL defines internal types legitimately; the check is written for service repos that
-      should import UAC/UIC types), or add a ratchet baseline for the pre-existing offenders (~30 local
-      BaseModel/TypedDict/dataclass across `walk_forward.py`, `per_leaf_failure.py`, `models/schemas.py`, `ml/models.py`,
-      `core/*`, `reconcile/*`, `feature_calculator/*`, `feature_service_base/*`, `pipeline_e2e_check/*`, etc.), then
-      re-run `bash scripts/quality-gates.sh` green. (repo: unified-trading-library + unified-trading-pm QG templates).
-      Done when: UTL `quality-gates.sh` exits 0 at LDR HEAD with no codex-py failure.
-- [ ] [DATA-ENG] P1. **Once the above gate is green, ship the consolidator phantom-lock guard fix** (`d8f05a5d`:
-      skip-with-loud-alert on oversized unprovable-cutoff merges, `manifest_consolidator.py`) via quickmerge, and proceed
-      with the `manifest_consolidator_market_data_cefi_stuck_lock` issue's todo-3 recovery verification. (repo:
-      unified-trading-library).
+- [ ] [BACKEND] P2. **Scope the codex-py `schema-provenance` check out of library repos (or baseline UTL's internal
+      types)** so UTL's QG run stops warning on ~30 legitimate internal dataclasses. Wire `--skip-schema-provenance` in
+      `base-library.sh`'s codex block (or an equivalent per-repo escape), verify `quality-gates.sh` on UTL no longer
+      prints the warning. (repo: unified-trading-pm, scripts/quality-gates-base/base-library.sh). Done when: UTL QG run
+      is clean of the schema-provenance warning.
+- [x] ✅ [DATA-ENG] P1. **Fix the actual UTL QG red (hardcoded prod project ID in `test_manifest_consolidator.py`)** —
+      the regression test used `bucket = "market-data-tick-cefi-prd-central-element-323112"`, tripping "Hardcoded prod
+      project ID in tests". Renamed to `market-data-tick-cefi-prd-test-project` — `unified-trading-library@af783d92`.
 
 ## Progress Log
 
-- **2026-08-19T21:2xZ (slot-4 worker, manifest_consolidator todo-2)**: filed. QG on `d8f05a5d` failed at the codex-py
-  schema-provenance sub-check; verified pre-existing (offenders at `HEAD~1`, none in the worker's 2-file commit).
-  Declared repo-blocker `qg_red` for unified-trading-library. The consolidator guard fix is committed but parked behind
-  this gate.
+- **2026-08-19T21:2xZ (slot-4 worker, manifest_consolidator todo-2)**: filed as a P1 blocking issue (wrong diagnosis —
+  attributed the QG red to the schema-provenance check).
+- **2026-08-19T21:3xZ (slot-4 worker)**: CORRECTED. The schema-provenance check is a `log_warn` in base-library.sh and
+  does not block. The actual QG failure was my own test's hardcoded prod bucket name; fixed in `af783d92`. This doc
+  demoted to P2 (schema-provenance mis-application to a library repo remains a quality-of-life finding). Repo-blocker
+  RB-959c7b8d was resolved via watcher_green and is moot.
