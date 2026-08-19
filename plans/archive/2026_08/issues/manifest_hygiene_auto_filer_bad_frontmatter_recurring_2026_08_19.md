@@ -5,8 +5,10 @@ created: 2026-08-19
 parent_epic: observability_master
 assigned_vm: planning
 resolved_by: >-
-  unified-trading-pm@e56e311cbd (agents/data_pipeline_failure.md boot-prompt fix, 2026-08-19 10:32:57 UTC) — see
-  Correction below for why the fix landed somewhere other than this doc's original recommendation.
+  unified-trading-pm@e56e311cbd (boot-prompt fix) + e2e-audit image rebuild/redeploy (build
+  127018f4-e3f4-4937-b466-421d0970c106, digest sha256:cf2eb741..., all 3 Cloud Run Jobs updated) —
+  see "Second correction" below for why BOTH were needed (the boot prompt fix alone never took
+  effect until the stale container running it was replaced).
 source:
   - e2e-testing/scripts/audit/manifest_hygiene_daily.py
   - e2e-testing/scripts/audit/reprobe_new_empty_confirmed.py
@@ -102,6 +104,41 @@ prompt to the current, live, test-covered template —
 instruction. Verified this is genuinely live on current `live-defi-rollout` HEAD, not just
 staged.
 
+## Second correction (2026-08-19, later same day) — the deployed container was the ACTUAL root cause, not the boot prompt
+
+Both prior corrections above assumed `dp-audit-bot`'s daily filings came from the dispatched-agent
+path (`agents/data_pipeline_failure.md`). They did not. `dp-audit-bot`'s commits carry no
+`Quickmerge:` trailer and don't match either bot-exemption pattern
+(`check_strict_quickmerge.py`'s `"github-actions"` / `"[bot]"` checks) — they never went through
+`safe-doc-push.sh`, quickmerge, or any git hook at all. `git log --author=dp-audit-bot` shows the
+identical raw-commit pattern recurring **daily** (2026-08-17 through 2026-08-19, both filings each
+day), including on 2026-08-19 — a full day AFTER `e2e-testing@aa6e8a1498` (2026-08-18 11:20:50
+UTC) landed the fix that was supposed to stop exactly this ("never raw-commit escalation issue doc
+from Cloud Run Job; always dispatch to agent-orchestrator instead").
+
+**Confirmed via `gcloud builds list --project=central-element-323112`**: the `e2e-audit:latest`
+Cloud Build image was last built **2026-08-17T02:14:53Z** — a day and a half BEFORE the source
+fix. The three Cloud Run Jobs that run these scripts daily
+(`uts-prod-dp-manifest-hygiene-changed`, `uts-prod-dp-manifest-hygiene-full`,
+`uts-prod-dp-reprobe-empty`) were pinned to that stale image's exact digest
+(`sha256:e27b001c...`). **The source fix was real and correct — it was simply never deployed.**
+That's why every downstream "fix" (this doc's original recommendation, the boot-prompt repair)
+kept failing to actually stop the recurrence: none of them touched the thing that was really
+running.
+
+**Fix**: rebuilt via `gcloud builds submit --config=cloudbuild-e2e-audit.yaml
+--project=central-element-323112 --region=asia-northeast1 .` (build `127018f4-e3f4-4937-b466-421d0970c106`,
+2026-08-19T14:20:11Z, SUCCESS, 1m45s) — new digest `sha256:cf2eb741...`. Explicitly updated all
+three Cloud Run Jobs to the new digest via `gcloud run jobs update <name> --image=...@sha256:cf2eb741...`
+(verified live via `gcloud run jobs describe` on all three afterward — all three now reference the
+new digest, not just the update command's own success message). Did **not** manually execute any
+job — next scheduled run picks up the new image on its own.
+
+With this deployed, `dp-audit-bot`'s next daily run will hit the ALREADY-FIXED `file_escalation_issue`
+code path (emit event + dispatch to agent, never raw-write+push) — the boot-prompt fix from the
+first correction now actually matters, since a dispatched agent will finally be the one filing
+these docs going forward, through the gated `safe-doc-push.sh` path.
+
 ## Todos
 
 - [x] ✅ [CODE] P2. Root-cause + fix the recurring bad-frontmatter auto-filing. DONE — actual fix
@@ -109,3 +146,11 @@ staged.
       (`unified-trading-pm@e56e311cbd`), not a change to the e2e-testing scripts this doc
       originally named; corrected and closed by a later `/ci-reconcile` pass after finding the
       original recommendation pointed at dead code.
+- [x] ✅ [INFRA] P1. Rebuild + redeploy the `e2e-audit` Cloud Build image so the boot-prompt fix
+      (and the underlying `file_escalation_issue` architecture change) actually takes effect. DONE
+      — see "Second correction" above; new digest live on all three Cloud Run Jobs, verified via
+      `gcloud run jobs describe`, not executed manually.
+- [ ] [OPERATOR] P3. Confirm tomorrow's (2026-08-20) `dp-audit-bot` daily runs stop appearing —
+      if `manifest_hygiene_red_all_2026_08_20.md` / `empty_reprobe_disagreement_all_2026_08_20.md`
+      still land with bad frontmatter or a `dp-audit-bot` raw-commit signature, the deploy did not
+      actually take effect (or a fourth mechanism exists) and this needs reopening.
