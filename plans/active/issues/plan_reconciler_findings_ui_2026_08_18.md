@@ -97,23 +97,34 @@ Confirmed by hunters + independently re-verified by the orchestrator, but **rout
 lives on a currently GRACE-PROTECTED doc (newest commit <12h old at run start), so the safe resolution is already
 known but cannot be applied until the grace window clears (next run):
 
+**[x] ALL 4 RESOLVED 2026-08-19** — applied by a same-day EPIC-scoped `/plan-reconcile deployment_and_user_management_master`
+run (commit `7838e833` 2026-08-19 03:38:32 +0100 = 02:38 UTC) once each doc's grace window cleared; confirmed live
+by this tranche's own follow-up run (dispatch `agt-c82f06`, see
+`/plans/active/issues/plan_reconciler_findings_ui_2026_08_19.md`), which read all 4 target docs fresh and verified
+the fixes are present and correctly reflect this section's own diagnosis.
+
 1. `plans/active/ui_consolidated_closeout_2026_07_30.md` Track 3 Sources (line ~122) still frames the `/artifacts`
    page as "mock-first done, real API+UI wiring **in progress**" — the source plan's own banner
    (`artifact_pipeline_observability_2026_07_17.md:396`) shows all 5 vertical slices landed `deployment-ui@3210bb5`
    (2026-07-23), before the hub doc even existed (2026-07-30). Stale since authoring, uncorrected 19+ days.
+   **RESOLVED** — corrected to "shipped" per that doc's own 2026-08-19 Progress Log entry.
 2. Same hub doc, Track 3's close-out criterion ("the alerts N+1 read pattern fixed at the root, not just the two
    stopgaps") contradicts its own Sources paragraph 7 lines above, which documents the root fix as deliberately
    WONT-DO'd 2026-08-01. **Already flagged in this doc's own Progress Log 2026-08-06** (`ag_closeout_auditor`) and
    still unfixed 12 days later — a second confirmation this needs the actual edit, not another flag.
+   **RESOLVED** — criterion corrected to reflect both halves (reader-side DONE, writer-side WONT-DO'd-by-decision).
 3. `plans/active/issues/architecture_v2_drift_leg_specs_and_manifest_residue_2026_07_16.md` is a genuine, correctly
    `[ui]`-tagged live orphan (1 open `[ENGINEER] P1` todo, UI-repo-only per its own 2026-08-16 retag note — see
    Hygiene fix below) but is cited by **zero** Track 1-4 Sources lists in the closeout hub and is absent from the
    2026-08-10 predecessor findings doc. Needs adding to the hub's Track 3 or a new line once the hub is writable.
+   **RESOLVED** — added to the hub's Track 4 Sources (mock/test-fixture hygiene fit, not Track 3).
 4. `plans/active/ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4's premise (draft a migration-batch
    plan for `data_status_tab_and_downloads_remediation_2026_06_16.md`'s cleared items) is now stale — all 6 named
    items are already shipped `[x]` directly in the source doc (dated 2026-08-14 through 08-16, via pw:L2 + a
    `/plan-reconcile` pass), not via a new satellite-batch extraction as the todo anticipates. Needs annotation or a
    scope-narrowing edit once writable.
+   **RESOLVED** — todo 4 annotated with a correction note; the checkbox itself stays open (steps 2-6 of the
+   archival ritual remain live work), only the stale premise was corrected.
 
 ## Hygiene fixes
 
@@ -266,3 +277,11 @@ where warranted, 9 grace-protected as context only.
   the na-eligibility-audit entry above landed as a genuine same-file concurrent-edit collision during push —
   git's autostash-reapply raised a textual conflict since both are independent Progress Log appends anchored at the
   same point; resolved by keeping both, na-eligibility-audit's first since it read the doc before this entry existed.)
+- **plan_reconciler 2026-08-19 (ui tranche, dispatch `agt-c82f06`)**: Phase -1 check found all 4 grace-blocked
+  Doc-drift items above were applied by a same-day epic-scoped `/plan-reconcile deployment_and_user_management_master`
+  run (commit `7838e833`, ~17h before this dispatch) once their grace windows cleared — verified live in each target
+  doc's own Progress Log, marked resolved inline above. Remaining open items in this findings doc: Hygiene fix 1's
+  4th instance (`deployment_api_unauthenticated_prod_p0_2026_08_10.md:686`, still grace-protected this run too);
+  Filed item 1 (context-scout script bug, outside `plans/**`); Filed item 2 (AO-backlog-status check for
+  `deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md`'s dispatch inactivity — attempted, inconclusive,
+  carried forward); Filed item 4 (low-priority, deferred). This doc is not yet archivable.
