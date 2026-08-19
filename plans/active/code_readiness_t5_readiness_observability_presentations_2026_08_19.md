@@ -154,7 +154,52 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-_None at authoring time._
+- [ ] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
+      "re-run at the finer grain the moment T2 lands `instrument_type` / `data_type`" todo below is waiting on
+      something that is already true in production, so the wait is the only thing left to remove. MEASURED
+      2026-08-19 by reading the live artefact through your own engine
+      (`cursor-configs/skills/honest-coverage-dump/scripts/shard_universe.py`), not by inspecting the writer:
+
+      - `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`schema_version: 2`) carries BOTH
+        `by_venue_instrument_type` (172 `(ag, venue)` pairs) and `by_venue_instrument_type_data_type` (184 pairs),
+        populated for all 5 asset_groups.
+      - `detect_grain(payload)` returns **`"instrument_type"`**, and `iter_shard_cells()` yields **3,962** cells at
+        `(asset_group, venue, instrument_type, data_type)` grain.
+      - Your auto-detect works as documented — you asked to verify rather than assume, so: verified, by executing
+        it. No code change was needed on either side for the axes themselves.
+
+      **Two caveats you must carry into the re-run, or the finer grain will report inflated numbers.** Both are
+      defects in T2's writer measured the same day, both now fixed in `instruments-service`
+      `scripts/measure_honest_coverage.py` (see this tranche's T2 plan Progress Log for the `<repo>@<sha>`) — but
+      the fix only reaches the artefact on the NEXT nightly `measure-honest-coverage` cron run, so any dump taken
+      against a coverage.json dated on or before 2026-08-19 still contains them:
+
+      1. **The 3,962 cell count is inflated by 86 duplicate cells (2.2%).** 24 `(ag, venue, instrument_type)`
+         groups carried two case-variant keys at level 5 (e.g. `sports/LADBROKES` holding both `'ODDS'` with
+         `data_types=['trades']` and `'odds'` with `data_types=['odds']` — one shard, two keys); 26 literal
+         `'nan'` instrument_type keys sat beside 85 blank ones; and 6 `data_type` groups differed only by case.
+         Collapsing all three artifacts gives **3,876** true distinct shards. Quote 3,876, not 3,962 — and state
+         the date and denominator beside it either way.
+      2. **The `instrument_type` axis is ~50% hollow and the grain label does not say so.** 1,973 of 3,962 cells
+         (49.8%) carry a blank or `'nan'` instrument_type, yet `detect_grain()` reports the finer grain for the
+         whole payload. Per asset_group: `defi` 1,871/2,804 (66.7%), `tradfi` 82/244 (33.6%), `prediction`
+         10/19 (52.6%), `sports` 10/822 (1.2%), `cefi` 0/73 (0%). A reader trusting the label alone believes it
+         has a finer breakdown than exists for half the corpus — the same failure mode as the mislabelled `grain`
+         field in `readiness_pipeline_stage_per_shard_2026_08_18.json` (next item). Report grain per asset_group,
+         or report the hollow fraction beside the label.
+
+- [ ] [FROM-T2] P1. **Your readiness dump's `grain` field is mislabelled — the writer, not the file.** This is the
+      `/plans/epics/system_readiness_master.md` § W3 `[DOC] P1` item, and it lands in a file this tranche owns, so
+      T2 has not touched it. MEASURED: `plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18.json`
+      declares top-level `grain: "instrument_type"` while all 864 rows carry only
+      `['venue', 'asset_group', 'mode', 'pipeline_stage', 'leg_states']` — no `instrument_type` key on any row.
+      Root cause is in `cursor-configs/skills/readiness-state-dump/scripts/derive_readiness.py:208`:
+      `grain = detect_grain(coverage_payload)` reads the grain of the **coverage source** and then reports it as
+      the grain of the **readiness rows**, which are built at `venue x asset_group x mode`. The two are different
+      things. Suggested shape: emit `row_grain: "venue_asset_group_mode"` for what the rows actually are, and keep
+      the source's grain under its own key (`coverage_source_grain`), so neither is silently claiming the other.
+      Also worth a look while you are in there: 9 rows carry an EMPTY `venue` string (all `asset_group: sports`) —
+      they come straight through from 9 blank-venue cells in coverage.json, which T2 is tracking separately.
 
 ## Todos
 
