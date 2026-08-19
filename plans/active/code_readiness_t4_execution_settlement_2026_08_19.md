@@ -150,7 +150,32 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-_None at authoring time._
+> **T1 unblock notice 2026-08-20** — UAC `OrderStatus` is now the full 9-state machine the codex SSOT describes.
+> `FAIL_OUTBOUND` and `RECONCILED` exist, and so do `ORDER_STATUS_TRANSITIONS`, `TERMINAL_ORDER_STATUSES`,
+> `is_terminal_order_status()` and `is_legal_order_transition()`, all exported from the top-level
+> `unified_api_contracts` facade. You are unblocked on this edge; the two todos below are the follow-through.
+
+- [ ] [FROM-T1] P1. Migrate execution-service's `OrderStatus.PENDING` / `OrderStatus.OPEN` call sites to the
+      renamed `OrderStatus.PENDING_NEW` / `OrderStatus.NEW`, then tell T1 to DELETE the two transitional aliases.
+      **Nothing is broken right now** — T1 landed the rename as enum ALIASES (`OrderStatus.PENDING is
+      OrderStatus.PENDING_NEW` is True, `.value` byte-identical), precisely so this is not a stop-the-world edit.
+      Blast radius MEASURED at hand-off: **24 `OrderStatus.PENDING`/`.OPEN` call sites in execution-service** (plus
+      1 in unified-trading-system-ui, which T1 owns and will handle). Fleet-wide there is NO `.name`-based,
+      `OrderStatus[...]`, `len(OrderStatus)` or iteration coupling, so this is a mechanical rename with no
+      semantic edge cases. The aliases are a deliberate, tracked exception to the no-shims rule: the
+      entity-rename SSOT wants consumers migrated in the SAME change, and T1 is forbidden from editing your repo.
+      Evidence: `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
+- [ ] [FROM-T1] P1. Write `execution-service/tests/unit/orders/test_state_machine.py` — the codex doc's own
+      declared `verifier:`, which has never existed in the repo's history and is why the 9-state-vs-7-state
+      divergence went unnoticed from 2026-05-12 to 2026-07-31. T1 already pins the ENUM against the codex table
+      (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
+      SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
+- [ ] [FROM-T1] P2. Decide whether `PARTIALLY_FILLED -> CANCELLED / EXPIRED` is a legal transition. T1 transcribed
+      `ORDER_STATUS_TRANSITIONS` edge-for-edge from the codex diagram, which draws exactly ONE edge out of
+      `PARTIALLY_FILLED` (full fill) — deliberately NOT widened on intuition, because a too-permissive machine
+      silently accepts an illegal transition whereas a too-strict one fails loudly. Real venues do cancel
+      partially-filled orders, so this likely needs the codex diagram amended first (the doc is the SSOT; the UAC
+      map is its projection). You own the venue behaviour evidence, so this is your call to make and T1's to land.
 
 ## Todos
 

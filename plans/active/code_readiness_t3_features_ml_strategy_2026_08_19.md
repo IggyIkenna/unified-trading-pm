@@ -150,7 +150,23 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-_None at authoring time._
+- [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
+      unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
+      edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
+      (flat `reference_position: dict[venue, Decimal]` plus a flat `credit`, "same shape as the existing price
+      leg") was SUPERSEDED the same day it was written: the source issue carries a later operator revision ruling
+      it incomplete — it resolves the venue axis but not the INSTRUMENT axis, since one strategy instance holds a
+      universe of instruments, so a single envelope-level triple can only ever describe ONE instrument's reference
+      state. The replacement (`references: list[InstrumentReferenceEntry]`, nesting the per-venue dict one level
+      deeper) is published in that issue under the heading **"Proposed shape (illustrative — not finalized; this
+      is what needs resolving, not what's decided)"**, immediately followed by **"Open questions for the operator
+      — do not resolve unilaterally"** (Q12-Q16). Implementing the todo's literal text would re-commit the exact
+      scalar-shape regression the operator caught; implementing the vector would answer five questions explicitly
+      reserved for the operator.
+      **Two points ARE settled whichever way Q12-Q16 land, so you can design against them today**: `credit` is
+      OPTIONAL (a "flavor", never a mandatory field — pure-passive, fire-immediately and patient-then-escalate are
+      all valid consumers), and it is strategy-COMPUTED and strategy-OWNED, with execution merely consuming it.
+      Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 
 ## Todos
 
