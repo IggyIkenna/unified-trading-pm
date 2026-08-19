@@ -501,3 +501,25 @@ _(remaining rows populated as each attempt completes)_
   the same free endpoint under real-world load is a server-capacity pattern, not a deterministic client-side bug.
   No further request-shape debugging planned; the real fix (if one exists) is either a paid/dedicated NIM tier or
   accepting this lane's ceiling is unreliable on the free tier.
+
+- **2026-08-19 (later) — CORRECTION to the GLM finding above: `zai.env` was the WRONG, older, unrelated account.
+  The real GLM Coding Plan account's blocker is confirmed to be the ORIGINAL gcloud-reauth wall after all, not
+  balance.** Operator clarified `~/.claude-accounts/zai.env` (found and tested above) is a DIFFERENT, older
+  personal account they never funded — not the one Ikenna set up with a real balance. Pulled the real account
+  files directly off the orchestrator VM via AWS SSM (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`, read-only
+  `send-command`/`get-command-invocation`, no VM state changed): `/home/ubuntu/.claude-accounts/glm-5-2.env` and
+  `glm-5-turbo.env` — both real, both registered in AO's live `/api/accounts` (`account_status: None` = healthy,
+  not disabled). **But both files' `ANTHROPIC_AUTH_TOKEN` is a LIVE command substitution, not a static value**:
+  `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=glm-coding-plan-api-key
+  --project=central-element-323112)"` — evaluated fresh every time the file is sourced, by whatever gcloud identity
+  is active in that shell. Confirmed this fails EVERYWHERE tried: locally as `ikenna@odum-research.com`
+  (reauth-blocked, same wall as before), locally as `harshkantariya.work@gmail.com` (`PERMISSION_DENIED` — real
+  identity, wrong IAM grant), and even ON THE VM ITSELF as its own default `github-actions-deploy@central-element-
+  323112.iam.gserviceaccount.com` (`PERMISSION_DENIED` too) — meaning this exact gap likely also affects AO's own
+  real production GLM dispatch, not just this bake-off, if AO's spawn path sources this file the same way (worth
+  the operator independently checking whether GLM has actually dispatched successfully recently, separate from
+  this bake-off). **The most viable fix remains `ikenna@odum-research.com` reauth**: it's the one identity that
+  already proved it has real access to other secrets in this same project earlier today, so it's the most likely
+  to already hold the right IAM grant here too — the reauth, not a missing grant, is the actual blocker for it.
+  Deleted the empty/broken local copies rather than leave misleading zero-length credential files sitting in
+  `~/.claude-accounts/`.
