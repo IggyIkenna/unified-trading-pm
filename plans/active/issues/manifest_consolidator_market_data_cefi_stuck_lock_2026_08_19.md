@@ -193,3 +193,23 @@ resolved_by:
   and the loop re-arms regardless). The durable fix belongs to todo 2 (TTL-based self-healing for the lock AND making
   the missing-marker full merge fit within the 7200s timeout / not re-arm the loop), and todo 3 verifies recovery
   end-to-end after that fix lands.**
+- **2026-08-19T21:2xZ (slot-4 worker, todo-2 fix)**: **Code fix shipped-as-commit `unified-trading-library@d8f05a5d` —
+  the todo-2 premise is CONTRADICTED by measurement: the lock DOES have TTL/expiry (`_LOCK_TTL_SECONDS`, 300s default,
+  9000s override for cefi). The REAL gap is the missing-marker → doomed-full-merge → kill → orphan → re-arm loop.**
+  Fix: `_UNPROVABLE_MERGE_MAX_SHARDS` (env `CONSOLIDATOR_UNPROVABLE_MERGE_MAX_SHARDS`, default 50000) — when the
+  unprovable-cutoff (missing `consolidator_content_write_at`) merge spans more than that many per-VM shards, the cron
+  REFUSES the doomed corpus-wide merge and skips-with-loud-alert instead (`success=False` → CLI exit 1 +
+  `MANIFEST_CONSOLIDATION_FAILED` severity=ERROR → pages), so a killed holder's orphan clears after the TTL and never
+  re-arms a wedge. Regression test `test_unprovable_cutoff_oversized_merge_skips_instead_of_doomed_full_merge` added.
+  **BLOCKED ON SHIP**: unified-trading-library `quality-gates.sh` is red on a PRE-EXISTING codex-py schema-provenance
+  violation (not from this commit; offender files at HEAD~1). Filed
+  `/plans/active/issues/utl_codex_schema_provenance_qg_red_2026_08_19.md` + declared repo-blocker `qg_red`. Ship via
+  quickmerge once green. **Recovery data measured for todo 3** (via UTL native list_blobs, 2026-08-19 ~21:00Z):
+  172,028 per-VM shards; **10,717 newer than the last genuine merge (~08-16T23:11Z)**; 1,982 newer than the strip
+  rewrite (08-18T02:13:57Z); newest shard mtime 08-19T21:00Z (writers still active). A safe marker-restore recovery is
+  VIABLE: restore `consolidator_content_write_at` to the last genuine merge's LISTING time (recoverable from Cloud
+  Logging ~08-17T21:18 / 23:50 `phase=shards_listed` lines — the canonical's gen was 1786921866108814 then, rewritten
+  to 1787019237694916 at the 08-18T02:13:57 strip), pause cron → cancel/kill holder → restamp (metadata-only) → resume →
+  next cycle does an incremental merge of only ~10.7k shards (~10 min, fits the 7200s budget) and re-stamps the marker.
+  Current holder at filing: `rdlhn` (19:34Z, still running, will hit its 7200s timeout ~21:34Z and orphan the lock a 4th
+  time).**
