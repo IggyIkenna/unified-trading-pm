@@ -33,7 +33,8 @@ related:
     /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
   ]
 created: 2026-08-19
-authoritative_for: [migration-script placement decision, scripts/migrations/{repo}/ naming convention, Phase 0b template roster]
+authoritative_for:
+  [migration-script placement decision, "scripts/migrations/{repo}/ naming convention", Phase 0b template roster]
 referenced_by: [/codex/06-coding-standards/script-homes.md]
 owner:
 last_reviewed: 2026-08-19
