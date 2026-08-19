@@ -12,7 +12,7 @@ summary: >-
   times: none of the boot message's other "session variables" (`SERVER_URL`, `SLOT_ID`, `DISPATCH_ID`, `WORKTREE`,
   `TRANCHE`, `BRANCH`) are actually exported shell env vars -- every HTTP call and path must use literal values
   substituted from the boot message text, not `$VARNAME` references (confirmed via `env | grep`, both dispatches).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -38,7 +38,8 @@ estimate_baseline_ai_days: 0.4
 estimate_calibrated_ai_days: 0.32
 assigned_role: backend_engineer
 drift_direction: advance-code
-resolved_by:
+resolved_by: "dispatched worker, slot 3, 2026-08-19 — agent-orchestrator@6eeee7f7f8 + agent-orchestrator@5ae4658a78 + unified-trading-pm@5620bc3c12"
+last_updated: "2026-08-19"
 locked_by:
 locked_since:
 supersedes:
@@ -60,6 +61,15 @@ context_scope:
 ---
 
 # plan_reconciler dispatch wiring: `$PM_REPO_PATH` points at the root clone, not the slot's own — 2nd occurrence
+
+> **🟢 RESOLVED 2026-08-19** — both todos shipped + live-verified. `plan_health.dispatch()` now rewrites
+> `pm_repo_path` to the picked slot's own clone right after `_pick_free_slot()`
+> (`agent-orchestrator@6eeee7f7f8`); verified against 2 distinct plan_health-family roles via an executed test
+> (`agent-orchestrator@5ae4658a78`). Boot-message session vars documented as literal-substitution text, not real
+> exported shell env vars (`unified-trading-pm@5620bc3c12`, `agents/RULES.md` + `agents/plan_reconciler.md`).
+> Durable ruling migrated to `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`. Full
+> reconciliation + verification trace: `plans/archive/issues/
+> plan_reconciler_boot_pm_repo_path_points_at_root_clone_2026_08_18_finalize_2026_08_19.md`.
 
 ## Evidence
 
@@ -166,3 +176,13 @@ canonical checkout other slots read from, or simply confuse git state in a clone
   rule. Todo 2: direction (b) chosen and shipped in `unified-trading-pm` (this same commit batch) — see the todo's own
   evidence line for the reasoning. Both QG-verified (agent-orchestrator: 4123 passed/9 skipped + dashboard 414
   passed, 0 basedpyright errors) before shipping.
+- **2026-08-19 (dispatched worker, finalize-prep verification)**: added an executed regression test covering a 2nd
+  and 3rd distinct plan_health-family mode beyond the happy-path test's default (`report`) — `mode="reconcile"`
+  (plan_reconciler) and `mode="na_eligibility"` (na_eligibility_auditor), the exact 2 roles this doc's own Evidence
+  section confirms were broken live in production. Both new assertions confirm `extra_vars["pm_repo_path"]` resolves
+  to the picked slot's own clone and differs from the caller-supplied default. Same contention-recovery pattern as
+  the prior ship (2 lost isolated-ship attempts, 3rd landed clean) — shipped + independently verified:
+  `agent-orchestrator@5ae4658a78` (`git merge-base --is-ancestor` pass + `git show 5ae4658a78:tests/test_plan_health.py
+  \| grep` finds all 3 pm_repo_path assertions). QG green (4143 passed/8 skipped). This is the finalize doc's todo 1
+  "at least 2 distinct plan_health-family roles" bar, met via a real executed test against the shipped code path
+  (not just re-reading it) — see the finalize doc for the full reconciliation writeup.
