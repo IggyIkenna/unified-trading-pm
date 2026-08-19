@@ -164,3 +164,54 @@ itself "done," so the next natural tick after unpause dispatches normally with n
       are still open.
 - **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. 2 of 3 follow-up items already shipped same-day with evidence; sole remaining todo (add reason + paused_at field, surface on API + dashboard) is a scoped, deterministic schema/code change. Conflict-check clear: grepped plans/active/*.md for `scheduled_dispatch_pause` — zero hits outside this doc. Companion gated finalize: `ao_scheduled_dispatch_pause_reasons_2026_08_18_finalize_2026_08_19.md`.
 - **context-scout 2026-08-19**: populated context_scope (5 entries).
+
+## MEASURED UPDATE 2026-08-19 — the paused set has grown from 3 to 7, and `ci_reconcile` is paused again
+
+Read directly off the persisted registry on the orchestrator VM (read-only SSM;
+`data/state/scheduled_dispatch_paused_modes.dedup.json`, the file
+`scheduled_dispatch_pause.py` loads) rather than the API, since `/api/scheduled-dispatch/status`
+needs auth:
+
+```
+["ag_closeout", "ao_watchdog", "cefi_mtds_smoke", "ci_reconcile", "na_eligibility", "reconcile", "report"]
+```
+
+**This doc's "Current state" section above is now wrong in two ways** and misled a 2026-08-19
+investigation into the fleet's BOOTING slots: (1) it records 3 paused modes when 7 are, and
+(2) it records `ci_reconcile` as RESUMED on 2026-08-18 — it is paused again, with today's
+`scheduled_job_runs` rows confirming the effect live (`sjr-1a3d8ef3`, 19:24:05Z, 4 attempts,
+`"mode 'ci_reconcile' is paused by operator"`). Four modes have no recorded reason at all:
+`ao_watchdog`, `na_eligibility`, `reconcile`, `report`. Today's run rows show `plan_reconciler`
+(all 10 tranches) and `na_eligibility_auditor` (all 10 tranches) each bouncing off their pause on
+every tick.
+
+This is exactly the structural gap the open `[FEATURE] P2` follow-up above exists to close: the
+registry stores a bare `set[str]` with no `paused_at`/`reason`, so a pause added after a doc like
+this one is written is invisible until someone reads the file by hand. Recording the measurement
+here does not fix it — only the schema change does.
+
+Separately, the modes that are NOT paused are starving on capacity rather than dispatching:
+`scheduled_job_queue` rows for `escalation_queue_reconciler` (queued since 00:40Z, 6 attempts),
+`data_pipeline_alerts_reconciler` (00:36Z, 11 attempts) and `context_scout_auditor` (00:53Z) carry
+`last_error` of `"no free configured slot to dispatch plan_health check onto"`, and the
+`na_eligibility_auditor` tranche rows carry `"no headroom account (Claude or DeepSeek) available to
+dispatch"` — consistent with the account snapshots seen the same hour
+(`overage_status: rejected`, `overage_disabled_reason: org_level_disabled` / `out_of_credits`).
+
+## Todos (added 2026-08-19)
+
+- [ ] [OPERATOR] P1. Confirm whether the four unrecorded pauses (`ao_watchdog`, `na_eligibility`,
+      `reconcile`, `report`) and the re-pause of `ci_reconcile` are intentional, and record the
+      reason + rough date for each in the sections above — or resume the ones that are forgotten.
+      `ao_watchdog` matters most: it is the fleet's own daily health check
+      (`/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer),
+      so while it is paused nothing is running the check that would have surfaced the other six.
+      (repo: NA — operator knowledge, not derivable from any system field)
+- [ ] [REVIEW] P2. Re-check the "Current state" section against the live registry file whenever
+      this doc is touched, until the `paused_at`/`reason` schema change lands — a hand-maintained
+      list of paused modes went stale within 24h of being written, which is the measured argument
+      for the schema fix, not just the theoretical one. (repo: unified-trading-pm)
+- [ ] [INFRA] P2. Decide whether scheduled-job capacity starvation deserves its own alert: the
+      three `plan_health`-family jobs above sat queued ~20h on 2026-08-19 with `no free configured
+      slot` / `no headroom account`, and nothing paged. Distinct from the pause question — these
+      modes are enabled and still not running. (repo: agent-orchestrator)

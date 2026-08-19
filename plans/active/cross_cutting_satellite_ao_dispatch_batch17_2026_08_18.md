@@ -57,7 +57,7 @@ source: >-
 
 ## From `main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`
 
-- [ ] [CI] P1. **Make the `branch-health.yml` drift-tick safety-net FLEET-WIDE instead of `github.repository`-scoped.**
+- [x] ✅ [CI] P1. **Make the `branch-health.yml` drift-tick safety-net FLEET-WIDE instead of `github.repository`-scoped.** — unified-trading-pm@96c163347f
       Dispatch `main-backmerge-to-ldr.yml` for every `promotion_model: ldr_main` repo in `workspace-manifest.json`
       (the same repo-list read the AR-lag job in that file already does), not just `unified-trading-pm`. Without
       this, a single transient GHA failure (e.g. a `429` downloading `actions/create-github-app-token`) strands
@@ -111,3 +111,11 @@ source: >-
   dispatch fix and the new failure-detection surface) and
   `unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml` (item 2, the caller-stub comment fix — confirmed
   this is the real post-migration hosting location, matching this batch's own drafting-time correction above).
+- **2026-08-19 (worker, slot 7, dispatch cross_cutting_satellite_ao_dispatch_batch17-6a8c25390694)**: item 1 DONE —
+  `branch-health.yml`'s drift-tick now dispatches `main-backmerge-to-ldr.yml` for unified-trading-pm + every
+  `promotion_model: ldr_main` repo in `workspace-manifest.json` (read from live-defi-rollout, fleet-promote staleness
+  guard; repo-set mirrors `_main_direct_repos()` in `scripts/cicd/promotion_lag_monitor.py`; best-effort loop;
+  timeout-minutes 3→10). Live dispatch test confirmed a non-PM repo receives the trigger: trading-agent-service run
+  32303502126 (`workflow_dispatch`, completed success — backmerge ran clean/noop). Shipped unified-trading-pm@96c163347f
+  (Pass-1 QG green → quickmerge `--agent` landed → post-push ancestry verified). Items 2 (comment fix, unified-trading-ci)
+  and 3 (failed-backmerge detection surface) remain open; item 2 depends on this landing per its own note.

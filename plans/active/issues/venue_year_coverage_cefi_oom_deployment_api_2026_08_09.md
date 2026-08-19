@@ -208,7 +208,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
-- [ ] [BACKEND] P0. **cefi `venue-year-coverage` still WORKER-TIMEOUTs (300s gunicorn limit) even with every
+- [x] ✅ [BACKEND] P0. **cefi `venue-year-coverage` still WORKER-TIMEOUTs (300s gunicorn limit) even with every
       shipped per-chunk vectorization fix live — an AGGREGATE wall-clock budget problem across 215+ row groups, not a
       single slow call.** Live repro 2026-08-19 (slot 32, infra re-verification) against deployed revision
       `uts-shared-deployment-api-00656-vv8` (confirmed containing `deployment-api@18489f99f8`'s `_union_rank_series`
@@ -237,7 +237,22 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       scope's own failure again had no SIGABRT captured in its own probe window (only an isolated "malformed
       response" error at request start, same ambiguous signature as the 2026-08-19 slot-31 entry below) — not
       conclusively attributable to either mechanism above from logs alone. Repo: deployment-api. Re-run this issue's
-      3-scope cefi probe as the acceptance check once shipped.
+      3-scope cefi probe as the acceptance check once shipped. — **deployment-api@a69dad3** (Quickmerge, verified
+      ancestor of `origin/live-defi-rollout`): took candidate-fix branch (a) — `manifest_source.iter_manifest_row_groups`
+      now decodes up to `_ROW_GROUP_READ_MAX_WORKERS=4` row groups concurrently via a bounded `ThreadPoolExecutor`
+      (matching the service's 4 vCPU Cloud Run allocation — decode is CPU-bound against an already-downloaded blob, no
+      per-row-group network round-trip, so more threads than cores buys nothing), converting the sequential sum of
+      individually-fast per-row-group costs into wall-clock roughly divided by the worker count. Each task builds its
+      OWN `pq.ParquetFile` over a fresh zero-copy `pyarrow.BufferReader` view of the same downloaded bytes (pyarrow does
+      not document `ParquetFile.read_row_group` as safe to call concurrently on one shared instance) — no re-download,
+      no re-copy, no change to per-task peak memory (still one row group's decoded size). Yield ORDER is preserved
+      (`ThreadPoolExecutor.map` yields in submission order, not completion order), so the route's per-chunk
+      accumulation semantics and existing tests are unaffected. New regression test
+      (`tests/unit/services/test_manifest_source.py`) proves order holds with more row groups than worker threads.
+      Full `quality-gates.sh` (no skip flags) is clean, sentinel=a69dad3 (Quickmerge-trailer verified). Live-prod
+      re-verification (a fresh rollout + re-run of the 3-scope cefi probe) is a separate follow-up, same pattern as
+      every other BACKEND fix in this issue — this closes the local aggregate-wall-clock-budget gap; the top-level
+      INFRA todo above should be re-run against the revision containing this SHA once it ships.
 - [x] ✅ [BACKEND] P0. **`_union_rank_series`'s `status.map(_STATUS_RANK)` call (`data_status_union.py:145`) is a NEW
       WORKER-TIMEOUT/SIGABRT abort site** — surfaced live 2026-08-19 (slot 31, infra re-verification) inside the very
       helper the now-shipped `provenance_breakdown` vectorization fix (`deployment-api@b4b81502c0`, above) introduced
@@ -641,3 +656,15 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   scope per infra.md's `does_not: Python service business logic`). **Not flipping the top-level INFRA todo — the
   clean-window acceptance bar is still not met**, now gated on this new aggregate-budget finding rather than any
   previously-shipped fix (all of which are confirmed live and holding).
+- **2026-08-19 (slot 7, backend_engineer)**: The aggregate-wall-clock-budget BACKEND P0 todo (flagged above by slot 32)
+  done — shipped `deployment-api@a69dad3`. Took candidate-fix (a) — parallelized `iter_manifest_row_groups`'s
+  row-group decode via a bounded 4-worker `ThreadPoolExecutor` (matching the service's 4 vCPU allocation; decode is
+  CPU-bound against an already-downloaded blob, so no per-row-group network wait to hide behind), each task using its
+  own `ParquetFile`/`BufferReader` pair over the shared downloaded bytes (no re-download), preserving yield order via
+  `.map()`'s submission-order guarantee and per-task peak-memory bound. Full detail in the todo's own flip above. Full
+  `quality-gates.sh` (no skip flags) green, sentinel=a69dad3 (Quickmerge-trailer verified, confirmed ancestor of
+  `origin/live-defi-rollout` after this session's fresh-pull). **This checkbox was code-complete but never flipped
+  in the session that shipped it (interrupted before the plan-flip step) — flipped here after confirming the shipped
+  code on disk already implements the exact fix this todo describes and the SHA is on `origin/live-defi-rollout`.**
+  **Live-prod re-verification is a separate follow-up** — the top-level INFRA todo should be re-run once this SHA
+  reaches `main` and redeploys `uts-shared-deployment-api`, per this issue's established pattern.

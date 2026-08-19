@@ -782,6 +782,35 @@
     align-items: center;
     gap: 7px;
   }
+  /* Code-completeness cells (§10) -- per (archetype, mode), from the archetype-code-completeness
+     skill's five-hook rollup. ready = every hook resolves; unverified = no failing hook but at
+     least one has no clean registry check; gap = at least one hook fails outright. */
+  .cc {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .cc-ready {
+    color: var(--good);
+  }
+  .cc-unverified {
+    color: var(--warn);
+  }
+  .cc-gap {
+    color: var(--crit);
+  }
+  .fg-list {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+  }
+  .fg-undeclared {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--crit);
+    font-style: italic;
+  }
 </style>
 
 <div class="shell">
@@ -878,6 +907,14 @@
         </li>
         <li>
           <a href="#s9"><span class="num">09</span><span class="ttl">Contributing research and backtests</span></a>
+        </li>
+        <li>
+          <a href="#s10"
+            ><span class="num">10</span><span class="ttl">Strategy families and archetypes, in full</span></a
+          >
+        </li>
+        <li>
+          <a href="#s11"><span class="num">11</span><span class="ttl">Venue and chain breadth</span></a>
         </li>
       </ol>
     </nav>
@@ -1088,7 +1125,7 @@
       </div>
 
       <p>
-        Three fields carry most of the architectural meaning. <code>eligible_venues</code> plus
+        A cluster of fields carries most of the permission-and-provenance meaning. <code>eligible_venues</code> plus
         <code>venue_constraints</code> say where an instruction is <em>permitted</em> to be worked and under what
         limits; <code>venue_routing_mode</code> defaults to <code>SOR_AT_EXECUTION</code>, meaning the venue choice is
         made at execution time rather than by the strategy; and <code>execution_policy_ref</code> <em>names</em> an
@@ -1096,65 +1133,78 @@
         expresses method. That separation is enforced by the type, not by convention.
       </p>
       <p>
-        <code>reference_price</code> is the newest of these, and it lives on the shared envelope rather than on any
-        one instruction type so any instruction can carry a benchmark price — <code>reference_price_mark_mode</code>
-        says whether execution marks fills against it as sent, or re-derives it as the underlying moves. Execution
-        additionally stamps <code>received_at_utc</code> and <code>sent_at_utc</code> on every instruction it
-        touches, so the strategy-side-to-order-placed latency is a field, not a log-mining exercise.
+        <code>reference_price</code> carries a different kind of meaning, and it is shipped on the envelope today —
+        it lives there rather than on any one instruction type so any instruction can carry a benchmark price, and
+        <code>reference_price_mark_mode</code> says whether execution marks fills against it as sent, or re-derives
+        it as the underlying moves. But price alone is one leg of a three-leg design, not the whole reference
+        mechanism: strategy is meant to state its per-instrument <strong>position</strong> and
+        <strong>credit</strong> at the same reference point too, so execution can approximate how to adjust on a
+        tick basis as new position/price information arrives without re-consulting slow-path strategy — that
+        triple, not price on its own, is the entire reason the fast-path/slow-path split works. Strategy sets the
+        governing boundary; execution decides the mechanics within it. Only the price leg and the mark-mode flag
+        exist in code today — the position and credit legs are designed, not built (see the callout below).
+        Execution additionally stamps <code>received_at_utc</code> and <code>sent_at_utc</code> on every instruction
+        it touches, so the strategy-side-to-order-placed latency is a field, not a log-mining exercise.
       </p>
 
       <div class="callout">
-        <span class="tag">Target-state: a reference position alongside the reference price</span>
+        <span class="tag">Target-state: a reference price, position and credit — per instrument, not per instruction</span>
         <b class="st st-plan">planned</b>
         <b class="ev ev-assumed">~ assumed</b>
         <p>
           A price can legitimately differ from the reference — the underlying moved. A <strong>position</strong>
           mismatch is a different kind of problem: it means execution's view of what strategy holds disagrees with
-          strategy's own view, which is an integrity check, not a market observation. The proposed extension —
-          not yet on the schema — adds a per-venue <code>reference_position</code> the same shape as
-          <code>venue_constraints</code>, so it stays meaningful even when <code>venue_routing_mode</code> is
-          <code>SOR_AT_EXECUTION</code> and the venue isn't chosen until execution time. A mismatch would reuse the
-          risk engine's existing four-way consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> /
-          <code>MONITOR</code> / <code>TEST_ONLY</code>) rather than invent a second decision model, defaulting to
-          <code>BLOCK</code>.
+          strategy's own view, which is an integrity check, not a market observation. Price, position and credit at
+          the same reference point are the whole mechanism, not price alone — and because a strategy instance can
+          hold a universe of many instruments at once, that triple has to be a <strong>vector, one entry per
+          instrument</strong>, not a single flat value on the instruction. An earlier draft of this design put a
+          single per-venue <code>reference_position</code> straight on the envelope — that solves the venue axis
+          (which venue, when <code>venue_routing_mode</code> is <code>SOR_AT_EXECUTION</code> and the venue isn't
+          picked until execution time) but not the instrument axis, and was corrected for exactly that reason.
         </p>
         <div class="code">
-          <span class="k">class</span> <b>ReferencePosition</b>:
-              by_venue: dict[str, Decimal]  <i># strategy's believed position, per eligible venue</i>
+          <span class="k">class</span> <b>InstrumentReferenceEntry</b>:
+              instrument_id: str
+              reference_price: Decimal
+              reference_position: dict[str, Decimal]  <i># per-venue — same shape as before, now nested per instrument</i>
+              credit: CreditBand | None = None  <i># band (market-making) or hard threshold (arbitrage)</i>
+              position_adjustment_bps_per_unit_risk: Decimal | None = None  <i># symmetric coefficient, against RAW position</i>
 
           <span class="k">class</span> <b>CreditBand</b>:
               entry_threshold: Decimal | None = None  <i># minimum edge to act</i>
               abandon_threshold: Decimal | None = None  <i># max adverse move tolerated once committed — optional even when entry_threshold is set</i>
 
-          <i># proposed additions to StrategyInstructionEnvelope</i>
-          reference_position: dict[str, Decimal] | None = None
-          credit: CreditBand | None = None
-          position_adjustment_bps_per_unit_risk: Decimal | None = None  <i># one symmetric coefficient, against RAW position</i>
+          <i># proposed addition to StrategyInstructionEnvelope — one entry per instrument in the universe</i>
+          references: list[InstrumentReferenceEntry] = []
         </div>
         <p>
           <code>credit</code> is strategy-owned and strategy-computed — the same intent-vs-mechanism split
-          <code>execution_policy_ref</code> already draws elsewhere. A market maker expresses it as a band around
-          the reference price; an arbitrage archetype expresses it as a hard fire-or-don't threshold and leaves
-          <code>abandon_threshold</code> unset. <code>position_adjustment_bps_per_unit_risk</code> generalizes
-          <code>QuoteInstruction.skew_on_inventory</code> (§02) off market-making specifically — one symmetric
-          coefficient, applied against the same raw, single-instrument position <code>reference_position</code>
-          reconciles against, not the netted "effective" exposure below. Both are governing boundaries the strategy
-          sets; which algo runs and how it stays inside them remains execution's call, the same relationship
-          <code>hedge_deadline_ms</code> (§02, <code>AtomicInstruction</code>) already has with the algo layer.
+          <code>execution_policy_ref</code> already draws elsewhere; <code>position_adjustment_bps_per_unit_risk</code>
+          generalizes <code>QuoteInstruction.skew_on_inventory</code> (§02) off market-making specifically. Both are
+          governing boundaries the strategy sets; which algo runs and how it stays inside them remains execution's
+          call, the same relationship <code>hedge_deadline_ms</code> (§02, <code>AtomicInstruction</code>) already
+          has with the algo layer. On mismatch, execution would reuse the risk engine's existing four-way
+          consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>)
+          rather than invent a second decision model — but the trigger type itself doesn't exist yet: none of the
+          risk engine's 13 typed trigger conditions covers a position mismatch today, so wiring this needs a new
+          trigger type added to that closed set, not just consumption of an existing one.
         </p>
         <p>
-          A cross-instrument version of this — how a fill in instrument B should move the acceptable adjustment on
-          instrument A — is real but deliberately out of scope here: it would live as a fast-path approximation
-          module inside execution-service, relevant only where A and B are non-fungible (a cross-chain staked-basis
-          leg, or options across different terms or strikes), and is stubbed rather than built. Reconciliation
-          reuses the same idempotent re-emission that refreshes <code>reference_price</code>, plus a separate,
-          slower, venue-dependent SLA watch for whether strategy has seen the trades it expects back from
-          execution within a bounded window — asynchronous, and never a gate on execution's own fast path.
+          Exactly how the vector is keyed is still open, not decided: nesting per-instrument-then-per-venue (as
+          sketched above) assumes one strategy instance never wants two different believed positions for the same
+          instrument across venues within one instruction — true today, not re-confirmed for a multi-instrument
+          vector. Whether <code>credit</code> and the adjustment coefficient vary per entry or apply once across the
+          whole vector is also open. A cross-instrument version of this — how a fill in instrument B should move the
+          acceptable adjustment on instrument A — is real but deliberately out of scope here: it would live as a
+          fast-path approximation module inside execution-service, relevant only where A and B are non-fungible (a
+          cross-chain staked-basis leg, or options across different terms or strikes), and is stubbed rather than
+          built.
         </p>
         <p>
-          <b class="ev ev-assumed">~ assumed</b> — design only, resolved 2026-08-19, not yet implemented. Full
-          record: <a href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md">execution_delta_proxy_repricer_generalization_2026_08_18.md</a>
-          § "Reference position, credit ownership, and the generic per-position adjustment."
+          <b class="ev ev-assumed">~ assumed</b> — design only, not yet implemented; the shape above is illustrative,
+          not final. Full record, including every open question:
+          <a href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md">execution_delta_proxy_repricer_generalization_2026_08_18.md</a>
+          § "The reference triple is a vector per instrument, not a scalar per instruction."
         </p>
       </div>
 
@@ -1412,6 +1462,71 @@
           health-factor ladder are settled — what remains is a risk-appetite decision on the specific numbers, which is
           an operator sign-off rather than an engineering change. Treat the values above as illustrative of the
           <em>shape</em> of the configuration, and read the live numbers from the file itself.
+        </p>
+      </div>
+
+      <div class="callout">
+        <span class="tag">What the timeframe, the "SCE" id suffix and the health-factor ladder actually mean</span>
+        <b class="ev ev-check">? check</b>
+        <p>
+          The <code>strategy_id</code> above carries a <code>_SCE_1H</code> suffix. Read against this codebase's own
+          hold-policy rule (<code>SCE</code> = <code>SAME_CANDLE_EXIT</code>, and — verbatim —
+          "DeFi strategies are NEVER SCE (gas + confirmation latency); SCE is only for CeFi/TradFi ML strategies with
+          explicit TP/SL"), that suffix is stale: a staked-basis carry position is entered and held, not
+          round-tripped every candle. The field that actually governs behavior, two lines above it,
+          <code>execution_mode: continuous</code>, is correct — this is <code>HOLD_UNTIL_FLIP</code>-style behavior
+          (exit when the carry stops being profitable), not same-candle exit. <b class="ev ev-verified">✓ verified</b>
+          against the strategy's own held, multi-leg close-all logic below — the id string itself is an unfixed
+          naming leftover, tracked as a todo, not this artefact's to fix.
+        </p>
+        <p>
+          <code>timeframe: 1h</code> sets the candle/feature-bar resolution the engine's tick loop advances on — it
+          is a <strong>feature and re-evaluation</strong> cadence, not a risk-monitoring one. That distinction
+          matters directly for the health-factor ladder just above it.
+        </p>
+        <div class="callout">
+          <span class="tag">Liquidation risk does not wait for the next candle</span>
+          <b class="ev ev-verified">✓ verified</b>
+          <p>
+            The ladder above (<code>health_factor_target</code> / <code>_emergency_reduce_at</code> /
+            <code>_emergency_close_at</code>) is read synchronously on every tick via a fail-closed cache
+            (<code>position/core/margin_health_cache.py</code> — a miss or a stale read both block the trade, never
+            "no check, proceed"), but that read is bounded by the strategy's own cadence, and an hourly
+            re-evaluation is far too slow for a health factor that can move meaningfully in seconds. The real
+            liquidation trigger does not run on this strategy's <code>timeframe</code> at all:
+            <code>execution_service/defi_execution/monitors/health_factor_monitor.py</code>'s
+            <code>HealthFactorMonitor</code> is a near-block-time loop per chain (Ethereum ~12s via WS
+            <code>eth_subscribe newHeads</code> with poll fallback, Base 2s, Arbitrum ~1s debounced), firing
+            <code>DEFI_HEALTH_FACTOR_CRITICAL</code> (HF &lt; 1.10) and <code>DEFI_LIQUIDATION_IMMINENT</code>
+            (HF &lt; 1.05) independently of any strategy poll. A separate, portfolio-wide
+            <code>LIQUIDATION_CASCADE_RISK</code> circuit breaker fires <code>KILL_ALL</code> at Aave HF ≤ 1.10
+            across ≥ 2 positions — a cross-position check, differently scoped from this one strategy's own
+            <code>health_factor_emergency_close_at: 1.0</code> floor, not a duplicate of it. These are three
+            separate mechanisms at three different scopes, not one hourly poll.
+          </p>
+          <p>
+            <b class="ev ev-check">? check</b> — <code>HealthFactorMonitor</code> is real, written code, but this
+            pass found zero call sites constructing it anywhere in execution-service outside its own module: whether
+            anything actually runs it in production was not confirmed.
+          </p>
+        </div>
+        <p>
+          <b>What execution does when it fires:</b>
+          <code>execution_service/algo_library/deleverage_executor.py</code>'s <code>DeleverageExecutor</code> is a
+          <code>MarginEvent</code>-driven Pub/Sub subscriber — event-triggered, not scheduled — dispatching an
+          asset-group-aware action on <code>CRITICAL</code>/<code>LIQUIDATION</code> severity: for DeFi,
+          <code>top_up_collateral</code> on CRITICAL, <code>repay_debt</code> ("repay borrow + withdraw collateral")
+          on LIQUIDATION. For a full unwind rather than a partial deleverage, the strategy's close-all script —
+          <code>CarryStakedBasisCloseAll</code> — runs a real, ordered sequence: cancel resting perp orders on the
+          hedge venue, close the perp hedge (reduce-only), repay the Aave borrow, unstake/redeem the LST, settle
+          on-chain transfers, then a post-close recon check. <b class="ev ev-verified">✓ verified</b> — read in
+          full; the actual <code>_order_unwind_sequence()</code> implementation only enforces a coarser two-tier
+          grouping (every hedge-leg position closes before every DeFi-leg position), not the finer six-step total
+          order its own docstring states — repay-before-unstake within the DeFi tier is stated intent, not
+          independently enforced by that function today.
+          <b class="ev ev-check">? check</b> — the dispatch logic above is real and unit-testable; whether a live
+          subscription actually calls <code>DeleverageExecutor</code> in production execution-service was not
+          traced in this pass.
         </p>
       </div>
 
@@ -2248,6 +2363,1111 @@
           specific that already works.
         </p>
       </div>
+    </details>
+  </section>
+
+  <!-- 10 -->
+  <section id="s10">
+    <div class="sec-head">
+      <span class="num">10</span>
+      <h2>Strategy families and archetypes, in full</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-verified">✓ verified</b>
+    </div>
+    <p class="lede">
+      Every archetype the engine can run belongs to exactly one of nine orthogonal families. This section names all of
+      them — not the abbreviated cut that has appeared in this document before — and grades each one on whether its
+      code paths are actually complete, not just declared. Naming and completeness are different claims; this section
+      keeps them separate on purpose.
+    </p>
+    <div class="keypoints">
+      <div>
+        <b>9 families, 60 archetypes</b
+        ><span
+          >Every value of <code>StrategyArchetype</code> maps to exactly one <code>StrategyFamily</code> via
+          <code>ARCHETYPE_TO_FAMILY</code> — a total function, verified 60/60</span
+        >
+      </div>
+      <div>
+        <b>Completeness is derived, not asserted</b
+        ><span
+          >Per archetype × mode, five machine-checked hooks (engine registration, param schema, target-universe
+          catalog, allocator rank, mode-specific dispatch) roll up to ready / unverified / gap</span
+        >
+      </div>
+      <div>
+        <b>Feature-group consumption: 55/60 traced</b
+        ><span
+          >The remaining 5 are declared <code>UNDECLARED_ARCHETYPES</code> on purpose — a wrong guess would silently
+          mislead a backtestability check, so the registry refuses to guess</span
+        >
+      </div>
+    </div>
+    <details class="sec-body" open>
+      <summary>All 60 archetypes, grouped by family, with per-mode code-completeness</summary>
+      <div class="stat-row">
+        <div class="stat"><span class="v">9</span><span class="k">Strategy families</span></div>
+        <div class="stat"><span class="v">60</span><span class="k">Strategy archetypes</span></div>
+        <div class="stat"><span class="v">55</span><span class="k">Feature-group consumption traced</span></div>
+        <div class="stat"><span class="v">6</span><span class="k">Archetypes ready — batch</span></div>
+        <div class="stat"><span class="v">6</span><span class="k">Archetypes ready — live</span></div>
+      </div>
+      <p>
+        <strong>Source and method.</strong> Family and archetype counts come directly from
+        <code>StrategyArchetype</code>, <code>StrategyFamily</code> and <code>ARCHETYPE_TO_FAMILY</code> in
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code> — imported and
+        enumerated, not transcribed. Per-mode completeness is the live output of the
+        <code>archetype-code-completeness</code> skill (<code>derive_archetype_completeness.py</code>), run against
+        strategy-service on 2026-08-19: 60 archetypes × 3 modes = 180 rows, cross-validated against a direct read of
+        every source registry it checks. Feature-group consumption is
+        <code>ARCHETYPE_FEATURE_GROUPS</code> / <code>UNDECLARED_ARCHETYPES</code> in
+        <code>archetype_feature_groups.py</code>, whose own docstring is explicit that an entry is only added once
+        traced to real dispatch code — an absent entry means "not yet reviewed," never "consumes nothing."
+      </p>
+      <p>
+        <strong>Reading the completeness columns.</strong>
+        <b class="cc cc-ready">ready</b> — engine factory, param schema, target-universe catalog and the mode-specific
+        dispatch hook all resolve.
+        <b class="cc cc-unverified">unverified</b> — no hook fails outright, but at least one has no clean
+        machine-checkable registry (paper's per-family tick-loader dispatch and the allocator-rank leg are the two
+        recurring causes; never asserted ready or broken on a guess).
+        <b class="cc cc-gap">gap</b> — at least one hook fails: most commonly no factory-registered v2 engine class,
+        or no <code>PARAM_SCHEMA_REGISTRY</code> entry. The skill records two dated agent-audit notes rather than
+        guessing where no registry lookup exists: paper's tick-loader dispatch covers only the DeFi carry/yield
+        family (~48/60 archetypes fall through to a generic perp-basis loader, untested for the rest), and live
+        dispatch below the shared orchestrator was confirmed absent-of-evidence by grepping
+        <code>cascade_subscriber.py</code> / <code>service_entry.py</code>, not by assumption.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The nine families</span
+          ><span class="note">Source: StrategyFamily + ARCHETYPE_TO_FAMILY, unified-api-contracts</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>Archetypes</th>
+                <th>What it covers</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-exec"><strong>ML_DIRECTIONAL</strong></td>
+                <td>2</td>
+                <td>Directional exposure sized by a trained model's output — continuous or event-settled.</td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>RULES_DIRECTIONAL</strong></td>
+                <td>3</td>
+                <td>
+                  Directional exposure from deterministic rule/technical signals, including
+                  <code>TSMOM_BTC_CTA</code> — a proven diversifier per the research engine (positive in both the 2023
+                  and 2026 drawdowns).
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>CARRY_AND_YIELD</strong></td>
+                <td>11</td>
+                <td>
+                  Basis, funding, staking and lending yield capture — the deepest single family: dated and perpetual
+                  basis and their inverses, funding dispersion, staked basis, recursive borrow/stake, and plain
+                  lending/staking rotation.
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>ARBITRAGE_STRUCTURAL</strong></td>
+                <td>8</td>
+                <td>
+                  Price-dispersion and structural arbitrage, including four DeFi MEV archetypes (sandwich, JIT
+                  liquidity, backrun, liquidation bundle) and cross-domain event arb (prediction × sports).
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>MARKET_MAKING</strong></td>
+                <td>10</td>
+                <td>
+                  Continuous and event-settled quoting plus three DeFi LP variants (concentrated, pool, vault) under
+                  one family.
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>EVENT_DRIVEN</strong></td>
+                <td>1</td>
+                <td>
+                  A single archetype — economic-results and yield-curve-driven positioning. Distinct from
+                  <code>LIQUIDATION_CAPTURE</code>, which sits under ARBITRAGE_STRUCTURAL, not here.
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><strong>VOL_TRADING</strong></td>
+                <td>19</td>
+                <td>
+                  The largest family by a wide margin — expanded from 1 to 19 archetypes 2026-04-25: RV/IV arb, spread
+                  structures, carry, covered calls, protective put, straddle, synthetic delta, MM, ML-lean, two
+                  0DTE variants, term-structure arb and slope, dispersion, variance swap, LEAPS convexity, cross-asset
+                  spread and ratio spread, plus the legacy <code>VOL_TRADING_OPTIONS</code>.
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-exec"><strong>STAT_ARB_PAIRS</strong></td>
+                <td>2</td>
+                <td>Fixed-pair and cross-sectional statistical arbitrage.</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><strong>PORTFOLIO</strong></td>
+                <td>4</td>
+                <td>
+                  Cross-category sleeves, added as the ninth orthogonal family 2026-04-25: multi-strategy, risk
+                  parity, factor allocation, tactical overlay.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>ML_DIRECTIONAL — 2 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>ML_DIRECTIONAL_CONTINUOUS</code></td>
+                <td class="fg-list">momentum, moving_averages, oscillators, technical_indicators, volatility_realized</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>ML_DIRECTIONAL_EVENT_SETTLED</code></td>
+                <td class="fg-list">odds_calculator, team_form</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>RULES_DIRECTIONAL — 3 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>RULES_DIRECTIONAL_CONTINUOUS</code></td>
+                <td class="fg-list">candlestick_patterns, momentum, signal_confirmation, technical_indicators</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>RULES_DIRECTIONAL_EVENT_SETTLED</code></td>
+                <td class="fg-list">odds_calculator, team_form</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>TSMOM_BTC_CTA</code></td>
+                <td class="fg-list">momentum, volatility_realized</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>CARRY_AND_YIELD — 11 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>CARRY_BASIS_DATED</code></td>
+                <td class="fg-list">futures_term_structure</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_BASIS_DATED_INV</code></td>
+                <td class="fg-list">futures_term_structure</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_BASIS_PERP</code></td>
+                <td class="fg-list">perp_funding_rates</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_BASIS_PERP_INV</code></td>
+                <td class="fg-list">perp_funding_rates</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_FUNDING_DISPERSION</code></td>
+                <td class="fg-list">perp_funding_rates</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_STAKED_BASIS</code></td>
+                <td class="fg-list">lending_rates, lst_yields</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-ready">ready</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_STAKED_BASIS_DATED</code></td>
+                <td class="fg-list">lending_rates, lst_yields</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_RECURSIVE_STAKED</code></td>
+                <td class="fg-list">lending_rates, lst_yields</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_RECURSIVE_BORROW_LENDING_ONLY</code></td>
+                <td class="fg-list">lending_rates</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>YIELD_ROTATION_LENDING</code></td>
+                <td class="fg-list">lending_rates</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+              </tr>
+              <tr>
+                <td><code>YIELD_STAKING_SIMPLE</code></td>
+                <td class="fg-list">lst_yields</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>ARBITRAGE_STRUCTURAL — 8 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>ARBITRAGE_PRICE_DISPERSION</code></td>
+                <td class="fg-list">cross_venue_spreads</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+                <td class="cc cc-ready">ready</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_SPORTS_DUTCHING</code></td>
+                <td class="fg-list">odds_calculator</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>LIQUIDATION_CAPTURE</code></td>
+                <td class="fg-list">liquidation_band_prediction, liquidation_clusters</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_MEV_SANDWICH</code></td>
+                <td class="fg-undeclared">undeclared</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_MEV_JIT_LIQUIDITY</code></td>
+                <td class="fg-undeclared">undeclared</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_MEV_BACKRUN</code></td>
+                <td class="fg-undeclared">undeclared</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_MEV_LIQUIDATION_BUNDLE</code></td>
+                <td class="fg-undeclared">undeclared</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_CROSS_DOMAIN_EVENT</code></td>
+                <td class="fg-list">cross_asset_correlation</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>MARKET_MAKING — 10 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>MARKET_MAKING_CONTINUOUS</code></td>
+                <td class="fg-list">book_depth_bands, liquidity_walls, order_flow_inference</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING_EVENT_SETTLED</code></td>
+                <td class="fg-list">odds_calculator, team_form</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING_PASSIVE_SPREAD</code></td>
+                <td class="fg-list">book_depth_bands, liquidity_walls</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING_INVENTORY_SKEW</code></td>
+                <td class="fg-list">book_depth_bands, flow_interaction</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING_ML_LEAN</code></td>
+                <td class="fg-list">book_depth_bands, liquidity_walls, order_flow_inference</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING_QUEUE_MICROSTRUCTURE</code></td>
+                <td class="fg-list">book_depth_bands, microstructure, order_flow_inference</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING_PREDICTION</code></td>
+                <td class="fg-list">polymarket_market_microstructure</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>DEFI_LP_CONCENTRATED</code></td>
+                <td class="fg-list">concentrated_liquidity_il_realised</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+              </tr>
+              <tr>
+                <td><code>DEFI_LP_POOL</code></td>
+                <td class="fg-list">dex_pool_swap_flow, pool_invariant_drift</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+              </tr>
+              <tr>
+                <td><code>DEFI_LP_VAULT</code></td>
+                <td class="fg-list">vault_share_price_apy</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>EVENT_DRIVEN — 1 archetype</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>EVENT_DRIVEN</code></td>
+                <td class="fg-list">economic_results, yield_curve</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>VOL_TRADING — 19 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>VOL_TRADING_OPTIONS</code> <span class="fg-list">(legacy)</span></td>
+                <td class="fg-list">options_iv</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+                <td class="cc cc-unverified">unverified</td>
+              </tr>
+              <tr>
+                <td><code>VOL_ARB_RV_IV</code></td>
+                <td class="fg-list">options_iv, realized_implied_vol</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_SPREAD_STRUCTURES</code></td>
+                <td class="fg-list">options_iv, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_CARRY</code></td>
+                <td class="fg-list">options_iv, variance_risk_premium</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_OVERLAY_COVERED_CALLS</code></td>
+                <td class="fg-list">options_iv, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_OVERLAY_PROTECTIVE_PUT</code></td>
+                <td class="fg-list">options_iv, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_STRADDLE</code></td>
+                <td class="fg-list">gamma_exposure, options_iv</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_SYNTHETIC_DELTA</code></td>
+                <td class="fg-list">gamma_exposure, options_iv, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_MARKET_MAKING</code></td>
+                <td class="fg-list">gamma_exposure, options_iv, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_ML_LEAN</code></td>
+                <td class="fg-list">gamma_exposure, options_iv</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_0DTE_GAMMA_SCALPING</code></td>
+                <td class="fg-list">gamma_exposure, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_0DTE_PIN_RISK</code></td>
+                <td class="fg-list">gamma_exposure, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_TERM_STRUCTURE_ARB</code></td>
+                <td class="fg-list">futures_term_structure, vol_surface_term_structure</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_TERM_STRUCTURE_SLOPE</code></td>
+                <td class="fg-list">vol_surface_term_structure</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_DISPERSION</code></td>
+                <td class="fg-list">cross_asset_correlation, options_iv</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_VARIANCE_SWAP</code></td>
+                <td class="fg-list">variance_risk_premium</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_LEAPS_CONVEXITY</code></td>
+                <td class="fg-list">options_iv, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_CROSS_ASSET_SPREAD</code></td>
+                <td class="fg-list">cross_asset_correlation, options_iv</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>VOL_RATIO_SPREAD</code></td>
+                <td class="fg-list">options_iv, second_order_greeks</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>STAT_ARB_PAIRS — 2 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>STAT_ARB_PAIRS_FIXED</code></td>
+                <td class="fg-list">cointegration, cross_asset_correlation</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>STAT_ARB_CROSS_SECTIONAL</code></td>
+                <td class="fg-list">cross_asset_correlation, regime_detection</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>PORTFOLIO — 4 archetypes</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Archetype</th>
+                <th>Feature groups consumed</th>
+                <th>Batch</th>
+                <th>Paper</th>
+                <th>Live</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>PORTFOLIO_MULTI_STRATEGY</code></td>
+                <td class="fg-undeclared">undeclared</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>PORTFOLIO_RISK_PARITY</code></td>
+                <td class="fg-list">cross_asset_correlation, volatility_realized</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>PORTFOLIO_FACTOR_ALLOCATION</code></td>
+                <td class="fg-list">cross_asset_correlation, regime_detection</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+              <tr>
+                <td><code>PORTFOLIO_TACTICAL_OVERLAY</code></td>
+                <td class="fg-list">momentum, regime_detection</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+                <td class="cc cc-gap">gap</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p>
+        <strong>Reading this honestly.</strong> 6 of 60 archetypes are batch-ready and 6 are live-ready by this
+        measure (5 paper-ready — <code>CARRY_STAKED_BASIS</code>'s paper leg is unverified rather than confirmed);
+        7 are unverified rather than broken; the remaining 47 have at least one failing hook, most often no
+        factory-registered engine at all. That is not a defect in this table — it is what a code-completeness
+        measure independent of any venue's data looks like today, and it matches what
+        <code>param_schema.py</code>'s and <code>factory.py</code>'s own module docstrings already say in prose. The
+        <code>VOL_TRADING</code> family (19 archetypes) and the four MEV archetypes account for most of the gap.
+        Deployment profile is a separate, orthogonal axis: 34 of the 60 archetypes run co-located-VM for latency
+        (<code>ARCHETYPE_TO_DEPLOYMENT_PROFILE</code>) — mostly CARRY_AND_YIELD, ARBITRAGE_STRUCTURAL,
+        MARKET_MAKING and STAT_ARB_PAIRS — while VOL_TRADING, EVENT_DRIVEN and PORTFOLIO (26 archetypes) run
+        distributed.
+      </p>
+    </details>
+  </section>
+
+  <!-- 11 -->
+  <section id="s11">
+    <div class="sec-head">
+      <span class="num">11</span>
+      <h2>Venue and chain breadth</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-verified">✓ verified</b>
+    </div>
+    <p class="lede">
+      The engine described in §01–§09 is venue- and chain-agnostic by construction (§08); this section is the
+      concrete inventory of what it is actually wired to today, measured from the same registries the engine reads
+      at runtime rather than counted by hand.
+    </p>
+    <div class="keypoints">
+      <div>
+        <b>192 venues declared</b
+        ><span
+          >Every entry in <code>VENUE_DATA_TYPE_CAPABILITIES</code>, across DeFi, CeFi, TradFi, sports and
+          prediction markets</span
+        >
+      </div>
+      <div>
+        <b>23 chains, not 2</b
+        ><span
+          >Every member of <code>ChainKind</code> — the authoritative chain enum, not a string-literal grep. 14 of
+          the 23 already have a live DeFi venue key; 9 are onboarded ahead of venue coverage</span
+        >
+      </div>
+      <div>
+        <b>DeFi venue count: unresolved, honestly</b
+        ><span
+          >No single registry answers "how many DeFi venues" cleanly — this section cites the specific, named
+          registry behind every number rather than asserting one total</span
+        >
+      </div>
+    </div>
+    <details class="sec-body" open>
+      <summary>Every chain, and the DeFi protocol × chain spread</summary>
+      <div class="stat-row">
+        <div class="stat"><span class="v">192</span><span class="k">Venues declared</span></div>
+        <div class="stat"><span class="v">23</span><span class="k">ChainKind members</span></div>
+        <div class="stat"><span class="v">67</span><span class="k">Distinct DeFi protocol names</span></div>
+        <div class="stat"><span class="v">121</span><span class="k">DeFi protocol×chain entries</span></div>
+      </div>
+      <div class="callout">
+        <span class="tag">Correction, same session, before these numbers were used anywhere</span>
+        <p>
+          An earlier pass through this section derived chains by grepping string literals across the codebase, which
+          produced "19 chain tokens" — a filter artefact, not a registry read: it missed
+          <code>gnosis</code>, <code>mode</code>, <code>celo</code>, <code>aurora</code>, <code>fantom</code>,
+          <code>metis</code>, <code>moonbeam</code> and <code>bitcoin</code> entirely, and wrongly counted three
+          <code>hyperliquid_api</code>/<code>_rest</code>/<code>_testnet</code> naming variants as separate chains.
+          The same pass estimated "51 DeFi venues" from a name-prefix filter; a peer re-measurement of the same
+          question got 130, ~59–70, or 103 depending on which filter was applied, and correctly declined to pick
+          one. Both are corrected below by importing the actual enums rather than pattern-matching for them.
+        </p>
+      </div>
+      <p>
+        <strong>Source.</strong> The chain count is a direct import and enumeration of <code>ChainKind</code> in
+        <code>unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py</code> — the canonical
+        chain identifier used by strategy archetype configs' <code>allowed_chains</code> field, execution-service
+        connector routing, and MTDS per-chain adapter dispatch. 23 members, enumerated directly, not grepped. Venue
+        counts are <code>VENUE_DATA_TYPE_CAPABILITIES</code> (192 keys) and
+        <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> (121 keys, the DeFi-specific portion merged into the main
+        dict), both from <code>unified-api-contracts/unified_api_contracts/registry/</code>, measured live
+        2026-08-19. The 192, 60 archetypes and 9 families are independently reproduced by this section and by the
+        registry ground-truth audit (<code>plans/audit/results/registry_ground_truth_2026_08_19.md</code>, itself
+        corrected in the same session) — those three counts are solid. The DeFi venue total is deliberately not
+        asserted as one number below: the 67-protocol / 121-entry breakdown is a real, precisely-scoped measurement
+        of one named registry, not a claim that it is "the" DeFi venue count.
+      </p>
+      <p>
+        <strong>Do not use <code>VENUE_CHAIN_MAP</code> for chain coverage.</strong> That registry declares only 4
+        chains across 15 venues and under-reports by construction — already flagged as a P0 backend finding in the
+        registry ground-truth audit above. Every count in this section comes from <code>ChainKind</code> and the
+        venue capability registries directly, never from that map.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Every ChainKind member</span
+          ><span class="note">23 chains from ChainKind, cross-referenced against live venue keys in VENUE_DATA_TYPE_CAPABILITIES</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Chain (ChainKind)</th>
+                <th>Live venue keys</th>
+                <th>Note</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>ethereum</code></td>
+                <td>47</td>
+                <td>By far the deepest chain — every LST/restaking protocol, most lending and every legacy DEX</td>
+              </tr>
+              <tr>
+                <td><code>arbitrum</code></td>
+                <td>17</td>
+                <td>Second-deepest — AAVE_V3, COMPOUND_V3, MORPHO, UNISWAP_V3, PENDLE, EULER_V2 all present</td>
+              </tr>
+              <tr>
+                <td><code>solana</code></td>
+                <td>16</td>
+                <td>Non-EVM — JITO, JUPITER, KAMINO, METEORA, ORCA, RAYDIUM and the LST/lending set</td>
+              </tr>
+              <tr>
+                <td><code>base</code></td>
+                <td>10</td>
+                <td>AAVE_V3, COMPOUND_V3, MORPHO, UNISWAP_V3, BALANCER, plus AERODROME_V3 (Base-native)</td>
+              </tr>
+              <tr>
+                <td><code>optimism</code></td>
+                <td>9</td>
+                <td>AAVE_V3, COMPOUND_V3, MORPHO, UNISWAP_V3, CURVE, VELODROME_V2 (Optimism-native)</td>
+              </tr>
+              <tr>
+                <td><code>polygon</code></td>
+                <td>8</td>
+                <td>AAVE_V3, COMPOUND_V3, MORPHO, UNISWAP_V3, BALANCER, IDLE, BEEFY, CHAINLINK</td>
+              </tr>
+              <tr>
+                <td><code>avalanche</code></td>
+                <td>7</td>
+                <td>AAVE_V3, CURVE, BALANCER, BEEFY, SUSHISWAP_V3, TRADER_JOE_V2 (Avalanche-native), BENQI</td>
+              </tr>
+              <tr>
+                <td><code>bsc</code></td>
+                <td>6</td>
+                <td>AAVE_V3, BEEFY, PANCAKESWAP_V3, RADIANT, VENUS — BNB Chain / legacy Binance Smart Chain</td>
+              </tr>
+              <tr>
+                <td><code>zksync</code></td>
+                <td>2</td>
+                <td>AAVE_V3, LIGHTER (zkSync-native)</td>
+              </tr>
+              <tr>
+                <td><code>scroll</code></td>
+                <td>2</td>
+                <td>AAVE_V3, COMPOUND_V3</td>
+              </tr>
+              <tr>
+                <td><code>starknet</code></td>
+                <td>1</td>
+                <td>EXTENDED-STARKNET</td>
+              </tr>
+              <tr>
+                <td><code>linea</code></td>
+                <td>1</td>
+                <td>AAVE_V3</td>
+              </tr>
+              <tr>
+                <td><code>mantle</code></td>
+                <td>1</td>
+                <td>MANTLE-ETHEREUM (the Mantle LST protocol, distinct from the Mantle chain itself)</td>
+              </tr>
+              <tr>
+                <td><code>hyperliquid_l1</code></td>
+                <td>1</td>
+                <td>The HYPERLIQUID venue key itself — perp DEX and L1 in one; venue naming drops the _l1 suffix</td>
+              </tr>
+              <tr>
+                <td><code>aurora</code></td>
+                <td>0</td>
+                <td>Registered in <code>ChainKind</code>; no live venue key yet</td>
+              </tr>
+              <tr>
+                <td><code>bitcoin</code></td>
+                <td>0</td>
+                <td>Non-EVM; registered for cross-chain collateral context, no live DeFi venue key</td>
+              </tr>
+              <tr>
+                <td><code>blast</code></td>
+                <td>0</td>
+                <td>
+                  Registered in <code>ChainKind</code> and in chain infrastructure (<code>chain_env.py</code>'s
+                  <code>MAINNET_CHAIN_IDS</code>/<code>CHAIN_GENESIS_DATES</code>) but has no live venue key yet —
+                  chain support exists ahead of venue coverage here
+                </td>
+              </tr>
+              <tr>
+                <td><code>celo</code></td>
+                <td>0</td>
+                <td>Registered in <code>ChainKind</code>; no live venue key yet</td>
+              </tr>
+              <tr>
+                <td><code>fantom</code></td>
+                <td>0</td>
+                <td>Registered in <code>ChainKind</code>; no live venue key yet</td>
+              </tr>
+              <tr>
+                <td><code>gnosis</code></td>
+                <td>0</td>
+                <td>Registered in <code>ChainKind</code>; no live venue key yet</td>
+              </tr>
+              <tr>
+                <td><code>metis</code></td>
+                <td>0</td>
+                <td>Registered in <code>ChainKind</code>; no live venue key yet</td>
+              </tr>
+              <tr>
+                <td><code>mode</code></td>
+                <td>0</td>
+                <td>Registered in <code>ChainKind</code>; no live venue key yet</td>
+              </tr>
+              <tr>
+                <td><code>moonbeam</code></td>
+                <td>0</td>
+                <td>Registered in <code>ChainKind</code>; no live venue key yet</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>
+        <strong>The reverse gap: a live chain missing from <code>ChainKind</code>.</strong> <code>plasma</code>
+        (2025 Tether-backed L1) has two live venue keys today — AAVE-PLASMA and FLUID-PLASMA, reached via
+        <code>DEFI_VENUE_TO_PROTOCOL</code> — but is <strong>not</strong> a <code>ChainKind</code> member, so it is
+        absent from the table above despite having real venue coverage. Aave launched on Plasma the same day as
+        mainnet with over $6.5B deposited in week one, so this is not an edge case. This is the mirror image of
+        <code>VENUE_CHAIN_MAP</code>'s under-declaration and <code>blast</code>/<code>aurora</code>/etc.'s
+        chain-ahead-of-venue gap above — three different registries drifting out of sync with each other in three
+        different directions, worth reconciling in the same pass as the <code>VENUE_CHAIN_MAP</code> P0 already
+        tracked in the ground-truth audit,
+        <b class="ev ev-check">? check</b>.
+      </p>
+      <p>
+        <strong>Per-asset-group split.</strong> Of the 192 declared venues, 121 are DeFi protocol×chain entries
+        (<code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code>) and 71 are CeFi, TradFi, sports and prediction combined. A
+        finer split by those four groups is not reported here: the registry's own
+        <code>get_venue_asset_group()</code> classifier keys its DeFi lookup on lowercase adapter names
+        (<code>"uniswap_v3"</code>) rather than the uppercase <code>PROTOCOL-CHAIN</code> venue keys this section
+        uses, so every DeFi venue silently falls back to its <code>"cefi"</code> default — a real classifier gap
+        found while measuring this section,
+        <b class="ev ev-check">? check</b>, distinct from the already-flagged <code>VENUE_CHAIN_MAP</code> issue
+        above and not fixed here (out of this document's scope).
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">DeFi protocol × chain spread</span
+          ><span class="note">Source: DEFI_VENUE_DATA_TYPE_CAPABILITIES, 67 protocols / 121 entries</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Protocol</th>
+                <th>Chains</th>
+                <th>#</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td><code>AAVE_V3</code></td><td class="fg-list">arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon, scroll, zksync</td><td>10</td></tr>
+              <tr><td><code>BALANCER</code></td><td class="fg-list">arbitrum, avalanche, base, ethereum, optimism, polygon</td><td>6</td></tr>
+              <tr><td><code>BEEFY</code></td><td class="fg-list">arbitrum, avalanche, base, bsc, ethereum, polygon</td><td>6</td></tr>
+              <tr><td><code>COMPOUND_V3</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon, scroll</td><td>6</td></tr>
+              <tr><td><code>CHAINLINK</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td><td>5</td></tr>
+              <tr><td><code>MORPHO</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td><td>5</td></tr>
+              <tr><td><code>UNISWAP_V3</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td><td>5</td></tr>
+              <tr><td><code>PANCAKESWAP_V3</code></td><td class="fg-list">arbitrum, base, bsc, ethereum</td><td>4</td></tr>
+              <tr><td><code>CURVE</code></td><td class="fg-list">avalanche, ethereum, optimism</td><td>3</td></tr>
+              <tr><td><code>IDLE</code></td><td class="fg-list">arbitrum, ethereum, polygon</td><td>3</td></tr>
+              <tr><td><code>RADIANT</code></td><td class="fg-list">arbitrum, bsc, ethereum</td><td>3</td></tr>
+              <tr><td><code>SUSHISWAP_V3</code></td><td class="fg-list">avalanche, base, ethereum</td><td>3</td></tr>
+              <tr><td><code>YEARN_V3</code></td><td class="fg-list">arbitrum, ethereum, optimism</td><td>3</td></tr>
+              <tr><td><code>EULER_V2</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
+              <tr><td><code>KARAK</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
+              <tr><td><code>PENDLE</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
+              <tr><td><code>RENZO</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
+              <tr><td><code>VENUS</code></td><td class="fg-list">bsc, ethereum</td><td>2</td></tr>
+              <tr><td><code>AAVE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>ACROSS</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>AERODROME_V3</code></td><td class="fg-list">base</td><td>1</td></tr>
+              <tr><td><code>ALCHEMY-ONCHAIN</code></td><td class="fg-list">(chain-agnostic RPC infra)</td><td>1</td></tr>
+              <tr><td><code>ANKR</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>BENQI</code></td><td class="fg-list">avalanche</td><td>1</td></tr>
+              <tr><td><code>CAMELOT_V3</code></td><td class="fg-list">arbitrum</td><td>1</td></tr>
+              <tr><td><code>COINBASE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>COMPOUND</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>CONVEX</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>EIGENLAYER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>ETHENA</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>ETHERFI</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>FLASHBOTS</code></td><td class="fg-list">ethereum (MEV infra, not a trading protocol)</td><td>1</td></tr>
+              <tr><td><code>FLUID</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>FRAX</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>JITO</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>JITORESTAKING</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>JUPITER</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>KAMINO</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>KELPDAO</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>LIDO</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>LIFINITY</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>MAKER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>MANTLE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>MARGINFI</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>MARINADE</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>METEORA</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>MORPHOVAULTS</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>ORCA</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>PHOENIX</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>PUFFER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>PYTH</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>RAYDIUM</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>ROCKETPOOL</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>SOLBLAZE</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>SOLEND</code></td><td class="fg-list">solana</td><td>1</td></tr>
+              <tr><td><code>SPARK</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>STADER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>STAKEWISE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>STARGATE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>SUSHISWAP</code></td><td class="fg-list">arbitrum</td><td>1</td></tr>
+              <tr><td><code>SWELL</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>SYMBIOTIC</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>TRADER_JOE_V2</code></td><td class="fg-list">avalanche</td><td>1</td></tr>
+              <tr><td><code>UNISWAP</code></td><td class="fg-list">ethereum (v1-era pool)</td><td>1</td></tr>
+              <tr><td><code>UNISWAP_V2</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>UNISWAP_V4</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
+              <tr><td><code>VELODROME_V2</code></td><td class="fg-list">optimism</td><td>1</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p>
+        Protocol-version variants are listed as distinct registry keys (<code>AAVE</code> vs. <code>AAVE_V3</code>,
+        <code>UNISWAP</code>/<code>UNISWAP_V2</code>/<code>UNISWAP_V3</code>/<code>UNISWAP_V4</code>,
+        <code>SUSHISWAP</code> vs. <code>SUSHISWAP_V3</code>) because that is how the venue capability registry
+        declares them — each carries its own per-data-type start dates. This table is 67 rows / 121 protocol×chain
+        entries from one specific, named registry (<code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code>); it is not offered
+        as "the" DeFi venue count — see the correction and source notes above for why that single number does not
+        currently exist as a clean, reproducible measurement.
+      </p>
     </details>
   </section>
 

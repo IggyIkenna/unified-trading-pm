@@ -67,9 +67,17 @@ Do not start before then.
       figures/company valuation, so none violate the disclosure rule), the performance-figure phrase (0 hits — item
       2's fix holds), and the invented-strategy-family phrase (0 new hits outside the already-tracked
       `strategy-service-walkthrough.html` instance the Elysium child plan owns).
-- [ ] [REVIEW] P1. **Verify each claimed fix against the live file**, then update the corresponding finding's
+- [x] ✅ [REVIEW] P1. **Verify each claimed fix against the live file**, then update the corresponding finding's
       status in [the sibling-docs audit](/plans/audit/results/client_artefact_sibling_docs_audit_2026_08_18.md)
-      from open to resolved.
+      from open to resolved. — verified 2026-08-19 (slot 10, review), fresh-pulled to LDR HEAD `aa5cd6a94f` first.
+      Independently re-grepped the live files (not the parent plan's checkboxes): D1 ClearLoop 0 hits; D2
+      performance phrase 0 hits (remaining `annualised` = metric/market-fact/methodology only); P0 Solana/Drift
+      paragraph gone (only a hedged jitoSOL "requires acceptance first" note at line 1332); P0 transfer-wiring now
+      caveated (§07 "not yet wired end-to-end"); P1 reserve-ratio graded `partial` + `~ assumed`; P2 invented-family
+      "DeFi liquidity provision" 0 hits ("liquidation capture" survives only as a real `ARBITRAGE_STRUCTURAL`
+      archetype descriptor at line 1397); P2 readiness graded (25 markers). Marked the 7 resolved findings + the 2
+      still-open findings (`paper − batch = 0`, promotion-ladder — no sibling-plan fix, already tracked in their
+      owning plans) in the audit report.
 - [ ] [DOC] P2. **Archive the parent plan** once every todo above is done — standard 6-step ritual (status →
       `archived`, `git mv` into the dated archive folder, corpus-wide referrer-path fixup, verify no broken links,
       confirm line caps still hold).
@@ -85,3 +93,14 @@ finalize reconciles findings back into; source-path hunt skipped (finalize gate)
 `eb190e4427`). Independently swept all six live artefact files (not the parent plan's checkboxes) for `clearloop`,
 `$`, `budget`/`ARR`/`valuation`/`revenue`, the performance-figure phrase, and the invented-strategy-family phrase —
 see the flipped checkbox above for the full breakdown. Zero disqualifying hits. Items 2 and 3 remain open.
+
+**2026-08-19 (slot 10, review)** — Dispatched item 2 (verify each claimed fix + mark findings resolved).
+Fresh-pulled to LDR HEAD `aa5cd6a94f` first. Independently re-grepped all six claimed fixes against the live files
+(not the parent plan's checkboxes) — see the flipped checkbox above for the per-fix breakdown; all 6 hold. Marked the
+7 corresponding audit findings `Resolved` and the 2 findings with no sibling-plan fix (`paper − batch = 0`,
+promotion-ladder) `Still open` with pointers to their owning plans (`client_artefact_remediation_2026_08_18.md` §A /
+`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` §H.8 and open P1). Two residual grep hits are
+benign, not regressions: `liquidation capture` at `platform-architecture.html:1397` is a correct archetype descriptor
+under the real `ARBITRAGE_STRUCTURAL` family (not a fabricated family name), and `jitoSOL` at `:1332` is a hedged
+"requires venue acceptance first" boundary note (not the removed present-tense Drift claim). Item 3 (archive parent)
+remains — this dispatch was scoped to item 2 only.

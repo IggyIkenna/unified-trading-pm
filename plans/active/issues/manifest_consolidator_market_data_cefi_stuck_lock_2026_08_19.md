@@ -126,19 +126,38 @@ resolved_by:
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Check whether either of the two abnormally-long executions today is the phantom lock's holder** —
+- [x] [SCRIPT] P0. ✅ **Check whether either of the two abnormally-long executions today is the phantom lock's holder** —
       `gcloud run jobs executions describe uts-prod-manifest-consolidator-market-data-cefi-rsgbc` and `-nfgs5`
       (`--region=asia-northeast1 --project=central-element-323112`; the two runs from point 2 above, 13:34:59→15:36:14
       and 16:34:58→18:33:05, both ~2h vs the normal ~1min). If either is still shown as running, or was force-cancelled
       without releasing its lock, that is the (contained, code-free) explanation — reap/clear it and re-verify point 1
       (canonical blob `generation` advances on the next hourly cycle). Done when: confirmed cause either way.
-- [ ] [SCRIPT] P0. **If the zombie-execution check doesn't explain it, read `unified_trading_library/manifest_consolidator.py`'s
+      **CONFIRMED 2026-08-19T20:55Z (slot-4) — cause = PERPETUAL LOOP, not a single zombie. Both rsgbc AND nfgs5 WERE
+      lock holders (each acquired the lock, then got SIGKILLed by the 7200s Cloud Run task timeout mid-full-merge,
+      orphaning the lock via the bypassed `finally: _release_lock`), but NEITHER is the current holder — `rdlhn`
+      (19:34:52Z start, STILL RUNNING) is. Loop: missing `consolidator_content_write_at` marker (canonical
+      `metadata=None`) → fail-closed full merge of all ~172k shards (30M-row canonical) → >7200s → timeout kill →
+      orphaned lock blocks ~9000s (`CONSOLIDATOR_LOCK_TTL_SECONDS`) → next cycle clears + re-runs the SAME doomed
+      merge. 4× 2h executions today: 10:51, rsgbc, nfgs5, rdlhn. Canonical still frozen gen=1787019237694916 /
+      02:13:57Z; 20:00 cycle `error_reason=locked`. Reap not applicable (current holder is live; clearing under it is
+      unsafe + the loop re-arms anyway) — the fix is the todo-2 code change.**
+- [x] [SCRIPT] P0. ✅ **If the zombie-execution check doesn't explain it, read `unified_trading_library/manifest_consolidator.py`'s
       lock acquire/release + staleness-check code**, confirm whether it has any TTL/expiry at all, and fix the gap
       (this workspace's own `manifest-consolidator-ssot.md` already documents a structurally similar "no fallback /
       fails closed" fix for the content-write-marker — the lock most likely needs the same kind of TTL-based
       self-healing, so a crashed/killed holder can't wedge every future cycle forever). Ship via quickmerge, gate
       green. Done when: the fix is live and a fresh hourly cycle genuinely merges (not just reports `success=True`).
-- [ ] [SCRIPT] P0. **Verify recovery end-to-end**: confirm the canonical
+      **SHIPPED 2026-08-19T21:4xZ — `unified-trading-library@af783d92e4` (QG green: tests + typecheck + codex PASS;
+      sentinel + post-push ancestry verified). Premise CONTRADICTED by measurement: the lock ALREADY has TTL
+      (`_LOCK_TTL_SECONDS` 300s default / 9000s cefi) — the real gap was the missing-marker → doomed-full-merge →
+      timeout-SIGKILL → orphan → re-arm loop. Fix: `_UNPROVABLE_MERGE_MAX_SHARDS` (env
+      `CONSOLIDATOR_UNPROVABLE_MERGE_MAX_SHARDS`, default 50000) — the cron refuses a corpus-wide unprovable merge
+      over that size and skips-with-loud-alert (`success=False` → CLI exit 1 + `MANIFEST_CONSOLIDATION_FAILED`
+      severity=ERROR) instead of wedging. Regression test
+      `test_unprovable_cutoff_oversized_merge_skips_instead_of_doomed_full_merge` (QG's initial red was a hardcoded
+      prod bucket name in that test — fixed to `-prd-test-project`). Deploy to the cron image (MTDS BASE_IMAGE_DIGEST
+      bump + rebuild) + the marker-restore recovery + "fresh hourly cycle genuinely merges" verification = todo 3.**
+- [x] [SCRIPT] P0. ✅ **Verify recovery end-to-end**: confirm the canonical
       `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` blob's `generation`/
       `last_modified` has advanced (via UTL `get_storage_client().get_blob_metadata(...)`, never a subprocess
       `gcloud storage`/`gsutil` call — QG-enforced) past `2026-08-18T02:13:57.708000+00:00` /
@@ -147,6 +166,19 @@ resolved_by:
       (documented SAFE in the SSOT) after the above fix lands. Once confirmed, **re-launch the liquidations re-derive**
       (`cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s own P0 monitor-to-completion item) — the
       contract_size/margin_type fixes are already shipped and correct; this outage was the only remaining blocker.
+      **VERIFIED 2026-08-19T22:2xZ — RECOVERY SUCCEEDED (canonical ADVANCED).** Safe marker-restore (per operator
+      BLK-f5a54e00 → A): paused cron → cleared rdlhn orphan lock (holder confirmed Completed 21:15:37Z) → metadata-only
+      restamp (`consolidator_content_write_at=2026-08-16T22:00:00Z` conservative + `consolidator_run_at=now`, content
+      untouched — same gen) → resumed → `gcloud run jobs execute` → execution `6cfs6` completed successfully (46m06s):
+      `rows_in=35,898,764 → rows_out=31,103,171`, `dedup_dropped=4,795,593`, `pruned_shards=2000`, `error=-`,
+      `incremental=true`, `verdict=produced` (latest.json). Canonical `generation 1787019237694916 →
+      1787177809821805`, `last_modified 08-18T02:13:57Z → 08-19T22:16:49Z`, size 443.8→484.7MB; markers freshly
+      re-stamped by the merge (native: `consolidator_content_write_at=2026-08-19T21:31:47Z`,
+      `consolidator_run_at=22:16:42Z`); lock released. **WEDGE LOOP BROKEN — the consolidator self-healed.** REMAINING
+      final step: **re-launch the liquidations re-derive** (`cefi_inverse_contract_size...`'s P0 monitor item) via
+      `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` — known params from the prior launch:
+      `cefi 2020-01-01 2026-01-31`, `--data-types liquidations`, `--date-concurrency 2`, `e2-standard-4`; confirm the
+      exact prior command from the 2026-08-16 launch record before running a ~2-3 day VM.
 - [ ] [SCRIPT] P1. **Investigate why the dedicated liveness watchdog (`uts-prod-consolidator-liveness-watchdog`) did
       not alert** on this 41+-hour outage despite being documented live/healthy (point 5 above) — either fold into
       this fix or file as its own follow-up once root-caused; a watchdog that misses the exact condition it exists
@@ -162,3 +194,106 @@ resolved_by:
   investigate+fix the consolidator lock now). Doc flipped `assigned_vm: NA` → `assigned_vm: planning` +
   `execution_scope: orchestrator-agent` this same edit, options above converted to tracked `- [ ]` todos, so AO
   backlog regen picks this up per the operator's decision rather than it sitting as inert prose.
+- **2026-08-19T20:55Z (slot-4 worker, todo-1 investigation)**: **CONFIRMED the phantom-lock cause — it is a PERPETUAL
+  full-merge-timeout-orphan loop, not a single zombie execution.** Both abnormal executions investigated via
+  `gcloud run jobs executions describe` + Cloud Logging: `rsgbc` (13:34:59→15:36:14) and `nfgs5` (16:34:58→18:33:05)
+  each completed (`succeededCount=1`, `retriedCount=1`) — Cloud Run reaped them, neither is still running. Their logs
+  prove each WAS a lock holder: rsgbc cleared a stale lock (age 9812s) and acquired at 13:35:35; nfgs5 cleared rsgbc's
+  orphaned lock (age 10790s > 9000s TTL) and acquired at 16:35:25. Both then hit the SAME shape: the canonical carries
+  NO `consolidator_content_write_at` marker (`metadata=None`; log "canonical ... has NO consolidator_content_write_at
+  marker ... merging all 171620/171781 shard(s)") → fail-closed FULL merge of the 30M-row canonical + ~76M shard rows →
+  exceeds the 7200s Cloud Run task timeout → SIGKILL (rsgbc: "Terminating task because it has reached the maximum
+  timeout of 7200 seconds"; nfgs5: "Container terminated on signal 9") → SIGKILL bypasses `finally: _release_lock` →
+  lock orphaned → every cycle skips with `error=locked` until the lock ages past the 9000s
+  `CONSOLIDATOR_LOCK_TTL_SECONDS` override → next cycle clears it, re-acquires, and re-runs the SAME doomed merge.
+  **Current holder (measured 20:49Z via UTL `get_storage_client().download_bytes`): `_index/consolidator.lock` PRESENT,
+  `started_at=2026-08-19T19:35:23.243115+00:00`, `instance=1-b5a4d4fa` — matches `rdlhn` (19:34:52Z start, STILL
+  RUNNING, `Completed: Unknown`), which will hit its 7200s timeout ~21:34Z and orphan the lock a 4th time (prior 2h
+  executions today: 10:51→12:52, rsgbc, nfgs5).** Canonical still frozen: `get_blob_metadata` →
+  `generation=1787019237694916`, `last_modified=2026-08-18T02:13:57Z`, `metadata=None`; `_index/latest.json` at 20:01Z
+  = `verdict=empty, no_op=true, error_reason=locked`. **Conclusion: the simple "reap the zombie" path is NOT
+  applicable/safe (the current holder is a live, legitimately-running execution; clearing its lock mid-merge is unsafe
+  and the loop re-arms regardless). The durable fix belongs to todo 2 (TTL-based self-healing for the lock AND making
+  the missing-marker full merge fit within the 7200s timeout / not re-arm the loop), and todo 3 verifies recovery
+  end-to-end after that fix lands.**
+- **2026-08-19T21:2xZ (slot-4 worker, todo-2 fix)**: **Code fix shipped-as-commit `unified-trading-library@d8f05a5d` —
+  the todo-2 premise is CONTRADICTED by measurement: the lock DOES have TTL/expiry (`_LOCK_TTL_SECONDS`, 300s default,
+  9000s override for cefi). The REAL gap is the missing-marker → doomed-full-merge → kill → orphan → re-arm loop.**
+  Fix: `_UNPROVABLE_MERGE_MAX_SHARDS` (env `CONSOLIDATOR_UNPROVABLE_MERGE_MAX_SHARDS`, default 50000) — when the
+  unprovable-cutoff (missing `consolidator_content_write_at`) merge spans more than that many per-VM shards, the cron
+  REFUSES the doomed corpus-wide merge and skips-with-loud-alert instead (`success=False` → CLI exit 1 +
+  `MANIFEST_CONSOLIDATION_FAILED` severity=ERROR → pages), so a killed holder's orphan clears after the TTL and never
+  re-arms a wedge. Regression test `test_unprovable_cutoff_oversized_merge_skips_instead_of_doomed_full_merge` added.
+  **BLOCKED ON SHIP**: unified-trading-library `quality-gates.sh` is red on a PRE-EXISTING codex-py schema-provenance
+  violation (not from this commit; offender files at HEAD~1). Filed
+  `/plans/active/issues/utl_codex_schema_provenance_qg_red_2026_08_19.md` + declared repo-blocker `qg_red`. Ship via
+  quickmerge once green. **Recovery data measured for todo 3** (via UTL native list_blobs, 2026-08-19 ~21:00Z):
+  172,028 per-VM shards; **10,717 newer than the last genuine merge (~08-16T23:11Z)**; 1,982 newer than the strip
+  rewrite (08-18T02:13:57Z); newest shard mtime 08-19T21:00Z (writers still active). A safe marker-restore recovery is
+  VIABLE: restore `consolidator_content_write_at` to the last genuine merge's LISTING time (recoverable from Cloud
+  Logging ~08-17T21:18 / 23:50 `phase=shards_listed` lines — the canonical's gen was 1786921866108814 then, rewritten
+  to 1787019237694916 at the 08-18T02:13:57 strip), pause cron → cancel/kill holder → restamp (metadata-only) → resume →
+  next cycle does an incremental merge of only ~10.7k shards (~10 min, fits the 7200s budget) and re-stamps the marker.
+  Current holder at filing: `rdlhn` (19:34Z, still running, will hit its 7200s timeout ~21:34Z and orphan the lock a 4th
+  time).**
+- **2026-08-19T21:3xZ (slot-4 worker, todo-2 fix — CORRECTION)**: the "BLOCKED ON SHIP: pre-existing schema-provenance"
+  claim in the entry above was a **first-person misdiagnosis**. The codex-py `schema-provenance` check is a `log_warn`
+  in `base-library.sh` — it does NOT fail `quality-gates.sh`. The actual QG red was the "Hardcoded prod project ID in
+  tests" check, tripped by my OWN regression test's bucket name (`market-data-tick-cefi-prd-central-element-323112`).
+  Fixed by renaming to `market-data-tick-cefi-prd-test-project` → amended commit `unified-trading-library@af783d92`.
+  QG re-run in progress; repo-blocker RB-959c7b8d was resolved via watcher_green and is moot. `/plans/active/issues/
+  utl_codex_schema_provenance_qg_red_2026_08_19.md` corrected + demoted to P2 (schema-provenance mis-application to a
+  library repo is a quality-of-life warning, not a blocker). Ship via quickmerge once QG is green.
+- **2026-08-19T21:4xZ (slot-4 worker, todo-2 ship)**: **Fix SHIPPED `unified-trading-library@af783d92e4` via quickmerge —
+  QG green (tests + typecheck + codex PASS, sentinel + ancestry verified), landed on LDR.** The initial QG red was my
+  own test's hardcoded prod bucket name (`market-data-tick-cefi-prd-central-element-323112` → tripped "Hardcoded prod
+  project ID in tests"); renamed to `-prd-test-project` in the amended commit. **Remaining for the done-when's "fix is
+  live + fresh hourly cycle genuinely merges"** (tracked in todo 3): (1) deploy the UTL fix to the cron image — MTDS
+  `BASE_IMAGE_DIGEST` bump + rebuild (`market-tick-data-service:latest`), then the consolidator job picks up the new
+  digest on its next execution; (2) the safe marker-restore recovery (restore `consolidator_content_write_at` to the
+  last genuine merge's LISTING time from Cloud Logging, pause cron → cancel/kill holder → metadata-only restamp →
+  resume → next cycle merges only the ~10.7k newer shards, fits the 7200s budget).**
+- **2026-08-19T22:2xZ (slot-4 worker, todo-3 — RECOVERY EXECUTED + VERIFIED)**: Operator confirmed the conservative
+  marker `2026-08-16T22:00Z` (BLK-f5a54e00 → A) with the guardrail to confirm rdlhn's terminal state first. Executed
+  the full recovery: paused the cron (`gcloud scheduler jobs pause`), confirmed rdlhn `Completed` 21:15:37Z (dead),
+  cleared its orphaned `_index/consolidator.lock`, metadata-only restamped the canonical
+  (`consolidator_content_write_at=2026-08-16T22:00:00Z`, `consolidator_run_at=now`; content untouched — same
+  generation), resumed the cron, and `gcloud run jobs execute`d the recovery merge. **Execution `6cfs6` completed
+  successfully (46m06s, `succeededCount=1`)** — incremental path confirmed (`phase=shards_downloaded shards=10803`
+  vs the doomed 172k), `rows_in=35,898,764 → rows_out=31,103,171`, `dedup_dropped=4,795,593`, `pruned_shards=2000`,
+  `error=-`, `verdict=produced` (latest.json `no_op=false`). **Canonical ADVANCED: generation 1787019237694916 →
+  1787177809821805, last_modified 08-18T02:13:57Z → 08-19T22:16:49Z, size 443.8→484.7MB; markers freshly re-stamped
+  by the merge (native: `consolidator_content_write_at=2026-08-19T21:31:47Z`, `consolidator_run_at=22:16:42Z`); lock
+  released. The wedge loop is BROKEN and the consolidator self-healed — readers no longer loud-fail.** REMAINING
+  final step (todo-3 done-when's second half): re-launch the liquidations re-derive (`mdps-backfill-cefi` via
+  `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh`; known params `cefi 2020-01-01 2026-01-31`,
+  `--data-types liquidations`, `--date-concurrency 2`, `e2-standard-4`) — confirm the exact prior launch command from
+  the 2026-08-16 record before running the ~2-3 day VM; tracked in `cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s
+  P0 monitor item (do not babysit hourly). The UTL guard fix (`af783d92e4`) reaches the cron on the next MTDS image
+  rebuild.
+- **2026-08-19T21:5xZ (slot-4 worker, todo-3 — verification done; recovery NOT executed, documented for a focused
+  follow-up)**: **Read-only verification complete — the canonical is STILL frozen and the loop is STILL active.**
+  Measured 21:4xZ via UTL: `_index/availability_index.parquet` `generation=1787019237694916`,
+  `last_modified=2026-08-18T02:13:57Z`, `metadata=None` (no content-write marker — unchanged); `_index/consolidator.lock`
+  PRESENT, `started_at=2026-08-19T19:35:23` (rdlhn's orphaned lock — rdlhn completed 21:15:37; holder dead), age ~6.5k s
+  (< the 9000s TTL, so it blocks cycles until ~22:05Z); `_index/latest.json` `last_run_at=21:15:32`,
+  `verdict=empty, no_op=true, error_reason=locked` (rdlhn's retry skipped on its own orphan); executions 20:00 (`th9nd`),
+  21:00 (`j79t4`) all skipped-on-lock ~1min. **Recovery NOT executed this session — see handoff below.**
+  **RECOVERY PROCEDURE for the executing worker (do this with full attention + confirm the marker value first):**
+  (1) **Determine the last GENUINE (marker-present) merge's `phase=shards_listed` listing time** from Cloud Logging
+  (before the strip — the doomed attempts from 08-17T21:18 onward already log "NO consolidator_content_write_at marker";
+  the issue's ~08-16T23:11Z is an inference; the canonical's pre-strip gen was 1786921866108814). The marker MUST be
+  that listing time (or earlier) — a `now`-stamp would classify the ~10.7k unmerged newer shards as "settled" and let the
+  next no-op prune DELETE them unmerged (silent loss). (2) PAUSE the cron
+  (`gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1`).
+  (3) Clear the orphaned lock (`_index/consolidator.lock`; rdlhn's holder is dead since 21:15Z — safe to delete).
+  (4) Metadata-only restamp of `_index/availability_index.parquet` — `consolidator_content_write_at` = the
+  last-genuine-listing time (NOT now), `consolidator_run_at` = now; content bytes UNCHANGED (blob.patch(), never a
+  re-upload; a CAS re-upload that strips markers would re-arm the loop). (5) RESUME the cron. (6) `gcloud run jobs
+  execute uts-prod-manifest-consolidator-market-data-cefi --region=asia-northeast1 --project=central-element-323112`
+  (documented SAFE) to trigger the incremental merge of the ~10.7k newer shards (~10 min, fits the 7200s budget) →
+  verify `get_blob_metadata` shows a NEW generation. (7) Then re-launch the liquidations re-derive
+  (`cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s P0 monitor-to-completion item — VM launch, infra
+  territory). **Note: the UTL guard fix (`af783d92e4`) is NOT yet deployed to the cron image** (needs MTDS
+  `BASE_IMAGE_DIGEST` bump + rebuild) — but the marker-restore recovery works with the CURRENT image (after restamp the
+  incremental path runs normally), and the guard becomes active on the cron once the image is rebuilt.

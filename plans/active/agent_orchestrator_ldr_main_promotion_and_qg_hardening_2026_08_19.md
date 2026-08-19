@@ -231,21 +231,41 @@ coverage** against `pyproject.toml`'s declared `fail_under = 70`.
       flake/side-effect risk on a shared host) or hand-mocking ~30 imports individually (fragile, low logic-density
       per line). Scope this properly before attempting — likely wants dependency-injection seams added first
       rather than mocking `server.py` module globals directly.
-- [ ] [INFRA] P2. **Give the suite a real unit/integration split.** All 274 test files sit flat under
-      `tests/test_*.py` — no subdirectories, and the existing `unit`/`integration`/`smoke`/`host_load_sensitive`
-      pytest markers are each used in only ~1 file, so there is no cheap way to run a fast subset (confirmed
-      live: a full-coverage run took 421s with no faster alternative available). This is also why Phase 2's own
-      coverage-measurement research pass got stuck twice this session waiting on a full run it had no way to
-      shrink. Done-when: a `pytest -m unit` (or equivalent) run completes in well under a minute and covers the
-      bulk of fast, non-integration logic.
-- [ ] [INFRA] P2. **No coverage baseline/ratchet file exists** (repo-wide grep for one came up empty) — once the
-      floor-raising todo above lands, add a shrinking-ratchet baseline (mirrors this workspace's existing pattern
-      elsewhere, e.g. `line_caps_baseline.yaml`) so coverage is enforced to only ever go up, not just clear a
-      static floor.
-- [ ] [INFRA] P3. **Dashboard (`dashboard/`) has no coverage measurement at all** — 19 vitest `*.test.ts` files run
-      with no coverage provider configured, plus a separate 36-spec Playwright e2e layer. Lower priority than the
-      Python backend (per CLAUDE.md's UI rule, dashboard tests are already tsc/ESLint/vitest/Playwright-only, no
-      Python gate applies) but worth a follow-up decision on whether a vitest coverage number is worth adding.
+- [x] [INFRA] P2. ✅ **DONE — `agent-orchestrator@cfd1a47753`.** Unit/integration split — 3781 test functions
+      across 280/302 files auto-marked `@pytest.mark.unit` by MEASURED per-test runtime (not manual per-file
+      classification — a one-off script cross-referenced `--co -q` + `--durations=0` output via `ast` parsing,
+      inserting only decorator lines, never touching test logic). Threshold 0.05s, chosen from the real timing
+      distribution's density inflection. `pytest -m unit` verified at 26-48s across 3 runs under real host
+      contention (target: well under 60s) — 3952/4897 collected items. Found + correctly excluded (not silently
+      forced green) one pre-existing, unrelated test-isolation bug — see new follow-up todo below.
+- [x] [INFRA] P2. ✅ **DONE — `agent-orchestrator@cfd1a47753`.** Coverage baseline/ratchet — new
+      `scripts/quality_gates/check_coverage_ratchet.py` + `coverage_baseline.yaml`, wired into `quality-gates.sh`
+      right after the existing `--cov-fail-under=72` step (reuses the same `--cov-report=json` output, no second
+      pytest run); `--update-baseline`/`--allow-lower` mirrors this workspace's established ratchet pattern.
+      Caught + fixed a real precision bug in its own first version before shipping it: 3 consecutive full-suite
+      runs of IDENTICAL code measured 82.6823%/82.6797%/82.6770% total coverage (real run-to-run coverage.py
+      noise on this ~4900-test suite, not regressions) — the original narrow tolerance against a 2-decimal-
+      rounded baseline would have permanently flapped the gate red; fixed to full-precision storage + a tolerance
+      sized to the measured noise floor, verified both that real noise now passes and a fabricated regression
+      still correctly fails.
+- [x] [INFRA] P3. ✅ **DONE (decided yes) — `agent-orchestrator@cfd1a47753`.** Dashboard vitest coverage — added
+      `@vitest/coverage-v8` (2/2 sibling UI repos in this workspace already use it, so this wasn't a novel
+      package ask) + a coverage config block, wired into `quality-gates.sh`'s existing dashboard test step.
+      Baseline measured: 12.88% statements / 89.77% branches / 33.79% functions across `src/` — the low
+      statement% is structural (this harness runs DOM-less, testing pure `.ts` logic only; `.tsx` component
+      render coverage is the Playwright e2e layer's job by design, same split `unified-trading-system-ui` already
+      makes explicit). No enforcement floor wired yet, deliberately — flagged as its own follow-up decision once
+      the baseline is accepted, not built in this pass.
+- [x] [INFRA] P2. ✅ **DONE — `agent-orchestrator@8e0438c160`.** Pre-existing test-isolation/order-dependency bug:
+      `tests/test_pane_tree_reap.py::test_kill_session_reaps_before_tmux_kill` failed both standalone and under
+      `pytest -m unit` despite passing in the full suite. Root cause found: `kill_session`'s teardown log calls
+      `running_checkout_sha()`, which caches its result in a module-level global once warmed; the test's
+      `monkeypatch.setattr(tmux_spawn.subprocess, "run", fake_run)` patches the shared stdlib `subprocess`
+      singleton (not a `tmux_spawn`-local copy), so a COLD cache let the mock leak through and record a spurious
+      extra call — the full suite masked this because an earlier-collected test always warms the cache first.
+      Fixed test-side (mirrors existing prior art in `test_tmux_spawn_kill_and_dismiss.py` for the identical
+      gotcha) — the cache-once-per-process design itself is deliberate, not a bug. Re-added `@pytest.mark.unit`.
+      Verified standalone + `-m unit` + full suite (4891 passed) all green.
 - [x] [INFRA] P2. ✅ **RESOLVED 2026-08-19 — already covered by existing generic machinery, no new gap.** Audit
       whether a check is needed against no-two-open-AO-tasks-targeting-the-same-agent-orchestrator-file risk.
       Found `server/regen_backlog_from_plan.py::_derive_script_collision_group()` — built specifically from a real
@@ -337,17 +357,32 @@ archived docs, were not yet sampled.
       pinned → two calls return identical value; neither set → two calls return DIFFERENT random values
       (documents the dev-fallback trap this incident hit); GCS fallback path also pins correctly (mocked at the
       lazy-import boundary `_load_gcs_secret` actually uses).
-- [ ] [INFRA] P3. **Sample the remaining ~92 docs in the tightest corpus** (single-repo `repos: [agent-orchestrator]`
-      issue docs not yet read) plus a second pass on the ~36 co-listed-repo docs and ~130 non-`issues/`-folder
-      archived docs (`plans/archive/2026_08/` in particular has undated-convention incident writeups outside the
-      `issues/` subdirectory worth checking). Same COVERED/GAP/UNCLEAR method as above; split any new GAP into its
-      own todo the way this pass's 7 were split, don't batch them into one vague "write more tests" line.
-- [ ] [DOC] P3. **Investigate the recurrence pattern, not just the latest fix**: 3 of the sampled docs
-      (`ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md` and its two predecessors) are
-      the SAME underlying regen-dispatch bug recurring 3 times — each fix landed a real test, but the pattern-
-      enumeration approach itself (a regex/pattern list needing repeated widening) is the actual defect. Consider
-      whether a property-based/fuzzed test (any self-declared-not-eligible phrasing, not an enumerated list) would
-      close this class permanently instead of waiting for a 4th recurrence to widen the list again.
+- [ ] [INFRA] P3. **Sample the remaining ~92 docs in the tightest corpus — 34/116 done this session, 82 remain.**
+      Second pass (2026-08-19) sampled 34 more single-repo `repos: [agent-orchestrator]` issue docs in
+      `plans/archive/issues/` (corpus = 124 total via `grep -l "^repos: \[agent-orchestrator\]$"`, minus 8 already
+      named in this Phase 3 section). Result: 30 confirmed COVERED (each verified against a real, present test —
+      not filename inference), 3 correctly skipped as non-code-fix incidents, **1 real GAP found and fixed same
+      session**: `agent_orchestrator_local_qg_red_context_lifecycle_worker_liveness_2026_08_08.md`'s own P3 todo
+      was left unswept — `test_confirmed_working_pane_clears_stale_kick_failure_streak` in
+      `tests/test_worker_liveness.py` drove a `WORKING_PANE_SPINNER` classification without mocking
+      `context_probe.context_reading`, risking a real disk read on a shared host's live `orch-slot-14` session —
+      fixed at `agent-orchestrator@8e0438c160` (mirrors the mock pattern already used elsewhere in the same
+      file). 82 still unsampled in this corpus, plus the ~36 co-listed-repo docs and ~130 non-`issues/`-folder
+      archived docs entirely untouched — continue with the same COVERED/GAP/UNCLEAR method, split any new GAP
+      into its own todo, don't batch.
+- [x] [DOC] P3. ✅ **DONE — `agent-orchestrator@8e0438c160`.** Investigate the recurrence pattern, not just the
+      latest fix: 3 recurrences of the regen-dispatch pattern-matching gap (confirmed via `git log -G` against
+      the regex — 2 of the 3 are code-commit-level recurrences, not separate PM issue docs as originally framed;
+      only 1 doc, `ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md`, actually exists —
+      a CLAIM ≤ MEASUREMENT correction to this todo's own premise). Built a `hypothesis` property-based test
+      fuzzing case/markdown/context variations of the known phrasings — **it found a real 4th recurrence on its
+      first run**: case-sensitivity, British "judgement" spelling, missing-article phrasing, and markdown-italic
+      `\b`-boundary defeat were ALL silently unmatched. Fixed all 4 in `_PERMANENT_NON_DISPATCHABLE_RE`. This
+      converts the bug class from silently-missed to loudly-caught-by-CI on the next phrasing variant, though not
+      a permanent close — **architectural recommendation** (not implemented, per scope): pattern-matching prose
+      is fundamentally the wrong tool (a genuinely novel phrase still slips through no matter how much fuzzing
+      covers KNOWN meanings); an explicit machine-readable tag (this codebase already has `[OPERATOR]` precedent)
+      would be the durable fix — a bigger change, left as a future consideration, not built here.
 
 ## Phase 4 — Containerize agent-orchestrator (Docker), cross-checked against the IONOS migration
 
@@ -357,22 +392,39 @@ own the cloud migration itself** — `/plans/active/ao_ci_aws_to_ionos_migration
 (added to this plan's `related:`) — but containerizing AO is directly relevant to it and must be cross-checked
 against whatever that plan currently assumes about how AO is deployed/run.
 
-- [ ] [INFRA] P1. **Read `ao_ci_aws_to_ionos_migration_2026_08_18.md` in full before designing the container build**
-      — it may already assume a specific deploy shape (the existing `ao-self-pull.sh` root-cron + `systemctl
-      restart` model this plan's Phase 1 confirmed is still current) that a container changes. State explicitly
-      whether containerizing REPLACES `ao-self-pull.sh`'s restart mechanism or wraps it (e.g. the container still
-      polls LDR internally and restarts its own process, vs. an external supervisor rebuilding/redeploying the
-      container on each LDR push).
-- [ ] [INFRA] P1. **Design + ship the Dockerfile/image-build workflow** for agent-orchestrator's server. Decide
-      build trigger (same `push:[live-defi-rollout]` this plan's Phase 1 confirmed as AO's actual deploy signal, or
-      a separate build-only trigger) and registry target (this fleet already has `image-build-gate.yml` precedent
-      per Phase 1's semver-agent finding — check whether that's reusable or AO-specific). Done-when: an image
-      builds successfully from a real LDR commit and runs the server correctly in a local/test container.
-- [ ] [INFRA] P2. **Decide what "runs as a Docker container inside the VM" means for the EC2→IONOS migration
-      specifically** — does containerizing make the migration strictly easier (portable image, same container
-      runtime on either cloud) or does it need its own IONOS-side prerequisite (a container runtime installed,
-      registry access from the new host)? Fold the answer into the IONOS plan itself, don't duplicate it here —
-      this todo's done-when is "the IONOS plan's own todos reflect the container model," not new IONOS work here.
+- [x] [INFRA] P1. ✅ **DONE 2026-08-19.** Read `ao_ci_aws_to_ionos_migration_2026_08_18.md` in full before
+      designing the container build. Finding: it's a mature, mostly-blocked (on the operator's IONOS account
+      signup, §3) human plan with real production-cutover stakes, assuming the exact bare-VM systemd +
+      `ao-self-pull.sh` model unchanged — zero containerization anywhere in it. **Decision: containerizing WRAPS
+      the existing self-pull/restart model, does not replace its mechanics** — "how a new version reaches the
+      running box" still flows through the same self-pull-detects-a-new-LDR-commit trigger, just
+      rebuilding/restarting a container instead of restarting a bare uvicorn process. Folded into the IONOS plan
+      itself as a Decision-log entry + a note on its open VM-lifecycle-abstraction design todo (next todo below
+      covers that fold-in specifically).
+- [x] [INFRA] P1. ✅ **DONE — `agent-orchestrator@8e0438c160`.** Design + ship the Dockerfile/image-build
+      workflow. New `Dockerfile.vm-orchestrator` (kept separate from the existing root `Dockerfile` — see below)
+      — multi-stage, `python:3.13-slim`, same `orchestrator.service` ExecStart minus `--reload` (redundant with
+      `ao-self-pull.sh`'s own restart), includes `tmux`/`git`/`openssh-client` since worker-session spawning is
+      the point. **Verified end-to-end**: built + ran with `ORCHESTRATOR_MODE=mock`, `GET /api/healthz` → 200
+      from inside the running container. Build trigger: new `.github/workflows/image-build-vm-orchestrator.yml`,
+      `push:[live-defi-rollout]` path-filtered, **inactive by design** (no push step — no confirmed registry
+      target/credentials exist yet; GCP-auth fails closed via `continue-on-error`). `image-build-gate.yml`
+      confirmed NOT reusable — it only drives a pre-provisioned Cloud Build trigger off the root `Dockerfile`, no
+      Dockerfile-path input. **Major finding surfaced, filed as its own issue (out of scope here, different
+      deployment target)**: agent-orchestrator already has a SEPARATE, existing Cloud Run Dockerfile
+      (`agent_orchestrator_cloud_run_deployment_2026_05_19.md`, archived — a stateless API-only "brain," no
+      tmux, gated on a companion workers-off-VM plan reaching D3) — that Dockerfile's `COPY agents/ ./agents/`
+      step is broken (the directory was deleted 2026-07-10's read-the-file boot cutover); filed as
+      `plans/active/issues/agent_orchestrator_cloud_run_dockerfile_broken_copy_agents_dir_2026_08_19.md`.
+- [x] [INFRA] P2. ✅ **DONE 2026-08-19 — `unified-trading-pm@dd472dfa24`.** Decide what "runs as a
+      Docker container inside the VM" means for the EC2→IONOS migration. Containerizing makes it strictly
+      easier — a container runtime is a much smaller cross-cloud-portability surface than replicating a full
+      `uv`-venv Python bootstrap per provider. Folded into the IONOS plan directly (not duplicated here): a new
+      Decision-log entry there records the wrap-not-replace decision and its "first real test of the
+      portability motivation" framing, and its open §1 VM-lifecycle-abstraction design todo now notes to
+      evaluate "provision compute + firewall + a container runtime, then `docker pull`+`docker run`" instead of
+      the full venv-bootstrap-per-provider shape when it's next picked up — not a mandate to redesign now, since
+      that plan is still blocked on §3 (IONOS account signup) regardless.
 
 ### Considered and explicitly OUT of scope: CI self-hosted runners do NOT get this same treatment
 
@@ -388,14 +440,18 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
 
 ## Phase 5 — Finalize
 
-- [ ] [DOC] P1. **Post-phase codex audit** — once Phases 1-4 are shipped, do the standing "read the codex docs this
-      plan depends on and check them against what actually shipped" pass named in CLAUDE.md's plan-authoring rules.
-      Update any contract that changed, SUPERSEDED-banner anything invalidated.
-- [ ] [DOC] P1. **Archive `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s live-state claims are now
-      historical, not current** — it's already archived with a resolved banner, so no un-archiving needed, but add
-      a one-line dated note at its top ("SUPERSEDED IN PRACTICE 2026-0X-XX by <this plan> — agent-orchestrator is
-      ldr_main again") so a future reader doesn't mistake its "What changed" section for current state. Do this
-      LAST, only once Phase 1 has actually shipped.
+- [x] [DOC] P1. ✅ **DONE 2026-08-19.** Post-phase codex audit — checked every codex doc this plan's `related:`/
+      `context_scope:` cites against everything actually shipped: `ci-cd-flow.md` (repo counts + the `ldr_terminal`
+      mention, both already correctly updated in Phase 1 and re-verified accurate here, correctly framed as
+      historical — "restored 2026-08-19 after a 2-week detour" — not asserting it as current state anywhere),
+      `runtime-deployment-topology.md` (confirmed still accurate, deploy mechanism never changed). Repo-wide
+      `rg -l "ldr_terminal\|promotion_model.*agent-orchestrator" codex/` returns only `ci-cd-flow.md`, correctly
+      framed. No contract invalidated by this plan's shipped work; nothing needed a SUPERSEDED banner in codex
+      itself (the archived issue doc below is a plan/issue doc, not codex — handled by the next todo).
+- [x] [DOC] P1. ✅ **DONE 2026-08-19.** Archive `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s
+      live-state claims are now historical, not current — added the dated SUPERSEDED note at its top pointing to
+      this plan's Phase 1, noting the deploy-side facts (dashboard trigger fix, root cause) are still accurate
+      history but the `promotion_model: ldr_terminal` state itself is superseded.
 - [ ] [DOC] P0. **Archive this plan** once every todo above is `[x]` and unlocked — standard 6-step ritual, corpus-
       wide referrer-path fixup included.
 

@@ -63,12 +63,16 @@ being fully done. Do not start before then.
       needs its own Progress Log updated to reflect that this remediation pass ran. — **Done 2026-08-19** (evidence:
       all 13 audit summary-table findings RESOLVED after live re-verification of both walkthroughs + both wired
       checkers green; owning plans' Progress Logs updated — see Progress Log below).
-- [ ] [REVIEW] P1. **Re-check every item in the parent plan's "Real system gaps — already tracked, not duplicated
+- [x] ✅ [REVIEW] P1. **Re-check every item in the parent plan's "Real system gaps — already tracked, not duplicated
       here" section.** If transfer-handler wiring, capital-budget enforcement, dynamic-universe pinning, or any of
       `system_readiness_master.md` W5/W10/W12/W13/W16/W17/W18 has landed since this plan was authored, the
       corresponding artefact content can move from target-state framing to a present-deep claim — spin that into a
       new tracked todo (a new small plan or an addition here) rather than leaving the artefact under-claiming a now-
-      real capability.
+      real capability. — **Done 2026-08-19: re-checked every item; NONE has landed since authoring.** § B
+      capital-budget P0, § C transfer-handler P0, § H.8 dynamic-universe-pinning P0 (all in
+      `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`) and `system_readiness_master.md`
+      W5/W10/W12/W13/W16/W17/W18 remain `- [ ]` open with zero items checked off — no target-state→present-deep
+      re-frame warranted, no new todo spun up. See Progress Log below.
 - [ ] [DOC] P2. **Archive the parent plan** once every todo above is done — standard 6-step ritual (status →
       `archived`, `git mv` into the dated archive folder, exact-successor banner if applicable, corpus-wide
       referrer-path fixup, verify no broken links, confirm line caps still hold).
@@ -95,3 +99,18 @@ appended remediation-pass entries to both owning artefact plans'
 ([`nick_ai_platform_disclosure_artifact_2026_08_16.md`](/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md)
 + [`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`](/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md))
 Progress Logs. Todos 2 (re-check "Real system gaps") and 3 (archive parent) remain for subsequent dispatches.
+
+**2026-08-19 — todo 2 (re-check "Real system gaps") done.** Re-checked every item in the parent plan's
+[`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md) § "Real system
+gaps" against the live plans — none has landed since the 2026-08-18 audit, so no artefact content moves from
+target-state to present-deep and no new todo is warranted:
+- **Transfer-handler production wiring** — `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`
+  § C P0 "Replace the stub `TransferHandler` implementations" still `- [ ]` open.
+- **Capital-budget enforcement** — same plan § B P0 "Verify capital-budget enforcement, or build it" still `- [ ]` open.
+- **Dynamic-universe as-of-date pinning** — same plan § H.8 P0 "Stamp the resolved dynamic-universe as-of date into the
+  run manifest" still `- [ ]` open.
+- **W5/W10/W12/W13/W16/W17/W18** — `system_readiness_master.md`: collateral/cross-margin/transfer-eligibility/manual-
+  trade (W5), risk native+share-class/Greeks (W10), reconciliation (W12), PnL attribution (W13),
+  latency/tracing/preflight/SLA (W16), fee/gas (W17), canonical output paths (W18) — every P0 still `- [ ]` open, zero
+  checked off. (W16's fail-closed ruling and W5's populate-not-design refinements landed on 2026-08-18 as *new* tracked
+  items, not capability landings.) Todo 3 (archive parent) is now unblocked.

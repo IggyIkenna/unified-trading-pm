@@ -275,6 +275,15 @@ pieces, all resolved this session:
 
 ### 1. `reference_position` — per-venue, on the envelope, mismatch reuses `RiskRuleConsequence`
 
+> **CORRECTED 2026-08-19 (later revision, same day) — the shape below is SUPERSEDED.** The operator reviewed this
+> while the client artefact was being drafted and ruled `dict[venue, Decimal]` incomplete: it solves the venue axis
+> (needed for `SOR_AT_EXECUTION`) but not the instrument axis — a strategy instance can hold a universe of many
+> instruments, not one. Operator's own framing: "a chain of them per instrument in the universe, so surely a vector
+> of tuples." The venue-axis reasoning immediately below is NOT wrong, it's nested one level too shallow — see
+> § "The reference triple is a vector per instrument, not a scalar per instruction" further down for the correction
+> and the open questions it raises. Left in place rather than deleted, per this doc's own correct-in-place
+> convention.
+
 **Shape: `dict[venue, Decimal]`, matching `venue_constraints`'s existing shape** — RESOLVED over the alternative of
 requiring `target_venue` to be set, specifically to stay meaningful under `venue_routing_mode: SOR_AT_EXECUTION`,
 where the venue isn't chosen until execution time. Strategy states its believed position on every eligible venue;
@@ -354,6 +363,100 @@ execution-service within that SLA window. If not — "execution-service thinks i
 isn't seeing it" — that is the trigger for a heavier reconciliation pass, separate from and slower than the
 per-instruction instant check, and it must never block or slow down execution-service's own fast path (it is a
 strategy-side, asynchronous watch, not a gate execution waits on).
+
+## The reference triple is a vector per instrument, not a scalar per instruction — corrected 2026-08-19
+
+**Operator ruling, same day, later revision — corrects § "Reference position, credit ownership..." above where it
+conflicts.** While drafting the client-facing artefact, the operator reviewed the `dict[venue, Decimal]` shape
+resolved above for `reference_position` and ruled it incomplete: it solves the venue axis but not the instrument
+axis. A strategy instance can hold a universe of many instruments at once — a single `reference_price`, a single
+`reference_position: dict[venue, Decimal]`, and a single `credit` on the envelope can only ever describe ONE
+instrument's reference state, however the venue axis inside `reference_position` is shaped.
+
+### The shape was already half-right, earlier in this same document
+
+Layer 2's `ExecutionSensitivityEntry` design (§ "The generic contract this session's design settled on," above)
+already proposed exactly this instrument-axis vector, for the price/sensitivity pair:
+
+```
+references: list[{ instrument_id, reference_price, sensitivity_coefficient, second_order_coefficient? }]
+# N=1 is MM/options (one underlying). N=2 is the arb-leg case. A basket/multi-leg options
+# structure is just a longer list — same shape, no later schema rewrite.
+```
+
+The "Reference position, credit ownership..." section, added later the same day, did not build on that list — it
+bolted `reference_position`/`credit` onto the envelope as flat, single-instrument fields instead, quietly
+regressing to the scalar shape Layer 2 had already moved past. That is the actual defect the operator caught, not a
+requirement invented from nothing.
+
+### Proposed shape (illustrative — not finalized; this is what needs resolving, not what's decided)
+
+The natural fix nests `reference_position` and `credit` INTO each entry of the list Layer 2 already proposed,
+keeping the venue axis inside each instrument entry rather than flattening the whole thing:
+
+```
+class InstrumentReferenceEntry:
+    instrument_id: str
+    reference_price: Decimal
+    reference_position: dict[str, Decimal]  # per-venue — the venue-axis resolution above stays correct,
+                                             # just nested one level deeper
+    credit: CreditBand | None = None
+    position_adjustment_bps_per_unit_risk: Decimal | None = None
+    sensitivity_coefficient: Decimal | None = None       # ties back into Layer 2's ExecutionSensitivityEntry
+    second_order_coefficient: Decimal | None = None
+
+# proposed addition to StrategyInstructionEnvelope
+references: list[InstrumentReferenceEntry] = []
+```
+
+Every design decision already made in this doc stays intact — the per-venue dict still exists and still serves
+`SOR_AT_EXECUTION`; `credit` is still optional and still strategy-owned; the symmetric bps-per-unit-risk coefficient
+still applies to RAW position — this just nests them one level under a per-instrument list instead of the flat
+envelope. It is explicitly NOT the final word: which container this list lives on, and how it reconciles against
+`QuoteInstruction.reference_price: Decimal` (currently REQUIRED — narrows the envelope's optional field, a
+single-instrument override that itself assumes a scalar) is unresolved.
+
+### Open questions for the operator — do not resolve unilaterally
+
+12. **Does `references: list[InstrumentReferenceEntry]` live on `StrategyInstructionEnvelope` directly, or does the
+    envelope keep single-instrument convenience fields (today's `reference_price`) for the common N=1 case, with the
+    vector reserved for cases that actually need N>1?** Duplicating the shape in two places is worse than picking
+    one; recommend the vector as the ONE home, with N=1 as the trivial list-of-one case — but `QuoteInstruction`
+    narrowing `reference_price` to required today would need to change too.
+13. **Is the venue axis nested per-instrument (as drafted above), or does the vector need a full
+    `(instrument_id, venue)` cross-product** — can a strategy legitimately hold different believed positions on the
+    SAME instrument across different venues within one instruction's reference state? The existing "hard rule" (one
+    strategy instance executes a given instrument on one venue) suggests nesting is sufficient, but that rule
+    predates the vector shape — worth re-confirming once N>1 instruments are in play.
+14. **Does `credit` vary per-entry, or is one credit policy shared across the whole vector?** Moot for N=1; for the
+    arb-leg N=2 case, do the two legs carry independent thresholds, or one shared band?
+15. **Does the position-mismatch `RiskRuleTrigger` (todo below) fire once per instruction or once per vector
+    entry?** Verified this session: none of the 13 existing `RiskRuleTrigger` subtypes
+    (`/codex/04-architecture/risk-rule-taxonomy.md`) covers a position/reference mismatch — adding one needs a UAC PR
+    regardless of scalar-vs-vector shape, per that doc's own "adding a new trigger requires a UAC PR" rule; the
+    vector shape changes whether the new trigger's required-field shape is per-instruction or per-entry.
+16. **Does `position_adjustment_bps_per_unit_risk` also move per-entry**, now the shape is proven multi-instrument,
+    rather than staying one coefficient for the whole instruction?
+
+Default lean, stated for the record, not as a ruling: the vector is the one home (no envelope-level duplication),
+venue nested per-instrument (not a full cross-product), credit per-entry, the new `RiskRuleTrigger` subtype
+evaluates per-entry, and the adjustment coefficient moves per-entry too — all following the "the vector was already
+right in Layer 2" reasoning above.
+
+## Side-finding: DeFi liquidation monitoring has the same "fast trigger, not slow poll" pattern this issue is about
+
+Verified 2026-08-19 while correcting `codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html`
+§03's `carry_staked_basis` config example per a separate operator ruling — noted here because it's the same lesson
+this whole issue documents (execution-side reaction without a strategy-side round trip), just for DeFi liquidation
+risk. `execution_service/defi_execution/monitors/health_factor_monitor.py`'s `HealthFactorMonitor` (near-block-time
+per-chain poll/WS loop) and `execution_service/algo_library/deleverage_executor.py`'s `DeleverageExecutor`
+(MarginEvent-driven auto-deleverage) are both real, substantial code — but `HealthFactorMonitor(` has zero
+constructor call sites found in execution-service outside its own module this pass, the same "declared-but-unwired"
+shape documented elsewhere in this issue. Separately, `strategy_service/configs/carry_staked_basis.yaml`'s
+`strategy_id` carries a stale `_SCE_1H` suffix — `hold-policy.md` rules DeFi strategies "NEVER SCE"; the config's
+functional `execution_mode: continuous` field is correct, only the id string is wrong, and the same suffix recurs
+across several other DeFi configs (grepped, not exhaustively enumerated). Neither fixed here — strategy-service is
+outside this pass's owned files. Tracked as todos below.
 
 ## Fast-loop cadence vs. strategy's refresh cadence — two different speeds, one already named
 
@@ -479,15 +582,34 @@ POST_ONLY as two independently composable fields.
       should be authored for real if it once existed elsewhere and was lost. **EXTRACTED 2026-08-19
       (na-eligibility-audit, cross-cutting tranche, conflict-check clear)** — see
       `cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md` item 3.
-- [ ] [DESIGN] P1. **Design and add `reference_position: dict[venue, Decimal]` to `StrategyInstructionEnvelope`**,
-      shaped like the existing `venue_constraints` dict so it stays meaningful under `SOR_AT_EXECUTION` routing.
-      Resolved 2026-08-19 (§ "Reference position, credit ownership..." above) — this todo is the implementation.
-- [ ] [BACKEND] P1. **Wire `reference_position` mismatch as a `RiskRuleTrigger`** consumed by
-      `preflight_gate.py`, reusing the existing `RiskRuleConsequence` vocabulary (`BLOCK`/`SCALE_DOWN`/`MONITOR`/
-      `TEST_ONLY`), default consequence `BLOCK`. No new decision model — resolved 2026-08-19.
+- [ ] [DESIGN] P1. **SUPERSEDED 2026-08-19 (later revision, same day).** ~~Design and add
+      `reference_position: dict[venue, Decimal]` to `StrategyInstructionEnvelope`~~ — the scalar-per-instruction
+      shape was ruled wrong (see § "The reference triple is a vector per instrument..."); the venue-axis reasoning
+      survives, nested one level deeper inside a per-instrument vector. Superseded by the next todo.
+- [ ] [DESIGN] P1. **Design `InstrumentReferenceEntry` + `references: list[...]`** on `StrategyInstructionEnvelope`
+      (or reconcile it with Layer 2's `ExecutionSensitivityEntry.references`, which already proposed this exact
+      per-instrument list shape) — resolves judgment calls 12-16. Must reconcile against
+      `QuoteInstruction.reference_price: Decimal`'s existing required-field narrowing.
+- [ ] [BACKEND] P1. **Wire the position-mismatch check as a `RiskRuleTrigger`** consumed by `preflight_gate.py`,
+      reusing the existing `RiskRuleConsequence` vocabulary (`BLOCK`/`SCALE_DOWN`/`MONITOR`/`TEST_ONLY`), default
+      `BLOCK`. **Note 2026-08-19 (later revision): scoped per-entry of the `references` vector (judgment call 15),
+      not per-instruction — verified none of the 13 existing `RiskRuleTrigger` subtypes covers this, so it needs a
+      UAC PR, not a pure consumption of an existing subtype.**
+- [ ] [BACKEND] P2. **Add a `position_mismatch` `RiskRuleTrigger` subtype via a UAC PR** — verified 2026-08-19 that
+      none of the 13 existing typed subtypes (`/codex/04-architecture/risk-rule-taxonomy.md`) covers a
+      reference-position mismatch; the closed union requires a UAC PR to extend, per that doc's own anti-patterns
+      section (`unified_api_contracts/canonical/crosscutting/risk_rule/_triggers.py`).
 - [ ] [DESIGN] P2. **Design the generic per-position adjustment field** (one symmetric bps-per-unit-of-risk
       coefficient, applied against the RAW single-instrument/single-venue position) on the shared envelope,
-      generalizing off `QuoteInstruction.skew_on_inventory` rather than inventing new shape. Resolved 2026-08-19.
+      generalizing off `QuoteInstruction.skew_on_inventory` rather than inventing new shape. **Note 2026-08-19 (later
+      revision): now likely per-vector-entry (judgment call 16), not per-instruction — unresolved.**
+- [ ] [AGENT] P2. **Trace whether `HealthFactorMonitor`/`DeleverageExecutor` are wired to a real production
+      entrypoint** (service bootstrap constructing the monitor per-chain; a real Pub/Sub subscription calling
+      `deleverage_executor.handle()`) or are declared-but-unwired like the rest of this issue's findings.
+- [ ] [BACKEND] P3. **Fix the stale `_SCE_1H` suffix on DeFi strategy_ids** (`carry_staked_basis.yaml` and siblings)
+      — DeFi is never SAME_CANDLE_EXIT per `hold-policy.md`; rename to the correct hold-policy abbreviation across
+      the config, `close_all/__init__.py`'s dispatch dict, and `close_all/carry_staked_basis.py`'s `STRATEGY_ID`
+      constant together (a rename needs every consumer migrated in the same change).
 - [ ] [DESIGN] P3. **Stub — do NOT build — the cross-instrument fast-path position-impact approximator** in
       execution-service (estimates how a fill in instrument B should move the acceptable adjustment on instrument
       A, for non-fungible pairs only: cross-chain staked-basis legs, cross-term/cross-strike options). This is
@@ -535,3 +657,19 @@ execution's fast path. Also confirmed: all of this sits at the same intent-vs-me
 policy decides mechanics within them. 6 new todos added. Nothing built yet; this session's output is design only.
 `codex/14-customer-journeys/commercial-model/strategy-service-deep-dive.html` §02 is being updated to reflect this
 as explicit target-state (`planned`/`assumed` grading), not as a live claim.
+
+**2026-08-19 — corrected per two operator rulings while updating the client-facing artefacts.** (1) The
+`reference_position`/`credit` shape resolved earlier the same day was WRONG: it solved the venue axis but not the
+instrument axis. Corrected in § "The reference triple is a vector per instrument, not a scalar per instruction" —
+folds `reference_position`/`credit` into the `references: list[...]` shape Layer 2 already proposed, rather than
+the flat envelope fields added later. 5 new judgment calls (12-16), none resolved, explicit default leans stated.
+Verified along the way: none of the 13 existing `RiskRuleTrigger` subtypes covers a position mismatch — a new
+subtype needs a UAC PR, not just consumption of an existing one. (2) While correcting the artefact's
+`carry_staked_basis` config example (a separate operator ruling — the example wrongly implied same-candle-exit),
+verified the real DeFi liquidation-trigger path: `HealthFactorMonitor` (near-block-time per-chain monitor) and
+`DeleverageExecutor` (MarginEvent-driven auto-deleverage) are real code, decoupled from the strategy's own `1h`
+config timeframe (which is a feature/backtest bar resolution, not a risk cadence) — but `HealthFactorMonitor`
+appears to have zero production callers in this pass. Also found: the config's `_SCE_1H` strategy_id suffix is
+stale (DeFi is never SAME_CANDLE_EXIT per `hold-policy.md`); the functional `execution_mode: continuous` field is
+correct. Neither the wiring gap nor the naming mismatch was fixed here (out of this pass's owned files); both
+tracked as new todos. Nothing in either correction was built — design/finding only.

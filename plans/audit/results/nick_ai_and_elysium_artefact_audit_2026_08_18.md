@@ -385,3 +385,9 @@ evidence-tier `.ev-*` legend + `.own` owner marks in both files), all 14 cited S
 9/11). `status` flipped `partial`→`pass` (the audit-result status enum is `fail/partial/pass`) — this marks the two audited walkthroughs' findings addressed, NOT the
 underlying system gaps (W5/W10/W12/W13/W16/W17/W18) the parent plan cross-references, which remain tracked and open
 in `system_readiness_master.md` / `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`.
+
+**2026-08-19 (slot 1)** — Landed here independently via `client_artefact_remediation_elysium_finalize_2026_08_18.md`
+item 3, at the same time as the broader parent-level finalize pass above; that pass's reconciliation is a superset
+(covers both artefacts + a `status` flip) of what this session's own edit would have added, so this session's
+redundant table edit was dropped on rebase in favor of the parent pass — see that plan's own Progress Log for the
+resulting checkbox citation.

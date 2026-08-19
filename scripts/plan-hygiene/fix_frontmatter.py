@@ -314,6 +314,19 @@ def _is_issue_path(fp: pathlib.Path) -> bool:
     return "/plans/active/issues/" in str(fp.resolve()).replace("\\", "/")
 
 
+def _is_audit_result_path(fp: pathlib.Path) -> bool:
+    """Path-derived doc_type check — a doc under plans/audit/results/ or plans/audit/instructions/
+    IS an audit-result/audit-instruction doc, never plan-shaped. This fixer has no audit-aware
+    branch: `fix_active_plan()` unconditionally hints `doc_type_hint="plan"` for anything outside
+    `_is_issue_path`, which strips `date` (DEPRECATED_PLAN_FIELDS, but `Req.R` on audit-result per
+    docspec.py's FIELD_SPECS) and injects plan-only fields (execution_scope/priority/
+    drift_direction/depends_on/locked_by — none of which exist in the audit-result/audit-instruction
+    schema) — confirmed live corrupting `plans/audit/results/*.md` docs that quality-gates.sh's
+    changeset-scoped fixer call picks up (`_fm_doc_trees` includes `plans/audit/results/*.md`)."""
+    p = str(fp.resolve()).replace("\\", "/")
+    return "/plans/audit/results/" in p or "/plans/audit/instructions/" in p
+
+
 def derive_created_from_filename(filename: str) -> str | None:
     """Extract date from filename pattern *_YYYY_MM_DD.md."""
     stem = filename.replace(".md", "")
@@ -828,6 +841,10 @@ def fix_active_plan(fp: pathlib.Path) -> bool:
     result = parse_frontmatter_blocks(text)
     if result is None:
         print(f"  SKIP {fp.name}: no frontmatter block detected")
+        return False
+
+    if _is_audit_result_path(fp):
+        print(f"  SKIP {fp.name}: audit-result doc — no audit-aware defaults; fix by hand per docspec.py")
         return False
 
     # REFUSE-ON-UNPARSEABLE (2026-07-20): never mechanically edit a doc whose YAML is already

@@ -177,6 +177,22 @@ affected detectors (`DP-LIVE-004`/`live_stream_watcher`, `DP-WATCHER-002`/`cron_
 both already have source-side renag_tracker wiring per the codebase's existing pattern, so their
 repeat-firing is downstream-only and depends entirely on this doc's root cause getting fixed.
 
+> **CORRECTION (2026-08-19, data_pipeline_failure escalation worker, slot 4, agt-010efb):** the claim
+> immediately above — that DP-LIVE-004 already has source-side renag_tracker wiring — is FALSE, confirmed
+> by direct code read (not inference): `check_live_capture_productivity`
+> (`deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py:542-551`) takes only
+> `miss_tracker` (onset-gate only) — no `renag_tracker` parameter exists on the function at all — and its
+> `cli.py:899-910` call site does not pass one either, unlike the DP-LIVE-003 call site three lines above it
+> (`cli.py:889-896`), which explicitly passes `renag_tracker=renag_tracker`. DP-LIVE-004 therefore re-emits on
+> EVERY sweep once a shard crosses `min_consecutive` misses, with zero source-side suppression, relying
+> entirely on the downstream alerting-service dedup layer this doc is chasing bugs in. New P2 todo added below
+> to close this gap (DP-WATCHER-002's wiring status was not re-checked this session — scoped to DP-LIVE-004
+> only). Separately, also confirmed `check_live_capture_productivity` hardcodes
+> `severity="CRITICAL", tier=EscalationTier.PAGE_OPERATOR` for every finding (:596-598), which contradicts
+> `/codex/05-infrastructure/data-pipeline-alerts.md`'s registry row for DP-LIVE-004 (🟠 WARN, "auto-recover
+> (visibility only)") — flagged only, not changed (ambiguous which side is stale; a severity/tier change is a
+> design decision, not a small/clear fix).
+
 ## Todos
 
 - [x] ✅ [SCRIPT] P1. Wire `RenagTracker`/`apply_cooldown` into `missing_live_producer_watcher`
@@ -202,17 +218,87 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
       re-sample deferred, not yet done this session** — the doc's own verify bar (≥2 observed redeploys
       within one 30-min cooldown window post-fix) needs a follow-up dispatch once `dp-alerting-subscriber`
       picks up this deploy; tracked as the new todo below rather than closed on unit-test evidence alone.
-- [ ] [SCRIPT] P2. **ADDED 2026-08-19** — live-verify the `RecurringCooldownState` fix
-      (`alerting-service@f48a61193f`) actually holds a `DP_CRON_DID_NOT_FIRE`/`DP_RUN_MOSTLY_EMPTY`/
-      `CONSOLIDATOR_DOWN` cooldown across a real `dp-alerting-subscriber` redeploy: confirm the deploy
-      reached `dp-alerting-subscriber` (`gcloud run revisions list`, digest/content-check per this doc's
-      own established discipline — not SHA-ancestor alone, Option-B direct-promote rewrites commits),
-      then sample the SAME previously-repeat-firing identity (BYBIT-FUTURES on
-      `mtds-live-cefi-consolidated-*`, or whatever is currently firing) across ≥2 observed redeploys
-      within one 30-min window and confirm it stays suppressed for the full cooldown instead of
-      re-firing on every redeploy. Also spot-check `alerting/state/cooldowns.json` in the
-      `alerting-service-<project>` bucket actually gets written (confirms the wiring reaches real GCS,
-      not just the unit-test-mocked path). Repo: alerting-service.
+- [x] ✅ [SCRIPT] P2. **RESOLVED 2026-08-19 (data_pipeline_alerts_reconciler, slot 30, agt-6764e9)** —
+      live-verified the `alerting-service@f48a61193f` fix does NOT actually hold the cooldown, root-caused
+      why, and shipped the fix. `slack-read-channel.py data-pipeline-alerts 24` (2026-08-19, ~19:00Z) still
+      showed `DP_CRON_DID_NOT_FIRE` firing 2,516 times/24h across 39 distinct (vm, venue, data_type)
+      identities — e.g. `mtds-live-tradfi-cme-trades-20260809-163443`/CME/trades fired 63x with a
+      13.6-45.7min interval (avg 23min), and even restricted to ONLY fires after the `-00130` revision's
+      `06:16:07Z` deploy (36 fires, `06:21Z`-`20:35Z`), the avg interval was still 24.4min — well under the
+      1800s (30min) cooldown, 14h+ post-deploy. Root cause (NEW, distinct from every prior
+      investigation's hypothesis in this doc): `RecurringCooldownState.record()`
+      (`alerting_service/core/recurring_dedup_persistence.py`) persisted cooldown state via a BLIND
+      full-blob overwrite — `write_cooldown_state(dict(self._last_emitted_at))` — of only the calling
+      process's own local `_last_emitted_at` cache, which is loaded ONCE per process/container lifetime
+      (`_ensure_loaded()`). Any concurrent process with a divergent local view (old+new Cloud Run revision
+      overlapping during a redeploy, or two sibling in-flight requests within the same revision) has its
+      OWN just-recorded identities silently dropped the moment the OTHER process's write lands —
+      defeating the cooldown for exactly those identities, the same failure shape as the pre-GCS
+      in-process-only dict this fix was built to replace, just intermittent instead of total (which
+      explains this doc's own confusing prior samples: "some identities show continued leaking post-deploy,
+      others show clean compliant cadence" — that split IS the race, not measurement noise). This also
+      explains why the mixed-result 2026-08-19 slot-21 sample above could not resolve the discrepancy by
+      tracing one identity's hash — the bug isn't per-identity, it's a write-write race across ALL
+      identities sharing the same `cooldowns.json` blob.
+      Fix: `record()` now re-reads `read_cooldown_state()` and merges before writing, instead of writing
+      only its own local cache — closes the lost-update window (a residual read-then-write race between
+      two SIMULTANEOUS writers remains possible but self-heals within one cycle, unlike the prior
+      guaranteed-clobber-on-every-write design). Same shared `RecurringCooldownState` layer backs
+      `DP_RUN_MOSTLY_EMPTY` (369 fires/24h) and `DP_VM_EXIT_NONZERO` (124 fires/24h) too, so this fix
+      applies to all `_RECURRING_ALERT_COOLDOWNS`-eligible events, not just `DP_CRON_DID_NOT_FIRE`.
+      Evidence: `alerting-service@ac21303714`, `quality-gates.sh --no-fix` ALL GATES PASSED (52s, full
+      suite incl. 2 updated/new regression tests in `tests/unit/test_recurring_dedup_persistence.py`
+      proving a blind overwrite would have dropped a sibling instance's recorded identity and the merge
+      fix prevents it); verified `ac21303714` is an ancestor of `origin/live-defi-rollout` post-push.
+      **Live-behavior re-verification not done this session** (would need to wait out a fresh ≥30min
+      post-deploy window, out of scope for a one-shot reconciler dispatch) — tracked as the new todo below
+      for the next `/data-pipeline-alerts-reconcile` sweep (fires every 6h) to confirm.
+- [ ] [SCRIPT] P2. **ADDED 2026-08-19 (data_pipeline_alerts_reconciler, slot 30)** — after
+      `alerting-service@ac21303714` (the merge-before-write fix above) reaches a live
+      `dp-alerting-subscriber` revision (`gcloud run revisions list`, content-check not SHA-ancestor
+      alone), re-sample `DP_CRON_DID_NOT_FIRE`'s fire interval for any currently-repeat-firing identity
+      over a window that spans ≥2 real redeploys (or, if redeploys have quieted down, just confirm the
+      interval is now consistently ≥1800s for at least 2 consecutive fires) and confirm it no longer dips
+      below the 1800s cooldown the way this todo's own evidence showed pre-fix. Also spot-check
+      `alerting/state/cooldowns.json` in the `alerting-service-<project>` bucket contains entries for
+      multiple DIFFERENT identities recorded close together in time (proof the merge, not a last-write-wins
+      overwrite, is what's live). If the storm persists even after this fix, the residual
+      simultaneous-writers race (two processes reading-then-writing in the same instant) may need a real
+      compare-and-swap (GCS `if_generation_match`) rather than read-then-write — note that as the next
+      escalation if so. Repo: alerting-service.
+- [ ] [CODE] P2. **ADDED 2026-08-19 (data_pipeline_failure escalation worker, slot 1, agt-1e37b1)** —
+      NEW, previously-unchecked candidate root cause found for the SPORTS-ODDS slice of this VM's
+      DP-LIVE-004 burst specifically (`mtds-live-sports-odds-api-odds-20260816-145019`, this dispatch's
+      sampled venue=MYBOOKIEAG data_type=odds "never captured"): the LIVE `OddsApiWSFeedConnector`
+      (`market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py`) polls The
+      Odds API with `regions="uk,us"` (`_DEFAULT_REGIONS`) — a REGION-based filter that returns EVERY
+      bookmaker The Odds API has for those regions, unfiltered. The BATCH adapter
+      (`market_interface/adapters/sports/odds_api_adapter.py`) instead sends an explicit curated
+      `bookmakers=` list, `REQUESTED_ODDS_API_BOOKMAKERS` (mirrored in UAC's
+      `unified_api_contracts/registry/sports_bookmaker_league_coverage.py`) — and that list does
+      **NOT** include `mybookieag` (nor several other bookmakers this VM's own burst already named:
+      lowvig, betus, bovada, betfred_uk, grosvenor, betano_uk, leovegas, bet888sport, fanatics,
+      boylesports, betway, betmgm — see the 2026-08-19 slot-10/slot-14 Progress Log entries above for
+      the full ~30-venue list). The batch-side docstring is explicit that the REQUESTED list is "the
+      only defensible basis for a per-bookmaker EXPECTATION" and that treating an un-requested book as
+      expected "manufactures false honest-absence" — the live connector's region-based fetch has no
+      equivalent scoping, so it can attempt-and-never-capture bookmakers the rest of the system never
+      considers in-scope. **NOT YET CONFIRMED as the actual mechanism** — `check_live_capture_
+      productivity`'s `(venue, data_type)` grouping reads real `attempted_at` rows off a CONSOLIDATED
+      per-VM manifest shard (`live_stream_watcher.py::_read_vm_shard_group_activity`), a different blob
+      than the per-instrument leaf parquets `live_tick_blob_path` writes, and this dispatch did not
+      trace how/whether that consolidated shard's `venue=MYBOOKIEAG` row is populated (i.e., did not
+      rule out honest-absence: MYBOOKIEAG may simply list zero markets for every fixture this VM is
+      currently tracking, which `_parse_fixture_response` correctly turns into zero ticks — genuinely
+      no bug). Next dispatch: (1) read the consolidated per-VM shard for this exact VM (bucket/blob via
+      whatever builds `LiveVmShard` in `deployment-service/deployment_service/data_pipeline_monitors/`)
+      and check the raw `capture_status` distribution for `venue=MYBOOKIEAG`/`LOWVIG`/`BETUS` rows —
+      if they show real `attempted_failed`/similar rows (not just absence), that confirms a live-vs-batch
+      scope divergence bug; (2) if confirmed, fix by either scoping `OddsApiWSFeedConnector` to the same
+      `REQUESTED_ODDS_API_BOOKMAKERS` list (via `bookmakers=` instead of `regions=`, matching the batch
+      adapter's own cheaper-cost pattern) or by adding the out-of-scope bookmakers to the requested list
+      if they should genuinely be captured. Did not attempt a code fix this session — unconfirmed
+      mechanism, `does_not: guess at an ambiguous fix`. Repo: market-tick-data-service.
 - [x] ✅ [OPERATOR] P1. (carried over) Investigate the 2 genuine live-capture stalls first
       flagged 2026-08-17 (BYBIT-FUTURES on `mtds-live-cefi-consolidated-20260817-025031`; CME
       trades on `mtds-live-tradfi-cme-trades-20260809-163443`) — both VMs running, both
@@ -255,6 +341,17 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
         follow-up todo (verify a real `captured` row post-relaunch, since this VM needs a
         fresh cycle to pick up the new code — not blocking this todo's resolution, the code
         fix itself is what this todo asked for).
+- [ ] [CODE] P2. **ADDED 2026-08-19 (data_pipeline_failure escalation worker, slot 4, agt-010efb)** —
+      wire `RenagTracker`/`apply_cooldown` into `check_live_capture_productivity` (DP-LIVE-004,
+      `deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py:542`), mirroring
+      the exact pattern already shipped for DP-LIVE-003 in `missing_live_producer_watcher.
+      check_missing_live_producers` (`deployment-service@9abb2d20e4`) — add a `renag_tracker` param to the
+      function signature, pass it through from the `cli.py:899-910` call site (which currently omits it,
+      unlike the DP-LIVE-003 call site 3 lines above), and gate the `emit_finding()` call on
+      `renag_tracker.apply_cooldown(...)` so a shard past `min_consecutive` misses re-nags on a 1800s cooldown
+      instead of re-firing every sweep. Source-side defense-in-depth, independent of (and does not replace)
+      the alerting-service GCS-persistence fix this doc already tracks — closes the corrected claim above.
+      Confirmed by direct code read, not a guess. Repo: deployment-service.
 
 ## Progress Log
 
@@ -391,3 +488,83 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   worktree confirmed clean (`git status` on `live-defi-rollout`, 0 ahead) both before and after, no code change
   needed or shipped here. Did not re-ping the authoring slot (`dp-fleet-monitor` is not a numeric slot id — no
   real originator to notify per the boot-prompt's skip rule). Completing via `/done`.
+- **2026-08-19 (data_pipeline_alerts_reconciler, slot 30, agt-6764e9, scheduled 6-hourly sweep)**: found this
+  doc via the pre-task plan/issue conflict check while running `/data-pipeline-alerts-reconcile`. Fresh
+  `slack-read-channel.py data-pipeline-alerts 24` (3,041 msgs/24h: 2,516 `DP_CRON_DID_NOT_FIRE`, 369
+  `DP_RUN_MOSTLY_EMPTY`, 124 `DP_VM_EXIT_NONZERO`, plus single-digit counts of 8 other event types) confirmed
+  the storm continues well past the `-00130` deploy this doc already traced. Root-caused the actual mechanism
+  (see the flipped P2 todo above): `RecurringCooldownState.record()` performed a blind full-dict overwrite of
+  `cooldowns.json` using only the calling process's own local cache, so any concurrent writer (redeploy
+  overlap, or two in-flight requests on the same revision) clobbers the other's freshly-recorded identities —
+  this is a NEW, distinct root cause from every earlier hypothesis in this doc, and explains the "some
+  identities compliant, some still leaking" mixed-sample pattern the 2026-08-19 slot-21 entry logged as
+  inconclusive. Shipped `alerting-service@ac21303714` (`record()` now re-reads + merges durable state before
+  writing) with 2 updated/new regression tests; `quality-gates.sh --no-fix` ALL GATES PASSED (52s);
+  `quickmerge --agent` landed clean, post-push ancestry verified against `origin/live-defi-rollout`. Did not
+  wait out a live post-deploy window to re-confirm compliance (one-shot dispatch, ~30min+ observation is out
+  of scope) — added a fresh P2 todo for the next scheduled sweep (fires every 6h) to close the loop. No new
+  DP-`*` registry entry needed (same already-registered `DP_CRON_DID_NOT_FIRE`/`DP_RUN_MOSTLY_EMPTY`/
+  `DP_VM_EXIT_NONZERO` event names, same already-documented dedup-defeat failure class — this is a fix to
+  the mechanism, not a newly discovered alert type). Completing via `/done`.
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 1, agt-1e37b1)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-sports-odds-api-odds-20260816-145019
+  venue=MYBOOKIEAG data_type=odds` (no issue slug — alert-carries-the-details path). Confirmed this is the
+  SAME VM the 2026-08-19 slot-10/slot-14 dispatches already logged firing across ~30 distinct sports-odds
+  bookmaker venues in one burst (MYBOOKIEAG explicitly named in that list) — a duplicate/spam symptom of
+  THIS doc's already-open root cause, not a new failure mode; did not file a separate issue doc, per the
+  established pattern. Went one step further than the prior sports-odds dispatches by tracing the actual
+  live-vs-batch fetch-scope code: found a genuine, previously-unchecked discrepancy — the live
+  `OddsApiWSFeedConnector` fetches via `regions=uk,us` (unfiltered, returns every bookmaker in-region) while
+  the batch adapter and its UAC-mirrored expected-universe both scope to an explicit curated `bookmakers=`
+  list (`REQUESTED_ODDS_API_BOOKMAKERS`) that does NOT include `mybookieag` or several other bookmakers named
+  in the same burst (lowvig, betus, bovada, betfred_uk, grosvenor, betano_uk, leovegas, bet888sport, fanatics,
+  boylesports, betway, betmgm). Filed this as a new P2 todo above rather than guessing a fix — could not
+  confirm within this dispatch whether the consolidated per-VM manifest shard `check_live_capture_
+  productivity` actually reads (a different blob than the per-instrument leaf parquets this repo's own
+  `live_tick_blob_path` writes) shows real `attempted_failed`-shaped rows for these out-of-scope bookmakers
+  (a genuine live-vs-batch scope bug) versus MYBOOKIEAG simply listing zero markets for every currently-
+  tracked fixture (honest absence, `_parse_fixture_response` already handles that correctly by emitting no
+  tick). No code changes shipped this session (repo: market-tick-data-service; unconfirmed mechanism,
+  `does_not: guess at an ambiguous fix`). Did not re-attempt the alerting-service P2 live-reverify todo
+  (out of this dispatch's assigned repo). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id, so
+  skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
+  covered that FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 4, agt-010efb)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-sports-odds-api-odds-20260816-145019
+  venue=LADBROKES data_type=odds` (no issue slug — alert-carries-the-details path). Confirmed this is the SAME
+  VM + burst already logged by the 2026-08-19 slot-10/slot-14/slot-1 dispatches above — LADBROKES is explicitly
+  named in slot-10's ~30-venue burst list — a duplicate/spam symptom of THIS doc's already-open root cause, not
+  a new failure mode; did not file a separate issue doc, per the established pattern. Unlike the MYBOOKIEAG-class
+  venues the slot-1 dispatch flagged, LADBROKES IS in-scope: it appears in the batch adapter's curated bookmaker
+  list (`market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:128`, `"ladbrokes_uk"`),
+  so the slot-1 region-vs-bookmakers scope-mismatch theory does not explain this specific venue's alert —
+  LADBROKES would already be included in the live connector's unfiltered `regions=uk,us` fetch too.
+
+  Went one step further than the prior duplicate-confirmations by reading the actual DP-LIVE-004 detector code
+  (`deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py::check_live_capture_
+  productivity`, `cli.py:899-910` call site) to verify this doc's own "Also shipped this sweep" claim that
+  "both already have source-side renag_tracker wiring" (DP-LIVE-004/DP-WATCHER-002). **That claim is FALSE for
+  DP-LIVE-004, confirmed by direct code read, not inference**: `check_live_capture_productivity`'s signature
+  (`live_stream_watcher.py:542-551`) takes only `miss_tracker` (onset-gate only, no re-nag cooldown) — no
+  `renag_tracker` parameter exists at all — and its `cli.py` call site (:899-910) does not pass one either,
+  unlike the DP-LIVE-003 call site three lines above it (:889-896), which explicitly passes
+  `renag_tracker=renag_tracker`. Once a shard crosses `min_consecutive` misses, `check_live_capture_
+  productivity` re-emits on EVERY subsequent sweep with no source-side suppression — it relies entirely on the
+  downstream alerting-service dedup layer this doc is already chasing bugs in. Separately confirmed: the
+  detector hardcodes `severity="CRITICAL", tier=EscalationTier.PAGE_OPERATOR` (:596-598) for every DP-LIVE-004
+  finding, which contradicts `/codex/05-infrastructure/data-pipeline-alerts.md`'s own registry row for
+  DP-LIVE-004 (🟠 WARN, "auto-recover (visibility only)") — flagged, not changed (ambiguous whether the
+  registry doc or the code is the stale side; a severity/tier change is a design decision, not a small/clear
+  fix, `does_not: guess at an ambiguous fix`).
+
+  Corrected the doc's own stale claim inline (banner above "Also shipped this sweep") and added a new P2 todo
+  for the DP-LIVE-004 renag_tracker wiring (mirrors the already-proven DP-LIVE-003 fix pattern exactly —
+  low-risk, additive, does not change detection or severity, only re-fire cadence). Did not attempt the fix
+  myself this session: non-trivial (signature change + cli.py wiring + new tests + a full deployment-service
+  `quality-gates.sh` cycle), outside my assigned repo (`market-tick-data-service`), and this exact issue doc has
+  had 4+ concurrent/recent dispatches touching alerting-service/deployment-service in the last day — real
+  collision risk for an uncoordinated same-day fix, per findings-triage "fits another plan → annotate, don't
+  fix". No code changes shipped this session (repo: market-tick-data-service — no MTDS-side bug found; worktree
+  confirmed clean, 0 ahead, before and after). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id,
+  so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
+  covered the FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.

@@ -21,7 +21,7 @@ summary:
   this session did not have access to. Given the size (92k lines combined) and the risk of silently breaking referential
   integrity (edges pointing at a deleted node) from a manual JSON patch without the actual generator, this was triaged
   as a big cross-repo finding to flag rather than hand-edit blind.'
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [meta]
@@ -45,7 +45,7 @@ source:
   code, adaptors, manifest, gcs, everything." Discovered as a side-finding while fixing the TreasuryTab
   SUB_ACCOUNT_DRIFT dropdown bug in deployment-ui (the 12th repo the operator''s fleet grep caught).'
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-api-contracts@1df9aca7 (2026-08-19, slot-7) — sole open todo, prospectus regen
 locked_by:
 context_scope: [scripts/openapi/generate_strategy_prospectus.py, unified-api-contracts/openapi/prospectus, /codex/06-coding-standards/script-homes.md, /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md]
 execution_scope: orchestrator-agent # was local-only — corrected 2026-08-18 (plan_reconciler): this doc flipped
@@ -56,6 +56,11 @@ estimate_baseline_ai_days: 0.5
 drift_direction: advance-code
 depends_on: []
 ---
+
+> **🗄️ ARCHIVED 2026-08-19** — sole open todo `[x]` (unified-api-contracts@1df9aca7, prospectus regen); no
+> `locked_by`; no new codex contract established by this mechanical regen (the "source wins" ruling this todo executed
+> was already codified in this doc's own 2026-08-08 Progress Log entry, not a fresh contract). Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # deployment-ui capability bundle still shows DRIFT as a live venue
 
@@ -368,7 +373,7 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 
 ## Todos
 
-- [ ] [SCRIPT] P2. **Run `generate_strategy_prospectus.py` against current `unified-api-contracts` HEAD, review the diff
+- [x] ✅ [SCRIPT] P2. **Run `generate_strategy_prospectus.py` against current `unified-api-contracts` HEAD, review the diff
       (expected large: many unrelated-axis differences plus 2 wholly missing archetypes, `CARRY_FUNDING_DISPERSION` and
       `TSMOM_BTC_CTA`), confirm the 2 missing archetypes land correctly and nothing else looks structurally wrong (a
       `[MACHINE-DERIVED]`/`[CODEX-DERIVED]` header on every file, no truncated sections), then commit all 57 (or 59,
@@ -445,3 +450,18 @@ below is untouched (out of scope — DRIFT-specific, unrelated to this GMX pass)
 
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **2026-08-19 (slot-7) — sole open todo SHIPPED.** Dry-ran `generate_strategy_prospectus.py --uac-root
+  unified-api-contracts --output-dir <scratch>` first per this doc's own established caution. Found **3** new
+  archetypes, not the 2 the todo anticipated: `ARBITRAGE_SPORTS_DUTCHING` (a sports archetype added since this todo
+  was drafted) alongside the expected `CARRY_FUNDING_DISPERSION`/`TSMOM_BTC_CTA` — total archetype count is now 60,
+  not 57/59. All 60 render cleanly: 0 `missing_codex` (every archetype now has a codex doc — an improvement over the
+  doc's 2026-07-16-era gap), every file carries `[MACHINE-DERIVED]`/`[CODEX-DERIVED]` headers, no truncated sections,
+  no empty files. Reviewed the diff on all 57 previously-committed files: large as expected — venue-category
+  reclassification (CEFI+DEFI vs DEFI-only per archetype), refreshed execution-algorithm lists (including intentional
+  `Selector contradiction: ...` diagnostic strings sourced live from the manifest, not generator corruption),
+  gap-tracker path updates (`plans/active/issues/...` → `plans/archive/2026_08/issues/...`, reflecting docs archived
+  since), and markdown table/fence formatting normalization. The one non-generated file in the directory,
+  `prospectus-codex-audit.md`, was left untouched (confirmed via `git status`). Copied the 60 scratch files over the
+  committed set, committed all 60 as one `unified-api-contracts` change, Pass-1 `quality-gates.sh` green (256s,
+  sentinel matches HEAD), shipped via `quickmerge --agent --files 'openapi/prospectus/*.md'`, post-push ancestry
+  verified. **Shipped: `unified-api-contracts@1df9aca7`.**

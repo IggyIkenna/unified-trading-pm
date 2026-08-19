@@ -88,6 +88,10 @@ silently treated as clean.
 
 ### Finding D1 — "ClearLoop" named 6 times in `strategy-service-deep-dive.html`
 
+> **Resolved 2026-08-19 (slot 10, review)** — independent `rg -i clearloop` on the live file (fresh-pulled to
+> `aa5cd6a94f`) returns 0 hits; the only remaining corpus hit is the internal non-client-facing
+> `elysium-carveout-deferral-message-2026-08-11.md`, out of client-artefact scope.
+
 ```
 strategy-service-deep-dive.html:620   "...Copper, whose ClearLoop service lets collateral be traded at a venue..."
 strategy-service-deep-dive.html:633   SVG alt text: "...which for Copper includes ClearLoop mirroring collateral..."
@@ -111,6 +115,10 @@ escalation about wording, explicitly **not** a licence to keep the wording as-is
 in-scope client-facing content. **This is the single highest-confidence finding in this audit.**
 
 ### Finding D2 — a performance figure (vague but real) repeated across two documents
+
+> **Resolved 2026-08-19 (slot 10, review)** — 0 hits for the "consistent positive annualised returns" phrase in
+> either file; the 4 remaining `annualised` occurrences in `platform-architecture.html` are metric labels / a
+> market-fact borrow rate / methodology notes, not performance claims.
 
 `elysium_carveout_stubbed_strategy_service_2026_08_12.md` §C states the one hard prohibition on the Elysium
 artefacts: *"No performance figure anywhere until the overlays land. The research Sharpe belongs to the 8-overlay
@@ -152,6 +160,10 @@ they sit close to the line.
 
 ### P0 — `platform-architecture.html` asserts a Solana/Drift staked-basis capability that does not exist
 
+> **Resolved 2026-08-19 (slot 10, review)** — the present-tense "runs on Solana against Drift, posting jitoSOL and
+> mSOL" paragraph is gone (cut outright); 0 `mSOL` / `Drift`-DEX hits, and the one residual `jitoSOL` mention
+> (line 1332) is a hedged "requires the perp venue to accept them first" boundary note, not a capability claim.
+
 ```
 platform-architecture.html:1232-1237
   "Worth noting what the same machinery does elsewhere, because it is the clearest evidence that the venue layer
@@ -183,6 +195,10 @@ on this point, and `platform-architecture.html` is the one that is wrong.
 
 ### P0 — `strategy-service-deep-dive.html` §05/§07 repeats the completed audit's highest-severity transfer-wiring finding, undisclosed
 
+> **Resolved 2026-08-19 (slot 10, review)** — §07 now carries an inline caveat ("Transfer netting and custody
+> routing … are not yet wired end-to-end in production — see the caveat in §05"), and §05's pipeline is graded
+> `planned`/`partial`; the overstatement is now disclosed rather than presented unconditionally.
+
 The completed first-pass audit's top P0 finding for `strategy-service-walkthrough.html` was: *"§11 'Automated
 movement' overstates reachability — no production transfer path exists"* — verified against
 `execution-service/execution_service/transfer_coordinator.py` that only `SUBACCOUNT_MOVE` auto-registers a handler,
@@ -208,6 +224,10 @@ document no active remediation plan currently covers.
 
 ### P1 — `platform-architecture.html` presents a "reserve ratio" capital mechanism with no confirmed code behind it
 
+> **Resolved 2026-08-19 (slot 10, review)** — §10 is now graded `partial` + `~ assumed`, so the 20%/10%/30%
+> thresholds are no longer presented as confirmed. The underlying "does reserve-ratio behaviour exist" verification
+> (`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` §H.15) remains a separate open todo.
+
 ```
 platform-architecture.html:1175
   "reserve ratio     target ≈ 20%   ·   floor ≈ 10%   ·   ceiling ≈ 30%   (configurable)"
@@ -225,6 +245,10 @@ passage is a strong candidate for being that exact draft — flagging it here so
 against the right source.
 
 ### P2 — the invented "DeFi liquidity provision" strategy-family label recurs, uncorrected, in two sibling documents
+
+> **Resolved 2026-08-19 (slot 10, review)** — "DeFi liquidity provision" returns 0 hits in both files; "liquidation
+> capture" no longer appears as a family name (the one residual hit, line 1397, is a correct archetype descriptor
+> under the real `ARBITRAGE_STRUCTURAL` family, and the real 9-family table is now present).
 
 The completed audit's clearest single finding was that `strategy-service-walkthrough.html` invented a
 non-existent "Liquidity provision" `StrategyFamily` member (real enum has 9: `ML_DIRECTIONAL`, `RULES_DIRECTIONAL`,
@@ -265,6 +289,10 @@ because it is not phrased as a specific, falsifiable count the way the original 
 
 ### P2 — `platform-architecture.html`'s readiness claims were never re-graded against the 2026-08-18 stricter `live` definition, and use self-reported percentages the corpus otherwise treats as a hard-rule violation
 
+> **Resolved 2026-08-19 (slot 10, review)** — `platform-architecture.html` now carries rule-13 status + evidence-tier
+> grading (25 `.st`/`.ev`/`~ assumed`/`? check` markers); §13's self-reported readiness percentages are graded
+> `partial` + `? check`, not `live`/`verified`.
+
 `nick_ai_platform_disclosure_artifact_2026_08_16.md`'s Build section carries an open P0 todo: *"Re-grade every
 section mark in BOTH artefacts against the STRICTER `live` definition (operator, 2026-08-18): `live` now means
 reachable on a production path AND validated with real capital... expect most `live` marks to drop to `partial`."*
@@ -282,6 +310,10 @@ ruling was written to govern, and no active plan currently re-grades it.
 
 ### P2 — the `paper − batch = 0` hard-equality claim is stated unconditionally, same open caveat as the audited sibling
 
+> **Still open 2026-08-19 (slot 10, review)** — no sibling-plan fix; the `paper − batch = 0` caveat for
+> `platform-architecture.html` is not covered by `client_artefact_remediation_siblings_2026_08_18.md`. Already
+> tracked in `client_artefact_remediation_2026_08_18.md` §A + `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` §H.8.
+
 `platform-architecture.html` §05 (Figure 3, line 1523: `"paper − batch = 0"`, captioned "a proof, not a
 tolerance") states the equality without qualification. `client_artefact_remediation_2026_08_18.md` §A already
 carries this open todo for the sibling walkthrough: *"Add a caveat near §08/§09's hard equality claim — `paper ==
@@ -291,6 +323,10 @@ gap (`elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md` §H.
 here and is not mentioned anywhere in `platform-architecture.html`.
 
 ### P3 — promotion-ladder terminal state asserted as settled in two documents, still unconfirmed
+
+> **Still open 2026-08-19 (slot 10, review)** — no sibling-plan fix; the four-rung ladder's terminal full-live state
+> remains unconfirmed. Already tracked in `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`
+> (open P1).
 
 Both `strategy-service-deep-dive.html` §09 ("Candidate → paper → early live → live") and `platform-architecture.html`
 §11 (Figure 9's "candidate, then one-day paper, then early live, then full live") state the same four-rung ladder
