@@ -224,17 +224,21 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
 
 ## Follow-up
 
-- [ ] [BACKEND] P2. **Widen `account_is_usable()` into provider-aware usability** — per-provider
-      functions (Claude: `weekly_pct`/`five_hour_pct`/`overage_status`; Gemini:
-      reuse/generalize the existing separate `gemini_account_has_rate_headroom` RPM/RPD gate; stub
-      for DeepSeek/Gemma/Codex-Luna as those accounts come online), dispatched by `AccountProvider`.
-      Needs an operator decision on the per-provider thresholds (matching whatever
-      `pick_next_account(require_headroom=True)` already uses per provider, or deliberately
-      different ones for the kill-vs-avoid distinction). **Second consumer found 2026-08-19** (via
-      `multi_provider_context_billing_reconciliation_2026_08_16.md`): `dashboard/src/layout.tsx:549`
-      has its own `accountIsUsable()` (camelCase) that "mirrors AutoSpawn's own dispatch-eligibility
-      definition verbatim" per its own docstring — update it in the SAME change or the dashboard
-      silently drifts from the backend's new provider-aware logic. Repo: agent-orchestrator.
+- [x] [BACKEND] P2. **Widen `account_is_usable()` into provider-aware usability — shipped
+      2026-08-19, agent-orchestrator@7aa42f67a3.** Implementation deliberately does NOT widen
+      `account_is_usable()` itself — that function is correctly reused by 6+ OTHER call sites
+      (`pick_next_account` default mode, `usable_account_count`, `all_accounts_unusable`, the
+      all-down alert) that must keep treating a near-ceiling-but-not-rate-limited account as
+      usable. Instead added a NEW `_account_meets_dispatch_headroom()` (autospawn.py) — usable AND
+      under pct ceilings (Claude) AND under RPM/RPD (Gemini, reusing the existing
+      `gemini_account_has_rate_headroom`) — and refactored `_pick_headroom_account` +
+      `_drain_worker_account_failover` to both call it, so dispatch-time picking and the
+      worker-kill check can never drift apart again. **Dashboard mirror verified NOT needed**:
+      `layout.tsx:549`'s `accountIsUsable()` answers a deliberately coarser question (fleet-wide
+      "is EVERY account unusable" alert) that must NOT trip on ceiling-proximity (would false-page
+      "all accounts blocked CRIT" routinely) — confirmed this was already a looser mirror than its
+      own docstring claimed, pre-existing, not something this change worsened. Tests:
+      `tests/test_autospawn.py` (3 new), all passing under a clean QG run.
 - [x] [OPERATOR] P3. **Paused slots correctly stay out of account-failover scope — resolved
       2026-08-19.** Paused is intentional (capacity reservation for humans when few accounts
       remain), not related to account exhaustion. No code change needed.
@@ -251,56 +255,178 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       Operator confirmed the flat "all-but-haiku" class as literally stated — a weak/cheap model
       (the gemini-flash-lite example) is an acceptable substitute for a non-strict role under this
       interim placeholder, no further exclusion list needed for now.
-- [ ] [BACKEND] P2. **Build the equivalence-class registry** (replacing the accidental
-      `short_tier()` unknown→sonnet fallback) + add `model_strict: true|false` to
-      `role_registry.py` `RoleSpec` / `agents/<role>.md` frontmatter. **Existing string-based
-      model-tier parsers to extend/mirror, found 2026-08-19**: `_parse_frontmatter_model_tier`
-      (`regen_backlog_from_plan.py:916-951`, plan frontmatter → tier) and `_coerce_model`
-      (`role_registry.py:108-116`, role frontmatter — already accepts both `opus`/`opus-required`
-      strings, a useful template for how `model_strict` should parse). Repo: agent-orchestrator.
-- [ ] [BACKEND] P3. **Add `model_strict:` to plan/task frontmatter** alongside the existing
-      commented-out `model_tier:` stub in `task_template.md`, and fix the `PLAN_FORMAT.md` /
-      `task_template.md` doc-drift found above (missing `model_tier:` row, `assigned_role` spelling
-      mismatch) in the same edit, after confirming actual parser behavior in
-      `regen_backlog_from_plan.py`. Repo: unified-trading-pm.
-- [ ] [BACKEND] P3. **Build a scheduled-job model/tier/strict config surface** — none exists today;
-      replaces the hardcoded mode-tuple in `plan_health.py:688-710`. Repo: agent-orchestrator.
-- [ ] [BACKEND] P3. **Build a per-`wall_type` escalation model/tier/strict config surface** — none
-      exists today; all wall types currently share one flat default model. Repo: agent-orchestrator.
-- [ ] [BACKEND] P2. **Unify the 3 dispatch moments** (fresh dispatch, resume-after-kill, and live
-      mid-session cap-hit in `WorkerLivenessWatchdog._handle_usage_cap`) to consult
-      `model_strict` + the equivalence-class registry consistently — today only fresh/resume get
-      DeepSeek substitution; mid-session always freezes regardless of tier. Repo: agent-orchestrator.
+- [x] [BACKEND] P2. **Build the equivalence-class registry — shipped 2026-08-19,
+      agent-orchestrator@1b1b9eb858.** `model_tier.equivalence_class()`/`models_are_substitutable()`
+      — flat "standard" class minus a Haiku singleton, deliberately NOT routed through
+      `short_tier()` (whose unknown→sonnet default is load-bearing for `is_deepseek()`'s
+      context-window prior — reusing it here would have reproduced the exact landmine this todo
+      exists to avoid). `RoleSpec.model_strict: bool = False` + `_coerce_model_strict()`
+      (role_registry.py), parsed from `agents/<role>.md` frontmatter. `agents/main.md` set to
+      `model_strict: true` — directly implementing the operator's own named example
+      ("must not silently fall back to something as weak as gemini-flash-lite"); flag this specific
+      content decision for review since it was made on the operator's behalf, not re-confirmed.
+      Tests: `tests/test_model_tier.py` (3 new) + `tests/test_role_registry.py` (4 new).
+- [ ] [BACKEND] P3. **Add `model_strict:` to plan/task frontmatter + fix doc-drift — CODE DONE,
+      NOT YET SHIPPED (blocked, see new finding below) — stays unchecked until it actually lands.** `_parse_frontmatter_model_strict()` +
+      `_resolve_plan_model_strict()`/`_resolve_task_model_strict()` (regen_backlog_from_plan.py,
+      factored into standalone functions specifically to keep `regen()`'s cyclomatic complexity
+      under the ruff C901 cap — inlining tripped it, 27>26) + `BacklogTask.model_strict: bool`
+      (backlog.py) — **shipped, agent-orchestrator@c134a9c0d4**. The doc-drift fix (`PLAN_FORMAT.md`
+      `assigned_role:` line was wrong in 3 ways, not just hyphenation — `data-pipeline-engineer`/
+      `infra-engineer` name no real `agents/*.md` role at all; verified live against every real
+      `role:` field, corrected to `backend_engineer | data_engineering | ui_developer | infra |
+      monitor | review`) + `model_tier:`/`model_strict:` rows added to both `PLAN_FORMAT.md` and
+      `task_template.md` + `scripts/docs/docspec.py`'s `agent-role` FieldSpec (registered
+      `model_strict` as `"scalar"` not `"enum"` — a real YAML `true`/`false` parses to a Python
+      bool, which would HARD-fail a string-membership enum check) — **all 4 files complete,
+      verified clean via standalone `check_frontmatter_schema.py`/`check_active_refs_archived_
+      plans.py` runs, sitting UNCOMMITTED in the unified-trading-pm working tree**, blocked from
+      shipping by an unrelated repo-wide gate failure — see "New finding" below. Also improved
+      `worker_liveness_watchdog._slot_is_model_strict()` (shipped as part of todo 6's commit,
+      agent-orchestrator@7aa42f67a3) to read a task-dispatched slot's `task.model_strict` DIRECTLY
+      rather than re-deriving from its role — the task already carries the fully-resolved
+      plan-override-vs-role-default answer, so re-deriving from role alone would have silently
+      MISSED a plan-level override. Tests: `tests/test_regen_backlog_from_plan.py` (6 new).
+- [x] [BACKEND] P3. **Build a scheduled-job model/tier/strict config surface — shipped 2026-08-19,
+      agent-orchestrator@204bc8e1fa.** `plan_health.dispatch(..., model_strict: bool = False)`,
+      wired through the new shared `autospawn.select_account_with_non_strict_retry()` helper.
+      **Caveat, stated plainly**: every one of the 9 `smart_tier` modes (reconcile/docs_reconcile/
+      ag_closeout/.../ao_watchdog) is ALREADY forced to sonnet-tier — the widest pool the retry
+      helper searches — so the new retry is a structural no-op for every mode that exists today; it
+      only matters once a scheduled job is ever pinned to a stricter tier. Verified the retry
+      mechanism itself DOES fire correctly using `mode="report"` + an explicit non-sonnet `model=`
+      (the one mode that doesn't force smart_tier). Tests: `tests/test_plan_health.py` (2 new).
+- [x] [BACKEND] P3. **Build a per-`wall_type` escalation model/tier/strict config surface —
+      shipped 2026-08-19, agent-orchestrator@204bc8e1fa.** `escalate()`/`enqueue()` both gained
+      `model_strict: bool = False`, per-call (hence per-wall_type, same shape `model` already has
+      — no separate WALL_TYPE→default registry invented, matching scope). Threaded through the
+      SAME shared retry helper as scheduled jobs, and into BOTH places a not-yet-dispatchable
+      escalation gets queued (`enqueue()`'s own payload AND `escalate()`'s internal fallback
+      payload — missed the second one on the first pass; the retry-loop's `**payload` unpacking
+      into a fresh `escalate()` call would have silently dropped `model_strict` back to False on
+      retry otherwise). Same "no wall_type is non-sonnet today" caveat as scheduled jobs. Tests:
+      `tests/test_escalation.py` (2 new).
+- [x] [BACKEND] P2. **Unify the 3 dispatch moments — shipped 2026-08-19,
+      agent-orchestrator@7aa42f67a3, SCOPE-LIMITED — read this carefully.** `_handle_usage_cap`
+      (mid-session cap-hit) fixed to search under the slot's OWN real tier first (was hardcoded
+      `model=None` → an accidental always-sonnet-blend search regardless of the slot's actual tier
+      — a genuine latent bug, dormant today only because no role is currently opus/fable-tier), then
+      — for a non-strict, non-Haiku slot whose own tier is exhausted everywhere — ONE retry under
+      the sonnet blended pool via the new `_slot_is_model_strict()` resolution (current_task's
+      `model_strict` → persistent-role `agent_kind` → **defaults to strict/True on ANY resolution
+      failure**, the deliberate safe direction). **What this does NOT do**: fresh dispatch and
+      resume-after-kill's OWN total-exhaustion moments were NOT given the same cross-tier retry —
+      they still just fail/requeue/retry-next-tick on their own tier's exhaustion today, exactly as
+      before. The todo's title says "3 dispatch moments"; only 1 of the 3 actually gained new
+      retry-on-exhaustion behavior in this pass — the other 2 (fresh/resume) already had the
+      EXISTING sonnet-tier DeepSeek-blend (unconditional, not model_strict-gated) for whichever
+      tier they're already dispatching at, which is a DIFFERENT mechanism than what this todo adds.
+      If full 3-way parity is wanted, that's real remaining work, not yet scoped. Tests:
+      `tests/test_account_failover_resume.py` (10 new/changed).
 - [ ] [DATA] P3. **Once `multi_provider_model_capability_bakeoff_2026_08_19.md`'s synthesis todo
       lands** (its per-(model, complexity-tier) summary table), replace this doc's flat
       "all-but-haiku" equivalence-class placeholder with the real tiering data it produces — update
       the equivalence-class registry built above, not a fresh benchmark. Repo: agent-orchestrator.
+      Still blocked externally, unchanged.
 - [x] [OPERATOR] P3. **Future eval-benchmark plan — found 2026-08-19, already exists and is
       active**: `/plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1).
       Superseded this todo's original "not yet scoped" framing — see the todo directly above for
       the concrete follow-through once it completes.
 
-## Resumption notes (2026-08-19)
+## New finding 2026-08-19: unified-trading-pm quickmerge blocked repo-wide by an actively-mutating file
+
+While shipping todo 3's doc half, `bash scripts/quality-gates.sh` / `quickmerge.sh --isolated`
+repeatedly failed `check_frontmatter_schema` against `plans/active/issues/manifest_hygiene_red_
+all_2026_08_19.md` (an auto-filed `manifest_hygiene_daily.py` daily-audit doc). This is NOT a
+scoping artifact — confirmed via `git show origin/live-defi-rollout:<path>` that the malformed
+frontmatter is already ON origin, so it fails EVERY quickmerge in this repo right now, matching
+the precedent in the archived `alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12`
+issue doc. Attempted a minimal frontmatter-only fix (correct `doc_type`/`status`/`asset_group`/
+`tags`, add `resolved_by:`) as an unrelated, incidental unblock — standalone-verified clean
+(`check_frontmatter_schema.py` → 0 violations) — but between that fix and the next `git status`
+check the file's on-disk content had changed AGAIN, to a DIFFERENT and MORE degraded frontmatter
+(most required keys missing entirely), independent of anything this session did. Observed 3
+distinct versions of this file's frontmatter across ~10 minutes without touching it myself after
+the first attempt — strong evidence something automated (most plausibly `manifest_hygiene_daily.py`
+itself, mid-debug or re-firing) is actively rewriting it. Stopped touching it (multi-agent-safety:
+don't fight an active external process on a file that isn't mine) and did NOT include it in any
+shipped commit — my one edit to it was cleanly discarded by the failed quickmerge's own recovery
+path, confirmed via `git status`/`git stash show -p`, nothing lost or stranded.
+**Consequence**: todo 3's `unified-trading-pm` half (`agents/main.md`, `plans/PLAN_FORMAT.md`,
+`plans/active/task_template.md`, `scripts/docs/docspec.py`) is fully written, individually
+verified, and sitting uncommitted in the `.tabs/3/unified-trading-pm` working tree — ready to ship
+the moment this clears. **This is an operator-notification-worthy finding independent of this
+issue's own scope** — whoever owns `manifest_hygiene_daily.py` / the daily data-pipeline-alerts
+cron should check why its own output file's frontmatter is malformed AND apparently regenerating
+mid-session; it is currently blocking every quickmerge in unified-trading-pm, for every session.
+
+## Resumption notes (2026-08-19, updated after implementation)
 
 This doc is the sole, self-contained tracking surface for this initiative — no sibling plan exists
 or is planned (see Process note above). The `related:` plans (bake-off, billing-reconciliation,
 `ao_consolidated_closeout`) are independent parallel efforts merely cross-referenced here, not a
 dependency chain to walk.
 
-**Recommended implementation order** (dependency-derived, stated in chat but not yet answered by
-the operator when this session ended — default to this order if still unanswered on resume):
-1. Todo 1 (widen `account_is_usable()` + the `layout.tsx:549` dashboard mirror) — independent,
-   no prerequisites.
-2. Todo 2 (equivalence-class registry + `model_strict` on `role_registry.py`) — foundational;
-   todos 3/4/5/6 all build on it.
-3. Todos 3, 4, 5 (plan frontmatter / scheduled-job / escalation config surfaces) — can proceed in
-   parallel once todo 2 lands; each touches different files.
-4. Todo 6 (unify the 3 dispatch moments) — needs todo 2 done, benefits from todo 1 also being done.
-5. Todo 7 (replace the flat placeholder with real bake-off data) — **cannot start yet**, blocked on
-   `multi_provider_model_capability_bakeoff_2026_08_19.md`'s own synthesis todo landing (external,
-   not owned by this doc) — check that plan's Progress Log before attempting.
+**Implementation status**: todos 1, 2, 4, 5, 6 are shipped and live on agent-orchestrator's
+`live-defi-rollout` (4 commits: `1b1b9eb858`, `7aa42f67a3`, `c134a9c0d4`, `204bc8e1fa` — see each
+todo above for which commit and its exact scope/caveats). Todo 3's agent-orchestrator half shipped
+in `c134a9c0d4` too; its unified-trading-pm half is code-complete but **NOT YET SHIPPED**, blocked
+by the unrelated repo-wide gate failure in "New finding" above. Todo 7 remains externally blocked,
+unchanged.
+
+**What to do on resume, in order**:
+1. Check whether `plans/active/issues/manifest_hygiene_red_all_2026_08_19.md`'s frontmatter has
+   stabilized (`.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py` from
+   unified-trading-pm — clean output means it's safe now). If clean, ship todo 3's 4 waiting files
+   (`agents/main.md`, `plans/PLAN_FORMAT.md`, `plans/active/task_template.md`,
+   `scripts/docs/docspec.py` — confirm they're still sitting uncommitted in `.tabs/3/unified-trading-pm`
+   first via `git status`; if a session already shipped them, this step is just verification).
+2. Decide whether the todo-6 scope gap is worth closing (fresh dispatch / resume-after-kill each
+   getting the SAME cross-tier non-strict retry `_handle_usage_cap` now has) — not currently
+   tracked as its own todo; add one if the operator wants it.
+3. Todo 7 stays blocked until `multi_provider_model_capability_bakeoff_2026_08_19.md`'s synthesis
+   todo lands — check that plan's Progress Log before attempting.
+4. Once todo 3 ships and the doc has no other open `- [ ]` items besides todo 7, this issue is
+   effectively done pending only the external bake-off dependency — reconsider whether it should
+   stay `status: open` or move toward archival at that point (todo 7 itself would need to be the
+   last open item, or get its own follow-on tracking).
 
 **Lessons from this session, worth not re-learning**:
+- **A shared multi-agent checkout's `bash scripts/quality-gates.sh` sees EVERY file currently on
+  disk, including a peer's or a cron job's uncommitted/actively-regenerating output — not just
+  yours.** Hit this twice: (1) a stale `.venv` in THIS repo and in a completely different sibling
+  repo (`strategy-service`) both surfaced as test failures that had nothing to do with the code
+  being changed — fixed via a plain `uv sync --frozen`, not a code change; (2) a daily-audit output
+  doc with malformed, apparently-actively-changing frontmatter blocked the whole repo's quickmerge.
+  Diagnose WHOSE problem a failure is (git blame the file / check if it's YOUR diff) before assuming
+  your own change caused it — a full-tree gate failing on a file you never touched is a real,
+  recurring failure mode here, not a fluke.
+- **`bash quickmerge.sh ... | tail -N` silently discards the real exit code** — a shell pipeline's
+  exit status is the LAST command's (`tail`'s, always 0) unless you capture `$?` right after the
+  first command or avoid the pipe. Redirect to a file and check `$?` explicitly instead, or you'll
+  read a stale/wrong "exit code 0" off a run that actually failed.
+- **Adding branches to an already-large function can trip ruff's C901 complexity cap even when each
+  branch is individually simple** — `regen_backlog_from_plan.py:regen()` went 26→27 from what looked
+  like a small, safe addition. Fix: extract the new logic into its own small function (mirrors the
+  file's own existing `_role_tier`/`_resolve_task_tier` pattern) rather than inlining — cheaper than
+  it looks, and matches the codebase's own established way of keeping that function's complexity down.
+- **A `with patch.multiple(...): ...` assertion on a mock's `.call_count` must live INSIDE the `with`
+  block** — the patch is torn down (real function restored) the moment the block exits, so an
+  assertion placed after it silently checks the REAL function, not the mock (`AttributeError:
+  'function' object has no attribute 'call_count'`, not a subtler wrong-value failure — easy to
+  catch, easy to introduce by habit when copying a pattern from code where the assertions happened
+  to already be inside).
+- `select_account_for_spawn` never downgrades model TIER — it only swaps provider/account within
+  the SAME nominal tier (`autospawn.py:1794-2089`). The "strict vs substitutable" design this doc
+  builds is entirely new; don't assume any tier-fallback path already exists to extend.
+- Searching the plan corpus by guessed keywords for "the model-capability benchmark plan" (tried
+  `benchmark`/`eval`/`capability`/`comparison`/`parity`) returned nothing useful — corpus-wide
+  `benchmark` hits are mostly unrelated performance-benchmark docs. What worked: `git log
+  --oneline --name-only -- plans/` filtered for a topic keyword, which surfaced the real commit
+  even though its own message ("model-existence sweep") didn't literally match either. When an
+  operator says "there's already a plan for X" and a keyword grep comes up empty or ambiguous,
+  ask for the slug directly rather than burning more search cycles guessing — a same-window,
+  same-provider-effort sibling plan (billing-reconciliation) was an easy false-positive lead here.
 - `select_account_for_spawn` never downgrades model TIER — it only swaps provider/account within
   the SAME nominal tier (`autospawn.py:1794-2089`). The "strict vs substitutable" design this doc
   builds is entirely new; don't assume any tier-fallback path already exists to extend.
