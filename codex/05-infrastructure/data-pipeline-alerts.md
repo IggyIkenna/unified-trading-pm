@@ -27,6 +27,7 @@ referenced_by:
   [
     /codex/02-data/honest-absence-downstream-handling.md,
     /codex/05-infrastructure/deployment-observability.md,
+    /plans/archive/2026_08/alerting_service_escalation_ladder_centralization_2026_08_18.md,
     plans/archive/issues/data_pipeline_alerts_dp_not_v9_and_rate_limited_false_positives_2026_06_27.md,
   ]
 owner:
@@ -524,6 +525,25 @@ nothing) was paying full memory cost for the 75%+ of rows it never uses. Fix pat
 BEFORE any `.to_pandas()`/full-DataFrame conversion — never bump the Cloud Run memory ceiling as the first response to
 an OOM on one of these jobs without first checking whether a checker is materializing rows it doesn't need. Full
 incident: `/plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md`.
+
+### Revocation cascade stays local to deployment-service (2026-08-18 ruling)
+
+The escalation-ladder centralization work
+(`/plans/archive/2026_08/alerting_service_escalation_ladder_centralization_2026_08_18.md`) moved the `FILE_ISSUE`/
+`PAGE_OPERATOR` dispatch DECISION into alerting-service (its Phase 2-3), but `_apply_revocation()`/
+`RevocationActuator` (`deployment-service/deployment_service/data_pipeline_monitors/revocation_actuator.py`)
+deliberately did NOT move with it — revocation stays fully in deployment-service, unmigrated, for the SAME
+independence reason `AUTO_RECOVER` stays local under that plan's Option C. This mirrors the DP-WATCHER independence
+ruling directly above (2026-06-23): "routing it back through the alerting spine it exists to backstop would
+re-couple them." Revocation is the same shape of risk — a drain/hold decision that depends on alerting-service's
+availability is a worse trade than the visibility it would gain — so it stays in the "fast, local, must-work-even-
+if-alerting-service-is-down" tier, not the "already-can't-self-heal, judgment-shaped" tier the escalation ladder
+targets. Revocation is not dark to alerting-service either way: `_fleet_halt_visibility()` already emits
+`DP_REVOCATION_FLEET_HALT` via the same `log_event()` path every other `DP_*` finding uses, so alerting-service (and
+Slack) has READ-ONLY visibility into every revocation action without owning any control over it. **Revisit
+condition**: only once deployment-service's live-deployment surface genuinely splits into multiple independent
+services should full migration be reconsidered — only then does a single deployment-service process stop being able
+to see the whole dependency graph locally, which is what makes local revocation correct today.
 
 ## Daily digests (also posted to the channel, INFO)
 

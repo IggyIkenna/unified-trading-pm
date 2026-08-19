@@ -9,7 +9,7 @@ summary: >-
   reusing the existing lifecycle-events pub/sub channel, closing the one-directional gap with a light, GCS-durable
   return path (never a synchronous RPC), and relocating the GitHub repository_dispatch delivery call alongside
   alerting-service's other outbound notifiers.
-status: active
+status: complete
 nature: design
 asset_group: [cross-cutting]
 stage: [meta]
@@ -302,8 +302,13 @@ process stop being able to see the whole dependency graph locally, which is what
       data_pipeline_monitors/escalation.py` — no shim, no dead re-export (CLAUDE.md "Delete deprecated code"). Also
       delete the now-unused `check_dispatch_dedup_gcs`/`check_relaunch_dispatch_budget`/`check_dispatch_dedup_for_finding`
       call sites from `escalation.py` (KEEP `escalation_dedup.py`'s `check_dispatch_dedup`/`find_open_issue_for_tuple`/
-      `find_open_issue_for_vm` — those still gate deployment-service's OWN `write_issue_doc()` call, which is not
-      moving). `route_finding()`'s `result["dispatch"]` key and the `event_details["fast_spawn_dispatched"]`/
+      `find_open_issue_for_vm` — the ORIGINAL PLANNING ASSUMPTION was that these still gate deployment-service's OWN
+      `write_issue_doc()` call; **CORRECTED 2026-08-18 (Phase 4 finding, see that section's Progress Log note) — this
+      was already stale at planning time**: a fresh `rg` found ZERO production call sites for any of the three in
+      `deployment_service/`, only test references — `write_issue_doc()`'s actual dedup is its own same-day-slug
+      `path.exists()` check. Kept as-is anyway per this todo's own instruction (deleting them wasn't in scope here),
+      just noting the "gates write_issue_doc()" justification for keeping them was never true). `route_finding()`'s
+      `result["dispatch"]` key and the `event_details["fast_spawn_dispatched"]`/
       `"fast_spawn_skipped"` stamping go with it — the dispatch verdict now only exists on the alerting-service side.
       Done-when: `rg -l _dispatch_to_orchestrator deployment-service/` returns nothing, deployment-service's
       `quality-gates.sh` is green, and a live end-to-end fire of a real or synthetic FILE_ISSUE-tier finding proves
@@ -385,7 +390,7 @@ process stop being able to see the whole dependency graph locally, which is what
 
 ## Phase 4 — Return path: deployment-service reads the ladder
 
-- [ ] [BACKEND] P2. In `deployment-service/deployment_service/data_pipeline_monitors/escalation.py::route_finding()`,
+- [x] [BACKEND] P2. In `deployment-service/deployment_service/data_pipeline_monitors/escalation.py::route_finding()`,
       before the `FILE_ISSUE`-tier `write_issue_doc()` call, add a best-effort (never-raises, matching every other
       cross-cutting read already in this module) GCS read of alerting-service's
       `alerting/state/escalation-ladder/<identity>.json` (Phase 3's state, identity from Phase 1's shared function)
@@ -397,22 +402,58 @@ process stop being able to see the whole dependency graph locally, which is what
       (seeded via Phase 3's test harness) produces an issue doc whose body visibly carries the occurrence count and
       rung, and a live fire with no ladder state (a genuinely first-ever finding) produces a doc byte-shape-identical
       to today's (no missing-field crash, no dangling blank ladder section).
-- [ ] [REVIEW] P2. Check whether `escalation_dedup.py`'s existing OPEN-issue-doc dedup (`check_dispatch_dedup`, still
+      **✅ DONE (2026-08-18)** — `event_details` gains `ladder_occurrence_count`/`ladder_rung`/`ladder_first_seen_at`
+      + a 4th key not in the original spec, `ladder_state` (CLOSED/OPEN/HALF_OPEN — added because "rung 2, 5
+      occurrences" alone is ambiguous about current escalation status). Reads the SAME raw JSON shape directly via
+      `get_storage_client()` (never imports `alerting_service.escalation_ladder` — would violate the Tier-4
+      no-service-deps rule). Threaded into `write_issue_doc()`'s body via `dataclasses.replace(finding,
+      details={**finding.details, **ladder_context})`, mirroring the existing `_oom_investigate_finding()` pattern
+      already in this file — no signature change to `write_issue_doc()` itself. **Both done-when scenarios verified
+      live against real infra** (real `alerting-service-central-element-323112` bucket, scratch PM-clone tmp dirs,
+      never touching the real PM clone): a seeded OPEN state (`occurrence_count=5, rung=2`) produced a doc body
+      visibly carrying all 4 fields, cleaned up after; a fresh never-seeded identity produced a doc with zero
+      `ladder_*` keys, byte-shape-identical to pre-Phase-4 behavior. `quality-gates.sh` green (independently
+      re-verified). Shipped `deployment-service@a9eb4f5465`.
+- [x] [REVIEW] P2. Check whether `escalation_dedup.py`'s existing OPEN-issue-doc dedup (`check_dispatch_dedup`, still
       owned by deployment-service post-Phase-2) needs a change so a doc already carrying a ladder-escalated
       annotation is not silently read as "no new activity" purely because `max_attempted_at` hasn't moved — an
       escalation-worthy RECURRENCE is itself new information even when the underlying data hasn't changed. The two
       signals (data freshness vs. occurrence frequency) may turn out to be genuinely orthogonal and need no
       reconciling — state which, with the reasoning, in this doc's Progress Log; do not leave it implicit.
+      **✅ DONE (2026-08-18) — no code change needed, genuinely orthogonal.** `checkpoint_has_new_activity()`'s
+      `max_attempted_at` tracks whether the underlying `attempted_failed` backlog DATA moved (a
+      correctness/freshness signal); the ladder's `occurrence_count`/`rung` tracks how many times the SAME alert
+      fired (a recurrence-frequency/notification-fatigue signal). Forcing a ladder rung-bump to count as "new
+      activity" would reopen the exact "30+ redundant dispatches for one already-diagnosed condition" bug
+      `check_dispatch_dedup` was built to close, for precisely the case (a static, already-diagnosed backlog
+      re-triggering the ladder without new data) most likely to trip it — the ladder already has its own dedicated
+      escalation signal (the dispatch itself, firing once per CLOSED→OPEN/HALF_OPEN→OPEN crossing), so there's no
+      gap for `check_dispatch_dedup` to fill. **Correction to this doc's own Phase 2 entry** (a doc/comment that
+      misled is a finding, fixed in the same turn per the workspace hard rule): Phase 2's "KEEP
+      `escalation_dedup.py`'s `check_dispatch_dedup`/`find_open_issue_for_tuple`/`find_open_issue_for_vm` — those
+      still gate deployment-service's OWN `write_issue_doc()` call" claim is **factually stale** — a fresh `rg`
+      across `deployment_service/` found ZERO production call sites for any of these three functions (only
+      `tests/unit/test_escalation_dedup.py` references them). `write_issue_doc()`'s only actual dedup is its own
+      same-day-slug `path.exists()` check, unrelated to `check_dispatch_dedup`. Not chased further here (out of
+      this todo's scope — this todo is about whether the ladder needs to interact with that dedup, and the answer
+      is no either way, whether or not it's currently wired) — flagged as a fact for whoever next touches
+      `escalation_dedup.py`'s call-site wiring.
 
 ## Phase 5 — Revocation cascade
 
-- [ ] [DOCS] P3. Add a short cross-reference note to `/codex/05-infrastructure/data-pipeline-alerts.md` § "Watching
+- [x] [DOCS] P3. Add a short cross-reference note to `/codex/05-infrastructure/data-pipeline-alerts.md` § "Watching
       the watchers" (or a new adjacent subsection) recording this plan's decision above: `_apply_revocation()` /
       `RevocationActuator` stay in deployment-service, not migrated into alerting-service's new policy layer, citing
       the same 2026-08-14 DP-WATCHER independence ruling in
       `/plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md` this plan's reasoning is grounded in,
       plus the stated revisit condition (only on a genuine multi-service split of deployment-service's live-deployment
       surface). Done-when: the note exists and both this plan and the codex doc cross-link each other.
+      **✅ DONE (2026-08-18)** — added a new "Revocation cascade stays local to deployment-service (2026-08-18
+      ruling)" subsection immediately after "Watching the watchers", citing the DP-WATCHER independence ruling, the
+      `_fleet_halt_visibility()`/`DP_REVOCATION_FLEET_HALT` existing-visibility fact, and the stated revisit
+      condition verbatim. Cross-linked both directions: this plan already cited the codex doc in its own "Codex
+      SSOTs" table; added this plan's path to the codex doc's `referenced_by:` frontmatter. **All 5 phases of this
+      plan are now complete** — every todo checked, plan ready for archival.
 
 ## Codex SSOTs
 
