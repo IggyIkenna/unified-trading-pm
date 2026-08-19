@@ -262,7 +262,7 @@ where it writes.
 | GLM 5-Turbo | `death_class` teardown-signal extend (Easy #2) | 0 | 59 | 58 (10) | 270,291 / 20,931 | 7,670,784 | 2.50% (real 200K window) | 14.3 min | PASS | 10 tool_errors recorded (highest of any attempt so far), still completed clean. |
 | GLM 5-Turbo | Capture peak `context_used_pct` (Medium #1) | 1 | 81 | 80 (13) | 274,191 / 23,877 | 11,947,264 | 0.54% | 21.1 min | INFRA-INTERRUPTED — same shared 5-hour quota, $4.40 spent on real work first | Excluded from scoring, same as GLM 5.2's task 2. |
 
-_(GLM 5-Turbo tasks 4-6 still resolving as the shared quota window; likely instant-INFRA-BLOCKED like GLM 5.2's — updated once confirmed. Remaining rows populated as each attempt completes.)_
+| GLM 5-Turbo | Tasks 4-6 (pool-exhaustion-decouple, check-active-refs-baseline, sequential-ordering) | 1 (×3) | 1 (×3) | — | $0 (×3) | — | ~1-2s each | INFRA-BLOCKED — same shared 5-hour quota, all 3 identical `[1308]` errors with the SAME reset timestamp as GLM 5.2's | Confirms the shared-quota finding conclusively — GLM lane fully complete: 5.2 got 1 PASS + 1 interrupted + 4 blocked; 5-Turbo got 2 PASS + 1 interrupted + 3 blocked. |
 
 **Gemini 3.5-flash-lite paid-tier backfill (slot 24, `proj5`) — SUPERSEDES the 4 free-tier quota-blocked rows above for the same 4 tasks:**
 
@@ -610,3 +610,29 @@ _(GLM 5-Turbo tasks 4-6 still resolving as the shared quota window; likely insta
   the Gemini free-tier concurrency finding above. Real value delivered regardless: this is the fleet's first-ever
   confirmed real tool-use dispatch through GLM's native endpoint, with 3 full clean completions and 2 substantial
   partial ones as real evidence, not just a smoke test.
+
+- **2026-08-19 (later) — ALL 36 planned attempts across all 6 models have now run (or been confirmed
+  infra-blocked). Full-bake-off status, no lane still dispatching:**
+
+  | Model | Clean PASS | Interrupted (real partial work) | Infra-blocked (0 real signal) | Real infra bug found |
+  |---|---|---|---|---|
+  | Gemini 3.5-flash-lite | **4/6** | 2/6 | 0/6 | Wrong context-window constant (fixed) |
+  | Gemini 3.7-flash | 0/6 | 0/6 | 6/6 (free) + 6/6 (paid retry) | Free-tier AND partially the "paid" tier both quota-walled |
+  | GLM 5.2 | 1/6 | 1/6 | 4/6 | none (Z.ai-side quota, not a bug) |
+  | GLM 5-Turbo | 2/6 | 1/6 | 3/6 | none |
+  | DiffusionGemma 26B | 0/6 | 0/6 | 6/6 | NVIDIA-side instability, 4 distinct failure modes, confirmed not our request shape |
+  | Codex/Luna | 0/6 | 0/6 | 6/6 | Bridge rejects `system`-role messages — real code bug, root-caused |
+
+  **Real capability signal exists for exactly 2 of 6 models** (Gemini 3.5-flash-lite, GLM — both models). The
+  other 4 produced zero usable Gate-1/2 data this run, each for a distinct, now-documented reason. **This
+  session's actual biggest yield was infrastructure**, not model rankings: 2 real provider bugs found and either
+  fixed (context-window) or root-caused for someone else to fix (Codex bridge), 1 confirmed vendor-side
+  reliability problem (NVIDIA NIM), 1 confirmed shared-quota mechanic (GLM), and working, reusable dispatch +
+  30s-cadence polling infrastructure now proven end-to-end for any future bake-off round.
+  **Still open, needs the operator**: (1) whether to pursue a Gemini quota-INCREASE request (separate from
+  billing) for `generate_content_free_tier_requests` on project 371216509644; (2) whether Gemma is worth a retry
+  given NVIDIA's confirmed instability, or should be dropped from consideration; (3) the Codex bridge fix is real
+  engineering work belonging to `codex_luna_flex_bridge_2026_08_14.md`, not this plan; (4) GLM's 5-hour quota
+  resets 2026-08-20 00:22:34 UTC — the remaining 7 blocked GLM tasks (4 for 5.2, 3 for 5-Turbo) could be re-run
+  serially (not concurrently) after that to get full 6/6 coverage on both models. Gate-2 quality scoring on the
+  Gate-1 passers, and the final per-(model, tier) synthesis table, are the two todos still not started.
