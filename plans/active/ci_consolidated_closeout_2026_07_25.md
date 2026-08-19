@@ -13,7 +13,10 @@ status:
   # (dual-tagged [ci, infrastructure] P1 plans with no consolidated-closeout coordinator since this doc was
   # archived 2026-07-28)
 nature: process
-asset_group: [cross-cutting]
+asset_group: [ci] # corrected 2026-08-19 (ag-closeout-audit cross-cutting-tranche run) -- was [cross-cutting]; this
+  # is the ci tranche's OWN hub/coordinator doc (title, parent_epic: ci_master, assigned_role: cicd all confirm) --
+  # a bare-cross-cutting-tag-on-single-tranche-content mistag invisible to the dual-tag Orthogonality grep since it
+  # carried only one tag
 stage: [meta]
 repos: [unified-trading-pm, deployment-service, agent-orchestrator]
 scope: [engineer, admin]
