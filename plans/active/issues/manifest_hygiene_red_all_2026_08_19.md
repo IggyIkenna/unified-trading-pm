@@ -11,7 +11,6 @@ scope: [engineer, admin]
 tags: [manifest-hygiene, data-pipeline, honest-coverage]
 related: [/plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md]
 created: 2026-08-19
-author: "manifest_hygiene_daily.py (data-pipeline daily audit)"
 parent_epic: observability_master
 priority: P1
 assigned_vm: planning

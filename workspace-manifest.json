@@ -1522,7 +1522,7 @@
       "ldr_ci_status_sha": "215a6cbc36f84cc4f5d934eb0147482b4427e10e"
     },
     "agent-orchestrator": {
-      "promotion_model": "ldr_terminal",
+      "promotion_model": "ldr_main",
       "type": "tool",
       "tier": 0,
       "arch_tier": "external",
@@ -1532,10 +1532,10 @@
       "integration_branch": "live-defi-rollout",
       "ci_trigger_branch": "live-defi-rollout",
       "codex_sections": [],
-      "version": "0.100.0",
+      "version": "0.100.3",
       "version_source": "git-tag",
       "status": "active",
-      "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd restart). promotion_model=ldr_terminal (2026-08-05): the live orchestrator.service and the dashboard SPA (deploy-dashboard.yml) BOTH deploy directly from live-defi-rollout — `main` is never consumed by anything for this repo, so it is deliberately EXCLUDED from LDR->main promotion (no quality-gates-v2 promote-PR spend, no risk of blocking behind a main merge conflict — see agent_orchestrator_ldr_terminal_promotion_2026_08_05 for the incident this fixes). `main` is a frozen historical ref; do not re-add ldr_main without also reverting the dashboard trigger. A `main` slot base reads as diverged — 2026-05-24 incident.",
+      "notes": "Canonical orchestrator — IggyIkenna/agent-orchestrator holds all the code (no external upstream; the original CosmicTrader/orchastrator evaluation fork is superseded). Slot worktrees integrate via live-defi-rollout like every repo (server code ships from LDR via systemd self-pull restart; dashboard SPA deploys on push:[live-defi-rollout] via deploy-dashboard.yml — retargeted off push:[main] 2026-08-05, kept that way). promotion_model=ldr_main (restored 2026-08-19 for parallel AO-dispatch fleet parity — see agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19). The 2026-08-05 ldr_terminal flip (agent_orchestrator_ldr_terminal_promotion_2026_08_05) was a belt-and-suspenders response to a stuck main-promotion PR silently blocking the dashboard's auto-deploy for 3+ hours (main sat 751 commits behind LDR) — but the actual fix was the deploy-trigger retarget above, which already decouples deploy from `main` entirely; excluding the repo from promotion on top of that traded away normal CI-gated promotion for no remaining deploy-risk reduction. A `main` slot base reads as diverged — 2026-05-24 incident.",
       "ci_status": "MAIN_GREEN",
       "coverage_pct": null,
       "bypass_audit_path": null,

@@ -771,17 +771,58 @@ if [ -f "$VM_REGISTRY_CHECKER" ]; then
     fi
 fi
 
+# ── Post-gates: compute changeset-scoped doc-tree file list (shared by the fixer, the schema
+# checker, and the archive-safety ratchet below) ──
+# SCOPED to your own changeset, not the whole corpus (2026-07-22, decision 2026-07-19 in
+# foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18; extended 2026-08-19 to also gate
+# the auto-fixer below — it previously ran with zero args, which defaults to a corpus-wide sweep
+# of every active plan/issue/epic including plans/active/issues/*.md, re-dirtying unrelated LIVE
+# pipeline docs with plan-shaped defaults that are schema-invalid for doc_type: issue (e.g. a
+# blanket `status: active` when the issue-status enum is open/blocked/resolved/false-positive/
+# superseded) — the exact 2026-07-18 failure mode, reintroduced one step earlier than the checker
+# it feeds): a single bypassed bad doc from a DIFFERENT agent used to fail this locally for EVERY
+# clone on the shared branch (measured ~55min fleet-wide shipping block), and the sanctioned
+# remedy (seed_frontmatter.py --apply) correctly refuses to touch a foreign-dirty file — so only
+# the doc's own owner could clear it. Mirrors the pre-push guard's own reasoning
+# (scripts/hooks/pre-push): scope to staged + unstaged + committed-but-unpushed doc changes only
+# (the doc trees these checks cover). CI's lint-codex slice is UNCHANGED and keeps corpus-wide
+# enforcement — a bypassed bad doc still fails CI, it just no longer blocks an unrelated agent's
+# LOCAL gate. A manual full-corpus sweep remains available via
+# `python3 scripts/plan-hygiene/check_frontmatter_schema.py` / `fix_frontmatter.py` (no args).
+_fm_doc_trees='plans/active/*.md plans/active/issues/*.md plans/epics/*.md plans/audit/results/*.md plans/audit/instructions/*.md codex/*.md agents/*.md *.mdc'
+_fm_upstream=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
+_fm_changed=""
+if [ -n "$_fm_upstream" ]; then
+    # shellcheck disable=SC2086  # intentional word-split: _fm_doc_trees is a space-separated pathspec list
+    _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR "${_fm_upstream}...HEAD" -- $_fm_doc_trees 2>/dev/null)"
+fi
+# shellcheck disable=SC2086
+_fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR -- $_fm_doc_trees 2>/dev/null)"
+# shellcheck disable=SC2086
+_fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --cached --name-only --diff-filter=ACMR -- $_fm_doc_trees 2>/dev/null)"
+# A brand-new doc that was never `git add`ed is UNTRACKED, so none of the three `diff` calls
+# above see it at all (diff only compares tracked content) — without this, a fresh bad-
+# frontmatter doc you just wrote would silently skip local validation entirely.
+# shellcheck disable=SC2086
+_fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- $_fm_doc_trees 2>/dev/null)"
+_fm_scoped_list=""
+for _f in $_fm_changed; do
+    [ -f "$REPO_ROOT/$_f" ] || continue
+    case " $_fm_scoped_list " in *" $_f "*) : ;; *) _fm_scoped_list="${_fm_scoped_list} $_f" ;; esac
+done
+
 # ── Post-gates: Plan frontmatter auto-fixer (runs BEFORE schema check so fixer can pre-populate) ──
 # SSOT: plans/PLAN_FORMAT.md + scripts/plan-hygiene/fix_frontmatter.py.
 # Mechanically populates missing/default fields (doc_type, nature, stage, scope, tags, related,
-# execution_scope, drift_direction, depends_on, last_updated, etc.) on every active plan + epic
-# so the schema check below finds them pre-populated rather than absent. Auto-fixer never changes
-# fields that have a real value; it only fills in safe defaults for missing/empty fields.
-# Exit 0 always (fixer never fails the gate — it only fixes).
+# execution_scope, drift_direction, depends_on, last_updated, etc.) on files in YOUR changeset only
+# (reuses $_fm_scoped_list computed above) so the schema check below finds them pre-populated
+# rather than absent. Auto-fixer never changes fields that have a real value; it only fills in safe
+# defaults for missing/empty fields. Exit 0 always (fixer never fails the gate — it only fixes).
 FRONTMATTER_FIXER="${REPO_ROOT}/scripts/plan-hygiene/fix_frontmatter.py"
-if [ -f "$FRONTMATTER_FIXER" ]; then
-    echo "Running plan frontmatter auto-fixer..."
-    python3 "$FRONTMATTER_FIXER" \
+if [ -f "$FRONTMATTER_FIXER" ] && [ -n "${_fm_scoped_list// /}" ]; then
+    echo "Running plan frontmatter auto-fixer (scoped to your changeset)..."
+    # shellcheck disable=SC2086
+    python3 "$FRONTMATTER_FIXER" $_fm_scoped_list \
         && log_success "Plan frontmatter auto-fixer completed" \
         || { echo "⚠ Plan frontmatter auto-fixer errored (non-blocking — schema check follows)" >&2; }
 fi
@@ -792,41 +833,10 @@ fi
 # *.mdc — plans/archive deliberately EXCLUDED) and fails on ANY violation, HARD or SOFT, so the
 # 2026-07-04 zero-violations corpus cannot rot. Replaces the two-checks lifecycle: the warn-only
 # check_docspec_coverage.py is RETIRED. Exit 0/1 from check_frontmatter_schema.py.
-#
-# SCOPED to your own changeset, not the whole corpus (2026-07-22, decision 2026-07-19 in
-# foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18): a single bypassed bad doc from a
-# DIFFERENT agent used to fail this locally for EVERY clone on the shared branch (measured ~55min
-# fleet-wide shipping block), and the sanctioned remedy (seed_frontmatter.py --apply) correctly
-# refuses to touch a foreign-dirty file — so only the doc's own owner could clear it. Mirrors the
-# pre-push guard's own reasoning (scripts/hooks/pre-push): scope to staged + unstaged +
-# committed-but-unpushed doc changes only (the doc trees this checker covers). CI's lint-codex
-# slice is UNCHANGED and keeps corpus-wide enforcement — a bypassed bad doc still fails CI, it just
-# no longer blocks an unrelated agent's LOCAL gate. A manual full-corpus sweep remains available via
-# `python3 scripts/plan-hygiene/check_frontmatter_schema.py` (no args).
+# Reuses the changeset-scoped $_fm_scoped_list computed above (shared with the fixer).
 FRONTMATTER_SCHEMA_CHECKER="${REPO_ROOT}/scripts/plan-hygiene/check_frontmatter_schema.py"
 if [ -f "$FRONTMATTER_SCHEMA_CHECKER" ]; then
     echo "Running per-doc-type frontmatter schema check (plan/epic/issue/audit)..."
-    _fm_doc_trees='plans/active/*.md plans/active/issues/*.md plans/epics/*.md plans/audit/results/*.md plans/audit/instructions/*.md codex/*.md agents/*.md *.mdc'
-    _fm_upstream=$(git -C "$REPO_ROOT" rev-parse --abbrev-ref --symbolic-full-name '@{u}' 2>/dev/null || echo "")
-    _fm_changed=""
-    if [ -n "$_fm_upstream" ]; then
-        # shellcheck disable=SC2086  # intentional word-split: _fm_doc_trees is a space-separated pathspec list
-        _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR "${_fm_upstream}...HEAD" -- $_fm_doc_trees 2>/dev/null)"
-    fi
-    # shellcheck disable=SC2086
-    _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --name-only --diff-filter=ACMR -- $_fm_doc_trees 2>/dev/null)"
-    # shellcheck disable=SC2086
-    _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" diff --cached --name-only --diff-filter=ACMR -- $_fm_doc_trees 2>/dev/null)"
-    # A brand-new doc that was never `git add`ed is UNTRACKED, so none of the three `diff` calls
-    # above see it at all (diff only compares tracked content) — without this, a fresh bad-
-    # frontmatter doc you just wrote would silently skip local validation entirely.
-    # shellcheck disable=SC2086
-    _fm_changed="${_fm_changed} $(git -C "$REPO_ROOT" ls-files --others --exclude-standard -- $_fm_doc_trees 2>/dev/null)"
-    _fm_scoped_list=""
-    for _f in $_fm_changed; do
-        [ -f "$REPO_ROOT/$_f" ] || continue
-        case " $_fm_scoped_list " in *" $_f "*) : ;; *) _fm_scoped_list="${_fm_scoped_list} $_f" ;; esac
-    done
     if [ -z "${_fm_scoped_list// /}" ]; then
         log_success "Frontmatter schema check skipped (no doc changes in your changeset — nothing of yours to check; CI's corpus-wide scan is unaffected)"
     else
