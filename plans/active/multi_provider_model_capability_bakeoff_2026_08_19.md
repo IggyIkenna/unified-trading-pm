@@ -197,17 +197,30 @@ not yet built anywhere) — approximated as peak reported token usage ÷ that mo
 approximation, not a true AO-grade measurement. No attempt's diff auto-merges — Gate 1/2 scoring + the shared-task
 diff comparison decide what (if anything) actually ships via normal `quickmerge.sh`.
 
+**Usage-stats polling (operator requirement, 2026-08-19)**: every attempt runs with a companion poller at ≤60s
+cadence for the attempt's full duration — see the `[INFRA] P1` poller todo below for exactly what it captures and
+where it writes.
+
 ## Todos
 
-- [ ] [OPERATOR] P0. Temporarily enable `account_status` for exactly the accounts this bake-off needs (1 Gemini
-      project pair per model variant tested, the GLM Coding Plan account, 1 NVIDIA/Gemma account, the Codex/Luna
-      account) — every one is currently paused per standing 2026-08-16 operator instruction ("fully shipped ready
-      to use but on pause mode"). Re-disable each account once its 6 attempts are recorded. Done when: all 6 models'
-      accounts show `account_status: enabled` for the duration of their own run only.
+- [x] [OPERATOR] P0. ✅ Operator go-ahead given 2026-08-19 ("yes bro, go ahead and use whatever account you have to
+      use and creds you need. test all these 6 models properly") — resolves the policy question above: the
+      operator's explicit answer supersedes the 2026-08-16 pause instruction for the scope of this bake-off.
+      `account_status` itself needs no change (confirmed AO-internal-only, doesn't gate direct dispatch). Dispatch
+      is unblocked.
 - [ ] [INFRA] P1. Stand up the isolated-branch-per-attempt dispatch mechanism described in Mechanics above (36
       branches off `live-defi-rollout`, one `claude` subprocess per attempt, env pointed at the right
       proxy/endpoint). Done when: one real end-to-end attempt (any model, any task) produces an isolated branch
       with a real diff and no collision with the base branch.
+- [ ] [INFRA] P1. Build a per-attempt usage-stats poller, cadence ≤60s (operator requirement, 2026-08-19), capturing:
+      (a) the running `claude -p` session's own transcript jsonl (`~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`)
+      — cumulative input/output/cache tokens, turn count, tool-call count, approx context-fill%; (b) each provider
+      account's own usage/quota surface where one exists (litellm proxy spend log for Gemini/Gemma, GLM/z.ai account
+      usage, Codex/Luna account usage) — message count and/or % of plan/quota consumed, stated as "not available" per
+      account if the provider exposes none. Snapshots appended to a per-attempt poll-log file referenced from the
+      Results table. Done when: one real attempt (paired with the INFRA todo above) has a complete poll-log from
+      launch to exit at ≤60s cadence, covering both the jsonl-transcript stats and whatever account-usage surface
+      exists for that provider.
 - [ ] [BACKEND] P2. Run Gemini 3.5 Flash-Lite against all 6 Gemini-lane tasks; record Gate 1/2 scores + tokens/
       context-fill/turns/time per attempt. Done when: 6 rows exist in the Results table below (or a stated
       pass/fail/blocked reason per attempt).
@@ -257,3 +270,11 @@ _(populated as each model's run completes)_
   Asked the operator directly whether their session-long cooperation (fetching keys, approving the proxy/tests) already
   counts as that go-ahead, or whether they want the todo kept as an explicit checkpoint before any of the 36 attempts
   start. **Not yet resolved — do not start dispatching any attempt until this is answered.**
+
+- **2026-08-19 (later, same session) — operator go-ahead received, dispatch unblocked; new polling requirement
+  added.** Operator: "yes bro, go ahead and use whatever account you have to use and creds you need. test all these
+  6 models properly and make sure that we are also checking the usage stats of each of those accounts every one
+  minute when the models are doing some tasks on them ... capture all the context related stats and all the jsonl
+  related stats and all the stats that we can get frequently, 30s or 1 min at the most." `[OPERATOR] P0` flipped
+  done. New `[INFRA] P1` poller todo added (spec above); building it now, proving it end-to-end on the first real
+  attempt alongside the existing isolated-branch-mechanism todo, before scaling to the remaining 35.
