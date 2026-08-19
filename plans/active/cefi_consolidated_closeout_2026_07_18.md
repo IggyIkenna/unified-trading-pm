@@ -269,6 +269,11 @@ Phases 1/1b/1c/2/5 sections show 0 remaining open todos.
   default-pool + a date-serial barrier), not a physical ceiling; the gap is **~1-2 days of work at June rates**. **THE
   THROUGHPUT BUG IS NOW FIXED + MEASURED LIVE** (~14 MB/s on the VM). The doc also flags that "operator accepted 50.79%"
   may have been INFERRED from the erroneous ceiling verdict, not actually given.
+  **STALE (ag-closeout-audit, cefi tranche, 2026-08-19): the date-serial barrier this paragraph calls "fixed" was
+  never actually shipped — live-measured 2026-08-16 on the running BINANCE-FUTURES resume VM at only ~4 MB/s
+  (download-leg 4.01 MB/s / upload-leg 3.22 MB/s), not ~14 MB/s. Root cause + corrected estimate:
+  `issues/cefi_tardis_date_serial_barrier_still_open_2026_08_16.md`; fix design:
+  `cefi_tardis_date_concurrency_2026_08_16.md`.**
 - [x] ✅ [REVIEW] P0. **RULING (autonomous, within documented intent — /autonomous, 2026-07-18)**: **RE-OPEN the CeFi
       Completion Program + REVERSE the 50.79% acceptance.** Basis (all operator-stated): the archival's premise is a
       verified-false ~350x code-bug, now fixed + measured live; the "accept 50.79%" was inferred, not actually given.

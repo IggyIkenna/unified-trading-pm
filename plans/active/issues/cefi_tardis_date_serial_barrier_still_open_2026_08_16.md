@@ -107,9 +107,10 @@ recovery to full-chunk replay or a page — this needs its own verification + fi
       confirm `monotonic` is already `false` under `--batch-date-concurrency=20`. If confirmed, this needs its own
       urgency independent of the CeFi barrier work — file as its own P0 if the TradFi backfill owners aren't already
       tracking it.
-- [ ] [DOC] P3. Correct the stale "~14x" estimate everywhere it's cited in the corpus
-      (`cefi_consolidated_closeout_2026_07_18.md`, `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) — point
-      both at this doc's corrected figure.
+- [x] ✅ [DOC] P3. **DONE 2026-08-19 (ag-closeout-audit, cefi tranche)** — Corrected the stale throughput claim
+      everywhere it's cited in the corpus (`cefi_consolidated_closeout_2026_07_18.md`,
+      `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) — both now carry a dated correction note pointing at
+      this doc's live-measured figure (~4 MB/s, not the stale ~14 MB/s "fixed" claim).
 
 ## Progress Log
 
@@ -123,3 +124,13 @@ recovery to full-chunk replay or a page — this needs its own verification + fi
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged -- the linked design plan, the archived
   throughput-collapse doc, and the two source paths (MTDS orchestrator barrier, UTL concurrency adapter) still cover
   the doc's subject matter.
+- **ag-closeout-audit 2026-08-19 (cefi tranche)**: mechanical corpus-hygiene fix, done in-run per the skill's HARD
+  rule (fix in-run, never park). Item 3 (stale throughput-figure correction) shipped: both cited docs
+  (`cefi_consolidated_closeout_2026_07_18.md`, `cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) now carry a
+  dated correction note. Items 1 and 2 remain open -- item 1 redirects to `cefi_tardis_date_concurrency_2026_08_16.md`
+  (itself audited this run: orphaned, time-gated on the same Tardis N=1 slot occupied by the live BINANCE-FUTURES
+  backfill); item 2 (verify TradFi checkpoint regression) stays bundled under this doc's own explicit 2026-08-16
+  operator ruling ("human plan, not AO-dispatched, execute today") -- not extracted into a batch. No real covering
+  plan (assigned_vm: planning + status: active with an open Todos-section citation) claims either remaining item.
+  Overall verdict for the cefi closeout-completeness sweep: orphaned_partial_coverage, non-batchable
+  (operator-gated/time-gated per the standing 2026-08-16 ruling), one item resolved this run.
