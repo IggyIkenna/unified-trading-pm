@@ -33,7 +33,7 @@ related:
     /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
   ]
-parent_epic: cefi_master
+parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- the barrier lives in process_ticks, the shared asset-group-parameterized MTDS orchestrator entrypoint (CEFI/TRADFI/DEFI/SPORTS all route through it); the fix is already live on TradFi/Deribit and one of the 6 correctness bugs is a confirmed TradFi production regression independent of CeFi
 source: "Interactive session 2026-08-16, slot 4 — operator asked for the real e2e download-to-GCS rate on the live
   BINANCE-FUTURES resume VM after flagging '30 min/day' as too slow; measurement led to a full design investigation"
 assigned_vm: NA

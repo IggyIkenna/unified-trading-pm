@@ -23,7 +23,10 @@ related:
   ]
 created: 2026-08-17
 author: slot-14 (data_engineering)
-parent_epic: cefi_master
+parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- root-cause fix patches shared
+  # MTDS manifest-writer plumbing (_tradfi_manifest_shard.py::_tradfi_manifest_itype), which hardcoded a
+  # tradfi-only gate causing EVERY non-tradfi asset group to skip instrument_type canonicalization -- not a
+  # cefi-specific bug, cefi was just where the 13x regrowth was noticed first
 source: [/plans/archive/2026_08/cefi_casing_residual_ao_dispatch_2026_08_16.md]
 priority: P1
 assigned_vm: planning
