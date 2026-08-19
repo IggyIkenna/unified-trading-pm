@@ -1866,6 +1866,10 @@
           <i># what to do</i> instrument: <i>InstrumentKey</i> quantity: <i>decimal</i> reference_price: <i>decimal</i>
           <i># the benchmark it assumed</i> execution_policy_ref: <i>str</i> <i># which policy governs it</i> urgency:
           <i>Urgency</i> eligible_venues: <i>list[str]</i> venue_constraints: <i>VenueConstraints</i>
+          reference_position: <i>dict[str, decimal] | None</i> <i># believed position per eligible venue</i> credit:
+          <i>{entry_threshold, abandon_threshold} | None</i> <i># strategy-owned band or threshold</i>
+          position_adjustment_bps_per_unit_risk: <i>decimal | None</i>
+          <i># symmetric skew coefficient, against raw position</i>
         </div>
       </details>
       <div class="callout">
@@ -1876,6 +1880,24 @@
           improve — new algos, new venues, better routing — without a single strategy changing.
         </p>
       </div>
+      <h3>Reference position, credit, and per-position adjustment</h3>
+      <p>
+        A generalisation of the reference-price idea above, extending it from "what did the market look like" to
+        "does execution's view of the position match strategy's." <code>reference_position</code> states strategy's
+        believed position per eligible venue, shaped like <code>venue_constraints</code> so it stays meaningful when
+        the venue is not chosen until execution time (<code>SOR_AT_EXECUTION</code> routing); a mismatch on the venue
+        actually used is an integrity check, not a market-move tolerance, and reuses the same four-outcome
+        risk-consequence vocabulary (<code>BLOCK</code>/<code>SCALE_DOWN</code>/<code>MONITOR</code>/
+        <code>TEST_ONLY</code>) the preflight risk gate already supports elsewhere, defaulting to <code>BLOCK</code>.
+        <code>credit</code> is strategy-owned and strategy-computed — a band around the reference price for
+        market-making, a hard fire-or-don't threshold for arbitrage — execution only consumes whatever is cached.
+        <code>position_adjustment_bps_per_unit_risk</code> is one symmetric coefficient against the raw,
+        single-instrument, single-venue position, generalising the existing <code>skew_on_inventory</code> concept
+        off market-making specifically.
+        <b class="st st-plan">planned</b><b class="ev ev-assumed">~ assumed</b> — none of this is built; design
+        recorded in
+        <code>plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md</code>.
+      </p>
       <h3>The action vocabulary</h3>
       <div class="plate">
         <div class="plate-head">
