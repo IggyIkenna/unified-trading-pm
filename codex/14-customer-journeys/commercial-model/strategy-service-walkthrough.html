@@ -1312,7 +1312,13 @@
         <p>
           <code>reference_price</code> only tells execution what the market looked like at instruction time — it
           says nothing about whether execution's view of strategy's <em>position</em> agrees with strategy's own
-          view. A price gap is a market observation; a position gap is an integrity problem. The proposed extension
+          view. A price gap is a market observation; a position gap is an integrity problem. Price, position, and
+          credit at the same reference point are the whole reference mechanism, not price alone: the intent is for
+          execution to approximate how to adjust on a tick basis as new position/price information arrives without
+          a round trip back to strategy's own slower loop — that triple is the entire reason the
+          fast-path/slow-path split works. Strategy sets the governing boundary; execution decides mechanics within
+          it. Only <code>reference_price</code> and <code>reference_price_mark_mode</code> are shipped today — the
+          position and credit legs below are designed, not built. The proposed extension
           adds a per-venue <code>reference_position</code>, shaped like <code>venue_constraints</code> above so it
           stays meaningful under <code>SOR_AT_EXECUTION</code> routing, and reuses the existing four-way risk
           consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>)

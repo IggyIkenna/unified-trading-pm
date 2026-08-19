@@ -1125,7 +1125,7 @@
       </div>
 
       <p>
-        Three fields carry most of the architectural meaning. <code>eligible_venues</code> plus
+        A cluster of fields carries most of the permission-and-provenance meaning. <code>eligible_venues</code> plus
         <code>venue_constraints</code> say where an instruction is <em>permitted</em> to be worked and under what
         limits; <code>venue_routing_mode</code> defaults to <code>SOR_AT_EXECUTION</code>, meaning the venue choice is
         made at execution time rather than by the strategy; and <code>execution_policy_ref</code> <em>names</em> an
@@ -1133,11 +1133,18 @@
         expresses method. That separation is enforced by the type, not by convention.
       </p>
       <p>
-        <code>reference_price</code> is the newest of these, and it lives on the shared envelope rather than on any
-        one instruction type so any instruction can carry a benchmark price — <code>reference_price_mark_mode</code>
-        says whether execution marks fills against it as sent, or re-derives it as the underlying moves. Execution
-        additionally stamps <code>received_at_utc</code> and <code>sent_at_utc</code> on every instruction it
-        touches, so the strategy-side-to-order-placed latency is a field, not a log-mining exercise.
+        <code>reference_price</code> carries a different kind of meaning, and it is shipped on the envelope today —
+        it lives there rather than on any one instruction type so any instruction can carry a benchmark price, and
+        <code>reference_price_mark_mode</code> says whether execution marks fills against it as sent, or re-derives
+        it as the underlying moves. But price alone is one leg of a three-leg design, not the whole reference
+        mechanism: strategy is meant to state its per-instrument <strong>position</strong> and
+        <strong>credit</strong> at the same reference point too, so execution can approximate how to adjust on a
+        tick basis as new position/price information arrives without re-consulting slow-path strategy — that
+        triple, not price on its own, is the entire reason the fast-path/slow-path split works. Strategy sets the
+        governing boundary; execution decides the mechanics within it. Only the price leg and the mark-mode flag
+        exist in code today — the position and credit legs are designed, not built (see the callout below).
+        Execution additionally stamps <code>received_at_utc</code> and <code>sent_at_utc</code> on every instruction
+        it touches, so the strategy-side-to-order-placed latency is a field, not a log-mining exercise.
       </p>
 
       <div class="callout">
