@@ -200,12 +200,16 @@ dispatch"` — consistent with the account snapshots seen the same hour
 
 ## Todos (added 2026-08-19)
 
-- [ ] [OPERATOR] P1. Confirm whether the four unrecorded pauses (`ao_watchdog`, `na_eligibility`,
-      `reconcile`, `report`) and the re-pause of `ci_reconcile` are intentional, and record the
-      reason + rough date for each in the sections above — or resume the ones that are forgotten.
-      `ao_watchdog` matters most: it is the fleet's own daily health check
+- [ ] [OPERATOR] P1. Record the reason + rough date for the three still-unrecorded pauses
+      (`na_eligibility`, `reconcile`, `report`) and for the re-pause of `ci_reconcile` in the
+      sections above — or resume the ones that turn out to be forgotten.
+      **`ao_watchdog` RESOLVED 2026-08-19**: operator authorized resuming it and only it;
+      `POST /api/scheduled-dispatch/ao_watchdog/resume` returned `{"mode":"ao_watchdog",
+      "status":"active"}` and the persisted registry re-read confirms it is gone from the paused
+      set (6 remain: ag_closeout, cefi_mtds_smoke, ci_reconcile, na_eligibility, reconcile,
+      report). It was the urgent one — it is the fleet's own daily health check
       (`/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer),
-      so while it is paused nothing is running the check that would have surfaced the other six.
+      so while it was paused nothing was running the check that would have surfaced the other six.
       (repo: NA — operator knowledge, not derivable from any system field)
 - [ ] [REVIEW] P2. Re-check the "Current state" section against the live registry file whenever
       this doc is touched, until the `paused_at`/`reason` schema change lands — a hand-maintained

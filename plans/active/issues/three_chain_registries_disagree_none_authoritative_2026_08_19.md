@@ -63,22 +63,40 @@ answers. The consequences are not cosmetic.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Declare ONE authoritative chain SSOT and make the others derive from it or die.** Per the
-      workspace's centralisation rule the answer is a single registry with the others importing it — not three
-      hand-maintained lists that drift. `ChainKind` is the natural candidate. State the decision in the surviving
-      registry's docstring so the next reader does not re-derive it.
-- [ ] [BACKEND] P0. **Add `plasma` to the authoritative registry** — it has live venues (`AAVE-PLASMA`,
-      `FLUID-PLASMA` via `DEFI_VENUE_TO_PROTOCOL`) and a mainnet chain ID in `chain_env.MAINNET_CHAIN_IDS`, so its
-      absence is a straight omission, not a scoping decision.
-- [ ] [BACKEND] P0. **Add `scroll` and `starknet` to `KNOWN_CHAINS`** or delete `KNOWN_CHAINS` in favour of the
-      authoritative registry. Both have live venues today (`AAVE_V3-SCROLL`, `COMPOUND_V3-SCROLL`,
-      `EXTENDED-STARKNET`).
-- [ ] [AGENT] P0. **Enumerate every consumer of each of the three registries** and determine which number each one
-      is currently getting. Anything that wrote a chain-scoped split to GCS, a manifest, or a published metric needs
-      its output re-checked — the under-count is silent, so nothing will have flagged itself.
+- [x] ✅ [BACKEND] P0. **`ChainKind` declared the vocabulary SSOT — unified-api-contracts@27ebc544b2.** Chose
+      "derive from it" over "or die", because measurement showed the three are NOT three answers to one question —
+      they own different concerns (see Progress Log). The decision is stated in `ChainKind`'s own docstring naming
+      the other two and what each owns, and in `KNOWN_CHAINS`'s docstring naming the concern it owns, so the next
+      reader does not re-derive it.
+- [x] ✅ [BACKEND] P0. **`ChainKind.PLASMA` added — unified-api-contracts@27ebc544b2.** Confirmed a straight
+      omission exactly as described: `MAINNET_CHAIN_IDS["PLASMA"] = 9745` and a `CHAIN_GENESIS_DATES` entry
+      (2025-09-25) have both existed since the 2026-07-27 onboarding, so the chain was live everywhere EXCEPT the
+      canonical enum. `test_chainkind_covers_every_mainnet_chain_id` now blocks the repeat.
+- [x] ✅ [BACKEND] P0. **`SCROLL` added to `KNOWN_CHAINS`; `starknet` deliberately NOT added — this todo's premise
+      was wrong.** MEASURED: `EXTENDED-STARKNET` is a `VENUES_BY_ASSET_GROUP["cefi"]` member and does **not** appear
+      in `ALL_DEFI_VENUES`. `KNOWN_CHAINS` is a DeFi venue-string token-recognition set, so a CeFi venue cannot
+      justify an entry in it, and adding `starknet` would have been cargo-culted from a mis-stated premise.
+      (`ChainKind` already carries `starknet` — that is the right home for it.) `SCROLL` *was* justified and added,
+      **plus `PLASMA`, which this todo missed**: `AAVE-PLASMA`/`FLUID-PLASMA` had the identical defect.
+      `KNOWN_CHAINS` also held **12** entries at measurement, not the 10 stated in this doc's table.
+- [x] ✅ [AGENT] P0. **Consumers enumerated; the silent under-count is REAL and now named.** `ChainKind` — 6 UAC
+      modules + MTDS `adapters/umi_tick_provider.py`. `KNOWN_CHAINS` — instruments-service
+      `engine/orchestrator/writers.py` and `catalogue.py`, MTDS `scripts/rebuild_mtds_manifest.py`, each doing
+      `if chain in KNOWN_CHAINS:` and therefore **silently taking the else-branch for all four SCROLL/PLASMA
+      venues** until this fix. `VENUE_CHAIN_MAP` — UAC-internal only (no cross-repo consumer). The code side is
+      fixed; **whether any already-written chain-scoped GCS/manifest output needs re-checking is data verification
+      in T2-owned repos** — filed on T2's plan as `[FROM-T1]` rather than assumed clean. (Also found: several
+      instruments-service scripts hand-roll their OWN `KNOWN_CHAINS` literal instead of importing UAC's — a
+      duplicate-vocabulary risk in a repo this tranche does not own; included in the same T2 request.)
 - [ ] [REVIEW] P1. **Resolve the 13-vs-14 discrepancy**: two independent agents counted chains-with-live-venues
       today and got 13 and 14. Both derived it from registries rather than guessing, so one of the two filters is
       subtly wrong. Settle it and record the correct filter, since this number now appears in client artefacts.
+      **NOT resolved 2026-08-19** — a naive `venue.split("-", 1)[1]` over `ALL_DEFI_VENUES` yields 14, but two of
+      those (`native-solana`, `onchain`) are split artifacts, not chains: `parse_defi_venue()` correctly resolves
+      `SOLANA-NATIVE-SOLANA` → `SOLANA` and `ALCHEMY-ONCHAIN` → the declared `ONCHAIN` pseudo-chain. So the "14"
+      filter is demonstrably one of the wrong ones, but settling the correct count needs the `ONCHAIN`
+      keep-or-remove decision `chain_env.py` already flags as pending — left open rather than answered with a
+      number that would re-rot.
 - [ ] [REVIEW] P1. **Check whether the published coverage denominators read any of these three.** A peer verified
       `measure_honest_coverage.py` does not read `VENUE_CHAIN_MAP`; the equivalent check for `KNOWN_CHAINS` and
       `ChainKind` has not been done. If a denominator reads the 10-chain or 4-chain list, published coverage is an
@@ -88,3 +106,38 @@ answers. The consequences are not cosmetic.
 
 **2026-08-19 — filed.** Consolidated from three independent sub-agent findings during the client-artefact
 expansion; each agent independently hit the problem of having no single defensible chain source.
+
+**2026-08-19 — FIXED, unified-api-contracts@27ebc544b2** (T1 code-readiness tranche, slot-6).
+
+**The framing in this doc's title and table is partly a category error, and the fix reflects the measurement, not
+the framing.** These are not three competing answers to "which chains does the platform support":
+
+| Registry | Concern it actually owns | Verdict |
+| --- | --- | --- |
+| `ChainKind` | the chain VOCABULARY (lowercase canonical values) | promoted to SSOT |
+| `KNOWN_CHAINS` | UPPERCASE token recognition for SPLITTING `<PROTOCOL>-<CHAIN>` venue strings | kept, now derives |
+| `VENUE_CHAIN_MAP` | venue→chain for DeFi shared-wallet routing | kept, values must be `ChainKind` |
+
+`VENUE_CHAIN_MAP` covering "4 chains / 15 of 192 venues" is therefore its correct SCOPE (only wallet-sharing venues
+belong in it), not the under-count the table implies. Merging the three would have destroyed real distinctions.
+
+**But the underlying defect was real, and worse than "under-reporting".** Four live `ALL_DEFI_VENUES` entries —
+`AAVE_V3-SCROLL`, `COMPOUND_V3-SCROLL`, `AAVE-PLASMA`, `FLUID-PLASMA` — parse (via `parse_defi_venue()`) to chain
+tokens `SCROLL`/`PLASMA` that `KNOWN_CHAINS` did not contain, so every `if chain in KNOWN_CHAINS:` consumer took
+the else-branch for them, silently. That is a live data-path defect, not a cosmetic registry-count disagreement.
+
+**Three claims in this doc corrected by measurement** (each re-measured, not reasoned):
+
+1. `KNOWN_CHAINS` held **12** entries, not 10.
+2. `starknet` has **no** DeFi venue justifying a `KNOWN_CHAINS` entry — `EXTENDED-STARKNET` is a CeFi venue and is
+   absent from `ALL_DEFI_VENUES`. Not added, deliberately.
+3. `PLASMA` was missing from `KNOWN_CHAINS` too — this doc named only `scroll`/`starknet`.
+
+**What now prevents the drift recurring** (`tests/unit/test_chain_registry_ssot.py`, 7 tests): `ChainKind` ⊇/⊆
+`MAINNET_CHAIN_IDS`, `ChainKind` ⊇ `CHAIN_GENESIS_DATES`, every live DeFi venue's parsed chain token is recognised
+by `KNOWN_CHAINS`, every `KNOWN_CHAINS` member is a `ChainKind` or one of two explicitly-allowlisted venue-as-L1
+tokens (`HYPERLIQUID`, `ASTER`), and every `VENUE_CHAIN_MAP` value is a `ChainKind` value. All 7 pass; the six
+containment properties were also executed standalone as direct probes.
+
+**Still open**: the 13-vs-14 count (see todo — partially diagnosed, blocked on the pending `ONCHAIN` pseudo-chain
+decision) and the coverage-denominator check. Neither closed on a plausible-looking number.
