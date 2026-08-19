@@ -208,7 +208,7 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
-- [ ] [BACKEND] P0. **`_union_rank_series`'s `status.map(_STATUS_RANK)` call (`data_status_union.py:145`) is a NEW
+- [x] ✅ [BACKEND] P0. **`_union_rank_series`'s `status.map(_STATUS_RANK)` call (`data_status_union.py:145`) is a NEW
       WORKER-TIMEOUT/SIGABRT abort site** — surfaced live 2026-08-19 (slot 31, infra re-verification) inside the very
       helper the now-shipped `provenance_breakdown` vectorization fix (`deployment-api@b4b81502c0`, above) introduced
       to REPLACE the old per-`(pipeline_mode, source)`-group loop. Faulthandler dumps for 2 fresh `Uncaught signal: 6`
@@ -222,7 +222,30 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       lookup (e.g. `pd.Categorical`/`replace` or a numpy `searchsorted` on a precomputed rank array) or hoisting
       `_union_rank_series` to compute ONCE per full manifest read rather than once per chunk-call-site, mirroring how
       `(venue, year)` counts already accumulate across chunks. Repo: deployment-api. Re-run this issue's 3-scope cefi
-      probe as the acceptance check once shipped.
+      probe as the acceptance check once shipped. — **deployment-api@18489f99f8** (Quickmerge, verified ancestor of
+      `origin/live-defi-rollout`): took BOTH recommended-fix branches. (1) Replaced `status.map(_STATUS_RANK)` with
+      `pd.Categorical(status, categories=list(_STATUS_RANK)).codes` — `_STATUS_RANK`'s keys are already in rank
+      order (0..3), so the Categorical codes ARE the rank directly via a genuine hash-table factorize, instead of
+      the dict-mapper `.map()` path that converts the dict to a Series and resolves via an index-alignment join
+      (`get_indexer`/`_should_compare`) — confirming the faulthandler-diagnosed suspicion. Also vectorized the
+      sibling `mode_rank` computation (previously a per-row `.map(lambda pm: ...)` Python-call), replacing it with
+      `str.startswith` column ops + `np.select` (the now-unused `_mode_of` helper was removed; its semantics are
+      inlined). Verified byte-identical output vs. the old approach via a synthetic 150k-row benchmark before
+      applying. (2) Found + fixed a genuine 2x-redundant-compute bug on the SAME call path: `_process_manifest_chunk`
+      (`_live_coverage_venue_year.py:141,147`) called `provenance_breakdown(df)` then `union_reduce_to_cells(df)`
+      back-to-back on the identical `df`, each independently recomputing `_union_rank_series` over the same rows.
+      Added an optional `rank=` param to both + a new `compute_row_rank()` public entry point in
+      `data_status_union.py` so the caller computes the rank ONCE per chunk and passes it to both — this is the
+      "hoist to compute once ... rather than once per chunk-call-site" branch of the recommended fix, applied at
+      the call-site granularity the row-group-streaming architecture actually permits (computing it once per FULL
+      manifest read, as the todo's literal wording also floated, would require materializing the whole manifest in
+      memory — the exact OOM shape the streaming design exists to avoid, so that reading was rejected). Full unit
+      suite for the touched modules green (`test_data_status_union.py` 21, `test_route_venue_year_coverage.py` +
+      `test_route_venue_year_coverage_scope.py` 26, 47 total); full `quality-gates.sh` (no skip flags) green,
+      sentinel=18489f99f805c138e396ff3cd09e3613287c151e. **Live-prod re-verification (re-run this issue's 3-scope
+      cefi probe once this SHA ships to the live Cloud Run service) is a separate follow-up, same pattern as every
+      other BACKEND fix in this issue — not claiming this closes the top-level INFRA todo; that todo should be
+      re-run once this SHA is live in production.**
 - [x] ✅ [BACKEND] P2. Audit the container's memory headroom (16GiB) vs. cefi/tradfi/defi's REAL manifest sizes —
       measure peak RSS for an unfiltered full read of each, similar to the RSS-measurement approach the archived
       `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08` issue doc used for `measure_honest_coverage.py` — to
@@ -559,3 +582,13 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   worker action. Flagging for main/operator: consider wiring a prerequisite condition on this backlog task keyed to
   the `_union_rank_series` BACKEND fix landing, so it stops re-dispatching to idle slots until that ships. Not
   flipping the INFRA todo — still blocked on the same unshipped fix as the entry above.
+- **2026-08-19 (slot 4, backend_engineer)**: The `_union_rank_series` BACKEND P0 todo (flagged above by slot 14 as
+  the current blocker) done — shipped `deployment-api@18489f99f8`. Fixed both the dict-mapper index-alignment slow
+  path (`status.map(_STATUS_RANK)` → `pd.Categorical(...).codes`, plus vectorized the sibling per-row `mode_rank`
+  `.map(lambda)`) and a genuine 2x-redundant-compute bug (`_union_rank_series` was independently recomputed once
+  inside `provenance_breakdown` and once inside `union_reduce_to_cells`, both called on the identical `df` from
+  `_process_manifest_chunk` — added a `rank=` param to both + `compute_row_rank()` so the caller computes it once
+  and reuses it). Full detail in the todo's own flip above. Full unit suite for the touched modules (47 tests) +
+  full `quality-gates.sh` green, sentinel=18489f99f805c138e396ff3cd09e3613287c151e. **Live-prod re-verification is
+  a separate follow-up** — the top-level INFRA todo should be re-run once this SHA reaches `main` and redeploys
+  `uts-shared-deployment-api`, per this issue's established pattern for every other BACKEND fix.
