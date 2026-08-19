@@ -24,7 +24,7 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch22_finalize_2026_08_16.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
-    /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md,
     /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -48,7 +48,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md,
     /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -117,15 +117,23 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       periodic sweep or a PM-side hygiene script calling a new read-only AO endpoint — implementer's choice, per the
       doc's own Option-A framing. **Done when**: a dead-locked `plan_reconciler_findings_<tranche>_<date>.md` with a
       reaped-stale-correlated `locked_by` auto-clears within the chosen sweep's cadence, with a test proving a
-      still-live dispatch is NOT cleared. Source: `/plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`
-      todo "[BACKEND] P1. Implement Option A auto-clear". Repo: agent-orchestrator (+ a PM-repo write path).
+      still-live dispatch is NOT cleared. **✅ Already shipped** — `agent-orchestrator@bfe8fb28a0`
+      (`PlanReconcilerDeadLockSweep`, `server/plan_reconciler_dead_lock_sweep.py`), landed directly against the
+      source doc, this todo is now MOOT. Source (historical): `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`
+      todo "[BACKEND] P1. Implement Option A auto-clear". Durable contract:
+      `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock correlation…".
 - [ ] [DOCS] P3. **Ensure `plan_reconciler`'s own lock-stamping step always includes the dispatch id + timestamp.**
       2 of 4 dead 2026-08-09 docs (and a 3rd independently reproduced 2026-08-15, sports tranche) stamped a bare
       `locked_by: plan_reconciler` with no `(agt-xxxxxx) since <ts>` suffix, making dead-session correlation
       impossible for those rows even once todo 1 ships. Audit `cursor-configs/skills/plan-reconcile/SKILL.md`'s
       lock-stamping step for why it sometimes skips the suffix and fix it to be unconditional. **Done when**: every
       `plan_reconciler`-authored `locked_by:` stamp in a fresh run carries both the dispatch id and a timestamp,
-      verified against 2+ live runs. Source: same doc, finding 6 + its `[INFRA] P3` todo. Repo: unified-trading-pm.
+      verified against 2+ live runs. Source (historical): `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`,
+      finding 6 + its `[INFRA] P3` todo. Repo: unified-trading-pm. **✅ Already shipped** —
+      `unified-trading-pm@<see that doc's own resolved commit>` fixed the ACTUAL lock-stamping step, which turned out
+      to live in `agents/plan_reconciler.md` STEP 2b, not `cursor-configs/skills/plan-reconcile/SKILL.md` as this
+      todo's own text assumed (SKILL.md never contained that step — a misleading pointer this fix also corrected at
+      the source). This todo is now MOOT.
 - [ ] [BACKEND] P1. **Pre-dispatch duplicate-tranche live-lock check in `plan_health.py`'s `dispatch()`.** A second
       same-day `tranche=X` `plan_reconciler`/`ag_closeout_auditor`/etc. worker can currently be spawned while a first
       worker for the SAME `(tranche, date)` is still alive and holding its findings-doc lock (live 2026-08-16
@@ -134,8 +142,12 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       relevant family's findings doc) for a live `locked_by:`, or an AO-side non-terminal `AgentRow` for a prior
       dispatch matching the same tranche+date, and skip/queue the new dispatch instead of spawning a collision.
       **Done when**: a second same-day same-tranche dispatch attempt is refused or queued while the prior worker's
-      lock is confirmed live, with a regression test. Source: same doc, the 2026-08-16 `[BACKEND] P1` finding ("New
-      gap found live 2026-08-16"). Repo: agent-orchestrator.
+      lock is confirmed live, with a regression test. Source (historical):
+      `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`, the 2026-08-16 `[BACKEND] P1`
+      finding ("New gap found live 2026-08-16"). Repo: agent-orchestrator. **✅ Already shipped** —
+      `agent-orchestrator@bfe8fb28a0` (`_tranche_dispatch_gate`/`_last_tranche_dispatch`,
+      `server/plan_health.py`) — generalized across `reconcile`/`na_eligibility`/`ag_closeout`, so it also covers
+      `ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 2's identical `na_eligibility` gap. This todo is now MOOT.
 - [x] ✅ [DOCS] P3. ~~Batch the `/poll` + blocked-queue check in `agents/main.md`'s per-tick loop.~~ **ALREADY SHIPPED
       `unified-trading-pm@f637aed3cf`** — done directly while resolving the source issue doc (this plan was never
       activated from `status: draft`, so it held no live lock on the work). STEP 2A + STEP 2.5 now cross-reference

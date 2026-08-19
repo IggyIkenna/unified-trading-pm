@@ -15,8 +15,8 @@ tags: [ao, ao-dispatch, close-out, batch-22, finalize, satellite-extraction]
 related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch22_2026_08_16.md,
-    /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
-    /plans/active/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/archive/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md,
     /plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md,
     /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

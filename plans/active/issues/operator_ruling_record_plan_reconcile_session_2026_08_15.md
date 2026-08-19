@@ -18,7 +18,7 @@ tags: [operator-ruling, evidence, plan-hygiene, quality-gates, plan-reconcile, f
 related:
   [
     /plans/active/issues/operator_ruling_record_ao_round5_apply_session_2026_08_08.md,
-    /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
     /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 created: 2026-08-15
@@ -57,9 +57,11 @@ checkbox-flip citations resolve to a real path instead of an unsourced "operator
   — _"Clear now, auto-clear policy going forward."_ Ruling: clear all 6 confirmed-dead locks immediately, and going
   forward the reconciler auto-clears a PM-repo doc's `locked_by: plan_reconciler` lock once AO confirms the
   corresponding dispatch id is `reaped-stale` (Option A of the 3 presented in
-  `/plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 1). Applied: all 6 tranche findings
-  docs had their stale lock cleared this session; the actual Option-A auto-clear mechanism is tracked as a new follow-up
-  todo in that doc (not implemented in this doc-hygiene pass).
+  `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 1). Applied: all 6 tranche findings
+  docs had their stale lock cleared this session; the actual Option-A auto-clear mechanism was tracked as a follow-up
+  todo in that doc (not implemented in this doc-hygiene pass) — since shipped, `agent-orchestrator@bfe8fb28a0`
+  (`PlanReconcilerDeadLockSweep`), durable contract now at
+  `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock correlation…".
 - **Item 2 — corpus-wide `locked_by: live-defi-rollout` placeholder bug** — _"One-time corpus-wide clear
   (Recommended)."_ Ruling: Option B — treat the literal string `live-defi-rollout` as never a real lock and clear it
   from every doc in `plans/active/` carrying it in one pass, per

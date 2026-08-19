@@ -192,6 +192,40 @@ storms), not individual dispatch errors.
 
 ---
 
+## PM-repo dead-lock correlation + duplicate-tranche dispatch guard (2026-08-19)
+
+Two gaps existed for the sharded per-tranche scheduled auditors (`reconcile`/`na_eligibility`/`ag_closeout`) that a
+dead-dispatch `AgentRow` alone couldn't close, closed together in `agent-orchestrator@bfe8fb28a0`
+(`/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`):
+
+1. **PM-repo lock auto-clear** (`server/plan_reconciler_dead_lock_sweep.py`, `PlanReconcilerDeadLockSweep`, a daemon
+   thread wired in `server.py` alongside `PlanReconcilerLivenessCanary`). `plan_reconciler`'s own skill stamps
+   `locked_by: plan_reconciler (<dispatch_id>) since <ts>` on its
+   `plans/active/issues/plan_reconciler_findings_<tranche>_<date>.md` findings doc and the skill's "never auto-unlock"
+   policy means nothing clears it if the worker dies mid-run — this was measured to block 6 tranches' daily
+   reconciliation for 5 days (2026-08-10 through 2026-08-15) before a human noticed. The sweep correlates the doc's
+   `locked_by:` dispatch id against AO's own `AgentRow.exit_reason`, and auto-clears the PM-repo lock ONLY once the
+   dispatch is confirmed `exit_reason="reaped-stale"` AND the AgentRow's own `finished_at`/`registered_at` is older
+   than `tuning.plan_reconciler_dead_lock_max_age_hours` (default 8h) — **never a hand-typed timestamp inside the
+   doc**, which live docs were found to carry inconsistently (some omit it entirely). A still-live dispatch (no
+   `exit_reason` yet, or a non-`"reaped-stale"` exit) is never touched. The actual git write happens in a throwaway
+   scratch clone under `config.STATE_DIR`, never the shared `tuning.pm_repo_path` checkout (which stays read-only by
+   convention — every other reader of that path only ever reads it) — clone, edit the two frontmatter lines, commit,
+   push, delete; a rejected push (genuine concurrent edit) is abandoned for that tick rather than ever force-pushed,
+   re-evaluated fresh next tick.
+2. **Duplicate-tranche dispatch guard** (`_tranche_dispatch_gate` in `server/plan_health.py`, alongside the existing
+   report-mode-only `_report_dispatch_gate`). `reconcile`/`na_eligibility`/`ag_closeout` are deliberately exempt from
+   `_report_dispatch_gate` (their own scheduled call, not promotion-throttled) — but that exemption also meant zero
+   duplicate-dispatch protection for the identical `(mode, tranche, day)`, confirmed live twice as a real edit
+   collision (`agt-053eab`/`agt-3eb42b` on `tranche="ao"`, 2026-08-16; `agt-72629d`/`agt-9095fb` on `tranche="defi"`,
+   2026-08-18, `mode="na_eligibility"`). `_tranche_dispatch_gate` correlates a same-day same-`(mode, tranche)`
+   `plan_health_dispatch_initiated` activity row (now also logging `tranche`) to its `AgentRow`; if no
+   `plan_health_result` has posted yet AND the AgentRow isn't `archived`, the new dispatch coalesces onto the existing
+   one instead of spawning a collision. Unlike the report throttle, there is no `force=` bypass — a genuinely-live
+   sibling dispatch is never safe to double-spawn onto.
+
+---
+
 ## Capacity queue
 
 When a scheduled dispatch hits no-capacity and the caller supplies `job_name`, the server inserts a
