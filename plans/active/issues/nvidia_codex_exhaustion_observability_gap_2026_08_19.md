@@ -150,6 +150,34 @@ NVIDIA/Codex are deliberately paused on the live fleet and standing up a second 
 instance (beyond the litellm-proxy/codex-bridge pieces already used) was judged out of scope for a
 same-session finding.
 
+## Independent corroboration — Harsh, same day, separate real test (bake-off harness)
+
+A second, independent real test (Harsh, `multi_provider_model_capability_bakeoff_2026_08_19.md`'s
+own evaluation harness — 6 Gemini tasks fired ~30s apart) hit the SAME class of failure from a
+different angle: real Gemini free-tier rate-limit washout, not caught proactively. Two corrections/
+additions this surfaces, worth stating precisely rather than just appended:
+
+- **Gemini is NOT part of this doc's gap** — it already has real dispatch-time gating
+  (`gemini_account_has_rate_headroom()`, wired into `_account_meets_dispatch_headroom()`). Harsh's
+  "no Gemini/Gemma equivalent exists... no `gemini_*_ceiling` in config.py" is correct for the specific
+  POLLER-shaped pattern (GLM/DeepSeek's shape: a background poller writes a %-of-ceiling onto
+  `AccountUsageRow`) — Gemini uses a different, already-wired mechanism (real-time activity-log RPM/RPD
+  counting), not "no gating at all." Both tests (Harsh's bake-off harness, this doc's smoke test) fired
+  requests OUTSIDE AO's real `select_account_for_spawn` dispatch path, so neither proves AO's own gate
+  failed — both prove the same thing: real exhaustion is frequent and easy to hit, external tooling
+  that bypasses AO's dispatch path gets no protection from it (expected — that path was never in scope).
+- **Real, concrete ceiling numbers, worth recording**: Gemini's public free-tier limits — **20 req/min
+  for 3.7-flash, 250K tokens/min for 3.5-flash-lite**. Pacing requests to these known numbers would have
+  avoided most of Harsh's washout even without new gating code.
+- **Architectural preference for the NVIDIA fix below**: prefer the poller pattern (GLM/DeepSeek's
+  shape — write a %-of-ceiling onto the shared `AccountUsageRow` fields) over mirroring Gemini's
+  bespoke real-time-counting branch. The poller pattern converges toward ONE real generic primitive
+  (already shared by Claude+GLM); another bespoke branch would make a fourth parallel mechanism, not a
+  more uniform one. A real `GeminiQuotaPoller` (using the two numbers above) is also a buildable
+  follow-up in its own right — not opened as its own todo here (Harsh explicitly left it as an open
+  question, not urgent given the bake-off is nearly done) — flagged for the operator to weigh in on
+  separately, not decided in this doc.
+
 ## Follow-up
 
 - [ ] [BACKEND] P2. **Wire NVIDIA into the shared gate.** Add `nvidia_account_has_rate_headroom()`
