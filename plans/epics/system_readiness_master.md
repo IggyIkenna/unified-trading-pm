@@ -194,12 +194,25 @@ surfaces) and `execution_instruction` is explicitly _"none wired yet"_. **Modes 
       pre-existing coverage.json-observed verdict — no separate paper feed leg was added. Verified live 2026-08-19
       against `OKX-FUTURES`: BATCH → `not_ready` (coverage.json, zero captured), PAPER and LIVE → identical
       `unverified` verdict (registered in `WS_FEED_CONNECTOR_FACTORIES`, live data flow itself unconfirmed).
-- [ ] [BACKEND] P0. **Archetype readiness is CODE completeness, not data availability.** The existing
+- [x] [BACKEND] P0. ✅ **Archetype readiness is CODE completeness, not data availability.** The existing
       `strategy — archetype half` leg uses `satisfying_archetypes()`, which answers "which archetypes can this
       venue's DATA satisfy" — a different question from "are this archetype's code paths and hooks complete for
       batch / paper / live". Nothing answers the latter. Build it as a skill or script where the hooks are
       machine-detectable; where they are not, record a dated agent audit rather than leaving the cell blank. This
-      supersedes the vaguer "readiness applies to archetypes too" framing below.
+      supersedes the vaguer "readiness applies to archetypes too" framing below. — `unified-trading-pm@73c9e0036a`
+      (`cursor-configs/skills/archetype-code-completeness/`). Checks 5 machine-detectable hooks across all 60
+      `StrategyArchetype` members: `engine_factory` (`factory.ARCHETYPE_ENGINE_REGISTRY`), `param_schema`
+      (`PARAM_SCHEMA_REGISTRY`), `target_universe_catalog` (`specs_for_archetype()`), `allocator_rank`
+      (`ALLOCATOR_ARCHETYPE_REGISTRY`, mode-invariant), plus one mode-specific dispatch leg per BATCH
+      (`STRATEGY_TYPE_TO_SLOT`) / PAPER (`paper_run_handler.py`'s 9 named tick-loader frozensets) / LIVE
+      (`topology_enforcement.load_topology_requirements()`). Where no clean registry lookup exists (paper's
+      non-DeFi-carry dispatch fallback, live's dispatch below the shared `V2EngineOrchestrator`), emits a DATED
+      AGENT AUDIT record (2026-08-19) rather than guessing. Verified live 2026-08-19 against real strategy-service
+      code (60 archetypes × 3 modes = 180 rows): counts cross-validate exactly against a direct read of every
+      source registry (32 factory-registered engines, 35 param schemas, 8 dedicated allocator ranks, 12 paper
+      tick-loader hits, 60/60 topology docs present). Rollup ~6 ready / ~47 not_ready / ~7 unverified per mode —
+      only 32/60 archetypes have an engine at all today, the `VOL_*`/unbuilt `MARKET_MAKING_*` family accounting
+      for most of the gap.
 - [ ] [DOC] P1. **One shared readiness audit feeds BOTH client artefacts** (operator ruling 2026-08-19) — Elysium
       and Nick AI take the same underlying audit, not two per-artefact ones. It belongs to the shared parent
       remediation plan, not duplicated into the per-file children.
