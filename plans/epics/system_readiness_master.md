@@ -174,7 +174,7 @@ surfaces) and `execution_instruction` is explicitly _"none wired yet"_. **Modes 
 - [x] [BACKEND] P0. ✅ **Extend the readiness dump to the full surface × mode matrix**, with the service split above —
       strategy-service owns positions, execution-service owns orders / fills / trades / account balance. Reuse real
       checks per the skill's own fact-vs-proxy policy; a surface with no machine check prints `unverified`, never a
-      silent pass. — `unified-trading-pm@4c92cd5b45`. Added `execution_orders`/`execution_fills`/`execution_trades`/
+      silent pass. — `unified-trading-pm@6817d944ec`. Added `execution_orders`/`execution_fills`/`execution_trades`/
       `execution_account_balance` legs to `checks.py` + a new `_execution_order_capability_probe.py` cross-venv
       probe (execution-service's own `get_supported_venues()` adapter registry + UAC's `validate_operation`
       per-env `place_order` capability — real checks, not invented proxies). Verified live 2026-08-19 against
@@ -187,7 +187,7 @@ surfaces) and `execution_instruction` is explicitly _"none wired yet"_. **Modes 
       [paper-batch-live-reconciliation](/codex/09-strategy/operational/paper-batch-live-reconciliation.md) § 0,
       **paper always consumes the LIVE feed**, never a testnet feed — testnet is an execution sub-mode, and a
       testnet price series would break the determinism proof by construction. So market data is a two-feed
-      question (batch + live), not three. — `unified-trading-pm@4c92cd5b45`. Added `checks.mtds_live_feed()` (MTDS's
+      question (batch + live), not three. — `unified-trading-pm@6817d944ec`. Added `checks.mtds_live_feed()` (MTDS's
       own `WS_FEED_CONNECTOR_FACTORIES` registry, read via a new `_mtds_live_feed_probe.py` cross-venv probe that
       calls MTDS's own `connectors.register_all()` + `connector_registry.registered_venues()`) and wired
       `derive_readiness.py` so PAPER and LIVE rows reuse the SAME live-feed verdict, while BATCH keeps the
