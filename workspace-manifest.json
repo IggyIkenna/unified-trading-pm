@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "3fedc96b2c918e57e36a6b3c47241f82fb1af57d"
+      "ldr_ci_status_sha": "39b95ee24e701f60aeafc8a83647d923f3dae854"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "14d9b16eca64f35fb7aea8501c5ec87e1a3161c9"
+      "ldr_ci_status_sha": "c202cdc0304dcd1e28a6c269b34478a22733dd14"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -544,7 +544,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "d1e69ea671b2e7551b25cd96e5221d7961754c8f"
+      "ldr_ci_status_sha": "2cb10ff80744050803ee74b642709a1d20e4348b"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -608,7 +608,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "8d2e93852f97201024564e381eb34d361ea9d6d5"
+      "ldr_ci_status_sha": "985de715e5d447fc7868e3889a88af7bd81905cb"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -670,7 +670,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "eeb9f0e24eef91459466ed2add871cd9fc8571d5"
+      "ldr_ci_status_sha": "4037d02195775b81e62008c434b2bd4c485ab501"
     },
     "ibkr-gateway-infra": {
       "promotion_model": "ldr_main",
