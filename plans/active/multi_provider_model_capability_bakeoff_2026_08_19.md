@@ -237,3 +237,23 @@ _(populated as each model's run completes)_
   Grok/Kimi excluded (operator), `gemma-4-31b-it` excluded (operator: not working properly), real GLM model ids
   confirmed as `glm-5.2`/`glm-5-turbo` (server-aliased to `glm-5.3`), Claude models explicitly deferred to a later
   plan.
+
+- **2026-08-19 (later, same session) — infrastructure already in place, ZERO of the 36 attempts dispatched yet.**
+  Slots 24-29 claimed (`.agent-claim`, 7-day expiry) and mapped 1:1 to the 6 models (table in Mechanics above); all
+  confirmed clean/`live-defi-rollout`/in-sync before claiming. The local litellm proxy from yesterday's tool-use
+  verification is STILL RUNNING (`~/.venvs/litellm-proxy`, PID persists across sessions via `nohup`+`disown`,
+  `127.0.0.1:8768`, config `agent-orchestrator/config/litellm/grok_gemini_proxy.yaml` in slot 1) — reuse it, don't
+  rebuild. All 9 required provider secrets already fetched into `~/.claude-accounts/litellm-proxy.env` (mode 600,
+  outside any git tree) — reuse them, don't re-fetch from GSM. Real tool_use proof for Gemini/Kimi/DiffusionGemma
+  (and Grok's distinct new bug) written back to their SOURCE plans today, not just here — see
+  `grok_gemini_translation_proxy_2026_08_14.md` and `kimi_gemma_provider_onboarding_2026_08_16.md` Progress Logs.
+
+  **Open question, not yet answered by the operator**: the `[OPERATOR] P0` todo above was originally framed as
+  "enable `account_status`" — that's WRONG, verified by reading `server/state_store/account_usage.py`:
+  `account_status: disabled` is pure AO-internal dispatch bookkeeping (`account_is_usable()`, checked only by AO's
+  OWN spawn code), never consulted by direct tmux/subprocess dispatch at all — nothing technical blocks this
+  bake-off. The REAL open question is a policy one: the operator's standing instruction that paused these accounts
+  was framed as usage-policy ("so agents don't use them yet"), not a technical gate — this bake-off IS "using them."
+  Asked the operator directly whether their session-long cooperation (fetching keys, approving the proxy/tests) already
+  counts as that go-ahead, or whether they want the todo kept as an explicit checkpoint before any of the 36 attempts
+  start. **Not yet resolved — do not start dispatching any attempt until this is answered.**

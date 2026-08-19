@@ -697,6 +697,28 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
   uncommitted on purpose** (per this session's own instruction) — `server/gemini_translation_smoke.py` and
   `tests/test_gemini_litellm_translation_smoke.py` sit as working-tree edits for the lead session to review and ship.
 
+- **2026-08-19 (interactive session, slot 1, `/multi_provider_model_capability_bakeoff_2026_08_19.md` prep)**:
+  Real evidence toward the open `[REVIEW] P0` tool-use-verification todo — **Gemini half CLOSED, Grok half found
+  BROKEN with a new, more precise root cause.**
+
+  **Gemini**: a real `tool_use`/`tool_result` round-trip through a local litellm proxy instance (isolated venv,
+  same `config/litellm/grok_gemini_proxy.yaml`) succeeded against `gemini-3.5-flash-lite-proj1` — a `get_weather`
+  tool call correctly returned `stop_reason: "tool_use"` with the right tool name + parsed `{"location": "Tokyo"}`
+  input. This is the first real tool-calling proof for Gemini through this proxy (only plain-text completions were
+  verified before). The P0 todo's own "Done when" requires BOTH Grok and Gemini proven, so the checkbox stays open,
+  but the Gemini half is now genuinely done.
+
+  **Grok**: `grok-4.3`/`grok-4.6` tool_use could not be tested — a real `400 "Invalid model name"` on every
+  request. Root cause, found via the proxy's own startup log (not guessed): litellm 1.97.0 silently fails to
+  register EITHER grok model at config-load time — `XAI_API_KEY` resolved correctly, but neither `grok-4.3` nor
+  `grok-4.6` appears anywhere in `/v1/models`, and unlike every other model in the same config (which each get a
+  visible `register_model: ... not in built-in cost map` warning), the Grok entries produce ZERO log output at
+  all — they are dropped before even reaching that warning path. Likely cause: litellm's static cost-map doesn't
+  recognize these newer xAI model strings and the config loader silently excludes unrecognized entries rather than
+  erroring. Not fixed this session — Grok is explicitly out of scope for the current bake-off (operator decision,
+  2026-08-19) — but this is now a precisely-diagnosed gap (an explicit `model_info` override or a litellm version
+  bump are the likely fixes) rather than "still unverified," for whenever Grok work resumes.
+
 ## Context scout
 
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
