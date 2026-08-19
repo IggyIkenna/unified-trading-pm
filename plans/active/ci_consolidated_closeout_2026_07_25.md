@@ -125,7 +125,7 @@ isolation fixed on self-hosted runners.
 (Cloud Build re-stamps mutable git-sha image tags on rebuild) ·
 [issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md](/plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md)
 (`cassette-drift-check.yml` calls a deleted script, silently green) ·
-[issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md](/plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md)
+[issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md](/plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md)
 (`digest-drift-sweep.yml` `GITHUB_TOKEN` cross-repo scope bug, silent no-op since birth) ·
 [issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md](/plans/archive/issues/github_actions_deploy_sa_overbroad_secret_access_2026_07_24.md)
 (github-actions-deploy SA has over-broad project-wide Secret Manager access) ·

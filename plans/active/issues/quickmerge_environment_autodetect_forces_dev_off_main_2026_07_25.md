@@ -177,11 +177,17 @@ change needs a caller audit across the repo before touching it — out of scope 
 - [ ] [INFRA] P2. **Finish the quickmerge environment auto-detect follow-up.** **Steps 2+4 are DONE, only step 3
       remains** — corrected 2026-08-07 (na-eligibility-audit; the text below was stale, see marker below for why): step
       3 (revisit whether `scripts/quickmerge.sh`'s branch check should broaden to `live-defi-rollout`/`staging`) is the
-      only genuinely open sub-item — tracked in `ci_satellite_ao_dispatch_batch4_2026_07_31.md` as Deferred **D4-1**
-      (`status: active`, but D4-1 itself sits in the Conflict-gated/Deferred section, not currently dispatched by any
-      active todo — gated on `scripts/quickmerge.sh` ownership contention with that batch's own todo 1). It is a
-      design/judgment call on the fleet-wide shipping-pipeline gate every repo depends on — appropriately stays NA even
-      with steps 2/4's risk reduced.
+      only genuinely open sub-item. **Blocker citation corrected 2026-08-19 (plan_reconciler)**: this item is NO
+      LONGER gated on `scripts/quickmerge.sh` ownership contention with `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s
+      own todo 1 — that contention was CLEARED 2026-08-09, confirmed live in the now-archived
+      `plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md:118-126` ("BOTH blockers
+      cleared... `scripts/quickmerge.sh` is free again... batch-5 (or later) should extract it as a bounded AO
+      todo"), and `ci_satellite_ao_dispatch_batch4_2026_07_31.md` is itself `status: complete`, archived — not
+      `status: active` as this item previously (and repeatedly, through 2026-08-18) still claimed. The recommended
+      extraction was never actually executed by batch5/6/15 despite the clearing. The genuinely still-live reason
+      this stays open/NA is the design/judgment call itself — it is a design/judgment call on the fleet-wide
+      shipping-pipeline gate every repo depends on — appropriately stays NA on that basis alone, independent of the
+      now-stale ownership-contention framing.
 
 ## na-eligibility-audit verdict
 

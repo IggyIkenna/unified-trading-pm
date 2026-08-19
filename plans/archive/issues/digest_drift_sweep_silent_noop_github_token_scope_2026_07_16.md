@@ -21,7 +21,7 @@ summary: >
   nothing. NOT caused by the CI-cost runner flip (23ce709cc touched only `runs-on:`); the flip merely caused the log to
   be read. The second-order bug: the `POST /dispatches` at :160-176 uses the SAME out-of-scope token, so fixing only the
   fetch would surface a wave of 403/404s at the dispatch step instead.
-status: open
+status: archived
 nature: notes
 asset_group: [ci]
 stage: [meta]
@@ -70,7 +70,7 @@ drift_direction: advance-code
 last_updated: 2026-08-12
 locked_by:
 context_scope: [/codex/08-workflows/ci-cd-flow.md, /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md, /plans/archive/2026_08/ci_satellite_ao_dispatch_batch1_2026_07_26.md, .github/workflows/digest-drift-sweep.yml]
-resolved_by:
+resolved_by: "execution-service/agent-orchestrator/ml-service update-dependency-version.yml cascade confirmed live 2026-08-19 (plan_reconciler), no longer dormant"
 depends_on: []
 ---
 
@@ -304,9 +304,14 @@ assertion — otherwise we keep a third detector nobody reads.
 
 ## Todos
 
-- [ ] [DEVOPS] P1. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
-      2026-06-28** — recommendation 1 above remains the sole unresolved item; recommendations 2b/2c/3 already shipped
-      2026-07-26.
+- [x] ✅ [DEVOPS] P1. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
+      2026-06-28** — **RESOLVED (no longer dormant), verified live 2026-08-19** by plan_reconciler:
+      `gh run list --repo IggyIkenna/execution-service --workflow=update-dependency-version.yml` shows the cascade
+      firing multiple times/day via `repository_dispatch`, all `conclusion: success` (3 runs today alone:
+      2026-08-19T01:08/06:11/18:06Z). Likely resumed as a side effect of
+      `post_cutover_silent_assumption_sweep_2026_07_23.md`'s F2 fix (semver-agent retarget off the dormant
+      `staging` trigger, already in this doc's own `context_scope`) — the exact resuming commit was not traced,
+      so cite "resumed, cause not definitively traced" rather than asserting that causal chain as certain.
 
 ## na-eligibility-audit verdict
 

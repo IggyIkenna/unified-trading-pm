@@ -365,15 +365,56 @@ _(populated after hunters return)_
 
 ## Flips verified
 
-_(populated after verification)_
+All 7 priority candidates independently re-verified this session (fresh tool calls, not trusting hunter citations
+alone) and applied:
 
-## Contradictions
+1. `ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md` — 60-min clean-window bar todo: **DONE**,
+   re-verified `ci_satellite_ao_dispatch_batch13_2026_08_13.md:163` + confirmed the finalize doc's deferred
+   reconciliation never happened (0 grep hits) — flipped directly.
+2. `git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md` — both original todos: **DONE**,
+   re-verified `unified-trading-pm@b92d9ba52fe` reachable + the `unified-trading-ci` special-case still live in
+   `slot-git-status-report.sh:312-326` — flipped, plus filed a NEW todo 3 for a genuinely separate live gap (see
+   Contradictions/NEW-findings below).
+3. `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` — dormant-cascade todo: **DONE**, re-ran
+   `gh run list --workflow=update-dependency-version.yml` myself — 3 successful runs today alone, cascade
+   unambiguously not dormant. Doc now 1/1 done — zero-checkbox archive candidate (see Archive candidates below).
+4. `ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` — self-hosted-runner-security `[OPERATOR]`
+   todo: **DONE on superseding evidence** (not the originally-scoped artifact) — re-verified
+   `/codex/07-security/self-hosted-runner-security-posture.md:80-89` states the revert-based remediation is the
+   adopted standing posture; the harden-and-keep-self-hosted path this todo scoped was never applied and is now
+   moot.
 
-_(populated after verification)_
+## Contradictions (confirmed + fixed)
+
+1. `github_actions_operator_gated_followups_2026_07_17.md:266` — MTDS-promote-blocked table row: **FIXED**,
+   re-verified live `market-tick-data-service` git log (10 successful `chore(promote)` merges in the last 10
+   entries, 5 dated today) — struck through with corrected note, historical trail kept per row-9's own pattern.
+2. `quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md:177-184` — stale "ownership contention"
+   blocker citation: **FIXED** (rationale-accuracy correction, not a reclassification) — re-verified
+   `plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md:118-126` confirms the contention
+   cleared 2026-08-09 and batch4 is archived/`status: complete`; corrected to cite only the still-live
+   design/judgment-call reason for staying NA.
+
+**NEW finding filed (not a contradiction, no existing todo covered it)**: `git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`
+todo 3 — `agent-orchestrator/server/worker_liveness/_git_alerts.py:532-534`'s "ahead" branch has zero age/sustain
+threshold, unlike its sibling `dirty`/`behind` branches in the same function and unlike the sibling Slack-paging
+function's 90-min sustain for the same "ahead" case — independently confirmed via direct code read (lines 500-560).
+This is the real mechanism behind this run's own boot-time false-positive git-status nudge.
 
 ## Doc-drift
 
-_(populated after verification)_
+**Codex-alignment drift — routed, not auto-applied (adds new content, not a single-fact substitution; doesn't
+qualify for the STEP 5.f2 mechanical-staleness carve-out):**
+
+1. `/codex/06-coding-standards/quality-gates.md`'s "Sanctioned timeout overrides" section documents only
+   `IGNORE_TIMEOUT`/`PYRIGHT_TIMEOUT` — zero mentions of `PYTEST_TIMEOUT_SECONDS`/`PYTEST_TIMEOUT`/
+   `PYTEST_TIMEOUT_RETRIES` despite a ~2,900-line 5-doc incident chain living on exactly those knobs (confirmed
+   live in `base-library.sh`/`base-service.sh`, used across 7+ repos). Recommend adding a row for each.
+2. `/codex/04-architecture/ci-alerting.md` has zero mentions of `streak_start_sha`, a new Firestore field +
+   alert-linkage mechanism shipped `unified-trading-ci@7000ac0` per
+   `ci_alert_failure_resolution_linkage_2026_08_16.md`. Recommend documenting the shipped mechanism.
+
+Both routed via `/blocked` (STEP 6) with a recommendation, not applied autonomously.
 
 ## Hygiene fixes
 
@@ -385,7 +426,15 @@ _(populated after verification)_
 
 ## Archive candidates (operator review)
 
-_(populated after verification)_
+- `digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md` — **ARCHIVED this pass**. Flipping its sole
+  open todo (see Flips verified) left it 0-open/all-done, unlocked, non-grace. The pre-commit `check_archive_candidates`
+  hook correctly caught this as a hard gate before it would let the commit through. Ran the 6-step ritual: `status:
+  archived` + `resolved_by:` set, `git mv` to `plans/archive/issues/`, repointed 2 structured referrers
+  (`ci_consolidated_closeout_2026_07_25.md:128` markdown link, `ci_satellite_ao_dispatch_batch15_2026_08_16.md`
+  ×2 — a `context_scope`-style leading-slash ref and a backtick-quoted no-slash prose ref, both caught and
+  fixed), left the remaining referrers untouched (13 already-archived docs = historical narrative;
+  `na_docs_validity_and_ao_eligibility_audit_2026_07_26.md`'s bare-filename prose mention; the 2 machine-generated
+  `ci_master` index/report files, left for the next natural regen).
 
 ## Refuted (dropped by verify)
 

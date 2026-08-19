@@ -30,7 +30,7 @@ related:
     /plans/active/ci_pipeline_speed_and_cost_redesign_2026_08_05.md,
     /plans/active/issues/unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14.md,
     /plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md,
-    /plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
+    /plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/active/issues/breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md,
     /plans/active/issues/pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md,
     /plans/active/github_actions_operator_gated_followups_2026_07_17.md,
@@ -281,7 +281,7 @@ source: >-
 - [ ] [DEVOPS] P2. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
       2026-06-28** — bounded diagnostic question (grep trigger config, check dispatch history, diff against last-fired
       date), not an open-ended design call despite 4+ prior audit passes calling it judgment-only. Source:
-      `plans/active/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. Gate: a recorded root
+      `plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`. Gate: a recorded root
       cause with evidence, or a positive confirmation the cascade is intentionally dormant.
 
 - [ ] [SCRIPT] P3. **Wire the `consumer-qg-gate` job into `pin_branch_protection_rulesets.py`'s required-status-check

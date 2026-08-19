@@ -74,12 +74,28 @@ upstream branch rather than a hardcoded `live-defi-rollout` comparison.
 
 ## Todos
 
-- [ ] [BACKEND] P3. Locate the git-status-nudge ahead-count computation (likely `agent-orchestrator`,
-      whatever emits the "🟥 GIT STATUS RED" boot/heartbeat message) and confirm it hardcodes
-      `origin/live-defi-rollout` as the comparison target for every repo. Repo: agent-orchestrator.
-- [ ] [BACKEND] P3. Fix it to compare against each repo's own tracked branch (or explicitly skip
-      `unified-trading-ci` / any repo not on the `ldr_main` promotion model) instead of a hardcoded
-      `live-defi-rollout` target. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P3. Locate the git-status-nudge ahead-count computation — **found in the wrong repo than
+      guessed**: not `agent-orchestrator`, but `unified-trading-pm/scripts/dev/slot-git-status-report.sh`, the
+      actual data source both the Slack-paging alert and the in-session boot/heartbeat nudge read from.
+- [x] ✅ [BACKEND] P3. Fix it to compare against each repo's own tracked branch — **already shipped 6 days
+      BEFORE this doc was even filed**: `unified-trading-pm@b92d9ba52fe` ("fix: unified-trading-ci false
+      git-health ahead warning", 2026-08-11), `scripts/dev/slot-git-status-report.sh:312-326` — special-cases
+      `unified-trading-ci` → compare against `main`. Live-verified still present. Both todos flipped by
+      plan_reconciler 2026-08-19 after independently confirming the commit + live code.
+- [ ] [BACKEND] P2. **NEW (2026-08-19) — a separate, still-open false-positive mechanism, distinct from the
+      2 todos above.** This run's own boot heartbeat received a false-positive `unified-trading-pm: AHEAD=1
+      unpushed` nudge that this doc's diagnosed mechanism does NOT explain — PM carries no `integration_branch`
+      override (confirmed in `workspace-manifest.json`), so comparing it against `live-defi-rollout` is
+      correct; the fix above would not have prevented it. Real gap:
+      `agent-orchestrator/server/worker_liveness/_git_alerts.py:532-534` (`maybe_nudge_on_red_repos`) fires on
+      the "ahead" branch with **zero age/sustain threshold** — independently confirmed by direct code read:
+      the sibling `dirty` branch 3 lines later gates on `age_s > 3600`, and the sibling Slack-paging function
+      `maybe_alert_git_staleness` enforces a 90-min sustain (`GIT_RED_SUSTAIN_S`) for its own "ahead" case, but
+      `maybe_nudge_on_red_repos`'s "ahead" branch has no equivalent gate at all — only a 30-min RE-nudge
+      throttle exists, which doesn't stop the FIRST fire. A momentary ahead=1 reading (e.g. a commit landing
+      slightly before its push in the normal two-pass ship flow) can fire this nudge on the very next
+      ~5-min-cadence tick. Fix: add an age/sustain threshold to the "ahead" branch of `maybe_nudge_on_red_repos`,
+      mirroring its own sibling branches. Repo: agent-orchestrator.
 
 ## Progress Log
 
@@ -87,3 +103,8 @@ upstream branch rather than a hardcoded `live-defi-rollout` comparison.
   (message_ids 9106/9165/9201) this session. Did not touch unified-trading-ci itself — nothing there needs
   fixing, only the nudge's own comparison logic.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **plan_reconciler 2026-08-19 (dispatch agt-f212cb, ci tranche)**: flipped both original todos with HARD
+  evidence (fix shipped 2026-08-11 in a different repo than guessed). Filed a NEW todo for a genuinely separate,
+  still-open false-positive mechanism discovered via this run's own live boot-heartbeat occurrence (slot 1,
+  2026-08-19) — see todo 3. `context_scope` needs a follow-up add of `scripts/dev/slot-git-status-report.sh`
+  (the actual fix site for todos 1-2) — not yet added this pass, left for the next context-scout run.
