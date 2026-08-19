@@ -3,8 +3,14 @@ doc_type: issue
 title: "plan_reconciler tranche sweep — ao, 2026-08-19"
 summary: >-
   Sharded `/plan-reconcile ao` daily reconciliation pass, dispatch agt-be3ce1, slot 10. 104 docs in the ao tranche; 51
-  in the 12h grace window (read-only context), 53-54 non-grace docs (~1.16MB across 6 parent_epics) fanned across
-  epic-cluster hunters for full-coverage detect + adversarial verify. In progress — sections below are a live journal.
+  in the 12h grace window (read-only context), 54 non-grace docs (~1.16MB across 6 parent_epics) fanned across 6
+  epic-cluster hunters (100% read in full), adversarially re-verified inline before any write. RUN COMPLETE
+  2026-08-19: 6 confirmed contradiction fixes + 2 hygiene fixes applied (10 files, `unified-trading-pm@cfbb87d309`
+  + `@608566d440`); 2 genuine judgment calls routed via `/blocked`, both answered by the operator (option A both
+  times) and applied (`@fb81c7a564`); 3 candidates investigated and refuted (no action needed); 4 findings that
+  need further work (new codex prose, a live code/state check, a broader epic-roster audit) remain filed below as
+  open `- [ ]` todos for future pickup — this doc stays `status: open` for that reason, not because the run itself
+  is unfinished.
 status: open
 nature: issue
 asset_group: [ao]
@@ -162,16 +168,19 @@ carve-out criterion) — none qualified as a single unambiguous value substituti
 
 **Routed via `/blocked` (genuine two-sided judgment calls, operator rules)**:
 
-- **`BLK-8841776a`**: `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:430-433` states the
-  content-derived-backlog-task-id migration is "not deferred, done" — but
+- **`BLK-8841776a` — ✅ ANSWERED (A) + APPLIED.** `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md:430-433`
+  stated the content-derived-backlog-task-id migration is "not deferred, done" — but
   `content_derived_backlog_task_ids_2026_08_08_finalize.md` (the plan's own verification gate) has 0/6 verification
-  todos complete, and the parent plan itself still has 3 open Follow-up todos. Asked how to correct the codex
-  wording; recommended softening to acknowledge the pending finalize-plan verification.
-- **`BLK-cf790dbf`**: `ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md`'s still-open todo 5/6 (IDE-compatible
-  heartbeat, citing "operator-approved") directly conflicts with that SAME doc's own next-day Progress Log entry,
-  which found `ao_human_fleet_integration_2026_08_15.md` explicitly evaluated and REJECTED the same mechanism
-  (UserPromptSubmit as heartbeat carrier), not to be re-opened without a new ruling. Asked which stands; recommended
-  the rejection stands and the todo's "operator-approved" framing needs correcting.
+  todos complete, and the parent plan itself still has 3 open Follow-up todos. Operator ruled A (soften the wording).
+  Applied: codex text now reads "migration applied and holding (2037/2037 planned rows migrated, 0 unexplained);
+  independent verification pending via the finalize plan's 0/6 gate" — `unified-trading-pm@fb81c7a564`.
+- **`BLK-cf790dbf` — ✅ ANSWERED (A) + APPLIED.** `ao_review_slot_hard_rule_and_diagnostics_2026_08_17.md`'s
+  still-open todo 5 (IDE-compatible heartbeat, citing "operator-approved") directly conflicted with that SAME doc's
+  own next-day Progress Log entry, which found `ao_human_fleet_integration_2026_08_15.md` explicitly evaluated and
+  REJECTED the same mechanism (UserPromptSubmit as heartbeat carrier), not to be re-opened without a new ruling.
+  Operator ruled A (the rejection stands). Applied: retagged todo 5 `[SCRIPT]` → `[BLOCKED-OPERATOR-DECISION]`,
+  corrected the stale "operator-approved" framing, original technical content preserved for a future ruling —
+  `unified-trading-pm@fb81c7a564`.
 
 **Filed as durable todos (need more work than a citation fix — not `/blocked` judgment calls)**:
 
