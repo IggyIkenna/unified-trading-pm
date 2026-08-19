@@ -376,3 +376,18 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   needs a dedicated identity-hash trace per the slot-21 entry's own recommendation, not a repeat fleet-wide sample).
   No code changes shipped this session; this is documentation-only (Progress Log entry), shipped via `safe-doc-push.sh`
   since the orchestrator HTTP surface for the normal quickmerge/PM-flip loop was unreachable.
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 14, agt-955440 — RE-DISPATCH of the same escalation
+  the slot-10 entry above logged)**: the orchestrator HTTP surface is reachable this time (heartbeat/progress
+  succeeded), so this dispatch completes the lifecycle slot-10 couldn't finish rather than re-diagnosing from
+  scratch. Independently confirmed slot-10's conclusion before closing: `repos: [alerting-service,
+  deployment-service]` in this doc's own frontmatter already scopes the root cause away from
+  `market-tick-data-service` (my assigned repo); `check_live_capture_productivity` (DP-LIVE-004,
+  `deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py:542`) already gates on
+  `min_consecutive` misses before firing, so the detector logic itself isn't naively noisy — the ~30-distinct-venue
+  burst slot-10 observed is consistent with this doc's established mechanism (one redeploy-wiped dedup window
+  fanning out across every venue×data_type shard the VM owns), not a sign of a new detector-side bug. No genuine
+  ODDS_API/odds capture-productivity claim was independently re-verified this session (that would duplicate the
+  still-open P2 live-verify todo above, which is correctly scoped to alerting-service, not this repo) — MTDS
+  worktree confirmed clean (`git status` on `live-defi-rollout`, 0 ahead) both before and after, no code change
+  needed or shipped here. Did not re-ping the authoring slot (`dp-fleet-monitor` is not a numeric slot id — no
+  real originator to notify per the boot-prompt's skip rule). Completing via `/done`.

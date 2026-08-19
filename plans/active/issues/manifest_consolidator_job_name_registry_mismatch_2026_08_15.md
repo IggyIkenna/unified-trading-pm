@@ -121,11 +121,12 @@ tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only par
       the job list some other way (already correct, only the docstring/log lines are stale). Done when: a stated
       verdict (live gap vs. docstring-only) with the specific code path cited as evidence. Repo: deployment-service.
       — deployment-service (see Progress Log 2026-08-19, slot 31).
-- [ ] [INFRA] P1. Fix `deployment_service/cloud_run_job_registry.py::_MANIFEST_CONSOLIDATOR_JOBS` to emit the real
+- [x] ✅ [INFRA] P1. Fix `deployment_service/cloud_run_job_registry.py::_MANIFEST_CONSOLIDATOR_JOBS` to emit the real
       `uts-prod-manifest-consolidator-{service_kind}-{ag}` stems (10 entries across `instruments`/`market-data`, or
       read `manifest_consolidator_buckets`'s keys directly from terraform-parity rather than hand-listing). Done
       when: `tests/unit/test_cloud_run_job_registry_guard.py` passes (it parses `*_scheduler.tf` and should catch
       drift) + `quality-gates.sh` green. Repo: deployment-service.
+      — deployment-service@a0005a5539 (see Progress Log 2026-08-19, slot 14).
 - [ ] [INFRA] P1. Re-verify `deployment_service/data_pipeline_monitors/cloud_run_job_failure_watcher.py`'s
       `manifest-consolidator-*` exclusion list + `consolidator_oom_watcher.py`'s read path against the registry
       fixed in the todo above; confirm the real per-(service_kind, asset_group) jobs are covered by exactly one of
@@ -188,3 +189,14 @@ tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only par
   the hyphen fixed, DP-WATCHER-005 still only ever covers the 5 `market-data` consolidator jobs, never the 5
   `instruments` ones — todo 3 should confirm whether those are covered by DP-WATCHER-006 or remain a real gap. Shipped:
   deployment-service (see commit in slot 31's `/done` evidence).
+- **2026-08-19 (slot 14, todo 2 — infra)**: Fixed `cloud_run_job_registry.py::_MANIFEST_CONSOLIDATOR_JOBS`. It hand-listed
+  5 stems (`manifest-consolidator-{ag}`, one per asset_group) which have never existed live — replaced with the real
+  10 `manifest-consolidator-{kind}-{ag}` stems (`kind` in `instruments`/`market-data` × the 5 asset_groups), matching
+  `manifest_consolidator_scheduler.tf`'s `manifest_consolidator_buckets` `for_each` map (`each.key` = `"{kind}-{ag}"`).
+  Also corrected the module docstring's stale `manifest-consolidator-{ag}` example. Verified:
+  `tests/unit/test_cloud_run_job_registry_guard.py` (10/10 passed — the tf-stem-coverage guard now matches the real
+  names instead of passing by substring-luck against the old wrong stems), `tests/unit/test_dp_recovery_actuators.py` +
+  `tests/unit/test_consolidator_oom_watcher.py` (82 passed, unaffected), full `quality-gates.sh` green. Did NOT touch
+  `cloud_run_job_failure_watcher.py`'s exclusion list or `consolidator_oom_watcher.py`'s read path — that's todo 3's
+  scope (this fix changes what jobs the registry NAMES, not which watcher classifies them). Shipped:
+  deployment-service@a0005a5539.
