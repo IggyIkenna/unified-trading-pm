@@ -32,6 +32,8 @@ locked_by:
 locked_since:
 priority: P1
 depends_on: []
+execution_scope: local-only
+drift_direction: advance-code
 ---
 
 # docs-reconcile 2026-08-19 — bigger-scope findings
