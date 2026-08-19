@@ -73,7 +73,7 @@ sequential: true
 source: >-
   Split from `prediction_consolidated_closeout_2026_07_18.md` (Phase A section, lines 177-266, and Phase B section,
   lines 267-343, of that doc as of 2026-07-18/2026-07-24) per the operator-approved line-cap remediation triage
-  `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
+  `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
   boundaries"). Content moved verbatim, not summarized. Phase A and Phase B are combined into one child per the triage's
   specific guidance for this plan ("Phase A-B residuals"). `sequential: true` added 2026-07-24 (plan audit finding) to
   encode this doc's own "Phase B — run the migrations (gated on Phase A green)" header text as a real ordering — this is
@@ -395,20 +395,22 @@ context_scope:
       `--confirm-prod-write`; prod RUN HELD per operator). Live dry-run (756,817 rows): #1 `prediction_trades`→`trades`
       3,385 rows (99.55%→100%); #2 per-CID `instrument_type`→`PREDICTION_MARKET` 648,616 rows (per-CID 4.16%→100%,
       all-rows 11.70%→**97.40%**); #3 `source` 2 empty→`polymarket_clob`. **TWO FINDINGS FOR THE HELD RUN
-      (operator-decision, revises decision-2):** (i) the CQG bundle is NOT null-by-design in practice — 80,068 rows =
+      (operator-decision, revises decision-2):** (i) **RESOLVED 2026-08-19 (operator ruling, `BLK-2062d75e`)** — the
+      CQG bundle is NOT null-by-design in practice — 80,068 rows =
       60,427 `PREDICTION_MARKET` + 17,361 lowercase `prediction` + only 2,280 null; keeping it unstamped caps all-rows
       at 97.40%, and its 17,361 lowercase `prediction` are themselves non-canonical → decide: normalize the bundle to
-      `PREDICTION_MARKET` too (→~100%) vs enforce SSOT "bundle null" (un-stamps 77,788) vs leave inconsistent. (ii)
+      `PREDICTION_MARKET` too (→~100%) vs enforce SSOT "bundle null" (un-stamps 77,788) vs leave inconsistent.
+      **RULED: normalize the bundle to `PREDICTION_MARKET` too** — matches the per-CID precedent, reaches ~100%
+      canonical coverage, avoids reversing the 60,427 rows already correctly stamped. Execution:
+      `prediction_satellite_ao_dispatch_batch12_2026_08_17.md` todo 4 (its `[OPERATOR]` gate removed same ruling). (ii)
       `instrument_type`/`data_type` are consolidator DEDUP-KEY columns → the additive shard adds the corrected rows but
       leaves ~652k OLD rows as stragglers (doubling); reaching the target % needs an old-row sweep = the "naive direct
       `_index` rewrite" that resurrects on `--force` rebuild → the run needs a tombstone/removal strategy. Both
       documented in the script docstring + printed by dry-run. **CROSS-REF added 2026-08-19 (plan_reconciler,
-      agt-4a2f8b)**: `prediction_satellite_ao_dispatch_batch12_2026_08_17.md` todo 4 picks up the execution of the
-      per-CID half of finding (i)'s stamp (9,260 rows) as "resolved by precedent," but does NOT independently resolve
-      the CQG-bundle half (2,280 rows) of this still-open 3-way decision — that todo has been `[OPERATOR]`-gated
-      pending this decision (see its own 2026-08-19 note) rather than left to run `--bundle-mode normalize`
-      unreviewed. Whoever rules on finding (i) should read that todo's note for the narrower per-CID/CQG-bundle scope
-      split before ruling. **✅ MANIFEST `--apply` APPLIED 2026-07-19 (tick 18) —
+      agt-4a2f8b), RESOLVED same day**: `prediction_satellite_ao_dispatch_batch12_2026_08_17.md` todo 4 executes the
+      stamp (both the 9,260-row per-CID half and the 2,280-row CQG-bundle half of finding (i)) — the operator ruled
+      (`BLK-2062d75e`) to normalize the bundle too, so that todo's `[OPERATOR]` gate has been removed and it runs as
+      originally written. **✅ MANIFEST `--apply` APPLIED 2026-07-19 (tick 18) —
       `market-data-tick-pred-prd/_index` CAS REPLACE, generation `…161980856`→`…195626006`, 745,107 rows, 12,524
       stragglers removed, `instrument_type` 11.80%→100% / `data_type` 100% / `source` 100%, 0 captured cells lost;
       snapshot `_index/backups/pre_prediction_canonicalize_20260719T103301075148Z.parquet`; consolidator paused→resumed

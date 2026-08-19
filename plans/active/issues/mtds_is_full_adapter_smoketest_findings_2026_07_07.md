@@ -413,10 +413,14 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
 - [ ] [VERIFY] P1. Root-cause the 273 mistagged DERIBIT/COMBO rows (open question #1) — not attempted this session (out
       of dispatched scope).
 - [x] [FIX] P1. OKX/BYBIT margin-type mislabeling — **already fixed by a concurrent sibling workflow**,
-      `instruments-service@176d4610` ("correct Bybit/Kraken-Futures margin-type inference bugs + add @LIN/@INV
+      `instruments-service@a4542b2d` ("correct Bybit/Kraken-Futures margin-type inference bugs + add @LIN/@INV
       canonical-symbol builder") + the OKX branch in `parsing.py::_infer_margin_type` (docstring cites real live
       evidence 2026-07-09, `_UM`/`_CM` infix logic corrected). Verified 2026-07-10 by reading the current code before
-      redoing anything.
+      redoing anything. **SHA CORRECTED 2026-08-19 (plan_reconciler)**: the originally-cited `176d4610` is reachable
+      only from orphaned `origin/wip-preserve/*` branches, not an ancestor of `origin/live-defi-rollout`; the same
+      content landed verbatim under the rebased `a4542b2d` (confirmed ancestor via `git merge-base --is-ancestor`,
+      content confirmed present at HEAD in `parsing.py`). The underlying fix is genuinely shipped; only the citation
+      was wrong.
 - [x] [FIX] P1. Wire VENUS/BENQI/RADIANT/EULER_V2 into the production orchestrator — fixed. UAC side (`defi_venues.py`
       DEFI_VENUE_PHASE flip + `venue_adapter_keys.py` RADIANT-BSC entry): `unified-api-contracts@42ce2de3`. IS side
       (`defi.py` `_build_defi_venues()` + golden-fixture regen): `instruments-service@9b0c1095`. 7 venues flipped
@@ -444,7 +448,10 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
 - [x] [DECISION] P1. GMX V2 coverage — **operator decision applied**: see new § 3a below. Do not integrate V2; GMX
       capture stays scoped to the V1 vault.
 - [ ] [CODE] P2. Update both drilldown mockups — not attempted this session (out of dispatched scope).
-- [~] [FIX] P3. P2/P3 minor/cosmetic sweep — partial: `drift.py` class-docstring self-contradiction fixed (real source
+- [x] [FIX] P3. P2/P3 minor/cosmetic sweep — **marker corrected 2026-08-19 (plan_reconciler): was non-standard `[~]`,
+      not a valid `- [ ]`/`- [x]` per plans/PLAN_FORMAT.md; the work this line describes is genuinely done (3 fixes
+      shipped, cited below), so `[x]` is correct — the ~12 untouched P2/P3 list items remain prose-tracked in section
+      3 above, not part of this checkbox's own scope.** `drift.py` class-docstring self-contradiction fixed (real source
   is SDK TS constants, not the dead Data API) and the SolBlaze/BlazeStake dead `/api/v1/exchange_rate` endpoint fixed
   (real live endpoint is `/api/v1/stats`, confirmed live 2026-07-10 — this one was NOT actually dead code,
   `_tier3_bsol_rest` in `solana_lst_archival.py` is a real live production code path that could never succeed before
@@ -465,6 +472,25 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
   attempted (low value, several already cross-referenced/deferred elsewhere, some touch `instrument_key` format which
   needs the dedicated canonicalization effort, not a cosmetic batch pass) — see the 2026-07-14 Progress Log entry below
   for a one-line diagnosis on each.
+
+- [ ] [FIX] P1. [instruments-service] Wire DERIBIT-COMBO into the live WS connector (currently batch-only) — no live
+      WS connector registered for this venue at all.
+- [ ] [FIX] P1. [market-tick-data-service] Fix OKX-SWAP live-connector venue-key mis-registration + hardcoded
+      `instrument_type` regardless of swap vs dated future (`live/connectors/okx_ws.py`).
+- [ ] [FIX] P2. [instruments-service] Fix BYBIT `_resolve_base_quote` base_asset/underlying pollution for linear
+      dated futures (`parsing.py:348-371`).
+- [ ] [FIX] P2. [instruments-service] Widen the Bitfinex quote-asset filter so BTC-margined perps aren't silently
+      dropped (`parsing.py:463 _passes_asset_filter` + `cefi_instrument_universe.py:131-133` — 8 real products
+      affected).
+- [ ] [FIX] P1. [market-tick-data-service] Fix Databento CME event-contract `instrument_class` mistyping
+      (`databento/adapter.py:764-766` — assumes `"BAG"`; real Databento returns C/P) — 0 real EVENT_CONTRACT rows
+      exist anywhere.
+- [ ] [FIX] P2. [market-tick-data-service] Add an explicit Yahoo early-return for ICE/CBOE index instruments instead
+      of silent Databento fallthrough (`umi_tick_provider.py:123,493,499`).
+
+  **Added 2026-08-19 (plan_reconciler)**: these 6 todos convert untracked P1/P2 prose bugs from § "Full bug list"
+  above into tracked checkboxes per CLAUDE.md's HARD RULE ("every follow-up is a `- [ ]` todo, never prose") — the
+  bugs themselves were already documented in the bug list, just never promoted to a dispatchable todo.
 
 ## Progress Log
 

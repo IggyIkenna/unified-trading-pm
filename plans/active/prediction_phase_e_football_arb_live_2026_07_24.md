@@ -69,7 +69,7 @@ gate_on_depends: true
 source: >-
   Split from `prediction_consolidated_closeout_2026_07_18.md` (Phase E section, lines 438-499 of that doc as of
   2026-07-18/2026-07-24) per the operator-approved line-cap remediation triage
-  `plans/active/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
+  `/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` (row 22, "4-way split along the plan's own Phase A-E
   boundaries — one depends_on-gated: Phase E gated on B+D"). Content moved verbatim, not summarized. The `depends_on` +
   `gate_on_depends: true` on the Phase A-B residuals and Phase D sibling plans encodes the parent plan's own Phase-E
   header text ("gated on B+D") as a real dispatch gate.
