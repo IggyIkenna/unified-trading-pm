@@ -907,6 +907,9 @@ is essentially complete for this set — every venue except CoW Swap has an MTDS
 | Uniswap V2 / V4 | no confirmed live leg (only V3 is wired) |
 | IBKR | no live leg at all — architecturally can't be public WS (local TWS/IB Gateway socket only); MDPS candle path is UNVERIFIED — the generic tradfi candle adapters are written against Databento's raw schema, no test/wiring names IBKR specifically |
 | CoW Swap | absent end-to-end — no MTDS adapter, no MDPS wiring, batch or live |
+| Jupiter (spot), Raydium, Pacifica, Jito (LST, jitoSOL) | real, unauthenticated live WS — confirmed working, not scaffolds (Solana venue set, audited 2026-08-19 alongside execution/strategy — see `execution_master.md`'s "Solana venue set" section for full per-venue detail) |
+| Jito Restaking (`JITORESTAKING-SOLANA`) | batch only (`restaking_jito_adapter.py`) — **no live connector found** this pass, unlike jitoSOL; scoping (does any archetype need it live) tracked in `execution_master.md`, not duplicated here |
+| Drift | absent end-to-end — operator-killed 2026-07-16, reaffirmed 2026-08-14; **this session's operator request named Drift for reuse, a genuine conflict with that standing ruling** — the reconciliation todo lives in `execution_master.md` (`[OPERATOR]` tag), not duplicated here |
 
 - [ ] [DATA] P2. **AAVE V3 — extend the live leg beyond liquidations-only.** `live/connectors/aave_liquidations_
       ethereum_ws.py` is real (OnChainEventPoller on `eth_getLogs`, ~12s poll) but only serves liquidation events; no
@@ -936,7 +939,20 @@ is essentially complete for this set — every venue except CoW Swap has an MTDS
       dedicated IBKR candle path is built.
 - [ ] [DATA] P1. **CoW Swap — genuinely greenfield end-to-end, confirmed 2026-08-19** (zero hits for
       "cowswap"/"cow_swap"/"cow swap" anywhere in MTDS or MDPS — no batch adapter, no live connector, no candle
-      wiring; nothing to process since MTDS never writes CoW Swap raw shards). Build the MTDS batch adapter +
-      candle-derivation wiring once the execution-service CoW Swap adapter (see `execution_master.md`) establishes
-      what data shape is needed; sequence data build after or alongside execution build, not before it's clear what
-      the venue's actual quote/settlement data shape looks like.
+      wiring; nothing to process since MTDS never writes CoW Swap raw shards). **This is not optional polish — it's
+      required for batch=live=paper determinism** (CLAUDE.md "Live = batch (event-log spine)...
+      paper(W)==batch-rerun(W) epsilon=0"; operator's explicit question this session: "we also need to have
+      historical data for CoW batch-live symmetry... otherwise we can't replay the market data"). A live-only CoW
+      Swap adapter with no MTDS/MDPS historical capture means the venue can never be backtested or paper-simulated.
+      Build the MTDS batch adapter + candle-derivation wiring once the execution-service CoW Swap adapter (see
+      `execution_master.md`) establishes what data shape is needed; sequence data build after or alongside
+      execution build, not before it's clear what the venue's actual quote/settlement data shape looks like. Follow
+      the existing MTDS backfill pattern other DEX venues already use (Uniswap/Raydium's batch adapter + candle
+      wiring shape above) — don't invent a new one.
+- [ ] [BACKEND] P2. **General principle, applied here as the concrete instance**: any genuinely greenfield venue
+      built with a live execution adapter but no MTDS/MDPS historical capture is a batch=live=paper determinism gap,
+      not just a CoW Swap-specific one. Checked against the rest of this session's priority-venue audits (CeFi,
+      Ethereum DeFi, Solana): every other greenfield-adjacent build already sequences MTDS batch+live alongside
+      execution (see the Pacifica/Jupiter-Kamino plans' own UAC→IS→MTDS→execution→strategy ordering) — CoW Swap is
+      the one case that doesn't yet, which is why it gets its own explicit todo above rather than an assumption.
+      Pointer only, not a duplicate SSOT — see also `system_readiness_master.md`'s W1/W2 readiness-dimension note.
