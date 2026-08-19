@@ -157,7 +157,7 @@ resolved_by:
       `test_unprovable_cutoff_oversized_merge_skips_instead_of_doomed_full_merge` (QG's initial red was a hardcoded
       prod bucket name in that test — fixed to `-prd-test-project`). Deploy to the cron image (MTDS BASE_IMAGE_DIGEST
       bump + rebuild) + the marker-restore recovery + "fresh hourly cycle genuinely merges" verification = todo 3.**
-- [ ] [SCRIPT] P0. **Verify recovery end-to-end**: confirm the canonical
+- [x] [SCRIPT] P0. ✅ **Verify recovery end-to-end**: confirm the canonical
       `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` blob's `generation`/
       `last_modified` has advanced (via UTL `get_storage_client().get_blob_metadata(...)`, never a subprocess
       `gcloud storage`/`gsutil` call — QG-enforced) past `2026-08-18T02:13:57.708000+00:00` /
@@ -166,6 +166,19 @@ resolved_by:
       (documented SAFE in the SSOT) after the above fix lands. Once confirmed, **re-launch the liquidations re-derive**
       (`cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s own P0 monitor-to-completion item) — the
       contract_size/margin_type fixes are already shipped and correct; this outage was the only remaining blocker.
+      **VERIFIED 2026-08-19T22:2xZ — RECOVERY SUCCEEDED (canonical ADVANCED).** Safe marker-restore (per operator
+      BLK-f5a54e00 → A): paused cron → cleared rdlhn orphan lock (holder confirmed Completed 21:15:37Z) → metadata-only
+      restamp (`consolidator_content_write_at=2026-08-16T22:00:00Z` conservative + `consolidator_run_at=now`, content
+      untouched — same gen) → resumed → `gcloud run jobs execute` → execution `6cfs6` completed successfully (46m06s):
+      `rows_in=35,898,764 → rows_out=31,103,171`, `dedup_dropped=4,795,593`, `pruned_shards=2000`, `error=-`,
+      `incremental=true`, `verdict=produced` (latest.json). Canonical `generation 1787019237694916 →
+      1787177809821805`, `last_modified 08-18T02:13:57Z → 08-19T22:16:49Z`, size 443.8→484.7MB; markers freshly
+      re-stamped by the merge (native: `consolidator_content_write_at=2026-08-19T21:31:47Z`,
+      `consolidator_run_at=22:16:42Z`); lock released. **WEDGE LOOP BROKEN — the consolidator self-healed.** REMAINING
+      final step: **re-launch the liquidations re-derive** (`cefi_inverse_contract_size...`'s P0 monitor item) via
+      `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` — known params from the prior launch:
+      `cefi 2020-01-01 2026-01-31`, `--data-types liquidations`, `--date-concurrency 2`, `e2-standard-4`; confirm the
+      exact prior command from the 2026-08-16 launch record before running a ~2-3 day VM.
 - [ ] [SCRIPT] P1. **Investigate why the dedicated liveness watchdog (`uts-prod-consolidator-liveness-watchdog`) did
       not alert** on this 41+-hour outage despite being documented live/healthy (point 5 above) — either fold into
       this fix or file as its own follow-up once root-caused; a watchdog that misses the exact condition it exists
@@ -240,6 +253,24 @@ resolved_by:
   digest on its next execution; (2) the safe marker-restore recovery (restore `consolidator_content_write_at` to the
   last genuine merge's LISTING time from Cloud Logging, pause cron → cancel/kill holder → metadata-only restamp →
   resume → next cycle merges only the ~10.7k newer shards, fits the 7200s budget).**
+- **2026-08-19T22:2xZ (slot-4 worker, todo-3 — RECOVERY EXECUTED + VERIFIED)**: Operator confirmed the conservative
+  marker `2026-08-16T22:00Z` (BLK-f5a54e00 → A) with the guardrail to confirm rdlhn's terminal state first. Executed
+  the full recovery: paused the cron (`gcloud scheduler jobs pause`), confirmed rdlhn `Completed` 21:15:37Z (dead),
+  cleared its orphaned `_index/consolidator.lock`, metadata-only restamped the canonical
+  (`consolidator_content_write_at=2026-08-16T22:00:00Z`, `consolidator_run_at=now`; content untouched — same
+  generation), resumed the cron, and `gcloud run jobs execute`d the recovery merge. **Execution `6cfs6` completed
+  successfully (46m06s, `succeededCount=1`)** — incremental path confirmed (`phase=shards_downloaded shards=10803`
+  vs the doomed 172k), `rows_in=35,898,764 → rows_out=31,103,171`, `dedup_dropped=4,795,593`, `pruned_shards=2000`,
+  `error=-`, `verdict=produced` (latest.json `no_op=false`). **Canonical ADVANCED: generation 1787019237694916 →
+  1787177809821805, last_modified 08-18T02:13:57Z → 08-19T22:16:49Z, size 443.8→484.7MB; markers freshly re-stamped
+  by the merge (native: `consolidator_content_write_at=2026-08-19T21:31:47Z`, `consolidator_run_at=22:16:42Z`); lock
+  released. The wedge loop is BROKEN and the consolidator self-healed — readers no longer loud-fail.** REMAINING
+  final step (todo-3 done-when's second half): re-launch the liquidations re-derive (`mdps-backfill-cefi` via
+  `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh`; known params `cefi 2020-01-01 2026-01-31`,
+  `--data-types liquidations`, `--date-concurrency 2`, `e2-standard-4`) — confirm the exact prior launch command from
+  the 2026-08-16 record before running the ~2-3 day VM; tracked in `cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s
+  P0 monitor item (do not babysit hourly). The UTL guard fix (`af783d92e4`) reaches the cron on the next MTDS image
+  rebuild.
 - **2026-08-19T21:5xZ (slot-4 worker, todo-3 — verification done; recovery NOT executed, documented for a focused
   follow-up)**: **Read-only verification complete — the canonical is STILL frozen and the loop is STILL active.**
   Measured 21:4xZ via UTL: `_index/availability_index.parquet` `generation=1787019237694916`,
