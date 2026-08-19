@@ -103,7 +103,18 @@ estimate_baseline_ai_days: <N> # raw estimate
 estimate_calibrated_ai_days: <N> # baseline × class multiplier
 
 # Plan-specific — work-philosophy (/codex/12-agent-workflow/work-philosophy.md)
-assigned_role: backend-engineer | data-pipeline-engineer | ui-developer | infra-engineer | monitor | review
+# Values verified 2026-08-19 against the real `role:` field in every unified-trading-pm/agents/*.md (doc-drift fix,
+# worker_slot_account_exhaustion_no_rotation_2026_08_19 todo 3): this line previously read "backend-engineer |
+# data-pipeline-engineer | ui-developer | infra-engineer | monitor | review" — hyphenated (auto-normalized by
+# role_registry.canonical_role, harmless) AND, worse, two outright wrong role ids (data-pipeline-engineer /
+# infra-engineer name no real agents/*.md role — the real ones are data_engineering / infra).
+assigned_role: backend_engineer | data_engineering | ui_developer | infra | monitor | review
+# model_tier: opus-required # optional — default sonnet (role-derived); fable-required = OPERATOR-REQUEST-ONLY.
+# Doc-drift fix 2026-08-19: task_template.md always documented this field; it was missing from this canonical
+# schema entirely. SSOT for the tier vocabulary: /codex/06-coding-standards/model-tier-selection.md.
+# model_strict: true # optional (worker_slot_account_exhaustion_no_rotation_2026_08_19) — true = never substitute a
+# different model when this plan's own tier is exhausted everywhere (freeze-and-wait); absent/false (the default) =
+# attempt a cross-model substitution. Defers to the assigned_role's own model_strict when absent here too.
 drift_direction: advance-code | correct-codex # which way this plan closes the codex↔codebase gap
 
 # Plan-specific — reasoning-effort override (elective; model-tier-selection.md is the SSOT).

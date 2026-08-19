@@ -78,7 +78,6 @@ related_plans:
   - ../active/l2_book_microstructure_capture_2026_07_13.md
   - ../archive/2026_08/recursive_loop_orchestrator_wiring_finalize_2026_08_09.md
   - ../active/service_config_ownership_and_instruction_contract_2026_08_12.md
-  - ../active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md
   - ../active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md
   - /plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
@@ -328,12 +327,6 @@ opportunity-checker + wizard full-parameterization
 
 **status**: active · **estimate**: 5.0 cal AI-days (class: brand-new) **title**: Deeper-Than-L5 Order Book Capture —
 populate queue_position_* for MARKET_MAKING_QUEUE_MICROSTRUCTURE
-
-### [`strategy_archetype_latency_deployment_profile_execution_2026_08_10`](../active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md)
-
-**status**: active (`assigned_vm: planning`, AO-dispatched) · **estimate**: 4.0 cal AI-days (class: brand-new)
-**title**: Execution — wire archetype-declared deployment-profile requirements into runtime-topology.yaml + derive
-deployments from active archetypes
 
 ### [`strategy_service_family2_close_unwind_emission_2026_08_09`](/plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md)
 

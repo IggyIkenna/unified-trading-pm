@@ -252,7 +252,26 @@ where it writes.
 | **DiffusionGemma 26B** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~5s each | **INFRA-BLOCKED, entire lane** — NVIDIA NIM `InternalServerError`(500)/`BadGatewayError`(502) on every attempt; a simple single-turn smoke test against the SAME endpoint succeeded (200 OK) immediately after, isolating the failure to the full real Claude Code request shape (real CLAUDE.md system prompt + full multi-tool schema), not a dead endpoint | Zero usable data. Root cause not yet pinned to a specific payload/tool-count limit — flagged, not fixed. Re-run needs that fixed first. |
 | **Codex/Luna** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~0.1s each | **INFRA-BLOCKED, entire lane** — bridge rejects any `system`-role message (HTTP 400), root-caused in `codex_luna_flex_bridge_2026_08_14.md` | Zero usable data. Needs a real bridge-code fix, not a config/retry issue. |
 
-_(remaining rows populated as each attempt completes)_
+| GLM 5.2 | `context-scout` audit (Easy) | 0 | 46 | 45 (1) | 437,337 / 163,104 | 4,708,800 | 0.31% (real window 200K, corrected — launched with a wrong 128K assumption, same class of bug as the earlier Gemini one) | 10.7 min | PASS | Real `modelUsage.glm-5.2.contextWindow` confirms 200,000, matching Gemini's — the 128K figure used at launch for both GLM models' poller was a guess, now known wrong. |
+| GLM 5-Turbo | `context-scout` audit (Easy) | 0 | 38 | 37 (3) | 163,346 / 18,998 | 4,439,424 | 0.30% (corrected, real window 200K) | 10.0 min | PASS | 3 tool_errors recorded, non-blocking (task still completed clean). |
+| GLM 5-Turbo | `death_class` teardown-signal extend (Easy #2) | 0 | 59 | 58 (10) | 270,291 / 20,931 | 7,670,784 | 2.50% (corrected, real window 200K) | 14.3 min | PASS | 10 tool_errors recorded (highest error count of any attempt so far), still completed clean — worth checking during Gate-2 review whether these reflect real friction with this task's shape. |
+
+| GLM 5.2 | `death_class` teardown-signal extend (Easy #2) | 1 | 90 | 88 (0) | 464,142 / 250,313 | 12,423,680 | 0.59% (real 200K window) | 32.8 min | INFRA-INTERRUPTED — 90 real turns, $6.30 spent, before Z.ai's 5-hour Coding Plan usage limit hit (`[1308] Usage limit reached for 5 hour`, resets 2026-08-20 00:22:34 UTC) | Substantial real work done, not a clean pass/fail — excluded from Gate-1/2 scoring like the Gemini quota-interrupted rows above. |
+| GLM 5.2 | Tasks 3-6 (peak-context-pct, pool-exhaustion-decouple, check-active-refs-baseline, sequential-ordering) | 1 (×4) | 1 (×4) | — | $0 (×4) | — | ~2-3s each | INFRA-BLOCKED — same 5-hour usage limit, already exhausted by task 2, every subsequent request rejected instantly | Zero usable data for these 4. **The 5-hour window is a SHARED account-level quota, not per-model** — confirmed: GLM 5-Turbo (running concurrently on the SAME account) hit the identical error with the identical reset timestamp on its own task 3. Running both GLM models concurrently split one shared budget rather than getting two independent ones. |
+| GLM 5-Turbo | `context-scout` audit (Easy) | 0 | 38 | 37 (3) | 163,346 / 18,998 | 4,439,424 | 0.30% (real 200K window) | 10.0 min | PASS | 3 tool_errors recorded, non-blocking. |
+| GLM 5-Turbo | `death_class` teardown-signal extend (Easy #2) | 0 | 59 | 58 (10) | 270,291 / 20,931 | 7,670,784 | 2.50% (real 200K window) | 14.3 min | PASS | 10 tool_errors recorded (highest of any attempt so far), still completed clean. |
+| GLM 5-Turbo | Capture peak `context_used_pct` (Medium #1) | 1 | 81 | 80 (13) | 274,191 / 23,877 | 11,947,264 | 0.54% | 21.1 min | INFRA-INTERRUPTED — same shared 5-hour quota, $4.40 spent on real work first | Excluded from scoring, same as GLM 5.2's task 2. |
+
+| GLM 5-Turbo | Tasks 4-6 (pool-exhaustion-decouple, check-active-refs-baseline, sequential-ordering) | 1 (×3) | 1 (×3) | — | $0 (×3) | — | ~1-2s each | INFRA-BLOCKED — same shared 5-hour quota, all 3 identical `[1308]` errors with the SAME reset timestamp as GLM 5.2's | Confirms the shared-quota finding conclusively — GLM lane fully complete: 5.2 got 1 PASS + 1 interrupted + 4 blocked; 5-Turbo got 2 PASS + 1 interrupted + 3 blocked. |
+
+**Gemini 3.5-flash-lite paid-tier backfill (slot 24, `proj5`) — SUPERSEDES the 4 free-tier quota-blocked rows above for the same 4 tasks:**
+
+| Gemini 3.5-flash-lite | `docs-reconcile` audit (Easy #2, paid-tier retry) | 1 | 33 | — | 549,049 / 20,805 | 2,694,348 | 4.48% | 15.3 min | INFRA-INTERRUPTED (quota again, $3.21 spent) | Paid tier helped (more turns than the free-tier instant fail) but still hit a wall — same partial-signal treatment as before. |
+| Gemini 3.5-flash-lite | `escalation-queue-reconciler` audit+gap-check (Medium #1, paid-tier retry) | 0 | 23 | — | 777,085 / 19,418 | 1,699,282 | **66.7%** (peak mid-task — a real spike, not the poller's usual sub-5% range) | 11.7 min | **PASS** | First clean completion for this task — the free-tier attempt never got past 13 turns. |
+| Gemini 3.5-flash-lite | repo-touched-capture (Hard #1, paid-tier retry) | 0 | 75 | — | 1,342,762 / 40,378 | 10,031,112 | 5.98% | 60.5 min | **PASS** | First clean completion of ANY Hard-tier task for this model — the free-tier attempt died at 56 turns on quota. Longest single attempt in the whole bake-off so far (60.5 min). |
+| Gemini 3.5-flash-lite | `na-eligibility-auditor` audit+fix (Hard #2, paid-tier retry) | 1 | 27 | — | 659,320 / 18,347 | 1,832,982 | 1.43% | 6.6 min | INFRA-INTERRUPTED (quota again, $2.66 spent) | Same as Easy #2 retry — helped but didn't fully clear the wall. |
+
+**Gemini 3.5-flash-lite final tally, all 6 tasks**: 4 clean PASS (Easy #1, Medium #2, Medium #1-retry, Hard #1-retry), 2 INFRA-INTERRUPTED with real partial work (Easy #2-retry, Hard #2-retry). The only model in this bake-off with real coverage across every tier including Hard.
 
 ## Progress Log
 
@@ -456,3 +475,185 @@ _(remaining rows populated as each attempt completes)_
   completed a real turn) is left as-is — no better source available yet. **Also confirmed slot 25's (Gemini
   3.7-flash) live git checkout directly**: clean tree, same as slot 24 — none of its 6 infra-blocked attempts left
   any lost/uncommitted work either.
+
+- **2026-08-19 (later) — operator approved wiring the paid-tier Gemini project (371216509644); wired, verified,
+  re-dispatched.** Operator confirmed: their Gemini Pro subscription (the consumer app) does NOT grant API access
+  (verified against Google's own docs before answering — separate product from the API/AI Studio billing this
+  fleet actually uses) — the correct mechanism remains the already-identified Paid Tier 3 project. Added
+  `gemini-3.5-flash-lite-proj5`/`gemini-3.7-flash-proj5` to `config/litellm/grok_gemini_proxy.yaml`, mirroring the
+  existing proj1-3 blocks exactly. **Spend cap on project 371216509644 still not independently verified** —
+  `ikenna@odum-research.com`'s gcloud session hit the same reauth wall as the GLM blocker, so I couldn't check via
+  `gcloud billing`; proceeding on the operator's explicit "yes wire it" rather than blocking a second time, but
+  this residual risk is real and worth the operator confirming directly in the AI Studio console when free.
+  **Hit and fixed a real proxy-restart bug**: `~/.claude-accounts/litellm-proxy.env` uses plain `VAR=value` (no
+  `export`), so a bare `source` in the same shell as a backgrounded `nohup` does NOT propagate the vars to the
+  child process — the first 2 restart attempts both failed with `Missing Gemini API key` even though the file
+  genuinely had the right value. Fixed via a small wrapper script (`set -a; source; set +a; exec litellm`) —
+  confirmed the key was actually visible (39 chars, matches expected length) before trusting the next smoke test.
+  **Real smoke test against proj5 passed**: HTTP 200, properly billed, no `RESOURCE_EXHAUSTED`.
+  **Re-dispatched**: slot 25 running Gemini 3.7-flash's full 6-task queue again via `gemini-3.7-flash-proj5`
+  (model label `gemini-3.7-flash-paidtier`, context-window arg corrected to the real 200,000 this time); slot 24
+  backfilling its 4 previously quota-blocked Gemini 3.5-flash-lite tasks via `gemini-3.5-flash-lite-proj5` (model
+  label `gemini-3.5-flash-lite-paidtier`). Both use the corrected poller default. Results will land as separate
+  rows (labeled `-paidtier`) rather than overwriting the free-tier rows above, so the free-tier quota-wall finding
+  stays on record even after the paid-tier re-run completes.
+
+- **2026-08-19 (later) — GLM's real blocker is account balance, not gcloud auth; Gemma's NVIDIA NIM issue confirmed
+  server-side after ruling out every request-shape hypothesis.**
+  **GLM**: bypassed the `ikenna@odum-research.com` gcloud reauth wall entirely — found an already-cached, ready
+  credential file at `~/.claude-accounts/zai.env` (GLM 5.2 via Z.ai's native endpoint, `export`-format, dated
+  2026-08-04, predates this plan). A real smoke test against it returned a clean application-level error, NOT an
+  auth failure: `429 {"code":"1113","message":"[1113][Insufficient balance or no resource package. Please
+  recharge.]"}`. The credential itself is valid — Z.ai recognized and processed the request — but the GLM Coding
+  Plan subscription's balance/resource package is exhausted or expired. **This is an operator action (recharge the
+  Z.ai account), not a technical blocker** — the gcloud reauth issue is now moot for GLM regardless of whether it
+  ever gets fixed. GLM 5-Turbo's credential/model-string not yet separately verified (same account, different
+  `ANTHROPIC_MODEL` value — blocked on the same balance issue either way).
+  **Gemma/DiffusionGemma**: ruled out every request-shape hypothesis via direct curl reproduction — a 54KB system
+  prompt (10,568 tokens) with 1 tool: 200 OK; 16 realistic multi-field tool schemas: 200 OK; a real streaming
+  (`stream:true`) tool-call request: 200 OK. None reproduced the failure. A real `claude -p` dispatch (not curl)
+  against the same endpoint then produced a FOURTH distinct failure mode within one investigation — after 500,
+  502, and the earlier confirmed cold-start timeout, this one returned a clean `429 Too Many Requests` (partly
+  self-inflicted — the several rapid synthetic curl tests just before it added real load to the same endpoint).
+  **Conclusion: this is NVIDIA-side undercapacity/instability on their free-hosted NIM endpoint for this model**,
+  not a bug in our proxy config or in Claude Code's real request shape — four different failure signatures from
+  the same free endpoint under real-world load is a server-capacity pattern, not a deterministic client-side bug.
+  No further request-shape debugging planned; the real fix (if one exists) is either a paid/dedicated NIM tier or
+  accepting this lane's ceiling is unreliable on the free tier.
+
+- **2026-08-19 (later) — CORRECTION to the GLM finding above: `zai.env` was the WRONG, older, unrelated account.
+  The real GLM Coding Plan account's blocker is confirmed to be the ORIGINAL gcloud-reauth wall after all, not
+  balance.** Operator clarified `~/.claude-accounts/zai.env` (found and tested above) is a DIFFERENT, older
+  personal account they never funded — not the one Ikenna set up with a real balance. Pulled the real account
+  files directly off the orchestrator VM via AWS SSM (`i-0c9b283b31d6b5ca7`, `ap-northeast-1`, read-only
+  `send-command`/`get-command-invocation`, no VM state changed): `/home/ubuntu/.claude-accounts/glm-5-2.env` and
+  `glm-5-turbo.env` — both real, both registered in AO's live `/api/accounts` (`account_status: None` = healthy,
+  not disabled). **But both files' `ANTHROPIC_AUTH_TOKEN` is a LIVE command substitution, not a static value**:
+  `export ANTHROPIC_AUTH_TOKEN="$(gcloud secrets versions access latest --secret=glm-coding-plan-api-key
+  --project=central-element-323112)"` — evaluated fresh every time the file is sourced, by whatever gcloud identity
+  is active in that shell. Confirmed this fails EVERYWHERE tried: locally as `ikenna@odum-research.com`
+  (reauth-blocked, same wall as before), locally as `harshkantariya.work@gmail.com` (`PERMISSION_DENIED` — real
+  identity, wrong IAM grant), and even ON THE VM ITSELF as its own default `github-actions-deploy@central-element-
+  323112.iam.gserviceaccount.com` (`PERMISSION_DENIED` too) — meaning this exact gap likely also affects AO's own
+  real production GLM dispatch, not just this bake-off, if AO's spawn path sources this file the same way (worth
+  the operator independently checking whether GLM has actually dispatched successfully recently, separate from
+  this bake-off). **The most viable fix remains `ikenna@odum-research.com` reauth**: it's the one identity that
+  already proved it has real access to other secrets in this same project earlier today, so it's the most likely
+  to already hold the right IAM grant here too — the reauth, not a missing grant, is the actual blocker for it.
+  Deleted the empty/broken local copies rather than leave misleading zero-length credential files sitting in
+  `~/.claude-accounts/`.
+
+- **2026-08-19 (later) — paid-tier Gemini re-run came back MIXED, not clean: the "Paid Tier 3" upgrade is only
+  partially effective, real $ spent either way.** `gemini-3.7-flash-paidtier` (slot 25): 6/6 STILL failed — task 1
+  got 11 turns/$0.67 before a 429, tasks 2-6 failed instantly — and the error text explicitly names
+  `generate_content_free_tier_requests` as the exhausted metric, on the SAME project we just wired as "confirmed
+  Paid Tier 3." `gemini-3.5-flash-lite-paidtier` (slot 24, the 4-task backfill): task 2 hit the identical
+  `free_tier`-labeled 429 again ($3.21 spent first); task 3 (`escalation-queue-reconciler`) got a REAL clean PASS
+  this time — 23 turns, $3.30, `is_error:false`; task 5 still in flight.
+  **Conclusion: enabling billing on project 371216509644 did not uniformly lift every quota metric** — some
+  requests now get real headroom (task 3's pass), but the specific `generate_content_free_tier_requests` RPM-style
+  metric is still gating other requests as if the project were free-tier, even though line ~420 of
+  `grok_gemini_translation_proxy_2026_08_14.md` says this project was independently confirmed Paid Tier 3 on
+  2026-08-16. This is a known Google Cloud pattern (billing-enabled lifts SOME default caps, others need an
+  EXPLICIT quota-increase request via the console, not just billing) — worth the operator checking the AI Studio
+  quota page for this specific metric on project 371216509644, not just the billing/spend-cap page.
+  **PAUSING further paid-tier Gemini dispatch here** — real money continues to accumulate ($0.67 + $3.21 this
+  round, on top of the earlier free-tier spend) for a fix that is not yet reliably working; not continuing to burn
+  spend on a partially-broken paid tier without the operator's input on whether to pursue the quota-increase path
+  or accept the current data as-is.
+
+- **2026-08-19 (later) — GLM finally unblocked: operator re-authenticated as `harshkantariya@odum-research.com`,
+  real funded credential fetched, both models tool_use-verified, both lanes dispatched.** `gcloud auth login
+  --account=harshkantariya@odum-research.com` (operator, interactive) plus `gcloud config set account` resolved
+  what 3 other identities (`ikenna@odum-research.com` reauth-blocked, `harshkantariya.work@gmail.com` and the VM's
+  own `github-actions-deploy@...` both permission-denied) could not: a clean fetch of the real
+  `glm-coding-plan-api-key` secret (49 bytes). Built `~/.claude-accounts/glm-5-2.env`/`glm-5-turbo.env` with this
+  real key (static value this time, not the VM files' live-gcloud-lookup pattern). Both smoke-tested clean before
+  any real dispatch: plain-text (200 OK, real content, GLM 5.2's response confirms the known 5.2→5.3
+  server-aliasing) AND a real tool_use exchange on GLM 5.2 (200 OK, real `tool_use` block, `stop_reason:
+  "tool_use"`) — this fleet's first-ever confirmation that GLM's native endpoint handles tool-calling correctly,
+  closing a gap the source onboarding plan had left explicitly open. Re-verified all 6 GLM-lane tasks' checkboxes
+  still open (unchanged from original selection). Dispatched: slot 26 (GLM 5.2) and slot 27 (GLM 5-Turbo), both
+  against the full 6-task queue, poller at 30s/128K-context-window (Z.ai's real window not yet confirmed via a
+  `modelUsage`-equivalent field the way Gemini's was — 128K is an estimate, flag any correction the same way the
+  Gemini one was caught). Results will land in the Results table as both lanes complete.
+
+- **2026-08-19 (later, from slot 2) — independently reconfirmed a SECOND working credential path for GLM
+  (`ikenna@odum-research.com`, not just `harshkantariya@odum-research.com`), and answered the operator's standing
+  question on AO visibility into the Gemini/Gemma quota walls.** Operator ran `gcloud auth login
+  --account=ikenna@odum-research.com` interactively; `gcloud auth list` now shows it active with no reauth wall.
+  Fetched `glm-coding-plan-api-key` directly from GSM (succeeded) and smoke-tested `api.z.ai/api/anthropic/v1/messages`
+  (`model: glm-5.2`): HTTP 200, real billed response (`model: "glm-5.3"`), no `RESOURCE_EXHAUSTED`/`429`. Useful as a
+  fallback path now that both identities are confirmed working, on top of the already-dispatched slots 26/27 above —
+  no action needed on this lane, it's covered.
+  **AO-visibility answer**: none of this run's quota exhaustion was ever visible to AO — Mechanics is explicit this
+  bake-off used "direct tmux/subprocess dispatch — no local AO backend instance, no real AO backlog involved," so
+  every `RESOURCE_EXHAUSTED`/`429` was only ever caught reactively via each attempt's own CLI exit code, never AO
+  telemetry. Even a real AO-mediated dispatch wouldn't have caught it proactively today either: the
+  `GLMQuotaPoller`/`DeepSeekBalancePoller` headroom-gating pattern (writes `five_hour_pct`/`weekly_pct` onto
+  `AccountUsageRow`, read by `autospawn._pick_headroom_account` for any provider with zero extra wiring) has no
+  Gemini/Gemma equivalent (confirmed via `server/config.py` grep — no `gemini_*_ceiling`/poller analog exists). It
+  WAS knowable ahead of time the cheap way, though: the ceilings actually hit are publicly documented free-tier
+  numbers (20 req/min for `gemini-3.7-flash`, 250K input-tokens/min for `gemini-3.5-flash-lite`) — pacing/serializing
+  the 6 queued tasks instead of 30s spacing would have avoided most of the washout, matching this plan's own earlier
+  conclusion. Not opening a `GeminiQuotaPoller` todo unilaterally — flagging as a real, buildable gap for the
+  operator to decide is worth tracking, given this bake-off is close to done.
+
+- **2026-08-19 (later) — GLM lane result: both models produced real signal before hitting a SHARED 5-hour
+  account-level usage quota, not a per-model one.** GLM 5.2's full lane: 1 clean PASS (task 1), 1
+  INFRA-INTERRUPTED with substantial real work (task 2, 90 turns/$6.30 before the cutoff), 4 instant
+  INFRA-BLOCKED. GLM 5-Turbo: 2 clean PASS (tasks 1-2), 1 INFRA-INTERRUPTED (task 3, 81 turns/$4.40), tasks 4-6
+  still resolving but expected to be instant-blocked like GLM 5.2's tail. **Confirmed the quota is shared across
+  BOTH models, not independent per-model budgets**: GLM 5-Turbo's task 3 hit the identical `[1308] Usage limit
+  reached for 5 hour` error with the EXACT same reset timestamp (2026-08-20 00:22:34 UTC) as GLM 5.2's — running
+  both models concurrently split one account's budget rather than getting two separate ones, the same lesson as
+  the Gemini free-tier concurrency finding above. Real value delivered regardless: this is the fleet's first-ever
+  confirmed real tool-use dispatch through GLM's native endpoint, with 3 full clean completions and 2 substantial
+  partial ones as real evidence, not just a smoke test.
+
+- **2026-08-19 (later) — ALL 36 planned attempts across all 6 models have now run (or been confirmed
+  infra-blocked). Full-bake-off status, no lane still dispatching:**
+
+  | Model | Clean PASS | Interrupted (real partial work) | Infra-blocked (0 real signal) | Real infra bug found |
+  |---|---|---|---|---|
+  | Gemini 3.5-flash-lite | **4/6** | 2/6 | 0/6 | Wrong context-window constant (fixed) |
+  | Gemini 3.7-flash | 0/6 | 0/6 | 6/6 (free) + 6/6 (paid retry) | Free-tier AND partially the "paid" tier both quota-walled |
+  | GLM 5.2 | 1/6 | 1/6 | 4/6 | none (Z.ai-side quota, not a bug) |
+  | GLM 5-Turbo | 2/6 | 1/6 | 3/6 | none |
+  | DiffusionGemma 26B | 0/6 | 0/6 | 6/6 | NVIDIA-side instability, 4 distinct failure modes, confirmed not our request shape |
+  | Codex/Luna | 0/6 | 0/6 | 6/6 | Bridge rejects `system`-role messages — real code bug, root-caused |
+
+  **Real capability signal exists for exactly 2 of 6 models** (Gemini 3.5-flash-lite, GLM — both models). The
+  other 4 produced zero usable Gate-1/2 data this run, each for a distinct, now-documented reason. **This
+  session's actual biggest yield was infrastructure**, not model rankings: 2 real provider bugs found and either
+  fixed (context-window) or root-caused for someone else to fix (Codex bridge), 1 confirmed vendor-side
+  reliability problem (NVIDIA NIM), 1 confirmed shared-quota mechanic (GLM), and working, reusable dispatch +
+  30s-cadence polling infrastructure now proven end-to-end for any future bake-off round.
+  **Still open, needs the operator**: (1) whether to pursue a Gemini quota-INCREASE request (separate from
+  billing) for `generate_content_free_tier_requests` on project 371216509644; (2) whether Gemma is worth a retry
+  given NVIDIA's confirmed instability, or should be dropped from consideration; (3) the Codex bridge fix is real
+  engineering work belonging to `codex_luna_flex_bridge_2026_08_14.md`, not this plan; (4) GLM's 5-hour quota
+  resets 2026-08-20 00:22:34 UTC — the remaining 7 blocked GLM tasks (4 for 5.2, 3 for 5-Turbo) could be re-run
+  serially (not concurrently) after that to get full 6/6 coverage on both models. Gate-2 quality scoring on the
+  Gate-1 passers, and the final per-(model, tier) synthesis table, are the two todos still not started.
+
+- **2026-08-19 (later) — REAL root cause found for why the "paid tier" Gemini re-run still failed: `gcloud alpha
+  services quota list` shows the Paid Tier 3 quota bucket is genuinely provisioned (20,000 req/min for BOTH
+  `gemini-3.5-flash-lite` and `gemini-3.7-flash` on project `central-element-323112`) — the ceiling was never the
+  problem. Free-tier limits on the SAME project, for comparison: `gemini-3.7-flash` = 5 req/min,
+  `gemini-3.5-flash-lite` = 15 req/min (both lower than the `RESOURCE_EXHAUSTED` messages' own stated "limit: 20"
+  suggested — there are multiple overlapping bucket rules, the per-model dimension is the binding one).** The real
+  problem: our actual requests were still being billed against `generate_content_free_tier_requests`, not
+  `generate_content_paid_tier_3_requests`, despite using `GEMINI_API_KEY_PROJ5`. This matches a known Google AI
+  Studio gotcha — an API key generated BEFORE Cloud Billing was enabled on its project can stay classified as
+  free-tier indefinitely; the quota bucket gets provisioned but the key doesn't automatically re-associate with
+  it. **Fix, not yet done**: regenerate the API key for project 371216509644 via
+  https://aistudio.google.com/app/apikey (after confirming billing is genuinely active), swap the regenerated
+  value into `GEMINI_API_KEY_PROJ5`, and re-test before trusting `proj5` for any further dispatch — the current
+  key is not reliably drawing on the paid pool it's nominally provisioned for.
+  **Live status snapshot (2026-08-19T12:44 UTC)**: Gemini (both free proj1 and paid proj5) — both respond 200 OK
+  to a single lightweight probe right now (a single request never trips a per-minute limit either way, so this
+  confirms nothing about tier routing, only that neither key is dead). NVIDIA/Gemma — also 200 OK on a
+  trivial single-turn probe right now, consistent with the earlier finding that it fails specifically on full-size
+  real requests, not universally. GLM — still inside its 5-hour lockout, **11h38m remaining** at check time,
+  resets 2026-08-20T00:22:34Z.

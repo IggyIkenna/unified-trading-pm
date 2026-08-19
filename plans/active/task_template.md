@@ -19,7 +19,7 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [template, format, canonical, agent-task, plan-authoring]
-related: [/plans/archive/2026_07/ao_dispatch_correctness_regen_reconcile_2026_07_07.md, /plans/PLAN_FORMAT.md]
+related: [/plans/PLAN_FORMAT.md]
 created: "2026-02-25"
 last_updated: 2026-08-16 # was: 2026-07-24 — corrected 2026-08-16, added §3 finding Y (AO-dispatched plans must not carry an operator-gated item in the same file as their dispatchable todos — split it out) per operator directive after a corpus sweep found dozens of assigned_vm:planning plans with a [OPERATOR]/BLOCKED-<TOKEN> item interleaved with plain todos, silently blocking the plan's own archival; prior entry: corrected 2026-07-24, added §3 findings L/M (markdown structural well-formedness, internal self-consistency) surfaced by an adversarial verification pass on data_pipeline_e2e_milestones_gate_2026_07_24.md's 64-todo distribution; earlier: corrected 2026-07-23, plan_quality_four_line_defense_architecture_2026_07_23.md line-1 todo: added §3 rules for findings D/E/F/G/C (section-shorthand, ambiguous verbs, delete-risk tagging, definition-of-done, stale-checkbox pre-check) surfaced by an adversarial AO-dispatch-readiness review of sports_consolidated_closeout_2026_07_19.md
 parent_epic: agent_operating_framework_master
@@ -118,6 +118,10 @@ estimate_baseline_ai_days: <n>
 estimate_calibrated_ai_days: <n × class-multiplier>
 assigned_role: <default craft — data_engineering | infra | backend_engineer | ui_developer | review>
 # model_tier: opus-required # optional — default sonnet (role-derived); fable-required = OPERATOR-REQUEST-ONLY (§4)
+# model_strict: true # optional (worker_slot_account_exhaustion_no_rotation_2026_08_19) — true = never substitute a
+# different model when this plan's own tier is exhausted everywhere (freeze-and-wait); absent/false (the default) =
+# attempt a cross-model substitution (see model_tier.models_are_substitutable). Defers to assigned_role's own
+# model_strict when absent here too.
 drift_direction: advance-code
 depends_on: # optional — upstream plan slugs (documents ordering + gates archival)
 # gate_on_depends: true    # optional — machine-hold this plan's tasks until depends_on tasks are done

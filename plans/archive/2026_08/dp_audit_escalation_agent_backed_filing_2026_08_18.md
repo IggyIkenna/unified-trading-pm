@@ -9,7 +9,7 @@ summary: |
   substrate already solved this correctly (never raw-commit from an ephemeral runner — defer to a dispatched agent
   instead) but its dispatched worker's boot prompt assumes a doc is already filed, so the pattern isn't actually
   wired end-to-end anywhere. This plan closes that loop.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [data, meta]
@@ -24,7 +24,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-19"
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
@@ -147,12 +147,35 @@ exists on one side and is never actually exercised end-to-end.
       (both actionable-frontmatter halves had actually already shipped), and cross-linked from
       `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md`'s `data_pipeline_failure` row (incl.
       bumping its `last_reviewed`). — unified-trading-pm@6fca190fb8
-- [ ] [BACKEND] P3. \_(stretch, optional)\_ Consider extracting `write_issue_doc`'s frontmatter-template logic into a
-      shared location (UTL or UAC — both e2e-testing and deployment-service already depend on them) instead of
-      leaving two independent implementations after this plan. Deferred: the tier-and-import-architecture rule bans
-      direct service-to-service imports, e2e-testing and deployment-service already carry other independently-
-      duplicated DP\_\* code as existing precedent, and extraction into a shared dependency is a real design call
-      with its own review surface — not a mechanical follow-up. Revisit if the two templates drift again.
+- [x] [BACKEND] P3. ✅ _(stretch, optional)_ Investigated extracting `write_issue_doc`'s frontmatter-template logic
+      into UTL/UAC — **not worth it; closed without extracting.** The premise ("two independent implementations")
+      no longer holds: re-read `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue` post-todo-2
+      (`e2e-testing@aa6e8a1498`) and confirmed it derives ZERO frontmatter now — it only emits
+      `DP_ESCALATION_DEFERRED` + fires `repository_dispatch`; the raw finding `details` dict it emits is not
+      schema-shaped. `deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py::write_issue_doc`
+      is now the ONLY remaining Python implementation, already covered by 7 tests
+      (`deployment-service/tests/unit/test_escalation_issue_writer.py`) pinned to `docspec.py`'s schema — zero live
+      code duplication to converge. Checked UTL (`unified_trading_library`) and UAC
+      (`unified_api_contracts`) for precedent (`rg -l "frontmatter|docspec|PER_TYPE"`): none exists — `docspec.py`
+      is PM-repo-internal tooling (loads PM-root registries, has an `argparse` CLI, was never designed as an
+      importable library) and isn't precedent for an extraction target either way. Per
+      `/codex/04-architecture/tier-and-import-architecture.md`, UTL (T1) is trading-domain shared infra
+      (event sinks, cloud storage, service framework) and UAC (T0) is external/internal API-contract schemas —
+      neither is a domain fit for "PM plans/issues doc frontmatter," and with a single T4 caller today, adding it
+      to either would be premature abstraction serving one consumer in a tier meant for many. The genuinely live
+      third rendition — `unified-trading-pm/agents/data_pipeline_failure.md`'s STEP 1, where a dispatched LLM
+      worker hand-writes the same frontmatter shape from prose instructions when no doc is pre-filed — is prose
+      consumed by a one-shot agent, not a Python import; "extraction" doesn't apply to it the same way (that would
+      be a bigger, separate design change: teaching the worker to invoke a shared renderer via shell instead of
+      hand-typing YAML). While investigating that STEP 1 path, found and fixed a live drift bug it caused: it cited
+      `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue`'s template (`e2e-testing@c05ec220ec`) as the
+      "last hand-verified match" against `docspec.py` — but todo 2 of THIS plan deleted that template three commits
+      later (`e2e-testing@aa6e8a1498`), leaving a dangling reference a future dispatched worker would find empty.
+      Also found its hand-written field list omitted `assigned_vm`, a REQUIRED field for `doc_type: issue` (missing
+      → HARD-fails `docspec.py`'s `PER_TYPE["issue"]` check) — `write_issue_doc` already emits it
+      (`vm-cross-cutting`) but the boot prompt never told the worker to. Fixed both: repointed the citation at the
+      current, tested `write_issue_doc` implementation and added the missing `assigned_vm: vm-cross-cutting` field
+      to the prompt's field list. — unified-trading-pm@e56e311cbd
 
 ## Progress Log
 
@@ -189,3 +212,19 @@ exists on one side and is never actually exercised end-to-end.
   working"). Both commits verified ancestors of `origin/live-defi-rollout`. Todo 4's checkbox above is correct;
   this entry was just never appended (found + closed — plan-reconcile observability_master, 2026-08-19).
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 1 open stretch/optional todo remains on an otherwise fully-shipped, live-verified plan (4/5 todos DONE + a live end-to-end drill proved the whole chain works); the residual is explicitly self-described as 'a real design.
+- **2026-08-19 (interactive session, slot 3) — closed the last todo, plan archived**: investigated the stretch todo
+  (extract `write_issue_doc`'s frontmatter-template logic into UTL/UAC). Re-read
+  `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue` post-todo-2 and confirmed it derives zero
+  frontmatter now (event-emit + dispatch only) — the "two independent implementations" premise that motivated the
+  todo no longer holds; `escalation_issue_writer.py::write_issue_doc` is the only Python implementation left, already
+  test-covered, with no domain-fit shared-library home and no second caller to converge with. Closed `[x]`
+  "investigated, not worth it" rather than forcing an extraction, per the todo's own allowance. While investigating,
+  found and fixed a live drift bug the investigation surfaced: `agents/data_pipeline_failure.md`'s STEP 1 cited
+  `e2e-testing`'s now-deleted template as the reference to mirror and omitted the REQUIRED `assigned_vm` field from
+  its hand-written frontmatter list (would HARD-fail `docspec.py`'s `PER_TYPE["issue"]` check) —
+  unified-trading-pm@e56e311cbd. Also fixed two adjacent stale references in
+  `/codex/05-infrastructure/data-pipeline-alerts.md` found while doing the archival codex-alignment check (wrong
+  module path for the split-out issue writer; the plan-citation path about to go stale on archival) and added a
+  short closure note there so a future reader doesn't re-litigate this same extraction question from scratch —
+  bumped `last_reviewed`. All 6 todos done, `locked_by:` unset → archiving now per the 6-step ritual
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`).

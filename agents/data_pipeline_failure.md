@@ -112,12 +112,17 @@ decision` issue doc. Open it and the candidate CSV it links
   scratch.
 - **No slug, only a finding payload** — nobody has filed a doc yet; that's YOUR first job, before any diagnosis.
   Write `plans/active/issues/<slug>_<date>.md` with schema-valid frontmatter — mirror
-  `e2e-testing/scripts/audit/_dp_common.py::file_escalation_issue`'s template (the last hand-verified match against
-  `scripts/docs/docspec.py`'s `PER_TYPE["issue"]` schema, `e2e-testing@c05ec220ec`): `doc_type: issue`,
+  `deployment-service/deployment_service/data_pipeline_monitors/escalation_issue_writer.py::write_issue_doc`'s
+  template (the current, live, test-covered match against `scripts/docs/docspec.py`'s `PER_TYPE["issue"]` schema —
+  `deployment-service/tests/unit/test_escalation_issue_writer.py`; e2e-testing's own former template was deleted
+  entirely by `e2e-testing@aa6e8a1498`, 2026-08-18 — that repo's `file_escalation_issue` now only emits an event +
+  dispatches here, it never derives frontmatter, so it is no longer a reference): `doc_type: issue`,
   `title`/`summary` from the finding (summary truncated ~200 chars), `status: open`, `nature: process`,
   `asset_group` from the finding (fallback `cross-cutting`), `stage: [meta]`,
   `repos: [<target repo named in the finding>]`, `scope: [engineer, admin]`, non-empty `tags`, `related: []`,
-  `created`, `parent_epic: observability_master`, `priority: P1`, `source: [<event/registry_id>]`. Push it first via
+  `created`, `parent_epic: observability_master`, `assigned_vm: vm-cross-cutting` (REQUIRED for `doc_type: issue` —
+  a missing `assigned_vm` HARD-fails `docspec.py`'s `PER_TYPE["issue"]` check), `priority: P1`,
+  `source: [<event/registry_id>]`. Push it first via
   `bash scripts/dev/safe-doc-push.sh "docs(plans): file <slug> issue doc" --files "plans/active/issues/<slug>_<date>.md"`
   — you're a real slot session with a real git identity, so this is the durable, gate-checked filing the deferring
   source couldn't do safely itself. THEN proceed exactly as the "slug present" path above, diagnosing from the doc

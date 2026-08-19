@@ -452,8 +452,10 @@ less useful." Investigated end-to-end:
       2026-06-21.
 - [ ] [DATA] P3. **cs ensemble (`_panel.py`) reads `alt_*` (2022+) not `altfull_*` (2017+)** — a plumbing gap (the deep
       history exists but isn't used). Low priority since the regime analysis says pre-2021 hurts, but the inconsistency
-      should be reconciled (use `altfull_*` + an explicit TRAINCUT, not a silent 2022 floor). Repo: e2e-testing. Prov:
-      data-extent audit 2026-06-21.
+      should be reconciled (use `altfull_*` + an explicit TRAINCUT, not a silent 2022 floor). **`_panel.py` is
+      GCS-archived research corpus, not in-repo** (verified 2026-08-19; restore via
+      `e2e-testing/scripts/paper_trading/RECOVERY.md`'s `research_archive/code/` rsync). Prov: data-extent audit
+      2026-06-21.
 
 ### 2026-06-21 — SIGNAL-vs-EXECUTION, walk-forward COIN/STRATEGY allocation, basis CAPACITY, HYPE universe gap
 
@@ -493,7 +495,9 @@ constraint, then HYPE. Findings (all walk-forward, IS=2023-24 / OOS=2025-26):
 - [ ] [DATA] P2. **Add HYPE + the post-2024 cohort (SUI, etc.) to the trading universe** — fetch from Bybit/Hyperliquid
       (`_fetch_bybit.py`/`_fetch_hyperliquid.py`), fetch their funding, **re-run the cs ensemble (`_panel.py`) with them
       in the universe** so they actually trade; the WF allocator then weights a new coin from the floor up as it earns a
-      trailing Sharpe. Repo: e2e-testing `scripts/paper_trading/` + strategy-service. Prov: HYPE gap 2026-06-21.
+      trailing Sharpe. **`_panel.py` is GCS-archived research corpus, not in-repo** (verified 2026-08-19; restore via
+      `e2e-testing/scripts/paper_trading/RECOVERY.md`'s `research_archive/code/` rsync); the fetch scripts land in
+      e2e-testing `scripts/paper_trading/` + strategy-service. Prov: HYPE gap 2026-06-21.
 - [ ] [RESEARCH] P2. **Implement the deployable allocator: basis filled-to-capacity + capped slow-momentum (180-365d)
       over the directional legs** (cs/h32/ext/short/tsmom), monthly, lagged, per-leg cap so no sleeve dominates; coins
       stay ~equal-weight (selection isn't a reliable edge). Repo: strategy-service. Prov: allocation study 2026-06-21.
@@ -548,7 +552,9 @@ NOT the fills (gross is also ~1 full). cs and tsmom are the genuinely weak ones.
 
 - [ ] [RESEARCH] P2. **Apply the cs denoise + tsmom-long-only to the production legs** — cs: `ewm(span≈7)` on the ML
       book (or a longer-horizon target retrain in `_panel.py`); tsmom: ship LONG-ONLY (drop the short side). Both
-      IS-chosen, OOS-validated, lookahead-free. Repo: e2e-testing `scripts/paper_trading/` + strategy-service. Prov:
+      IS-chosen, OOS-validated, lookahead-free. **`_panel.py` is GCS-archived research corpus, not in-repo** (verified
+      2026-08-19; restore via `e2e-testing/scripts/paper_trading/RECOVERY.md`'s `research_archive/code/` rsync); apply
+      against e2e-testing `scripts/paper_trading/` + strategy-service. Prov:
       leg-quality audit 2026-06-21.
 - [ ] [RESEARCH] P3. **h32 is the next weak leg (0.54 full)** — give it the same denoise/horizon treatment (it's a
       momentum leg; likely over-trading like cs). Repo: e2e-testing. Prov: leg-quality audit 2026-06-21.
@@ -636,3 +642,7 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
 
 - **na-eligibility-audit 2026-08-16** [body-hash:10d1f1a5151d4f00]: KEEP-NA, valid — Read the full 633-line doc end-to-end (not just checkbox count). 16 of the 22 open checkboxes (lines 274, 346, 350, 354, 358, 397, 401, 405, 442, 446, 497, 549, 553, 570, 586, 589) are verbatim restatements of the five §C bullet-g…
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **2026-08-19**: fixed a stale-pointer finding surfaced by `/context-scout` — this doc's 3 live `_panel.py` references
+  (lines ~453, ~495, ~553) now state plainly it's GCS-archived research corpus, not an in-repo path (confirmed absent
+  from every repo's working tree + git history), with the `RECOVERY.md` rsync restore command. Same fix mirrored onto
+  `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s P2.11.15 (the near-verbatim duplicate held back there).
