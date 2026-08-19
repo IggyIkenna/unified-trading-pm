@@ -85,15 +85,23 @@ not already done. That key is not reproduced here.
 
 ## Next steps for whoever picks this up
 
-0. **[UI] Flag per-model health in the dashboard, live-derived, not a hardcoded label** — operator ask,
-   2026-08-19: while this is open, the dashboard should visibly distinguish `diffusiongemma-26b-a4b-it` (working)
-   from `gemma-4-31b-it` (broken, this issue) so nobody dispatches to the broken one blind. Reuse the EXACT
-   precedent already shipped for Kimi: `KimiWalletPanel.tsx`'s `allKimiAccountsPaused()` — derived live from
-   `GET /api/accounts`, not a static string, so the banner disappears on its own the moment this issue resolves.
-   For Gemma specifically there is no existing per-model (only per-provider) health field on `AccountView` — check
-   whether one needs adding, or whether `last_used_at`/a new `health_status` field on the NVIDIA account row is the
-   right vehicle. Done when: a `.gemma-degraded-banner` (or similar) renders live off real account state, with a
-   Playwright regression spec mirroring `kimi-wallet-reconciliation.spec.ts`'s "shows the paused banner" test.
+0. ✅ **[UI] DONE 2026-08-19** (slot 3, isolated pilot) — flag per-model health in the dashboard, live-derived, not a
+   hardcoded label. Added `AccountDef.health_status: Literal["healthy","degraded"] | None` (`server/accounts.py`,
+   `server/models/accounts.py`, wired via a new `_account_health_status()` reader into `_account_to_view()` in
+   `server/routes/accounts.py` — deliberately NOT reusing `status`, which reflects the unrelated pause/rate-limit
+   state, not "does this model respond"). `NvidiaCapacityPanel.tsx` gained `degradedNvidiaAccounts()` + a
+   `.gemma-degraded-banner`, following the exact `KimiWalletPanel.tsx`/`allKimiAccountsPaused()` precedent —
+   live-polled from `GET /api/accounts`, disappears on its own once the flag flips back to `"healthy"`. Tooltip
+   cites this issue doc and the real evidence by name. **Evidence**: `agent-orchestrator@3b610af0b0` (landed on
+   `live-defi-rollout`) — full `quality-gates.sh` green (4150 passed/4 skipped pytest, pip-audit clean, `tsc`
+   clean, 418/418 vitest); new `NvidiaCapacityPanel.test.ts` (4 cases) + a new Playwright case in
+   `nvidia-capacity.spec.ts` ("shows the degraded banner for gemma-4-31b-it only... DiffusionGemma stays
+   unflagged") — 10/10 real e2e passed, including a full regression run of Kimi's 7 existing banner specs (no
+   collateral damage). **Real remaining gap, not code**: the LIVE VM's `data/config/accounts.json` (gitignored,
+   operator-managed, separate from the shipped `accounts.mock.json` e2e fixture) still needs
+   `health_status: "degraded"` set on the real `nvidia-gemma-4-31b-it` account for the banner to actually show in
+   production — a manual operator/dispatch step, same category as the original `POST /api/accounts/{id}/disable`
+   pause, not something this pilot session did or should do from a slot checkout.
 1. **Get the playground's real wire request**: DevTools → **Network** tab (not Console) → filter Fetch/XHR → send
    a playground message → find the `chat/completions` (or similar) request → right-click → Copy → **Copy as
    cURL**. Diff it against attempt 3's payload above — likely differences to check: a different `api_base`/route
@@ -113,3 +121,50 @@ not already done. That key is not reproduced here.
 - **2026-08-19**: Filed following an interactive pilot-testing session. Full evidence table above is the complete
   real record; nothing summarized away. Operator will hand this to another engineer (Harsh) to continue while this
   session moves on to GLM/Gemini real-CLI testing.
+
+- **2026-08-19 (slot 3, isolated pilot, new key)**: Operator generated a fresh, THIRD NVIDIA key
+  (`.tabs/3/agent-orchestrator/keys.env`, never GSM-stored) specifically to re-test this. Two real, bounded calls
+  direct to `https://integrate.api.nvidia.com/v1/chat/completions`: (1) control — `google/diffusiongemma-26b-a4b-it`,
+  real `HTTP 200` in 0.41s, confirming the new key itself is valid; (2) `google/gemma-4-31b-it`, 110s bounded
+  timeout — **identical zero-byte timeout** (`curl: (28) Operation timed out ... 0 bytes received`), matching the
+  exact failure signature of every prior attempt. This is now a **6th real attempt across a 3rd distinct key**,
+  further reinforcing "not a credentials issue" from the evidence table above. Per this doc's own "do not keep
+  blind-retrying" guidance, no further raw-API retries were made this session — real signal here would come from
+  step 1 (the playground's actual wire request), which needs the operator's own browser DevTools session, not
+  something reproducible from this environment.
+
+  **Step 0 ([UI] health banner) — implemented, tested, and shipped this session**, in the isolated `.tabs/3` slot
+  per the local-pilot-isolation-runbook (dashboard code change, not a live-orchestrator pilot launch — no server
+  instance spun up against real credentials; only the repo's own self-isolating `mode=mock` Playwright/vitest test
+  infra was used). Real per-account (not per-provider) health field added, following the "live-derived, not
+  hardcoded" precedent from `KimiWalletPanel.tsx`'s `allKimiAccountsPaused()`:
+  - `AccountDef.health_status: Literal["healthy", "degraded"] | None` (`server/accounts.py`) — operator-declared
+    static config, same shape as `tier`/`variant`/`gcp_project`, deliberately NOT reusing `status` (which reflects
+    the unrelated pause/rate-limit state — both Gemma accounts are independently `disabled` for the task-routing
+    gate, not this bug).
+  - `AccountView.health_status` (`server/models/accounts.py`) + `_account_health_status()` reader wired into
+    `_account_to_view()` (`server/routes/accounts.py`), mirroring the existing `_account_provider()` pattern
+    (accounts.json-read, no DB/ORM change needed).
+  - `NvidiaCapacityPanel.tsx`: new `degradedNvidiaAccounts()` pure helper + `.gemma-degraded-banner` rendering,
+    fetched live from `GET /api/accounts` (polled, same as Kimi's banner) — disappears on its own the moment the
+    operator flips the account back to `"healthy"`. Tooltip cites this issue doc by name and the real evidence
+    (6 attempts, 3 keys) so the reason is never a bare label.
+  - `dashboard/src/types.ts`, `dashboard/src/styles.css` (`.gemma-degraded-banner`, mirrors `.kimi-paused-banner`'s
+    severity), `data/config/accounts.mock.json` (e2e fixture: `nvidia-diffusiongemma-demo` → `"healthy"`,
+    `nvidia-gemma-4-31b-demo` → `"degraded"`).
+  - **Real test evidence**: new `NvidiaCapacityPanel.test.ts` (4 vitest cases for the pure helper); new Playwright
+    case in `nvidia-capacity.spec.ts` ("shows the degraded banner for gemma-4-31b-it only... DiffusionGemma stays
+    unflagged") — **10/10 passed** against the real e2e stack (`mode=mock`, real server boot), including a
+    regression run of all 7 existing Kimi-banner specs (no collateral damage). Two pre-existing test fixtures
+    (`layout.test.ts`, `KimiWalletPanel.test.ts`) needed a `health_status: null` field added to their `AccountView`
+    mock builders to keep typechecking — done, `tsc --noEmit` clean, full vitest suite **418/418 passed**. Backend
+    `AccountDef`/`AccountView` construction sanity-checked directly (`degraded` and default-`None` both validate).
+  - **Shipped**: `quality-gates.sh --no-fix` confirmed green (4148 passed/4 skipped pytest, pip-audit clean, `tsc`
+    clean, 418/418 vitest) before shipping; landed via `quickmerge.sh --agent --files ...` scoped to exactly the 11
+    touched files as `agent-orchestrator@3b610af0b0` on `live-defi-rollout` (re-verified green in quickmerge's own
+    Stage 3 re-gate: 4150 passed/4 skipped). See the flipped step 0 above for the full evidence citation. The live
+    VM's real `accounts.json` (gitignored, operator-managed, separate from the shipped `accounts.mock.json` e2e
+    fixture) still needs `health_status: "degraded"` set on the real `nvidia-gemma-4-31b-it` account for the banner
+    to actually render in production — a manual operator/dispatch step, same category as the original
+    `POST /api/accounts/{id}/disable` pause, not something this pilot session did or should do from a slot
+    checkout.
