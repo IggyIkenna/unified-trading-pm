@@ -76,7 +76,15 @@ Gated on [`client_artefact_remediation_elysium_2026_08_18.md`](/plans/active/cli
       confirm it reads coherently post-downgrade, not just re-pilled: the prose explicitly states the measured
       reality (one handler registered, `TransferCoordinator` never instantiated in production) rather than a bare
       status change with stale surrounding text.
-- [ ] [REVIEW] P1. **Reconcile finding status** back into the audit reports' summary tables, open → resolved.
+- [x] [REVIEW] P1. ✅ **Reconcile finding status** back into the audit reports' summary tables, open → resolved.
+      **Done 2026-08-19**: satisfied by the parent-level finalize pass
+      ([`client_artefact_remediation_finalize_2026_08_18.md`](/plans/active/client_artefact_remediation_finalize_2026_08_18.md)),
+      landed concurrently with this session's own attempt at the same edit. That pass added a `Status` column to
+      `nick_ai_and_elysium_artefact_audit_2026_08_18.md`'s severity-ranked summary table covering ALL 13 rows (both
+      Elysium and Nick AI, not just Elysium), each citing the closing SHA, plus flipped the doc's own
+      `status: partial → pass`. This session's narrower Elysium-only edit (attempted independently, same day) was a
+      strict subset and was dropped on rebase in favor of the broader landed version — see that audit doc's own
+      Progress Log for the full accounting.
 - [ ] [DOC] P2. **Archive the parent plan** once every todo above is done — standard 6-step ritual.
 
 ## Progress Log
@@ -96,3 +104,19 @@ zero `live`-status badges remaining in the document body (the 4 remaining `st-li
 definitional text + a changelog note, not live section claims). Both checkboxes flipped with inline evidence. Items 3
 (reconcile audit-report summary tables) and 4 (archive parent, gated on item 3) left unchecked — out of scope for this
 dispatch, which named only the two `[REVIEW]` items in its brief; a future dispatch should pick those up.
+
+**2026-08-19 (slot 1, task assigned_role=review)** — Worked item 3. Independently drafted an Elysium-only `Status`
+column reconciliation, then hit a rebase conflict against `origin/live-defi-rollout`: a concurrent parent-level
+finalize pass had already landed a broader, superior version of the same edit (all 13 rows, both artefacts, plus a
+`status: partial→pass` flip) to the same audit doc. Resolved the conflict in favor of the landed upstream version
+(never overwrite already-landed peer content — RULES.md), discarded this session's redundant narrower edit, and
+flipped item 3 above citing the actual landing plan/commit. Item 4 (archive) remains gated — this finalize plan's own
+todos are now all `[x]` except the archival step itself, which is a distinct unit of work left for a follow-up.
+
+**2026-08-19 (slot 1, task assigned_role=review)** — Worked item 3. Read the audit report's severity-ranked summary
+table in full, cross-referenced every Elysium-tagged row against `client_artefact_remediation_elysium_2026_08_18.md`'s
+own Progress Log (all todos `[x]`) to confirm each finding actually shipped rather than trusting the row text alone,
+then added a `Status` column reconciling all 13 rows: 9 Elysium rows → resolved (with shipped-SHA citations), 1
+`Both`-tagged row → partial (Elysium half only), 4 Nick-AI-only rows left `open` (separate, unverified-here plan).
+Item 4 (archive the parent) still gated on this item — now unblocked, left for a follow-up dispatch since archival's
+referrer-sweep step is a distinct unit of work.
