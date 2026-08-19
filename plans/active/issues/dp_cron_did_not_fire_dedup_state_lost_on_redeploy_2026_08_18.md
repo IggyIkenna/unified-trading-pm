@@ -74,7 +74,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 locked_since:
 context_scope:
   [
@@ -182,11 +182,37 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
 - [x] ✅ [SCRIPT] P1. Wire `RenagTracker`/`apply_cooldown` into `missing_live_producer_watcher`
       (DP-LIVE-003) as source-side defense-in-depth, independent of the alerting-service dedup bug.
       Evidence: `deployment-service@9abb2d20e4`, `quality-gates.sh --no-fix` ALL PASSED (252s).
-- [ ] [SCRIPT] P1. Design + ship GCS-persisted state for the `_RECURRING_ALERT_COOLDOWNS` subset
-      of `AlertDeduplicator` (repo: alerting-service), scoped to avoid adding GCS I/O to the
-      general 60s-default dedup path. Verify post-fix via a live-behavior re-sample that survives
-      at least 2 observed redeploys within one 30-min cooldown window (a single quiet sample is not
-      sufficient evidence per this doc's own "why this evaded prior investigations" section).
+- [x] ✅ [SCRIPT] P1. **RESOLVED 2026-08-19 (data_pipeline_failure escalation worker, agt-b66b27)**
+      — Design + ship GCS-persisted state for the `_RECURRING_ALERT_COOLDOWNS` subset of
+      `AlertDeduplicator` (repo: alerting-service), scoped to avoid adding GCS I/O to the general
+      60s-default dedup path. Shipped a new `RecurringCooldownState` layer
+      (`alerting_service/core/recurring_dedup_persistence.py`) consulted in `router._is_duplicate_alert`
+      (both `route_event`/`route_event_with_explicit_channels` call sites) ONLY for events carrying a
+      `_RECURRING_ALERT_COOLDOWNS` `ttl_override` — reuses the ALREADY-BUILT-BUT-NEVER-CALLED
+      `AlertStorageStore.read_cooldown_state()`/`write_cooldown_state()` (`alerting/state/cooldowns.json`)
+      rather than inventing a new GCS blob/bucket (that persistence layer shipped with zero production
+      caller until this fix — the same "built but not called" anti-pattern already documented for the
+      revocation actuator in `/codex/05-infrastructure/data-pipeline-alerts.md`). State loads once per
+      process/container lifetime (cached) and writes through only on an actual new delivery
+      (cooldown-gated, so writes stay infrequent); fails OPEN (never suppress, never raise) on any GCS
+      read/write error, mirroring `RenagTracker`'s documented fail-open direction. Evidence:
+      `alerting-service@f48a61193f`, `quality-gates.sh --no-fix` ALL QUALITY GATES PASSED (52s, full
+      1070-test suite green incl. 2 new test files + isolation fixtures added to `tests/conftest.py`
+      to prevent the persisted layer from leaking state across unrelated tests). **Live-behavior
+      re-sample deferred, not yet done this session** — the doc's own verify bar (≥2 observed redeploys
+      within one 30-min cooldown window post-fix) needs a follow-up dispatch once `dp-alerting-subscriber`
+      picks up this deploy; tracked as the new todo below rather than closed on unit-test evidence alone.
+- [ ] [SCRIPT] P2. **ADDED 2026-08-19** — live-verify the `RecurringCooldownState` fix
+      (`alerting-service@f48a61193f`) actually holds a `DP_CRON_DID_NOT_FIRE`/`DP_RUN_MOSTLY_EMPTY`/
+      `CONSOLIDATOR_DOWN` cooldown across a real `dp-alerting-subscriber` redeploy: confirm the deploy
+      reached `dp-alerting-subscriber` (`gcloud run revisions list`, digest/content-check per this doc's
+      own established discipline — not SHA-ancestor alone, Option-B direct-promote rewrites commits),
+      then sample the SAME previously-repeat-firing identity (BYBIT-FUTURES on
+      `mtds-live-cefi-consolidated-*`, or whatever is currently firing) across ≥2 observed redeploys
+      within one 30-min window and confirm it stays suppressed for the full cooldown instead of
+      re-firing on every redeploy. Also spot-check `alerting/state/cooldowns.json` in the
+      `alerting-service-<project>` bucket actually gets written (confirms the wiring reaches real GCS,
+      not just the unit-test-mocked path). Repo: alerting-service.
 - [x] ✅ [OPERATOR] P1. (carried over) Investigate the 2 genuine live-capture stalls first
       flagged 2026-08-17 (BYBIT-FUTURES on `mtds-live-cefi-consolidated-20260817-025031`; CME
       trades on `mtds-live-tradfi-cme-trades-20260809-163443`) — both VMs running, both
@@ -232,6 +258,21 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
 
 ## Progress Log
 
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 16, agt-b66b27)**: dispatched off a
+  CRITICAL `DP_CRON_DID_NOT_FIRE` (DP-WATCHER-002) escalation naming cron `dp-exit-code-monitor`
+  (no issue slug — alert-carries-the-details path). Live-verified `dp-exit-code-monitor` itself is
+  healthy (`gcloud scheduler jobs describe`: `ENABLED`, `0 * * * *`; last 8 `gcloud run jobs
+  executions list` rows all "Execution completed successfully" in 55s-2m26s) — the cron is NOT
+  failing to fire. Cross-checked `dp-alerting-subscriber` revision churn
+  (`gcloud run revisions list`): 2 revisions 95s apart same day (`-00127-z47` 01:38:16Z →
+  `-00128-7nj` 01:39:51Z), confirming this doc's root cause is still live as of today. Fresh
+  `slack-read-channel.py data-pipeline-alerts 3` showed the SAME DP_CRON_DID_NOT_FIRE spam pattern
+  this doc already diagnosed (DP-LIVE-004 findings mislabeled under the shared event name, dozens of
+  sports-odds venues re-firing at 05:06Z). Concluded this escalation is a duplicate/spam symptom of
+  THIS doc's already-open root cause, not a new failure mode — did not file a separate issue doc.
+  Shipped the doc's own recommended fix (the one remaining open P1 todo) rather than just
+  re-diagnosing: see the flipped todo above for the full design + evidence. Pinged the authoring
+  slot with the outcome.
 - 2026-08-18: `data_pipeline_alerts_reconciler` (slot 23, dispatch agt-d52c5d) ran the 6-hourly
   `/data-pipeline-alerts-reconcile` sweep. Ground-truth Slack read (150 msgs/24h) found the
   channel not quiet; cross-checked against the two prior confirmed-fixed issue docs for this
