@@ -31,6 +31,7 @@ related:
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/runtime-deployment-topology.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
+    /plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md,
   ]
 created: 2026-08-19
 last_updated: 2026-08-19
@@ -266,9 +267,46 @@ archived docs, were not yet sampled.
       whether a property-based/fuzzed test (any self-declared-not-eligible phrasing, not an enumerated list) would
       close this class permanently instead of waiting for a 4th recurrence to widen the list again.
 
-## Phase 4 — Finalize
+## Phase 4 — Containerize agent-orchestrator (Docker), cross-checked against the IONOS migration
 
-- [ ] [DOC] P1. **Post-phase codex audit** — once Phases 1-3 are shipped, do the standing "read the codex docs this
+Operator directive (same session, added after Phases 1-3 were already checkpointed): package agent-orchestrator to
+run as a Docker container inside its VM, specifically to make cross-cloud migration easier. **This plan does not
+own the cloud migration itself** — `/plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md` already tracks that
+(added to this plan's `related:`) — but containerizing AO is directly relevant to it and must be cross-checked
+against whatever that plan currently assumes about how AO is deployed/run.
+
+- [ ] [INFRA] P1. **Read `ao_ci_aws_to_ionos_migration_2026_08_18.md` in full before designing the container build**
+      — it may already assume a specific deploy shape (the existing `ao-self-pull.sh` root-cron + `systemctl
+      restart` model this plan's Phase 1 confirmed is still current) that a container changes. State explicitly
+      whether containerizing REPLACES `ao-self-pull.sh`'s restart mechanism or wraps it (e.g. the container still
+      polls LDR internally and restarts its own process, vs. an external supervisor rebuilding/redeploying the
+      container on each LDR push).
+- [ ] [INFRA] P1. **Design + ship the Dockerfile/image-build workflow** for agent-orchestrator's server. Decide
+      build trigger (same `push:[live-defi-rollout]` this plan's Phase 1 confirmed as AO's actual deploy signal, or
+      a separate build-only trigger) and registry target (this fleet already has `image-build-gate.yml` precedent
+      per Phase 1's semver-agent finding — check whether that's reusable or AO-specific). Done-when: an image
+      builds successfully from a real LDR commit and runs the server correctly in a local/test container.
+- [ ] [INFRA] P2. **Decide what "runs as a Docker container inside the VM" means for the EC2→IONOS migration
+      specifically** — does containerizing make the migration strictly easier (portable image, same container
+      runtime on either cloud) or does it need its own IONOS-side prerequisite (a container runtime installed,
+      registry access from the new host)? Fold the answer into the IONOS plan itself, don't duplicate it here —
+      this todo's done-when is "the IONOS plan's own todos reflect the container model," not new IONOS work here.
+
+### Considered and explicitly OUT of scope: CI self-hosted runners do NOT get this same treatment
+
+Operator reasoning (same session, worth recording so it isn't re-litigated): the CI self-hosted runner
+infrastructure is not itself a deployed application shipping code from LDR to main — it has no code of its own,
+it's a cron-driven executor running the workflow YAMLs that already live in each target repo. There's no
+"container of itself" to build, and no promotion-model question to resolve, because there's no deployable artifact
+in the first place. **Decision: the CI runner infrastructure stays outside this plan's scope entirely** — it does
+not need a `promotion_model` flip (it was never `ldr_terminal` or any other promotion model to begin with) and
+does not need Docker containerization for the same reason a cron job doesn't need containerizing to migrate
+clouds. If CI-runner-specific migration work is needed for the IONOS move, that belongs in
+`ao_ci_aws_to_ionos_migration_2026_08_18.md` (or a sibling doc), not here.
+
+## Phase 5 — Finalize
+
+- [ ] [DOC] P1. **Post-phase codex audit** — once Phases 1-4 are shipped, do the standing "read the codex docs this
       plan depends on and check them against what actually shipped" pass named in CLAUDE.md's plan-authoring rules.
       Update any contract that changed, SUPERSEDED-banner anything invalidated.
 - [ ] [DOC] P1. **Archive `agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s live-state claims are now
