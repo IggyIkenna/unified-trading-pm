@@ -22,7 +22,7 @@ tags: [gcs, bucket-naming, stale-config, data-correctness, migration-scripts]
 related:
   [
     /plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md,
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-18
@@ -41,7 +41,7 @@ drift_direction: advance-code
 depends_on:
 context_scope:
   [
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
     instruments-service/scripts/,
   ]
 supersedes:

@@ -22,7 +22,7 @@ related:
     /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
     /plans/active/deployment_service_api_integration_cleanup_2026_08_18.md,
     /plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md,
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/autonomous-recovery-matrix.md,
   ]

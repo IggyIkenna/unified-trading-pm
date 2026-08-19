@@ -30,7 +30,7 @@ related:
     /codex/06-coding-standards/script-homes.md,
     /codex/05-infrastructure/launcher-script-ssot.md,
     /codex/06-coding-standards/quality-gates.md,
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
   ]
 created: 2026-08-19
 authoritative_for:
@@ -247,7 +247,7 @@ launcher for a migration heavy enough to need one.
 
 ## Migration status (2026-08-19) — verified against the live tree
 
-Founding plan: [`migration_script_canonicalization_into_deployment_service_2026_08_18.md`](/plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md).
+Founding plan: [`migration_script_canonicalization_into_deployment_service_2026_08_18.md`](/plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md).
 Counts below are `.py` files present in each `deployment-service/scripts/migrations/{repo}/` subdirectory, verified
 2026-08-19 (not the historical relocation-event counts, which differ slightly due to test-file and stub-directory
 folding — see the plan's own Progress Log for the full per-file disposition of every relocation pass).
@@ -276,4 +276,4 @@ relocation sweep, if ever wanted, needs its own separate plan.
 - [`script-homes.md`](../06-coding-standards/script-homes.md) — the parent decision tree; item 4 corrected same date.
 - [`tier-and-import-architecture.md`](../04-architecture/tier-and-import-architecture.md) — the no-service-imports
   rule behind most "left in place, blocked" dispositions above.
-- Founding plan (archived): `/plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md`.
+- Founding plan (archived): `/plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md`.

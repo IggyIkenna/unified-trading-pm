@@ -28,7 +28,7 @@ scope: [engineer]
 tags: [quality-gates, baseline-ratchet, hardcoded-config, test-hygiene]
 related:
   [
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
   ]
 created: 2026-08-19
 last_updated: "2026-08-19"
@@ -46,7 +46,7 @@ drift_direction: advance-code
 depends_on:
 context_scope:
   [
-    /plans/active/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
     deployment-service/scripts/sync/,
     deployment-service/tests/unit/,
   ]
