@@ -1374,6 +1374,46 @@
         your agreement, and they are the clearest example of why the carve-out in §11 is drawn where it is.
       </p>
 
+      <p>
+        Named precisely: the "directional" grouping above is two separate registry families, not one — a rules-based
+        family and an ML-based family. That makes nine families platform-wide, not seven, and sixty archetypes across
+        them. <b class="ev ev-verified">✓ verified</b>
+      </p>
+
+      <details class="ref">
+        <summary>All 9 strategy families, and the archetype count in each<span class="tag-ref">reference</span></summary>
+    <div class="plate">
+        <div class="plate-head">
+          <span class="label">Every strategy family the platform declares</span>
+          <span class="note">Your two archetypes sit inside Carry &amp; Yield — one family, out of nine</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Family</th><th>Archetypes</th><th>Representative members</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">CARRY_AND_YIELD</td><td class="num-col">11</td><td>Your two sit here — staked basis, dated/perp basis, funding dispersion, lending rotation</td></tr>
+              <tr><td class="mono">VOL_TRADING</td><td class="num-col">19</td><td>0DTE gamma scalping, term-structure arb, variance swaps, straddles, dispersion</td></tr>
+              <tr><td class="mono">MARKET_MAKING</td><td class="num-col">10</td><td>Continuous and event-settled quoting, inventory skew, DeFi LP (pool / vault / concentrated)</td></tr>
+              <tr><td class="mono">ARBITRAGE_STRUCTURAL</td><td class="num-col">8</td><td>Price dispersion, liquidation capture, MEV sandwich / backrun / JIT-liquidity</td></tr>
+              <tr><td class="mono">PORTFOLIO</td><td class="num-col">4</td><td>Factor allocation, risk parity, multi-strategy, tactical overlay</td></tr>
+              <tr><td class="mono">RULES_DIRECTIONAL</td><td class="num-col">3</td><td>Continuous and event-settled rules-based directional, BTC CTA trend</td></tr>
+              <tr><td class="mono">ML_DIRECTIONAL</td><td class="num-col">2</td><td>Continuous and event-settled ML-driven directional</td></tr>
+              <tr><td class="mono">STAT_ARB_PAIRS</td><td class="num-col">2</td><td>Cross-sectional and fixed-pair statistical arbitrage</td></tr>
+              <tr><td class="mono">EVENT_DRIVEN</td><td class="num-col">1</td><td>Event-driven</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </details>
+
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code> —
+        <code>StrategyFamily</code> (9 members), <code>StrategyArchetype</code> (60 members) and the
+        <code>ARCHETYPE_TO_FAMILY</code> mapping, which maps every one of the 60 with none left unmapped. Counted by
+        import, not by hand.
+      </p>
+
       <div class="callout">
         <span class="tag">On how quickly things can be added</span>
         <p>
@@ -3341,6 +3381,93 @@
           </table>
         </div>
       </div>
+
+      <h3>The surface today, measured directly from the registries</h3>
+      <p>
+        None of the above is asserted without a count behind it. The following is generated from the same registries
+        the platform's own code reads at runtime — imported and counted this session, not hand-transcribed, so it
+        will not drift the way a copied figure does. <b class="ev ev-verified">✓ verified</b>
+      </p>
+
+      <div class="stat-row">
+        <div class="stat"><span class="v">192</span><span class="k">Venues declared in the platform's market-data capability registry, across every asset group</span></div>
+        <div class="stat"><span class="v">103</span><span class="k">Of those are DeFi protocol-chain venues — all with a capability entry</span></div>
+        <div class="stat"><span class="v">16</span><span class="k">Chains the DeFi surface reaches, from Arbitrum and Ethereum to Solana and Starknet</span></div>
+        <div class="stat"><span class="v">60</span><span class="k">Strategy archetypes across 9 families — your two are one family, one asset group. Detail in §3</span></div>
+      </div>
+
+      <details class="ref">
+        <summary>Venues by asset group, and the DeFi protocol × chain spread<span class="tag-ref">reference</span></summary>
+    <div class="plate">
+        <div class="plate-head">
+          <span class="label">Declared venues by asset group</span>
+          <span class="note">Canonical registry membership — not every declared venue has market data wired yet</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Asset group</th><th>Venues</th><th>Examples</th></tr></thead>
+            <tbody>
+              <tr><td><strong>DeFi</strong></td><td class="num-col">103</td><td>AAVE_V3, COMPOUND_V3, MORPHO, CURVE, PENDLE, UNISWAP, LIDO, JUPITER, RAYDIUM, HYPERLIQUID — spanning 16 chains</td></tr>
+              <tr><td><strong>Sports</strong></td><td class="num-col">39</td><td>DraftKings, FanDuel, Betfair (UK / EU), Pinnacle, BetMGM, Bovada</td></tr>
+              <tr><td><strong>CeFi</strong></td><td class="num-col">25</td><td>Binance, OKX, Bybit, Deribit, Coinbase, Kraken, Bitget, Aster</td></tr>
+              <tr><td><strong>TradFi</strong></td><td class="num-col">8</td><td>CME, ICE, NASDAQ, NYSE, CBOE, KRX, FRED, FX</td></tr>
+              <tr><td><strong>Prediction</strong></td><td class="num-col">2</td><td>Kalshi, Polymarket</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The DeFi protocol × chain spread</span>
+          <span class="note">Where one protocol's footprint is really N chains, not N venues</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead><tr><th>Protocol</th><th>Chains</th><th>Where</th></tr></thead>
+            <tbody>
+              <tr><td class="mono">AAVE_V3</td><td class="num-col">10</td><td>arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon, scroll, zksync (plus legacy <span class="mono">AAVE-ETHEREUM</span> and <span class="mono">AAVE-PLASMA</span> forms)</td></tr>
+              <tr><td class="mono">COMPOUND_V3</td><td class="num-col">6</td><td>arbitrum, base, ethereum, optimism, polygon, scroll</td></tr>
+              <tr><td class="mono">MORPHO</td><td class="num-col">5</td><td>arbitrum, base, ethereum, optimism, polygon (plus <span class="mono">MORPHOVAULTS-ETHEREUM</span>)</td></tr>
+              <tr><td class="mono">CURVE</td><td class="num-col">3</td><td>avalanche, ethereum, optimism</td></tr>
+              <tr><td class="mono">PENDLE</td><td class="num-col">2</td><td>arbitrum, ethereum</td></tr>
+              <tr><td>Solana-native set</td><td class="num-col">5 venues</td><td><span class="mono">JUPITER</span>, <span class="mono">KAMINO</span>, <span class="mono">METEORA</span>, <span class="mono">ORCA</span>, <span class="mono">RAYDIUM</span> — all on Solana</td></tr>
+              <tr><td>Standalone venues</td><td class="num-col">5 venues</td><td><span class="mono">HYPERLIQUID</span>, <span class="mono">ASTER</span>, <span class="mono">EXTENDED-STARKNET</span>, <span class="mono">ETHENA-ETHEREUM</span>, <span class="mono">LIDO-ETHEREUM</span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <p>
+        The 16 chains behind that spread: <span class="mono">arbitrum</span>, <span class="mono">avalanche</span>,
+        <span class="mono">base</span>, <span class="mono">blast</span>, <span class="mono">bsc</span>,
+        <span class="mono">ethereum</span>, <span class="mono">hyperliquid</span>, <span class="mono">linea</span>,
+        <span class="mono">mantle</span>, <span class="mono">optimism</span>, <span class="mono">plasma</span>,
+        <span class="mono">polygon</span>, <span class="mono">scroll</span>, <span class="mono">solana</span>,
+        <span class="mono">starknet</span> and <span class="mono">zksync</span>.
+      </p>
+
+      <div class="callout">
+        <span class="tag">What's verified this session, and what's cited from the dated audit</span>
+        <p>
+          The 192-venue total, the 103-venue DeFi declaration, the per-asset-group counts and the full protocol ×
+          chain spread above were imported and counted directly this session
+          (<code>unified_api_contracts.registry.market_data_categories.VENUE_DATA_TYPE_CAPABILITIES</code> and
+          <code>VENUES_BY_ASSET_GROUP</code>). <b class="ev ev-verified">✓ verified</b> Fourteen of the sixteen
+          chains above are confirmed as direct <code>ChainKind</code> members; <span class="mono">hyperliquid</span>
+          and <span class="mono">plasma</span> are confirmed instead through live venue names
+          (<span class="mono">HYPERLIQUID</span>, <span class="mono">AAVE-PLASMA</span>,
+          <span class="mono">FLUID-PLASMA</span>) rather than the chain enum itself. A separate, narrower "51 DeFi
+          venues, 19 chain tokens" count — filtering the same 192-entry registry to DeFi protocol names, and counting
+          three additional Hyperliquid transport variants as distinct chain tokens — comes from the 2026-08-19
+          registry ground-truth audit (internal) and is cited rather than re-derived here.
+          <b class="ev ev-check">? check</b> Either way, both counts are an order of magnitude past what this
+          document showed before this pass. The registry's own <span class="mono">VENUE_CHAIN_MAP</span>
+          under-declares (4 chains, 15 venues) and was deliberately not used as the chain source for any of the
+          above — that gap is a tracked registry defect, not a documentation one.
+        </p>
+      </div>
+      </details>
 
       <h3>What that means in practice, without overstating it</h3>
       <p>
