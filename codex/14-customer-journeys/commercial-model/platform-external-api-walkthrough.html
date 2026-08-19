@@ -858,6 +858,27 @@
   .sec-head .ev {
     align-self: center;
   }
+
+  /* Owner mark — the THIRD mark, alongside status (what the system does) and evidence
+     tier (how we know). Names who closes the gap. Solid neutral-filled chip with a plain
+     hairline border — no colour border, no dash, no wash — so it reads as metadata, not
+     a fourth status colour, and is never confused with .st or .ev at a glance. */
+  .own {
+    font-family: var(--sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    padding: 2px 8px;
+    border-radius: 3px;
+    white-space: nowrap;
+    color: var(--ink-2);
+    background: var(--surface-2);
+    border: 1px solid var(--rule);
+    cursor: help;
+  }
+  .sec-head .own {
+    align-self: center;
+  }
 </style>
 
 <div class="shell">
@@ -894,6 +915,13 @@
       >
       <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
       <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
+    </div>
+    <div class="legend">
+      <span
+        ><b class="own" title="Example — hover any owner mark for the full reference">owner: W5</b> the workstream,
+        plan or epic that closes this gap — hover for the full citation; omitted once status reaches
+        <b class="st st-live">live</b>, because a live claim has no open gap to own</span
+      >
     </div>
   </header>
 
@@ -1883,6 +1911,29 @@
         A caller that can express a buy can express a lay, or a stake, without new plumbing — only a different action on
         the same envelope.
       </p>
+      <h3>The lifecycle, once submitted</h3>
+      <p>
+        The action vocabulary above is what you can ask for. What happens after is a separate, target-state contract:
+        every incremental step — create, update, cancel, amend — is stored in the order table in a normalised format,
+        with the exchange reason derived from the request, response and error codes.
+        <b class="st st-plan">planned</b> — not built today.
+      </p>
+      <div class="keypoints">
+        <div>
+          <b>In-flight versus confirmed</b
+          ><span
+            >A cancel attempted before confirmation and one issued after are different events with different outcomes,
+            and the record must be able to tell them apart</span
+          >
+        </div>
+        <div>
+          <b>Restart recovery</b
+          ><span
+            >Execution-service restarting must not lose in-flight order state — a restart that does is an incident
+            generator, not a maintenance event</span
+          >
+        </div>
+      </div>
     </details>
   </section>
 
@@ -2087,7 +2138,10 @@
               </tr>
               <tr>
                 <td><b>2. Algorithms</b></td>
-                <td>Policy-selected execution algos rather than straight market orders</td>
+                <td>
+                  Policy-selected execution algos — <code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code> — rather
+                  than straight market orders
+                </td>
                 <td>You want execution quality without building it</td>
               </tr>
               <tr>
@@ -2104,6 +2158,11 @@
         Algorithms are chosen by a versioned, content-hashed policy table gated on the instruction's action and urgency
         — not hard-coded per strategy. Changing execution behaviour is a policy change, and because policies are
         versioned, any fill can be traced to the exact policy that governed it.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly: <code>execution-service/execution_service/algorithms/registry.py</code> maps algorithm IDs
+        (<code>TWAP</code>, <code>VWAP</code>, <code>ICEBERG</code>) to their execution and config classes; a straight
+        market order is the default when no policy names an algo.
       </p>
       <h3>Chained sequences</h3>
       <p>
@@ -2149,7 +2208,44 @@
       <h3>Moving</h3>
       <p>
         Transfers are expressed as instructions on the same envelope as trades, and route to a rail appropriate to the
-        movement — exchange-internal, on-chain, or custody.
+        movement — exchange-internal, on-chain, or custody. Rail by rail, today:
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Transfer rails</span><span class="note">Wired versus specified</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Rail</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>SUBACCOUNT_MOVE</code></td>
+                <td>The only rail with a registered, auto-wired handler today</td>
+              </tr>
+              <tr>
+                <td><code>CEX_WITHDRAW</code></td>
+                <td>Specified, marked <code>NOT WIRED</code> in source</td>
+              </tr>
+              <tr>
+                <td><code>REBALANCE</code></td>
+                <td>Enum-only — no handler</td>
+              </tr>
+              <tr>
+                <td>Gas top-up / floor</td>
+                <td>No implementation anywhere in the codebase</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
+        <code>TransferCoordinator</code> itself is never instantiated in production code today — every rail above is
+        target-state until it is, regardless of which handlers exist.
       </p>
       <div class="callout">
         <span class="tag">A guarantee worth stating plainly</span>
@@ -2170,6 +2266,58 @@
         Signing is pluggable — local keys, cloud-KMS-encrypted keys, or MPC custody providers — declared per deployment
         rather than assumed. Which surface is in use is part of the audit record.
       </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Custody providers</span><span class="note">Shipped versus stubbed</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Provider</th>
+                <th>State</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>CLOUD_KMS_ENCRYPTED</code></td>
+                <td>Shipped — HSM-backed CMK envelope encryption</td>
+              </tr>
+              <tr>
+                <td><code>COPPER_MPC</code></td>
+                <td>
+                  Production MPC provider for every DeFi chain and non-Binance CeFi, per-wallet flip on credentials
+                </td>
+              </tr>
+              <tr>
+                <td>Ceffu</td>
+                <td>
+                  A custody provider, but not a distinct signing surface — its signing routes <em>via Copper</em>; the
+                  Ceffu integration itself is a stub pending its API spec
+                </td>
+              </tr>
+              <tr>
+                <td><code>FIREBLOCKS_MPC</code></td>
+                <td>Enum member retained for future flexibility — out of scope for the current custody stack</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code> and
+        <code>execution-service/execution_service/transfer_coordinator.py</code>.
+      </p>
+      <div class="callout">
+        <span class="tag">What's genuinely absent — custody and transfer eligibility, per venue</span>
+        <p>
+          <b class="ev ev-assumed">~ assumed</b>. No field, in any registry, declares which venues are Copper-eligible,
+          Ceffu-eligible, manual-transfer-eligible or automated-prime-broker-eligible. A workspace-wide search
+          confirmed this is a genuine gap, not an unread field — the fix is a new registry field, not a query
+          rewrite. Not a per-venue matrix here for the same reason <a href="#s19">§19</a> declines to invent one.
+        </p>
+      </div>
     </details>
   </section>
 
@@ -2235,6 +2383,17 @@
         The same code path serves batch and live, and paper is compared against a batch re-run of the same window. If
         they disagree, that is a defect to fix rather than an expected difference — which is what makes a backtest
         result meaningful as a forward-looking claim.
+      </p>
+      <p>
+        The mechanism is one transport facade, not a parallel implementation per mode. MTDS, MDPS, features, strategy
+        and execution all publish and read through the UTL <code>EventTransport</code> facade
+        (<code>unified_trading_library.streaming.event_facade</code>): <code>InMemoryTransport</code> backs paper and
+        colocated runs, Pub/Sub backs live — same call sites, same schemas, a different transport underneath. That is
+        what makes <code>paper(W) == batch-rerun(W)</code> an enforceable property rather than a hoped-for one.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against <code>unified_trading_library/streaming/event_facade.py</code>'s
+        <code>get_transport()</code> dispatch.
       </p>
       <h3>Measured readiness — 2026-08-18</h3>
       <div class="plate">
