@@ -136,31 +136,54 @@ below don't need todo 5's code to have landed first): a new module
 
 ## Todos
 
-- [ ] [INFRA] P1. Resolve the `deployment-api:latest` image-naming confusion across the 3 terraform files that
-      actually reference it — `data_pipeline_fleet_monitor_scheduler.tf` (`data_pipeline_monitor_image` local, 3
-      usages), `deployment_digest_scheduler.tf` (`deployment_digest_image` local), `monitoring_deadman_scheduler.tf`
-      (`monitoring_deadman_image` local). First read each Cloud Run Job's `args`/`command` block in these 3 files to
-      confirm the exact `-m deployment_service.data_pipeline_monitors.<entrypoint>` module names invoked, then
-      determine the checkable fact: do those entrypoints' Python imports resolve cleanly against
-      deployment-service's OWN already-published `deployment-service:latest` image (the one
-      `wave_launcher_image_resolved` in `wave_launcher_scheduler.tf` already defaults to, built from
-      `deployment-service/Dockerfile`'s `COPY deployment_service/ ./deployment_service/`) — compare each
-      entrypoint's imports against `deployment-service/Dockerfile`'s installed dependency set vs
-      `deployment-api/Dockerfile`'s. **If imports resolve cleanly**: repoint all 3 locals to reuse the EXISTING
-      `deployment-service:latest` image, deleting the 3 now-redundant `*_image` locals entirely (no new image build,
-      no AR push). **If they do not** (a genuinely missing dependency): rename the 3 locals' underlying image tag to
-      a distinct, non-colliding, honest name (e.g. `deployment-api-bundled:latest` — NOT `deployment-service:latest`,
-      already taken by a different image; NOT plain `deployment-api:latest`, collides with the deployment-api
-      SERVICE's own identity), applied atomically across all 3 files in one commit, with an inline terraform comment
-      on each explaining why (mirroring `monitoring_deadman_scheduler.tf`'s existing explanatory comment). No prod
-      data deletion either way — the existing `deployment-api:latest` tag remains valid and keeps serving
-      deployment-api's own Cloud Run Service deploy regardless of which branch is taken, so no `[OPERATOR]` gate
-      applies. Done-when: `grep -rn "deployment-api:latest" deployment-service/terraform/gcp/*.tf` shows only
-      deployment-api's own legitimate service-deploy references (zero hits in the 3 monitor files); `ENV=prod bash
-      deployment-service/terraform/gcp/tofu.sh plan` shows only the expected image/local diff (no destroys); applied;
-      AND `gcloud run jobs executions list --job=<job-name> --region=asia-northeast1 --project=central-element-323112`
-      shows a SUCCEEDED execution post-change for all 3 affected jobs (trigger manually via `gcloud run jobs execute`
-      if the next scheduled window is too far out). Evidence: cite the 3 execution IDs + the tofu apply output.
+- [x] 1. ✅ [INFRA] P1. Resolve the `deployment-api:latest` image-naming confusion across the 3 terraform files that
+      actually reference it. **Per-file finding was a genuine split, not the uniform either/or the todo anticipated**:
+      `data_pipeline_fleet_monitor_scheduler.tf` (3 jobs: exit-code/heartbeat/meta) and `monitoring_deadman_scheduler.tf`
+      invoke `deployment_service.data_pipeline_monitors.*` entrypoints — confirmed these resolve cleanly against
+      deployment-service's OWN `deployment-service:latest` (the `maintenance-jobs`-stage image built by
+      `deployment-service/cloud-build/deployment-service-jobs-image.cloudbuild.yaml` specifically for Cloud Run Jobs
+      needing the eager `deployment_service.__init__` -> `backends` import chain — the SAME image
+      `wave_launcher_scheduler.tf` already runs `deployment_service`-owned code on) — repointed all 4 job locals to
+      it, deleted nothing (kept the locals, just fixed their value — DRY over the todo's literal "delete + inline 3x"
+      suggestion). `deployment_digest_scheduler.tf` invokes `deployment_api.scripts.deployment_digest_worker` — a
+      genuinely different, `deployment_api.*`-owned entrypoint that deployment-service's image does NOT install, so
+      it correctly stays on a deployment-api-built image; attempted the "distinct honest tag" branch
+      (`deployment-api-bundled:latest`) but **reverted** it — wiring the new tag required forward-porting a new
+      build/push step into the shared `cloudbuild-api-template.yaml`, which `check_cloudbuild_template_drift`'s
+      shrink-only baseline blocked (17 markers > baseline 16); that's a cross-cutting PM-template change out of this
+      todo's scope. Left `deployment_digest_scheduler.tf` on the original `deployment-api:latest` tag — functionally
+      correct (unchanged behavior), the naming-collision concern is NOT fully resolved for this one job (see follow-up
+      todo below). **Live discovery not anticipated by the todo**: `deployment-api/cloudbuild.yaml`'s existing
+      `redeploy-monitor-jobs` step auto-re-pinned all 4 dp-monitor/deadman jobs to `deployment-api:latest` on every
+      deployment-api deploy — left unaddressed, the very next deploy would have silently reverted this fix. Narrowed
+      that step (renamed `redeploy-digest-job`) to only `uts-prod-deployment-digest`, and added the 4 jobs to
+      `deployment-service-jobs-image.cloudbuild.yaml`'s own `redeploy-jobs` re-pin list instead. Done-when (as
+      modified by the above): `grep -rn "deployment-api:latest" deployment-service/terraform/gcp/*.tf` — zero hits in
+      `data_pipeline_fleet_monitor_scheduler.tf`/`monitoring_deadman_scheduler.tf` (still present, correctly, in
+      `deployment_digest_scheduler.tf` — see follow-up); `ENV=prod bash deployment-service/terraform/gcp/tofu.sh plan`
+      shows only the 4 repointed jobs' image diff (targeted `-target` apply, no destroys, no unrelated pre-existing
+      drift touched — `deployment_service_prod_terraform_drift_2026_08_07.md`'s ~62 unrelated changes left alone);
+      applied; all 4 jobs' post-change executions SUCCEEDED. Evidence: `deployment-service@873d88a0a1` (terraform +
+      deployment-service-jobs-image.cloudbuild.yaml, QG green) — targeted apply confirmed via
+      `gcloud run jobs describe` (all 4 → `deployment-service:latest`) — executions
+      `uts-prod-dp-exit-code-monitor-zzqq6`, `uts-prod-dp-heartbeat-watcher-kfzvt`, `uts-prod-dp-meta-watchers-rsq6v`,
+      `uts-prod-monitoring-deadman-4swb7` all `succeededCount=1`. `deployment-api@8bdec86e9d` (cloudbuild.yaml
+      narrowing, QG green) + `deployment-service@9a60be47a7` (deployment_digest_scheduler.tf revert, QG green). Final
+      `tofu plan` re-verified: my 5 job resources show zero diff (change-count dropped from 67 -> 62, exactly -5).
+
+- [ ] 1b. [INFRA] P3. Follow-up from item 1: give `deployment_digest_scheduler.tf`'s Cloud Run Job (`uts-prod-deployment-digest`)
+      a distinct, honestly-named image tag instead of reusing `deployment-api:latest` (which still collides in name
+      with the deployment-api SERVICE's own deploy identity, even though it's no longer confused with
+      deployment-service:latest since items 1's other 4 jobs moved off it). Requires forward-porting a
+      `deployment-api-bundled:latest` alias build (`-t`) + push step into
+      `unified-trading-pm/configs/cloudbuild-api-template.yaml` (gated so it doesn't affect the template's OTHER
+      consumers, e.g. client-reporting-api) so `deployment-api/cloudbuild.yaml`'s content stops being flagged as
+      undrained by `check_cloudbuild_template_drift`'s shrink-only baseline — then re-apply the
+      `deployment-api-bundled:latest` rename to `deployment_digest_scheduler.tf` + re-add the `redeploy-digest-job`
+      re-pin to the new tag (both attempted + reverted in item 1's session — the terraform-side diff is straightforward
+      to redo once the template accepts the build/push content). Done-when: `check_cloudbuild_template_drift.py --repo
+      deployment-api` passes with the new content; `deployment_digest_scheduler.tf`'s local points at
+      `deployment-api-bundled:latest`; applied + a verified SUCCEEDED execution.
 
 - [x] 2. ✅ [BACKEND] P1. Fix `create_deployment()` in `deployment_api/clients/deployment_service_client.py` — it POSTs to
       `{DEPLOYMENT_SERVICE_URL}/api/v1/deployments`, a route `deployment_service/api/routes/state.py` DOES implement
@@ -304,3 +327,14 @@ below don't need todo 5's code to have landed first): a new module
   `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`, flagged to the
   operator directly (big finding: cross-repo, data-correctness). Plan flipped `status: active` this same edit —
   remaining todos (1, 3-9) now dispatchable to AO.
+- **2026-08-19 (slot 32, item 1)**: Resolved. Per-file finding was a genuine split (2 of 3 jobs' entrypoints resolve
+  cleanly against `deployment-service:latest`; the 3rd genuinely needs a deployment-api-built image) rather than the
+  uniform either/or the todo phrased — see item 1's evidence line for the full split + the reverted
+  `deployment-api-bundled:latest` attempt (blocked by `check_cloudbuild_template_drift`'s shrink-only baseline,
+  requires a `cloudbuild-api-template.yaml` forward-port — spun off as new item 1b). Also surfaced + fixed a live
+  discovery the todo didn't anticipate: `deployment-api/cloudbuild.yaml`'s pre-existing `redeploy-monitor-jobs`
+  auto-repin step would have silently reverted this fix on the next deployment-api deploy — narrowed it and added
+  the moved jobs to `deployment-service-jobs-image.cloudbuild.yaml`'s own re-pin list instead. All 4 repointed jobs'
+  post-change executions verified SUCCEEDED live in prod (`uts-prod-dp-exit-code-monitor-zzqq6`,
+  `uts-prod-dp-heartbeat-watcher-kfzvt`, `uts-prod-dp-meta-watchers-rsq6v`, `uts-prod-monitoring-deadman-4swb7`).
+  Shipped: `deployment-service@873d88a0a1`, `deployment-api@8bdec86e9d`, `deployment-service@9a60be47a7`.
