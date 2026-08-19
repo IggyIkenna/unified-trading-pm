@@ -31,7 +31,7 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler-agt-421c89
+locked_by:
 depends_on: []
 context_scope:
   [
@@ -319,3 +319,5 @@ None — all 50 `parent_epic: cefi_master` docs were read in full (2 directly, 4
   cleared outer-gate for a future pass. Item 2 (corpus-wide epic-body regen) stays open — genuinely a
   coordination-timing judgment call (concurrent-session collision risk), not worker-determinable today. Doc stays
   assigned_vm: NA (item 2 alone keeps it there).
+
+- **2026-08-19 (plan_reconciler_dead_lock_sweep, automated)**: auto-cleared `locked_by:` — agent agt-421c89 confirmed reaped-stale, 28.5h old (>= 8.0h threshold). Dispatch `agt-421c89` confirmed `exit_reason="reaped-stale"` via AO's own AgentRow state (ruled 2026-08-15, `/plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A). Cleared at 2026-08-19T06:46:33Z.
