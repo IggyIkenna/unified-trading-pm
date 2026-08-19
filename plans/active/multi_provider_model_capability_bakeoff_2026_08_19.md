@@ -357,3 +357,29 @@ _(remaining rows populated as each attempt completes)_
   Gate-1 result** — all 6 attempts excluded from the Results table below (would misrepresent Codex/Luna's actual
   capability if scored as 6 fails; the model never got a chance to attempt any task). Re-run once the bridge fix
   lands; no further action on this lane from the bake-off side until then.
+
+- **2026-08-19 (later) — Gemini/Gemma free-tier quota wall hit, real $ already spent on failed attempts; a
+  paid-tier key exists but is NOT wired into the proxy nor spend-capped — flagging rather than switching myself.**
+  Running slots 24+25 concurrently (both hitting Gemini's API) surfaced real free-tier ceilings that are too low
+  for a full multi-turn agentic coding task: gemini-3.7-flash slot 25 task 1 hit `RESOURCE_EXHAUSTED` (20
+  requests/min free-tier limit) after 9 turns, real cost **$0.74** incurred before failing; gemini-3.5-flash-lite
+  slot 24 task 3 hit the free-tier 250K-input-tokens/min cap after 13 turns, **$1.31** incurred. Both are genuine
+  infra/quota failures, not real Gate-1 results — do not read either as "the model failed the task." Separately,
+  diffusiongemma-26b slot 28 task 2 hit a transient NVIDIA NIM 500 (0 turns, $0 — likely just retry-worthy, not a
+  quota issue).
+  **A real fix already exists but is NOT applied**: `grok_gemini_translation_proxy_2026_08_14.md` records an
+  operator-approved decision (`[x] [OPERATOR] P1`) to add project `371216509644` (confirmed **Paid Tier 3**, vastly
+  higher ceilings) as a 4th Gemini project — its key (`GEMINI_API_KEY_PROJ5`) is already fetched into
+  `~/.claude-accounts/litellm-proxy.env` from yesterday, but `config/litellm/grok_gemini_proxy.yaml` only wires up
+  proj1/proj2/proj3 (all free-tier) — proj5 was never added to the actual proxy config, confirmed by reading the
+  file directly. **Deliberately NOT wiring it in myself right now**: switching to a paid, real-money-per-token tier
+  for the remaining ~13 free-tier Gemini/Gemma attempts is a real financial-exposure decision, and the source plan
+  itself flags an unresolved step — setting a spend-limit on project 371216509644 via the AI Studio console (a
+  human/browser action, line ~443 of that plan) — with no evidence that's actually been done. Running the paid tier
+  unmetered is the wrong call to make unilaterally while the operator is away, even under the broad go-ahead
+  already given for this bake-off. **Letting the already-launched free-tier queues run to completion as-is** (the
+  remaining attempts are bounded, worst case another ~$10-15 if every remaining Gemini/Gemma task also hits the
+  wall) rather than intervening mid-flight and risking a broken checkout. **Recommendation for the operator**:
+  confirm a spend cap is set on project 371216509644, then wire `proj5` into the proxy yaml (mirrors the existing
+  proj1-3 block exactly) and re-run whichever Gemini/Gemma tasks failed on quota through the paid tier for a real
+  result.
