@@ -402,6 +402,25 @@ had already run. Treat every todo below as net-new work, not a resume.
       plan's Why section). Done when: a real breakeven table exists in the Progress Log, citing the rates gathered
       in the live-verify todos, not re-derived from memory. **DONE 2026-08-16** — table added to the Progress Log
       below, citing the exact rates already registered in `model_pricing.py`.
+- [ ] [INFRA] P1. **New, 2026-08-19 — self-hosted Gemma is now real infra, needs wiring into AO.** A persistent
+      self-hosted `gemma3:27b` server is live (see Progress Log below for full evidence: instance, IP, cost, fix
+      details) — operator instruction: replace BOTH `nvidia-diffusiongemma` and `nvidia-gemma-4-31b-it` with a
+      single account pointing at this self-hosted server, don't run both hosted+self-hosted in parallel. Steps:
+      (1) add a new model entry to `config/litellm/grok_gemini_proxy.yaml` using LiteLLM's `ollama_chat` provider
+      pointing at the self-hosted server's base URL — Ollama's native API is NOT Anthropic-Messages-compatible, so
+      this has to route through the same proxy pattern already used for Gemini/GLM/NVIDIA, not a direct
+      `ANTHROPIC_BASE_URL` point. (2) `server/accounts.py`'s `AccountProvider` enum needs an honest new value for
+      this (NOT `"nvidia"` — it isn't NVIDIA-hosted anymore; mislabeling it would repeat the exact
+      `ProviderBadge`-lying-about-provider bug this session already found+fixed elsewhere). (3) Add a
+      `model_pricing.py` `RateCard` entry — real cost driver is the fixed monthly EC2 spend, not per-token, so
+      price this as $0/token with a comment pointing at the real infra cost instead of fabricating a per-token
+      figure. Done when: quality-gates.sh green, shipped via quickmerge.
+- [ ] [OPERATOR] P1. **Deregister both `nvidia-diffusiongemma` and `nvidia-gemma-4-31b-it` on the live orchestrator,
+      register the new self-hosted account.** Depends on the `[INFRA] P1` todo above shipping + deploying first.
+      Live account mutation, not a code change — use the same real, verified path as the original Kimi/NVIDIA
+      registration (`POST /api/accounts/...`), never a hand-edit of `accounts.json`. Done when: `GET /api/accounts`
+      shows exactly one Gemma account, pointing at the self-hosted server, and a real dispatched task against it
+      completes successfully.
 
 ## Progress Log
 
@@ -691,3 +710,49 @@ needs the waitlist to activate first) — both correctly operator-gated, not som
      the rest of this file may become one of two live options (hosted API vs. self-hosted) rather than the only
      one, and so nobody duplicates that effort by starting a second self-hosting attempt. Whichever session
      finishes first should file the real plan doc for it — this note is a pointer, not a claim of ownership.
+
+### 2026-08-19 (later) — self-hosted Gemma: real AWS prototype, root cause found+fixed, persistent server live
+
+**This is the effort flagged in the entry above — filing the real details here now that it's done, per that entry's
+own pointer.** Operator-directed: prototype on AWS first (cheaper long-term host is IONOS, out of scope here),
+validate the approach and real costs, then decide next steps.
+
+**Prototype (isolated, since torn down)**: `g6.xlarge` → `g6.2xlarge` (1× NVIDIA L4, 24GB VRAM), `ap-northeast-1`,
+AWS Deep Learning Base OSS Nvidia Driver GPU AMI (Ubuntu 24.04). `ollama pull gemma3:27b` (17GB, Q4_K_M quant) then
+`ollama run` failed twice, ~5min timeout each, 0% GPU utilization both times — genuinely looked like a resource or
+driver problem, was neither. **Root cause, found by direct measurement, not guessing**: a cold read of the 17GB
+model blob (`sync; drop_caches; time cat blob > /dev/null`) measured **~32MB/s real throughput** — well under this
+specific gp3 volume's own 125MB/s baseline (real EBS variability, not a config mistake). Loading the model was
+disk-bound the whole time, never touched the GPU. **Fix**: `aws ec2 modify-volume --throughput 500 --iops 6000` on
+the existing volume — no filesystem work, no re-download. Confirmed: warm inference now completes in ~52s
+end-to-end (was 5+ min failing), real generation rate **14.35 tokens/s**, prompt-eval rate **119.8 tokens/s**, GPU
+confirmed actually used (18GB VRAM, 85% util). Prototype instance + its security group + key pair were fully torn
+down after validation — nothing left running, ~$2-3 total spend for the whole diagnostic session.
+
+**Persistent server (LIVE as of this entry)**: operator decided the cost case for Gemma specifically holds up
+(fixes `gemma-4-31b-it`'s real timeout bug + removes NVIDIA's shared-key rate ceiling — unlike GLM, which was
+separately repriced and does NOT have a cost case, see the billing-reconciliation plan). Stood up fresh with every
+lesson baked in: `g6.2xlarge`, EBS provisioned to 500MB/s/6000 IOPS from creation (not discovered after the fact),
+`OLLAMA_HOST=0.0.0.0:11434` + `OLLAMA_KEEP_ALIVE=-1` via a systemd override (network-reachable + always-warm, not
+localhost-only), a dedicated Elastic IP so the address survives stop/start, security group restricted to the
+operator's IP for both SSH and the Ollama port (no auth layer exists on raw Ollama, so this is not for open
+exposure). Verified reachable directly over the network (not via SSH tunnel) — `curl http://<eip>:11434/api/tags`
+returns the model listing from an external client.
+
+- **Endpoint**: `http://<Elastic-IP>:11434` (IP intentionally not duplicated in this doc — resolve live via
+  `aws ec2 describe-addresses` in `ap-northeast-1`, tagged `Name=gemma-ollama-persistent`; avoids this doc rotting
+  if the instance is ever re-associated to a different EIP).
+- **Model**: `gemma3:27b` (real Ollama registry model — the closest real match to this fleet's fictional
+  `google/diffusiongemma-26b-a4b-it`/`google/gemma-4-31b-it` naming; genuinely open-weight, Q4_K_M quantized).
+- **Cost**: ~$0.80-1.02/hr running 24/7 → **~$587-734/month**, plus a few dollars/month for the provisioned EBS
+  throughput and the EIP. Real recurring spend, replacing $0/mo (NVIDIA free tier) — justified by fixing a real
+  bug + removing a real rate ceiling, not by cost savings.
+- **AWS account**: same account as this fleet's own production orchestrator VM (confirmed via a pre-existing
+  `agent-orchestrator-key` key pair found in the account during setup) — a different resource, own key pair/SG/EIP,
+  but worth knowing this isn't a separate sandbox account.
+
+**Follow-up, tracked as the new `[INFRA] P1`/`[OPERATOR] P1` todos above**: wire this into `agent-orchestrator`
+proper (LiteLLM `ollama_chat` proxy entry, an honest new `AccountProvider` value — not `"nvidia"`, that would be a
+provider-mislabeling bug), then deregister both existing NVIDIA-hosted Gemma accounts and register this one in
+their place, live-verified. Not done in this entry — this entry is the infra record, the todos are the remaining
+work.
