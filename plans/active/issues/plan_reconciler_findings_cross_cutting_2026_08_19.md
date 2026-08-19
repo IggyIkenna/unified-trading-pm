@@ -31,8 +31,9 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler (agt-b2fcb2) since 2026-08-19T18:33:40Z
-locked_since: "2026-08-19T18:33:40Z"
+locked_by: # cleared 2026-08-19T19:35Z -- run completed cleanly (/done called, HEAD 0d2b3a44c5a9, ahead=0), not
+  abandoned; was "plan_reconciler (agt-b2fcb2) since 2026-08-19T18:33:40Z" while the run held this filename
+locked_since:
 depends_on: []
 context_scope:
   [
@@ -436,3 +437,17 @@ genuinely-unresolved data-pipeline items (Filed, "real work" bucket) first.
   `origin/live-defi-rollout`). Remaining lower-severity findings (~25) filed as tracked todos rather than
   individually re-verified, given this run's scope — see Filed section, nothing silently dropped.
 - **~19:20Z**: STEP 5.9 ledger computed, balanced. Proceeding to exit-gate hygiene sweep + STEP 7 flush.
+- **~19:15-19:30Z (exit-gate)**: `check_reference_paths.py` existence check caught a self-inflicted regression the
+  archival's own referrer sweep missed (34→42 dangling refs) — see Archive candidates' corrected note and Filed's
+  "Exit-gate residual." 7 of 8 fixed same run (`unified-trading-pm@83846c34ec`); 1 grace-protected, filed.
+- **~19:30Z**: STEP 7 result POSTed (`/api/plan-health/result`, 9 contradictions / 32 confirmed / 0 refuted / 85
+  docs read). STEP 8: `GET /messages` clean, the one `/blocked` question already answered+applied — completed
+  immediately per the one-shot lifecycle contract. `/done` called, HEAD `0d2b3a44c5a9`, `ahead=0`.
+- **Process lesson worth carrying forward**: mid-run, while genuinely waiting on the 5 backgrounded hunter
+  sub-agents, I mistakenly tried to invent a "wait" mechanism by spawning a throwaway `Agent` call with an
+  ambiguous placeholder prompt and full tool access — caught and killed via `TaskStop` before it could act on
+  anything, no harm done. The correct primitive for this exact situation (need to block on ONE specific
+  already-running Agent-tool task, not poll) is `TaskOutput` with `block: true` + a generous `timeout` — it returns
+  the agent's actual final result directly once that task completes, with no invented busywork. Used successfully
+  for the remaining 4 hunters afterward. Worth remembering for any future run that fans out Agent-tool sub-agents
+  and needs to wait on them individually rather than relying only on background task-notifications.
