@@ -62,7 +62,7 @@ related_plans:
   - ../active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md
   - ../active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md
   - ../active/infra_consolidated_closeout_2026_07_25.md
-  - ../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch17_2026_08_16.md
   - ../active/infra_satellite_ao_dispatch_batch17_finalize_2026_08_16.md
   - ../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md
@@ -681,7 +681,7 @@ _43 active plans declare `parent_epic: infrastructure_master` in their frontmatt
 
 ## P3 — backlog; revisit quarterly
 
-### [`infra_satellite_ao_dispatch_batch12_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md)
+### [`infra_satellite_ao_dispatch_batch12_finalize_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md)
 **status**: active · **estimate**: 0.08 cal AI-days (class: infra)
 **title**: Infra satellite AO batch 12 — finalize (archive per the 6-step ritual)
 

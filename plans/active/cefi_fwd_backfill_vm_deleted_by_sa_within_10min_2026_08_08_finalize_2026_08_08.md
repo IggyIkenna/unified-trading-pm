@@ -61,16 +61,18 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Reconcile.** Once all 3 of the source doc's open items land — (1) `[INFRA]` P0 root-cause diagnosis
-      of the double-insert + deletion pattern (Tardis concurrency guard vs. zombie watchdog `vm.delete` path, plus
-      whether `cefi-fwd-20260806-065837`'s early termination was also a deletion), (2) `[DATA]` P1 GCS probe
-      re-confirming coverage after the currently-RUNNING backfill VM (`cefi-fwd-20260808-123230`) terminates normally,
-      (3) `[CODE]` P2 fix for the MTDS pre-flight bug at `venue_fetch.py:526-552` — re-verify each cited
-      commit/measurement actually exists (do not trust the source doc's own copy of the evidence line), flip its
-      checkboxes if not already `[x]`, and confirm no new residual item was opened by (1)'s findings (e.g. if the
-      double-insert deleter is identified and needs its own fix, that becomes a new tracked todo/issue doc, not a silent
-      close). **Done when**: all 3 source items are `[x]` with re-verified evidence, or any genuinely new residual is
-      spun into a fresh tracked todo per the findings-triage HARD RULE.
+- [ ] [REVIEW] P2. **Reconcile.** **Updated 2026-08-19 (`/plan-reconcile security_and_cross_cutting_master` Phase 1
+      fix — the brief below was stale, superseding the original 3-item list this todo shipped with; see Progress Log
+      for what changed).** Live-measured 2026-08-19: 6 of `issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`'s
+      7 todos are `[x]`; the sole remaining open item is a DIFFERENT, later-dated one —
+      `- [ ] [INFRA] P1. **NEW 2026-08-09** ... Backfill the live \`derivative_ticker\` forward gap for
+      CARRY_BASIS_PERP venues, 2026-06-05→2026-08-05 confirmed complete but 2026-08-06→today still 0 objects across
+      all 6 venues` (self-justified, no `[OPERATOR]` tag needed per that doc's own na-eligibility-audit round7
+      ruling). Once THIS item lands: re-verify each cited commit/measurement of all 7 todos actually exists (do not
+      trust the source doc's own copy of the evidence line), and confirm no new residual item was opened by any of
+      the 7 findings (e.g. if the double-insert deleter needs its own fix, that becomes a new tracked todo/issue doc,
+      not a silent close). **Done when**: all 7 source items are `[x]` with re-verified evidence, or any genuinely
+      new residual is spun into a fresh tracked todo per the findings-triage HARD RULE.
 - [ ] [DOC] P2. **Archive.** Run the standard 6-step archival ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md` once todo 1 confirms it is fully closed —
@@ -81,6 +83,14 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-19** (`/plan-reconcile security_and_cross_cutting_master` Phase 1, AO-dispatch-readiness fix): todo 1's
+  dispatch brief named 3 specific "open items" (root-cause diagnosis, GCS probe, MTDS pre-flight fix) as the gate
+  condition — all 3 were `[x]` by 2026-08-08/09, but a 4th item (`[INFRA] P1`, "NEW 2026-08-09") opened the same day
+  and is still the doc's sole open todo as of a fresh 2026-08-19 measurement. This doc's own `context-scout
+  2026-08-15` entry below already flagged "now 6 of 7 todos done, 1 open" but the todo brief itself was never
+  updated to match — a worker dispatched on the literal original text would think reconciliation could start once
+  the 3 named items closed, when a 4th genuinely-blocking item remained. Rewrote todo 1 to name the real current
+  gate condition.
 - **2026-08-08**: authored alongside the source doc's `assigned_vm: NA -> planning` reclassification
   (na-eligibility-audit round7 RECLASSIFY sweep, cefi tranche, batch 2 of 3).
 - **context-scout 2026-08-15**: populated/refreshed context_scope (4 entries) — the source issue doc (now 6 of 7 todos

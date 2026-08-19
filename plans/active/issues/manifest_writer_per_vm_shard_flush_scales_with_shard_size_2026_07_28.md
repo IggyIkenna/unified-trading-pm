@@ -111,14 +111,17 @@ its own review):
       instead of rewriting the whole shard, with periodic (or close()-time) compaction into the canonical per-VM
       parquet. Must preserve the existing SIGKILL-durability guarantee (no entry lost on a hard kill) and not regress
       the small-shard case. (repo: unified-trading-library)
-- [ ] [BACKEND] P3. **round5-cross-cutting-audit 2026-08-08**: durability-vs-throughput defaults to preserving
-      durability per CLAUDE.md's "data pipeline correctness is the heartbeat" HARD RULE + the P2 todo above already
-      requiring the SIGKILL-durability guarantee; pursue P2 first, leave this tradeoff unimplemented absent an explicit
-      ask. As a cheaper interim alternative to the above, investigate making the per-VM flush debounce entries-threshold
-      dominant over the interval-threshold once the existing shard exceeds some size (e.g. skip the 5s time-based
-      trigger and require a real entry-count batch once the shard is large), so large shards get bigger, less-frequent
-      batches instead of constant small ones. Note this trades durability under SIGKILL for throughput — needs an
-      explicit call on whether that tradeoff is acceptable, not a default flip. (repo: unified-trading-library)
+- [ ] [BACKEND] P3. **(reworded 2026-08-19, `/plan-reconcile security_and_cross_cutting_master` Phase 1 — line-1
+      completeness fix; content unchanged, action moved to line 1, dated annotation moved after)** As a cheaper
+      interim alternative to the P2 delta-shard todo above, investigate making the per-VM flush debounce
+      entries-threshold dominant over the interval-threshold once the existing shard exceeds some size (e.g. skip
+      the 5s time-based trigger and require a real entry-count batch once the shard is large), so large shards get
+      bigger, less-frequent batches instead of constant small ones. Note this trades durability under SIGKILL for
+      throughput — needs an explicit call on whether that tradeoff is acceptable, not a default flip.
+      **round5-cross-cutting-audit 2026-08-08 note**: durability-vs-throughput defaults to preserving durability per
+      CLAUDE.md's "data pipeline correctness is the heartbeat" HARD RULE + the P2 todo above already requiring the
+      SIGKILL-durability guarantee; pursue P2 first, leave this tradeoff unimplemented absent an explicit ask.
+      (repo: unified-trading-library)
 - [ ] [SCRIPT] P3. Once either fix above ships, verify against a synthetic large per-VM shard (~1M+ rows) that flush
       latency no longer scales linearly with existing shard size, and add a regression test guarding it. (repo:
       unified-trading-library)

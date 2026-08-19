@@ -26,7 +26,7 @@ estimate_calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
-locked_by: plan_reconciler-agt-830118
+locked_by:
 depends_on: []
 context_scope:
   [

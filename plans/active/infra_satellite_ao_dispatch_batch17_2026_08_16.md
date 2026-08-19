@@ -155,7 +155,9 @@ follow-up batch once the operator rules (see `## Deferred`).
       since it's a live dispatched task. Repo: unified-trading-pm. Source:
       `vm_launcher_setup_script_freshness_gap_2026_07_31.md`'s tier (2).
 
-- [ ] [OPERATOR] P2. **Resolve the pd-ssd/pd-standard genuine-override tier (15 of 149 launchers) — found during the
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-19 (`/plan-reconcile security_and_cross_cutting_master` Phase 2 flip — the
+      todo's own stated done-when, "the operator states a decision," was already satisfied by the DECIDED line below,
+      just never flipped).** **Resolve the pd-ssd/pd-standard genuine-override tier (15 of 149 launchers) — found during the
       `--boot-disk-type` review 2026-08-16, not in the source issue's original 3 tiers.** These 15 hardcode a
       non-default disk type instead of falling through the `${BOOT_DISK_TYPE:-pd-balanced}` pattern the rest of the
       corpus uses: `launch-aave-lending-rate-validation-vm.sh`, `launch-funding-ensemble-paper-cron-vm.sh`,
@@ -179,11 +181,14 @@ follow-up batch once the operator rules (see `## Deferred`).
       plan's own `--boot-disk-type` review (2026-08-16, slot 12).
       **DECIDED 2026-08-18: option (a) — add the optional `boot_disk_type` param.**
 
+
 - [ ] [SCRIPT] P2. Implement the `boot_disk_type` param decided above (backward compatible), migrate the 15 named
       launchers to use it instead of hardcoding `--boot-disk-type`. Cross-check the one already flagged to slot 17's
       "Migrate group B" task before touching it. Repo: unified-trading-pm.
 
-- [ ] [OPERATOR] P2. **Resolve two more genuine blocking gaps found during group B's migration (2026-08-16, slot 17) —
+- [x] ✅ [OPERATOR] P2. **DONE 2026-08-19 (`/plan-reconcile security_and_cross_cutting_master` Phase 2 flip — same
+      class as the todo above: done-when already satisfied by the DECIDED line below, checkbox never flipped).**
+      **Resolve two more genuine blocking gaps found during group B's migration (2026-08-16, slot 17) —
       neither in this plan's or the source issue's original tier list.** (1) **`;`-delimited-metadata callers**
       (`launch-manifest-recon-all-vm.sh`, `launch-manifest-recon-apply-vm.sh` confirmed so far — likely others in group
       C given the same `VENUES=`-can-contain-commas pattern): `lc_gcloud_create`'s internal guards

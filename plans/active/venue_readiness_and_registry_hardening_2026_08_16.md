@@ -817,9 +817,26 @@ baseline.
 PASSED`. `unified-api-contracts` working tree came back clean (`git status --porcelain` empty) — the 3 files tracked
 as uncommitted-but-verified since the "NOT YET SHIPPED" entry above are now committed as `2fa22fee` ("feat: declare
 StrategyArchetype to feature_group mapping (UAC SSOT)"), present on `origin/live-defi-rollout`,
-`git rev-list --count origin/live-defi-rollout..HEAD` = 0. Someone else's concurrent `DeFiAdapter` dispatch-wiring
-work (karak/pendle/symbiotic) landed and cleared the SIT invariant; this session's own 3 files were then shipped
-(by this or another slot — the commit predates this check) without needing to touch the ratchet baseline. Also
+`git rev-list --count origin/live-defi-rollout..HEAD` = 0. **CORRECTED 2026-08-19 (`/plan-reconcile
+security_and_cross_cutting_master` Phase 1/3, independently re-verified against
+`unified-api-contracts/tests/data/execution_service_venue_reachability_baseline.json`'s own dated docstring +
+`git log` on that baseline file — commits `88a71f8e`/`6dba7ac5`)**: the original entry below was wrong about the
+mechanism. **Karak and pendle did NOT get wired** — `execution-service/execution_service/adapters/defi_adapter.py`
+has zero `karak`/`pendle` references today (live-verified), and the baseline file's own docstring explicitly
+confirms both remain "STILL genuinely unreachable... DeFiAdapter has no KARAK/PENDLE gate marker at all" (they stay
+correctly listed in `unreachable_defi_venues`, an accepted, tracked ratchet gap — not a masked false-green). The
+real cause of the SIT invariant going green was narrower: **Symbiotic alone** got a real `DeFiAdapter` dispatch wire
+(`execution-service@85c8310b2`) AND the checker's own `DEFI_VENUE_TO_CONNECTOR_CLASS`/`DEFI_VENUE_TO_GATE_MARKER`
+dicts (which previously had no entry for symbiotic/karak/pendle at all, making all three unconditionally
+"unreachable" as a false NEGATIVE signal regardless of wiring) got a real symbiotic entry added — karak/pendle's
+entries were correctly RESTORED to the baseline, not removed. This session's own 3 files shipping and the invariant
+passing were two independent, correctly-outcomed events, not causally "karak/pendle landing." No live-safety risk
+found (the ratchet baseline is accurate); the original claim below is left struck-through rather than deleted, per
+this corpus's audit-trail-preservation convention.
+
+~~Someone else's concurrent `DeFiAdapter` dispatch-wiring work (karak/pendle/symbiotic) landed and cleared the SIT
+invariant; this session's own 3 files were then shipped (by this or another slot — the commit predates this check)
+without needing to touch the ratchet baseline.~~ Also
 corrected a stale entry the same edit: the "Deferred work" table below still listed L342 (karak cross-link + pendle
 issue doc) as "Not done" though the Definition-of-done section above already recorded it shipped
 (`unified-trading-pm@abf0117caa`) — a misleading pointer, fixed on contact rather than left to re-mislead the next

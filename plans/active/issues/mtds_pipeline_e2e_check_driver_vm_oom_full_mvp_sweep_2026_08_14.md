@@ -167,8 +167,7 @@ Two independent angles, not mutually exclusive:
       hard evidence and fixed the one genuinely actionable gap the investigation surfaced; the ultimate
       host-level trigger is forensically unrecoverable for this specific instance (not a further-investigable
       gap, a permanently lost one). Follow-up split off below for catching the NEXT occurrence live.
-- [ ] [DATA] P3. **NEW (split off 2026-08-18, slot 14) — catch the NEXT occurrence live instead of guessing
-      post-hoc.** The forensic gap above (no serial console, no kernel-level OOM evidence) is structural: a driver
+- [ ] [DATA] P3. **NEW (split off 2026-08-18, slot 14) — catch the NEXT occurrence live instead of guessing post-hoc.** The forensic gap above (no serial console, no kernel-level OOM evidence) is structural: a driver
       that vanishes leaves nothing more to read after the fact. Whoever next launches the DEFI leg of the
       `--asset-group DEFI` re-run (the still-open [DATA] P2 todo below) should, for THIS ONE launch only, stay
       present enough to poll `deployment_service.data_pipeline_monitors._gcs`/`get_serial_port_output`

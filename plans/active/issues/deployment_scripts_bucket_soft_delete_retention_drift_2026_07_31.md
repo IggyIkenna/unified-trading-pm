@@ -116,13 +116,16 @@ Either way this needs a decision, not a blind `tofu apply` of whichever value co
       just slower than the 08-09 estimate — re-tracked as a date-gated follow-up below. (repo: deployment-service,
       verification only.)
 
-- [ ] [DEFERRED-BY-DESIGN][INFRA] P3. **Re-check drain on/after 2026-08-17.** Re-run `gcs_bucket_stats.py` for
-      `deployment-scripts-central-element-323112` on or after 2026-08-17 (1 week from now — the async GCS purge should
-      have completed by then given the current 81%-purged rate). **Done when**: `bloat_pct` is single-digit (≤9%). **If
-      STILL not drained by 08-17**: the remaining soft-deleted objects are not aging out → escalate to writer-side
+- [ ] [INFRA] P3. **Re-check drain now — date gate (2026-08-17) has passed (today 2026-08-19).** Re-run
+      `gcs_bucket_stats.py` for `deployment-scripts-central-element-323112` (the async GCS purge should have completed
+      by 08-17 given the 81%-purged rate measured 08-10). **Done when**: `bloat_pct` is single-digit (≤9%). **If
+      STILL not drained**: the remaining soft-deleted objects are not aging out → escalate to writer-side
       investigation (`LogUploader` re-upload cadence / regression, per
       `/plans/archive/issues/deployment_scripts_bucket_softdelete_log_churn_2026_06_01.md`). Repo: deployment-service
-      (verification only, no code path). Date-gated to on/after 2026-08-17.
+      (verification only, no code path). **Retag note (2026-08-19, `/plan-reconcile security_and_cross_cutting_master`
+      Phase 1 AO-readiness fix)**: was mistagged `[DEFERRED-BY-DESIGN][INFRA]` — `DEFERRED-BY-DESIGN` means a CLOSED,
+      PERMANENT non-fix per task_template.md §3, but this is a dated, time-gated re-check, the opposite of
+      permanent — retagged to plain `[INFRA]` and the non-standard bracket-stacking syntax dropped.
 
 ## Progress Log (na-eligibility-audit incremental marker)
 

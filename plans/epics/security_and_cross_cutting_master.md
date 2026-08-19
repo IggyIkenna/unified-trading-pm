@@ -27,7 +27,7 @@ created: 2026-05-07
 name: security_and_cross_cutting_master
 tier: L4
 priority: P0
-assigned_vm: vm-cross-cutting
+assigned_vm: NA
 parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
@@ -58,7 +58,7 @@ related_plans:
   - ../active/deployment_service_api_integration_cleanup_finalize_2026_08_18.md
   - ../active/empty_confirmed_and_coverage_correctness_audit_2026_08_15.md
   - ../active/infra_consolidated_closeout_2026_07_25.md
-  - ../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
+  - ../archive/2026_08/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md
   - ../active/infra_satellite_ao_dispatch_batch17_2026_08_16.md
   - ../active/infra_satellite_ao_dispatch_batch17_finalize_2026_08_16.md
   - ../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md
@@ -71,10 +71,24 @@ related_plans:
   - ../active/strategy_service_centralization_fixes_2026_08_16.md
   - ../active/strategy_service_centralization_fixes_finalize_2026_08_16.md
   - ../active/venue_readiness_and_registry_hardening_2026_08_16.md
-last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
-locked_by: live-defi-rollout
-locked_since: 2026-05-07
+last_updated: 2026-08-19 # was: 2026-07-14 — badly stale vs. the body's own 2026-08-18 rename/restructure content
+  # (renamed from infrastructure_master) and its related_plans entries dated through 2026-08-18; bumped by
+  # /plan-reconcile security_and_cross_cutting_master (2026-08-19), corroborated independently by 3 separate hunter
+  # batches. Prior history: was 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase
+  # split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans'
+  # cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below
+  # [finding 69, §A2 B-queue]
+locked_by: # was: live-defi-rollout — the corpus-wide branch-name-as-lock placeholder bug
+  # (locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md), already ruled a bug and cleared corpus-wide
+  # 2026-08-12 via scripts/plans/clear_locked_by_placeholder_2026_08_12.py; this epic-hub doc was outside that
+  # sweep's scanned population (plans/epics/ vs plans/active/) and missed. Cleared here by the same mechanical fix.
+locked_since:
 ---
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/1cb08e78-d005-425b-87d1-4cc73a6bc3b5 (generated 2026-08-19,
+`/plan-reconcile security_and_cross_cutting_master`)
 
 ## Audit 2026-05-07
 
@@ -665,8 +679,8 @@ regeneration is tracked as Phase 3's README-registry-refresh todo._
 
 ## P3 — backlog; revisit quarterly
 
-### [`infra_satellite_ao_dispatch_batch12_finalize_2026_08_09`](../active/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md)
-**status**: active · **estimate**: 0.08 cal AI-days (class: infra)
+### [`infra_satellite_ao_dispatch_batch12_finalize_2026_08_09`](../archive/2026_08/infra_satellite_ao_dispatch_batch12_finalize_2026_08_09.md)
+**status**: archived (2026-08-19) · **estimate**: 0.08 cal AI-days (class: infra)
 **title**: Infra satellite AO batch 12 — finalize (archive per the 6-step ritual)
 
 ### [`infra_satellite_ao_dispatch_batch7_finalize_2026_08_04`](../active/infra_satellite_ao_dispatch_batch7_finalize_2026_08_04.md)

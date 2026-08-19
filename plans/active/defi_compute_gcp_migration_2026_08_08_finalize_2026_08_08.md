@@ -59,8 +59,7 @@ source: >-
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Verify every one of the parent plan's 18 `- [x]` todos actually carries checkable evidence, not
-      just a claim.** For each: if it cites a commit sha, confirm it's a real ancestor of the relevant repo's live
+- [ ] [REVIEW] P1. **Verify every one of the parent plan's 18 `- [x]` todos actually carries checkable evidence, not just a claim.** For each: if it cites a commit sha, confirm it's a real ancestor of the relevant repo's live
       branch (`git merge-base --is-ancestor <sha> origin/<branch>`); if it cites a Cloud Run revision/health-check
       result, re-run the check live rather than trusting the recorded text (`gcloud run services describe` for `Ready`
       state); if it cites an AWS resource deletion (`uts-defi-prod` cluster, the 3 ECS services, the AWS Batch job
@@ -69,8 +68,7 @@ source: >-
       evidence does NOT hold up is reopened with the discrepancy stated, not silently left `[x]`. Repo:
       unified-trading-pm.
 
-- [ ] [REVIEW] P1. **Re-check the parent plan's two investigation-derived findings for follow-up work they might have
-      produced.** Todo 1 (execution-service's actual role) and todo 2 (what scaled `uts-defi-prod` from 0→running) were
+- [ ] [REVIEW] P1. **Re-check the parent plan's two investigation-derived findings for follow-up work they might have produced.** Todo 1 (execution-service's actual role) and todo 2 (what scaled `uts-defi-prod` from 0→running) were
       open questions at authoring time — read what they actually found. If either surfaced a real gap (e.g. a live
       caller that needed repointing, an automated scale-up process nobody had disabled), confirm the parent plan's own
       todos already closed that gap; if not, write a new tracked todo (own doc if it doesn't fit an existing one) rather
@@ -78,8 +76,7 @@ source: >-
       to either "fully closed within the parent plan, here's the todo that did it" or a new `- [ ]` todo exists for the
       gap. Repo: unified-trading-pm.
 
-- [ ] [REVIEW] P2. **Confirm the
-      ~$250/month AWS savings target was actually re-measured, not assumed.** The parent
+- [ ] [REVIEW] P2. **Confirm the ~$250/month AWS savings target was actually re-measured, not assumed.** The parent
       plan's own todo 18 calls for a post-decommission Cost Explorer re-measurement — verify that todo's evidence is a
       real before/after dollar figure (same `SERVICE`/`USAGE_TYPE` group-by, filtered `REGION=ap-northeast-1`
       methodology used to scope the parent plan), not a restatement of the original estimate. If the realized saving

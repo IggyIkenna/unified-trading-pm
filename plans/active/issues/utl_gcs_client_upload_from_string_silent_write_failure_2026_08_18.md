@@ -518,6 +518,26 @@ already prioritized toward these 6 docs now).
   says is deliberately kept minimal (`pandas/numpy/urllib only — no research-code imports`) — against the file's
   stated design intent, not a mechanical swap. Left as-is.
 
+## Tracked follow-ups (added 2026-08-19, `/plan-reconcile security_and_cross_cutting_master` Phase 2.4 zero-checkbox
+## sweep — converted from prose so these 2 genuinely-open items are visible to checkbox-based tooling; neither is
+## answered by this conversion)
+
+- [ ] [OPERATOR] P1. Decide AO-vs-human dispatch scope for the 16 confirmed Category-1 remediation files
+      (instruments-service 15 files/20 call sites + strategy-service 1 file/2 call sites — see the classification
+      table above) before authoring a remediation plan. Options: **A) AO-dispatched batch** — bounded, mechanical
+      per-file `upload_bytes`/`download_bytes` conversion with a live-verify step per file, same shape as this
+      doc's own Category-2 remediation which shipped cleanly across 6 repos **[WORKER REC — this doc's own Category-2
+      precedent already proved the mechanical-fix-plus-live-verify pattern works fleet-wide]**. **B) human-authored
+      plan** — the original coordinating session's own note flagged these as "one-off/historical scripts in an
+      unfamiliar repo per-file context, not a blind batch-replace," which leans toward closer human review per file.
+- [ ] [REVIEW] P2. Scope a fix for the other 7 `DomainConfig`-family classes in
+      `unified_trading_library/.../domain_configs.py` sharing the identical `extra="forbid"` + `.env`-auto-read
+      latent-crash risk that `StrategyDomainConfig` had (`InstrumentDomainConfig`/`ClientDomainConfig`/
+      `VenueDomainConfig`/`TickerUniverseConfig`/`RiskDomainConfig`/`AlertRuleDomainConfig`/`RateLimitDomainConfig`/
+      `FeatureFlagDomainConfig`) — same `extra="ignore"` fix pattern already shipped for `StrategyDomainConfig`
+      (`unified-trading-library@1da1a095d4`) is the likely fix, but each class needs its own confirm-then-fix pass,
+      not a blind sweep.
+
 ## Progress Log
 
 - **2026-08-18**: Filed while fixing `deployment_service_api_integration_cleanup_2026_08_18.md` todo 2. Root cause

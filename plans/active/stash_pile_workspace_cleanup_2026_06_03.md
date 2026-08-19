@@ -15,7 +15,7 @@ related: []
 created: 2026-06-03
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only
 priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 1.5

@@ -128,7 +128,7 @@ isolation fixed on self-hosted runners.
 `github_actions_operator_gated_followups_2026_07_17.md` + `github_actions_staging_machinery_shutdown_2026_07_24.md` (GHA
 cost-reduction program: options analysis → redirect index → operator-gated followups → dead staging-machinery shutdown)
 ·
-[issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md](/plans/active/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md)
+[issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md](/plans/archive/issues/deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md) (archived 2026-08-19, resolved)
 (deployment-api Artifact-Registry-repo-override allowlist audit + startup-time IAM capability probe; retagged `[ci]`
 2026-08-16 from a `[cross-cutting]` mistag, `/ag-closeout-audit cross-cutting` parked finding 4) ·
 [issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md](/plans/active/issues/glue_runner_units_stopped_fleet_ci_outage_2026_08_04.md)
