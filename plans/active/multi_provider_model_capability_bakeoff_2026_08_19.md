@@ -383,3 +383,22 @@ _(remaining rows populated as each attempt completes)_
   confirm a spend cap is set on project 371216509644, then wire `proj5` into the proxy yaml (mirrors the existing
   proj1-3 block exactly) and re-run whichever Gemini/Gemma tasks failed on quota through the paid tier for a real
   result.
+
+- **2026-08-19 (later) — slot 25 (Gemini 3.7-flash) is a COMPLETE quota washout: 6/6 tasks failed, zero real
+  signal.** Confirmed via each attempt's own `result.json`: task 1 ran 9 real turns before `RESOURCE_EXHAUSTED`
+  ($0.74 spent), tasks 2-6 each failed on their VERY FIRST request (1 turn, $0 each) — the 20-req/min free-tier
+  quota never had time to recover in the 30s between queued tasks. **Gemini 3.7-flash produced literally zero
+  usable Gate-1/Gate-2 data this run** — every row would be quota-noise, not model signal. Excluded from the
+  Results table entirely (same treatment as Codex/Luna) pending a paid-tier re-run.
+  **Gemini 3.5-flash-lite (slot 24) faring better** (larger free-tier ceiling: 250K tokens/min vs. 3.7-flash's 20
+  req/min): 2 real completions so far (task 1 PASS already in Results table; task 4 tmux-fixture-audit also
+  completed clean, `is_error:false`, 27 turns, $3.05 — pending a Results row once reviewed), 2 quota fails (tasks
+  2 and 3), task 5 still running.
+  **Gemma (slot 28, DiffusionGemma 26B) hitting a DIFFERENT wall — NVIDIA NIM `InternalServerError` on every real
+  attempt so far (4/4), but NOT a dead endpoint**: a direct simple single-turn smoke test against the same
+  `diffusiongemma-26b-a4b-it` endpoint just now returned a clean 200 — the failure is specific to the FULL real
+  Claude Code request shape (real CLAUDE.md system prompt + the full multi-tool schema array Claude Code sends),
+  not the model being down. Likely a payload-size or tool-schema-count limit on this free-hosted NIM endpoint, not
+  yet root-caused precisely — flagging the pattern, not yet diagnosed to the same depth as the Codex bug. 2 tasks
+  remain; if they fail identically, this lane's results need the same "infra-blocked, not a real result" treatment
+  once confirmed.
