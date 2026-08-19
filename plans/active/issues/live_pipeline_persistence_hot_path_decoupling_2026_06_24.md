@@ -7,9 +7,12 @@ summary:
   archive — breaks paper(W)==batch-rerun(W)); and MDPS reads the just-flushed tick parquet back FROM GCS on the
   production hot path. Decided direction (operator 2026-06-25): Option 2 log-spine — HOT Pub/Sub-with-retention + COLD
   batched hive GCS parquet + BigQuery analytics, off ONE windowing via a UAC envelope + UTL transport facade. Hot-path
-  decoupling shipped (LiveEventFacadeSink default at websocket_runner.py:242); status blocked because the durable
-  warm-tier (Pub/Sub→Cloud-Storage→GCS parts→daily aggregate) is NOT yet built — tracked in
-  mtds_plan_reconciliation_2026_06_29 § Section F M-C7."
+  decoupling shipped (LiveEventFacadeSink default at websocket_runner.py:242). **Summary corrected 2026-08-19
+  (plan_reconciler, cross-cutting) — the durable warm-tier IS now built**: this doc's own body records
+  'RESOLVED 2026-08-13 (slot-15, live-verified) — the compaction leg has landed; full build record:
+  /plans/active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md.' Remaining scope is narrower
+  than this summary previously implied — see that recovery plan for what's still open (a parked determinism
+  re-test, P1.2)."
 status: open
 nature: notes
 asset_group: [cross-cutting]
@@ -30,7 +33,7 @@ source:
     unified-api-contracts/unified_api_contracts/events/streaming.py,
   ]
 assigned_vm: planning
-resolved_by: live_data_persistence_central_event_log_2026_06_25.md # ANNOTATION 2026-07-14 (verify-rerun-2 finding 21): doc-frontmatter-schema.md requires resolved_by only when status=resolved, but status here is `blocked` per the 2026-06-30 body banner (hot-path decoupling shipped; durable warm-tier still not built) — left populated as a forward-pointer to the plan that partially resolved this issue rather than cleared, because this doc is locked_by: live-defi-rollout (annotate-not-flip per HARD GATE, not a status/archival edit); re-evaluate resolved_by when unlocking for archival
+resolved_by: live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md # RE-EVALUATED 2026-08-19 (plan_reconciler, cross-cutting) — the prior 2026-07-14 annotation's own trigger condition ("re-evaluate resolved_by when unlocking for archival") has fired: locked_by below is now empty (was live-defi-rollout placeholder, cleared corpus-wide 2026-08-12) AND the warm-tier build this pointer was waiting on is RESOLVED 2026-08-13 (see summary above). Re-pointed from the original 2026-06-25 architecture-decision plan to the plan that actually shipped the fix. status is still `open` (not `resolved`) since a parked determinism re-test (P1.2) remains — final status/archival still owned by that recovery plan's own [SCRIPT] P3, per this doc's archive_exempt note below.
 locked_by:
 locked_since:
 archive_exempt: true # 2026-08-13: 0-open-todos intentional/durable — standing problem-record; remaining determinism re-test tracked at recovery-plan P1.2 (parked), final resolved_by/archival owned by that plan's [SCRIPT] P3

@@ -269,13 +269,16 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
       blob shape for every `_DEFAULT_SERVICES` entry (verify via a live GCS read, not an assumption), remove the
       `.get("could_exist", root)` fallback added in todo 5 and require the new shape unconditionally. Done-when:
       fallback code deleted, full test suite green, live GCS check cites the object generation/timestamp proving every
-      service's blob was rewritten after todo 5 landed. **BLOCKED (2026-08-13, discovered this session)**: this
-      done-when is now structurally unreachable until a SEPARATE, larger regression is fixed —
-      `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` (see its 2026-08-13 Progress Log entry) — only 3
-      of 14 `_DEFAULT_SERVICES` currently produce a `full.json.gz` at all (10 fail: 7 with newly-discovered
-      TypeError/AttributeError manifest-column bugs, 3 with timeouts, 1 already-tracked ml-service gap). Confirmed
-      pre-existing, not caused by this plan's dual-scope code. Not something to fix inline here — that issue doc now
-      owns the root-cause + fix; this todo resumes once it's resolved.
+      service's blob was rewritten after todo 5 landed. **UNBLOCKED — corrected 2026-08-19 (plan_reconciler,
+      cross-cutting): the blocking regression is now resolved, this todo resumes.** Was BLOCKED 2026-08-13 on a
+      separate, larger regression in `data_status_rollup_ml_service_full_blob_missing_2026_07_26.md` (only 3 of 14
+      `_DEFAULT_SERVICES` produced a `full.json.gz`). That doc is now `status: archived`,
+      `resolved_by: deployment-api@0bb3694c80 (dead-lock fix) + data_status_rollup_multi_timeframe_stall_residual_gap_2026_08_15.md`
+      (live-verified end-to-end 2026-08-16T00:16Z per that doc's own record), and its line ~429 explicitly names this
+      todo as a beneficiary. **Not itself verified done by this correction** — this todo's own done-when (a fresh
+      rollup run producing the new blob shape for every service, verified via a live GCS read citing object
+      generation/timestamp, fallback code deleted, full test suite green) still needs to actually run; only the
+      false "still blocked" premise is fixed here.
 - [x] [REVIEW] P2. End-to-end live verification — once todos 1-6 are deployed, re-run the 3-scope probe pattern from
       `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md` (`could_exist`/`mvp`/`all`, `asset_groups=cefi`)
       against BOTH the on-demand endpoint (should already work) and a fresh rollup-backed response (the new capability),
