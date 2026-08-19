@@ -170,3 +170,33 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:24ee848d2e464ac1]: KEEP-NA — the [BACKEND] durable-fix item is claimed by `ao_satellite_ao_dispatch_batch22_2026_08_16.md` (its todo 5 cites this doc by path); leave open, do not duplicate. **CORRECTED 2026-08-19 (`/plan-reconcile agent_operating_framework_master`)**: that doc's own frontmatter is `status: draft`, not active — `rg -n '^status:' plans/active/ao_satellite_ao_dispatch_batch22_2026_08_16.md` confirms `status: draft`, meaning the durable-fix work has never actually been dispatched to a worker despite the correspondence being real. Do not treat this item as covered until `ao_satellite_ao_dispatch_batch22_2026_08_16.md` is flipped `active`. The [OPERATOR] slot-3-recurrence item stays KEEP-NA (operator-only live-infra action; a 2026-08-16 staleness note is a suspicion, not hard evidence of closure).
+
+## Related phase-derivation defect found 2026-08-19 (fold-in, operator-directed)
+
+While diagnosing why the fleet showed scheduled-job slots stuck displaying `BOOTING`, a second,
+narrower defect turned up in the same `compute_slot_phase` machinery this doc covers.
+
+The primary bug is fixed and shipped (`agent-orchestrator@0391039be0`): a typed one-shot agent
+(`spawn_base_role` set — the `plan_health`/escalation family) never POSTs `/boot` and never gets a
+`current_task`, so neither signal that retires `phase=booting` could fire and the phase read
+`booting` for the agent's entire run. Measured live: slot 29 (`docs_reconciler`, `agt-6551b7`,
+`status=active`) read `booting` for 35+ min at 43% context while genuinely working; slot 28's
+`cefi_reconciliation_auditor` (`agt-419a6c`) read `booting` across a run that exited
+`lifecycle-complete`.
+
+The residual defect is a producer/consumer disagreement about the SCOPE of that phase split.
+`server/fleet_slot_status.py` tests `phase == "pre_boot"` / `phase == "booting"` FIRST, before any
+status branch, so a `working` slot with a boot-phase reads as `booting` in the persisted
+`fleet_slot_snapshots` KPI history. `dashboard/src/layout.tsx`'s `summarise()` gates the identical
+split on `s.status === "idle"` (and `layout.test.ts` asserts `bootingCount === 0` for a
+`working`+`booting` slot). `fleet_slot_status.py`'s own docstring claims the two "can never
+silently drift" — they can, and do. `server/models/slots.py`'s field comment sides with the
+dashboard ("phase is only meaningful while status is idle").
+
+- [ ] [BACKEND] P3. Reconcile the phase-split scope between `server/fleet_slot_status.py` and
+      `dashboard/src/layout.tsx` so the persisted fleet-KPI snapshot and the live dashboard
+      genuinely share one definition, as `fleet_slot_status.py`'s docstring already promises.
+      Note this changes a KPI's historical counting semantics, so state which side wins and why in
+      the commit — do not silently pick one. Rarer since `agent-orchestrator@0391039be0` (a typed
+      one-shot no longer produces `working`+`booting`), but still reachable inside the boot window.
+      (repo: agent-orchestrator)
