@@ -499,6 +499,47 @@ investigation confirmed are both achievable with existing primitives:
       buckets from Phase 1. 6 new tests, full `quality-gates.sh` green. Evidence:
       agent-orchestrator@e9bb4aa2d1d4573318d406a9efd5363184810be9.
 
+### Phase 2b — UI-agnostic liveness (statusLine doesn't fire for IDE-extension sessions) + incremental usage-push fix
+
+> **Added 2026-08-19 (operator, interactive session)**: operator asked to actually flip on continuous live
+> heartbeat + usage for real sessions "like the one we're having right now" — an IDE-extension-hosted session, not
+> a terminal `claude` CLI session. Investigation found the original Phase 2 statusline mechanism structurally
+> cannot cover this: confirmed against the official docs that `statusLine` is a terminal-CLI-only feature, never
+> invoked by the VS Code/Cursor native extension chat panel. Resolved with a UI-agnostic replacement below rather
+> than accepting the gap.
+
+- [x] [BACKEND] P1. **Build a UI-agnostic liveness heartbeat that works for terminal AND IDE-extension sessions
+      alike.** `ao-liveness-heartbeat.py` polls the same local transcript files every Claude Code UI surface
+      already writes identically (`~/.claude/projects/<cwd-slug>/<session-id>.jsonl`, confirmed universal in
+      Phase 0) rather than depending on `statusLine`/hooks firing at all — "was any transcript touched in the
+      last N minutes" is a file-based signal, not a rendering-surface-specific one. `context_used_pct` is
+      deliberately left unreported (None = "alive, not measuring", an already-supported state) rather than
+      reverse-engineering Claude Code's own context accounting and risking a wrong number. Evidence:
+      agent-orchestrator@0affeffedd.
+- [x] [BACKEND] P1. **Fix a real double-counting bug found while designing the recurring job**: `ao-usage-push.py`
+      re-aggregated and re-pushed the FULL transcript total on every invocation (`scan_session_usage()` does a
+      full-file scan every call by its own docstring; `record_task_usage` always INSERTs, never upserts, by
+      design) — running it on a cron against a still-growing session would have double/triple/N-times overcounted
+      spend the longer the session ran. Added a local cursor (`message_id` set, persisted per slot+session under
+      `$TMPDIR`) so each push is a correct, non-overlapping delta batch; a failed push does not advance the
+      cursor, so it retries next tick rather than losing data. Evidence: same commit as above.
+- [x] [INFRA] P1. **Wire both into one recurring job, installable identically for either operator.**
+      `ao-fleet-sync-tick.sh` drives both scripts each tick (usage-push for every recently-touched session, then
+      one liveness heartbeat); `install-fleet-sync-cron.sh` idempotently installs a crontab entry, parameterized
+      by `AO_SLOT_ID`/`AO_HUMAN_LABEL` so the same command works for both. **Verified live in production this
+      session**: installed for Ikenna (9001, 15-min cadence), fired one tick immediately — 5 of 8 recently-active
+      sessions' usage pushed successfully (real spend: $10.53/$45.60/$5.06/$1.24/$99.46), 3 hit a transient
+      `502 Bad Gateway` (not retried-away silently lost — the cursor design means they retry next tick), and the
+      liveness heartbeat succeeded (`agt-14768c`). Confirmed via a direct `GET /api/agents?kind=human` read:
+      `"role":"human"`, `"agent_kind":"human"`, `"online":true`, fresh `last_ping` — this exact session (running
+      in the VS Code/Cursor extension, not a terminal) is now genuinely visible in AO for the first time. Evidence:
+      agent-orchestrator@0affeffedd, live verification this session.
+- [ ] [OPERATOR] P2. **Harsh — install the same recurring job on his own machine (his half of Phase 4, extended).**
+      Once Harsh has registered (existing Phase 4 todo above), one additional command:
+      `AO_HUMAN_LABEL=harsh bash scripts/human_fleet/install-fleet-sync-cron.sh 9002 --minutes 15`. No coding —
+      the script is already generic per-operator. Done when: `crontab -l | grep 'ao-fleet-sync:9002'` shows the
+      installed entry and a `GET /api/agents?kind=human` call shows `harsh` with a fresh `last_ping`.
+
 ### Phase 3 — dashboard
 
 - [x] 17. ✅ [UI] P2. **Add `"human"`/`"planning-human"` to the `AgentKind` union, `KINDS_ORDER`, and
