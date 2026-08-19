@@ -3333,6 +3333,14 @@ When a QG fails ONLY on a timing META-gate — all substantive gates green — t
 - `IGNORE_TIMEOUT=true bash scripts/quality-gates.sh` — skips the `<MAX_DURATION>s` (default 300) wall-clock gate.
   `MAX_DURATION` is also env-overridable (docs note "set to 600 for PM/codex").
 - `PYRIGHT_TIMEOUT=<n>` — raises basedpyright's inner `run_timeout` (default 120s) when type-check is slow under load.
+- `PYTEST_TIMEOUT_SECONDS` (aka `PYTEST_TIMEOUT`, both read) — raises pytest's own per-test `--timeout` (default 150s,
+  raised from an original hardcoded 60s per `pytest_timeout_60s_flaky_under_contention_2026_07_29.md`) when tests are
+  timing out purely from host contention, not a real hang. `PYTEST_TIMEOUT_RETRIES` (default 1) governs the
+  retry-once-on-timeout mechanism shipped alongside it (`unified-trading-pm@52a85d6c7`, 2026-08-06) — a single-worker
+  pytest run that hits the wall-clock timeout once retries automatically before failing the slice. Both live in
+  `scripts/quality-gates-base/base-library.sh`/`base-service.sh`; several repos additionally set a higher per-repo
+  `PYTEST_TIMEOUT` in their own `quality-gates.sh` stub under sustained load (same pattern as the `MAX_DURATION` bump
+  below).
 
 These are legitimate because the timing gate is a performance budget, not a quality check — on a quiet host the same QG
 completes well under it (e.g. an MTDS run that took 425s under contention runs ~99s solo). The gate still runs every

@@ -431,6 +431,15 @@ qualify for the STEP 5.f2 mechanical-staleness carve-out):**
 
 Both routed via `/blocked` (STEP 6) with a recommendation, not applied autonomously.
 
+**STEP 8 update**: operator answered `BLK-ed97af99` = **A** (author both now) at 2026-08-19T19:13:29Z. Applied
+both same-turn: `/codex/06-coding-standards/quality-gates.md`'s "Sanctioned timeout overrides" section now
+documents `PYTEST_TIMEOUT_SECONDS`/`PYTEST_TIMEOUT`/`PYTEST_TIMEOUT_RETRIES` (cited against
+`base-library.sh`/`base-service.sh` + the shipping commit `unified-trading-pm@52a85d6c7`);
+`/codex/04-architecture/ci-alerting.md` gained a new "Failure↔resolution linkage — `streak_start_sha`" section
+documenting the mechanism shipped `unified-trading-ci@7000ac0`, cited against
+`ci_alert_failure_resolution_linkage_2026_08_16.md` (read in full before writing, not paraphrased from the hunter's
+summary alone).
+
 ## Hygiene fixes
 
 _(populated after verification)_
