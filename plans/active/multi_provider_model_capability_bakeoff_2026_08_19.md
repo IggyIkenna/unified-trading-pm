@@ -99,10 +99,10 @@ their source doc archived since original selection 2026-08-18 — swapped, see t
 |---|---|---|
 | Easy | Audit `ag-closeout-auditor` timer (sharding, run time, review-gate, escalation trace) | `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` |
 | Easy | Audit `docs-reconcile` timer (same 4 checks) — *swapped in 2026-08-19, replaces the now-shipped `ao_watchdog.md` wrapper task* | same doc |
-| Medium | Join per-task compaction occurrence onto `TaskUsageRow` | `ao_satellite_ao_dispatch_batch24_2026_08_18.md` |
+| Medium | Audit `escalation-queue-reconciler` timer (4 checks + cross-check whether it would've caught the plan_reconciler PR-backlog problem itself) | `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` — *re-swapped 2026-08-19 (2nd pass), replaces "join per-task compaction onto TaskUsageRow", which shipped `agent-orchestrator@4a9cf6258` between plan authoring and dispatch* |
 | Medium | Audit other repos for the same unscoped-tmux-fixture test anti-pattern | `issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` — *swapped in 2026-08-19, replaces `DirtyStateResolution.COMMIT_AND_PUSH` fix whose source doc is now fully archived* |
 | Hard | Capture which repo(s) a task touched, from real commit/push evidence (no existing mechanism to mirror) | `ao_satellite_ao_dispatch_batch24_2026_08_18.md` — *shared with Codex/Luna, see below* |
-| Hard | Build `GET /api/backlog/graph` + hand-rolled-SVG dependency-graph dashboard view (no d3/mermaid allowed) | `issues/ao_residuals_after_dispatch_hardening_2026_07_17.md` |
+| Hard | Audit `na-eligibility-auditor` timer (4 checks); if a review-gate or escalation-trace gap is found, design AND implement the fix, not just flag it | `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` — *re-swapped 2026-08-19 (2nd pass), replaces the `GET /api/backlog/graph` dashboard task, which shipped `agent-orchestrator@003aafb608` between plan authoring and dispatch; scope widened from plain-audit to audit+fix to keep it Hard-shaped like this task's siblings* |
 
 ### GLM lane (models 3 + 4, run independently — 12 attempts total)
 
@@ -270,6 +270,45 @@ _(populated as each model's run completes)_
   Asked the operator directly whether their session-long cooperation (fetching keys, approving the proxy/tests) already
   counts as that go-ahead, or whether they want the todo kept as an explicit checkpoint before any of the 36 attempts
   start. **Not yet resolved — do not start dispatching any attempt until this is answered.**
+
+- **2026-08-19 (later) — operator go-ahead received; dispatch mechanism + poller built and proven; 2 more tasks
+  caught stale on a SECOND re-verification pass; GLM/Codex lanes blocked/at-risk.** Operator gave explicit
+  go-ahead + a new requirement: poll every account's usage stats at <=60s cadence during each attempt, capturing
+  context/jsonl/token stats. Built `unified-trading-pm/scripts/dev/bakeoff/{run-attempt.sh,usage-poll.sh}`
+  (isolated-branch dispatch + a companion poller reading the running `claude -p` session's own transcript jsonl via
+  a fixed `--session-id`). **First bug caught by actually running it**: Claude Code's project-dir naming is
+  per-EXACT-cwd (e.g. `-active-...-tabs-24-agent-orchestrator`), not one shared dir per top-level workspace as
+  assumed — fixed by deriving the encoded path from the real repo dir instead of hardcoding it. Proven end-to-end
+  on a real attempt (Gemini 3.5-flash-lite, slot 24, `ag-closeout-auditor` audit task): real poll data captured
+  (23 turns, 7 tool_use calls, 0 tool errors, ~230K cumulative input tokens at the ~90s mark, 1.07% approx
+  context-fill) — both `[INFRA] P1` todos' "done when" criteria met.
+  **Re-verifying the rest of the matrix before dispatching it turned up 2 more already-shipped tasks** (same
+  failure class as the first re-verification pass): Gemini Medium#1 ("join per-task compaction onto
+  `TaskUsageRow`") shipped `agent-orchestrator@4a9cf6258`, and Gemini Hard#2 (`GET /api/backlog/graph` dashboard)
+  shipped `agent-orchestrator@003aafb608` — both landed AFTER this plan was authored a few hours ago and BEFORE
+  dispatch. Swapped for `escalation-queue-reconciler` audit (Medium) and `na-eligibility-auditor` audit-plus-fix
+  (Hard) — task tables above updated. **Lesson**: this fleet ships fast enough that even same-session task
+  selections can go stale within hours — a real pre-dispatch check immediately before each attempt launches
+  (not just once at plan-authoring time) would be more robust than a manual sweep; noted as a possible follow-up,
+  not built this session (time-boxed).
+  **GLM lane blocked**: fetching the `glm-coding-plan-api-key` GSM secret failed — `ikenna@odum-research.com`'s
+  gcloud OAuth session now needs interactive reauthentication ("Reauthentication failed: cannot prompt during
+  non-interactive execution"), despite this same identity successfully fetching 9 other secrets earlier in the
+  session. Needs the operator to run `gcloud auth login --account=ikenna@odum-research.com` interactively — cannot
+  self-resolve. GLM lane (slots 26/27) on hold until then.
+  **Codex/Luna lane at risk, not yet attempted**: `codex_bridge_server.py`'s own module docstring states the
+  tool-use path "has not yet been proven against the actual `claude` CLI end to end" and its `openai_codex` SDK
+  import is deliberately lazy/optional ("this not-yet-deployed bridge process") — real risk this lane simply
+  doesn't work yet. `~/.codex/auth.json` confirmed present. Have not yet attempted starting the bridge server
+  locally on :8769 for slot 29 — next action for that lane.
+  **Dispatched**: slot 24 (Gemini 3.5-flash-lite) running task 1/6 (`ag-closeout-auditor` audit, proof attempt,
+  poller confirmed live at ~7min elapsed); slot 25 (Gemini 3.7-flash) launched against the full corrected 6-task
+  queue; slot 28 (DiffusionGemma 26B) launched against the full 6-task Gemma queue. All via
+  `scripts/dev/bakeoff/run-lane.sh` (sequential per-slot queue runner over `run-attempt.sh`), nohup'd, independent
+  of this chat session continuing. Slot 24's remaining 5 tasks will be launched once its task 1 process exits (its
+  own `run-attempt.sh` invocation is what I'm waiting on for a completion notification — cannot start task 2 on the
+  same checkout while task 1's subprocess is still mid-edit on task 1's branch). GLM (slots 26/27) and Codex/Luna
+  (slot 29) not yet dispatched — see blockers above.
 
 - **2026-08-19 (later, same session) — operator go-ahead received, dispatch unblocked; new polling requirement
   added.** Operator: "yes bro, go ahead and use whatever account you have to use and creds you need. test all these
