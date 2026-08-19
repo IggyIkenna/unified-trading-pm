@@ -26,7 +26,7 @@ related:
     /codex/05-infrastructure/human-fleet-operator-setup.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-15"
+last_updated: "2026-08-19"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -535,11 +535,15 @@ investigation confirmed are both achievable with existing primitives:
       `"role":"human"`, `"agent_kind":"human"`, `"online":true`, fresh `last_ping` — this exact session (running
       in the VS Code/Cursor extension, not a terminal) is now genuinely visible in AO for the first time. Evidence:
       agent-orchestrator@0affeffedd, live verification this session.
-- [ ] [OPERATOR] P2. **Harsh — install the same recurring job on his own machine (his half of Phase 4, extended).**
+- [x] ✅ [OPERATOR] P2. **Harsh — install the same recurring job on his own machine (his half of Phase 4, extended).**
       Once Harsh has registered (existing Phase 4 todo above), one additional command:
       `AO_HUMAN_LABEL=harsh bash scripts/human_fleet/install-fleet-sync-cron.sh 9002 --minutes 15`. No coding —
       the script is already generic per-operator. Done when: `crontab -l | grep 'ao-fleet-sync:9002'` shows the
-      installed entry and a `GET /api/agents?kind=human` call shows `harsh` with a fresh `last_ping`.
+      installed entry and a `GET /api/agents?kind=human` call shows `harsh` with a fresh `last_ping`. **Executed
+      2026-08-19 (interactive session, slot 2)**: cron entry installed (`*/15 * * * * ... # ao-fleet-sync:9002`);
+      manually fired one tick to verify rather than waiting 15min — hit and fixed a real, previously-undiscovered bug
+      in `ao-fleet-sync-tick.sh` doing so (see Progress Log). Both done-when conditions confirmed after the fix.
+      Evidence: `agent-orchestrator@1e80d160e0`, live verification this session.
 
 ### Phase 2c — per-tab presence sub-slots (2026-08-19, operator caught the real gap)
 
@@ -640,12 +644,19 @@ investigation confirmed are both achievable with existing primitives:
       Phase 2 usage/billing capability into real numbers — see Phase 5's note on token counts below). Done when: the
       task shows up correctly in the "Human Fleet" dashboard page and
       `GET /api/backlog/usage/windows?role_group=human` returns a real row.
-- [ ] [OPERATOR] P1. **Harsh — hand to Harsh, pure verification, no coding (unchanged from the 2026-08-15 ruling).**
+- [x] ✅ [OPERATOR] P1. **Harsh — hand to Harsh, pure verification, no coding (unchanged from the 2026-08-15 ruling).**
       Same steps as Ikenna's todo above, but `machine='harsh-laptop'`, `AO_SLOT_ID=9002`:
       `python3 -c "from server.auth import issue_token; t,e = issue_token('harsh', role='worker', machine='harsh-laptop'); print(t); print('expires', e)"`,
       then `mkdir -p ~/.config/agent-orchestrator && nano ~/.config/agent-orchestrator/human-fleet-token` (paste the
       token), then `AO_SLOT_ID=9002 bash scripts/human_fleet/ao-register.sh harsh`. Done when: `ao-register.sh`
-      returns `{"ok": true, ...}` and `harsh` shows up in AO's `GET /api/agents`.
+      returns `{"ok": true, ...}` and `harsh` shows up in AO's `GET /api/agents`. **Executed 2026-08-19 (interactive
+      session, slot 2)**: minted via the confirmed-in-sync local `.env.local` `ORCHESTRATOR_JWT_SECRET` (verified
+      matching the canonical Secret-Manager blob first via `refresh_env_from_sm.sh` dry-run — `keep`, not `REPLACE` —
+      before use; the raw secret itself was never fetched fresh or printed), saved to
+      `~/.config/agent-orchestrator/human-fleet-token` (0600), registered:
+      `{"ok":true,"agent_id":"agt-76ed5c","slot_id":9002}`. Live-verified via `GET /api/agents?kind=human`: `harsh`,
+      `role=human`, `agent_kind=human`, `status=active`, `online=true`, fresh `last_ping`. Evidence: live API response,
+      this session.
 - [ ] [SCRIPT] P2. **Harsh — run one real, low-stakes task end-to-end (unchanged from the 2026-08-15 ruling).** Same
       steps as Ikenna's task todo above, `AO_SLOT_ID=9002`. Done when: the task shows up correctly in the "Human
       Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
@@ -821,3 +832,45 @@ investigation confirmed are both achievable with existing primitives:
   renders, not whether it's needed.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:750fff6078039cf5]: RECLASSIFY (per-todo split) — the Fleet-table role-badge exclusion item extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 4. Doc stays NA for its other remaining items (Harsh's Phase 4 — physically requires his own machine; Ikenna's task-cycle — blocked on live backlog state, 0/706 tasks without a blocked_reason; the /api/agents zero-rows contradiction — cross-referenced, see `ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md` item 11).
+- **2026-08-19 (interactive session, slot 2, Harsh's Phase 4/2b executed)**: Ran Harsh's onboarding live, one step at a
+  time per his own request, following `/codex/05-infrastructure/human-fleet-operator-setup.md`. Two real findings
+  along the way, not just execution. (1) At the start of this session that runbook doc genuinely did not exist in
+  this checkout — a `find`/`rg` sweep came up empty — so the first response to Harsh incorrectly told him the doc was
+  nonexistent/a misremembering. It was NOT: a concurrent session (Ikenna, slot-4·laptop,
+  `unified-trading-pm@b9b59e817d`, "docs(codex): add Human Fleet operator setup runbook for Harsh (CLI + Cursor)",
+  2026-08-19T04:41:23+01:00) had just created it, and this checkout's `git pull --ff-only origin live-defi-rollout`
+  (run later in the same session, to safely edit this very plan file) pulled it in — the earlier "doesn't exist"
+  answer was a stale-checkout artifact, not a wrong premise on Harsh's part. Corrected once found; the doc's own Step
+  5 ("Cursor's Claude Code extension ignores `permissions.defaultMode`... constant permission prompts the CLI never
+  shows") was real and was applied: `claudeCode.allowDangerouslySkipPermissions`/`claudeCode.initialPermissionMode` set
+  in this machine's actual editor config (`~/.config/Code/User/settings.json` — genuinely VS Code here, not Cursor;
+  the doc's example path was macOS/Cursor-specific, adapted for this Linux/VS-Code machine). (2) The first mint
+  attempt ran in a fresh shell with neither `ORCHESTRATOR_JWT_SECRET` nor its GCS path exported — `_load_secret()`
+  correctly fell back to an ephemeral per-process secret (loud warning), which would have produced a token the real
+  server could never validate. Rather than fetching the raw secret from GSM into a laptop checkout (his first
+  suggestion — works against the code's own "central-VM-only, never shared with worker VMs" design intent for zero
+  benefit over the alternative), found the secret was ALREADY present in this checkout's `.env.local` via the
+  standard `refresh_env_from_sm.sh` sync path and confirmed in sync with the canonical Secret-Manager blob (dry-run
+  `keep`, not `REPLACE`) before using it — identical practical outcome, smaller exposure surface, raw secret value
+  never printed. Registration then succeeded first try. Installing the Phase 2b cron surfaced a real,
+  previously-undiscovered bug: `ao-fleet-sync-tick.sh`'s mtime probe tried BSD `stat -f %m` before GNU `stat -c %Y`
+  — on Linux, GNU `stat -f` doesn't error, it silently returns filesystem info instead of a file's mtime, so the
+  arithmetic on the resulting garbage string crashed under `set -u`. The correct GNU-first order is already the
+  established convention elsewhere in this exact repo (`ao-self-pull.sh:76`; `qg-common.sh:293` even documents this
+  precise gotcha) — this one script just had it backwards. Fixed + shipped (`agent-orchestrator@1e80d160e0`, full QG
+  green — also had to `npm ci` the dashboard, which was missing an already-committed `recharts` dependency, an
+  unrelated pre-existing local-env gap, not a code issue). Harsh (slot 9002) now live: `agt-76ed5c`, `role=human`,
+  `status=active`, fresh `last_ping`; cron installed; one manually-fired tick already proved usage-push (4 sessions,
+  real priced spend) and the liveness heartbeat both work end-to-end. **Worth a follow-up, not investigated further
+  this session**: while verifying, `GET /api/agents?kind=human` showed Ikenna's `ikenna-tab3/4/5/6` rows all
+  `status=stale`/`online=false` — if his cron was installed before this fix shipped and his machine is Linux, this
+  exact bug would explain it; not confirmed, captured as a todo below rather than assumed.
+
+### Phase 8 — follow-up from Harsh's 2026-08-19 onboarding (not yet actioned)
+
+- [ ] [SCRIPT] P2. **Check whether Ikenna's stale `ikenna-tabN` rows (observed 2026-08-19, `GET /api/agents?kind=human`
+      showing tab3/4/5/6 all `status=stale`/`online=false`) were caused by the `ao-fleet-sync-tick.sh` GNU/BSD `stat`
+      ordering bug fixed this session (`agent-orchestrator@1e80d160e0`)** — if his cron was installed before this fix
+      and his machine is Linux, every tick since would have silently crashed before reaching the heartbeat call.
+      Check his crontab log (`/tmp/ao-fleet-sync-9001.log`) for the failure signature, confirm the fix resolves it on
+      his machine too, not just Harsh's. Repo: agent-orchestrator.
