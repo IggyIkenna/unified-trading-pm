@@ -40,7 +40,7 @@ estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
-last_updated: "2026-07-24"
+last_updated: "2026-08-17" # was "2026-07-24" -- corrected 2026-08-19 (/plan-reconcile manifest_master), matched to the latest dated Progress Log entry (na-eligibility-audit 2026-08-17)
 locked_by:
 locked_since:
 supersedes:
@@ -159,7 +159,10 @@ does not require a second whole-corpus walk.
       round-trip survives (SOURCE_PRIORITY↔AVAILABILITY symmetry · PipelineMode · emission latency); the per-AG
       migrators MUST call it immediately before their atomic drop. Test proves the closed-set is purge-ready TODAY. The
       actual DROP stays G4-gated (coupled to cefi+tradfi `--apply` complete) — only the GUARD is landed here. (operator
-      2026-06-07: "break old paths is the point of the migration" — couple-to-G4, do NOT lead the data). The could-exist
+      2026-06-07: "break old paths is the point of the migration" — couple-to-G4, do NOT lead the data).
+      **FLAG 2026-08-19** (`/plan-reconcile manifest_master`, not applied): the catalogue's Gate-State Board now
+      shows cefi+tradfi G4 both 🟢 — the stated coupling condition appears satisfied; re-verify both are genuinely
+      stable (not just "applied") before treating the drop as unblocked. The could-exist
       PRODUCER is already Era-B (`uac@ae70338d`/`is@74df991d`); this retires the legacy-READ surface that still parses
       un-migrated v8 `data_type=options_chain` rows. **Removing it BEFORE the relabel would loud-fail every read of
       un-migrated v8 data (deployment-api/preflight KeyError / unknown DataType) — heartbeat break — so it is sequenced

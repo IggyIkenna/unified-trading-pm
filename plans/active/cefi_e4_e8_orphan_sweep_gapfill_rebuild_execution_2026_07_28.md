@@ -6,8 +6,10 @@ summary: >-
   remaining work = ORPHAN SWEEP + gap-fill" todo / data_completion_cefi-015, its "Orphan sweep + bucket-state evidence"
   sibling / data_completion_cefi-013, and the "NEXT SESSION — execute the migration" todo) into ONE properly-scoped,
   phased execution chain — main-agent ruling BLK-650261be, 2026-07-28. All steps are human-executed (LOCAL, not
-  AO-dispatched) — this is ~1.2M-object prod-bucket delete + VM-scale work, squarely the delete-safety-protocol
-  hard-stop class, never an autonomous-agent action.
+  AO-dispatched) — this is large-scale prod-bucket delete + VM-scale work (Phase B's dry-run census found the real
+  population was 287,074 objects, not the ~1.2M this scope note originally estimated before the contaminating bug
+  behind that figure was found and fixed — corrected 2026-08-19, `/plan-reconcile manifest_master`, see Phase B for the
+  full trail), squarely the delete-safety-protocol hard-stop class, never an autonomous-agent action.
 status: active
 nature: process
 asset_group: [cefi]

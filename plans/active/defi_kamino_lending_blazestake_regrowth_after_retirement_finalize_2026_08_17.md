@@ -15,7 +15,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-19"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -42,10 +42,10 @@ locked_since:
 
 # Finalize — DeFi KAMINO_LENDING/BLAZESTAKE regrowth root-cause
 
-- [ ] [REVIEW] P3. Confirm the root-cause diagnosis landed (which mechanism — rebuild-rescan class like dex_pools,
-      or a live-writer casing/dedup defect like POOL — was identified for the small KAMINO_LENDING (80 rows) and
-      BLAZESTAKE (1 row) regrowth), flip the source `[DIAG] P3` todo to done with evidence, and archive this plan
-      once done and unlocked.
+- [ ] [REVIEW] P3. Confirm the root-cause diagnosis landed, flip the source `[DIAG] P3` todo to done with evidence, THEN archive this plan (only once unlocked) — corrected 2026-08-19 (`/plan-reconcile manifest_master`, line-1-completeness fix: the flip+archive actions were previously stranded on lines 2-3, invisible to a worker's brief).
+      Mechanism to confirm is either a rebuild-rescan class defect (like `dex_pools`) or a live-writer casing/dedup
+      defect (like `POOL`) for the small KAMINO_LENDING (80 rows) and BLAZESTAKE (1 row) regrowth — see
+      `context_scope` for the two comparison docs.
 
 ## Progress Log
 
@@ -54,3 +54,9 @@ locked_since:
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) -- added the two sibling recurrence
   docs (`dex_pools` rebuild-rescan class, `POOL`-uppercase live-writer class) the source issue doc's own todo names
   as the two mechanism classes to compare this regrowth against.
+- **plan-reconcile 2026-08-19 (epic-scoped, AO-dispatch-readiness hunter)**: line-1-completeness fix on the one open
+  todo — the flip-source-todo and archive-once-unlocked actions were on physical lines 2-3, invisible to a worker's
+  brief (`regen_backlog_from_plan.py::_parse_open_todos` only captures line 1). Rewrote so all three actions (confirm,
+  flip, archive) are on line 1; mechanism-comparison detail moved to a continuation line. Also added this doc's own
+  entry to the epic hub's "Assigned active plans" P3 section (it was missing entirely — the hub instead still listed a
+  different, already-archived Kamino finalize doc). Working-tree-only, not shipped.

@@ -37,7 +37,7 @@ estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
-last_updated: "2026-07-28"
+last_updated: "2026-08-19"
 locked_by:
 locked_since:
 supersedes:
@@ -315,7 +315,14 @@ context_scope: [/plans/active/master_data_canonicalisation_migration_catalogue_2
       2026-07-28, investigated per `autonomous_session_operator_decisions_2026_07_25.md`)**: the operator-decision fork
       this todo cited — "decision 338" — is the classifier registry-EXTENSION ruling (extend `canonical_question_group`
       coverage vs. leave unmatched markets unclassified), NOT a separate ruling on seeder grain; it was ratified +
-      implemented 2026-06-16 (`unified-api-contracts@d4523602`, the OTHER-catch-all change) and independently
+      implemented 2026-06-16. **SHA CORRECTED 2026-08-19** (`/plan-reconcile manifest_master`): the previously-cited
+      `unified-api-contracts@d4523602` is WRONG — verified via `git log -1 d4523602` it is dated 2026-07-16 (a month
+      later) and is an unrelated logging-level perf fix, not a decision-338 commit. The real decision-338 sequence,
+      all dated 2026-06-16 and all tagged `(decision 338)` in their own commit messages (cross-confirmed against
+      `infra_ops_residual_migration_verification_2026_07_24.md`'s independent citation of the same 3 SHAs), is
+      `unified-api-contracts@d52217f`+`e0035fd`+`8e3108d` — see that doc for the per-commit breakdown; not
+      independently re-verified here whether these 3 specifically cover the "OTHER-catch-all" sub-change this
+      sentence originally attributed to the wrong SHA. and independently
       re-confirmed 2026-07-26/27 (`autonomous_session_operator_decisions_2026_07_25.md` entry #14;
       `/plans/archive/2026_07/prediction_cqg_residual_2026_07_24.md` todo 1;
       `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md` "Why this batch exists") —

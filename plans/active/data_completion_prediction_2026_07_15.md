@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-15
+last_updated: 2026-08-18 # was 2026-07-15 (the doc's own creation date, never bumped across ~15 dated Progress Log entries) -- corrected 2026-08-19 (/plan-reconcile manifest_master), matched to the latest dated Progress Log entry (na-eligibility-audit 2026-08-18)
 locked_by:
 locked_since:
 supersedes:
@@ -399,7 +399,11 @@ range never overlaps a still-in-flight per-market-only day).
       `dependency_checker` so a non-v9 upstream is caught loud, not silently consumed. **⚠️ DESIGN NUANCE (slot-3
       2026-06-02 — why deferred, not shipped half-baked):** the prod corpus is **100% v8 TODAY** (pre-migration), so a
       hard `schema_version==9` assert would break EVERY consumer immediately, and an unconditional warn would fire on
-      100% of reads (pure noise). Ship it as a **loud WARN that fires only on MIXED-version drift** (some rows v9, some
+      100% of reads (pure noise). **FLAG 2026-08-19** (`/plan-reconcile manifest_master`, not applied — annotation
+      only): this "100% v8" premise is dated slot-3 2026-06-02; `master_data_canonicalisation_migration_catalogue_
+      2026_06_07.md`'s Gate-State Board now shows prediction G4 🟢 (applied 2026-06-29), so the corpus is very likely
+      no longer 100% v8 — the design nuance above needs a fresh re-read against current schema_version distribution
+      before this todo is next worked, not a rubber-stamp on the 06-02 assumption. Ship it as a **loud WARN that fires only on MIXED-version drift** (some rows v9, some
       not, within one read) OR an `asset_group`-column-absent-on-a-supposedly-migrated-bucket signal — the real
       post-migration regression — NOT a blanket "not v9" warn. Becomes a hard assert only AFTER each AG's G3 migration
       flips its corpus to v9. P2 + warn-only → low value pre-migration; real value is the post-migration regression

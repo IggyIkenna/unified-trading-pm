@@ -35,7 +35,7 @@ related:
   ]
 created: "2026-08-17"
 author: slot-4 (backend_engineer, adopted review craft for this dispatch)
-last_updated: "2026-08-17"
+last_updated: "2026-08-19"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -111,9 +111,8 @@ P0 POOL-recurrence work already in flight.
 
 ## Todos
 
-- [ ] [DIAG] P3. Root-cause the `KAMINO_LENDING` (80 captured) and `BLAZESTAKE` (1 captured) regrowth since their
-      2026-08-05/06 retirements — sample the regrown rows' underlying GCS objects directly (`gcs_describe_object`)
-      to determine whether they correspond to real physical objects at the legacy venue path (rebuild-rescan class,
+- [ ] [DIAG] P3. Root-cause the `KAMINO_LENDING` (80 captured) and `BLAZESTAKE` (1 captured) regrowth since their 2026-08-05/06 retirements by sampling the regrown rows' underlying GCS objects directly (`gcs_describe_object`) — line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master` (method moved up from line 2).
+      Goal: determine whether they correspond to real physical objects at the legacy venue path (rebuild-rescan class,
       like `dex_pools`) or are manifest-column-only artifacts from a live writer defect (like POOL-uppercase).
       Re-check row counts first (may have grown since 2026-08-17) before designing a fix. (repo:
       market-tick-data-service or market-data-processing-service, per whichever mechanism is found)

@@ -49,12 +49,17 @@ related_plans:
   - ../active/infra_ops_residual_migration_verification_2026_07_24.md
   - ../active/is_catalogue_g1_root_audit_log_2026_07_24.md
   - ../active/master_data_canonicalisation_migration_catalogue_2026_06_07.md
-last_updated: 2026-05-21
+last_updated: 2026-08-19 # was 2026-05-21 -- corrected by /plan-reconcile manifest_master (stale "Assigned active plans" roster refresh, see Progress Log)
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---
 
 # Manifest Master (L1)
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/f145f5d7-3b4f-428e-a9fe-869be0d75e78 (generated 2026-08-19,
+`/plan-reconcile manifest_master`)
 
 **Owns**: manifest schema (**v9 current** — `MANIFEST_SCHEMA_VERSION = 9` live 2026-05-30, UTL@`c7bfa427`; v9 adds the
 `source` column per `tradfi_massive_dual_source_2026_05_28` Phase 3; the historical Stage 0-4 / `d3_manifest_v8_finish`
@@ -123,8 +128,10 @@ Full archaeology: [`manifest_evolution_SUPERSEDED_2026_05_21.md`](manifest_evolu
 
 ## Assigned active plans
 
-_15 active plans declare `parent_epic: manifest_master` in their frontmatter. Workers pick up in priority order (P0
-first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
+_14 active plans declare `parent_epic: manifest_master` in their frontmatter (corrected 2026-08-19 via `/plan-reconcile
+manifest_master` — the prior "15" count included 2 plans already archived+complete, and the P2/P3 slots were pointing
+at those same archived docs while 2 genuinely-active P2/P3 plans were missing entirely; see Progress Log). Workers pick
+up in priority order (P0 first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`.*
 
 ## P0 — must complete before next foundation gate
 
@@ -132,11 +139,6 @@ first). Auto-populated by `scripts/plans/populate_epic_bodies_2026_05_21.py`._
 
 **status**: active · **estimate**: 2.4 cal AI-days (class: infra) **title**: CeFi E4→E8 orphan-sweep + legacy gap-fill +
 manifest rebuild — VM execution chain
-
-### [`data_completion_cefi_2026_07_15`](../archive/2026_08/data_completion_cefi_2026_07_15.md)
-
-**status**: active · **estimate**: 2 cal AI-days (class: infra) **title**: Data completion to 100% — CeFi manifest
-canonicalisation + backfill (split from M-1)
 
 ### [`data_completion_defi_2026_07_15`](../active/data_completion_defi_2026_07_15.md)
 
@@ -193,15 +195,17 @@ migration_verification_orphan_safety_2026_06_10
 
 ## P2 — useful; opportunistic
 
-### [`data_completion_cefi_2026_07_15_finalize_2026_07_27`](../archive/2026_08/data_completion_cefi_2026_07_15_finalize_2026_07_27.md)
+### [`manifest_v9_residual_2026_08_15`](../active/manifest_v9_residual_2026_08_15.md)
 
-**status**: active · **estimate**: 0.2 cal AI-days (class: infra) **title**: >-
+**status**: active · **estimate**: 0.4 cal AI-days (class: infra) **title**: Manifest v9 residual — orphaned epic-body
+checkboxes extracted from manifest_master
 
 ## P3 — backlog; revisit quarterly
 
-### [`defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09`](../active/defi_kamino_lending_venue_drift_live_data_verification_gap_2026_08_04_finalize_2026_08_09.md)
+### [`defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17`](../active/defi_kamino_lending_blazestake_regrowth_after_retirement_finalize_2026_08_17.md)
 
-**status**: active · **estimate**: 0.16 cal AI-days (class: infra) **title**: >-
+**status**: active · **estimate**: 0.08 cal AI-days (class: infra) **title**: Finalize — DeFi KAMINO_LENDING/BLAZESTAKE
+regrowth root-cause
 
 ## Archived plans
 
@@ -262,3 +266,22 @@ migration_verification_orphan_safety_2026_06_10
       4.DEFAULT-REMOVAL-v8kwargs (remove `= None` defaults from v8 schema kwargs).
 - [x] ✅ **[OPERATOR] P1. MOVED 2026-08-15 to `/plans/active/manifest_v9_residual_2026_08_15.md`** — Phase 8.A+8.B
       sign-off on `manifest_divergence_triage_2026_05_09.md`.
+
+## Progress Log
+
+- **plan-reconcile 2026-08-19 (epic-scoped run)**: "Assigned active plans" section was stale since 2026-05-21 — verified
+  via `.venv/bin/python scripts/plans/populate_epic_bodies_2026_05_21.py --dry-run` (reports 14 real active
+  `parent_epic: manifest_master` plans, P0=11/P1=1/P2=1/P3=1) cross-checked against `rg "^parent_epic: manifest_master$"
+  plans/active/*.md` (14 hits) and `epic_report_data.py --epic manifest_master` (`plan_children_count: 14`). Fixed by
+  hand (scoped to this epic only — the populator script has no `--epic` filter and would have rewritten all 27 epics'
+  bodies, out of scope for an epic-scoped reconcile under shared-checkout contention): removed `data_completion_cefi_
+  2026_07_15` + its `_finalize_2026_07_27` sibling from the P0/P2 listings (both `status: complete`, living in
+  `plans/archive/2026_08/`, verified via `grep -n "^status:" `on each — the epic body had them marked "active" with
+  links already pointing into `archive/2026_08/`); removed the P3 entry for `defi_kamino_lending_venue_drift_live_
+  data_verification_gap_2026_08_04_finalize_2026_08_09` (dangling — its `../active/...` link resolves nowhere; the doc
+  only exists at `plans/archive/2026_08/...`, confirmed via `find`); added the 2 real current P2/P3 plans that were
+  missing from the body entirely — `manifest_v9_residual_2026_08_15` (P2) and `defi_kamino_lending_blazestake_
+  regrowth_after_retirement_finalize_2026_08_17` (P3, itself a 2026-08-18 move from `plans/active/issues/
+  defi_kamino_lending_blazestake_regrowth_after_retirement_2026_08_17_finalize.md` — corpus-wide referrer grep for the
+  old path found zero remaining hits). Corrected "15 active plans" → "14 active plans" in the section intro. Working-
+  tree-only fix (this session did not ship); scoped to `plans/epics/manifest_master.md` alone.
