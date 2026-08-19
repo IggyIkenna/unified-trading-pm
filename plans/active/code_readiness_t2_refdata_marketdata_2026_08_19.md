@@ -320,14 +320,23 @@ todos only to confirm they are data-movement, then leave it.
       slice into `candles_by_tf`, and `_streaming_write_per_tf` streams every batch for a true chain
       (`groups = [(instrument_id, tf_candles)]`), so the current code appears correct and the stale 1-of-7 bundles
       predate it. The next item is the piece of this that IS code-shaped.
-- [ ] [BACKEND] P0. **Close the multi-symbol survival gap with a unit test so the relaunch stops being the only
-      oracle.** MEASURED 2026-08-20: `tests/unit/test_chain_streaming.py` covers `_iter_chain_symbol_dfs` (the
-      READER yields one slice per symbol) but NOTHING asserts every symbol survives end-to-end into the WRITTEN
-      frame — a grep for a symbol-count/`nunique` assertion over written output returns zero hits across the MDPS
-      test tree. That absence is exactly why the issue doc calls the current code "unverifiable without the live
-      post-fix relaunch". A test driving `_process_chain_bundle_streaming` with a multi-contract bundle, asserting
-      all N contracts reach `_streaming_write_one_group`, turns a VM-gated unknown into a code-level proof at zero
-      data-movement cost.
+- [x] [BACKEND] P0. **Close the multi-symbol survival gap with a unit test so the relaunch stops being the only
+      oracle.** ✅ 2026-08-20 — shipped `market-data-processing-service@8bffeb8dfe` (verified an ancestor of
+      `origin/live-defi-rollout`; landed blob re-read to confirm the tests are in it). Three tests drive the real
+      `_process_chain_bundle_streaming` with a 7-contract BYBIT futures_chain bundle — mirroring the exact GCS
+      ground truth the issue measured — and assert every contract reaches `_streaming_write_one_group`, that a true
+      chain writes ONE group per timeframe keyed on the chain root, and that the single-contract case still writes
+      (so the multi-symbol assertions cannot pass vacuously). **RESULT: the current streaming code PRESERVES all 7
+      contracts.** The issue doc's "current code appears correct ... unverifiable without the live post-fix
+      relaunch" is now VERIFIED in code, so the stale 1-of-7 bundles are attributable to older code, not to what
+      ships today. **Test teeth proven, not assumed**: injecting the exact 7→1 truncation into
+      `_streaming_process_slice_timeframes` makes them fail with `6 of 7 contracts never reached the writer`; the
+      source was restored and re-verified clean by `git diff` before shipping. Remaining risk on this symptom is
+      DATA (already-written bundles), not code — and that stays operator-gated.
+      **The gap that made this necessary**: `test_chain_streaming.py` already covered `_iter_chain_symbol_dfs`
+      (the READER yields one slice per symbol), but a grep for a symbol-count/`nunique` assertion over WRITTEN
+      output returned zero hits across the whole MDPS test tree — nothing checked that those slices survive to the
+      writer. That absence, not the code, is why the issue stayed VM-gated for eleven days.
 - [ ] [BACKEND] P1. Land the MDPS adapter-protocol / polars-seam migration as ONE atomic change across the 18
       adapter files sharing the ABC/Protocol boundary. Evidence:
       `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
