@@ -539,3 +539,34 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   Still far from this todo's own `NEVER_SCOUTED =0, STALE=0` completion bar — the `docspec.py` `FieldSpec` flip stays
   untouched, deliberately, same as every prior session logged above.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:70f657a3d86ef521]: KEEP-NA, valid — sole open todo is the corpus-wide context_scope backfill, genuinely unbounded ongoing corpus-scale work whose target moves as the corpus grows; reaffirmed across 2+ prior audit passes.
+- **2026-08-19 (interactive session, context-scout backfill toward todo 1)**: Re-ran `generate_context_scope_inventory.py`
+  fresh at session start (the 2026-08-17 marker's snapshot was stale) — **840 in-scope docs, 22 `NEVER_SCOUTED`, 581
+  `STALE`, 237 `UP_TO_DATE`** (STALE up sharply since 2026-08-17, consistent with this corpus's continuous churn from
+  other daily skills touching `last_updated`). Ran the `/context-scout` skill's Phase 0-2 procedure via a 9-agent
+  `Workflow` fan-out (9 batches of ~11 docs, `model=sonnet`, `SUB_AGENT_MANDATORY_RULES.md` pasted at every spawn) over
+  all 22 `NEVER_SCOUTED` docs plus a 77-doc `STALE` slice (99 docs targeted, a bounded chunk — not an attempt at the
+  full 581). This session independently verified every diff before shipping, per this corpus's own "an agent's own
+  report is not sufficient evidence" lesson (2026-08-03 entry above): YAML frontmatter re-parse across all 97 touched
+  files (0 invalid), no duplicate `context_scope:` keys, `check_line_caps.sh` SCOPED-mode clean (0 new hard-cap
+  breaches), and the one diff over 20 changed lines
+  (`ao_human_fleet_integration_2026_08_15.md`, a 14→6 entry trim) spot-checked and confirmed a legitimate refresh with
+  no content loss. **97/99 docs scouted and shipped; 2 correctly exempted** —
+  `plans/active/issues/manifest_hygiene_red_all_2026_08_18.md` (`locked_by: live-defi-rollout`, left untouched per the
+  skill's lock rule) and this doc's own sibling coordinator
+  `plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` (pre-existing 1092L, over the 1000L hard cap
+  and already operator-exempted 2026-08-15 — made zero edits rather than push it further over, per the skill's line-cap
+  procedure). Avg 4.19 entries/doc (min 0, max 6). Shipped via `scripts/dev/safe-doc-push.sh`:
+  `unified-trading-pm@e88ab02465` (97 files, 444 insertions/32 deletions), verified landed on
+  `origin/live-defi-rollout` via `git merge-base --is-ancestor` + a direct content spot-check (not just ahead=0 + clean
+  tree, per this corpus's own 2-check discipline). **Result: fresh post-ship inventory reports 844 in-scope docs (+4,
+  corpus grew concurrently), 2 `NEVER_SCOUTED`** (the same 2 exempted docs above — need the lock lifted / a line-cap
+  trim before they can be scouted, not more scouting effort) **and 511 `STALE`** (581→511 net, against ongoing
+  corpus-wide churn from other daily skills during the same window) **and 331 `UP_TO_DATE`** (237→331). Still far from
+  this todo's own `NEVER_SCOUTED=0, STALE=0` completion bar — the `docspec.py` `FieldSpec` flip stays untouched,
+  deliberately, same as every prior session logged above. **Adjacent finding, not fixed here (out of this skill's own
+  scope boundary — it never rewrites a doc's body/todo prose)**:
+  `plans/active/citadel_paper_batch_live_reconciliation_2026_06_19.md`'s own open todo P2.11.15 names `_panel.py`,
+  which does not resolve anywhere in this checkout (confirmed via a full-checkout grep) — a stale pointer for a future
+  `/plan-reconcile` pass. **Remaining work for the next session**: 2 `NEVER_SCOUTED` (both exempted, need
+  lock-lift/line-cap-trim first, not more scouting) + 511 `STALE` (re-measure before trusting — this corpus's churn
+  rate has consistently outpaced single-session scouting throughput per every prior entry above).
