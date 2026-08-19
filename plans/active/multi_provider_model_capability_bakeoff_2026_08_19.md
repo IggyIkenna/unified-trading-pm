@@ -252,6 +252,10 @@ where it writes.
 | **DiffusionGemma 26B** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~5s each | **INFRA-BLOCKED, entire lane** — NVIDIA NIM `InternalServerError`(500)/`BadGatewayError`(502) on every attempt; a simple single-turn smoke test against the SAME endpoint succeeded (200 OK) immediately after, isolating the failure to the full real Claude Code request shape (real CLAUDE.md system prompt + full multi-tool schema), not a dead endpoint | Zero usable data. Root cause not yet pinned to a specific payload/tool-count limit — flagged, not fixed. Re-run needs that fixed first. |
 | **Codex/Luna** | **all 6 assigned tasks** | 1 (×6) | 1 (×6) | — | $0 (×6) | — | — | ~0.1s each | **INFRA-BLOCKED, entire lane** — bridge rejects any `system`-role message (HTTP 400), root-caused in `codex_luna_flex_bridge_2026_08_14.md` | Zero usable data. Needs a real bridge-code fix, not a config/retry issue. |
 
+| GLM 5.2 | `context-scout` audit (Easy) | 0 | 46 | 45 (1) | 437,337 / 163,104 | 4,708,800 | 0.31% (real window 200K, corrected — launched with a wrong 128K assumption, same class of bug as the earlier Gemini one) | 10.7 min | PASS | Real `modelUsage.glm-5.2.contextWindow` confirms 200,000, matching Gemini's — the 128K figure used at launch for both GLM models' poller was a guess, now known wrong. |
+| GLM 5-Turbo | `context-scout` audit (Easy) | 0 | 38 | 37 (3) | 163,346 / 18,998 | 4,439,424 | 0.30% (corrected, real window 200K) | 10.0 min | PASS | 3 tool_errors recorded, non-blocking (task still completed clean). |
+| GLM 5-Turbo | `death_class` teardown-signal extend (Easy #2) | 0 | 59 | 58 (10) | 270,291 / 20,931 | 7,670,784 | 2.50% (corrected, real window 200K) | 14.3 min | PASS | 10 tool_errors recorded (highest error count of any attempt so far), still completed clean — worth checking during Gate-2 review whether these reflect real friction with this task's shape. |
+
 _(remaining rows populated as each attempt completes)_
 
 ## Progress Log
