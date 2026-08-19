@@ -49,23 +49,18 @@ tags: [prediction, ao-dispatch, close-out, batch-6, satellite-docs, data-correct
 related:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
-    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
-    /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_finalize_2026_07_25.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch3_2026_07_26.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch5_2026_07_26.md,
-    /plans/archive/2026_08/issues/kalshi_execution_credential_secret_name_mismatch_2026_07_26.md,
-    /plans/archive/issues/kalshi_mass_attempted_failed_unclassified_adapter_error_2026_07_27.md,
-    /plans/archive/issues/prediction_arb_live_execution_bridge_2026_07_20.md,
-    /plans/archive/issues/prediction_lifecycle_prefetch_gate_and_resolution_day_catalogue_2026_07_14.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
-    /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
+# archive-safety ratchet (2026-08-19, quality_gate_resolution agt-62ee9f): dropped 11 direct
+# /plans/archive/... citations (sibling batch2/3/4/5(+finalize) + 4 now-archived issue docs) --
+# per the archival ritual step 5, related: must not point at plans/archive/ directly. No fact
+# lost: every one was a closed-out sibling AO-dispatch batch or resolved issue, and the load-
+# bearing pointers (e.g. the Betfair item's Source doc) already live in this file's own prose,
+# which the ratchet explicitly exempts. Archived files remain readable at their original paths.
 created: "2026-07-29"
 last_updated: "2026-07-30"
 parent_epic: predictions_master
@@ -156,7 +151,12 @@ sports-tranche-owned).
       all four repos — both true, `quality-gates.sh` green on unified-api-contracts, strategy-service,
       execution-service, and e2e-testing (SHAs above).
 
-- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **Two-sided Betfair odds — persist back+lay, not just one side.** **RETAGGED
+- [ ] [BLOCKED-CREDENTIALS][INFRA] P2. **Two-sided Betfair odds — persist back+lay, not just one side.**
+      **CREDENTIAL APPROVAL REQUEST** (noted 2026-08-19, quality_gate_resolution agt-62ee9f): outstanding ask is GCP
+      network-egress provisioning in `europe-west2` (operator-decided region, 2026-08-11) so
+      `execution-service/scripts/refresh_betfair_session_token.py` can clear Betfair's geo-block from this
+      workspace's only egress (Tokyo) — not self-serviceable (new regional egress, not an ambient-identity IAM
+      role); full detail in the Progress Log paragraphs below. **RETAGGED
       2026-08-19 (ag_closeout_auditor, prediction tranche)** — was bare `[INFRA]`; live-traced against
       `agent-orchestrator/server/regen_backlog_from_plan.py`'s `_is_non_dispatchable()`/`_has_live_blocked_token()`
       and confirmed the bare tag read as falsely dispatchable despite the genuine external Betfair-account block
