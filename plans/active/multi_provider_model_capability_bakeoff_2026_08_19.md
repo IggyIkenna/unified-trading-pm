@@ -169,12 +169,33 @@ decisions (which model tier is worth dispatching a given task shape to).
 
 ## Mechanics
 
-Each of the 36 (model, task) attempts runs in its OWN isolated git branch/worktree off `live-defi-rollout` — never
-directly on a shared branch — so the 2 shared-Hard-task pairs don't collide and no attempt's diff pollutes another's.
-A `claude` CLI subprocess is spawned per attempt with `ANTHROPIC_BASE_URL`/`ANTHROPIC_MODEL` set to the target model
-(litellm proxy :8768 for Gemini/Gemma, native `api.z.ai` for GLM, `codex-bridge` :8769 for Codex/Luna). No attempt's
-diff auto-merges — Gate 1/2 scoring + the shared-task diff comparison decide what (if anything) actually ships via
-normal `quickmerge.sh`.
+**Direct tmux/subprocess dispatch — no local AO backend instance, no real AO backlog involved** (operator decision,
+2026-08-19). One dedicated slot per model (already-isolated git checkouts, matches this fleet's existing per-slot
+worktree convention) rather than 36 worktrees hand-rolled inside slot 1:
+
+| Slot | Model | `.agent-claim` |
+|---|---|---|
+| 24 | Gemini 3.5-flash-lite | claimed 2026-08-19, `role: model-capability-bakeoff` |
+| 25 | Gemini 3.7-flash | same |
+| 26 | GLM 5.2 | same |
+| 27 | GLM 5-turbo | same |
+| 28 | DiffusionGemma 26B | same |
+| 29 | Codex/Luna | same |
+
+All 6 confirmed clean/`live-defi-rollout`/`0 ahead 0 behind origin` before claiming. Within each model's slot, each
+of its 6 tasks runs on its own branch off `live-defi-rollout` — the 2 cross-slot shared Hard tasks (repo-touched
+capture: slot 24/25 vs. 29; sequential-ordering root-cause: slot 26/27 vs. 29) land on independently-named branches
+so they never collide despite being attempted in different slots.
+
+Per attempt: a tmux session in that slot runs `claude -p "<task's exact Done-when + source citation>"
+--output-format json`, with `ANTHROPIC_BASE_URL`/`ANTHROPIC_MODEL`/auth env pointed at that model's proxy or native
+endpoint (litellm :8768 for Gemini/Gemma, native `api.z.ai` for GLM, `codex-bridge` :8769 for Codex/Luna) —
+mirroring `start-claude-account-tmux.sh`'s existing pattern, just non-interactive and per-task. The CLI's own JSON
+result gives `num_turns`/`total_cost_usd`/token usage/duration directly — no AO telemetry pipeline needed for those
+4 metrics. **Context-fill % is NOT natively reported by the CLI** (it's literally one of the bake-off's own tasks,
+not yet built anywhere) — approximated as peak reported token usage ÷ that model's context window, stated as an
+approximation, not a true AO-grade measurement. No attempt's diff auto-merges — Gate 1/2 scoring + the shared-task
+diff comparison decide what (if anything) actually ships via normal `quickmerge.sh`.
 
 ## Todos
 
