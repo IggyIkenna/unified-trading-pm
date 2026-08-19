@@ -29,7 +29,7 @@ created: "2026-07-24"
 last_updated: "2026-08-17" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only # was: orchestrator-agent — corrected 2026-08-19 (plan_reconciler, cross-cutting) — only valid NA-paired value
 priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 2

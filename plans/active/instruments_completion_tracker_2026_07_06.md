@@ -23,26 +23,26 @@ related:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
     /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
     /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
-    issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
     /plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
     /plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md,
-    issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
+    /plans/archive/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
     /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
-    issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
-    issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md,
-    issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
-    issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
-    issues/aster_mtds_failure_count_regression_2026_07_07.md,
+    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    /plans/archive/issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md,
+    /plans/archive/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
+    /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /plans/archive/issues/aster_mtds_failure_count_regression_2026_07_07.md,
     /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
-    issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
-    issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
-    issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
+    /plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
+    /plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
+    /plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
     /plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
     /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
-    issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
-    issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
-    issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
-    issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
+    /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
+    /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/archive/2026_07/instruments_service_docs_consolidation_2026_07_08.md,
     /codex/02-data/honest-coverage-model.md,
     /plans/archive/2026_08/instruments_completion_tracker_progress_log_history_2026_08_03.md,
@@ -389,7 +389,10 @@ _(cefi + defi already canonical — they do NOT wait on this; only tradfi does.)
 - [ ] [VERIFY] P0. Certify per-AG Layer-1; **record fresh numbers in the Progress Log** — only now is any Layer-2 %
       trustworthy. **PARTIALLY DONE (reconciled 2026-07-28) — 4 of 5 AGs certified, tradfi still genuinely open.**
       `plans/archive/2026_07/layer1_remeasure_and_certify_2026_07_06.md` (complete) certified cefi 73.61% / defi 94.81%
-      / sports 30.77% / prediction 66.67% (2026-07-06/07, matching this tracker's own Snapshot above). Its tradfi task
+      / sports 30.77% / prediction 66.67% (2026-07-06/07 — a historical citation of what that now-archived plan
+      certified AT THE TIME; the cefi figure does **not** match the current Snapshot above, which the 2026-07-12
+      correction updated to 72.60% — cite the Snapshot's 72.60% for cefi, not this line, when current truth is
+      needed — flagged 2026-08-19, plan_reconciler cross-cutting). Its tradfi task
       stayed `🚧 BLOCKED-PLAN2` and was **forked out verbatim 2026-07-24** into
       `/plans/active/tradfi_consolidated_closeout_2026_07_18.md`'s own Phase C todo list — that plan, not this checkbox,
       is where tradfi Layer-1 certification now lives. Leaving unchecked: the item's own Gate ("Certify per-AG Layer-1")
