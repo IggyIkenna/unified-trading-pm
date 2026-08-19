@@ -564,14 +564,14 @@ investigation confirmed are both achievable with existing primitives:
       **Verified live in production this session**: 3 concurrently-active tabs (3, 4, 6) each registered as a
       distinct `AgentRow`/slot, plus the identity slot (9001) refreshed — confirmed via the scripts' own
       `{"ok":true,"agent_id":...,"slot_id":...}` responses. Evidence: same commit as above, live verification.
-- [ ] [SCRIPT] P2. **Widen `AutoSpawn._should_spawn`'s human-slot check too (the 4th exemption site, deferred from
-      the Phase 2c commit)** — `server/autospawn.py` had an unrelated concurrent WIP change from another session
-      at ship time; reverted just this one hunk rather than risk sweeping their in-progress work into this commit.
-      Re-apply once that file is clear: change `if slot.slot_id in config.human_slot_ids():` to
-      `if config.is_human_slot_id(slot.slot_id):` in `_should_spawn` (mirrors the other 3 sites exactly). Low
-      urgency — the other 3 sites already cover the core never-kill/never-kick guarantee; this one only matters if
-      AO's own slot-picker ever considered a 91000+/92000+ id a spawn candidate, which its normal small-dense-
-      integer roster iteration does not do in practice. Repo: agent-orchestrator.
+- [x] [SCRIPT] P2. **Widen `AutoSpawn._should_spawn`'s human-slot check too (the 4th exemption site, deferred from
+      the Phase 2c commit)** — the peer session's unrelated WIP in `server/autospawn.py` landed (confirmed via
+      `git fetch` + a clean `git status` on the file), so the hunk was safely reapplied: `_should_spawn` now
+      calls `config.is_human_slot_id(slot.slot_id)` instead of the fixed-set `config.human_slot_ids()` membership
+      check — mirrors the other 3 sites exactly. New test `test_should_spawn_blocks_human_tab_sub_slot` (slot
+      91004) proves AO will never attempt to spawn a worker onto a per-tab presence sub-slot, same as the
+      stable identity slot. All 4 of 4 liveness/kill-exemption sites now cover the widened range. Evidence:
+      agent-orchestrator@0443654c9c.
 - [ ] [OPERATOR] P2. **Harsh — same per-tab visibility, no extra steps beyond his existing Phase 4/2b setup.** The
       identical `install-fleet-sync-cron.sh 9002` command (Phase 4/2b above) already installs the per-tab-aware
       script — no new command needed. Done when: `GET /api/agents?kind=human` shows one or more `harsh-tabN` rows
