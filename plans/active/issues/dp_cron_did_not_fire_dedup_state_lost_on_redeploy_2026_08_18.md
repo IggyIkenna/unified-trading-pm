@@ -356,3 +356,23 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
      found for the mixed result — `does_not: guess at an ambiguous fix`); this is a genuinely open investigation,
      not a small/clear fix, and outside this dispatch's assigned repo (market-tick-data-service). No code
      changes shipped this session.
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 10, agt-955440)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-sports-odds-api-odds-20260816-145019
+  venue=ODDS_API data_type=odds` (no issue slug — alert-carries-the-details path; the orchestrator API at
+  `localhost:8765` was unreachable this session — no listener, `curl` connection-refused — so this dispatch could
+  not heartbeat/progress/done/ping the authoring slot through the normal HTTP surface; documenting the finding
+  durably here instead of leaving it unrecorded). Fresh `slack-read-channel.py data-pipeline-alerts 3` (3h window)
+  confirms this is a duplicate/spam symptom of THIS doc's already-open root cause, not a new failure mode: the SAME
+  `mtds-live-sports-odds-api-odds-20260816-145019` VM re-fired `DP_CRON_DID_NOT_FIRE` for **~30 distinct sports-odds
+  venues** (BETFAIR_EX_UK, BETONLINEAG, BETFRED_UK, MATCHBOOK, MYBOOKIEAG, ODDS_API, PADDYPOWER, GROSVENOR, LOWVIG,
+  BETANO_UK, BETFAIR_SB_UK, LADBROKES, LIVESCOREBET, LEOVEGAS, FANDUEL, BET888SPORT, BETRIVERS, BETUS, BOVADA,
+  BETVICTOR, BOYLESPORTS, BETWAY, CASUMO, CORAL, DRAFTKINGS, FANATICS, BETMGM, and more) within a single ~30-minute
+  window (`14:21Z`-`14:51Z`), several repeating (BETFAIR_EX_UK, BETFRED_UK, BETONLINEAG each fired twice ~30min
+  apart) — the same "dozens of sports-odds venues re-firing" pattern the 2026-08-19 slot-16 dispatch above already
+  logged at `05:06Z` today, and the same shared-`AlertDeduplicator`-state mechanism this doc's root cause section
+  describes (one VM emits one `DP_CRON_DID_NOT_FIRE` per venue×data_type shard it owns, so a single redeploy-wiped
+  dedup window fans out to a burst across every venue on that VM at once). Did not file a separate issue doc. Did
+  not attempt the P2 live-verify todo this session (out of scope for a single-VM spam-triage dispatch — that todo
+  needs a dedicated identity-hash trace per the slot-21 entry's own recommendation, not a repeat fleet-wide sample).
+  No code changes shipped this session; this is documentation-only (Progress Log entry), shipped via `safe-doc-push.sh`
+  since the orchestrator HTTP surface for the normal quickmerge/PM-flip loop was unreachable.
