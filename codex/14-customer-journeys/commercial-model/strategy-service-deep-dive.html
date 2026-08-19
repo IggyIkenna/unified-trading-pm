@@ -1148,57 +1148,63 @@
       </p>
 
       <div class="callout">
-        <span class="tag">Target-state: a reference position alongside the reference price</span>
+        <span class="tag">Target-state: a reference price, position and credit — per instrument, not per instruction</span>
         <b class="st st-plan">planned</b>
         <b class="ev ev-assumed">~ assumed</b>
         <p>
           A price can legitimately differ from the reference — the underlying moved. A <strong>position</strong>
           mismatch is a different kind of problem: it means execution's view of what strategy holds disagrees with
-          strategy's own view, which is an integrity check, not a market observation. The proposed extension —
-          not yet on the schema — adds a per-venue <code>reference_position</code> the same shape as
-          <code>venue_constraints</code>, so it stays meaningful even when <code>venue_routing_mode</code> is
-          <code>SOR_AT_EXECUTION</code> and the venue isn't chosen until execution time. A mismatch would reuse the
-          risk engine's existing four-way consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> /
-          <code>MONITOR</code> / <code>TEST_ONLY</code>) rather than invent a second decision model, defaulting to
-          <code>BLOCK</code>.
+          strategy's own view, which is an integrity check, not a market observation. Price, position and credit at
+          the same reference point are the whole mechanism, not price alone — and because a strategy instance can
+          hold a universe of many instruments at once, that triple has to be a <strong>vector, one entry per
+          instrument</strong>, not a single flat value on the instruction. An earlier draft of this design put a
+          single per-venue <code>reference_position</code> straight on the envelope — that solves the venue axis
+          (which venue, when <code>venue_routing_mode</code> is <code>SOR_AT_EXECUTION</code> and the venue isn't
+          picked until execution time) but not the instrument axis, and was corrected for exactly that reason.
         </p>
         <div class="code">
-          <span class="k">class</span> <b>ReferencePosition</b>:
-              by_venue: dict[str, Decimal]  <i># strategy's believed position, per eligible venue</i>
+          <span class="k">class</span> <b>InstrumentReferenceEntry</b>:
+              instrument_id: str
+              reference_price: Decimal
+              reference_position: dict[str, Decimal]  <i># per-venue — same shape as before, now nested per instrument</i>
+              credit: CreditBand | None = None  <i># band (market-making) or hard threshold (arbitrage)</i>
+              position_adjustment_bps_per_unit_risk: Decimal | None = None  <i># symmetric coefficient, against RAW position</i>
 
           <span class="k">class</span> <b>CreditBand</b>:
               entry_threshold: Decimal | None = None  <i># minimum edge to act</i>
               abandon_threshold: Decimal | None = None  <i># max adverse move tolerated once committed — optional even when entry_threshold is set</i>
 
-          <i># proposed additions to StrategyInstructionEnvelope</i>
-          reference_position: dict[str, Decimal] | None = None
-          credit: CreditBand | None = None
-          position_adjustment_bps_per_unit_risk: Decimal | None = None  <i># one symmetric coefficient, against RAW position</i>
+          <i># proposed addition to StrategyInstructionEnvelope — one entry per instrument in the universe</i>
+          references: list[InstrumentReferenceEntry] = []
         </div>
         <p>
           <code>credit</code> is strategy-owned and strategy-computed — the same intent-vs-mechanism split
-          <code>execution_policy_ref</code> already draws elsewhere. A market maker expresses it as a band around
-          the reference price; an arbitrage archetype expresses it as a hard fire-or-don't threshold and leaves
-          <code>abandon_threshold</code> unset. <code>position_adjustment_bps_per_unit_risk</code> generalizes
-          <code>QuoteInstruction.skew_on_inventory</code> (§02) off market-making specifically — one symmetric
-          coefficient, applied against the same raw, single-instrument position <code>reference_position</code>
-          reconciles against, not the netted "effective" exposure below. Both are governing boundaries the strategy
-          sets; which algo runs and how it stays inside them remains execution's call, the same relationship
-          <code>hedge_deadline_ms</code> (§02, <code>AtomicInstruction</code>) already has with the algo layer.
+          <code>execution_policy_ref</code> already draws elsewhere; <code>position_adjustment_bps_per_unit_risk</code>
+          generalizes <code>QuoteInstruction.skew_on_inventory</code> (§02) off market-making specifically. Both are
+          governing boundaries the strategy sets; which algo runs and how it stays inside them remains execution's
+          call, the same relationship <code>hedge_deadline_ms</code> (§02, <code>AtomicInstruction</code>) already
+          has with the algo layer. On mismatch, execution would reuse the risk engine's existing four-way
+          consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>)
+          rather than invent a second decision model — but the trigger type itself doesn't exist yet: none of the
+          risk engine's 13 typed trigger conditions covers a position mismatch today, so wiring this needs a new
+          trigger type added to that closed set, not just consumption of an existing one.
         </p>
         <p>
-          A cross-instrument version of this — how a fill in instrument B should move the acceptable adjustment on
-          instrument A — is real but deliberately out of scope here: it would live as a fast-path approximation
-          module inside execution-service, relevant only where A and B are non-fungible (a cross-chain staked-basis
-          leg, or options across different terms or strikes), and is stubbed rather than built. Reconciliation
-          reuses the same idempotent re-emission that refreshes <code>reference_price</code>, plus a separate,
-          slower, venue-dependent SLA watch for whether strategy has seen the trades it expects back from
-          execution within a bounded window — asynchronous, and never a gate on execution's own fast path.
+          Exactly how the vector is keyed is still open, not decided: nesting per-instrument-then-per-venue (as
+          sketched above) assumes one strategy instance never wants two different believed positions for the same
+          instrument across venues within one instruction — true today, not re-confirmed for a multi-instrument
+          vector. Whether <code>credit</code> and the adjustment coefficient vary per entry or apply once across the
+          whole vector is also open. A cross-instrument version of this — how a fill in instrument B should move the
+          acceptable adjustment on instrument A — is real but deliberately out of scope here: it would live as a
+          fast-path approximation module inside execution-service, relevant only where A and B are non-fungible (a
+          cross-chain staked-basis leg, or options across different terms or strikes), and is stubbed rather than
+          built.
         </p>
         <p>
-          <b class="ev ev-assumed">~ assumed</b> — design only, resolved 2026-08-19, not yet implemented. Full
-          record: <a href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md">execution_delta_proxy_repricer_generalization_2026_08_18.md</a>
-          § "Reference position, credit ownership, and the generic per-position adjustment."
+          <b class="ev ev-assumed">~ assumed</b> — design only, not yet implemented; the shape above is illustrative,
+          not final. Full record, including every open question:
+          <a href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md">execution_delta_proxy_repricer_generalization_2026_08_18.md</a>
+          § "The reference triple is a vector per instrument, not a scalar per instruction."
         </p>
       </div>
 
@@ -1456,6 +1462,71 @@
           health-factor ladder are settled — what remains is a risk-appetite decision on the specific numbers, which is
           an operator sign-off rather than an engineering change. Treat the values above as illustrative of the
           <em>shape</em> of the configuration, and read the live numbers from the file itself.
+        </p>
+      </div>
+
+      <div class="callout">
+        <span class="tag">What the timeframe, the "SCE" id suffix and the health-factor ladder actually mean</span>
+        <b class="ev ev-check">? check</b>
+        <p>
+          The <code>strategy_id</code> above carries a <code>_SCE_1H</code> suffix. Read against this codebase's own
+          hold-policy rule (<code>SCE</code> = <code>SAME_CANDLE_EXIT</code>, and — verbatim —
+          "DeFi strategies are NEVER SCE (gas + confirmation latency); SCE is only for CeFi/TradFi ML strategies with
+          explicit TP/SL"), that suffix is stale: a staked-basis carry position is entered and held, not
+          round-tripped every candle. The field that actually governs behavior, two lines above it,
+          <code>execution_mode: continuous</code>, is correct — this is <code>HOLD_UNTIL_FLIP</code>-style behavior
+          (exit when the carry stops being profitable), not same-candle exit. <b class="ev ev-verified">✓ verified</b>
+          against the strategy's own held, multi-leg close-all logic below — the id string itself is an unfixed
+          naming leftover, tracked as a todo, not this artefact's to fix.
+        </p>
+        <p>
+          <code>timeframe: 1h</code> sets the candle/feature-bar resolution the engine's tick loop advances on — it
+          is a <strong>feature and re-evaluation</strong> cadence, not a risk-monitoring one. That distinction
+          matters directly for the health-factor ladder just above it.
+        </p>
+        <div class="callout">
+          <span class="tag">Liquidation risk does not wait for the next candle</span>
+          <b class="ev ev-verified">✓ verified</b>
+          <p>
+            The ladder above (<code>health_factor_target</code> / <code>_emergency_reduce_at</code> /
+            <code>_emergency_close_at</code>) is read synchronously on every tick via a fail-closed cache
+            (<code>position/core/margin_health_cache.py</code> — a miss or a stale read both block the trade, never
+            "no check, proceed"), but that read is bounded by the strategy's own cadence, and an hourly
+            re-evaluation is far too slow for a health factor that can move meaningfully in seconds. The real
+            liquidation trigger does not run on this strategy's <code>timeframe</code> at all:
+            <code>execution_service/defi_execution/monitors/health_factor_monitor.py</code>'s
+            <code>HealthFactorMonitor</code> is a near-block-time loop per chain (Ethereum ~12s via WS
+            <code>eth_subscribe newHeads</code> with poll fallback, Base 2s, Arbitrum ~1s debounced), firing
+            <code>DEFI_HEALTH_FACTOR_CRITICAL</code> (HF &lt; 1.10) and <code>DEFI_LIQUIDATION_IMMINENT</code>
+            (HF &lt; 1.05) independently of any strategy poll. A separate, portfolio-wide
+            <code>LIQUIDATION_CASCADE_RISK</code> circuit breaker fires <code>KILL_ALL</code> at Aave HF ≤ 1.10
+            across ≥ 2 positions — a cross-position check, differently scoped from this one strategy's own
+            <code>health_factor_emergency_close_at: 1.0</code> floor, not a duplicate of it. These are three
+            separate mechanisms at three different scopes, not one hourly poll.
+          </p>
+          <p>
+            <b class="ev ev-check">? check</b> — <code>HealthFactorMonitor</code> is real, written code, but this
+            pass found zero call sites constructing it anywhere in execution-service outside its own module: whether
+            anything actually runs it in production was not confirmed.
+          </p>
+        </div>
+        <p>
+          <b>What execution does when it fires:</b>
+          <code>execution_service/algo_library/deleverage_executor.py</code>'s <code>DeleverageExecutor</code> is a
+          <code>MarginEvent</code>-driven Pub/Sub subscriber — event-triggered, not scheduled — dispatching an
+          asset-group-aware action on <code>CRITICAL</code>/<code>LIQUIDATION</code> severity: for DeFi,
+          <code>top_up_collateral</code> on CRITICAL, <code>repay_debt</code> ("repay borrow + withdraw collateral")
+          on LIQUIDATION. For a full unwind rather than a partial deleverage, the strategy's close-all script —
+          <code>CarryStakedBasisCloseAll</code> — runs a real, ordered sequence: cancel resting perp orders on the
+          hedge venue, close the perp hedge (reduce-only), repay the Aave borrow, unstake/redeem the LST, settle
+          on-chain transfers, then a post-close recon check. <b class="ev ev-verified">✓ verified</b> — read in
+          full; the actual <code>_order_unwind_sequence()</code> implementation only enforces a coarser two-tier
+          grouping (every hedge-leg position closes before every DeFi-leg position), not the finer six-step total
+          order its own docstring states — repay-before-unstake within the DeFi tier is stated intent, not
+          independently enforced by that function today.
+          <b class="ev ev-check">? check</b> — the dispatch logic above is real and unit-testable; whether a live
+          subscription actually calls <code>DeleverageExecutor</code> in production execution-service was not
+          traced in this pass.
         </p>
       </div>
 

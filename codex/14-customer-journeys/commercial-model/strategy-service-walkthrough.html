@@ -1306,32 +1306,34 @@
         </p>
       </div>
       <div class="callout">
-        <span class="tag">Target-state: a reference position alongside the reference price</span>
+        <span class="tag">Target-state: a reference price, position and credit — per instrument, not per instruction</span>
         <b class="st st-plan">planned</b>
         <b class="ev ev-assumed">~ assumed</b>
         <p>
           <code>reference_price</code> only tells execution what the market looked like at instruction time — it
           says nothing about whether execution's view of strategy's <em>position</em> agrees with strategy's own
           view. A price gap is a market observation; a position gap is an integrity problem. Price, position, and
-          credit at the same reference point are the whole reference mechanism, not price alone: the intent is for
-          execution to approximate how to adjust on a tick basis as new position/price information arrives without
-          a round trip back to strategy's own slower loop — that triple is the entire reason the
-          fast-path/slow-path split works. Strategy sets the governing boundary; execution decides mechanics within
-          it. Only <code>reference_price</code> and <code>reference_price_mark_mode</code> are shipped today — the
-          position and credit legs below are designed, not built. The proposed extension
-          adds a per-venue <code>reference_position</code>, shaped like <code>venue_constraints</code> above so it
-          stays meaningful under <code>SOR_AT_EXECUTION</code> routing, and reuses the existing four-way risk
-          consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>)
-          on mismatch rather than a new decision model — default <code>BLOCK</code>.
+          credit at the same reference point are the whole reference mechanism, not price alone. Because a strategy
+          instance can hold a universe of many instruments at once, that triple has to be a
+          <strong>vector — one entry per instrument</strong>, not a single flat value on the instruction; an earlier
+          draft of this design put a single per-venue value straight on the envelope, which solves the venue axis
+          (needed for <code>SOR_AT_EXECUTION</code>) but not the instrument axis, and was corrected for that reason.
+          Only <code>reference_price</code> and <code>reference_price_mark_mode</code> are shipped today — everything
+          below is designed, not built.
         </p>
         <div class="code">
-          <i># proposed additions to StrategyInstructionEnvelope — not yet on the schema</i>
-          reference_position: dict[str, Decimal] | None = None
-          <i># strategy's believed position, per eligible venue</i>
+          <i># proposed addition to StrategyInstructionEnvelope — one entry per instrument in the universe</i>
+          references: list[InstrumentReferenceEntry] = []
+
+          <span class="k">class</span> <b>InstrumentReferenceEntry</b>:
+          instrument_id: str
+          reference_price: Decimal
+          reference_position: dict[str, Decimal]
+          <i># per-venue — SOR_AT_EXECUTION-safe, nested per instrument</i>
           credit: CreditBand | None = None
           <i># strategy-owned, strategy-computed — band (market-making) or hard threshold (arbitrage)</i>
           position_adjustment_bps_per_unit_risk: Decimal | None = None
-          <i># one symmetric coefficient, against RAW position — generalizes QuoteInstruction.skew_on_inventory</i>
+          <i># symmetric coefficient, against RAW position — generalizes QuoteInstruction.skew_on_inventory</i>
 
           <span class="k">class</span> <b>CreditBand</b>:
           entry_threshold: Decimal | None = None
@@ -1342,22 +1344,19 @@
         <p>
           Both fields are governing boundaries strategy sets, not instructions execution must follow mechanically —
           the same intent-vs-mechanism split <code>execution_policy_ref</code> and <code>AtomicInstruction</code>'s
-          own <code>hedge_deadline_ms</code> already draw above. A cross-instrument version — how a fill in one
-          instrument should move the acceptable adjustment on another — is real but explicitly out of scope here: it
-          would live as a fast-path approximation module inside execution-service, relevant only for non-fungible
-          pairs (a cross-chain staked-basis leg, options across different terms or strikes), and is stubbed, not
-          built. Reconciliation reuses the same idempotent re-emission that refreshes <code>reference_price</code>,
-          plus a separate, slower, venue-dependent SLA watch for whether strategy has seen the trades it expects
-          back — asynchronous, never a gate on execution's own fast path.
+          own <code>hedge_deadline_ms</code> already draw above. On mismatch, execution would reuse the risk
+          engine's existing four-way consequence rather than a new decision model — but the trigger type itself
+          doesn't exist yet; none of the risk engine's 13 typed trigger conditions covers a position mismatch today.
+          How the vector keys the venue axis, and whether credit varies per entry, are both still open.
         </p>
         <p>
-          <b class="ev ev-assumed">~ assumed</b> — design only, resolved 2026-08-19, not yet implemented. Full
-          record:
+          <b class="ev ev-assumed">~ assumed</b> — design only, not yet implemented; the shape above is illustrative,
+          not final. Full record:
           <a
             href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md"
             >execution_delta_proxy_repricer_generalization_2026_08_18.md</a
           >
-          § "Reference position, credit ownership, and the generic per-position adjustment."
+          § "The reference triple is a vector per instrument, not a scalar per instruction."
         </p>
       </div>
     </details>
@@ -2395,16 +2394,27 @@
       </div>
       <h3>Emergency flatten is a plan, not a loop</h3>
       <div class="code">
-        <i># carry_staked_basis unwind order:</i>
-        1. cancel resting perp orders on the hedge venue 2. unwind the on-chain leg 3. repay borrow where the position
-        is leveraged
-        <i># venue-priority: hedge first (CeFi), then DeFi unwind</i>
+        <i># carry_staked_basis unwind order (close_all/carry_staked_basis.py docstring):</i>
+        1. cancel resting perp orders on the hedge venue 2. close the perp hedge (reduce-only) 3. repay the Aave
+        borrow 4. unstake / redeem the LST 5. settle on-chain transfers 6. post-close recon check
+        <i># venue-priority: hedge (CeFi) closed first, then DeFi unwind</i>
       </div>
       <p>
         Unwinding in the wrong order can leave an account under-collateralised part-way through the sequence — closing a
         hedge before repaying the borrow it protects is how a controlled exit becomes a liquidation. The plan is
         therefore per-archetype and venue-scoped rather than a generic loop over positions.
       </p>
+      <div class="callout">
+        <span class="tag">The code enforces two tiers, not six ordered steps</span>
+        <b class="ev ev-verified">✓ verified</b>
+        <p>
+          The docstring above states six ordered steps; the actual
+          <code>CarryStakedBasisCloseAll._order_unwind_sequence()</code> only enforces two: every hedge-leg position
+          closes before every DeFi-leg position, in whatever relative order they arrive in
+          <code>current_positions</code>. Repay-before-unstake within the DeFi tier is the stated intent, not a
+          separately-enforced ordering in this function today.
+        </p>
+      </div>
     </details>
   </section>
 
