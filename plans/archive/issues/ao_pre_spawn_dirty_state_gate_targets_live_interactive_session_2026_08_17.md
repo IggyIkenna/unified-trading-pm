@@ -11,7 +11,7 @@ summary: >-
   Recovery succeeded this time (nothing was destroyed — same-repo dangling commits, still in the object
   database), but this is luck, not a guarantee: a same-content overwrite, a `git gc`, or a second concurrent
   edit racing the recovery could have made this unrecoverable.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -28,7 +28,7 @@ parent_epic: orchestrator_master
 source: "Interactive session slot 4, 2026-08-17 — mid-edit on a UTL/MTDS cross-repo feature when the gate fired against all 3 open repos at the same timestamp (2026-08-17T18:33:10Z)"
 assigned_vm: planning
 created: 2026-08-17
-resolved_by:
+resolved_by: "interactive session, slot 3, 2026-08-19 — agent-orchestrator@ad00fb7b38"
 locked_by:
 locked_since:
 priority: P2
@@ -40,6 +40,16 @@ context_scope: [/codex/05-infrastructure/per-tab-worktrees.md]
 ---
 
 # AO pre-spawn dirty-state gate fired against a live interactive session, not a dead predecessor
+
+> **🟢 RESOLVED 2026-08-19** — all 3 todos closed, `agent-orchestrator@ad00fb7b38`. (1) The liveness proc-cwd probe
+> (`_default_proc_cwd_live`) rewritten on `psutil` — no longer Linux-`/proc`-only, no longer argv-pattern-blind.
+> (2) `commit_and_push_dirty_repos`'s wip-preserve push now independently verified via `git ls-remote` before any
+> realign is allowed. (3) The realign-to-origin step now only fires when `replacing_session is not None` (a real
+> spawn is imminent) — the periodic dirty-sweep, the only caller that ever passed `None`, no longer resets local
+> HEAD for no protective reason. All 3 live-verified with real, non-mocked repros (see the finalize doc,
+> `plans/archive/issues/ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17_finalize_2026_08_17.md`).
+> Durable detail: `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Pre-spawn dirty-state gate
+> hardening".
 
 ## What was found (2026-08-17)
 

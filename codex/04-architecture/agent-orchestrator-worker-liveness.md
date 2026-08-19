@@ -28,7 +28,7 @@ referenced_by:
     /plans/active/ao_human_fleet_integration_2026_08_15.md,
   ]
 owner:
-last_reviewed: 2026-08-15
+last_reviewed: 2026-08-19
 code_refs:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
@@ -42,6 +42,9 @@ code_refs:
     agent-orchestrator/server/config.py,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/scripts/human_fleet/ao_client.sh,
+    agent-orchestrator/server/worktree_clean_check/_liveness.py,
+    agent-orchestrator/server/worktree_clean_check/_orphan.py,
+    agent-orchestrator/server/worktree_clean_check/_resolve.py,
   ]
 ---
 
@@ -641,6 +644,43 @@ Account-selection closures (same plan): a **late-binding account re-check** in `
 account that went unusable in the pick→spawn window; next tick re-picks) + a **load-spread tiebreaker** in
 `_pick_headroom_account` (active-slot-count as the 3rd sort key after 5h%/weekly%). SSOT:
 `plans/active/orchestrator_consolidated_remaining_2026_06_25.md`.
+
+## Pre-spawn dirty-state gate hardening — proc-cwd liveness probe + push-verified realign (2026-08-19)
+
+`ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17.md`: a slot's `resolve_dirty_state`
+(`DirtyStateResolution.COMMIT_AND_PUSH`, `server/worktree_clean_check/_resolve.py`/`_orphan.py`) auto-committed then
+reset a LIVE interactive per-tab-worktree session's WIP across 3 repos, believing it had a dead predecessor. Two
+independent hardening fixes, both `agent-orchestrator@ad00fb7b38`:
+
+- **`_default_proc_cwd_live` (`_liveness.py`) rewritten on `psutil.process_iter()`, never `pgrep -f <path>` +
+  `/proc/<pid>/cwd`.** This is the out-of-band "process still running" triangulation signal
+  `orphaned_commit_recovery_has_no_dispatch_path_2026_07_30` built specifically to override a stale claim-file-based
+  dead/absent verdict — but its ORIGINAL implementation had two compounding gaps that made it a silent no-op for
+  exactly the interactive-laptop-session shape: (1) `/proc` is Linux-only, silently False on macOS, where interactive
+  per-tab-worktree sessions actually run (`agent_orchestrator_proc_cwd_liveness_test_macos_incompatible_2026_08_02`
+  had already found and shelved this as "acceptable — real deployment target is Linux," an assumption this incident
+  breaks); (2) `pgrep -f <path>` matches a process's ARGV, not its actual cwd — a bare interactive `claude` REPL has
+  no filesystem path in its own command line, so it never matched even on Linux. `psutil` queries each live
+  process's real cwd directly (no argv pattern needed), closing both gaps at once, cross-platform.
+- **`commit_and_push_dirty_repos`'s wip-preserve push is now independently VERIFIED via `git ls-remote --exit-code`
+  before the realign is ever allowed to run** — the incident recorded 3 orphan-wip commits unreachable from any ref
+  (only recoverable via local `git reflog`) despite the push step reporting success; `push_result.returncode == 0`
+  is no longer trusted alone.
+- **The realign-to-`origin/<base>` step now only fires when `replacing_session is not None`** (a new session is
+  genuinely about to occupy the slot). Audited all 6 production call sites of `resolve_dirty_state`/
+  `commit_and_push_dirty_repos`: `routes/slots_ops.py`, `autospawn.py`'s fresh-spawn AND account-rotation paths, and
+  `worker_liveness/_respawn.py` all pass a real incoming/rotating session name — realigning to a clean tip still
+  serves its purpose there. `worker_liveness_watchdog.py`'s `_sweep_dirty_slots` (the periodic, spawn-independent
+  dirty sweep) is the ONLY caller that ever passes `replacing_session=None`, and is also the exact caller shape most
+  likely to observe a live interactive session with no `.agent-claim`/tmux — so gating the realign there removes the
+  "no spawn in flight — why was local HEAD just reset" surprise without touching the liveness check itself
+  (defense-in-depth, not a replacement for the proc-cwd fix). A verified-preserved commit with no imminent spawn is
+  now left as local HEAD — ahead of origin, clean working tree, directly visible via plain `git log` — instead of
+  realigned away.
+
+Full incident + root-cause detail + live-verification evidence: `plans/archive/issues/ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17.md`.
+
+---
 
 ## Account auth-failure eviction + outage-safe detection (2026-06-22)
 

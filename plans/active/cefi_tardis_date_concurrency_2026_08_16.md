@@ -318,8 +318,10 @@ reason.** What's genuinely still open:
       diff as a `chore(orphan-wip)` commit, then reset the branch to origin — the uncommitted work briefly looked
       fully lost (clean tree, no stash, nothing ahead of origin) before the orphan-wip commits
       (`c998342a`/`f4508391`/`431d419fd6`, still present as dangling objects) were found via `git reflog` and
-      recovered via `git checkout <commit> -- <path>`. Filed as its own tracked issue —
-      `/plans/active/issues/ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17.md` — an
+      recovered via `git checkout <commit> -- <path>`. Filed as its own tracked issue, now RESOLVED + archived —
+      `/plans/archive/issues/ao_pre_spawn_dirty_state_gate_targets_live_interactive_session_2026_08_17.md`
+      (`agent-orchestrator@ad00fb7b38`; root cause + fixes also captured in
+      `/codex/04-architecture/agent-orchestrator-worker-liveness.md` § "Pre-spawn dirty-state gate hardening") — an
       interactive session mid-edit should not be a valid "dead predecessor" target for that gate, and the
       `COMMIT_AND_PUSH` disposition's push half silently didn't happen (all 3 orphan-wip commits stayed local-only).
 
