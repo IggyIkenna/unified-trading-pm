@@ -27,7 +27,6 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, ci-cd, promotion-model, quality-gates, coverage, regression-tests, ldr-terminal]
 related:
   [
-    /plans/archive/2026_08/issues/agent_orchestrator_ldr_terminal_promotion_2026_08_05.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/runtime-deployment-topology.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
@@ -96,7 +95,7 @@ intro is not one.
 branch-protection check and a fleet-wide precedent search) — the judgment calls below are no longer open, they're
 answered. Executing them is still real work; re-deriving the answer is not.
 
-- [ ] [INFRA] P0. **Flip `workspace-manifest.json`'s `agent-orchestrator` entry**: `promotion_model`
+- [x] [INFRA] P0. ✅ **Flip `workspace-manifest.json`'s `agent-orchestrator` entry**: `promotion_model`
       (`repositories.agent-orchestrator`, ~line 1524) from `"ldr_terminal"` to `"ldr_main"`. **Do NOT also revert
       `ci_trigger_branch`** (line ~1533, currently `"live-defi-rollout"`) — keep it (see next todo). Rewrite the
       `notes` field (~line 1538) — it currently warns "do not re-add ldr_main without also reverting the dashboard
@@ -108,6 +107,9 @@ answered. Executing them is still real work; re-deriving the answer is not.
       `python3 -c "import json; print(json.load(open('workspace-manifest.json'))['repositories']['agent-orchestrator']['promotion_model'])"`
       prints `ldr_main`, `ci_trigger_branch` is still `live-defi-rollout`, both version fields match, and
       `scripts/cicd/ldr_to_main_fleet_promote.sh`'s `LDR_MAIN_REPOS` output includes `agent-orchestrator` again.
+      **DONE 2026-08-19** — all 4 conditions verified live: `promotion_model=ldr_main`,
+      `ci_trigger_branch=live-defi-rollout` unchanged, both version fields now `0.100.3`,
+      `ldr_to_main_fleet_promote.sh --list` includes `agent-orchestrator` in its SIT-covered/ldr_main repo set.
 - [x] N/A — **deploy-dashboard.yml trigger: KEEP `push:[live-defi-rollout]`, do not add `push:[main]` back.**
       RESOLVED, no decision left: reverting to (or restoring) `push:[main]` reintroduces the exact original
       incident (a stuck main-promotion PR silently blocking the dashboard). Fleet precedent confirms this is the
@@ -126,13 +128,16 @@ answered. Executing them is still real work; re-deriving the answer is not.
       already use `NEVER_PROMOTE = ("ldr_main", "ldr_terminal")` / `_main_direct(cfg)` treating both values
       identically — agent-orchestrator falls into the same excluded branch either way, just via a different tuple
       member after the flip.
-- [ ] [INFRA] P1. **Re-apply branch protection**: `python3 scripts/repo-management/pin_branch_protection_rulesets.py
+- [x] [INFRA] P1. ✅ **Re-apply branch protection**: `python3 scripts/repo-management/pin_branch_protection_rulesets.py
       --repo agent-orchestrator --apply` (dry-run first). Live-confirmed current state via `gh api
       repos/IggyIkenna/agent-orchestrator/rulesets/17369729`: `require-quality-gates` currently requires ONLY
       `Quality Gates (agent-orchestrator) / quality-gates-v2` — `sit-gate/fleet-green` was dropped by the
       2026-08-07 ldr_terminal fix and needs to come back once the manifest flip lands (the script's
       `ldr_main_repos()` picks it up automatically, no code change). Done-when: the live ruleset requires both
-      checks again, matching a sibling `ldr_main` repo's ruleset exactly.
+      checks again, matching a sibling `ldr_main` repo's ruleset exactly. **DONE 2026-08-19** — dry-run matched
+      prediction exactly, `--apply` succeeded (1/1, 0 failures), live `gh api` re-check confirms ruleset
+      `17369729` now requires both `Quality Gates (agent-orchestrator) / quality-gates-v2` and
+      `sit-gate/fleet-green`.
 - [x] N/A — **`semver-agent.yml` / release semantics: leave unreactivated BY DESIGN, but this is not silent.**
       RESOLVED + re-verified live: grepped every repo's `pyproject.toml`/`requirements*.txt`/`package.json`
       fleet-wide — still zero consumers of agent-orchestrator as a package (only self-references inside its own
@@ -152,7 +157,7 @@ answered. Executing them is still real work; re-deriving the answer is not.
       already coexists in the fleet, confirming the generic mechanism isn't AO-specific plumbing to strip out. It
       simply goes unexercised for agent-orchestrator after this flip; leave the code in place for whatever repo
       needs a single-consumer-only escape hatch next.
-- [ ] [DOC] P0. **Update every codex/doc reference to agent-orchestrator's promotion model.** Known citations to
+- [x] [DOC] P0. ✅ **Update every codex/doc reference to agent-orchestrator's promotion model.** Known citations to
       revisit (grep `rg -l "ldr_terminal" codex/ plans/active/` for the full current list — this one may have grown
       since authoring): `/codex/08-workflows/ci-cd-flow.md` (the "24 repos are ldr_main... 0 route through staging"
       count needs to include agent-orchestrator again; any `ldr_terminal` special-case language should note it's
@@ -161,7 +166,17 @@ answered. Executing them is still real work; re-deriving the answer is not.
       CLAUDE.md system-prompt-visible summary line if one exists (search for "AO self-pulls LDR" framing and
       confirm it still matches whatever Phase 1's dashboard-trigger todo decided). Done-when: `rg -l "ldr_terminal"`
       across codex/ + plans/active/ returns only docs that correctly describe it as a general mechanism, none
-      asserting it as agent-orchestrator's current state.
+      asserting it as agent-orchestrator's current state. **DONE 2026-08-19** — `ci-cd-flow.md`'s two "24 repos are
+      `ldr_main`" count sentences (lines ~190, ~346) updated to 25, with an inline cite to this plan.
+      `runtime-deployment-topology.md`'s AO self-pull description (lines 594-601) re-checked: describes the DEPLOY
+      mechanism (systemd self-pull off `live-defi-rollout`), not the promotion model — unaffected by this flip, no
+      edit needed, confirmed still accurate. CLAUDE.md's "AO self-pulls LDR" line: same — deploy mechanism, not
+      promotion model, still accurate. `rg -l "ldr_terminal" codex/ plans/active/` post-fix: only this plan itself
+      plus 2 docs (`codex_mcp_tool_use_bridge_2026_08_18.md`, `unified_trading_library_config_interface_mass_test_
+      failure_2026_08_15.md`) that reference it as historical/dated Progress-Log provenance of already-shipped work
+      ("this repo's promotion_model=ldr_terminal" describing state AT THE TIME of that dated entry, not a live-state
+      claim) — left untouched deliberately, rewriting historical Progress Log entries would falsify provenance, not
+      fix a stale claim.
 
 ## Phase 2 — Harden + expand quality gates and coverage
 

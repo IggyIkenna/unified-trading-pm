@@ -187,7 +187,9 @@ flowchart TB
 | `feat/*`                  | Legacy optional isolation branch — **not** the workspace unit of work                                                                   | None                                             | rare; Path-B clones supersede it                               |
 
 **The `promotion_model` toggle (reversible, per-repo).** Each repo carries `promotion_model` in
-`workspace-manifest.json` — today **24 repos are `ldr_main`** (LDR→main direct) and **`unified-trading-pm` runs its own
+`workspace-manifest.json` — today **25 repos are `ldr_main`** (LDR→main direct; agent-orchestrator restored 2026-08-19
+after a 2-week `ldr_terminal` detour, see `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19`) and
+**`unified-trading-pm` runs its own
 dedicated main-direct Option-B path**, so **0 repos route through staging**. The toggle is REVERSIBLE: flipping a repo
 off `ldr_main` (a major/breaking version bump, or an explicit operator decision) routes THAT repo LDR→staging→main
 again. The gates are UNCHANGED on both paths — SIT (re-homed onto a frozen LDR snapshot for direct repos) +
@@ -344,7 +346,7 @@ A/B-proof). The migration also switched PR authorship from the GitHub App to a P
 | **staging-routed** (only if a repo's toggle is flipped OFF `ldr_main` — none are today): LDR→staging / staging→main | `--rebase` attempted FIRST (preserves original commit SHAs), `--squash` (and `--merge`) fallback only when rebase can't arm (real conflicts / a merge-laden range)                                | **Sometimes** — valid whenever the rebase path actually armed; not guaranteed.                                                                                                          |
 
 **Bottom line**: because every fleet repo is `promotion_model: ldr_main` today (verified via `workspace-manifest.json` —
-24 `ldr_main` repos), the ancestor check is invalid for **100% of the fleet's own squash-promote path**. PM's own
+25 `ldr_main` repos), the ancestor check is invalid for **100% of the fleet's own squash-promote path**. PM's own
 dedicated Option-B path is the one documented exception (corrected 2026-08-02 — see the row above): it merges rather
 than squashes, so the ancestor check IS valid there. The staging-routed split only becomes operationally relevant
 if/when the reversible per-repo toggle routes a specific FLEET repo through `staging` — even then it is merely

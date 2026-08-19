@@ -2,7 +2,6 @@
 doc_type: issue
 title: "Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_19)"
 created: 2026-08-19
-author: "reprobe_new_empty_confirmed.py (data-pipeline daily audit)"
 parent_epic: observability_master
 assigned_vm: planning
 source:
