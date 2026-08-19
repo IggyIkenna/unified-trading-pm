@@ -27,6 +27,7 @@ related:
     /plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md,
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/active/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
   ]
 created: "2026-08-19"
 last_updated: "2026-08-19"
@@ -323,6 +324,15 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       tier they're already dispatching at, which is a DIFFERENT mechanism than what this todo adds.
       If full 3-way parity is wanted, that's real remaining work, not yet scoped. Tests:
       `tests/test_account_failover_resume.py` (10 new/changed).
+- [ ] [BACKEND] P3. **Close the todo-6 scope gap** — give fresh dispatch (AutoSpawn's routine
+      refill) and resume-after-kill (`_resume_pass`) the SAME non-strict cross-tier retry
+      `_handle_usage_cap` now has, via `autospawn.select_account_with_non_strict_retry` (already
+      shipped, agent-orchestrator@204bc8e1fa — the helper exists, just isn't called from these two
+      sites yet). Today they only get the existing, unconditional sonnet-tier DeepSeek-blend for
+      whichever tier they're already dispatching at — not a model_strict-gated cross-tier retry.
+      Not urgent (both already degrade gracefully — queue/retry-next-tick — on total exhaustion,
+      unlike the mid-session case which sat frozen indefinitely before todo 6). Repo:
+      agent-orchestrator.
 - [ ] [DATA] P3. **Once `multi_provider_model_capability_bakeoff_2026_08_19.md`'s synthesis todo
       lands** (its per-(model, complexity-tier) summary table), replace this doc's flat
       "all-but-haiku" equivalence-class placeholder with the real tiering data it produces — update
@@ -333,32 +343,20 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       Superseded this todo's original "not yet scoped" framing — see the todo directly above for
       the concrete follow-through once it completes.
 
-## New finding 2026-08-19: unified-trading-pm quickmerge blocked repo-wide by an actively-mutating file
+## New finding 2026-08-19: unified-trading-pm quickmerge blocked repo-wide (tracked separately)
 
-While shipping todo 3's doc half, `bash scripts/quality-gates.sh` / `quickmerge.sh --isolated`
-repeatedly failed `check_frontmatter_schema` against `plans/active/issues/manifest_hygiene_red_
-all_2026_08_19.md` (an auto-filed `manifest_hygiene_daily.py` daily-audit doc). This is NOT a
-scoping artifact — confirmed via `git show origin/live-defi-rollout:<path>` that the malformed
-frontmatter is already ON origin, so it fails EVERY quickmerge in this repo right now, matching
-the precedent in the archived `alerting_service_basedpyright_regression_blocks_all_ships_2026_08_12`
-issue doc. Attempted a minimal frontmatter-only fix (correct `doc_type`/`status`/`asset_group`/
-`tags`, add `resolved_by:`) as an unrelated, incidental unblock — standalone-verified clean
-(`check_frontmatter_schema.py` → 0 violations) — but between that fix and the next `git status`
-check the file's on-disk content had changed AGAIN, to a DIFFERENT and MORE degraded frontmatter
-(most required keys missing entirely), independent of anything this session did. Observed 3
-distinct versions of this file's frontmatter across ~10 minutes without touching it myself after
-the first attempt — strong evidence something automated (most plausibly `manifest_hygiene_daily.py`
-itself, mid-debug or re-firing) is actively rewriting it. Stopped touching it (multi-agent-safety:
-don't fight an active external process on a file that isn't mine) and did NOT include it in any
-shipped commit — my one edit to it was cleanly discarded by the failed quickmerge's own recovery
-path, confirmed via `git status`/`git stash show -p`, nothing lost or stranded.
-**Consequence**: todo 3's `unified-trading-pm` half (`agents/main.md`, `plans/PLAN_FORMAT.md`,
-`plans/active/task_template.md`, `scripts/docs/docspec.py`) is fully written, individually
-verified, and sitting uncommitted in the `.tabs/3/unified-trading-pm` working tree — ready to ship
-the moment this clears. **This is an operator-notification-worthy finding independent of this
-issue's own scope** — whoever owns `manifest_hygiene_daily.py` / the daily data-pipeline-alerts
-cron should check why its own output file's frontmatter is malformed AND apparently regenerating
-mid-session; it is currently blocking every quickmerge in unified-trading-pm, for every session.
+While shipping todo 3's doc half, `quickmerge.sh`/`quality-gates.sh` repeatedly failed
+`check_frontmatter_schema` against an UNRELATED auto-filed doc
+(`plans/active/issues/manifest_hygiene_red_all_2026_08_19.md`, from `manifest_hygiene_daily.py`)
+whose frontmatter was observed in 3 different, progressively-more-broken states across ~10
+minutes without this session touching it — already on origin, so it blocks EVERY quickmerge in
+this repo, not just this one. Full write-up, evidence, and its own follow-up todos:
+`/plans/active/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`.
+**Consequence for THIS issue**: todo 3's `unified-trading-pm` half (`agents/main.md`,
+`plans/PLAN_FORMAT.md`, `plans/active/task_template.md`, `scripts/docs/docspec.py`) is fully
+written and individually verified, sitting uncommitted in the `.tabs/3/unified-trading-pm` working
+tree, ready to ship the moment the other doc clears — tracked as this doc's own todo 3, not
+duplicated here.
 
 ## Resumption notes (2026-08-19, updated after implementation)
 

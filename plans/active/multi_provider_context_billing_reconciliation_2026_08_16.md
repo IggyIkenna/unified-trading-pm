@@ -169,14 +169,53 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       incident (a different failure mode, already fixed, generic) but not this one. Done when: either the real
       incident is located and its fix's generality (provider-specific vs. generic) is confirmed, or the operator
       confirms it should be independently re-tested rather than assumed to be the same class of bug.
-- [ ] [INFRA] P0. Fix Codex/Luna's fake token-count estimate (`_estimate_tokens = len(text)//4`,
+- [~] [INFRA] P0. Fix Codex/Luna's fake token-count estimate (`_estimate_tokens = len(text)//4`,
       `codex_bridge_server.py`) — confirmed unreliable via this session's own 1.6x-off word-count test on a real
-      tokenizer comparison. Investigate first whether the `openai-codex` SDK's own thread/turn result carries real
-      usage data not currently being read (an easy fix if so); if genuinely unavailable, a real tokenizer
-      (tiktoken-compatible for the GPT-5.6 family) is the fallback, not a better heuristic guess. Done when: a real
-      sample of Codex-backed turns' captured token counts are cross-checked against the actual ChatGPT/Codex usage
-      dashboard and found to agree within a stated tolerance — same standard already required by
-      `codex_luna_flex_bridge_2026_08_14.md`'s existing accurate-usage-capture todo, which this directly unblocks.
+      tokenizer comparison. **PARTIAL `agent-orchestrator@f7214e31b5` (shipped 2026-08-19)** — the "easy fix" this
+      todo predicted was real: `openai_codex._run.TurnResult.usage: ThreadTokenUsage | None` already carries real
+      per-turn accounting (`.total`/`.last`, each a `TokenUsageBreakdown`: `cached_input_tokens`, `input_tokens`,
+      `output_tokens`, `reasoning_output_tokens`, `total_tokens`) — confirmed by reading
+      `.venv/lib/python3.13/site-packages/openai_codex/_run.py` and `generated/v2_all.py` directly, not assumed.
+      Both `run_codex_turn` (plain-text path) and `_drive_codex_turn`'s `TurnFinished` (tool-use completion path)
+      now thread this through to `translate_codex_result_to_anthropic` via a new `_codex_usage_to_anthropic_usage`
+      mapper (`codex_bridge_server.py`) instead of estimating. **Live-verified field-mapping, not guessed**: a
+      real 2-turn same-thread SDK probe (`gpt-5.6-luna`, real `~/.codex/auth.json`) proved OpenAI's
+      `cached_input_tokens` is a SUBSET of `input_tokens` (turn 2's `last`: `cached=13056 input=14006 output=6
+      total_tokens=14012`, and `14006+6 == 14012` — total excludes cached, confirming subset not additive), unlike
+      Anthropic's own additive `cache_read_input_tokens` shape — so the mapper does
+      `anthropic.input_tokens = codex.input_tokens - codex.cached_input_tokens` (not a straight rename) to avoid
+      double-counting/inflating `context_used_pct`; `reasoning_output_tokens` folds into Anthropic's single
+      `output_tokens` (same "reasoning bills as output" convention Claude's own extended thinking uses). The ONE
+      remaining estimate: the mid-turn `tool_use` pause response (`translate_tool_call_paused_to_anthropic`) — real
+      usage genuinely doesn't exist yet at that point (the Codex turn hasn't reached a terminal state; see
+      `_tiktoken_estimate`'s own docstring for why capturing it live would mean a materially riskier rewrite of the
+      just-shipped pause/resume machinery, not attempted here) — now a real `tiktoken` (`o200k_base`) count instead
+      of `len(text)//4`, per this todo's own explicit fallback instruction. Quality gates green
+      (`bash scripts/quality-gates.sh --no-fix`: ruff/basedpyright clean, 4210 passed/8 skipped pytest, dashboard
+      tsc/454 vitest green — the first run caught a real gap, `uv lock` alone doesn't `uv sync` a new dependency
+      into `.venv`, `basedpyright` flagged `tiktoken` unresolved until `uv sync` ran). **NOT yet done**: (1) this
+      fix hasn't been deployed to the production `codex-bridge.service` VM — LDR only auto-pulls the main
+      `orchestrator` service, `codex-bridge` needs the same manual `uv sync` + restart
+      `codex_mcp_tool_use_bridge_2026_08_18.md`'s Progress Log already documents; (2) the full "Done when" bar
+      (cross-check against the real ChatGPT/Codex usage DASHBOARD, a login-gated web page) needs either operator
+      access or a real sample of fleet-dispatched Codex turns to check against — neither exists yet while
+      `codex-luna` stays operator-gated disabled (`codex_mcp_tool_use_bridge_2026_08_18.md`'s still-open unpause
+      todo, now flagged ready for operator review). Tracked as the 2 new todos immediately below rather than left
+      as unstructured prose.
+- [ ] [INFRA] P1. New (2026-08-19) — deploy the real-usage fix above (`agent-orchestrator@f7214e31b5`) to the
+      production `codex-bridge.service` VM: `uv sync` (installs the new `tiktoken` dependency — `ao-self-pull.sh`
+      pulls code only, confirmed does not run `uv sync`) then `systemctl restart codex-bridge`, same two-step
+      pattern `codex_mcp_tool_use_bridge_2026_08_18.md`'s Progress Log already used for the `mcp` dependency. Low
+      risk to do ahead of the operator's unpause decision (zero real traffic on this service today) — doing it now
+      means accurate usage is already live the moment real dispatch starts. Done when: a real post-deploy smoke
+      test against the VM's `codex-bridge.service` shows non-estimated (`TurnResult.usage`-sourced) numbers in the
+      response, not the old `len(text)//4` shape.
+- [ ] [REVIEW] P2. New (2026-08-19) — once real fleet traffic flows through Codex/Luna (gated on
+      `codex_mcp_tool_use_bridge_2026_08_18.md`'s operator-gated unpause, not mine to flip), cross-check a real
+      sample of captured token counts against the actual ChatGPT/Codex usage dashboard within a stated tolerance —
+      the one part of this todo's original "Done when" bar that genuinely cannot be satisfied before real traffic
+      exists (no dashboard access from this session either — needs either operator visual confirmation or a
+      dashboard-scraping mechanism neither of which exists today).
 - [ ] [REVIEW] P1. **Narrowed 2026-08-18 (Grok decommissioned)** — verify Claude Code's own end-to-end
       `context_used_pct` display is accurate for Gemini/GLM — the individual API responses carry real vendor-reported
       usage (confirmed this session), but the CUMULATIVE session-level percentage Claude Code itself computes and
