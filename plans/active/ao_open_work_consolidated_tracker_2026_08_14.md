@@ -19,16 +19,11 @@ scope: [engineer, admin]
 tags: [ao, agent-orchestrator, tracker, consolidated, open-work, worker-lifecycle, dispatch]
 related:
   [
-    /plans/archive/issues/ao_fleet_regression_triad_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_2026_08_16.md,
     /plans/active/ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md,
     /plans/active/ao_dispatch_plans_operator_item_separation_sweep_2026_08_16.md,
     /plans/active/task_template.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
-    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_2026_08_04.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch7_finalize_2026_08_06.md,
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
     /codex/04-architecture/agent-orchestrator-backlog-state-alignment.md,
   ]
@@ -410,7 +405,7 @@ context_scope:
       no `systemd-notify`/`sd_notify` convention exists anywhere in this repo, and `orchestrator.service` is
       `Type=simple` with `Restart=on-failure`/`RestartSec=10` already declared, so a process exit is the correct
       trigger. Wired into `server.py`'s lifespan; new `notify_readiness_watchdog_restart` Slack alert. Source:
-      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` — flip its checkbox too.
+      `/plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` — flip its checkbox too.
 - [ ] [BACKEND] P3. **Confirmed still open + genuine design fork 2026-08-15 (reconciliation sweep).** Right-size/harden
       the DB pool — `pool_size`/`max_overflow` raise correctly stays un-bumped (disproven, matches the SQLAlchemy
       defaults still in `server/db.py`); `pool_timeout` was raised to 125s for a separate P2 issue, not this one. Two

@@ -879,13 +879,14 @@ baseline before shipping.
       (if needed) stays a separate `scripts/vm/launch-*.sh` that invokes it, same separation-of-concerns
       script-homes.md already draws for launcher-vs-compute-logic. Done-when: doc exists with `authoritative_for`
       frontmatter set, cross-referenced from the next todo.
-      **DONE (2026-08-19).** `/codex/05-infrastructure/migration-script-ssot.md` authored — why-this-rule-exists,
+      **DONE (2026-08-19).** `migration-script-ssot.md` authored — why-this-rule-exists,
       scope table (5 operation shapes + explicit NOT-in-scope list including the newly-discovered blocker classes:
       tier-architecture imports, test-coupling, subprocess-venv-coupling, filename-vs-content mismatch), naming
       convention, `migration_common.py` contract, full 5-template roster with the still-open "no real file imports
       it yet" gap named explicitly, relationship to script-homes.md, VM-launcher cross-link, and a verified-against-
       the-live-tree migration-status table (per-repo file counts + exclusion reasons). `authoritative_for` set.
       Cross-referenced from the next todo.
+      > 🟡 [CORRECTION 2026-08-19, ci-reconcile]. Not found in tree/git history; script-homes.md has no cross-ref. Re-opened -- author it for real before re-claiming DONE.
 - [x] [DOC] P1. **Correct** `/codex/06-coding-standards/script-homes.md`'s decision-tree item 4 (currently: "one-off,
       single-repo operation tied to that repo's internals ... → repo-level `scripts/`") — **this is not a
       documentation-drift fix, it is a default-behavior change**: per the operator's 2026-08-18 pushback, "write a
