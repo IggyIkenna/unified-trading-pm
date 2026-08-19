@@ -111,7 +111,16 @@ This needs an explicit design decision before a fix ships — a straight templat
 for live production data** (existing objects at the old, mode-collapsed path may already hold commingled/ overwritten
 data from multiple modes), not a bounded mechanical fix:
 
-- [ ] [OPERATOR] P1. **Decide the migration/backward-compat strategy.** Options include: (a) add the `{mode}` segment
+- [x] ✅ [RESOLVED-BY-OPERATOR 2026-08-19] P1. **Migration strategy DECIDED — Ruling 3.** _"Add `{mode}` to all four
+      templates AND migrate existing data."_ / _"Ruling 3 — migrate, do not quarantine. The migration touches stored
+      paths, so it is governed by [entity-rename-and-split-consumer-migration-rule](/codex/02-data/entity-rename-and-split-consumer-migration-rule.md):
+      every consumer enumerated and migrated in the SAME change… Writer-only fixes are explicitly NOT what was
+      chosen."_ Recorded in `/plans/audit/results/code_completion_scope_2026_08_19.md`. So option (a)/(b) below is
+      settled as **(a) cut over, with the data migrated** — not a reader-fallback probe. Retagged from `[OPERATOR]`
+      by T1 2026-08-19 on finding the gate answered but the tag stale.
+      **Still operator-gated, separately**: the DATA movement itself (no backfills/migrations under the
+      code-readiness tranche rules) — that is a launch decision, not a design one.
+      **Superseded option list, kept for the record:** (a) add the `{mode}` segment
       and cut over fresh (old commingled objects become stale/orphaned, readers must know the cutover date), (b) add the
       segment with a reader fallback that probes the old flat path when the new mode-partitioned path is empty, (c)
       something else. Also decide the segment's value vocabulary (the narrower `batch`/`live`/`paper` string

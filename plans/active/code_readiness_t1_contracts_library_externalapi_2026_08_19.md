@@ -206,13 +206,32 @@ _None at authoring time._
 
 ### Contract extensions — unblock T3 and T4 EARLY
 
-- [ ] [BACKEND] P0. Extend UAC `QuoteInstruction` with `delta`, `gamma` and `underlying_instrument_id`. **T4's
-      delta-proxy repricer generalization is blocked on this** — land it first and tell T4.
-- [ ] [BACKEND] P0. Add `reference_position` to `StrategyInstructionEnvelope`, per-venue, same shape as the existing
-      price leg. **T3 and T4 both block on this.** Design resolved 2026-08-19, not implemented.
-- [ ] [BACKEND] P0. Add the `credit` leg to `StrategyInstructionEnvelope`, completing the price + position + credit
-      reference triple the artefacts describe. Evidence:
-      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
+- [x] ✅ [BACKEND] P0. UAC `QuoteInstruction` extended with `delta`, `gamma`, `underlying_instrument_id` —
+      unified-api-contracts@6be4b136d7. **T4 IS UNBLOCKED on this edge.** All three are optional; `None` reproduces
+      exactly the previously-hardcoded `delta=1.0` / `underlying_instrument_id=instrument` self-underlying case, so
+      no existing construction changes meaning. Semantics match `DeltaProxyRepricer._reprice()` as already
+      implemented (`effective_delta = delta + gamma * underlying_move`), verified by a test that computes that
+      formula from schema-carried values. Also documented `refresh_cadence_ms` as the STRATEGY-side cadence
+      specifically — the issue is explicit that conflating it with execution's faster tick-driven loop is a design
+      error. 5 tests incl. a JSON round-trip (the instruction crosses the EventTransport seam).
+- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
+      todo names (`dict[venue, Decimal]`, "same shape as the existing price leg") is SUPERSEDED** — the source issue
+      carries a dated correction banner from a later same-day operator revision ruling that shape incomplete: it
+      solves the venue axis but not the INSTRUMENT axis, since a strategy instance holds a universe of instruments.
+      The replacement (`references: list[InstrumentReferenceEntry]`) is published in that issue under the heading
+      **"Proposed shape (illustrative — not finalized; this is what needs resolving, not what's decided)"** followed
+      by **"Open questions for the operator — do not resolve unilaterally"** (Q12-Q16). Implementing the todo's
+      literal text would ship the rejected shape; implementing the vector would answer five questions explicitly
+      reserved for the operator. **Needs: a ruling on Q12-Q16**, then this becomes a bounded code task.
+      Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
+- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add the `credit` leg to `StrategyInstructionEnvelope`. Same gate as
+      `reference_position` above — Q14 asks whether `credit` varies per-entry or is one policy shared across the
+      vector, which cannot be answered without first resolving Q12 (where the vector lives). Landing `credit` as a
+      flat envelope field now would re-commit the exact scalar-shape regression the operator caught. Note the
+      design IS settled on two points that survive whichever way Q12-Q16 land: `credit` is OPTIONAL (a "flavor",
+      not mandatory — pure-passive, fire-immediately and patient-then-escalate are all valid consumers) and
+      strategy-OWNED/strategy-COMPUTED with execution merely consuming it.
+      Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 - [ ] [BACKEND] P1. Advance `OrderStatus` to the full 9-state `OrderState` machine the 23-doc SSOT describes. Ruled
       2026-08-06 (Option A — advance the contract), reconfirmed 2026-08-12; the CODE and TEST todos are both still
       open. Evidence: `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
@@ -237,6 +256,22 @@ _None at authoring time._
       IDENTICAL GCS path today and overwrite each other.** This directly threatens the paper(W) == batch-rerun(W)
       determinism spine. Land the CODE; the data migration strategy stays operator-gated. Evidence:
       `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
+      **UNBLOCKED 2026-08-19 — the design gate this was waiting on is ANSWERED.** Operator Ruling 3
+      (`/plans/audit/results/code_completion_scope_2026_08_19.md` § rulings): _"Add `{mode}` to all four templates
+      AND migrate existing data"_ / _"migrate, do not quarantine … Writer-only fixes are explicitly NOT what was
+      chosen."_ The issue's own `[OPERATOR]` todo is stale against that ruling and has been retagged.
+      **Scoping MEASURED 2026-08-19 by T1 (this is the expensive part — do not re-derive it):** the change is 5
+      templates, not 4 (`strategy_orders` too), plus `partition_keys`, plus deleting the
+      `_MODE_KWARG_PENDING_MIGRATION` carve-out in `build_path()`. **The trap: six LIVE UTL callers do NOT pass
+      `mode=` and will raise `KeyError: 'mode'` the moment the placeholder lands** —
+      `domain_client/clients/pnl.py:40`, `positions.py:41`, `strategy.py:39`, `strategy.py:50`,
+      `execution.py:59`, `execution.py:72`. These are UTL-owned, so migrating them IS the "same change" the
+      entity-rename rule demands — but it changes those getters' public signatures, so confirm first which are
+      dead: `registry.py`'s own comment claims `StrategyDomainClient.get_instructions` /
+      `get_gcs_instructions_path` have ZERO call sites. Writers live in T3/T4 repos (`save_operations.py`,
+      both `domain_adapter.py`s) and already pass `mode=`, so they need no edit — but writer↔reader byte-parity
+      must be re-checked read-only, and any mismatch filed as an inbound request rather than fixed across tranches.
+      The DATA migration the ruling also mandates stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule.
 - [ ] [BACKEND] P0. Fix the GCS client silent write failure — wrong method names swallowed by a broad exception
       handler. Evidence: `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
 - [ ] [BACKEND] P1. Root-cause and fix the 55 failing tests in `config_interface` / `cloud_interface`. Leading
@@ -281,6 +316,33 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-20 — **T1 SESSION HANDOVER — second agent took over the tranche under an explicit operator ruling.**
+  Not a normal resume: two Claude sessions were live in slot 6 at once. MEASURED at takeover — the incumbent T1
+  agent (PID 19387, started 23:13:08) was mid-`quickmerge` (children 26702/26708/27231) shipping the
+  QuoteInstruction edge, with `--isolated` holding `schemas.py` evacuated into `stash qm-iso-evac-26708`. The
+  incoming agent did NOT edit anything while that was true — it armed a watchdog on the ship's real terminal
+  state, confirmed `6be4b136` landed on `origin/live-defi-rollout` and the evac stash cleared, and only then
+  retired PID 19387 (SIGTERM, confirmed gone, no orphaned ship children). Operator answered "take over T1, retire
+  the peer" when asked; the takeover was not autonomous.
+  **Nothing was lost, and that is measured, not assumed**: every tracked file in the UAC tree was byte-identical
+  to `origin/live-defi-rollout`, 2 of 3 untracked test files identical, the third differing only by a
+  one-character docstring-formatting artifact (`""" "coinbase"` vs `""""coinbase"`). The tree was synced
+  `--ff-only` to `6be4b136` (0 ahead / 0 behind) behind a retained safety stash
+  `t1-takeover-safety-20260819T230423Z` — deliberately NOT dropped. The older `qm-iso-evac-56777` residue from the
+  documented SIGTERM recovery was left alone (never drop foreign WIP).
+  **Standing warning for whoever reads this next**: slot 6 still hosts 3 other live `claude` sessions
+  (PIDs 2749, 32709, 97270 — two of them ~1d14h old). They share this checkout's `.git/index` and `.git/config`.
+  Re-check for a live peer before assuming this tranche is yours.
+- 2026-08-19 — **Contract edge #1 landed: `QuoteInstruction` carries the sensitivity triple —
+  unified-api-contracts@6be4b136d7. T4 IS UNBLOCKED on this edge.** Shipped by the outgoing agent; VERIFIED
+  independently by the incoming one before adopting the claim: `6be4b136` is on `origin/live-defi-rollout`, and
+  the landed `schemas.py` blob carries `underlying_instrument_id` (line 328), `delta` (335) and `gamma` (344), all
+  three optional. The suite claim was re-measured too — 5 test functions, and the JSON round-trip is real
+  (`QuoteInstruction.model_validate_json(original.model_dump_json())` at line 97), which matters because the
+  instruction crosses the `EventTransport` seam. NOT re-measured by the incoming agent: the assertion that all 5
+  pass (running `pytest` directly is banned, and the outgoing agent's own note records that UAC's gate suppresses
+  pytest output on success) — they are on origin and inside the standing suite, so the next `quality-gates.sh` run
+  in this repo covers them.
 - 2026-08-19 — **Registry P0 #2 landed: chain registries reconciled — unified-api-contracts@27ebc544b2.** Verified
   landed (`27ebc544b2` an ancestor of `origin/live-defi-rollout`; landed blobs re-read). The issue's "three
   registries, three answers" framing is partly a CATEGORY ERROR — measured, they own three different concerns, so
