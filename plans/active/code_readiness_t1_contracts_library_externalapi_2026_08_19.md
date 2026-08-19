@@ -187,10 +187,18 @@ _None at authoring time._
       working and now gets a MORE complete answer. The re-check of whether any already-written chain-scoped output
       was affected by the SCROLL/PLASMA non-recognition is data verification in T2-owned repos — filed as an
       inbound request on T2's plan, not silently assumed clean.
-- [ ] [BACKEND] P0. `canonical_path_violations()` validates the filename stem. The oracle drops the last path
-      segment before validating, so raw venue wire stems and double-wrapped catalogue-miss ids return 0 violations
-      == CANONICAL when they are not. Evidence:
-      `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
+- [x] ✅ [BACKEND] P0. `canonical_path_violations()` validates the filename stem — **already shipped before this
+      tranche existed; this todo was STALE, not outstanding.** Landed `unified-api-contracts@d40c5d7d` +
+      `@502ef57e` (+ `market-tick-data-service@953679de` for the writer side). VERIFIED BY MEASUREMENT rather than
+      by trusting the issue doc's own "how it shipped" section: `CanonicalViolationClass` exists as a StrEnum whose
+      `ID_FORM` member is documented as "The FILENAME STEM: whether the per-instrument shard is named for a …"; the
+      `id_form` violation list is populated at 4 distinct sites in
+      `unified_api_contracts/canonical/_partition_path_canonicality.py`; and the default
+      `violation_classes=None` reports BOTH classes, so the pre-2026-07-20 structure-only behaviour is now the
+      explicit opt-in (`frozenset({CanonicalViolationClass.STRUCTURAL})`) rather than the silent default. The
+      source issue is still `status: open`, but its 2 remaining open todos are unrelated `[DATA]` P2/P3 findings
+      from 2026-08-17, not this oracle fix. Evidence:
+      `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` § 9.
 - [ ] [BACKEND] P0. `canonical_path_violations()` validates VALUES, not just path structure — today it is blind to
       `instrument_type` / `data_type` / `venue` / `chain` values. Either extend it or make the blindness explicit in
       its return type so a caller cannot mistake it for a full check.
@@ -333,6 +341,15 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-20 — **Oracle filename-stem todo was STALE — closed by measurement, not by new code.** The plan listed
+  `canonical_path_violations()` filename-stem validation as an open P0; it shipped weeks earlier
+  (`unified-api-contracts@d40c5d7d`/`@502ef57e`). Confirmed against the CODE, not the issue doc's self-report:
+  `CanonicalViolationClass.ID_FORM` is documented as "The FILENAME STEM", `id_form` is populated at 4 sites, and
+  structure-only is now an explicit opt-in rather than the silent default. The source issue reads `status: open`
+  only because 2 unrelated `[DATA]` findings from 2026-08-17 remain on it — a reminder that an issue's status
+  field is not a verdict on any single todo inside it. **Still genuinely open**: the sibling VALUES todo — the
+  oracle remains blind to `instrument_type`/`data_type`/`venue`/`chain` VALUES, which CLAUDE.md itself warns
+  agents about, so "0 violations" still does not mean "canonical" on that third axis.
 - 2026-08-20 — **Contract edge #3 landed: `OrderStatus` is now the 9-state machine — unified-api-contracts@a3c572f8.
   T4 unblocked.** Verified on origin, not by exit code: 9 canonical members + 2 aliases present in the landed blob,
   transition map + test file present, top-level export present, and `a3c572f8` confirmed via
