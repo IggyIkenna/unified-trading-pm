@@ -214,6 +214,12 @@ once the bake-off's synthesis todo lands, rather than duplicating its scope here
   `1538-1546`) both default every wall type to one flat `SONNET_DEFAULT_MODEL`; `WALL_TYPES` is
   validation-only, no tier map. Needs building from scratch.
 
+**Process note (2026-08-19)**: this work stays tracked directly in this issue doc, not a separate
+plan — operator decision after weighing it. Rationale: this doc is already `assigned_vm: NA` /
+`execution_scope: local-only`, mechanically identical to a human plan, and the workspace's audit
+tooling (`/na-eligibility-audit`, `/ag-closeout-audit`) already handles substantial issue docs
+carrying real open work. Don't re-litigate "shouldn't this be a real plan?" without new information.
+
 ## Follow-up
 
 - [ ] [BACKEND] P2. **Widen `account_is_usable()` into provider-aware usability** — per-provider
@@ -245,7 +251,11 @@ once the bake-off's synthesis todo lands, rather than duplicating its scope here
       interim placeholder, no further exclusion list needed for now.
 - [ ] [BACKEND] P2. **Build the equivalence-class registry** (replacing the accidental
       `short_tier()` unknown→sonnet fallback) + add `model_strict: true|false` to
-      `role_registry.py` `RoleSpec` / `agents/<role>.md` frontmatter. Repo: agent-orchestrator.
+      `role_registry.py` `RoleSpec` / `agents/<role>.md` frontmatter. **Existing string-based
+      model-tier parsers to extend/mirror, found 2026-08-19**: `_parse_frontmatter_model_tier`
+      (`regen_backlog_from_plan.py:916-951`, plan frontmatter → tier) and `_coerce_model`
+      (`role_registry.py:108-116`, role frontmatter — already accepts both `opus`/`opus-required`
+      strings, a useful template for how `model_strict` should parse). Repo: agent-orchestrator.
 - [ ] [BACKEND] P3. **Add `model_strict:` to plan/task frontmatter** alongside the existing
       commented-out `model_tier:` stub in `task_template.md`, and fix the `PLAN_FORMAT.md` /
       `task_template.md` doc-drift found above (missing `model_tier:` row, `assigned_role` spelling
@@ -267,3 +277,36 @@ once the bake-off's synthesis todo lands, rather than duplicating its scope here
       active**: `/plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1).
       Superseded this todo's original "not yet scoped" framing — see the todo directly above for
       the concrete follow-through once it completes.
+
+## Resumption notes (2026-08-19)
+
+This doc is the sole, self-contained tracking surface for this initiative — no sibling plan exists
+or is planned (see Process note above). The `related:` plans (bake-off, billing-reconciliation,
+`ao_consolidated_closeout`) are independent parallel efforts merely cross-referenced here, not a
+dependency chain to walk.
+
+**Recommended implementation order** (dependency-derived, stated in chat but not yet answered by
+the operator when this session ended — default to this order if still unanswered on resume):
+1. Todo 1 (widen `account_is_usable()` + the `layout.tsx:549` dashboard mirror) — independent,
+   no prerequisites.
+2. Todo 2 (equivalence-class registry + `model_strict` on `role_registry.py`) — foundational;
+   todos 3/4/5/6 all build on it.
+3. Todos 3, 4, 5 (plan frontmatter / scheduled-job / escalation config surfaces) — can proceed in
+   parallel once todo 2 lands; each touches different files.
+4. Todo 6 (unify the 3 dispatch moments) — needs todo 2 done, benefits from todo 1 also being done.
+5. Todo 7 (replace the flat placeholder with real bake-off data) — **cannot start yet**, blocked on
+   `multi_provider_model_capability_bakeoff_2026_08_19.md`'s own synthesis todo landing (external,
+   not owned by this doc) — check that plan's Progress Log before attempting.
+
+**Lessons from this session, worth not re-learning**:
+- `select_account_for_spawn` never downgrades model TIER — it only swaps provider/account within
+  the SAME nominal tier (`autospawn.py:1794-2089`). The "strict vs substitutable" design this doc
+  builds is entirely new; don't assume any tier-fallback path already exists to extend.
+- Searching the plan corpus by guessed keywords for "the model-capability benchmark plan" (tried
+  `benchmark`/`eval`/`capability`/`comparison`/`parity`) returned nothing useful — corpus-wide
+  `benchmark` hits are mostly unrelated performance-benchmark docs. What worked: `git log
+  --oneline --name-only -- plans/` filtered for a topic keyword, which surfaced the real commit
+  even though its own message ("model-existence sweep") didn't literally match either. When an
+  operator says "there's already a plan for X" and a keyword grep comes up empty or ambiguous,
+  ask for the slug directly rather than burning more search cycles guessing — a same-window,
+  same-provider-effort sibling plan (billing-reconciliation) was an easy false-positive lead here.
