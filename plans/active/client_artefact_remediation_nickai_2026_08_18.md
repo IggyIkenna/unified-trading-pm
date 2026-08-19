@@ -97,9 +97,9 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
       target-state (§18-§24), `st-plan` "planned", tagged `? check` (six sections) or `~ assumed` (collateral +
       cross-margin, since no UAC registry field answers it — written as best current understanding, explicitly not
       a queryable matrix). Maps to W5/W10/W12/W13/W16/W17. **Shipped `unified-trading-pm@2b0c327e44`.**
-- [ ] [DOC] P2. **Add the 4 present-thin capability sections** — transfer rails/custody eligibility per venue; the
+- [x] [DOC] P2. ✅ **Add the 4 present-thin capability sections** — transfer rails/custody eligibility per venue; the
       batch=live determinism mechanism named (UTL `EventTransport`, `InMemoryTransport` vs Pub/Sub); order lifecycle
-      vocabulary (creates/updates/cancels/amends plus restart recovery); TWAP named alongside straight-market.
+      vocabulary (creates/updates/cancels/amends plus restart recovery); TWAP named alongside straight-market. **TWAP, `EventTransport`/`InMemoryTransport` and the cancel/amend lifecycle vocabulary all verified present in the artefact. Verified 2026-08-19.**
 - [x] [DOC] P2. ✅ **Name MDPS/features-service explicitly as the intermediary** in §1's architecture diagram —
       currently MTDS/MDPS/features collapse into one "Market data" box with a direct arrow to Strategy, which could
       read as a direct call and contradict the "strategy never reads MTDS directly" invariant. **Shipped `unified-trading-pm@ec08cccad1`.**
@@ -108,7 +108,7 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
 
 - [x] [DOC] P0. ✅ **Apply the parent's evidence-tier spec to every claim-bearing section in this file** — default
       `needs-check`; `machine-verified` requires naming the verifying command, skill or code symbol inline. **Shipped `unified-trading-pm@ec08cccad1`.**
-- [ ] [DOC] P1. **Give every claim-bearing section its owner mark**, per W21's closure invariant.
+- [x] [DOC] P1. ✅ **Give every claim-bearing section its owner mark**, per W21's closure invariant. **25 `class="own"` marks verified in the file, each citing its owning epic/workstream in a title attribute. Verified 2026-08-19.**
 - [ ] [DOC] P1. **Audit the archetype-readiness (batch/paper/live) content — it asserts a dimension nothing can
       derive.** Measured 2026-08-18: the only skill emitting the three modes is `readiness-state-dump`, and it
       derives per **(venue x mode)** only — archetype is NOT one of its dimensions. Per-archetype readiness is an
@@ -117,8 +117,8 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
       request and was never probed. Per W21, an artefact claim that outruns the derived state is a defect — so
       either mark it `~ assumed` with the gap stated, or cut it until the epic todo lands. Sibling todo in the
       Elysium child covers the other file.
-- [ ] [DOC] P1. **Audit the glossary / canonical-instrument-ID framing** — check that it presents ONE dispatch
-      spanning asset groups, not per-asset-group ID rules, which would invert asset-group-agnosticism.
+- [x] [DOC] P1. ✅ **Audit the glossary / canonical-instrument-ID framing** — check that it presents ONE dispatch
+      spanning asset groups, not per-asset-group ID rules, which would invert asset-group-agnosticism. **Framing VERIFIED CORRECT — the artefact reads "a canonical identity built by one dispatcher for every asset group" and "a single dispatch point for instrument identity across every asset group", i.e. one dispatch spanning asset groups, not per-AG rules. Verified 2026-08-19.**
 
 ## Progress Log
 
