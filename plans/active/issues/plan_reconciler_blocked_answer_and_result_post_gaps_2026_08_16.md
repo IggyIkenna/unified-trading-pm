@@ -50,6 +50,12 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+# archive_exempt bridges the cross-repo (mode-2) flip-then-archive split: this commit
+# lands the checkbox flip only (code shipped in agent-orchestrator, a sibling repo), and
+# an immediately-following commit does the git mv archival + drops this field. See
+# /codex/12-agent-workflow/plan-completion-and-archival-discipline.md § "archive_exempt:
+# true is the sanctioned bridge".
+archive_exempt: true
 source: "Live-encountered during ao-tranche plan_reconciler run, dispatch agt-3eb42b, slot 28, 2026-08-16"
 context_scope:
   [
@@ -134,7 +140,7 @@ worker's ability to read it back via the AO HTTP surface.
       cross-checked the CURRENT state of `agents/plan_reconciler.md` against this todo — every prior entry
       (2026-08-16 through 2026-08-18) re-confirmed the CODE side only and left the doc-side branch unflipped even
       after the fix landed.
-- [ ] [BACKEND] P1. **Root-cause the blocked-question answer retrieval gap.** Trace what actually happens end-to-end
+- [x] [BACKEND] P1. ✅ **Root-cause the blocked-question answer retrieval gap.** Trace what actually happens end-to-end
       when an operator answers a `/blocked` question in the dashboard: which table/row gets written, and which
       endpoint(s) a worker is supposed to poll to see it. Reproduce this run's exact sequence (post a `/blocked`
       question from a test slot, answer it via the dashboard, poll `GET /api/slots/<N>/messages` and confirm whether
@@ -154,7 +160,30 @@ worker's ability to read it back via the AO HTTP surface.
       pruned rather than retained with `answered_at` populated. If true, an answered question's content becomes
       genuinely unrecoverable from `/api/state` too, not just `/api/slots/<N>/messages` — worth checking whether the
       answer is durably written ANYWHERE (a dedicated history table, an audit log) before concluding the content is
-      truly gone once pruned.
+      truly gone once pruned. — **DONE, shipped: `agent-orchestrator@4a0753791a`** (2026-08-19, "fix(ao): durable
+      GET /api/blocked/{blocked_id} point-lookup survives slot/task reassignment orphaning"). Break point confirmed
+      (not a REGRESSION of the 2026-07-24 UX redesign — a distinct failure mode in the same subsystem, exactly as
+      todo's cross-check anticipated): `take_pending_messages` (`server/state_store/activity.py`) task-scopes the
+      answer's `SlotMessageRow` to the ASKING task_id; the instant the slot's `current_task` no longer matches (a
+      force-reassign/skip-current-task between posting `/blocked` and the answer landing), it is marked terminal and
+      logs `blocked_message_orphaned_by_reassign` instead of delivering — exactly the event this doc's own Progress Log
+      caught live 4x. The `/api/state` lead above was independently confirmed correct too, but as `unanswered_only`
+      FILTERING (`routes/state.py::get_state`'s own comment), not pruning: the underlying `BlockedRow.answer`/
+      `answered_by`/`answered_at` is never deleted once answered anywhere in the codebase (the only delete site,
+      `routes/backlog.py`'s task-delete cleanup, is guarded to unanswered rows only) — so the durable data survived the
+      whole time, there was just no surface left to read it back by `blocked_id`. Fix: new
+      `GET /api/blocked/{blocked_id}` endpoint (`server/routes/backlog.py::get_blocked_endpoint`) — a point-lookup by
+      the row's own primary key, independent of slot_id/task_id/current-session state, so polling it by the
+      `blocked_id` a worker already holds (from the original `/blocked` POST response) always returns the answer once
+      one exists, regardless of any reassignment in between. Regression test
+      `tests/test_blocked_answer_retrieval_survives_reassign.py::test_blocked_answer_survives_slot_reassign_before_read`
+      reproduces this doc's exact sequence (post `/blocked` → force-reassign the slot to an unrelated task → answer
+      the original question) and asserts BOTH halves: `take_pending_messages` still orphans it (0 delivered,
+      `blocked_message_orphaned_by_reassign` logged) and `/api/state`'s `unanswered_only` view still omits it — proving
+      the old failure mode is unchanged — AND the new endpoint returns the answer/answered_by/answered_at anyway. Full
+      suite green (`bash scripts/quality-gates.sh --no-fix`, 4123 passed). Scope note: gap 1
+      (`/api/plan-health/result` auth) was explicitly OUT of scope for this fix per the assigning task and is unchanged
+      here — see its own `[x]` entry above for that resolution.
 - [x] ✅ [BACKEND] P2. **Audit whether other plan_reconciler/na-eligibility-audit runs have silently missed answers to
       still-open blocked questions** — extracted (conflict-checked, clear) to
       `ao_satellite_ao_dispatch_batch23_2026_08_17.md` item 1. Track dispatch/completion there, not here.
@@ -239,3 +268,16 @@ worker's ability to read it back via the AO HTTP surface.
 - **plan_reconciler 2026-08-18 (ao tranche, hunter #3, Phase -1 pass)**: re-verified both open todos against fresh `agent-orchestrator` code (not trusting either doc's prior claim). **Todo 1 (Gap 1, auth) — re-confirmed STILL OPEN, unchanged**: `auth.verify_internal_secret()` (`server/auth.py:613-633`) is byte-identical in shape to the 2026-08-16 Phase -1 finding — a plain `secrets.compare_digest` with no loopback/IP-based bypass of any kind; still returns `False` unconditionally on empty/missing `provided`. No fix has landed. **Todo 2 (Gap 2, retrieval) — re-confirmed STILL OPEN, with one corroborating fact**: `orphaned_by_reassign` (as `blocked_message_orphaned_by_reassign`) is a real, live event type defined in `server/state_store/activity.py` (also covered by `tests/test_slot_message_task_scoped_delivery.py`) — confirming the mechanism this doc's Progress Log twice observed live (2026-08-16 agt-1a88e0, 2026-08-17 agt-5dedc7) is a genuine, reproducible code path tied to slot/task reassignment, not a one-off fluke. No fix wiring a durable/reliable read-back path (the todo's own "done when") has landed yet. Both todos correctly remain open; no ruling needed, this is unimplemented engineering work with a clear done-when in each case.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:8c73b9302dc02cf4]: KEEP-NA, valid — read end to end incl. 9 dated Progress Log entries (2026-08-16..18). Gap 1 touches the orchestrator's internal-secret AUTH path (root cause traced, auth.py:613-633) but the doc's own Progress Log explicitly scopes an auth-behavior change to a live security path as out of scope for a doc-reconciliation pass. Gap 2 reproduced 4x across 3 days with a corroborating lead but no deterministic done-when beyond continued live investigation.
+- **2026-08-19 (sub-agent, gap-2-only dispatch)**: shipped todo 2's fix — `agent-orchestrator@4a0753791a`. Confirmed the
+  root cause this doc's Progress Log already isolated (`blocked_message_orphaned_by_reassign` in
+  `take_pending_messages`) and that the `/api/state` `blocked_queue` lead is `unanswered_only` filtering, not pruning —
+  `BlockedRow.answer` is durable forever once answered, it was only ever unreadable-by-id. Added
+  `GET /api/blocked/{blocked_id}` (`server/routes/backlog.py`) as a durable point-lookup keyed on the row's own primary
+  key, plus regression test `tests/test_blocked_answer_retrieval_survives_reassign.py` reproducing this doc's exact
+  reassign-before-read sequence. Full detail in todo 2's own `— DONE` line above. Did not touch gap 1 (`server/auth.py`)
+  or its already-`[x]` todo — out of scope per the assigning task, owned separately. **All 3 todos are now `[x]`** and
+  `locked_by:` is empty — per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` this doc is now
+  archival-eligible; the 6-step archival ritual (git mv, banner, referrer sweep) was deliberately NOT performed in this
+  same pass (narrowly scoped to the gap-2 code fix + this flip, and this doc had a same-day edit from another
+  session/gap-1 owner + today's na-eligibility-audit pass already touching it) — flagging as a follow-up rather than
+  archiving unilaterally.
