@@ -267,8 +267,9 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       ("must not silently fall back to something as weak as gemini-flash-lite"); flag this specific
       content decision for review since it was made on the operator's behalf, not re-confirmed.
       Tests: `tests/test_model_tier.py` (3 new) + `tests/test_role_registry.py` (4 new).
-- [ ] [BACKEND] P3. **Add `model_strict:` to plan/task frontmatter + fix doc-drift — CODE DONE,
-      NOT YET SHIPPED (blocked, see new finding below) — stays unchecked until it actually lands.** `_parse_frontmatter_model_strict()` +
+- [x] [BACKEND] P3. **Add `model_strict:` to plan/task frontmatter + fix doc-drift — shipped
+      2026-08-19, agent-orchestrator@c134a9c0d4 + unified-trading-pm@cc38229b57 (the doc half,
+      previously blocked — see "New finding" below for how it cleared).** `_parse_frontmatter_model_strict()` +
       `_resolve_plan_model_strict()`/`_resolve_task_model_strict()` (regen_backlog_from_plan.py,
       factored into standalone functions specifically to keep `regen()`'s cyclomatic complexity
       under the ruff C901 cap — inlining tripped it, 27>26) + `BacklogTask.model_strict: bool`
@@ -279,10 +280,9 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       monitor | review`) + `model_tier:`/`model_strict:` rows added to both `PLAN_FORMAT.md` and
       `task_template.md` + `scripts/docs/docspec.py`'s `agent-role` FieldSpec (registered
       `model_strict` as `"scalar"` not `"enum"` — a real YAML `true`/`false` parses to a Python
-      bool, which would HARD-fail a string-membership enum check) — **all 4 files complete,
-      verified clean via standalone `check_frontmatter_schema.py`/`check_active_refs_archived_
-      plans.py` runs, sitting UNCOMMITTED in the unified-trading-pm working tree**, blocked from
-      shipping by an unrelated repo-wide gate failure — see "New finding" below. Also improved
+      bool, which would HARD-fail a string-membership enum check) — **all 4 files shipped
+      unified-trading-pm@cc38229b57**, after sitting blocked for a time by an unrelated
+      repo-wide gate failure that has since cleared — see "New finding" below. Also improved
       `worker_liveness_watchdog._slot_is_model_strict()` (shipped as part of todo 6's commit,
       agent-orchestrator@7aa42f67a3) to read a task-dispatched slot's `task.model_strict` DIRECTLY
       rather than re-deriving from its role — the task already carries the fully-resolved
@@ -343,20 +343,19 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       Superseded this todo's original "not yet scoped" framing — see the todo directly above for
       the concrete follow-through once it completes.
 
-## New finding 2026-08-19: unified-trading-pm quickmerge blocked repo-wide (tracked separately)
+## New finding 2026-08-19: unified-trading-pm quickmerge blocked repo-wide (tracked separately, now cleared for this doc)
 
 While shipping todo 3's doc half, `quickmerge.sh`/`quality-gates.sh` repeatedly failed
 `check_frontmatter_schema` against an UNRELATED auto-filed doc
 (`plans/active/issues/manifest_hygiene_red_all_2026_08_19.md`, from `manifest_hygiene_daily.py`)
 whose frontmatter was observed in 3 different, progressively-more-broken states across ~10
-minutes without this session touching it — already on origin, so it blocks EVERY quickmerge in
-this repo, not just this one. Full write-up, evidence, and its own follow-up todos:
-`/plans/active/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`.
-**Consequence for THIS issue**: todo 3's `unified-trading-pm` half (`agents/main.md`,
-`plans/PLAN_FORMAT.md`, `plans/active/task_template.md`, `scripts/docs/docspec.py`) is fully
-written and individually verified, sitting uncommitted in the `.tabs/3/unified-trading-pm` working
-tree, ready to ship the moment the other doc clears — tracked as this doc's own todo 3, not
-duplicated here.
+minutes without this session touching it — already on origin, so it blocked EVERY quickmerge in
+this repo, not just this one. Full write-up, evidence, and its own follow-up todos (still open,
+independent of this doc): `/plans/active/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`.
+**Consequence for THIS issue, resolved**: the blocking file's frontmatter had stabilized enough by
+the next session to pass `check_frontmatter_schema` standalone; todo 3's `unified-trading-pm` half
+shipped cleanly at `cc38229b57` on the first retry. The generator issue itself is unrelated to this
+doc and remains tracked only in its own issue doc above — no action needed here.
 
 ## Resumption notes (2026-08-19, updated after implementation)
 
@@ -365,29 +364,23 @@ or is planned (see Process note above). The `related:` plans (bake-off, billing-
 `ao_consolidated_closeout`) are independent parallel efforts merely cross-referenced here, not a
 dependency chain to walk.
 
-**Implementation status**: todos 1, 2, 4, 5, 6 are shipped and live on agent-orchestrator's
-`live-defi-rollout` (4 commits: `1b1b9eb858`, `7aa42f67a3`, `c134a9c0d4`, `204bc8e1fa` — see each
-todo above for which commit and its exact scope/caveats). Todo 3's agent-orchestrator half shipped
-in `c134a9c0d4` too; its unified-trading-pm half is code-complete but **NOT YET SHIPPED**, blocked
-by the unrelated repo-wide gate failure in "New finding" above. Todo 7 remains externally blocked,
-unchanged.
+**Implementation status**: todos 1, 2, 3, 4, 5, 6 are shipped and live (agent-orchestrator:
+`1b1b9eb858`, `7aa42f67a3`, `c134a9c0d4`, `204bc8e1fa`; unified-trading-pm: `cc38229b57` for todo
+3's doc half — see each todo above for which commit and its exact scope/caveats). The todo-6 SCOPE
+GAP (fresh dispatch + resume-after-kill not getting the same cross-tier retry `_handle_usage_cap`
+has) is its own separate `- [ ]` todo below — code written this session (agent-orchestrator,
+uncommitted pending QG), see that todo for status. Todo 7 remains externally blocked, unchanged.
 
 **What to do on resume, in order**:
-1. Check whether `plans/active/issues/manifest_hygiene_red_all_2026_08_19.md`'s frontmatter has
-   stabilized (`.venv/bin/python scripts/plan-hygiene/check_frontmatter_schema.py` from
-   unified-trading-pm — clean output means it's safe now). If clean, ship todo 3's 4 waiting files
-   (`agents/main.md`, `plans/PLAN_FORMAT.md`, `plans/active/task_template.md`,
-   `scripts/docs/docspec.py` — confirm they're still sitting uncommitted in `.tabs/3/unified-trading-pm`
-   first via `git status`; if a session already shipped them, this step is just verification).
-2. Decide whether the todo-6 scope gap is worth closing (fresh dispatch / resume-after-kill each
-   getting the SAME cross-tier non-strict retry `_handle_usage_cap` now has) — not currently
-   tracked as its own todo; add one if the operator wants it.
-3. Todo 7 stays blocked until `multi_provider_model_capability_bakeoff_2026_08_19.md`'s synthesis
+1. If the todo-6 scope-gap todo below is still `- [ ]` with no commit sha cited, the implementation
+   was written but not yet verified/shipped — check `git status` in `.tabs/3/agent-orchestrator` for
+   uncommitted changes to `server/autospawn.py`/`server/worker_liveness_watchdog.py` and their
+   tests; run `bash scripts/quality-gates.sh` and ship via quickmerge if clean.
+2. Todo 7 stays blocked until `multi_provider_model_capability_bakeoff_2026_08_19.md`'s synthesis
    todo lands — check that plan's Progress Log before attempting.
-4. Once todo 3 ships and the doc has no other open `- [ ]` items besides todo 7, this issue is
-   effectively done pending only the external bake-off dependency — reconsider whether it should
-   stay `status: open` or move toward archival at that point (todo 7 itself would need to be the
-   last open item, or get its own follow-on tracking).
+3. Once the todo-6 scope gap ships and the doc has no other open `- [ ]` items besides todo 7, this
+   issue is effectively done pending only the external bake-off dependency — reconsider whether it
+   should stay `status: open` or move toward archival at that point.
 
 **Lessons from this session, worth not re-learning**:
 - **A shared multi-agent checkout's `bash scripts/quality-gates.sh` sees EVERY file currently on
