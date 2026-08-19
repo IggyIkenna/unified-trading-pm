@@ -29,7 +29,7 @@ summary: >-
   (`market-tick-data-service`'s own `RelaunchBackfillVm` docstring explicitly calls machine resize "the human call").
 status: open
 nature: issue
-asset_group: [sports, cross-cutting]
+asset_group: [sports] # retagged 2026-08-19 (ag-closeout-audit sports): the cross-cutting-scoped item (relaunch-budget cross-contamination bug) is already fixed/shipped; the sole remaining open item (todo 2, OOM machine-resize/investigate decision for mtds-backfill-odds-smallchunk10) is 100% sports-scoped
 stage: [data]
 repos: [deployment-service, market-tick-data-service]
 scope: [engineer, admin]

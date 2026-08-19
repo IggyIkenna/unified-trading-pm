@@ -129,3 +129,8 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `check_line_caps.sh`, the script todo 1
   directs the worker to actually run against the parent doc.
 - **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries, all resolve).
+- **ag-closeout-audit sports 2026-08-19**: linkage-only mention, not a dispatch citation — noting
+  `plans/active/issues/mtds_backfill_odds_smallchunk10_relaunch_budget_bug_and_oom_2026_08_09.md` was retagged
+  `[sports, cross-cutting]` → `[sports]` this run (its shipped fix was genuinely cross-cutting; its one remaining
+  open item, an `[OPERATOR]`-gated VM machine-resize/investigate decision, is 100% sports-scoped). This doc is
+  parked/self-dispatched, not covered by this finalize plan's own gated todos.
