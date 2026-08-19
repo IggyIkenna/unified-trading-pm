@@ -75,10 +75,14 @@ reactive — it would not catch an in-place change to the instrument-catalogue s
 Implement the 4-part fix below, in order (each part is independently useful; later parts depend on earlier ones
 landing in the same repo so they are NOT concurrent-dispatchable against each other — sequential within this doc).
 
-- [ ] [DATA] P1. Add `INSTRUMENTS_SCHEMA_VERSION: str = "1.0.0"` as a module-level constant in
+- [x] ✅ [DATA] P1. Add `INSTRUMENTS_SCHEMA_VERSION: str = "1.0.0"` as a module-level constant in
       `unified-api-contracts/unified_api_contracts/internal/domain/instruments/_instruments_parquet_schema.py`,
       following the same pattern as UAC's existing `CANONICAL_*_VERSION` constants elsewhere in the repo. Repo:
       unified-api-contracts. Done-when: the constant exists, is exported, and a unit test asserts its value.
+      — unified-api-contracts@88a62935 (2026-08-19): `INSTRUMENTS_SCHEMA_VERSION: str = "1.0.0"` added to
+      `_instruments_parquet_schema.py` + exported via its `__all__` and the `internal.domain.instruments` package
+      re-export; unit test `tests/unit/test_instruments_parquet_schema_version.py` asserts the value. QG green
+      (294s), quickmerge landed + ancestry-verified on LDR.
 - [ ] [DATA] P1. Extend `unified-api-contracts/scripts/check_schema_versions.py` (or add a sibling script) to also
       cover `internal/domain/instruments/` — its current `_get_files()` only walks `canonical/domain/` +
       `canonical/execution.py`. Pair with a checked-in golden file (column name+type+order, or a content hash of
