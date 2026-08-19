@@ -717,7 +717,9 @@ class AvailabilityRecord:
   the coarse-vs-fine distinction this rule now codifies.
 - **No `data_source` column for non-TradFi rows.** Track what the data IS (transfers, injuries, odds), not where it came
   from (Transfermarkt, API Football, Tardis). If you swap providers, the manifest stays the same.
-- **`source` field (v9, universal).** Every external-vendor cell across all 5 asset groups now carries `source`. The
+- **`source` field (v9, universal).** The `source` field exists on every `AvailabilityRecord` across all 5 asset groups (v9 schema) — write-wiring itself is
+  NOT yet universal: tradfi + prediction are ✅ WIRED; cefi/defi/sports remain 🔴 RED GAP with cells landing `source=""`
+  (see "Per-AG `source=` write-wiring status" below). The
   column tags which upstream provider produced the manifest row, enabling `GROUP BY source` reconciliation for
   multi-source cells and registry-driven auto-stamp for single-source cells. **Current UAC `SOURCE_PRIORITY` source
   strings = `"databento"`, `"yahoo"`, `"tardis"` (per asset group)** — `"massive"` (removed 2026-07-19) and `"barchart"`
@@ -955,7 +957,9 @@ applies until backfill lands per "honest absence" contract.
 
 **Phase 6 full-execution criteria** (from plan):
 
-- ✅ Every Phase 1A protocol has ≥1 captured shard in production GCS per manifest.
+- 🟡 Every Phase 1A protocol EXCEPT the 6E families (Vaults, DEX V3, DEX CLMM, Balancer/Curve, DEX-pool perps — 0
+  captured shards, not yet launched per the table above and item below) has ≥1 captured shard in production GCS per
+  manifest.
 - ✅ Per-asset-group manifest coverage ≥99% for in-scope (asset_group, venue, data_type, day) cells.
 - ✅ Phantom audit shows zero drift.
 - 🟡 IN-FLIGHT: 6E vaults + DEX + SOLANA LST (6C) backfills not yet launched; coverage will update once VMs complete.

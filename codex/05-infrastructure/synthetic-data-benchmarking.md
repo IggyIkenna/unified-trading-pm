@@ -49,7 +49,7 @@ for value correctness) is post-cutover.
 > `unified_trading_library/synthetic/{generator,profile,harness,cli,report}.py`, UAC
 > `registry/generators/{cefi,defi,tradfi}.py`, the launcher
 > `deployment-service/scripts/vm/launch-synthetic-benchmark-vm.sh`, and the `synbench-` prefix in
-> `vm_zombie_watchdog.py`'s `_VM_PREFIX_TO_BUCKET`. **One path drifted**: UAC
+> `vm_zombie_watchdog.py`'s `VM_PREFIX_TO_BUCKET`. **One path drifted**: UAC
 > `canonical/crosscutting/synthetic_generator` is now a **package directory**, not a single `.py` module (a sibling
 > `synthetic_generator_backup.py` also exists and currently carries the `SyntheticGeneratorId` enum). The
 > `last_executed: NEVER` / "matrix not yet populated" claims were **not** re-verified against GCS in this pass — they

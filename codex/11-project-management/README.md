@@ -17,7 +17,7 @@ Boundary rule: See `unified-trading-pm/codex/13-codex-governance/SSOT-BOUNDARY.m
 
 ---
 
-## Active Epics (19 epics in 5 tiers — everlasting)
+## Active Epics (19 epics in 6 tiers — everlasting)
 
 Epics live under `plans/epics/<slug>.md` — **everlasting, no date suffix, no `estimate_*` fields**. Each owns one
 persistent code surface and one assigned VM. Full SSOT for the epic flow:

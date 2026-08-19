@@ -1401,7 +1401,8 @@ another repo.
 
 ## Quality Gate Performance
 
-Quality gates must complete within 120 seconds to maintain developer productivity. Several performance optimizations are
+Quality gates must complete within the `MAX_DURATION` wall-clock budget (default 300 seconds; see § Sanctioned timeout
+overrides below) to maintain developer productivity. Several performance optimizations are
 available for environments where type checking is slow or when doing rapid iterations.
 
 ### --skip-typecheck Flag

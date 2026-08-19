@@ -237,7 +237,7 @@ Aster / Extended / Lighter.
 | **Vertex**                 | Arbitrum                           | ✗              | ✗                                    | ✗                                              | ✗                                                                                                                              | OUT OF SCOPE                                                                                                                                                                                                                                            |
 | **Jupiter perps (Solana)** | Solana                             | ✗              | ✗                                    | ✗                                              | ✗                                                                                                                              | OUT OF SCOPE                                                                                                                                                                                                                                            |
 
-## Per-protocol shard-atom matrix
+## Per-protocol shard-atom matrix (duplicate of above — pending consolidation)
 
 > **Codex SSOT for per-protocol shard atom** (mirrored from
 > [`defi_catalogue_chain_primitives_2026_05_10.md`](../../plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md)

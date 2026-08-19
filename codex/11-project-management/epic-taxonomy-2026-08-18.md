@@ -64,7 +64,7 @@ domains below, never both, and both kinds of `parent_epic` values are equally va
   Non-goal above.
 - **`plan_hygiene_master`** — process/tooling-about-plans itself (owns the plan-hygiene check scripts,
   `run_hygiene_sweep.sh`, and this very restructure's own parent plan). Not a service domain; stays its own thing.
-- **The 3 `*_SUPERSEDED_*.md` epic files** (`cross_cutting_may_23_SUPERSEDED_2026_05_21`,
+- **The 4 `*_SUPERSEDED_*.md` epic files** (`cross_cutting_may_23_SUPERSEDED_2026_05_21`,
   `manifest_evolution_SUPERSEDED_2026_05_21`, `manifest_migration_SUPERSEDED_2026_05_21`,
   `strategy_and_dart_master_SUPERSEDED_2026_05_21`) — historical record only, already properly marked superseded,
   not part of any live domain.

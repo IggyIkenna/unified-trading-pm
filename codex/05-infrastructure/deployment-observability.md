@@ -468,7 +468,7 @@ rides the same shape and degrades to empty without creds (never blocks GCP). NOT
 dominated by un-reaped STALE active entries (registry-hygiene debt — the zombie-watchdog's reap job), a real signal the
 reconciliation surfaces. The reconciliation reads the full active registry (~2.4k entries) per call → ~13s cold; a
 stale-while-revalidate cache (the inventory pattern) is a tracked perf follow-up. **UI wiring REMOVED 2026-07-21**
-(Fleet-tab consolidation, below) — the cockpit Fleet tab no longer renders the accounted/unknown/expected-missing cards
+(Fleet-tab consolidation, above) — the cockpit Fleet tab no longer renders the accounted/unknown/expected-missing cards
 (judged redundant with Deployments' own per-row status); the endpoint itself is UNCHANGED and still callable, just no
 longer UI-consumed.
 

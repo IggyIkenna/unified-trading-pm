@@ -130,7 +130,8 @@ unified-api-contracts@glue-1.service`, "10.2h active, current job's own start ti
 `deployment-service` and `unified-trading-pm` both red on `live-defi-rollout`, plus a mid-history provenance-gate
 bypass discovered during the sweep's own verification pass, not present in the prior entry.
 
-- **Persistent alerts (non-auto-resolving)**: none remaining — all three found this pass are fixed + verified below.
+- **Persistent alerts (non-auto-resolving)**: none remaining — the original three plus one bypass found later in this
+  same pass (item 4) are all fixed + verified below.
   1. **deployment-service `live-defi-rollout` red** (class b, genuine code regression, compounded by class g).
      `47cddc0b` (Phase-3 migration-script relocation from instruments-service/market-tick-data-service) landed with
      STEP 5.95 TID251 violations (`vm_log_archival_cron.py`/`vm_serial_capture_cron.py` importing
