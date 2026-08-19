@@ -148,9 +148,36 @@ backport precedent already used for this same job), not a same-session escalatio
       — mirrors the sizing-drift backport already done for this same job in
       `dp_exit_code_monitor_oom_signal9_2026_08_09.md`. Do NOT `terraform apply` the file as-is; the
       backport must land the LIVE value into the file, never the reverse. Repo: deployment-service.
-- [ ] [SCRIPT] P2. Live-verify: after this fix deploys, confirm the next several
-      `DP_CRON_DID_NOT_FIRE`/`dp-exit-code-monitor` cycles stop firing in `#data-pipeline-alerts`
-      (the "34-36m ago, every ~60min" signature should disappear entirely, not just slow down).
+- [x] [SCRIPT] P2. ✅ **RESULT: the fix had NEVER actually deployed — a distinct root cause, now
+      fixed.** A follow-on escalation (agt-63b255, slot 16, dispatched off the SAME alert firing again
+      at 13:xxZ) found `dc6ac3d7eb` was on `live-defi-rollout` but the Cloud Run Jobs that actually run
+      the meta/exit-code/heartbeat sweeps (`uts-prod-dp-exit-code-monitor`, `uts-prod-dp-heartbeat-watcher`,
+      `uts-prod-dp-meta-watchers`) run off `deployment-service:latest`, built ONLY by
+      `cloud-build/deployment-service-jobs-image.cloudbuild.yaml` — a config with NO Cloud Build trigger
+      wired to it (confirmed: `gcloud builds triggers list` has no match), so a fix landing on
+      `live-defi-rollout`/`main` never reaches these jobs unless someone manually runs
+      `gcloud builds submit --config=...`. Content-verified the live job image
+      (`deployment-service@sha256:d487e016e43d...`, pulled + grepped) still had `"exit-code": 5.0` — the
+      SOURCE fix was real but never deployed. Fixed by manually triggering the build
+      (`gcloud builds submit --config=cloud-build/deployment-service-jobs-image.cloudbuild.yaml
+      --region=asia-northeast1 --substitutions=_GIT_SHA=3fedc96`), build `67e76f2d-3930-4f71-b391-a43402e06f03`
+      SUCCESS (asia-northeast1, ~13:49-13:55Z) — Evidence: cloudbuild=67e76f2d-3930-4f71-b391-a43402e06f03.
+      Its `redeploy-jobs` step re-resolved all 8 dependent Cloud Run Jobs (incl. the 3 named above) to
+      the freshly-pushed `:latest`, no `WARN:` lines in the build log. Content-verified post-deploy: a
+      fresh pull of `deployment-service:latest` (digest `sha256:1b7f25a3a1a3...`) now has
+      `"exit-code": 60.0`. The "34-36m ago, every ~60min" signature should now genuinely stop (not just
+      slow down) on the job's next `*/15` meta sweep. Repo: deployment-service (no source change — a
+      deploy-only fix; the source fix was already correct).
+- [ ] [INFRA] P2. **ADDED 2026-08-19 (agt-63b255, slot 16)** — the systemic gap behind the above: NOTHING
+      auto-deploys `cloud-build/deployment-service-jobs-image.cloudbuild.yaml` on a `deployment_service/`
+      change landing on `main`/`live-defi-rollout` — it is manual-only (`gcloud builds submit`), unlike
+      most other services' Cloud Build configs which fire off a push trigger. This is exactly the failure
+      shape this doc's own fix just fell into: a correct source fix that silently never reached the
+      Cloud Run Jobs consuming it, discovered only because the SAME alert re-fired and a second escalation
+      happened to content-verify the live job image instead of trusting the git landing. Wire a Cloud
+      Build trigger (push to `main`, path-filtered to `deployment_service/**` + the cloudbuild file itself,
+      mirroring whatever trigger pattern `deployment-api`'s own auto-deploy uses) so this class of gap
+      cannot recur silently. Repo: deployment-service.
 
 ## Progress Log
 
@@ -170,3 +197,25 @@ backport precedent already used for this same job), not a same-session escalatio
   bug, findings-triage: file a fresh issue rather than folding an unrelated mechanism into an
   already-scoped doc). Flagged but did NOT touch the terraform schedule drift (`*/5` declared vs `0
   * * * *` live) — applying it would revert the live cron and risk reopening the sweep-overlap storm.
+
+- 2026-08-19 (data_pipeline_failure escalation worker, slot 16, agt-63b255): dispatched off the SAME
+  `DP_CRON_DID_NOT_FIRE`/`dp-exit-code-monitor` alert firing again ("last output 34m ago"), context
+  carried no issue slug. Grepped `plans/active/issues/` per the pre-task conflict-check rule and found
+  this doc already open with an unchecked "live-verify the fix deployed" todo — read it first rather
+  than re-diagnosing from scratch. Confirmed `dc6ac3d7eb` genuinely landed on `live-defi-rollout` (git
+  log), then checked whether it reached the RUNTIME: `uts-shared-deployment-api` (Cloud Run Service) DOES
+  have the fix live, but that is the WRONG resource — the actual meta/exit-code/heartbeat sweeps run as
+  separate Cloud Run JOBS (`uts-prod-dp-meta-watchers` etc.) off a DIFFERENT image, `deployment-service:latest`,
+  built only by `cloud-build/deployment-service-jobs-image.cloudbuild.yaml`. Content-verified (docker pull +
+  grep inside the container, not a SHA-ancestor check — this doc's own established discipline) that image
+  still shipped `"exit-code": 5.0` — the fix had never been rebuilt/redeployed to it, because that
+  cloudbuild config has no CI trigger (`gcloud builds triggers list` confirmed no match) and nothing else
+  runs it automatically. Manually ran `gcloud builds submit --config=cloud-build/deployment-service-jobs-image.cloudbuild.yaml
+  --region=asia-northeast1 --substitutions=_GIT_SHA=3fedc96`; build `67e76f2d-3930-4f71-b391-a43402e06f03`
+  reached `SUCCESS` (~6 min), its `redeploy-jobs` step re-resolved all 8 dependent Cloud Run Jobs to the
+  fresh `:latest` with zero WARN lines. Re-pulled `deployment-service:latest` post-build (digest
+  `sha256:1b7f25a3a1a3...`) and confirmed `"exit-code": 60.0` now live. Checked off todo 3 with this
+  evidence and added a new P2 todo for the systemic gap (no CI trigger on this cloudbuild config) so the
+  same "source fix silently never reaches the runtime" failure mode does not recur on the next fix to
+  this file. Did not touch the terraform-drift todo (unrelated, still open, unchanged scope). No code
+  changed this session — deploy-only fix, since the source fix from the prior session was already correct.
