@@ -301,4 +301,15 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   (ancestry-verified against origin).
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-16** [body-hash:83cc19e793382ee1]: KEEP-NA, valid — Read end-to-end. 4 of 5 todos closed across a same-day follow-up session that shipped a formal ProducerLifecycleState mechanism (classifying 6 of 8 genuinely-absent producers NOT_YET_ACTIVE per the operator's own confirmation that these are pre-live-trading placeholders) plus a real dedicated AWS EC2 liveness check replacing an earlier blanket GCP-only exclusion for the orchestrator VM.
-**context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-19 (slot-31, data_pipeline_failure, escalation `agt-7f6044`, `DP_CRON_DID_NOT_FIRE`/DP-LIVE-003 re-page)**:
+  DP-LIVE-003 paged again for `mdps-features-live-tradfi-` — the exact producer the still-open `[OPERATOR]` todo below
+  already names. Live-verified 2026-08-19: `gcloud compute instances list --filter="name~'^mdps-features-live-tradfi-'"`
+  returns zero rows across all zones — genuinely still absent, not a stale/dedup-defeated re-fire artifact (the
+  2026-08-17/18 dedup-defeat bugs tracked in `dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md` +
+  `dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md` are about repeated pages for the SAME still-true
+  condition, not about this condition being false). No new root cause found — this is the same producer, same open
+  decision, now 9 days stale. Per this session's role contract (data_pipeline_failure: diagnose or ask, never guess an
+  operator-gated relaunch), did not file a duplicate issue doc (findings-triage: "fits another plan → annotate it,
+  don't fix") and did not relaunch — escalated the stale `[OPERATOR]` todo below via `/blocked` instead. No code
+  changed this session.
