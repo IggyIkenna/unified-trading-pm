@@ -692,6 +692,65 @@
       display: none;
     }
   }
+
+  .st {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 2px 7px;
+    border-radius: 3px;
+    white-space: nowrap;
+    border: 1px solid currentColor;
+  }
+  .st-live {
+    color: var(--good);
+    background: var(--g-data-wash);
+  }
+  .st-part {
+    color: var(--warn);
+    background: var(--g-post-wash);
+  }
+  .st-plan {
+    color: var(--crit);
+    background: var(--accent-wash);
+  }
+  .ev {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 1px 8px;
+    border-radius: 10px;
+    white-space: nowrap;
+    border: 1px dashed currentColor;
+    background: transparent;
+  }
+  .ev-verified {
+    color: var(--g-data);
+  }
+  .ev-check {
+    color: var(--ink-3);
+  }
+  .ev-assumed {
+    color: var(--warn);
+  }
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 20px;
+    align-items: center;
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--ink-3);
+    margin: 22px 0 0;
+  }
+  .legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
 </style>
 
 <div class="shell">
@@ -713,6 +772,20 @@
       and what an external strategy would have to implement to sit in the same slot. Every contract below is the real
       declaration, not a paraphrase.
     </p>
+
+    <div class="legend">
+      <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
+      <span><b class="st st-part">partial</b> built, reachable for some cases</span>
+      <span><b class="st st-plan">planned</b> specified, not yet built</span>
+    </div>
+    <div class="legend">
+      <span
+        ><b class="ev ev-verified">✓ verified</b> checked against code or measured data — verifying source named
+        inline</span
+      >
+      <span><b class="ev ev-check">? check</b> stated in good faith, not yet independently validated</span>
+      <span><b class="ev ev-assumed">~ assumed</b> best current understanding — explicitly not verified</span>
+    </div>
 
     <dl class="factbar">
       <div>
@@ -784,6 +857,8 @@
     <div class="sec-head">
       <span class="num">01</span>
       <h2>What this repository is, and what it isn't</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
     </div>
     <p class="lede">
       This service decides. It consumes features and market state, evaluates archetypes on each tick, sizes and hedges,
@@ -852,6 +927,8 @@
     <div class="sec-head">
       <span class="num">02</span>
       <h2>The strategy → execution contract</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-verified">✓ verified</b>
     </div>
     <p class="lede">
       This is the part most likely to matter to you, because it is the boundary your side would integrate against. Every
@@ -1016,6 +1093,8 @@
     <div class="sec-head">
       <span class="num">03</span>
       <h2>Configuration surface, in full</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
     </div>
     <p class="lede">
       Configuration is a YAML file per strategy instance, validated against typed schemas, with family-level defaults
@@ -1118,6 +1197,8 @@
     <div class="sec-head">
       <span class="num">04</span>
       <h2>Halting it: breakers and kill switch</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
     </div>
     <p class="lede">
       There are two independent mechanisms: an automatic circuit that reacts to position health, and an operator kill
@@ -1199,6 +1280,8 @@
     <div class="sec-head">
       <span class="num">05</span>
       <h2>Capital, collateral and custody</h2>
+      <b class="st st-plan">planned</b>
+      <b class="ev ev-check">? check</b>
     </div>
     <p class="lede">
       The strategy never names a rail. It asks for a balance to exist somewhere, and a layered set of coordinators and
@@ -1427,6 +1510,11 @@
         </figcaption>
       </figure>
 
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
+        <code>TransferCoordinator</code> is not instantiated in production code today — the pipeline shown above is
+        target-state, not yet production-wired end-to-end.
+      </p>
+
       <h3>Wallet and transfer vocabulary</h3>
       <div class="code">
         <span class="k">class</span> <b>WalletType</b>(StrEnum): FUNDING
@@ -1475,6 +1563,14 @@
           execution service and no vendor-specific mirroring code path, and that is by design.
         </p>
         <p>
+          <strong>Verified against source</strong> — this document's custody roster (<code>mock · local_key · cloud_kms ·
+          copper · ceffu</code>, above) is the working <code>get_custody_provider()</code> set. A separate code artefact
+          (<code>SigningSurface</code> in <code>unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>)
+          lists <code>FIREBLOCKS_MPC</code> and omits a distinct Ceffu member — that is not a contradiction: Ceffu's
+          signing routes through Copper (<code>CEFFU_ROUTES_VIA_COPPER_NOTE</code>), and the Fireblocks entry carries
+          <code>SigningSurfaceStatus.OUT_OF_SCOPE</code> — retained for future flexibility, not wired today.
+        </p>
+        <p>
           The consequence worth understanding is that a move between two venues under the same custodian is a mirroring
           instruction to that custodian and no coin moves at all; a move that crosses custodians unmirrors on one side,
           settles on-chain between the two, and re-mirrors on the other. The instruction the strategy emits is
@@ -1516,6 +1612,8 @@
     <div class="sec-head">
       <span class="num">06</span>
       <h2>Positions, risk and P&amp;L — the read surface</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
     </div>
     <p class="lede">
       Nineteen route modules expose what the service knows. This is what you would query — directly if you self-operate,
@@ -1607,6 +1705,8 @@
     <div class="sec-head">
       <span class="num">07</span>
       <h2>Feeding an external strategy in</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-assumed">~ assumed</b>
     </div>
     <p class="lede">
       If you wanted to run your own strategy on this infrastructure, the integration surface is small and precisely
@@ -1645,6 +1745,10 @@
         semantics · The attestation field on every instruction · Execution algorithms and venue routing · Transfer
         netting and custody routing · The promotion ladder: candidate → paper → live
       </div>
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
+        Transfer netting and custody routing, listed above, are not yet wired end-to-end in production — see the
+        caveat in §05.
+      </p>
       <p>
         Because the envelope carries <code>eligible_venues</code> and <code>execution_policy_ref</code>, your strategy
         declares where it may trade and which policy should work its orders, without needing to know how either is
@@ -1667,6 +1771,8 @@
     <div class="sec-head">
       <span class="num">08</span>
       <h2>Asset-group agnosticism and expansion</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-verified">✓ verified</b>
     </div>
     <p class="lede">
       The same engine, contract and ledger serve every asset group. This is the property that makes expansion a
@@ -1762,6 +1868,8 @@
     <div class="sec-head">
       <span class="num">09</span>
       <h2>Contributing research and backtests</h2>
+      <b class="st st-part">partial</b>
+      <b class="ev ev-check">? check</b>
     </div>
     <p class="lede">
       Under the ongoing arrangement you can bring ideas rather than only receive results. Backtests launch through the
