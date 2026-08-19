@@ -1,0 +1,2 @@
+asset_group,venue,data_type,chain,day,verdict,detail
+tradfi,CME,trades,,2026-08-19,ORACLE_EXPECTS_DATA,oracle SHOULD_HAVE_DATA (None) but cell is empty_confirmed
