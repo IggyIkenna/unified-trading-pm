@@ -65,9 +65,40 @@ gate inside `matching_engine.py`'s EVM DeFi dispatch path once that `NotImplemen
 architecture choice, not a bounded todo. Recommend routing through `matching_engine.py` (one call site covers all
 3 engines + any future EVM DeFi MEV archetype) rather than 3 separate per-engine call sites.
 
+> **Corrected 2026-08-19 (slot-32)**: the `matching_engine.py` recommendation above is a misread. Its
+> `NotImplementedError` (`_route_amm_instruction`, `execution_service/providers/matching_engine.py:258`) is the EVM
+> **single-AMM-swap** *paper-fill* path (book_type=AMM), not an MEV **bundle** submission path — `gate_or_advise()` gates
+> a `list[TenderlyTx]` bundle, and a single swap is not a bundle. The bundle-submission path the engines' own docstring
+> names (`aave_flash_bundle.py`, see `liquidation_bundle.py:55`) does not exist, and `FLASHBOTS_BUNDLE_RELAY` is STUBBED
+> (operator 2026-05-10, post-cutover). The correct call site is the **live bundle-submission boundary** (Phase 5C "every
+> live order goes through bundle-sim"), which must be built first — see Progress Log.
+
 ## Todos
 
 - [ ] [STRATEGY] P1. Design + wire a `gate_or_advise()` pre-submission call for EVM DeFi MEV bundles — decide
       single call site (`matching_engine.py`'s EVM DeFi dispatch, replacing the current `NotImplementedError` stub)
       vs. 3 per-engine call sites in `liquidation_bundle.py`/`jit_liquidity.py`/`sandwich_theoretical.py`.
       Repo: execution-service, strategy-service.
+
+## Progress Log
+
+- **2026-08-19 (slot-32, data_engineering worker)** — dispatched on the P1 "decide" todo. Design investigation, each
+  claim verified by direct read/grep (not a grep-only proxy):
+  - `gate_or_advise()` (`execution_service/providers/tenderly.py:458`) gates a `list[TenderlyTx]` bundle; zero production
+    callers (only its own module family + tests) — confirms the issue headline.
+  - `matching_engine.py`'s `NotImplementedError` (`_route_amm_instruction`, line 258) is the EVM **single-AMM-swap**
+    *paper-fill* path, not a bundle submission path → the "single call site in matching_engine.py" recommendation is a
+    misread.
+  - The MEV engines (`liquidation_bundle.py`/`jit_liquidity.py`/`sandwich_theoretical.py`) are signal generators: they
+    emit instructions (e.g. `liquidation_bundle.py` `_build_bundle()` emits an `"asset"/"amount"/"chain"/venue` payload),
+    never `TenderlyTx` bundles — so "3 per-engine call sites" is also not where a bundle sim belongs.
+  - The engine docstring names `execution-service …/aave_flash_bundle.py` as the bundle packer (`liquidation_bundle.py:55`)
+    but that file does **not exist**; the only consumer of liquidation-bundle instructions is
+    `cli/defi_arbitrage_mev_liquidation_bundle_decision_trace.py` (a decision-trace CLI, not live execution).
+  - `FLASHBOTS_BUNDLE_RELAY` is STUBBED per operator 2026-05-10 ("post-cutover if needed",
+    `/codex/05-infrastructure/chain-rpc-mev-tenderly.md` § MevSubmissionMode).
+
+  **Decision**: the gate belongs at the **live bundle-submission boundary** (Phase 5C "every live order goes through
+  bundle-sim"), which does not exist yet. Wiring it requires first building that path (`aave_flash_bundle.py` equivalent +
+  un-stubbing `FLASHBOTS_BUNDLE_RELAY`) — a larger, operator-scoped effort, not this 1-hour todo. Escalated to operator via
+  /blocked: defer wiring (record design, re-tag todo) vs. approve building the bundle path now.
