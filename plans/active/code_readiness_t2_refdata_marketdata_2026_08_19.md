@@ -282,10 +282,30 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Complete the `InstrumentRecord` schema ADD/REMOVE reconciliation against adapter kwargs and flip
       `extra='forbid'`. Adapter kwargs are silently dropped on mismatch today. Evidence:
       `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
-- [ ] [BACKEND] P0. Lock and version the instruments schema — add `INSTRUMENTS_SCHEMA_VERSION`, a `schema_version`
-      field on `SchemaContract`, make writers/readers actually consult the per-AG contracts, and add a golden/hash
-      test so a silent column change cannot ship. Evidence:
+- [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC)** — Lock and version the instruments schema — add
+      `INSTRUMENTS_SCHEMA_VERSION`, a `schema_version` field on `SchemaContract`, make writers/readers actually
+      consult the per-AG contracts, and add a golden/hash test so a silent column change cannot ship. Evidence:
       `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
+      **Reason 2026-08-20 — the locked contract has NEVER matched the catalogue writer, so wiring it up as
+      specified would have blocked production promotion for all five asset groups.** Parts 1-3 of that issue's
+      4-part fix are UAC (T1's repo); part 4 is mine. I built part 4 — `validate_dataframe(df, CONTRACT_REGISTRY[...])`
+      at `build_instrument_catalogue.py::promote_catalogue`, which already takes `asset_group`, blocking the way its
+      neighbour `CATALOGUE_SHRINK_BLOCKED` does (CRITICAL event + exit 1, never a raise) — then MEASURED it before
+      shipping and **reverted it**. The measurement:
+
+      - The writer's `CATALOG_COLUMNS` emits **41** columns; the contract declares **85**.
+      - **4 of the 6 `required=True` columns are never emitted, for ALL FIVE asset groups**:
+        `instrument_key`, `symbol`, `available_from_datetime`, `timestamp`.
+      - The writer's canonical identifier is **`instrument_id`** (`build_instrument_catalogue.py:279` — "`instrument_id`
+        is written as the canonical column"); the contract requires `instrument_key`. Likewise the writer emits
+        `available_from`/`available_to` where the contract wants `available_from_datetime`/`available_to_datetime`.
+      - Wiring the gate turned 3 existing `promote_catalogue` tests red with 80 violations on a cefi frame — not
+        because the fixtures are thin, but because the contract describes a different shape than the writer produces.
+
+      So the contract is not a lock that drifted; it never fit. That also explains why "registered in
+      `CONTRACT_REGISTRY` but consulted by nothing" survived unnoticed — the first consumer would have failed
+      immediately. Part 4 is genuinely blocked on reconciling the contract with the writer, which lives in UAC.
+      Filed to T1. The revert is verified: `git status` clean and the 12 `promote_catalogue` tests green again.
 - [ ] [BACKEND] P0. Build the instruments catalogue definitions aggregation and field-change history — monthly-grain
       aggregation, mutable-field declaration, field-change log, point-in-time-equivalence proof. **The design
       ratification todo is `[OPERATOR]`-gated** — build everything downstream of it against the documented design

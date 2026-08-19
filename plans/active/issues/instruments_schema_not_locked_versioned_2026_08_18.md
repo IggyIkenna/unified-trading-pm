@@ -96,7 +96,15 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       (`unified-api-contracts/unified_api_contracts/internal/schemas/_instrument_catalogue_contract.py`). Depends on
       the first todo. Repo: unified-api-contracts. Done-when: `CEFI_INSTRUMENT_CATALOGUE.schema_version` (and the
       other 4 asset-group contracts) resolve to the same value as `INSTRUMENTS_SCHEMA_VERSION`.
-- [ ] [DATA] P2. Wire the per-asset-group `SchemaContract`s to the instruments-service write path — today
+- [ ] [DATA] P0. **Reconcile `INSTRUMENTS_PARQUET_SCHEMA` with what the catalogue writer actually emits — this
+      now gates part 4.** Measured 2026-08-20: writer emits 41 columns, contract declares 85, and 4 of the 6
+      required columns (`instrument_key`, `symbol`, `available_from_datetime`, `timestamp`) are emitted by NO asset
+      group. Decide which side is authoritative — the schema's `instrument_key`/`*_datetime` naming, or the
+      writer's `instrument_id`/`available_from` — then align the other. Repo: unified-api-contracts (+ a follow-up
+      writer change in instruments-service if the schema wins). Done-when: a real catalogue frame from
+      `build_instrument_catalogue.py` produces ZERO violations from `validate_dataframe` against its own
+      asset_group's contract.
+- [ ] [DATA] P2. **BLOCKED on the part-0 reconciliation above** — Wire the per-asset-group `SchemaContract`s to the instruments-service write path — today
       `CEFI_INSTRUMENT_CATALOGUE` / `DEFI_INSTRUMENT_CATALOGUE` / `TRADFI_INSTRUMENT_CATALOGUE` /
       `PREDICTION_INSTRUMENT_CATALOGUE` / `SPORTS_INSTRUMENT_CATALOGUE` are registered into `CONTRACT_REGISTRY` but
       never consulted by any writer or reader (grep-confirmed zero references outside their own definition file).
@@ -107,6 +115,27 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       write with a column outside the locked+versioned contract is rejected at write time, with a regression test.
 
 ## Progress Log
+
+- **2026-08-20 (T2 code-readiness tranche)**: **Part 4 is NOT implementable as written — the contract has never
+  matched the writer.** Built the part-4 gate (`validate_dataframe` against
+  `CONTRACT_REGISTRY[(ag, "instrument_catalogue", "instrument_catalogue")]` inside
+  `build_instrument_catalogue.py::promote_catalogue`, which already receives `asset_group`), measured it, and
+  reverted it rather than ship a change that would have blocked production promotion for all five asset groups.
+  MEASURED: the writer's `CATALOG_COLUMNS` emits **41** columns against the contract's **85**, and **4 of the 6
+  `required=True` columns are never emitted by the writer for ANY asset group** — `instrument_key`, `symbol`,
+  `available_from_datetime`, `timestamp`. The writer's canonical identifier is `instrument_id`
+  (`build_instrument_catalogue.py:279`: "`instrument_id` is written as the canonical column"), not the contract's
+  `instrument_key`; the writer emits `available_from`/`available_to` where the contract declares
+  `available_from_datetime`/`available_to_datetime`. Wiring the gate turned 3 existing `promote_catalogue` tests
+  red with 80 violations on a cefi frame.
+
+  **This reframes the issue.** "Registered but never consulted" is not merely an unused guard — it is why a
+  never-fitting contract survived: the first real consumer fails immediately. So part 4's done-when ("a catalogue
+  write with a column outside the locked+versioned contract is rejected at write time") cannot be met until the
+  contract and the writer are reconciled, and that reconciliation is a UAC change with a real decision in it —
+  either `INSTRUMENTS_PARQUET_SCHEMA` is wrong about the catalogue's shape, or the catalogue writer is wrong about
+  its own canonical columns. Filed to T1 (`code_readiness_t1_contracts_library_externalapi_2026_08_19.md`), since
+  UAC owns both the schema and the contracts. Adding a new part 0 below to carry that decision.
 
 - **2026-08-18 (data_engineering, slot 9)**: filed from `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md`
   item 3 (B23 determination). Determination recorded in `data_pipeline_completion_2026_08_21.md`'s B23 blockquote.

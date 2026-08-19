@@ -148,6 +148,32 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T2] P0. **`INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
+      before B23's schema lock can be enforced anywhere.** MEASURED 2026-08-20 by building B23 part 4's write-time
+      gate in `instruments-service` and running it before shipping (then reverting it — shipping would have blocked
+      production catalogue promotion for all five asset groups):
+
+      - `build_instrument_catalogue.py`'s `CATALOG_COLUMNS` emits **41** columns; the contract declares **85**.
+      - **4 of the 6 `required=True` columns are emitted by NO asset group**: `instrument_key`, `symbol`,
+        `available_from_datetime`, `timestamp` (identical result for cefi, defi, tradfi, prediction, sports).
+      - The writer's canonical identifier is **`instrument_id`** — `build_instrument_catalogue.py:279` states
+        outright that "`instrument_id` is written as the canonical column (the helper also accepts
+        `instrument_key`)". The contract requires `instrument_key`.
+      - Same split on the date columns: writer emits `available_from`/`available_to`, contract declares
+        `available_from_datetime`/`available_to_datetime`.
+      - Wiring the gate turned 3 existing `promote_catalogue` tests red with 80 violations on a cefi frame.
+
+      **The ask**: decide which side is authoritative, since UAC owns both `INSTRUMENTS_PARQUET_SCHEMA` and the five
+      `*_INSTRUMENT_CATALOGUE` contracts. Either the schema is wrong about the catalogue's shape (rename toward
+      `instrument_id`/`available_from`), or the writer is (instruments-service changes its emitted columns — T2 can
+      take that half once you rule). This is not a naming nit: it blocks B23 part 4's done-when ("a catalogue write
+      with a column outside the locked+versioned contract is rejected at write time"), and it explains why the
+      contracts sat registered-but-unconsulted without anyone noticing — the first real consumer fails instantly.
+
+      Tracked as a new P0 part 0 in
+      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`. Note parts 2 and 3 of that
+      issue's 4-part fix are also yours (UAC) and still open.
+
 - [ ] [FROM-T2] P1. **The `KNOWN_CHAINS` gap you fixed for SCROLL/PLASMA is still open for TEN more chains
       carrying 46,698 live manifest rows.** Your SCROLL/PLASMA fix (unified-api-contracts@27ebc544b2) was correct
       but scoped to the two chains that had been reported. MEASURED 2026-08-20 against the live
