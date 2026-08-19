@@ -763,7 +763,23 @@ that didn't block shipping.
       (13th is `scripts/migrations/__init__.py` itself, see next todo). Relocate each to `deployment-service/
       scripts/migrations/instruments-service/`, re-verifying its `Delete-when` is genuinely open (not stale) before
       moving — re-check via `git log -1 --format=%cs -- <script>` per script-homes.md's staleness-hint method.
-- [ ] [INFRA] P2. instruments-service already has its own partial local attempt at this same idea —
+      **DONE (2026-08-19).** RELOCATED (9, +tests where present): `backfill_completion_key_overlap_gate_2026_08_09.py`,
+      `canonicalize_defi_manifest_data_types_2026_05_16.py` (a real silently-no-oping test bug found + fixed in the
+      relocated test — `CLOUD_PROVIDER=local` in `conftest.py` made `patch("google.cloud.storage.Client", ...)` a
+      no-op; fixed by patching the script's own `get_storage_client` name directly),
+      `canonicalize_defi_manifest_data_types_option_g_2026_05_16.py`, `canonicalize_lending_indices_data_type_2026_05_16.py`,
+      `cumulative_drawdown_guard_2026_08_15.py`, `measure_cefi_catalogue_enumeration_gap_2026_07_23.py`,
+      `reconcile_phantom_manifest_rows.py`, `refresh_sports_weather_player_values_league_coverage_2026_06_21.py`
+      (Delete-when re-verified genuinely open — no such CLI subcommand exists in `instruments_service/cli/`),
+      `teams_coverage_census_2026_08_05.py`. LEFT IN PLACE — blocked (3): `canonicalize_defi_manifest_venue_2026_06_14.py`
+      / `resolve_dex_pool_factory_addresses_2026_08_09.py` (hard `instruments_service.reference_data.adapters.defi.
+      _dex_factory_registry` import), `reconcile_phantom_manifest_rows_all.py` (a same-directory sibling script,
+      `cross_asset_rescan.py`, not in this todo's scope, resolves it via `Path(__file__).resolve().parent /
+      "reconcile_phantom_manifest_rows_all.py"` and hard-fails if it's not a sibling). 3 stale-path comments fixed
+      in `instruments_service/engine/orchestrator/venue_core.py` and 2 `scripts/canonicalize_*.py` files. Both
+      repos' `quality-gates.sh --no-fix` green. Shipped `instruments-service@c508eac55d` (source) +
+      `deployment-service@47cddc0b43` (destination, bundled with market-tick-data-service + ratchet fixes below).
+- [x] [INFRA] P2. instruments-service already has its own partial local attempt at this same idea —
       `instruments-service/scripts/migrations/` (a stub subdirectory: `__init__.py` + 2 files,
       `validate_defi_metadata_cohesion.py` + `verify_defi_metadata_forward.py`). Fold this INTO the fleet-wide
       canonical structure rather than leaving a second, competing "migrations" directory inside instruments-service
@@ -771,7 +787,12 @@ that didn't block shipping.
       `instruments-service/scripts/migrations/` directory. Done-when: `grep -rn "scripts.migrations" instruments-
       service/` (import references) returns nothing outside test fixtures, `bash instruments-service/scripts/
       quality-gates.sh` green.
-- [ ] [DATA] P2. **market-tick-data-service — ~30 `permanent`/`campaign`/`reusable-*`-marked files** (full list per
+      **DONE (2026-08-19).** The directory actually held 3 files, not 2 — `backfill_defi_metadata_2026_04_29.py`
+      was present but unnamed in the todo text; moved all 3 (+ tests) for consistency with the todo's real goal.
+      `__init__.py` + the now-empty directory deleted. Done-when grep returns 3 hits, all 3 are the doc-hygiene
+      path-comment fixes from the prior todo (plain prose, not import references) — zero real imports remain.
+      Shipped in the same commits as the prior todo.
+- [x] [DATA] P2. **market-tick-data-service — ~30 `permanent`/`campaign`/`reusable-*`-marked files** (full list per
       §Discovery grep, representative subset: `scripts/backfill_cefi_source_column.py`,
       `scripts/backfill_defi_source_column.py`, `scripts/defi_chain_genesis_relabel_migration_2026_06_01.py`,
       `scripts/defi_object_path_canonicalisation_2026_06_01.py`, `scripts/migrate_dex_pool_columns.py`,
@@ -783,13 +804,63 @@ that didn't block shipping.
       at execution time via `grep -l '^# Lifecycle: \(permanent\|campaign\|reusable\)' market-tick-data-service/
       scripts/*.py market-tick-data-service/scripts/*/*.py`, since new ones may land between authoring and
       execution). Relocate each to `deployment-service/scripts/migrations/market-tick-data-service/`.
-- [ ] [INFRA] P2. market-tick-data-service ALSO already has a local partial-canonicalization attempt: `scripts/
+      **DONE (2026-08-19).** Live re-derivation found 53 files, of which 30 (after applying §Discovery's own
+      name-regex operation-shape filter) are genuinely migration-shaped — matching the "~30" estimate. RELOCATED
+      (20, after a mid-shipment correction — see below): `cleanup_solana_defi_fake_history_2026_06_17.py`,
+      `defi_captured_pre_existence_fix_2026_06_01.py`, `defi_chain_genesis_relabel_migration_2026_06_01.py`,
+      `defi_object_path_canonicalisation_2026_06_01.py`, `defi_index_venue_canonicalise_2026_06_01.py`,
+      `defi_phantom_captured_pre_genesis_fix_2026_06_01.py`, `defi_venue_launch_relabel_migration_2026_06_01.py`,
+      `defi_captured_vs_objects_walk_2026_06_01.py`, `defi_oracle_relabel_migration_2026_06_01.py`,
+      `gate3_solana_manifest_reconcile.py`, `migrate_dex_pool_columns.py`,
+      `migrate_hyperliquid_rest_pipeline_mode_2026_06_17.py`, `migrate_legacy_solana_defi_to_canonical.py`,
+      `mtds_prediction_fillrate_check_2026_08_02.py`, `mtds_defi_fillrate_check_2026_08_05.py`,
+      `mtds_tradfi_fillrate_check_2026_08_02.py`, `refresh_sports_bookmaker_league_coverage_2026_06_21.py`,
+      `reconcile_market_tick_manifest.py`, `one_offs/restamp_manifest_consolidator_2026_07_26.py`,
+      `sports/verify_k1k2_lowercase_twins_2026_07_27.py`. LEFT IN PLACE — blocked (10): 2 hard-internal-import
+      (`backfill_hl_mark_price_from_s3_asset_ctxs_2026_06_17.py`, `odds_api_rss_sampler_2026_08_02.py`), 4
+      test-coupling (`backfill_cefi_source_column.py`, `backfill_defi_source_column.py`,
+      `restamp_tradfi_source_2026_07_07.py`, `one_offs/verify_legacy_bucket_decommission_precondition.py` — each
+      has a test loading it via `importlib` against a hardcoded same-repo path; would need script+test moved
+      together, out of this pass's destination scope), and **4 pulled back out mid-shipment**
+      (`migrate_dex_swap_columns.py`, `migrate_tradfi_ohlcv_session_stamps.py`, `mtds_reconcile_partial_bundles.py`,
+      `mtds_reconcile_partition_mismatch.py`) — **new blocker class found during independent re-verification**:
+      these 4 files' pre-existing direct `google.cloud.storage`/`storage.Client()` usage (never wrapped through
+      `get_storage_client()`) would have regressed deployment-service's STEP 5.95 TID251 ratchet baseline (13→22,
+      7 new sites) — since the code itself isn't new (just relocated), fixing it properly needs the SAME kind of
+      GCS-wrapper refactor Phase 1 did for 15 instruments-service files, which was out of scope for a same-day
+      relocation pass. Restored in market-tick-data-service, removed from deployment-service. **Follow-up needed**:
+      a future pass should refactor these 4 files' `google.cloud.storage` calls to `get_storage_client()`'s
+      `upload_bytes`/`download_bytes`/`list_blobs` etc. (Phase-1 style), THEN relocate — tracked here, not a new
+      issue doc (small, well-scoped, single-repo). Both repos' `quality-gates.sh --no-fix` green (after also fixing
+      2 unrelated pre-existing TID251 sites + 8 unrelated pre-existing empty-string-fallback sites that were
+      independently blocking the same ratchets — see the bundled commit's note). Shipped
+      `market-tick-data-service@fcb11ebf7b` (source) + `deployment-service@47cddc0b43` (destination).
+- [x] [INFRA] P2. market-tick-data-service ALSO already has a local partial-canonicalization attempt: `scripts/
       one_offs/` (2 files, subset of the prior todo) AND `scripts/migration_common.py` (domain-specific CeFi-v2
       helper — per Phase 0, this stays local, it is NOT generic scaffolding). Fold `scripts/one_offs/`'s 2 files
       into the fleet-wide move (covered by the prior todo); leave `migration_common.py` where it is, but add a
       one-line comment cross-referencing the new `deployment-service/scripts/migrations/lib/migration_common.py`
       so a future reader isn't confused by the name collision between the two DIFFERENT `migration_common.py`
       files.
+      **DONE (2026-08-19).** Both `one_offs/` files handled by the prior todo (1 relocated, 1 left in place as a
+      test-coupling blocker — no double-handling). Cross-reference comment added to
+      `market-tick-data-service/scripts/migration_common.py`'s header. Shipped in the same commit as the prior
+      todo.
+
+**Note on the bundled `deployment-service@47cddc0b43` commit**: independently re-verifying both Phase 3 sub-agents'
+combined work (not trusting either report alone) surfaced 2 genuinely NEW ratchet violations from the relocated
+files themselves (the 4-file TID251 case above, and a matching empty-string-fallback overage from those same 4
+files + `migrate_legacy_solana_defi_to_canonical.py`) PLUS, once those were resolved, 5 more pre-existing-but-now-
+blocking violations entirely unrelated to Phase 3 (2 TID251 in `scripts/vm/vm_log_archival_cron.py` /
+`vm_serial_capture_cron.py` — legitimate `google.cloud.compute_v1` usage, no UTL wrapper exists for VM management,
+not just a storage/secrets one; 3 empty-string-fallback in `deployment_service/data_pipeline_monitors/escalation.py`
+[from this session's own earlier Phase-2 alerting-ladder work] +
+`scripts/migrations/lib/templates/examples/example_reconcile_phantom_manifest_rows.py` [Phase 0b] +
+`scripts/migrations/self/rebuild_sports_manifest.py` + `scripts/recovery/relaunch_backfill_vm.py` — all verified
+as genuinely deliberate "field may be absent, checked immediately after" patterns, not bugs). Resolved the 4-file
+TID251 case by exclusion (documented above); resolved the other 8 sites with `# noqa: qg-empty-fallback` /
+`# noqa: TID251` markers with reasons. Both ratchets independently re-verified at exactly baseline after the fix
+(`tid251: 13==13`, `empty-string: 87==87`) before shipping.
 - [ ] [DOC] P2. **Record the disposition of the ~500 remaining `oneoff`-marked instruments-service + market-tick-
       data-service scripts explicitly** in this plan's Progress Log once Phases 0-3's other todos are done — NOT
       relocated individually (that narrow-scope judgment stands, confirmed by the operator), but explicitly note
