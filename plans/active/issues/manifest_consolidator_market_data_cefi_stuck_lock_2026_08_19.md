@@ -240,3 +240,29 @@ resolved_by:
   digest on its next execution; (2) the safe marker-restore recovery (restore `consolidator_content_write_at` to the
   last genuine merge's LISTING time from Cloud Logging, pause cron → cancel/kill holder → metadata-only restamp →
   resume → next cycle merges only the ~10.7k newer shards, fits the 7200s budget).**
+- **2026-08-19T21:5xZ (slot-4 worker, todo-3 — verification done; recovery NOT executed, documented for a focused
+  follow-up)**: **Read-only verification complete — the canonical is STILL frozen and the loop is STILL active.**
+  Measured 21:4xZ via UTL: `_index/availability_index.parquet` `generation=1787019237694916`,
+  `last_modified=2026-08-18T02:13:57Z`, `metadata=None` (no content-write marker — unchanged); `_index/consolidator.lock`
+  PRESENT, `started_at=2026-08-19T19:35:23` (rdlhn's orphaned lock — rdlhn completed 21:15:37; holder dead), age ~6.5k s
+  (< the 9000s TTL, so it blocks cycles until ~22:05Z); `_index/latest.json` `last_run_at=21:15:32`,
+  `verdict=empty, no_op=true, error_reason=locked` (rdlhn's retry skipped on its own orphan); executions 20:00 (`th9nd`),
+  21:00 (`j79t4`) all skipped-on-lock ~1min. **Recovery NOT executed this session — see handoff below.**
+  **RECOVERY PROCEDURE for the executing worker (do this with full attention + confirm the marker value first):**
+  (1) **Determine the last GENUINE (marker-present) merge's `phase=shards_listed` listing time** from Cloud Logging
+  (before the strip — the doomed attempts from 08-17T21:18 onward already log "NO consolidator_content_write_at marker";
+  the issue's ~08-16T23:11Z is an inference; the canonical's pre-strip gen was 1786921866108814). The marker MUST be
+  that listing time (or earlier) — a `now`-stamp would classify the ~10.7k unmerged newer shards as "settled" and let the
+  next no-op prune DELETE them unmerged (silent loss). (2) PAUSE the cron
+  (`gcloud scheduler jobs pause uts-prod-manifest-consolidator-market-data-cefi-cron --location=asia-northeast1`).
+  (3) Clear the orphaned lock (`_index/consolidator.lock`; rdlhn's holder is dead since 21:15Z — safe to delete).
+  (4) Metadata-only restamp of `_index/availability_index.parquet` — `consolidator_content_write_at` = the
+  last-genuine-listing time (NOT now), `consolidator_run_at` = now; content bytes UNCHANGED (blob.patch(), never a
+  re-upload; a CAS re-upload that strips markers would re-arm the loop). (5) RESUME the cron. (6) `gcloud run jobs
+  execute uts-prod-manifest-consolidator-market-data-cefi --region=asia-northeast1 --project=central-element-323112`
+  (documented SAFE) to trigger the incremental merge of the ~10.7k newer shards (~10 min, fits the 7200s budget) →
+  verify `get_blob_metadata` shows a NEW generation. (7) Then re-launch the liquidations re-derive
+  (`cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s P0 monitor-to-completion item — VM launch, infra
+  territory). **Note: the UTL guard fix (`af783d92e4`) is NOT yet deployed to the cron image** (needs MTDS
+  `BASE_IMAGE_DIGEST` bump + rebuild) — but the marker-restore recovery works with the CURRENT image (after restamp the
+  incremental path runs normally), and the guard becomes active on the cron once the image is rebuilt.
