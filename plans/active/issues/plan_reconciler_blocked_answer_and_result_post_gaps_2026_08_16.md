@@ -114,13 +114,26 @@ worker's ability to read it back via the AO HTTP surface.
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Root-cause why `/api/plan-health/result` rejects an empty/omitted `X-Orchestrator-Secret` from
+- [x] [BACKEND] P1. ✅ **Root-cause why `/api/plan-health/result` rejects an empty/omitted `X-Orchestrator-Secret` from
       localhost**, despite `agents/plan_reconciler.md`'s documented loopback-trust behavior. Read
       `server/plan_health.py`'s auth-check code path directly (don't trust the doc's claim or this finding's
       reproduction alone — confirm against the CURRENT code). Either fix the code to match the documented behavior, or
       correct the doc if the loopback-trust design was intentionally removed/never shipped. Done when: a plan_reconciler
       worker's result POST succeeds from the standard boot environment without a manually-provisioned secret, OR the
-      role doc is corrected to state the secret IS required and how a worker obtains it.
+      role doc is corrected to state the secret IS required and how a worker obtains it. — **DONE, already shipped
+      before this doc caught up: `unified-trading-pm@1600565cd2` (2026-08-17T06:32:21+01:00,
+      "fix stale claim: /api/plan-health/result has NO loopback auth bypass, verify_internal_secret() 401s on empty
+      secret regardless of source IP").** Chose the doc-correction branch, not a code change — `auth.verify_internal_secret()`
+      (`server/auth.py:613-633`) is a plain `secrets.compare_digest` with no loopback/IP bypass of any kind (confirmed
+      unchanged as of the 2026-08-18 Phase -1 re-check below), and weakening auth to match a stale doc claim would be
+      a live-security-path change, not something to do for doc-hygiene reasons. `agents/plan_reconciler.md` (current,
+      lines 101-106) now correctly states: "`ORCHESTRATOR_INTERNAL_SECRET` must be set in your shell before you POST
+      a result. There is no loopback bypass... An empty secret does not 'still work because it's same-box' — it
+      silently 401s... If the env var is empty, treat it as a boot-config bug and escalate." This satisfies the
+      todo's second done-when branch exactly. Verified 2026-08-19: this doc's own Progress Log never previously
+      cross-checked the CURRENT state of `agents/plan_reconciler.md` against this todo — every prior entry
+      (2026-08-16 through 2026-08-18) re-confirmed the CODE side only and left the doc-side branch unflipped even
+      after the fix landed.
 - [ ] [BACKEND] P1. **Root-cause the blocked-question answer retrieval gap.** Trace what actually happens end-to-end
       when an operator answers a `/blocked` question in the dashboard: which table/row gets written, and which
       endpoint(s) a worker is supposed to poll to see it. Reproduce this run's exact sequence (post a `/blocked`

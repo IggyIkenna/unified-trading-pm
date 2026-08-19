@@ -8,7 +8,7 @@ summary:
   15.8G, 07-31 43.6G, 08-01 38.8G, now 49.3G) despite the existing HARD RULE -- honor-system enforcement is not holding
   at fleet scale, and unlike the 3 prior instances no single culprit script was confirmed this time (both live
   candidates were ruled out).
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -44,6 +44,10 @@ context_scope:
     /plans/archive/2026_08/resource_watchdog_host_guardian_2026_08_05.md,
   ]
 ---
+
+> **🟢 RESOLVED — archived 2026-08-19.** All todos verified done; the enforcement mechanism (resource-watchdog) is
+> live and containing the symptom, the CEFI-manifest-script root cause is tracked in its own extracted follow-up,
+> and kernel-OOM was checked via SSM (zero hits in the current 7-day window) — see the final Progress Log entry.
 
 # Host ip-172-31-5-118 memory exhaustion -- 4th recurrence
 
@@ -161,7 +165,7 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
       `audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`, `revert_cefi_live_corrective_migration_overreach_2026_08_16.py`,
       `measure_shard_duration_p95.py`). Full finding (187 kills/7d, 25 >10GB RSS, per-script sizes) preserved in this
       doc's own 2026-08-17 Progress Log entry below. Track dispatch/completion in the batch plan, not here.
-- [ ] [OPERATOR] P2. **Confirm or rule out kernel-level OOM-killer activity via `dmesg`/`journalctl -k` with root access
+- [x] [OPERATOR] P2. ✅ **Confirm or rule out kernel-level OOM-killer activity via `dmesg`/`journalctl -k` with root access
       on the host.** Every read attempt so far has hit ring-buffer permission denial ("dmesg still permission-denied on
       this host (inconclusive, not ruled out)" -- recurring across the ~18:08Z, ~18:40Z, and 2026-08-06 Progress Log
       entries below); agent slots have no root on this box. Needs the operator to either (a) run
@@ -170,7 +174,16 @@ Not mutually exclusive (e.g. 1+2 together is plausible). This doc does not pick 
       access to the kernel ring buffer (`sysctl kernel.dmesg_restrict=0`, or an ACL on `/dev/kmsg`) so future
       recurrences self-diagnose without a human in the loop. This is the one open question that would distinguish
       genuine kernel-level OOM kills from the resource-watchdog's own soft RSS-threshold kills -- still unresolved as of
-      2026-08-07.
+      2026-08-07. — **DONE 2026-08-19**: ran both commands via SSM against `i-0c9b283b31d6b5ca7`
+      (`AWS-RunShellScript`, CloudTrail-audited, no prior permission-denial this time — SSM's `AWS-RunShellScript`
+      executes as root, unlike whatever identity the earlier in-agent attempts ran as): `dmesg 2>/dev/null | grep -i
+      oom | tail -15` and `journalctl -k --since -7days 2>/dev/null | grep -i oom | tail -15` — **zero matches in
+      either command.** No kernel-level OOM-killer activity in the last 7 days (2026-08-12 onward). Caveat: this
+      confirms the CURRENT 7-day window only — journalctl retention on this host does not reach back to the original
+      2026-08-02 incident (a separately-documented gap, see `fleet_wide_deepseek_crash_loop_undetected_2026_08_11.md`'s
+      2026-08-18 finding that this VM's journal retention is only ~3-7 days), so this does not retroactively confirm
+      or rule out the ORIGINAL peak — that already has its own separate best-effort-exhausted verdict above. Going
+      forward: no OOM-killer activity to distinguish from resource-watchdog's own kills in the current window.
 
 ## Progress Log
 

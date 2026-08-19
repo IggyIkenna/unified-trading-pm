@@ -400,7 +400,7 @@ context_scope:
       batch21_finalize todo 2). Original peak best-effort-exhausted (predates resource-watchdog); redirected to
       resource-watchdog's own kill corpus — 187 kills/7d, 25 >10GB RSS, all tracing to 4 unbounded CEFI-manifest scripts
       in `market-tick-data-service/scripts/` (new follow-up filed there). Source:
-      `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`.
+      `/plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md`.
 - [x] [REVIEW] P2. **DONE — confirmed live 2026-08-15 (this session, direct SSM check).** Zero kernel OOM-killer hits
       host-wide in the last 30 days (`journalctl -k`, no root needed — the orchestrator's own service user,
       `ubuntu`/group `adm`, can already read this). Ruled out cleanly. Source: same doc.

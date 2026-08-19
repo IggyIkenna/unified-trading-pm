@@ -45,7 +45,7 @@ context_scope:
     /plans/active/ao_open_work_consolidated_tracker_2026_08_14.md,
     /plans/active/issues/slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md,
     /plans/active/issues/ao_scheduled_skills_benchmark_and_ruled_decisions_session_2026_07_30.md,
-    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
+    /plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /plans/active/issues/shared_host_home_filesystem_full_2026_07_26.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
@@ -159,7 +159,7 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
       candidate processes were ruled out; check for any newly-observed high-memory process across the last 3+ restarts.
       Explicitly best-effort — **done when**: either a plausible culprit is identified, or the investigation is judged
       infeasible within a bounded pass and closed as best-effort-exhausted (state which). Cite back into
-      `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` + the tracker's Track 4.
+      `/plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` + the tracker's Track 4.
       Repo: agent-orchestrator / infra. — ✅ DONE 2026-08-17 (slot 10): the original 2026-08-02 peak itself is
       best-effort-exhausted (predates resource-watchdog, no forensic trail survives). Redirected to the fallback
       ("newly-observed high-memory process") via resource-watchdog's own kill corpus: 187 kills/7d, 25 >10GB RSS (peak
@@ -207,7 +207,7 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
   best-effort-exhausted. Redirected to the fallback: queried resource-watchdog's own kill corpus and found 187
   kills/7d, 25 >10GB RSS, all tracing to 4 unbounded CEFI-manifest scripts in `market-tick-data-service/scripts/`.
   Landed a new `[INFRA] P2` follow-up todo in
-  `/plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` naming the scripts. Full
+  `/plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md` naming the scripts. Full
   detail in that doc's Progress Log.
 - **2026-08-17 (slot 12, AO-dispatched)**: Worked the 60-minute context-signal validation re-run todo. Verified the
   fleet was clean-start (all `working` slots ≤60% context) before beginning — the exact precondition the 2026-08-08

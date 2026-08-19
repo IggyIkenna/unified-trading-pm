@@ -84,12 +84,22 @@ context_scope: [/plans/active/issues/prosewrap_padding_corpus_wide_1290_space_20
       pin on the same file set. Re-verified 2026-08-10 (slot 24, review): commit `fcbc736` on LDR; package.json shows
       `^3.9.5`; the proseWrap concern is confirmed inert on `.tsx`/`.css` (a markdown-only option), so no formatting
       risk to the dashboard.
-- [ ] [INFRA] P3. **Then decide whether the dashboard should gate on formatting at all.**
+- [x] [INFRA] P3. ✅ **Then decide whether the dashboard should gate on formatting at all.**
       `agent-orchestrator/scripts/quality-gates.sh` runs `tsc --noEmit` + `vitest` for the dashboard but never
       `format:check`, which is the only reason this skew has not failed anyone's gate. That is a gap or a deliberate
       choice; it is currently neither documented nor obvious. If formatting should be enforced, wiring `format:check` in
       is a one-line change — but do it AFTER the version-bump todo above, or the gate starts failing on the disagreement
-      itself.
+      itself. — **DECIDED 2026-08-19 (trust-mode, operator's "apply your recommendation" ruling): YES, gate on it.**
+      The version-bump todo above already landed (`agent-orchestrator@fcbc736`, 2026-08-10) and confirmed
+      byte-identical output — there's no longer a disagreement to gate INTO, so the original risk this todo warned
+      about no longer applies. An un-enforced `format` script that the repo's own README/package.json documents as
+      the way to format is a latent footgun (a contributor runs it, it "works," but nothing catches drift going
+      forward). Wiring `format:check` into `quality-gates.sh` is left as its own small follow-up (not implemented in
+      this same pass, to avoid a 6th concurrent editor touching `agent-orchestrator` while other in-flight work was
+      already running against that repo tonight):
+      - [ ] [INFRA] P3. Wire `npm run format:check` into `agent-orchestrator/scripts/quality-gates.sh`'s dashboard
+            leg (alongside the existing `tsc --noEmit` + `vitest` calls). Done when: a deliberately-misformatted
+            dashboard file fails the gate, and the current tree passes clean. Repo: agent-orchestrator.
 
 ## Progress Log
 

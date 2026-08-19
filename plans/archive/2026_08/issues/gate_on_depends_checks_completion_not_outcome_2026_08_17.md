@@ -10,7 +10,7 @@ summary: >-
   tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16_finalize.md was dispatched to confirm a GCS delete had
   landed, but the dependency's own P0 todo — though checked done — recorded "NOT GREEN (CF-8 RED), delete
   correctly WITHHELD".
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -43,6 +43,9 @@ context_scope:
     /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
   ]
 ---
+
+> **🟢 RESOLVED — archived 2026-08-19.** `task_template.md`'s `gate_on_depends` section now carries the callout
+> this doc's sole todo asked for — see that doc's `related:` for the live pointer.
 
 # gate_on_depends checks completion, not outcome
 
@@ -91,11 +94,20 @@ decision.
 
 ## Todos
 
-- [ ] [DOC] P3. Decide + document (in `task_template.md`, near the existing `gate_on_depends` section) whether/how
+- [x] [DOC] P3. ✅ Decide + document (in `task_template.md`, near the existing `gate_on_depends` section) whether/how
       a gated finalize plan should be protected from this class of premature dispatch, per one of the three
-      options above (or another). Repo: unified-trading-pm.
+      options above (or another). Repo: unified-trading-pm. — **DONE 2026-08-19 — operator-recommendation applied
+      (trust-mode, per the operator's 2026-08-19 "apply your recommendation, log the reasoning" ruling on this class
+      of small decision): option (c)**, `task_template.md`'s `gate_on_depends` bullet now carries an explicit
+      callout — `unified-trading-pm@<pending-sha>`. Reasoning: option (a) (status-quo/worker-discipline) already
+      failed once (this doc's own live incident); option (b) (a distinguishable checkbox marker the dispatcher
+      could someday key off) needs new `regen_backlog_from_plan.py` parsing logic — real engineering, not a small
+      ruling; option (c) is a pure documentation addition with zero new machinery, costs nothing to apply now, and
+      directly targets the actual failure mode (a worker trusting the gate instead of reading the dependency's
+      substance) — the same behavior this doc's own author already had to do informally when it hit the bug live.
 
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: KEEP-NA, valid — the doc's sole open todo is explicitly self-classified as a design question ("Needs an operator/plan-authoring-convention call, not a worker decision"), citing 3 mutually-exclusive options with no stated criterion for choosing among them. No corpus traps present.
+- **2026-08-19 (interactive session, operator trust-mode ruling)**: applied option (c) directly — see todo above.

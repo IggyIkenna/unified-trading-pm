@@ -18,7 +18,7 @@ related:
     /plans/active/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md,
     /plans/active/issues/docs_reconcile_findings_2026_08_17.md,
     /plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md,
-    /plans/active/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
+    /plans/archive/2026_08/issues/orchestrator_host_memory_exhaustion_4th_recurrence_2026_08_02.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-17"

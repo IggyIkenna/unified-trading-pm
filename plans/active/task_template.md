@@ -502,6 +502,16 @@ version.
      ordering + gates archival only). Enforcement: `dispatch.py::_prereqs_met` holds a `queued` task until all its
      `prereqs.completed_tasks` are `done` (and any named `prereqs.prerequisites` conditions are `true`). NEVER hand-edit
      `backlog.yaml` to add prereqs — author the frontmatter; the backend derives them.
+  - **`gate_on_depends` checks the dependency todo's checkbox, never its recorded OUTCOME** _(2026-08-18,
+    `gate_on_depends_checks_completion_not_outcome_2026_08_17.md`: a gated finalize plan dispatched to "confirm the
+    delete landed" the moment the dependency's verify-then-act todo was `[x]` — even though that todo's own text
+    recorded a legitimate non-success result, "NOT GREEN, delete correctly WITHHELD")._ If the upstream todo you're
+    gating on is a verify-then-act shape (run a check; if it passes, act; if not, correctly withhold the action —
+    either way the todo is done), do NOT assume the gated finalize's premise holds just because the checkbox is
+    `[x]`. Either (a) have the finalize plan's own first todo independently re-verify the substantive outcome before
+    acting on it, or (b) state the non-success terminal state in a way a cold reader of the finalize brief can't miss
+    (e.g. name the exact recorded result in the finalize todo's own text, not just a `depends_on` pointer). A bare
+    `depends_on` + `gate_on_depends: true` on a verify-then-act todo is not sufficient on its own.
 - **Verify an "Ordering note" before asserting it's safe.** For multi-repo/multi-step DAG plans (audit→fix→verify,
   migrations), a note claiming step N can land before step M is a CORRECTNESS CLAIM, not a convenience aside — don't
   reason from the diff's code shape alone (e.g. "this branch doesn't read X" can still break at runtime if a live caller
