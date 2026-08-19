@@ -229,6 +229,11 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("temperament_base", Req.E, "scalar"),
         FieldSpec("scope_tools", Req.E, "free_list"),
         FieldSpec("reports_to", Req.E, "scalar"),
+        # worker_slot_account_exhaustion_no_rotation_2026_08_19 todo 2: "scalar", not
+        # "enum" — a real YAML `true`/`false` parses to a Python bool, which would
+        # HARD-fail an enum({"true","false"}) string-membership check. See
+        # role_registry._coerce_model_strict for the actual parse.
+        FieldSpec("model_strict", Req.E, "scalar"),
     ],
     "cursor-rule": [],  # special-cased in validate_frontmatter
 }

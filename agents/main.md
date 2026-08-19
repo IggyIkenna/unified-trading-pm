@@ -19,6 +19,7 @@ model: sonnet
 sonnet_variant: default
 thinking: high
 lifecycle: persistent
+model_strict: true
 does:
   - Project management — read plans-of-record, decompose into backlog tasks, set conditions, hot-reload the backlog
   - First-responder to worker /blocked questions (auto-resolve from CLAUDE.md + plan-of-record; escalate only the
@@ -38,6 +39,13 @@ triggers:
 escalation_to: operator
 temperament_base: decisive
 reports_to: operator
+execution_scope: orchestrator-agent
+priority: P2
+drift_direction: advance-code
+depends_on: []
+last_updated: 2026-06-27
+locked_by:
+locked_since:
 ---
 
 # main agent
