@@ -2009,6 +2009,36 @@
       </details>
 
       <div class="callout">
+        <span class="tag">Where the contract is headed — reference price, reference position, credit</span>
+        <p>
+          <b class="st st-live">live</b>
+          The envelope already carries a <span class="mono">reference_price</span> on every instruction — the market
+          level the strategy believed was true the moment it was emitted — together with a mark mode telling
+          execution whether to hold that price fixed as sent or keep marking it against the underlying while the
+          order is worked. It exists because a price is allowed to move between instruction and fill; that is what
+          the reference price accounts for, not a fault condition.
+        </p>
+        <p>
+          <b class="st st-plan">planned</b> <b class="ev ev-assumed">~ assumed</b>
+          A position can go stale in a different way than a price can: a strategy and execution simply disagreeing
+          about what is actually held is not a market move, it is the two sides losing sync. The next layer, designed
+          but not yet built, adds a <span class="mono">reference_position</span> to the same envelope — the
+          strategy's believed position, per venue it is eligible to trade on — checked against what execution
+          actually sees the instant an instruction lands. A mismatch is treated as an integrity failure, using the
+          same block, scale-down or monitor consequence the risk gate already applies to any rule it fires, not a
+          new decision path.
+        </p>
+        <p>
+          Travelling alongside it is <span class="mono">credit</span> — a tolerance band or a fire-or-don't threshold
+          that the strategy computes and owns, with execution only consuming whatever is cached to decide whether and
+          how aggressively to act on it. None of this reaches into how an order is actually worked: it sets the
+          boundary the algorithm library described above operates inside, the same relationship
+          <span class="mono">execution_policy_ref</span> already has with the algorithm it resolves to — strategy
+          states the governing limits, execution's own logic decides the mechanics within them.
+        </p>
+      </div>
+
+      <div class="callout">
         <span class="tag">Stated plainly</span>
         <p>
           For your two archetypes the working orders are not latency-sensitive — carry is captured over hours and days, not
