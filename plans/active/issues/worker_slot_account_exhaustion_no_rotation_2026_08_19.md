@@ -96,12 +96,14 @@ paused 2026-08-18 ~07:14-07:24 UTC — ~21h *before* the failover fix even exist
 `("working","blocked","idle")` filter regardless of account state, so they wouldn't be touched by
 this mechanism even if the usability check were fixed.
 
-## Genuine ambiguity, not yet resolved
+## Initial ambiguity — resolved 2026-08-19 (see live re-check below)
 
 At investigation time, no `SlotRow.current_task` matched `sports_taxonomy_p4_backfill`, and the
 backlog API showed all 15 related tasks `status=queued, dispatched_to=None` — i.e. nothing was
 actively running against `sub-b-iggy2london` at that instant. The operator's dashboard observation
-may reflect a different moment than this snapshot; worth a fresh live check before/alongside a fix.
+may have reflected a different moment than this snapshot. **Resolved**: the live re-check in the
+2026-08-19 follow-up below reproduced the same result a second time — see that section and its
+corresponding `[x] [SCRIPT] P3` todo.
 
 ## 2026-08-19 follow-up: multi-provider scope + mid-session exhaustion (operator conversation)
 
