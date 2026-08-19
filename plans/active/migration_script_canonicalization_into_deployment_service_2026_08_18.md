@@ -584,7 +584,7 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
 
 ## Phase 2 — small/medium repos: full relocation (volume is cheap, no scope-narrowing needed)
 
-- [ ] [DATA] P2. **market-data-processing-service** (13 files, `scripts/backfill-prediction-candles.sh`,
+- [x] [DATA] P2. **market-data-processing-service** (13 files, `scripts/backfill-prediction-candles.sh`,
       `scripts/backfill_candle_manifest.py`, `scripts/backfill_defi_dex_pool_swaps_source_correction.py`,
       `scripts/backfill_odds_horizon_bucket_missing_shards_2026_07_28.py`,
       `scripts/blast_radius_cefi_chain_bundle_timestamp_float_2026_08_14.py`,
@@ -600,11 +600,47 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       relocate the rest into `deployment-service/scripts/migrations/market-data-processing-service/`. Done-when:
       `bash market-data-processing-service/scripts/quality-gates.sh` AND `bash deployment-service/scripts/quality-
       gates.sh` both green, no dangling reference to the old paths.
-- [ ] [DATA] P2. **features-service** (18 files — `scripts/backfill_feature_orphan_class_e.py` through
+      **DONE (2026-08-19).** RELOCATED (3): `survey_tradfi_quarantine_raw_source_2026_07_27.py`,
+      `scope_processed_candles_pool_uppercase_corpus_2026_08_17.py`,
+      `scope_processed_candles_instrument_type_uppercase_corpus_cefi_tradfi_prediction_2026_08_17.py` — all 3
+      Delete-when NOT satisfied (parent docs still `active`/`open`), no import blockers. LEFT IN PLACE — Delete-when
+      satisfied (9): `backfill_candle_manifest.py`, `backfill_defi_dex_pool_swaps_source_correction.py`,
+      `backfill_odds_horizon_bucket_missing_shards_2026_07_28.py`,
+      `migrate_odds_horizon_bucket_venue_to_bookmaker_2026_07_27.py`,
+      `reclassify_odds_horizon_bucket_unresolvable_rows_2026_07_28.py`,
+      `blast_radius_cefi_chain_bundle_timestamp_float_2026_08_14.py`,
+      `close_odds_horizon_bucket_expected_unattempted_cells_2026_07_25.py`,
+      `migrate_candle_canonical_2026_07.py` (doubly justified — also a hard
+      `market_data_processing_service.app.core.*` import, tier-architecture blocker),
+      `restamp_sports_candle_venue_2026_08_03.py` — each verified against its resolving plan/issue doc's VERDICT
+      lines and row-count reconciliation. LEFT IN PLACE — blocked (1): `backfill-prediction-candles.sh` (invokes
+      `python3 -m market_data_processing_service.cli.main`; deployment-service doesn't declare that package as a
+      dependency — same tier-architecture class as `run_2yr_config_grid_backtest.py`). Both repos' `quality-gates.sh
+      --no-fix` green (market-data-processing-service 121s standalone; deployment-service full-tree, see below).
+      Shipped `market-data-processing-service@e6aed01c99` (source) + `deployment-service@7269d436f2` (destination,
+      bundled with features-service + e2e-testing + a blocker fix, see that commit's note below).
+- [x] [DATA] P2. **features-service** (18 files — `scripts/backfill_feature_orphan_class_e.py` through
       `scripts/write_sports_smoke_test_provenance_note_2026_07_28.py`, full list in this plan's §Discovery grep
       output; also `scripts/sports/*` subdirectory entries). Same Delete-when-first triage + relocate to
       `deployment-service/scripts/migrations/features-service/`. Done-when: same green-QG + no-dangling-reference
       bar as above.
+      **DONE (2026-08-19).** Live re-derivation found 19 files, not 18 (§Discovery table off-by-one, noted not
+      chased). RELOCATED (1): `scripts/sports/features_sports_reconcile_available_at.py` — self-contained, 0
+      dangling refs. LEFT IN PLACE — satisfied (4, each annotated in-file with resolving evidence):
+      `purge_sports_derived_features_post_floor_residue_2026_07_27.py` (re-census confirmed 0 residue),
+      `scripts/sports/migrate_gcs_entity_filenames.sh` (target bucket confirmed 404-deleted, script now inert),
+      `write_sports_smoke_test_provenance_note_2026_07_28.py` (Delete-when's actual mechanism was fulfilled
+      differently — a git-tracked note, not this script's GCS-sidecar approach — script never ran, dead weight),
+      `scripts/sports/launch_parallel_backfill.sh` (deprecated redirect + VM-launcher carve-out, same as e2e-testing's
+      exclusion). LEFT IN PLACE — blocked (14): `backfill_feature_orphan_class_e.py` (sibling dynamic-load, same
+      class as strategy-service's precedent), 8 files with hard `features_service.common`/`features_service.onchain`
+      imports, `sports/profile_2018_06_17_memory.py` (monkeypatches live `features_service.sports.exporters`
+      internals), and 3 bash scripts (`backfill_funding_30day.sh`, `backfill_lst_yields_30day.sh`,
+      `sports/run_backfill.sh`) that `python -m features_service` against that repo's own installed venv — a
+      subprocess-level service↔service coupling, same practical blocker class as a hard import. Both repos'
+      `quality-gates.sh --no-fix` green (features-service standalone; deployment-service full-tree, see below).
+      Shipped `features-service@56795575f6` (source: 1 deletion + 2 in-place annotation edits) +
+      `deployment-service@7269d436f2` (destination, see note below).
 - [x] [DATA] P3. **strategy-service remainder** (the 2 non-Category-1 matches — `scripts/
       backfill_strategy_instructions_orphan_class_e.py`, `scripts/migrate_clients_yaml_to_client_first.py` — the 3rd
       strategy-service match, `run_2yr_config_grid_backtest.py`, is already covered by Phase 1). Relocate to
@@ -676,7 +712,7 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       concurrent verification passes). Shipped `deployment-api@e6e226bb70` (source: delete) and
       `deployment-service@f0f23a86a7` (destination: add relocated file + stale `.gitkeep` cleanup for both this
       and the unified-trading-library subdirectory).
-- [ ] [DATA] P3. **e2e-testing** (the 6 genuine GCS-migration files identified in §Discovery's exclusion note —
+- [x] [DATA] P3. **e2e-testing** (the 6 genuine GCS-migration files identified in §Discovery's exclusion note —
       `scripts/defi/migrate_legacy_twins_from_audit.py`, `scripts/defi/migrate_uniswap_v4_legacy_to_canonical.py`,
       `scripts/defi/copy_lst_yields_prd_to_canonical_2026_07_14.py`,
       `scripts/sports/migrate_sports_md_unmappable_to_canonical_2026_06_19.py`,
@@ -684,6 +720,30 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       `scripts/sports/verify_sports_md_unmappable_twins_2026_06_19.py` — explicitly NOT the `launch_*_vm.sh`/
       `setup-backfill-vm.sh` files in the same directories, those stay governed by launcher-script-ssot.md).
       Relocate to `deployment-service/scripts/migrations/e2e-testing/`.
+      **DONE (2026-08-19).** No import blockers on any of the 6 (repo-wide grep clean). RELOCATED (2):
+      `migrate_legacy_twins_from_audit.py` (Delete-when open — source doc `status: partial`, all-AG clause including
+      cefi not re-checked since), `migrate_uniswap_v4_legacy_to_canonical.py` (fan-out+manifest-verify half done,
+      but legacy-delete half explicitly still pending per the most recent 2026-07-13 residuals audit). LEFT IN
+      PLACE — Delete-when satisfied (4): `copy_lst_yields_prd_to_canonical_2026_07_14.py` (legacy bucket copied +
+      verified + deleted same-day), `migrate_sports_md_unmappable_to_canonical_2026_06_19.py` (population confirmed
+      0, legacy delete executed), `delete_sports_legacy_twinned_2026_06_19.py` (delete literally executed, cited by
+      commit), `verify_sports_md_unmappable_twins_2026_06_19.py` (verification + delete both confirmed complete).
+      Both repos' `quality-gates.sh --no-fix` green (e2e-testing 54s standalone; deployment-service full-tree, see
+      below). Shipped `e2e-testing@0eafd0c284` (source) + `deployment-service@7269d436f2` (destination).
+
+**Note on the bundled `deployment-service@7269d436f2` commit** (destination side for market-data-processing-service
++ features-service + e2e-testing above): while independently re-verifying these 3 sub-agents' work, `quality-
+gates.sh`'s own commit-time re-gate rejected TWO consecutive quickmerge attempts on an UNRELATED pre-existing
+STEP 5.94 fallback-import-baseline overage in `scripts/sync/sync-configs.py:267` (3 sites vs. baseline 2) — a file
+none of the 3 sub-agents touched, confirmed via `git log`/`git diff` to be untouched since 2026-07-09. This had
+silently started blocking ALL deployment-service commits fleet-wide, not just this plan's work. Root-caused and
+fixed (separated a legitimate function-scoped `unified_trading_library` import from its wrapping
+`try/except ImportError` — the `except` was really guarding client-construction errors, not an optional import;
+`unified_trading_library` is a core direct dependency, not optional) and bundled into the same commit since it was
+the thing blocking it. Filed
+`/plans/active/issues/deployment_service_preexisting_qg_failures_sync_configs_hardcoded_project_id_2026_08_19.md`
+for the full writeup + a second, still-open, lower-priority finding (hardcoded prod project ID in 2 test files)
+that didn't block shipping.
 
 ---
 
