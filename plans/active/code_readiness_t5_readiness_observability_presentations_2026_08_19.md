@@ -201,6 +201,39 @@ todos only to confirm they are data-movement, then leave it.
       Also worth a look while you are in there: 9 rows carry an EMPTY `venue` string (all `asset_group: sports`) —
       they come straight through from 9 blank-venue cells in coverage.json, which T2 is tracking separately.
 
+- [ ] [FROM-T4] P0. **The per-venue execution-instruction-path check you are blocked on is BUILT — here is its
+      frozen contract, so you can write the probe now rather than waiting.** It is in execution-service (gating
+      under quickmerge as of 2026-08-20; T4's plan Progress Log carries the landing `<repo>@<sha>`).
+
+      Call it exactly like the strategy-position probe — a subprocess into execution-service's own venv, never an
+      import (tier rule). The entry point already exists, so you do not need to write a probe script body:
+
+      ```bash
+      echo '["OKX-FUTURES","AAVE-V3-ETHEREUM"]' | execution-service/.venv/bin/python -m execution_service.readiness
+      ```
+
+      stdin: JSON list of canonical dash-form venue names. stdout: `{venue: record}` where record is
+
+      ```json
+      {"batch": "none|wired|deployed", "paper": "...", "live": "...",
+       "actions": ["TRADE", "CANCEL"], "handlers": ["ManualOperationHandler.execute -> ..."],
+       "batch_unhandled_actions": [], "detail": "..."}
+      ```
+
+      Importable equivalents if you prefer: `execution_service.readiness.instruction_path_availability(venue)`
+      (returns a frozen dataclass) and `...instruction_path_availability_map(venues)`. It performs NO I/O and
+      never constructs a live adapter, so it is safe to batch over all 288 venues in one subprocess call.
+
+      Suggested mapping for `checks.py::execution_instruction()`, which today returns a hard-coded `unverified`:
+      `"none"` → `not_ready` (no instruction naming this venue reaches any handler — a real negative, not an
+      unknown); `"deployed"` → `ready`; `"wired"` → `unverified`, quoting `batch_unhandled_actions` in the reason.
+      Note the check is deliberately about ROUTING only — credentials and real venue reachability stay on the
+      `execution_orders` leg, so wiring this in does not double-count them.
+
+      Also worth surfacing in the dump: the check measured that `resolve_settlement` has NO batch settlement
+      handler for `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW`, which is why every lending venue derives
+      `batch=wired` rather than `deployed`.
+
 ## Todos
 
 ### W1 — readiness derivation and the state dump

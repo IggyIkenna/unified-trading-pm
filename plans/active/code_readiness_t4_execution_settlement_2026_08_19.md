@@ -173,9 +173,13 @@ _None at authoring time._
 
 - [ ] [BACKEND] P0. Fix CeFi live venue-string dispatch in the order-adapter factory, broken for 9 of 12 major
       venues — same legacy bare-token table defect as strategy-service's. Coordinate the canonical form with T3.
-- [ ] [BACKEND] P0. Add CANCELLED and AMENDED to `OrderTracker`. `GET /instructions/{id}` reports a genuinely
-      cancelled order as SUBMITTED forever and `is_instruction_complete()` never flips true for a cancel-only
-      instruction. Evidence:
+- [x] ✅ [BACKEND] P0. Add CANCELLED and AMENDED to `OrderTracker` — **ALREADY SHIPPED; this plan's todo was
+      stale at authoring.** MEASURED 2026-08-20 in code, not from the issue's checkboxes:
+      `execution_service/orders/tracker.py:51` `mark_cancelled()` sets status `"CANCELLED"`, `:61`
+      `mark_amended()` sets `"AMENDED"`, and `:117` `is_instruction_complete()` treats
+      `terminal_statuses = {"FILLED", "CANCELLED"}` — so a cancel-only instruction DOES flip complete. Both are
+      called from the live surface (`api/manual_instruction_api.py:473` `/cancel`, `:551` `/amend`). The source
+      issue's remaining open item is a P3 (`instruction_to_order_ids` staleness), not this P0. Evidence:
       `/plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
 - [ ] [BACKEND] P0. Implement the full 9-state order lifecycle once T1 lands the `OrderState` contract.
 - [ ] [BACKEND] P0. Fix the broken emergency close-all path — strategy POSTs to `/api/orders` and execution-service
@@ -188,12 +192,21 @@ _None at authoring time._
 
 ### Correctness P0s — silently wrong today
 
-- [ ] [BACKEND] P0. Implement the CCXT `withdraw()` stub. The real exchange call is commented out, so every
-      CEX_WITHDRAW-routed venue (18 of 22) would report a successful withdrawal that never happened. Evidence:
+- [x] ✅ [BACKEND] P0. Implement the CCXT `withdraw()` stub — **ALREADY SHIPPED; this plan's todo was stale at
+      authoring.** MEASURED 2026-08-20 in code: `execution_service/engine/transfers/live_ccxt_adapter.py:227`
+      makes the real call `await ccxt_exchange.withdraw(token, float(amount), to_address, params={"chain": chain})`
+      — not a commented-out stub — and `engine/transfers/wiring.py:82` resolves credentials and builds one real
+      CCXT exchange per wirable CEX_WITHDRAW venue. The issue's one remaining open item is
+      `BLOCKED-CREDENTIALS` (exercise end-to-end against a real exchange), which is allowed-pending state 2
+      (venue connectivity). Evidence:
       `/plans/active/issues/cefi_ccxt_withdraw_stub_returns_false_confirmed_2026_08_16.md`.
-- [ ] [BACKEND] P0. Fix `CloudKmsCustodyProvider` silently defaulting an unmapped chain to `chain_id=1` (Ethereum)
-      on HOT_TRADING and GAS_RESERVE wallets. UAC's own `resolve_chain_id()` raises on the same case — match it.
-      Evidence: `/plans/active/issues/defi_cloud_kms_silent_wrong_chain_id_fallback_2026_08_16.md`.
+- [x] ✅ [BACKEND] P0. Fix `CloudKmsCustodyProvider`'s silent `chain_id=1` fallback — **ALREADY SHIPPED; this
+      plan's todo was stale at authoring.** MEASURED 2026-08-20 in code:
+      `execution_service/custody/cloud_kms.py:39` imports UAC's `resolve_chain_id`, and `:387` `_resolve_chain_id()`
+      delegates to it (`:399`) so an unmapped chain RAISES instead of signing against Ethereum;
+      `custody/local_key.py:15,140` is wired the same way. The issue's remaining open item is `[OPERATOR]` P0
+      (inspect live `wallet_provisioning.json`), which this tranche cannot self-serve. Evidence:
+      `/plans/active/issues/defi_cloud_kms_silent_wrong_chain_id_fallback_2026_08_16.md`.
 - [ ] [BACKEND] P0. Reach-test every connector module. Marinade, Kamino and Jupiter connectors have zero production
       callers; the Pendle connector is built but never instantiated in `DeFiAdapter` and is absent from
       `DEFI_VENUE_TO_CONNECTOR_CLASS` / `DEFI_VENUE_TO_GATE_MARKER`. Wire them or delete them — no shims. Evidence:
@@ -201,6 +214,13 @@ _None at authoring time._
 - [ ] [BACKEND] P0. Enforce the funds-isolation invariant in code — funds NEVER move between clients; every transfer
       is scoped to one `client_id` and `TransferCoordinator` raises `CrossClientTransferForbiddenError`. SSOT:
       `/codex/04-architecture/client-funds-isolation.md`.
+- [ ] [BACKEND] P1. Close the BATCH settlement gap the instruction-path check surfaced 2026-08-20. MEASURED via
+      `backtest_v2.action_handlers.BATCH_UNHANDLED_ACTIONS`: `resolve_settlement` has no handler for
+      `CONVERT_DUST`, `LP_BURN`, `LP_MINT`, `REPAY`, `WITHDRAW`, so each raises `UnhandledActionError` and
+      `paper(W) == batch-rerun(W)` cannot hold for any instruction using them — this is why every lending venue
+      derives `batch=wired` instead of `deployed`. `REPAY`/`WITHDRAW` are rate-matched inverses of the shipped
+      `BORROW`/`LEND` handlers and should be cheap; `LP_MINT`/`LP_BURN` need the DEFI_LP position shape. SSOT:
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.
 
 ### W12 — reconciliation
 
@@ -254,3 +274,54 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+
+- 2026-08-20 — **Slot/venv note for whoever resumes this tranche.** Work happens in `.tabs/5` (this session's
+  assigned slot), NOT `.tabs/7`: tab 7 has no `execution-service/.venv`, so its quality gate cannot run. Tab 5 is
+  provisioned for all seven owned repos. Tab 5 is shared with one other live session working other repos — scope
+  every commit by name, never `git add .`.
+
+- 2026-08-20 — **Todo 2 (the 864-row unblocker) built and gated.** Shipped the real per-venue
+  execution-instruction-path check, which is what `checks.py::execution_instruction()` had no implementation to
+  call. New in execution-service:
+  - `execution_service/readiness/instruction_path.py` — `instruction_path_availability(venue)` returns a frozen
+    record `{batch, paper, live, actions, handlers, batch_unhandled_actions, detail}` with each mode one of
+    `"none" | "wired" | "deployed"`. Derived from three registries the runtime really dispatches on: the
+    order-adapter factory (`get_supported_venues()` + `_resolve_venue_str`), the new DeFi route table, and the
+    sports exchange adapters. Performs NO I/O.
+  - `execution_service/readiness/__main__.py` — cross-venv probe: stdin JSON venue list → stdout JSON map, so T5
+    shells out instead of importing execution-service into another venv.
+  - `execution_service/adapters/defi_instruction_routes.py` — the venue-token → connector routing `DeFiAdapter`
+    previously carried as three private substring `if` chains, extracted to one ordered table. `DeFiAdapter` now
+    dispatches THROUGH it (`_execute_swap`/`_execute_lending`/`_execute_staking`), so the check reads the same
+    table the executor uses and the two cannot drift. Match order (JUPITER before UNISWAP, MORPHO/KAMINO before
+    AAVE) and all three error-message wordings are pinned by tests.
+  - `backtest_v2/action_handlers.py` — added `BATCH_SETTLEMENT_ACTIONS` / `BATCH_NO_FILL_ACTIONS` and a DERIVED
+    `BATCH_UNHANDLED_ACTIONS` (set-subtraction from the enum, so a new action lands there automatically).
+
+  MEASURED, by running the check (not inferred): `OKX-FUTURES`/`BINANCE-SPOT`/`KRAKEN-SPOT` → all three modes
+  `deployed`, actions `(CANCEL, TRADE)`. `COINBASE-FUTURES` → all three `none` (the factory itself refuses it —
+  the check inherits that rather than stripping the suffix). `UNISWAP-V3-ETHEREUM`/`JUPITER-SOLANA` → `SWAP`.
+  `LIDO-ETHEREUM` → `STAKE, UNSTAKE`. `BETFAIR`/`POLYMARKET`/`KALSHI` → `TRADE`. `NOT-A-VENUE` → all `none`.
+  **New finding the check surfaced:** `AAVE-V3-ETHEREUM` derives `batch=wired`, not `deployed`, because
+  `resolve_settlement` has no settlement handler for `REPAY` or `WITHDRAW`. The full measured set with no BATCH
+  handler is `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW` — so `paper(W) == batch-rerun(W)` cannot hold for
+  instructions using them. Tracked as a new todo below.
+  `ruff format`/`ruff check` clean and `basedpyright` reports 0 errors on all eight files.
+
+  **Gate note — quickmerge exit 0 does NOT mean landed** (the exact trap CLAUDE.md warns about). Run 1 returned
+  exit 0 while the log's last lines read `❌ Re-gate FAILED … Function/class/method size exceeded`, and
+  `git cat-file -e origin/live-defi-rollout:<path>` confirmed none of the new files were in origin. Cause:
+  `DeFiAdapter._execute_swap` reached 53L against the 50L method cap (`MAX_METHOD_LINES`, base-service.sh:276)
+  because of the docstring I added. Fixed by collapsing that docstring to one line (47L now); the detailed
+  rationale lives in `defi_instruction_routes.py`'s module docstring where it does not count against a method cap.
+  Re-verified by replicating the gate's own AST check repo-wide: **no size violations across
+  `execution_service/`**. Also: capture quickmerge to a FILE, never `| tail -N` — run 1's truncation threw away
+  the itemised violation and cost a diagnosis round-trip. `<repo>@<sha>` appended when run 2 lands.
+
+- 2026-08-20 — **Three of this plan's four "Correctness P0s — silently wrong today" were already fixed before the
+  plan was authored.** Verified in CODE, not from the issue docs' checkboxes (this corpus has confirmed
+  checkbox-vs-prose traps): OrderTracker CANCELLED/AMENDED, the CCXT `withdraw()` stub, and
+  `CloudKmsCustodyProvider`'s `chain_id=1` fallback. Each is flipped above with its measured file:line. The
+  remainder of each source issue is either a P3 or an `[OPERATOR]`/`BLOCKED-CREDENTIALS` item outside this
+  tranche's reach. Net: the "silently wrong today" section is one real open item (connector reach-test) plus the
+  funds-isolation invariant, not four.
