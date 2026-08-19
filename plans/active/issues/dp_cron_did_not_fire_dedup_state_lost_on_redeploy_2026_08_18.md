@@ -313,3 +313,46 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   above. Flipped the carried-over [OPERATOR] todo to done. All todos in this doc are now resolved except the P1 GCS-
   persistence design (still correctly its own dispatch, not attempted this session — out of this session's assigned
   scope, which was specifically the live-capture-stall investigation).
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 21, agt-c66894)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-cefi-consolidated-20260817-025031
+  venue=ASTER data_type=liquidations` (no issue slug — alert-carries-the-details path). Confirmed this is a
+  duplicate/spam symptom of THIS doc's root cause, not a new failure mode — did not file a separate issue doc.
+  Ruled out a genuine ASTER-liquidations capture bug specifically: the connector
+  (`market-tick-data-service/market_tick_data_service/live/connectors/aster_book_liq_ws.py`,
+  `AsterLiquidationsWSConnector`) subscribes ONE small all-market `!forceOrder@arr` stream — none of the
+  per-symbol subscribe-frame-size/connection-count limits that broke `book_snapshot_5`/`BYBIT-FUTURES` apply
+  here — and a prior investigation (`scripts/check_aster_liquidations_capture_rate_2026_08_02.py`,
+  `/plans/active/issues/tarball_stale_window_cefi_live_capture_correctness_risk_2026_08_01.md` todo #5)
+  already confirmed real liquidation events DO get captured for this venue, just at a genuinely low natural
+  event rate — consistent with an occasional 3d-staleness-budget trip, not a code defect.
+  **Attempted the P2 live-verify todo, result MIXED, not a clean pass — leaving P2 open, refining scope for the
+  next dispatch instead of closing it:**
+  1. Confirmed the GCS-persistence fix (`alerting-service@f48a61193f`, committed `2026-08-19T05:29:07Z`) reached
+     production: current live revision `dp-alerting-subscriber-00130-cwn` deployed `2026-08-19T06:16:07Z`
+     (`gcloud run revisions list`), ~47min after the commit — content, not SHA-ancestor alone (Option-B
+     direct-promote rewrites commits, per this doc's own established discipline).
+  2. Fresh `slack-read-channel.py data-pipeline-alerts 6` (831 msgs/6h) isolated the exact
+     `vm=mtds-live-cefi-consolidated-20260817-025031 venue=ASTER data_type=liquidations` identity's 14 fire
+     timestamps over the window: `04:35, 05:06(+31 ok), 05:21(+15 VIOLATION), 05:37(+16 VIOLATION),
+     06:06(+29 ok), 06:21(+15 VIOLATION), 06:36(+15 VIOLATION), 07:06(+30 ok), 07:21(+15 VIOLATION),
+     07:36(+15 VIOLATION), 07:50(+14 VIOLATION), 09:20(+90 ok), 09:35(+15 VIOLATION), 10:06(+31 ok)`. Six of
+     these violations post-date the `-00130` deploy (06:21 through 09:35) — the exact "alternating
+     short/near-compliant gap" shape `dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md`
+     already characterized, continuing unchanged after the fix went live for this specific identity.
+  3. BUT a direct live read of the persisted state (`AlertStorageStore().read_cooldown_state()`, 97 keys total,
+     42 `DP_CRON_DID_NOT_FIRE` keys) shows persistence genuinely functioning right now — a batch of keys updated
+     at `10:20:2x-31Z` and a prior batch at `09:50:5x-09:51:03Z`, a clean ~29.8min gap, i.e. COMPLIANT cadence
+     for those specific identities. Could not confirm whether the ASTER-liquidations identity's own hash is
+     among either wave without recomputing `compute_dedup_key(event_name, details)` against its exact `details`
+     dict (not captured verbatim from the Slack-rendered alert text) — so this is inconclusive on the specific
+     identity, not a clean re-sample pass.
+  4. Net: the fix is live and the persistence layer is demonstrably not a no-op, but the doc's own P1 "resolved"
+     claim is not yet fully verified for every affected identity — some show continued leaking post-deploy,
+     others show clean compliant cadence. **Recommend the next dispatch trace ONE specific still-leaking
+     identity end-to-end** (compute its exact `compute_dedup_key` hash from the live emitter's `details` dict,
+     grep that exact key in `cooldowns.json`, and correlate its timestamps against the Slack fire times) rather
+     than a fleet-wide re-sample — that precision is what neither this dispatch nor the two prior ones achieved.
+     Did not attempt a deeper alerting-service code fix this session (no confident, non-guessed root cause
+     found for the mixed result — `does_not: guess at an ambiguous fix`); this is a genuinely open investigation,
+     not a small/clear fix, and outside this dispatch's assigned repo (market-tick-data-service). No code
+     changes shipped this session.
