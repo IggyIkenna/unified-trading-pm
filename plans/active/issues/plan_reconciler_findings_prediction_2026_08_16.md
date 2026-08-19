@@ -558,3 +558,13 @@ in this same run.
   dangling-refs, tradfi AG-closeout orphan, corpus-wide NA-ratchet growth — none prediction-attributable), and
   judgment-call investigation notes. `BLK-e7b0e8da` is now closed (resolved earlier in this same doc). None is a
   bounded worker-determinable outcome sitting undispatched here. Doc stays NA.
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:2c68a82e4b4d5b67]: KEEP-NA,
+  stale-items — 10 open items reconciled (grep + manual count both match Phase-0's given 10). Item 2 (Betfair
+  `[INFRA]` tag on `batch6_2026_07_29.md:159`) is now the least-current of 3 copies of the same finding — superseded
+  by the fuller 4-sub-finding version in `plan_reconciler_findings_predictions_master_2026_08_19.md:200-216` (freshly
+  verified <12h grace window, hard-evidence-backed). Not stale in substance (still a real, live-tracked Betfair
+  account-lockout blocker), just redundant with a more-detailed sibling copy — no independent action taken (this is
+  `/plan-reconcile`'s own recurring-cadence mechanism, not something to hand-edit here). Remaining 9 items correctly
+  non-dispatchable: grace-window placeholders, cross-tranche routing pointers (tradfi ×2, cross-cutting ×1), an
+  NA-ratchet self-reference, 2 pointers at OTHER docs' possibly-bounded items (not extractable from this doc), and 1
+  genuine OPERATOR_QUESTION (batch11/phase_d double-execution risk). Doc stays NA.

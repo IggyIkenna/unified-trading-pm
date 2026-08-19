@@ -304,3 +304,10 @@ re-litigated, just confirmed still accurate on read):
   trust mode — no operator ruling needed this run. 4 findings left correctly grace-protected on
   `batch6_2026_07_29.md`. 0 refuted. Working-tree only, no commit/push (do-not-ship instruction). Phase 5.95 HTML
   report built + published — see `plans/epics/predictions_master.md`'s own `## Report` section for the link.
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:cf2935624e704e4d]: KEEP-NA,
+  valid — 4 open items reconciled (grep + manual count both match Phase-0's given 4). All 4 are a single coherent,
+  hard-evidence-complete fix bundle against `prediction_satellite_ao_dispatch_batch6_2026_07_29.md`, independently
+  re-verified fresh (`git log -1` on the target: last touch ~4h51m before this check, still inside the 12h grace
+  window) — genuinely blocked by the corpus's grace mechanism, not a doc-hygiene gap or a candidate for extraction (the
+  fix target is a DIFFERENT doc; this doc is the audit-trail record, applied by the next `/plan-reconcile` pass once
+  grace clears). Doc stays NA.

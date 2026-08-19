@@ -620,9 +620,13 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
       work. The separate historical BACKFILL of these columns remains tracked as its own live Phase-B checkbox
       ("Backfill the fixture-match attributes (A4 columns) across historical Polymarket + Kalshi soccer") — not
       superseded by this close.
-- **E2 alias additions** (shared): add the missing Kalshi soccer team aliases (E2's worklist) to
+- ~~**E2 alias additions** (shared): add the missing Kalshi soccer team aliases (E2's worklist) to
   `unified_api_contracts.external.api_football.team_mappings`, plus the South-American club aliases for the odds-side
-  ~66%→~100% — to reach the operator's ~0% gap.
+  ~66%→~100% — to reach the operator's ~0% gap.~~ **STALE — SHIPPED, na-eligibility-audit 2026-08-19**:
+  `prediction_phase_e_football_arb_live_2026_07_24.md`'s own E2 section is `[x]` DONE, citing both items shipped —
+  Kalshi soccer team resolution (`instruments-service@ec8633ac` + `unified-api-contracts@e7ed754e`, ~0%→82.6%→~100% on
+  92 live fixtures) and the South-American club aliases (`unified-api-contracts@98d757f9`, closes the odds-side ~66%
+  cap). No checkbox existed here to flip (prose-only Deferred-work bullet) — struck through in place.
 - **A2 residual** (shared / other repo): identity-migration todo 2 only (`prod/catalog.parquet` regen — prod-GCS run,
   gated on the shared canonical migration so it doesn't bake transitional ids) — corrected 2026-07-21, plan-reconcile:
   todos 7 (`gcs_paths.py` bucket-abbreviation flip) and 8 (MDPS UAC-pin verify) were resolved 2026-07-19 (see the A2
@@ -788,3 +792,13 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   after 2026-07-18" section remains genuine operator/shared-file-gated work (no new `- [ ]` markup, still correctly
   not surfacing in the checkbox count). Still the live index for its 4 Phase A-E children. Doc stays NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified, unchanged (coordination-hub, codex-only list).
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:f43f8052811600c9]: KEEP-NA,
+  stale-items — 0 native open checkboxes (coordination hub by design, `archive_exempt: true`, `gate_on_depends: false`,
+  re-confirmed via `grep -cE '^- \[ \]'` = 0). The "E2 alias additions" Deferred-work prose bullet was stale (both
+  named items — Kalshi soccer team resolution + South-American club aliases — shipped, cited in
+  `prediction_phase_e_football_arb_live_2026_07_24.md`'s own closed E2 section) — struck through in place with the
+  shipped-evidence citation; no checkbox existed to flip. The other 5 Deferred-work bullets remain genuine
+  operator/shared-file-gated work, independently re-verified this pass (A2 residual confirmed still-open against its
+  cited source; CQG residual §5 confirmed NOT resolved by the archived `prediction_cqg_residual_2026_07_24.md`'s
+  decision-338, which answered a different question). Still the live index for its 4 Phase A-E children (all still
+  open). Doc stays NA, not archive-eligible.

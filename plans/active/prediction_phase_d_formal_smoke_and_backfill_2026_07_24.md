@@ -304,3 +304,7 @@ context_scope:
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- re-verified, unchanged.
 - **na-eligibility-audit 2026-08-18** [body-hash:39431b602f991e5b]: KEEP-NA, valid -- depends_on+gate_on_depends:true on prediction_phase_ab_residuals_2026_07_24 re-confirmed live still open (its own P0 migration todo unchecked). All 5 open items here are downstream of that unfinished migration. Doc stays NA.
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:fe46fdb5946a427f]: KEEP-NA,
+  valid — `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` re-confirmed live still
+  open (that doc independently re-verified this same run: 4 open todos, P0 migration item still unchecked). All 5
+  items here reduce to that same unfinished gate. Doc stays NA.

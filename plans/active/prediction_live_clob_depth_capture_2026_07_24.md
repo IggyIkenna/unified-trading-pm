@@ -926,3 +926,8 @@ sports/prediction-track blocker.
   (not-applicable — re-confirmed 0 open todos via a fresh full read + grep across every checkbox-marker variant;
   every prose "[ ]" mention is historical narration). `archive_exempt: true` defers the archival call to
   `/archive-candidates-audit`, not this skill. Doc stays NA.
+
+- **na-eligibility-audit 2026-08-19 (prediction tranche, dispatch agt-0e920e)** [body-hash:be7672a984d4baab]: KEEP-NA,
+  valid (not-applicable) — re-confirmed 0 open todos via a fresh full read + dual-mode grep (strict + broad
+  indent-agnostic). `archive_exempt: true` still correctly routes the archival decision to `/archive-candidates-audit`
+  (complex referrer graph), not this skill. Doc stays NA.
