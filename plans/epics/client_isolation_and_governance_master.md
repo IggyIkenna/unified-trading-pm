@@ -15,8 +15,8 @@ scope: [engineer, admin]
 tags: [client-isolation, governance, uac, execution, strategy, data-correctness]
 related:
   [
-    ../active/per_client_isolation_and_venue_fanout_topology_2026_05_20.md,
-    ../active/global_ledger_pnl_attribution_discovery_2026_05_21.md,
+    /plans/archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md,
+    /plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
 created: 2026-05-21
 name: client_isolation_and_governance_master
@@ -40,6 +40,11 @@ strategy ID catalogue + manual UI replication of every live action.
 
 **Assigned VM**: `vm-cross-cutting` (co-located with `infrastructure_master` + `observability_master` +
 `batch_live_symmetry_master`).
+
+## Report
+
+Live HTML ledger: https://claude.ai/code/artifact/09b2d4f0-e527-4d9f-a59e-fcf5acda3e70 (generated 2026-08-19,
+`/plan-reconcile client_isolation_and_governance_master`)
 
 ## Scope inherited from `cross_cutting_may_23_SUPERSEDED_2026_05_21` (extended 2026-05-21)
 
@@ -131,12 +136,16 @@ this epic land here as they are dispatched. See [README.md](README.md) for the a
       shape, isolation policy, portfolio/wallet topology). Replace ad-hoc per-service client-config shapes with this
       type. Repo: unified-api-contracts (+ downstream consumers: strategy-service, execution-service).
 
-### [`uac_coverage_90pct_2026_06_10`](../active/uac_coverage_90pct_2026_06_10.md)
+### [`uac_coverage_90pct_2026_06_10`](/plans/archive/2026_07/uac_coverage_90pct_2026_06_10.md)
 
 **Sync 2026-07-12** (finding 34, §A2 B-queue ruling): declares `parent_epic: client_isolation_and_governance_master` +
 `status: active` + P1, but was absent from this epic's `related_plans` + P1 section — now registered (was: unlisted).
-Near-complete: all coverage-work todos done (combined statement coverage 92.53%, branch 56.63%); only the final PM
-`quality-gates.sh` confirm-and-flip todo remains open.
+**Corrected 2026-08-19** (`/plan-reconcile client_isolation_and_governance_master`) — this section previously read
+"near-complete... only the final PM `quality-gates.sh` confirm-and-flip todo remains open," which was stale. The plan
+is now `status: superseded` and fully archived (0 open / 12 done): a later, untracked Phase 5 raised the UAC coverage
+gate again (90 → 94, 2026-06-20), reaching 94.62% combined, which mooted this plan's own disputed 89.82%-vs-"≥90%"
+numbers. Verified live: `/codex/06-coding-standards/quality-gates.md` lines 505-506 and
+`unified-api-contracts/pyproject.toml` `fail_under = 94`. No further action needed here.
 
 ### [`per_client_isolation_and_venue_fanout_topology_2026_05_20`](../archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md)
 

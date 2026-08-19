@@ -181,10 +181,11 @@ symbol or behaviour was read in source. This table is the audit; the todos below
 
 ## D. Code-completion bar — gates the repository send
 
-- [ ] [OPERATOR] P0. **Define "does everything we need" for strategy-service as a falsifiable checklist — CODE
-      completeness only.** The operator clarified that the code completes this week while data and live/batch deployment
-      continue to October, and the sent message says exactly that. Enumerate per archetype: decisions it must make,
-      features it must consume, instruction types it must emit, and what "correct" means. Output is a codex doc.
+- [ ] [OPERATOR] P0. **CODE completeness only — define "does everything we need" for strategy-service as a
+      falsifiable checklist.** The operator clarified that the code completes this week while data and live/batch
+      deployment continue to October, and the sent message says exactly that. Enumerate per archetype: decisions it
+      must make, features it must consume, instruction types it must emit, and what "correct" means. Output is a codex
+      doc.
 - [ ] [AGENT] P0. **Audit strategy-service against the bar once written**, appending gaps here as todos. Do not start
       closing gaps before the bar exists — it is what stops scope drifting.
 - [ ] [AGENT] P1. **Verify the two contracted archetypes emit every required instruction type end to end** —
@@ -195,8 +196,8 @@ symbol or behaviour was read in source. This table is the audit; the todos below
 - [ ] [OPERATOR] P0. **Enumerate what the repository discloses before it goes.** All nine declared families, the risk
       engine, the position monitor, P&L attribution. Confirm that disclosing the non-carry families is intended —
       Exhibit B defines Carry & Yield as the contracted scope, so the rest is our own IP shown voluntarily.
-- [ ] [OPERATOR] P0. **Confirm no other client's identifiers, configuration or capital data are present — including in
-      git history.** A working-tree scrub does not scrub the log.
+- [ ] [OPERATOR] P0. **Confirm no other client's identifiers, configuration or capital data are present anywhere —
+      including in git history, not just the working tree.** A working-tree scrub does not scrub the log.
 - [ ] [AGENT] P1. **Produce the disclosure inventory** for that review. Read-only; no deletions without a ruling.
 - [ ] [OPERATOR] P1. **Decide the transfer mechanism** — snapshot, read-only mirror or time-boxed grant — and whether it
       carries a confidentiality acknowledgement beyond the Consulting Agreement.
