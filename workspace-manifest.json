@@ -79,7 +79,7 @@
     "market-tick-data-service": "0.144.15",
     "system-integration-tests": "0.15.5",
     "unified-api-contracts": "0.141.0",
-    "unified-trading-library": "0.90.2",
+    "unified-trading-library": "0.90.3",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.30.22",
     "e2e-testing": "0.41.25",
@@ -2249,8 +2249,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.90.2.dev1+g020063e44",
-      "published_at": "2026-08-18T20:14:27Z",
+      "version": "0.90.3.dev1+gfb860beaa",
+      "published_at": "2026-08-19T01:07:31Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
