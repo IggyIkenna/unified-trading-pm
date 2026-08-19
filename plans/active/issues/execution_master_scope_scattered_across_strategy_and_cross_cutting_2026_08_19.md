@@ -127,16 +127,36 @@ SSOT is a concrete, already-identified gap, not a new one.
       epic-assignment-decision-rule test, specifically checking each for execution_master-shaped content (algo
       selection/aggressiveness, order generation, position/price approximation, co-location, execution-backtesting)
       that should retag to `execution_master`. Repo: unified-trading-pm.
-- [ ] [REVIEW] P2. Full-read `bucket_fold_execution_strategy_2026_07_17.md` specifically — its title implies it may
-      itself be the missing link describing how execution-store and strategy-store content got folded together;
-      confirm its actual `parent_epic` and whether its content belongs split across both epics. Repo:
-      unified-trading-pm.
-- [ ] [REVIEW] P2. Resolve or re-scope F37 (`capability_wizard_analysis_findings_2026_06_11.md`, still `status:
-      open`) — confirm whether `UNIFIED_EXECUTION_DELTA.md`'s content now lives inside
-      `execution-algorithm-selection.md` (in which case F37 just needs closing with a citation) or whether the
-      "delta approximation" material the operator is asking about is a distinct, still-unwritten thing. Repo:
-      unified-trading-pm.
+- [x] ✅ [REVIEW] P2. **Full-read `bucket_fold_execution_strategy_2026_07_17.md` — CONFIRMED correctly scoped, no
+      retag.** Read in full (all 284 lines). `parent_epic: security_and_cross_cutting_master` (line 44). Content is
+      entirely GCS bucket-topology/naming consolidation (execution-store 4+pred→1, strategy-store flat→tiered,
+      provisioning/parity-migrate/atomic-cutover/consolidator-retarget/source-delete) — near-complete infra fold, zero
+      execution-algorithm/order-generation content. Passes the decision-rule test cleanly: this fold would look
+      identical regardless of which service's buckets were being folded — genuine cross-cutting storage mechanism, not
+      execution_master's specific-mechanism scope. No change needed.
+- [x] ✅ [REVIEW] P2. **Resolve F37 — CONFIRMED already fixed, doc is substantive not a stub.** Read
+      `/codex/04-architecture/execution-algorithm-selection.md` in full (138 lines, `status: current`,
+      `created: 2026-07-30`). It fully replaces the missing `UNIFIED_EXECUTION_DELTA.md` selector.py cited: the
+      `InstructionType` → execution-algorithm taxonomy, `select_algorithm()`'s 4-step priority chain, ghost
+      (declared-but-unimplemented) algorithms, the two legitimate ICEBERG universes (canonical-backtest-safe vs
+      manual/live), naming reconciliation, and change discipline (keep selector.py + UAC's `algo_compatibility`
+      transcription in sync). `capability_wizard_analysis_findings_2026_06_11.md`'s own F33–F37 block already reads
+      "FIXED — verified 2026-07-30, execution-service@52fe0632 + unified-api-contracts@91df8e34". The "delta
+      approximation" the operator asked about maps to this doc's algo-selection-taxonomy scope, not a separate
+      unwritten thing — F37 needs no further action. (The parent issue doc's own `status: open` is unrelated — it's a
+      running log with other, unrelated findings still open; not a signal this specific finding is unresolved.)
 - [ ] [REVIEW] P3. Same under-claiming check for `security_and_cross_cutting_master` → `execution_master` direction
       (only 1 doc spot-checked here, `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`) — low
       priority since `security_and_cross_cutting_master` is already known-large (232 docs) and this is a single
       data point, not a pattern yet.
+
+## Progress Log
+
+- **2026-08-19, claude (`/autonomous`)**: dispatched 4 Sonnet-5 sub-agents (read-only investigation, no shipping
+  authority) — 3 splitting the 14-doc `strategy_master` full-read audit (todo 1), 1 doing a targeted keyword scan of
+  `security_and_cross_cutting_master`'s ~237 docs for execution-shaped content (todo 4). Personally closed todos 2 and
+  3 in parallel while those ran: `bucket_fold_execution_strategy_2026_07_17.md` read in full and confirmed correctly
+  `security_and_cross_cutting_master` (pure bucket-topology fold, no execution-algo content); F37 confirmed already
+  fixed by direct read of `/codex/04-architecture/execution-algorithm-selection.md` (substantive 138-line SSOT, not a
+  stub). Every sub-agent finding will be personally re-verified against the actual file content before any retag
+  ships — no sub-agent has ship authority on this issue.
