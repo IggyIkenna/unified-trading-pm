@@ -169,6 +169,17 @@ epics: `observability_master` 24, `agent_operating_framework_master` 13, `batch_
    (`deployment_network_egress_ingress_observability_2026_08_18.md`,
    `manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`) but both are `asset_group:
    [infrastructure]` — a sibling `infra`-tranche worker's population, not this run's to fix.
+3. **[Delete-risk tagging, verified largely self-mitigated]** `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md:113`
+   — flagged by today's epic sweep as its highest-priority Filed item ("sole open todo['s]... no `[OPERATOR]`/
+   `BLOCKED-<TOKEN>` tag" on delete-risk-adjacent work). Read the full todo (only open checkbox in the doc, 749L):
+   its own body (lines 173-181) already explicitly narrates the risk AND defers the actual classify/delete/relocate
+   work entirely to a sibling, already-gated doc (`repo_scripts_governance_audit_2026_06_18.md`, `assigned_vm: NA`,
+   its own Finding 1), stating in-line "do not re-flip this checkbox until the governance-audit plan's Phase-1...
+   actually lands." The remaining scope THIS item still tracks is narrower than the original finding assumed — not
+   a live unsupervised-delete exposure today, since the delete portion is prose-deferred elsewhere. A defense-in-depth
+   `[OPERATOR]`-adjacent tag would still be an improvement (machine-visible, not just prose-buried), but exactly what
+   tag/rewrite is the right one given the item's now-narrower remaining scope is a judgment call, not a mechanical
+   substitution — filed rather than guessed at.
 
 ## Progress Log
 
