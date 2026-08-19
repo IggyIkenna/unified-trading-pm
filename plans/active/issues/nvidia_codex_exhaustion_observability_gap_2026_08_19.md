@@ -88,8 +88,8 @@ fixed). The gap is entirely in what feeds INTO that function per provider:
 | GLM | Same `weekly_pct`/`five_hour_pct` fields, now populated from real credit-ceiling math (`glm_quota_poller.py`, fixed 2026-08-19) | SAME generic check as Claude — zero GLM-specific code needed | ✅ (as of today) |
 | Gemini | RPM/RPD/TPM per (project, model) | Bespoke `gemini_account_has_rate_headroom()`, called explicitly from inside the shared gate | ✅ — but bespoke, not generic |
 | DeepSeek | $ balance + peak/off-peak daily/monthly spend ceiling | A THIRD, entirely separate code path (`_deepseek_in_peak_window()` + spawn ceilings) — never routes through `_account_meets_dispatch_headroom()` at all | ⚠️ works, but structurally its own island, not the shared gate |
-| **NVIDIA/Gemma** | RPM (shared per key, measured today: 15-20 concurrent breaking point) | **Nowhere.** `nvidia_headroom.py` computes and DISPLAYS it (`GET /api/accounts/nvidia/capacity`) but nothing calls it from dispatch logic | ❌ |
-| **Codex/Luna** | Unknown — no API signal exists at all (`boost_multiplier` stays permanently `None`, confirmed in `multi_provider_context_billing_reconciliation_2026_08_16.md`) | **Nowhere**, proactively or reactively | ❌ |
+| **NVIDIA/Gemma** | RPM (shared per key, measured today: 15-20 concurrent breaking point) | ✅ **FIXED 2026-08-19**: `nvidia_account_has_rate_headroom()` wired into `_account_meets_dispatch_headroom()` (agent-orchestrator@86cd2066) | ✅ |
+| **Codex/Luna** | **CORRECTED 2026-08-19** (post-fix cross-check against the installed SDK — see todo 2's evidence below): a real, structured signal DOES exist (`RateLimitSnapshot`/`RateLimitWindow.used_percent`) — the original "no API signal exists at all" claim here conflated this with the unrelated $-metered `boost_multiplier` billing-reconciliation signal (`multi_provider_context_billing_reconciliation_2026_08_16.md`), which genuinely IS still `None`. Not yet confirmed live-populated — a real proactive poller is a new follow-up todo below. | ✅ reactive (`codex_bridge_server.py`'s 429 catch, agent-orchestrator@43f8f828); 🟡 proactive poller still an open follow-up | ✅ (reactive) |
 
 So today there are really **three different real mechanisms**, not one uniform one:
 1. Generic pct-ceiling fields (Claude, GLM) — the closest thing to a real uniform primitive.
@@ -99,6 +99,11 @@ So today there are really **three different real mechanisms**, not one uniform o
 And NVIDIA/Codex have none of the three.
 
 ## The reactive fallback doesn't save NVIDIA/Codex either
+
+> **✅ STATUS 2026-08-19: both gaps this section describes are now closed** — NVIDIA via a real proactive gate
+> (todo 1), Codex via a real reactive 429 catch (todo 2). The analysis below is kept as the accurate PRE-fix
+> record, not stale — see the Follow-up section for what shipped and what's still open (a real proactive Codex
+> poller, and the still-unfixed pane-scanner gap this section's own last paragraph flags).
 
 `_account_meets_dispatch_headroom()` degrades an uncovered provider to the plain
 `account_is_usable()` check, whose only dynamic signal is `rate_limited_until`. Confirmed by direct
@@ -180,30 +185,85 @@ additions this surfaces, worth stating precisely rather than just appended:
 
 ## Follow-up
 
-- [ ] [BACKEND] P2. **Wire NVIDIA into the shared gate.** Add `nvidia_account_has_rate_headroom()`
-      (`server/nvidia_headroom.py`, mirroring `gemini_account_has_rate_headroom()`'s shape) and call
-      it from `_account_meets_dispatch_headroom()` the same way Gemini is called today. Use the real
-      measured breaking point (15-20 concurrent requests, this session) as the starting ceiling, not
-      the unconfirmed community-reported "~40 RPM" figure — flag it as `ceiling_confirmed=false` still
-      if no sustained-rate (not just burst) measurement exists. Done when: a simulated near-ceiling
-      NVIDIA account is excluded from `_pick_headroom_account`'s candidate list, same proof shape as
-      GLM's own todo in `deepseek_claude_blended_provider_routing_2026_07_28.md`. Repo:
-      agent-orchestrator.
-- [ ] [BACKEND] P2. **Build a reactive fallback for Codex/Luna** (and confirm/build the same for
-      NVIDIA as defense-in-depth). No proactive quota signal exists for Codex — OpenAI's ChatGPT
-      Plus/Codex API has never been confirmed to expose one. The realistic fix is reactive: catch a
-      real 429/rate-limit-shaped error response from `codex_bridge_server.py` (or the litellm proxy
-      for NVIDIA) and set a cooldown via the SAME mechanism Claude's `rate_limited_until` uses, rather
-      than requiring `usage_poller.py`'s Claude-only path. Done when: a simulated 429 from either
-      provider results in a real cooldown that `account_is_usable()` then correctly honors.
+- [x] ✅ [BACKEND] P2. **Wire NVIDIA into the shared gate.** Added `nvidia_account_has_rate_headroom()`
+      (`server/nvidia_headroom.py`, mirrors `gemini_account_has_rate_headroom()`'s call shape) and wired it into
+      `_account_meets_dispatch_headroom()` the same way Gemini is wired. Ceiling:
+      `TuningDefaults.nvidia_concurrent_request_ceiling` (`server/config.py`, default 15) — the real measured
+      burst-concurrency floor (5/10/15 clean, 20 started failing, this session), NOT the unconfirmed community
+      "~40 RPM" figure (kept unchanged as the separate `NVIDIA_RATE_CEILING` the dashboard snapshot still
+      reports). Real tests prove a near-ceiling NVIDIA account is excluded from `_pick_headroom_account`'s
+      candidate list
+      (`tests/test_autospawn.py::test_pick_headroom_account_excludes_near_ceiling_nvidia_account_from_candidates`)
+      and from `_account_meets_dispatch_headroom()` directly, plus a regression guard and the selected-event
+      logging fix that makes the RPM counter actually increment (`NVIDIA_REQUEST_SELECTED_EVENT` was minted back
+      in 2026-08-16 but never logged from a real pick — would have made the new gate a permanent no-op).
+      Full `quality-gates.sh` green (4287 passed, 0 failed) before shipping. **Evidence: agent-orchestrator@86cd2066**.
       Repo: agent-orchestrator.
-- [ ] [REVIEW] P3. **Live-verify (or disprove) whether `tmux_pruner.py`'s pane-text rate-limit scanner
-      catches a non-Claude-shaped error message at all.** Not confirmed either way this session — the
-      regex LOOKS Claude-specific but the outer scan doesn't branch on provider, so this needs a real
-      check (feed a real GLM/NVIDIA 429 pane-text sample through `scan_rate_limits_once()` and see
-      what happens), not an assumption from reading the regex alone. Repo: agent-orchestrator.
+- [x] ✅ [BACKEND] P2. **Build a reactive fallback for Codex/Luna.** `codex_bridge_server.py` now catches a
+      rate-limit-shaped exception (`_looks_like_rate_limit_error`, matched against the real NVIDIA/GLM 429
+      samples recorded in this doc) at both `run_codex_turn`'s and `_drive_codex_turn`'s SDK call sites and
+      writes a cooldown via the SAME `state_store.mark_account_rate_limited()` Claude's `usage_poller.py` uses
+      (`TuningDefaults.codex_reactive_rate_limit_cooldown_seconds`, default 300s — explicitly an unconfirmed
+      placeholder, no real Codex 429 had been observed live at ship time). Required making this bridge a real DB
+      writer for the first time — `scripts/codex-bridge.service`'s `ReadWritePaths` updated to include `data/`
+      (**a running instance needs `sudo systemctl daemon-reload && sudo systemctl restart codex-bridge`, or a
+      re-run of `install-codex-bridge-service.sh`, to pick this up; until then the reactive write fails closed,
+      logged, never crashes**). Real tests prove a simulated 429 — both at the helper-function level and through
+      `run_codex_turn`'s own wiring — results in a cooldown `account_is_usable()` correctly honors
+      (`tests/test_codex_bridge_server.py`). NVIDIA defense-in-depth on the litellm proxy path was judged NOT
+      additionally needed: LiteLLM is a third-party off-the-shelf proxy process outside this codebase (unlike
+      `codex_bridge_server.py`, bespoke AO code this fix can instrument directly), and NVIDIA is already covered
+      by todo 1's proactive gate above. **Evidence: agent-orchestrator@43f8f828**.
+
+      **CORRECTION (same session, coordinator cross-check against the installed SDK after this shipped)**: this
+      doc's "no proactive quota signal exists for Codex... never been confirmed to expose one" claim is WRONG.
+      The installed `openai-codex` SDK genuinely models one: `RateLimitWindow` (`used_percent: int`, a real 0-100
+      field, plus `resets_at`/`window_duration_mins`) nested in `RateLimitSnapshot.primary`/`.secondary` (almost
+      certainly mirroring Claude's five_hour/weekly split), reachable via `AccountRateLimitsReadRequest` ->
+      `GetAccountRateLimitsResponse` or pushed via `AccountRateLimitsUpdatedNotification` (confirmed part of the
+      SDK's PUBLIC notification union in `openai_codex/models.py`, not just internal generated bindings). See
+      `.venv/lib/python3.13/site-packages/openai_codex/generated/v2_all.py` lines 2928 (`RateLimitWindow`), 5737
+      (`AccountRateLimitsReadRequest`), 6724 (`RateLimitSnapshot`), 7652 (`AccountRateLimitsUpdatedNotification`),
+      8002 (`GetAccountRateLimitsResponse`). What's STILL genuinely true: `boost_multiplier` (the unrelated
+      $-metered billing-reconciliation signal, `multi_provider_context_billing_reconciliation_2026_08_16.md`)
+      stays `None` — that narrower claim was conflated into the broader "no signal at all" one, which was too
+      broad. NOT yet traced: whether a real live call actually populates `RateLimitSnapshot` (a type existing in
+      generated bindings doesn't prove a live response carries it), which JSON-RPC method the high-level
+      `Codex`/`AsyncCodex` wrapper exposes to request it, or whether `_drive_codex_turn`'s notification stream
+      ever receives `AccountRateLimitsUpdatedNotification` in practice. See the new follow-up todo below — the
+      reactive-429 fix above stays valid, real, tested defense-in-depth regardless of whether the proactive path
+      also gets built. Repo: agent-orchestrator.
+- [x] ✅ [REVIEW] P3. **Live-verified: `tmux_pruner.py`'s pane-text rate-limit scanner is a genuine no-op for a
+      non-Claude-shaped error message.** Fed the real GLM and NVIDIA 429 pane-text samples from this doc's own
+      "Real evidence" section through the ACTUAL `scan_rate_limits_once()` (a real test, not code-inference) —
+      confirmed: `_RATE_LIMIT_RE` only matches Claude Code's own two English banner phrases ("You've hit your
+      ... limit" / "Stop and wait for limit to reset"); neither raw-JSON sample matches, so the account is never
+      marked
+      (`tests/test_tmux_pruner_rate_limit_scan.py::test_non_claude_shaped_glm_429_text_is_not_caught_by_the_pane_scanner`
+      and the parallel NVIDIA test). **Not fixed inline** (explicitly out of this [REVIEW] todo's bounded
+      "verify, don't rebuild" scope) — judged NOT a clean one-line regex-widen given real redundancy questions:
+      GLM is already fully covered proactively (`glm_quota_poller.py`), NVIDIA now is too (todo 1 above), and
+      Codex now has a MORE reliable exact-exception catch (todo 2 above) than pane-text guessing would ever be;
+      whether this exact JSON shape is even representative of what a LiteLLM-backed provider renders into a pane
+      was also never independently confirmed. **Evidence: agent-orchestrator@16be42cc14**. Repo:
+      agent-orchestrator.
+- [ ] [BACKEND] P2. **NEW (found this session — coordinator cross-check against the installed SDK, folded into
+      todo 2's evidence above): trace and, if confirmed live, build a real proactive Codex rate-limit poller.**
+      Map `RateLimitSnapshot.primary`/`.secondary.used_percent` (see todo 2's corrected evidence for the exact
+      SDK types/line citations) straight onto the SAME generic `AccountUsageRow.five_hour_pct`/`weekly_pct`
+      fields Claude/GLM already share — needing ZERO new bespoke branch in `_account_meets_dispatch_headroom()`,
+      matching this doc's own stated preference (poller pattern over a bespoke branch, see "Independent
+      corroboration" above) more closely than even the shipped reactive-429 fix does. First step: find the
+      JSON-RPC method name / high-level `Codex`/`AsyncCodex` accessor that actually issues
+      `AccountRateLimitsReadRequest` (or confirm `AccountRateLimitsUpdatedNotification` fires on a real session)
+      — NOT yet traced, only the type surface was confirmed to exist. Done when: a real (or realistically
+      simulated, if live Codex access is as constrained as NVIDIA's paused accounts were) call returns a
+      populated `RateLimitSnapshot`, and a poller mirroring `glm_quota_poller.py`'s shape writes it onto
+      `AccountUsageRow`. Repo: agent-orchestrator.
 - [ ] [BACKEND] P3. **Stronger proof, if wanted**: reproduce the NVIDIA 429 through a real (isolated,
       non-fleet) AO dispatch path end-to-end and confirm via the instance's own `activity_log`/
       `AccountUsageRow` whether anything gets recorded — the piece explicitly not done in this doc (see
       "What was NOT done" above). Not urgent — the code-trace + real-429 combination already
-      establishes the gap; this would only sharpen the proof. Repo: agent-orchestrator.
+      establishes the gap; this would only sharpen the proof. **DEFERRED this session**: todos 1-3 above plus
+      the new proactive-Codex-poller todo consumed the available effort; this todo was already marked
+      not-urgent in this doc's own original text, so left open rather than rushed. Repo: agent-orchestrator.
