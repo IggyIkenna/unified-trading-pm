@@ -35,7 +35,9 @@ related:
 created: "2026-08-09"
 author: slot-22
 priority: P3
-parent_epic: tradfi_master
+parent_epic: plan_hygiene_master # was: tradfi_master (epic-assignment audit 2026-08-19) -- core finding is a
+  # generic check_line_caps.sh carve-out gap (a net-zero-length content substitution can never satisfy the
+  # DELETED=0 precondition); doc's own text says the identical bug already hit cross_cutting_consolidated_closeout_2026_07_25.md
 source: >-
   Discovered live 2026-08-09 while shipping an accurate ES_OPT coverage update — `check_line_caps.sh` refused the
   closeout-plan half of the change (`HARD tradfi_consolidated_closeout_2026_07_18.md 1005L`), pre-commit hook output

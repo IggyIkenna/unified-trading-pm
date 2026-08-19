@@ -36,7 +36,9 @@ related:
   ]
 created: 2026-07-16
 author: unknown
-parent_epic: defi_master
+parent_epic: uac_master # was: defi_master (epic-assignment audit 2026-08-19) -- sole remaining todo regenerates
+  # UAC's cross-AG prospectus/capability generator; doc's own text: "the prospectus genuinely spans
+  # CEFI/DEFI/TRADFI/SPORTS/PREDICTION"
 priority: P2
 source:
   'Operator ruling 2026-07-16: "kill drift entirely from our whole system... kill all other solana perp dex''s. uac,

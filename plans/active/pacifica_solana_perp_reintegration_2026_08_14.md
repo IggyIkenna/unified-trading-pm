@@ -32,7 +32,9 @@ related:
   ]
 created: 2026-08-14
 last_updated: "2026-08-17"
-parent_epic: defi_master
+parent_epic: cefi_master # was: defi_master (epic-assignment audit 2026-08-19) -- doc's own asset_group: [cefi];
+  # body states Pacifica is "cleanly cefi-classified" (real off-chain CLOB, cefi schema/bucket/partition path),
+  # matching HYPERLIQUID/ASTER -- wrong asset-group, not a shared-mechanism case
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
