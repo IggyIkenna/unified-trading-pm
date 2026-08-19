@@ -138,10 +138,10 @@ timed out" (genuinely transient) in the retry loop's own error classification.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix `scripts/dev/safe-doc-push.sh`'s argument parser (lines 187-200) per one of the two options
+- [x] ✅ [SCRIPT] P1. Fix `scripts/dev/safe-doc-push.sh`'s argument parser (lines 187-200) per one of the two options
       above. Add a regression test (mirroring `test-safe-doc-push-concurrency.sh`'s style) asserting `--agent` either
       is accepted as a no-op or produces a clear usage error, never a silent `BRANCH` corruption. Repo:
-      unified-trading-pm.
+      unified-trading-pm. — unified-trading-pm@7adc383c84
 - [ ] [SCRIPT] P2. Audit every other `$BRANCH` usage in the script (not just the 2 fetch call sites) for the same
       corrupted-value blast radius — confirm a corrupted `BRANCH` can never reach a `git push`/`git pull` call
       unnoticed. Repo: unified-trading-pm.
@@ -158,3 +158,12 @@ timed out" (genuinely transient) in the retry loop's own error classification.
   fleet-wide ship script every doc-only commit depends on, which — per this exact same doc-family's own precedent
   (`safe_doc_push_isolation_drops_rename_deletions_2026_08_10.md`, archived earlier this run) — wants its own
   regression test and blast-radius check rather than a same-session patch buried in an unrelated reconciliation run.
+- **2026-08-19 (worker slot-32)**: fixed the P1 argument-parser bug — the parsing loop
+  (`scripts/dev/safe-doc-push.sh`) now has an explicit `--agent` no-op case (mirroring quickmerge.sh's convention) and
+  rejects any other unrecognized `-*`/`--*` token with a clear "unrecognized flag" usage error instead of silently
+  adopting it as `BRANCH`. Added `scripts/dev/test-safe-doc-push-agent-flag-parsing.sh`, mirroring
+  `test-safe-doc-push-stash-recovery.sh`'s style: case 1 proves `--agent --files <f>` lands the commit on
+  `live-defi-rollout` unmodified; case 2 proves an unrecognized flag (`--bogus-flag`) exits 2 with the new usage
+  error instead of corrupting the fetch/pull/push branch. Both cases pass locally. Shipped
+  `unified-trading-pm@7adc383c84`. P2 (audit every other `$BRANCH` usage) and P3 (CLAUDE.md/SUB_AGENT_MANDATORY_RULES
+  doc-parity update) remain open, tracked above — out of scope for this task.
