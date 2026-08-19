@@ -716,6 +716,44 @@ tracked item, wherever it lives."**
       coincidence does not scale to ~300–500 agent tasks/day. Fold this into the existing daily
       `/plan-reconcile` sweep rather than adding a new mechanism.
 
+## W22 — Strategy/execution messaging and the external instruction API
+
+Operator ruling 2026-08-19: the bridge from a strategy's decision to execution is currently unmeasured and,
+per a workspace-wide search on 2026-08-19, unbuilt end-to-end — the only live instruction path is the manual one
+(`ManualOperationHandler → LiveOrchestrator.execute_instruction()`), not an automated strategy-to-execution bridge.
+This workstream is that bridge, plus what it takes to expose the same instruction contract to an external client
+two ways: we host it, or they run our container themselves. Surfaced while auditing
+[`platform-external-api-walkthrough.html`](/codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html)
+§25 for [`client_artefact_remediation_nickai_2026_08_18.md`](/plans/active/client_artefact_remediation_nickai_2026_08_18.md).
+
+- [ ] [BACKEND] P0. **Strategy → execution instruction delivery over messaging, not a service dependency.** Same
+      UTL `EventTransport` facade market data already uses — Pub/Sub-backed, keyed on what the subscriber needs.
+      A direct service-to-service call is explicitly out — this is a T4 service boundary.
+- [ ] [BACKEND] P0. **Features-service → execution subscription.** Execution subscribes to only the feature groups
+      it needs, not a broadcast of everything features-service produces.
+- [ ] [BACKEND] P0. **Every strategy-emitted instruction sinked to GCS, one by one, for audit and analysis** —
+      reuse the existing manifest/shard pipeline rather than inventing a parallel one; queryable via BigQuery
+      external tables. Distinct from market-tick-data aggregation (W2/W3), which is a separate axis.
+- [ ] [BACKEND] P0. **Three execution-service deployment topology, one schema, protocol per deployment**:
+      internal (Pub/Sub, our own strategy-service), external-automated (registered/allow-listed clients, HTTP or
+      WebSocket depending on the latency bar), manual (DART or an external trading UI/API, HTTP — manual trading
+      has no latency floor to defend). Same `StrategyInstructionEnvelope` across all three.
+- [ ] [BACKEND] P0. **External hosting, two ways**: we run and maintain the execution-service deployment for a
+      registered client, OR they run the same image themselves (Dockerized, config-driven, our hot-reload config
+      model per W6) — on their infrastructure or ours. The call shape is identical either way.
+- [ ] [BACKEND] P0. **Complete the instruction action vocabulary past TRADE** — the other 10 action types on
+      `StrategyInstructionEnvelope` currently return HTTP 501; wire each for both the internal and external paths.
+- [ ] [BACKEND] P0. **Add kill-switch and flatten-position as instructions**, not only as internal system behaviour
+      (W15/security kill-switches already exist as an operational control) — a caller must be able to send them,
+      scoped the same way the internal kill-switch is (all-live / per-archetype / per-venue).
+- [ ] [BACKEND] P1. **Broker and routing configuration via the existing `venue_constraints` field** — no new
+      schema needed, per operator direction 2026-08-19; population and validation, not design.
+- [ ] [BACKEND] P1. **Registered-client management for the external-automated deployment** — who is allow-listed,
+      and how a new client gets onboarded.
+
+Codex SSOTs: `/codex/02-data/live-data-persistence-and-event-log.md` (EventTransport facade),
+`/codex/04-architecture/tier-and-import-architecture.md` (no service→service dependency).
+
 ---
 
 ---
