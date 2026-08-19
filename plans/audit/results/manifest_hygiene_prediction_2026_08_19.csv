@@ -1,0 +1,6 @@
+asset_group,finding,event,detail
+prediction,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,  DIVERGENT_EMPTY                               463 ❌
+prediction,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-19 08:11:12,480 WARNING DIVERGENT_EMPTY asset_group=prediction venue=POLYMARKET data_type=trades date=2026-08-15"
+prediction,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-19 08:11:12,480 WARNING DIVERGENT_EMPTY asset_group=prediction venue=POLYMARKET data_type=trades date=2026-08-16"
+prediction,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,"2026-08-19 08:11:12,480 WARNING DIVERGENT_EMPTY asset_group=prediction venue=POLYMARKET data_type=trades date=2026-08-17"
+prediction,oracle_expects_but_empty,DP_DIVERGENT_EMPTY,DIVERGENT_EMPTY:  463
