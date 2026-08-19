@@ -32,25 +32,64 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ── JOB 1: Drift-tick — dispatch main-backmerge-to-ldr ───────────────────────────────
+  # ── JOB 1: Drift-tick — dispatch main-backmerge-to-ldr (fleet-wide) ──────────────────
   # Replaces the hourly `schedule:` trigger that was in main-backmerge-to-ldr.yml.
   # The push trigger on that workflow still handles the common case; this job is the
   # safety-net for [skip ci] commits to main that suppress the push trigger.
+  # FLEET-WIDE (2026-08-19, main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md):
+  # dispatches for unified-trading-pm + every `promotion_model: ldr_main` repo in
+  # workspace-manifest.json — the same repo-set _main_direct_repos() in
+  # scripts/cicd/promotion_lag_monitor.py computes — so a transient GHA failure (e.g. a
+  # codeload 429) on one repo's backmerge run is re-driven on the next tick instead of
+  # stranding that repo's LDR until a human or a conflict_resolver notices. A repo toggled
+  # off `ldr_main` drops out on the next tick (reversible, like the promote fleet).
   # Main-backmerge-to-ldr.yml's schedule trigger is removed (template updated separately).
   drift-tick:
     runs-on: ubuntu-latest
-    timeout-minutes: 3
+    timeout-minutes: 10
     steps:
-      - name: Dispatch main-backmerge-to-ldr (drift safety-net)
+      - uses: actions/checkout@v5
+      - name: Dispatch main-backmerge-to-ldr (fleet-wide drift safety-net)
         env:
           # Cross-repo dispatch → must use GH_PAT (GITHUB_TOKEN cannot trigger workflows).
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           set +e
-          gh workflow run main-backmerge-to-ldr.yml \
-            --repo "${{ github.repository }}" \
-            && echo "[branch-health:drift-tick] dispatched main-backmerge-to-ldr drift sweep" \
-            || echo "[branch-health:drift-tick] dispatch failed (best-effort; push trigger still active)"
+          # Prefer the LDR copy of the manifest — the same staleness guard
+          # ldr-to-main-promote-fleet.yml uses (main may lag LDR when PM's own promotion is
+          # stuck), so a promotion_model change takes effect on the next drift-tick, not only
+          # after the next promote. On an LDR-read failure the checked-out (main) copy stands.
+          git fetch origin live-defi-rollout --depth=1 --quiet 2>/dev/null || true
+          if git show origin/live-defi-rollout:workspace-manifest.json > .bh-manifest.json 2>/dev/null && [ -s .bh-manifest.json ]; then
+            mv -f .bh-manifest.json workspace-manifest.json
+          fi
+          # Repo set = unified-trading-pm (always main-direct, even though the manifest stamps
+          # no promotion_model on it) ∪ every repo flagged promotion_model == "ldr_main". Same
+          # logic as scripts/cicd/promotion_lag_monitor.py::_main_direct_repos(); an unreadable
+          # manifest falls back to PM-only (prior behavior).
+          REPOS=$(python3 -c "
+          import json
+          out = {'unified-trading-pm'}
+          try:
+              m = json.load(open('workspace-manifest.json'))
+              repos = m.get('repositories', {})
+              if isinstance(repos, dict):
+                  for name, cfg in repos.items():
+                      if isinstance(cfg, dict) and cfg.get('promotion_model') == 'ldr_main':
+                          out.add(str(name))
+          except (OSError, json.JSONDecodeError, ValueError):
+              pass  # manifest unreadable -> PM-only fallback (prior behavior)
+          print('\n'.join(sorted(out)))
+          " 2>/dev/null || echo "unified-trading-pm")
+          OWNER="${GITHUB_REPOSITORY_OWNER:-IggyIkenna}"
+          for REPO in $REPOS; do
+            [ -z "$REPO" ] && continue
+            if gh workflow run main-backmerge-to-ldr.yml --repo "${OWNER}/${REPO}" 2>/dev/null; then
+              echo "[branch-health:drift-tick] dispatched main-backmerge-to-ldr for ${OWNER}/${REPO}"
+            else
+              echo "[branch-health:drift-tick] dispatch FAILED for ${OWNER}/${REPO} (best-effort; push trigger still active)"
+            fi
+          done
           exit 0
 
   # ── JOB 2: Promotion-lag monitor ─────────────────────────────────────────────────────
