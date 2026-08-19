@@ -575,17 +575,13 @@ questions queue without a real answer from the operator present.
 
 ## Scheduling this skill
 
-**Not yet wired to a systemd timer as of this skill's creation (2026-08-17)** — it runs manually / via
-`/autonomous` today. To make it a standing scheduled job (matching the other 9 timers documented in
-`/codex/04-architecture/agent-orchestrator-scheduled-jobs.md`), the remaining work is genuine backend engineering,
-not something to half-wire here without tests: a new `mode="ao_watchdog"` branch in
-`agent-orchestrator/server/plan_health.py`'s dispatch handler (mirroring `escalation_reconcile`'s wiring — the
-`_MODE_TO_ROLE` dict + the `role: escalation_queue_reconciler`-style thin wrapper role file, which this skill
-already has a sibling for at `unified-trading-pm/agents/ao_watchdog.md`), an `install-ao-watchdog-timer.sh`
-following the existing installer pattern (pick an unused fire-minute offset — see the existing minute table in
-`agent-orchestrator-scheduled-jobs.md`), and backend tests for the new dispatch branch. **File this as a tracked
-plan todo, not prose** — this note itself is not the todo (per the workspace's own "every follow-up is a `- [ ]`
-todo" HARD RULE).
+**Wired to a daily systemd timer** (`ao_watchdog_scheduled_timer_wiring_2026_08_17.md`, closed out 2026-08-19) —
+`mode="ao_watchdog"` in `agent-orchestrator/server/plan_health.py`'s dispatch handler (the `_MODE_PROMPT_TEMPLATE`
+/ `_MODE_AGENT_KIND` dicts, mirroring `escalation_reconcile`'s wiring), the thin wrapper role file
+`unified-trading-pm/agents/ao_watchdog.md`, and `agent-orchestrator/scripts/install-ao-watchdog-timer.sh` (daily,
+00:47 UTC — midnight-adjacent per the operator's 2026-08-18 cadence decision, staggered against
+`ci_reconciler`/`plan_reconciler`) are all live. It still also runs manually / via `/autonomous` exactly as before —
+the timer is additive, not a replacement path.
 
 ## Under `/autonomous` / one-shot dispatch contract
 
