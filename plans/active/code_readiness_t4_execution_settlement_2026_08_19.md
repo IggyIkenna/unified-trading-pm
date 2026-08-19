@@ -185,8 +185,13 @@ todos only to confirm they are data-movement, then leave it.
       workspace-wide search — the only live path is manual. Publish/read via the UTL `EventTransport` facade
       (`InMemoryTransport` for paper/colocated, Pub/Sub for live) so `paper(W) == batch-rerun(W)` holds at epsilon
       zero. SSOT: `/codex/02-data/live-data-persistence-and-event-log.md`.
-- [ ] [BACKEND] P0. **Expose a real per-venue execution-instruction-path check.** This is the single check that
-      unblocks grading on all 864 readiness rows — **T5 blocks on it directly.** Ship it early and tell T5.
+- [x] ✅ [BACKEND] P0. **Expose a real per-venue execution-instruction-path check** — **execution-service@b70d2edb16**
+      (landing verified independently of quickmerge's exit code: all six new files resolve under
+      `git cat-file -e origin/live-defi-rollout:<path>`, and `git diff --stat origin/live-defi-rollout` is empty for
+      the two modified files). `execution_service/readiness/instruction_path.py` exposes
+      `instruction_path_availability(venue)`; `python -m execution_service.readiness` is the cross-venv probe.
+      T5 has the frozen contract under their `## Inbound requests` (`unified-trading-pm@34999f0adf`), posted before
+      the code landed so they were never idle-waiting. Measured verdicts are in the Progress Log.
 - [ ] [BACKEND] P0. Build the external instruction API surface, coordinating the contract with T1.
 - [ ] [BACKEND] P1. Complete the delta-proxy repricer generalization to the full price + position + credit triple.
       `DeltaProxyRepricer` + `QuoteMaintainer` implement the price leg only. **Needs T1's `QuoteInstruction`
@@ -207,10 +212,28 @@ todos only to confirm they are data-movement, then leave it.
       issue's remaining open item is a P3 (`instruction_to_order_ids` staleness), not this P0. Evidence:
       `/plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
 - [ ] [BACKEND] P0. Implement the full 9-state order lifecycle once T1 lands the `OrderState` contract.
-- [ ] [BACKEND] P0. Fix the broken emergency close-all path — strategy POSTs to `/api/orders` and execution-service
-      exposes no such route.
+- [ ] [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
+      said.** Two independent defects, both measured: (a) no `/api/orders` route exists anywhere under
+      `execution_service/api/`, so the strategy-side POST reaches nothing; (b) even the in-process path is a
+      no-op — `v2/account_orchestrator.py:48` `AccountInstructionOrchestrator.dispatch()` validates
+      `authorization_id`, logs, appends to `_history` and returns `accepted=True` **without closing anything**; its
+      own module docstring says "real venue wiring lands in follow-up commits once each venue adapter exposes the
+      right account-ops surface". An emergency close-all therefore reports success while closing zero positions,
+      which is the more dangerous half. Fix needs BOTH: a route on the DEPLOYED app (see the entrypoint todo below)
+      and real per-venue CLOSE_ALL wiring behind `AccountActionV2.CLOSE_ALL`.
 - [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
+- [ ] [BACKEND] P0. **Reconcile the deployed HTTP surface with what this plan and the artefacts claim.** MEASURED
+      2026-08-20: `Dockerfile` CMD is `uvicorn execution_service.api.main:create_app --factory`, and
+      `execution_service/api/main.py:43-44` registers ONLY the UTL health router and
+      `external_instruction_api.router`. `manual_router` (`/instruction`, `/cancel`, `/amend`,
+      `/instructions/{id}`, `/venues`, `/algos`, `/pending`) is registered on `api/app.py:127`, which the container
+      never serves — `api/app.py` is imported only by CLI handlers and `evidence_router`. So on the DEPLOYED
+      service the single HTTP instruction path is `POST /external/instructions`, which 501s every action except
+      TRADE. **This contradicts this plan's own framing that "the only live instruction path today is manual".**
+      NOT YET MEASURED, and required before deciding the fix: how DART's manual-trade surface actually reaches
+      execution-service (a second deployment target, an in-process CLI path, or genuinely unreachable). Resolve
+      that first, then either register `manual_router` on `main.py` or record why it is deliberately CLI-only.
 - [ ] [BACKEND] P1. Verify the production live orchestrator actually satisfies the `LiveOrchestrator` protocol it is
       cast to — untested end to end, and the prior pass spot-checked location only. Evidence:
       `/plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
@@ -236,8 +259,11 @@ todos only to confirm they are data-movement, then leave it.
       callers; the Pendle connector is built but never instantiated in `DeFiAdapter` and is absent from
       `DEFI_VENUE_TO_CONNECTOR_CLASS` / `DEFI_VENUE_TO_GATE_MARKER`. Wire them or delete them — no shims. Evidence:
       `/plans/active/issues/pendle_venue_onboarding_2026_08_16.md`.
-- [ ] [BACKEND] P0. Enforce the funds-isolation invariant in code — funds NEVER move between clients; every transfer
-      is scoped to one `client_id` and `TransferCoordinator` raises `CrossClientTransferForbiddenError`. SSOT:
+- [x] ✅ [BACKEND] P0. Enforce the funds-isolation invariant in code — **ALREADY ENFORCED; this plan's todo was
+      stale at authoring.** MEASURED 2026-08-20: `execution_service/transfer_coordinator.py:275` raises
+      `CrossClientTransferForbiddenError` when `intent.client_id` differs from the process's `client_id`, with the
+      message "Funds NEVER move between different clients (custody + legal boundary)" citing the SSOT directly;
+      `validate_intent` (`:173`) and the handler path (`:238-244`) both propagate it rather than swallowing. SSOT:
       `/codex/04-architecture/client-funds-isolation.md`.
 - [ ] [BACKEND] P1. Close the BATCH settlement gap the instruction-path check surfaced 2026-08-20. MEASURED via
       `backtest_v2.action_handlers.BATCH_UNHANDLED_ACTIONS`: `resolve_settlement` has no handler for
@@ -341,7 +367,10 @@ todos only to confirm they are data-movement, then leave it.
   rationale lives in `defi_instruction_routes.py`'s module docstring where it does not count against a method cap.
   Re-verified by replicating the gate's own AST check repo-wide: **no size violations across
   `execution_service/`**. Also: capture quickmerge to a FILE, never `| tail -N` — run 1's truncation threw away
-  the itemised violation and cost a diagnosis round-trip. `<repo>@<sha>` appended when run 2 lands.
+  the itemised violation and cost a diagnosis round-trip. Run 2 **LANDED: `execution-service@b70d2edb16`**, verified
+  by `git cat-file -e origin/live-defi-rollout:<path>` for all six new files plus an empty
+  `git diff --stat origin/live-defi-rollout` on the two modified ones — not by trusting exit 0, which run 1 proved
+  is returned even on a failed re-gate.
 
 - 2026-08-20 — **Three of this plan's four "Correctness P0s — silently wrong today" were already fixed before the
   plan was authored.** Verified in CODE, not from the issue docs' checkboxes (this corpus has confirmed
