@@ -152,3 +152,22 @@ ANY provider today, including Claude, despite Claude having the richest usage-hi
       Check that plan's current Progress Log tail first (concurrent sessions are actively landing work on it).
       **Done when**: either every call site is confirmed wired, or the remaining gap is stated with a citation to the
       current state.
+
+      **Re-confirmed 2026-08-19 (interactive session, prompted by an operator ask that planning AND escalation
+      dispatch both get the same difficulty/duration-stratified treatment).** Read `deepseek_claude_blended_provider_
+      routing_2026_07_28.md` end to end (through its full 1000-line hard cap, latest entry 2026-08-19) and
+      `agent-orchestrator/server/autospawn.py::select_account_for_spawn()` directly — the gap is still open, byte-for-
+      byte the same list as 2026-08-18: `escalation.py`/`main_agent_keeper.py`/`plan_health.py`/`server.py`/
+      `worker_liveness_watchdog.py`/`ensure_review_agents`/the resume pass all still default `task=None`, so none of
+      them get difficulty/duration-band rotation — only `autospawn_refill` does. Separately, escalation workers
+      register with a flat `role="custom"` (`escalation.py:992-999`, deliberate — keeps promote/chat lanes clean,
+      `agent_kind` carries real identity) rather than a `role_registry`-resolved RoleSpec; this does NOT block
+      analytics attribution (`task_role_group()`/`_ESCALATION_ROLES` in `server/state_store/slots.py` already
+      classify escalation-origin spend into `cicd`/`conflict_resolver`/`data_pipeline_failure`/
+      `quality_gate_resolution` independent of the registration-time role label — confirmed via
+      `deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md`), so it's a narrower, lower-
+      priority gap than the stratification one. **Not implemented in this session** — the operator's own instruction
+      for this exact scope was "update the todos in the existing plans," not "implement now," and this is live
+      production dispatch-routing code the owning plan has repeatedly treated with operator-ship-review caution
+      (e.g. its own Phase 4 `[INFRA]` todo shipped code+tests but left checkboxes unflipped "pending QG + operator
+      ship review"). Leaving this todo OPEN rather than flipping it — the wiring itself is still real, undone work.
