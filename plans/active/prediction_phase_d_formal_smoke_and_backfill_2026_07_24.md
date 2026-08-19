@@ -133,8 +133,9 @@ context_scope:
       for) — try 2026-08-05 first, fall back to 2026-06-28 if any shard comes up empty. Run `data-pipeline-check-is` for
       prediction-only, all shards, post-migration — both prediction IS shards prove force/skip + canonical shape; report
       path cited.
-- [ ] [DATA] P0. **Same `--day` ruling as above.** Run `data-pipeline-check-mtds` for prediction-only, all shards,
-      post-migration — same day, all 4 prediction MTDS shards prove force/skip + canonical shape; report path cited.
+- [ ] [DATA] P0. **`--day 2026-08-05` (fallback `2026-06-28`) — same ruling as the `-is` todo above.** Run
+      `data-pipeline-check-mtds` for prediction-only, all shards, post-migration — same day, all 4 prediction MTDS
+      shards prove force/skip + canonical shape; report path cited.
       **BOTH skills green across all prediction shards = prediction is code-complete, migrated, honestly-covered, and
       verified.** **PARTIAL 2026-07-19 (tick 22):** all 6 smoke fixes landed; IS force leg DEMONSTRATED end-to-end
       (0-obj→182 CQG-first objects w/ canonical `PREDICTION_MARKET`, `-test-` bucket, day=2026-06-28) — the dominant IS
@@ -167,7 +168,7 @@ context_scope:
       now-relocated section; it explicitly does NOT flip this checkbox itself (only the pre-Phase-B leg lands there —
       the mid-migration leg stays tracked here). Done when: both runs' report paths + dates are cited in this plan's
       Progress Log.
-- [ ] [DATA] P2. **`--day` ruled 2026-08-07, same as above.** `data-pipeline-check-mtds` 3x cadence top-up (relocated
+- [ ] [DATA] P2. **`--day 2026-08-05` (fallback `2026-06-28`), ruled 2026-08-07, same as above.** `data-pipeline-check-mtds` 3x cadence top-up (relocated
       2026-07-25 from the parent's "Queued audits + reviews" section). Run
       `/data-pipeline-check-mtds --asset-group prediction` twice more — the same pre-Phase-B baseline + Phase-B
       mid-migration checkpoints as the `-is` todo above — to reach the 3x cadence (checkpoint 3 is this doc's own

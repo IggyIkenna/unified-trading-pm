@@ -399,7 +399,7 @@ version.
   for whoever executes it, exactly what the dispatch-scope-eligibility rule bans.
 - **A resumable script's `--report`/checkpoint file goes in a shared, task-id-keyed, durable location — never a
   per-slot-per-session scratchpad** _(finding X, 2026-08-06,
-  `plans/active/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`: the same resumable-migration todo
+  `plans/archive/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`: the same resumable-migration todo
   was independently dispatched to 3 concurrent slots, each writing its own `--report` checkpoint under its own
   `/home/ubuntu/.claude-configs/orch-slot-*/cc-tmpdir/**/scratchpad/` — none could see the others' progress, so two of
   the three slots re-derived 60+ date-shards' worth of already-done work as pure GCS-read cost, and the first slot's

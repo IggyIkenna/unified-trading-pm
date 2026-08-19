@@ -50,7 +50,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-08-12"
+last_updated: "2026-08-19"
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -131,8 +131,8 @@ context_scope:
 
 ### E3 — Unify the two arb paths onto the shared fixture identity (Leg 3)
 
-- [ ] [BACKEND] P1. **Wire the arb engine to CONSUME `af_fixture_id` — gaps (1) and (2) below SHIPPED since the
-      2026-07-19 trace (verified live in code 2026-08-12); only gap (3) remains open.** ~~The 6 materialized columns are
+- [ ] [BACKEND] P1. **Only gap (3) of 3 remains open — gaps (1)-(2) SHIPPED since the 2026-07-19 trace (verified live
+      in code 2026-08-12).** Wire the arb engine to CONSUME `af_fixture_id`. ~~The 6 materialized columns are
       an UNCONSUMED landing spot~~ — **(1) DONE**: features-service
       `prediction_cross_venue_dispatch.py::_records_from_universe` now reads the 6 `_COL_*` columns and populates
       `InstrumentRecord.af_fixture_id` / `af_league_id` / home+away canonical ids / `fixture_date` /

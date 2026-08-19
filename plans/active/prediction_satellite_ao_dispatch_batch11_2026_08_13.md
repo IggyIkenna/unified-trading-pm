@@ -22,7 +22,7 @@ related:
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-19" # was 2026-08-13 -- stale vs the 2026-08-17 context-scout body edit; corrected 2026-08-19 (/plan-reconcile predictions_master)
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -37,7 +37,8 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: []
+depends_on: [prediction_phase_ab_residuals_2026_07_24] # added 2026-08-19 (/plan-reconcile predictions_master) -- both todos below were only ever prose-gated on this doc's open-todo count reaching 0 (see each todo's own text), never machine-enforced; 2 separate dispatched workers (slot-29, slot-12, both 2026-08-14) had to independently self-skip after wasted round-trips discovering the gate live. Encodes the already-stated intent as a real dispatch gate, does not change it.
+gate_on_depends: true
 context_scope:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
@@ -61,8 +62,9 @@ source: >-
 
 ## Todos
 
-- [ ] [CODE] P2. Run data-pipeline-check-is --asset-group prediction --day 2026-08-05 (fallback 2026-06-28) once the
-      phase_ab gate clears, cite the report path Source:
+- [ ] [CODE] P2. **GATED — do not run until `prediction_phase_ab_residuals_2026_07_24.md` reaches 0 open todos
+      (currently 4, re-verified 2026-08-19).** Run `data-pipeline-check-is --asset-group prediction --day 2026-08-05`
+      (fallback `2026-06-28`) once that gate clears; cite the report path. Source:
       `plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
 
       **NOT ACTIONABLE 2026-08-14 (slot-29, backend_engineer) — gate still open, re-verified live.** Same gate as the
@@ -70,16 +72,23 @@ source: >-
           `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true`. Live-checked
           `prediction_phase_ab_residuals_2026_07_24.md` today: still **6 open `- [ ]` todos** (recounted 2026-08-17 by plan_reconciler — A1 resolved 2026-08-15, dropping the count from 7) (unchanged from every prior
           re-check). Skipping (`reason_code: GATED`) rather than running the pipeline-check prematurely; re-check
-          `prediction_phase_ab_residuals_2026_07_24.md`'s open-todo count before re-attempting.
+          `prediction_phase_ab_residuals_2026_07_24.md`'s open-todo count before re-attempting. **CORRECTED 2026-08-19
+          (plan_reconciler, `/plan-reconcile predictions_master`)**: live recount today is **4 open** `- [ ]` todos, not
+          6 (`grep -c '^- \[ \]' plans/active/prediction_phase_ab_residuals_2026_07_24.md` = 4, matching that doc's own
+          2026-08-18 na-eligibility-audit marker) — gate conclusion unchanged (4 &gt; 0, still not dispatchable), only
+          the stale count corrected.
 
-- [ ] [CODE] P2. Run data-pipeline-check-mtds --asset-group prediction --day 2026-08-05 (fallback 2026-06-28) once the
-      phase_ab gate clears, cite the report path Source:
+- [ ] [CODE] P2. **GATED — do not run until `prediction_phase_ab_residuals_2026_07_24.md` reaches 0 open todos
+      (currently 4, re-verified 2026-08-19).** Run `data-pipeline-check-mtds --asset-group prediction --day 2026-08-05`
+      (fallback `2026-06-28`) once that gate clears; cite the report path. Source:
       `plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`
 
       **NOT ACTIONABLE 2026-08-14 (slot-12, backend_engineer) — gate still open, re-verified live.** The Phase D source
       plan is `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true`. Live-checked
       `prediction_phase_ab_residuals_2026_07_24.md` today: still **6 open `- [ ]` todos** (recounted 2026-08-17 by plan_reconciler — A1 resolved 2026-08-15, dropping the count from 7) (unchanged from every prior
-      na-eligibility-audit re-check since 2026-08-06/07/09/10). The P0 manifest-migration todo's `--apply` landed the
+      na-eligibility-audit re-check since 2026-08-06/07/09/10). **CORRECTED 2026-08-19 (plan_reconciler, `/plan-reconcile
+      predictions_master`)**: live recount today is **4 open**, matching the sibling todo's correction above — gate
+      conclusion unchanged. The P0 manifest-migration todo's `--apply` landed the
       (a)/(b)/(c) items 2026-07-19 but the CQG-bundle normalization decision (i) and the old-row tombstone-sweep
       strategy (ii) remain genuinely open/undecided — Phase-B is not fully closed, so the gate has not cleared. Skipping
       (`reason_code: GATED`) rather than running the pipeline-check prematurely; re-check

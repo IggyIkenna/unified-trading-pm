@@ -208,12 +208,14 @@ grace status fresh rather than assuming still-blocked; most are now outside the 
       to `prediction_mdps_live_depth_history_not_accumulating_2026_08_04.md` at its pre-archive `active/issues/`
       path. **FIXED 2026-08-16 (Phase -1)**: both repointed to `plans/archive/issues/`.
       `unified-trading-pm@<this-commit>`.
-- [ ] [DOCS] P3. `plans/active/task_template.md:402` — stale reference to
+- [x] ✅ [DOCS] P3. `plans/active/task_template.md:402` — stale reference to
       `prediction_trades_migration_concurrent_dispatch_2026_07_28.md` in a worked example; this normative-ref doc
       itself is grace-protected (33min old at run time) despite not being a prediction-tranche doc per se.
-      **RE-CHECKED 2026-08-16 (Phase -1)**: still grace-protected — target's last commit is now 17:03:07+0100
-      (16:03:07Z), ~5.5h old at re-check time (<12h). Left open, not fixed.
-- [ ] [DOCS] P2. `prediction_consolidated_closeout_2026_07_18.md` (hub) — does not reference
+      **FIXED 2026-08-19 (plan_reconciler, `/plan-reconcile predictions_master`)**: grace cleared (last touch
+      2026-08-17T15:40:18Z, >12h old at 2026-08-19T00:49:38Z check). Repointed to the confirmed archive path
+      `plans/archive/issues/prediction_trades_migration_concurrent_dispatch_2026_07_28.md`. Working-tree edit only
+      (this session ships nothing — do-not-ship instruction).
+- [x] ✅ [DOCS] P2. `prediction_consolidated_closeout_2026_07_18.md` (hub) — does not reference
       `prediction_venue_e2e_batch1_2026_08_16.md` anywhere, though that plan's `_finalize` sibling already lists the
       hub in its own `related:` frontmatter (one-directional linkage — child cites parent, parent doesn't cite
       child). **FOUND 2026-08-16 (plan_reconciler, prediction-tranche, fresh same-day dispatch `agt-64e465`)**:
@@ -222,7 +224,12 @@ grace status fresh rather than assuming still-blocked; most are now outside the 
       hub's last commit is 16:41:24Z, ~5.5h old at check time (22:13Z), <12h. Add batch1 (+ its finalize sibling) to
       the hub's child-plan list once out of grace. (Note: `batch1`'s own `parent_epic` is `infrastructure_master`,
       not `predictions_master` — this is an asset_group-scoped cross-reference gap on the hub, not an epic-ownership
-      question.)
+      question.) **MOOT — CLOSED 2026-08-19 (plan_reconciler, `/plan-reconcile predictions_master`)**: confirmed
+      per the 08-18 findings doc's own note — `prediction_venue_e2e_batch1_2026_08_16.md` (+ `_finalize`) were
+      archived 2026-08-18 by a concurrent AO-dispatch session before this citation gap was ever fixed. A hub not
+      linking forward to an archived plan's pre-archive path is no longer a live citation gap — re-verified via a
+      fresh corpus grep (0 hits for `venue_e2e` anywhere in `plans/active/`). No action needed; closing as moot
+      rather than leaving a stale open item for a doc that no longer exists at the cited path.
 
 ## Codex corrections applied
 
@@ -383,6 +390,18 @@ frontmatter refs, line-cap HARD violations) came back clean (0 findings) for the
 
 None — all 7 hunters completed and reported; every candidate they surfaced was triaged (fixed, flagged, or routed)
 in this same run.
+
+## Progress Log (2026-08-19 entry below the historical log)
+
+- **2026-08-19 (plan_reconciler, `/plan-reconcile predictions_master`, epic-scoped run)**: Phase -1 re-check of this
+  doc against fresh corpus state (~00:49Z). Of the remaining 5 open items at entry, 2 cleared grace and were fixed
+  (task_template.md:402 ref; hub venue_e2e_batch1 citation — found moot, batch1 now archived). The other 3 remain
+  correctly open: `prediction_live_clob_depth_capture_2026_07_24.md:470` (ordinary-work live-code question, not a
+  doc-hygiene gap — unchanged classification from the original 2026-08-16 review), the Betfair `[INFRA]` tag
+  question and `mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md` mistag question (both still inside the 12h
+  grace window as of this check — a corpus-wide touch at ~2026-08-18T21-22Z reset their clocks). The 4 "Filed"
+  items and 3 "Exit-gate observations" items are unchanged (routed to other tranches/skills, not this run's job).
+  See `plan_reconciler_findings_predictions_master_2026_08_19.md` for this run's full epic-scoped report.
 
 ## Progress Log
 

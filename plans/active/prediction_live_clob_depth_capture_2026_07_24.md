@@ -15,12 +15,12 @@ scope: [engineer, admin]
 tags: [prediction, kalshi, polymarket, clob, live-data, websocket, capture, book-snapshot]
 related:
   [
-    plans/active/prediction_venue_perps_and_live_clob_depth_2026_06_20,
-    plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24,
-    plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24,
-    plans/active/issues/prediction_universe_capture_dead_since_07_01_2026_07_06,
-    plans/active/prediction_capture_incident_remediation_2026_07_06,
-    plans/active/issues/plan_line_cap_remediation_2026_07_23,
+    /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
+    /plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
+    /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
+    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
+    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
 parent_epic: predictions_master
@@ -38,7 +38,7 @@ superseded_by:
 depends_on:
 source: >-
   Split from prediction_venue_perps_and_live_clob_depth_2026_06_20.md (2354 lines / 87 todos, HARD over the 1000L
-  line-cap) per plans/active/issues/plan_line_cap_remediation_2026_07_23.md row 23 — operator approved unlocking
+  line-cap) per /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md row 23 — operator approved unlocking
   `locked_by: live-defi-rollout` and a 3-way clean-partition (parked perps track / live CLOB-depth capture infra /
   cross-venue arb+coverage). This file carries the live CLOB-depth capture infra third verbatim.
 assigned_role: data_engineering
@@ -58,7 +58,7 @@ context_scope:
 
 > **🟢 2026-07-24 — SPLIT FROM `prediction_venue_perps_and_live_clob_depth_2026_06_20.md`.** That plan grew to 2354
 > lines / 87 todos across three intertwined tracks and was flagged HARD over the 1000-line cap
-> (`plans/active/issues/plan_line_cap_remediation_2026_07_23.md` row 23). Operator approved unlocking
+> (`/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md` row 23). Operator approved unlocking
 > `locked_by: live-defi-rollout` and a 3-way clean-partition. **This file carries the PREDICTION (Kalshi/Polymarket
 > YES-NO market) live+batch data-capture pipeline track verbatim** — every todo and Progress Log entry below was moved
 > unchanged (never summarized or rewritten). Siblings from the same split:
@@ -263,14 +263,19 @@ context_scope:
         recent past date → re-run the `book_snapshot_5` batch backfill → verify `row_count>0`" item is still parked
         there (it was re-tagged off `[OPERATOR]` 2026-07-28 but remains sequenced AFTER batch4 P0 lands; that gate has
         now cleared with the P0 ship `instruments-service@3617261f`, yet the re-enum+backfill itself has NOT been
-        dispatched/run). The corresponding batch4 depth-history verify (this doc's own `[x]` item above) returned
+        dispatched/run). ~~The corresponding batch4 depth-history verify (this doc's own `[x]` item above) returned
         VERDICT: FAIL — this row-proof backfill does not change that verdict. Re-open in a future batch as a ready
-        `[DATA]` candidate now that its P0 dependency has landed. **na-eligibility-audit 2026-08-10: citation
+        `[DATA]` candidate now that its P0 dependency has landed.~~ **na-eligibility-audit 2026-08-10: citation
         repointed** — the live current owner is
         [`prediction_satellite_ao_dispatch_batch10_2026_08_09.md`](/plans/archive/2026_08/prediction_satellite_ao_dispatch_batch10_2026_08_09.md)
         todo 1 (`status: active`, `assigned_vm: planning`, verbatim `Source:` cites this exact checkbox), not batch4 —
         batch10 independently re-extracted the same item and is the current dispatch surface; batch4's older, staler
-        Deferred-section copy of this item is superseded by batch10's, not a second live claim.
+        Deferred-section copy of this item is superseded by batch10's, not a second live claim. **RESOLVED 2026-08-19
+        (/plan-reconcile predictions_master)**: batch10 (+ its finalize) is now `status: complete`, archived — that
+        finalize plan's own text confirms this exact item "confirmed `[x]` ✅ flipped (line 247) with batch10 todo 1's
+        full evidence chain: live manifest rows &gt;0 (4 dates, 648K rows), mtds@82ba5399/0a6ad2de". The "stays `- [ ]`,
+        NOT run" narrative above (struck through) was superseded by this shipped resolution; this checkbox's own `[x]`
+        state was already correct, only the stale in-body prose contradicting it is now fixed.
 - [x] ✅ [SCRIPT] P1. **Prediction BATCH recent-window (05-23→06-22) zero-capture — TWO-LAYER root cause, BOTH FIXED
       (2026-06-23 batch-column-close session)**: (1) **Pre-flight layer (already fixed pre-session, mtds@84504e6 on
       LDR)** — the 28,448 Polymarket-trades manifest rows for 05-23→06-22 are `empty_confirmed[SOURCE_RETURNED_ZERO]`

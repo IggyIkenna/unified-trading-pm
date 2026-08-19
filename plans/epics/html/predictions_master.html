@@ -1,0 +1,955 @@
+<!-- Generated 2026-08-19 by /plan-reconcile predictions_master (epic-scoped run). Data source: scripts/plan-hygiene/epic_report_data.py --epic predictions_master --json, run at generation time. -->
+<title>Predictions Odds Board</title>
+<style>
+  @import url(data:text/css;charset=utf-8,);
+
+  :root {
+    /* -- ground / surface -- */
+    --ground: #f7f5f0;
+    --surface: #ffffff;
+    --surface-raised: #fbfaf6;
+    --border: #dcd6c9;
+    --border-strong: #c7bfa9;
+    /* -- text -- */
+    --text-primary: #1a1f27;
+    --text-muted: #6b7280;
+    --text-faint: #9a9488;
+    /* -- brand accent (ticker amber) -- */
+    --accent: #b5791f;
+    --accent-strong: #8f5f14;
+    --accent-wash: #f2e6cc;
+    /* -- semantic: YES / NO (prediction-market vocabulary, not the brand accent) -- */
+    --yes: #1f9d63;
+    --yes-wash: #dcf3e7;
+    --no: #c23652;
+    --no-wash: #fbe3e8;
+    --gated: #9a6b1f;
+    --gated-wash: #f3e9d3;
+    /* -- type -- */
+    --font-display: ui-monospace, "Cascadia Code", "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
+    --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --shadow-card: 0 1px 2px rgba(26, 31, 39, 0.06), 0 4px 12px rgba(26, 31, 39, 0.05);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #12151a;
+      --surface: #1a1f27;
+      --surface-raised: #1f252e;
+      --border: #2a313d;
+      --border-strong: #3a4350;
+      --text-primary: #e8ecf1;
+      --text-muted: #8b95a5;
+      --text-faint: #5c6577;
+      --accent: #e8a33d;
+      --accent-strong: #f0b862;
+      --accent-wash: #3a2f18;
+      --yes: #3ecf8e;
+      --yes-wash: #163828;
+      --no: #e8546b;
+      --no-wash: #3a1a22;
+      --gated: #d9a44a;
+      --gated-wash: #362a14;
+      --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.35);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #12151a;
+    --surface: #1a1f27;
+    --surface-raised: #1f252e;
+    --border: #2a313d;
+    --border-strong: #3a4350;
+    --text-primary: #e8ecf1;
+    --text-muted: #8b95a5;
+    --text-faint: #5c6577;
+    --accent: #e8a33d;
+    --accent-strong: #f0b862;
+    --accent-wash: #3a2f18;
+    --yes: #3ecf8e;
+    --yes-wash: #163828;
+    --no: #e8546b;
+    --no-wash: #3a1a22;
+    --gated: #d9a44a;
+    --gated-wash: #362a14;
+    --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 20px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    background: var(--ground);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    padding: 0 0 5rem;
+  }
+
+  .wrap {
+    max-width: 78rem;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  a { color: var(--accent-strong); }
+
+  code, .mono, .tabular {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ============ MASTHEAD ============ */
+  .masthead {
+    background: var(--text-primary);
+    color: var(--ground);
+    padding: 2.75rem 0 2.25rem;
+    border-bottom: 3px solid var(--accent);
+  }
+  :root:not([data-theme="light"]) .masthead,
+  :root[data-theme="dark"] .masthead {
+    background: #05070a;
+  }
+
+  .masthead-eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.9rem;
+  }
+  .masthead-eyebrow::before {
+    content: "";
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 50%;
+    background: var(--yes);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 25%, transparent);
+  }
+
+  .masthead h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: clamp(2rem, 4.4vw, 3.1rem);
+    line-height: 1.04;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.85rem;
+    text-wrap: balance;
+  }
+
+  .masthead .dek {
+    font-size: 1.02rem;
+    line-height: 1.55;
+    color: #c9cdd5;
+    max-width: 46rem;
+    margin: 0 0 1.1rem;
+  }
+
+  .masthead .genstamp {
+    font-family: var(--font-display);
+    font-size: 0.74rem;
+    color: #8b95a5;
+    letter-spacing: 0.02em;
+  }
+
+  /* ============ STAT STRIP ============ */
+  .stat-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+    gap: 1px;
+    background: var(--border-strong);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: -2.1rem 0 2.5rem;
+    box-shadow: var(--shadow-card);
+    position: relative;
+    z-index: 2;
+  }
+
+  .stat-cell {
+    background: var(--surface);
+    padding: 1.15rem 1.3rem 1rem;
+  }
+
+  .stat-cell .label {
+    font-family: var(--font-display);
+    font-size: 0.66rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 0.5rem;
+  }
+
+  .stat-cell .value {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 2.1rem;
+    line-height: 1;
+    letter-spacing: -0.01em;
+  }
+
+  .stat-cell .value.yes { color: var(--yes); }
+  .stat-cell .value.no { color: var(--no); }
+  .stat-cell .value.accent { color: var(--accent-strong); }
+
+  .stat-cell .sub {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+  }
+
+  /* ============ SECTIONS ============ */
+  section { margin-bottom: 3rem; }
+
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 0.75rem;
+    margin-bottom: 1.1rem;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0.6rem;
+  }
+
+  .section-head .tag {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--accent-strong);
+    background: var(--accent-wash);
+    padding: 0.22rem 0.55rem;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .section-head h2 {
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+    font-weight: 700;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  .section-note {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+    max-width: 54rem;
+    margin: 0 0 1.2rem;
+  }
+
+  /* ============ TICKET GRID (plan-by-plan) ============ */
+  .ticket-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+    gap: 0.9rem;
+  }
+
+  .ticket {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1rem 1.1rem 1.05rem;
+    box-shadow: var(--shadow-card);
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+  }
+
+  .ticket.is-settled {
+    opacity: 0.72;
+  }
+
+  .ticket-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+
+  .ticket-title {
+    font-size: 0.86rem;
+    font-weight: 600;
+    line-height: 1.35;
+  }
+
+  .ticket-path {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    color: var(--text-faint);
+    margin-top: 0.15rem;
+    word-break: break-word;
+  }
+
+  .pill {
+    font-family: var(--font-display);
+    font-size: 0.62rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 0.16rem 0.45rem;
+    border-radius: 999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .pill.aggregator { background: var(--accent-wash); color: var(--accent-strong); }
+  .pill.settled { background: var(--yes-wash); color: var(--yes); }
+
+  .odds-bar {
+    display: flex;
+    height: 0.55rem;
+    border-radius: 999px;
+    overflow: hidden;
+    background: var(--border);
+  }
+  .odds-bar .fill-yes { background: var(--yes); }
+  .odds-bar .fill-no { background: var(--no); }
+
+  .odds-legend {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+  }
+  .odds-legend .done { color: var(--yes); }
+  .odds-legend .open { color: var(--no); }
+
+  .ticket-op {
+    background: var(--gated-wash);
+    color: var(--gated);
+    border: 1px dashed var(--gated);
+    border-radius: 5px;
+    padding: 0.4rem 0.5rem;
+    font-size: 0.74rem;
+    line-height: 1.4;
+  }
+
+  /* ============ SETTLEMENT TABLE (operator's desk) ============ */
+  .settle-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    font-size: 0.86rem;
+  }
+  .settle-table th {
+    text-align: left;
+    font-family: var(--font-display);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 0.7rem 1rem;
+    background: var(--surface-raised);
+    border-bottom: 1px solid var(--border);
+  }
+  .settle-table td {
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .settle-table tr:last-child td { border-bottom: none; }
+  .settle-table .tag-op {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    color: var(--gated);
+    font-weight: 700;
+  }
+
+  /* ============ TICKER TAPE (closed out this pass) ============ */
+  .tape {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .tape-row {
+    display: grid;
+    grid-template-columns: 1.4rem 1fr;
+    gap: 0.7rem;
+    align-items: start;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--yes);
+    border-radius: 6px;
+    padding: 0.65rem 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  .tape-row .glyph {
+    font-family: var(--font-display);
+    color: var(--yes);
+    font-weight: 700;
+  }
+  .tape-row .archived-glyph { color: var(--accent-strong); }
+  .tape-row.archived { border-left-color: var(--accent); }
+  .tape-row b { font-weight: 600; }
+  .tape-row .meta {
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    color: var(--text-faint);
+    margin-top: 0.25rem;
+  }
+
+  /* ============ LANES ============ */
+  .lane-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+  }
+  .lane-table th {
+    text-align: left;
+    font-family: var(--font-display);
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 0.6rem 0.9rem;
+    border-bottom: 2px solid var(--border-strong);
+  }
+  .lane-table td {
+    padding: 0.8rem 0.9rem;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  .lane-status {
+    font-family: var(--font-display);
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+    padding: 0.15rem 0.45rem;
+    border-radius: 4px;
+    white-space: nowrap;
+    display: inline-block;
+  }
+  .lane-status.ready { background: var(--yes-wash); color: var(--yes); }
+  .lane-status.gated { background: var(--gated-wash); color: var(--gated); }
+  .lane-status.blocked { background: var(--no-wash); color: var(--no); }
+
+  /* ============ DISPATCH PROMPTS ============ */
+  .prompt-card {
+    background: var(--text-primary);
+    color: #d7dbe2;
+    border-radius: 8px;
+    padding: 1.1rem 1.2rem;
+    margin-bottom: 1rem;
+    box-shadow: var(--shadow-card);
+  }
+  :root:not([data-theme="light"]) .prompt-card,
+  :root[data-theme="dark"] .prompt-card {
+    background: #05070a;
+  }
+  .prompt-card .prompt-head {
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    color: var(--accent);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .prompt-card pre {
+    margin: 0;
+    white-space: pre-wrap;
+    font-family: var(--font-display);
+    font-size: 0.76rem;
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  /* ============ NOTES ============ */
+  .notes {
+    font-size: 0.86rem;
+    color: var(--text-muted);
+    line-height: 1.7;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.4rem;
+  }
+  .notes p { margin: 0 0 0.8rem; }
+  .notes p:last-child { margin-bottom: 0; }
+  .notes code {
+    background: var(--surface-raised);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+    font-size: 0.82rem;
+  }
+
+  footer {
+    text-align: center;
+    color: var(--text-faint);
+    font-family: var(--font-display);
+    font-size: 0.72rem;
+    padding-top: 2rem;
+  }
+</style>
+
+<div class="masthead">
+  <div class="wrap">
+    <div class="masthead-eyebrow">predictions_master &middot; L0 asset-group epic &middot; live board</div>
+    <h1>Predictions Odds Board</h1>
+    <p class="dek">
+      Kalshi &amp; Polymarket binary-outcome markets — capture pipeline, manifest canonicalisation, honest coverage,
+      and the football cross-venue arb build. Generated by <code>/plan-reconcile predictions_master</code>,
+      2026-08-19.
+    </p>
+    <div class="genstamp">GENERATED 2026-08-19T01:20Z &middot; SOURCE: epic_report_data.py --epic predictions_master --json</div>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <div class="stat-strip">
+    <div class="stat-cell">
+      <div class="label">Open contracts</div>
+      <div class="value no tabular">25</div>
+      <div class="sub">deduped, aggregator-excluded</div>
+    </div>
+    <div class="stat-cell">
+      <div class="label">Settled</div>
+      <div class="value yes tabular">108</div>
+      <div class="sub">deduped, aggregator-excluded</div>
+    </div>
+    <div class="stat-cell">
+      <div class="label">On the operator's desk</div>
+      <div class="value accent tabular">1</div>
+      <div class="sub">manual manifest write, human-only</div>
+    </div>
+    <div class="stat-cell">
+      <div class="label">Child docs</div>
+      <div class="value tabular">19</div>
+      <div class="sub">15 plans + 4 issues (incl. this run's own)</div>
+    </div>
+  </div>
+
+  <section>
+    <div class="section-head">
+      <span class="tag">Board</span>
+      <h2>Plan-by-plan</h2>
+    </div>
+    <p class="section-note">
+      One ticket per child plan — the fill bar reads like a settled/open book: green settles left, red-outlined
+      open sits right. Aggregator plans (satellite/finalize/consolidated-closeout) are flagged and excluded from
+      the deduped totals above, matching <code>/open-task-count</code>'s own methodology.
+    </p>
+    <div class="ticket-grid">
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Prediction consolidated close-out (hub)</div>
+            <div class="ticket-path">prediction_consolidated_closeout_2026_07_18.md</div>
+          </div>
+          <span class="pill aggregator">aggregator</span>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:100%"></div></div>
+        <div class="odds-legend"><span class="done">1 settled</span><span class="open">0 open</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Cross-venue Kalshi&harr;Polymarket arb + honest coverage</div>
+            <div class="ticket-path">prediction_cross_venue_arb_and_coverage_2026_07_24.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:93%"></div><div class="fill-no" style="width:7%"></div></div>
+        <div class="odds-legend"><span class="done">26 settled</span><span class="open">2 open</span></div>
+      </div>
+
+      <div class="ticket is-settled">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Live + batch CLOB depth &amp; trades capture</div>
+            <div class="ticket-path">prediction_live_clob_depth_capture_2026_07_24.md</div>
+          </div>
+          <span class="pill settled">0 open</span>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:100%"></div></div>
+        <div class="odds-legend"><span class="done">34 settled</span><span class="open">archive_exempt</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Phase A&ndash;B residuals (writers + manifest migration)</div>
+            <div class="ticket-path">prediction_phase_ab_residuals_2026_07_24.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:79%"></div><div class="fill-no" style="width:21%"></div></div>
+        <div class="odds-legend"><span class="done">15 settled</span><span class="open">4 open &middot; critical-path</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Phase C &mdash; data-status + honest-coverage UI</div>
+            <div class="ticket-path">prediction_phase_c_data_status_ui_2026_07_24.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:50%"></div><div class="fill-no" style="width:50%"></div></div>
+        <div class="odds-legend"><span class="done">2 settled</span><span class="open">2 open &middot; gated</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Phase D &mdash; formal smoke &amp; MVP backfill</div>
+            <div class="ticket-path">prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:55%"></div><div class="fill-no" style="width:45%"></div></div>
+        <div class="odds-legend"><span class="done">6 settled</span><span class="open">5 open &middot; gated</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Phase E &mdash; football cross-venue arb, live path</div>
+            <div class="ticket-path">prediction_phase_e_football_arb_live_2026_07_24.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:60%"></div><div class="fill-no" style="width:40%"></div></div>
+        <div class="odds-legend"><span class="done">3 settled</span><span class="open">2 open &middot; gated</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Satellite batch 6 &mdash; Betfair, canonical groups</div>
+            <div class="ticket-path">prediction_satellite_ao_dispatch_batch6_2026_07_29.md</div>
+          </div>
+          <span class="pill aggregator">aggregator</span>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:86%"></div><div class="fill-no" style="width:14%"></div></div>
+        <div class="odds-legend"><span class="done">19 settled</span><span class="open">3 open &middot; 4 hygiene fixes queued (grace)</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Satellite batch 11 &mdash; IS/MTDS pipeline checks</div>
+            <div class="ticket-path">prediction_satellite_ao_dispatch_batch11_2026_08_13.md (+ finalize)</div>
+          </div>
+          <span class="pill aggregator">aggregator</span>
+        </div>
+        <div class="odds-bar"><div class="fill-no" style="width:100%"></div></div>
+        <div class="odds-legend"><span class="done">0 settled</span><span class="open">5 open &middot; now machine-gated</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Satellite batch 12 &mdash; manifest canonicalisation split</div>
+            <div class="ticket-path">prediction_satellite_ao_dispatch_batch12_2026_08_17.md (+ finalize)</div>
+          </div>
+          <span class="pill aggregator">aggregator</span>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:14%"></div><div class="fill-no" style="width:86%"></div></div>
+        <div class="odds-legend"><span class="done">1 settled</span><span class="open">6 open</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">ML Model 2A walk-forward + arb_calculator</div>
+            <div class="ticket-path">predictions_ml_walk_forward_and_arb_2026_06_20.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:56%"></div><div class="fill-no" style="width:44%"></div></div>
+        <div class="odds-legend"><span class="done">5 settled</span><span class="open">4 open &middot; cross-epic gate</span></div>
+      </div>
+
+      <div class="ticket is-settled">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Dead REST-polling interface (MTDS adapters)</div>
+            <div class="ticket-path">issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md</div>
+          </div>
+          <span class="pill settled">0 open</span>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:100%"></div></div>
+        <div class="odds-legend"><span class="done">1 settled</span><span class="open">archive_exempt</span></div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Batch 4 deferred residuals</div>
+            <div class="ticket-path">issues/prediction_batch4_deferred_residuals_2026_08_16.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:50%"></div><div class="fill-no" style="width:50%"></div></div>
+        <div class="odds-legend"><span class="done">1 settled</span><span class="open">1 open</span></div>
+        <div class="ticket-op">[OPERATOR] manual manifest --apply, 38,020 rows &mdash; human-review-gated by design</div>
+      </div>
+
+      <div class="ticket">
+        <div class="ticket-top">
+          <div>
+            <div class="ticket-title">Betfair lay-price adapter &mdash; scaffold rebuild</div>
+            <div class="ticket-path">issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md</div>
+          </div>
+        </div>
+        <div class="odds-bar"><div class="fill-yes" style="width:75%"></div><div class="fill-no" style="width:25%"></div></div>
+        <div class="odds-legend"><span class="done">3 settled</span><span class="open">1 open</span></div>
+        <div class="ticket-op">[BLOCKED-CREDENTIALS] Betfair account pending password change &mdash; account-holder action only</div>
+      </div>
+
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="tag">Desk</span>
+      <h2>On the operator's desk</h2>
+    </div>
+    <p class="section-note">Every open item gated on a human action, with what it's waiting on.</p>
+    <table class="settle-table">
+      <thead>
+        <tr><th>Item</th><th>Gated on</th><th>Doc</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="tag-op">[OPERATOR][DATA]</span> Reclassify 38,020 out-of-lifecycle POLYMARKET
+              <code>empty_confirmed</code> rows to honest absence via a manual manifest <code>--apply</code></td>
+          <td>Human review by design — the delete-safety protocol reserves this exact write class for a person
+              (a false positive would silently mark good captured data as failed).</td>
+          <td><code>issues/prediction_batch4_deferred_residuals_2026_08_16.md</code></td>
+        </tr>
+        <tr>
+          <td><span class="tag-op">[BLOCKED-CREDENTIALS]</span> Live-verify Betfair back+lay persistence against a
+              real sampled market</td>
+          <td>Betfair account is in a mandatory <code>ACCOUNT_PENDING_PASSWORD_CHANGE</code> state &mdash; the
+              account holder must change the password via betfair.com, then update the GSM secret. Code, egress,
+              and fixture-resolution are all shipped and green; only this credential step remains.</td>
+          <td><code>issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="tag">Tape</span>
+      <h2>Closed out this pass</h2>
+    </div>
+    <p class="section-note">
+      What this run's own <code>/plan-reconcile predictions_master</code> pass fixed, working-tree only (no
+      commit/push this session &mdash; a separate lead session ships). Full evidence in
+      <code>plans/active/issues/plan_reconciler_findings_predictions_master_2026_08_19.md</code>.
+    </p>
+    <div class="tape">
+      <div class="tape-row"><span class="glyph">&#10003;</span><div><b>Stale cross-doc count</b> &mdash; "6 open" on <code>phase_ab_residuals</code>
+        corrected to the live 4, in 4 places (2 satellite-batch todos + the hub's snapshot + aggregated index).
+        <span class="meta">P2 &middot; 4 files</span></div></div>
+      <div class="tape-row"><span class="glyph">&#10003;</span><div><b>Stale frontmatter summary</b> &mdash; phase_ab_residuals named 5 residual
+        items, 4 already closed; rewritten to the accurate current 4.
+        <span class="meta">P2 &middot; prediction_phase_ab_residuals_2026_07_24.md</span></div></div>
+      <div class="tape-row"><span class="glyph">&#10003;</span><div><b>Hidden line-1 hard constraints</b> &mdash; a gating condition and a
+        scoping fact both wrapped past a todo's first physical line, invisible to a dispatcher's line-1 read.
+        Rewritten to front-load the constraint in 3 todos.
+        <span class="meta">P2 &middot; batch11 (&times;2), phase_e E3</span></div></div>
+      <div class="tape-row"><span class="glyph">&#10003;</span><div><b>Ordering machine-enforced</b> &mdash; batch11's prose-only gate on
+        phase_ab_residuals (already the cause of 2 wasted dispatch round-trips) is now a real
+        <code>depends_on</code>+<code>gate_on_depends</code>.
+        <span class="meta">P2 &middot; prediction_satellite_ao_dispatch_batch11_2026_08_13.md</span></div></div>
+      <div class="tape-row"><span class="glyph">&#10003;</span><div><b>Wrong internal citation</b> &mdash; "line 53's walk-forward run"
+        corrected to line 65 (line 53 was this doc's own gate banner, not the sibling todo).
+        <span class="meta">P2 &middot; predictions_ml_walk_forward_and_arb_2026_06_20.md</span></div></div>
+      <div class="tape-row"><span class="glyph">&#10003;</span><div><b>9 dangling references</b> repointed to their post-archive paths, on the
+        marquee capture-infra doc.
+        <span class="meta">P2&ndash;P3 &middot; prediction_live_clob_depth_capture_2026_07_24.md</span></div></div>
+      <div class="tape-row"><span class="glyph">&#10003;</span><div><b>Ambiguous back-references</b> &mdash; "same <code>--day</code> ruling as
+        above" restated with the actual date inline, twice.
+        <span class="meta">P2&ndash;P3 &middot; prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md</span></div></div>
+      <div class="tape-row archived"><span class="glyph archived-glyph">&#9632;</span><div><b>Archived</b> &mdash; batch7 + its finalize plan,
+        full 6-step ritual: source reconciled, no durable contract to migrate, 5 corpus referrers repointed
+        (4 in the epic + the finalize doc's own self-citation), 0 dangling refs left.
+        <span class="meta">plans/archive/2026_08/prediction_satellite_ao_dispatch_batch7_2026_08_04{,_finalize}.md</span></div></div>
+      <div class="tape-row archived"><span class="glyph archived-glyph">&#9632;</span><div><b>Archived</b> &mdash; a prior daily findings doc
+        that reached 0 open todos as a direct result of this run's own Phase&nbsp;&minus;1 fix, caught by
+        <code>check_archive_candidates.sh</code> mid-run rather than left for ship time.
+        <span class="meta">plans/archive/issues/plan_reconciler_findings_prediction_2026_08_17.md</span></div></div>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="tag">Queue</span>
+      <h2>Confirmed, waiting on grace</h2>
+    </div>
+    <p class="section-note">
+      4 findings on <code>batch6</code> are hard-evidence-confirmed but the file was touched &lt;12h before every
+      check this run made &mdash; left untouched per this corpus's own 12-hour grace-window discipline. A single
+      future pass should apply all 4 together.
+    </p>
+    <table class="settle-table">
+      <thead><tr><th>Finding</th><th>Evidence</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Stale "next step" text says egress still needs provisioning</td>
+          <td>Independently verified <code>deployment-service@7a7e847e</code> (egress provisioning) is a real
+              ancestor of <code>origin/live-defi-rollout</code> &mdash; it shipped 2026-08-12; the blocker moved
+              to a Betfair account state, already correctly recorded elsewhere in the same doc.</td>
+        </tr>
+        <tr>
+          <td>Stale Deferred-section prose about batch2</td>
+          <td><code>batch2</code> + its finalize have been <code>status: complete</code>, archived, since
+              2026-07-30 &mdash; the "flip to active" instruction is now moot.</td>
+        </tr>
+        <tr>
+          <td>Line-1 completeness on the Betfair todo</td>
+          <td>First physical line ends "provisioning a NEW" &mdash; the object (the actual egress) is entirely
+              on line 2.</td>
+        </tr>
+        <tr>
+          <td>Tag mismatch: bare <code>[INFRA]</code> vs. the mirrored issue doc's <code>[BLOCKED-CREDENTIALS][INFRA]</code></td>
+          <td>Traced the live AO dispatcher gating regex by hand &mdash; today it reads this todo as
+              dispatchable, the exact churn pattern that produced 6+ prior wasted dispatches on this item.</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="tag">Lanes</span>
+      <h2>Parallel-tab flow for what's left</h2>
+    </div>
+    <p class="section-note">
+      Of the 25 open items, only 2 file-disjoint lanes are genuinely dispatchable in parallel <em>right now</em>
+      with no gate. Everything else either waits on Phase A&ndash;B residuals closing, on an external credential,
+      or on the cross-epic <code>sports_master:Group&nbsp;E</code> gate &mdash; stated plainly rather than
+      claiming parallelism the file/gate boundaries don't support.
+    </p>
+    <table class="lane-table">
+      <thead><tr><th>Lane</th><th>File</th><th>Status</th><th>What's open</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>A</td>
+          <td><code>prediction_cross_venue_arb_and_coverage_2026_07_24.md</code></td>
+          <td><span class="lane-status ready">READY</span></td>
+          <td>Tarball-overwrite race (OPS); fixture-pairing residual, team-alias tables (DESIGN) &mdash; 2 items.</td>
+        </tr>
+        <tr>
+          <td>B</td>
+          <td><code>prediction_phase_ab_residuals_2026_07_24.md</code></td>
+          <td><span class="lane-status ready">READY</span></td>
+          <td>Manifest enum/dedupe migration <code>--apply</code>; fixture-attribute historical backfill;
+              <code>instrument_type</code> casing re-verify; 3x-cadence top-up &mdash; 4 items. Unlocks Phase C,
+              Phase D, Phase E, and batches 11/12 once cleared.</td>
+        </tr>
+        <tr>
+          <td>&mdash;</td>
+          <td>Phase C / D / E, batches 11 &amp; 12</td>
+          <td><span class="lane-status gated">GATED</span></td>
+          <td>13 items total, all machine-held on Lane B via <code>depends_on</code>+<code>gate_on_depends</code>.</td>
+        </tr>
+        <tr>
+          <td>&mdash;</td>
+          <td><code>predictions_ml_walk_forward_and_arb_2026_06_20.md</code></td>
+          <td><span class="lane-status gated">GATED</span></td>
+          <td>4 items, all blocked on the cross-epic <code>sports_master:Group&nbsp;E</code> gate (FSS &ge;95%
+              non-NULL features) &mdash; not this epic's to unlock.</td>
+        </tr>
+        <tr>
+          <td>&mdash;</td>
+          <td><code>batch6</code> Betfair item + 2 issue docs</td>
+          <td><span class="lane-status blocked">BLOCKED</span></td>
+          <td>3 items, each waiting on an external human action (Betfair password reset, or an operator-reserved
+              manifest write).</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="tag">Dispatch</span>
+      <h2>Dispatch prompts</h2>
+    </div>
+    <p class="section-note">Self-contained prompts for the 2 ready lanes above &mdash; each carries the sub-agent rules floor and this workspace's implement-and-verify-then-stop discipline.</p>
+
+    <div class="prompt-card">
+      <div class="prompt-head">Lane A &middot; cross-venue arb + coverage</div>
+      <pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules.
+
+Work ONLY in unified-trading-pm/plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md
+and the code repos it names (features-service). Do not touch any other prediction_* doc.
+
+Task: close the 2 open todos in that plan --
+  1. [OPS] the tarball-overwrite race (a concurrent fleet create-code-tarballs run clobbers a
+     freshly-rebuilt GCS tarball before a new VM's boot-fetch) -- root-cause it and ship a fix
+     or a locking/versioning guard.
+  2. [DESIGN] P1 the fixture-pairing residual (team-alias tables) at that doc's line ~220 --
+     read the doc's own Progress Log first, it documents 3 partial investigation passes already.
+
+Implement + verify quality-gates.sh genuinely green, then STOP -- do not ship (no quickmerge/
+git push). Flip the checkbox with repo@sha evidence in the SAME turn per commit-push-flip-rule.md.</pre>
+    </div>
+
+    <div class="prompt-card">
+      <div class="prompt-head">Lane B &middot; Phase A&ndash;B residuals (critical path)</div>
+      <pre>Read unified-trading-pm/cursor-configs/SUB_AGENT_MANDATORY_RULES.md in full and follow ALL rules.
+
+Work ONLY in unified-trading-pm/plans/active/prediction_phase_ab_residuals_2026_07_24.md and the
+code repos it names. This is the epic's critical path -- clearing it unlocks 13 further gated
+todos across Phase C/D/E and satellite batches 11-12.
+
+Task: close the 4 open todos -- the manifest enumeration-driven canonical/dedupe migration
+--apply, the historical fixture-match-attribute backfill, the instrument_type casing re-verify
+to 100%, and the 3x-cadence data-pipeline-check reconciliation top-up. Read each todo's own
+Done-when clause before starting -- several have already-implemented, already-held scripts
+ready to --apply per the doc's own notes.
+
+Implement + verify quality-gates.sh genuinely green, then STOP -- do not ship. Flip each
+checkbox with repo@sha evidence in the SAME turn per commit-push-flip-rule.md.</pre>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head">
+      <span class="tag">Notes</span>
+      <h2>Notes &amp; methodology</h2>
+    </div>
+    <div class="notes">
+      <p>
+        Open/settled counts are the deduped figures from <code>scripts/plan-hygiene/epic_report_data.py --epic
+        predictions_master --json</code>, which mirrors <code>/open-task-count</code>'s own aggregator-exclusion
+        methodology &mdash; satellite/finalize/consolidated-closeout plans are flagged and excluded from the
+        headline totals to avoid double-counting the same work through its extraction batch and its source doc.
+      </p>
+      <p>
+        <code>parent_epic</code> membership is the frontmatter-driven definition (<code>rg "^parent_epic:
+        predictions_master$"</code>), not the filename-substring inventory-script method &mdash; per the
+        epic-taxonomy restructure's own finding, the substring method false-positives dispatch-batch plans as
+        orphans purely because an epic's <code>related_plans:</code> list doesn't track batch churn.
+      </p>
+      <p>
+        This corpus has been reconciled daily for 3+ calendar days prior to this run (2026-08-16 through
+        2026-08-18) &mdash; the low finding count and 0 refuted candidates reflect that standing cadence, not a
+        light pass. One of 5 dispatched hunters (covering the hub, Phase C, and batch 12 pair) hit a global
+        concurrent-subagent ceiling from other active sessions on this shared host and never returned a result;
+        its exact scope was covered directly instead, so coverage remains 18/18 (100%) of the active child docs.
+      </p>
+      <p>
+        Full finding-by-finding detail, adversarial-verification notes, and the Phase 5.9 no-miss ledger:
+        <code>plans/active/issues/plan_reconciler_findings_predictions_master_2026_08_19.md</code>.
+      </p>
+    </div>
+  </section>
+
+  <footer>PREDICTIONS_MASTER &middot; /plan-reconcile &middot; unified-trading-pm</footer>
+</div>

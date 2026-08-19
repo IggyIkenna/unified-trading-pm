@@ -71,7 +71,7 @@ related:
     /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-31 # was 2026-07-26 — /ag-closeout-audit prediction (scheduled) Finding-3 fix: added 6 previously-unindexed docs (2 kalshi issues, features_delta_one, prediction_trades_migration_concurrent_dispatch, 2 fresh 2026-07-31 adapter dead-code findings) to the Aggregated source docs index, and corrected the stale kalshi_live_capture_regression_and_drift entry (was "3 prose follow-ups", live-verified now 1 checkbox)
+last_updated: 2026-08-19 # was 2026-07-31 — /plan-reconcile predictions_master (epic-scoped): corrected 2 stale "6 open" phase_ab_residuals citations (snapshot table + aggregated index) to the live count of 4. Prior: was 2026-07-26 — /ag-closeout-audit prediction (scheduled) Finding-3 fix: added 6 previously-unindexed docs (2 kalshi issues, features_delta_one, prediction_trades_migration_concurrent_dispatch, 2 fresh 2026-07-31 adapter dead-code findings) to the Aggregated source docs index, and corrected the stale kalshi_live_capture_regression_and_drift entry (was "3 prose follow-ups", live-verified now 1 checkbox)
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only
@@ -150,10 +150,11 @@ context_scope:
 
 **Per-child open-todo snapshot (2026-07-24 — so the split itself is AO-legible without opening each child):**
 
-- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **6
-  open** (re-verified via `grep -c` 2026-08-15, `/plan-reconcile` sweep — was 13 as of the 2026-07-25 split, since
-  drained by shipped work; snapshot below was 20 days stale). Top (still open): [DATA] P0. Enumeration-driven
-  canonical/dedupe migration of the prediction manifest; [DATA] P0. Backfill the fixture-match attributes (A4 columns).
+- [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — **4
+  open** (re-verified via `grep -c` 2026-08-19, `/plan-reconcile predictions_master` — was 6 as of 2026-08-15/17,
+  since dropped further by the 2026-08-17 RECLASSIFY_SPLIT extraction to batch12). Top (still open): [DATA] P0.
+  Enumeration-driven canonical/dedupe migration of the prediction manifest; [DATA] P0. Backfill the fixture-match
+  attributes (A4 columns).
 - [`prediction_phase_c_data_status_ui_2026_07_24.md`](/plans/active/prediction_phase_c_data_status_ui_2026_07_24.md) —
   **2 open** (re-verified via `grep -c` 2026-08-15 — was 4). Top P0: [UI] P0. RE-ADD the data-status "dimensions
   enumeration" view to deployment-ui/api.
@@ -321,8 +322,8 @@ fixture-linked before MVP backfill.
 - **This plan's own Phase A-E children (2026-07-24 fork — were listed in the Split-notice table above but not repeated
   here; added so this index is the single place every source doc lives, including this plan's own forks)**:
   - **[BACKEND] P0.**
-    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 6 open
-    (re-verified via `grep -c` 2026-08-15, `/plan-reconcile` sweep — was 13 as of the 2026-07-25 split). **CORRECTED
+    [`prediction_phase_ab_residuals_2026_07_24.md`](/plans/active/prediction_phase_ab_residuals_2026_07_24.md) — 4 open
+    (re-verified via `grep -c` 2026-08-19, `/plan-reconcile predictions_master` — was 6 as of 2026-08-15/17). **CORRECTED
     2026-08-16 (plan_reconciler)**: prior "Top" text here named 2 items ("finish the prediction capture-incident
     remediation; kill the dead Kalshi `trading-api.kalshi.com` host") that are both now `[x]` DONE (2026-08-15 and
     2026-08-30 respectively) — the accurate current top-2 open items match the snapshot above: [DATA] P0.
