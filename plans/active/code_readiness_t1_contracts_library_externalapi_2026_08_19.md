@@ -148,6 +148,43 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T2] P1. **The `KNOWN_CHAINS` gap you fixed for SCROLL/PLASMA is still open for TEN more chains
+      carrying 46,698 live manifest rows.** Your SCROLL/PLASMA fix (unified-api-contracts@27ebc544b2) was correct
+      but scoped to the two chains that had been reported. MEASURED 2026-08-20 against the live
+      `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`by_chain.defi`, derived from the
+      manifest — no new GCS walk): the DeFi manifest carries **23 distinct chains; UAC's `KNOWN_CHAINS` has 14; 10
+      manifest chains are outside it**:
+
+      | chain | total rows | captured |
+      | --- | ---: | ---: |
+      | STARKNET | 28,830 | 0 |
+      | AURORA | 4,082 | 2,725 |
+      | MANTLE | 3,687 | 1,537 |
+      | BLAST | 2,380 | 0 |
+      | MODE | 2,332 | 0 |
+      | METIS | 1,548 | 0 |
+      | MOONBEAM | 1,601 | 0 |
+      | CELO | 972 | 0 |
+      | FANTOM | 856 | 0 |
+      | GNOSIS | 410 | 0 |
+      | **total** | **46,698** | **4,262** |
+
+      Every `if chain in KNOWN_CHAINS:` consumer takes the ELSE branch for all ten — the exact failure mode your
+      issue `three_chain_registries_disagree_none_authoritative_2026_08_19.md` describes, unfixed at 10x the scope.
+      Also worth your attention in the other direction: **`ASTER` is in `KNOWN_CHAINS` but has ZERO DeFi manifest
+      rows**, so the set is simultaneously over- and under-inclusive versus live data.
+
+      **Deliberately NOT assumed**: that all ten belong in `KNOWN_CHAINS`. That set is derived from `SUBGRAPH_IDS` +
+      `_STATIC_VENUE_CHAINS` + `_EXTRA_VENUE_PARTITION_CHAINS` and governs VENUE-SUFFIX SPLITTING, which is not
+      necessarily the same population as "chains the manifest may legitimately carry". `STARKNET` in particular is a
+      known deliberate exclusion (`EXTENDED-STARKNET` is a CeFi on-chain perp CLOB that must NOT be DeFi-split), so
+      at least one of the ten is arguably correct as-is. The ask is that UAC state which population `KNOWN_CHAINS`
+      is meant to be and reconcile the ten against that — not that you add them all.
+
+      Context: T2 removed three hand-rolled copies of this set in `instruments-service` (they had drifted in both
+      directions — missing `ASTER`, carrying a phantom `STARKNET`) so they now import yours; see
+      `instruments-service@2b482a1247`. That makes UAC the single point where this is fixable.
+
 _None at authoring time._
 
 ## Todos

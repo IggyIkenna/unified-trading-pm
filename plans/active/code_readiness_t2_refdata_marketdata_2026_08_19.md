@@ -148,7 +148,20 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [ ] [FROM-T1] P1. **Re-check chain-scoped output for the four venues `KNOWN_CHAINS` silently dropped.** UAC's
+- [x] [FROM-T1] P1. **Re-check chain-scoped output for the four venues `KNOWN_CHAINS` silently dropped.**
+      ✅ 2026-08-20 — **checked; no re-derivation needed for those four, and no data movement required.** Measured
+      from the live 2026-08-19 coverage projection (derived from the manifest — no new GCS walk): none of
+      `AAVE_V3-SCROLL`, `COMPOUND_V3-SCROLL`, `AAVE-PLASMA`, `FLUID-PLASMA` exists as a glued venue anywhere in the
+      DeFi projection; there are ZERO `-SCROLL`/`-PLASMA`-suffixed venues at all. The bare protocols (`AAVE_V3`,
+      `COMPOUND_V3`, `AAVE`, `FLUID`) are all present, and both chains are first-class values in `by_chain` with
+      real volume (`SCROLL` 122,183 rows, `PLASMA` 198,424 rows incl. 36 captured). The venue/chain split landed
+      correctly for these rows. **Scope of that claim**: it shows the chain column is populated and no glued form
+      survived — it does not independently re-verify that each row is attached to the right protocol.
+      **Both chains are ~99.9% `empty_confirmed`** (SCROLL 122,053/122,183 with 0 captured; PLASMA 198,388/198,424).
+      That may be legitimate pre-genesis absence — not investigated here, and deliberately NOT claimed as a defect.
+      Original text below.
+- [ ] [FROM-T1-CONTEXT] P3. _(original request, retained for the record)_ **Re-check chain-scoped output for the
+      four venues `KNOWN_CHAINS` silently dropped.** UAC's
       `KNOWN_CHAINS` did not recognise the `SCROLL`/`PLASMA` chain tokens until unified-api-contracts@27ebc544b2,
       so `if chain in KNOWN_CHAINS:` took the else-branch for `AAVE_V3-SCROLL`, `COMPOUND_V3-SCROLL`,
       `AAVE-PLASMA` and `FLUID-PLASMA` in **instruments-service** `engine/orchestrator/writers.py` +
