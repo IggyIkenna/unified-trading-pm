@@ -299,6 +299,36 @@ while still lacking a manual-live path, or vice versa, and today's matrix has no
 
 ## W3 — Granularity as a first-class dimension
 
+### Coverage denominator — the shard space is NOT a Cartesian product (operator ruling 2026-08-19)
+
+The coverage SSOT already forbids the naive cross-product: per
+[honest-coverage-model](/codex/02-data/honest-coverage-model.md), the expected matrix is keyed by
+**`(asset_group, instrument_type)` at the writer/lowercase grain**, never the broad `DATA_TYPES_BY_ASSET_GROUP`
+superset, "because using it as the denominator over-counts". The operator's 2026-08-19 ruling extends that:
+
+- Take the dimensions that **actually exist for each shard at its deepest granularity** — data_type, chain,
+  instrument_type, and per-AG axes — never a uniform product across all venues.
+- **Sports gets instrument_type and chain too**, with **leagues** as a real axis. **Fixtures are excluded from the
+  shard COUNT** (too noisy) but still belong in the full denominator.
+- The **full denominator = shards × available days**. The **combinatoric view drops days** — that is the
+  human-friendly number. Percentage completion is computed against the full denominator.
+
+- [ ] [BACKEND] P0. **Reconcile the shipped denominator against this ruling.** Today's headline is 48.54% over a
+      119,500,618 volume-weighted denominator across 3,960 shards. Confirm whether 3,960 is the true deepest-grain
+      shard count including per-AG axes (sports leagues especially) or a coarser projection — the operator's
+      expectation is that a genuinely exhaustive count is LARGER. Any change to the denominator is a change to
+      every published coverage number, so land it as a dated supersession, never a silent edit.
+- [ ] [BACKEND] P0. **The readiness dump is coarser than the coverage model — close the gap.**
+      `readiness_pipeline_stage_per_shard_2026_08_18.json` is `venue × asset_group × mode` (864 rows) and its rows
+      carry no `instrument_type` or `data_type`, so it cannot answer the per-shard question at all. Scope is
+      pipeline-only (declared → instruments_service → market_tick_data → MDPS → features), which is CORRECT and
+      should stay: strategy and execution are ephemeral — they scale with config iterations and client count, so a
+      percentage is meaningless there. Coverage % is a statement about the pipeline up to features, and should say so.
+- [ ] [DOC] P1. **Its `grain` field is mislabelled** — it declares `grain: instrument_type` while no row carries an
+      `instrument_type` key. Anyone trusting the label believes they have a finer breakdown than exists. Fix the
+      writer, not just the file.
+
+
 - [ ] [BACKEND] P0. **Model coverage per (venue × instrument_type × data_type × granularity)** — candles versus tick
       entering MTDS are different coverage questions, and coverage may be **better at one granularity and worse at
       another** for the same venue and data type. A single number across granularities hides exactly the fact a
@@ -747,6 +777,21 @@ the self-inflicted-conflict guard repeatedly) · `unified_trading_ci_ff_pull_cro
       it true is a re-run, not an edit. When a doc closes, drop it from here rather than marking it closed twice.
 
 ## Definition of done for the epic
+
+### The goalpost — the ONLY work that may still be pending (operator ruling 2026-08-19)
+
+When this epic is done, everything is **complete in code**. The only things still outstanding may be:
+
+1. **Backfills still running** — batch data landing.
+2. **Venue connectivity** — private feed and public feed, orders and trades.
+3. **Market data live.**
+4. **Testnets, where they exist.**
+5. **Strategy archetypes code-ready for batch / paper / live — pending testing with real data.**
+
+Anything outside those five that is not code-complete is REMAINING WORK, not an acceptable end state. This is the
+filter to audit against: the question is never "does the document match reality", it is "what is not yet
+code-complete, and is it on this list".
+
 
 - [ ] [BACKEND] P0. **Every venue with a code path has a derived batch / paper / live state**, with `unverified`
       surfaced honestly where a check does not exist.
