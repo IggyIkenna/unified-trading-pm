@@ -66,11 +66,15 @@ source: >-
       ruling out the delta-proxy-repricer pattern for `BACKRUN`/`LIQUIDATION_BUNDLE` — today's "12s block budget is
       generous enough" is reasoned, not measured. Done when: a real measured number is on record, compared against
       the 12s budget. Source: `execution_delta_proxy_repricer_generalization_2026_08_18.md` item at line 345.
-- [ ] [REVIEW] P2. **Confirm whether execution-service's `engine/risk/preflight_gate.py` reads strategy-service's
+- [x] ✅ [REVIEW] P2. **Confirm whether execution-service's `engine/risk/preflight_gate.py` reads strategy-service's
       real `ExposureAggregator`-computed net/effective exposure**, or maintains an independent view — a pure
       code-read fact-finding task (does it call ExposureAggregator or not), distinct from the normative "should it"
       judgment call the source doc leaves open. Done when: a definite yes/no is on record, evidenced by the code
-      read. Source: `execution_delta_proxy_repricer_generalization_2026_08_18.md` item at line 363.
+      read. Source: `execution_delta_proxy_repricer_generalization_2026_08_18.md` item at line 363. **ANSWER: NO —
+      preflight_gate.py does NOT read strategy-service's ExposureAggregator (0 repo-wide hits for
+      ExposureAggregator/exposure_aggregator); same-named `gross_exposure_usd`/`net_exposure_usd` ctx keys are
+      caller-supplied `account_state` only, and the sole prod call-site (`engine/orchestrator.py:246`) passes no
+      `account_state` → unpopulated on the live path. Resolved 2026-08-19 (slot 7) — see Progress Log.**
 - [ ] [AGENT] P3. **Resolve the dead `feedback_market_making_reference_price_model.md` reference** cited by both
       `vol_trading/options.py` (strategy-service) and `quote_maintenance.py` (execution-service)'s docstrings —
       confirmed not to exist anywhere in `unified-trading-pm`. Repoint both docstrings to
@@ -134,3 +138,15 @@ source: >-
   `strategy-service/strategy_service/risk/core/exposure_aggregator.py`); the 7 doc-hygiene items from
   `plan_reconciler_findings_cross_cutting_2026_08_18.md` each fully name their own single target doc inline, so no
   further per-item entries added (would exceed the curated-list budget for marginal value).
+- **2026-08-19 (slot 7, batch item 2 DONE)**: confirmed by direct code read — execution-service's
+  `engine/risk/preflight_gate.py` does NOT read strategy-service's `ExposureAggregator`. Evidence: (1) repo-wide
+  `rg` for `ExposureAggregator|exposure_aggregator` in execution-service = zero hits; (2) the module imports are
+  UAC (`unified_api_contracts.risk`) + UTL (`risk_preflight`/`RuleEvalContext`) + execution-service-internal only —
+  no strategy-service import; (3) `gross_exposure_usd`/`net_exposure_usd` are `RuleEvalContext` keys populated
+  solely from an optional `account_state` dict (`_copy_account_state_into_ctx`), and the sole production call-site
+  (`execution_service/engine/orchestrator.py:246` `execute_instruction`) calls `run_risk_preflight` with NO
+  `account_state` — so on the live path those keys are unpopulated and `MaxGrossExposureTrigger`/
+  `MaxNetExposureTrigger` rules are dropped by `_can_evaluate` (silently skipped, not independently computed). It
+  maintains an independent (caller-supplied, live-unpopulated) view; the two services' same-named fields are a
+  dual-path shape with no verified single source of truth. Confirms the source issue doc's own judgment-call-10
+  resolution (execution_delta_proxy_repricer_generalization_2026_08_18.md).

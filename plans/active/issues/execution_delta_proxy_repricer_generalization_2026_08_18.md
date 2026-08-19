@@ -264,6 +264,14 @@ same-named field on both sides with no verified single source of truth between t
 `gross_exposure_usd`/`net_exposure_usd` in execution-service's `RuleEvalContext` today is either a separate,
 possibly-diverging computation, or unpopulated — not yet traced to its source in this pass.
 
+**Trace completed 2026-08-19 (cross_cutting_satellite_ao_dispatch_batch18 item 2, slot 7, independent code read)**:
+the sole production call-site is `execution_service/engine/orchestrator.py:246` `execute_instruction`, which calls
+`run_risk_preflight(instruction, reference_price=...)` with NO `account_state` — so `_copy_account_state_into_ctx`
+never runs on the live path, `gross_exposure_usd`/`net_exposure_usd` are unpopulated, and `_can_evaluate` drops
+`MaxGrossExposureTrigger`/`MaxNetExposureTrigger` rules for lack of the context key (silently skipped, not an
+independent computation). Definite yes/no for this item: preflight_gate does NOT consume strategy-service's
+`ExposureAggregator` (0 `ExposureAggregator`/`exposure_aggregator` hits repo-wide in execution-service).
+
 ## Reference position, credit ownership, and the generic per-position adjustment — resolved 2026-08-19
 
 Operator-driven design session extending Layer 1/2 above. Core idea: **`reference_price` alone only tells
