@@ -337,6 +337,28 @@ write a manifest row of any kind — not even `attempted_failed`).
           productive use of an AO worker — the campaign is already being actively babysat tick-by-tick in that doc's own
           Progress Log by a separate ongoing session.
 
+          **AO-dispatch re-verification, 2026-08-19T05:57Z (slot 31, this session)**: genuine new information this time
+          — the chain has now swept past the target range entirely (unlike every prior dispatch of this todo, which
+          found it still deep in 2020). Live-ran the authoritative census
+          (`market-tick-data-service/scripts/sports/census_odds_api_gap_verify_2026_08_02.py`, manifest-only, no GCS
+          walk): **277 of 2266 calendar days since the 2020-06-06 floor still missing (was 300 as of 2026-08-07T07:37Z
+          — real net progress)**. Of the 20 contiguous missing-day ranges ≥3 days, **two fall inside this todo's own
+          target window**: `2026-06-25..2026-07-02` (8d, overlaps window-1's 06-27..07-02 tail) and
+          `2026-07-07..2026-07-10` (4d, inside window-1). No gap currently touches window-2 (2026-07-16..07-25) at the
+          day-level — but per the done-when above, day-level presence alone does not confirm the T-minus horizon-grid
+          granularity window-2 actually cares about; that check still hasn't been run and can't usefully happen while
+          window-1 itself still has live day-level holes. Live VM check: single instance
+          `mtds-backfill-odds-20260817-062648` RUNNING (created 2026-08-17T05:32:36Z, ~2.4 days uptime), heartbeat epoch
+          `1787119027` = `2026-08-19T05:57:07Z` against a check at `05:57:51Z` (44s old — genuinely alive, not stalled).
+          Singleton-guard respected: **no VM launched this session** — one is already running and the guard caps this
+          fleet at 1 concurrent instance; a second launch would race/duplicate per the standing guidance above. **Not
+          done**: 2 real gap-day ranges remain inside window-1, and window-2's granularity is unverified — flipping now
+          would be a false-done claim. This todo should stay gated on the owning campaign
+          (`sports_all_vendor_honest_coverage_convergence_2026_08_07.md`) rather than be re-dispatched on a fixed
+          cadence; the next productive re-check is once those 2 residual ranges clear (or the running VM completes a
+          pass and the 277-day figure stops dropping, at which point the residual becomes a real backfill target
+          in its own right rather than an in-progress sweep).
+
 - [x] [DATA] P1. Verify DeFi's same-day capture was/wasn't also blocked, once
       `market-data-tick-defi-prd-central-element-323112`'s manifest consolidator is confirmed healthy (see the
       ManifestConsolidatorStaleError above — this itself may need its own issue doc if it's still stale; worker should
@@ -498,3 +520,16 @@ with no new information. Leaving checkbox unchecked; recommend the next dispatch
 convergence, not on a fixed cadence.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+
+**2026-08-19 (slot 31, data_engineering)** — Re-dispatched item 1. Per the pre-task plan/issue conflict-check HARD
+RULE, read this doc's own accumulated notes first rather than acting on the stale task-brief opening line. Live-ran the
+authoritative gap census fresh (not trusting any prior reading): 277/2266 missing days (was 300 as of
+2026-08-07T07:37Z) — real, new progress; the sweep has now passed entirely through the 2020-06-06→2026-08 range instead
+of still being deep in 2020. Precisely identified 2 residual gap-day ranges landing inside this todo's own window-1
+(2026-06-25..07-02, 2026-07-07..07-10) — genuine remaining work, not yet closed. Checked the single live VM
+(`mtds-backfill-odds-20260817-062648`, RUNNING, heartbeat 44s old) — healthy, singleton guard respected, did not
+launch a duplicate. Added the fresh evidence inline under the checkbox (see note above) rather than replacing any
+prior author's text. Checkbox correctly left unchecked — window-1 still has live gaps, window-2's granularity is
+unverified. Filed no new issue doc (this doc already owns the tracking); skipping this task with `reason_code: GATED`
+rather than re-dispatching on a fixed cadence, since the productive next check is once the residual ranges close or
+the 277-day figure stops dropping.
