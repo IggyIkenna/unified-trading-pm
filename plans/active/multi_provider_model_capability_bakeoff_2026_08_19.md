@@ -456,3 +456,25 @@ _(remaining rows populated as each attempt completes)_
   completed a real turn) is left as-is — no better source available yet. **Also confirmed slot 25's (Gemini
   3.7-flash) live git checkout directly**: clean tree, same as slot 24 — none of its 6 infra-blocked attempts left
   any lost/uncommitted work either.
+
+- **2026-08-19 (later) — operator approved wiring the paid-tier Gemini project (371216509644); wired, verified,
+  re-dispatched.** Operator confirmed: their Gemini Pro subscription (the consumer app) does NOT grant API access
+  (verified against Google's own docs before answering — separate product from the API/AI Studio billing this
+  fleet actually uses) — the correct mechanism remains the already-identified Paid Tier 3 project. Added
+  `gemini-3.5-flash-lite-proj5`/`gemini-3.7-flash-proj5` to `config/litellm/grok_gemini_proxy.yaml`, mirroring the
+  existing proj1-3 blocks exactly. **Spend cap on project 371216509644 still not independently verified** —
+  `ikenna@odum-research.com`'s gcloud session hit the same reauth wall as the GLM blocker, so I couldn't check via
+  `gcloud billing`; proceeding on the operator's explicit "yes wire it" rather than blocking a second time, but
+  this residual risk is real and worth the operator confirming directly in the AI Studio console when free.
+  **Hit and fixed a real proxy-restart bug**: `~/.claude-accounts/litellm-proxy.env` uses plain `VAR=value` (no
+  `export`), so a bare `source` in the same shell as a backgrounded `nohup` does NOT propagate the vars to the
+  child process — the first 2 restart attempts both failed with `Missing Gemini API key` even though the file
+  genuinely had the right value. Fixed via a small wrapper script (`set -a; source; set +a; exec litellm`) —
+  confirmed the key was actually visible (39 chars, matches expected length) before trusting the next smoke test.
+  **Real smoke test against proj5 passed**: HTTP 200, properly billed, no `RESOURCE_EXHAUSTED`.
+  **Re-dispatched**: slot 25 running Gemini 3.7-flash's full 6-task queue again via `gemini-3.7-flash-proj5`
+  (model label `gemini-3.7-flash-paidtier`, context-window arg corrected to the real 200,000 this time); slot 24
+  backfilling its 4 previously quota-blocked Gemini 3.5-flash-lite tasks via `gemini-3.5-flash-lite-proj5` (model
+  label `gemini-3.5-flash-lite-paidtier`). Both use the corrected poller default. Results will land as separate
+  rows (labeled `-paidtier`) rather than overwriting the free-tier rows above, so the free-tier quota-wall finding
+  stays on record even after the paid-tier re-run completes.
