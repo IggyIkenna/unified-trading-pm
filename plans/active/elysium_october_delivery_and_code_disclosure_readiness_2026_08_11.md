@@ -962,3 +962,16 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — content-hash change since yesterday was line-cap housekeeping only (Progress-Log-history extraction to keep the doc under 1000L, done twice more today via /plan-reconcile Checkpoint 2), not a substantive edit; re-verified end to end (88 open todos, grep-confirmed matching the doc's own Work-surface table), all 9 operator-decision clusters remain open/unruled, governing HARD RULE (no client-artefact content without operator escalation) still present and accurately described at lines 77-79. No RECLASSIFY candidate found — the one dated note since yesterday (operator declining to assume RULING 3 covers the Hyperliquid un-hide ask without re-checking its scope) is a non-unlock, not an unlock. Doc stays assigned_vm: NA.
 - **na-eligibility-audit 2026-08-18** (defi tranche, dispatch agt-2c8a26): KEEP-NA, valid — content-hash change since the 2026-08-17 marker was a single work-surface table cell sync (`elysium_carveout_stubbed_strategy_service_2026_08_12.md` todo count 18/4→17/5, fixed by plan_reconciler 2026-08-18) via `git diff` against the prior marker commit — a non-substantive cosmetic correction to this doc's own bookkeeping table, not an edit to any of the 88 open todos or the governing HARD RULE (lines 77-79, unchanged). Citation-shortcut applied per the skill's "never re-litigate an established ruling" rule — the 2026-08-17 pass already did the full end-to-end read + grep-count reconciliation and found no RECLASSIFY candidate; nothing in today's diff reopens that question. Doc stays `assigned_vm: NA`.
+
+- **2026-08-19 — 2026-08-18 artefact-remediation pass reconciled (`strategy-service-walkthrough.html`)**: the
+  [`client_artefact_remediation`](/plans/active/client_artefact_remediation_2026_08_18.md) family (parent + elysium
+  child + siblings) shipped and was independently re-verified this session (finalize pass) — §01/§03 instruction
+  count corrected to 11, §02 strategy-family list corrected to the 9 real `StrategyFamily` members, §11 "Automated
+  movement" reworded to "specified as a target state, mostly not yet wired", all 10 `live` badges re-graded to
+  `partial`, the custody `SigningSurface` finding resolved as a documented false positive (explanatory note added;
+  enum list deliberately untouched), full-repository scope statement + §09 carve/hosted split added, "never reads
+  MTDS directly" invariant named, and the P2/P3 disclosure + completeness content (mirrored-custody, funding-route
+  binding, capability-wizard note, rank-allocator, book-level overlays, fee/gas-as-decision, AtomicInstruction
+  worked example) all present. Evidence-tier `.ev-*` marks + rule-13 owner marks applied to all 16 eligible sections.
+  Landing commits `unified-trading-pm@{171dc40739, 6a5598e736, 8fb70b119b}` (per-todo evidence in the elysium child
+  plan). The disclosure-review gate in § E remains the standing pre-send check.

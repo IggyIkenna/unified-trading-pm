@@ -23,7 +23,7 @@ related:
   ]
 referenced_by:
 owner:
-last_reviewed:
+last_reviewed: 2026-08-19
 code_refs:
 created: "2026-08-19"
 author: claude

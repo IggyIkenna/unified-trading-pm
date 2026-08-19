@@ -426,3 +426,14 @@ remain unchecked, correctly blocked on that review.
 - **na-eligibility-audit 2026-08-17** [body-hash:13e6f20212196355]: KEEP-NA, valid -- Client-facing disclosure artifact with an explicit, hard disclosure boundary (archetypes-yes/edge-no, no commercial figures, code snippets limited to schemas/contracts) requiring ongoing editorial judgment against that boundary, not a mechanical build. All 7 pre-audit measurement todos are already done (checked). The 2 remaining todos are 'build the artifact' (content/design judgment applying the disclosure boundary to a large coverage dataset) and an explicit operator-review gate before any client-facing send. The doc's own Progress Log states this was deliberate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries) -- added `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`, the doc's own "read this first" comparison-track cite; other 3 re-verified, still resolve.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — Client-facing disclosure artifact with a hard, operator-set disclosure boundary; all 7 pre-audit measurement todos are already done (checked). Of the 4 currently-open todos: 2 are the previously-audited. (1/4 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
+
+**2026-08-19 — 2026-08-18 artefact-remediation pass reconciled (`platform-external-api-walkthrough.html`)**: the
+[`client_artefact_remediation`](/plans/active/client_artefact_remediation_2026_08_18.md) family (parent + nickai
+child + siblings + elysium children) shipped and was independently re-verified this session (finalize pass) — §2/§3
+external-API framing now names the concrete live surface and states TRADE-only-live / 10-of-11-types-501, all 6
+`live` badges re-graded to `partial`, the forward claim cut, §4 coverage table + 288-venue figure reconciled, §14
+names the 8-leg readiness-dump framework, §16 testnet claim qualified, §5 lede scoped, 7 absent + 4 thin capability
+sections added (§18-§24 + §1 MDPS/features-service intermediary), and the evidence-tier `.ev-*` legend + 26
+`class="own"` owner marks applied. Landing commits `unified-trading-pm@{ec08cccad1, 2b0c327e44, 19724f5e69}`
+(per-todo evidence in the nickai child plan). The "Operator review before send" P0 gate below remains the standing
+pre-send check — this remediation pass does not authorise sending the document anywhere.

@@ -10,7 +10,7 @@ summary: >-
   material correction the sub-agents' own ground-truth snapshot had gone stale on (the Nick AI external-API build
   landed the same day as, but after, the pre-audit both agents relied on). No hard disclosure-boundary violation
   found in either artefact; both have real, material accuracy and completeness gaps, detailed below.
-status: partial
+status: pass
 nature: record
 audited_scope: >-
   platform-external-api-walkthrough.html and strategy-service-walkthrough.html — completeness against
@@ -344,21 +344,21 @@ future editor could wrongly narrow this document to the carve-out's tighter scop
 
 ## Summary table — severity-ranked, both artefacts
 
-| Severity | Finding | Artefact | Axis |
-| --- | --- | --- | --- |
-| P0 | Instruction-type count wrong (9 vs 11), 2 real types missing from §03 | Elysium | Accuracy |
-| P0 | Invented "Liquidity provision" strategy family still shown; 5 vs real 9 families | Elysium | Accuracy |
-| P0 | §11 "Automated movement" overstates reachability — no production transfer path exists | Elysium | Accuracy |
-| P0 | §2/§3 external-API "live" badge doesn't disclose the TRADE-only-live / 10-of-11-types-501 reality | Nick AI | Accuracy |
-| P1 | §4 coverage table internally contradicts its own denominator formula | Nick AI | Accuracy |
-| P1 | Custody `SigningSurface` list (shows Fireblocks, omits Ceffu) doesn't match the working provider roster | Elysium | Accuracy |
-| P1 | "Strategy never reads MTDS directly" invariant unstated in both artefacts | Both | Target-state |
-| P1 | No artefact scope statement distinguishing full-repo-send vs future carve-out | Elysium | Disclosure (moderate) |
-| P1 | §09 reconciliation detail has no carve/hosted split vs withheld IP | Elysium | Disclosure (moderate) |
-| P2 | 7 of 14 Nick AI missing-capability probes fully absent (fees, collateral, manual-trade, reconciliation, PnL, risk/Greeks, latency/SLA) | Nick AI | Missing capability |
-| P2 | 5 of 13 Elysium missing-capability probes fully absent (custody routing, funding graph, wizard, rank-allocator, overlays) | Elysium | Missing capability |
-| P3 | §05→§08 stale cross-reference (should be §09) | Elysium | Accuracy (minor) |
-| P3 | §14 "19-step contract" mislabels the 8-leg framework that produced the quoted numbers | Nick AI | Accuracy (minor) |
+| Severity | Finding | Artefact | Axis | Status |
+| --- | --- | --- | --- | --- |
+| P0 | Instruction-type count wrong (9 vs 11), 2 real types missing from §03 | Elysium | Accuracy | ✅ RESOLVED 2026-08-19 — §01/§03 now state 11 (`unified-trading-pm@171dc40739`); live-verified "The eleven action types" |
+| P0 | Invented "Liquidity provision" strategy family still shown; 5 vs real 9 families | Elysium | Accuracy | ✅ RESOLVED 2026-08-19 — §02 lists the 9 real `StrategyFamily` members (`@171dc40739`); the one remaining "Liquidity provision" mention describes the removal, not a recurrence |
+| P0 | §11 "Automated movement" overstates reachability — no production transfer path exists | Elysium | Accuracy | ✅ RESOLVED 2026-08-19 — reworded to "specified as a target state, mostly not yet wired" with explicit NOT-WIRED caveats (`@171dc40739`) |
+| P0 | §2/§3 external-API "live" badge doesn't disclose the TRADE-only-live / 10-of-11-types-501 reality | Nick AI | Accuracy | ✅ RESOLVED 2026-08-19 — names the concrete live surface, states TRADE-only-live / 10-of-11 return 501 (`@ec08cccad1`) |
+| P1 | §4 coverage table internally contradicts its own denominator formula | Nick AI | Accuracy | ✅ RESOLVED 2026-08-19 — table/formula reconciled (`@ec08cccad1`) |
+| P1 | Custody `SigningSurface` list (shows Fireblocks, omits Ceffu) doesn't match the working provider roster | Elysium | Accuracy | ✅ RESOLVED 2026-08-19 — FALSE POSITIVE: Ceffu stub routes via Copper (`CEFFU_ROUTES_VIA_COPPER_NOTE`), Fireblocks `SigningSurfaceStatus.OUT_OF_SCOPE`; explanatory note added, enum list deliberately untouched (`@171dc40739`) |
+| P1 | "Strategy never reads MTDS directly" invariant unstated in both artefacts | Both | Target-state | ✅ RESOLVED 2026-08-19 — Elysium names it explicitly (`@171dc40739`); Nick AI names MDPS/features-service as the intermediary (`@ec08cccad1`) |
+| P1 | No artefact scope statement distinguishing full-repo-send vs future carve-out | Elysium | Disclosure (moderate) | ✅ RESOLVED 2026-08-19 — full-repository scope statement added near top (`@171dc40739`) |
+| P1 | §09 reconciliation detail has no carve/hosted split vs withheld IP | Elysium | Disclosure (moderate) | ✅ RESOLVED 2026-08-19 — carve/hosted split note added (`@171dc40739`) |
+| P2 | 7 of 14 Nick AI missing-capability probes fully absent (fees, collateral, manual-trade, reconciliation, PnL, risk/Greeks, latency/SLA) | Nick AI | Missing capability | ✅ RESOLVED 2026-08-19 — §18-§24 added as target-state, `st-plan` (`@2b0c327e44`) |
+| P2 | 5 of 13 Elysium missing-capability probes fully absent (custody routing, funding graph, wizard, rank-allocator, overlays) | Elysium | Missing capability | ✅ RESOLVED 2026-08-19 — mirrored-custody, funding-route, wizard note, allocator, overlays all present (`@6a5598e736`) |
+| P3 | §05→§08 stale cross-reference (should be §09) | Elysium | Accuracy (minor) | ✅ RESOLVED 2026-08-19 — `@171dc40739` |
+| P3 | §14 "19-step contract" mislabels the 8-leg framework that produced the quoted numbers | Nick AI | Accuracy (minor) | ✅ RESOLVED 2026-08-19 — now names the 8-leg readiness-dump framework (`@ec08cccad1`) |
 
 ## Progress Log
 
@@ -372,3 +372,16 @@ superseded by same-day remediation work by the time this audit ran. Corrected in
 than left as the sub-agent's original (now-wrong) recommendation. Companion dispatch plan authored at
 [`/plans/active/client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 per operator direction to hand this off to the agent-orchestrator fleet for triage and execution.
+
+**2026-08-19 — reconciled by the finalize pass
+([`client_artefact_remediation_finalize_2026_08_18.md`](/plans/active/client_artefact_remediation_finalize_2026_08_18.md)).**
+Every checked todo in the parent remediation plan + all three children (elysium/nickai/siblings) re-verified against
+the live HTML and cited commits — not checkbox text alone. All 13 summary-table findings below are **RESOLVED**:
+live grep of both walkthroughs confirms the fixes (eleven action types; §02's 9 real `StrategyFamily` members; §11
+"specified as a target state, mostly not yet wired"; TRADE-only / 501 disclosure; §14 names the 8-leg framework;
+evidence-tier `.ev-*` legend + `.own` owner marks in both files), all 14 cited SHAs resolve on
+`origin/live-defi-rollout`, and the two wired hygiene checkers run green
+(`check_artefact_disclosure.py`: 0 hard violations; `check_artefact_enum_drift.py`: 0 violations, real enum counts
+9/11). `status` flipped `partial`→`pass` (the audit-result status enum is `fail/partial/pass`) — this marks the two audited walkthroughs' findings addressed, NOT the
+underlying system gaps (W5/W10/W12/W13/W16/W17/W18) the parent plan cross-references, which remain tracked and open
+in `system_readiness_master.md` / `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`.
