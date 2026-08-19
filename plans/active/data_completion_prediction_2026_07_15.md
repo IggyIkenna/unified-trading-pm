@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-08-18 # was 2026-07-15 (the doc's own creation date, never bumped across ~15 dated Progress Log entries) -- corrected 2026-08-19 (/plan-reconcile manifest_master), matched to the latest dated Progress Log entry (na-eligibility-audit 2026-08-18)
+last_updated: 2026-08-19 # was 2026-08-18 -- bumped 2026-08-19 (batch13 item 1 PASS closed the pipeline_mode/source rider items), matched to the latest dated Progress Log entry
 locked_by:
 locked_since:
 supersedes:
@@ -72,14 +72,16 @@ context_scope:
       comparison, CF-7 relabel) are NOT closed by this — their own text leaves genuine ambiguity about whether they
       completed alongside E4, left open pending a closer per-item read.
 
-- [ ] [DATA] P0. C-pipeline_mode RIDER: the `pipeline_mode=` partition for prediction lands in THIS walk (satisfies
+- [x] ✅ [DATA] P0. C-pipeline_mode RIDER: the `pipeline_mode=` partition for prediction lands in THIS walk (satisfies
       `pipeline_mode_partition_migration_2026_06_01.md` for prediction — do NOT run it separately). **(MIGRATED FROM:
       `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)** **[na-eligibility-audit
       2026-08-19: SUBSUMED, not independently dispatchable — this item's own text says not to run it separately; answered
-      by `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1's `pipeline_mode non-null` pass criterion. Stays
-      open pending that batch's result — do not extract or close separately.]**
+      by `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1's `pipeline_mode non-null` pass criterion.]**
+      **CLOSED 2026-08-19 — batch13 item 1 ran PASS on all 4 criteria** (live `_index` read, 2,814,442 rows:
+      `pipeline_mode` non-null on 100% of rows, 0 blank). See `prediction_satellite_ao_dispatch_batch13_2026_08_19.md`
+      item 1 for the full comparison evidence.
 
-- [ ] [DATA] P1. C-source RIDER: stamp `source` = the data-source API (`polymarket_clob` / `polymarket_gamma_api` /
+- [x] ✅ [DATA] P1. C-source RIDER: stamp `source` = the data-source API (`polymarket_clob` / `polymarket_gamma_api` /
       `kalshi_*`) on every prediction cell in THIS walk (path/`pipeline_mode` → `source` column), re-consolidate into
       the `_index` — HARD, swap-resilient (a future Polymarket data-provider change stays distinguishable). Closes
       `data_source_provenance` Phase 6 prediction. **Venue ≠ source invariant preserved**: Polymarket/Kalshi remain
@@ -97,8 +99,13 @@ context_scope:
       2026-06-03). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
       consolidation ruling.)** **[na-eligibility-audit 2026-08-19: SUBSUMED, not independently dispatchable — no writer
       code change needed per this item's own text; answered by
-      `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1's `source populated on every cell` pass criterion.
-      Stays open pending that batch's result — do not extract or close separately.]**
+      `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1's `source populated on every cell` pass criterion.]**
+      **CLOSED 2026-08-19 — batch13 item 1 ran PASS on all 4 criteria**: `source` populated (non-blank) on 100% of
+      2,814,442 rows, correct per-venue (POLYMARKET → `polymarket_clob`/`polymarket_gamma_api`; KALSHI → `kalshi`) — no
+      mismatches. Checked `data_source_provenance_enforcement_2026_07_24.md` for an open "Phase 6 prediction" item
+      gated solely on this result: none found (its 12 open items are cross-AG P0 rollups / cross-plan-sequencing items,
+      not a prediction-specific item blocked on this comparison) — no flip made there. See
+      `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1 for the full comparison evidence.
 
 - [x] ✅ [DATA] P0. Post-walk: re-run the `(date,venue,data_type)` comparison → **legacy-only CELLS = 0**; canonical
       `_index` all v9; `pipeline_mode` non-null; **`source` populated on every cell (HARD — zero blank; the API source
@@ -504,3 +511,14 @@ range never overlaps a still-in-flight per-market-only day).
   audit passes and 4-5 `/ag-closeout-audit` "0 AO-eligible" rulings on the Phase-B migration — not re-litigated. 18
   open todos -> 16 (2 extracted/closed here; net corpus todo count unchanged until the batch itself closes, since the
   2 extracted items now live there instead).
+- **2026-08-19 (batch13 item 1 result — slot-33)**: `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 1
+  (the post-walk `(date,venue,data_type)` comparison) ran PASS on all 4 criteria against the live canonical `_index`
+  (`market-data-tick-pred-prd-central-element-323112`, 2,814,442 rows, read via `read_availability_index_safe`
+  column-pruned under `run-bounded-analysis.sh`): (1) both legacy buckets confirmed still 404/gone -> legacy-only
+  cells = 0 by construction; (2) `schema_version` is 9 on 100% of rows; (3) `pipeline_mode` non-null on 100% of rows;
+  (4) `source` populated on 100% of rows, correct per-venue (POLYMARKET -> `polymarket_clob`/`polymarket_gamma_api`;
+  KALSHI -> `kalshi`). Per this doc's own text, the C-pipeline_mode RIDER and C-source RIDER items above needed no
+  independent action beyond this check -- flipped `[x]` citing this result. Checked `data_source_provenance_
+  enforcement_2026_07_24.md` for an open prediction-specific item gated solely on this comparison and
+  `legacy_bucket_dual_write_decommission_2026_07_24.md`'s L6 gate (already DONE 2026-07-13 for prediction, predates
+  this result) -- neither had anything left to flip. 16 open todos -> 14.
