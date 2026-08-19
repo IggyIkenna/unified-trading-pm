@@ -381,7 +381,7 @@ function, a transform function, a target-path/bucket resolver) that the NEXT sim
 reinventing the whole script from scratch. Building 5 templates — not relocating 619 individual files — is the
 actual leverage point §Pattern clustering's evidence points to.
 
-- [ ] [INFRA] P1. `template_purge.py` (cluster 1 — row-removal/purge, 110 files' worth of precedent). Parameterizes:
+- [x] [INFRA] P1. `template_purge.py` (cluster 1 — row-removal/purge, 110 files' worth of precedent). Parameterizes:
       a row-selection predicate (criteria for "stale"/"phantom"/"duplicate"), an optional pre-delete backup-snapshot
       write (the exact write path the sibling issue doc found broken in 15 instruments-service files — this
       template's snapshot helper goes through `migration_common.py`'s `upload_bytes` wrapper so that specific bug
@@ -405,10 +405,10 @@ actual leverage point §Pattern clustering's evidence points to.
       refactored to IMPORT/parameterize the template (the done-when's literal bar) — `purge_bad_prediction_
       manifest_rows.py` was mid-relocation by a concurrent agent when this was built, so the authoring agent
       correctly avoided touching it (scope-boundary discipline) and built the standalone worked example instead.
-      **Remaining**: refactor `deployment-service/scripts/migrations/instruments-service/purge_bad_prediction_
-      manifest_rows.py` (now landed, no longer mid-move) to actually import `template_purge.py` instead of its own
-      hand-rolled purge logic.
-- [ ] [INFRA] P1. `template_canonicalize.py` (cluster 2 — field/path canonicalization & schema migration, the
+      **DONE (2026-08-19) — done-when criterion closed.** `purge_bad_prediction_manifest_rows.py` refactored to
+      import/parameterize `template_purge.py`, preserving exact predicate/behavior. `quality-gates.sh --no-fix`
+      green. Shipped `deployment-service@fb4595fd52`.
+- [x] [INFRA] P1. `template_canonicalize.py` (cluster 2 — field/path canonicalization & schema migration, the
       LARGEST cluster at 170 files' worth of precedent). Parameterizes: an old-shape → new-shape row transform
       function, a path-rewrite rule (old canonical-path segment → new), and a verification pass (old shape absent,
       new shape present, row counts reconcile). Build against `canonicalize_defi_manifest_venue_2026_06_14.py` (an
@@ -423,15 +423,18 @@ actual leverage point §Pattern clustering's evidence points to.
       refactored to IMPORT/parameterize the template — the real source script's DEX-factory-registry resolution
       branch has a hard `instruments_service.*` import, which would violate the tier architecture's "no
       service↔service deps" rule if folded into the generic (deployment-service-owned) template; documented in the
-      template's own module docstring as a deliberate scope boundary, not an oversight. **Remaining**: once/if a
-      genuinely generic (non-instruments-service-coupled) canonicalize target surfaces, refactor it to import this
-      template instead of hand-rolling.
-- [ ] [INFRA] P2. `template_reconcile.py` (cluster 3 — drift reconciliation & repair, 66 files' worth of precedent).
+      template's own module docstring as a deliberate scope boundary, not an oversight.
+      **DONE (2026-08-19) — done-when criterion closed via a different candidate.** The original DEX-registry-coupled
+      target stays blocked (unchanged reasoning above), but `canonicalize_defi_manifest_data_types_2026_05_16.py`
+      (a different, already-relocated, unblocked canonicalize-shaped file) was refactored to import/parameterize
+      `template_canonicalize.py` instead — exact kebab→snake mapping preserved, gained the template's built-in
+      verification pass for free. Test file rewritten to match, green. Shipped `deployment-service@fb4595fd52`.
+- [x] [INFRA] P2. `template_reconcile.py` (cluster 3 — drift reconciliation & repair, 66 files' worth of precedent).
       Parameterizes: a two-source comparison function (manifest vs. GCS, or manifest vs. a derived-truth
       recomputation), a per-mismatch corrective-write function, and a mismatch-count report. Build against
       `reconcile_phantom_manifest_rows.py` (instruments-service Phase-3 target) as the worked example. Done-when:
       same bar as above.
-      **MOSTLY DONE (2026-08-19) — one done-when criterion NOT yet met.** `template_reconcile.py` exists
+      **DONE (2026-08-19).** `template_reconcile.py` exists
       (`ReconcileConfig`/`run_reconcile`/`ReconcileResult`, hooks: `comparator` (boolean mismatch mask; may do its
       own read-only GCS lookups since a reconciliation comparator needs a second source of truth
       `migration_common.py` doesn't wrap), `corrective_write` (fixes only the mismatched subset), optional
@@ -439,11 +442,9 @@ actual leverage point §Pattern clustering's evidence points to.
       `migration_common.py`), with a full worked example (`scripts/migrations/lib/templates/examples/
       example_reconcile_phantom_manifest_rows.py`) reproducing `reconcile_phantom_manifest_rows.py`'s bulk-list-
       then-check comparator + 4-column corrective flip + per-`data_type` breakdown, and 9 unit tests.
-      `quality-gates.sh` green (deployment-service, 216s). Shipped `deployment-service@412482d831`. **NOT done**:
-      no real Phase-1/2/3 file was refactored to IMPORT/parameterize the template — the real source script
-      (`reconcile_phantom_manifest_rows.py`) lives in instruments-service, out of this template's own change scope.
-      **Remaining**: at Phase 3 (instruments-service relocation), refactor the relocated copy to import
-      `template_reconcile.py` instead of its own hand-rolled comparator/corrective-write logic.
+      `quality-gates.sh` green (deployment-service, 216s). Shipped `deployment-service@412482d831`. Done-when
+      criterion closed 2026-08-19: `reconcile_phantom_manifest_rows.py` (relocated by Phase 3) refactored to
+      import/parameterize the template. Green. Shipped `deployment-service@fb4595fd52`.
 - [ ] [INFRA] P2. `template_backfill.py` (cluster 4 — backfill/populate missing value, 108 files' worth of
       precedent). Parameterizes: a "needs backfill" row predicate, a value-computation function, and an in-place
       write-back. Build against a Phase-2/3 target (`backfill_cefi_source_column.py`, market-tick-data-service) as
@@ -464,7 +465,7 @@ actual leverage point §Pattern clustering's evidence points to.
       for CeFi's ~30M-row OOM avoidance and row-count STOP-ON-SURPRISE bound check are NOT part of the generic
       template — documented in the template's own module docstring — and should stay as a local wrapper around the
       template's hooks).
-- [ ] [INFRA] P2. `template_audit.py` (cluster 5 — read-only audit/investigation/verification, 74 files' worth of
+- [x] [INFRA] P2. `template_audit.py` (cluster 5 — read-only audit/investigation/verification, 74 files' worth of
       precedent — structurally distinct from the other 4: no `--apply`/mutation path needed at all, just a scan +
       structured report). Parameterizes: a scan function and an output formatter (text/JSON/CSV). Build against
       `teams_coverage_census_2026_08_05.py` (instruments-service) as the worked example. Done-when: same bar as
@@ -477,9 +478,9 @@ actual leverage point §Pattern clustering's evidence points to.
       example (`scripts/migrations/lib/templates/examples/example_audit_teams_coverage_census.py`) reproducing
       `teams_coverage_census_2026_08_05.py`'s 4 sections end to end, and 15 unit tests. `quality-gates.sh` green
       (deployment-service, 295s non-cached, 3565 passed/5 skipped/0 failed). Shipped `deployment-service@34520ac0ae`.
-      **NOT done**: no real Phase-1/2/3 file was refactored to IMPORT/parameterize the template — the real source
-      script lives in instruments-service, out of this template's own change scope. **Remaining**: at Phase 3
-      (instruments-service relocation), refactor a real audit-shaped file to import `template_audit.py`.
+      **DONE (2026-08-19) — done-when criterion closed.** `teams_coverage_census_2026_08_05.py` (relocated by
+      Phase 3, the template's own original worked-example source) refactored to import/parameterize
+      `template_audit.py`, preserving byte-for-byte computed values, green. Shipped `deployment-service@fb4595fd52`.
 - [x] [DOC] P2. Add a "Template roster" table to `scripts/migrations/README.md` (the stub Phase 0's first todo
       creates) listing all 5 templates, the operation-shape each covers, and a one-line "when to use this one"
       guide — this is what a future script author actually reads before writing anything, so it needs to be
