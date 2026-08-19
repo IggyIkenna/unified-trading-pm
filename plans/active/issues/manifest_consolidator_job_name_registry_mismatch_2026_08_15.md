@@ -127,11 +127,12 @@ tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only par
       when: `tests/unit/test_cloud_run_job_registry_guard.py` passes (it parses `*_scheduler.tf` and should catch
       drift) + `quality-gates.sh` green. Repo: deployment-service.
       — deployment-service@a0005a5539 (see Progress Log 2026-08-19, slot 14).
-- [ ] [INFRA] P1. Re-verify `deployment_service/data_pipeline_monitors/cloud_run_job_failure_watcher.py`'s
+- [x] ✅ [INFRA] P1. Re-verify `deployment_service/data_pipeline_monitors/cloud_run_job_failure_watcher.py`'s
       `manifest-consolidator-*` exclusion list + `consolidator_oom_watcher.py`'s read path against the registry
       fixed in the todo above; confirm the real per-(service_kind, asset_group) jobs are covered by exactly one of
       the two watchers, not zero. Done when: a stated coverage verdict per real job stem, evidenced by reading both
       watchers' current logic against the corrected registry. Repo: deployment-service.
+      — deployment-service@3d5db7dcfd (verdict + fix; see Progress Log 2026-08-19, slot 10).
 - [ ] [INFRA] P2. Grep deployment-service for any other `manifest-consolidator-{ag}` / `manifest-consolidator-
       {asset_group}` literal beyond the four files already found (`relaunch_consolidator.py` docstrings fixed
       2026-08-15, `cloud_run_job_registry.py`, `consolidator_oom_watcher.py`, `cloud_run_job_failure_watcher.py`).
@@ -200,3 +201,25 @@ tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only par
   `cloud_run_job_failure_watcher.py`'s exclusion list or `consolidator_oom_watcher.py`'s read path — that's todo 3's
   scope (this fix changes what jobs the registry NAMES, not which watcher classifies them). Shipped:
   deployment-service@a0005a5539.
+- **2026-08-19 (slot 10, todo 3 — infra)**: Re-verified coverage of the 10 real per-(kind, ag) consolidator jobs
+  against the corrected registry + both watchers. **Verdict: 5 of 10 were covered by exactly one watcher, 5 were
+  covered by ZERO — a real gap, now fixed.** Per-job matrix:
+  - `manifest-consolidator-market-data-{cefi,defi,tradfi,sports,prediction}` (5): covered by DP-WATCHER-005 (its
+    `_read()` hardcodes the `market-data` kind) and EXCLUDED from DP-WATCHER-006 (`_CONSOLIDATOR_STEM_PREFIX =
+    "manifest-consolidator-"`). Exactly one watcher. ✓
+  - `manifest-consolidator-instruments-{cefi,defi,tradfi,sports,prediction}` (5): DP-WATCHER-005 hardcoded
+    `market-data` so it never read the `instruments` jobs, AND DP-WATCHER-006 excluded the whole
+    `manifest-consolidator-*` family on the assumption 005 covered it. Zero watchers — a genuine per-execution
+    alerting blind spot (the same class the DP-MANIFEST-001 heartbeat-staleness path only catches late). ✗
+  **Fix (findings-triage "in your file → fix in same commit", todo 3's repo scope)**: extended DP-WATCHER-005 to
+  cover BOTH kinds. `consolidator_oom_watcher.py` now enumerates `_CONSOLIDATOR_KINDS = ("instruments",
+  "market-data")` per asset_group (reader + `check_consolidator_oom` keyed by `"{kind}-{ag}"`), the index-age reader
+  resolves the correct per-kind bucket via the new `meta_targets.consolidator_bucket(kind, ag)` (instruments-store vs
+  market-data), and the emitted finding now carries `details["kind"]` so the already-kind-aware
+  `_recover_consolidator` → `RelaunchConsolidator.relaunch(kind=...)` auto-recovery targets the right job. cli.py
+  wires `consolidator_bucket` in place of the market-data-only resolver. Tests: rewrote
+  `tests/unit/test_consolidator_oom_watcher.py` (2 reader tests now assert both kinds' parents; +1 new
+  `check_consolidator_oom` test asserting per-kind index cross-check + `details["kind"]`). Verified `quality-gates.sh`
+  green (258s) + quickmerge landed. **Residual for todo 4**: `cloud_run_job_failure_watcher.py`'s exclusion is now
+  CORRECT (both kinds are genuinely covered by 005, so excluding the whole `manifest-consolidator-*` family is right);
+  no change needed there. Shipped: deployment-service@3d5db7dcfd.
