@@ -189,6 +189,15 @@ a normal ratchet into a self-reinforcing wall.
 - [ ] [BACKEND] P3. Resolve the two flagged journeys (`deploy-service`, `kill-switch-toggle`) named in the prior todo —
       the missing-manifest hard-fail is fixed, this half was explicitly out of scope for that fix. Repo:
       unified-trading-pm (`scripts/checkers/`).
+- [ ] [SCRIPT] P2. **Have `scripts/dev/safe-doc-push.sh` self-set `GITHUB_REF_NAME`/`GITHUB_REF` when it detects it's
+      committing to `live-defi-rollout` locally**, so every future local session gets the correct baseline+buffer
+      ratchet mode automatically instead of needing to know and manually pass these vars (3rd confirmed recurrence,
+      2026-08-16 + 2026-08-19 x1 — see Progress Log). Also investigate why `export VAR=val && bash
+      scripts/dev/safe-doc-push.sh ...` did not reliably propagate the var through to the check (only an `env
+      VAR=val bash scripts/dev/safe-doc-push.sh ...` prefix worked reliably, 2026-08-19) — likely a subprocess/hook
+      boundary that resets or doesn't inherit the exported var; root-cause and either fix the propagation or document
+      the `env`-prefix requirement explicitly in the script's own usage text. Repo: unified-trading-pm
+      (`scripts/dev/`, `scripts/plan-hygiene/`).
 
 ## Progress Log
 
@@ -249,3 +258,21 @@ a normal ratchet into a self-reinforcing wall.
   skip-rule.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:f2fc0a2b8f9bc8cb]: KEEP-NA, valid -- Two remaining open todos on an otherwise heavily-shipped CI/promotion-mechanics incident doc. The first is explicitly framed as an operator decision the todo text itself says is 'not a unilateral backend change — it narrows a hard gate.' The second (resolving real-flow test coverage for the deploy-service and kill-switch-toggle journeys) is genuine engineering work; kill-switch-toggle in particular touches live-trading kill-switch machinery, so it is treated as care-requiring GENUINE_WORK rather than a slam-dunk mechanical task, not clearing the full bounded-outcome bar needed for a doc-level reclassify.
+- **2026-08-19 (plan_reconciler, sports tranche, agt-07473e)**: **third confirmed recurrence of the local-repro
+  false-positive** (same class as the 2026-08-16 entry above). `bash scripts/dev/safe-doc-push.sh` (which shells out
+  to `run_hygiene_sweep.sh`'s prek hook) failed committing 2 new `assigned_vm: NA` issue docs with
+  `check_na_corpus_ratchet (--diff-base origin/main): 9 new NA-population doc(s); 24 new open todo(s)` — a plain
+  local invocation with no `GITHUB_REF_NAME`/`GITHUB_REF` set, so the guard defaulted to diff-base-vs-`origin/main`
+  mode instead of baseline+buffer. Confirmed the fix: `env GITHUB_REF_NAME=live-defi-rollout
+  GITHUB_REF=refs/heads/live-defi-rollout bash scripts/dev/safe-doc-push.sh ...` correctly selected baseline+buffer
+  mode and the check passed cleanly (genuine remaining blocker after that was an unrelated frontmatter
+  `parent_epic` omission on this session's own new doc, fixed separately). **New finding this run**: even with the
+  var exported in the calling shell (`export GITHUB_REF_NAME=... && bash scripts/dev/safe-doc-push.sh ...`), the
+  first several retries still failed identically — only explicitly prefixing the var on `safe-doc-push.sh`'s own
+  invocation line (`env VAR=val bash scripts/dev/safe-doc-push.sh ...`) reliably worked; `export`-then-`&&` did not
+  reliably propagate through whatever subprocess/hook chain `safe-doc-push.sh` spawns (not root-caused further this
+  pass — genuinely new investigation, not a same-file fix). **Not fixed at the root**: `safe-doc-push.sh` itself
+  still requires every caller to know and correctly pass this env var by hand for a plain local LDR commit — the
+  natural fix (have the script set `GITHUB_REF_NAME`/`GITHUB_REF` itself when it detects it's operating on
+  `live-defi-rollout`, mirroring what a real LDR-push CI run would set) would close this permanently for every
+  future local session, but that's a `scripts/**` change outside this run's write scope. Filed as todo below.

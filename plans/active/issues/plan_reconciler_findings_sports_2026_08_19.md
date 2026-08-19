@@ -175,12 +175,33 @@ None — no finding this run met the narrow mechanical carve-out bar.
 
 ## Archive candidates (operator review)
 
-- **`sports_consolidated_native_ao_extract_2026_07_25.md`** — 33/33 todos verified `[x]` (confirmed both in the
-  2026-08-18 run and independently re-confirmed this run: `grep -c` shows 0 open / 33 done). NOT archived this pass —
-  its finalize plan's todo 1 (reconcile into the hub) is only partially complete (5 of an estimated ~10-15 genuinely
-  outstanding reconciliation items found and flipped; several other closeout-doc open items were investigated and
-  found to be either genuinely separate scope or already covered by other satellite extractions — see Coverage).
-  Finalize todo 4 (archive the extract plan) explicitly must run LAST, after todos 1-3 — not yet safe.
+- **`sports_consolidated_native_ao_extract_2026_07_25.md`** — 33/33 todos verified `[x]`. Its finalize plan's todos
+  1-3 are now ALL DONE this run (see Flips verified + the finalize-todo-3 gate re-check below) — pre-conditions for
+  archival (finalize todo 4) are now MET. **NOT executed this pass**: `grep -rl` found 21 corpus referrers
+  (excluding the extract + finalize docs themselves); several need live-vs-historical judgment (dated
+  `plan_reconciler_findings_*` reports should likely keep citing the pre-archive path as accurate history), and
+  `sports_consolidated_closeout_2026_07_19.md` alone cites it well over a dozen times while sitting at 998/1000
+  lines — a bulk repoint risks the line cap again. Recorded as ready-for-a-dedicated-pass in the finalize plan
+  itself (full referrer-scope note there), not silently dropped.
+
+## Finalize-plan todo 3 — excluded/scoped-down item gate re-check
+
+All 4 items resolved this run (finalize plan `sports_consolidated_native_ao_extract_2026_07_25_finalize.md` todo 3,
+now flipped `[x]`):
+
+1. **KALSHI/POLYMARKET cross-AG bleed** — gate CLEARED: `sports_satellite_ao_dispatch_batch3_2026_07_25.md`'s
+   disposition candidate shipped DONE 2026-07-31 (now archived). The closeout's line-532 venue-vocabulary checkbox
+   could partially advance on this basis, but left open — see Flips verified note (too entangled with a separate
+   live contradiction to safely edit this pass).
+2. **T-18h horizon/cap-widening design choice** — gate STILL CLOSED: no operator ruling found (`grep -rl "T-18h"
+   plans/active/issues/` — 0 hits). No new todo needed.
+3. **Sports P2a sub-items (a)/(b)** — gate CLEARED, and the follow-through was ALREADY completed:
+   `sports_closeout_track_s2_foldin_2026_07_25.md` already carries both as done (sub-item (a) G1 noise-wipe, DONE;
+   sub-item (b) G2 2015-2017 diagnosis, DONE 2026-07-27). No new todo needed.
+4. **K1/K2 DELETE → `DP_RUN_MOSTLY_EMPTY` re-check** — gate CLEARED (Track V K1/K2 delete executed 2026-07-28,
+   `market-tick-data-service@26201c44`), and the re-check was ALREADY extracted AND completed:
+   `sports_closeout_track_s2_foldin_2026_07_25.md` line 437-445, DONE 2026-08-05 (spike resolved as predicted, no
+   code change needed). No new todo needed.
 - **This doc's own predecessor** (`plan_reconciler_findings_sports_2026_08_18.md`) — NOT archived; it still carries
   genuinely-open recommendations (the 3 fold candidates, noted above) not yet executed by any pass. Leaving it active
   per its own "next pass" framing until those are resolved or explicitly superseded.
@@ -225,3 +246,14 @@ The ~95 non-grace sports-tranche docs outside the `sports_consolidated_closeout`
 - **2026-08-19T18:40Z (plan_reconciler, dispatch agt-07473e, slot 4)**: Phase -1 + finalize-plan todo-1 reconciliation
   complete. 5 flips + 1 duplicate-dispatch strike landed, commit `e6e455f6c2`, verified on `origin/live-defi-rollout`.
   Proceeding to finalize-plan todos 2-3, then the corpus-wide Phase 1 fan-out for remaining coverage.
+- **2026-08-19T19:03Z**: hit a local-only `check_na_corpus_ratchet` false-positive committing this doc + the
+  check_line_caps issue doc (already-tracked class, `na_corpus_ratchet_diff_base_vs_lagging_main_deadlocks_promotion_2026_08_10.md`)
+  — root-caused, confirmed the `GITHUB_REF_NAME`/`GITHUB_REF` env-var fix, appended a 3rd-recurrence Progress Log
+  entry + a new todo to that existing tracked doc rather than re-filing. Also caught + fixed my own frontmatter bug
+  (missing `parent_epic`) on the check_line_caps doc. Landed commit `6e6b92ab34`.
+- **2026-08-19T19:10Z**: finalize-plan todo 3 (re-check the 4 excluded/scoped-down items' gates) complete — all 4
+  resolved (2 gates cleared with follow-through already independently completed by other sessions, 1 confirmed
+  still-closed, 1 deferred with a recorded recommendation). Finalize-plan todos 1-3 now all `[x]`; todo 4
+  (archive the extract plan) confirmed pre-condition-ready but deferred (21-referrer scope, recorded in the finalize
+  plan itself for the next pass). Proceeding to the corpus-wide Phase 1 fan-out for the remaining ~95 non-grace
+  sports-tranche docs.
