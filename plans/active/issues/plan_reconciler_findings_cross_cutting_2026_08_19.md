@@ -190,7 +190,7 @@ epics: `observability_master` 24, `agent_operating_framework_master` 13, `batch_
    660-triple delta list, verdict each delta row, fork fresh AG batches for genuinely-new rows, close out the
    banner) — `assigned_vm: NA` (default, not explicitly ruled either way this round); updated
    `venue_e2e_wiring_2026_08_16.md`'s banner to record the ruling + point at the new doc instead of "unresolved".
-   No AG batch file touched, per the ruling. `unified-trading-pm@<this commit>`.
+   No AG batch file touched, per the ruling. `unified-trading-pm@6161e471d6`.
 
 ## Progress Log
 
