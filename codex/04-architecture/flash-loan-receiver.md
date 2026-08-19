@@ -116,13 +116,13 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
 
 ## Modes
 
-| Mode              | Contract Needed? | Behavior                                                           |
-| ----------------- | ---------------- | ------------------------------------------------------------------ |
+| Mode              | Contract Needed? | Behavior                                                            |
+| ----------------- | ---------------- | ------------------------------------------------------------------- |
 | Backtest          | No               | simulated in-memory (see note below — no `flash_loan_simulator.py`) |
-| Paper trade       | No               | Signs but doesn't broadcast                                        |
-| Testnet (Sepolia) | Yes              | Pre-deployed, address in UAC                                       |
-| Tenderly fork     | Yes              | CI deploys fresh per fork via deploy script                        |
-| Live (mainnet)    | Yes              | Pre-deployed, verified, address in UAC                             |
+| Paper trade       | No               | Signs but doesn't broadcast                                         |
+| Testnet (Sepolia) | Yes              | Pre-deployed, address in UAC                                        |
+| Tenderly fork     | Yes              | CI deploys fresh per fork via deploy script                         |
+| Live (mainnet)    | Yes              | Pre-deployed, verified, address in UAC                              |
 
 ## CI Integration
 
@@ -143,19 +143,29 @@ Then validates on-chain: `eth_getCode(address)` must return non-empty bytecode.
 
 ## Owner
 
-| Concern              | Owner                                     |
-| -------------------- | ----------------------------------------- |
-| Solidity source      | deployment-service                        |
-| Deployment to chains | deployment-service                        |
-| Address registry     | UAC testnet_contracts.yaml                |
-| Preflight validation | execution-service AAVEConnector.connect() |
-| Backtest simulation  | execution-service (see note — file renamed/folded)  |
+| Concern              | Owner                                              |
+| -------------------- | -------------------------------------------------- |
+| Solidity source      | deployment-service                                 |
+| Deployment to chains | deployment-service                                 |
+| Address registry     | UAC testnet_contracts.yaml                         |
+| Preflight validation | execution-service AAVEConnector.connect()          |
+| Backtest simulation  | execution-service (see note — file renamed/folded) |
 
 > **⚠️ `flash_loan_simulator.py` does not exist (verified 2026-07-31).** This doc named it in two places as the
 > execution-service module that simulates flash loans in-memory during backtest. There is no file by that name anywhere
 > in the workspace. Flash-loan handling now appears under `execution_service/backtest_v2/benchmark_registry.py` and the
 > atomic-bundle path (`tests/unit/test_atomic_bundle_executor.py` exercises it), but this re-review did not establish
 > which module is the intended successor — do not cite a replacement until someone confirms it.
+
+> **⚠️ `AtomicBundleExecutor` has zero non-test production construction sites (verified 2026-08-19).**
+> `execution_service/algorithms/atomic_bundle_executor.py`'s class is imported and re-exported at package level
+> (`execution_service/__init__.py`) and named in a docstring comment in `engine/handlers/flash_loan_handler.py`
+> ("This is called as part of AtomicBundleExecutor"), but grep finds no actual construction (`AtomicBundleExecutor(`)
+> anywhere outside its own two test files (`tests/unit/test_atomic_bundle_executor.py`,
+> `tests/unit/test_flash_loan_receiver_execution.py`). It answers the question the previous paragraph left open — this
+> is a real, tested class that exercises the flash-loan-sequence path, but it is orphaned from any live dispatch path
+> today, the same shape as Pattern 10 in
+> [`/codex/04-architecture/capital-efficiency-patterns.md`](/codex/04-architecture/capital-efficiency-patterns.md).
 
 ---
 
@@ -257,7 +267,9 @@ After deploy, copy the address into:
 
 ### Runtime resolution (executor-side)
 
-`RecursiveLoopOrchestrator.flash_open()` resolves the address by:
+`RecursiveLoopOrchestrator._flash_open()` (verified 2026-08-19: private method, called internally by the public
+`open()` when `request.opening_mode == OpeningMode.FLASH`; symmetric `_flash_close()` for `unwind()`) resolves the
+address by:
 
 1. Query `FLASH_LOAN_RECEIVER_REGISTRY` filtered by `(chain, protocol=AAVE_V3, receiver_kind=recursive_leverage)`
 2. Validate on-chain: `eth_getCode(address)` non-empty
@@ -265,6 +277,38 @@ After deploy, copy the address into:
 
 If no row matches or bytecode missing → raises `RECURSIVE_RECEIVER_NOT_DEPLOYED` (FAIL prefix in `DefiErrorCode`
 taxonomy).
+
+### ⚠️ Live-mode flash-loan submission is stubbed (verified 2026-08-19)
+
+Address resolution above succeeds — the deployed `RecursiveLeverageReceiver.sol` contracts in the table above are real.
+But the step after resolution, actually building and broadcasting the `flashLoan()` transaction, is not implemented for
+live mode. `RecursiveLoopOrchestrator._submit_flash_loan()` (same file, `execution_service/defi_execution/orchestrators
+/recursive_loop_orchestrator.py`):
+
+```python
+def _submit_flash_loan(
+    self, request: RecursiveLoopRequest, receiver_address: str, actions: tuple[Action, ...]
+) -> tuple[str | None, int]:
+    """Encode + submit flashLoanSimple tx. Returns (tx_hash, gas_used)."""
+    if self._w3 is None:
+        return (f"0xSIM_FLASH_{request.correlation_id[:8]}", 350_000)
+    return (None, 0)
+```
+
+When `self._w3` (the `w3_client` constructor arg) is `None` — simulation mode — it returns a fabricated-but-labeled
+`0xSIM_FLASH_...` hash, which is honest (clearly not a real hash) and matches every other simulation path in this
+orchestrator. **But when `self._w3` is set — i.e. live mode, the only condition that matters for real fund movement —
+it unconditionally returns `(None, 0)`, no matter what `receiver_address` or `actions` are.** Both `_flash_open()` and
+`_flash_close()` treat a `None` tx_hash as failure and return `RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT`. **The
+atomic flash-loan path (`OpeningMode.FLASH`) therefore cannot succeed in live mode today** — every live-mode flash
+open/unwind request fails at this line, regardless of position state, health factor, or gas budget. The PERSISTENT
+driver (per-iteration supply→borrow, no flash loan) is unaffected — it makes real awaited `AAVEConnector` calls per the
+class docstring and is the only live-capable opening mode today.
+
+This is a distinct gap from the bridging gap in `/codex/04-architecture/transfer-architecture.md` § "Bridging execution
+reality" — that section covers venue-to-venue `BRIDGE` transfers; this is single-transaction atomic on-chain flash-loan
+execution. Whether fixing this stub is in scope now is a genuinely open question the operator has not decided (see that
+section's "Still genuinely open" list) — this doc only documents the verified current state.
 
 ### CI integration
 
