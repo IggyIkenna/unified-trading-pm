@@ -307,7 +307,7 @@ orchestrator-dispatched).
 
 ### Phase 5 — guardrail so this class can't recur
 
-- [x] ✅ [CODE] P2. **DONE 2026-07-27 (slot-9, `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 3)** —
+- [x] ✅ [CODE] P2. **DONE 2026-07-27 (slot-9, `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo 3)** —
       `instruments-service@a4137022`. Shared `validate_perp_instrument_record()` write-time guardrail
       (`reference_data/adapters/cefi/_perp_write_guard.py`), wired into both `kalshi_perp.py`'s and
       `polymarket_perp.py`'s `_parse_market` — rejects any record whose `instrument_type` isn't `PERPETUAL`, or whose
@@ -484,7 +484,7 @@ orchestrator-dispatched).
   confirmed with a second independent probe) that Phase 4's `BLOCKED-OPERATOR-DECISION` may not actually gate the
   market-data half of the repoint. Order-placement endpoints untested — reads-only finding. No code changed; Workstream
   B's Phase 0-5 structure stands, this just updates the auth assumption feeding Phase 1/2/4.
-- **2026-07-26 (slot-12, `data_engineering`, dispatched via `prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo
+- **2026-07-26 (slot-12, `data_engineering`, dispatched via `/plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md` todo
   2): Closed Phase 3's event-capture-gap VERIFY — read-only diagnostic, found + root-caused a real bug, filed the fix as
   new Phase 6 (not implemented, per this VERIFY's own out-of-scope gate).** Live-fetched ~9,200 Kalshi + ~1,600
   Polymarket markets (unauthenticated adapter calls), classified them client-side via the SAME UAC classifiers the

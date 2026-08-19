@@ -420,7 +420,7 @@ longer has its own download button.
       (the dir exists but doesn't cover this component), so `pw:L2` is N/A rather than run-and-green — verified instead
       via an earlier live browser check against a captured real API payload (documented in this doc's Update §1) plus
       the unit-level regression spec above.
-- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 5) — premise stale,
+- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (`/plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 5) — premise stale,
       writer already venue-agnostic, no fix needed.** **Widen the writer-fix scope to Solana DeFi + CURVE-OPTIMISM**
       (Update §2 above). Audited: `_split_by_instrument_type`
       (`instruments-service/instruments_service/engine/orchestrator/writers.py:131`) is already applied unconditionally
@@ -436,13 +436,13 @@ longer has its own download button.
       `_route_hyperliquid`/`_route_aster` chain-annotation wrappers mirroring the existing Pacifica/Extended/Lighter
       ones, 181 unit tests green, full quality-gates green. Not a new bug; just widening an existing todo's scope to
       match reality — and that widening is done.
-- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 3) — read-only, no
+- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (`/plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 3) — read-only, no
       code change.** Pull the real per-instrument_type breakdown for DERIBIT live (the comparison built for this doc
       used illustrative numbers pending this) and confirm whether OPTION coverage is actually healthy or is itself a
       live gap once visible. Pulled live prod deployment-api data (30-day window): OPTION 2,676/2,677 dates (99.96%),
       near-identical to FUTURE/PERPETUAL/COMBO/SPOT_PAIR. **Verdict: OPTION coverage is healthy — not a live gap.** Full
       evidence in the batch doc.
-- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 2) —
+- [x] ✅ [CODE] P1. **CLOSED 2026-07-27 (`/plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 2) —
       deployment-api@554cde9, deployment-ui@8f6c4bc.** **Add `missing_dates`/`dates_found_list` to the
       per-instrument_type and per-underlying breakdown entries**
       (`deployment-api/deployment_api/services/data_status/breakdowns_core.py` — `_build_instrument_type_breakdown`
@@ -499,7 +499,7 @@ longer has its own download button.
       `market_data_categories.py:1279-1286`. Whoever picks this up next: re-verify current live state of
       `VENUES_BY_ASSET_GROUP["tradfi"]` + `enumerate_expected_universe.py`'s gating comment before recording a final
       verdict, since both were observed changing during this exact session. **DONE (na-eligibility-audit 2026-08-03)** —
-      `instruments_satellite_ao_dispatch_batch1_2026_07_27.md`:186 (todo 4) is this exact item and explicitly says both
+      `/plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md`:186 (todo 4) is this exact item and explicitly says both
       in-flux threads left open here "have both since settled, verified 2026-08-02": (1) `market_data_categories.py`'s
       `VENUE_DATA_TYPE_CAPABILITIES["POLYGON"]` fixed (`unified-api-contracts@e34afc1d`, removed as stale dead code);
       (2) `FRED` confirmed correctly placed, not a conflation instance (real adapter + matching capability entry). A
@@ -507,7 +507,7 @@ longer has its own download button.
       `VENUE_DATA_AVAILABILITY["POLYGON"]`, NOT dead code, still surfaced into `ui-reference-data.json`) was filed as
       its own follow-up doc (`archive/issues/uac_venue_data_availability_stale_polygon_entry_2026_08_02.md`) rather than
       fixed inline — matching this todo's own "this todo is the audit, not the fix" done-when.
-- [x] ✅ [VERIFY] P1. **CLOSED 2026-07-27 (instruments_satellite_ao_dispatch_batch1_2026_07_27.md todo 1) — read-only,
+- [x] ✅ [VERIFY] P1. **CLOSED 2026-07-27 (`/plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md` todo 1) — read-only,
       no code change.** Raw-parquet spot-check the 5 additional CeFi venues flagged by the pre-audit's registry read as
       likely hitting the same multi-type blank-collapse: `OKX-FUTURES`, bare `BYBIT`, `BINANCE-FUTURES`,
       `KRAKEN-FUTURES`, `BINANCE-DELIVERY`. Result: 2 of 5 genuinely hit the DERIBIT-class bug (bare `BYBIT`,
@@ -532,7 +532,7 @@ longer has its own download button.
   renaming the "Instrument breakdown" venue-detail link — a genuine naming call gated on other work landing; the
   historical CeFi/TradFi manifest backfill — approach depends on a not-yet-confirmed generic reprocessing utility). 5
   items were bounded/worker-determinable and never assessed against the AO dispatch-scope bar — extracted to
-  `instruments_satellite_ao_dispatch_batch1_2026_07_27.md` (checkboxes here left open per convention; that batch's
+  `/plans/archive/2026_08/instruments_satellite_ao_dispatch_batch1_2026_07_27.md` (checkboxes here left open per convention; that batch's
   finalize twin reconciles them once actually done): the 5-venue spot-check, the `missing_dates`/`dates_found_list`
   breakdown fields, the DERIBIT-live breakdown pull, the TradFi POLYGON/FRED conflation audit, and widening the
   blank-`instrument_type` writer fix to Solana DeFi + CURVE-OPTIMISM. 1 item (extending the CLOB-on-chain classification
