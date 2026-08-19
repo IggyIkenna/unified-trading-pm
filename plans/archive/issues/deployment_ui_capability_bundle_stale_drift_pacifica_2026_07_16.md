@@ -21,7 +21,7 @@ summary:
   this session did not have access to. Given the size (92k lines combined) and the risk of silently breaking referential
   integrity (edges pointing at a deleted node) from a manual JSON patch without the actual generator, this was triaged
   as a big cross-repo finding to flag rather than hand-edit blind.'
-status: open
+status: resolved
 nature: notes
 asset_group: [defi]
 stage: [meta]
@@ -45,7 +45,7 @@ source:
   code, adaptors, manifest, gcs, everything." Discovered as a side-finding while fixing the TreasuryTab
   SUB_ACCOUNT_DRIFT dropdown bug in deployment-ui (the 12th repo the operator''s fleet grep caught).'
 assigned_vm: planning
-resolved_by:
+resolved_by: unified-api-contracts@1df9aca7 (2026-08-19, slot-7) — sole open todo, prospectus regen
 locked_by:
 context_scope: [scripts/openapi/generate_strategy_prospectus.py, unified-api-contracts/openapi/prospectus, /codex/06-coding-standards/script-homes.md, /plans/archive/2026_07/defi_satellite_ao_dispatch_batch3_2026_07_26.md]
 execution_scope: orchestrator-agent # was local-only — corrected 2026-08-18 (plan_reconciler): this doc flipped
@@ -55,8 +55,12 @@ estimate_class: refactor
 estimate_baseline_ai_days: 0.5
 drift_direction: advance-code
 depends_on: []
-archive_exempt: true # bridge for the cross-repo two-commit flip-then-mv split; dropped in the follow-up archival commit
 ---
+
+> **🗄️ ARCHIVED 2026-08-19** — sole open todo `[x]` (unified-api-contracts@1df9aca7, prospectus regen); no
+> `locked_by`; no new codex contract established by this mechanical regen (the "source wins" ruling this todo executed
+> was already codified in this doc's own 2026-08-08 Progress Log entry, not a fresh contract). Per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
 
 # deployment-ui capability bundle still shows DRIFT as a live venue
 
