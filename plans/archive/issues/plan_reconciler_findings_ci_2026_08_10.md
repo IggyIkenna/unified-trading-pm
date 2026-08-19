@@ -5,7 +5,7 @@ summary: >-
   Daily deep plan-reconciliation run-findings doc for the ci topic tranche, dispatch agt-fb0ce4 (slot 2). Records
   hunter-detected candidates, adversarial-verification outcomes, applied fixes, routed operator questions, and coverage
   for this run. Also the progress journal for the run itself.
-status: open
+status: archived
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -30,6 +30,9 @@ calibrated_ai_days: 0.1
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
+  "agent-orchestrator@4a0753791a (durable GET /api/blocked/{blocked_id} point-lookup, fixes the blocked-question
+  answer-retrieval gap that was this doc's sole remaining open item — verified reachable on
+  origin/live-defi-rollout, 2026-08-19)"
 locked_by:
 depends_on: []
 context_scope:
@@ -505,3 +508,21 @@ written).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- This is a plan_reconciler run-journal doc (dispatch agt-fb0ce4, slot 2) with 1 genuinely open item: whether the blocked-question answer-retrieval channels (GET /api/slots/N/messages; the /progress response's own messages array) have a real delivery gap -- 6 polling attempts spanning ~20 min plus 4 guessed alternate endpoint shapes all returned empty/404 despite a harness-level notification claiming the operator had answered BLK-6b80187a. The doc's own 2026-08-16 update re-checked the corpus...
+
+- **plan_reconciler (Phase -1), 2026-08-19 (dispatch agt-f212cb, slot 1, ci tranche)**: the sole remaining open item
+  (blocked-question answer-retrieval gap) is **RESOLVED** — `agent-orchestrator@4a0753791a` ("fix(ao): durable GET
+  /api/blocked/{blocked_id} point-lookup survives slot/task reassignment orphaning") independently verified reachable
+  via `git merge-base --is-ancestor` on `origin/live-defi-rollout`; full root-cause + fix narrative captured in
+  `/plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md`. This doc now has zero
+  genuinely-open items — archiving per Phase -1's own mandate ("a findings doc with zero genuinely-open items left
+  afterward gets archived"). `git mv` to `plans/archive/issues/`, `status: archived`, `resolved_by:` populated.
+  Referrers swept: 7 of 10 already live under `plans/archive/`, unaffected by this doc's own move (already-archived
+  historical prose, out of scope for further edits); the 3 active-corpus referrers
+  (`ci_satellite_ao_dispatch_batch15_2026_08_16.md`, `ag_closeout_audit_ci_parked_2026_08_16.md`,
+  `plan_reconciler_findings_ci_2026_08_16.md`) are prose "Source:" attribution citations by bare filename, left as
+  historical narrative per the precedent this exact doc-chain already established
+  (`plan_reconciler_findings_security_and_cross_cutting_master_2026_08_19.md`'s own archival of a sibling doc: "5
+  historical prose mentions left as-is"); `plans/epics/ci_master.md`'s "active issues" list is machine-regenerated
+  (`regenerate_active_plan_inventory.py`/hygiene-sweep tooling), not hand-synced — left for the next natural regen
+  rather than hand-patched (CLAUDE.md: "Duplicate/stale index rows ... Regenerate via the inventory tooling, never
+  hand-sync").

@@ -6,7 +6,7 @@ summary: >-
   Phase -1 predecessor-doc reconciliation, hunter-detected candidates (8 parallel batches, 47 writable docs), a
   Trust-Mode line-cap split applied inline, adversarial-verification outcomes, applied fixes, routed operator
   questions, and coverage for this run. Also the progress journal for the run itself.
-status: open
+status: archived
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [role, plan_reconciler, reconciliation, plan-hygiene, ci, sharded-run]
 related:
   [
-    /plans/active/issues/plan_reconciler_findings_ci_2026_08_10.md,
+    /plans/archive/issues/plan_reconciler_findings_ci_2026_08_10.md,
     /plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
     /plans/archive/2026_08/operator_ruling_record_ci_line_cap_splits_2026_08_16.md,
   ]
@@ -32,11 +32,13 @@ calibrated_ai_days: 0.3
 assigned_role: backend_engineer
 drift_direction: fix
 resolved_by:
+  "2026-08-19 plan_reconciler Phase -1 re-check closed all 5 named leftover items (grace-window re-verify,
+  priority-mismatch, codex-alignment, truncated-log, archive-candidates) — see Progress Log"
 locked_by:
 depends_on: []
 context_scope:
   [
-    /plans/active/issues/plan_reconciler_findings_ci_2026_08_10.md,
+    /plans/archive/issues/plan_reconciler_findings_ci_2026_08_10.md,
     /plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
@@ -339,3 +341,42 @@ progress journal), out of na-eligibility-audit's own scope per SKILL.md's `does_
 `/plan-reconcile`'s own verification/continuation work, not something this skill classifies or acts on). Doc's own
 Progress Log confirms it is genuinely not fully resolved (5 named open items awaiting a future `/plan-reconcile`
 pass). No action taken.
+
+- **plan_reconciler (Phase -1), 2026-08-19 (dispatch agt-f212cb, slot 1, ci tranche)**: closed out all 5 named
+  leftover items with a fresh independent re-check:
+  (a) `qg_host_adaptive_resource_governor_2026_07_14.md`'s grace window has long since lapsed (doc has since moved
+  to `plans/active/` proper) — re-read the doc's live "ledger unification" open todo (2026-08-03-dated, INFRA P2)
+  fresh: it explicitly self-disambiguates from the already-shipped cross-repo fix ("Not attempted in the fork
+  \[out\] of scope: cross-repo CI sharing, not cross-population sharing") — this is a genuinely-scoped, still-open
+  item, NOT stale/contradictory content. The original hunter's "contradicts live code+codex" claim could not be
+  reproduced on independent re-read — same INCONCLUSIVE disposition as the codex-alignment/priority-mismatch items
+  below, not a fix.
+  (b) Priority-mismatch candidate — one further independent grep attempt (P1-tagged QG/host/governor/contention docs
+  in `plans/active/issues/`) found no duplicated task at two priorities, only legitimate distinct docs. THREE
+  independent passes (original hunter, 2026-08-16 predecessor reconciliation, this run) have now failed to relocate
+  it — dropping per this skill's own anti-fabrication rule rather than guessing a match.
+  (c)/(d) Unrecoverable codex-alignment findings and truncated Progress-Log entries — unchanged, still correctly
+  unfixable without fabricating content; no new recovery path found.
+  (e) 5 archive candidates — re-verified fresh: 3 (`uac_value_only_config_change_breaks_utl_untested_2026_07_20.md`,
+  `deployment_api_ar_repo_override_audit_and_iam_probe_2026_08_07.md`, and `cloudbuild_template_drift_blocks_all_pm_commits_2026_08_12.md`)
+  are now already archived (the latter via the dedicated `ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md`
+  plan's own todo 1; the other two via the sibling `security_and_cross_cutting_master` tranche's 2026-08-19 run,
+  which cited this doc's own finding as its source). The remaining 2
+  (`codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`,
+  `sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`) — re-checked: the codex-freshness-ratchet doc
+  is STILL a valid 0-open/6-done candidate, correctly tracked as an open todo in
+  `ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md` (an active, unlocked, AO-dispatched `assigned_role: review`
+  plan — this is the system working as designed, not a process gap, so left for its own dispatch rather than
+  duplicated here a third time); `sit_gate_treadmill...` is **no longer** a zero-checkbox candidate — a genuine new
+  P3 todo (`ldr_to_main_fleet_promote.sh:638`'s `gh api` call) appeared since 2026-08-16, so it correctly stays
+  active with real open work.
+  Every item has now reached a terminal state (resolved / inconclusive-dropped / unrecoverable-accepted /
+  correctly-tracked-elsewhere) — zero genuinely-open items remain in THIS doc. Archiving per Phase -1's own mandate.
+  Predecessor `plan_reconciler_findings_ci_2026_08_10.md` archived in the same pass (its own sole open item —
+  the blocked-question answer-retrieval gap — resolved via `agent-orchestrator@4a0753791a`, verified reachable).
+  Referrers swept: structured `/plans/active/issues/...` references in `ag_closeout_audit_ci_parked_2026_08_16.md`
+  and `ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md` repointed to the new archive path in the same commit;
+  `archive_exempt:` YAML-comment mentions (bare filename, 4 docs) and other prose "Source:"/narrative citations left
+  as historical record per the precedent `plan_reconciler_findings_security_and_cross_cutting_master_2026_08_19.md`
+  already established this same session; `plans/epics/ci_master.md`'s auto-generated active-issues list left for
+  the next natural inventory regen (never hand-synced, per CLAUDE.md).
