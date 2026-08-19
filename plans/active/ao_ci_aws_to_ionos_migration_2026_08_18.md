@@ -321,6 +321,8 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       correctly — exact commands, no "you'll know it when you see it" steps. Done-when: a real timed dry-run (starting
       one of the stopped boxes, walking the runbook, confirming it serves real traffic/claims a real job) completes in
       **under 1 hour**, elapsed time and any friction points logged in the Progress Log, then the box is re-stopped.
+      **Runbook authored + shipped `unified-trading-pm@6ff00d4ca7`** (2026-08-18) — the doc itself is done; the timed
+      dry-run is not (needs a real stopped AWS box to run against, which doesn't exist until §4/§5's stop steps land).
 - [ ] [INFRA] P2. After both cutovers, confirm the actual first full-month IONOS invoice against the ~$65.52×2 +
       near-zero-egress projection from this plan's "Why" section, **and** confirm the AWS DR-standby overhead against
       the ~$95-105/mo estimate. Done-when: both invoice totals logged in the Progress Log against their projected
