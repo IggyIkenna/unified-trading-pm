@@ -1003,6 +1003,9 @@
       <li>
         <a href="#s24"><span class="num">24</span><span class="ttl">Latency, preflight, and staleness SLAs</span></a>
       </li>
+      <li>
+        <a href="#s25"><span class="num">25</span><span class="ttl">The external execution API — two ways to run it</span></a>
+      </li>
     </ol>
   </nav>
 
@@ -1296,7 +1299,10 @@
                 <td>Strategy</td>
                 <td>— none —</td>
                 <td>No</td>
-                <td>No counterparty-facing surface yet — <b class="st st-plan">planned</b></td>
+                <td>
+                  No counterparty-facing surface yet — <b class="st st-plan">planned</b>, shape in
+                  <a href="#s25">§25</a>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -1933,13 +1939,22 @@
                 <td>Transfer, deposit, withdraw</td>
                 <td>Wallets, exchanges, custody</td>
               </tr>
+              <tr>
+                <td class="grp grp-post">Control</td>
+                <td>
+                  Kill-switch (scoped halt), flatten position — <b class="st st-plan">planned</b>, not yet
+                  expressible as an instruction a caller can send (<a href="#s25">§25</a>)
+                </td>
+                <td>Every archetype, every venue</td>
+              </tr>
             </tbody>
           </table>
         </div>
       </div>
       <p>
         A caller that can express a buy can express a lay, or a stake, without new plumbing — only a different action on
-        the same envelope.
+        the same envelope. Broker and routing configuration does not need a new field either — <code>venue_constraints</code>
+        on the envelope above is already general enough to carry it, once populated.
       </p>
       <h3>The lifecycle, once submitted</h3>
       <p>
@@ -3142,6 +3157,106 @@
       <p style="font-size: 0.95rem; color: var(--ink-3)">
         This is specified, not built. No trigger, latency-tracing or staleness-SLA mechanism described here is live
         today.
+      </p>
+    </details>
+  </section>
+
+  <section id="s25">
+    <div class="sec-head">
+      <span class="num">25</span>
+      <h2>The external execution API — two ways to run it</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="system_readiness_master.md — W22: Strategy/execution messaging and the external instruction API"
+        >owner: W22</b
+      >
+    </div>
+    <p class="lede">
+      §02 marked the Strategy surface "no counterparty-facing surface yet." This is the shape of closing that gap —
+      not a new integration pattern; the same instruction envelope and execution path already documented in
+      <a href="#s08">§08</a> and <a href="#s02">§02</a>, exposed outside our process boundary two different ways.
+    </p>
+    <details class="sec-body" open>
+      <summary>Internal messaging, an external transport, and who hosts what</summary>
+      <div class="callout">
+        <span class="tag">The honest state today</span>
+        <p>
+          A workspace-wide search found no internal messaging — Pub/Sub or otherwise — connecting strategy-service's
+          decisions to execution-service today, and no direct API client between them either. The only live
+          instruction path is the manual one: <code>ManualOperationHandler → LiveOrchestrator.execute_instruction()</code>
+          (<a href="#s02">§02</a>) — not an automated strategy-to-execution bridge. Closing that gap is the first
+          part of this work, not an assumed foundation.
+        </p>
+      </div>
+      <h3>Internal: messaging, not a service dependency</h3>
+      <p>
+        Strategy's decisions reach execution the same way market data already does (<a href="#s14">§14</a>) — over
+        the UTL <code>EventTransport</code> facade, Pub/Sub-backed, keyed on what the subscriber needs. Two
+        subscriptions, not one: execution subscribes to strategy's instruction stream, and separately to the
+        feature groups it needs from features-service. A messaging dependency in both cases, never a direct
+        service-to-service call — this platform holds that boundary everywhere else, and this is no exception.
+      </p>
+      <h3>Every instruction is sinked for audit, one by one</h3>
+      <p>
+        Every strategy-emitted instruction lands in GCS through the same shard-and-manifest pipeline the rest of
+        this platform's data uses, queryable via BigQuery external tables — an audit and analysis surface, not
+        only a live queue. Market tick data feeding the decision is aggregated separately
+        (<a href="#s04">§04</a>–<a href="#s07">§07</a>); this sink is instructions only.
+      </p>
+      <h3>Three deployments, one schema, different protocols</h3>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Deployment topology</span
+          ><span class="note">Same StrategyInstructionEnvelope, different transport</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Deployment</th>
+                <th>Serves</th>
+                <th>Protocol</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Internal</td>
+                <td>Our own strategy-service instructions</td>
+                <td>Pub/Sub — low latency, our infrastructure</td>
+              </tr>
+              <tr>
+                <td>External, automated</td>
+                <td>Registered external clients' strategy instructions</td>
+                <td>HTTP or WebSocket, latency-dependent — hosted on our side, callers known and allow-listed</td>
+              </tr>
+              <tr>
+                <td>Manual</td>
+                <td>DART, an external trading UI, or a manual API caller</td>
+                <td>HTTP — manual trading has no latency floor to defend</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Two ways to run it, for an external client specifically</span>
+        <p>
+          <b>We host it</b> — a client sends strategy instructions to an execution-service deployment we run and
+          maintain, registered and allow-listed on our side. <b>They host it</b> — the same execution-service
+          image, Dockerized, config-driven, deployable on their infrastructure or ours, with the same hot-reload
+          configuration model documented in <a href="#s11">§11</a>. The call shape is identical either way — only
+          who operates the deployment differs.
+        </p>
+      </div>
+      <h3>What this needs from the instruction contract</h3>
+      <p>
+        The action vocabulary (<a href="#s08">§08</a>) has to grow past trade / on-chain / event / movement to
+        cover control instructions — a scoped kill-switch and a flatten-position instruction, both already
+        conceptually present as system behaviour (<a href="#s15">§15</a>) but not yet expressible <em>as an
+        instruction</em> a caller can send. Broker and routing configuration does not need a new field:
+        <code>venue_constraints</code> on the envelope (<a href="#s08">§08</a>) is already general enough to carry
+        it, once populated.
       </p>
     </details>
   </section>
