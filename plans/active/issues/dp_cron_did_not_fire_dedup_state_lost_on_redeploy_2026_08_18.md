@@ -250,6 +250,39 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
       simultaneous-writers race (two processes reading-then-writing in the same instant) may need a real
       compare-and-swap (GCS `if_generation_match`) rather than read-then-write — note that as the next
       escalation if so. Repo: alerting-service.
+- [ ] [CODE] P2. **ADDED 2026-08-19 (data_pipeline_failure escalation worker, slot 1, agt-1e37b1)** —
+      NEW, previously-unchecked candidate root cause found for the SPORTS-ODDS slice of this VM's
+      DP-LIVE-004 burst specifically (`mtds-live-sports-odds-api-odds-20260816-145019`, this dispatch's
+      sampled venue=MYBOOKIEAG data_type=odds "never captured"): the LIVE `OddsApiWSFeedConnector`
+      (`market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py`) polls The
+      Odds API with `regions="uk,us"` (`_DEFAULT_REGIONS`) — a REGION-based filter that returns EVERY
+      bookmaker The Odds API has for those regions, unfiltered. The BATCH adapter
+      (`market_interface/adapters/sports/odds_api_adapter.py`) instead sends an explicit curated
+      `bookmakers=` list, `REQUESTED_ODDS_API_BOOKMAKERS` (mirrored in UAC's
+      `unified_api_contracts/registry/sports_bookmaker_league_coverage.py`) — and that list does
+      **NOT** include `mybookieag` (nor several other bookmakers this VM's own burst already named:
+      lowvig, betus, bovada, betfred_uk, grosvenor, betano_uk, leovegas, bet888sport, fanatics,
+      boylesports, betway, betmgm — see the 2026-08-19 slot-10/slot-14 Progress Log entries above for
+      the full ~30-venue list). The batch-side docstring is explicit that the REQUESTED list is "the
+      only defensible basis for a per-bookmaker EXPECTATION" and that treating an un-requested book as
+      expected "manufactures false honest-absence" — the live connector's region-based fetch has no
+      equivalent scoping, so it can attempt-and-never-capture bookmakers the rest of the system never
+      considers in-scope. **NOT YET CONFIRMED as the actual mechanism** — `check_live_capture_
+      productivity`'s `(venue, data_type)` grouping reads real `attempted_at` rows off a CONSOLIDATED
+      per-VM manifest shard (`live_stream_watcher.py::_read_vm_shard_group_activity`), a different blob
+      than the per-instrument leaf parquets `live_tick_blob_path` writes, and this dispatch did not
+      trace how/whether that consolidated shard's `venue=MYBOOKIEAG` row is populated (i.e., did not
+      rule out honest-absence: MYBOOKIEAG may simply list zero markets for every fixture this VM is
+      currently tracking, which `_parse_fixture_response` correctly turns into zero ticks — genuinely
+      no bug). Next dispatch: (1) read the consolidated per-VM shard for this exact VM (bucket/blob via
+      whatever builds `LiveVmShard` in `deployment-service/deployment_service/data_pipeline_monitors/`)
+      and check the raw `capture_status` distribution for `venue=MYBOOKIEAG`/`LOWVIG`/`BETUS` rows —
+      if they show real `attempted_failed`/similar rows (not just absence), that confirms a live-vs-batch
+      scope divergence bug; (2) if confirmed, fix by either scoping `OddsApiWSFeedConnector` to the same
+      `REQUESTED_ODDS_API_BOOKMAKERS` list (via `bookmakers=` instead of `regions=`, matching the batch
+      adapter's own cheaper-cost pattern) or by adding the out-of-scope bookmakers to the requested list
+      if they should genuinely be captured. Did not attempt a code fix this session — unconfirmed
+      mechanism, `does_not: guess at an ambiguous fix`. Repo: market-tick-data-service.
 - [x] ✅ [OPERATOR] P1. (carried over) Investigate the 2 genuine live-capture stalls first
       flagged 2026-08-17 (BYBIT-FUTURES on `mtds-live-cefi-consolidated-20260817-025031`; CME
       trades on `mtds-live-tradfi-cme-trades-20260809-163443`) — both VMs running, both
@@ -446,3 +479,26 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   DP-`*` registry entry needed (same already-registered `DP_CRON_DID_NOT_FIRE`/`DP_RUN_MOSTLY_EMPTY`/
   `DP_VM_EXIT_NONZERO` event names, same already-documented dedup-defeat failure class — this is a fix to
   the mechanism, not a newly discovered alert type). Completing via `/done`.
+- **2026-08-19 (data_pipeline_failure escalation worker, slot 1, agt-1e37b1)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-sports-odds-api-odds-20260816-145019
+  venue=MYBOOKIEAG data_type=odds` (no issue slug — alert-carries-the-details path). Confirmed this is the
+  SAME VM the 2026-08-19 slot-10/slot-14 dispatches already logged firing across ~30 distinct sports-odds
+  bookmaker venues in one burst (MYBOOKIEAG explicitly named in that list) — a duplicate/spam symptom of
+  THIS doc's already-open root cause, not a new failure mode; did not file a separate issue doc, per the
+  established pattern. Went one step further than the prior sports-odds dispatches by tracing the actual
+  live-vs-batch fetch-scope code: found a genuine, previously-unchecked discrepancy — the live
+  `OddsApiWSFeedConnector` fetches via `regions=uk,us` (unfiltered, returns every bookmaker in-region) while
+  the batch adapter and its UAC-mirrored expected-universe both scope to an explicit curated `bookmakers=`
+  list (`REQUESTED_ODDS_API_BOOKMAKERS`) that does NOT include `mybookieag` or several other bookmakers named
+  in the same burst (lowvig, betus, bovada, betfred_uk, grosvenor, betano_uk, leovegas, bet888sport, fanatics,
+  boylesports, betway, betmgm). Filed this as a new P2 todo above rather than guessing a fix — could not
+  confirm within this dispatch whether the consolidated per-VM manifest shard `check_live_capture_
+  productivity` actually reads (a different blob than the per-instrument leaf parquets this repo's own
+  `live_tick_blob_path` writes) shows real `attempted_failed`-shaped rows for these out-of-scope bookmakers
+  (a genuine live-vs-batch scope bug) versus MYBOOKIEAG simply listing zero markets for every currently-
+  tracked fixture (honest absence, `_parse_fixture_response` already handles that correctly by emitting no
+  tick). No code changes shipped this session (repo: market-tick-data-service; unconfirmed mechanism,
+  `does_not: guess at an ambiguous fix`). Did not re-attempt the alerting-service P2 live-reverify todo
+  (out of this dispatch's assigned repo). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id, so
+  skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
+  covered that FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
