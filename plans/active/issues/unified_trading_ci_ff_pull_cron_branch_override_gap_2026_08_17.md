@@ -205,7 +205,14 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
       wired into `quality-gates.sh` alongside the existing manifest-canonical guard. Full `quality-gates.sh` green.
 - [ ] [OPERATOR] P3. Decide whether to collapse registries (B)/(C) into a single manifest-driven lookup
       (removes the duplicate-registry class of bug entirely) or keep them separate with the new parity test as
-      the guard — design call, not blocking. Repo: unified-trading-pm.
+      the guard — design call, not blocking. Repo: unified-trading-pm. **Scope correction 2026-08-19
+      (plan_reconciler)**: this doc's own root-cause framing names only THREE registries (A/B/C above), but a
+      FOURTH independently hand-maintained copy of the same "what branch does repo X use" fact exists:
+      `scripts/dev/slot-git-status-report.sh:312-326` (fixed independently, `unified-trading-pm@b92d9ba52fe`,
+      2026-08-11 — the git-status-nudge false-positive fix, see
+      `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`). Currently
+      correctly populated (no live bug there), but any registry-collapse decision made here should account for
+      this 4th copy too, not just (B)/(C).
 - [ ] [BACKEND] P2. Add a fleet-wide "N slots quarantined on the SAME repo for the SAME reason" rollup to
       `_alert_branch_quarantine`'s dedup key (`agent-orchestrator/server/autospawn.py:2003`) — today it dedupes by
       `(slot_id, offending-repo-signature)`, correct for a single slot re-alerting on an unchanged problem but with

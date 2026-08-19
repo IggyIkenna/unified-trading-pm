@@ -352,12 +352,27 @@ asserting a reclassification.
 text). **Zero-checkbox/archive candidates**: none currently — `digest_drift_sweep...` may become one once F1
 resolves.
 
-## Coverage (hunters / batches / docs) — Phase 1 complete
+## Coverage (hunters / batches / docs) — final
 
-All 6 hunter batches returned. 31/31 dispatched docs covered (5+5+6+6+5+4). Combined with the 7 docs Phase -1
-already investigated directly = all 38 writable docs in this run's 56-doc tranche now have fresh eyes on them.
-Approx combined hunter spend: ~1.3M tokens across 6 batches, ~122 tool calls, wall-clock ~8-11 min per batch
-(parallel). Proceeding to STEP 4 (adversarial verification) next.
+All 6 hunter batches returned, 31/31 dispatched docs covered (5+5+6+6+5+4). Combined with the 7 docs Phase -1
+investigated directly = **all 38 writable docs** in this run's 56-doc tranche read in full this run (18 were
+grace-protected, read-only context). Phase -1 additionally closed out 2 predecessor findings docs. Approx combined
+hunter spend: ~1.3M tokens across 6 batches, ~122 tool calls, wall-clock ~8-11 min per batch (parallel).
+
+**Phase 5.9 NO-MISS LEDGER**: `routed_to_operator` = 1 blocked question (`BLK-ed97af99`, covering 2 codex-alignment
+findings) == `parked_in_issue_doc` = 1 (same 2 findings, filed in this doc's own Doc-drift section) — **balanced,
+1 == 1**. `agent_skips`: 0 sub-agents returned a skip this run (all 6 hunters completed their full assigned batch;
+no verifier sub-agents were spawned — all STEP-4 verification was done inline by the orchestrator with fresh tool
+calls, per this doc's own `model: sonnet`/effort-max frontmatter authorizing inline verification for a candidate
+count this size). Every count above is a fresh measurement from this run's own tool calls, not carried forward
+from a hunter's unverified claim.
+
+## Plans not reached
+
+None — full tranche coverage achieved (38/38 writable docs read; 18/18 grace-protected docs correctly left
+untouched). 3 minor P3 hygiene classes were consciously NOT pursued to completion this pass (see Filed section's
+"Not pursued this pass" note) — that is a scoping choice, not a coverage gap; every doc was read, not every
+cosmetic finding within an already-read doc was individually corrected.
 
 ## Verification (STEP 4)
 
@@ -422,7 +437,26 @@ _(populated after verification)_
 
 ## Filed
 
-_(populated after verification)_
+1. `unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`'s `[OPERATOR]` P3 registry-collapse todo
+   (L206-208) — annotated with the 4th un-synced registry Batch F found (`slot-git-status-report.sh`), so the
+   eventual operator decision accounts for it. Not a flip (still genuinely a design call), a scope correction.
+2. `na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md` todo 3 (corpus-wide sweep) — 11 more
+   confirmed instances + the 116-doc scale finding folded in (see Phase -1/hunter sections above; also see
+   `unified-trading-pm@19deb57bef`).
+3. 2 codex-alignment gaps routed via `BLK-ed97af99` (see Doc-drift above) — durably filed in this doc's own
+   Doc-drift section per STEP 6(b) (no separate issue doc needed, the run-findings doc IS the durable record).
+
+**Not pursued this pass (time/scope, honestly reported per Phase 5.9(e), not silently dropped):**
+- ~15 stale/missing `last_updated` frontmatter fields across the docs this run's hunters read (per-batch detail
+  above). Multiple docs show a "corrected once by plan_reconciler 2026-08-16, already stale again by 2026-08-19"
+  pattern — manual re-correction each run is whack-a-mole; better served by an automated fix (e.g. a hook that
+  bumps `last_updated` on any commit touching a doc's own Progress Log) than by this run chasing each instance by
+  hand. Recommend as a follow-up design question, not filed as a todo here (would just be another instance of the
+  same whack-a-mole).
+- Batch B Finding E (`pytest_timeout_60s_flaky_under_contention_2026_07_29.md`'s `related:`/`context_scope`
+  missing its 3 own continuation docs) — cosmetic navigation gap, low value relative to remaining run budget.
+- Various P3 `context_scope` gaps noted per-batch above (e.g. `quickmerge_environment_autodetect...`'s missing
+  `qg-environment.sh` entry) — left for the next `context-scout` pass, which owns this maintenance routinely.
 
 ## Archive candidates (operator review)
 
@@ -438,7 +472,8 @@ _(populated after verification)_
 
 ## Refuted (dropped by verify)
 
-_(populated after verification)_
+None this run — every candidate that reached STEP 4 verification (7 priority items) was independently confirmed
+with fresh tool-call evidence and applied. No hunter finding was found to be wrong on re-check.
 
 ## Coverage (hunters / batches / docs)
 
@@ -456,3 +491,16 @@ _(populated after run, if applicable)_
   specific — `/na-eligibility-audit`'s disjoint remit; 1 soft warning). Phase -1 reconciled both prior ci findings
   docs to genuine closure (archived both, PM@b30280613a). Computed fresh tranche inventory (56 docs) + grace set (18
   docs). This doc created to capture the run.
+- **2026-08-19 (same dispatch, continued)**: STEP 3 dispatched 6 parallel hunter batches over the 31 non-grace docs
+  not already covered by Phase -1; all 6 returned with substantial candidates. STEP 4 independently re-verified 7
+  priority candidates with fresh tool calls (git log/show, gh run list, direct code reads, codex reads) — all 7
+  confirmed, none refuted. STEP 5 applied all 7: 6 fixes across 6 docs (PM@fcb094b7c6) + 1 archival
+  (`digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`, made archive-ready by its own flip, same
+  commit) + folded 11 new truncation-bug instances + a 116-doc scale finding into the already-filed
+  `na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md` (PM@19deb57bef) + 1 scope-correction
+  annotation on `unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`'s registry-collapse todo.
+  STEP 6 routed 2 codex-alignment gaps via `BLK-ed97af99` (trust-mode's own carve-out: codex edits always route,
+  never auto-apply, regardless of evidence strength). Branch was extremely hot throughout (double-digit
+  branch-drift retries on nearly every commit — 8-10 sibling tranche/epic reconciler dispatches active
+  same-day); every commit eventually landed clean via the standard pull-rebase-autostash recovery, no data lost,
+  confirmed via `git merge-base --is-ancestor` after each. Moving to STEP 7/8.
