@@ -27,7 +27,9 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-parent_epic: defi_master
+parent_epic: manifest_master # was: defi_master (epic-assignment audit 2026-08-19) -- executes the shared cross-AG
+  # v9 manifest-schema migration (migrate_instruments_store_v9.py, tracked in the cross-AG
+  # master_data_canonicalisation_migration_catalogue), just scoped to defi's corpus -- same script/gate runs per-AG
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1

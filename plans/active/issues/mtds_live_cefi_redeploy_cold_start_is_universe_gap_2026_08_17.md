@@ -18,7 +18,9 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/archive/2026_08/cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md,
   ]
-parent_epic: cefi_master
+parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- root cause + fix are in
+  # generic MTDS live-plumbing (instrument_availability_paths.py, live/_is_universe.py) with no asset-group gating --
+  # same day-partition-fallback gap hits any asset group's live VM redeployed early in the UTC day
 created: "2026-08-17"
 author: "slot-17 (infra, AO-dispatched)"
 source: ["cefi_okx_futures_xperp_marker_ao_dispatch_2026_08_16_finalize.md P2.2/P2.3"]

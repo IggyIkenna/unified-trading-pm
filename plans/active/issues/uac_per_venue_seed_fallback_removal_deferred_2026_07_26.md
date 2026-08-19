@@ -34,7 +34,9 @@ related:
 created: 2026-07-26
 author: unknown
 last_updated: "2026-08-17"
-parent_epic: cefi_master
+parent_epic: uac_master # was: cefi_master (epic-assignment audit 2026-08-19) -- explicitly a shared UAC registry
+  # fallback decision spanning asset_group: [cefi, defi, tradfi, prediction]; fix wires
+  # deployment-api/venue_resolution.py generically for all 4, not cefi-specific
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
