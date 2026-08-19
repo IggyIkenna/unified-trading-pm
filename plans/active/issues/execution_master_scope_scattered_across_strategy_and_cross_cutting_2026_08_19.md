@@ -122,11 +122,31 @@ SSOT is a concrete, already-identified gap, not a new one.
 
 ## Todos
 
-- [ ] [REVIEW] P1. Full-read audit of `strategy_master`'s active child docs (read `rg -l "^parent_epic:
-      strategy_master$" plans/active/*.md plans/active/issues/*.md` for the current list) against the
-      epic-assignment-decision-rule test, specifically checking each for execution_master-shaped content (algo
-      selection/aggressiveness, order generation, position/price approximation, co-location, execution-backtesting)
-      that should retag to `execution_master`. Repo: unified-trading-pm.
+- [x] ✅ [REVIEW] P1. **Full-read audit of `strategy_master`'s 14 active child docs — DONE, findings ratified.**
+      3 Sonnet-5 sub-agents each full-read a subset against the decision-rule test; every RETAG-CANDIDATE finding was
+      personally re-verified against the actual file content (not taken on the sub-agent's word) before acting.
+      **10/14 CORRECTLY-SCOPED** (no change): `capability_wizard_client_lite_and_ci_regen_followup_2026_07_24.md`,
+      `cross_venue_funding_reversion_research_2026_07_24.md`, `defi_collateral_sizing_and_wizard_full_parameterization_2026_06_17.md`,
+      `l2_book_microstructure_capture_2026_07_13.md`, `v2_engine_venue_buildout_2026_06_15.md`,
+      `strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md`,
+      `issues/capability_wizard_analysis_findings_2026_06_11.md` (personally read by me directly, not delegated),
+      `issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`,
+      `issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md`,
+      `issues/e2e_defi_config_taxonomy_wizard_roundtrip_2026_06_17.md`. **4/14 carry genuine execution_master-shaped
+      content — 1 already retagged, 3 filed as scoped split-follow-up (see new todos below), none actioned blind:**
+      1. `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md` (391L, whole-doc) — **RETAGGED
+         2026-08-19**, `parent_epic: strategy_master` → `execution_master` (this doc's own frontmatter + both epic
+         docs' "Assigned active plans" sections updated in the same commit). Personally read in full (all 392 lines):
+         entirely archetype-declared deployment-profile → `runtime-topology.yaml` co-location/sizing derivation
+         (`co_located_vm` vs `distributed`, live vCPU/memory sizing from active-archetype client/instrument counts) —
+         matches the operator's named "co-location" execution_master scope verbatim, doc's own title starts
+         "Execution —". Clean single-frontmatter-line move, no content split needed (whole doc is one coherent unit).
+      2. `service_config_ownership_and_instruction_contract_2026_08_12.md` (783L) — majority execution-shaped, NOT
+         retagged this session, see new todo below for exact section boundaries.
+      3. `crypto_alpha_research_2026_07_24.md` (639L) — majority-of-Progress-Log execution-shaped, NOT retagged this
+         session, see new todo below.
+      4. `carry_staked_basis_funding_scan_experiment_2026_06_16.md` (839L) — 2 specific sub-sections execution-shaped,
+         NOT retagged this session, see new todo below.
 - [x] ✅ [REVIEW] P2. **Full-read `bucket_fold_execution_strategy_2026_07_17.md` — CONFIRMED correctly scoped, no
       retag.** Read in full (all 284 lines). `parent_epic: security_and_cross_cutting_master` (line 44). Content is
       entirely GCS bucket-topology/naming consolidation (execution-store 4+pred→1, strategy-store flat→tiered,
@@ -145,10 +165,62 @@ SSOT is a concrete, already-identified gap, not a new one.
       approximation" the operator asked about maps to this doc's algo-selection-taxonomy scope, not a separate
       unwritten thing — F37 needs no further action. (The parent issue doc's own `status: open` is unrelated — it's a
       running log with other, unrelated findings still open; not a signal this specific finding is unresolved.)
-- [ ] [REVIEW] P3. Same under-claiming check for `security_and_cross_cutting_master` → `execution_master` direction
-      (only 1 doc spot-checked here, `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`) — low
-      priority since `security_and_cross_cutting_master` is already known-large (232 docs) and this is a single
-      data point, not a pattern yet.
+- [x] ✅ [REVIEW] P3. **Same under-claiming check for `security_and_cross_cutting_master` → `execution_master`
+      direction — DONE, clean result.** Targeted keyword scan (not full-read of all 237 docs, per scope): 237 docs
+      tagged `parent_epic: security_and_cross_cutting_master`, narrowed via ripgrep for execution-algo/aggressiveness/
+      co-location/execution-backtest/order-generation/price-approximation keyword clusters → 4 candidates, all read in
+      full. **Zero retag candidates**: `bucket_fold_ml_2026_07_17.md` + `bucket_fold_features_2026_07_17.md` matched
+      "co-location" as a homonym (ML-artifact bucket co-location, not exchange co-location);
+      `nick_ai_platform_disclosure_artifact_2026_08_16.md` and `issues/e2e_wiring_reachability_audit_2026_08_15.md`
+      each had one passing mention of execution-algo/aggressiveness terms inside a genuinely broader cross-cutting
+      scope (disclosure-artifact measurement, E2E reachability audit respectively) — not primary-subject execution
+      content. Clean negative result, not manufactured to have something to report.
+- [ ] [SPLIT] P2. **Split `service_config_ownership_and_instruction_contract_2026_08_12.md` (783L) — execution_master
+      content confirmed, exact section boundaries below (personally verified by full read, not sub-agent-only).**
+      Retag/extract to `execution_master`: **§ B** (execution-policy registry — algo-selection rules keyed by
+      `(client_id, slot_label)`, GCS loader, hot reload), **§ G** (exhaustive execution-service change surface — G1
+      config_algorithm threading into the live selector, G2 latency-timestamp threading through all 10 `ChildOrder`
+      construction sites, G3/G3a benchmark-matcher duplication + lending-path rate-impact), **§ I** (candle-based
+      fills — `CandleBookColsMatcher` depth-walk fill pricing, `ExecutionFidelityTier` ladder, sub-candle VWAP
+      fallback rung — this is literally "price approximations on cash data"), **§ J1/J3/J4/J6** (dual-path SSOT
+      register for `book_type`/benchmark-fill/algo-names/transfer-types — all execution-service-owned things). Stays
+      `strategy_master`: **§ A** (audit summary, frames the whole doc — keep a pointer copy if split), **§ D**
+      (strategy-service `ClientDomainConfig` subscription — genuinely strategy-side), the strategy-emit half of **§ H**
+      (transfer netting — "why netting must sit strategy-side" is a strategy-service design point, even though the
+      same section documents execution-service's consume-side transfer rail). **Why not done this session**: this is
+      a live, heavily-active doc (`status: draft` but dozens of already-shipped ✅ todos citing real execution-service/
+      UAC/strategy-service SHAs through 2026-08-16) with dense internal cross-references between sections — a rushed
+      split risks severing the SHA-evidence trail or the doc's own narrative continuity (§ G explicitly builds on § A/
+      B/C context). Needs a dedicated, careful pass, not inline surgery mid-audit. Repo: unified-trading-pm.
+- [ ] [SPLIT] P2. **Split `crypto_alpha_research_2026_07_24.md` (639L) — execution-research content confirmed within
+      the paper-trading-POC Progress Log, exact boundaries below.** Retag/extract to `execution_master`: the
+      "Fill-model fidelity" subsection (PB.4/PB.6/PB.7/PB.8 — swept-vs-touched maker fill, missed-remainder policy,
+      per-strategy fill backtest, aggTrades tape-fidelity), "Execution-config optimization" (PB.11/PB.13 — maker-vs-
+      taker/participation/timing lever sweep = the operator's named "aggressiveness controls"; live−batch execution-
+      realism differential), the "EXECUTION-REALISM AUDIT" section (maker-width sweep, ADV/depth capacity gating,
+      liquid-universe rebuild), and "EXECUTION CALIBRATION vs Binance RFQ" (not yet read in full — verify at split
+      time). Stays `strategy_master`: **§ C** (book-sizing/leg-selection decisions, operator-gated
+      `BLOCKED-OPERATOR-DECISION`), the alpha-research findings proper (short-leg re-spec, basis realism,
+      TS-momentum, multi-year walk-forward OOS) — these are genuine strategy-signal research even where they cite
+      execution-cost numbers as an input. **Why not done this session**: same reasoning as above — a chronological
+      research journal where findings cross-reference each other by PB-number across the fill-model/execution/alpha
+      boundary; a naive split breaks the "PB.7 confirmed PB.4" style evidentiary chain. `asset_group: [cefi]` (not
+      cross-cutting) — the execution-research content is CeFi-specific (Binance-perp fills/RFQ), so the destination
+      section in `execution_master` should note that scoping, not treat it as cross-cutting execution work. Repo:
+      unified-trading-pm.
+- [ ] [SPLIT] P3. **Split `carry_staked_basis_funding_scan_experiment_2026_06_16.md` (839L) — 2 specific sub-sections
+      confirmed execution-shaped, small and clearly bounded.** Retag/extract to `execution_master`: (a) "Global
+      transaction-cost-optimal rebalance (the 'PhD formula')" — replaces the greedy rotation gate with a per-period
+      L1 transaction-cost LP (`scipy.optimize.linprog`) deciding *how* to trade a rebalance (algo selection, ~15
+      lines); (b) "Daily positioning guide (manual-execution helper)" — `--target-diff`/`--apply` loops a precomputed
+      target book against market data to emit concrete OPEN/CLOSE/INCREASE/REDUCE/SWITCH orders (~13 lines), matching
+      the operator's execution-backtesting definition ("looping through pre-computed strategy instructions with
+      market data, generating orders") almost verbatim. Stays `strategy_master`: the net-carry ranking/hold/rotate
+      model, venue/collateral eligibility, and the GAS/slippage cost-MODELING sections (these explicitly cite
+      execution-service's existing cost models as dependencies rather than owning the mechanism). **Why not done this
+      session**: lower priority (P3, smallest scope of the three) — bundled with the other 2 splits for a single
+      dedicated pass rather than one-off surgery on a doc that's also mid-workstream (gated on the v9 data-migration
+      per its own 2026-06-17 Progress Log entry). Repo: unified-trading-pm.
 
 ## Progress Log
 
@@ -160,3 +232,18 @@ SSOT is a concrete, already-identified gap, not a new one.
   fixed by direct read of `/codex/04-architecture/execution-algorithm-selection.md` (substantive 138-line SSOT, not a
   stub). Every sub-agent finding will be personally re-verified against the actual file content before any retag
   ships — no sub-agent has ship authority on this issue.
+- **2026-08-19, claude (`/autonomous`), audit complete.** All 4 sub-agent reports returned; personally read all 4
+  RETAG-CANDIDATE docs in full or substantially in full before acting (not the sub-agent's word alone) —
+  `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md` (392L, full),
+  `service_config_ownership_and_instruction_contract_2026_08_12.md` (784L, full),
+  `crypto_alpha_research_2026_07_24.md` (543/639L), `carry_staked_basis_funding_scan_experiment_2026_06_16.md`
+  (505/839L, both flagged sub-sections confirmed present at the cited locations). One clean whole-doc retag executed
+  (deployment-profile doc, both epic docs' Assigned-active-plans sections kept in sync in the same change). Three
+  partial-content findings converted into precisely-scoped `[SPLIT]` follow-up todos with exact section boundaries —
+  deliberately NOT surgically split this session: all three are live, actively-shipping, densely cross-referenced
+  docs where a rushed split risks breaking SHA-evidence trails or chronological-journal evidentiary chains (the
+  "PB.N confirmed PB.M" cross-reference style in the research-journal docs specifically). This routes the
+  audit-scope finding to a proper follow-up unit per CLAUDE.md's findings-triage rule, not a deferral of the audit
+  itself — the audit (todo 1) is complete with every candidate identified and personally verified. Todo 4
+  (security_and_cross_cutting_master direction) also closed clean — no retags found. Remaining open work: the 3
+  `[SPLIT]` todos.

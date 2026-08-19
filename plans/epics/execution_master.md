@@ -212,8 +212,14 @@ design-comment mentions).
 
 ## Assigned active plans
 
-_(no active plans currently declare `parent_epic: execution_master`. Audit-pool wrapper plans for this epic land here as
-they are dispatched. See [README.md](README.md) for the audit→plan→epic flow.)_
+### [`strategy_archetype_latency_deployment_profile_execution_2026_08_10`](../active/strategy_archetype_latency_deployment_profile_execution_2026_08_10.md)
+
+**status**: active (`assigned_vm: planning`, AO-dispatched) · **estimate**: 4.0 cal AI-days (class: brand-new)
+**title**: Execution — wire archetype-declared deployment-profile requirements into runtime-topology.yaml + derive
+deployments from active archetypes. Retagged from `strategy_master` 2026-08-19 (execution_master_scope audit) — the
+whole doc is deployment-profile/co-location infra derivation from archetype latency needs, matching the operator's
+named "co-location" execution_master scope, not strategy config/parameterization. See
+[the audit issue](/plans/active/issues/execution_master_scope_scattered_across_strategy_and_cross_cutting_2026_08_19.md).
 
 ## Folded-in epic: Trading Agent Master (folded 2026-08-18)
 
