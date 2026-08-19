@@ -180,8 +180,12 @@ None — no finding this run met the narrow mechanical carve-out bar.
    bug described under Doc-drift above (see Progress Log for filing confirmation).
 2. **`BLK-7d1f4a2d`** (P0, big finding) — `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s stalled
    liquidations re-derive (see Phase 1 batch-7 findings above). Raised via `/api/slots/4/blocked` — durable lookup
-   `GET /api/blocked/BLK-7d1f4a2d`, survives slot reassignment. Options A/B/C given, recommendation A. Answer not
-   yet received as of this write-up — check on next tick.
+   `GET /api/blocked/BLK-7d1f4a2d`, survives slot reassignment. Options A/B/C given, recommendation A. **Answered
+   2026-08-19T19:24:44Z by operator: A** (dispatch a live-status check now, update the doc either way). Tracked as a
+   `- [ ]` todo directly on the target plan (new `## Liquidations re-derive live-status check` section, end of
+   `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`) rather than executed inline this pass — the check
+   itself (cross-referencing MDPS commits 2026-08-12→2026-08-16 against current shard counts) is genuinely new
+   scoped work, not a mechanical reconciliation fix.
 
 ## Archive candidates (operator review)
 

@@ -963,3 +963,21 @@ alone was proven misleading here) before declaring the re-derive done.
 
 - **na-eligibility-audit 2026-08-17** [body-hash:d7d2cf1fc4fcf46e]: KEEP-NA, stale-items closed — full 953-line re-read end-to-end. Closed 2 of 8 open items with hard evidence: the WIF cross-cloud-identity item (now DONE 2026-08-16, verified live) and the combo_chain expiration-field item (ruled "no separate field needed" 2026-08-16, doc-update follow-up tracked separately in data_pipeline_alert_storm_ops_ao_dispatch_2026_08_15.md). 3 items are citation-hold class (a) redirects to other active/dated-scoped docs (chain-relabel part 2, date-sharding, VM-rightsizing — the latter two explicitly marked OUT-OF-SCOPE by batch19's own 2026-08-13 operator-scoping ruling). Remaining 3 (liquidations root-cause umbrella, ~4,113+ wrong-inverse-notional re-derive, full re-drive attribution question) are live, multi-session data-correctness investigations, not bounded single-worker tasks. Doc stays assigned_vm: NA.
 - **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:4aec390d342cbb16]: KEEP-NA, valid — re-confirmed, same 6 open items as the marker above (hash drift only, no new staleness found on this pass). 3 are citation-hold (chain-relabel migration part 2 → dedicated phased plan `cefi_chain_relabel_migration_options_futures_2026_08_15.md`; MDPS per-date sharding + MDPS VM rightsizing → both explicitly OUT-OF-SCOPE per batch19's 2026-08-13 operator ruling, not re-litigated), tagged DEPENDENCY_BLOCKED. 3 are live, multi-session data-correctness investigations (liquidations root-cause umbrella; ~4,113+ wrong-inverse-notional re-derive — both blocking code bugs fixed, re-launch + 3-way verification not yet confirmed executed; full re-drive population-attribution question — an ambient 439-VM fleet may already cover it, needs live scope confirmation before flipping), tagged GENUINE_WORK. Doc stays assigned_vm: NA.
+
+## Liquidations re-derive live-status check — operator ruling 2026-08-19
+
+**Operator ruling** (`BLK-7d1f4a2d`, answered 2026-08-19T19:24:44Z, decision **A**): dispatch a live-status check now
+on the liquidations re-derive population (has it silently run and gone uncited, or is it genuinely stalled) and update
+this doc either way. Raised by `plan_reconciler` (dispatch `agt-07473e`) after the sports-tranche hunter fan-out found
+no substantive progress logged here since 2026-08-12 despite continued adjacent `market-data-processing-service` work
+through 2026-08-16 not cited back to this doc. Full finding detail:
+`plans/active/issues/plan_reconciler_findings_sports_2026_08_19.md`.
+
+- [ ] [DATA] P0. **Run the live-status check the operator ordered** — confirm whether the ~4,113-5,232-shard
+      knowably-wrong-inverse-notional re-derive (line 599) and the full re-drive (line 741) have progressed since
+      2026-08-12 (check `market-data-processing-service` commits 2026-08-12→2026-08-16 for anything touching this
+      path that wasn't cited back here, plus current GCS/manifest shard counts against the 2026-08-17 na-eligibility-
+      audit's cited populations). Update this doc's Progress Log with the answer either way (silently-progressed →
+      cite the shas and correct the stale population counts; genuinely stalled → say so explicitly and either resume
+      it or escalate why it can't proceed). Done when: this doc's open liquidations items (line 599, line 741) reflect
+      verified-current state, not an 8-day-stale snapshot.
