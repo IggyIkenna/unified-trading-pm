@@ -179,10 +179,44 @@ resolved_by:
       `deployment-service/scripts/vm/launch-mdps-backfill-vm.sh` — known params from the prior launch:
       `cefi 2020-01-01 2026-01-31`, `--data-types liquidations`, `--date-concurrency 2`, `e2-standard-4`; confirm the
       exact prior command from the 2026-08-16 launch record before running a ~2-3 day VM.
-- [ ] [SCRIPT] P1. **Investigate why the dedicated liveness watchdog (`uts-prod-consolidator-liveness-watchdog`) did
+- [x] [SCRIPT] P1. ✅ **Investigate why the dedicated liveness watchdog (`uts-prod-consolidator-liveness-watchdog`) did
       not alert** on this 41+-hour outage despite being documented live/healthy (point 5 above) — either fold into
       this fix or file as its own follow-up once root-caused; a watchdog that misses the exact condition it exists
       for is itself a gap.
+      **ROOT-CAUSED + FIXED 2026-08-19T~23:1xZ (slot-10) — `unified-trading-library@53abdf72f3`.** Deployed reality
+      first (both confirmed live, not from docs): the fast/slow-tier split (`consolidator_liveness_scheduler.tf`) IS
+      applied — `uts-prod-consolidator-liveness-watchdog-{fast,slow}-cron`, both ENABLED; `market-data-tick-cefi` is
+      on the **slow** tier (hourly-cadence buckets, `15,45 * * * *`, `cycle_sec=3600 cycles_grace=2` → 7200s DOWN
+      threshold) since it's one of the 12 categories `manifest_consolidator_schedule` widened to `0 * * * *`. Cloud
+      Logging on the slow-tier job at `2026-08-19T21:45:45Z` (mid-outage, canonical frozen since 08-18T02:13:57Z per
+      this doc's point 1) shows: `consolidator-liveness: market-data-tick-cefi-prd-central-element-323112 -> ok` —
+      **direct proof the watchdog was silently fooled, not merely mis-scheduled.** Traced to
+      `unified_trading_library/manifest_writer/_state.py::_consolidator_heartbeat_age_sec`, which PREFERS
+      `_consolidator_latest_run_age_sec` (reads `_index/latest.json`'s `last_run_at`) over the canonical blob's own
+      mtime. `_index/latest.json` is written on **every** consolidator cycle — including the lock-skip no-op this
+      incident's todo 1/2 diagnosed (`success=True, no_op_lock=True, error_reason="locked"`) — by design, per
+      `_write_latest_run_summary`'s own docstring ("written on EVERY run … so `last_run_at` always reflects
+      liveness"), a 2026-08-18 fix for a DIFFERENT false-positive (`sports_odds_vm_consolidator_stale_stall_2026_08_18.md`,
+      a migrator tool bumping the canonical blob's mtime without the consolidator running). That fix's premise —
+      "any latest.json write proves liveness" — is false for a locked no-op: the process fired but produced nothing,
+      and the SAME lock blocks the next cycle too, so `last_run_at` refreshes forever while the canonical stays
+      frozen — exactly this incident (41.6h, zero `CONSOLIDATOR_DOWN` alerts). **Fix**: `_consolidator_latest_run_age_sec`
+      now returns `None` (composite reader falls through to the genuinely-stale canonical blob mtime) whenever the
+      latest run's own `no_op` + `error_reason=="locked"` — every other no-op shape (idle-touch, unchanged) is
+      unaffected, preserving the 2026-08-18 fix's intent. This also restores `assert_consolidator_healthy`'s
+      read-path loud-fail for the same condition (shared function). Regression:
+      `tests/unit/test_manifest_writer_consolidator_latest_run_locked_noop.py` (3 tests: locked no-op excluded,
+      non-locked no-op still counts, composite reader falls back to blob mtime end-to-end — mirrors the exact
+      measured contradiction above). QG green (full run, sentinel + post-push ancestry verified). The watchdog's
+      running Cloud Run job image has not yet picked up this source change — same MTDS image-rebuild step tracked
+      as its own todo below (shared with todo 2's fix; no Cloud Build has been triggered for either yet, so no
+      `cloudbuild=<id>` evidence exists to cite here).
+- [ ] [INFRA] P2. **Rebuild the `market-tick-data-service:latest` image (MTDS `BASE_IMAGE_DIGEST` bump) so BOTH
+      shipped fixes reach their running Cloud Run jobs** — todo 2's `_UNPROVABLE_MERGE_MAX_SHARDS` cutoff (currently
+      only live via the manual marker-restore recovery, not the deployed cron image) and this todo's
+      `_consolidator_latest_run_age_sec` locked-no-op exclusion (currently live nowhere — the watchdog's Cloud Run
+      job still runs the pre-fix image). One rebuild event closes both; cite `Evidence: cloudbuild=<id>` on this
+      checkbox once triggered and resolved SUCCESS.
 
 ## Progress Log
 
