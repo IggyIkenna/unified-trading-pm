@@ -178,7 +178,7 @@ BRANCH="live-defi-rollout"
 FILES=()
 
 if [[ $# -lt 1 ]]; then
-  echo "Usage: $0 \"<commit message>\" --files \"path1 path2 ...\" [branch]" >&2
+  echo "Usage: $0 \"<commit message>\" --files \"path1 path2 ...\" [--agent] [branch]" >&2
   exit 2
 fi
 MSG="$1"
@@ -191,6 +191,18 @@ while [[ $# -gt 0 ]]; do
       # shellcheck disable=SC2206
       FILES=($1)
       shift
+      ;;
+    --agent)
+      # No-op: quickmerge.sh's CLAUDE.md-documented `--agent` convention has no
+      # distinct behavior here, but an agent caller passing it (as CLAUDE.md's
+      # ship-script parity implies) must not have it silently swallowed as the
+      # target BRANCH -- see safe_doc_push_unrecognized_flag_silently_becomes_
+      # branch_name_2026_08_18.md.
+      shift
+      ;;
+    -*)
+      echo "Refusing: unrecognized flag '$1'. Usage: $0 \"<commit message>\" --files \"path1 path2 ...\" [--agent] [branch]" >&2
+      exit 2
       ;;
     *)
       BRANCH="$1"
