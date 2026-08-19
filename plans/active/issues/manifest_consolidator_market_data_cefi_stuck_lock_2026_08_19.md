@@ -37,8 +37,10 @@ author: claude-agent
 source: "plan_reconciler sports-tranche run (agt-07473e), live-status check ordered by operator ruling BLK-7d1f4a2d"
 priority: P0
 parent_epic: mtds_mdps_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
+assigned_role: data_engineering
+sequential: true
 drift_direction: advance-code
 depends_on: []
 locked_by:
@@ -122,27 +124,33 @@ resolved_by:
   (`instruments-{cefi,tradfi,defi,prediction}`, `features-{cefi,defi,tradfi,calendar}`, `strategy`, `execution`,
   `ml-training-artifacts`) or is scoped to `market-data-cefi` alone — not checked this pass.
 
-## Recommended next steps (options, for whoever picks this up — human or a dispatched engineering session)
+## Todos
 
-- **(C) Check first, cheapest**: `gcloud run jobs executions describe uts-prod-manifest-consolidator-market-data-cefi-rsgbc`
-  and `-nfgs5` (the two long runs) — are either still shown as running / were either force-cancelled? If yes, that is
-  very likely the "sibling cron" the lock check is deferring to, and clearing/reaping that specific execution may be
-  sufficient without touching any code.
-- **(B) If C doesn't explain it**: read `unified_trading_library/manifest_consolidator.py`'s lock acquire/release +
-  staleness-check code, confirm whether it has any TTL/expiry at all, and fix the gap (this workspace's own
-  `manifest-consolidator-ssot.md` already documents a prior, structurally similar class of "no fallback / fails
-  closed" fix for the content-write-marker — the lock likely needs the same kind of TTL-based self-healing).
-- **(A) Safe, low-cost verification either way**: `gcloud run jobs execute uts-prod-manifest-consolidator-market-data-cefi
-  --region=asia-northeast1 --project=central-element-323112` (manual execution is documented SAFE in the SSOT, CAS
-  prevents double-write) — given every cycle is currently hitting the same lock check, this will very likely ALSO
-  no-op and confirm the diagnosis cheaply, but won't fix it alone.
-- Once the canonical index resumes updating (verify via the same `get_blob_metadata` generation check in point 1),
-  **re-launch the liquidations re-derive** (`cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s own P0
-  monitor-to-completion item) — the contract_size/margin_type fixes are already shipped and correct; this outage is
-  the only known remaining blocker.
-- Separately investigate why the liveness watchdog didn't alert (point 5) — either as part of this issue or its own
-  follow-up, since a watchdog that doesn't catch a 41+-hour outage of the exact condition it exists for is itself a
-  gap.
+- [ ] [SCRIPT] P0. **Check whether either of the two abnormally-long executions today is the phantom lock's holder** —
+      `gcloud run jobs executions describe uts-prod-manifest-consolidator-market-data-cefi-rsgbc` and `-nfgs5`
+      (`--region=asia-northeast1 --project=central-element-323112`; the two runs from point 2 above, 13:34:59→15:36:14
+      and 16:34:58→18:33:05, both ~2h vs the normal ~1min). If either is still shown as running, or was force-cancelled
+      without releasing its lock, that is the (contained, code-free) explanation — reap/clear it and re-verify point 1
+      (canonical blob `generation` advances on the next hourly cycle). Done when: confirmed cause either way.
+- [ ] [SCRIPT] P0. **If the zombie-execution check doesn't explain it, read `unified_trading_library/manifest_consolidator.py`'s
+      lock acquire/release + staleness-check code**, confirm whether it has any TTL/expiry at all, and fix the gap
+      (this workspace's own `manifest-consolidator-ssot.md` already documents a structurally similar "no fallback /
+      fails closed" fix for the content-write-marker — the lock most likely needs the same kind of TTL-based
+      self-healing, so a crashed/killed holder can't wedge every future cycle forever). Ship via quickmerge, gate
+      green. Done when: the fix is live and a fresh hourly cycle genuinely merges (not just reports `success=True`).
+- [ ] [SCRIPT] P0. **Verify recovery end-to-end**: confirm the canonical
+      `market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` blob's `generation`/
+      `last_modified` has advanced (via UTL `get_storage_client().get_blob_metadata(...)`, never a subprocess
+      `gcloud storage`/`gsutil` call — QG-enforced) past `2026-08-18T02:13:57.708000+00:00` /
+      `generation=1787019237694916`. If not yet cleared naturally, `gcloud run jobs execute
+      uts-prod-manifest-consolidator-market-data-cefi --region=asia-northeast1 --project=central-element-323112`
+      (documented SAFE in the SSOT) after the above fix lands. Once confirmed, **re-launch the liquidations re-derive**
+      (`cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md`'s own P0 monitor-to-completion item) — the
+      contract_size/margin_type fixes are already shipped and correct; this outage was the only remaining blocker.
+- [ ] [SCRIPT] P1. **Investigate why the dedicated liveness watchdog (`uts-prod-consolidator-liveness-watchdog`) did
+      not alert** on this 41+-hour outage despite being documented live/healthy (point 5 above) — either fold into
+      this fix or file as its own follow-up once root-caused; a watchdog that misses the exact condition it exists
+      for is itself a gap.
 
 ## Progress Log
 
@@ -150,3 +158,7 @@ resolved_by:
   `plan_reconciler_findings_sports_2026_08_19.md`'s Filed section for the escalation id) and cited into
   `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s Progress Log answering the operator's BLK-7d1f4a2d
   live-status-check order.
+- **2026-08-19T20:00:32Z**: `BLK-336884f2` answered by operator — **A** (dispatch an engineer/session to
+  investigate+fix the consolidator lock now). Doc flipped `assigned_vm: NA` → `assigned_vm: planning` +
+  `execution_scope: orchestrator-agent` this same edit, options above converted to tracked `- [ ]` todos, so AO
+  backlog regen picks this up per the operator's decision rather than it sitting as inert prose.

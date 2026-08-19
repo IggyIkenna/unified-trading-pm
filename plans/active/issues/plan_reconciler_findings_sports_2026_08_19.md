@@ -190,7 +190,8 @@ None — no finding this run met the narrow mechanical carve-out bar.
    writing zero rows (`error=locked`). Zero Slack alerts fired in 72h despite a documented liveness watchdog. Full
    evidence in the new issue doc. Alerted via `/api/slots/4/blocked` — `BLK-336884f2`, durable lookup
    `GET /api/blocked/BLK-336884f2`. Options A (dispatch investigation now) / B (manual execute + monitor, unlikely
-   alone to fix) / C (defer), recommendation A. Also recorded in
+   alone to fix) / C (defer), recommendation A. **Answered 2026-08-19T20:00:32Z by operator: A.** Issue doc flipped
+   `assigned_vm: planning` + real `- [ ]` todos so AO backlog regen picks it up. Also recorded in
    `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`'s own Progress Log (the BLK-7d1f4a2d todo there is now
    flipped `[x]` with this finding as its answer).
 
