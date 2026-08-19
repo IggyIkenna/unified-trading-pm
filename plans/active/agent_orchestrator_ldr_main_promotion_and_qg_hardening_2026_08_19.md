@@ -184,32 +184,53 @@ answered. Executing them is still real work; re-deriving the answer is not.
 collected, 4,146 passed / 8 skipped / 0 failed, 421s full run): **77.41% branch coverage / 79.28% statement
 coverage** against `pyproject.toml`'s declared `fail_under = 70`.
 
-- [ ] [INFRA] P0. **The 70% floor is declared but NOT actually enforced — fix the gate itself first.**
+- [x] [INFRA] P0. ✅ **The 70% floor is declared but NOT actually enforced — fix the gate itself first.**
       `scripts/quality-gates.sh` (~line 115) runs `python -m pytest tests/ -q -p no:cacheprovider` with **no
       `--cov` flag at all** — `pyproject.toml`'s `fail_under = 70` never gets checked by the automated gate,
       coverage only reflects reality when someone runs it by hand (as this session's research pass did). This is
       the single highest-value Phase 2 fix: wire `--cov=server --cov-report=term-missing --cov-fail-under=70` (or
       the calibrated new floor from the next todo) into the actual QG pytest invocation. Done-when: a deliberately
-      under-70%-covering change fails `quality-gates.sh` locally.
-- [ ] [BACKEND] P1. **Raise the enforced floor from 70% toward the measured 77.41%, incrementally** — e.g. 72-73%
+      under-70%-covering change fails `quality-gates.sh` locally. **DONE — `agent-orchestrator@7f798432ef`.**
+      Wired `--cov=server --cov-report=term-missing --cov-fail-under=72` directly (combined with the next todo).
+      Verified via a real full `quality-gates.sh` run: `Required test coverage of 72% reached. Total coverage:
+      78.86%`, 4395 passed / 0 failed.
+- [x] [BACKEND] P1. ✅ **Raise the enforced floor from 70% toward the measured 77.41%, incrementally** — e.g. 72-73%
       as a first milestone, not straight to the current number (leaves zero regression headroom) and not an
       arbitrary round figure. Wire into the same `--cov-fail-under` flag as the todo above (one combined change if
       convenient). Done-when: QG passes at today's level and fails on a real regression below the new floor.
-- [ ] [BACKEND] P1. **Zero-coverage files — the highest-value gap, not the lowest-percentage one.**
+      **DONE — `agent-orchestrator@7f798432ef`.** Set to 72% (`pyproject.toml`'s `[tool.coverage.report]
+      fail_under` + the CLI flag, kept in sync). Mechanically guaranteed by pytest-cov's `--cov-fail-under` to fail
+      any run under the floor — real measured total after this batch is 78.86%, real headroom above 72%.
+- [x] [BACKEND] P1. ✅ **Zero-coverage files — the highest-value gap, not the lowest-percentage one.**
       `server/creds_env_poller.py` (0.00%, 106 lines), `server/kimi_balance.py` (0.00%, 46 lines),
       `server/kimi_balance_poller.py` (0.00%, 67 lines) have NO tests at all, not just weak ones. One todo per
-      file: write a real test suite (not a smoke test) for each.
+      file: write a real test suite (not a smoke test) for each. **DONE — `agent-orchestrator@7f798432ef`.** All 3
+      now 100% statement + 100% branch coverage: `creds_env_poller.py` (24 tests, verified stable across 3 runs),
+      `kimi_balance.py` (14 tests), `kimi_balance_poller.py` (14 tests, including real thread lifecycle + `_loop`
+      resilience branches).
 - [ ] [BACKEND] P2. **Worst-covered-by-percentage, split per file** (each gets its own todo when picked up, don't
       batch): `server/routes/vms.py` (20.34%, 177/237 missing), `server/gemini_translation_smoke.py` (31.21%,
       147/228), `server/routes/ops.py` (33.59%, 67/110), `server/routes/resource_watchdog.py` (34.58%, 57/93),
       `server/notifications/telegram.py` (37.96%, 68/115), `server/fleet_slot_snapshot_poller.py` (40.00%, 25/51),
       `server/routes/repo_blockers.py` (41.27%, 29/55), `server/worker_liveness/_respawn.py` (42.28%, 108/192),
       `server/auto_park_reconcile.py` (43.59%, 29/58), `server/worktree_setup.py` (45.33%, 31/63).
-- [ ] [BACKEND] P1. **Worst-covered-by-VOLUME, prioritize these over the percentage list above** — concurrency/
+- [~] [BACKEND] P1. **Worst-covered-by-VOLUME, prioritize these over the percentage list above** — concurrency/
       dispatch-critical, highest absolute missing-line count, exactly what multi-agent-on-itself dispatch stresses
       hardest: `server/server.py` (37.69%, 325 lines missing), `server/gcs_sync.py` (42.45%, 238 missing),
       `server/tmux_spawn.py` (69% cov but 230 missing — large file, worth it despite a decent %),
-      `server/autospawn.py` (83% cov but 216 missing — same reasoning).
+      `server/autospawn.py` (83% cov but 216 missing — same reasoning). **2/4 DONE —
+      `agent-orchestrator@7f798432ef`.** `server.py`: 37.44%→52.05% scoped (66-line reduction; `lifespan()`'s
+      ~685-line async-context-manager body deliberately deferred — booting a real app or hand-mocking ~30
+      background-loop imports judged high-risk/low-ROI for a bounded pass, flagged as its own follow-up below).
+      `gcs_sync.py`: 42.45%→87-88% (also surfaced + fixed a real bug, see Progress Log). `tmux_spawn.py` and
+      `autospawn.py` still open — dispatched in the same wave as the percentage-list todo above, see Progress Log.
+- [ ] [BACKEND] P2. **`server.py`'s `lifespan()` async-context-manager body (~lines 141-826, ~685 lines) — the
+      single largest remaining coverage gap in the repo, deliberately deferred out of the bounded volume-coverage
+      pass above.** Wires ~30 real background loops/watchdogs (tmux, GCS, Slack, DB canaries, etc.) on server
+      startup/shutdown. Closing it needs either a real-app boot test (real threads/subprocess/tmux/GCS calls — high
+      flake/side-effect risk on a shared host) or hand-mocking ~30 imports individually (fragile, low logic-density
+      per line). Scope this properly before attempting — likely wants dependency-injection seams added first
+      rather than mocking `server.py` module globals directly.
 - [ ] [INFRA] P2. **Give the suite a real unit/integration split.** All 274 test files sit flat under
       `tests/test_*.py` — no subdirectories, and the existing `unit`/`integration`/`smoke`/`host_load_sensitive`
       pytest markers are each used in only ~1 file, so there is no cheap way to run a fast subset (confirmed
@@ -364,3 +385,22 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
   placeholder fix. All 4 Phase 1 todos now `[x]` with inline DONE evidence above. Phases 2-4 not yet started this
   session — pausing here to report back before continuing, given the unplanned infra detour and the size of what's
   left.
+- **2026-08-19 (same session, continued via `/autonomous`)**: Operator directed "do the rest of the work
+  /autonomous" — applying `AUTONOMOUS_AGENT_RULES.md` + `SUB_AGENT_MANDATORY_RULES.md`, driving Phases 2-5 to
+  completion on a self-paced loop, no further check-ins unless a genuine impossibility is hit. Phase 2 wave 1
+  shipped — `agent-orchestrator@7f798432ef`: `--cov` wiring + 72% floor, 3 zero-coverage files to 100%, `gcs_sync.py`
+  42%→88%, `server.py` 37%→52% scoped (real full-suite verification: 4395 passed, 0 failed, 78.86% total coverage).
+  Fanned out via 5 parallel sub-agents (different files each, per the max-5-parallel / gate-and-ship-stays-serial
+  rule) — one sub-agent (server.py) stalled mid-task waiting on a notification it can't receive as a sub-agent
+  (backgrounded its own coverage baseline run, then stopped); resumed it via SendMessage with corrective guidance
+  (run bounded foreground commands only) rather than redispatching from scratch, and it completed successfully on
+  resume. One sub-agent's coverage pass on `gcs_sync.py` surfaced a real bug — `upload_state_to_gcs()` had no
+  try/except around its storage-client call, unlike every sibling upload function and its own S3 mirror's
+  documented "never raises" contract, so a transient GCS outage during a snapshot tick propagated and skipped the
+  S3 mirror + git commit for that tick — fixed directly (small, clear, in-scope per findings-triage) rather than
+  just documented, and updated the sub-agent's own test to assert the corrected behavior. Also had to `uv sync` a
+  stale local `.venv` mid-session (another concurrent session's already-landed `tiktoken`/`mcp` deps weren't
+  installed locally yet — confirmed via `pyproject.toml`/`uv.lock` before syncing, not a real basedpyright
+  regression). Worst-by-volume todo is 2/4 done (`tmux_spawn.py`/`autospawn.py` still open, marked `[~]`); a new
+  P2 todo split out for `server.py`'s `lifespan()` — deliberately deferred as its own scoping problem, not a quick
+  add. Wave 2 (remaining volume files + all 10 worst-by-percentage files) dispatched next, same message.
