@@ -876,14 +876,22 @@ investigation confirmed are both achievable with existing primitives:
       his machine too, not just Harsh's. Repo: agent-orchestrator. **Resolved 2026-08-19 (same session)**: not the
       `stat` bug — a SEPARATE, bigger bug found checking Harsh's own log: `ao-fleet-sync-tick.sh` called bare
       `python3` for both `ao-usage-push.py` and `ao-liveness-heartbeat.py`. Under cron's real minimal PATH that
-      resolves to system Python (no `pydantic` installed), not this repo's `.venv` — so **every single scheduled
-      tick, for BOTH operators, since the cron was first installed, silently crashed** (`/tmp/ao-fleet-sync-9002.log`
-      full of `ModuleNotFoundError: No module named 'pydantic'`; confirmed by reproducing under
+      resolves to system Python (no `pydantic` installed), not this repo's `.venv` — so **every scheduled tick on
+      Harsh's own host, since his cron was first installed, silently crashed** (`/tmp/ao-fleet-sync-9002.log` full
+      of `ModuleNotFoundError: No module named 'pydantic'`; confirmed by reproducing under
       `env -i PATH=/usr/bin:/bin`). Fixed by pinning to `${SCRIPT_DIR}/../../.venv/bin/python3` explicitly (fallback
       to bare `python3` only if the venv is missing) — verified under the same simulated cron-minimal-PATH before
-      shipping. Evidence: `agent-orchestrator@6e5c8ccc57`. Live-verified after shipping:
-      `ikenna-tab2/4/6` all now `status=active` with fresh timestamps — his fleet-sync is genuinely healthy now, not
-      just no-longer-crashing. **Separately confirmed, not a bug**: `harsh-tabN` rows still don't appear for THIS
+      shipping. Evidence: `agent-orchestrator@6e5c8ccc57`. **Correction, same session, operator caught it**: the
+      Progress Log originally claimed this as a BOTH-operators bug and credited this fix with `ikenna-tab2/4/6`
+      going `active` shortly after shipping — both wrong. Ikenna's cron runs on his own separate machine against
+      his own separate checkout; confirmed `/tmp/ao-fleet-sync-9001.log` does not even exist on this host, so his
+      already-running cron job could not have picked up a fix that only landed on `origin/live-defi-rollout` without
+      his own `git pull` — nothing shipped this session could mechanically have caused his recovery. The observed
+      timing was coincidental (his own tick cycle, independent of this fix), not causal. Whether Ikenna's host ever
+      hit this exact bug is **unconfirmed** — his log was never read, his host's `python3` resolution was never
+      checked, and no access to his machine exists from this session. Confirmed scope: this bug is proven on Harsh's
+      host only; the fix is real and correct regardless of whether it was ever needed elsewhere. **Separately
+      confirmed, not a bug**: `harsh-tabN` rows still don't appear for THIS
       session specifically — `resolve_tab_number()` only matches a `-tabs-(\d+)-` cwd-slug segment, and this
       session's own transcript lives under the bare `-active-unified-trading-system-repos` project slug (no
       `.tabs/N` segment), unlike Ikenna's, whose active tabs are each opened with `.tabs/N` as their own VS Code
