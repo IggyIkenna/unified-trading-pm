@@ -78,11 +78,14 @@ exclusion. No downstream consumer is currently claiming corporate-actions capabi
 
 ## Todos
 
-- [ ] [REVIEW] P1. **Confirm current blast radius** — is `corporate_actions_handler.py`'s CLI (`--operation
-      corporate_actions --mode batch`) actually invoked by a scheduled/production job today, or built-but-never-run?
-      Unlike an earlier draft of this doc claimed, `earnings_results` (the yfinance leg of the SAME handler) is
-      genuinely dispatched — so the Polygon leg is at minimum wired into a real, callable operation, not orphaned
-      code; what's unconfirmed is whether anything actually schedules it.
+- [x] ✅ [REVIEW] P1. **EXTRACTED 2026-08-18 (na-eligibility-audit, tradfi tranche, dispatch agt-31bfcb) →
+      `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 1.** Confirm current blast radius — is
+      `corporate_actions_handler.py`'s CLI (`--operation corporate_actions --mode batch`) actually invoked by a
+      scheduled/production job today, or built-but-never-run? Unlike an earlier draft of this doc claimed,
+      `earnings_results` (the yfinance leg of the SAME handler) is genuinely dispatched — so the Polygon leg is at
+      minimum wired into a real, callable operation, not orphaned code; what's unconfirmed is whether anything
+      actually schedules it. Bounded, worker-determinable investigation — dispatched separately from todos 2/3
+      below, which stay genuinely operator/design-gated.
 - [ ] [OPERATOR] P1. **Decide the re-sourcing path** — evaluate yfinance's `Ticker.dividends`/`Ticker.splits` first
       (same library already live in this file for earnings, see "real precedent" section above) before considering
       a paid data contract; confirm whether yfinance's coverage/reliability is acceptable for the tickers this
@@ -95,3 +98,8 @@ exclusion. No downstream consumer is currently claiming corporate-actions capabi
 
 **2026-08-18 — filed.** Found live during EVENT_DRIVEN archetype registry work in unified-api-contracts; not
 independently re-derived, this is a direct-read confirmation of the adapter's real import chain.
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **RECLASSIFY, per-todo split.** Todo 1
+  (blast-radius confirmation) is bounded/worker-determinable — extracted to
+  `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 1 (conflict-cleared, zero existing coverage). Todos 2
+  (OPERATOR re-sourcing decision) and 3 (contingent registry declaration, gated on todo 2) stay genuinely
+  operator-gated / contingent. Doc stays `assigned_vm: NA`.

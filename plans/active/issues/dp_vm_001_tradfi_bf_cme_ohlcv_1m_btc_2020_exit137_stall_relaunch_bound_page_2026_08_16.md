@@ -316,3 +316,6 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
   (BACKEND run.log pull+diagnose) extracted, narrowed to exclude the 2 VMs already billing-root-caused elsewhere —
   see checkbox above. Todo 1 (operator relaunch decision) stays genuinely gated. "Recommended decision" item 3
   converted to a tracked `[OPERATOR]` todo (was untracked prose). Doc stays `assigned_vm: NA`.
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — reaffirmed.** Sole
+  remaining open todo (the `≤2/(vm-prefix,day)` relaunch-bound tightening policy question) is unchanged, genuinely
+  operator-gated. `assigned_vm` unchanged.

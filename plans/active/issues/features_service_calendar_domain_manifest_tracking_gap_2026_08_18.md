@@ -89,10 +89,18 @@ than silently worked around, per findings-triage (outside every currently-open p
 - [ ] [AGENT] P2. **If yes: wire `record_captured` (or the calendar-appropriate equivalent) into
       `corporate_actions_handler.py`, `economic_results_handler.py`, `forexfactory_handler.py`, and the
       `calendar_orchestrator.py` dispatch path.**
-- [ ] [DOC] P3. **Add a one-line note to `batch_handler.py` on why calendar has no distinct paper mode** (reuses
-      batch output directly, or is genuinely unbuilt — state which, once confirmed).
+- [x] ✅ [DOC] P3. **EXTRACTED 2026-08-18 (na-eligibility-audit, tradfi tranche, dispatch agt-31bfcb) →
+      `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 2.** Add a one-line note to `batch_handler.py` on
+      why calendar has no distinct paper mode (reuses batch output directly, or is genuinely unbuilt — state which,
+      once confirmed). Bounded, worker-determinable (read the code, confirm the fact, document it) — dispatched
+      separately from todos 1/2 above, which stay genuinely design/contingent-gated.
 
 ## Progress Log
 
 **2026-08-18 — filed.** Found answering an operator question, not from a dedicated audit — narrow, direct-read
 confirmation across 4 handler files, not a corpus-wide sweep of every features-service domain.
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **RECLASSIFY, per-todo split.** Todo 3
+  (paper-mode doc note) is bounded/worker-determinable — extracted to
+  `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md` todo 2 (conflict-cleared, zero existing coverage). Todo 1
+  (Layer-1 EXPECTED-universe design question) and todo 2 (contingent `record_captured` wiring, gated on todo 1)
+  stay genuinely design/contingent-gated. Doc stays `assigned_vm: NA`.

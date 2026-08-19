@@ -92,8 +92,27 @@ recaptured on every subsequent run.
   source audit's live read on the same day; a future session picking this up should re-measure rather than trust
   this number if meaningfully more time has passed.
 
+## Todos
+
+- [ ] [DATA] P3. **Root-cause which capture path is still fetching/writing the deprecated-ETF tickers
+      (`ETHE`/`GBTC`/`BITO`/`FBTC`/`ARKB`/`FETH` at `NYSE`/`NYSE_ARCA`/`BATS`/`CBOE_BZX`)** going forward — check
+      whether a venue adapter's own instrument-universe resolution, an MVP scope filter that doesn't cover these
+      specific tickers, or a stale reference-data cache is the source. Open-ended investigation, not a bounded
+      single action.
+- [ ] [DATA] P3. **Re-measure the current re-accumulated row count** against the 2026-08-18 baseline (5,932 rows)
+      before acting further — the figure is from a same-day live read during an unrelated audit and should not be
+      trusted without a fresh confirmation if meaningfully more time has passed.
+- [ ] [DATA] P3. **Once root-caused: fix the forward-going source AND re-purge** the re-accumulated rows — a second
+      one-off purge without fixing the source would just re-accumulate again, per the same mechanism that produced
+      this count in the first place. Gated on the root-cause todo above.
+
 ## Progress Log
 
 - **2026-08-18**: filed while checking Priority-3 ownership of this side finding (tracked backlog pass). Confirmed
   via corpus-wide grep this re-accumulation was flagged but never tracked as its own item anywhere —
   `assigned_vm: NA` pending root-cause investigation into the still-active capture path.
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — converted prose to
+  tracked todos (HARD RULE: every follow-up is a `- [ ]` todo, never prose).** The doc's own "Explicitly not yet
+  done" section named 3 real follow-up items that existed only as prose — added as tracked checkboxes above,
+  content unchanged. All 3 are genuine open-ended investigation/execution work (root cause unknown, needs
+  exploration), not a single worker-determinable outcome. `assigned_vm` unchanged.

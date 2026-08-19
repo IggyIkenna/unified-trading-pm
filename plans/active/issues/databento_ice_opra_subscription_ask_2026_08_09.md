@@ -115,3 +115,8 @@ incur real metered billing the moment they're queried.
   running backfill VMs), narrowing the ask to only the genuinely-excluded ICE/OPRA datasets. This is a real
   billing/subscription commitment decision (`CREDENTIAL_BLOCKED`), not a missing key -- correctly `assigned_vm: NA`.
 - **context-scout 2026-08-14**: populated context_scope (1 entry).
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — reaffirmed.** Both
+  todos remain a billing/subscription decision (`CREDENTIAL_BLOCKED`) plus its contingent code follow-up; only
+  intervening change was plan_reconciler's 2026-08-18 citation fix to todo 2 (now names
+  `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` directly). `assigned_vm`
+  unchanged.

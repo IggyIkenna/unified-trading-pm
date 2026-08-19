@@ -243,6 +243,13 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   `plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md` live and confirmed `status: archived` +
   its combined todo `[x]` with evidence. Remaining 2 open todos (P2 residual catalogue-leg purge needing separate
   operator confirmation; the all-AG foundation-drive NEXT items) stay genuinely open. `assigned_vm` unchanged.
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — reaffirmed, 2 open
+  todos unchanged.** Line 77 (top-level Gated-Phase-2 rollup) is ongoing coordination/monitoring work (backfill
+  fleets to completion, image-rebuild sequencing, catalogue regen) — not a single worker-determinable outcome. Line
+  387 (residual 2-leg catalogue purge) independently re-verified KEEP-NA-STALE: confirmed live that
+  `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` (`status: active`, `assigned_vm: planning`)
+  todo 1 covers this exact item verbatim (NASDAQ/NYSE SPOT_PAIR 318 rows + 12 cefi-singles rows) — citation already
+  correct (added by plan_reconciler 2026-08-18). `assigned_vm` unchanged.
 
 ## Historical progress log (tradfi track, moved verbatim from the umbrella 2026-07-24)
 

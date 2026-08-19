@@ -913,3 +913,9 @@ operator activation.
   `tradfi_satellite_ao_dispatch_batch12_2026_08_10.md` / `tradfi_satellite_ao_dispatch_batch12_2026_08_10_finalize.md`
   AO-dispatch pair. Content itself unreviewed by this entry — this fixes the linkage gap only.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — reaffirmed (6th
+  consecutive pass).** 0 open native todos (live grep confirmed). NOT an ARCHIVE candidate: `archive_exempt: true`,
+  tranche aggregated-reference umbrella / `check_ag_closeout_linkage.py` linkage anchor, with still-open dependent
+  children gating archival per PLAN_FORMAT.md regardless. Only intervening changes were the plan_reconciler
+  child-digest count corrections (Split-notice table) and a context-scout touch — neither shifts this disposition.
+  `assigned_vm` unchanged.
