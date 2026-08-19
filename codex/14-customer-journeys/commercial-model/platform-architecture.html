@@ -569,6 +569,18 @@
       </p>
 
       <div class="callout">
+        <span class="tag">Why this differs from the SigningSurface code enum</span>
+        <p>
+          <strong>Verified against source.</strong> One internal code artefact
+          (<code>SigningSurface</code> in <code>unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>)
+          lists <code>FIREBLOCKS_MPC</code> and has no distinct Ceffu member. That is not a contradiction of the roster
+          above: Ceffu's signing routes through Copper (<code>CEFFU_ROUTES_VIA_COPPER_NOTE</code>), and the Fireblocks
+          entry carries <code>SigningSurfaceStatus.OUT_OF_SCOPE</code> — retained for future flexibility, not wired
+          today. The working stack is Copper plus CEFFU, as stated above.
+        </p>
+      </div>
+
+      <div class="callout">
         <span class="tag">Ownership, stated correctly up front</span>
         <p>
           Operating something and owning it are different questions, and this document is careful to keep them apart.
@@ -1229,14 +1241,6 @@
         </div>
       </div>
 
-      <p>
-        Worth noting what the same machinery does elsewhere, because it is the clearest evidence that the venue layer is
-        genuinely registry-driven rather than hand-built per venue: the identical staked-basis structure runs on Solana
-        against Drift, posting jitoSOL and mSOL as margin. Different chain, different staking protocol, different LST,
-        no bespoke engine — the registry row differs and the leg builder adapts. Each of those still took real integration
-        work to stand up; what the architecture removed is the need to do it again from scratch every time.
-      </p>
-
       <div class="callout">
         <span class="tag">Adding an LST — where the boundary falls</span>
         <p>
@@ -1281,8 +1285,8 @@
       </details>
 
       <p>
-        Beyond Carry &amp; Yield the platform also carries arbitrage, statistical arbitrage, DeFi liquidity provision,
-        volatility, market making, event-driven, liquidation capture and directional families. Those were never in scope of
+        Beyond Carry &amp; Yield the platform also carries structural arbitrage, statistical arbitrage, portfolio,
+        volatility, market making, event-driven and directional families. Those were never in scope of
         your agreement, and they are the clearest example of why the carve-out in §11 is drawn where it is.
       </p>
 
@@ -3099,7 +3103,7 @@
         your venue set are in scope; the other Carry &amp; Yield variants in §3 are within the same family but outside the
         engagement, and are offered to you first with a thirty-day right of first refusal; and the strategy families
         outside Carry &amp; Yield altogether — arbitrage, market making, ML-directional, event-driven, volatility,
-        statistical arbitrage, rules-directional, liquidation capture, DeFi liquidity provision — are outside it entirely.
+        statistical arbitrage, rules-directional and portfolio — are outside it entirely.
         Naming all three tiers up front is what keeps the non-compete workable for both sides.
       </p>
     </details>
@@ -3287,10 +3291,8 @@
           The figures previously sent are being re-run rather than restated. We are extending the testing window, adding
           hedge mark-to-market and execution costs, and re-running everything against the canonical dataset. We expect the
           updated numbers to come out broadly similar and possibly a little more conservative — but much better evidenced,
-          which is the point of §5. Across everything tested so far we are increasingly confident the strategies generate
-          consistent positive annualised returns, generally ranging from single digits into double digits depending on
-          market conditions. We would rather hand you a smaller number we can defend line by line than a larger one we
-          cannot.
+          which is the point of §5. We would rather hand you a smaller number we can defend line by line than a larger one
+          we cannot.
         </p>
       </div>
 
