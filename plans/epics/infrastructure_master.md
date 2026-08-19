@@ -5,7 +5,7 @@ summary:
   L4 cross-cutting umbrella for infra — shard-axis matrix + data-status drilldown surface, VM launcher /
   deployment-build maturity, AWS↔GCP parity, Cloud Build health, and the LDR→main CI/CD pipeline; every asset_group
   umbrella consumes the shard-axis endpoint shipped here.
-status: active
+status: superseded # (was: active; superseded 2026-08-18, folded into security_and_cross_cutting_master, see banner — cross-epic sweep 2026-08-19: this file was left status:active with no banner while its 4 sibling folds all got one)
 nature: process
 asset_group: [infrastructure]
 stage: [meta]
@@ -75,10 +75,19 @@ related_plans:
   - ../active/strategy_service_centralization_fixes_2026_08_16.md
   - ../active/strategy_service_centralization_fixes_finalize_2026_08_16.md
   - ../active/venue_readiness_and_registry_hardening_2026_08_16.md
-last_updated: 2026-07-14 # was: 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
+last_updated: 2026-08-19 # was: 2026-07-14 — superseded 2026-08-18 (folded into security_and_cross_cutting_master), status/banner corrected in the cross-epic sweep 2026-08-19 (was left status:active with no SUPERSEDED-BY banner unlike its 4 sibling folds). Prior: was 2026-07-12 — stale vs. the body's own 2026-07-13 addendum (10-way utl_reuse phase split), never bumped when added [finding 83, synced 2026-07-14]. Prior: was 2026-06-19 — stale vs. related_plans' cicd_mvp_ldr_to_main_pipeline_2026_06_30 entry (added without a bump); corrected alongside the body edits below [finding 69, §A2 B-queue]
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 ---
+
+> **⚠️ SUPERSEDED-BY 2026-08-18**: This epic was renamed to
+> [`security_and_cross_cutting_master.md`](security_and_cross_cutting_master.md) per
+> [`/codex/11-project-management/epic-taxonomy-2026-08-18.md`](/codex/11-project-management/epic-taxonomy-2026-08-18.md)
+> (its CI-topic references carved out to [`ci_master.md`](ci_master.md), UAC-topic references carved out to
+> [`uac_master.md`](uac_master.md), the remainder renamed in place as the narrowed `security_and_cross_cutting_master`).
+> This file is kept as **archaeology only** — DO NOT add new work here. New active plans declare
+> `parent_epic: security_and_cross_cutting_master` (or `ci_master` / `uac_master` for the carved-out topics) in
+> frontmatter. Full epic-flow SSOT: [`README.md`](README.md).
 
 ## Audit 2026-05-07
 

@@ -214,7 +214,7 @@ epic-taxonomy restructure's Phase 6 close-out — see
 [`plans/active/epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`](../active/epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md).
 23→22: `infrastructure_master` folded into `security_and_cross_cutting_master`, `escalation_and_disaster_recovery_master`
 folded into `observability_master`, `dart_and_promote_master` and `trading_agent_master` folded into their consumers,
-`global_ledger_pnl_attribution_master` folded into `batch_live_symmetry_master`/`system_readiness_master` — net effect
+`global_ledger_pnl_attribution_master` folded into `strategy_master` — net effect
 5 folds, 2 new epics (`uac_master`, `security_and_cross_cutting_master` replacing `infrastructure_master`),
 `ci_master` split out of the old infra umbrella. Superseded/archived epic files excluded (unchanged):
 `cross_cutting_may_23_SUPERSEDED_2026_05_21.md`, `manifest_evolution_SUPERSEDED_2026_05_21.md`,
