@@ -533,3 +533,17 @@ prior author's text. Checkbox correctly left unchecked — window-1 still has li
 unverified. Filed no new issue doc (this doc already owns the tracking); skipping this task with `reason_code: GATED`
 rather than re-dispatching on a fixed cadence, since the productive next check is once the residual ranges close or
 the 277-day figure stops dropping.
+
+**2026-08-19T19:48Z (slot 33, dispatched as review-role, task assigned_role=data_engineering)** — Re-dispatched item 1
+again, ~14h after the slot-31 entry immediately above. Live-reconfirmed rather than trusting the prior timestamp: fresh
+`census_odds_api_gap_verify_2026_08_02.py` run shows 277/2266 missing days, **byte-identical** to the 05:57Z reading
+(same 2 residual ranges inside window-1: 2026-06-25..07-02, 2026-07-07..07-10) — genuinely zero new information this
+dispatch. VM `mtds-backfill-odds-20260817-062648` still RUNNING. **Root-caused why this keeps happening**: the
+2026-08-09 dispatcher gate (`prereqs.prerequisites: [sports_odds_backfill_chain_converged_to_target_range]`) was
+attached to task id `...-9d92e47b666d`, which no longer exists — the live task id is now `...-bbab759cd4a7` (confirmed
+via `GET /api/backlog`) and its `prereqs.prerequisites` in the live `agent-orchestrator/data/config/backlog.yaml` reads
+`[]` (root-clone read-only check, not editable from this worker session). Filed
+[`ao_backlog_task_id_churn_orphans_handtuned_prereqs_2026_08_19.md`](ao_backlog_task_id_churn_orphans_handtuned_prereqs_2026_08_19.md)
+covering the general mechanism + an immediate-mitigation todo (re-attach the gate to the current id — needs
+main/operator write access to the root-clone yaml, out of scope here). Checkbox still correctly left unchecked. Skipping
+with `reason_code: GATED`.
