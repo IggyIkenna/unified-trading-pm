@@ -458,10 +458,25 @@ actual leverage point §Pattern clustering's evidence points to.
       structured report). Parameterizes: a scan function and an output formatter (text/JSON/CSV). Build against
       `teams_coverage_census_2026_08_05.py` (instruments-service) as the worked example. Done-when: same bar as
       above.
-- [ ] [DOC] P2. Add a "Template roster" table to `scripts/migrations/README.md` (the stub Phase 0's first todo
+      **MOSTLY DONE (2026-08-19) — one done-when criterion NOT yet met.** `template_audit.py` exists
+      (`AuditConfig`/`run_audit`/`AuditResult`, hooks: `scan` (returns a structured `AuditFindings` report),
+      optional `columns` for bounded column-projected reads; `AuditSection`/`scalar_section`/`value_counts_section`
+      builder helpers; `format_text`/`format_json`/`format_csv`/`format_findings` output formatters — no
+      `write_mode`/mutation path at all, structurally distinct from the other 4 templates), with a full worked
+      example (`scripts/migrations/lib/templates/examples/example_audit_teams_coverage_census.py`) reproducing
+      `teams_coverage_census_2026_08_05.py`'s 4 sections end to end, and 15 unit tests. `quality-gates.sh` green
+      (deployment-service, 295s non-cached, 3565 passed/5 skipped/0 failed). Shipped `deployment-service@34520ac0ae`.
+      **NOT done**: no real Phase-1/2/3 file was refactored to IMPORT/parameterize the template — the real source
+      script lives in instruments-service, out of this template's own change scope. **Remaining**: at Phase 3
+      (instruments-service relocation), refactor a real audit-shaped file to import `template_audit.py`.
+- [x] [DOC] P2. Add a "Template roster" table to `scripts/migrations/README.md` (the stub Phase 0's first todo
       creates) listing all 5 templates, the operation-shape each covers, and a one-line "when to use this one"
       guide — this is what a future script author actually reads before writing anything, so it needs to be
       genuinely usable, not just a changelog entry. Cross-reference from `migration-script-ssot.md` (Phase 4).
+      **DONE (2026-08-19).** All 5 rows present (purge, canonicalize, backfill, reconcile, audit), each with a
+      "when to use this one" guide column, built incrementally as each template shipped — landed in the same
+      commits as the templates themselves (`deployment-service@412482d831`, `@c2557e5dfb`, `@34520ac0ae`). The
+      `migration-script-ssot.md` cross-reference is deferred to Phase 4 (that doc doesn't exist yet).
 
 ---
 
@@ -614,18 +629,53 @@ Follow-up items 1+2, now scoped as real todos per the operator's dispatch-scope 
       (engine/core imports, sibling-script dynamic loading) more than instruments-service's GCS/manifest-only
       scripts do — expect a similar in-place-only outcome for any strategy-service Phase 3 candidates, not a
       relocation-by-default assumption.
-- [ ] [DATA] P3. **unified-trading-library** (2 files — `scripts/migrate_manifest_v8.py`, `scripts/
+- [x] [DATA] P3. **unified-trading-library** (2 files — `scripts/migrate_manifest_v8.py`, `scripts/
       check_consolidator_lock_orphan_status_2026_08_17.py`). Relocate to `deployment-service/scripts/migrations/
       unified-trading-library/`. Note: UTL is a dependency of every other service (per
       `/codex/04-architecture/tier-and-import-architecture.md`'s tier rules) — confirm neither script is itself
       imported by UTL's own package code (only invoked as a standalone CLI) before moving, `grep -rn` for
       `from scripts.migrate_manifest_v8\|import migrate_manifest_v8` across the UTL package.
-- [ ] [DATA] P3. **client-reporting-api** (1 file — `scripts/backfill_history.py`). Relocate to `deployment-service/
+      **DONE (2026-08-19).** Both files confirmed clean (0 grep hits anywhere in the UTL package or repo).
+      `migrate_manifest_v8.py` relocated — its `Delete-when` (v9 walk complete + no v8 rows remain) is NOT
+      satisfied (`master_data_canonicalisation_migration_catalogue_2026_06_07.md` line 286, still an open P0 todo),
+      so it's genuinely active, not dead weight. Hit a real deployment-service Import-Patterns violation on the
+      relocated deep import (`unified_trading_library.migrations.upgrade_manifest_to_v8.run_migration`, not
+      top-level-exported) — resolved with the fleet's established `# noqa: qg-deep-import` convention (same pattern
+      already used in `deployment_service/data_pipeline_monitors/*`). `check_consolidator_lock_orphan_status_
+      2026_08_17.py` LEFT IN PLACE — its own `Delete-when` (the DIAG todo it names) is already satisfied (resolved
+      2026-08-17, ruled a non-issue), so it's dead weight, correctly archived-in-place rather than relocated;
+      annotated in-file with the resolving evidence. Both repos' `quality-gates.sh --no-fix` green (UTL 208s;
+      deployment-service 464s full-tree). Shipped `unified-trading-library@7ca07546d8` (source: delete +
+      annotate) and `deployment-service@c477ba1aef` (destination: add relocated file).
+- [x] [DATA] P3. **client-reporting-api** (1 file — `scripts/backfill_history.py`). Relocate to `deployment-service/
       scripts/migrations/client-reporting-api/`.
-- [ ] [DATA] P3. **deployment-api** (1 file — `scripts/cleanup_ghost_venue_manifest_rows.py`). Relocate to
+      **RESOLVED-EXCLUDED (2026-08-19) — not relocated, plan's own scope assumption was wrong.** This file is NOT
+      migration-shaped despite matching the filename-pattern sweep that pulled it into Phase 2 — it's live,
+      load-bearing product code with two hard runtime import dependencies on its exact current path:
+      `client_reporting_api/cli/backfill_command.py` (`sys.path.insert` + `from backfill_history import (...)`,
+      backing the `client-reporting-manage backfill` subcommand) and `client_reporting_api/cli/onboard_command.py`
+      (`from scripts.backfill_history import backfill_client`, the `onboard` subcommand's final step) —
+      `scripts/quality-gates.sh` itself documents this coupling as deliberate. Its `DATA_DIR` is also read by ~10
+      other core modules (`pnl_chart_generator.py`, `monthly_report_generator.py`, `backfill_store.py`,
+      `invoice_state.py`, `dashboard_generator.py`, `transfer_collector.py`, several CLI commands, tests) — this is
+      client-reporting-api's own reporting-data pipeline, not a cross-environment migration artifact. Relocating it
+      would strand load-bearing logic in an unrelated ops repo with no import path back (would make
+      client-reporting-api depend on deployment-service, backwards from the tier architecture) and would require
+      touching the two importer files, outside this todo's single-file scope. `client-reporting-api/scripts/
+      quality-gates.sh --no-fix` green (113s, unmodified). No files changed in either repo; nothing to ship.
+- [x] [DATA] P3. **deployment-api** (1 file — `scripts/cleanup_ghost_venue_manifest_rows.py`). Relocate to
       `deployment-service/scripts/migrations/deployment-api/`. Note the mild irony (deployment-api is
       deployment-service's own API sibling) — still worth moving for the same "one canonical registry" reason as
       every other repo, not exempted just because it's adjacent.
+      **DONE (2026-08-19).** Its `Delete-when` (prod-run completed + manifest orphan-sweep=0) has no positive
+      evidence of satisfaction in git history/issue docs/Progress Logs — treated as still-open per the plan's
+      literal todo text, relocated (only the docstring's invocation-path example updated; logic, lifecycle
+      markers, and imports unchanged since both repos already depend on `unified_trading_library`/
+      `unified_api_contracts` directly). No dangling references in either repo. Both repos' `quality-gates.sh
+      --no-fix` green (deployment-api 238s; deployment-service full-tree, multiple runs, 464s-1029s across
+      concurrent verification passes). Shipped `deployment-api@e6e226bb70` (source: delete) and
+      `deployment-service@f0f23a86a7` (destination: add relocated file + stale `.gitkeep` cleanup for both this
+      and the unified-trading-library subdirectory).
 - [ ] [DATA] P3. **e2e-testing** (the 6 genuine GCS-migration files identified in §Discovery's exclusion note —
       `scripts/defi/migrate_legacy_twins_from_audit.py`, `scripts/defi/migrate_uniswap_v4_legacy_to_canonical.py`,
       `scripts/defi/copy_lst_yields_prd_to_canonical_2026_07_14.py`,
