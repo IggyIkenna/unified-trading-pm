@@ -141,11 +141,19 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
       non-streaming — real evidence the documented streaming gap doesn't break the CLI, just costs one wasted
       round trip per turn (a candidate for the still-open streaming-support todo in
       `codex_luna_flex_bridge_2026_08_14.md`, not fixed here — out of this plan's scope).
-- [ ] [REVIEW] P1. Characterize concurrency + timeout behavior for real: multiple simultaneous in-flight tool
-      calls on the SAME bridge process, and Codex's own `tool_timeout_sec` MCP config (defaults to null per the
-      prototype, unconfirmed real behavior) against a genuinely slow tool (a long-running Bash command, not the
-      20s synthetic sleep already tested). Done when: a documented real ceiling (or confirmed "no ceiling
-      observed up to N seconds") exists, not assumed from the prototype's one 20s data point.
+- [x] [REVIEW] P1. ✅ Characterize concurrency + timeout behavior for real — **DONE 2026-08-19**, both against live
+      Codex/ChatGPT credentials (isolated local pilot). **Concurrency**: two fully independent tool-use turns
+      fired via real `asyncio.gather` at the SAME bridge process (distinct `thread_id`s
+      `01a018d0-0fcb-73b2-b0a2-79b05567cf64` / `01a018d0-105b-7b60-beeb-7634e9512b3e`), resolved in REVERSE
+      creation order specifically to rule out an accidental FIFO-only assumption — both sessions' final answers
+      correctly quoted their OWN distinct secret value (`ALPHA-VALUE-3047` / `BETA-VALUE-9182`) with zero
+      cross-contamination, confirming `ThreadSessionRegistry`'s per-`tool_use_id` isolation holds under real
+      concurrent load, not just by code inspection. **Timeout**: a real tool-use turn paused, then a genuine
+      90-SECOND wall-clock wait (measured, `time.monotonic()`-timed) before sending the `tool_result` — 4.5x the
+      prototype's earlier untested 20s data point. Result: `HTTP 200`, Codex genuinely accepted the delayed
+      result and produced the correct final answer (`SLOW-VALUE-6600`). **No timeout ceiling observed up to
+      90s** — Codex's `tool_timeout_sec` MCP config default (`null` per the prototype) holds in practice at this
+      duration, not just in the config default's stated intent.
 - [x] [SCRIPT] P1. ✅ `bash scripts/quality-gates.sh` green — **DONE 2026-08-19**: `✅ agent-orchestrator quality
       gate PASSED` (ruff lint/format, basedpyright 0 errors, 4196 pytest passed/8 skipped, pip-audit clean,
       dashboard tsc+vitest green). Two real basedpyright errors and 2 unformatted files caught and fixed first
@@ -244,9 +252,21 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
   other concurrent local sessions sharing it — see the SessionStart collision warning — so the gate is
   genuinely resource-queued, not stalled).
 
-  **Honestly still open after this entry**: todo 5 (concurrency/timeout characterization — multiple simultaneous
-  tool calls, a genuinely slow tool, Codex's own `tool_timeout_sec`) has NOT been attempted yet; todos 6-9
-  (ship via quickmerge, deploy to the live VM, the operator-gated `codex-luna` unpause, final archival) are all
-  still open, in that order.
+  Shipped: quality gates ran fully green (`✅ agent-orchestrator quality gate PASSED` — ruff/basedpyright/4196
+  pytest/pip-audit/dashboard tsc+vitest) after fixing 2 real basedpyright errors + reformatting 2 files; shipped
+  via quickmerge as `agent-orchestrator@ea9ecd2b4e` on `live-defi-rollout` (this repo's `promotion_model:
+  ldr_terminal` — LDR IS the deploy target).
+
+- **2026-08-19 (later, same day) — todo 5 (concurrency + timeout characterization) done, real evidence, no code
+  changes needed.** Two more live experiments (isolated local pilot, same real credentials): (1) two fully
+  independent tool-use turns fired concurrently via `asyncio.gather`, resolved in REVERSE creation order — zero
+  cross-session contamination, `ThreadSessionRegistry`'s per-`tool_use_id` isolation holds under real concurrent
+  load. (2) A real 90-second wall-clock delay between a tool-use pause and its `tool_result` (4.5x the
+  prototype's untested 20s data point) — Codex still accepted the delayed result and answered correctly; no
+  timeout ceiling observed at this duration. Full detail on both todo checkboxes above.
+
+  **Honestly still open after this entry**: todos 8 (deploy to the live VM + verify), 9 (operator-gated
+  `codex-luna` unpause — NOT mine to do, per this plan's own Non-goals and the operator's 2026-08-16 "disabled"
+  instruction), and 10 (final archival, gated on everything above) remain open, in that order.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:b86998d38ce6877d]: KEEP-NA, valid — doc's own Progress Log records an explicit same-day operator decision (human plan, not AO-dispatched); every todo is part of one multi-file, multi-day rewrite of live-dispatch-critical-path machinery (codex_bridge_server.py) including a prod VM deploy/restart and a live account unpause — exactly the class not to auto-bundle into RECLASSIFY.
