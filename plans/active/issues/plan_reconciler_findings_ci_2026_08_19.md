@@ -96,7 +96,268 @@ during Phase -1, not carried forward from a prior run's claim.
 
 ## Hunter dispatch (Phase 1 / STEP 3)
 
-_(populated as batches are dispatched/return)_
+**6 parallel read-only hunter batches dispatched** (sonnet, `SUB_AGENT_MANDATORY_RULES.md` pasted in full at each
+spawn) over the 31 docs not already covered by Phase -1:
+
+- Batch A — QG/host-contention cluster (5 docs) — **RETURNED**
+- Batch B — pytest-timeout flaky series (5 docs)
+- Batch C — quickmerge/glue-runner/CI infra cluster (6 docs)
+- Batch D — ldr-to-main/promote + unified-api-contracts cluster (6 docs)
+- Batch E — misc cluster 1 (5 docs)
+- Batch F — misc cluster 2 (4 docs)
+
+### Batch A candidate ledger (pre-verification)
+
+**C1 — Doc self-contradiction + codex corroboration (P1, borders P0 — opposing directives on a security posture).**
+`ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md:534` — open `[OPERATOR] P0` todo: "RULED
+2026-08-06, option (a)... Keep `unified-trading-pm` public and self-hosted; close the fork-PR code-execution hole
+instead of moving CI or making the repo private" (re-affirmed "STILL the current exposure" at L557, dated
+2026-08-08) — contradicted by the SAME doc's own L610-620 + Deferred table L702: "Complete the public-repo
+migration — DONE 2026-08-07... PM's 8 self-hosted runners... fully deregistered" — and by
+`/codex/07-security/self-hosted-runner-security-posture.md:80-89`: "the `unified-trading-pm` exposure is RESOLVED
+(2026-08-07)... Standing invariant going forward: never register a self-hosted runner pool on a public repo." The
+open todo prescribes the OPPOSITE remediation path (harden fork-PR-approval, keep self-hosted) from what the doc's
+own later content + codex show was actually adopted (full revert to `ubuntu-latest`). Not a missed-flip (the todo
+as literally written was never executed — a different, superseding fix shipped instead) — needs STEP 4 verify then
+resolution (likely: close/annotate L534 as superseded-by-the-actual-remediation, not flip to `[x]`).
+
+**Missed flips**: none found (checked all 12 open todos across the 5 docs for hidden-completion evidence).
+
+**Archive candidates**: none new — `fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` has 0 open
+checkboxes but is correctly `archive_exempt: true` (set 2026-08-09, real prose-only open work) — verified-clean,
+not a finding.
+
+**H1 — Systemic truncated na-eligibility-audit entries (P2).** 4 of 5 docs have a `na-eligibility-audit 2026-08-18
+(ci tranche)` Progress Log entry cut off mid-sentence at EOF: `fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md:626`,
+`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md:826`,
+`ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md:880`,
+`deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md:213`. Identical truncation shape
+across 4 independently-authored docs suggests a systemic bug (likely a length cap) in the 2026-08-18 na-eligibility-
+audit ci-tranche run's own append path, not 4 coincidental typos — the stated verdict lands before each cutoff, so
+no routing decision was lost. `deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md` has NO
+2026-08-18 entry at all (possible coverage gap in that run, or correctly out of scope — undeterminable from this
+doc alone). Cannot safely reconstruct the cut-off text (would be fabrication) — route only, do not attempt a fix.
+
+**H2 — Stale/missing `last_updated` frontmatter, 5 of 5 docs (P3, mechanically fixable).**
+`fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md` (2026-08-03, 15d stale),
+`fleet_wide_qg_self_hosted_runner_capacity_crisis_2026_07_27.md` (field absent),
+`ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md` (field absent),
+`deployment_api_mtds_meta_missing_blocks_workspace_qg_step_5_83_2026_08_03.md` (2026-08-03, 15d stale),
+`deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md` (2026-08-06, 11d stale) — all should
+bump to match each doc's own actual last Progress Log entry date.
+
+### Batch D candidate ledger (ldr-to-main/promote + unified-api-contracts cluster) — pre-verification
+
+**F1 — Missed flip (P2), HARD evidence.** `ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md:276-279`'s
+sole remaining blocking todo ("start/hold a genuinely clean 60-consecutive-minute window... before declaring this
+incident `resolved`") was independently confirmed satisfied 5 days before this audit —
+`ci_satellite_ao_dispatch_batch13_2026_08_13.md:143-166`: "✅ CONFIRMED CLEAN 2026-08-14... the 60-min clean-window
+bar is met — exceeded ~168x over" — but that same entry explicitly deferred reconciling the source doc's checkbox
+to `ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md`, and a grep of that finalize doc for the topic returns
+zero hits — the deferral was never honored.
+
+**F2 — Contradiction (P2).** `github_actions_operator_gated_followups_2026_07_17.md:266`'s operator table asserts
+"MTDS promote PR #601 blocked on QG failure... Real, current" — contradicted by live `market-tick-data-service` git
+log showing 5 successful `chore(promote): LDR → main` merges dated TODAY (2026-08-19: `27b1cc20`, `85b4b63d`,
+`77319e07`, `c0bd7382`, `cada444d`, tags through `v0.144.20`), plus an earlier successful promote-merge already
+recorded 2026-08-07 in the sibling doc. Caveat from the hunter: PR #601's literal open/closed state by number was
+not independently verified — only the headline "blocked" claim, which the live promote history contradicts.
+
+**F3 — Truncation instances (P2) — ADD TO EXISTING FILED DOC, do not re-file.** A dedicated issue doc
+`plans/active/issues/na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md` was filed TODAY (before this
+run) already tracking this exact truncation-bug pattern (2 instances, explicitly notes "this run did not do a
+corpus-wide sweep"). Batch D found 2 MORE instances: `ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md:343`,
+`silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md:235`.
+
+**F4 — Stale `last_updated`, 2 docs (P3).** `ldr_to_main_promote_fleet_queued_run_cancelled_livelock_2026_08_07.md:44`
+(2026-08-07, 11d stale), `silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md:30` (2026-07-17, never
+once bumped across ~9 dated passes).
+
+**F5 — Cross-tranche stuck item (P3, informational only — not ci-tranche's to fix).**
+`github_actions_operator_gated_followups_2026_07_17.md:410-420`'s slot-concurrency revisit-date is 17 days overdue;
+the doc's own na-eligibility-audit passes explicitly decline it as "cross-tranche (ao, not ci)" — structurally
+nothing in the normal ci-tranche cadence will ever revisit it. Worth an `ao`-tranche pickup, not actionable here.
+
+**Missed flips (other)**: none beyond F1. **Contradictions (other)**: none beyond F2. **Codex-alignment /
+archive-candidates**: none — checked `ci-cd-flow.md`, `ci-alerting.md`, `self-hosted-runner-security-posture.md`
+against this batch's claims, no drift either direction; no doc in this batch is a zero-checkbox candidate. Docs
+`promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md`,
+`unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14.md`, and its `_finalize` pair
+are CLEAN — no findings (finalize-plan coverage explicitly verified as complete, no gap).
+
+### Batch B candidate ledger (pytest-timeout flaky series) — pre-verification
+
+**Finding A — Codex-alignment drift (P2), codex is stale/incomplete.**
+`/codex/06-coding-standards/quality-gates.md`'s "Sanctioned timeout overrides" section documents only
+`IGNORE_TIMEOUT`/`PYRIGHT_TIMEOUT` — zero hits for `PYTEST_TIMEOUT` (measured: `grep -c`), despite this entire
+~2,900-line 5-doc incident chain living on `PYTEST_TIMEOUT_SECONDS`/`PYTEST_TIMEOUT`/`PYTEST_TIMEOUT_RETRIES`
+(confirmed live in `base-library.sh`/`base-service.sh`, used across 7+ repos). This is an ADDITION of missing
+content, not a single-fact substitution — does not cleanly qualify for the narrow mechanical-codex-staleness
+auto-apply carve-out (STEP 5.f2 requires no invented content); routing rather than auto-fixing.
+
+**Finding C — Truncation instances (P1, systemic) — ADD TO EXISTING FILED DOC.** 2 more confirmed instances (1 new,
+1 re-confirmed) beyond the already-filed `na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md`:
+`pytest_timeout_60s_flaky_under_contention_continued2_2026_08_03.md:149` (new, literal EOF),
+`pytest_timeout_60s_flaky_under_contention_continued3_2026_08_03.md:565` (re-confirmed, doc grew, now literal EOF).
+Also re-confirmed still-present: `..._continued_2026_08_02.md:985` (mid-word truncation, NOT at EOF — a later entry
+was appended after it, meaning the bug can leave a truncated entry stranded mid-document, not just at file end).
+Strong pattern: every truncation instance across Batches A/B/D is a `na-eligibility-audit 2026-08-18 (ci tranche)`
+entry, always on an `assigned_vm: NA` doc — worth naming this correlation explicitly when updating the filed issue.
+
+**Finding D — Stale `last_updated`, 4 of 5 docs (P3).** All 4 dated pytest-timeout docs stale by 2-14 days (3 of
+them "corrected" once already by plan_reconciler 2026-08-16 and already drifted stale again); doc5 has no
+`last_updated` field at all.
+
+**Finding E — Missing cross-links (P3).** Doc1's `related:`/`context_scope` lists none of its 3 continuation docs,
+despite all 3 naming doc1 as parent — a reader following only doc1's own frontmatter has no path to ~30 more
+escalation entries in the chain.
+
+**Finding F — Line-cap proximity warning (P3, informational).** doc1 (998/1000 lines) and doc2 (989/1000 lines) are
+within single-digit lines of the HARD cap — both already self-document redirecting new entries elsewhere, so not a
+current violation, but flagged for the next writer.
+
+**Finding G — Stale path in a CODE comment (P3, out of plan_reconciler's `plans/**`-only write scope).**
+`features-service/scripts/quality-gates.sh:~43` cites `plans/active/qg_governor_glue_runner_ledger_coordination_2026_08_03.md`,
+which has since moved to `plans/archive/2026_08/...` — a code-comment fix, not a plan-doc fix; noting only, not
+actioned by this run.
+
+**Missed flips / contradictions**: none found beyond what's noted above (doc3's todo1 bundling a landed-tracking
+clause with a not-yet-resolved recurrence clause is a wording nit, not a hidden-evidence violation). **Archive
+candidates**: none — every doc has ≥1 genuinely open checkbox.
+
+### Batch F candidate ledger (misc cluster 2) — pre-verification
+
+**F-A — Missed flip (P2), HARD evidence, wrong-repo-guessed.**
+`git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md:77-82`'s 2 open todos ("locate the
+ahead-count computation, likely agent-orchestrator... fix it to compare against each repo's own tracked branch")
+already shipped — 6 days BEFORE this doc was even filed — but in a different repo than the todos guessed:
+`unified-trading-pm/scripts/dev/slot-git-status-report.sh:312-326` (commit `b92d9ba52fe`, 2026-08-11, "fix:
+unified-trading-ci false git-health ahead warning" — special-cases `unified-trading-ci` → `main`). Doc stays
+`status: open`, `assigned_vm: planning` (AO-dispatchable) with no Progress Log entry acknowledging the fix exists —
+risks a future AO dispatch re-investigating an already-fixed mechanism in the wrong repo.
+
+**F-B — NEW finding (P2), not covered by any existing todo — the real mechanism behind THIS run's own boot-time
+false-positive nudge.** This run's own slot-1 boot heartbeat received `unified-trading-pm: AHEAD=1 unpushed` when
+the repo was actually clean seconds later. Doc 1's diagnosed mechanism does NOT explain this (PM carries no
+`integration_branch` override in `workspace-manifest.json`, so comparing against `live-defi-rollout` is correct for
+PM — doc 1's fix, even where it applies, wouldn't have prevented this). The REAL gap: `agent-orchestrator/server/worker_liveness/_git_alerts.py:532-534`
+(`maybe_nudge_on_red_repos`) fires on the "ahead" branch with **zero age/sustain threshold** — unlike the sibling
+`dirty` branch 3 lines later (`age_s > 3600`) and `behind` branch (`age_s > 600`) in the SAME function, and unlike
+the sibling Slack-paging function `maybe_alert_git_staleness`, which enforces a 90-min sustain
+(`GIT_RED_SUSTAIN_S`) for its own "ahead" case. A momentary ahead=1 reading (e.g. a commit landing slightly before
+its push in the normal two-pass ship flow) can fire this in-session nudge on the very next ~5-min-cadence tick —
+only a 30-min re-nudge throttle exists (doesn't stop the FIRST fire). Needs a new todo (not a fix to doc 1's
+existing ones): add an age/sustain threshold to the "ahead" branch of `maybe_nudge_on_red_repos`, mirroring its own
+sibling branches.
+
+**F-C — Contradiction (P2).** `unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md:13-14` claims
+"THREE independent, un-synced registries" answer "what branch does repo X integrate on" (enumerates A/B/C only) —
+but `slot-git-status-report.sh:313-315` is a 4th, independently hand-maintained copy of the same fact (the one F-A
+just fixed) that the doc's problem statement and its still-open `[OPERATOR]` registry-collapse decision don't
+account for. Currently correctly populated (no live bug), but the doc undercounts its own problem scope.
+
+**F-D — Hygiene (P3).** Doc 1's `context_scope` cites only the read-only consumer
+(`agent-orchestrator/server/worker_liveness/_git_alerts.py`), never the actual fix site
+(`slot-git-status-report.sh`) — should be updated once F-A/F-B are resolved.
+
+**F-E — Hygiene (P3, low-confidence, not misleading).** `post_cutover_silent_assumption_sweep_2026_07_23.md` has 2
+stale line-citations (content unchanged, just line-shifted from doc growth) — `:139-142` cites
+`reconcile_release_tags.py:51` (now L72), `:307-308` cites `ci-cd-flow.md:1413` (now L1456).
+
+**Missed flips (other) / contradictions (other)**: none beyond F-A/F-C. **Archive candidates**: none — all 4 docs
+have genuine open work (doc 3's `sequential: true` gating is correctly holding, verified against its own 8
+na-eligibility-audit passes).
+
+### Batch C candidate ledger (quickmerge/glue-runner/CI infra cluster) — pre-verification
+
+**G1 — Contradiction (P2), rationale-accuracy not reclassification.**
+`quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md`'s sole open todo (step 3, broaden the
+branch-check) repeatedly cites (2026-08-09/10/18 audit entries) "gated on `scripts/quickmerge.sh` ownership
+contention with `ci_satellite_ao_dispatch_batch4_2026_07_31.md`'s own todo 1" as its blocker — but
+`plans/archive/2026_08/ci_satellite_ao_dispatch_batch4_finalize_2026_07_31.md:118-126` shows that contention was
+CLEARED 2026-08-09 ("BOTH blockers cleared, ready for batch-5 extraction... `scripts/quickmerge.sh` is free
+again"), and batch4 itself is `status: complete`, archived. The recommended follow-up ("batch-5 or later should
+extract it") was never executed — batch5/6/15 all just carry the stale framing forward. The UNDERLYING disposition
+is correct (step 3 genuinely still undone — live-verified `qg-environment.sh` still checks only `branch == "main"`,
+its own header comment says "deliberately" pending this doc) — this is a stale REASON-CITED, not a wrong verdict.
+Fix: correct the doc to cite only the still-live "awaiting operator design ruling" reason, drop the stale
+"ownership contention" framing.
+
+**G2/G3 — Hygiene (P3).** `quickmerge_environment_autodetect_forces_dev_off_main_2026_07_25.md`'s `context_scope`
+lists `quickmerge.sh` but not `qg-environment.sh` (now the actual single-source-of-truth per its own header
+comment); stale `last_updated` in `image_build_validate_stranded_on_deregistered_glue_runners_2026_08_07.md`
+(2026-08-07 vs. Progress Log through 2026-08-18) and `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`
+(2026-08-14 vs. 2026-08-18 audit entry, low confidence — several sibling docs have no `last_updated` field at all,
+so this may not be a corpus-wide convention).
+
+**G4 — FYI, not a contradiction (P3).** 2 open todos in different docs ask the identical design question
+(standing repo-visibility/runner-registration-drift alert on `unified-trading-ci`) — already self-aware
+cross-referenced, just worth merging into one tracked item when ruled on.
+
+No missed flips, no zero-checkbox/archive candidates, no codex-alignment drift found in either direction (checked
+`/codex/08-workflows/ci-cd-flow.md`'s sentinel/retry + `unified-trading-ci` hosting sections against live code —
+both match exactly).
+
+### Batch E candidate ledger (misc cluster 1) — pre-verification
+
+**F1 — HEADLINE FINDING (P1), AUTO-RESOLVE class (provable, hunter RAN the check).**
+`digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md:307-309`'s sole open todo ("investigate why
+`update-dependency-version.yml`'s primary cascade has been dormant since 2026-06-28") is **empirically false as of
+today** — live `gh run list` (run by the hunter this session) shows the cascade firing multiple times/day across
+all 3 of the doc's own named sample repos (`execution-service`: 3 successful runs today alone; `agent-orchestrator`:
+5 successful runs today; `ml-service`: successful runs through today), all `conclusion: success`. Likely resumed as
+a side effect of `post_cutover_silent_assumption_sweep_2026_07_23.md`'s F2 fix (semver-agent retarget, already in
+this doc's own `context_scope`) — the hunter did not trace the exact resuming commit, so cite "resumed, cause not
+definitively traced" rather than asserting the F2 causal chain as certain. Needs STEP 4 re-verification (re-run
+`gh run list` myself) then close/re-scope the todo — doc may become a genuine archive candidate.
+
+**F2 — Contradiction (P3, low-medium confidence, low stakes — todo already closed either way).**
+`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md:103-104` ("the semver-agent... is dead,
+deliberately") vs. `semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md:8` (semver-agent running
+successfully fleet-wide, filed 2 weeks later) — hunter's own hedge: these likely describe two different payloads
+(semver-agent's `version-bump` dispatch vs. `quality-gates-v2.yml`'s separate `qg-passed` dispatch, the latter
+confirmed live to still omit `version`) — the doc's core technical claim is independently true, only the causal
+attribution is in tension. Low priority given the todo is already closed/not-a-bug.
+
+**F3 — Codex-alignment drift (P2), codex is stale.** `ci_alert_failure_resolution_linkage_2026_08_16.md` shipped a
+new `streak_start_sha` Firestore field + alert-linkage mechanism (`unified-trading-ci@7000ac0`) whose cited SSOT
+`/codex/04-architecture/ci-alerting.md` has zero mentions of it (measured: `grep -c`). No todo in the source doc
+covers documenting this — needs a new todo, not use of the mechanical-staleness carve-out (this is missing
+content, not a single-fact correction).
+
+**F4-F7 — Hygiene (P2-P3).** Stale/missing `last_updated` in 4 docs
+(`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md`,
+`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md` — field absent entirely,
+`digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md`,
+`ff_pull_fleet_drift_rca_2026_08_11.md` — mildest, 1 week).
+
+**F8 — Truncation, ADD TO EXISTING FILED DOC + SCALE UPDATE (P2, important).** 3 more confirmed instances
+(byte-verified via `tail -c`, not just Read-tool artifacts):
+`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md:296`,
+`build_deploy_pipeline_provenance_and_aws_deferred_gaps_2026_07_21.md:229`,
+`digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md:344`. **Critically**: a corpus-wide grep this
+session found **116 docs** carrying a `"na-eligibility-audit 2026-08-18"` entry — the already-filed
+`na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md` currently cites only 2 instances and its own
+todo 3 (corpus-wide sweep) hasn't run — the true blast radius is almost certainly much larger than currently
+tracked. This scale finding needs to reach that issue doc directly.
+
+**F9 — Possible NA misclassification (P3, low confidence, flagged not asserted).**
+`breaking_change_differ_blind_to_registry_data_dicts_2026_07_09.md` todo 7 (wire `consumer-qg-gate` into
+`pin_branch_protection_rulesets.py`) reads as bounded/deterministic single-repo script work — the exact shape
+na-eligibility-audit's own rubric flags as "simply defaulted to NA." The hunter could not see the 2026-08-18 pass's
+own reasoning for keeping it NA (right where the entry truncates, per F8) — worth a second look, not confidently
+asserting a reclassification.
+
+**Missed flips**: none (F1 is a different class — an open todo falsified by EXTERNAL reality, not by the doc's own
+text). **Zero-checkbox/archive candidates**: none currently — `digest_drift_sweep...` may become one once F1
+resolves.
+
+## Coverage (hunters / batches / docs) — Phase 1 complete
+
+All 6 hunter batches returned. 31/31 dispatched docs covered (5+5+6+6+5+4). Combined with the 7 docs Phase -1
+already investigated directly = all 38 writable docs in this run's 56-doc tranche now have fresh eyes on them.
+Approx combined hunter spend: ~1.3M tokens across 6 batches, ~122 tool calls, wall-clock ~8-11 min per batch
+(parallel). Proceeding to STEP 4 (adversarial verification) next.
 
 ## Verification (STEP 4)
 
