@@ -208,6 +208,21 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
+- [ ] [BACKEND] P0. **`_union_rank_series`'s `status.map(_STATUS_RANK)` call (`data_status_union.py:145`) is a NEW
+      WORKER-TIMEOUT/SIGABRT abort site** — surfaced live 2026-08-19 (slot 31, infra re-verification) inside the very
+      helper the now-shipped `provenance_breakdown` vectorization fix (`deployment-api@b4b81502c0`, above) introduced
+      to REPLACE the old per-`(pipeline_mode, source)`-group loop. Faulthandler dumps for 2 fresh `Uncaught signal: 6`
+      aborts (pid 21 @2026-08-19T06:09:44Z, pid 22 @2026-08-19T06:12:22Z) both identify the abort site as
+      `data_status_union.py:145` (`pandas/core/series.py:4719 Series.map` ← `_union_rank_series:145`) ←
+      `provenance_breakdown:239` ← `_process_manifest_chunk:141` ← `get_venue_year_coverage:320` — i.e. it is called
+      once per row-group chunk (215+ for cefi), same call-count-scales-with-row-groups shape the prior fix already
+      addressed for `union_reduce_to_cells`, just not for this call site. Needs investigation into why
+      `Series.map(dict)` is slow here (the pandas call chain shown routes through `get_indexer`/`_should_compare`,
+      suggesting an index-alignment path rather than a straight hash-lookup) and either a faster vectorized rank
+      lookup (e.g. `pd.Categorical`/`replace` or a numpy `searchsorted` on a precomputed rank array) or hoisting
+      `_union_rank_series` to compute ONCE per full manifest read rather than once per chunk-call-site, mirroring how
+      `(venue, year)` counts already accumulate across chunks. Repo: deployment-api. Re-run this issue's 3-scope cefi
+      probe as the acceptance check once shipped.
 - [x] ✅ [BACKEND] P2. Audit the container's memory headroom (16GiB) vs. cefi/tradfi/defi's REAL manifest sizes —
       measure peak RSS for an unfiltered full read of each, similar to the RSS-measurement approach the archived
       `honest_coverage_daily_vm_oom_all_asset_groups_2026_08_08` issue doc used for `measure_honest_coverage.py` — to
@@ -505,3 +520,25 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   Main flipped the prerequisite true; the task is unparked and eligible on multiple idle slots (20, 21, 23, 25, 26,
   27, 32, 9001) as of this entry. No doc content changed by this entry beyond this note — the INFRA todo's own text
   already correctly describes the remaining work.
+- **2026-08-19 (slot 31, infra)**: **Live-prod re-verification — FAIL, but the container-level OOM is now
+  DEFINITIVELY RESOLVED; a NEW distinct SIGABRT abort site surfaced instead.** Deployed revision confirmed:
+  `uts-shared-deployment-api-00652-ncq` (created 2026-08-19T01:49:03Z, image digest `sha256:72221b0a…`), and content
+  verified live via the established tree-diff method (`git diff origin/main -- <3 files>` against LDR HEAD returns
+  EMPTY) — both `deployment-api@ce37346` (`filter_to_mvp` vectorize) and `deployment-api@b4b81502c0`
+  (`provenance_breakdown` vectorize) are confirmed present on `main` and therefore in this live revision. Ran the
+  3-scope cefi probe (`X-API-Key` auth from `deployment-api-api-key` GSM secret, one-at-a-time, 20s apart,
+  `--max-time 90`) 2026-08-19T06:06:46-06:11:56Z: **all 3 scopes (`could_exist`/`mvp`/`all`) still failed** — each
+  timed out client-side (`http_code=000`, 0 bytes) at 90s. Cloud Logging swept for the full 06:06:00-06:13:00Z
+  window: **confirmed ZERO `Memory limit exceeded` / `terminated on signal 9` events anywhere** — the container-level
+  OOM this issue was originally filed for is genuinely gone. Instead, 2 fresh `WORKER TIMEOUT` + `Uncaught signal: 6`
+  (SIGABRT) events fired (pid 21 @06:09:44Z within the mvp-scope window, pid 22 @06:12:22Z within/just after the
+  all-scope window), both faulthandler-identifying the abort site as `data_status_union.py:145` inside
+  `_union_rank_series` (`status.map(_STATUS_RANK)`) ← `provenance_breakdown:239` ← `_process_manifest_chunk:141` ←
+  `get_venue_year_coverage:320` — a NEW bottleneck living INSIDE the very helper the `b4b81502c0` fix introduced to
+  replace the old per-group loop; filed as a new BACKEND P0 todo above (repo/craft outside this INFRA session's
+  scope per infra.md's `does_not: Python service business logic`). The `could_exist` scope's own failure had no
+  SIGABRT captured in the same window — only an isolated "malformed response or connection to the instance had an
+  error" logged near its request start (06:06:46.552Z); cause not conclusively identified from logs alone, flagging
+  as unresolved rather than asserting a mechanism. **Not flipping the top-level INFRA todo — the clean-window
+  acceptance bar is still not met**, now gated on the new `_union_rank_series` BACKEND fix rather than the OOM or
+  either of the two already-shipped vectorization fixes (both confirmed live and holding).
