@@ -75,10 +75,13 @@ architecture choice, not a bounded todo. Recommend routing through `matching_eng
 
 ## Todos
 
-- [ ] [STRATEGY] P1. Design + wire a `gate_or_advise()` pre-submission call for EVM DeFi MEV bundles — decide
-      single call site (`matching_engine.py`'s EVM DeFi dispatch, replacing the current `NotImplementedError` stub)
-      vs. 3 per-engine call sites in `liquidation_bundle.py`/`jit_liquidity.py`/`sandwich_theoretical.py`.
+- [x] ✅ [STRATEGY] P1. Decide `gate_or_advise()` call-site placement — RESOLVED 2026-08-19: single call site at the
+      **live bundle-submission boundary** (Phase 5C "every live order goes through bundle-sim"), not
+      `matching_engine.py` (paper-fill single-AMM-swap path) nor per-engine signal-generation sites.
       Repo: execution-service, strategy-service.
+- [ ] [OPERATOR] P1. Wire `gate_or_advise()` at the live bundle-submission boundary — deferred post-cutover: blocked
+      on building that path first (`aave_flash_bundle.py` absent; `FLASHBOTS_BUNDLE_RELAY` stubbed per operator
+      2026-05-10). Repo: execution-service, strategy-service.
 
 ## Progress Log
 
@@ -102,3 +105,9 @@ architecture choice, not a bounded todo. Recommend routing through `matching_eng
   bundle-sim"), which does not exist yet. Wiring it requires first building that path (`aave_flash_bundle.py` equivalent +
   un-stubbing `FLASHBOTS_BUNDLE_RELAY`) — a larger, operator-scoped effort, not this 1-hour todo. Escalated to operator via
   /blocked: defer wiring (record design, re-tag todo) vs. approve building the bundle path now.
+
+- **2026-08-19 (operator answer via main)** — BLOCKED Q answered: option A (defer wiring). Keep `gate_or_advise()`
+  built-but-unwired; design decision recorded (correct call site = live bundle-submission boundary, Phase 5C); P1 todo
+  re-tagged — wiring deferred post-cutover, gated on building the bundle-submission path. B (build now) contradicts the
+  standing operator 2026-05-10 stub of `FLASHBOTS_BUNDLE_RELAY`; C (wire into `matching_engine.py`) is the misread
+  already corrected above.
