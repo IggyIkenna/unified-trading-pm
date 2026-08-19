@@ -281,6 +281,40 @@ Two hard constraints on whoever implements it:
   is enum-only, and gas top-up/floor has no handler and no reserve-threshold logic anywhere. Wiring means building
   those, not just instantiating the coordinator.
 
+
+### Four more Wave-0 rulings — 2026-08-19
+
+| # | Ruling | Decision |
+| - | ------ | -------- |
+| 6 | Corporate-actions re-sourcing | **Yahoo Finance.** |
+| — | market-tick-data-service scope | **INCLUDE it** — the omission from the seven-repo list was accidental. |
+| — | `_SCE_1H` strategy_id | **Migrate properly**, not document-and-leave. |
+| — | Seven unowned epic P0s | **Author all seven plans now, in parallel.** |
+
+**Ruling 6 — Yahoo Finance.** Not on the fleet-wide banned-vendor list (Elysium · Arkham · Bloxroute · Infura ·
+Kaiko · Massive-fka-Polygon.io), so it is a permitted source. Build the adapter scaffold regardless of credential
+state per the external-data-always-available rule; if access is missing, ship the scaffold and mark
+`BLOCKED-CREDENTIALS` rather than descoping. **Also required in the same change**: correct
+[tradfi-databento-sourcing-ssot](/codex/02-data/tradfi-databento-sourcing-ssot.md), whose 2026-08-03 banner still claims the Polygon.io removal is
+"COMPLETE ACROSS ALL REPOS" — features-service is the third confirmed still-live usage found after that date.
+
+**MTDS is IN SCOPE.** It owns market-data-live, which is allowlist item 3 of the goalpost, and the epic's own
+pipeline table treats it as a distinct stage. The scoping pass excluded it on a literal reading of the repo list;
+that exclusion is now reversed and MTDS needs the same per-repo remaining-work treatment as the other seven.
+
+**`_SCE_1H` — migrate, do not document-and-leave.** The harder, correct option. Governed by
+[entity-rename-and-split-consumer-migration-rule](/codex/02-data/entity-rename-and-split-consumer-migration-rule.md):
+enumerate and migrate EVERY consumer in the same change — stored GCS rows, manifest entries, ledger records,
+backtest artefacts, registry memberships, and the two legacy-mapping scripts. No shim (the workspace bans
+deprecated shims). A token grep will miss path-prefix, filename and registry-membership binders, so the enumeration
+must be done properly before anything changes.
+
+**Author all seven unowned P0 plans in parallel.** UAC weightings SSOT; strategy-service account-balance I/O,
+risk/exposure, PnL-attribution-in-full, canonical output paths; execution-service security audit; W22
+messaging/external-instruction-API. Plan authoring is file-disjoint across the seven so it parallelises, and does
+not need to wait on Waves 1-3. Caveat worth carrying: W22 and the security audit both lean on accurate per-venue
+and per-chain declarations, so their authors should expect Wave-1's UAC registry fixes to change their inputs.
+
 ## Suggested dispatch order
 
 Reasoning follows the dependency chain the epic itself describes (instruments-service → UAC underlies almost
