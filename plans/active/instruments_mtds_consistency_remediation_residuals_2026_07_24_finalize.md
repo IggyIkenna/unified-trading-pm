@@ -112,3 +112,17 @@ last_updated: "2026-08-11"
   - execution is out of this archival todo's own scope (this finalize plan carries no `repos:`, doc-only) and belongs to
     the issue doc's own SCRIPT todo.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **2026-08-19 (slot 33)**: Re-dispatched the REVIEW todo; re-verified fresh rather than trusting prior sessions'
+  checks. Same conclusion, precondition still unmet — N5r/N6r (e) has genuinely never been executed: (1)
+  `gcloud compute instances list` — 0 matches for `defi-manifest-projection-` or `canonical-migration-defi-rebuild-`,
+  no execution VM running or ever launched; (2)
+  `get_storage_client().list_blobs('deployment-scripts-central-element-323112', prefix='n5r-n6r-projection/')` — 0
+  objects, the projection has never been run; (3) 0 projection-related `vm-logs/` blobs — the launcher was never
+  invoked; (4) `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e) still `- [ ]`. **NEW vs prior
+  sessions**: the live AO backlog shows the (e) execution task (`defi_manifest_venue_itype_canon_swap_execution-4a5cafd06bcb`)
+  is QUEUED and dispatchable, and launcher (c) + drain gate (d) are both SHIPPED
+  (`deployment-service@99b46b9f2d`, `market-tick-data-service@697d983c/@0a9ea724`) — the chain is not stalled: a
+  data_engineering executor picking up (e) can launch `deployment-service/scripts/vm/launch-defi-manifest-projection-vm.sh`
+  to produce the projection, run the drain-gate + snapshot, then `--apply-prod --confirm-prod-write` + post-verify.
+  This REVIEW todo stays `- [ ]`; no archival performed; skipping GATED — the blocker is VM-execution work owned by the
+  issue doc's own SCRIPT todo (e), out of this doc-only review todo's scope.
