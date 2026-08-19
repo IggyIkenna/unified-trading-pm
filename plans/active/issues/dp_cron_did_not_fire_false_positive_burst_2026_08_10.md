@@ -218,13 +218,21 @@ is exactly the kind of judgment call this doc should surface, not resolve.
       rollout-ahead-shaped) and are deliberately left classified `ACTIVE`/alerting per the fail-toward- alerting rule —
       see the NEW narrower operator todo below for just these 2. Evidence:
       `deployment-service@f6a830f94f044fa9ee98b567ea47217629e9052d`. Repo: deployment-service.
-- [ ] [OPERATOR] P1. For the 2 producers NOT resolved by the lifecycle-state pass above (`mdps-features-live-tradfi-` —
-      short launch/delete cycles on 2026-08-04, ~6 days absent at time of finding; `prediction-arb-detector-` — ran
-      continuously until deleted 2026-06-29, ~6 weeks absent at time of finding), confirm operational intent: real
-      regression needing relaunch, or a deliberate pause the lifecycle-state framework should also mark
-      `not_yet_active`/`superseded`. Both currently stay `ACTIVE` and WILL page again on the next DP-LIVE-003 sweep
-      cycle (by design — fail toward alerting on ambiguous evidence). Do not relaunch blind — each producer's current
-      config/entrypoint needs a fresh look before restart. Repo: deployment-service.
+- [x] ✅ [OPERATOR] P1. **RESOLVED (2026-08-19, escalation `agt-7f6044`)** — `mdps-features-live-tradfi-` half of this
+      todo. DP-LIVE-003 paged again for this prefix (live-verified zero running instances via `gcloud`); escalated the
+      still-open decision via `/blocked` (options: A relaunch now vs B mark `not_yet_active`/`superseded`). Operator
+      chose **B**: deliberately not relaunching TradFi live features yet. Reclassified
+      `mdps-features-live-tradfi-` from ACTIVE to `NOT_YET_ACTIVE` in `producer_lifecycle.NOT_YET_ACTIVE_PREFIXES` —
+      DP-LIVE-003 no longer pages on its absence. New regression tests added covering both directions (must NOT page
+      when absent; the remaining ambiguous producer below still MUST page). — deployment-service@16b45256
+      (`quality-gates.sh --no-fix` ALL PASSED, 3647 tests; shipped via quickmerge, landed on `live-defi-rollout`,
+      ancestry-verified against origin).
+- [ ] [OPERATOR] P1. For the remaining unresolved producer, `prediction-arb-detector-` (ran continuously until deleted
+      2026-06-29, ~6 weeks absent at time of finding — NOT part of the escalation this session answered), confirm
+      operational intent: real regression needing relaunch, or a deliberate pause the lifecycle-state framework should
+      also mark `not_yet_active`/`superseded`. Currently stays `ACTIVE` and WILL page again on the next DP-LIVE-003
+      sweep cycle (by design — fail toward alerting on ambiguous evidence). Do not relaunch blind — the producer's
+      current config/entrypoint needs a fresh look before restart. Repo: deployment-service.
 - [x] ✅ [SCRIPT] P1. **RESOLVED (2026-08-10 follow-up session)** — finding 1's `agent-orch-planning-vm-` exclusion was
       a same-day stopgap (blanket `_GCP_CENSUS_UNOBSERVABLE_PREFIXES` exclusion); it now has a REAL, dedicated AWS EC2
       liveness check (`missing_live_producer_watcher._agent_orch_planning_vm_present`, via a new
