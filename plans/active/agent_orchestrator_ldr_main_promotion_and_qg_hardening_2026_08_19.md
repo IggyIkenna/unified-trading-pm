@@ -262,10 +262,15 @@ the issue-doc filename directly in a comment above its regression test — but 7
 came out of the sample. ~92 more docs in the tightest corpus, plus ~36 co-listed-repo docs and ~130 non-`issues/`
 archived docs, were not yet sampled.
 
-- [ ] [BACKEND] P1. **GAP: operator→agent chat messages silently dropped** — delivery was marked on POLL/drain, not
-      on the agent's actual reply (`ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`). New
-      `tests/test_operator_reply_delivery_ack.py`: assert a chat message stays "undelivered" until the agent's next
-      `/poll` is followed by a recorded reply, not merely drained.
+- [x] [BACKEND] P1. ✅ **FALSE POSITIVE, corrected 2026-08-19 — actually COVERED, not a GAP.** delivery was marked
+      on POLL/drain, not on the agent's actual reply (`ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`).
+      This session's prior research pass claimed a new `tests/test_operator_reply_delivery_ack.py` was needed —
+      **verified false**: `agent-orchestrator/tests/test_agent_message_redelivery.py` already exists (shipped at
+      `ao@8076257`, the same commit that fixed the incident) with 8 tests including
+      `test_reply_acks_whole_batch_641_643_regression` — the exact 641/643 regression this issue doc names, plus
+      `test_redelivered_until_answered`/`test_reply_ack_stops_redelivery` covering precisely "stays undelivered
+      until the agent's reply is recorded." The earlier research sampled the issue doc's narrative without checking
+      the current test suite for an existing regression test — a CLAIM ≤ MEASUREMENT miss. No new test needed.
 - [ ] [INFRA] P1. **GAP: `ao-self-pull.sh` silently stalled 2+ hrs** — untracked `accounts.json` backup files
       blocked `git pull --ff-only` (`ao_self_pull_stalled_by_untracked_backup_files_2026_07_29.md`). No test file
       exists for this script at all — add a shell-level (or subprocess-wrapped pytest) test asserting the script
@@ -286,12 +291,28 @@ archived docs, were not yet sampled.
       tuning every regen cycle** (`backlog_regen_drops_handtuned_prereqs_2026_07_12.md`). Only a stray string match
       exists in `test_regen_backlog_from_plan.py`, not a real assertion — add explicit
       `test_regen_preserves_handtuned_prereqs_and_priority`.
-- [ ] [DOC] P2. **UNCLEAR → resolve: SQLite lock-storm-triggers-stuck-shutdown causal chain**
-      (`ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`) — `test_server_shutdown.py` exists but no
-      keyword ties it to this specific causal chain; read both closely and either confirm COVERED or write the gap.
-- [ ] [DOC] P2. **UNCLEAR → resolve: unpinned `ORCHESTRATOR_JWT_SECRET` invalidating every token on restart**
-      (`orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`) — `jwt_secret` tests exist
-      but restart-persistence of the pinned secret specifically is unconfirmed; read closely and resolve.
+- [x] [DOC] P2. ✅ **RESOLVED 2026-08-19 → COVERED, not unclear.** SQLite lock-storm-triggers-stuck-shutdown causal
+      chain (`ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`) — read `test_server_shutdown.py` closely:
+      its module docstring explicitly names `ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`'s P2 todo
+      and describes the exact causal chain (sequential `.stop()` calls each blocking on `thread.join(timeout=5-10s)`
+      under DB-lock-storm/tmux-timeout contention, reproducing the incident's ~20-25s shutdown hang before
+      systemd's SIGKILL) — `test_stops_run_concurrently_not_sequentially` and
+      `test_every_stop_fn_is_called_even_if_one_raises` directly regression-guard the fix
+      (`_stop_loops_concurrently`). The prior pass's "no keyword ties it" claim was checked against the wrong
+      thing (a name-only grep, not the docstring) — a second CLAIM ≤ MEASUREMENT miss this same session. No new
+      test needed.
+- [ ] [BACKEND] P2. **RESOLVED → confirmed GAP, not unclear.** Unpinned `ORCHESTRATOR_JWT_SECRET` invalidating every
+      token on restart (`orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md`) — read the
+      full issue doc: the "restart-persistence" verification that closed this incident was 100% LIVE/manual ops
+      (mint a token against the real VM, `systemctl restart`, re-validate the same token by hand) — real and
+      convincing, but not a checked-in regression test, so a future regression (the `.env.local` pin lost on a VM
+      rebuild, the systemd drop-in dropped) has nothing guarding it. `tests/test_authenticate_websocket.py` only
+      documents the CONSEQUENCE of a rotated secret (loopback tolerates a stale token) — it never calls
+      `server/auth.py::_load_secret()` directly or asserts pinning. Confirmed via `grep -rn "_load_secret\b" tests/
+      server/auth.py` — zero direct test coverage of the function itself. Add a real unit test: with
+      `ORCHESTRATOR_JWT_SECRET` (or its GCS fallback) set, two separate `_load_secret()` calls must return the
+      IDENTICAL value (proving pinned/restart-safe); with neither set, two calls must return DIFFERENT random values
+      (documenting the dev-fallback trap this incident hit).
 - [ ] [INFRA] P3. **Sample the remaining ~92 docs in the tightest corpus** (single-repo `repos: [agent-orchestrator]`
       issue docs not yet read) plus a second pass on the ~36 co-listed-repo docs and ~130 non-`issues/`-folder
       archived docs (`plans/archive/2026_08/` in particular has undated-convention incident writeups outside the
@@ -404,3 +425,18 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
   regression). Worst-by-volume todo is 2/4 done (`tmux_spawn.py`/`autospawn.py` still open, marked `[~]`); a new
   P2 todo split out for `server.py`'s `lifespan()` — deliberately deferred as its own scoping problem, not a quick
   add. Wave 2 (remaining volume files + all 10 worst-by-percentage files) dispatched next, same message.
+- **2026-08-19 (same session, Phase 3 pre-dispatch verification)**: before dispatching sub-agents against Phase 3's
+  8 GAP/UNCLEAR items, read all 8 archived issue docs directly and grepped the current test suite for each claimed
+  gap — CLAIM ≤ MEASUREMENT, per this workspace's own hard rule. Found the prior session's research pass got **2 of
+  8 wrong**: the operator-message "GAP" already has a full regression suite
+  (`tests/test_agent_message_redelivery.py`, 8 tests, shipped in the SAME commit that fixed the incident) — the
+  research sampled the issue doc's narrative without checking the current test tree; and the SQLite lock-storm
+  "UNCLEAR" is actually COVERED — `test_server_shutdown.py`'s own module docstring names the incident doc directly
+  and its 2 tests regression-guard the exact fix. Both corrected to `[x]` with the disproving evidence inline, no
+  code needed. The JWT-secret "UNCLEAR" item resolved the other way — read the full incident doc: its
+  "restart-persistence" verification was 100% live/manual VM ops (mint a token, `systemctl restart`, re-validate by
+  hand), never encoded as an automated test; `_load_secret()` itself has zero direct test coverage. Reframed from
+  UNCLEAR to a confirmed GAP with a precise fix spec. Net: 5 confirmed real gaps remain
+  (self-pull test, pip-audit gate-content test, systemd MemoryMax test, spawn trust-prompt test, regen_backlog
+  hand-tuned-prereqs test) plus the newly-reframed JWT-secret pinning test = 6 real items, dispatched as 5 parallel
+  sub-agents next (JWT-secret combined with the small pip-audit one in a single dispatch).
