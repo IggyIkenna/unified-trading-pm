@@ -416,3 +416,25 @@ archival — no live Databento dependency).
   only spot-checked one instance of was judged out of this one-shot escalation's scope; deferring to the operator
   decision above instead. Did not relaunch. Posted a bounded `/blocked` focused on this new wave-scale finding
   (the root cause itself is already covered by agt-dfccf4's page). No code changed.
+- **2026-08-19 (slot 31, data_pipeline_failure escalation agt-2e69b4, DP-LIVE-004 on
+  `mtds-live-tradfi-cme-trades-20260809-163443`) — STILL `blocked`, same root cause, further-aged reconfirmation.**
+  `dp-fleet-monitor`'s `live_stream_watcher.check_live_capture_productivity` paged again: VM `RUNNING`, actively
+  attempting (`last attempt 0.0h ago`), CME trades last `captured` **7.5d ago** (staleness budget 3d) — up from the
+  5.3d/6d figures the 2026-08-17/08-18 entries above recorded, confirming the gap is still monotonically widening
+  with zero recovery, not a new or different failure. Ran `DatabentoBaseClient.warmup()` fresh this session
+  (`market-tick-data-service`, Secret Manager key resolved, never printed): **succeeded — 29 datasets, no
+  auth/locked/suspended error**, differing from this doc's per-VM-manifest evidence. Per the 2026-08-15 entry's own
+  established finding (CME/GLBX.MDP3 is a **dataset-scoped** 402, not an account-wide suspension — other Databento
+  venues/datasets write fine), an unscoped account-level `warmup()`/`list_datasets()` success does **not** contradict
+  or resolve the CME-specific block; it is consistent with every prior entry since 2026-08-15 and is not new evidence
+  either way for whether GLBX.MDP3 itself is unblocked. Deliberately did **not** attempt a live GLBX.MDP3 fetch or a
+  fresh manifest/GCS read to further verify — five independent sessions over the last 5 days (08-14/08-15×2/08-17×3/
+  08-18) already established this exact signature (`402 account_delinquent_invoice` / `api_key_deactivated`/`unpaid
+  invoice` CRAM auth failure) via direct `run.log`/manifest evidence with no change since; a sixth identical
+  live-fetch probe would add no new information and risks incurring real Databento cost for a call whose outcome is
+  already known with high confidence. Did not attempt a code fix or relaunch — this is the same
+  `BLOCKED-OPERATOR-DECISION` the doc's open `[OPERATOR]` P0 "pay the invoice again" todo already covers; masking it
+  (relaunching the VM, silencing the alert) would not restore capture while the invoice stays unpaid. Posted a
+  bounded `/blocked` pointing at this doc's existing P0 todo rather than duplicating the page. `$AUTHORING_SLOT` was
+  `dp-fleet-monitor` (non-numeric) — per the role contract's own carve-out, skipped the authoring-slot ping (the
+  dispatch-time Slack alert already covers that FYI). No code changed.
