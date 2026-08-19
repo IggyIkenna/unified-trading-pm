@@ -348,3 +348,19 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
   session separately shipped (unrelated but adjacent) fixes now live: `unified-trading-pm@bff3027035` (quickmerge.sh
   ldr_terminal messaging + STAGE 1.5 fix) and `agent-orchestrator@2adea47c26` (dashboard git-status "warn" badge
   15-min debounce for the `behind` state).
+- **2026-08-19 (later, fresh session, resumed cold from this plan doc)**: Phase 1 fully executed and shipped —
+  `unified-trading-pm@eec00af96b`, verified `git merge-base --is-ancestor` against `origin/live-defi-rollout`
+  (ahead=0) plus a live content check (`promotion_model` reads `ldr_main` on origin, not just locally). Branch
+  protection re-applied and confirmed live via `gh api` before shipping. Hit a real, previously-undiagnosed
+  fleet-wide infra bug along the way: `quality-gates.sh` called `fix_frontmatter.py` with zero args, which defaults
+  to a corpus-wide sweep of every active plan/issue/epic and applies plan-shaped field defaults that are
+  schema-invalid for `doc_type: issue` docs — re-dirtying two unrelated LIVE pipeline-generated docs
+  (`manifest_hygiene_red_all_2026_08_19.md`, `empty_reprobe_disagreement_all_2026_08_19.md`) into a still-broken
+  state on every gate run, exactly the failure class `foreign_dirty_frontmatter_blocks_every_agents_gate_2026_07_18`
+  already fixed for the schema CHECKER in 2026-07-22 — the auto-FIXER just never got the same changeset-scoping.
+  Fixed at the root (moved the existing scoping computation up, shared by both), not worked around. A peer session
+  independently landed a better-informed fix to both foreign docs mid-reconcile (real repo/related-plan triage, not
+  just schema satisfaction) — resolved the resulting stash-pop conflict by keeping their content over my own
+  placeholder fix. All 4 Phase 1 todos now `[x]` with inline DONE evidence above. Phases 2-4 not yet started this
+  session — pausing here to report back before continuing, given the unplanned infra detour and the size of what's
+  left.
