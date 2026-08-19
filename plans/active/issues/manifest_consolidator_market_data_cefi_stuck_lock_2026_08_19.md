@@ -126,12 +126,21 @@ resolved_by:
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Check whether either of the two abnormally-long executions today is the phantom lock's holder** —
+- [x] [SCRIPT] P0. ✅ **Check whether either of the two abnormally-long executions today is the phantom lock's holder** —
       `gcloud run jobs executions describe uts-prod-manifest-consolidator-market-data-cefi-rsgbc` and `-nfgs5`
       (`--region=asia-northeast1 --project=central-element-323112`; the two runs from point 2 above, 13:34:59→15:36:14
       and 16:34:58→18:33:05, both ~2h vs the normal ~1min). If either is still shown as running, or was force-cancelled
       without releasing its lock, that is the (contained, code-free) explanation — reap/clear it and re-verify point 1
       (canonical blob `generation` advances on the next hourly cycle). Done when: confirmed cause either way.
+      **CONFIRMED 2026-08-19T20:55Z (slot-4) — cause = PERPETUAL LOOP, not a single zombie. Both rsgbc AND nfgs5 WERE
+      lock holders (each acquired the lock, then got SIGKILLed by the 7200s Cloud Run task timeout mid-full-merge,
+      orphaning the lock via the bypassed `finally: _release_lock`), but NEITHER is the current holder — `rdlhn`
+      (19:34:52Z start, STILL RUNNING) is. Loop: missing `consolidator_content_write_at` marker (canonical
+      `metadata=None`) → fail-closed full merge of all ~172k shards (30M-row canonical) → >7200s → timeout kill →
+      orphaned lock blocks ~9000s (`CONSOLIDATOR_LOCK_TTL_SECONDS`) → next cycle clears + re-runs the SAME doomed
+      merge. 4× 2h executions today: 10:51, rsgbc, nfgs5, rdlhn. Canonical still frozen gen=1787019237694916 /
+      02:13:57Z; 20:00 cycle `error_reason=locked`. Reap not applicable (current holder is live; clearing under it is
+      unsafe + the loop re-arms anyway) — the fix is the todo-2 code change.**
 - [ ] [SCRIPT] P0. **If the zombie-execution check doesn't explain it, read `unified_trading_library/manifest_consolidator.py`'s
       lock acquire/release + staleness-check code**, confirm whether it has any TTL/expiry at all, and fix the gap
       (this workspace's own `manifest-consolidator-ssot.md` already documents a structurally similar "no fallback /
@@ -162,3 +171,25 @@ resolved_by:
   investigate+fix the consolidator lock now). Doc flipped `assigned_vm: NA` → `assigned_vm: planning` +
   `execution_scope: orchestrator-agent` this same edit, options above converted to tracked `- [ ]` todos, so AO
   backlog regen picks this up per the operator's decision rather than it sitting as inert prose.
+- **2026-08-19T20:55Z (slot-4 worker, todo-1 investigation)**: **CONFIRMED the phantom-lock cause — it is a PERPETUAL
+  full-merge-timeout-orphan loop, not a single zombie execution.** Both abnormal executions investigated via
+  `gcloud run jobs executions describe` + Cloud Logging: `rsgbc` (13:34:59→15:36:14) and `nfgs5` (16:34:58→18:33:05)
+  each completed (`succeededCount=1`, `retriedCount=1`) — Cloud Run reaped them, neither is still running. Their logs
+  prove each WAS a lock holder: rsgbc cleared a stale lock (age 9812s) and acquired at 13:35:35; nfgs5 cleared rsgbc's
+  orphaned lock (age 10790s > 9000s TTL) and acquired at 16:35:25. Both then hit the SAME shape: the canonical carries
+  NO `consolidator_content_write_at` marker (`metadata=None`; log "canonical ... has NO consolidator_content_write_at
+  marker ... merging all 171620/171781 shard(s)") → fail-closed FULL merge of the 30M-row canonical + ~76M shard rows →
+  exceeds the 7200s Cloud Run task timeout → SIGKILL (rsgbc: "Terminating task because it has reached the maximum
+  timeout of 7200 seconds"; nfgs5: "Container terminated on signal 9") → SIGKILL bypasses `finally: _release_lock` →
+  lock orphaned → every cycle skips with `error=locked` until the lock ages past the 9000s
+  `CONSOLIDATOR_LOCK_TTL_SECONDS` override → next cycle clears it, re-acquires, and re-runs the SAME doomed merge.
+  **Current holder (measured 20:49Z via UTL `get_storage_client().download_bytes`): `_index/consolidator.lock` PRESENT,
+  `started_at=2026-08-19T19:35:23.243115+00:00`, `instance=1-b5a4d4fa` — matches `rdlhn` (19:34:52Z start, STILL
+  RUNNING, `Completed: Unknown`), which will hit its 7200s timeout ~21:34Z and orphan the lock a 4th time (prior 2h
+  executions today: 10:51→12:52, rsgbc, nfgs5).** Canonical still frozen: `get_blob_metadata` →
+  `generation=1787019237694916`, `last_modified=2026-08-18T02:13:57Z`, `metadata=None`; `_index/latest.json` at 20:01Z
+  = `verdict=empty, no_op=true, error_reason=locked`. **Conclusion: the simple "reap the zombie" path is NOT
+  applicable/safe (the current holder is a live, legitimately-running execution; clearing its lock mid-merge is unsafe
+  and the loop re-arms regardless). The durable fix belongs to todo 2 (TTL-based self-healing for the lock AND making
+  the missing-marker full merge fit within the 7200s timeout / not re-arm the loop), and todo 3 verifies recovery
+  end-to-end after that fix lands.**
