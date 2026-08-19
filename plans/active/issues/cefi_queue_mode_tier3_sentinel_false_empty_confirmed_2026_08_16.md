@@ -139,9 +139,11 @@ lines despite genuine fetch activity, which is what let this run silently for 17
       `attempted_failed` migration above will cause a natural re-verification pass that either finds and records the
       real capture or genuinely re-fetches it; no separate backfill action needed unless the re-verification pass
       itself surfaces a new, distinct problem.
-- [ ] [DATA] P3. Delete `scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py` once the re-verification
-      pass above confirms the corrected rows resolved cleanly (its own `# Delete-when:` header names this doc's
-      resolution as the trigger).
+- [x] ✅ [DATA] P3. **EXTRACTED 2026-08-19 (ag-closeout-audit, cefi tranche)** — Delete
+      `scripts/migrate_cefi_queue_mode_false_empty_confirmed_2026_08_16.py` once the re-verification pass above
+      confirms the corrected rows resolved cleanly (its own `# Delete-when:` header names this doc's resolution as
+      the trigger). Live todo now `cefi_satellite_ao_dispatch_batch22_2026_08_19.md` (currently `status: draft`,
+      pending operator approval to dispatch — the item is tracked there, not re-worked here once approved).
 
 ## Progress Log
 
@@ -166,3 +168,9 @@ lines despite genuine fetch activity, which is what let this run silently for 17
 - **na-eligibility-audit 2026-08-16** [body-hash:001b7452f28b77e7]: KEEP-NA, valid — Full end-to-end read (146 lines) confirms this is a same-day (2026-08-16), fully-executed incident-response issue doc, not a stale backlog item.
 - **context-scout 2026-08-17**: populated context_scope (4 entries) — field already carried accurate content from
   filing; this is its first context-scout marker.
+- **ag-closeout-audit 2026-08-19 (cefi tranche, dispatch agt-5a343c)**: item 2 (delete the migration script once
+  re-verification confirms clean) extracted to `cefi_satellite_ao_dispatch_batch22_2026_08_19.md` — conflict-checked
+  clear against every existing active cefi batch/finalize plan and the wider corpus (zero hits). Item 1 (the
+  contingent April-2026 gap watch-item) is unaffected — still not currently actionable, no action needed unless the
+  re-verification pass itself surfaces a new distinct problem. Doc stays `open`/`assigned_vm: NA` (1 item remains,
+  contingent and not itself extractable).
