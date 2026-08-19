@@ -229,6 +229,15 @@ margin per leg).
 - Error classification for flash-loan reverts (per `DefiErrorCode`)
 - Gas budget + MEV-aware submission
 
+**⚠️ Not live-wired today (verified 2026-08-19):** the orchestrator class for this pattern, `AtomicBundleExecutor`
+(`execution-service/execution_service/algorithms/atomic_bundle_executor.py`), has zero non-test production construction
+sites workspace-wide — it is real and tested (its own unit test + `test_flash_loan_receiver_execution.py` exercise it
+end-to-end), but nothing in the live dispatch path builds one. Separately, the recursive-borrow flash-loan driver that
+would submit this pattern's underlying transaction (`RecursiveLoopOrchestrator._submit_flash_loan()`) unconditionally
+fails in live mode regardless of what triggers it. See
+[`/codex/04-architecture/flash-loan-receiver.md`](/codex/04-architecture/flash-loan-receiver.md) for both findings in
+full.
+
 ## Pattern 11: Unity deposit leverage (commercial)
 
 **Setup:**
