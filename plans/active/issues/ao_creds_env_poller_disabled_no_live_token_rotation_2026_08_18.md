@@ -32,7 +32,7 @@ context_scope:
     agent-orchestrator/server/usage_poller.py,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: 2026-08-19 # was 2026-08-18 -- stale vs the 2026-08-19 na-eligibility-audit + live SSM-applied-fix entries; corrected (plan_reconciler ao)
 parent_epic: orchestrator_master
 priority: P2
 assigned_vm: NA

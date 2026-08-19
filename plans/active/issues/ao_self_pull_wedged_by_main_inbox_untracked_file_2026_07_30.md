@@ -175,9 +175,11 @@ host/root-clone access (main agent's own session, or the operator).
       ("stale-process self-heal not resolving") — resolved by the same tick's restart path: new `MainPID=686237`,
       `ExecMainStartTimestamp=2026-07-30 17:49:27 UTC`, verified serving real data (`GET /api/backlog` → 200, 1029
       tasks). Root checkout is current and the live service is proven serving current code, not just current on disk.
-- [ ] [OPERATOR] P2. Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` so future
+- [ ] [BLOCKED-CREDENTIALS] P2. Set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` in the planning VM's `.env.local` so future
       `ao-self-pull.sh` wedge/drift alerts actually page instead of logging `no webhook` (repo: agent-orchestrator,
-      host-level config).
+      host-level config). **Retagged 2026-08-19 (plan_reconciler ao)**: the 2026-08-19 attempt below found BOTH
+      documented candidate secret names resolve to nothing — genuinely blocked on locating the correct secret
+      name/project, not just an operator-run-a-script action.
 
       **PREPARED 2026-08-08 (operator ruling, ao round-5 apply session item 20): "Operator will set it - needs
           Claude to provide exact file/value/steps."** Verified against the live repo -- `agent-orchestrator/scripts/bootstrap_vm.sh`
