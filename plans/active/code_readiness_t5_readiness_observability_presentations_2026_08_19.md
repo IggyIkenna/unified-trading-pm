@@ -265,8 +265,31 @@ todos only to confirm they are data-movement, then leave it.
       `/archetype-code-completeness` output rather than re-deriving it.
 - [ ] [BACKEND] P0. Make credentials a first-class readiness dimension (W1 addition 2026-08-19).
 - [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19).
-- [ ] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
-      unverified 20`) against §17's own table — the artefacts flag it as not reconciled.
+- [x] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
+      unverified 20`) against §17's own table — the artefacts flag it as not reconciled. — **RECONCILED
+      2026-08-20**, live full-fleet run against `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`
+      (date=2026-08-19), grain=`instrument_type`, 288 venues × 3 modes = 864 rows. Dump reproduces the artefact
+      total **exactly: ready 0 / not_ready 844 / unverified 20**. The figure stands, with denominator (864) and
+      date (2026-08-19). Two caveats recorded as their own todos below: the execution-service probe failed in this
+      run, and the plan's stated cause for the number is wrong.
+
+- [ ] [BACKEND] P0. **The stated critical path is WRONG and should be re-pointed** (measured 2026-08-20). This plan
+      and the coordinator both say T4's execution-instruction check is "the structural reason all 864 rows read
+      `unverified`". Measured per-leg counts say otherwise: the rows read **`not_ready` (844), not `unverified`**,
+      and the dominant failing leg is **`strategy` = 840 `not_ready`** — specifically
+      `position_read_mode_availability(venue).<mode> = none`. `execution_instruction` is `unverified` on all 864,
+      but rollup lets any `not_ready` dominate, so closing the instruction leg alone moves **zero** rows off
+      `not_ready`. The headline number is gated by **strategy position-adapter coverage (strategy-service, T3)**,
+      not by T4. Raise with the coordinator before more effort is spent on the assumed critical path.
+
+- [ ] [BACKEND] P1. Fix the execution-service capability probe failing on the full-fleet run. In the 288-venue run
+      `_execution_order_capability_probe.py` exited 1 with `No bucket configured for market_data/defi and no
+      project ID available`, so `execution_orders` / `execution_fills` / `execution_trades` /
+      `execution_account_balance` all reported `unverified=864`. The same probe SUCCEEDS on a single-venue run
+      (`--venue OKX-FUTURES` derives `execution_orders=ready` at PAPER and LIVE via
+      `validate_operation(place_order, env=testnet|mainnet)`), so this is environmental, not a missing capability.
+      The dump degrades honestly, but the published execution-leg counts are a FLOOR, not a measurement — do not
+      quote them as capability until this is fixed.
 - [ ] [BACKEND] P1. Resolve the per-venue and per-data-type cells that remain pending at the finer grain inside each
       readiness tree.
 - [ ] [BACKEND] P1. Fix the tree gaps the artefacts name explicitly — Scroll and zkSync read `unverified — declared,
@@ -469,6 +492,40 @@ todos only to confirm they are data-movement, then leave it.
 
 - 2026-08-20 — **Grain auto-detection VERIFIED, not assumed** (the P0 says so explicitly) —
   `unified-trading-pm@c3a3e870f4`.
+
+- 2026-08-20 — **Full-fleet dump RUN (runtime verification, not just unit tests) — and it re-points the effort's
+  critical path.**
+
+  Ran `derive_readiness.py` end-to-end under `instruments-service/.venv` against
+  `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`, grain `instrument_type`, 288 venues × 3
+  modes = **864 rows**. This is the runtime verification the shipped code owed — the new `execution_instruction`
+  leg renders its measured denominator on every row, and the dump-level coverage finding prints once as designed.
+
+  **864-row total RECONCILED**: the dump reproduces the artefacts' quoted headline **exactly — ready 0 /
+  not_ready 844 / unverified 20**, denominator 864, date 2026-08-19.
+
+  **FINDING 1 — the stated critical path is wrong.** This plan and the coordinator both assert that T4's
+  execution-instruction check is "the structural reason all 864 rows read `unverified`". Measured per-leg:
+
+  | leg | ready | not_ready | unverified |
+  | --- | ---: | ---: | ---: |
+  | `strategy` | 24 | **840** | 0 |
+  | `execution_transfers` | 0 | 768 | 96 |
+  | `market_tick_data` | 109 | 470 | 285 |
+  | `execution_instruction` | 0 | 0 | 864 |
+
+  The rows are **`not_ready`, not `unverified`**, and rollup lets any `not_ready` dominate. With `strategy`
+  failing on 840 of 844, closing the instruction leg entirely would move **zero** rows. The headline is gated by
+  **strategy position-adapter coverage** (`position_read_mode_availability(venue).<mode> = none`, strategy-service
+  — T3's repo), not by T4. Tracked as a P0 above; the coordinator should re-point before more effort is spent on
+  the assumed edge.
+
+  **FINDING 2 — the execution legs in this run are a floor, not a measurement.** The execution-service probe
+  subprocess exited 1 (`No bucket configured for market_data/defi and no project ID available`), so all four
+  execution-service legs reported `unverified=864`. The same probe SUCCEEDS single-venue — `--venue OKX-FUTURES`
+  derives `execution_orders=ready` at PAPER and LIVE. Environmental, not absent capability. The dump degraded
+  honestly (probe unavailable → `unverified`, never a silent pass), which is the design working, but the
+  execution-leg counts must not be quoted as capability until fixed. Tracked as a P1 above.
   `tests/test_shard_universe_grain_detection.py`, 7 tests passing. The case that matters for the T2 handoff is
   the third: when T2 lands the `by_venue_instrument_type_data_type` KEY before landing data under it, a detector
   keyed on mere key-presence would flip to the fine grain and enumerate **zero** shard cells — every coverage
