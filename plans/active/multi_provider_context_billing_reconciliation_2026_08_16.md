@@ -646,3 +646,21 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       blocks the data-gathering work behind it. **Done when**: every dependency this recommendation needs is either
       done or explicitly named as still-missing, and the recommendation itself is recorded with its own dated
       Progress Log entry, not folded silently into another todo's evidence.
+
+- **2026-08-19 — isolated pilot session, two findings that had only existed in chat, captured here so they aren't
+  lost.**
+  1. **Real Gemini CLI task result** (companion data point to the GLM one already in
+     `deepseek_claude_blended_provider_routing_2026_07_28.md`'s Progress Log): a real end-to-end `claude` CLI task
+     against `gemini-3.5-flash-lite-proj1` — 5 turns, real file edit completed, CLI-reported
+     `total_cost_usd: $0.1617` (computed equivalent — Gemini's free tier has no real $ bill; see the
+     `subscription_credits`/`rate_limited_free` shape split in the schema todo above).
+  2. **Full-system model-existence sweep (2026-08-19, isolated pilot, free list-endpoints only — no generation
+     cost)**: every currently-registered model across every provider confirmed real and listed, nothing
+     deprecated — `deepseek-v4-flash`/`deepseek-v4-pro` (DeepSeek `/models`); `glm-5.2`→served-as-`glm-5.3`,
+     `glm-5-turbo` (Z.ai `/v1/models`); `gemini-3.5-flash-lite`, `gemini-3.7-flash` ×3 pooled keys each, all keys
+     individually valid (Google `/v1beta/models`); `diffusiongemma-26b-a4b-it`, `gemma-4-31b-it` (NVIDIA
+     `/v1/models` — both listed; `gemma-4-31b-it`'s real problem is the persistent timeout in
+     `plans/active/issues/gemma_4_31b_it_persistent_timeout_2026_08_19.md`, not a missing/dead model); `kimi-k3`,
+     `kimi-k2.6`, `kimi-k2.7-code` (Moonshot `/v1/models` — bonus: `kimi-k2.7-code-highspeed` exists too,
+     unregistered, FYI only); `gpt-5.6-luna` (Codex/Luna — already proven live). No action needed from this
+     finding alone; recorded so a future session doesn't re-run the same free sweep from scratch.
