@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: TransferCoordinator
-summary:
-  TransferCoordinator is the single entry point for all execution-service fund movements — routes by
+summary: TransferCoordinator is the single entry point for all execution-service fund movements — routes by
   TransferIntent.transfer_type, enforces same-client_id on every transfer (raises CrossClientTransferForbiddenError),
   validates the destination against the client wallet registry, and is idempotent on idempotency_key.
 status: current
@@ -48,7 +47,14 @@ Before this facade, fund movements were fragmented across `transfer_handler.py`,
 **HARD RULE cross-reference**: `/codex/04-architecture/client-funds-isolation.md` — funds NEVER move between different
 clients. `TransferCoordinator` is the final-gate consumer-side enforcement point.
 
-**Status**: pending Phase 1 (UAC TransferIntent contract — slot 5).
+**Status (re-verified 2026-08-19)**: the "pending Phase 1" framing is stale — the UAC `TransferIntent`/`TransferResult`
+contract has shipped and is live (`BusTransferType`, 13 members, `unified_api_contracts.canonical.crosscutting.transfer_events`;
+consumed and tested by `strategy-service/strategy_service/transfer_coordinator.py`'s emit-time netting). What remains
+undone is narrower and different: **`execution_service.transfer_coordinator.TransferCoordinator` itself has ZERO
+production construction sites workspace-wide** (verified by grep — not imported, not built, not referenced in `app.py`
+or any wiring module; only its own unit tests construct it). It is a real, tested, dormant class — see
+`/codex/09-strategy/architecture-v2/cross-cutting/transfer-rebalance.md`'s IMPLEMENTATION STATUS box for the matching
+producer-side gap ("nothing emits `TransferIntent` in production").
 
 ---
 
@@ -60,13 +66,16 @@ clients. `TransferCoordinator` is the final-gate consumer-side enforcement point
 
 ## Routing table
 
-| `TransferIntent.transfer_type` | Downstream handler                                                                                                             |
-| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| `CEX_WITHDRAW`                 | `adapters/order_adapter.py` venue withdraw                                                                                     |
-| `DEFI_DEPOSIT`                 | `defi_execution/protocols/<protocol>/deposit()`                                                                                |
-| `DEFI_WITHDRAW`                | `defi_execution/protocols/<protocol>/withdraw()`                                                                               |
-| `BRIDGE`                       | `v2/handlers.py` `BridgeHandler`                                                                                               |
-| `SUBACCOUNT_MOVE`              | NEW — Binance + OKX only; `NotSupportedError` for all others with named successor `subaccount_transfers_phase_2_2026_06_01.md` |
+**Table below is design intent — `_ensure_default_handlers()` only registers `SUBACCOUNT_MOVE`; every other row has NO
+handler wired.** Calling `.execute()` with any other `transfer_type` today raises `KeyError` ("No handler registered").
+
+| `TransferIntent.transfer_type` | Downstream handler                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `CEX_WITHDRAW`                 | NOT WIRED — module docstring (2026-08-16) says `adapters/order_adapter.py` has no withdraw function; real impl is the separate `engine.transfers.live_ccxt_adapter` path, reached via `HandlerRegistry`/`InstructionRouter`, not this coordinator                                                                                                                                                                                                                                                                                                                                                                                                        |
+| `DEFI_DEPOSIT`                 | design intent: `defi_execution/protocols/<protocol>/deposit()` — no handler registered in code today                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `DEFI_WITHDRAW`                | design intent: `defi_execution/protocols/<protocol>/withdraw()` — no handler registered in code today                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `BRIDGE`                       | **corrected 2026-08-19** — the module docstring names `execution_service.v2.handlers.BridgeHandler` as the target; **that module and class do not exist anywhere in the workspace** (`v2/handlers.py` is not a real file; `BridgeHandler` has zero definitions — fabricated/stale). The real live-capable bridge connectors are `SocketBridgeConnector`/`CCTPBridgeConnector` (`defi_execution/protocols/bridge.py`, `cctp.py`) — real, tested, but zero production call sites today. See `/codex/04-architecture/transfer-architecture.md` § "Bridging execution reality" for the decided `BridgeRouter` architecture that will wire `BRIDGE` for real. |
+| `SUBACCOUNT_MOVE`              | Only wired handler — `_SubaccountMoveHandler`, Binance + OKX only; `NotSupportedTransferError` for all others, named successor `subaccount_transfers_phase_2_2026_06_01.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
 
 ---
 
