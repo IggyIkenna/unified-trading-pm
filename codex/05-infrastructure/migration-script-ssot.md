@@ -9,7 +9,7 @@ summary: "Every recurring-shaped one-off (purge/canonicalize/reconcile/backfill/
 status: current
 nature: ssot
 asset_group: [cross-cutting]
-stage: [infra]
+stage: [meta]
 repos:
   [
     deployment-service,
