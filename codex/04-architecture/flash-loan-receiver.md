@@ -307,8 +307,9 @@ class docstring and is the only live-capable opening mode today.
 
 This is a distinct gap from the bridging gap in `/codex/04-architecture/transfer-architecture.md` § "Bridging execution
 reality" — that section covers venue-to-venue `BRIDGE` transfers; this is single-transaction atomic on-chain flash-loan
-execution. Whether fixing this stub is in scope now is a genuinely open question the operator has not decided (see that
-section's "Still genuinely open" list) — this doc only documents the verified current state.
+execution. **DECIDED 2026-08-19 (operator): fix this stub now, not deferred** — Morpho is a named priority venue and
+this directly blocks it (was previously an open question; corrected here rather than left stale). Tracked as a
+concrete build todo in `/plans/epics/execution_master.md`'s "Venue MVP-readiness" section.
 
 ### CI integration
 

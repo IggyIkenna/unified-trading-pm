@@ -111,28 +111,58 @@ design-comment mentions).
 - [ ] [INFRA] P2. **Kalshi / IBKR IAM extension** — same secret-provisioning pattern as the CeFi grants above; extend
       `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md` if it already names these two,
       otherwise fold them into it rather than opening a parallel tracker.
-- [ ] [BACKEND] P1. **Morpho strategy-wiring + flash-loan/atomic-tx reachability — confirmed genuinely stubbed/broken
-      in live mode 2026-08-19, matching a parallel agent's independent finding.**
-      `engine/handlers/flash_loan_handler.py`'s live-mode docstring says steps are "encoded, not executed
-      separately" via `AtomicBundleExecutor`, but `algorithms/atomic_bundle_executor.py::execute_bundle` has **zero
-      callers anywhere in execution-service** outside its own file and an `__init__.py` re-export — it is never
-      actually invoked, and even its own `execute_bundle` loops sequential single-instruction calls rather than
-      building one atomic on-chain tx despite the docstring's claim. `algo_library/multicall_batcher.py::
-      MulticallBatcher` does real Multicall3 grouping/encoding and IS used by `intent_engine.py`, but neither file
-      contains a `send_transaction`/broadcast call — encoding-only, no wired submission path. Cross-reference:
-      `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md` (2 open / 18 done)
-      already names `_submit_flash_loan` staying a stub as a sub-finding — this todo is the flash-loan/atomic-bundle
-      half of that doc's broader read/execute-asymmetry finding, don't duplicate its tracking. A parallel agent has
-      also documented this in codex/ this session (`AtomicBundleExecutor` orphaned-from-live-dispatch note) — cite,
-      don't re-derive the codex-side writeup. Done-when: either the live submission path is wired end-to-end with a
-      real testnet tx, or `AtomicBundleExecutor`/`flash_loan_handler` are explicitly marked not-production-ready
-      with a tracked follow-up.
+- [ ] [BACKEND] P0. **Morpho flash-loan stub — DECIDED 2026-08-19: fix now, not deferred** (was previously framed
+      as an audit/reachability-check; Morpho is a named priority venue and this directly blocks it).
+      `RecursiveLoopOrchestrator._submit_flash_loan()`
+      (`execution_service/defi_execution/orchestrators/recursive_loop_orchestrator.py:704`) unconditionally returns
+      `(None, 0)` whenever `self._w3` is set — i.e. **live mode, the only condition that matters for real fund
+      movement**:
+      ```python
+      def _submit_flash_loan(self, request, receiver_address, actions) -> tuple[str | None, int]:
+          if self._w3 is None:
+              return (f"0xSIM_FLASH_{request.correlation_id[:8]}", 350_000)
+          return (None, 0)
+      ```
+      Both `_flash_open()`/`_flash_close()` treat a `None` tx_hash as failure
+      (`RECURSIVE_LOOP_FLASH_REPAYMENT_INSUFFICIENT`), so **every live-mode `OpeningMode.FLASH` request fails at
+      this line today**, independent of position state, health factor, or gas budget. Documented in
+      `/codex/04-architecture/flash-loan-receiver.md` § "Live-mode flash-loan submission is stubbed" (that doc's own
+      closing line — "whether fixing this stub is in scope now is a genuinely open question the operator has not
+      decided" — is now stale per this decision; corrected in the same edit as this todo). Address resolution
+      (`FLASH_LOAN_RECEIVER_REGISTRY` lookup + `eth_getCode` bytecode check) already works and the deployed
+      `RecursiveLeverageReceiver.sol` contracts are real — only the encode-and-broadcast step is missing. Fix: build
+      + sign + broadcast the `flashLoan()` tx the same way the already-live-capable PERSISTENT driver (per-iteration
+      supply→borrow, no flash loan) makes its real `AAVEConnector` calls — that driver is the reference pattern.
+      Cross-reference, don't duplicate: `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`
+      (2 open / 18 done) already names this stub as a sub-finding. Done-when: a real testnet `flashLoan()` tx
+      succeeds end-to-end through `_flash_open()`/`_flash_close()` with `self._w3` set.
+- [ ] [BACKEND] P2. **`AtomicBundleExecutor`/`MulticallBatcher` — separate, still-undecided gap, not conflated with
+      the flash-loan fix above.** `algorithms/atomic_bundle_executor.py::execute_bundle` has zero callers anywhere
+      in execution-service outside its own file + an `__init__.py` re-export (never invoked), and even its own
+      `execute_bundle` loops sequential single-instruction calls rather than building one atomic on-chain tx despite
+      its docstring's claim. `algo_library/multicall_batcher.py::MulticallBatcher` does real Multicall3
+      grouping/encoding and IS used by `intent_engine.py`, but neither file contains a `send_transaction`/broadcast
+      call — encoding-only, no wired submission path. Unlike the flash-loan stub above, the operator has not ruled
+      on this one — done-when: either the live submission path is wired end-to-end with a real testnet tx, or
+      `AtomicBundleExecutor` is explicitly marked not-production-ready with a tracked follow-up (an `[OPERATOR]`
+      scoping call, not assumed).
 - [ ] [BACKEND] P1. **CoW Swap — genuinely greenfield, confirmed 2026-08-19** (zero code anywhere in the repo beyond
       3 unrelated design-comment mentions of "CowSwap" as inspiration for `intent_engine.py`/`solver_auction.py`).
       Build a CoW Swap execution adapter from scratch: order-signing (CoW Protocol off-chain order + on-chain
       settlement), quote fetching, order submission to the CoW API, fill tracking. Follow the existing DEX-adapter
       shape (`defi_execution/protocols/uniswap.py` + `uniswap_live.py` as the closest analog — swap-only, no limit
       orders, per the instruction/order-type registry finding below).
+- [ ] [DATA] P1. **CoW Swap — historical/batch data capability is required alongside the live execution adapter,
+      not optional.** Per the batch=live=paper determinism invariant (CLAUDE.md "Live = batch (event-log
+      spine)... paper(W)==batch-rerun(W) epsilon=0") and the operator's explicit question this session ("we also
+      need to have historical data for CoW batch-live symmetry... otherwise we can't replay the market data"): a
+      live-only adapter with no MTDS/MDPS historical capture means CoW Swap can never be backtested or
+      paper-simulated once the execution adapter above lands — batch/paper mode would have nothing to replay
+      against for this venue. Tracked on the data side in `mtds_mdps_master.md`'s CoW Swap MTDS/MDPS todo (batch
+      adapter + candle-derivation wiring, sequenced against this execution build, following the existing
+      `defi_execution/protocols/uniswap.py`-analog MTDS backfill pattern other DEX venues already use) — cite it
+      here rather than duplicating; this todo exists so the requirement is visible from the execution-side todo
+      too, since it is easy to ship a live adapter alone and consider the venue "done" without it.
 - [x] [BACKEND] P2. ✅ **Uniswap gap audit — closed 2026-08-19, code is NOT a gap.** Prior framing assumed Uniswap
       might be partial/simulation-only; verified execution-service has a substantial live V3 execution surface
       (`defi_execution/protocols/{uniswap,uniswap_encoding,uniswap_live}.py`, 479 lines in `uniswap_live.py` alone) —
@@ -153,31 +183,82 @@ design-comment mentions).
       research what a non-custodial wallet-transfer option would require (self-custodied wallet + on-chain transfer
       instead of a custody provider) — research output only, not a build todo, until/unless the operator says
       otherwise.
-- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — **Solana spot+perp basis trade bridged to Ethereum, venue names
-      TBD.** Genuinely greenfield at the PM-doc level (no existing doc covers this exact "Solana basis bridged to
-      Ethereum" shape — the nearest existing plan,
-      `/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md`, is SOL-native LST carry via
-      Jupiter perps + Kamino borrow, not a cross-chain bridge structure). Bridge architecture itself is owned by a
-      separate, parallel agent working only in `codex/` (already landed several dated 2026-08-19 codex commits on
-      EVM/Solana bridge architecture — see `/codex/04-architecture/transfer-coordinator.md` and its neighbors) — do
-      not duplicate that work here; this todo is a placeholder pending the operator naming the actual Solana
-      venue(s) to use.
-- [ ] [OPERATOR] P1. **Manual-live vs automated-live execution mode — cross-cutting requirement, not
-      Betfair-specific.** Operator (2026-08-19), exact words: "the whole strategy service and execution need to
-      understand that there's a manual Live mode where everything is our own manual execution, and there's an
-      automated Live mode." Applies to EVERY venue in this epic's priority set, not just Betfair. **What already
-      exists** (2026-08-19 audit): UAC's `OperationalMode` enum already has a `MANUAL` value, consumed in
-      `execution_service/cli/handlers/__init__.py` (`OperationalMode.MANUAL` resolves to
-      `LiveExecutionHandler(mode=mode)`, differing from `LIVE` only in instruction source — HTTP manual API vs
-      automated strategy signals, not a fully separate engine) and wired through `manual_instruction_api.py`/
-      `manual_instruction_helpers.py`. This is real infra to build on, not a from-scratch build. **What's missing**:
-      `MANUAL` today is one flat value alongside `LIVE`/`PAPER`/`BACKTEST` — there is no "LIVE, with a
-      manual-vs-automated sub-axis" concept. Companion strategy-service-side gap tracked in `strategy_master.md`'s
-      matching todo (cross-reference, this is the execution-service half). `[OPERATOR]`: the exact modeling decision
-      (a new sub-enum on `OperationalMode`? a field on the execution instruction? per-archetype config?) is a design
-      call, not mechanically derivable — resolve it first; the wiring itself (updating `LiveExecutionHandler`
-      dispatch, the manual-instruction API, per-venue adapter selection) is `[BACKEND]`-eligible follow-up once
-      scoped.
+- [ ] [OPERATOR] P3. BLOCKED-OPERATOR-DECISION — **Solana↔Ethereum basis-trade BRIDGE architecture** (distinct from
+      the per-venue Solana audit below, which resolves the venue-naming half of this placeholder). Bridge
+      architecture itself is owned by a separate, parallel agent working only in `codex/` (already landed several
+      dated 2026-08-19 codex commits on EVM/Solana bridge architecture — see
+      `/codex/04-architecture/transfer-coordinator.md` and its neighbors) — do not duplicate that work here.
+
+### Solana venue set — Jupiter, Raydium, Drift, Pacifica, Jito (real per-venue audit, 2026-08-19)
+
+Operator (2026-08-19), exact words: "jupiter raydium and drift should all be used" for the Solana spot+perp basis
+trade, plus Pacifica (already covered by its own dedicated plan) and Jito (LST — the Solana-side equivalent of
+Lido/EtherFi, asked about explicitly). Real per-venue grep across execution-service, strategy-service, MTDS,
+features-service, instruments-service — not an assumption from "extensively referenced" hit counts:
+
+| Venue | Execution | Strategy | MTDS batch/live | Features |
+| --- | --- | --- | --- | --- |
+| Jupiter (spot) | live, complete (adapter + swap exec + live WS shipped 2026-08-08) | not applicable to spot-only usage | batch+live, real | generic `dex_pool_swaps` mapping (no venue-specific calculator needed) |
+| Jupiter (perps) | **not built** — `JupiterConnector` is swap-only, no perp methods | n/a — no perp surface exists yet | n/a | n/a |
+| Raydium | **`supports_live=True`** — real `send_transaction()` via `BaseSolanaConnector`, not simulation-only | **registered**: `CARRY_BASIS_PERP@raydium-hyperliquid-sol-1h-sol-v5-prod` (`spot_venue=raydium`) + `MARKET_MAKING_CONTINUOUS@raydium-sol-usdc-1h-sol-v5-prod` — real slots, not candidate-only | batch (`raydium_classic_amm_handler.py`, 480L) + live (`raydium_defi_ws.py`, 323L), both real | 0 venue-specific hits; covered generically via the shipped `dex_pool_swaps` feature-group mapping (same pattern as Uniswap) |
+| Drift | zero Drift-specific code found (confirmed by grep — matches the removal claim below) | n/a | n/a | n/a |
+| Pacifica | simulation-only pending an operator wallet-key decision (own dedicated plan tracks this) | **registered**: `CARRY_FUNDING_DISPERSION` + `CARRY_BASIS_PERP` | batch+live, both real, **fully shipped 2026-08-14/15** across all 5 repos | n/a — funding-rate feature path is CeFi-side, Pacifica is `cefi`-classified |
+| Jito (LST, jitoSOL) | `stake()`/`unstake()` simulation-only (`supports_live=False`) — needs the `spl-stake-pool` SDK | **registered**: `CARRY_RECURSIVE_STAKED@kamino-jito-hyperliquid-sol-1h-sol-v2-prod` | batch (`lst_rates_handler.py`/`staking_yields_handler.py`) + live (`jito_defi_ws.py`), both real | real (`lst_features.py`, `lst_seasonal_rewards_collector.py`) |
+| Jito Restaking (`JITORESTAKING-SOLANA`, separate product) | simulation-only, same SDK gap as jitoSOL | not found registered in any archetype slot | batch only (`restaking_jito_adapter.py`) — **no live connector found**, unlike jitoSOL | not separately audited this pass |
+
+- [x] [BACKEND] P1. ✅ **Jupiter, Raydium, Pacifica, Jito(LST) — confirmed NOT greenfield, matching the memory
+      note's caveat that "extensively referenced" needed real verification, not assumption.** Per-venue evidence in
+      the table above. Jupiter perps and Jito Restaking's live leg are the only genuine build gaps found, both
+      already covered by narrower todos below or by the existing Jupiter+Kamino plan — nothing else in this row
+      needs new work.
+- [x] [BACKEND] P2. ✅ **Correction to a sibling plan, found during this audit.**
+      `/plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md` §C's first todo ("Implement
+      Kamino `borrow`/`repay`... it currently has `supply`/`withdraw`... — the lending side only") is stale —
+      `execution_service/defi_execution/protocols/kamino.py::borrow()`/`repay()` (lines 246/264) are real
+      implementations (`_submit_kamino_tx_api_op`: Kamino's Transactions API → sign → broadcast, with a paper-mode
+      short-circuit), not stubs. Corrected directly in that plan's own Progress Log rather than left to rot — see
+      that doc. Consequence: Jito's `CARRY_RECURSIVE_STAKED` slot above is NOT blocked by a missing Kamino
+      execution capability; only Jito's own stake-pool write path (jitoSOL side) remains simulation-only.
+- [ ] [OPERATOR] P1. **Drift — reconcile this session's operator request against the standing 2026-08-14 kill
+      ruling before any Drift code work resumes.** This session's operator instruction named Drift as one of four
+      venues for the Solana spot+perp basis trade; the durable codex ruling
+      (`/codex/04-architecture/solana-defi-coverage.md`, 🔴 tombstone 2026-07-16, reaffirmed in the 🟢 REVERSAL
+      banner 2026-08-14 — "DRIFT-SOLANA stays removed... nothing in this reversal touches Drift") is a real,
+      recent (5 days old at time of writing), twice-stated decision citing a specific $280M Lazarus-attributed hack
+      and an unproven ~$0-TVL Velocity relaunch. **This is a genuine SSOT contradiction, not a stale doc** — get an
+      explicit fresh operator ruling naming which one governs before writing any Drift-specific code (re-affirm the
+      kill, or explicitly reverse it a second time with the current Velocity-DEX risk picture considered). Do not
+      silently pick either side.
+- [ ] [BACKEND] P2. **Jito Restaking — confirm whether a live-feed connector genuinely doesn't exist or was missed
+      this pass.** `restaking_jito_adapter.py` (MTDS) has batch coverage; no `jito_restaking`/`JITORESTAKING` hit
+      appeared in `live/connectors/*.py` this session's grep. If genuinely absent, scope whether restaking
+      (distinct from jitoSOL LST) needs live coverage for any MVP archetype before building it — don't build
+      speculatively.
+- [ ] [BACKEND] P3. **Jito Restaking — register an archetype slot if it should trade at all**, mirroring the
+      jitoSOL LST pattern (`CARRY_RECURSIVE_STAKED@kamino-jito-...`) if a restaking-specific archetype use case
+      exists; today it has adapters at every layer but zero strategy-side registration.
+- [ ] [BACKEND] P1. **Manual-live vs automated-live execution mode — DECIDED 2026-08-19: static, per-strategy-
+      instance config, cross-cutting requirement, not Betfair-specific.** Operator (2026-08-19), exact words: "the
+      whole strategy service and execution need to understand that there's a manual Live mode where everything is
+      our own manual execution, and there's an automated Live mode." Applies to EVERY venue in this epic's priority
+      set, not just Betfair. **Design decision (no longer open)**: manual-vs-automated is set ONCE when a strategy
+      instance is launched — the same shape as the existing paper-vs-live distinction — not a dynamic per-order or
+      per-venue-default mechanism. **What already exists** (2026-08-19 audit, build on this, don't rebuild): UAC's
+      `OperationalMode` enum already has a `MANUAL` value, consumed in `execution_service/cli/handlers/__init__.py`
+      (`OperationalMode.MANUAL` resolves to `LiveExecutionHandler(mode=mode)`, differing from `LIVE` only in
+      instruction source — HTTP manual API vs automated strategy signals, not a fully separate engine) and wired
+      through `manual_instruction_api.py`/`manual_instruction_helpers.py`. UAC also has
+      `ExecutionTrigger = {AUTOMATED, MANUAL_OPERATOR}` — the closest existing primitive to "who executes" — but it
+      has exactly one live consumer today (`close_all/_template.py`, the emergency kill-switch close-all path).
+      **Build**: (1) add a per-strategy-instance manual/automated flag set at launch time (same launch-config
+      surface as the paper/live flag), (2) wire `OperationalMode.MANUAL`/`ExecutionTrigger.MANUAL_OPERATOR` into
+      that concrete shape beyond the one close-all call site — `LiveExecutionHandler` dispatch, the
+      manual-instruction API, per-venue adapter selection all read the new flag instead of assuming automated.
+      Companion strategy-service-side build tracked in `strategy_master.md`'s matching todo (cross-reference, this
+      is the execution-service half — the two sides must land the SAME shape). Done-when: launching a strategy
+      instance with the manual flag set routes every live order through the manual-instruction/tracking path (no
+      automated adapter call), and launching without it behaves exactly as today's automated live path, for at
+      least one venue end-to-end (Betfair is the natural first instance per the item above).
 - [ ] [BACKEND] P1. **Instruction-type x order-type x venue-capability registry — PARTIAL, confirmed 2026-08-19,
       operator-requested audit.** Operator: "That's supposed to be governed in registries... for all of them" (every
       instruction-type x order-type x venue combination, not just the DEX-swap example that prompted the question).
