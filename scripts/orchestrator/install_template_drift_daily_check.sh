@@ -5,8 +5,10 @@
 # install_template_drift_daily_check.sh — install the workflow-template drift daily-check systemd
 # timer (rollout-ratchet panel backend).
 #
-# Must run as root (or with sudo) on the orchestrator VM (id `planning`, EIP 13.113.200.22),
-# the same box that already runs reap-stale-blockers.timer / ldr-to-main-promote-heartbeat.timer /
+# Must run as root (or with sudo) on the orchestrator VM (id `planning`,
+# api.agent-orchestrator.odum-research.com — see orchestrator_vm_registry.yaml for the
+# current instance id/IP, which changes across cloud migrations), the same box that
+# already runs reap-stale-blockers.timer / ldr-to-main-promote-heartbeat.timer /
 # qg-baseline-daily-promote.timer.
 #
 # Usage:

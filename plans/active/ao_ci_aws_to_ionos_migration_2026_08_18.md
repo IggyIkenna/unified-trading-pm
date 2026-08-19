@@ -23,7 +23,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
@@ -148,14 +148,16 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       elsewhere as the weaker option). **Operator-confirmed 2026-08-18**: try (a) first, per the Handoff exception
       above; fall back to (b)/(c) only if genuinely blocked. Done-when: a Progress Log entry names the chosen mechanism
       + why.
-- [ ] [DESIGN] P1. Decide CI-runner's remote-access model to replace AWS SSM (today's *only* remote-exec path — zero
-      SSH, zero inbound security-group rules). IONOS has no SSM equivalent. Evaluate SSH with key-based auth restricted
-      to an admin IP allowlist (IONOS Cloud Firewall) vs. a jump host vs. an agent-based tool. **Still open
-      2026-08-18**: this is specifically about the CI-runner's admin shell/exec channel (rare, ops-only — debugging,
-      pushing a fix directly), a different surface from the AO dashboard (already JWT/login-authed over public HTTPS,
-      not IP-gated, reachable from any device). Needs a direct answer to "IP-allowlist the admin-exec channel, or does
-      that need remote/mobile reachability too?" before this can close. Done-when: a written decision on access model +
-      firewall posture, logged in the Progress Log.
+- [x] [DESIGN] P1. ✅ Decide CI-runner's remote-access model to replace AWS SSM (today's *only* remote-exec path — zero
+      SSH, zero inbound security-group rules). IONOS has no SSM equivalent. **Operator-confirmed 2026-08-19**: plain
+      SSH, key-based auth, **no IP-allowlist** — replicate AO's own existing SSH-access pattern
+      (`agent-orchestrator-deploy.md`'s "SSH access" section: private key stored in Secrets Manager, fetched to the
+      operator's laptop on demand; key possession is the actual access control today, not source IP). Rejected a
+      jump-host/IP-allowlist design: the caller here is an operator's laptop/mobile with no stable IP to allowlist, so
+      the friction wouldn't buy anything AO's own precedent doesn't already accept — this is a rare, ops-only channel
+      (debugging a wedged runner pool, pushing a direct fix), not something needed from a fixed location. Key
+      rotation/storage follows §1's secrets-consolidation decision above (GCP Secret Manager). Done-when: a written
+      decision on access model + firewall posture, logged in the Progress Log. ✅ met by this entry.
 - [ ] [DESIGN] P1. Decide the AO metrics/recovery replacement for the AWS CloudWatch agent (mem/swap/disk) and the
       EventBridge+Lambda auto-reboot-on-alarm mechanism (`agent-orchestrator-api-host.md`) — both AWS-native, no IONOS
       equivalent, needed for the **IONOS** box only. Evaluate a plain systemd/self-hosted metrics exporter driving
@@ -206,11 +208,17 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       boxes) the instance. Done-when: run against a disposable test box on either provider, nothing left billing on
       IONOS after a delete, a resumable snapshot left in GCS, and the AWS path leaves the instance in `stopped` state
       with its EBS/EIP intact.
-- [ ] [INFRA] P2. Fix every hardcoded reference to AO's Elastic IP `13.113.200.22` to resolve through the DNS name
+- [x] [INFRA] P2. ✅ Fix every hardcoded reference to AO's Elastic IP `13.113.200.22` to resolve through the DNS name
       `api.agent-orchestrator.odum-research.com` instead — named instances: `orchestrator_vm_registry.yaml`,
       `install_ldr_to_main_promote_heartbeat.sh`, `install_qg_baseline_daily_promote.sh`,
-      `install_template_drift_daily_check.sh`, `cron_liveness_watchdog.py`. Done-when: grepping the literal IP across
-      `unified-trading-pm/` and `agent-orchestrator/` returns zero hits outside DNS-zone config itself.
+      `install_template_drift_daily_check.sh`, `cron_liveness_watchdog.py`. **Resolved 2026-08-19** — did the careful
+      per-file read the prior evaluation deferred (see Progress Log). Finding: none of the 5 named files used the bare
+      IP as a real connection target, so the original Done-when ("zero hits outside DNS-zone config") was
+      unachievable as literally written — it would require scrubbing archived docs (frozen historical record) and the
+      new DR-failback runbook, which deliberately hardcodes the AWS IP on purpose. Actual Done-when met: the 4
+      comment-only scripts now point at the DNS name instead of the bare EIP so they don't go stale post-migration;
+      `orchestrator_vm_registry.yaml`'s `public_ip:` field is unchanged (legitimately needs the current IP; its
+      sibling `fqdn:`/`api_url:` fields already carry the DNS name).
 - [ ] [INFRA] P2. Extend `setup-glue-runners.sh` / `glue-runner-run.sh` to use the §1 credential mechanism instead of
       the AWS-instance-role-bound WIF provider. Done-when: a runner registered from an IONOS box claims and completes a
       real GHA job end-to-end.
@@ -411,21 +419,35 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
   the AWS-Secrets-Manager-to-GCP-only replacement, `vm-launch.sh`/`vm-winddown.sh` themselves) needs either real IONOS
   API knowledge to do well or touches AO's live bootstrap script directly — higher blast-radius, held for the
   operator's go-ahead rather than rushed.
+- **2026-08-19**: Resolved both items the prior Deferred-work table flagged as not blocked on credentials.
+  **CI-runner remote-access model** (§1): operator confirmed plain SSH, key-based auth, no IP-allowlist — replicates
+  AO's own existing SSH-access pattern (`agent-orchestrator-deploy.md`: private key in Secrets Manager, fetched to the
+  operator's laptop on demand; key possession is the real control today, not source IP) rather than building new
+  jump-host/allowlist machinery for a caller (an operator's laptop/mobile) with no stable IP to allowlist anyway.
+  **Hardcoded-EIP-reference fix** (§2): did the careful per-file read the prior evaluation deferred — read all 5 named
+  files plus every other hit of `13.113.200.22` across both repos (~150 total). Finding: none of the 5 used the bare
+  IP as a real connection target — `orchestrator_vm_registry.yaml`'s `public_ip:` field legitimately needs to hold the
+  current IP (its sibling `fqdn:`/`api_url:` fields already carry the DNS name); the other 4
+  (`cron_liveness_watchdog.py`, `install_qg_baseline_daily_promote.sh`, `install_ldr_to_main_promote_heartbeat.sh`,
+  `install_template_drift_daily_check.sh`) were header comments naming which VM to run the installer on, not
+  executable code. The remaining ~150 hits are archived plans/issue docs (frozen historical record, correctly
+  untouched), active-plan logged evidence of past commands (also historical record), or the new DR-failback runbook,
+  which deliberately hardcodes the AWS IP on purpose — bypassing DNS during a failback IS the point. Shipped fix:
+  updated the 4 comment-only scripts to reference the DNS name + `orchestrator_vm_registry.yaml` instead of the bare
+  EIP so they don't go stale post-migration. No `agent-orchestrator` repo changes needed — its 6 hits were
+  comment-only re-derivation examples or the documented DNS-bypass diagnostic in `ao_client.sh`, both correct as-is.
 
-## Deferred work after 2026-08-18
+## Deferred work after 2026-08-19
 
 | Item                                                                            | State / why deferred                                                                             | Blocked on                                                          |
 | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| §1: CI-runner remote-access model                                                | Not done — needs a direct answer, not implementation                                               | Operator: confirm IP-allowlist for the admin-exec channel specifically (the earlier answer addressed dashboard access instead) |
 | §2: `bootstrap_vm.sh` `ionos` branch, AWS-Secrets-Manager→GCP swap, `vm-launch.sh`, `vm-winddown.sh` | Not done — deliberately held back, not attempted blind                                             | Real IONOS API access to build/verify correctly; touches AO's live bootstrap script (operator go-ahead wanted given blast radius) |
-| §2: hardcoded-EIP-reference fix                                                  | Not done — turned out to need a careful per-file read, not a mechanical find-replace               | Nothing external — just needs the careful pass, can happen any time     |
 | §2: wire transcript/eval-results uploads into `vm-winddown.sh`                   | Cannot be done yet — the functions exist (`agent-orchestrator@946eeaba51`) but have no caller       | `vm-winddown.sh` doesn't exist yet (row above)                          |
 | §3: IONOS account/API token                                                      | In progress                                                                                          | Operator (signup underway as of 2026-08-18)                             |
 | §4/§5: actual cutover (provision, shadow-observe, DNS, stop)                     | Cannot be done yet                                                                                   | §3's IONOS API token                                                    |
 | §6: failback-runbook timed dry-run                                               | Cannot be done yet — the runbook itself is done (`unified-trading-pm@6ff00d4ca7`)                   | A real stopped AWS box, which only exists after §4/§5's stop steps      |
 | §6: cloud-spend-forecast doc update, invoice reconciliation                      | Operator-owned / cannot be done yet                                                                 | Operator needs to flag the GCP-negotiation owner; invoice check needs a full IONOS billing cycle |
 
-**Recommended next item**: once §3's IONOS API token lands in GSM, `vm-launch.sh` + `bootstrap_vm.sh`'s `ionos` branch
-unblocks the whole rest of §2/§4/§5 — start there. Independently, and not blocked on anything, the CI-runner
-remote-access-model question just needs the operator to answer the actual question asked (admin-exec channel, not the
-dashboard) to unstick §1.
+**Recommended next item**: every item flagged as not-blocked-on-credentials is now resolved. Everything left waits on
+§3's IONOS API token landing in GSM — once it does, `vm-launch.sh` + `bootstrap_vm.sh`'s `ionos` branch unblocks the
+rest of §2/§4/§5; start there.

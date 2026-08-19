@@ -4,8 +4,10 @@
 # Delete-when: NA
 # install_ldr_to_main_promote_heartbeat.sh — install the LDR->main promote heartbeat systemd timer.
 #
-# Must run as root (or with sudo) on the orchestrator VM (id `planning`, EIP 13.113.200.22),
-# the same box that already runs reap-stale-blockers.timer / slot-cron-ff-pull.
+# Must run as root (or with sudo) on the orchestrator VM (id `planning`,
+# api.agent-orchestrator.odum-research.com — see orchestrator_vm_registry.yaml for the
+# current instance id/IP, which changes across cloud migrations), the same box that
+# already runs reap-stale-blockers.timer / slot-cron-ff-pull.
 #
 # Usage:
 #   sudo bash scripts/orchestrator/install_ldr_to_main_promote_heartbeat.sh
