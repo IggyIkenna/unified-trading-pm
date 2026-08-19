@@ -104,11 +104,36 @@ sub-classes of finding here are qualitatively different and should be triaged se
 Root-cause and remediate per asset group; do not bulk-accept without investigation given the column-swap-shaped
 sports instrument_type finding above.
 
-- [ ] [DATA] P1. Root-cause the 34 defi non-canonical venue entries — determine whether each is a genuinely
+- [x] ✅ [DATA] P1. Root-cause the 34 defi non-canonical venue entries — determine whether each is a genuinely
       unregistered venue+chain combo (needs adding to `ALL_DEFI_VENUES` as `pipeline`-phase) or a
       `_defi_bare_venue_bases` chain-suffix-stripping edge case for names containing a chain-like infix (e.g.
       `KAMINO-SOLANA`). Repo: unified-api-contracts (registry) or deployment-api (`_distinct_values.py`).
       Done-when: each of the 34 values is classified and either registered or the comparison logic fixed.
+      **DONE 2026-08-19 (slot-33).** Classified all 34 programmatically against the live UAC registry
+      (`ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES`/`MAINNET_CHAIN_IDS`) — 3 classes:
+      1. **26/34 — comparison-logic bug, FIXED**: the raw manifest value is a LITERAL exact member of
+         `ALL_DEFI_VENUES` in its full composite `PROTOCOL-CHAIN` form (e.g. `BALANCER-ARBITRUM`,
+         `UNISWAP_V3-ETHEREUM`, `KAMINO-SOLANA`, `SOLEND-SOLANA`), but `_comparison_set` only compared against
+         the chain-suffix-STRIPPED bare-base set, discarding the valid literal-composite match. Fixed by
+         comparing against the union of bare bases and the full `ALL_DEFI_VENUES` set —
+         `deployment-api@03d56dab24`.
+      2. **2/34 — known aliases, FIXED**: `AAVEV3` / `BLAZESTAKE` are `LEGACY_DEFI_VENUE_ALIASES` keys already
+         folded by `normalize_defi_venue`, never consulted by this panel. Added
+         `DEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES` (mirrors `CEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`),
+         wired into `_ACCEPTED_EXCEPTIONS[("venues", "defi")]` — `unified-api-contracts@1c14d7aafc`.
+      3. **1/34 — dead residue, FIXED**: `GMX` was removed from `ALL_DEFI_VENUES` 2026-07-25 (operator ruling,
+         `defi_gmx_venue_removal_2026_07_25.md`, unreliable data); repo-wide grep confirms zero live
+         MTDS/instruments-service adapter code stamps it — pure historical residue. Added
+         `DEFI_VENUE_ACCEPTED_DEAD_RESIDUE` (same UAC commit), wired into the same `_ACCEPTED_EXCEPTIONS` entry.
+      4. **5/34 — genuinely unregistered, filed separately**: `ASTER`, `EXTENDED`, `HYPERLIQUID`,
+         `KAMINO_LENDING`, `LIGHTER` are not in `ALL_DEFI_VENUES`/`LEGACY_DEFI_VENUE_ALIASES` in any form. These
+         need real registry-phase (`live` vs `pipeline`) + writer-trace judgment calls a mechanical fix would
+         risk getting wrong (per this same file's own D1b/CHAINLINK-* precedent) — filed as
+         `plans/active/issues/b21_defi_venue_5_unregistered_perp_dex_2026_08_19.md` with full per-value
+         evidence + 4 scoped follow-up todos, not folded into this item.
+      Verified: re-classifying all 34 against the shipped fix + new accepted-exception registries confirms
+      exactly the 5 above remain flagged — the other 29 now resolve correctly (26 canonical, 3
+      accepted-exception).
 - [ ] [DATA] P1. Root-cause the 2 defi non-canonical data_types (`dex_pools`, `dex_swaps`) — add to
       `DATA_TYPES_BY_ASSET_GROUP['defi']` if genuinely produced, else trace the writer emitting them. Repo:
       unified-api-contracts / market-tick-data-service. Done-when: a written determination + fix lands.
