@@ -224,6 +224,8 @@ source: >-
 - **context-scout 2026-08-03**: re-scouted; refreshed context_scope (5 entries) — added the v9 re-stamp source script.
 
 - **na-eligibility-audit 2026-08-17** [body-hash:4fc17ae72e7a34ce]: KEEP-NA, valid -- 3 remaining items each independently cited by NEVER-RE-LITIGATE rules. The FULL AUDIT item is a broad multi-plan judgment call reaffirmed as such by 4 prior audit rounds (2026-07-30, 08-01, 08-03, 08-08 round7). The schema_version re-stamp item carries an explicit dated operator ruling in its own text ('DEFERRED -- operator 2026-06-22: wait for the active backfill fleet to finish, then run in a quiet window') plus a HARD gate on irreversible --apply sign-off -- rule (a). The execution-config pre-flight item is explicitly a pointer whose own text says 'File under the execution epic' and the doc's own success criteria confirms 'not executed here' -- rule (c).
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 3 residual todos, each independently NEVER-RE-LITIGATE-citable: a broad FULL AUDIT judgment call, an irreversible schema_version re-stamp explicitly DEFERRED by operator 2026-06-22, and an execution-config pre-flight pointer item. Reaffirmed KEEP-NA 5x (2026-07-30 through 08-17).
+
 ## Deferred work — migrated to:
 
 - P3 (re-stamp legacy schema_version tails): N/A — no migration, still owned + open in this plan. Deferred per operator

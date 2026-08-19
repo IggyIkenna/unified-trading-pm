@@ -39,9 +39,10 @@ related:
 created: 2026-08-19
 author: plan-reconcile (observability_master epic-scoped pass, hunters D+E, adjudicated + filed by lead)
 parent_epic: observability_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning
+execution_scope: orchestrator-agent
 priority: P1
+assigned_role: worker
 drift_direction: advance-code
 source: [manifest_hygiene_daily.py, plan-reconcile-observability_master-2026-08-19]
 resolved_by:
@@ -120,3 +121,7 @@ invisible to `regen_backlog_from_plan.py`).
   issue docs), then independently re-verified by the lead session (`ls` re-run, `grep` for the source sentence in
   `manifest_hygiene_daily.py`, read lines 695-734 directly). NOT shipped this session (working-tree-only pass,
   heavy multi-session contention on the shared checkout) — the lead/operator session should pick this up.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): RECLASSIFY whole-doc — all 3 open todos are freshly
+  filed (2026-08-19, no prior audit pass), each bounded with a stated done-when and no operator gate or
+  design-judgment call found. Flipped `assigned_vm: NA -> planning`, added `assigned_role: worker` (was missing).
+  Companion: `manifest_hygiene_daily_ag_list_boilerplate_bug_2026_08_19_finalize_2026_08_19.md`.

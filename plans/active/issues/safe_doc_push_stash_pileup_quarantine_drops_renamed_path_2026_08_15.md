@@ -133,3 +133,4 @@ quarantine trigger and confirms the retry loop succeeds instead of exhausting.
   warning printed at all in this variant (contrast the renamed-path variant, which at least self-detects and logs).
   Concrete cost: one real, small, uncommitted edit lost (see the new P3 todo above) — low-stakes this time, but the
   mechanism doesn't distinguish low- from high-stakes content.
+- **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 2 open todos: todo 1 (stash-quarantine retry-loop fix) carries an explicit standing ruling — an earlier same-day RECLASSIFY_WHOLE proposal was overridden on conflict-check as an actively-worked, state-dependent/elusive. (1/2 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
