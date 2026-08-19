@@ -28,6 +28,14 @@ summary: >-
   to the general slot pool instead (confirmed: `ag_closeout_auditor` tranches ao/ui/ci/sports
   landed on ordinary slots 1/4/7/14, competing with regular plan-task throughput instead of using
   the reserve built specifically to avoid that).
+
+  2026-08-19 follow-up (same investigation, operator asked for the full intended 3-tier dispatch
+  model): re-reading `escalation.py`/`dispatch.py`/`config.py` end-to-end surfaced 2 more
+  code-confirmed gaps, distinct from the reclaim bug above and each other — see "Additional
+  findings" below. Gap A: `escalation._pick_free_slot` has ZERO reserve-preference logic at all
+  (confirmed zero matches for `reserved_slot_ids` in the whole file) — unlike `plan_health`'s
+  picker, it never mirrored the 2026-08-16 Finding-1 fix. Gap B: neither picker's general-pool
+  fallback checks for competing queued plan-item demand before claiming a non-reserved slot.
 status: open
 resolved_by:
 nature: issue
@@ -35,10 +43,11 @@ asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [agent-orchestrator, tmux, slot-lifecycle, worker-liveness-watchdog, scheduled-jobs, orphaned-session]
+tags: [agent-orchestrator, tmux, slot-lifecycle, worker-liveness-watchdog, scheduled-jobs, orphaned-session, escalation-dispatch, reserve-preference]
 related:
   [
     /plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md,
+    /plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
   ]
 created: "2026-08-19"
@@ -58,6 +67,9 @@ context_scope:
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/config.py,
     agent-orchestrator/server/plan_health.py,
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/server/dispatch.py,
+    agent-orchestrator/server/autospawn.py,
   ]
 supersedes:
 superseded_by:
@@ -154,6 +166,45 @@ alive. New `ag_closeout_auditor` tranches (ao/ui/ci/sports) fell through to the 
 pool instead — landing on slots 1/4/7/14, competing with ordinary plan-task throughput instead
 of using the capacity specifically reserved to avoid that competition.
 
+## Additional findings (2026-08-19 follow-up) — the reserve-preference model has 2 more gaps
+
+Prompted by the operator asking for the full intended dispatch-priority model: plan items go to
+normal slots; scheduled tasks prefer their own reserve and only spill into normal slots when
+nothing else needs them; escalations follow the identical rule. Re-reading `escalation.py`,
+`dispatch.py`, and `config.py` end-to-end (not just the slice this doc already covered) surfaced
+two more, code-confirmed gaps distinct from the tmux-reclaim bug above — both are dispatch-LOGIC
+gaps that would exist even with `_reclaim_idle_lingering_sessions` fully fixed, not liveness bugs.
+
+**Gap A — `escalation._pick_free_slot` has ZERO reserve-preference logic, unlike its
+`plan_health` sibling.** Confirmed via `grep -n "reserved_slot_ids" server/escalation.py` — zero
+matches in the entire file. The function (`server/escalation.py:408`) walks `list_slots(session)`
+in plain ascending `slot_id` order and returns the first genuinely-idle candidate; it never
+computes or prefers `config.ci_escalation_reserved_slot_ids()`. This is the same class of bug
+`ao_fleet_regression_triad_2026_08_16` Finding 1 fixed in `plan_health._pick_free_slot` (see
+`server/plan_health.py:212-223`), but that fix was never mirrored onto escalation's own picker.
+Net effect: a CI/CD-failure escalation will happily claim a low-numbered "normal" plan-worker
+slot while its own dedicated reserve (`DEFAULT_CI_ESCALATION_SLOT_RESERVE = 3`, `config.py:476`)
+sits idle, purely because the normal slot sorts first. Distinct from
+`ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`, which found the reserve slots themselves
+paused/account-exhausted (an availability problem) — this is a preference-ordering problem that
+applies even when every reserved slot is healthy and free.
+
+**Gap B — the general-pool fallback (both pickers) is not demand-aware.** Once a reserve is
+fully busy, both `plan_health._pick_free_slot` (today) and `escalation._pick_free_slot` (once Gap
+A is fixed) fall back to "any other slot that is currently idle," full stop — neither checks
+whether the backlog has queued plan-item work waiting on that same slot. A scheduled or
+escalation dispatch can therefore win a race against a plan item for a normal slot purely on
+pick-order timing, which doesn't match the intended model ("only spill into a normal slot when
+plan items don't also want it right now"). A fix would need the fallback to consult existing
+queued-backlog-demand signals (`autospawn._has_queued_work`/`_queued_undispatched_count`,
+`server/autospawn.py:578,606`) before claiming a non-reserved slot, instead of only checking
+physical idleness. Also confirmed while investigating: plan items are already correctly kept OFF
+both reserves today — the scheduled reserve via an explicit `_FILTERS` row
+(`sched_reserve_dispatch_exclusion_gap_2026_08_16`, `server/dispatch.py:139-177,360-371`) and the
+CI reserve via `autospawn._apply_fleet_cap`'s count clamp (`server/autospawn.py:4208`) — so this
+gap is one-directional: scheduled/escalation tasks can wrongly land on normal slots, never the
+reverse.
+
 ## Follow-up
 
 - [ ] [BACKEND] P2. **Root-cause why `_reclaim_idle_lingering_sessions` has not reclaimed slots
@@ -178,6 +229,21 @@ of using the capacity specifically reserved to avoid that competition.
       is what surfaced the finding; the same gap, wherever it is, plausibly affects any
       completed one-shot dispatch fleet-wide (review/escalate/conflict_resolver included, per
       the reclaimer's own documented scope), not just `ag_closeout_auditor`.
+- [ ] [BACKEND] P2. **Give `escalation._pick_free_slot` the same reserve-preference logic
+      `plan_health._pick_free_slot` already has** (Gap A above). Compute
+      `config.ci_escalation_reserved_slot_ids()` from the live non-review/non-human roster, try a
+      free-and-reserved slot first, fall back to the existing plain scan only when the reserve is
+      fully busy — mirror `server/plan_health.py:212-223`'s pattern exactly. Add/extend test
+      coverage in whichever test file covers `escalation._pick_free_slot`
+      (`tests/test_escalation.py` or similar — locate via grep before assuming a new file is
+      needed).
+- [ ] [BACKEND] P2. **Make the general-pool fallback demand-aware for both pickers** (Gap B
+      above) — before `plan_health._pick_free_slot` or `escalation._pick_free_slot` claims a
+      non-reserved slot as a fallback, check whether the backlog has queued/eligible plan-item
+      work waiting (reuse `autospawn._has_queued_work`/`_queued_undispatched_count` rather than
+      reinventing the check). Needs a short design decision first — whether "competing demand"
+      means any queued backlog task, or specifically one eligible for THIS slot — resolve that
+      before implementing, not while implementing.
 
 ## Codex SSOTs
 
