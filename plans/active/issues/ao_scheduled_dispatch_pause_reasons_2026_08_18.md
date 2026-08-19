@@ -28,10 +28,12 @@ related:
   ]
 created: "2026-08-18"
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning # reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
+execution_scope: orchestrator-agent
 priority: P2
-estimate_class: research
+estimate_class: infra
+estimate_baseline_ai_days: 0.4
+estimate_calibrated_ai_days: 0.32
 assigned_role: infra
 drift_direction: none
 source: >-
@@ -152,3 +154,4 @@ itself "done," so the next natural tick after unpause dispatches normally with n
       (see updated `ci_reconcile` section above); `ag_closeout`/`cefi_mtds_smoke` remain paused,
       untouched. Not archiving the doc/section since `ag_closeout`/`cefi_mtds_smoke` and follow-up 1
       are still open.
+- **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. 2 of 3 follow-up items already shipped same-day with evidence; sole remaining todo (add reason + paused_at field, surface on API + dashboard) is a scoped, deterministic schema/code change. Conflict-check clear: grepped plans/active/*.md for `scheduled_dispatch_pause` — zero hits outside this doc. Companion gated finalize: `ao_scheduled_dispatch_pause_reasons_2026_08_18_finalize_2026_08_19.md`.

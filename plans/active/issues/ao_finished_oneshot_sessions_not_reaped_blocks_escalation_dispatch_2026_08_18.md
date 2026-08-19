@@ -32,10 +32,12 @@ related:
   ]
 created: "2026-08-18"
 parent_epic: agent_operating_framework_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning # reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
+execution_scope: orchestrator-agent
 priority: P1
-estimate_class: research
+estimate_class: infra
+estimate_baseline_ai_days: 0.3
+estimate_calibrated_ai_days: 0.24
 assigned_role: infra
 drift_direction: none
 source: >-
@@ -210,3 +212,4 @@ corrections). Quality gate green (4118 passed) before shipping.
       per-tick logging of `ticks` progress in `_reclaim_idle_lingering_sessions` (currently zero
       observability into sub-threshold accumulation) as the next diagnostic step. Repo:
       agent-orchestrator.
+- **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. 2 of 3 todos already shipped with evidence; sole remaining todo (live re-verify + conditional DEBUG logging) is bounded/deterministic. Conflict-check clear: no active planning doc in agent_operating_framework_master claims this ground; the naming-adjacent `one_shot_complete_session_ownership_desync_2026_08_08.md` covers a DIFFERENT, opposite-direction reaper bug (idle-reap over-reclaiming vs. this doc's under-reclaiming) and is already fully shipped/gated by its own finalize plan. Companion gated finalize: `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md`.

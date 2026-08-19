@@ -187,3 +187,5 @@ mechanical fix, which is why this is filed rather than patched.
     needs its own follow-up todo/issue.
   - Todo 2 ([UI] gate the Playwright suite into CI) remains untouched — out of scope for this investigation and still
     correctly sequenced after this todo.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:d86463dc898685af]: KEEP-NA, valid — investigation todo now done (2026-08-18, both root causes traced to already-shipped fixes, re-verified passing); sole remaining open todo is an explicit policy/design-fork call (whether to gate the dashboard Playwright suite into CI), cited verbatim in ag_closeout_audit_ao_parked_2026_08_16.md's 'design fork' category. 2 prior audit rounds (2026-08-09, 2026-08-10) already declined reclassification for this same reason.

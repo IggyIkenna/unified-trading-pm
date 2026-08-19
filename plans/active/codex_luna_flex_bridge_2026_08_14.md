@@ -328,3 +328,5 @@ template, minus the third-party dependency).
   comparisons) are historical record of decisions/work already made, not live open todos. Also left the "sibling
   Grok/Gemini proxy plan" pointer in Non-goals and the Progress Log's `grok_gemini_translation_proxy_2026_08_14.md`
   citation untouched — that doc is owned by the separate removal track, not this one.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:942b6b6f4f957795]: KEEP-NA, valid — redirect-banner class: ag_closeout_audit_ao_parked_2026_08_16.md L198-199 explicitly excludes this whole doc from AO-dispatch (operator handling elsewhere, 2026-08-14), independently corroborated by ao_satellite_ao_dispatch_batch23_2026_08_17.md L~100-104 declining the same extraction for the same reason. Todos individually read bounded, but the dispatch mechanism itself is wrong per the redirect.

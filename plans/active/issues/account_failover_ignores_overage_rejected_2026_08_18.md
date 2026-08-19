@@ -140,30 +140,30 @@ list detects that state.
 - [ ] [OPERATOR] P2. **Decide the immediate remediation**: top up / raise the overage limit on
       `sub-b-iggy2london` now, or accept the account is unusable until the weekly reset
       (`2026-08-23T19:00:00Z`) and let affected slots idle/fail over manually in the meantime.
-- [ ] [BACKEND] P2. **Add `overage_status == "rejected"` as an explicit 5th failover-trigger
+- [x] N. ✅ [BACKEND] P2. **Add `overage_status == "rejected"` as an explicit 5th failover-trigger
       condition** alongside the existing four pct/rate-limit checks in the account-monitoring code
       path that feeds `rotate_all_slots_off_account` (see `main.md` § "Account-failover triggers"
       for the current four-condition table; the actual check lives in `server.py` per that section's
       own pointer). Should fire regardless of `weekly_pct`/`five_hour_pct` values, since overage
       rejection is a harder failure than either percentage threshold. Must cover BOTH observed
-      `overage_disabled_reason` values (`out_of_credits` and `org_level_disabled`), not just one.
-- [ ] [BACKEND] P2. **Investigate whether account rotation excludes overage-rejected accounts from
+      `overage_disabled_reason` values (`out_of_credits` and `org_level_disabled`), not just one. Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 7 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
+- [x] N. ✅ [BACKEND] P2. **Investigate whether account rotation excludes overage-rejected accounts from
       its selection pool.** Fleet-wide evidence (4 accounts, 15+ kills/18h on slot 2 alone) suggests
       rotation may be repeatedly re-landing on accounts already at their overage ceiling rather than
       skipping them — check the rotation-pool selection logic for an `overage_status` filter (or
       lack thereof), separate from the failover-trigger fix above (a trigger fix stops sessions
       dying on an already-bad account; a pool-exclusion fix stops rotation assigning a bad account
-      in the first place).
+      in the first place). Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 8 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 - [ ] [BACKEND] P3. **Check whether the review role's persistent loop burns through its assigned
       account's overage budget faster than rotation replenishes it** — alternate/complementary
       hypothesis to the pool-exclusion one above; review agent agt-8de6ec flagged this as
       unconfirmed. If review's long-running loop pattern is a meaningfully higher burn rate than
       other roles, it may need its own rotation cadence rather than sharing the general pool logic.
-- [ ] [BACKEND] P3. **Classify this failure shape instead of leaving it `death_class: unexplained`**
+- [x] N. ✅ [BACKEND] P3. **Classify this failure shape instead of leaving it `death_class: unexplained`**
       — when a killed slot's `account_snapshot.overage_status == "rejected"` at kill time, the
       death classifier should label it something diagnosable (e.g. `account_overage_exhausted`)
       rather than `unexplained`, so this doesn't read as a mystery crash on the next occurrence
-      (on this or any other account).
+      (on this or any other account). Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 9 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 
 ## Interaction analysis vs. the CI-escalation-reserve pool (2026-08-18, later same day)
 
@@ -221,3 +221,5 @@ either way.
   architecture this bug lives in.
 - `unified-trading-pm/agents/main.md` § "Account-failover triggers" — the trigger table this issue
   proposes extending.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:cf5ec6b8ba855a80]: RECLASSIFY (per-todo split) — 3 of 4 remaining todos (add the 5th failover trigger, investigate rotation-pool exclusion, classify the failure shape) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 7-9. Doc stays NA for the sole remaining item ([OPERATOR] immediate remediation decision: top up vs. accept unusable until weekly reset 2026-08-23).

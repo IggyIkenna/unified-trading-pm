@@ -690,7 +690,7 @@ investigation confirmed are both achievable with existing primitives:
 
 ### Phase 7 — main Fleet table exclusion + registration re-verification (found 2026-08-18, not yet fixed)
 
-- [ ] [UI] P2. **Exclude human-kind slots from the main dashboard Fleet table's generic role-badge rendering** —
+- [x] N. ✅ [UI] P2. **Exclude human-kind slots from the main dashboard Fleet table's generic role-badge rendering** —
       slot 9001 currently renders there with a role badge from the generic worker/reserve pool ("CI reserve"),
       confirmed live via dashboard screenshot 2026-08-18. Phase 3's `AgentKind`/`KINDS_ORDER`/`AGENT_KIND_LABEL`
       work (`dashboard/src/layout.tsx`, `agent-orchestrator@6b50caa795cfede5ecac6e91125a5284cad3a68e`) only ever
@@ -698,7 +698,7 @@ investigation confirmed are both achievable with existing primitives:
       per-slot role badge and add the same `human_slot_ids()`-style exclusion the liveness/kill sites already use
       (`server/config.py:316-331` pattern), so a human slot renders nowhere in the generic table at all (not
       mislabeled, not present). Done when: a live dashboard check shows slot 9001 absent from the main Fleet
-      table's rows entirely, still correctly present on the Human Fleet page. Repo: agent-orchestrator.
+      table's rows entirely, still correctly present on the Human Fleet page. Repo: agent-orchestrator. Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 4 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
 - [ ] [SCRIPT] P2. **Re-verify live whether `GET /api/agents?kind=human` still returns Ikenna's registered row** —
       this plan's own 2026-08-16 Progress Log confirmed `agent_id=agt-f6b475`, `slot_id=9001`, `agent_kind=human`
       live in production. A same-day sibling issue doc (`plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`)
@@ -741,3 +741,5 @@ investigation confirmed are both achievable with existing primitives:
   below the main Fleet table, or stay the existing separate `/human-fleet` page with just the exclusion bug (1)
   fixed? Todos below are written to be answerable either way — resolving the fork changes WHERE the fix in (1)
   renders, not whether it's needed.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:750fff6078039cf5]: RECLASSIFY (per-todo split) — the Fleet-table role-badge exclusion item extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 4. Doc stays NA for its other remaining items (Harsh's Phase 4 — physically requires his own machine; Ikenna's task-cycle — blocked on live backlog state, 0/706 tasks without a blocked_reason; the /api/agents zero-rows contradiction — cross-referenced, see `ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md` item 11).

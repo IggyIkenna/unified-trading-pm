@@ -134,7 +134,7 @@ spawn workers.
 - [ ] [SCRIPT] P2. Spread 31/32/33 across more than one account instead of triple-booking sub-b —
       today's incident is exactly what a single-account reserve produces the moment that one
       account gets paused/exhausted. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. Pull `overage_disabled_reason` for the other 21 disabled accounts (the field
+- [x] N. ✅ [SCRIPT] P2. Pull `overage_disabled_reason` for the other 21 disabled accounts (the field
       name this session's first pass got wrong) to understand whether that's a temporary overage
       window or something needing operator action — separate from this specific stuck row, but
       surfaced by the same investigation. Cross-reference against the in-progress provider-
@@ -142,11 +142,13 @@ spawn workers.
       `grok_gemini_translation_proxy_2026_08_14.md`, `codex_luna_flex_bridge_2026_08_14.md`,
       `kimi_gemma_provider_onboarding_2026_08_16.md`) before treating any of them as anomalous —
       operator confirmed 2026-08-18 these disabled non-Anthropic accounts are largely expected,
-      mid-onboarding/testing. (repo: agent-orchestrator)
-- [ ] [SCRIPT] P2. `/api/agents` returns ZERO rows for human slots (`human_agent_rows: []` when
+      mid-onboarding/testing. (repo: agent-orchestrator) Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 10 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
+- [x] N. ✅ [SCRIPT] P2. `/api/agents` returns ZERO rows for human slots (`human_agent_rows: []` when
       checked live 2026-08-18) — if the dashboard's human-fleet overview reads from this endpoint,
       that's why it "doesn't seem to work" per the operator. Needs its own investigation into which
       endpoint the human-fleet overview actually consumes and whether human-slot rows should be
       added to `/api/agents` or the overview should read `/api/state`'s `slots[]` instead. Filed
       here as a pointer, not a full diagnosis — deserves its own issue doc if it isn't already
-      tracked under `ao_human_fleet_integration_2026_08_15.md`. (repo: agent-orchestrator)
+      tracked under `ao_human_fleet_integration_2026_08_15.md`. (repo: agent-orchestrator) Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 11 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:4c459f34ca19cf91]: RECLASSIFY (per-todo split) — 2 of 3 remaining todos (pull overage_disabled_reason for the other 21 disabled accounts, investigate /api/agents zero human rows) extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` items 10-11. Doc stays NA for the sole remaining item ([OPERATOR] spread reserve slots 31/32/33 across more than one account instead of triple-booking sub-b).

@@ -320,3 +320,5 @@ Operator reported agents "keep respawning without finishing their tasks and burn
   call to whoever reviews, per the standing instruction on this doc. No code changed; read-only SSM only, same
   `state.db mode=ro` pattern, this time cross-analyzing raw pre-instrumentation timestamps rather than the
   diagnostic fields captured after 08-12.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:ee781ee3c4c9540d]: KEEP-NA, valid — the original P1 INVESTIGATE todo is already closed (root-caused 2026-08-18, same ambient-tmux-socket kill-server mechanism as the sibling doc, DeepSeek incidental, 5+ days zero recurrence). Sole remaining open item is an explicit [OPERATOR]-tagged tuning-flag revert decision with no decision on record. Converges with the 2026-08-17 na-eligibility-audit verdict (updated for the since-closed investigation item).

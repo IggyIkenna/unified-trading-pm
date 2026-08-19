@@ -830,3 +830,5 @@ duplicating a new issue doc. Skipping via `reason_code: GATED` per this doc's es
   false-positive), not real open items; the 1 genuine item (root-cause the "zero-derived-parent-row" dispatch-gate
   mechanism) is live-dispatch-critical-path agent-orchestrator machinery under active investigation, per the standing
   2026-07-31 operator directive routing AO-machinery docs to local-only.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:1e6c12c7e9789219]: KEEP-NA, valid — grep_open_todo_count mismatch (6 vs 1) explained: 5 of 6 hits are a quoted upstream doc's checkboxes inside a fenced code block (self-documented known tooling artifact, na_inventory_counts_fenced_code_block_checkboxes_as_open_todos_2026_08_02.md), not this doc's own todos. Doc cites the 2026-07-31 operator directive routing AO-machinery/dispatch-logic docs to execution_scope:local-only (4+ citations, most recently 2026-08-17); sole open todo is deep unresolved dispatcher-internals investigation, consistent with 6+ prior audit passes.

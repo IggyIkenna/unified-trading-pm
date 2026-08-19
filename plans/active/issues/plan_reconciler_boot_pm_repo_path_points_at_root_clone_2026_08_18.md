@@ -30,8 +30,8 @@ related:
 created: "2026-08-18"
 author: plan_reconciler
 parent_epic: orchestrator_master
-assigned_vm: NA
-execution_scope: local-only
+assigned_vm: planning # reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
+execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 0.4
@@ -126,3 +126,6 @@ canonical checkout other slots read from, or simply confuse git state in a clone
   pass) — todo 1 stays open, now with the exact file:line evidence needed to implement it directly. Todo 2 not
   independently re-verified this pass (the doc's own live `env | grep` evidence from 2 separate dispatches already
   stands; no new information to add).
+- **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. Root cause already fully traced with exact file:line evidence by a same-day plan_reconciler pass; both todos (fix the boot-template wiring + reconcile the session-var-export/doc-wording question) are bounded/deterministic. Conflict-check clear: no other active planning doc claims this fix. Companion gated finalize: `plan_reconciler_boot_pm_repo_path_points_at_root_clone_2026_08_18_finalize_2026_08_19.md`.
+
+**THIRD confirmed occurrence, na_eligibility_auditor (ao tranche, this run)**: this exact session's own boot message set `$PM_REPO_PATH` to `/home/ubuntu/unified-trading-system-repos/unified-trading-pm` (the root clone) rather than `.tabs/30/unified-trading-pm` (this session's own slot clone) — verified via `git status`/`git log` comparison of both paths before any write. Corroborates this doc's todo 1's own prediction that the bug generalizes to "every sharded plan_health-family role's boot prompt template", not just plan_reconciler's. Followed the same sanctioned workaround as the two prior occurrences: verified `.tabs/30/unified-trading-pm` was clean/current (ahead=0, behind=0, no stale `.agent-claim`) and did every Phase 3/4 write for this audit run there instead of the root clone. No new issue doc filed — this doc already tracks the class; noted here as evidence + folded the generalization into this doc's own finalize plan's reconcile todo (verify the fix covers every plan_health-family role, not just plan_reconciler).

@@ -165,3 +165,5 @@ post-sync-only enforcement), then ran the 6-step archival ritual on
 - 2026-08-18 (main, slot-3): Created mid-run, applying rulings as hunters report rather than batching all decisions
   to the very end — keeps the trust-mode log honest and auditable per-decision. Will append further entries as
   hunters 1/2/4/7 report and as Phase 3 cross-hunter synthesis surfaces anything additional.
+
+- **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:c8a117c5b155ae00]: KEEP-NA, valid — trust-mode operator-ruling decision log for an in-flight interactive /plan-reconcile ao run; by design carries zero checkbox-style todos (judgment calls already applied under trust-mode, each with reasoning). Doc explicitly states it is not yet final (hunters 1/2/4/7 still pending) — neither archivable nor reclassifiable; content is the record itself.
