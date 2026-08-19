@@ -22,7 +22,7 @@ summary: >-
   (`check_cron_fired` line ~859: `last_success_age <= target.max_age_min`) that is supposed to suppress
   a stale-sentinel false positive when the Cloud Run Job's real execution history shows a recent SUCCEEDED
   run. But the LIVE cron cadence has been hourly since the 2026-08-14 sweep-overlap-storm reconciliation
-  (`dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`'s "Reconcile the schedule discrepancy" todo,
+  (`/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`'s "Reconcile the schedule discrepancy" todo,
   closed 2026-08-14 — that todo corrected the PLAN's stale `*/5` claim but never touched this code
   constant). At hourly cadence, the job's last-success age at meta-sweep check time (meta itself runs
   `*/15`) is routinely 15-59 minutes — always exceeding the stale 10-minute budget — so the KEY #4
@@ -34,7 +34,7 @@ summary: >-
   (`terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf`, `dp_exit_code_monitor_cron` resource) still
   DECLARES `schedule = "*/5 * * * *"`, undeployed against the live hourly schedule. Applying that
   terraform would revert the live cron back to */5 and reopen the entire multi-week sweep-overlap/OOM
-  storm this doc's sibling issues fought through (`dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`,
+  storm this doc's sibling issues fought through (`/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md`,
   `dp_exit_code_monitor_oom_signal9_2026_08_09.md`) — flagged for a human/operator IaC-reconciliation
   pass, not touched by this fix.
 status: open
@@ -47,7 +47,7 @@ tags: [alerting, data-pipeline-monitors, dp-watcher-002, cron-freshness, false-p
 related:
   [
     /plans/active/issues/dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md,
-    /plans/active/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
+    /plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
     /plans/active/issues/dp_exit_code_monitor_oom_signal9_2026_08_09.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
