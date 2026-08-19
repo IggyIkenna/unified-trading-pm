@@ -112,3 +112,24 @@ this will recur on each one's own expiry unless fixed.
   one-off symptom, which is already resolved.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:a31fbbeb17037f53]: KEEP-NA, valid — primary/blocking todo is an [OPERATOR]-tagged live orchestrator.service systemd env-var change + restart (fleet-critical service, in-flight dispatch risk); todo 2 is gated on todo 1's outcome and can't execute meaningfully first.
+- **2026-08-19 (interactive session, operator-authorized: "ao is quiet, do it yourself, you have adc")**: applied the
+  config half live via SSM against `i-0c9b283b31d6b5ca7`. Appended `ORCHESTRATOR_CREDS_S3_BUCKET=uts-orchestrator-creds-427895769566`
+  to `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/.env.local` (the recommended S3 value, matching
+  the existing `ORCHESTRATOR_S3_BUCKET` state-bucket pattern on the same AWS account — chose S3 over GCS for
+  consistency, no other reason to prefer either) and restarted `orchestrator.service`. **Confirmed**: service came
+  back `ActiveState=active`/`SubState=running`, `/api/healthz` returned `200` post-restart (verified across 2
+  separate checks, ~30s apart — the FIRST check raced an unrelated, ordinary `ao-self-pull.sh` restart cycle that
+  landed ~20s after mine, both cleanly resolved). **NOT independently confirmed**: this doc's own done-when
+  ("a real token rotation... observed landing in `~/.claude-accounts/` within one poll interval") — I verified the
+  config is live and the service restarted with it present, which per `creds_env_poller.py`'s own code (the
+  `disabled` branch only fires when `_provider_and_uri()` returns `None`, i.e. neither bucket var is set) should
+  mean the poller now starts its thread, but I did not independently capture a "CredsEnvPoller started" log line or
+  observe an actual rotation land — leaving the checkbox open until that stronger bar is met. **Webhook half NOT
+  applied**: the same pass attempted to set `AGENT_ORCHESTRATOR_SLACK_WEBHOOK` per the prepared recipe in
+  `ao_self_pull_wedged_by_main_inbox_untracked_file_2026_07_30.md` — both documented secret names
+  (`AGENT_ORCHESTRATOR_SLACK_WEBHOOK`, `alerting-uts-live-alerts-slack-webhook`) under project `central-element-323112`
+  returned empty via `gcloud secrets versions access latest`, and a follow-up `gcloud secrets list ... | grep -iE
+  "slack|webhook|alert"` also returned nothing (command exited non-zero with no stdout) — genuinely could not locate
+  the secret under either documented name or a name-pattern search, not a transient failure. This is orthogonal to
+  the creds-poller fix (unrelated env var, tracked in the sibling doc) — not chased further this pass; flagging so
+  the next attempt doesn't repeat the same 2 dead-end secret names.

@@ -273,3 +273,15 @@ follows correctly — only the webhook config is missing).
   `operator_action_items_consolidated_2026_08_08.md`. 5 prior audits agree; no new facts found.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:a6eb1f279cdfe340]: KEEP-NA, valid — sole open item is a host-level secret-configuration action on the live orchestrator's ROOT checkout, explicitly outside any worker's authorized scope per agents/RULES.md §1; re-affirmed unresolved by 5 prior audit passes.
+- **2026-08-19 (interactive session, operator-authorized attempt)**: attempted the prepared recipe above live via
+  SSM against `i-0c9b283b31d6b5ca7`. Both documented secret names failed:
+  `gcloud secrets versions access latest --secret=AGENT_ORCHESTRATOR_SLACK_WEBHOOK --project=central-element-323112`
+  and the `alerting-uts-live-alerts-slack-webhook` fallback both returned empty; a follow-up
+  `gcloud secrets list --project=central-element-323112 | grep -iE "slack|webhook|alert"` also returned nothing.
+  Neither secret name resolves under this project currently — genuinely could not locate the value, not a transient
+  auth blip (the SAME SSM identity successfully restarted the service and read other state in the same session).
+  Possible causes not chased further: the secret was renamed/never created, lives under a different GCP project, or
+  this identity lacks `secretmanager.versions.list`-adjacent read on it specifically. Whoever picks this up next
+  should start by asking the operator directly for the correct secret name/project rather than re-trying the same 2
+  dead-end names. (Cross-linked: `ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md`'s same-session
+  entry records the same finding — that doc's OWN restart, for the unrelated creds-bucket var, succeeded.)
