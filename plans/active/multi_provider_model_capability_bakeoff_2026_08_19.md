@@ -558,3 +558,24 @@ _(remaining rows populated as each attempt completes)_
   against the full 6-task queue, poller at 30s/128K-context-window (Z.ai's real window not yet confirmed via a
   `modelUsage`-equivalent field the way Gemini's was — 128K is an estimate, flag any correction the same way the
   Gemini one was caught). Results will land in the Results table as both lanes complete.
+
+- **2026-08-19 (later, from slot 2) — independently reconfirmed a SECOND working credential path for GLM
+  (`ikenna@odum-research.com`, not just `harshkantariya@odum-research.com`), and answered the operator's standing
+  question on AO visibility into the Gemini/Gemma quota walls.** Operator ran `gcloud auth login
+  --account=ikenna@odum-research.com` interactively; `gcloud auth list` now shows it active with no reauth wall.
+  Fetched `glm-coding-plan-api-key` directly from GSM (succeeded) and smoke-tested `api.z.ai/api/anthropic/v1/messages`
+  (`model: glm-5.2`): HTTP 200, real billed response (`model: "glm-5.3"`), no `RESOURCE_EXHAUSTED`/`429`. Useful as a
+  fallback path now that both identities are confirmed working, on top of the already-dispatched slots 26/27 above —
+  no action needed on this lane, it's covered.
+  **AO-visibility answer**: none of this run's quota exhaustion was ever visible to AO — Mechanics is explicit this
+  bake-off used "direct tmux/subprocess dispatch — no local AO backend instance, no real AO backlog involved," so
+  every `RESOURCE_EXHAUSTED`/`429` was only ever caught reactively via each attempt's own CLI exit code, never AO
+  telemetry. Even a real AO-mediated dispatch wouldn't have caught it proactively today either: the
+  `GLMQuotaPoller`/`DeepSeekBalancePoller` headroom-gating pattern (writes `five_hour_pct`/`weekly_pct` onto
+  `AccountUsageRow`, read by `autospawn._pick_headroom_account` for any provider with zero extra wiring) has no
+  Gemini/Gemma equivalent (confirmed via `server/config.py` grep — no `gemini_*_ceiling`/poller analog exists). It
+  WAS knowable ahead of time the cheap way, though: the ceilings actually hit are publicly documented free-tier
+  numbers (20 req/min for `gemini-3.7-flash`, 250K input-tokens/min for `gemini-3.5-flash-lite`) — pacing/serializing
+  the 6 queued tasks instead of 30s spacing would have avoided most of the washout, matching this plan's own earlier
+  conclusion. Not opening a `GeminiQuotaPoller` todo unilaterally — flagging as a real, buildable gap for the
+  operator to decide is worth tracking, given this bake-off is close to done.
