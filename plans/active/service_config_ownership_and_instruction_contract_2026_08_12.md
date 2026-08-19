@@ -34,7 +34,9 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-12
-last_updated: "2026-08-12"
+last_updated: "2026-08-19" # 13 open execution-service todos (§§ B/G/I/K) moved to
+  # /plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md (parent_epic: execution_master),
+  # execution_master-scope audit -- see /plans/archive/2026_08/issues/execution_master_scope_scattered_across_strategy_and_cross_cutting_2026_08_19.md
 parent_epic: strategy_master
 assigned_vm: NA
 execution_scope: local-only
@@ -133,9 +135,9 @@ wires one of these must also delete or update whatever doc claims it is already 
       `cross_cutting_satellite_ao_dispatch_batch13b_2026_08_13.md`: `execution-service@c2053c47` —
       `HandlerRegistry.select_algorithm()` falls back to `resolve_config_algorithm()` when no explicit
       `config_algorithm` is supplied; the v2 `TradeHandler`/`SwapHandler` path calls the identical helper.
-- [ ] [AGENT] P1. **Reject an unknown `execution_policy_ref` loudly.** Default-deny is already the rule-evaluation
-      semantic; make an unresolvable REF equally loud rather than silently falling back to a default algo, which would
-      hide a misconfigured client.
+- [x] ✅ [AGENT] P1. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — "Reject an
+      unknown `execution_policy_ref` loudly." Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § B.
 
 ## § C. Put the reference price on the contract (unblocks B2, and the backtest property)
 
@@ -266,45 +268,24 @@ exists to protect, and it is already implemented rather than aspirational.
       `execution_service/algo_library/algorithms/*.py` (a DIFFERENT `ChildOrder` in `algo_library/schemas.py`) and
       `execution_service/algorithms/tradfi/*.py` (`TradFiChildOrder`, yet another type) do not carry the field — two
       more dataclasses would need it to close this fully.
-- [ ] [AGENT] P0. **G3 — collapse the benchmark's TWO independent implementations into one sent value.** _Corrected from
-      an earlier draft of this plan that framed this as two competing benchmarks — it is not._ There is **one**
-      benchmark-fills contract bridging the backtest groups
-      ([backtest-groups](/codex/04-architecture/backtest-groups.md): Group B uses benchmark fills, Group C measures
-      execution alpha "against the same benchmark"), and **the standalone-backtest property is already built**:
-      `strategy_service/engine/backtest/benchmark_fills.py` is a pure, bit-identical, 653-line Group-B implementation
-      whose own docstring states it lives in strategy-service "because Group B replaces execution entirely". The real
-      risk is therefore not disagreement-by-design but **drift between two implementations of one definition** — 653
-      lines here, `BenchmarkMatcher` there. **Second correction, 2026-08-12 (operator question "why not just make it a
-      no-op in execution-service"):** the duplication is narrower than the paragraph above assumed, and the operator's
-      instinct is right. `BenchmarkMatcher` is ONE of five matchers (`L0`/`L1`/`L2`/`AMM`/`Benchmark`), scoped to
-      **ALPHA_ZERO protocol ops — LEND/STAKE/BORROW**, and its benchmark-price mode is already "instant fill at a
-      **strategy-supplied** benchmark price, `price_impact_bps = 0`, because the matcher assumes the strategy already
-      absorbed any external impact accounting upstream" — i.e. **on the trade path it already consumes rather than
-      re-derives.** So sending the reference formalises the legacy mode's existing assumption; it does not displace a
-      rival calculation, and there is no independent trade-side benchmark engine to delete. **Recommendation:
-      strategy-sent is authoritative and the trade path becomes an explicit pass-through.**
-- [ ] [AGENT] P0. **G3a — do NOT no-op the lending path.** The same matcher's Phase-3B lending mode routes through
-      `LendingRateImpactCalculator` (`matching_engine/lending/rate_impact.py`) so backtest yield uses the **POST-trade**
-      rate: `fill_price` becomes post-trade APY and `price_impact_bps` the signed rate delta (negative for SUPPLY/REPAY
-      as utilisation drops, positive for BORROW/WITHDRAW). **strategy-service cannot compute this** — it is a function
-      of pool state and your own size — and using the pre-trade rate would silently **overstate lending and borrow
-      yields** on every recursive-carry and yield archetype. This matcher is not simulating a venue; it is modelling
-      own-size market impact on a real pool. Add a test asserting the lending path stays live if the trade path is
-      collapsed, so a future "make the benchmark matcher a pass-through" change cannot take the rate impact with it.
+- [x] ✅ [AGENT] P0. **G3 MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — collapsing
+      the benchmark's two independent implementations into one sent value. Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § G.
+- [x] ✅ [AGENT] P0. **G3a MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — do NOT no-op
+      the lending path's post-trade rate impact. Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § G.
 
 ### Smaller execution-service items
 
-- [ ] [AGENT] P1. **Unify the algo vocabulary — there are two.** `engine/instruction_convert.py` does
-      `algorithm = (algo or "MARKET").upper()`, and **`"MARKET"` does not exist in UAC `EXECUTION_ALGOS`** at all; it
-      also re-implements TWAP slicing params inline. That is a second naming system on the manual-instruction path,
-      invisible to the selector's validation. Either register the manual path's names in UAC or route it through the
-      selector.
-- [ ] [AGENT] P1. **Wire the execution-policy evaluator** (see § B) — `ExecutionPolicyArtifact` / `PolicyRule` appear
-      only in `v2/__init__.py` re-export plumbing, so the rule evaluator that already implements first-match-wins /
-      default-deny is never called.
-- [ ] [AGENT] P2. **Confirm the benchmark module's own consumers.** `metrics.py` is imported only by its siblings
-      (`enhanced_comparison.py`, `ranking.py`) — verify the chain reaches a live/reporting caller rather than
-      terminating in the benchmark package, so the alpha metrics are actually surfaced somewhere.
+- [x] ✅ [AGENT] P1. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — unify the algo
+      vocabulary (`instruction_convert.py`'s `"MARKET"` vs UAC `EXECUTION_ALGOS`). Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § G.
+- [x] ✅ [AGENT] P1. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — wire the
+      execution-policy evaluator (see § B above). Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § G.
+- [x] ✅ [AGENT] P2. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — confirm the
+      benchmark module's own consumers reach a live/reporting caller. Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § G.
 
 ## § H. Where transfers route — answered 2026-08-12, and the split is already correct
 
@@ -405,38 +386,19 @@ order actually fills against.
 
 ### Where the operator's sub-candle idea is still the right answer
 
-- [ ] [AGENT] P0. **DECIDED 2026-08-12 — build the sub-candle rung as a graded fallback, not a binary.** Operator:
-      _"some things won't have that as they never had tick data, so needs to handle both cases … it's making smarter
-      fallbacks, and only if no more granular candles to do the fallback then another fallback to the more basic version
-      is fine."_ The ladder becomes **book-columns → sub-candle VWAP → OHLC bar**, each rung used only when the one
-      above has no data. `CandleBookColsMatcher` needs `BOOK_SUMMARY_COLUMNS` precomputed on the candle, and cells that
-      never had tick data can never have them — today those drop straight to the naive tier, which is the gap. Nothing
-      sub-candle exists anywhere in `matching_engine/`. **The insertion is architecturally clean**:
-      `execution_fidelity(asset_group, venue, instrument_type, mode)` resolves the data-supported tier **declaratively
-      from the cell's MVP data_types in `MVP_SCOPE`** — not by probing storage — so "has 1m candles, lacks book columns"
-      is expressible as a decision-table rule. `clamp_tier()` already only ever clamps DOWN, so a new rung cannot
-      silently upgrade anything. **Two cautions for the implementer.** (1) `_TIER_RANK` is integer-ranked
-      `OHLC_BAR: 1 / CANDLE_BOOK_COLS: 2 / L2_TICK: 3`; inserting between 1 and 2 means renumbering, which touches every
-      clamp comparison and any persisted tier value — prefer widening the scale over shifting existing numbers. (2)
-      Preserve the existing fail-loud guard: a cell not in `MVP_SCOPE` raises rather than degrading, because "execution
-      must never silently fall back to OHLC for a venue/instrument_type that is not even in the capture universe" — the
-      new rung must not become a soft landing for cells that should still raise.
-- [ ] [AGENT] P1. **Measure the population the new rung serves** — cells with finer candles but no book-summary columns
-      — so the build is sized against real coverage rather than assumed need. This informs, but no longer gates, the
-      work above.
-- [ ] [AGENT] P1. **If it is built, carry PB.8's correction — a share of candle VOLUME over-counts fillable volume.**
-      `e2e-testing/scripts/paper_trading/_aggtrades_fidelity.py` (PB.8) already measured this against real Binance
-      aggTrades: a resting maker only fills against trades that hit its level **on the filling side** (for a resting BUY
-      at L: aggressive SELLS at price ≤ L, `isBuyerMaker=True`), while total candle volume includes the other side and
-      trades away from L. So a flat "25% of the candle" participation cap is optimistic by a measurable ratio. The
-      sibling `_fill_backtest.py` (PB.7) already prototypes the participation model itself — 15m bars, `PART = 0.25`,
-      three policies (`full` / `single_shot` / `requote`) — and quantifies the liquidity drag versus the full-fill
-      ideal. **Both are `Lifecycle: campaign` scripts whose delete-when condition is "the fill-model decision is made
-      and the winner shipped"** — so the decision above is the thing actually blocking their retirement.
+- [x] ✅ [AGENT] P0. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — build the
+      sub-candle rung as a graded fallback (DECIDED 2026-08-12). Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § I.
+- [x] ✅ [AGENT] P1. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — measure the
+      population the new rung serves. Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § I.
+- [x] ✅ [AGENT] P1. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — if built, carry
+      PB.8's correction (candle-VOLUME over-counts fillable volume). Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § I.
 
-- [ ] [AGENT] P1. **Update `/codex/04-architecture/execution-policy.md`** to state the `(client_id, slot_label)` keying
-      and the loader/reload story once § B lands — and to say plainly that the registry was declared-but-unwired until
-      then, so the doc stops implying a live mechanism.
+- [x] ✅ [AGENT] P1. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — update
+      `/codex/04-architecture/execution-policy.md`'s keying + loader/reload story once § B lands. Full todo text now
+      in `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § I.
 - [ ] [AGENT] P1. **Write the service-boundary contract into codex**: instruction + reference price is the whole
       surface; execution config never crosses; the standalone-backtest property is the test of it. No codex doc
       currently states this in one place, which is why it took a code audit to answer.
@@ -650,16 +612,15 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
       `execution-service@f3402a7c11` wired the pre-existing `TradeMatcher.capped_passive_fill_quantity` primitive into
       `L1Matcher._match_passive()`, filtered to the filling side per PB.8 (see next todo), routed via
       `policy_resolver.participation_cap_from_params`. 8 new tests.
-- [ ] [AGENT] P0. **Carry PB.8's correction into the cap's definition.** The cap must apply to volume that crosses the
-      limit **on the filling side** (for a resting BUY at L: aggressive SELLS at price ≤ L, `isBuyerMaker=True`), not to
-      total candle volume — `_ledgers.py` already resolves the maker fill "against the REAL aggTrades flow that crossed
-      our limit (true volume-at-price)", so the corrected model is already written down, not merely measured.
-- [ ] [AGENT] P1. **Route the per-strategy fill assumptions through the execution-policy `then_params`** rather than a
-      new config surface — this is precisely what that artifact is for, and it ties § K to § B/§ G1: the policy registry
-      being unwired is _why_ per-strategy fill parameterisation has nowhere to live today.
-- [ ] [AGENT] P2. **Then retire the campaign scripts.** `_fill_backtest.py` and `_aggtrades_fidelity.py` both carry
-      `Lifecycle: campaign` with delete-when "the fill-model decision is made + the winner is shipped". They are the
-      decision record; once the cap and its side-filter ship, they go.
+- [x] ✅ [AGENT] P0. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — carry PB.8's
+      correction into the (already-shipped) participation cap's definition. Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § K.
+- [x] ✅ [AGENT] P1. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — route
+      per-strategy fill assumptions through the execution-policy `then_params`. Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § K.
+- [x] ✅ [AGENT] P2. **MOVED to `execution_master` 2026-08-19** (execution_master-scope audit) — retire the
+      campaign scripts once the cap ships. Full todo text now in
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` § K.
 
 ## § F. Artifacts (do LAST, per operator sequencing)
 
@@ -669,6 +630,15 @@ assumptions? **Mechanisms: mostly yes. Parameterisation: no — and the missing 
       written until § B–D are done. Artifacts: platform overview, carve-out spec, deep dive.
 
 ## Progress Log
+
+- **2026-08-19, claude (`/autonomous`)**: 13 open todos across §§ B/G/I/K moved verbatim to
+  `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` (`parent_epic: execution_master`) per
+  the execution_master-scope audit — these are literal execution-service production-code changes (algo-selection
+  wiring, benchmark/fill-model matching-engine internals, candle-fidelity tiers), not strategy-config work, so they
+  need the correct epic for AO dispatch/reporting. Nothing else in this doc changed: §A audit table, all already-DONE
+  ✅ todos, §C/D (strategy-owned: reference-price contract, `ClientDomainConfig` subscription), §H (transfer
+  routing), §J's remaining rows/dual-path-documentation todo, §F, and the full historical Progress Log below stay
+  exactly as they were.
 
 - **2026-08-15 (round 5)** — Closed out the last 2 shadow-SSOT items, `PnLAttribution`/`PnLSummary`
   (`strategy-service@99a93fea1d`, verified on origin: UAC-backed import present,

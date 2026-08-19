@@ -300,7 +300,16 @@ features-service, instruments-service — not an assumption from "extensively re
 deployments from active archetypes. Retagged from `strategy_master` 2026-08-19 (execution_master_scope audit) — the
 whole doc is deployment-profile/co-location infra derivation from archetype latency needs, matching the operator's
 named "co-location" execution_master scope, not strategy config/parameterization. See
-[the audit issue](/plans/active/issues/execution_master_scope_scattered_across_strategy_and_cross_cutting_2026_08_19.md).
+[the audit issue](/plans/archive/2026_08/issues/execution_master_scope_scattered_across_strategy_and_cross_cutting_2026_08_19.md).
+
+### [`execution_service_policy_and_fill_model_gaps_2026_08_19`](../active/execution_service_policy_and_fill_model_gaps_2026_08_19.md)
+
+**status**: active (`assigned_vm: NA`) · **estimate**: 1.6 cal AI-days (class: refactor) · **title**: Execution-service
+policy evaluator, fill-model fidelity, and matching-engine gaps. 13 open todos extracted verbatim 2026-08-19
+(execution_master_scope audit) from `service_config_ownership_and_instruction_contract_2026_08_12.md` §§ B/G/I/K —
+wiring the execution-policy evaluator, the benchmark-fill duplication (G3/G3a), candle-fill fidelity's sub-candle
+rung, and the participation-cap PB.8 correction. See
+[the audit issue](/plans/archive/2026_08/issues/execution_master_scope_scattered_across_strategy_and_cross_cutting_2026_08_19.md).
 
 ## Folded-in epic: Trading Agent Master (folded 2026-08-18)
 
