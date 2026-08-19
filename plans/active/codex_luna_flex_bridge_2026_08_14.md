@@ -34,7 +34,7 @@ estimate_calibrated_ai_days: 5
 assigned_role: infra
 effort: max
 drift_direction: advance-code
-depends_on: [deepseek_claude_blended_provider_routing]
+depends_on: [deepseek_claude_blended_provider_routing_2026_07_28]
 locked_by:
 locked_since:
 supersedes:

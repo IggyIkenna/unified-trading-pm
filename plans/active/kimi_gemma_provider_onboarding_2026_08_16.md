@@ -36,7 +36,12 @@ estimate_calibrated_ai_days: 4
 assigned_role: infra
 effort: max
 drift_direction: advance-code
-depends_on: [deepseek_claude_blended_provider_routing, grok_gemini_translation_proxy, codex_luna_flex_bridge]
+depends_on:
+  [
+    deepseek_claude_blended_provider_routing_2026_07_28,
+    grok_gemini_translation_proxy_2026_08_14,
+    codex_luna_flex_bridge_2026_08_14,
+  ]
 locked_by:
 locked_since:
 supersedes:

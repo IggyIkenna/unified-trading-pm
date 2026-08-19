@@ -53,8 +53,7 @@ Machine-gated: `depends_on: [plan_reconciler_boot_pm_repo_path_points_at_root_cl
 
 ## Todos
 
-- [ ] [REVIEW] P2. Reconcile: confirm todo 1's fix (resolve `$PM_REPO_PATH`/every plan_health-family role's boot
-      template to the DISPATCHED SLOT's own `.tabs/<N>/unified-trading-pm`, not the root clone) is verified against
+- [ ] [REVIEW] P2. Reconcile: confirm todo 1's fix (resolve `$PM_REPO_PATH`/every plan_health-family role's boot template to the DISPATCHED SLOT's own `.tabs/<N>/unified-trading-pm`, not the root clone) is verified against
       a LIVE sharded dispatch of at least 2 distinct plan_health-family roles (not just plan_reconciler — this run's
       own na_eligibility_auditor occurrence is a 3rd confirmed instance of the same class, so verify the fix
       generalizes rather than only patching plan_reconciler's own call site). Confirm todo 2's chosen resolution

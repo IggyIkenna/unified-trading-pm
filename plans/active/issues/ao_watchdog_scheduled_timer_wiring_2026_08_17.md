@@ -23,7 +23,7 @@ source: >-
   Session that authored the /ao-watchdog skill (2026-08-17) — the skill's own "Scheduling this skill" section
   named this as required follow-up work rather than half-wiring it without tests inline.
 assigned_vm: planning
-execution_scope: NA
+execution_scope: orchestrator-agent
 estimate_class: infra
 drift_direction: advance-code
 depends_on: []

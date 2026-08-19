@@ -529,9 +529,10 @@ before touching the source doc directly._
       a sibling panel, collapsed state survives a reload, a header action button stays clickable and does not
       trigger collapse) plus 10 pre-existing wallet/blocked specs re-run green to confirm no regression. Source:
       operator request, this session (not from the 2026-08-14 audit sweep).
-- [ ] [TEST] P3. **New finding, 2026-08-16, adjacent to the collapsibility work above — NOT caused by it, isolated
-      and confirmed independently.** `dashboard/tests/e2e/task-usage-account-filter.spec.ts` has 2 pre-existing,
-      reproducible failures ("All accounts sums every task..." expects `17.0K`, gets `22.0K`; "tasks on an
+- [ ] [TEST] P3. **Root-cause 2 pre-existing, reproducible failures in
+      `dashboard/tests/e2e/task-usage-account-filter.spec.ts`** (both bleed +5000, likely `window_task_usage_totals`
+      double-counting/mis-attribution — see below). New finding, 2026-08-16, adjacent to the collapsibility work
+      above — NOT caused by it, isolated and confirmed independently. Failures: ("All accounts sums every task..." expects `17.0K`, gets `22.0K`; "tasks on an
       unregistered account are unreachable..." expects a `0` shortfall, gets `5.0K` bleeding into a registered
       account's slice) — the +5000 in both cases exactly matches the fixture's "unregistered account" oneoff rows
       (2000 cicd + 3000 scheduled), suggesting those rows are being double-counted or mis-attributed somewhere in

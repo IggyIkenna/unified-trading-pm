@@ -148,8 +148,7 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       the full STEP sequence in `main.md` for any other numbered-step-without-dependency shape before calling this
       done, not just 2A/2.5. Source: `/plans/active/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md`.
       Repo: unified-trading-pm.
-- [ ] [BACKEND] P2. **Escalate a wedged `tmux_alive=true` + `worker_alive=false` + `phase=pre_boot` slot from
-      indefinite resume-kicks to a kill+respawn.** Confirmed live incident (slot 2, 2026-08-04): the
+- [ ] [BACKEND] P2. **Escalate a wedged `tmux_alive=true` + `worker_alive=false` + `phase=pre_boot` slot from indefinite resume-kicks to a kill+respawn.** Confirmed live incident (slot 2, 2026-08-04): the
       WorkerLivenessWatchdog kept sending `watchdog_heartbeat_resumed` kicks every ~17-18min for 1.5h+ without ever
       escalating, and a concrete task-oriented nudge via `/api/slots/{id}/message` could NOT clear it (dispatch will
       not route a task to a slot it marks `pre_boot`/`worker_alive=false` — a worker-facing nudge is structurally the
@@ -162,8 +161,7 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       with a regression test; a currently-healthy slot's normal resume-kick cadence is unaffected (a negative test).
       Source: `/plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`. Repo:
       agent-orchestrator.
-- [ ] [BACKEND] P3. **Harden `ensure_review_agents`/the AgentKeeper reap path to positively verify a review slot's
-      live session is actually running the `review` prompt, not just any live session.** The 2026-08-16
+- [ ] [BACKEND] P3. **Harden `ensure_review_agents`/the AgentKeeper reap path to positively verify a review slot's live session is actually running the `review` prompt, not just any live session.** The 2026-08-16
       `human_claim`/`human_claim_check` guard fix (already shipped, `agent-orchestrator@d13788ec2f`) closes the ENTRY
       point — nothing should bind an ordinary task onto a reserved review slot again — but does not add a
       detect-and-recover path if a review slot ends up wedged by some other future mechanism, since the reap path

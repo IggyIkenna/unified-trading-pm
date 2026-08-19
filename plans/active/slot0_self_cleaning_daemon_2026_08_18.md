@@ -114,7 +114,8 @@ liveness check so it never fights a live occupant (including slot 0's own live s
       repo under slot 0 with a live tmux session attached, `outcome.action ==
       "protected_live_peer"` (nothing touched); against a repo left dirty by a confirmed-dead
       prior session, the WIP is committed and pushed and `outcome.action` reflects that.
-- [ ] [BACKEND] P2. Implement `_tick()` part 3 — branch-state healing, run AFTER dirty-state
+- [ ] [BACKEND] P2. Implement `_tick()` part 3 — branch-state healing (never `reset --hard`,
+      never touching a provably-live peer — full constraint below), run AFTER dirty-state
       resolution (same order `autospawn.py` uses, since a dirty tree fails
       `check_slot_branch_state`'s `git merge --ff-only` otherwise): call
       `worktree_clean_check.check_slot_branch_state(0, slot_dir, host_operator())`; if

@@ -147,7 +147,14 @@ and the reply path already exists via `POST /api/blocked/{id}/answer`. All 5 tod
 **Epic UN-PAUSED 2026-07-28** (see banner) — all 6 todos below (5 original + 1 new prerequisite) are now real,
 fully-scoped, AO-dispatchable work.
 
-- [ ] [BACKEND] P0. **Prerequisite — resolve the `/api/escalate` vs `/api/escalation/{id}` route-naming collision**
+- [x] [BACKEND] P0. ✅ **DONE — verified 2026-08-19 (`/plan-reconcile orchestrator_master`) directly against
+      `agent-orchestrator` code (this epic itself is out of that run's scope; fixed here only because the evidence is
+      unambiguous and the sibling doc's own "flip both" instruction named this exact checkbox): `server/routes/agents.py:440-448`'s
+      `GET /api/escalations/{escalation_id}` docstring confirms the namespaced-plural route (`/api/escalations/{id}`)
+      has no collision with `/api/escalate` (unchanged CI-wall dispatch) — satisfies this todo's own gate ("one of the
+      two routes is renamed or namespaced"). Cross-linked: `ao_open_work_consolidated_tracker_2026_08_14.md` (DONE
+      2026-08-15) and `ao_residuals_after_dispatch_hardening_2026_07_17.md` todo 1 (flipped same pass, same
+      evidence).** Prerequisite — resolve the `/api/escalate` vs `/api/escalation/{id}` route-naming collision
       BEFORE any of the P1 todos below are coded. `/api/escalate` already exists as the GHA-to-orchestrator CI-wall
       judgment dispatch; this epic's target pipeline (see "Target pipeline" above) proposes `/escalation/{id}` for the
       human-facing scoped link — whoever writes the second without noticing the first will either collide or wire
