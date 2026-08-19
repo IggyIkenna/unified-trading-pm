@@ -25,7 +25,6 @@ related:
     /plans/active/ao_satellite_ao_dispatch_batch22_finalize_2026_08_16.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
-    /plans/active/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md,
     /plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md,
     /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -50,7 +49,6 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md,
-    /plans/active/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md,
     /plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md,
     /plans/active/issues/ao_human_claim_reserved_slot_bypass_2026_08_16.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
@@ -138,16 +136,14 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       **Done when**: a second same-day same-tranche dispatch attempt is refused or queued while the prior worker's
       lock is confirmed live, with a regression test. Source: same doc, the 2026-08-16 `[BACKEND] P1` finding ("New
       gap found live 2026-08-16"). Repo: agent-orchestrator.
-- [ ] [DOCS] P3. **Batch the `/poll` + blocked-queue check in `agents/main.md`'s per-tick loop.** STEP 2A
-      (`POST /api/agents/$AGENT_ID/poll`) and STEP 2.5 (`GET /api/state` blocked-queue check, documented as running
-      "every tick") are two independent lookups written as separate numbered steps — the exact anti-pattern
-      `/codex/06-coding-standards/tool-call-batching.md`'s "Reviewing for this" section warns a role doc actively
-      teaches. Measured live effect: main's own session dropped from 13.2% to 0.0% multi-tool turns in a degraded
-      window while its share of all fleet turns rose to 24%. Rewrite STEP 2A + STEP 2.5 to run both calls together in
-      ONE turn (two `tool_use` blocks, same message) each tick, since neither depends on the other's result. Grep
-      the full STEP sequence in `main.md` for any other numbered-step-without-dependency shape before calling this
-      done, not just 2A/2.5. Source: `/plans/active/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md`.
-      Repo: unified-trading-pm.
+- [x] ✅ [DOCS] P3. ~~Batch the `/poll` + blocked-queue check in `agents/main.md`'s per-tick loop.~~ **ALREADY SHIPPED
+      `unified-trading-pm@f637aed3cf`** — done directly while resolving the source issue doc (this plan was never
+      activated from `status: draft`, so it held no live lock on the work). STEP 2A + STEP 2.5 now cross-reference
+      each other with an explicit "fire together, same turn" instruction; the `/loop` and CronCreate prompt templates
+      updated to match; the full STEP sequence was grepped for the same shape (no other fix needed there) and one
+      further instance was found + fixed in the "Overnight autonomous operation" loop's steps 1/2/5 (same redundant
+      `/api/state` re-fetch pattern). Do NOT redispatch this item. Source (now archived):
+      `/plans/archive/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md`. Repo: unified-trading-pm.
 - [ ] [BACKEND] P2. **Escalate a wedged `tmux_alive=true` + `worker_alive=false` + `phase=pre_boot` slot from indefinite resume-kicks to a kill+respawn.** Confirmed live incident (slot 2, 2026-08-04): the
       WorkerLivenessWatchdog kept sending `watchdog_heartbeat_resumed` kicks every ~17-18min for 1.5h+ without ever
       escalating, and a concrete task-oriented nudge via `/api/slots/{id}/message` could NOT clear it (dispatch will
