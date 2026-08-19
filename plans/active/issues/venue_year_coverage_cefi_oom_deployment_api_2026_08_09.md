@@ -542,3 +542,20 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   as unresolved rather than asserting a mechanism. **Not flipping the top-level INFRA todo — the clean-window
   acceptance bar is still not met**, now gated on the new `_union_rank_series` BACKEND fix rather than the OOM or
   either of the two already-shipped vectorization fixes (both confirmed live and holding).
+- **2026-08-19 (slot 14, infra)**: Re-dispatched onto this same open INFRA todo a few hours after the slot-31 entry
+  directly above. **Did not re-run the live-prod 3-scope probe** — checked `deployment-api`'s git history first
+  (`git log --since=2026-08-19 -- deployment_api/services/data_status_union.py`, HEAD at `df766d5`, dated
+  2026-08-19T12:18:07Z): zero commits have touched `data_status_union.py` since `b4b81502c0`, the exact SHA
+  slot-31's probe already ran against; the open BACKEND P0 (`_union_rank_series` SIGABRT) is confirmed still
+  unshipped. Re-running the identical probe against a provably-unchanged deployed code path would reproduce
+  slot-31's byte-for-byte result while repeating the same production SIGABRT/worker-timeout side effects on the
+  shared `uts-shared-deployment-api` Cloud Run service for no new information — skipped per the workspace's
+  async-wait/no-busy-poll discipline. This is the SAME redispatch-thrash shape the 2026-08-18 plan_reconciler entry
+  above root-caused once already (task eligible on many idle slots while genuinely blocked on unshipped code); that
+  fix addressed the then-current blocker (the now-moot semver/park condition) but nothing gates dispatch on the
+  NEW `_union_rank_series` blocker slot-31 discovered, so the same thrash is recurring against the new blocker.
+  Skipping this task with `reason_code: GATED` (own done-when not met, not a genuine ambiguity) rather than
+  hand-editing `backlog.yaml`'s prereqs myself — that tuning is main/operator-scoped per `RULES.md` § 4, not a
+  worker action. Flagging for main/operator: consider wiring a prerequisite condition on this backlog task keyed to
+  the `_union_rank_series` BACKEND fix landing, so it stops re-dispatching to idle slots until that ships. Not
+  flipping the INFRA todo — still blocked on the same unshipped fix as the entry above.
