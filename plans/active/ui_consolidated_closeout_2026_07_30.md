@@ -27,13 +27,11 @@ related:
     /plans/epics/observability_master.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/archive/2026_07/deployment_ui_observability_ux_tracker_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 created: "2026-07-30"
 last_updated: "2026-08-19" # (was: 2026-08-09 -- plan_reconciler epic-scoped run 2026-08-19: applied 3 grace-cleared
-  # doc-drift corrections from plan_reconciler_findings_ui_2026_08_18.md, see Progress Log)
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

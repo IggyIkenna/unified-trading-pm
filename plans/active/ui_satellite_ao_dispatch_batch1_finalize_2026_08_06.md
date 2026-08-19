@@ -29,7 +29,6 @@ related:
   ]
 created: "2026-08-06"
 last_updated: "2026-08-19" # (was: 2026-08-08 -- plan_reconciler epic-scoped run 2026-08-19: applied a grace-cleared
-  # doc-drift correction from plan_reconciler_findings_ui_2026_08_18.md, see Progress Log)
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

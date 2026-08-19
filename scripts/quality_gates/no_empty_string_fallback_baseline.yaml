@@ -35,8 +35,8 @@ repos:
   deployment-api:
     count: 2
   deployment-service:
-    commit: 5d251b27e5f48414d6e1f438c08b6338b050a3fc
-    count: 87
+    commit: 47cddc0b43bc0fa8fa1a8a36dfae8fc2e3ae2b09
+    count: 84
   deployment-ui:
     count: 0
   e2e-testing:
