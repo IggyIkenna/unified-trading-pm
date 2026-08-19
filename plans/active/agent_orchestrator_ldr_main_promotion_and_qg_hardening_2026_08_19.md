@@ -246,11 +246,19 @@ coverage** against `pyproject.toml`'s declared `fail_under = 70`.
       with no coverage provider configured, plus a separate 36-spec Playwright e2e layer. Lower priority than the
       Python backend (per CLAUDE.md's UI rule, dashboard tests are already tsc/ESLint/vitest/Playwright-only, no
       Python gate applies) but worth a follow-up decision on whether a vitest coverage number is worth adding.
-- [ ] [INFRA] P2. **Audit whether `quality-gates.sh` needs a check specific to concurrent-multi-agent-on-itself
-      risk** — e.g. no two open AO tasks targeting the same agent-orchestrator file (mirrors this workspace's own
-      "concurrent todos MUST touch different files" plan-authoring rule, but for AO's OWN dispatch against its OWN
-      code — a structural risk unique to AO working on AO). State whether the generic multi-agent-safety machinery
-      already covers this or it's a genuine new gap.
+- [x] [INFRA] P2. ✅ **RESOLVED 2026-08-19 — already covered by existing generic machinery, no new gap.** Audit
+      whether a check is needed against no-two-open-AO-tasks-targeting-the-same-agent-orchestrator-file risk.
+      Found `server/regen_backlog_from_plan.py::_derive_script_collision_group()` — built specifically from a real
+      prior incident (`transfermarkt_master_table_gcs_429_concurrent_writers_2026_07_12`: 3 slots independently ran
+      the same one-off script concurrently against the same target) — auto-derives `collision_group="script:
+      <filename>"` from ANY `.py`/`.sh` filename regex-matched in a todo's description text at backlog-regen time;
+      `dispatch.py`'s existing `_blocks_collision_group`/`_active_collision_groups_excluding` then makes two tasks
+      sharing that `collision_group` mutually exclusive across slots — generic dispatch machinery, applies to
+      AO-on-AO identically to every other repo, no AO-specific code needed. Residual (not a gap, a known
+      characteristic): basename-keyed not full-path-keyed (so `a/gcs_sync.py` and `b/gcs_sync.py` would
+      over-conservatively collide — harmless), and it only engages when a todo's description literally names the
+      target filename (relies on todo-authoring discipline — but this plan's own todos already do that
+      consistently, e.g. every Phase 2 coverage todo names its target file by path).
 
 ## Phase 3 — Regression tests for agent-orchestrator's own incident history
 
