@@ -246,7 +246,7 @@ author: plan_reconciler / source: `<dispatch_id>`) and set `locked_by:` to the L
 dead-session correlation impossible for those rows even after `server/plan_reconciler_dead_lock_sweep.py` shipped (it
 ages a lock off the owning AgentRow's own timestamp, not this doc's — but it still needs the id to find that AgentRow
 in the first place, and a human reading `locked_by:` directly still needs the timestamp). See
-`/plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` finding 6. Then fill the rest of the sections
+`/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` finding 6. Then fill the rest of the sections
 you APPEND to as you go:
 `## Flips verified`, `## Contradictions`, `## Doc-drift`, `## Hygiene fixes`, `## Filed`,
 `## Archive candidates (operator review)`, `## Refuted (dropped by verify)`, `## Coverage (hunters / batches / docs)`,

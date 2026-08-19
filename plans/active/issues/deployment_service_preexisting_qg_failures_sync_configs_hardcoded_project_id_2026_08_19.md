@@ -29,6 +29,7 @@ tags: [quality-gates, baseline-ratchet, hardcoded-config, test-hygiene]
 related:
   [
     /plans/archive/2026_08/migration_script_canonicalization_into_deployment_service_2026_08_18.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-19
 last_updated: "2026-08-19"

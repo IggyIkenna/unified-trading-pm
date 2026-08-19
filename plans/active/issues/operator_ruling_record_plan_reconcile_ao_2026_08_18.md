@@ -19,6 +19,7 @@ related:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
   ]
 created: "2026-08-18"
 author: main (Claude Code, interactive session, slot-3)

@@ -442,4 +442,4 @@ this skill's. `assigned_vm` unchanged.
 
 ## Progress Log
 
-- **2026-08-19 (plan_reconciler_dead_lock_sweep, automated)**: auto-cleared `locked_by:` — agent agt-15d58e confirmed reaped-stale, 8.0h old (>= 8.0h threshold). Dispatch `agt-15d58e` confirmed `exit_reason="reaped-stale"` via AO's own AgentRow state (ruled 2026-08-15, `/plans/active/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A). Cleared at 2026-08-19T07:38:34Z.
+- **2026-08-19 (plan_reconciler_dead_lock_sweep, automated)**: auto-cleared `locked_by:` — agent agt-15d58e confirmed reaped-stale, 8.0h old (>= 8.0h threshold). Dispatch `agt-15d58e` confirmed `exit_reason="reaped-stale"` via AO's own AgentRow state (ruled 2026-08-15, `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A). Cleared at 2026-08-19T07:38:34Z.
