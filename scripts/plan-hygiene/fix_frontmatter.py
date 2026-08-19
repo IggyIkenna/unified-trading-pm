@@ -218,16 +218,19 @@ KNOWN_ESTIMATES = {
     "work_split_2026_05_20_ikenna.md": ("infra", 0.5, 0.4),
 }
 
-# Keywords to derive asset_group from parent_epic
+# Keywords to derive asset_group from parent_epic. Values MUST be members of docspec.ASSET_GROUP
+# (there is no "crypto" or "cross-asset" value in that enum — a prior version of this table used
+# both and would seed a HARD-violating value on every doc that fell through to it).
 ASSET_GROUP_KEYWORDS = {
-    "crypto": "crypto",
-    "defi": "crypto",
-    "cefi": "crypto",
+    "defi": "defi",
+    "cefi": "cefi",
     "tradfi": "tradfi",
     "equity": "tradfi",
-    "cross_asset": "cross-asset",
-    "cross-asset": "cross-asset",
-    "all": "cross-asset",
+    "sports": "sports",
+    "prediction": "prediction",
+    "cross_asset": "cross-cutting",
+    "cross-asset": "cross-cutting",
+    "all": "cross-cutting",
 }
 
 
@@ -301,7 +304,14 @@ def derive_asset_group_from_epic(parent_epic: str) -> str:
     for keyword, group in ASSET_GROUP_KEYWORDS.items():
         if keyword in epic_lower:
             return group
-    return "cross-asset"
+    return "cross-cutting"
+
+
+def _is_issue_path(fp: pathlib.Path) -> bool:
+    """Path-derived doc_type check, mirroring docspec.doc_type_for_path's issue rule
+    (2026-07-06 HARD rule: doc_type is path-derived and a contradicting declared value fails
+    the schema gate) — a doc under plans/active/issues/ IS an issue, never a plan."""
+    return "/plans/active/issues/" in str(fp.resolve()).replace("\\", "/")
 
 
 def derive_created_from_filename(filename: str) -> str | None:
@@ -622,12 +632,20 @@ def _apply_field_defaults(  # noqa: C901
     body_text: str,
     filename: str,
     changes: list[str],
+    doc_type_hint: str = "plan",
 ) -> None:
-    """Populate missing/empty plan frontmatter fields with safe defaults (in-place)."""
+    """Populate missing/empty plan frontmatter fields with safe defaults (in-place).
+
+    `doc_type_hint` is the PATH-derived doc_type (see `_is_issue_path`) — used only when the
+    `doc_type` field itself is absent, so a doc under plans/active/issues/ seeds `doc_type: issue`
+    (+ the issue-shaped status/nature default below) instead of unconditionally `plan`, which
+    previously produced a doc_type declared-vs-path contradiction that the schema gate hard-fails
+    on (fix_frontmatter_issue_doc_seeded_as_plan_2026_08_19).
+    """
     # 1. doc_type
     if not has_field(new_fm, "doc_type"):
-        new_fm.insert(0, "doc_type: plan\n")
-        changes.append("added doc_type=plan")
+        new_fm.insert(0, f"doc_type: {doc_type_hint}\n")
+        changes.append(f"added doc_type={doc_type_hint}")
 
     # 2. title (from H1 heading)
     if not has_field(new_fm, "title"):
@@ -655,22 +673,26 @@ def _apply_field_defaults(  # noqa: C901
             changes.append("added summary")
     # If field exists but empty, leave it — intentional gap
 
-    # 4. status
+    # 4. status — issue docs use `open`, never `active` (operator 2026-06-24; STATUS_BY_TYPE has no
+    # "active" member for doc_type: issue at all).
     if not has_field(new_fm, "status"):
-        new_fm.append("status: active\n")
-        changes.append("added status=active")
+        default_status = "open" if doc_type_hint == "issue" else "active"
+        new_fm.append(f"status: {default_status}\n")
+        changes.append(f"added status={default_status}")
 
-    # 5. nature
+    # 5. nature — issue docs default to the `issue` nature value, not `process`.
     if not has_field(new_fm, "nature"):
-        new_fm.append("nature: process\n")
-        changes.append("added nature=process")
+        default_nature = "issue" if doc_type_hint == "issue" else "process"
+        new_fm.append(f"nature: {default_nature}\n")
+        changes.append(f"added nature={default_nature}")
 
-    # 6. asset_group (derive from parent_epic keywords)
+    # 6. asset_group (derive from parent_epic keywords; always a bracketed enum_list, never a bare
+    # scalar — asset_group's FieldSpec kind is enum_list)
     if not has_field(new_fm, "asset_group"):
         parent_epic = get_field_value(new_fm, "parent_epic") or ""
-        asset_group = derive_asset_group_from_epic(parent_epic) if parent_epic else "cross-asset"
-        new_fm.append(f"asset_group: {asset_group}\n")
-        changes.append(f"added asset_group={asset_group}")
+        asset_group = derive_asset_group_from_epic(parent_epic) if parent_epic else "cross-cutting"
+        new_fm.append(f"asset_group: [{asset_group}]\n")
+        changes.append(f"added asset_group=[{asset_group}]")
 
     # 7. stage
     if not has_field(new_fm, "stage"):
@@ -830,7 +852,11 @@ def fix_active_plan(fp: pathlib.Path) -> bool:
 
     # Remove deprecated fields — never strip a field THIS doc's own doc_type requires (e.g.
     # `author` is deprecated for doc_type: plan but REQUIRED on doc_type: issue).
-    doc_type_val = get_field_value(new_fm, "doc_type") or ""
+    # Falls back to the PATH-derived doc_type when the field itself is absent (the common case for
+    # a freshly-auto-filed issue doc) — a doc under plans/active/issues/ IS an issue regardless of
+    # whether it declares the field yet.
+    path_doc_type = "issue" if _is_issue_path(fp) else "plan"
+    doc_type_val = get_field_value(new_fm, "doc_type") or path_doc_type
     deprecated_set = DEPRECATED_PLAN_FIELDS
     if doc_type_val == "issue":
         deprecated_set = DEPRECATED_PLAN_FIELDS - ISSUE_REQUIRED_FIELDS
@@ -840,7 +866,7 @@ def fix_active_plan(fp: pathlib.Path) -> bool:
         changes.append("removed deprecated")
 
     # Apply all field defaults (extracted to keep fix_active_plan under complexity limit)
-    _apply_field_defaults(new_fm, body_text, fp.name, changes)
+    _apply_field_defaults(new_fm, body_text, fp.name, changes, doc_type_hint=path_doc_type)
 
     if not changes:
         return False
