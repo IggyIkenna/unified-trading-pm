@@ -78,6 +78,7 @@ _WORKSPACE_ROOT_DEFAULT = _HERE.parents[5]  # the multi-repo checkout root (sibl
 sys.path.insert(0, str(_SKILLS_DIR / "honest-coverage-dump" / "scripts"))
 
 import checks
+import instruction_actions
 from shard_universe import (
     DEFAULT_PROJECT_ID,
     CoverageReadError,
@@ -204,8 +205,13 @@ def build_dump(
     position_avail: dict[str, dict[str, str]],
     execution_probe: dict[str, dict],
     mtds_live_registered: frozenset[str],
+    workspace_root: Path | None = None,
 ) -> tuple[list[dict], dict]:
     grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
+    # Measured once for the whole dump -- InstructionActionV2 handler coverage is
+    # venue-independent, so re-deriving it per row would be waste AND would imply a
+    # per-venue signal that does not exist. See instruction_actions.py.
+    action_coverage = instruction_actions.measure(workspace_root or _WORKSPACE_ROOT_DEFAULT)
     cov_venue_ag = venue_asset_group_map(coverage_payload) if coverage_payload else {}
     uac_venue_ag = _uac_venue_asset_group_map()
     declared_venues = frozenset(VENUE_DATA_TYPE_CAPABILITIES.keys())
@@ -246,7 +252,7 @@ def build_dump(
         vd_features = checks.features_consumed(venue_dts, step17.orphaned_data_types)
         vd_archetype = checks.strategy_archetype_registered(satisfying)
         vd_transfers = checks.execution_transfers(venue, wallet_capability_venues)
-        vd_instruction = checks.execution_instruction()
+        vd_instruction = checks.execution_instruction(action_coverage)
 
         # Mode-invariant execution-service legs -- adapter presence doesn't vary
         # by mode (see checks.py's module comment on the execution surfaces).
@@ -306,6 +312,18 @@ def build_dump(
         "row_count": len(rows),
         "leg_state_counts": {k: dict(v) for k, v in leg_state_counts.items()},
         "overall_state_counts": dict(rollup_state_counts),
+        # A dump-level finding, deliberately NOT folded into the per-row legs: the
+        # handler gap is global and backtest-scoped, so attributing it to any single
+        # venue-mode would claim more than was measured.
+        "instruction_action_coverage": {
+            "resolved": action_coverage.resolved,
+            "denominator": action_coverage.denominator,
+            "handled": list(action_coverage.handled),
+            "control_plane": list(action_coverage.control_plane),
+            "unhandled": list(action_coverage.unhandled),
+            "sources": list(action_coverage.sources),
+            "summary": action_coverage.summary(),
+        },
     }
     return rows, summary
 
@@ -326,6 +344,21 @@ def _print_human(rows: list[dict], summary: dict, verbose: bool, limit: int) -> 
     for state in ("ready", "not_ready", "unverified"):
         print(f"  {state:<12} {summary['overall_state_counts'].get(state, 0)}")
     print()
+
+    cov = summary.get("instruction_action_coverage") or {}
+    if cov:
+        # Indexed, not .get(...)-with-a-default: build_dump always populates these keys, so a
+        # missing one is a real defect that should fail loudly rather than print a blank line.
+        print("=== Instruction-action handler coverage (GLOBAL finding, not per-venue) ===")
+        print(f"  {cov['summary']}")
+        if cov["unhandled"]:
+            print(
+                "  These actions have no settlement handler and raise UnhandledActionError. "
+                "This is a real gap, but it is venue-independent and backtest-scoped, so it is "
+                "reported here rather than failing every venue-mode row."
+            )
+        print(f"  sources: {cov['sources']}")
+        print()
 
     if not verbose:
         print("(pass --verbose for the per-venue-per-mode table, --limit N to cap rows shown)")

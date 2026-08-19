@@ -278,13 +278,45 @@ def execution_transfers(venue: str, wallet_capability_venues: frozenset[str]) ->
 
 
 # ---------------------------------------------------------------------------
-# execution-service -- instruction adaptor coverage (no check wired yet)
+# execution-service -- instruction adaptor coverage.
+#
+# Still `unverified` PER VENUE, and deliberately so: measured 2026-08-20, no
+# per-venue instruction-path registry exists in execution-service. The only
+# action-keyed dispatch is backtest_v2/action_handlers.py::resolve_settlement,
+# which is venue-independent and backtest-scoped. (The prior pointer at
+# v2/policy_resolver.py was wrong -- that resolves an execution ALGORITHM per
+# (client_id, slot_label), not a venue's ability to execute an action.)
+#
+# What changed is that the `unverified` now carries a MEASURED denominator --
+# how many InstructionActionV2 actions have a settlement path at all, and which
+# ones raise UnhandledActionError -- rather than reading "no check wired". An
+# action with no handler is a real negative, so a venue-mode whose leg set is
+# otherwise clean is still not allowed to look finished while five actions are
+# structurally unhandled. See instruction_actions.py for the full reasoning and
+# for why mapping actions onto UAC operation_details keys was rejected as drift.
 # ---------------------------------------------------------------------------
-def execution_instruction() -> Verdict:
+def execution_instruction(coverage: object | None = None) -> Verdict:
+    resolved = bool(getattr(coverage, "resolved", False))
+    if not resolved:
+        note = getattr(coverage, "note", "") if coverage is not None else "coverage not measured by this pass"
+        return Verdict(
+            "unverified",
+            "no per-venue InstructionActionV2 instruction-path check exists in execution-service "
+            f"(action-handler coverage also unresolved: {note})",
+        )
+
+    summary = getattr(coverage, "summary", lambda: "")()
+    # Stays `unverified`, never `not_ready`: the measured handler gap is GLOBAL and
+    # backtest-scoped, so it is not evidence that any PARTICULAR venue cannot execute
+    # an instruction. Reporting it per-row as not_ready would assert something this
+    # pass did not measure (CLAIM <= MEASUREMENT) and would make every one of the 864
+    # rows fail for the same non-venue-specific reason, destroying the dump's ability
+    # to discriminate. The gap is surfaced once, at dump level, as its own finding.
     return Verdict(
         "unverified",
-        "no per-venue InstructionActionV2-adaptor-coverage check is wired in this pass -- "
-        "execution-service/execution_service/v2/policy_resolver.py is the real registry a future increment should read",
+        "no PER-VENUE instruction-path registry exists in execution-service -- the only action-keyed "
+        "dispatch (backtest_v2/action_handlers.py::resolve_settlement) is venue-independent and "
+        f"backtest-scoped; measured coverage: {summary}",
     )
 
 
