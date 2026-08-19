@@ -353,10 +353,17 @@ no change at all.**
 
 ## C. execution-service — the two missing surfaces
 
-- [ ] [SCRIPT] P1. **Implement Kamino `borrow` / `repay`** in `defi_execution/protocols/kamino.py`. It currently has
-      `supply` / `withdraw` / `get_reserves` / `get_vault_info` / `get_price` — the lending side only.
-      **`KaminoBorrowParams` already exists in UAC**, so the contract is defined and this is an implementation against a
-      settled interface. Without borrow there is no stable to post as perp margin and the structure cannot run.
+- [x] [SCRIPT] P1. ✅ **CORRECTED 2026-08-19 (found during a parallel Solana venue audit for
+      `execution_master.md`/`strategy_master.md`) — Kamino `borrow`/`repay` are already implemented, this todo's
+      premise is stale.** `defi_execution/protocols/kamino.py::borrow()`/`repay()` (lines 246/264, as of 2026-08-19)
+      call `_submit_kamino_tx_api_op` — a real implementation against Kamino's Transactions API (`POST
+      /ktx/klend/borrow`), sign, and broadcast, with a paper-mode short-circuit — not stubs. This todo's original
+      framing ("it currently has `supply`/`withdraw`... — the lending side only") no longer matches the code;
+      corrected here rather than left to mislead the next reader. **Consequence for this plan**: the borrow leg of
+      the Jupiter+Kamino structure this plan builds is execution-ready; § A's economics gate and § A.3's schema gap
+      remain the only real blockers, this was never one. Cross-reference: this correction is also noted in
+      `execution_master.md`'s Solana venue-set section, which found the same fact from the strategy-service side
+      (the `CARRY_RECURSIVE_STAKED@kamino-jito-...` slot is not blocked by a missing Kamino execution capability).
 - [ ] [SCRIPT] P1. **Add a Jupiter perps execution path.** `protocols/jupiter.py` is swap-only. Perp position open/close
       goes through the Jupiter Perpetuals program (`PositionRequest` → `Position` accounts per its docs), which is a
       distinct flow from `execute_swap`. Follow the existing DeFi protocol + `DefiErrorCode` conventions

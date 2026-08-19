@@ -181,6 +181,23 @@ have at least one archetype slot; the genuine gaps are narrower than "no archety
 | Morpho | PARTIAL — candidate-protocol string only, no slot where it is primary/sole venue | `MULTICHAIN_LENDING`/`BTC_LENDING` `candidate_protocols`, flash-loan venue in `RECURSIVE_STAKED_BASIS` |
 | Uniswap | registered | `BASIS_TRADE`, `L2_BASIS` |
 | CoW Swap | absent | zero hits anywhere in `strategy_service/` |
+| Jupiter (spot) | n/a | swap-only venue, no perp surface exists — not an archetype-registration question |
+| Raydium | registered | `CARRY_BASIS_PERP@raydium-hyperliquid-sol-1h-sol-v5-prod` (`spot_venue=raydium`) + `MARKET_MAKING_CONTINUOUS@raydium-sol-usdc-1h-sol-v5-prod` |
+| Drift | removed | operator-killed 2026-07-16, reaffirmed 2026-08-14 — genuine conflict with this session's operator request, flagged as an `[OPERATOR]` item in `execution_master.md`, not duplicated here |
+| Pacifica | registered | `CARRY_FUNDING_DISPERSION` + `CARRY_BASIS_PERP`, full stack shipped 2026-08-14/15 |
+| Jito (LST, jitoSOL) | registered | `CARRY_RECURSIVE_STAKED@kamino-jito-hyperliquid-sol-1h-sol-v2-prod` |
+| Jito Restaking | absent | zero archetype-slot registration found, despite adapters existing at every other layer |
+
+- [x] [BACKEND] P1. ✅ **Solana venue set (Jupiter/Raydium/Drift/Pacifica/Jito) — real per-venue archetype-
+      registration audit, 2026-08-19.** Raydium and Jito(LST) are genuinely registered (real slots, not
+      candidate-only mentions, matching the Uniswap/AAVE V3 pattern rather than the Lido/Morpho partial one). Jito
+      Restaking has zero archetype-slot registration despite adapter coverage everywhere else — tracked as an
+      execution-side scoping question (`execution_master.md`, "Jito Restaking" todos) since building a slot before
+      confirming any archetype needs restaking specifically would be speculative. Drift's removal is real and
+      recent (2026-08-14 reaffirmation) but conflicts with this session's operator instruction — the reconciliation
+      todo lives in `execution_master.md` (`[OPERATOR]` tag), not duplicated here since it's a single cross-cutting
+      decision, not a strategy-specific one. Full per-venue execution/MTDS/features detail: `execution_master.md`'s
+      "Solana venue set" section.
 
 - [ ] [BACKEND] P2. **Lido — give it a real archetype slot, not just a candidate-protocol mention.** Currently
       `STAKED_BASIS`/`RECURSIVE_STAKED_BASIS` both default to `etherfi`; add a Lido-instantiated slot (or a
