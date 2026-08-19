@@ -256,14 +256,16 @@ coverage** against `pyproject.toml`'s declared `fail_under = 70`.
       render coverage is the Playwright e2e layer's job by design, same split `unified-trading-system-ui` already
       makes explicit). No enforcement floor wired yet, deliberately — flagged as its own follow-up decision once
       the baseline is accepted, not built in this pass.
-- [ ] [INFRA] P2. **NEW — pre-existing test-isolation/order-dependency bug found (not caused by this session's
-      changes): `tests/test_pane_tree_reap.py::test_kill_session_reaps_before_tmux_kill` fails both standalone
-      and under `pytest -m unit` (extra spurious `subprocess.run` call recorded) despite passing in the full
-      unfiltered suite** — confirmed unrelated to the unit-marking pass since the test body is fully mocked via
-      `monkeypatch` and only a decorator line was ever added to it; it implicitly relies on state left by some
-      earlier test in the default full-suite collection order. Currently excluded from the `unit` marker (kept
-      out of the fast subset rather than either ignored or force-included) so the fast subset stays trustworthy-
-      green. Needs a real fix: find and neutralize the leaking global/fixture state, then re-add the marker.
+- [x] [INFRA] P2. ✅ **DONE — `agent-orchestrator@8e0438c160`.** Pre-existing test-isolation/order-dependency bug:
+      `tests/test_pane_tree_reap.py::test_kill_session_reaps_before_tmux_kill` failed both standalone and under
+      `pytest -m unit` despite passing in the full suite. Root cause found: `kill_session`'s teardown log calls
+      `running_checkout_sha()`, which caches its result in a module-level global once warmed; the test's
+      `monkeypatch.setattr(tmux_spawn.subprocess, "run", fake_run)` patches the shared stdlib `subprocess`
+      singleton (not a `tmux_spawn`-local copy), so a COLD cache let the mock leak through and record a spurious
+      extra call — the full suite masked this because an earlier-collected test always warms the cache first.
+      Fixed test-side (mirrors existing prior art in `test_tmux_spawn_kill_and_dismiss.py` for the identical
+      gotcha) — the cache-once-per-process design itself is deliberate, not a bug. Re-added `@pytest.mark.unit`.
+      Verified standalone + `-m unit` + full suite (4891 passed) all green.
 - [x] [INFRA] P2. ✅ **RESOLVED 2026-08-19 — already covered by existing generic machinery, no new gap.** Audit
       whether a check is needed against no-two-open-AO-tasks-targeting-the-same-agent-orchestrator-file risk.
       Found `server/regen_backlog_from_plan.py::_derive_script_collision_group()` — built specifically from a real
@@ -355,17 +357,32 @@ archived docs, were not yet sampled.
       pinned → two calls return identical value; neither set → two calls return DIFFERENT random values
       (documents the dev-fallback trap this incident hit); GCS fallback path also pins correctly (mocked at the
       lazy-import boundary `_load_gcs_secret` actually uses).
-- [ ] [INFRA] P3. **Sample the remaining ~92 docs in the tightest corpus** (single-repo `repos: [agent-orchestrator]`
-      issue docs not yet read) plus a second pass on the ~36 co-listed-repo docs and ~130 non-`issues/`-folder
-      archived docs (`plans/archive/2026_08/` in particular has undated-convention incident writeups outside the
-      `issues/` subdirectory worth checking). Same COVERED/GAP/UNCLEAR method as above; split any new GAP into its
-      own todo the way this pass's 7 were split, don't batch them into one vague "write more tests" line.
-- [ ] [DOC] P3. **Investigate the recurrence pattern, not just the latest fix**: 3 of the sampled docs
-      (`ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md` and its two predecessors) are
-      the SAME underlying regen-dispatch bug recurring 3 times — each fix landed a real test, but the pattern-
-      enumeration approach itself (a regex/pattern list needing repeated widening) is the actual defect. Consider
-      whether a property-based/fuzzed test (any self-declared-not-eligible phrasing, not an enumerated list) would
-      close this class permanently instead of waiting for a 4th recurrence to widen the list again.
+- [ ] [INFRA] P3. **Sample the remaining ~92 docs in the tightest corpus — 34/116 done this session, 82 remain.**
+      Second pass (2026-08-19) sampled 34 more single-repo `repos: [agent-orchestrator]` issue docs in
+      `plans/archive/issues/` (corpus = 124 total via `grep -l "^repos: \[agent-orchestrator\]$"`, minus 8 already
+      named in this Phase 3 section). Result: 30 confirmed COVERED (each verified against a real, present test —
+      not filename inference), 3 correctly skipped as non-code-fix incidents, **1 real GAP found and fixed same
+      session**: `agent_orchestrator_local_qg_red_context_lifecycle_worker_liveness_2026_08_08.md`'s own P3 todo
+      was left unswept — `test_confirmed_working_pane_clears_stale_kick_failure_streak` in
+      `tests/test_worker_liveness.py` drove a `WORKING_PANE_SPINNER` classification without mocking
+      `context_probe.context_reading`, risking a real disk read on a shared host's live `orch-slot-14` session —
+      fixed at `agent-orchestrator@8e0438c160` (mirrors the mock pattern already used elsewhere in the same
+      file). 82 still unsampled in this corpus, plus the ~36 co-listed-repo docs and ~130 non-`issues/`-folder
+      archived docs entirely untouched — continue with the same COVERED/GAP/UNCLEAR method, split any new GAP
+      into its own todo, don't batch.
+- [x] [DOC] P3. ✅ **DONE — `agent-orchestrator@8e0438c160`.** Investigate the recurrence pattern, not just the
+      latest fix: 3 recurrences of the regen-dispatch pattern-matching gap (confirmed via `git log -G` against
+      the regex — 2 of the 3 are code-commit-level recurrences, not separate PM issue docs as originally framed;
+      only 1 doc, `ao_backlog_regen_missing_self_declared_not_ao_eligible_guard_2026_08_14.md`, actually exists —
+      a CLAIM ≤ MEASUREMENT correction to this todo's own premise). Built a `hypothesis` property-based test
+      fuzzing case/markdown/context variations of the known phrasings — **it found a real 4th recurrence on its
+      first run**: case-sensitivity, British "judgement" spelling, missing-article phrasing, and markdown-italic
+      `\b`-boundary defeat were ALL silently unmatched. Fixed all 4 in `_PERMANENT_NON_DISPATCHABLE_RE`. This
+      converts the bug class from silently-missed to loudly-caught-by-CI on the next phrasing variant, though not
+      a permanent close — **architectural recommendation** (not implemented, per scope): pattern-matching prose
+      is fundamentally the wrong tool (a genuinely novel phrase still slips through no matter how much fuzzing
+      covers KNOWN meanings); an explicit machine-readable tag (this codebase already has `[OPERATOR]` precedent)
+      would be the durable fix — a bigger change, left as a future consideration, not built here.
 
 ## Phase 4 — Containerize agent-orchestrator (Docker), cross-checked against the IONOS migration
 
@@ -384,12 +401,22 @@ against whatever that plan currently assumes about how AO is deployed/run.
       rebuilding/restarting a container instead of restarting a bare uvicorn process. Folded into the IONOS plan
       itself as a Decision-log entry + a note on its open VM-lifecycle-abstraction design todo (next todo below
       covers that fold-in specifically).
-- [ ] [INFRA] P1. **Design + ship the Dockerfile/image-build workflow** for agent-orchestrator's server. Decide
-      build trigger (same `push:[live-defi-rollout]` this plan's Phase 1 confirmed as AO's actual deploy signal, or
-      a separate build-only trigger) and registry target (this fleet already has `image-build-gate.yml` precedent
-      per Phase 1's semver-agent finding — check whether that's reusable or AO-specific). Done-when: an image
-      builds successfully from a real LDR commit and runs the server correctly in a local/test container.
-- [x] [INFRA] P2. ✅ **DONE 2026-08-19 — `unified-trading-pm@<pending, this commit>`.** Decide what "runs as a
+- [x] [INFRA] P1. ✅ **DONE — `agent-orchestrator@8e0438c160`.** Design + ship the Dockerfile/image-build
+      workflow. New `Dockerfile.vm-orchestrator` (kept separate from the existing root `Dockerfile` — see below)
+      — multi-stage, `python:3.13-slim`, same `orchestrator.service` ExecStart minus `--reload` (redundant with
+      `ao-self-pull.sh`'s own restart), includes `tmux`/`git`/`openssh-client` since worker-session spawning is
+      the point. **Verified end-to-end**: built + ran with `ORCHESTRATOR_MODE=mock`, `GET /api/healthz` → 200
+      from inside the running container. Build trigger: new `.github/workflows/image-build-vm-orchestrator.yml`,
+      `push:[live-defi-rollout]` path-filtered, **inactive by design** (no push step — no confirmed registry
+      target/credentials exist yet; GCP-auth fails closed via `continue-on-error`). `image-build-gate.yml`
+      confirmed NOT reusable — it only drives a pre-provisioned Cloud Build trigger off the root `Dockerfile`, no
+      Dockerfile-path input. **Major finding surfaced, filed as its own issue (out of scope here, different
+      deployment target)**: agent-orchestrator already has a SEPARATE, existing Cloud Run Dockerfile
+      (`agent_orchestrator_cloud_run_deployment_2026_05_19.md`, archived — a stateless API-only "brain," no
+      tmux, gated on a companion workers-off-VM plan reaching D3) — that Dockerfile's `COPY agents/ ./agents/`
+      step is broken (the directory was deleted 2026-07-10's read-the-file boot cutover); filed as
+      `plans/active/issues/agent_orchestrator_cloud_run_dockerfile_broken_copy_agents_dir_2026_08_19.md`.
+- [x] [INFRA] P2. ✅ **DONE 2026-08-19 — `unified-trading-pm@dd472dfa24`.** Decide what "runs as a
       Docker container inside the VM" means for the EC2→IONOS migration. Containerizing makes it strictly
       easier — a container runtime is a much smaller cross-cloud-portability surface than replicating a full
       `uv`-venv Python bootstrap per provider. Folded into the IONOS plan directly (not duplicated here): a new
