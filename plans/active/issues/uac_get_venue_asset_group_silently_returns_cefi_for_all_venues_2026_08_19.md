@@ -77,29 +77,60 @@ should have failed loudly returned a plausible default instead.
 
 ## Todos
 
-- [ ] [BACKEND] P0. **Establish whether `_VENUE_ASSET_GROUP` is empty, wrongly keyed, or populated from a source
-      that no longer matches the venue vocabulary.** The sub-agent that first hit this reported a case mismatch —
-      lowercase adapter names as keys versus the registry's uppercase `PROTOCOL-CHAIN` slugs — but that does not
-      by itself explain `BINANCE-SPOT` missing. Determine the real cause before fixing; do not patch the symptom
-      by lowercasing more aggressively.
-- [ ] [BACKEND] P0. **Make the miss path loud.** A venue whose asset group cannot be resolved must raise or return
-      `None`, never a plausible default. Per the workspace's fail-closed discipline, an unknown must not silently
-      become an answer. Changing the fallback will surface every existing caller that relied on it — that is the
-      point, and those call sites are the real blast radius.
-- [ ] [AGENT] P0. **Enumerate every caller and assess damage.** Grep the fleet for `get_venue_asset_group`. For
-      each call site, determine whether a wrong asset group corrupts stored data, a published metric, or only a
-      log line. Anything that wrote a per-asset-group split to GCS or a manifest needs its output re-checked.
+- [x] ✅ [BACKEND] P0. **Root cause established — unified-api-contracts@d4cded41b8.** Neither "empty" nor a case
+      mismatch: `_VENUE_ASSET_GROUP` was correctly populated (55 entries) but keyed on the WRONG VOCABULARY —
+      `cap.source`, the capability-declaration provider/adapter key (`binance`, `aave`, `databento`, `odds_api`),
+      while every caller passes a venue slug (`BINANCE-SPOT`, `AAVE_V3-ARBITRUM`). The two namespaces have zero
+      overlap, which is why `BINANCE-SPOT` missed too — the reported "lowercase adapter names vs uppercase slugs"
+      framing understated it as a casing bug when it is a category error. Lowercasing harder would have fixed
+      nothing.
+- [x] ✅ [BACKEND] P0. **Miss path is loud — unified-api-contracts@d4cded41b8.** Raises
+      `UnknownVenueAssetGroupError` (a `ValueError`) naming the offending token and both registries it missed.
+      Resolution is now: (1) `classify_venue_asset_group()` — the venue-vocabulary SSOT, which also preserves the
+      KALSHI/POLYMARKET `prediction` split; (2) the capability-source table, kept because 29 of its 55 keys are
+      data-provider names present in no venue registry; then raise. Verified by direct execution: all four
+      measured-broken slugs resolve correctly and both an unknown token and `""` raise.
+- [x] ✅ [AGENT] P0. **Callers enumerated — blast radius is ZERO code call sites.** Fleet-wide `rg` across every
+      repo in the slot (excluding `.venv`) found no code caller of `get_venue_asset_group` outside its own
+      defining module; all remaining hits are plan/issue/codex prose and archived plans. Name-based dynamic access
+      (`getattr(mod, "get_venue_asset_group")`) would also have matched that grep, so this is conclusive for
+      by-name access. **Nothing wrote a per-asset-group split through this function**, so no stored data, manifest
+      or published metric needs re-checking on its account.
 - [ ] [REVIEW] P1. **Cross-check against the venue-count discrepancy already recorded** in
       [registry ground truth](/plans/audit/results/registry_ground_truth_2026_08_19.md): 192 venues declared in
       `VENUE_DATA_TYPE_CAPABILITIES` but only 177 appearing in asset-group buckets. Confirm whether that 15-venue
       gap and this fallback share a root cause.
-- [ ] [REVIEW] P1. **Confirm the published coverage percentages are unaffected.** A peer agent verified that
-      `measure_honest_coverage.py` does not read `VENUE_CHAIN_MAP`; do the equivalent check for this function. The
-      per-asset-group coverage figures now published in `platform-external-api-walkthrough.html` §05 (sports
-      99.26 / prediction 92.81 / tradfi 86.96 / cefi 45.57 / defi 40.94) depend on the answer — if they were split
-      via this function, they are wrong and the artefact must be corrected before it is sent.
+- [x] ✅ [REVIEW] P1. **Published coverage percentages are UNAFFECTED by this defect.** Follows directly from the
+      zero-caller measurement above: `measure_honest_coverage.py` does not reference `get_venue_asset_group` (it
+      appears in no code file fleet-wide), so the §05 per-asset-group figures (sports 99.26 / prediction 92.81 /
+      tradfi 86.96 / cefi 45.57 / defi 40.94) were not split through it and need no correction on this account.
+      Scope note: this clears the artefact of THIS defect only — it is not a general audit of how those
+      denominators are derived.
 
 ## Progress Log
+
+**2026-08-19 — FIXED, unified-api-contracts@d4cded41b8** (T1 code-readiness tranche, slot-6). Root cause was a
+vocabulary category error, not the reported casing mismatch — see todo 1. Blast radius measured at ZERO code
+callers, so no stored data or published metric was corrupted; the defect was latent, waiting for its first
+consumer. Fix delegates to the pre-existing fail-closed `classify_venue_asset_group()` rather than adding a fourth
+venue→asset_group implementation.
+
+**Two findings surfaced while fixing, both fixed in the same commit:**
+
+1. **Bare `COINBASE` classified as `defi`** — `VENUES_BY_ASSET_GROUP["cefi"]` registers `COINBASE-SPOT`/`-FUTURES`/
+   `-CDE` but no bare `COINBASE`, so the token fell through to the generic DeFi base-token fallback and
+   false-matched `COINBASE-ETHEREUM` (the cbETH LST venue). This is the identical collision the classifier's own
+   comment documents for bare `BINANCE` — it was fixed for BINANCE in isolation and COINBASE was missed. A
+   systematic sweep confirms these two were the ONLY such collisions, and all 209 registered venues otherwise
+   classify to their own group.
+2. **No invariant guarded any of this.** Added `test_every_registered_venue_classifies_to_its_own_group` and
+   `test_no_non_defi_sub_venue_base_falls_through_to_defi`, so the next base-token collision fails the suite
+   instead of surviving until someone hand-probes it.
+
+Remaining open: the 15-venue `VENUE_DATA_TYPE_CAPABILITIES` (192) vs asset-group-bucket (177) gap. NOT closed and
+NOT investigated in this pass — measured only that `VENUE_TO_ASSET_GROUP` holds 209 keys and
+`VENUES_BY_ASSET_GROUP` sums to 177, which does not by itself explain the 192 figure. Left honestly open rather
+than closed on a plausible-looking number.
 
 **2026-08-19 — filed.** Reported by a sub-agent as DeFi-only; the orchestrating session reproduced it and found
 CeFi slugs miss as well, so the scope in the original report understated it. Not yet fixed — no code touched.

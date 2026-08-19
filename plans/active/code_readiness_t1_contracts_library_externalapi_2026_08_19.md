@@ -154,10 +154,16 @@ _None at authoring time._
 
 ### Registry SSOT — the P0s everything else is wrong without
 
-- [ ] [BACKEND] P0. `unified_api_contracts.execution.get_venue_asset_group()` fails closed. Today it is
-      `_VENUE_ASSET_GROUP.get(venue.lower(), "cefi")` — every unresolved venue (AAVE_V3-ARBITRUM, LIDO-ETHEREUM,
-      JUPITER-SOLANA, MORPHO-BASE all confirmed) silently returns `"cefi"`. Raise or return `None`, then migrate
-      every caller. Evidence:
+- [x] ✅ [BACKEND] P0. `unified_api_contracts.execution.get_venue_asset_group()` fails closed —
+      unified-api-contracts@d4cded41b8. Root cause MEASURED (not the reported one): the lookup was keyed on
+      capability-declaration `source` names (`binance`, `aave` — 55 keys) while callers pass `PROTOCOL-CHAIN`
+      venue slugs, so the two vocabularies had ZERO overlap and all 209 registered venues missed. Now delegates to
+      the existing fail-closed `classify_venue_asset_group()` SSOT, keeps the capability-source table as an
+      explicit second step (29 of 55 source keys resolve to nothing in the venue vocabulary, so deleting it would
+      have lost real behaviour), and raises `UnknownVenueAssetGroupError` on a real miss. Caller migration was a
+      no-op: a fleet-wide grep found ZERO code callers — every hit was docs/plans. Also fixed a collision found in
+      the classifier itself (bare `COINBASE` → `defi` via false-match on `COINBASE-ETHEREUM`, the same trap its own
+      comment documents for `BINANCE`) plus two systematic invariants so the next one fails the suite. Evidence:
       `/plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`.
 - [ ] [BACKEND] P0. Reconcile the three chain registries to ONE authoritative source. `ChainKind` (23, missing
       `plasma` which has live venues) / `KNOWN_CHAINS` (10, missing `scroll` and `starknet`, both live) /
@@ -260,6 +266,15 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-19 — **Registry P0 #1 landed: `get_venue_asset_group()` fails closed — unified-api-contracts@d4cded41b8.**
+  MEASURED, not assumed: the old lookup held 55 capability-declaration `source` keys (`binance`, `databento`) and
+  callers pass venue slugs (`BINANCE-SPOT`) — zero overlap, so all 209 registered venues fell through to the
+  hardcoded `"cefi"`. Blast radius measured at ZERO code callers fleet-wide, so nothing stored or published was
+  corrupted. Verified landed: `d4cded41b8` confirmed an ancestor of `origin/live-defi-rollout`, and the landed blobs
+  re-read from that commit carry the raise + the COINBASE fix. QG green (exit 0, full log captured); the gate
+  suppresses UAC's own pytest output on success, so I additionally executed both new test files' assertions
+  directly as standalone probes — all passed. Second defect found and fixed in the same commit: bare `COINBASE`
+  resolved to `defi` (false-match on `COINBASE-ETHEREUM`), the same trap already documented for `BINANCE`.
 - 2026-08-19 — **T1 CLAIMED by slot-6·laptop.** No other slot had claimed a tranche (checked: slots 2-5 running
   unrelated work; no tranche plan referenced in any other slot's session). Taking T1 per the coordinator's
   "launch T1 first — four blocking edges terminate here". If another agent is also on T1, that agent should
