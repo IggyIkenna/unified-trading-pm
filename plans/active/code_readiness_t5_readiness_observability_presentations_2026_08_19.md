@@ -260,8 +260,14 @@ todos only to confirm they are data-movement, then leave it.
       `unverified`, 27 `pending`, 17 `planned`, 17 `partial`, 14 `not yet`, 6 `missing`, 5 `not built`).
 - [ ] [DOC] P0. Re-derive `strategy-service-deep-dive.html` (51 `unverified`, 15 `partial`) against T3's output.
 - [ ] [DOC] P0. Re-derive `strategy-service-walkthrough.html` (23 `partial`) against T3's output.
-- [ ] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
-      item**. Build the check; it has already failed once, measurably.
+- [x] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
+      item**. Build the check; it has already failed once, measurably. — `unified-trading-pm@7b2dd29aaa`.
+      `scripts/plan-hygiene/check_artefact_claim_ownership.py`, wired into `run_hygiene_sweep.sh`. Measured
+      2026-08-20 over the 7 artefacts: 84 top-level sections, 83 claim-bearing, **37 carrying no `owner:` tag**,
+      189 open markers (st-part + st-plan + ev-check + ev-assumed), 55 closed. The invariant is confirmed FAILING
+      and is now ratcheted — both counts can only go down. Owner resolution reads the tag's `title` attribute (the
+      machine-readable doc path) before the visible label; label-only resolution produced 3 false violations on
+      this corpus, so the checker was corrected before seeding rather than baselining the lie.
 - [ ] [DOC] P0. Extend the same disclosure standard to the four sibling client artefacts the 2026-08-18 audit found
       violating it and which no remediation plan covers — `carveout-engineering.html` and
       `ODUM_Elysium_Phase2_Update_2026-07-24.html` alongside the two already in scope. Evidence:
@@ -308,3 +314,56 @@ todos only to confirm they are data-movement, then leave it.
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+
+- 2026-08-20 — **The acceptance test now exists and is machine-enforced** — `unified-trading-pm@7b2dd29aaa`.
+  `scripts/plan-hygiene/check_artefact_claim_ownership.py` + `artefact_claim_ownership_baseline.yaml`, wired into
+  `run_hygiene_sweep.sh` next to the disclosure and enum-drift checks.
+
+  **Measured, 7 artefacts under `codex/14-customer-journeys/commercial-model/`, 2026-08-20**: 84 top-level
+  sections · 83 claim-bearing · **37 with no `owner:` tag** · **189 open markers** · 55 closed. Both counts are
+  seeded as shrinking ratchets, so the effort's progress is now a number that can only fall. Per-artefact open
+  markers: walkthrough 53 · walkthrough(strategy) 36 · architecture 29 · api-reference 28 · deep-dive 26 ·
+  carveout 17 · ODUM 0.
+
+  Marker vocabulary is read from the artefacts' own markup (`st-part`/`st-plan`/`ev-check`/`ev-assumed`), not a
+  hand-copied list, and legend blocks are stripped first — the legend defines the vocabulary and contains a
+  literal `owner: W5` example that would otherwise hand every artefact a free ownership tag.
+
+  **Two corrections made before shipping, both cases of a claim outrunning its measurement:**
+  1. First cut resolved owner tags from the visible label only and reported 3 dangling references
+     (`elysium-disclosure §C`, `elysium-disclosure §H.8`, `registry ground-truth P0`). Reading the markup showed
+     all three carry a real repo-relative doc path in their `title` attribute. That was the checker's blind spot,
+     not an artefact defect — fixed, and the checker now also verifies the cited doc exists on disk.
+  2. `quickmerge` exited 0 while the gate FAILED on two E501 violations and nothing landed. Caught only by
+     checking `origin` directly. Re-shipped after fixing. Exit 0 from a piped ship script is not evidence.
+
+- 2026-08-20 — **`execution_instruction` leg: the SKILL.md pointer was wrong, and the real blocker is now named.**
+  Not yet shipped (in progress this session).
+
+  `readiness-state-dump/SKILL.md` pointed this leg at `execution-service/execution_service/v2/policy_resolver.py`,
+  calling it "the real `InstructionActionV2`-adaptor registry". **It is not.** Measured 2026-08-20: that module
+  resolves an execution *algorithm* keyed by `(client_id, slot_label)`, with venue appearing only as one
+  `applies_to` gate dimension (`venue_category`). It never answers "can this venue execute this action". Corrected
+  in place — a pointer that cost one agent a wrong-file read will cost every future agent the same.
+
+  The only action-keyed dispatch that exists is `backtest_v2/action_handlers.py::resolve_settlement`, which is
+  **venue-independent and backtest-scoped**. Measured via AST: **11/16 `InstructionActionV2` actions have a
+  settlement path** (10 handled + `CANCEL` control-plane no-fill by design); **5 raise `UnhandledActionError`:
+  `CONVERT_DUST`, `LP_BURN`, `LP_MINT`, `REPAY`, `WITHDRAW`** — `REPAY`/`WITHDRAW` are core lending actions and
+  `LP_MINT`/`LP_BURN` are what the enum's own comment says the DEFI_LP_CONCENTRATED engine emits.
+
+  **The leg still prints `unverified` per venue, deliberately.** The measured gap is global and backtest-scoped,
+  so folding it into the 864 rows as `not_ready` would assert something this pass did not measure and would make
+  every row fail for the same non-venue-specific reason. It is surfaced once, as a dump-level finding.
+
+  **Rejected as drift**: mapping `InstructionActionV2` onto UAC `operation_details` keys. That vocabulary is
+  per-venue idiosyncratic — measured `place_order` / `create_order` / `new_order` / `post_order` / `add_order` /
+  `submit_order` / `buy`+`sell`, mixed with feed endpoints (`l2_book`, `all_mids`, `ws_trades`) across 47 of 67
+  registered sources. Any hand-built map would silently misread venues spelling their order verb differently.
+
+- 2026-08-20 — **Grain auto-detection VERIFIED, not assumed** (the P0 says so explicitly). Not yet shipped.
+  `tests/test_shard_universe_grain_detection.py`, 7 tests passing. The case that matters for the T2 handoff is
+  the third: when T2 lands the `by_venue_instrument_type_data_type` KEY before landing data under it, a detector
+  keyed on mere key-presence would flip to the fine grain and enumerate **zero** shard cells — every coverage
+  figure silently collapsing while looking structurally fine. The shipped detector requires a non-empty venue
+  block and correctly falls back, still reporting the real 2-tuple cells. Confirmed by test, not by reading.
