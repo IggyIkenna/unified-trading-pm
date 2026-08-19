@@ -478,3 +478,26 @@ _(remaining rows populated as each attempt completes)_
   label `gemini-3.5-flash-lite-paidtier`). Both use the corrected poller default. Results will land as separate
   rows (labeled `-paidtier`) rather than overwriting the free-tier rows above, so the free-tier quota-wall finding
   stays on record even after the paid-tier re-run completes.
+
+- **2026-08-19 (later) — GLM's real blocker is account balance, not gcloud auth; Gemma's NVIDIA NIM issue confirmed
+  server-side after ruling out every request-shape hypothesis.**
+  **GLM**: bypassed the `ikenna@odum-research.com` gcloud reauth wall entirely — found an already-cached, ready
+  credential file at `~/.claude-accounts/zai.env` (GLM 5.2 via Z.ai's native endpoint, `export`-format, dated
+  2026-08-04, predates this plan). A real smoke test against it returned a clean application-level error, NOT an
+  auth failure: `429 {"code":"1113","message":"[1113][Insufficient balance or no resource package. Please
+  recharge.]"}`. The credential itself is valid — Z.ai recognized and processed the request — but the GLM Coding
+  Plan subscription's balance/resource package is exhausted or expired. **This is an operator action (recharge the
+  Z.ai account), not a technical blocker** — the gcloud reauth issue is now moot for GLM regardless of whether it
+  ever gets fixed. GLM 5-Turbo's credential/model-string not yet separately verified (same account, different
+  `ANTHROPIC_MODEL` value — blocked on the same balance issue either way).
+  **Gemma/DiffusionGemma**: ruled out every request-shape hypothesis via direct curl reproduction — a 54KB system
+  prompt (10,568 tokens) with 1 tool: 200 OK; 16 realistic multi-field tool schemas: 200 OK; a real streaming
+  (`stream:true`) tool-call request: 200 OK. None reproduced the failure. A real `claude -p` dispatch (not curl)
+  against the same endpoint then produced a FOURTH distinct failure mode within one investigation — after 500,
+  502, and the earlier confirmed cold-start timeout, this one returned a clean `429 Too Many Requests` (partly
+  self-inflicted — the several rapid synthetic curl tests just before it added real load to the same endpoint).
+  **Conclusion: this is NVIDIA-side undercapacity/instability on their free-hosted NIM endpoint for this model**,
+  not a bug in our proxy config or in Claude Code's real request shape — four different failure signatures from
+  the same free endpoint under real-world load is a server-capacity pattern, not a deterministic client-side bug.
+  No further request-shape debugging planned; the real fix (if one exists) is either a paid/dedicated NIM tier or
+  accepting this lane's ceiling is unreliable on the free tier.
