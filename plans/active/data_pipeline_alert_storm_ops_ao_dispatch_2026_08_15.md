@@ -118,13 +118,18 @@ resolved_by:
       instruction, only after the GCP-side revocation succeeded. Re-confirmed `orchestrator.service` still `active`
       and a live `gcloud secrets list` call still succeeds post-revocation — zero disruption. Repo: agent-orchestrator
       (host-level, `planning` VM) — no code diff; evidence here + the live GCP IAM key list is the artifact.
-- [ ] [INFRA] P3. **New finding, out of scope for this pass**: `~/.aws/credentials` on the `planning` VM carries a
-      SEPARATE static AWS IAM user credential (`ikenna-worker`, long-lived access key) that takes priority over the
-      VM's own `uts-orchestrator-epic-role` instance-profile role in the AWS SDK's default credential chain — this is
-      a residual static-credential risk independent of the GCP-side fix above (the WIF setup above correctly targets
-      the instance role, not this user key, so it is unaffected by and does not depend on this finding). Investigate
-      whether anything actually needs this static user key vs. the ambient instance role, and if not, retire it.
-      Repo: infra (host-level, `planning` VM).
+- [ ] [INFRA] P3. Investigate whether anything actually needs the separate static AWS IAM user credential
+      (`ikenna-worker`, long-lived access key, in `~/.aws/credentials` on the `planning` VM) vs. the VM's own
+      `uts-orchestrator-epic-role` instance-profile role — which the static key currently takes priority over in
+      the AWS SDK's default credential chain — and retire the static key if not. **New finding, out of scope for
+      this pass's WIF work** (independent risk; unaffected by and does not depend on the WIF fix above, which
+      correctly targets the instance role, not this user key). No `[OPERATOR]` gate needed (task_template.md
+      finding O(a)/U — self-justified: investigate-then-conditionally-retire, and if the audit half finds zero
+      live callers depend on the static key, removing it is a safe, reversible cleanup since the instance role
+      already provides equivalent access and the key can be recreated from IAM if ever needed). Corrected
+      2026-08-19, plan-reconcile observability_master: rewrapped so the action, not just the meta-commentary,
+      lands on this todo's first physical line (line-1 completeness, task_template.md §3). Done when: audit
+      result stated + key retired-or-justified-kept. Repo: infra (host-level, `planning` VM).
 - [x] ✅ [DATA] P1. Re-verified the chain relabel migration part 2 execution plan
       (`plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md`) against live state — **still
       current**: every Phase 1 (UAC)/Phase 2 (MTDS) file:line citation individually checked against post-draft

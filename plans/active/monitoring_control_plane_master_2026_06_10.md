@@ -24,7 +24,8 @@ related:
 created: 2026-06-10
 parent_epic: observability_master
 assigned_vm: NA
-execution_scope: orchestrator-agent
+execution_scope: local-only # corrected 2026-08-19 (plan-reconcile observability_master) -- assigned_vm: NA pairs with
+# execution_scope: local-only per task_template.md §2; was orchestrator-agent (the AO-dispatched pairing), a mismatch
 priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 2.0
@@ -257,8 +258,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       green (119s) — deployment-ui@76dc977 (`components/VersionCoherencePanel.tsx` on `/repos`) | pw:L2 ✓ 34/34 |
       regression: tests/smoke/verdict-store-panels.spec.ts. Firestore write cadence: every 30 min
       (`version-coherence-check.yml`, `workflow_dispatch` also armed for manual verification).
-- [ ] [CODE] P0. **Rollout-ratchet panels** — workflow-template drift (`detect_template_drift.py`) + Dockerfile
-      digest-pin conversion status per repo. Repo: deployment-api + deployment-ui.
+- [x] ✅ [CODE] P0. **Rollout-ratchet panels** — workflow-template drift (`detect_template_drift.py`) + Dockerfile
+      digest-pin conversion status per repo. Repo: deployment-api + deployment-ui. **DONE** — shipped as
+      `deployment-api@46e04e0757` (`GET /api/rollout-ratchet/overview`) + `deployment-ui@173e66ecab`
+      (`RolloutRatchetPanel.tsx`, wired into `RepoCi.tsx`); both verified ancestors of `origin/live-defi-rollout`.
+      This doc's own copy of the ask was tracked+built under a duplicate `ci_satellite_ao_dispatch_batch15` todo —
+      full evidence chain in
+      `/plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`.
+      Reconciled back to this source doc — plan-reconcile observability_master, 2026-08-19.
 - [ ] [CODE] P0. **Runtime-level deploy signal (v2 of decision 4)** — resolve what is RUNNING (deployment registry /
       Cloud Run revisions / VM heartbeats) and diff its SHA vs `main` HEAD. Repo: deployment-api + deployment-ui.
   > **🚫 Per-repo freeze-streak signal (AO half) + fleet-tab surface (deployment-ui half) — DESCOPED 2026-07-21
@@ -462,10 +469,14 @@ those). Harsh's three-surface charter (verbatim to Ikenna):
       `consolidator_throughput_backlog_monitor_2026_07_09.md`, active) now exist and are live — G3's original ask is
       fully covered by these two docs; no residual gap. Closing here with citation rather than leaving "IN PROGRESS —
       slot 3" stale.
-- [ ] [CODE] P0. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
+- [x] ✅ [CODE] P0. **(G4) Ruleset / branch-protection drift has no standing state** — `rules-alignment-agent` pages
       WARNING on per-repo ruleset misalignment; no UI. Fold into the planned **Rollout-ratchet panels** smart-extra
       (workflow-template drift + Dockerfile digest-pin) as a third ratchet column. Repos: deployment-api +
-      deployment-ui.
+      deployment-ui. **DONE** — `ruleset-drift-alert.yml` (the correct workflow; `rules-alignment-agent.yml` was a
+      mis-citation for a different, unrelated agent) now writes `ruleset_drift_verdicts` to Firestore, folded as the
+      3rd column of `RolloutRatchetPanel.tsx`. Same evidence chain as the Rollout-ratchet panels item above —
+      `/plans/archive/2026_08/issues/rollout_ratchet_panel_ui_only_mis_scoped_needs_backend_2026_08_17.md`.
+      Reconciled — plan-reconcile observability_master, 2026-08-19.
 - [x] ✅ [CODE] P0. DONE 2026-07-28 — **UNBLOCKED + SHIPPED** (operator decision 2026-07-27, §5-RESOLVED item 10).
       **(G5) Change-freeze window active has no standing banner** — `change-freeze-check` pages WARNING when a freeze
       blocks a scheduled/autonomous run; a freeze-window banner on `/repos` (active? window? reason?) now surfaces the

@@ -183,3 +183,8 @@ exists on one side and is never actually exercised end-to-end.
   drill ahead of real queued escalations. Todo 4 stays open pending a worker actually dispatching; check
   `plans/archive/issues/dp_audit_escalation_drill_verification_2026_08_18.md` (once/if filed) or re-run the same SSM
   check against escalation id `agt-2050ac`.
+- **2026-08-18 (resolved, ~2 min after the entry above)**: `agt-2050ac` WAS claimed and filed — slot-16 self-filed
+  `plans/archive/issues/dp_audit_escalation_drill_verification_2026_08_18.md` (`unified-trading-pm@1ea9a7c3ce`,
+  15:36:31 UTC) then resolved+archived it (`unified-trading-pm@8100c10056`, 15:38:49 UTC, "drill confirmed
+  working"). Both commits verified ancestors of `origin/live-defi-rollout`. Todo 4's checkbox above is correct;
+  this entry was just never appended (found + closed — plan-reconcile observability_master, 2026-08-19).

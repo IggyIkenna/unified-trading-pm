@@ -1,18 +1,21 @@
 ---
 doc_type: issue
 title:
-  deployment-service basedpyright ratchet (1259) broken fleet-wide by a dependency backmerge — 1261 measured, zero
-  deployment-service source changed
+  deployment-service basedpyright ratchet (1259) broken fleet-wide, root cause UNKNOWN — 1261 measured, zero
+  deployment-service source changed, dependency-backmerge theory FALSIFIED by isolated-worktree bisection
 summary: >-
   Measured 2026-08-15 in slot 15: `basedpyright deployment_service/` reports 1261 errors, 2 over the checked-in
   `BASEDPYRIGHT_MAX_ERRORS=1259` ratchet in `deployment-service/scripts/quality-gates.sh:134`. This BLOCKS every
-  quickmerge for deployment-service until fixed. Root cause is NOT in deployment-service: `git diff` between the last
-  confirmed-green commit (`deployment-service@bf69b2b289`, quality-gates.sh --no-fix passed clean at that tree) and
-  current HEAD (`7939f176`) touches only a Dockerfile + 2 shell launcher scripts — zero Python. The two editable-install
-  local deps (`unified-api-contracts`, `unified-trading-library`) both advanced HEAD around 2026-08-15T01:20-01:23Z (a
-  coordinated fleet backmerge window), and since they're path/editable-installed (not pinned wheels), ANY type-
-  signature change in either repo immediately changes what basedpyright infers inside deployment-service without
-  deployment-service's own git history recording anything.
+  quickmerge for deployment-service until fixed. `git diff` between the last confirmed-green commit
+  (`deployment-service@bf69b2b289`) and current HEAD (`7939f176`) touches only a Dockerfile + 2 shell launcher
+  scripts — zero Python — so the regression is NOT in deployment-service's own source. **The original "3-known-deps
+  backmerge" theory below is FALSIFIED** (see "Update 2026-08-15" in the body): an isolated-worktree bisection pinned
+  all 3 editable LOCAL_DEPS (`unified-api-contracts`, `unified-trading-library`, `deployment-api`) to their
+  pre-backmerge commits simultaneously and the count stayed at 1261 unchanged. Root cause is genuinely UNKNOWN as of
+  this correction (2026-08-19, plan-reconcile observability_master — this title/summary previously stated the
+  falsified theory as settled fact, already flagged twice by prior `/plan-reconcile` passes and left unfixed; see
+  `plan_reconciler_findings_cross_cutting_2026_08_16.md` + `..._08_18.md`) — needs a fresh bisection sweep beyond the
+  3 known LOCAL_DEPS.
 status: open
 nature: issue
 asset_group: [cross-cutting]

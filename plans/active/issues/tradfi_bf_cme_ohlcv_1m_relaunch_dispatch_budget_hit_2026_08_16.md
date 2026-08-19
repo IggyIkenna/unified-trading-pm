@@ -132,10 +132,20 @@ a repeat of the `cefi-aster-` pollution issue.
 
 ## Todos
 
-- [ ] [OPERATOR] P2. Decide option A vs B (above) for the `tradfi-bf-cme-ohlcv-1m-` launcher-family's relaunch
+- [x] ✅ [OPERATOR] P2. Decide option A vs B (above) for the `tradfi-bf-cme-ohlcv-1m-` launcher-family's relaunch
       dispatch budget; if B, implement once in `escalation_dedup.py` (repo: agent-orchestrator) and close this doc
       plus `cefi_extended_starknet_relaunch_dispatch_budget_hit_2026_08_16.md` and
       `cefi_aster_relaunch_dispatch_budget_hit_2026_08_16.md` against the same commit — do not implement per-doc.
+      **DONE** — option B ruled + shipped `deployment-service@2058bab339` (`_shard_group_key()`/`_SHARD_YEAR_RE`,
+      scopes the relaunch-dispatch budget by (launcher-family, shard-year)), verified ancestor of
+      `origin/live-defi-rollout`. The two cefi sibling docs cite this same commit and are archived. Its `Closes:`
+      trailer names only the 2 cefi docs, not this one — but the fix is generic (not cefi-scoped): re-ran
+      `_shard_group_key()`'s own `_SHARD_YEAR_RE` regex directly against this doc's own cited VM name
+      (`tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024-20260816-220540`) and confirmed it correctly extracts `"2024"` as the
+      shard-year, so the shipped fix structurally covers this launcher family too. Flipped 2026-08-19,
+      plan-reconcile observability_master — lead session should still confirm one post-2026-08-17 tradfi
+      relaunch-block occurrence (if any) budgets correctly per-shard-year before fully trusting this in production,
+      but the decision + implementation are done.
 - [ ] [OPERATOR] P3. If A is chosen (or as an interim step regardless), decide whether to manually relaunch just the
       `tradfi-bf-cme-ohlcv-1m-g02-6m-cl-2024` shard now vs waiting for the daily budget reset.
 

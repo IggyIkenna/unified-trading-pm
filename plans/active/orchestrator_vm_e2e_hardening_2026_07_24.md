@@ -386,13 +386,20 @@ Live bugs found during this verification (both fixed):
       untouched; legacy DBs without blocked_queue tolerated). 3 new tests pin ingest/sync/prune. Was:
       **[OPERATOR]-tagged todos become dispatchable tasks** — vm-planning slot-5 (11:44 UTC) burned a real worker boot
       to ask flip-or-leave. Repo: agent-orchestrator. Found 2026-06-12 Slack-alert triage.
-- [ ] [BACKEND] P0. **DESIGN RESOLVED — 2026-08-15 (operator, this session); now bounded implementation work, no longer
-      operator-gated.** Original ask (Ikenna, Slack 2026-06-12 — the next-phase "no dirty worktrees" flow): orchestrator
-      directs a worker on a dirty slot tree to (1) `quality-gates.sh` green → quickmerge the WIP; (2) red but easily
-      fixable → fix, re-QG, quickmerge; (3) not easily fixable → hand to the operator; (4) operator says not useful →
-      hard-reset from LDR. **Revised 2026-08-15** after the operator flagged the escalation branch as a real liveness
-      hazard (an unresponsive human-escalation leaves the slot stuck, doing nothing, until something else eventually
-      times it out and kills it anyway — better to let the slot resolve itself and move on):
+- [ ] [BACKEND] P0. Implement the orchestrator's dirty-worktree handling for a dirty slot tree: (1) `quality-gates.sh`
+      green → quickmerge the WIP as-is; (2) red but easily fixable → fix, re-QG, quickmerge; (3) not easily fixable
+      → `git stash` (named, tagging the predecessor/task context) and proceed with the next task — NEVER hand to
+      the operator, never block on a human. **DESIGN RESOLVED — 2026-08-15 (operator, this session); now bounded
+      implementation work, no longer operator-gated** (corrected 2026-08-19, plan-reconcile observability_master:
+      rewrapped so the action lands on line 1 — task_template.md §3 line-1 completeness; the prior line 1 was pure
+      meta-status commentary with zero task content, which na-eligibility-audit 2026-08-17 had already flagged as
+      `MISCLASSIFIED_LIKELY_AO_ELIGIBLE`). Original ask (Ikenna, Slack 2026-06-12 — the next-phase "no dirty
+      worktrees" flow): orchestrator directs a worker on a dirty slot tree to (1) `quality-gates.sh` green →
+      quickmerge the WIP; (2) red but easily fixable → fix, re-QG, quickmerge; (3) not easily fixable → hand to the
+      operator; (4) operator says not useful → hard-reset from LDR. **Revised 2026-08-15** after the operator
+      flagged the escalation branch as a real liveness hazard (an unresponsive human-escalation leaves the slot
+      stuck, doing nothing, until something else eventually times it out and kills it anyway — better to let the
+      slot resolve itself and move on):
 
       1. `quality-gates.sh` green → quickmerge the WIP as-is. (unchanged)
           2. Red but easily fixable → fix, re-QG, quickmerge. (unchanged)

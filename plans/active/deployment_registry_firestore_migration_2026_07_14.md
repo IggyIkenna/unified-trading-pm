@@ -142,8 +142,12 @@ heartbeat
       the full per-VM record from Firestore for a sampled set of live VMs; (4) parity — for N sampled live deployments
       the Firestore doc equals the GCS blob (status, `last_heartbeat_at`, counters, resource fields). P3 (GCS
       decommission) is self-halted on this real data-loss guard (prod Firestore `deployments` measured EMPTY
-      2026-07-17); the GCS blob delete stays blocked until all 4 criteria measure true, and P5 (verify + codex-sync) —
-      **DONE, deploy verified + GO/NO-GO measured FAIL, evidence + finding filed 2026-07-30 (slot 12).** Deploy
+      2026-07-17); the GCS blob delete stays blocked until all 4 criteria measure true; the GO/NO-GO measurement work this feeds into
+      P5 (verify + codex-sync) is itself —
+      **DONE, deploy verified + GO/NO-GO measured FAIL, evidence + finding filed 2026-07-30 (slot 12).** (P5 the
+      phase stays `draft`/blocked on P3 per the table above — only this measurement sub-step is done; corrected
+      2026-08-19, plan-reconcile observability_master, per task_template.md finding M self-consistency check —
+      was misreadable as "P5 the phase is DONE".) Deploy
       confirmed live: `uts-shared-deployment-api` revision `uts-shared-deployment-api-00332-8gl`, image
       `deployment-api:acdf634`, Cloud Build `b99e78c1-f5fe-449a-ab49-01ffd70f7b31` SUCCESS (commit
       `acdf634187bf7967bd36c983824cb4316a47435d`, descendant of both cited commits), Cloud Run env carries
