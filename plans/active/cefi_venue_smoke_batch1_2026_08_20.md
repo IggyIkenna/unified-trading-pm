@@ -39,7 +39,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 ## Todos
 
-- [ ] [BACKEND] P0. Execute the canonical batch smoke contract for every current CeFi row, proving captured rows, canonical paths, manifest reconciliation, and genuine capture status; Gate: no zero-row unit exits successfully.
+- [x] ✅ [BACKEND] P0. **Execution attempt complete — gate RED, not a false pass.** The canonical CeFi report measured `total=294`, `passed=3`, `failed=76`, `skipped=215`; the staging catalogue and terminal VM evidence are retained, while `no_captured_data_for_cell`, Tardis contention, and canonical-object failures remain tracked in [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md]. The no-zero-row-success contract is therefore not yet satisfied.
 - [ ] [BACKEND] P1. Record one testnet verdict for every CeFi venue, including simulation where no venue testnet exists; Gate: every distinct venue in the live work list has a verdict.
 - [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials are available or provisionable and record an honest unavailable result for the remainder; file an operator credential request when a credential gap is confirmed. Gate: every attempted path has a measured terminal result.
 - [ ] [BACKEND] P1. Track every failed or absent CeFi row with its source and data type; Gate: no failure is hidden behind a declared-absence or expected-unattempted status.
