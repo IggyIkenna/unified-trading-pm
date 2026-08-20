@@ -16,7 +16,7 @@
 ---
 
 <!-- AUTO-INDEX-START -->
-_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 384 plans across 10 domains. A plan tagged with multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/` by hand._
+_Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 386 plans across 10 domains. A plan tagged with multiple `asset_group:` values appears under each. Grep this block for a domain keyword before scanning `plans/active/` by hand._
 
 ### cefi (33)
 
@@ -232,7 +232,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 384 plans a
 - [`predictions_ml_walk_forward_and_arb_2026_06_20`](./predictions_ml_walk_forward_and_arb_2026_06_20.md) — Run Model 2A walk-forward validation (AUC gate) and ship the FSS arb_calculator — the predictions-ML half of the sports_predictions_e2e milestone.
 - [`sports_prediction_mvp_writetime_precompute_2026_07_24`](./sports_prediction_mvp_writetime_precompute_2026_07_24.md) — Forked out of mtds_data_status_page_parity_2026_07_21.md's sole remaining open todo (plan line-cap remediation, 2026-07-24): implement the already-traced, already-designed write-time `mvp: bool` stamp for sports/prediction rows on UTL's…
 
-### cross-cutting (103)
+### cross-cutting (105)
 
 - [`asset_class_to_asset_group_rename_2026_07_21`](./asset_class_to_asset_group_rename_2026_07_21.md) — Rename the DOMAIN-level unified_api_contracts.AssetClass (crypto/equity/fx/commodity/fixed_income) to AssetGroup across UAC + 7 downstream consumer repos + the UI, in one coordinated atomic landing per repo (no backward-compat shims…
 - [`bigquery_feature_ml_compute_engine_option_2026_06_08`](./bigquery_feature_ml_compute_engine_option_2026_06_08.md) — Adds BigQuery as an OPTIONAL third feature/ML compute-engine tier (in-process polars → DuckDB → BigQuery) over the hive-partitioned GCS corpus: Hive-partitioned external tables (uts_feature_external, one per asset_group×data_type,…
@@ -325,6 +325,8 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_index.py`. 384 plans a
 - [`pipeline_mode_partition_migration_2026_06_01`](./pipeline_mode_partition_migration_2026_06_01.md) — Promote pipeline_mode from a column to an on-disk hive partition key in GCS paths by bundling the change as a rider into each asset group's next scheduled whole-corpus manifest canonicalisation walk.
 - [`pipeline_mode_source_batch_live_replay_standardisation_2026_06_05`](./pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md) — Standardise pipeline_mode to source-aware live/batch/replay schema across all repos, gating all v9 manifest --apply runs on Phase 0 completion.
 - [`producer_silence_flatten_protocol_2026_08_14`](./producer_silence_flatten_protocol_2026_08_14.md) — Operator decision 2026-08-14, answering "what should happen when a producer goes silent". If strategy-service stops producing the cross-cutting data an instruction needs (risk, position) then: reconciliation UP means START FLATTENING RISK,…
+- [`redemption_wallet_transfer_execution_2026_08_20`](./redemption_wallet_transfer_execution_2026_08_20.md) — Hardens the wallet-transfer leg of the redemption cadence engine (companion plan fund_administration_redemption_cadence_engine_2026_08_20) so that batching many funds' outstanding redemptions into one cadence tick never violates the…
+- [`redemption_wallet_transfer_execution_finalize_2026_08_20`](./redemption_wallet_transfer_execution_finalize_2026_08_20.md) — Gated finalize plan for redemption_wallet_transfer_execution_2026_08_20 — reconciles evidence and runs the 6-step archival ritual once every todo in the source plan is done.
 - [`registry_ssot_hardening_2026_08_16`](./registry_ssot_hardening_2026_08_16.md) — W2 of the venue-readiness umbrella. Every venue fact should be declared once — capability record, data types, instrument types, adapter keys, error-code map — audited for per-service copies across all 7 umbrella repos. A same-pattern grep…
 - [`service_config_ownership_and_instruction_contract_2026_08_12`](./service_config_ownership_and_instruction_contract_2026_08_12.md) **[draft]** — Establishes the target the operator set 2026-08-12: the strategy↔execution contract is the INSTRUCTION (trade / swap / back-lay / atomic) plus a strategy-sent reference price, execution-service owns algo selection entirely via its own…
 - [`strategy_archetype_latency_deployment_profile_execution_2026_08_10`](./strategy_archetype_latency_deployment_profile_execution_2026_08_10.md) — Implements the decision artifact produced by `strategy_archetype_latency_deployment_profile_audit_2026_08_10.md` (`depends_on` + `gate_on_depends: true` — this plan's todos are NOT offered to the dispatcher until that audit's decision…
