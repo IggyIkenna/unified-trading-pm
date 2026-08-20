@@ -83,7 +83,7 @@ plan is a serial chain by file-topology, not a reflexive default.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Add `grace_period_seconds: int | None` to UAC `AllocatorRedemption`
+- [x] [BACKEND] P0. Add `grace_period_seconds: int | None` to UAC `AllocatorRedemption` — unified-api-contracts@5da3d42e (feature d1dccb0b + duplicate-field correction), fund-administration-service@52e9138; Evidence: quality-gates.sh passed in both repositories (UAC 307s correction re-gate; service 44s re-gate; service tests 35 passed, 83.90% coverage).
   (`unified_api_contracts/internal/domain/fund_administration/_types.py:125`), default `None`, alongside the existing
   `grace_period_days: int` (kept, unchanged, for backward compatibility with existing callers/tests). Update
   `create_redemption()` (`fund_administration_service/redemption/state_machine.py`) to accept an optional
