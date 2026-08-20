@@ -826,11 +826,17 @@ todos only to confirm they are data-movement, then leave it.
       surfaced by the post-phase codex audit 2026-08-20.** `/codex/04-architecture/account-instructions.md`'s
       Authorization table (Ops lead / Strategy owner + ops / Compliance + 2-of-N / firm officer / etc., one row
       per `AccountActionV2` member) and Audit section (per-instruction post-state snapshot, permanent structured
-      retention) are the DESIGN TARGET, now annotated as such in that doc. The REAL shipped
-      `AccountInstructionOrchestrator.dispatch()` (`execution_service/v2/account_orchestrator.py`) checks only
-      that `authorization_id` is a non-empty string — no role lookup, no per-action requirement — and audit is
-      two `log_event` calls with no post-state snapshot. Not started this session (design-heavy: needs a role
-      registry + an authorization-record lookup neither this tranche nor UAC currently define). SSOT:
+      retention) are the DESIGN TARGET, now annotated as such in that doc.
+
+      **Audit half CLOSED 2026-08-20 — `execution-service@d162dd6793`.** `dispatch()` previously deleted its own
+      `now_utc` parameter with a "kept as part of the signature for a later audit-event emit" comment — nothing
+      emitted anything. Every dispatch outcome (rejected-missing-auth, CLOSE_ALL executed, log-only-accept) now
+      emits a real `log_event` + `persist_audit_log` call — the exact same two-call pattern `orders/oms.py`'s
+      `ORDER_UPDATED` event already establishes in this repo, not a new mechanism. 6 new tests, including one
+      proving a rejection is itself audited, not silently dropped. **Authorization/RBAC half remains genuinely
+      open** — `dispatch()` still only checks `authorization_id` is a non-empty string, no role lookup, no
+      per-action requirement — deliberately not attempted: needs a role registry + an authorization-record lookup
+      neither this tranche nor UAC currently define, a real design question outside self-serve scope. SSOT:
       `/codex/04-architecture/account-instructions.md` §Authorization, §Audit.
 - [x] ✅ [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
       pending states. **Structural blocker fixed 2026-08-20, this todo's own remaining scope re-measured**: the
