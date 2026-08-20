@@ -68,7 +68,7 @@ related_plans:
   - /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md
   - /plans/active/venue_e2e_wiring_2026_08_16.md
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
-  - /plans/active/registry_ssot_hardening_2026_08_16.md
+  - /plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md
   - /plans/active/lazy_scoped_loading_refactor_2026_08_16.md
   - /plans/active/strategy_service_centralization_fixes_2026_08_16.md
   - /plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md

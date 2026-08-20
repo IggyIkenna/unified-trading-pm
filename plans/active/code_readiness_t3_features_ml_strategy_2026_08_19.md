@@ -261,7 +261,7 @@ todos only to confirm they are data-movement, then leave it.
       genuine miss), then delete `_STAKING_PROTOCOL_CHAIN` itself — `_ALLOWED_CHAINS`/`ALLOWED_CHAINS` stay,
       they're a separate concern (which chains this strategy permits, not protocol→chain resolution). This is
       T3's own repo so T1 cannot make this edit. Evidence:
-      `/plans/active/registry_ssot_hardening_2026_08_16.md` todo 6, `unified-api-contracts/unified_api_contracts
+      `/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md` todo 6, `unified-api-contracts/unified_api_contracts
       /registry/venue_constants.py::get_chain_for_protocol`.
 
 ## Todos

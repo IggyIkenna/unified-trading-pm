@@ -27,7 +27,7 @@ tags: [venue-readiness, e2e-wiring, transfers, carve-out-prerequisite, venue-cov
 related:
   [
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
-    /plans/active/registry_ssot_hardening_2026_08_16.md,
+    /plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
   ]
@@ -85,7 +85,7 @@ here**; if it belongs to one of these, it goes there.
 | **Contract step 1 (Declared)** — the route/mode axis on `VENUE_DATA_TYPE_CAPABILITIES`, the 40 venues that capture today with no capability entry, bookmaker spelling drift, the `VENUES_BY_ASSET_GROUP` ⊆ capability-record drift guard | [venue_capability_route_axis_and_cross_ag_declarations_2026_08_14](/plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md) |
 | **Step 12 (Reachability)** — "is it called from a production path", the reachability gate | [e2e_wiring_reachability_audit_2026_08_15](/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md) |
 | **Steps 6-8 read/execute asymmetry** — a venue tradeable but not reconcilable, the unreachable DeFi connectors | [venue_coverage_position_read_vs_execute_asymmetry_2026_08_14](/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md) |
-| **Registry SSOT / capability-record naming / error-code coverage** | [registry_ssot_hardening_2026_08_16](/plans/active/registry_ssot_hardening_2026_08_16.md) |
+| **Registry SSOT / capability-record naming / error-code coverage** | [registry_ssot_hardening_2026_08_16](/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md) |
 | **Per-service config (contract step 11)** | [service_config_ownership_and_instruction_contract_2026_08_12](/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md) § D |
 
 **What is left, and is genuinely unowned**: walking steps **2-9 per (venue × data type)** as one connected chain —

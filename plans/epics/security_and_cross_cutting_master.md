@@ -65,7 +65,7 @@ related_plans:
   - ../active/lazy_scoped_loading_refactor_2026_08_16.md
   - ../active/lst_rate_honest_coverage_2026_07_21.md
   - ../active/qg_host_adaptive_resource_governor_2026_07_14.md
-  - ../active/registry_ssot_hardening_2026_08_16.md
+  - ../archive/2026_08/registry_ssot_hardening_2026_08_16.md
   - ../active/repo_scripts_governance_audit_2026_06_18.md
   - ../active/stash_pile_workspace_cleanup_2026_06_03.md
   - ../active/strategy_service_centralization_fixes_2026_08_16.md
@@ -564,7 +564,7 @@ regeneration is tracked as Phase 3's README-registry-refresh todo._
 ### [`lst_rate_honest_coverage_2026_07_21`](../active/lst_rate_honest_coverage_2026_07_21.md)
 **status**: active · **estimate**: 4.8 cal AI-days (class: infra)
 
-### [`registry_ssot_hardening_2026_08_16`](../active/registry_ssot_hardening_2026_08_16.md)
+### [`registry_ssot_hardening_2026_08_16`](../archive/2026_08/registry_ssot_hardening_2026_08_16.md)
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
 **title**: Registry SSOT hardening — venue capability record, data/instrument types, adapter keys, error-code map
 
