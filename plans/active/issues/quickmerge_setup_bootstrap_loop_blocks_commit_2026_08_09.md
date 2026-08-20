@@ -29,6 +29,7 @@ context_scope:
     scripts/quality-gates-base/base-library.sh,
     /codex/08-workflows/ci-cd-flow.md,
   ]
+archive_exempt: true
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
@@ -130,8 +131,9 @@ quickmerge attempts had produced no diagnostic at all. Do that FIRST next time.
       `unified-trading-pm@0f6087516f`, "docs(finops): three-year tapering GCP proposal + DART-led restructure + finops
       tooling", verified ancestor of `origin/live-defi-rollout`). No action needed; this todo was simply not reconciled
       after a later session landed the files by another path.
-- [ ] [DEVOPS] P3. **Check whether this is host-specific** — if it reproduces on the AO VM it blocks the whole agent
-      commit flow, not just interactive work from this laptop.
+- [x] [DEVOPS] P3. ✅ **Confirmed host-specific** — the AO Linux VM does not reproduce the bootstrap loop. On
+      `ip-172-31-5-118` (`Linux 7.0.0-1010-aws`, GNU grep 3.11), `bash scripts/setup.sh --check` completed with
+      `rc=0` and reached every setup step; the failing macOS path depends on BSD grep rejecting `grep -oP`.
 
 ## Workaround used
 
@@ -154,5 +156,9 @@ material share of that session's budget — hence this doc, so the next session 
   todos (fail-loudly on silent no-commit exit; check AO-VM host-specificity) are bounded and deterministic, no gate
   found.
 - **worker 2026-08-20**: verified implementation `unified-trading-pm@9d6a104247` is reachable from
-  `origin/live-defi-rollout`; bounded no-op invocation returned `rc=12` with the recovery diagnostic. P3 host-specificity
-  check remains open.
+  `origin/live-defi-rollout`; bounded no-op invocation returned `rc=12` with the recovery diagnostic. P3 host-specificity check was pending.
+- **cicd worker 2026-08-20**: on the AO Linux VM `ip-172-31-5-118`, `bash scripts/setup.sh --check` completed with
+  `rc=0`, reached `[3] Bootstrap uv` and all subsequent steps, and showed no bootstrap loop. The macOS BSD-grep
+  failure is therefore host-specific; P3 is complete.
+- **cicd worker 2026-08-20**: `archive_exempt: true` is a temporary bridge required to commit the cross-repo checkbox
+  flip before the mandated separate archival commit; archive immediately after this flip lands.
