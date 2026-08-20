@@ -55,20 +55,11 @@ related:
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/data_completion_prediction_2026_07_15.md,
-    /plans/archive/2026_07/prediction_canonical_identity_migration_2026_07_08.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    /plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
     /plans/active/prediction_cross_venue_arb_and_coverage_2026_07_24.md,
     /plans/active/predictions_ml_walk_forward_and_arb_2026_06_20.md,
-    /plans/archive/2026_08/predictions_other_bucket_and_ui_drilldown_2026_06_20.md,
-    /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/archive/2026_07/prediction_satellite_ao_dispatch_batch2_2026_07_25.md,
-    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/archive/2026_07/prediction_consolidated_native_ao_extract_2026_07_25_finalize.md,
-    /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
 last_updated: 2026-08-19 # was 2026-07-31 — /plan-reconcile predictions_master (epic-scoped): corrected 2 stale "6 open" phase_ab_residuals citations (snapshot table + aggregated index) to the live count of 4. Prior: was 2026-07-26 — /ag-closeout-audit prediction (scheduled) Finding-3 fix: added 6 previously-unindexed docs (2 kalshi issues, features_delta_one, prediction_trades_migration_concurrent_dispatch, 2 fresh 2026-07-31 adapter dead-code findings) to the Aggregated source docs index, and corrected the stale kalshi_live_capture_regression_and_drift entry (was "3 prose follow-ups", live-verified now 1 checkbox)

@@ -16,7 +16,6 @@ tags: [defi, solana, dex-pool-swaps, indexer, orca, raydium, new-capability, whi
 related:
   [
     /plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
-    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
   ]
 created: "2026-08-08"
 last_updated: "2026-08-08"

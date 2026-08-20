@@ -143,6 +143,8 @@ is independently shippable, no need to clear all 925 in one pass.
 
 - **slot-21 2026-08-20 (pointer-review follow-up)**: The scoped gate exposed five remaining entries without body repetitions. Each archived plan was read; all five were resolved or already represented by existing referring-document evidence, so the stale historical pointers were dropped rather than manufacturing codex content. `--only` is clean; live checker count/baseline is 681.
 
+- **slot-21 2026-08-20 (fifth execution batch)**: Removed 21 redundant archived-plan `related:` citations from eight active referring plans after verifying each basename was already represented in body/source evidence. The checker now measures 671 citations against the existing 671 ratchet baseline; the corpus-wide cleanup todo remains open.
+
 ## Todos
 
 - [x] ✅ **EXTRACTED 2026-08-18 (na-eligibility-audit, infra tranche) →

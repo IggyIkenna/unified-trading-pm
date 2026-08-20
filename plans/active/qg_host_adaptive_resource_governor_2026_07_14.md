@@ -17,7 +17,6 @@ scope: [engineer, admin]
 tags: [infra, quality-gates, host-contention, governor, resource-admission, cross-host]
 related:
   [
-    /plans/archive/issues/qg_host_governor_severe_contention_2026_07_13.md,
     /codex/06-coding-standards/quality-gates.md,
     scripts/quality-gates-base/qg-host-governor.sh,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,

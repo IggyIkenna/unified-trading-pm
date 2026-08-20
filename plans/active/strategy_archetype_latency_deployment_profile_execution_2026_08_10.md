@@ -23,7 +23,6 @@ scope: [engineer]
 tags: [strategy, execution, deployment-profile, archetype, runtime-topology, derived-infra]
 related:
   [
-    /plans/archive/2026_08/strategy_archetype_latency_deployment_profile_audit_2026_08_10.md,
     unified-trading-pm/configs/runtime-topology.yaml,
     /codex/04-architecture/client-isolation-sla-and-runtime-profiles.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,

@@ -20,7 +20,6 @@ related:
     /codex/05-infrastructure/live-pipeline-architecture.md,
     /codex/04-architecture/batch-live-architecture.md,
     /codex/02-data/availability-manifest-and-data-status.md,
-    /plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
     /plans/active/mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md,
   ]
 created: 2026-08-14

@@ -18,7 +18,6 @@ tags: [firestore, deployment-registry, scale-test, codex, verification]
 related:
   - /plans/active/deployment_registry_firestore_migration_2026_07_14.md
   - /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md
-  - /plans/archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md
 created: "2026-07-14"
 last_updated: "2026-08-18" # (was: 2026-07-14 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, doc last substantively touched 2026-08-10)
 parent_epic: observability_master
