@@ -410,3 +410,138 @@ jobs:
       # (continue-on-error), so the Slack post itself still went out, but dedup + the GCS ledger
       # (deployment-ui Alerts page) silently never ran.
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  # ── JOB 4: Backmerge-failure monitor ────────────────────────────────────────────────
+  # Proactive detection surface for a FAILED main-backmerge-to-ldr run — DISTINCT from the
+  # `backmerge_sync_failure` escalation wall_type (which polls for RESOLUTION of an already-open
+  # escalation on DECISION=error — reactive, not proactive; see
+  # cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md's Progress Log) and from the
+  # notify-failure job inside main-backmerge-to-ldr.yml itself (which fires on the failure's OWN
+  # tick only). This asserts, per repo, that the most recent COMPLETED backmerge run did not end
+  # in a failure conclusion, and pages as a STANDING condition (state-transition dedup_key) until a
+  # subsequent run completes cleanly — catching the 11h13m drift class
+  # (main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md) independent of
+  # whether the failed run's own notify-failure post was seen or the transient self-healed.
+  # Repo set mirrors the drift-tick job above (unified-trading-pm + every promotion_model:ldr_main
+  # repo) — those are the repos where a failed backmerge strands LDR (ldr_terminal repos don't
+  # back-merge; single_branch repos have no LDR).
+  backmerge-failure-monitor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      failed: ${{ steps.scan.outputs.failed }}
+      report: ${{ steps.scan.outputs.report }}
+      recovered: ${{ steps.recovery.outputs.recovered }}
+    steps:
+      - uses: actions/checkout@v5
+      - name: Restore backmerge-failure alert state cache
+        uses: actions/cache@v5
+        with:
+          path: .backmerge-failure-alert-state.json
+          key: backmerge-failure-alert-state-${{ github.run_id }}
+          restore-keys: |
+            backmerge-failure-alert-state-
+      - name: Scan backmerge-failure across fleet
+        id: scan
+        env:
+          # Cross-repo `gh run list` → must use GH_PAT (GITHUB_TOKEN cannot read sibling repos).
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          set +e
+          FAILED=false
+          REPORT_LINES=""
+          # Repo set = unified-trading-pm + every promotion_model:ldr_main repo — the same
+          # _main_direct_repos() set the drift-tick job above dispatches for. LDR copy of the
+          # manifest preferred (same staleness guard the drift-tick uses).
+          git fetch origin live-defi-rollout --depth=1 --quiet 2>/dev/null || true
+          if git show origin/live-defi-rollout:workspace-manifest.json > .bh-manifest.json 2>/dev/null && [ -s .bh-manifest.json ]; then
+            mv -f .bh-manifest.json workspace-manifest.json
+          fi
+          REPOS=$(python3 -c "
+          import json
+          out = {'unified-trading-pm'}
+          try:
+              m = json.load(open('workspace-manifest.json'))
+              repos = m.get('repositories', {})
+              if isinstance(repos, dict):
+                  for name, cfg in repos.items():
+                      if isinstance(cfg, dict) and cfg.get('promotion_model') == 'ldr_main':
+                          out.add(str(name))
+          except (OSError, json.JSONDecodeError, ValueError):
+              pass  # manifest unreadable -> PM-only fallback (prior behavior)
+          print('\n'.join(sorted(out)))
+          " 2>/dev/null || echo "unified-trading-pm")
+          OWNER="${GITHUB_REPOSITORY_OWNER:-IggyIkenna}"
+          if [ -z "$REPOS" ]; then
+            echo "backmerge-failure: no repos — fail-open"
+            echo "failed=false" >> "$GITHUB_OUTPUT"
+            echo "report=backmerge-failure: no repos to check" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # `--status completed` is load-bearing: the drift-tick's own dispatch lands a NEW
+          # (queued/in-progress) run before this job scans, and without the status filter that
+          # just-dispatched run (conclusion=null) would mask the prior FAILED completed run.
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            CONCL=$(gh run list --repo "${OWNER}/${REPO}" --workflow main-backmerge-to-ldr.yml \
+              --status completed --limit 1 --json conclusion 2>/dev/null \
+              | python3 -c "import json,sys; d=json.load(sys.stdin); print((d[0].get('conclusion') or '') if d else '')" 2>/dev/null || echo "")
+            case "$CONCL" in
+              failure|startup_failure|timed_out)
+                FAILED=true
+                REPORT_LINES="${REPORT_LINES}\n*${REPO}*: latest main-backmerge-to-ldr run ${CONCL}"
+                ;;
+            esac
+          done <<< "$REPOS"
+          echo "failed=$FAILED" >> "$GITHUB_OUTPUT"
+          if [ "$FAILED" = "true" ]; then
+            FULL_REPORT=":rotating_light: *Backmerge FAILURE* — one or more repos' most recent main-backmerge-to-ldr run did not complete (the main→live-defi-rollout sync bridge):${REPORT_LINES}\nThe hourly drift-tick re-dispatches, but a run that keeps failing strands that repo's LDR. Inspect: gh run list --repo IggyIkenna/<repo> --workflow main-backmerge-to-ldr.yml --limit 5."
+            printf "report<<__EOR__\n%s\n__EOR__\n" "$FULL_REPORT" >> "$GITHUB_OUTPUT"
+          else
+            echo "report=backmerge-failure: all latest main-backmerge-to-ldr runs completed cleanly" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Compute recovery transition (state-diffed)
+        id: recovery
+        run: |
+          python3 scripts/cicd/alert_recovery.py \
+            --state-file .backmerge-failure-alert-state.json \
+            --current "${{ steps.scan.outputs.failed }}" >> "$GITHUB_OUTPUT"
+
+  backmerge-failure-notify:
+    needs: backmerge-failure-monitor
+    if: needs.backmerge-failure-monitor.outputs.failed == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.backmerge-failure-monitor.outputs.report }}
+      severity: CRITICAL
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Standing condition: page on the false→true transition, re-remind hourly while any repo
+      # still fails. Distinct key from the reusable workflow's own notify-failure
+      # (main-backmerge-to-ldr:failure) and from promotion-lag / ar-dep-publish-lag.
+      dedup_key: backmerge-failure
+      cooldown_min: 60
+      # Own concurrency lane (see lag-notify / ar-lag-notify) so a same-run sibling never cancels this.
+      concurrency_suffix: bm-failure
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  backmerge-failure-notify-resolved:
+    needs: backmerge-failure-monitor
+    if: needs.backmerge-failure-monitor.outputs.recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ":ballot_box_with_check: *backmerge-failure RESOLVED* — every repo's most recent main-backmerge-to-ldr run now completes cleanly (prior tick paged CRITICAL)"
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      # Shorter cooldown than the open-condition key so closure is never swallowed.
+      dedup_key: backmerge-failure-resolved
+      cooldown_min: 30
+      concurrency_suffix: bm-failure-cleared
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
