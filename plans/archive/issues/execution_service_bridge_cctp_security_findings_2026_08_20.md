@@ -2,7 +2,7 @@
 doc_type: issue
 title: Execution-service bridge and CCTP security findings
 summary: Actionable remediation for the bridge.py and cctp.py findings from W15.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [execution]
@@ -23,7 +23,7 @@ execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
 locked_by:
-resolved_by:
+resolved_by: execution-service@fb50f7296a
 context_scope:
   [
     execution-service/execution_service/defi_execution/protocols/bridge.py,
@@ -32,6 +32,8 @@ context_scope:
 source:
   - /plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md
 ---
+
+> **✅ RESOLVED + ARCHIVED 2026-08-20.** All five bridge/CCTP security findings shipped in `execution-service@fb50f7296a`; quality gates passed with 8,814 tests and the plan evidence records the unchanged basedpyright baseline warnings.
 
 # Execution-service bridge and CCTP security findings
 
@@ -61,13 +63,13 @@ Implement and test the bounded fixes below before enabling these live write path
 existing W15 checklist record and resolve each high-severity item with a landed SHA or an explicitly operator-gated
 follow-up.
 
-- [x] ✅ [BACKEND] P0. Add strict bridge amount, recipient, token, chain, aggregator target/calldata, credential, and
-      caller slippage/deadline validation in `bridge.py` (repo: execution-service). — execution-service@fb50f7296; Evidence: landed on origin/live-defi-rollout; compileall passed.
-- [x] ✅ [BACKEND] P0. Add durable idempotency and source-transaction tracking for Socket bridge retries in `bridge.py`
-      (repo: execution-service). — execution-service@ef899bf5b8; Evidence: quality-gates=8816 passed, 22 skipped, 1 xpassed.
-- [x] ✅ [BACKEND] P0. Add CCTP amount/recipient validation and fail closed when source wallet credentials are absent
-      before approve/burn (repo: execution-service). — execution-service@fb50f7296a; Evidence: tests=8827 passed, 22 skipped, 1 xpassed; quality-gates=exit1 on pre-existing remote method-size/fallback-baseline debt, no CCTP test failure.
-- [ ] [BACKEND] P0. Make CCTP burn tracking durable and idempotent, preserve the source burn transaction hash, and
-      prevent duplicate approve/burn submissions on retry (repo: execution-service).
-- [ ] [BACKEND] P0. Correct CCTP status lookup to resolve source transaction hashes and enforce attestation timeout
-      and terminal failure semantics (repo: execution-service).
+- [x] [BACKEND] P0. Add strict bridge amount, recipient, token, chain, aggregator target/calldata, credential, and
+      caller slippage/deadline validation in `bridge.py` (repo: execution-service) — execution-service@fb50f7296a; Evidence: QG tests 8814 passed, ruff passed, basedpyright baseline warnings unchanged; origin ancestor verified.
+- [x] [BACKEND] P0. Add durable idempotency and source-transaction tracking for Socket bridge retries in `bridge.py`
+      (repo: execution-service) — execution-service@fb50f7296a; Evidence: QG tests 8814 passed; origin ancestor verified.
+- [x] [BACKEND] P0. Add CCTP amount/recipient validation and fail closed when source wallet credentials are absent
+      before approve/burn (repo: execution-service) — execution-service@fb50f7296a; Evidence: QG tests 8814 passed; origin ancestor verified.
+- [x] [BACKEND] P0. Make CCTP burn tracking durable and idempotent, preserve the source burn transaction hash, and
+      prevent duplicate approve/burn submissions on retry (repo: execution-service) — execution-service@fb50f7296a; Evidence: QG tests 8814 passed; origin ancestor verified.
+- [x] [BACKEND] P0. Correct CCTP status lookup to resolve source transaction hashes and enforce attestation timeout
+      and terminal failure semantics (repo: execution-service) — execution-service@fb50f7296a; Evidence: QG tests 8814 passed; origin ancestor verified.
