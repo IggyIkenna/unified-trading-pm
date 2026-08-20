@@ -119,13 +119,7 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
       `scripts/plans/clear_locked_by_placeholder_2026_08_12.py` exists with the correct lifecycle markers; 4 batched
       commits shipped it (`cd956ed32a`, `8baf3b7bf8`, `83ecf4408c`, `fb08bce437`), all verified reachable on
       `origin/live-defi-rollout` via `git merge-base --is-ancestor`.
-- [ ] [SCRIPT] P2. **NEW 2026-08-18 (plan_reconciler cross-cutting)** — the one-time sweep cleared existing docs but
-      never patched the actual doc-creation source still stamping `locked_by: live-defi-rollout` on NEW docs (this
-      doc's own root-cause section names `scripts/plans/fix_epic_frontmatter_2026_05_21.py:133` as a candidate but
-      explicitly says it "is not the direct writer" — the real template was never identified/patched). Live
-      recurrence confirmed 2026-08-18: `grep -rl "^locked_by: live-defi-rollout" plans/active/` returns 2 files dated
-      AFTER the 2026-08-12 sweep — `plans/active/issues/manifest_hygiene_red_cefi_2026_08_16.md` and
-      `plans/active/issues/empty_reprobe_disagreement_all_2026_08_17.md`. Find and fix the actual source.
+- [x] ✅ [SCRIPT] P2. **DONE — unified-trading-pm.** Patched the actual writer `scripts/cicd/parity_watchdog.py` to emit an empty `locked_by:` field for new issue docs, preventing recurrence. Evidence: targeted Ruff passed; PM quality gates passed twice (472s and 390s); source commit verified reachable on `origin/live-defi-rollout`.
 - [x] ✅ [REVIEW] P2. Once unlocked, re-run archival eligibility on
       `plans/active/issues/deployment_ui_smoke_failures_daily_costs_nav_mobile_2026_07_21.md` specifically (all 3 todos
       already HARD-verified done as of 2026-08-10) and archive via the 6-step ritual if still eligible. **RESOLVED
