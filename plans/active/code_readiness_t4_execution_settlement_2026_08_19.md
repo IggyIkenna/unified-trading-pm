@@ -620,7 +620,15 @@ todos only to confirm they are data-movement, then leave it.
       updates every one of the 12 test files' patch targets in the same commit, verified by actually running the
       full list, not just the file's own local tests — this is safety-critical order-management code, so a rushed
       split that silently defangs a live mock is worse than leaving the file at cap.
-- [ ] [AGENT] P0. Post-phase codex audit across `/codex/04-architecture/` for every contract changed.
+- [x] ✅ [AGENT] P0. **Post-phase codex audit across `/codex/04-architecture/` for every contract changed — DONE
+      2026-08-20.** Every contract this tranche touched, checked: `order-state-machine.md` (fixed a prior session,
+      9-state warning + PARTIALLY_FILLED ruling); `account-instructions.md` (fixed this session —
+      `unified-trading-pm@0db97a5b47` — annotated the Authorization/Audit sections as design-target-not-shipped);
+      `strategy-execution-protocol.md`/`exposure-reduction-unification.md` (checked, both only reference the
+      `AccountActionV2` enum shape in a table, which is accurate, no fix needed). Grepped `codex/` for
+      `execution_instruction`/`instruction-path`/`864.*row` to check whether the readiness-dump fix
+      (`unified-trading-pm@8d47cf3393`) needed a codex update too — no codex doc describes that mechanism's
+      internals (it lives in the skill's own `SKILL.md`, not `codex/`), so nothing there to fix.
 - [ ] [BACKEND] P2. **Build real per-action, role-based authorization + structured audit for AccountInstruction —
       surfaced by the post-phase codex audit 2026-08-20.** `/codex/04-architecture/account-instructions.md`'s
       Authorization table (Ops lead / Strategy owner + ops / Compliance + 2-of-N / firm officer / etc., one row
@@ -632,7 +640,17 @@ todos only to confirm they are data-movement, then leave it.
       registry + an authorization-record lookup neither this tranche nor UAC currently define). SSOT:
       `/codex/04-architecture/account-instructions.md` §Authorization, §Audit.
 - [ ] [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
-      pending states.
+      pending states. **Structural blocker fixed 2026-08-20, this todo's own remaining scope re-measured**: the
+      readiness-dump's `execution_instruction` leg was hardcoded venue-independent-`unverified` for all 864 rows
+      (the real per-venue check existed, `execution-service@b70d2edb16`, but nothing called it) — fixed,
+      `unified-trading-pm@8d47cf3393`, independently verified live: a `defi` asset-group run went from a blanket
+      unverified to a real `{unverified: 20, ready: 133, not_ready: 387}` distribution across 540 rows. **What's
+      NOT done**: actually re-reading the 4 HTML artefacts' W-tagged markers against this now-real state and
+      updating any stale ones — no automated marker-writer exists anywhere in this workspace (checked: the
+      readiness-dump skill's own `SKILL.md` only describes deriving state, never writing it back into HTML), and
+      the 4 files are 33,976 lines combined, too large to safely hand-verify in the tail of this session. Dispatched
+      to a sub-agent (see this plan's Progress Log for the dispatch + its findings) rather than rushed or left
+      silently unattempted.
 
 ## Progress Log
 
@@ -665,6 +683,7 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@c0839616be` | `POST /account/instruction` route on both `app.py` and `main.py` in front of the CLOSE_ALL wiring above — 5 new HTTP tests; emergency close-all todo now CLOSED |
 | `execution-service@6f664e80a0` | BATCH settlement gap 1/5 closed: `CONVERT_DUST` now handled by `resolve_settlement`, 2 new tests |
 | `unified-trading-pm@0db97a5b47` | codex audit: `account-instructions.md`'s authorization table + audit section annotated as design-target-not-shipped (verified against the real `AccountInstructionOrchestrator.dispatch()`) |
+| `unified-trading-pm@8d47cf3393` | readiness-dump `execution_instruction` leg now calls the real per-venue-per-mode check (`execution_service.readiness.instruction_path`, shipped `execution-service@b70d2edb16` but never wired in) instead of a hardcoded venue-independent unverified — new `_execution_instruction_path_probe.py`, `checks.py`/`derive_readiness.py` updated; independently re-verified live after landing |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
