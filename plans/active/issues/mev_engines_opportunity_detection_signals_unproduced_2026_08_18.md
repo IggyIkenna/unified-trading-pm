@@ -154,13 +154,13 @@ call-site placement, not a mechanical fix).
 
 ## Todos
 
-- [x] [REVIEW] P2. **EXTRACTED 2026-08-18 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch17_2026_08_18.md`
+- [x] [REVIEW] P2. **EXTRACTED 2026-08-18 (na-eligibility-audit) → defi satellite batch17 (archived 2026-08-20)
       item 1.** Confirm whether the MEV engines actually call `TenderlyExecutionProvider.simulate-bundle`
       before submission — infrastructure exists and is wired into `matching_engine.py`, but no MEV-engine call
       site was confirmed this session. If unused, that's a real pre-submission safety gap for `LIQUIDATION_BUNDLE`'s
       atomic flash-loan bundle in particular (a revert there costs gas only, but an unsimulated bundle is still a
       worse bet than a simulated one).
-- [x] [REVIEW] P1. **EXTRACTED 2026-08-18 (na-eligibility-audit) → `defi_satellite_ao_dispatch_batch17_2026_08_18.md`
+- [x] [REVIEW] P1. **EXTRACTED 2026-08-18 (na-eligibility-audit) → defi satellite batch17 (archived 2026-08-20)
       item 2.** Confirm the exact default behavior at `liquidation_bundle.py:265-267` (no explicit default
       shown in this pass — could be `None`, raising downstream, or silently coerced) before scoping the fix.
 - [ ] [FEATURES] P2. **Build the BACKRUN opportunity-detection calculator** — `backrun_target_swap_size_usd_<chain>`
@@ -196,7 +196,7 @@ specific feature key, not a corpus-wide sweep.
   `liquidation_bundle.py:265-267` default-behavior confirmation) are bounded confirm-and-report code reads with a
   determinable outcome — conflict-checked clean against the full active-defi covering set (incl. the explicitly
   cross-referenced sibling `defi_gas_net_cost_partial_wiring_gap_2026_08_17.md` and `defi_satellite_ao_dispatch_batch16`,
-  neither overlaps) and extracted to `defi_satellite_ao_dispatch_batch17_2026_08_18.md` items 1-2 (checkboxes flipped
+  neither overlaps) and extracted to defi satellite batch17 (archived 2026-08-20) items 1-2 (checkboxes flipped
   above by citation). Todos 3-5 (the 3 opportunity-detection calculators) each self-declare an unresolved design
   question — stay genuine build/design work, not bounded. Todo 6 is explicitly gated on 3-5 landing. Doc stays
   `assigned_vm: NA` for the 4 remaining items (3-6).
