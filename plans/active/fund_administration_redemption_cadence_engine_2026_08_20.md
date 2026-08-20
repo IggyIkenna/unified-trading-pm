@@ -135,8 +135,21 @@ plan is a serial chain by file-topology, not a reflexive default.
   implementation). Done-when: `ctx.transfer_adapter is None` at `api/main.py:439` is unreachable via the real
   `_default_container()` path (mock/test containers still allowed to pass `None` explicitly).
 
-- [ ] [BACKEND] P1. Implement the real units-outstanding divisor for per-unit NAV, replacing the placeholder in
-  `GracePeriodHandler._drive_unchecked` (`grace_period_handler.py:112-114`) that reads `snapshot.nav_usd` directly as
+- [x] [BACKEND] P1. Implement the real units-outstanding divisor for per-unit NAV, replacing the placeholder in
+  `GracePeriodHandler._drive_unchecked` — fund-administration-service@43dcabe130; Evidence: quality-gates.sh passed (35s full run incl. tests); new test `test_units_outstanding_divisor_changes_settlement_nav_from_raw_nav_usd` in `tests/unit/test_background_handlers.py`.
+  **Correction to this todo's own text**: subscriptions never reach a `PROCESSED` status (their state machine is
+  `PENDING → APPROVED → REJECTED | SETTLED` — no `PROCESSED` value exists on `SubscriptionStatus`); implemented the
+  increment on subscription `SETTLED` instead (the transition whose own docstring says "funds have landed in
+  treasury," matching the semantic intent), decrement on redemption `PROCESSED` exactly as written (that status
+  does exist on `RedemptionStatus`). Wired at both call sites that can drive a redemption to `PROCESSED`
+  (`GracePeriodHandler._persist_processed` for the automatic cadence path, `main.py`'s `process_red()` handler for
+  the manual API path) so the ledger stays consistent regardless of which path fires; and at `main.py`'s
+  `settle_sub()` handler for the increment. Three pre-existing tests
+  (`test_grace_period_handler_keeps_multi_client_withdrawals_isolated`,
+  `test_grace_period_handler_drives_expired_redemptions`,
+  `test_grace_period_handler_prefers_seconds_over_days_when_expired`) needed a one-line `units_outstanding` seed each
+  to keep passing under the new divisor (previously implicit `units_outstanding=1` via the placeholder; now explicit).
+  (`grace_period_handler.py:112-114`) that reads `snapshot.nav_usd` directly as
   per-unit NAV. Add a `units_outstanding: dict[tuple[str, str], Decimal]` running ledger to `PersistenceStore`
   (`fund_administration_service/persistence/in_memory_store.py`), keyed by `(fund_id, share_class)`, incremented when a
   subscription reaches `PROCESSED` and decremented when a redemption reaches `PROCESSED`; compute
