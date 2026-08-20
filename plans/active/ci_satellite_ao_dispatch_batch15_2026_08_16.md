@@ -464,3 +464,6 @@ source: >-
   current HEAD and every claimed artifact (panel component, its wiring, the playwright spec, the API route, both
   verdict-writer drivers) genuinely exists on disk before flipping — did not trust the archived issue doc's own
   claims alone. No new code needed; this batch's citation simply predated the resolution.
+- **context-scout 2026-08-20**: re-verified context_scope (2 entries) unchanged, both resolve on disk — dispatch-batch
+  coordinator doc, source paths deliberately skipped per the carve-out (many distinct source docs, no single
+  dominant file target).

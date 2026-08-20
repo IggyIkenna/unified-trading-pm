@@ -56,6 +56,11 @@ source: >-
   AO-dispatched finalize-plan-coverage rule mechanically requires it for a plan that stays NA).
 assigned_role: data_engineering
 effort: xhigh
+context_scope:
+  [
+    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 sequential: true
 drift_direction: none
 ---

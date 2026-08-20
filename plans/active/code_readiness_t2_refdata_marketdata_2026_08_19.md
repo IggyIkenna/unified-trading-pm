@@ -562,13 +562,13 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Close-out
 
-- [ ] [DATA] P1. **Locate the disposition of the 2026-08-20 CeFi itype-casing dry-run VM
-      (`canonical-migration-cefi-itype-casing-apply-20260820-115340`) — it self-deleted before its result was
-      retrieved.** Full context: `/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`
-      Progress Log, 2026-08-20 entry. Find the persisted run log via safe UTL tooling (never `gsutil`/`gcloud`
-      object CLI), confirm the `Grand total instrument_type values would be normalized: N` disposition, review
-      against the ~39,286-row baseline order of magnitude, then either launch the real `--apply` run on a fresh
-      VM or diagnose if something looks wrong. Do NOT assume success.
+- [ ] [DATA] P1. **Relaunch the CeFi itype-casing dry-run with reduced concurrency — the 2026-08-20 dry-run
+      OOM-killed (exit 137) after ~19 min on a dedicated `e2-standard-16`, `--workers 16`.** Full evidence:
+      `/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md` Progress Log,
+      2026-08-20 entries. Located the log via `vm_run_log_final_uri()` + `download_bytes()` (never `gsutil`) —
+      DETERMINED, not unknown: the script never printed a `Grand total` line, so there is still no disposition
+      to review. Nothing was written (dry-run). Relaunch with materially fewer workers and/or a resized machine
+      before attempting `--apply`.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.

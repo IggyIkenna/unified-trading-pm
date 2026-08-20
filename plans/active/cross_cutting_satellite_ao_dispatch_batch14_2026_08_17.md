@@ -307,3 +307,7 @@ source: >-
   the 6 remaining Unity-venue capability-declaration todos (houses `VENUES_BY_ASSET_GROUP` +
   `VENUE_DATA_TYPE_CAPABILITIES`, cited directly in this batch's own item-3 Progress Log entry as the circular-import
   boundary); reordered to lead with the dominant remaining source doc.
+- **context-scout 2026-08-20**: reviewed; context_scope unchanged (5 entries) — all 5 paths still resolve and still
+  match the current open-todo mix (6 sequenced Unity-venue items + 2 non-Unity items); this doc is a dispatch-batch
+  coordinator with its finalize + naming-convention codex pointer already present, and the source-of-most-items
+  plan + its confirmed code target already lead the list.

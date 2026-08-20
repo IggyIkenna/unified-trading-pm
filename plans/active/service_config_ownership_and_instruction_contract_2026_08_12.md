@@ -46,6 +46,13 @@ estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 5
 assigned_role:
 drift_direction: none
+context_scope:
+  [
+    /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md,
+    /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
+    /codex/04-architecture/execution-policy.md,
+    /codex/06-coding-standards/config-reloader-pattern.md,
+  ]
 depends_on: []
 locked_by:
 locked_since:

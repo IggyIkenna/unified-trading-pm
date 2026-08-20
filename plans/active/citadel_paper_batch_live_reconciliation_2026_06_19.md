@@ -972,3 +972,4 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
   tree + git history), with the exact `RECOVERY.md` rsync restore command. Same fix applied to
   `crypto_alpha_research_2026_07_24.md`'s 3 own live `_panel.py` references (the actual owning doc per the
   near-verbatim-duplicate citation above).
+- **context-scout 2026-08-20**: re-scouted; context_scope unchanged (5 entries), all still resolve on disk.
