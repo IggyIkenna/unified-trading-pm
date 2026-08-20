@@ -19,7 +19,7 @@ tags: [strategy-agnostic, vehicle-eligibility, sma, fund-administration, client-
 related:
   [
     /plans/archive/2026_08/fund_administration_redemption_cadence_engine_2026_08_20.md,
-    /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
+    /plans/archive/2026_08/redemption_wallet_transfer_execution_2026_08_20.md,
     /plans/epics/strategy_master.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
