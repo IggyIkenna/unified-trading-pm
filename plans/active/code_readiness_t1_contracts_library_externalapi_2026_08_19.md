@@ -421,9 +421,13 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
 ### W5 — venue registry completeness
 
-- [ ] [BACKEND] P0. Populate `VenueCapabilityV2.collateral_rules` / `MarginSpec` for EVERY venue. The schema exists
-      and strategy-service risk-v2 already consumes it, but zero venues are populated, so every risk-v2 read
-      degrades silently to "no data". Evidence: epic W5 +
+- [ ] BLOCKED-OPERATOR-DECISION [BACKEND] P0. Populate `VenueCapabilityV2.collateral_rules` / `MarginSpec` for
+      EVERY venue. The schema exists and strategy-service risk-v2 already consumes it, but zero venues are
+      populated, so every risk-v2 read degrades silently to "no data". **2026-08-20: T1 investigated and
+      deliberately did not fabricate this.** This is "population, not schema design" per the research doc itself —
+      real per-venue collateral/margin data (LTV ratios, haircuts, margin tiers) for 192+ venues, feeding a live
+      risk system. Getting these wrong could cause real financial harm; this needs genuine data-research (a
+      credential-gated data source or a manual research pass), not code. Evidence: epic W5 +
       `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`.
 - [x] ✅ [BACKEND] P1. `TransferCapabilityV2` added to `VenueCapabilityV2` — unified-api-contracts@45a545e5ad.
       New fields, schema only (population is separate, tracked work, per this todo's own text):
@@ -559,7 +563,7 @@ todos only to confirm they are data-movement, then leave it.
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P2. ~~Ceffu integration is a stub pending its API
       spec...~~ Target is `execution-service/execution_service/transfer_coordinator.py` (T4-owned, confirmed by the
       artefact's own citation at line 16915) — see `[FROM-T1]` in T4's plan.
-- [x] ✅ [BACKEND] P2. **Shipped — `unified-api-contracts@<pending-sha>`.** Fee and gas modelling cost components —
+- [x] ✅ [BACKEND] P2. **Shipped — `unified-api-contracts@01a595d3aa`.** Fee and gas modelling cost components —
       contracts side. Added `clearing_fee_bps`, `broker_fee_bps`, `other_fee_bps` to
       `ExecutionCostEstimate` (`unified_api_contracts/internal/domain/execution_service/cost_estimate.py`), matching
       W17's exact "clearing, broker, exchange, gas, and other" breakdown (`exchange_fee_bps`/`gas_cost_usd` already
@@ -804,3 +808,45 @@ todos only to confirm they are data-movement, then leave it.
   before declaring the SSOT, so the declaration uses real terminology, not invented names.
   **Verdict: Safe to compact: YES.** Zero uncommitted work of this session's own exists anywhere; the one
   dirty file observed belongs to a different, live session.
+
+- 2026-08-20 — **`VenueCapabilityV2.collateral_rules`/`MarginSpec` population (W5) — flagged, deliberately NOT
+  fabricated.** Per `plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`, the schema is
+  real and already consumed but populated for zero venues — the doc itself labels this "Population, not schema
+  design." This is real per-venue collateral/margin data (LTV ratios, haircuts, margin tiers) for 192+ venues,
+  feeding a live risk system. T1 will not invent financial risk parameters; getting these wrong could cause real
+  harm. Left as `BLOCKED-OPERATOR-DECISION` in the plan (real data-research required, not code) rather than either
+  fabricating values or silently skipping the line item.
+- 2026-08-20 — **"External API surface" section re-triaged; 3 of 7 items were misassigned to T1, 1 shipped, 1 held
+  on a genuine design question, 1 (wizard) left untouched.** Investigated the P0 "replace HTTP 501s with
+  transfer/bridge/atomic/cancel" todo starting from `unified-trading-api/routes/execution.py` (T1-owned) —
+  confirmed that repo has NO `/external/*` surface and no `501`s anywhere (grep, `.venv` excluded). Traced the
+  artefact's actual citation (line 1361: `execution-service/execution_service/api/external_instruction_api.py`) —
+  `execution-service` is T4-owned, not T1's. Same pattern held for the counterparty-facing-surface item
+  (`strategy-service`, T3-owned), the API-surface-enumeration item (spans `instruments-service`+
+  `market-tick-data-service`, T2-owned, and `execution-service`, T4-owned — redirected to T5 as read-only
+  doc-generation, matching its existing `instruction_actions.py` tooling), and the Ceffu item
+  (`execution-service/transfer_coordinator.py`, T4-owned, confirmed by the artefact's own file citation).
+  Redirected all four via `[FROM-T1]` inbound flags (`unified-trading-pm@3837c66bbf`) with full measured context
+  so the receiving tranche doesn't re-derive it, and closed T1's own copies as SUPERSEDED (kept for provenance,
+  not deleted — the `check_todo_regression` conservation rule).
+  **Kill-switch/flatten-position instruction todo** — genuinely half-T1 (adding them to
+  `StrategyInstructionType` as caller-submittable actions, not just internal system behaviour) but is an open
+  design call, not a mechanical enum fill: `INSTRUCTION_TYPE_TO_OPERATIONS` is a total mapping and control
+  instructions may not decompose into `OperationType` steps the way trade/DeFi ones do. Held open, pending T4's
+  answer on the needed shape (asked in the same inbound flag) — did not guess and ship a contract T4 would have
+  to rework.
+  **W17 fee/gas modelling (contracts side) — shipped `unified-api-contracts@01a595d3aa`.** Read
+  `plans/epics/system_readiness_master.md` § W17 first (need was "clearing, broker, exchange, gas, and other";
+  `exchange_fee_bps`/`gas_cost_usd` already existed on `ExecutionCostEstimate`). Added
+  `clearing_fee_bps`/`broker_fee_bps`/`other_fee_bps`, all defaulting to `Decimal("0")` (zero existing/future
+  construction call sites broken — none exist yet in this repo, confirmed by grep), deliberately NOT folded into
+  `total_cost_bps` (documented, and locked in by a test) so no producer's total silently drifts. 3 tests in
+  `tests/internal/unit/domain/execution_service/test_cost_estimate_fee_breakdown.py`, verified passing standalone
+  before the full-repo gate (202s, clean — only pre-existing WARN-level findings, no new ones). The
+  strategy-service/execution-service wiring ("bake into the decision" / "bake into alpha PnL") is T3/T4's, per the
+  todo's own original framing — not redirected, since it already said so.
+  **Wizard UI item (P1) left untouched** — genuinely T1-owned (`unified-trading-system-ui`) but not started this
+  turn; next session should pick it up, needs `[UI]` + `pw:L2 ✓` + a cited regression spec per the plan's own note.
+  **Lesson for future sessions**: a plan-authored P0 naming a specific artefact section is not proof the target
+  repo is yours — the artefact cites its own source file per claim (grep the artefact around the todo's exact
+  wording before writing code against your own repo's same-named-but-unrelated file).

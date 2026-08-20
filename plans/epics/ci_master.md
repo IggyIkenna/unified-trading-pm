@@ -83,7 +83,7 @@ related_plans:
   - ../active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md
   - ../active/issues/silent_failures_surfacing_as_generic_promotion_lag_2026_07_17.md
   - ../active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md
-  - ../active/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md
+  - ../archive/2026_08/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md
   - ../active/issues/strategy_service_ldr_qg_infra_flake_and_promotion_deadlock_2026_08_06.md
   - ../active/issues/uac_value_only_config_change_breaks_utl_untested_2026_07_20.md
   - ../active/issues/unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14.md
@@ -415,8 +415,8 @@ _58 active plans/issues declare `parent_epic: ci_master` in their frontmatter (c
 **status**: open
 **title**: Promote-PR non-supersession after a gate-passing greeks-service re-run
 
-### [`sit_stamp_dispatch_503_false_positive_2026_08_17`](../active/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md)
-**status**: open
+### [`sit_stamp_dispatch_503_false_positive_2026_08_17`](../archive/2026_08/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md)
+**status**: resolved (archived 2026-08-20)
 **title**: full-workspace-sit "failures" were GitHub API 503s in the SIT_VALIDATED stamp-dispatch step, not broken cross-repo checks
 
 ### [`unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14_finalize_2026_08_18`](../active/issues/unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14_finalize_2026_08_18.md)
