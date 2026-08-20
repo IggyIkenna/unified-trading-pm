@@ -9,7 +9,7 @@ summary: >-
   `tradfi-bf-cme-ohlcv-1m-g01-6a-6l-2020-20260816-220209` (asset_group=tradfi, shard `g01-6a-6l-2020`, INSTRUMENT_IDS=
   6A/6B/6C/6E/6J/6L FUT+OPT) terminated exit_code=137, dispatcher-classified as stall-induced (watchdog kill), not
   OOM. Unlike the two same-shard sibling docs filed earlier the same day
-  (`dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md`,
+  (`/plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md`,
   `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md` — both of which
   explicitly did NOT pull `run.log`), this worker DID read the VM's `run.log`
   (`gs://deployment-scripts-central-element-323112/vm-logs/<vm>/run.log`, via the UTL/SDK-style GCS read, never
@@ -41,7 +41,7 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md,
     /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_16.md,
-    /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
+    /plans/archive/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/tradfi_bf_cme_ohlcv_1m_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
@@ -197,3 +197,8 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
   Progress Log (2026-08-17, slot 16) — did not re-page the operator (would be a duplicate ask); did not relaunch
   per RB-INFRA-RELAUNCH. No code changed this session.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo is a verbatim duplicate of
+  `tradfi_databento_account_billing_suspended_2026_08_09.md`'s own P0 `[OPERATOR]` todo (pay the Databento invoice) —
+  no independent action needed here. Cross-referenced this pass: the sibling
+  `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_exit137_stall_relaunch_bound_page_2026_08_15.md` doc this doc
+  corrects has been ARCHIVED this pass (both its todos closed as moot, citing this doc). `assigned_vm` unchanged.

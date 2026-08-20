@@ -582,3 +582,9 @@ every day narrows or closes it permanently.
   20+ other tradfi docs cite; a real 6-step archival's referrer-fixing blast radius remains disproportionate to this
   doc's remaining function. `assigned_vm` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. 0 open todos, `archive_exempt: true` standing
+  (2026-08-18 ruling: historical decision-log record 20+ other tradfi docs cite; disproportionate referrer-fixing
+  blast radius). **Flagging a conflict found this pass**: `ag_closeout_audit_tradfi_parked_2026_08_19.md`'s todo 2
+  had listed this doc among 3 "confirmed archivable_now" candidates, citing "`archive_exempt` already standing" as
+  supporting evidence for archival — an inverted reading (the exemption blocks archival, it doesn't support it).
+  Corrected on that doc this pass; this doc's own standing KEEP ruling is unaffected. `assigned_vm` unchanged.

@@ -760,3 +760,9 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   already-granted 4-leg go-ahead. `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated), reaffirmed. 4 open todos re-read end-to-end:
+  the ES_OPT launch + manifest-verify duplication citation to `tradfi_satellite_ao_dispatch_batch6_2026_08_01.md`
+  (status: active) still holds; the residual 2-leg catalogue purge remains its own fresh-operator-confirmation gate
+  (now tracked live via `tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`); ICE stays
+  BLOCKED-CREDENTIALS per the 2026-06-18 operator decline; the top-level Gated-Phase-2 rollup is unchanged. `assigned_vm`
+  unchanged.

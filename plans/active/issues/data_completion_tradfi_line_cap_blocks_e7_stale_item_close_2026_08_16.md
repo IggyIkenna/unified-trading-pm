@@ -147,3 +147,6 @@ this file cleanly (`git checkout --`, verified clean, 1000L).
   tradfi history — explicitly out of scope for an incidental audit-run fix per this doc's own "What was NOT done"
   section (better suited to a dedicated `/plan-reconcile` or manual split pass). `assigned_vm` unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries) — added the E7 extraction target tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Sole open todo (split
+  `data_completion_tradfi_2026_07_15.md` under the 1000L hard cap) remains genuine content-judgment work, out of scope
+  for an incidental audit-run fix. `assigned_vm` unchanged.

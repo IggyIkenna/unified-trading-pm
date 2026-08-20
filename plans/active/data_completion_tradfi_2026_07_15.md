@@ -1020,3 +1020,8 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   standing verdicts (operator/credential/design/dependency-gated). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-21**: KEEP-NA, valid — reaffirmed. Fresh read of the open items unchanged since the
+  08-17 pass (item 15 already RECLASSIFIED to batch15 that pass). Doc remains a genuine operator/credential/design-gated
+  mix: the retagged `altdata`-home dependents (sequenced behind the MTDS wiring item), the R1 `--also-legacy` permanent
+  data-loss record, G1.run `--apply-write` (gated on gate-b/gate-c), and the EIA live-integration-test follow-up.
+  `assigned_vm` unchanged.
