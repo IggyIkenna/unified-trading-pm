@@ -103,7 +103,7 @@ source: >-
       list was completed with the 3 source paths its own body names (`odds_api_ws.py`, `websocket_runner.py`,
       `odds_api_adapter.py`); the other 4 docs only needed the dated `context-scout 2026-08-20` marker. Fresh
       `generate_context_scope_inventory.py --json` confirms all 5 target docs UP_TO_DATE.
-- [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
+- [x] ✅ [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       3 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of: `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md` (its `[SCRIPT] P0`
       item), `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` (both its `[BACKEND] P2` and
@@ -111,7 +111,13 @@ source: >-
       plus its `[DATA] P3` item), and `wip_preserve_refs_silently_unrecovered_2026_07_29.md` (its own `[DATA] P3` item —
       the duplicate this batch folded in, so it flips in lockstep with `orphaned_commit_recovery`'s `[DATA] P3`, not
       independently). **Done when**: every one of those flips is committed with the `docs(plans):` prefix and cites the
-      real commit sha (or, for the read-only verification items, the reproduction evidence).
+      real commit sha (or, for the read-only verification items, the reproduction evidence). — **VERIFIED 2026-08-20**
+      (slot 3): all 7 named source checkboxes already `[x]` with evidence — the batch3 workers reconciled inline as they
+      shipped, so no flips remained outstanding: context_scout_completion `[SCRIPT] P0` → DONE-BY-CITATION (batch3 todo 1,
+      `docspec.py` Req.E→Req.R @`unified-trading-pm@bc88604f20`); ao_dispatch_priority_inversion `[BACKEND] P2` +
+      `[SCRIPT] P3` → `agent-orchestrator@af98fcd` + live-backlog backfill-check; orphaned_commit_recovery `[SCRIPT] P2`
+      (verifier) + `[SCRIPT] P2` (liveness) + `[DATA] P3` → `agent-orchestrator@623009e3`; wip_preserve_refs `[DATA] P3` →
+      same `@623009e3` 29-ref triage.
 - [ ] [INFRA] P0. **Re-check both Deferred-bucket items' gates and spin any newly-cleared ones into batch 4** — for
       `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`'s `[REVIEW] P3` item, re-check whether it has
       since been scoped into its own dedicated plan (e.g. via `/plan-brainstorm`) — if so, mark this batch's Deferred
