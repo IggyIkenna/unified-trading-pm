@@ -37,15 +37,8 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-depends_on: [prediction_phase_ab_residuals_2026_07_24]
+depends_on: [prediction_phase_ab_residuals_2026_07_24] # added 2026-08-19 (/plan-reconcile predictions_master) -- both todos below were only ever prose-gated on this doc's open-todo count reaching 0 (see each todo's own text), never machine-enforced; 2 separate dispatched workers (slot-29, slot-12, both 2026-08-14) had to independently self-skip after wasted round-trips discovering the gate live. Encodes the already-stated intent as a real dispatch gate, does not change it.
 gate_on_depends: true
-# depends_on added 2026-08-19 (/plan-reconcile predictions_master) -- both todos below were only ever
-# prose-gated on this doc's open-todo count reaching 0 (see each todo's own text), never machine-enforced;
-# 2 separate dispatched workers (slot-29, slot-12, both 2026-08-14) had to independently self-skip after
-# wasted round-trips discovering the gate live. Encodes the already-stated intent as a real dispatch gate,
-# does not change it. (moved off the depends_on line 2026-08-19 -- the inline comment was breaking
-# gate_on_depends_unmet_upstreams_on_disk()'s dep_stem parsing, 500'ing GET /api/backlog fleet-wide;
-# see /plans/active/issues/backlog_500_malformed_depends_on_comment_2026_08_19.md
 context_scope:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
