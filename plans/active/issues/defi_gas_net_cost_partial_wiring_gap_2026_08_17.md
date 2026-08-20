@@ -139,12 +139,9 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       threshold is implemented and unit-tested, or the docstring is corrected to match actual behavior with a cited
       reason. — strategy-service@fbf78dfe20 (see Progress Log for the scope note on the IL term).
 - [x] ✅ [STRATEGY] P3. Net `BACKRUN` profitability against priority gas. The engine now uses the UAC-cited Uniswap V3 gas budget and the bid price (`P90 x priority_gas_uplift`) converted to USD/bps, and fails closed without a positive priority-gas observation. Repo: strategy-service. Done when: `spread_bps < min_spread_bps` (or equivalent) accounts for the priority-gas cost, with a regression test. — strategy-service@696094a9b9 + evidence: full quickmerge gate green; 6406 passed, 248 skipped, 3 xfailed, 103 warnings; sentinel `696094a9b9`.
-- [ ] [STRATEGY] P3. Confirm whether execution-service's `ExecutionCostEstimator`
-      (`execution-service/.../services/execution_cost_estimator.py:170-190`) is genuinely unused by strategy-service
-      (0 import/call sites confirmed this session) — if so, either wire it in as originally intended (module
-      docstring says "for strategy-service signal filtering") or mark it dead code / retarget its purpose. Repo:
-      strategy-service, execution-service. Done when: either a real call site exists, or the docstring/lifecycle
-      marker is corrected to reflect it is unused.
+- [x] ✅ [STRATEGY] P3. Confirmed `ExecutionCostEstimator` is unused by strategy-service; retained as an execution-service-owned utility and corrected its stale module ownership claim. — execution-service@64395d6d97 + evidence: quality-gates.sh green; 8733 passed, 22 skipped, 1 xpassed.
+      `execution-service/.../services/execution_cost_estimator.py` has no non-test strategy-service call site; its
+      module docstring now records execution-service ownership and the intentional service-boundary non-use.
 
 ## Progress Log
 
@@ -406,3 +403,10 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   `liquidation_events`. Full MTDS quality gates passed: 11,075 passed, 28 skipped, 1 xpassed.
   The real `B < B2` historical fixture and CLI shard integration remain tracked as the explicit
   blocked follow-up above; archetype registration remains prohibited until that source gate passes.
+
+- **2026-08-20 (slot-10):** Confirmed there are zero non-test strategy-service imports or call sites for
+  `ExecutionCostEstimator`; execution-service retains the public export and dedicated unit/integration coverage,
+  so deletion or cross-service wiring would be incorrect. Corrected `execution_service/services/
+  execution_cost_estimator.py` to state execution-service ownership and the intentional service-boundary non-use.
+  Execution-service quality gates passed: 8,733 passed, 22 skipped, 1 xpassed; quickmerge landed
+  `execution-service@64395d6d97` on `origin/live-defi-rollout`.
