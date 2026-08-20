@@ -209,36 +209,6 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
       promotion means a bare `is-ancestor` check reads NO), and cite fresh Cloud Logging evidence of a CLEAN window (no
       `Memory limit exceeded` / `terminated on signal 9`) same as this issue's original acceptance bar. Repo:
       deployment-api (+ verify unified-trading-library reached main).
-- [ ] [BACKEND] P0. **NEW 2026-08-20 — `deployment-api@a69dad3`'s ThreadPoolExecutor parallelization did NOT close
-      the aggregate-budget gap; a FOURTH distinct abort site surfaced, inside `provenance_breakdown` itself.** Live
-      repro against `uts-shared-deployment-api-00670-v6r` (created 2026-08-20T18:23:24Z, confirmed post-`a69dad3` —
-      `git diff origin/main origin/live-defi-rollout -- manifest_source.py _live_coverage_venue_year.py
-      data_status_union.py` empty). Ran the same 3-scope cefi probe (`X-API-Key` from `deployment-api-api-key` GSM
-      secret, one-at-a-time, 20s apart, `--max-time 90`) 2026-08-20T19:41-19:47Z: **all 3 scopes still fail**,
-      client-side `http_code=000` at 90s. Cloud Logging swept the probe window: **zero `Memory limit exceeded`
-      events** (container OOM stays resolved) but a fresh `Uncaught signal: 6` (SIGABRT, pid 21 @19:47:06Z).
-      Faulthandler dump's MAIN-thread frame (not one of the 4 `ThreadPoolExecutor` worker threads visible lower in
-      the same dump) bottoms out at `data_status_union.py:275` inside `provenance_breakdown` —
-      `ranked = work.assign(_union_rank=row_rank)` — via `pandas/core/frame.py:5258 assign` →
-      `generic.py:6833 copy` → `internals/managers.py:612/363` → `internals/blocks.py:822 copy`. This is a NEW line
-      (275, the `.assign()` copy), distinct from every previously-fixed abort site in this doc
-      (`_union_rank_series`/`.map()` at old-145, `_classify`/`.apply()`, `filter_to_mvp`/`.apply()`,
-      `union_reduce_to_cells` old-176) — those 4 are confirmed NOT implicated in this dump. **Working hypothesis,
-      NOT yet confirmed by local benchmarking** (per this doc's own established discipline — every prior fix in
-      this chain was benchmarked locally before shipping, not shipped on log-read alone): `a69dad3`'s 4-worker
-      `ThreadPoolExecutor` means 4 row-group chunks now call `provenance_breakdown`'s `df.copy()` (line 258) +
-      `.assign()` (line 275, itself another internal copy) CONCURRENTLY — CPython's GIL serializes the pure-Python
-      bookkeeping around each pandas C call, so 4-way concurrent DataFrame copies may cost MORE aggregate wall time
-      than the same 4 copies run sequentially (context-switch + cache-locality loss), i.e. the parallelization fix
-      may have partially fought its own goal for this specific call site. Needs local reproduction (a synthetic
-      or real cefi-shaped multi-row-group manifest, `--workers=1` vs `--workers=4` peak-wall-clock comparison for
-      this exact code path) before committing to a fix direction — candidates if confirmed: avoid the redundant
-      `work.copy()` (line 258) + `.assign()` (line 275) double-copy by mutating a single copy in place, or shrink
-      the per-task unit of work so each thread's copy is cheaper, or reconsider whether `.assign()`'s allocation
-      is the true cost vs. thread-contention on the object being copied. Re-run this issue's 3-scope cefi probe as
-      the acceptance check once shipped. Repo: deployment-api. Evidence for this finding: revision
-      `uts-shared-deployment-api-00670-v6r`, SIGABRT pid 21 @2026-08-20T19:47:06Z (Cloud Logging,
-      `central-element-323112`).
 - [x] ✅ [BACKEND] P0. **cefi `venue-year-coverage` still WORKER-TIMEOUTs (300s gunicorn limit) even with every
       shipped per-chunk vectorization fix live — an AGGREGATE wall-clock budget problem across 215+ row groups, not a
       single slow call.** Live repro 2026-08-19 (slot 32, infra re-verification) against deployed revision
@@ -700,22 +670,3 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   **Live-prod re-verification is a separate follow-up** — the top-level INFRA todo should be re-run once this SHA
   reaches `main` and redeploys `uts-shared-deployment-api`, per this issue's established pattern.
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries)
-- **2026-08-20 (T1 slice, infra re-verification)**: **Live-prod re-verification of `deployment-api@a69dad3`
-  (ThreadPoolExecutor parallelization) — FAIL, container OOM stays resolved, a FOURTH distinct SIGABRT abort site
-  surfaced.** Confirmed `a69dad3` reached `main`: tree-diff (`git diff origin/main origin/live-defi-rollout --
-  manifest_source.py _live_coverage_venue_year.py data_status_union.py`) empty. Confirmed deployed: revision
-  `uts-shared-deployment-api-00670-v6r` (created 2026-08-20T18:23:24Z, 100% traffic). Ran the 3-scope cefi probe
-  (`X-API-Key` from `deployment-api-api-key` GSM secret, one-at-a-time, 20s apart, `--max-time 90`)
-  2026-08-20T19:41-19:47Z: **all 3 scopes failed**, client-side timeout (`http_code=000`) at 90s. Cloud Logging
-  swept the probe window: zero `Memory limit exceeded` events (container OOM confirmed still resolved); one fresh
-  `Uncaught signal: 6` SIGABRT (pid 21 @19:47:06Z) whose faulthandler dump's main-thread frame bottoms out at
-  `data_status_union.py:275` inside `provenance_breakdown`'s `work.assign(_union_rank=row_rank)` — a NEW line,
-  distinct from every previously-fixed abort site (`_union_rank_series`/`_classify`/`filter_to_mvp`/
-  `union_reduce_to_cells`, all confirmed not implicated in this dump). Working (unconfirmed) hypothesis: the
-  `a69dad3` fix's 4-worker `ThreadPoolExecutor` now runs 4 concurrent `provenance_breakdown` DataFrame copies per
-  request, and GIL-serialized C-level copy overhead across 4 threads may cost more aggregate wall time than the
-  same work sequential — i.e. the parallelization fix may partially work against itself for this call site. Filed
-  as a new BACKEND P0 todo above with the full stack trace + a local-benchmark-first requirement (matching this
-  issue's own established discipline of confirming a fix locally before shipping, not shipping on log-read alone).
-  **Not flipping the top-level INFRA todo** — the clean-window acceptance bar is still not met, now gated on this
-  new finding rather than any previously-shipped fix (all four prior fixes confirmed live and holding).
