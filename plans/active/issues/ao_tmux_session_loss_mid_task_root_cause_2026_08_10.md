@@ -350,17 +350,29 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P1. Get a real OOM-vs-external-kill verdict from `check_external_kill` now that it actually runs —
       the next `death_class=unexplained` row should show `external_kill.checked=true`; if none do within a
       reasonable window, the fix itself needs re-verifying live rather than trusted on read-back.
-- [ ] [INVESTIGATE] P1. **New lead, 2026-08-20**: fleet-wide query (last 24h) confirms this is NOT slot-specific —
-      slot 2 is 16/16 unexplained, slot 4 10/15, slot 1 9/15, slot 10 8/15, slot 11 6/7 (`tmux_session_lost` grouped
-      by slot_id). More notably, several specific TASK IDs died repeatedly across DIFFERENT slots in the last 48h:
-      `backlog_500_malformed_depends_on_comment-81a8666e249d` (4 deaths, slots 10/1/4),
-      `instruments_schema_not_locked_versioned-0ca8f7f490f2` (3 deaths, slots 4/10),
-      `defi_cefi_venue_chain_axis_contamination-09ac3d7aa6dc` (2 deaths, slots 11/10),
-      `deployment_api_client_factory_positional_project_id_bug-6f193540d7f3` (2 deaths, slots 13/4),
-      `cross_cutting_satellite_ao_dispatch_batch17-6a8c25390694` (2 deaths, slot 10 x2). A death following the SAME
-      task across different slot hosts points toward something the task itself does (not the host) — worth reading
-      what these specific tasks' work involves for a common trigger (e.g. another unscoped-tmux-touching subprocess
-      call, the same class of bug this doc's confirmed root cause already found once in a bats test fixture).
+- [x] [INVESTIGATE] P1. **New lead, 2026-08-20; read to a NEGATIVE result same day — no shared dangerous operation
+      found, unlike the original bats-test-tmux-fixture bug.** Fleet-wide query (last 24h) confirms this is NOT
+      slot-specific — slot 2 is 16/16 unexplained, slot 4 10/15, slot 1 9/15, slot 10 8/15, slot 11 6/7
+      (`tmux_session_lost` grouped by slot_id). A repeat-dying-task lead looked promising (several task IDs died
+      across DIFFERENT slots: `backlog_500_malformed_depends_on_comment-81a8666e249d` 4x/slots-10-1-4,
+      `instruments_schema_not_locked_versioned-0ca8f7f490f2` 3x/slots-4-10,
+      `defi_cefi_venue_chain_axis_contamination-09ac3d7aa6dc` 2x/slots-11-10,
+      `deployment_api_client_factory_positional_project_id_bug-6f193540d7f3` 2x/slots-13-4,
+      `cross_cutting_satellite_ao_dispatch_batch17-6a8c25390694` 2x/slot-10-twice) — but reading all 5 tasks' actual
+      `plan_ref` docs found no shared operation: they range from a pure Python code read/fix (deployment-api), to a
+      schema/contract edit (instruments-service, `sequential: true`), to bounded `gsutil`/live-SSH cron verification
+      (defi/cefi), to a GitHub Actions YAML edit + `gh workflow run` dispatch (cross-cutting CI), to backend
+      hardening of `agent-orchestrator`'s own `regen_backlog_from_plan.py`. None touches tmux directly, none runs an
+      unscoped test fixture, none matches the original bug's shape. The only thing genuinely common to all 5 (and to
+      virtually every AO-dispatched coding task) is running `quality-gates.sh` before shipping — not a distinguishing
+      signal. **Revises the lead**: this argues AGAINST a task-content trigger and back toward host/timing-driven —
+      the repeat-task pattern is more likely explained by "AO keeps redispatching the same still-open task, and
+      whatever kills sessions is roughly uniformly likely per session-second" than by the task's own work causing it.
+      The pane_tail captured at each death (`pane_tail_len=152`, identical across different slots/tasks) is tmux's
+      generic "Pane is dead (status N, <time>)" placeholder banner, not real scrollback — confirms (again) that no
+      forensic signal survives in the pane itself; the live `check_external_kill`/`check_oom_kill` fix (see the todo
+      above) catching the next death live is still the most promising remaining path, not further task-content
+      reading.
 
 ## Progress Log
 
