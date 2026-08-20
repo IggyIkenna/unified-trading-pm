@@ -389,9 +389,8 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 - [ ] [MTDS] P1. BLOCKED-ON:uac_snapshot_contract_and_source_fixture — add the
   canonical shard handler and prove a real Aave V3 Ethereum `B < B2` replay fixture
   before the downstream UAC/features/strategy gates are closed.
-- [ ] [FEATURES] P1. Add snapshot enrichment and provenance propagation using
-  only real as-of prices, parameters, slippage/liquidity, and gas cost; test
-  stale/missing joins as unavailable.
+- [x] ✅ [FEATURES] P1. Add snapshot enrichment and provenance propagation using
+  only real as-of prices, parameters, slippage/liquidity, and gas cost; test stale/missing joins as unavailable. — features-service@b2fcc11518 + evidence: QG_SLICE=tests (18491 passed, 209 skipped); QG_SLICE=typecheck passed.
 - [ ] [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
   replay; keep the engine fail-closed and add paper↔batch parity/exact-leg tests.
 - [ ] [STRATEGY] P2. After all gates pass, register the archetype and prove one
