@@ -639,7 +639,7 @@ todos only to confirm they are data-movement, then leave it.
       two `log_event` calls with no post-state snapshot. Not started this session (design-heavy: needs a role
       registry + an authorization-record lookup neither this tranche nor UAC currently define). SSOT:
       `/codex/04-architecture/account-instructions.md` §Authorization, §Audit.
-- [ ] [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
+- [x] ✅ [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
       pending states. **Structural blocker fixed 2026-08-20, this todo's own remaining scope re-measured**: the
       readiness-dump's `execution_instruction` leg was hardcoded venue-independent-`unverified` for all 864 rows
       (the real per-venue check existed, `execution-service@b70d2edb16`, but nothing called it) — fixed,
@@ -651,6 +651,30 @@ todos only to confirm they are data-movement, then leave it.
       the 4 files are 33,976 lines combined, too large to safely hand-verify in the tail of this session. Dispatched
       to a sub-agent (see this plan's Progress Log for the dispatch + its findings) rather than rushed or left
       silently unattempted.
+
+      **DONE 2026-08-20 — `unified-trading-pm@78508ce4e7`.** Sub-agent grepped all 4 files' `<style>` blocks (only
+      three real status classes exist anywhere: `st-live`/`st-part`/`st-plan`), cross-referenced every `owner: W*`
+      tag and execution/instruction keyword hit against this session's 6 real fixes, and independently re-verified
+      two claims against live source. Verdict: **no `st-*` badge met the bar for a confident flip** — every
+      candidate badge stays accurate, or the staleness lives in prose the task correctly scoped out of badge-flip
+      edits. Two genuinely wrong PROSE claims found and fixed directly (not badges, so the sub-agent correctly
+      flagged rather than auto-edited; I verified + fixed both): (1)
+      `platform-external-api-walkthrough.html` said "TRADE only — the other 10 action types return HTTP 501" —
+      QUOTE has been wired since `execution-service@dc4fad8de7`, corrected to "TRADE and QUOTE — the other 9"; (2)
+      the same file's "execution-instruction leg is unverified on all 864 rows... that check does not exist
+      anywhere in the fleet yet" — false since the fix immediately above; corrected to cite the real fix + the
+      measured `defi`-asset-group sample, without inventing an un-measured full-864 number. A third finding —
+      `strategy-service-walkthrough.html`'s "Emergency flatten" bullet likely understates what's shipped now that
+      `test_account_instruction_api.py` exists — the sub-agent was NOT confident enough to edit it itself; tracked
+      as its own new todo below rather than silently dropped.
+- [ ] [AGENT] P3. **Re-check `strategy-service-walkthrough.html`'s "Emergency flatten" bullet (~line 2694,
+      "What is still open") against what's actually shipped.** Surfaced by the artefact-marker audit 2026-08-20,
+      not confirmed enough to edit inline. Current text says "remaining work is request-shape mapping plus a
+      contract test across the service boundary" — `execution-service` now has real CLOSE_ALL wiring
+      (`execution-service@96411b68c9`), an HTTP route (`execution-service@c0839616be`), and
+      `tests/unit/test_account_instruction_api.py` explicitly proving `POST /account/instruction ->
+      AccountInstructionOrchestrator` end to end. Needs someone to read the actual current bullet text (it may
+      have already been edited since 2026-08-15) and cross-check the specific claim, not just assume stale.
 
 ## Progress Log
 
@@ -684,6 +708,7 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@6f664e80a0` | BATCH settlement gap 1/5 closed: `CONVERT_DUST` now handled by `resolve_settlement`, 2 new tests |
 | `unified-trading-pm@0db97a5b47` | codex audit: `account-instructions.md`'s authorization table + audit section annotated as design-target-not-shipped (verified against the real `AccountInstructionOrchestrator.dispatch()`) |
 | `unified-trading-pm@8d47cf3393` | readiness-dump `execution_instruction` leg now calls the real per-venue-per-mode check (`execution_service.readiness.instruction_path`, shipped `execution-service@b70d2edb16` but never wired in) instead of a hardcoded venue-independent unverified — new `_execution_instruction_path_probe.py`, `checks.py`/`derive_readiness.py` updated; independently re-verified live after landing |
+| `unified-trading-pm@78508ce4e7` | artefact-marker sub-agent audit: fixed 2 factually-wrong prose claims in `platform-external-api-walkthrough.html` (QUOTE falsely listed as still-501; the 864-rows-unverified claim falsely said the check doesn't exist) |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
