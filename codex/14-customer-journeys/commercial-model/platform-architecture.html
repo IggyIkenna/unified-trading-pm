@@ -3776,6 +3776,448 @@
         several billion records. As of the July programme review that backfill was roughly half complete, and it is the
         first item on the critical path in §12.
       </p>
+
+      <h3>Pulling this data directly — the external API</h3>
+      <p>
+        Two services expose this data over an authenticated HTTP surface external to the internal pipeline —
+        <span class="mono">market-tick-data-service</span> for tick/candle history and a near-real-time feed, and
+        <span class="mono">instruments-service</span> for the instrument catalogue itself. Both are code-complete and
+        tested; neither has yet been placed behind a public gateway or onboarded a real external caller, so read the
+        <b class="st st-part">partial</b> badge here as "built and reachable, not yet in front of a customer" rather
+        than "unbuilt". <b class="ev ev-verified">✓ verified</b> against
+        <span class="mono">market_tick_data_service/api/routers/external.py</span> and
+        <span class="mono">instruments_service/api/routers/external.py</span>.
+      </p>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">market-tick-data-service — <span class="mono">/external/market-data</span></span>
+          <span class="note">Coverage query, daily batch parquet, near-real-time NDJSON feed</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Path</th>
+                <th>What it returns</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/external/market-data/availability</td>
+                <td>
+                  What is captured for an (asset_group[, venue[, data_type]]) — the same daily
+                  <span class="mono">coverage.json</span> rollup the honest-coverage cron writes
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/external/market-data/delivery/batch</td>
+                <td>
+                  Daily parquet for one (asset_group, venue, data_type, date) shard — list the objects present, then
+                  stream the named one
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/external/market-data/delivery/stream</td>
+                <td>NDJSON stream of <span class="mono">CanonicalPersistEnvelope</span> records, near-real-time</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <details class="ref">
+        <summary>
+          market-tick-data-service external API — parameters, auth, examples, errors<span class="tag-ref"
+            >integration spec</span
+          >
+        </summary>
+        <div class="body-pad">
+          <p>
+            <strong>Auth</strong> — every route below requires one of: <span class="mono">X-Service-Token</span>
+            (S2S), legacy <span class="mono">X-API-Key</span>, or
+            <span class="mono">Authorization: Bearer &lt;JWT&gt;</span> carrying <span class="mono">org_id</span> +
+            <span class="mono">subscription_tier</span> claims — the shared <span class="mono">create_api_auth</span>
+            dependency used by every external route in this document. Missing or absent credentials return
+            <span class="mono">401</span>; a bad S2S token returns <span class="mono">403</span>.
+          </p>
+
+          <p><strong>GET /external/market-data/availability</strong></p>
+          <table>
+            <thead>
+              <tr>
+                <th>Param</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">asset_group</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td>cefi · defi · tradfi · sports · prediction</td>
+              </tr>
+              <tr>
+                <td class="mono">venue</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>e.g. BINANCE-FUTURES</td>
+              </tr>
+              <tr>
+                <td class="mono">data_type</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>requires venue to be set</td>
+              </tr>
+              <tr>
+                <td class="mono">date</td>
+                <td class="mono">string (ISO date)</td>
+                <td class="cross">—</td>
+                <td>defaults to the latest resolvable date within a 14-day lookback</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="eq">
+GET /external/market-data/availability?asset_group=cefi&amp;venue=BINANCE-FUTURES HTTP/1.1
+X-Service-Token: &lt;token&gt;
+
+<b>200 OK</b>
+{
+  "asset_group": "cefi",
+  "requested_date": "2026-08-19",
+  "resolved_date": "2026-08-19",
+  "summary": { "...": "asset-group rollup from coverage.json" },
+  "venue": "BINANCE-FUTURES",
+  "venue_summary": { "...": "per-venue rollup" }
+}
+          </div>
+
+          <p>
+            <strong>GET /external/market-data/delivery/batch</strong> — a two-step "list, then download": call
+            without <span class="mono">file</span> to see what exists for the shard, then pass an exact
+            <span class="mono">file</span> value back to stream it.
+          </p>
+          <table>
+            <thead>
+              <tr>
+                <th>Param</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">asset_group</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">venue</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">data_type</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">date</td>
+                <td class="mono">string (ISO date)</td>
+                <td class="tick">●</td>
+                <td>the raw-tick partition day</td>
+              </tr>
+              <tr>
+                <td class="mono">file</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>exact object path from a prior listing call; when set, streams that object in 1&nbsp;MiB chunks</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="eq">
+<b># step 1 — list</b>
+GET /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-19
+
+<b>200 OK</b>
+{
+  "asset_group": "cefi", "venue": "BINANCE-FUTURES", "data_type": "trades", "date": "2026-08-19",
+  "bucket": "&lt;resolved bucket&gt;",
+  "objects": [ { "file": "raw_tick_data/by_date/day=2026-08-19/.../part-0.parquet", "size": 41823001 } ],
+  "truncated": false
+}
+
+<b># step 2 — download the named object</b>
+GET /external/market-data/delivery/batch?...&amp;file=raw_tick_data/by_date/day=2026-08-19/.../part-0.parquet
+
+<b>200 OK</b>  application/octet-stream, Content-Disposition: attachment
+          </div>
+
+          <p><strong>GET /external/market-data/delivery/stream</strong></p>
+          <table>
+            <thead>
+              <tr>
+                <th>Param</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">asset_group</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">data_type</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">after</td>
+                <td class="mono">string (ISO-8601 timestamp)</td>
+                <td class="cross">—</td>
+                <td>only envelopes newer than this are returned</td>
+              </tr>
+              <tr>
+                <td class="mono">limit</td>
+                <td class="mono">integer</td>
+                <td class="cross">—</td>
+                <td>1–1000, default 100</td>
+              </tr>
+              <tr>
+                <td class="mono">topology</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>in_memory · redis · pubsub, default in_memory</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="eq">
+<b>200 OK</b>  application/x-ndjson — one CanonicalPersistEnvelope JSON object per line
+          </div>
+
+          <table>
+            <caption>Error codes, all three routes above</caption>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num-col">400</td>
+                <td><span class="mono">file</span> does not belong to the requested asset_group/venue/data_type/date shard</td>
+              </tr>
+              <tr>
+                <td class="num-col">401 / 403</td>
+                <td>missing, invalid, or wrong-typed credential</td>
+              </tr>
+              <tr>
+                <td class="num-col">404</td>
+                <td>no coverage measurement in the lookback window; requested object not found</td>
+              </tr>
+              <tr>
+                <td class="num-col">422</td>
+                <td>unknown asset_group / topology, or an unparseable <span class="mono">after</span> timestamp</td>
+              </tr>
+              <tr>
+                <td class="num-col">500 / 503</td>
+                <td>malformed coverage payload; storage bucket or project not configured</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            <b class="st st-plan">planned</b> Per-caller rate limiting on this surface itself is not yet
+            implemented — <span class="mono">create_api_auth</span> authenticates and tier-scopes the caller today but
+            does not throttle request volume.
+          </p>
+        </div>
+      </details>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">instruments-service — <span class="mono">/v1/instruments</span></span>
+          <span class="note">Instrument catalogue query and bulk parquet export</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Path</th>
+                <th>What it returns</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/v1/instruments</td>
+                <td>
+                  Catalogue query — instrument records for an (asset_group[, venue[, instrument_type]]), row-capped
+                  JSON
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">GET</td>
+                <td class="mono">/v1/instruments/bulk</td>
+                <td>The matched shards assembled into one streamed parquet file</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <details class="ref">
+        <summary>
+          instruments-service external API — parameters, auth, examples, errors<span class="tag-ref"
+            >integration spec</span
+          >
+        </summary>
+        <div class="body-pad">
+          <p>
+            <strong>Auth</strong> — the same <span class="mono">create_api_auth("instruments-service")</span>
+            dependency as above. Every authenticated caller currently sees the same result: this is public reference
+            data, not a per-client ledger, so <span class="mono">org_id</span> /
+            <span class="mono">subscription_tier</span> are validated but do not yet scope the response.
+          </p>
+
+          <p><strong>GET /v1/instruments</strong></p>
+          <table>
+            <thead>
+              <tr>
+                <th>Param</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">asset_group</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td>cefi · defi · tradfi · sports · prediction</td>
+              </tr>
+              <tr>
+                <td class="mono">venue</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>e.g. BINANCE-SPOT</td>
+              </tr>
+              <tr>
+                <td class="mono">instrument_type</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>e.g. SPOT_PAIR, PERPETUAL, OPTION</td>
+              </tr>
+              <tr>
+                <td class="mono">day</td>
+                <td class="mono">string (YYYY-MM-DD)</td>
+                <td class="cross">—</td>
+                <td>defaults to the latest captured day</td>
+              </tr>
+              <tr>
+                <td class="mono">limit</td>
+                <td class="mono">integer</td>
+                <td class="cross">—</td>
+                <td>1–20000, default 2000 — use <span class="mono">/bulk</span> for the full dump</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="eq">
+GET /v1/instruments?asset_group=cefi&amp;venue=BINANCE-SPOT&amp;instrument_type=SPOT_PAIR HTTP/1.1
+Authorization: Bearer &lt;jwt&gt;
+
+<b>200 OK</b>
+{ "...": "instrument records matching the query, from the same catalogue-query path IS's internal writers use" }
+          </div>
+
+          <p><strong>GET /v1/instruments/bulk</strong></p>
+          <table>
+            <thead>
+              <tr>
+                <th>Param</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">asset_group</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">venue</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>omit for all venues</td>
+              </tr>
+              <tr>
+                <td class="mono">day</td>
+                <td class="mono">string (YYYY-MM-DD)</td>
+                <td class="cross">—</td>
+                <td>defaults to the latest captured day</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="eq">
+<b>200 OK</b>  application/vnd.apache.parquet
+Content-Disposition: attachment; filename="instruments_cefi_all_2026-08-19.parquet"
+          </div>
+
+          <table>
+            <caption>Error codes</caption>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num-col">400</td>
+                <td>unknown asset_group; a bucket-naming failure</td>
+              </tr>
+              <tr>
+                <td class="num-col">401</td>
+                <td>missing or invalid credential</td>
+              </tr>
+              <tr>
+                <td class="num-col">404</td>
+                <td><span class="mono">/bulk</span> — no matching shards for the request</td>
+              </tr>
+              <tr>
+                <td class="num-col">500</td>
+                <td>internal error reading the catalogue</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            <b class="st st-plan">planned</b> Per-caller rate limiting is not yet implemented on this surface
+            either.
+          </p>
+        </div>
+      </details>
     </details>
   </section>
 
@@ -5236,6 +5678,251 @@
           adapters call it; you do not receive it. See §11.
         </p>
       </div>
+
+      <h3>The external HTTP surface — submitting an instruction directly</h3>
+      <p>
+        Everything above describes the instruction contract; this is the literal HTTP door onto it.
+        <span class="mono">execution-service</span> exposes two authenticated POST routes — one for the
+        strategy-level instruction envelope shown above, one for account-level operator actions — both thin front
+        doors onto the same internal orchestration path the platform's own strategies use, not a separate
+        implementation. <b class="ev ev-verified">✓ verified</b> against
+        <span class="mono">execution_service/api/external_instruction_api.py</span> and
+        <span class="mono">execution_service/api/account_instruction_api.py</span>.
+      </p>
+
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">execution-service — external instruction submission</span>
+          <span class="note">Two routes, both POST, both behind the same auth dependency as §4's data API</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Path</th>
+                <th>What it does</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">POST</td>
+                <td class="mono">/external/instructions</td>
+                <td>
+                  Submit a <span class="mono">StrategyInstructionEnvelope</span>-family instruction. Only
+                  <span class="mono">TRADE</span> and <span class="mono">QUOTE</span> are wired; the other eleven
+                  actions return <span class="mono">501</span>.
+                </td>
+                <td><b class="st st-part">partial</b></td>
+              </tr>
+              <tr>
+                <td class="mono">POST</td>
+                <td class="mono">/account/instruction</td>
+                <td>
+                  Submit an account-level operator action (<span class="mono">CLOSE_ALL</span>,
+                  <span class="mono">PAUSE</span>, ...). Only <span class="mono">CLOSE_ALL</span> has real per-venue
+                  wiring today; every other action is accepted and logged, not executed.
+                </td>
+                <td><b class="st st-part">partial</b></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <details class="ref">
+        <summary>
+          execution-service external API — request/response shapes, auth, current wiring, errors<span
+            class="tag-ref"
+            >integration spec</span
+          >
+        </summary>
+        <div class="body-pad">
+          <p>
+            <strong>Auth</strong> — <span class="mono">X-Service-Token</span> / legacy
+            <span class="mono">X-API-Key</span> / Bearer JWT, the identical dependency used by §4's data API. Both
+            routes additionally check the kill switch and drain mode before touching the orchestrator: an active kill
+            switch or a draining instance returns <span class="mono">503</span> before either route's business logic
+            runs.
+          </p>
+
+          <p>
+            <strong>POST /external/instructions</strong> — body is one member of the
+            <span class="mono">StrategyInstructionV2</span> union (the same envelope documented above:
+            <span class="mono">instruction_id</span>, <span class="mono">identity</span>,
+            <span class="mono">urgency</span>, <span class="mono">deadline_utc</span>,
+            <span class="mono">execution_policy_ref</span>, <span class="mono">eligible_venues</span>, plus
+            action-specific fields).
+          </p>
+          <div class="eq">
+<b># TRADE — the worked example</b>
+POST /external/instructions
+X-Service-Token: &lt;token&gt;
+Content-Type: application/json
+
+{
+  "action": "TRADE",
+  "instruction_id": "instr-7f3a...",
+  "emitted_at_utc": "2026-08-20T14:03:00Z",
+  "identity": { "client_id": "...", "strategy_instance_id": "...", "...": "full identity block" },
+  "target_venue": "BINANCE-FUTURES",
+  "target_instrument": "BTC-PERP",
+  "direction": "LONG",
+  "target_position_units": "1.5"
+}
+
+<b>200 OK</b>
+{ "instruction_id": "instr-7f3a...", "status": "FILLED", "detail": { "...": "orchestrator result" } }
+
+<b># QUOTE — registers delta-proxy repricing, does NOT place an order</b>
+<b>200 OK</b>
+{
+  "instruction_id": "instr-...", "status": "REGISTERED",
+  "detail": {
+    "underlying_instrument_id": "BTC-PERP", "delta": "0.62", "gamma": "0.004",
+    "note": "Delta-proxy repricing is armed for this instrument. No order was placed."
+  }
+}
+          </div>
+          <p>
+            <b class="st st-plan">planned</b> <span class="mono">QUOTE</span> never resolves to a resting order on
+            this surface today — there is no live tick-ingestion loop driving
+            <span class="mono">on_underlying_tick</span> in execution-service, so registration only arms the
+            repricer; the response says <span class="mono">REGISTERED</span>, deliberately never
+            <span class="mono">SUBMITTED</span>. The remaining <span class="mono">StrategyInstructionV2</span>
+            actions — SWAP, LEND, BORROW, WITHDRAW, REPAY, STAKE, UNSTAKE, TRANSFER, BRIDGE, ATOMIC, CANCEL — return
+            <span class="mono">501</span> on this surface rather than a silently dropped instruction.
+          </p>
+
+          <p><strong>POST /account/instruction</strong></p>
+          <table>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="mono">instruction_id</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">emitted_at_utc</td>
+                <td class="mono">datetime</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">client_id</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">initiating_operator</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">authorization_id</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td>business-level sign-off for this action; separate from the transport-level auth header</td>
+              </tr>
+              <tr>
+                <td class="mono">venue</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">account_id</td>
+                <td class="mono">string</td>
+                <td class="tick">●</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">action</td>
+                <td class="mono">enum</td>
+                <td class="tick">●</td>
+                <td>
+                  CLOSE_ALL · CLOSE_ALL_FOR_STRATEGY · SET_MARGIN_MODE · SET_LEVERAGE · EMERGENCY_LIQUIDATE ·
+                  TRANSFER_SUBACCOUNT · WITHDRAW · DEPOSIT_ACK · ROTATE_CREDENTIAL · PAUSE · RESUME
+                </td>
+              </tr>
+              <tr>
+                <td class="mono">params</td>
+                <td class="mono">object (string→string)</td>
+                <td class="cross">—</td>
+                <td></td>
+              </tr>
+              <tr>
+                <td class="mono">rationale</td>
+                <td class="mono">string</td>
+                <td class="cross">—</td>
+                <td></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="eq">
+<b>200 OK — a business rejection is still HTTP 200</b>
+{ "instruction_id": "acct-...", "action": "PAUSE", "accepted": false, "reason": "..." }
+          </div>
+          <p>
+            A rejection at any gate — kill switch, drain mode, missing authorization, a failed venue leg — comes back
+            as <span class="mono">HTTP 200</span> with <span class="mono">accepted: false</span>, never a 4xx/5xx: a
+            business-level rejection is deliberately not a transport-level error on this surface, so a caller reads
+            <span class="mono">accepted</span> rather than the status code to know what happened.
+            <b class="st st-plan">planned</b> Of the eleven <span class="mono">AccountActionV2</span> members only
+            <span class="mono">CLOSE_ALL</span> has real per-venue wiring; every other action is accepted, logged,
+            and returns <span class="mono">accepted: true</span> without touching a venue — that is the
+            orchestrator's own documented interim behaviour, not a defect in this router.
+          </p>
+
+          <table>
+            <caption>Error codes, both routes</caption>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="num-col">400</td>
+                <td>schema-invalid TRADE — missing <span class="mono">target_venue</span>; an unresolved direction</td>
+              </tr>
+              <tr>
+                <td class="num-col">401 / 403</td>
+                <td>missing, invalid, or wrong-typed credential</td>
+              </tr>
+              <tr>
+                <td class="num-col">501</td>
+                <td>an unwired <span class="mono">StrategyInstructionV2</span> action on <span class="mono">/external/instructions</span></td>
+              </tr>
+              <tr>
+                <td class="num-col">503</td>
+                <td>kill switch active, or the instance is draining</td>
+              </tr>
+              <tr>
+                <td class="num-col">500</td>
+                <td>orchestrator dispatch raised</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            <b class="st st-plan">planned</b> Per-caller rate limiting is not yet implemented on either route.
+          </p>
+        </div>
+      </details>
     </details>
   </section>
 

@@ -1365,6 +1365,16 @@
           >
           § "The reference triple is a vector per instrument, not a scalar per instruction."
         </p>
+        <p>
+          <b class="ev ev-verified">✓ verified</b> — scoping note, 2026-08-20: this reference-price/position/credit
+          mechanism, and <code>position_adjustment_bps_per_unit_risk</code> in particular, is the
+          <strong>continuous-quote</strong> fast-path kernel — not a universal repricing formula across asset groups.
+          A DeFi AMM leg is repriced by exact reserve/tick-math simulation, and a sports or prediction leg by a
+          finite-state posterior lookup; the Jacobian/Hessian Taylor form this design sketches is one of three
+          profile-specific kernels, not the general case. See
+          <a href="/codex/04-architecture/cross-domain-state-fabric.md">cross-domain-state-fabric.md</a> §4 and
+          ruling R15.
+        </p>
       </div>
 
       <h3>Position and target instructions</h3>
@@ -2105,11 +2115,11 @@
       </div>
       <div><b>Risk and health</b><span>Risk state, margin health, treasury state, reconciliation status</span></div>
       <div>
-        <b>Attribution</b><span>P&amp;L series and attribution — decision versus execution versus funding</span>
+        <b>P&amp;L time-series</b><span>Per account/instance, over HTTP; decision/execution/funding attribution is not yet its own route — see below</span>
       </div>
     </div>
     <details class="sec-body">
-      <summary>The route inventory, grouped by what it answers</summary>
+      <summary>The route inventory, grouped by what it answers — plus the full endpoint reference below</summary>
       <div class="plate">
         <div class="plate-head">
           <span class="label">API route modules</span
@@ -2137,9 +2147,10 @@
               </tr>
               <tr>
                 <td class="grp grp-post"><strong>Risk</strong></td>
-                <td class="mono">position/api/routes/risk.py · position/api/margin_health.py · risk/api/main.py</td>
+                <td class="mono">position/api/routes/risk.py · risk/api/main.py</td>
                 <td>
-                  Current risk state against limits, and margin health — the input the liquidation circuit acts on
+                  Current risk state against limits. Margin health is computed
+                  (<code>position/api/margin_health.py</code>) but not yet routed — see the callout below.
                 </td>
               </tr>
               <tr>
@@ -2154,8 +2165,11 @@
               </tr>
               <tr>
                 <td class="grp grp-data"><strong>P&amp;L</strong></td>
-                <td class="mono">pnl/api/main.py · position/api/routes/pnl_series.py</td>
-                <td>P&amp;L over time and its attribution across decision, execution and funding</td>
+                <td class="mono">position/api/routes/pnl_series.py</td>
+                <td>
+                  P&amp;L time-series per account/instance. <code>pnl/api/main.py</code> exposes health only today —
+                  attribution by decision/execution/funding is not yet its own HTTP route, see the correction below.
+                </td>
               </tr>
               <tr>
                 <td class="grp grp-exec"><strong>Control and registry</strong></td>
@@ -2174,6 +2188,726 @@
       <p>
         <code>evidence_router</code> is the one worth calling out for a due-diligence conversation: it exposes the
         attestation trail, which is how a decision is evidenced after the fact rather than reconstructed from logs.
+      </p>
+
+      <h3>How the surface is actually deployed — one process, four mount points</h3>
+      <p>
+        <code>strategy_service/api/main.py</code> builds the top-level app and mounts three independently-written
+        sub-applications onto it with <code>app.mount()</code> — each was built to run as its own service
+        (<code>risk-and-exposure-service</code>, <code>position-balance-monitor-service</code>, the PnL-attribution
+        service) and is composed into one process here. <b class="ev ev-verified">✓ verified</b> against
+        <code>strategy_service/api/main.py</code>.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Mount map</span
+          ><span class="note">Base path an external caller uses, and what actually answers behind it</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Mount</th>
+                <th>Backing app</th>
+                <th>Serves</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="grp grp-exec"><code>/</code></td>
+                <td class="mono">api/main.py</td>
+                <td>
+                  Health, the SSE signal stream, admin registry reads, the operational-mode gate, incident-evidence
+                  capture, restriction-profile resolution, signal-broadcast pull
+                </td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><code>/risk</code></td>
+                <td class="mono">risk/api/main.py <span class="fg-list">("risk-and-exposure-service")</span></td>
+                <td>Pre-trade checks, exposure aggregation, risk limits, VaR/CVaR, per-strategy risk status</td>
+              </tr>
+              <tr>
+                <td class="grp grp-data"><code>/position</code></td>
+                <td class="mono">
+                  position/api/main.py <span class="fg-list">("position-balance-monitor-service")</span>
+                </td>
+                <td>Positions, cross-venue aggregation, trades, NAV, reconciliation, treasury, P&amp;L time-series</td>
+              </tr>
+              <tr>
+                <td class="grp grp-post"><code>/pnl</code></td>
+                <td class="mono">pnl/api/main.py</td>
+                <td>
+                  <b class="ev ev-verified">✓ verified</b> — health only. No P&amp;L-computation routes are mounted
+                  here today; see the correction below.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag"
+          >Correction — the table above overstates what <code>pnl/api/main.py</code> does</span
+        >
+        <b class="ev ev-verified">✓ verified</b>
+        <p>
+          <code>pnl/api/main.py</code> builds a bare FastAPI app carrying only the shared health router — read in
+          full, it has no other route. The actual P&amp;L HTTP surface is
+          <code>GET /position/api/v1/accounts/{account_id}/pnl-series</code> (below), served from the
+          <code>/position</code> mount, not the <code>/pnl</code> mount. Attribution by decision/execution/funding
+          (the split described in <a href="#s9">§09</a>) is computed and returned in ledgers and backtest output, but
+          is not yet exposed as its own HTTP route on any mount — a gap, not a hidden endpoint.
+        </p>
+      </div>
+
+      <h3>Authentication — three patterns, and where none applies</h3>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Auth patterns in use</span
+          ><span class="note"
+            >Verified per-route by reading each router; there is no single shared auth middleware</span
+          >
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Pattern</th>
+                <th>Header(s)</th>
+                <th>Applies to</th>
+                <th>Failure modes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Admin token</strong></td>
+                <td class="mono">X-Admin-Token</td>
+                <td>
+                  <code>/api/v1/registry/*</code>, <code>/api/archetypes/{id}/operational-mode</code> (GET and POST)
+                </td>
+                <td>
+                  503 if no token is configured server-side (fails closed) · 401 missing header · 403 mismatch,
+                  compared with <code>hmac.compare_digest</code>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Service / API key</strong></td>
+                <td class="mono">X-Api-Key <span class="fg-list">or</span> X-Service-Token</td>
+                <td>
+                  <code>POST /risk/pre-trade-check</code>, <code>POST /risk/risk-limits</code>,
+                  <code>POST /risk/risk/strategy-status</code>
+                </td>
+                <td>401 neither header present · 403 API key mismatch (S2S token is checked first, then API key)</td>
+              </tr>
+              <tr>
+                <td><strong>None</strong></td>
+                <td class="mono">—</td>
+                <td>
+                  Every route under <code>/position</code>; <code>/internal/restriction-profile/*</code>;
+                  <code>/evidence/{incident_key}</code>; and several GET routes inside <code>/risk</code> itself —
+                  see the callout
+                </td>
+                <td>Network-layer isolation only</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Read honestly: most of the surface has no HTTP-layer auth today</span>
+        <b class="ev ev-verified">✓ verified</b>
+        <p>
+          Every route under the <code>/position</code> mount — including four write endpoints,
+          <code>POST /nav-snapshot/trigger</code>, <code>POST /reconciliation/resolve</code>,
+          <code>POST /reconciliation/drift/evaluate</code> and <code>POST /treasury/evaluate</code> — declares no
+          auth dependency in source. The same is true of <code>/internal/restriction-profile/*</code> and
+          <code>/evidence/{incident_key}</code>. And within the <code>/risk</code> mount specifically — the one
+          sub-app that does implement API-key/S2S auth — three GET routes (<code>/exposure/summary</code>,
+          <code>/exposure/by-venue</code>, <code>/exposure/by-instrument</code>), the GET variant of
+          <code>/risk-limits</code>, and <code>GET /risk/var</code> carry no <code>Depends(verify_auth)</code>, while
+          their POST siblings in the same file do. Today's boundary is network placement, not a credential — an
+          external integration should treat every one of these as requiring a private network path or a gateway in
+          front of it.
+        </p>
+        <b class="st st-plan">planned</b>
+        <p>A uniform auth layer (mTLS at the mesh boundary, or a consistent service-token check on every mutating route) is not yet built.</p>
+      </div>
+
+      <h3>Rate limits</h3>
+      <div class="callout">
+        <span class="tag">Not implemented on this HTTP surface</span>
+        <b class="st st-plan">planned</b>
+        <b class="ev ev-verified">✓ verified</b>
+        <p>
+          No request-rate-limiting middleware, decorator or dependency was found on any router in
+          <code>strategy_service/api/</code>, <code>position/api/</code>, <code>risk/api/</code> or
+          <code>pnl/api/</code>. A token-bucket <code>RateLimiter</code> does exist in the codebase
+          (<code>signal_broadcast/emitter.py</code>), but it throttles outbound signal emission to counterparties
+          against a declared <code>RateLimitConfig</code> — a different subsystem, not inbound HTTP request limiting.
+          Treat every endpoint below as unbounded until stated otherwise.
+        </p>
+      </div>
+
+      <h3>Error codes actually raised</h3>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Status codes</span
+          ><span class="note">Read from the <code>HTTPException</code> call sites across every router in this section</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Meaning here</th>
+                <th>Where it's raised</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>401</code></td>
+                <td>Missing credential</td>
+                <td>Auth-gated routes above, when the required header is absent</td>
+              </tr>
+              <tr>
+                <td><code>403</code></td>
+                <td>Credential present but wrong</td>
+                <td>Same routes, on an <code>hmac.compare_digest</code> mismatch</td>
+              </tr>
+              <tr>
+                <td><code>404</code></td>
+                <td>Resource does not exist, or has no data yet</td>
+                <td>
+                  Unknown <code>archetype_id</code>, a wallet with no health snapshot, an unknown
+                  <code>fill_id</code>/<code>instrument_id</code>/<code>deviation_id</code>, an empty PnL-series
+                  filter, and — permanently, today — <code>/defi-health</code>, <code>/defi-lp</code>,
+                  <code>/defi-staking</code> per client (unwired, see below)
+                </td>
+              </tr>
+              <tr>
+                <td><code>409</code></td>
+                <td>Operation not permitted from the current state</td>
+                <td>
+                  <code>POST .../operational-mode</code> when the requested transition isn't in the allowed set
+                  (e.g. <code>MANUAL → LIVE</code> direct)
+                </td>
+              </tr>
+              <tr>
+                <td><code>422</code></td>
+                <td>Request failed validation</td>
+                <td>
+                  <code>GET /risk/var</code> with no <code>returns[]</code> or an unrecognised
+                  <code>scenario</code>; standard FastAPI/Pydantic validation on any typed body or query param
+                </td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td>Unhandled exception, wrapped</td>
+                <td>
+                  Most <code>/risk</code>-mount routes on any exception — returned as an
+                  <code>EnhancedError</code> body, not a bare trace
+                </td>
+              </tr>
+              <tr>
+                <td><code>503</code></td>
+                <td>A required dependency isn't wired yet</td>
+                <td>
+                  Aggregator / store / tracker / monitor not injected at startup; an admin route with no
+                  <code>admin_api_token</code> configured
+                </td>
+              </tr>
+              <tr>
+                <td><code>204</code></td>
+                <td>Deliberate soft-fail, not an error to the caller</td>
+                <td>
+                  <code>POST /evidence/{incident_key}</code> returns 204 rather than 500 when the GCS upload itself
+                  fails, so an evidence-capture failure never blocks the caller's own flow
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>Every endpoint — control, admin and risk</h3>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Top-level mount (<code>/</code>) and <code>/risk</code></span
+          ><span class="note">Method, path, parameters with type + required-ness, auth pattern from the table above</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Method &amp; path</th>
+                <th>Parameters</th>
+                <th>Auth</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>GET /health</code> · <code>/readiness</code></td>
+                <td>none</td>
+                <td>none</td>
+                <td>
+                  Present identically on every mount (<code>/</code>, <code>/risk</code>, <code>/position</code>,
+                  <code>/pnl</code>) via the shared UTL health router
+                </td>
+              </tr>
+              <tr>
+                <td><code>GET /health/risk</code> · <code>/health/position</code> · <code>/health/pnl</code></td>
+                <td>none</td>
+                <td>none</td>
+                <td>Per-sub-package last-run sentinel — not a proxy to the sub-app's own health</td>
+              </tr>
+              <tr>
+                <td><code>GET /stream/signals</code></td>
+                <td>none</td>
+                <td>none</td>
+                <td>SSE, <code>SSEChannel.SIGNALS</code>, 30s heartbeat</td>
+              </tr>
+              <tr>
+                <td><code>GET /internal/restriction-profile</code></td>
+                <td>none</td>
+                <td>none</td>
+                <td>Lists known <code>persona_id</code>s</td>
+              </tr>
+              <tr>
+                <td><code>GET /internal/restriction-profile/{persona_id}</code></td>
+                <td>
+                  <code>persona_id</code>: str, required (path) · <code>flavour</code>: DemoFlavour, optional
+                  (query) · <code>env</code>: Env, optional, default <code>dev</code> (query)
+                </td>
+                <td>none</td>
+                <td>Unknown persona returns a hidden-everywhere fallback profile, not 404</td>
+              </tr>
+              <tr>
+                <td><code>POST /internal/restriction-profile/{persona_id}/resolve</code></td>
+                <td>
+                  <code>persona_id</code>: str, required (path) · body: <code>QuestionnaireResponse</code>, required
+                  · <code>flavour</code>, <code>env</code>: optional (query)
+                </td>
+                <td>none</td>
+                <td>G1.10 — questionnaire-driven overlay on the base persona profile</td>
+              </tr>
+              <tr>
+                <td><code>GET /api/v1/registry/archetypes</code></td>
+                <td>none</td>
+                <td>admin token</td>
+                <td>Every <code>StrategyArchetype</code> with live/planned status, reconciled against the process-global instance registry</td>
+              </tr>
+              <tr>
+                <td><code>GET /api/v1/registry/ml-models</code></td>
+                <td>none</td>
+                <td>admin token</td>
+                <td>ML_DIRECTIONAL-family subset of the same view; training timestamp/health fields are placeholders today</td>
+              </tr>
+              <tr>
+                <td><code>GET /api/archetypes/{archetype_id}/operational-mode</code></td>
+                <td><code>archetype_id</code>: str, required (path)</td>
+                <td>admin token</td>
+                <td>Defaults to <code>MANUAL</code> if no transition has ever been recorded</td>
+              </tr>
+              <tr>
+                <td><code>POST /api/archetypes/{archetype_id}/operational-mode</code></td>
+                <td>
+                  <code>archetype_id</code>: str, required (path) · body <code>{mode, reason?}</code>,
+                  <code>mode</code> required
+                </td>
+                <td>admin token</td>
+                <td>Closed transition set — see the worked example below</td>
+              </tr>
+              <tr>
+                <td><code>POST /evidence/{incident_key}</code></td>
+                <td><code>incident_key</code>: str, required (path)</td>
+                <td>none</td>
+                <td>Snapshots position-monitor safe-read-only state to GCS for incident audit; called by alerting-service</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/</code></td>
+                <td>none</td>
+                <td>none</td>
+                <td>Bare service-info root</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/stream/risk_alerts</code></td>
+                <td>none</td>
+                <td>none</td>
+                <td>SSE, <code>SSEChannel.RISK_ALERTS</code></td>
+              </tr>
+              <tr>
+                <td><code>POST /risk/pre-trade-check</code></td>
+                <td>body: <code>PreTradeCheckRequest</code>, required (UAC-canonical)</td>
+                <td>API key / S2S</td>
+                <td>Response <code>PreTradeCheckResponse</code>, also UAC-canonical — field-level example not included here, see below</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/exposure/summary</code></td>
+                <td><code>client_id</code>: str, required (query)</td>
+                <td>none</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/exposure/by-venue</code></td>
+                <td><code>client_id</code>: str, required (query)</td>
+                <td>none</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/exposure/by-instrument</code></td>
+                <td><code>client_id</code>: str, required (query)</td>
+                <td>none</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/risk-limits/{client_id}</code></td>
+                <td><code>client_id</code>: str, required (path)</td>
+                <td>none</td>
+                <td>Returns default limits if the client has none saved</td>
+              </tr>
+              <tr>
+                <td><code>POST /risk/risk-limits</code></td>
+                <td>body: <code>RiskLimits</code>, required</td>
+                <td>API key / S2S</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/risk-limits</code></td>
+                <td>none</td>
+                <td>none</td>
+                <td>Lists client IDs that have limits saved</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/risk/var</code></td>
+                <td>
+                  <code>client_id</code>: str, required · <code>confidence</code>: float, optional, default 0.99
+                  (0–1) · <code>horizon_days</code>: int, optional, default 1 (≥1) · <code>scenario</code>: str,
+                  optional — one of <code>GFC_2008</code>/<code>COVID_2020</code>/<code>CRYPTO_BLACK_THURSDAY_2020</code>
+                  · <code>returns</code>: list[float], required, ≥2 observations (all query)
+                </td>
+                <td>none</td>
+                <td>
+                  <b class="ev ev-verified">✓ verified</b> — the path carries a repeated <code>/risk</code> segment
+                  when reached through the combined strategy-service process: the sub-app's own route is already
+                  named <code>/risk/var</code>, and <code>api/main.py</code> mounts the whole sub-app at
+                  <code>/risk</code>. If risk-and-exposure-service instead runs as its own standalone process the
+                  path is plain <code>/risk/var</code> — this section documents the mounted topology, which is what
+                  <code>api/main.py</code> wires. Worked example below.
+                </td>
+              </tr>
+              <tr>
+                <td><code>POST /risk/risk/strategy-status</code></td>
+                <td>
+                  <code>client_id</code>: str, required (query) · body: <code>StrategyRiskProfile</code>, required
+                  (UAC-canonical)
+                </td>
+                <td>API key / S2S</td>
+                <td>Same doubled-segment path as above</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>Every endpoint — positions, trades, reconciliation, treasury</h3>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label"><code>/position</code> mount</span
+          ><span class="note">Every route carries no auth dependency in source — see the callout above</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Method &amp; path</th>
+                <th>Parameters</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>GET /positions/health</code></td>
+                <td><code>wallet_id</code>: str, required (query)</td>
+                <td>5-second-TTL cache; 404 if nothing has ever been pushed for the wallet; worked example below</td>
+              </tr>
+              <tr>
+                <td><code>GET /stream/positions</code></td>
+                <td>none</td>
+                <td>SSE, per-position updates</td>
+              </tr>
+              <tr>
+                <td><code>GET /aggregated-positions</code></td>
+                <td>
+                  <code>asset_group</code>, <code>venue</code>, <code>instrument_type</code>: str, optional (query) ·
+                  <code>limit</code>: int, optional, default 100 (1–1000) · <code>offset</code>: int, optional,
+                  default 0
+                </td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /aggregated-positions/{instrument_id}</code></td>
+                <td><code>instrument_id</code>: str, required (path)</td>
+                <td>404 if not aggregated</td>
+              </tr>
+              <tr>
+                <td><code>GET /portfolio-view/{client_id}</code></td>
+                <td><code>client_id</code>: str, required (path)</td>
+                <td>Balances/greeks/risk-groups fields are empty pending enrichment wiring — <b class="st st-part">partial</b></td>
+              </tr>
+              <tr>
+                <td><code>GET /sports-arb-positions</code></td>
+                <td>none</td>
+                <td>Empty list if the sports-arb engine isn't injected</td>
+              </tr>
+              <tr>
+                <td><code>GET /defi-health/{client_id}</code></td>
+                <td><code>client_id</code>: str, required (path)</td>
+                <td><b class="st st-plan">planned</b> — always 404 today; the aggregation pipeline isn't wired end to end</td>
+              </tr>
+              <tr>
+                <td><code>GET /defi-lp/{client_id}</code></td>
+                <td><code>client_id</code>: str, required (path)</td>
+                <td><b class="st st-plan">planned</b> — always 404, same reason</td>
+              </tr>
+              <tr>
+                <td><code>GET /defi-staking/{client_id}</code></td>
+                <td><code>client_id</code>: str, required (path)</td>
+                <td><b class="st st-plan">planned</b> — always 404, same reason</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk-groups/{client_id}</code></td>
+                <td><code>client_id</code>: str, required (path)</td>
+                <td>Position-only grouping; full greeks breakdown requires a snapshot not yet wired here</td>
+              </tr>
+              <tr>
+                <td><code>GET /stream/aggregated-positions</code></td>
+                <td>none</td>
+                <td>SSE</td>
+              </tr>
+              <tr>
+                <td><code>GET /trades</code></td>
+                <td>
+                  <code>venue</code>, <code>instrument</code>, <code>client_id</code>, <code>strategy_id</code>: str,
+                  optional · <code>start_date</code>, <code>end_date</code>: ISO 8601 datetime, optional ·
+                  <code>limit</code>: int, optional, default 500 (1–5000) · <code>offset</code>: int, optional,
+                  default 0 (all query)
+                </td>
+                <td>Ordered by fill time, most recent first; worked example below</td>
+              </tr>
+              <tr>
+                <td><code>GET /trades/count</code></td>
+                <td>same filters as above minus pagination</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /trades/summary</code></td>
+                <td><code>start_date</code>, <code>end_date</code>: optional (query)</td>
+                <td>Trade count, volume, fees for the period</td>
+              </tr>
+              <tr>
+                <td><code>GET /trades/{fill_id}</code></td>
+                <td><code>fill_id</code>: str, required (path)</td>
+                <td>Direct DB lookup; 404 if not found</td>
+              </tr>
+              <tr>
+                <td><code>POST /nav-snapshot/trigger</code></td>
+                <td>none</td>
+                <td>Builds and delivers a NAV snapshot via webhook now</td>
+              </tr>
+              <tr>
+                <td><code>GET /nav-snapshot/preview</code></td>
+                <td>none</td>
+                <td>Dry run — builds without delivering</td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/summary</code></td>
+                <td><code>client_id</code>: str, optional, default <code>"default"</code> (query)</td>
+                <td>
+                  Lightweight leverage/concentration/drawdown computed locally from aggregated positions — not the
+                  full <code>/risk</code>-mount engine (no VaR, no pre-trade checks here)
+                </td>
+              </tr>
+              <tr>
+                <td><code>GET /risk/defi-health</code></td>
+                <td><code>client_id</code>: str, optional, default <code>"default"</code> (query)</td>
+                <td>404 if no cached lending positions for the client</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/drift/portfolio-snapshot</code></td>
+                <td>none</td>
+                <td>Latest per-strategy / per-share-class drift snapshot</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/drift/history</code></td>
+                <td><code>limit</code>: int, optional, default 100 (1–1000)</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>POST /reconciliation/drift/evaluate</code></td>
+                <td>none</td>
+                <td>Manual refresh trigger</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/deviations</code></td>
+                <td><code>status</code>: str, optional (query)</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/balances</code></td>
+                <td><code>venue</code>: str, optional</td>
+                <td>Reads an in-memory cache, not the DB</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/pnl</code></td>
+                <td><code>venue</code>: str, optional</td>
+                <td>Reads an in-memory cache, not the DB</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/summary</code></td>
+                <td>none</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>POST /reconciliation/resolve</code></td>
+                <td>
+                  body: <code>{deviation_id: str, action: ReconciliationAction, note: str (min 10 chars),
+                  resolved_by: str}</code>, all required
+                </td>
+                <td>404 if <code>deviation_id</code> unknown</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/auto-recon/history</code></td>
+                <td>none</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /reconciliation/snapshots/history</code></td>
+                <td>
+                  <code>venue</code>, <code>instrument</code>, <code>status</code>: str, optional ·
+                  <code>start_date</code>, <code>end_date</code>: optional · <code>limit</code>: int, default 200
+                  (1–5000) · <code>offset</code>: int, default 0
+                </td>
+                <td>Queries the persistent DB directly, unlike the in-memory <code>/balances</code> and <code>/pnl</code> above</td>
+              </tr>
+              <tr>
+                <td><code>GET /treasury/balance</code></td>
+                <td><code>share_class</code>: str, optional, default <code>USDC</code></td>
+                <td>Includes computed rebalance amounts</td>
+              </tr>
+              <tr>
+                <td><code>GET /treasury/balance/history</code></td>
+                <td><code>limit</code>: int, optional, default 100 (1–1000)</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>GET /treasury/config</code></td>
+                <td>none</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>POST /treasury/evaluate</code></td>
+                <td><code>treasury_balance_usd</code>: Decimal, required (query)</td>
+                <td>Manual/demo path — production balances come from custodian polling</td>
+              </tr>
+              <tr>
+                <td><code>GET /api/v1/accounts/{account_id}/pnl-series</code></td>
+                <td>
+                  <code>account_id</code>: str, required (path) · <code>instance_id</code>: str, required (query) ·
+                  <code>from</code>, <code>to</code>: ISO date, optional · <code>per_venue</code>: bool, optional,
+                  default false
+                </td>
+                <td>404 if no data for the filter; worked example below</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Margin health is computed but not routed</span>
+        <b class="ev ev-check">? check</b>
+        <p>
+          <code>position/api/margin_health.py</code> computes live, per-venue CeFi margin snapshots
+          (<code>MarginHealthSnapshot</code>, haircut-adjusted collateral via the UAC collateral SSOT) and its own
+          module docstring calls the live compute path the SSOT for current margin — but the file declares no
+          <code>APIRouter</code> and is not imported by <code>position/api/main.py</code>. The computation is real;
+          the HTTP surface for it is not wired. <b class="st st-plan">planned</b>.
+        </p>
+      </div>
+
+      <h3>Worked examples</h3>
+      <p>
+        Five endpoints, chosen to span every mount and every auth pattern, with the exact request and a realistic
+        response built from the actual response model in source.
+      </p>
+
+      <div class="code">
+        <b>GET /position/positions/health?wallet_id=0xA1b2...9F</b>
+
+        <i>-- 200 OK --</i>
+        { "wallet_id": "0xA1b2...9F", "snapshot_at": "2026-08-20T14:03:11Z", "ltv": "0.612", "margin_ratio": null,
+        "liquidation_threshold": "1.10", "maintenance_margin": null, "stale": false }
+
+        <i>-- 404 Not Found (no snapshot ever pushed for this wallet) --</i>
+        { "detail": "No position-health data for wallet '0xA1b2...9F'. Ensure DeFi adapters are running and have
+        pushed at least one update." }
+      </div>
+
+      <div class="code">
+        <b>GET /risk/risk/var?client_id=client-042&amp;confidence=0.99&amp;horizon_days=1&amp;returns=-0.021&amp;returns=0.004&amp;returns=-0.008&amp;returns=0.011</b>
+
+        <i>-- 200 OK --</i>
+        { "var": -0.0187, "cvar": -0.021, "stress_var": null, "confidence": 0.99, "horizon_days": 1, "scenario": null
+        }
+
+        <i>-- 422 Unprocessable Entity (returns[] omitted) --</i>
+        { "message": "returns[] query parameter is required and must contain at least 2 observations", "category":
+        "VALIDATION", ... }
+      </div>
+
+      <div class="code">
+        <b>POST /api/archetypes/CARRY_STAKED_BASIS/operational-mode</b>
+        <i>X-Admin-Token: &lt;shared secret&gt;</i>
+
+        { "mode": "live", "reason": "first-trades green; graduating to DART" }
+
+        <i>-- 200 OK --</i>
+        { "archetype_id": "CARRY_STAKED_BASIS", "previous_mode": "paper", "new_mode": "live", "transition_at":
+        "2026-08-20T14:07:52.113000+00:00" }
+
+        <i>-- 409 Conflict (MANUAL -&gt; LIVE attempted directly) --</i>
+        { "detail": "transition not allowed: 'manual' -&gt; 'live'; allowed: ['backtest', 'manual', 'paper']" }
+      </div>
+
+      <div class="code">
+        <b>GET /position/trades?venue=BINANCE&amp;instrument=ETH-USDT&amp;limit=1</b>
+
+        <i>-- 200 OK --</i>
+        { "fills": [ { "fill_id": "f_9a21c...", "order_id": "o_77bd1...", "client_id": "client-042", "strategy_id":
+        "carry_staked_basis_eth_lido_binance", "venue": "BINANCE", "instrument": "ETH-USDT", "side": "SELL",
+        "quantity": "1.25", "price": "3412.80", "fee": "1.71", "fee_currency": "USDT", "is_maker": true,
+        "fill_timestamp": "2026-08-20T13:58:02Z", "received_at": "2026-08-20T13:58:02.184Z" } ], "total": 4831,
+        "limit": 1, "offset": 0, "has_more": true }
+      </div>
+
+      <div class="code">
+        <b>GET /position/api/v1/accounts/client-042/pnl-series?instance_id=carry_staked_basis_eth_lido_binance&amp;from=2026-08-01&amp;to=2026-08-20</b>
+
+        <i>-- 200 OK --</i>
+        { "account_id": "client-042", "instance_id": "carry_staked_basis_eth_lido_binance", "series": [ {
+        "timestamp": "2026-08-01T00:00:00Z", "pnl": 412.55, "venue": null }, { "timestamp": "2026-08-02T00:00:00Z",
+        "pnl": 498.02, "venue": null } ] }
+
+        <i>-- 404 Not Found (no data for the filter) --</i>
+        { "detail": "No PnL data for account_id=client-042 instance_id=carry_staked_basis_eth_lido_binance." }
+      </div>
+
+      <p style="font-size: 0.95rem; color: var(--ink-3)">
+        <code>POST /risk/pre-trade-check</code>, <code>POST /risk/risk-limits</code> and
+        <code>POST /risk/risk/strategy-status</code> take UAC-canonical bodies (<code>PreTradeCheckRequest</code>,
+        <code>RiskLimits</code>, <code>StrategyRiskProfile</code>) whose full field lists live in
+        <code>unified_api_contracts</code> rather than in this service — worked examples for those three are left
+        for the content pass this structural review is gating, rather than approximated here.
       </p>
     </details>
   </section>
