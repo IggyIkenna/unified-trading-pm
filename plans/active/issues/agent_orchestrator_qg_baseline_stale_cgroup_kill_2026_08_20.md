@@ -115,8 +115,29 @@ CI-firefighter actively diagnosing a live blocking wall), not a silent bump.
       is the full committed set; a bulk `--force` re-measure sweep (or at least a report of current vs.
       committed-baseline deltas without forcing) would catch this class before it blocks someone else's push.
 
+## CORRECTION (2026-08-20, same session, after landing the actual fix) — the real blocker was NOT the memory baseline
+
+The stale-baseline fix above (re-running `measure-qg-baseline.sh --force`) is real and was applied, but it did **NOT**
+fix the actual shipping blocker. After landing the baseline fix, 8 further `quickmerge.sh` attempts (qm5-qm12) STILL
+died silently at ~96-98% of the pytest run — including attempts with `QG_GOVERNOR_DISABLE=true` (governor fully
+bypassed, no cgroup cap of any kind active). That proves the memory cap was never the actual cause of the *shipping*
+failures; the true root cause is documented in a NEW issue doc:
+[[agent_orchestrator_quickmerge_orphan_reap_kills_interactive_background_2026_08_20]] — the orchestrator's own
+`orphan_reap` sweep (`server/orphan_reap.py`) kills any backgrounded shell process attributable to a slot (via
+`CLAUDE_CONFIG_DIR` env inheritance, not literal process identity) once it crosses ~340-360s age, regardless of launch
+method (`setsid`+`disown`, plain `nohup`+`disown`, or the CLI-tool-native `run_in_background`) — and a full
+agent-orchestrator quickmerge run legitimately needs ~380-420s on a busy shared host. The fix that actually landed the
+commit was stripping `CLAUDE_CONFIG_DIR` (+ sibling `CLAUDE_*`/`CLAUDECODE` env vars) from the backgrounded process's
+environment before launch, so `orphan_reap`'s config-dir scan never attributes it to the slot in the first place.
+
+**Do not re-derive the memory-cap theory from this doc alone in a future incident** — read the orphan_reap issue doc
+first if a `quickmerge.sh`/`quality-gates.sh` run dies silently near completion on this host; the stale-baseline
+condition documented above is a real, independently-worth-fixing issue, but it is very unlikely to be the actual
+blocker for a silent near-completion death from an interactive session.
+
 ## Provenance
 
 Escalation `agt-ddcd59` (slot 32, `local_ratchet_gate_breach`, repo=agent-orchestrator), 2026-08-20. 4 reproduced
 deaths at ~98% pytest completion before root-causing via `qg-host-governor.sh` source read +
-`/sys/fs/cgroup/.../memory.events` + `qg_resource_baseline.json` cross-check.
+`/sys/fs/cgroup/.../memory.events` + `qg_resource_baseline.json` cross-check. Superseded as the shipping blocker's
+root cause per the CORRECTION above, same session, ~90 minutes later.
