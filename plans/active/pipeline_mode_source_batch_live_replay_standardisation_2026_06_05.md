@@ -466,6 +466,10 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       writers). The batch-live-reconciliation-service confirms batch≈live within a tolerance, then a TTL clears the
       now-redundant `live` cells (long-lived `replay` stays where batch never existed). Config knobs (sensible defaults,
       non-blocking): reconciliation tolerance + TTL horizon. Repo: batch-live-reconciliation-service (+ UTL TTL helper).
+      **BLRS decision layer PARTIAL 2026-08-20 (T4)**: same sha `batch-live-reconciliation-service@0aaa663b59` adds
+      `engine/live_ttl.py` (`LiveTtlConfig`, `is_reconciled`, read-only `ttl_eligible_cells`) + the 2 `ReconConfig`
+      knobs, 10 tests, QG green. Checkbox stays open — never mutates the manifest by design; the UTL write-helper to
+      actually clear a TTL-eligible `live` row still doesn't exist, cross-repo, not attempted this session.
 - [ ] [DESIGN] P0. **M8 — cadence axis. PARTIAL — Phase 0.1 shipped the `Cadence` enum
       (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) in UAC@a2eab633.**
       REMAINING: wire **cadence** as a manifest COLUMN (UTL) + deployment-registry `run_class` (deployment-service) +
