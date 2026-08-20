@@ -148,7 +148,28 @@ direct testing, not documentation-reading:**
       explicitly not-accepted, confirmed live 2026-08-14 — no LST margin).
 - [x] [SCRIPT] P2. ✅ **Declare `VENUE_DATA_TYPE_CAPABILITIES`** for `trades`, `book_snapshot_5`, `derivative_ticker`,
       `available_from=2025-06-01`, `live_capable=True`/`requires_credentials=False` (real connector, not a
-      BLOCKED-CREDENTIALS stub like EXTENDED-STARKNET/LIGHTER-ZKSYNC) — `unified-api-contracts@316002f1e6`.
+      BLOCKED-CREDENTIALS stub like EXTENDED-STARKNET/LIGHTER-ZKSYNC). **CORRECTED 2026-08-20**: the cited
+      `unified-api-contracts@316002f1e6` never actually touched this dict — it only added the parallel
+      `SourceCapability` (`registry/capability_declarations/_cefi.py`) and `DataTypeCapability`
+      (`data_type_capability.py:698-736`) registries, plus the `VENUES_BY_ASSET_GROUP` membership; this checkbox's own
+      claim was false (verified via `git show 316002f1e6 --stat` — `market_data_categories.py` only changed 5 lines,
+      all in `VENUES_BY_ASSET_GROUP`). `market_data_categories.py`'s `VENUE_DATA_TYPE_CAPABILITIES` — the dict
+      `derive_readiness.py`/coverage tooling actually read — had ZERO PACIFICA-SOLANA entry until now, so every
+      readiness/coverage check treated the venue as "unverified" despite a real working adapter. Actually fixed
+      `unified-api-contracts@88cd9f912e`: `VenueCapabilityRecord` entry added (route="direct", all 3 data_types,
+      batch_start_date="2025-06-01"), mirroring the AAVE-PLASMA/FLUID-PLASMA pattern. Surfaced a second real gap in
+      the same session: fixing this made PACIFICA-SOLANA newly visible to `batch_capable_venues()`, which flipped
+      `test_mtds_venues_have_strategy_position_read_coverage_no_new_regressions` red — strategy-service's
+      `POSITION_READ_MODE_CAPABILITIES` has no `pacifica` entry (confirmed via grep) and Pacifica's USDC-only margin
+      means no LST-fallback rescue either, so `position_read_mode_availability("pacifica")` genuinely returns "none"
+      on batch/live/paper. This is a different registry from §F's `catalog_carry.py` funding-dispersion candidacy
+      (added `strategy-service@14d869449f`) — being a venue candidate and having a position-read-mode reader are
+      separate axes. Not built here (out of scope for a registry-declaration fix); recorded honestly in
+      `tests/data/strategy_position_read_mode_baseline.json` (PACIFICA-SOLANA added to the known-gap list, same
+      treatment as its other 100 entries) so the gate stays green without overclaiming coverage that doesn't exist.
+      Smoke-tested `GET https://api.pacifica.fi/api/v1/trades?symbol=BTC` live during this session (HTTP 200, real
+      `fulfill_taker`/`fulfill_maker` rows) — the "confirmed live 2026-08-14" claim in §A still holds as of
+      2026-08-20.
 - [x] [SCRIPT] P2. ✅ **Checked `onchain_perp_batch_handler.py`'s `_VENUE_SOURCE`/`_VENUE_PIPELINE_MODE`/`_VENUE_LAUNCH`
       dicts** — this file lives in `market-tick-data-service` (plan's file location for this todo was wrong), not UAC.
       Confirmed via the same self-archiving-vs-Tardis-routed logic that gates HYPERLIQUID/ASTER/EXTENDED-STARKNET
@@ -216,6 +237,16 @@ direct testing, not documentation-reading:**
       `True`, to unblock real live order placement. The signing code itself is scaffolded and tested
       (`execution-service@4aafcbda77`) — this todo is purely the credential-provisioning + go-live decision, a
       human-only step per the workspace's wallet-keys hard-stop.
+- [ ] [SCRIPT] P2. **New follow-up (surfaced 2026-08-20)**: give PACIFICA-SOLANA a real strategy-service position
+      reader. `position_interface/capabilities.py::POSITION_READ_MODE_CAPABILITIES` has no `pacifica` entry (confirmed
+      via grep) and Pacifica's USDC-only margin means the LST-address fallback can't rescue it either — so
+      `position_read_mode_availability("pacifica")` returns "none" on batch/live/paper today, even though §F already
+      registered PACIFICA-SOLANA as a `catalog_carry.py` funding-dispersion venue candidate (a separate axis — being a
+      candidate doesn't imply a position reader exists). Currently parked, not hidden: recorded in
+      `unified-api-contracts/tests/data/strategy_position_read_mode_baseline.json`'s ratchet baseline (the SIT
+      invariant-2 known-gap list) rather than silently passing. Close this by adding a real `pacifica` entry to
+      `POSITION_READ_MODE_CAPABILITIES` with genuine batch/live/paper coverage, then remove `PACIFICA-SOLANA` from the
+      baseline JSON in the same change (ratchets only shrink).
 
 ## D. market-tick-data-service — batch and live capture
 
@@ -473,3 +504,23 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   count was also off by one against a fresh `grep -cE` recount (27 done + 1 open = 28 total, not 27). See the
   doc's own Todos section for the actual per-item evidence citations rather than this summary line.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
+- **2026-08-20**: real live-verified gap found and fixed — §B's "Declare `VENUE_DATA_TYPE_CAPABILITIES`" checkbox cited
+  `unified-api-contracts@316002f1e6` but that commit never touched `market_data_categories.py`'s
+  `VENUE_DATA_TYPE_CAPABILITIES` dict (confirmed via `git show --stat`); PACIFICA-SOLANA had zero entry in the dict
+  `derive_readiness.py`/coverage tooling actually reads, so every readiness/coverage check treated it as
+  "unverified" despite a real working adapter (`market_tick_data_service/adapters/_umi_pacifica.py`,
+  `.../live/connectors/pacifica_solana_perp_ws.py`) and a correct parallel `DataTypeCapability` declaration
+  (`data_type_capability.py:698-736`). Fixed: `unified-api-contracts@88cd9f912e` — `VenueCapabilityRecord` added for
+  PACIFICA-SOLANA (route="direct", trades/book_snapshot_5/derivative_ticker, `batch_start_date="2025-06-01"` per
+  `venue_launch_dates.py`), mirroring the AAVE-PLASMA/FLUID-PLASMA pattern. Live smoke test during this session:
+  `GET https://api.pacifica.fi/api/v1/trades?symbol=BTC` → HTTP 200, real `fulfill_taker`/`fulfill_maker` trade rows —
+  the "confirmed live 2026-08-14" claim in §A still holds. The fix surfaced a second real, previously-invisible gap
+  (strategy-service has no `pacifica` position-read-mode reader — see the new P2 todo in §F); recorded honestly in
+  `unified-api-contracts/tests/data/strategy_position_read_mode_baseline.json` rather than silently passed. Also found
+  and fixed unrelated doc rot while editing that same baseline file's description: its "measured 2026-08-17: 106 of
+  159" count was stale (the array itself held 99 entries pre-edit, not 106) — corrected inline rather than
+  re-propagated. `unified-api-contracts` full `quality-gates.sh` ALL PASSED (703s) on a tree scoped to exactly these
+  2 files (a first gate run without `--no-fix` had also reformatted 14 unrelated files via an in-flight
+  `OrderStatus.PENDING`→`PENDING_NEW`/`OrderStatus.OPEN`→`NEW` enum-rename autofix; restored those to HEAD by name
+  before shipping — not this task's scope). Shipped via quickmerge (`--agent`, scoped `--files`); landed
+  `unified-api-contracts@88cd9f912e` on `live-defi-rollout`, ahead=0/clean confirmed post-push.
