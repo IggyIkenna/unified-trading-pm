@@ -79,7 +79,7 @@ liveness check so it never fights a live occupant (including slot 0's own live s
       per the operator's 2026-08-18 confirmed cadence for daily/standing self-checks). Done-when:
       `get_config().tuning.slot0_self_clean_interval_seconds == 3600` by default and
       `basedpyright`/`quality-gates.sh` are clean.
-- [ ] [BACKEND] P1. Create `server/slot0_self_clean.py` with a `Slot0SelfCleanLoop` class
+- [x] [BACKEND] P1. ✅ Create `server/slot0_self_clean.py` with a `Slot0SelfCleanLoop` class
       mirroring `TmuxPruner`'s daemon-thread shape in `server/tmux_pruner.py` EXACTLY:
       `__init__(interval_seconds: int | None = None)` sourcing the new tuning field when
       `None`, a `threading.Event`-gated `.start()`/`.stop(timeout=5.0)`, a named daemon thread
@@ -277,3 +277,50 @@ liveness check so it never fights a live occupant (including slot 0's own live s
   up locally (or coordinate with whichever worker/escalation is fixing the QG-red issue) rather
   than treating the whole plan as blocked.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+
+- **2026-08-20 (slot 31)**: Picked up todo 2. Created `server/slot0_self_clean.py` with
+  `Slot0SelfCleanLoop`, mirroring `TmuxPruner`'s daemon-thread shape exactly (`__init__`
+  sourcing `tuning.slot0_self_clean_interval_seconds` when `interval_seconds=None`, a
+  `threading.Event`-gated `.start()`/`.stop(timeout=5.0)`, named daemon thread
+  `"orchestrator-slot0-self-clean"`, `_loop()` with the initial-delay-then-tick shape and
+  `_tick()` wrapped in `try/except Exception: logger.exception(...)`). `_tick()` is a
+  documented no-op stub for now — parts 1-3 (clean no-op check, dirty-state resolution,
+  branch-state healing) are separate downstream todos (3-5) not in this task's scope.
+  Manually verified: instantiates, `.start()` spawns a live thread, `.stop()` joins within
+  timeout and clears `_thread` (no leak), default interval correctly sources
+  `get_config().tuning.slot0_self_clean_interval_seconds == 3600`. Pass-1 `quality-gates.sh`
+  green (4902 passed server, 463 passed dashboard vitest, `tsc --noEmit` clean, coverage
+  82.76% > baseline). Shipped via `quickmerge.sh --agent --files server/slot0_self_clean.py`;
+  post-push ancestry verified. **✅ Landed: `agent-orchestrator@ccbbfa4718`**
+  (`origin/live-defi-rollout`). Flipping todo 2's checkbox now.
+
+  **Resume instructions for whoever picks this up next** — todos 3-10 remain (this task's
+  scope was todo 2 only):
+
+  1. **Todo 3** — `_tick()` part 1 (clean no-op path): resolve slot 0's checkout via
+     `worktree_setup.slot_dir(0)`, call `worktree_clean_check.check_slot_clean(0, slot_dir)`,
+     return on `report.is_clean` with no action/no activity-log row. Replaces the current stub
+     body in `server/slot0_self_clean.py::Slot0SelfCleanLoop._tick`.
+  2. **Todo 4** — `_tick()` part 2 (dirty-state resolution): when dirty, call
+     `worktree_clean_check.resolve_dirty_state(slot_dir, 0, mode="commit_and_push",
+     timestamp_iso=<UTC now>)`. Read `classify_maker_liveness`'s real signature in
+     `server/worktree_clean_check/_liveness.py` before wiring (there is no "new occupant
+     replacing an old one" concept for a self-check, unlike a worker respawn).
+  3. **Todo 5 (P2)** — `_tick()` part 3, branch-state healing: run AFTER dirty-state
+     resolution. Call `check_slot_branch_state(0, slot_dir, host_operator())`; if
+     `should_stop`, call `heal_dead_slot_branch_quarantine(...)` — never `reset --hard`, never
+     touch a provably-live peer.
+  4. **Todo 6** — activity-log row for every non-no-op tick, event name `slot0_self_clean`,
+     mirroring `autospawn.py`'s `log_activity(db, "slot_dirty_state_resolved", ...)` call
+     shape.
+  5. **Todo 7** — wire `Slot0SelfCleanLoop` into `server/server.py`'s lifespan
+     startup/shutdown, the SAME block as `pruner = tmux_pruner.TmuxPruner()` and
+     `kicker = worker_liveness.WorkerLivenessKicker()` (grep `TmuxPruner()` in `server.py`).
+  6. **Todo 8 (P2, [REVIEW])** — live-verify against slot 0's ACTUAL current dirty-repo state
+     at pickup time (do not trust the 2026-08-18 authoring-time snapshot — it is now stale).
+  7. **Todo 9 (P2, [BACKEND])** — unit tests for `Slot0SelfCleanLoop._tick()`'s three branches
+     (clean/dirty-dead/dirty-live), mirroring `TmuxPruner`'s or `ResourceHistoryLoop`'s test
+     file shape (call `_tick()` directly, no real thread/wait needed).
+  8. **Todo 10 (P3, [DOC])** — add `Slot0SelfCleanLoop` alongside
+     `ResourceHistoryLoop`/`TmuxPruner`/`WorkerLivenessKicker` wherever those three are
+     documented together in `/codex/04-architecture/` or `/codex/05-infrastructure/`.
