@@ -64,5 +64,5 @@ Update the productivity oracle in `deployment-service` to model source-to-output
 
 ## Todos
 
-- [ ] [CODE] P1. Fix DP-LIVE-004 productivity accounting for sports ODDS_API source-to-bookmaker fan-out in `deployment-service`; preserve non-fan-out detection and add focused regression tests.
+- [x] [CODE] P1. Fix DP-LIVE-004 productivity accounting for sports ODDS_API source-to-bookmaker fan-out in deployment-service; preserve non-fan-out detection and add focused regression tests. — deployment-service@c4f2b1d048 + Evidence: quality-gates.sh --no-fix ALL QUALITY GATES PASSED; 3652 passed, 5 skipped
 - [ ] [DATA] P1. Re-run the live productivity audit against the exact VM and verify the false page clears while bookmaker-level capture remains fresh.
