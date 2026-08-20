@@ -78,7 +78,7 @@ context_scope:
       gateway adapters. Record the count and file list per category — this is the input every later todo sizes
       against. — Evidence: `rg --files` walk in execution-service; CCXT 8, native REST 3 (+ 1 shared transport),
       DeFi 31, sports external 7, TradFi 7; cassette files 17 across the three scoped cassette trees.; slot 4 inventory commit 8fa0a150a1
-- [ ] [AGENT] P0. **Decide what "exchange version" concretely means per transport category** — this is the real
+- [x] [AGENT] P0. **Decide what "exchange version" concretely means per transport category** — this is the real
       open design question, not mechanical. Candidates to evaluate per category, pick one (or a per-category mix)
       and write the decision down with reasoning: (a) an explicit API-version STRING the adapter asserts against
       a response header or a known-shape field (works for REST APIs that version explicitly, e.g. `/v1/`
@@ -89,7 +89,23 @@ context_scope:
       on-chain DeFi protocols, whether "version" means the deployed CONTRACT ADDRESS/ABI version instead of an API
       concept at all — on-chain protocols don't have a "REST API version," they have contract upgrades, which is
       a materially different drift risk (already partially covered by W15's per-adapter audit — cross-reference,
-      don't duplicate).
+      don't duplicate). **Decision (2026-08-20, slot 4):** define an exchange-version marker as the smallest
+      transport-specific compatibility identity, not as one universal numeric version. Native CeFi REST and sports
+      HTTP adapters pin the provider/product API path version (for example `/v1`, `/v2`, `/v3`, or `/v4`) per base
+      URL; when a provider has no versioned path or reliable version header, use the endpoint family plus a
+      normalized response-schema fingerprint rather than inventing a version string. CCXT-wrapped CeFi pins the
+      resolved CCXT library version (currently `4.5.39`, constrained by `>=4.5.24,<5.0.0`) as the adapter
+      compatibility version, but explicitly does **not** claim to pin the upstream venue API; structural cassette
+      checks remain the venue-drift guard and a separate per-venue HTTP assertion is not required in this phase.
+      DeFi on-chain connectors use chain/network, deployed contract address, and the ABI/function-selector
+      fingerprint; REST-backed DeFi connectors use the same path-version plus schema rule as native REST. TradFi
+      adapters are seven facades over the shared IBKR gateway, so they have no independent exchange API version:
+      pin the gateway wire/API major when the gateway exposes one, otherwise the adapter protocol/schema
+      fingerprint. This mix is chosen because URL versions and contract addresses are observable compatibility
+      inputs, while response headers are inconsistently available and a schema hash alone cannot identify a changed
+      endpoint or contract. Phase 2 must record these markers; Phase 3 must hash normalized structure (field names,
+      container shape, and scalar types; ignore values, timestamps, ordering, and secrets). Cross-reference W15 for
+      contract/security findings and do not duplicate).
 - [ ] [AGENT] P1. **Decide the cassette-drift-detection mechanism.** Options to evaluate: (a) a scheduled job that
       re-records a small canary request per venue against the LIVE API (read-only, safe endpoints only — e.g.
       exchange-info/ticker, never anything that could place an order) and diffs its shape against the checked-in
@@ -153,3 +169,5 @@ context_scope:
   rule reserves that for genuinely single-threaded work; Phase 1's three todos ARE independent of each other and
   can run concurrently, they just each gate their own downstream phase).
 - **2026-08-20, slot 4, Phase 1 inventory**: measured by `rg --files` plus top-level class declarations. Counts: **CCXT-wrapped CeFi 8** (`trade_execution/adapters/{aster,binance,bybit,coinbase,deribit,hyperliquid,okx,upbit}_ccxt.py`); **native-REST CeFi 3 concrete venues** (`bitfinex_native.py`, `bitget_native.py`, `kraken_rest_adapter.py`; `kraken_rest_transport.py` is a shared mixin); **DeFi 31 connectors** (`defi_execution/protocols/{aave,aster,beefy,bybit,cctp,convex,eigenlayer,etherfi,hyperliquid,idle,jito,jito_restaking,jupiter,kamino,karak,kelpdao,lido,marinade,morpho,orca,pacifica,pendle,puffer,raydium,renzo,rocket_pool,solblaze,symbiotic,uniswap,weth,yearn}.py`, excluding bases/helpers); **sports 7 external bookmaker/exchange adapters** (`sports_execution/adapters/aggregator/odds_api.py`, `bookmaker_api/{api_football,onexbet}.py`, `exchanges/{betfair,kalshi,matchbook,polymarket_clob}.py`; paper and Unity are non-venue); **TradFi 7 gateways** (`trade_execution/adapters/{cboe_adapter,cme_adapter,fx_adapter,ibkr_tradfi,ice_adapter,nasdaq_adapter,nyse_adapter}.py`). Legacy `trade_execution/adapters/sports_adapter.py` and `polymarket_adapter.py` facades are outside the requested sports surface and not double-counted.
+
+- **2026-08-20, slot 4, Phase 1 version-semantics decision**: Evidence from the real adapter walk and scoped cassettes supports a transport-specific marker: native CeFi and sports use URL/endpoint API path versions with normalized response-schema fingerprints where no explicit version exists; CCXT records the exact lock-resolved library version but does not assert an upstream venue API version; on-chain DeFi uses chain/network plus contract-address and ABI/selector fingerprints, while REST-backed DeFi follows the native rule; TradFi inherits the shared IBKR gateway protocol and has no independent exchange version. Structural hashes ignore values, timestamps, ordering, and secrets.
