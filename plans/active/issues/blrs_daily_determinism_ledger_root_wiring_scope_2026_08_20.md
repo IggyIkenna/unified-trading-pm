@@ -146,7 +146,7 @@ changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op
       through the UTL cloud_interface storage client, never a subprocess `gcloud`/`gsutil`
       (`/codex/05-infrastructure/gcs-object-operations.md`). Repo: unified-trading-library. Done when: a unit test with a
       fake client returns the newest of several seeded run ids.
-      — unified-trading-library@e5ac1c0a4b; Evidence: full quality-gates.sh passed (421s), quickmerge post-push ancestry verified.
+      — unified-trading-library@97195cb77d; Evidence: full quality-gates.sh passed (875s), quickmerge post-push ancestry verified.
 - [ ] [OPERATOR] P2. **Settle how both ledger roots reach the Stage-B job, then implement it.** Option (a): a wrapper
       that resolves the roots and triggers `uts-prod-blrs-daily-determinism` via the Cloud Run `:run` API with
       `overrides.containerOverrides[].env` carrying `PAPER_LEDGER_ROOT` / `BATCH_LEDGER_ROOT` (`ReconConfig` extends
@@ -189,3 +189,4 @@ changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op
   paths across the 3 involved repos) — no changes needed, left at 4 entries.
 
 - **2026-08-20** (AO worker slot-12, backend_engineer): shipped item 2 — added public `resolve_newest_run_id()` beside the client run-prefix helpers, listing only the client-scoped UTL storage prefix and selecting the lexicographically newest timestamp-prefixed run id. Unit coverage verifies multiple runs, client isolation, and nested batch paths; full quality gates passed and quickmerge landed `unified-trading-library@e5ac1c0a4b`.
+- **2026-08-20** (AO worker slot-8, infra): reverified item 2 at `unified-trading-library@97195cb77d`; the bounded full quality-gate run passed tests, type checking, import/codex compliance, and post-push ancestry verification.
