@@ -75,7 +75,7 @@ source: >-
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
       todo 1. Repo: unified-trading-pm (scratch repro, not shipped code).
       — `unified-trading-pm@9e5e873988`; Evidence: `bash scripts/dev/repro-stash-pathspec-cycles.sh` reproduced both hypotheses.
-- [ ] [SCRIPT] P2. **Promote the CONFIRMED `git pull --rebase --autostash` per-batch fix into the durable recovery
+- [x] ✅ [SCRIPT] P2. **Promote the CONFIRMED `git pull --rebase --autostash` per-batch fix into the durable recovery
       guidance** (reconcile with the existing nuanced `--ff-only`-from-a-clean-tree guidance already at
       `/codex/05-infrastructure/per-tab-worktrees.md:602`, don't blanket-override it). Not a hypothesis — the source doc's own "Third incident" section confirms `git pull --ff-only`
       can permanently stall once local history has genuinely diverged (a categorical git constraint), and that
@@ -87,7 +87,7 @@ source: >-
       `--ff-only`. Done-when: the guidance is added to at least one of the two named codex docs, citing this
       finding. Source:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
-      todo 3. Repo: unified-trading-pm.
+      todo 3. Repo: unified-trading-pm — unified-trading-pm@e022d3f0e3 + Evidence: /codex/05-infrastructure/per-tab-worktrees.md.
 
 ## From `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`
 
