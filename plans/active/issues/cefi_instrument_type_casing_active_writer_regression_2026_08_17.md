@@ -407,3 +407,10 @@ is genuinely VM-scale work, not shared-host-scale:
 
 
 - **Live check (slot-18, 2026-08-20 18:47 UTC)**: the post-fix VM remains active after roughly 9 minutes: Python PID 5272 is in `S` state at 634,496 KiB RSS, host memory reports 60 GiB available, and the sidecar emitted a heartbeat at 18:47:06Z. Repeated `Connection pool is full` messages continue at the launcher's pool-size-4 boundary, but there is no process exit, stall marker, or OOM evidence. The dry-run remains **in-flight** and `--apply` remains intentionally unlaunched.
+
+
+- **Terminal disposition (slot-18, 2026-08-20 19:02 UTC)**: `canonical-migration-cefi-itype-casing-apply-20260820-183425` reached a measured terminal failure, exit 137, and self-deleted. Its log recorded `Scanned 110523 per-VM shards` before the final futures were collected; RSS rose from ~650 MiB to 45,966,576 KiB (host available memory fell to 16 GiB), then the VM was OOM-killed. No `Grand total` or normalization findings were produced and no writes occurred. This isolates the remaining memory failure to concurrent downloaded shard/DataFrame work: `max_pending=workers*2` retained eight large shard futures after listing, despite the listing itself being streamed.
+
+- **Follow-up shipped (slot-18, 2026-08-20)**: tightened `max_pending` to exactly `max_workers` in `market-tick-data-service/scripts/normalize_instrument_type_casing.py`, correcting the one-window contract and documenting the measured OOM. `market-tick-data-service@abb4261b6b` landed on `origin/live-defi-rollout`; full `quality-gates.sh --no-fix` passed (11,093 passed, 28 skipped, 1 xpassed, 82.01% coverage).
+
+- **Fresh retry (slot-18, 2026-08-20 19:10 UTC)**: launched `canonical-migration-cefi-itype-casing-apply-20260820-191035` with `--all-buckets --workers 4 --dry-run`; the launcher refreshed the MTDS tarball at `mtds-code@abb4261b6b45`. Serial-console evidence at 19:14:03Z confirms setup complete and the exact command launched. At 19:14:23Z, PID 5526 was active at 537,484 KiB RSS with 60 GiB available and the heartbeat/uploader loops running. This retry is **STARTED and in-flight**; no `--apply` has been launched.
