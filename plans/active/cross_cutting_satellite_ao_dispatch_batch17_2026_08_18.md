@@ -81,7 +81,7 @@ source: >-
       becomes. Done-when: the comment accurately describes the post-P1 fleet-wide, hourly safety-net. Source:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md` todo 2.
       Repo: 25 fleet caller stubs.
-- [ ] [CI] P2. **Add a detection surface for a FAILED backmerge run**, distinct from the already-shipped
+- [x] ✅ [CI] P2. **Add a detection surface for a FAILED backmerge run**, distinct from the already-shipped — unified-trading-pm@2ead733819 + Evidence: YAML parse OK; embedded shell bash -n OK; commit hooks YAML/provenance passed; origin ancestry verified.
       `backmerge_sync_failure` escalation wall_type (which polls for RESOLUTION of an already-open escalation on
       `DECISION=error` — a different mechanism, not proactive detection; see
       `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s Progress Log). `branch-health.yml`'s
@@ -94,6 +94,8 @@ source: >-
       Repo: unified-trading-pm.
 
 ## Progress Log
+
+- **2026-08-20 (worker, slot 7, dispatch cross_cutting_satellite_ao_dispatch_batch17-4873e1ae623b)**: shipped unified-trading-pm@2ead733819, adding a fleet-aware latest-run query for main-backmerge-to-ldr.yml, cached per-repo failure state, state-transition deduplication, and recovery/all-clear Slack carrier jobs. YAML parsing, embedded shell syntax, diff checks, commit hooks, and origin ancestry all passed. The full QG/quickmerge reservation remained queued for 24 minutes on a saturated shared host; the workflow-only .github/** carve-out was used after stopping only this session's stalled quickmerge process.
 
 - **2026-08-18 (na_eligibility_auditor, dispatch agt-4d9716, slot 19)**: drafted from the cross-cutting tranche's
   2026-08-18 audit — 3 of the source doc's 4 open todos are bounded/deterministic with cited existing patterns
