@@ -526,9 +526,10 @@ todos only to confirm they are data-movement, then leave it.
       Issue archived: `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
 - [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor — full detail and Progress Log in
       `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` (not duplicated here). 2026-08-20: operator ruled
-      option (a) lazy submodule attributes (PEP 562, zero breaking changes); `registry/__init__.py` shipped
-      (`unified-api-contracts@684c6e0e52`); `architecture_v2/__init__.py` + `internal/__init__.py` converted and
-      verified, shipping next; a 4th file not in the original plan (`unified_api_contracts/__init__.py` itself,
+      option (a) lazy submodule attributes (PEP 562, zero breaking changes); `registry/__init__.py`
+      (`unified-api-contracts@684c6e0e52`) and `architecture_v2/__init__.py` + `internal/__init__.py`
+      (`unified-api-contracts@34b81221ef`) all shipped; a 4th file not in the original plan
+      (`unified_api_contracts/__init__.py` itself,
       the top-level package root — its `_VENUES` eager-import loop needs hand-written design, not the mechanical
       converter) discovered and partially done. Real measured win once all land: 1,766→1,295 modules (~27%) on
       `from unified_api_contracts.internal import StrategyArchetype`.

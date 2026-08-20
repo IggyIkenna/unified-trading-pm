@@ -150,7 +150,7 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
       `unified_api_contracts.registry.<leaf>` directly still benefits, and the collision/dead-import findings are
       real value), but do not report "Layer 2 done" off this alone — the measurable win is gated on
       `architecture_v2/__init__.py` and `internal/__init__.py` landing.
-      **`architecture_v2/__init__.py` — converted and fully verified, QG in flight.** Same AST converter, extended
+      **`architecture_v2/__init__.py` — shipped `unified-api-contracts@34b81221ef`.** Same AST converter, extended
       to handle a case `registry/__init__.py` didn't have: a live module-level statement
       (`StrategyInstructionV2 = TradeInstruction | SwapInstruction | ...`, a manually-inlined union type "to avoid
       Pydantic reimport races" per its own comment) that needs its ~13 constituent names as real objects at import
@@ -158,7 +158,7 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
       statement and force-imports it eagerly instead, while preserving the statement (and its explanatory comment)
       verbatim in its original form. 305 lazy exports, 41 source modules. Verified: 319/319 `__all__` values
       hash-pinned-repr-identical to the original (0 real diffs), basedpyright 0 errors.
-      **`internal/__init__.py` — converted and fully verified, QG in flight (same batch).** 1162 lazy exports, 165
+      **`internal/__init__.py` — shipped in the SAME commit, `unified-api-contracts@34b81221ef`.** 1162 lazy exports, 165
       source modules — this is the file that re-exports mostly FROM `architecture_v2` rather than leaf modules
       directly, confirming the earlier concern: it needed `architecture_v2/__init__.py` lazy FIRST for its own
       laziness to mean anything (shipping in the same batch, not sequentially, so neither lands without the other).
