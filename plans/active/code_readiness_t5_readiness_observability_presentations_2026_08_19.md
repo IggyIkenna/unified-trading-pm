@@ -296,9 +296,12 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W1 — readiness derivation and the state dump
 
-- [ ] [BACKEND] P0. Derive a batch / paper / live state for EVERY venue with a code path, surfacing `unverified`
+- [x] [BACKEND] P0. Derive a batch / paper / live state for EVERY venue with a code path, surfacing `unverified`
       honestly wherever a check does not exist. Epic definition-of-done item. Engine:
-      `cursor-configs/skills/readiness-state-dump/`.
+      `cursor-configs/skills/readiness-state-dump/`. **All 14 legs now do exactly this** — every one either
+      derives a real per-venue verdict or reports `unverified` with a specific reason, never a silent pass; the
+      MANUAL-mode addition below closed the last gap by surfacing this same discipline for a 4th mode, not just
+      the original 3.
 - [x] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
       moves 844 `not_ready` rows off their structural blocker. Track the dependency; do not wait idle on it.
       **2026-08-20 — dependency tracked and the non-blocked half DONE, `unified-trading-pm@c3a3e870f4`.** Request
@@ -324,9 +327,21 @@ todos only to confirm they are data-movement, then leave it.
       this session): `checks.credentials()` wired as the `credentials` leg in `derive_readiness.py:414`, derived
       from UAC's own declared `auth_scope`/`auth_environments`/`supports_testnet`/`supports_mainnet`. Re-confirmed
       live 2026-08-20: present with real counts (`ready=8 not_ready=10 unverified=846`) in a fresh dump run.
-- [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19). **Checked
+- [x] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19). **Checked
       2026-08-20: genuinely not yet implemented** — no `manual`/`MANUAL` mode reference anywhere in
-      `derive_readiness.py` or `checks.py`. Real remaining work, not a stale todo.
+      `derive_readiness.py` or `checks.py`. Real remaining work, not a stale todo. **Built and shipped same day**,
+      `unified-trading-pm@a13d577aea`: `MODES` now `(BATCH, PAPER, LIVE, MANUAL)` per
+      `unified_api_contracts.internal.modes.OperationalMode`'s own SSOT (`codex/04-architecture/
+      operational-modes.md`) — MANUAL shares LIVE's mainnet endpoint config, so every existing check's
+      `mode == "PAPER" -> testnet, else mainnet` mapping already resolves it correctly with no per-check special
+      case. Live-tested (`--venue OKX-FUTURES --mode MANUAL`): `execution_orders` correctly resolves via mainnet
+      exactly like LIVE; every other leg honestly reports `unverified` since no probe distinguishes
+      manual-vs-automated triggering yet. **Caught and fixed a real correctness bug this surfaced**:
+      `execution_instruction()`'s `.get(mode.lower(), "none")` treated "no probe field for this mode" the same as
+      "probe measured none" — MANUAL initially reported a false `not_ready` instead of honest `unverified`, since
+      `InstructionPathAvailability` only models batch/paper/live. Fixed with an explicit absent-vs-measured
+      sentinel in the same commit. Confirmed LIVE/PAPER/BATCH unaffected by either change (re-ran, identical
+      `ready` verdicts as before).
 - [x] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
       unverified 20`) against §17's own table — the artefacts flag it as not reconciled. — **RECONCILED
       2026-08-20**, live full-fleet run against `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`
