@@ -34,7 +34,8 @@ assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P0
 drift_direction: advance-code
-depends_on: []
+depends_on: [defi_venue_smoke_batch1_2026_08_20, cefi_venue_smoke_batch1_2026_08_20, sports_venue_smoke_batch1_2026_08_20, tradfi_venue_smoke_batch1_2026_08_20, prediction_venue_smoke_batch1_2026_08_20]
+gate_on_depends: true
 estimate_class: infra
 estimate_baseline_ai_days: 12.0
 estimate_calibrated_ai_days: 9.6
@@ -163,8 +164,7 @@ target wrote zero rows.
       CBOE/ohlcv_1s, CME/ohlcv_1m, CME/ohlcv_1s, NASDAQ/ohlcv_1m, NASDAQ/ohlcv_1s, NYSE/ohlcv_1m, and NYSE/ohlcv_1s.
       Focused tests cover uniqueness, dual-source CBOE routing, and Yahoo-only KRX routing; the full UAC quality gate
       passed.
-- [ ] [BACKEND] P0. **Fork per-asset-group dispatch batches**, matching W4's structure so the two workstreams stay
-      comparable per AG and do not each invent their own batching.
+- [x] ✅ [BACKEND] P0. **Fork per-asset-group dispatch batches**, matching W4's structure so the two workstreams stay comparable per AG and do not each invent their own batching. — unified-trading-pm + evidence: five AG plans and five gated finalize companions added for 353 source-scoped in-scope rows.
 - [ ] [BACKEND] P1. **Record the testnet answer per venue** — has one / behaves how / must be simulated. This feeds
       the `PAPER-READY` state directly and is cheap to gather while a venue is already being examined.
 - [ ] [BACKEND] P1. **Add testnet smoke tests where credentials are already available** or programmatically

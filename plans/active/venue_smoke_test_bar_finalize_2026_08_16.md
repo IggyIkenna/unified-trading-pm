@@ -26,6 +26,11 @@ related:
     /plans/active/venue_smoke_test_bar_2026_08_16.md,
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
     /plans/active/venue_e2e_wiring_2026_08_16.md,
+    /plans/active/defi_venue_smoke_batch1_2026_08_20.md,
+    /plans/active/cefi_venue_smoke_batch1_2026_08_20.md,
+    /plans/active/sports_venue_smoke_batch1_2026_08_20.md,
+    /plans/active/tradfi_venue_smoke_batch1_2026_08_20.md,
+    /plans/active/prediction_venue_smoke_batch1_2026_08_20.md,
   ]
 created: 2026-08-16
 last_updated: "2026-08-16"
@@ -39,7 +44,7 @@ estimate_calibrated_ai_days: 1.2
 assigned_role: backend_engineer
 effort: low
 drift_direction: none
-depends_on: [venue_smoke_test_bar_2026_08_16]
+depends_on: [venue_smoke_test_bar_2026_08_16, defi_venue_smoke_batch1_2026_08_20_finalize, cefi_venue_smoke_batch1_2026_08_20_finalize, sports_venue_smoke_batch1_2026_08_20_finalize, tradfi_venue_smoke_batch1_2026_08_20_finalize, prediction_venue_smoke_batch1_2026_08_20_finalize]
 gate_on_depends: true
 sequential: true
 locked_by:
