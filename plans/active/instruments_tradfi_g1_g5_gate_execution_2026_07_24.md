@@ -391,7 +391,10 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
           — this doc's own paragraph bundles 6 items under "4 legs" (an internal miscount), but the digest item that
           carried the operator's actual approval only asked about the literal 4 named above; those 2 residual legs stay
           open, tracked as their own explicit todo immediately below rather than assumed-approved by association.
-    - [ ] [DATA] P2. **NEW (filed 2026-08-08, split out of the item above)**: purge the 2 residual tradfi catalogue legs
+    - [ ] [DATA] P2. **T2 2026-08-20 note: tracked + actively worked in its own dedicated plan, not duplicated
+          here** — `/plans/active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md` (2 open /
+          1 done as of this check). Data-movement (manifest purge), correctly left to that plan rather than
+          executed inline in this gate-tracking doc. **NEW (filed 2026-08-08, split out of the item above)**: purge the 2 residual tradfi catalogue legs
           NOT covered by the executed 4-leg purge — NASDAQ/NYSE mis-classified `SPOT_PAIR` rows (318, all equity tickers
           incorrectly typed as spot-pairs) and the 12 cefi-singles' `EQUITY`/`EQUITY-USD` rows (NVDA/MSFT/
           CRCL/INTC/GOOGL/AMD/TSLA/AMZN/META/HOOD/AAPL/BABA — `unified_api_contracts.TRADFI_DATABENTO_INSTRUMENTS`

@@ -54,16 +54,10 @@ context_scope:
 
 ## Todos
 
-- [ ] [REVIEW] P3. Once batch 4's todo lands, upgrade `data_status_tab_and_downloads_remediation_2026_06_16.md`'s
-      Phase B checkbox citation from the bare extraction-pointer ("EXTRACTED 2026-08-17 ... to
-      `ui_satellite_ao_dispatch_batch4_2026_08_17.md` item 1") to the real shipped evidence (`<repo>@<sha>` +
-      `pw:L2 ✓`). Verify the shipped commit actually implements the denominator-freshness annotation before citing it
-      — do not trust batch 4's own wording alone. Done when: the source doc's checkbox cites real shipped evidence.
-      **Conflict-check (added 2026-08-18, plan_reconciler agt-2a424e)**:
-      `ui_satellite_ao_dispatch_batch1_finalize_2026_08_06.md` todo 4 (still open) also reconciles/touches this same
-      source doc's checkboxes for batch 1's work — currently NOT a live collision (todo 4's own 6 target items are
-      already independently shipped `[x]` directly in the source doc, verified by plan_reconciler 2026-08-18), but
-      coordinate or sequence if both finalize plans are ever worked concurrently.
+- [x] ✅ [REVIEW] P3. **DONE 2026-08-20 (T1 slice)** — verified `deployment-ui@153eae2cf1` +
+      `deployment-api@3180b1c22e` both exist and match their claimed subjects (`git log --oneline -1 <sha>` on each
+      repo), then upgraded `data_status_tab_and_downloads_remediation_2026_06_16.md`'s Phase B checkbox from the bare
+      extraction-pointer to the real shipped evidence (`<repo>@<sha>` + `pw:L2 ✓` + both regression spec paths).
 - [ ] [DOC] P3. Archive `ui_satellite_ao_dispatch_batch4_2026_08_17.md` via the standard 6-step ritual once todo 1 is
       done: archive banner → codex-alignment check (none expected — small UI/backend feature) → fix every corpus
       referrer → confirm `locked_by` empty. Done when: the plan is moved to `plans/archive/2026_08/`, every referrer

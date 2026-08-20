@@ -40,7 +40,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 - [ ] [BACKEND] P0. Execute the canonical batch smoke contract for every current non-Databento TradFi row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status.
 - [ ] [BACKEND] P1. Record one testnet verdict for every TradFi venue, distinguishing non-Databento sourcing from the exempt cells; Gate: every distinct venue has a written verdict.
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and mark unavailable accounts BLOCKED-CREDENTIALS; Gate: no venue is silently omitted because it is TradFi.
+- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; Gate: no venue is silently omitted because it is TradFi.
 - [ ] [BACKEND] P1. Track every failed or absent TradFi row with its resolved source and data type; Gate: a declared Databento exemption is never used to hide a non-Databento failure.
 - [ ] [BACKEND] P0. Re-run the source resolver and prove the eight exemption cells are exactly CBOE/CME/NASDAQ/NYSE ohlcv_1m/ohlcv_1s; Gate: a non-exempt negative control fails.
 

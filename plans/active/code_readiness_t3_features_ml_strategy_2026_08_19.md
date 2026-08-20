@@ -178,6 +178,17 @@ todos only to confirm they are data-movement, then leave it.
       retracted there. The counterparty-facing HTTP/WebSocket surface (the second half of the original ask)
       still needs separate real product/security design (auth model, rate limits, what data is exposed) —
       genuinely not attempted, correctly still open.
+- [ ] [BACKEND] P0. **Operator decision 2026-08-20: run BOTH local benchmark-fill settlement AND the new
+      general-instruction publish in live mode** (not skip-settlement) — explicitly needs its own downstream
+      reconciliation logic to avoid double-counting the same trade's position/PnL impact once a real venue fill
+      also comes back through execution-service. NOT built — design + build the reconciliation mechanism before
+      wiring `instruction_publisher` into any real live deployment (it is currently opt-in/unwired in production
+      regardless, per the checkbox above, so this is not blocking today, but IS the prerequisite before someone
+      connects it). Needs: how to correlate a local benchmark fill against the real venue fill for the same
+      instruction (likely `instruction_id`/`correlation_id`), which one is authoritative for PnL once both
+      exist, and whether the local fill becomes a shadow/comparison value rather than a real position delta once
+      live. No existing SSOT covers this — check `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
+      first, it may already define the right pattern for a different reconciliation case.
 - [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
       unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
       edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
@@ -408,6 +419,22 @@ todos only to confirm they are data-movement, then leave it.
       TWR/Notional/PnL-recovery); the one raw-equity HWM implementation found (`pnl_monitor.py:70,201-202`) has
       no confirmed production instantiation site (dead code, not a live violation) and mock_data_provider's is
       explicitly D2-smoke/mock-only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
+      **Operator decision 2026-08-20 (confirmed strategy-service is the right home)**: wire `compute_handler`
+      into a real cron trigger — do NOT delete it. **Operator's own spec for what PnL attribution IS, verbatim,
+      captured here so it isn't lost**: "PnL attribution takes snapshots of market data processing service and
+      feature service data and pretty much tries to attribute it to the total PnL change from account balance
+      changes. We need a PnL total change, and then you attribute it and you get the residual, which is your
+      error, so the error should become zero, of course. We should have alerts in Slack in one of our existing
+      channels that UTS live alerts, probably if the attribution is wrong and broken down by which asset group,
+      deployment, instruments, whatever." Concretely: `total_pnl_change` (from real account-balance deltas) −
+      `sum(attributed factors, from MTDS + features-service snapshots)` = `residual`; residual should trend to
+      ~0 for a correct attribution model; alert to the existing `uts-live-alerts`-style Slack channel (confirm
+      exact channel name — SSOT `/codex/04-architecture/agent-orchestrator-alerting.md`'s adjacent
+      `/codex/04-architecture/ci-alerting.md` doc names the pattern, not necessarily this exact channel) when
+      residual is non-zero beyond a to-be-set tolerance, broken down by asset_group / deployment / instrument.
+      **This is new scope beyond "wire the existing cron"** — the residual-computation + Slack-alerting
+      machinery does not exist yet per this session's investigation; check `compute_handler.py`'s current
+      output shape before assuming what's missing vs already there.
 - [ ] [BACKEND] P0. Build PnL attribution across every dimension the artefacts describe (W13) — currently
       "specified, not built".
 - [ ] [BACKEND] P1. Fix the interest-accrual wrong engine and banned formula. Evidence:
@@ -468,15 +495,39 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Fix the 5 of 7 on-chain feature groups writing byte-identical zero-feature-column parquets
       stamped `captured=True`, plus the 6 false-`captured` rows with zero GCS objects, plus the 4-repo
       `feature_group` vocabulary split. **Re-verified 2026-08-20 — narrower than titled, correctly NOT
-      agent-attempted**: the false-`captured`-rows + consolidator portions already shipped 2026-07-30
-      (`features-service@d8a643a0`). The one remaining piece (build 5 new protocol-specific MTDS chain-field
-      collectors — ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor per on-chain protocol)
-      has been independently re-confirmed FIVE separate times (na-eligibility-audits 07-30, 08-03, 08-06, 08-16,
-      round11-sweep 08-09) as needing a human sizing/scoping decision — which on-chain data source per
-      protocol/field — not a bare mechanical build. Not attempted here for the same reason; a sixth re-derivation
-      of this conclusion would waste the exact effort those audits exist to prevent. The vocabulary-split half
-      also explicitly needs an operator ruling per the doc's own summary. Evidence:
+      agent-attempted before this correction**: the false-`captured`-rows + consolidator portions already shipped
+      2026-07-30 (`features-service@d8a643a0`). The remaining piece (5 protocol-specific on-chain chain-field
+      collectors for ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor) had been
+      independently re-confirmed FIVE times as "needs a human data-source-per-protocol decision" — **that framing
+      was too broad, corrected 2026-08-20 (operator challenge: batch=live symmetry means whatever data source we
+      already have for one mode we should have for the other — investigated rather than re-asserted)**:
+      `execution-service/execution_service/defi_execution/protocols/aave_live.py::get_user_account_data()`
+      already makes a REAL on-chain call (`Pool.getUserAccountData()` via a real Web3 ABI fragment, not
+      simulated) returning exactly `ltv`, `currentLiquidationThreshold`, and `healthFactor` for AAVE_V3 — a
+      proven, working data-source answer the 5 prior audits never found because they only searched inside
+      features-service, not execution-service, for the same technical problem solved for a different purpose
+      (execution needs it for borrow-safety checks; features needs it for feature computation). Grepped the
+      other 6 protocols' execution-service modules (COMPOUND_V3, FLUID, EULER_V2, RADIANT, VENUS, BENQI, MORPHO)
+      for the same pattern — none found; only AAVE_V3 has this today. **Operator decision 2026-08-20: build all
+      7 protocols, not just AAVE_V3** — split into two todos below. Evidence:
       `/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
+- [ ] [AGENT] P0. **Build the AAVE_V3 on-chain feature collector NOW — unblocked, low-risk, pattern already
+      proven.** Mirror `execution-service/execution_service/defi_execution/protocols/aave_live.py`'s exact ABI
+      fragment + `Pool.getUserAccountData(account).call()` RPC pattern (lines ~113-125 for the ABI, ~143-152 for
+      the call + field mapping) inside features-service's on-chain feature engine, producing real
+      `ltv`/`liquidation_threshold`/`health_factor` values instead of the current byte-identical empty parquet
+      for AAVE_V3's feature group. `reward_rate`/`flash_loan_liquidity` are NOT covered by
+      `getUserAccountData()` — still need their own real on-chain source even for AAVE_V3 (check Aave's
+      `AaveProtocolDataProvider`/incentives contracts before guessing). Not a design question anymore for the 3
+      fields `getUserAccountData` answers — a port.
+- [ ] [OPERATOR] P0. **Find each of the other 6 protocols' (COMPOUND_V3, FLUID, EULER_V2, RADIANT, VENUS, BENQI,
+      MORPHO) real on-chain read method for ltv/liquidation_threshold/health_factor(/reward_rate/
+      flash_loan_liquidity where applicable), one at a time, mirroring the AAVE_V3 investigation above** — none
+      have an execution-service equivalent to copy from (confirmed by grep 2026-08-20), so each needs the same
+      "find the real contract call" research AAVE_V3 already had answered for it elsewhere. Operator offered to
+      help identify each protocol's method 2026-08-20 — do this interactively, protocol by protocol, not by
+      guessing an ABI. Once each is found, the collector build itself is the same mechanical port as AAVE_V3
+      above.
 - [x] ✅ [BACKEND] P0. Remove the banned-vendor dependency — `corporate_actions` is sourced exclusively from
       `polygon_corporate_actions_adapter.py` and Massive-fka-Polygon.io is a FLEET-WIDE banned vendor. **SHIPPED
       2026-08-20 — `features-service@fa78040e30`**, unblocked mid-session by operator ruling R6
@@ -506,8 +557,12 @@ todos only to confirm they are data-movement, then leave it.
       session's beta-hedge/vol-target caution. 2 of the doc's todos were already extracted to a dispatched satellite
       batch (archived 2026-08-20). Evidence:
       `/plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md`.
-- [ ] [BACKEND] P1. Give the calendar domain manifest visibility — `economic_events` / `forexfactory` /
-      `corporate_actions` / `earnings_results` never call `record_captured`. Evidence:
+- [ ] [AGENT] P1. **UNBLOCKED 2026-08-20 — operator ruled: YES, calendar belongs in Layer-1** (the event-driven
+      shape doesn't disqualify it; it needs its own shard-atom definition, not exclusion). Give the calendar
+      domain manifest visibility — wire `record_captured` (or the calendar-appropriate equivalent, since the
+      shard-atom is event-driven not per-venue-per-instrument) into `corporate_actions_handler.py`,
+      `economic_results_handler.py`, `forexfactory_handler.py`, and the `calendar_orchestrator.py` dispatch
+      path. Now mechanically buildable — the `[REVIEW]` gate that blocked it is resolved. Evidence:
       `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`.
 - [x] ✅ [BACKEND] P1. Fix the `delta_one` dependency checker resolving the wrong PREDICTION bucket token —
       `_format_template_vars` does a naive `asset_group.lower()` with no abbreviation map, but PREDICTION's real
@@ -864,3 +919,35 @@ forwards every non-LEADER_HEDGE instruction to an optional `instruction_publishe
 `atomic_publisher` seam exactly — additive, opt-in, byte-identical when unset, complementary shard so no
 instruction is ever double-published or dropped. Full detail on the flipped checkbox. The "should live mode skip
 local settlement" question is correctly left for whoever wires this into a real deployment, not decided here.
+
+**Also this session: caught two shipped-but-unflipped checkboxes** (`strategy-service@8a7f80e8`'s two fixes had
+real Progress Log entries but the actual todo checkboxes were never flipped — found only because the operator
+asked "how many tasks are left" and a fresh count exposed the gap) and one duplicate todo tracking the same
+already-resolved config-drift finding twice. Both fixed. **Lesson**: a Progress Log entry is not the same
+artifact as a flipped checkbox — writing the former does not guarantee the latter happened; re-count `- [ ]` vs
+`- [x]` periodically rather than trusting memory of what got flipped.
+
+## Progress Log — 2026-08-20 session 8 (operator design-decision round)
+
+**Operator challenged the "on-chain collectors need a human data-source decision" finding** (independently
+re-confirmed 5× by prior audits) with a sharp, correct instinct: batch=live symmetry means whatever data source
+batch already has, live should too — so why would this be unresolved? Investigated rather than re-asserting: the
+5 prior audits were right that features-service itself has no data source, but wrong to frame it as unknown —
+`execution-service/execution_service/defi_execution/protocols/aave_live.py::get_user_account_data()` already
+makes a REAL on-chain call (`Pool.getUserAccountData()`, real Web3 ABI, not simulated) answering `ltv`/
+`liquidation_threshold`/`health_factor` for AAVE_V3. **Lesson**: "needs a data-source decision" claims should be
+checked against SIBLING repos solving the same underlying technical problem for a different purpose, not just
+re-confirmed within the one repo that's missing it — the same real-world fact (how to read Aave's account data)
+existed in the codebase the whole time, just in execution-service instead of features-service. The other 6
+protocols (COMPOUND_V3, FLUID, EULER_V2, RADIANT, VENUS, BENQI, MORPHO) do NOT have an execution-service
+equivalent (confirmed by grep) — for those, the "needs investigation" framing was and remains correct.
+
+**Four operator design decisions resolved this session, todos updated accordingly** (see each item above for
+full detail): (1) build all 7 on-chain protocol collectors, starting with AAVE_V3 now (pattern proven) and the
+other 6 interactively with operator help finding each real read method; (2) run BOTH local settlement AND the
+new publish seam in live mode — needs a downstream reconciliation mechanism, not yet built; (3) calendar data
+DOES belong in Layer-1 honest-coverage — the manifest-visibility wiring is now mechanically buildable, not
+design-gated; (4) wire `compute_handler` into a real cron trigger (confirmed strategy-service is correct), plus
+a full operator-specified PnL-attribution design (residual = total PnL change − sum(attributed factors) →
+should trend to ~0; Slack-alert on non-zero residual broken down by asset_group/deployment/instrument) captured
+verbatim on that todo — this is new scope beyond "wire the existing cron", not yet built.

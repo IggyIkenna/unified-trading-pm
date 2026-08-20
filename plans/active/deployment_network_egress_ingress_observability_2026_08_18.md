@@ -25,7 +25,7 @@ related:
   ]
 created: 2026-08-18
 last_updated: 2026-08-18
-parent_epic: infrastructure_master
+parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1
@@ -246,11 +246,9 @@ per-VM resource tables), no new codex doc (extends `deployment-observability.md`
       correct (`avg_cpu_pct=15.1%, avg_mem_pct=7.5%, avg_disk_pct=1.9%` — consistent with a healthy low-utilization
       backfill VM, no rightsizing flag warranted for this VM), returned in the same query alongside the new net
       recv/sent fields with no SQL errors. No regression.
-- [ ] [DOC] P2. Flip `parent_epic` from `infrastructure_master` back to `security_and_cross_cutting_master` once the
-      in-flight epic taxonomy restructure (`epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`) lands the new
-      epic slug on origin — it wasn't committed yet at plan-commit time (2026-08-18), so `infrastructure_master` (old
-      taxonomy) was used temporarily to pass `check_ag_closeout_linkage`/schema validation. Gate: `parent_epic` reads
-      `security_and_cross_cutting_master` and `plan-hygiene` passes clean.
+- [x] ✅ [DOC] P2. **DONE 2026-08-20 (T1 slice)** — Flipped `parent_epic` from `infrastructure_master` to
+      `security_and_cross_cutting_master`. `plans/epics/security_and_cross_cutting_master.md` now exists on origin
+      (the epic-taxonomy-restructure landed since 2026-08-18), so the gate this todo was waiting on is met.
 
 ## Progress Log
 
@@ -323,3 +321,9 @@ inspect one real row's `jsonPayload` shape, write the aggregation query/worker a
 verify Track 2's 2 remaining VPC-Flow-Logs todos, then the 3 closing-the-loop todos in the stated order, then archive
 this plan per the standard 6-step ritual.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-20 (T1 slice)**: Re-ran the doc's own recommended recheck query
+  (`logName="...compute.googleapis.com%2Fvpc_flows"`, `--freshness=6h`) — **still 0 entries**, ~2 days after the
+  original `--enable-flow-logs` patch. The platform-level anomaly has not self-resolved; per the doc's own
+  instruction not to re-attempt the already-exhaustive config-level diagnosis, this stays parked pending the
+  operator opening a GCP support case. Separately, flipped `parent_epic` (see the todo above) — the epic-taxonomy
+  restructure this was waiting on has landed since 2026-08-18.
