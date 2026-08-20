@@ -517,7 +517,22 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [BACKEND] P0. Implement per-venue error codes and classify through UAC `classify_venue_error()`. Shard-level
       failure isolation, no `raise` in per-shard loops. SSOT:
-      `/codex/04-architecture/shard-level-failure-isolation.md`.
+      `/codex/04-architecture/shard-level-failure-isolation.md`. **Re-measured 2026-08-20: `classify_venue_error`
+      is already widely adopted (20 files: sports adapters, DeFi protocols, trade_execution adapters, the engine
+      orchestrator/router) — this was NOT unbuilt from scratch, contrary to the todo's original framing.** Audited
+      real per-venue loops for the actual "no raise in per-shard loop" invariant instead (`grep -rn "for venue in"`,
+      ~20 sites) and found + fixed one genuine, safety-relevant violation: `OrderRecoveryEngine.recover_venue()`
+      (`execution_service/engine/startup/order_recovery.py`) only wrapped `fetch_open_orders()` in a try/except —
+      `_reconcile_exchange_orphans`'s `cancel_order()`/`confirm_cancel()` calls were NOT wrapped, so any venue-
+      adapter exception there propagated uncaught through `run()`'s `for venue in venues:` loop, silently
+      abandoning recovery for every venue queued after the failing one on startup. Fixed — `execution-service@ff0b43b5d3`
+      — extracted `_reconcile_venue_orders()` (kept `recover_venue` under the 50-line cap), wraps the whole
+      reconciliation body, records via the file's own existing `CanonicalNetworkError` + `cb.record_failure()`
+      pattern (not `classify_venue_error` — that's a vendor-error-CODE classifier, doesn't fit an arbitrary Python
+      exception; kept consistent with this file's own established convention instead). New regression test proves
+      one venue's failure does not abort the second venue in `run()`. **Not done**: a full audit of the other ~19
+      "for venue in" sites for the same class of bug — this fixed the one found to be genuinely unsafe, not a
+      sweep of every site.
 - [ ] [BACKEND] P0. Pin the exchange version per venue and re-run cassettes on drift, so a silent venue-version
       change cannot go undetected (W14). No owning plan existed at authoring time.
 - [ ] [BACKEND] P0. Run a security audit of EVERY venue adaptor, especially DeFi, covering every on-chain write
@@ -709,6 +724,7 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `unified-trading-pm@0db97a5b47` | codex audit: `account-instructions.md`'s authorization table + audit section annotated as design-target-not-shipped (verified against the real `AccountInstructionOrchestrator.dispatch()`) |
 | `unified-trading-pm@8d47cf3393` | readiness-dump `execution_instruction` leg now calls the real per-venue-per-mode check (`execution_service.readiness.instruction_path`, shipped `execution-service@b70d2edb16` but never wired in) instead of a hardcoded venue-independent unverified — new `_execution_instruction_path_probe.py`, `checks.py`/`derive_readiness.py` updated; independently re-verified live after landing |
 | `unified-trading-pm@78508ce4e7` | artefact-marker sub-agent audit: fixed 2 factually-wrong prose claims in `platform-external-api-walkthrough.html` (QUOTE falsely listed as still-501; the 864-rows-unverified claim falsely said the check doesn't exist) |
+| `execution-service@ff0b43b5d3` | shard-level failure isolation fix: `OrderRecoveryEngine.recover_venue()` no longer lets one venue's reconciliation exception abort recovery for every other venue on startup; new regression test |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
