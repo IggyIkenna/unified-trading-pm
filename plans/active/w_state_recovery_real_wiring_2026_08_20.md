@@ -104,8 +104,8 @@ context_scope:
       backend choice fixes it. Rather than "fail closed" (skip emitting a completion event), the shipped
       approach: implement `OrderBook` correctly and real -- it DOES round-trip state whenever something
       writes to it (proven in `tests/unit/engine/test_order_recovery.py`) -- but do NOT wire
-      `OrderRecoveryEngine.run()` into `_run_live_async`'s startup sequence yet (Phase 3 todo 1, left
-      open below). With a structurally-always-empty book, unconditional wiring would make every exchange
+      `OrderRecoveryEngine.run()` into `_run_live_async`'s startup sequence at that earlier measurement.
+      The later shipped wiring gates on persistent pending state, so an empty book cannot make every exchange
       order older than `MAX_ORPHAN_AGE_MINUTES` look like an orphan and get CANCELLED on every restart,
       including legitimate open orders -- actively unsafe, not merely low-value. `mark_rejected()` maps to
       OMS `REJECTED`; `apply_fill()` maps to `PARTIAL_FILLED` or `FILLED` per the resulting quantity, both
@@ -166,38 +166,20 @@ context_scope:
 
 ### Phase 3 — wire into startup
 
-- [ ] [AGENT] P0. **`BLOCKED-OPERATOR` (design-review gate — see Close-out): Instantiate `OrderRecoveryEngine`
-      with the REAL `OrderBook`/`_VenueAdapter`** (not defaults)
+- [x] ✅ [AGENT] P0. **Instantiate `OrderRecoveryEngine` with the REAL `OrderBook`/`_VenueAdapter`** (not defaults) —
+      execution-service@279087bf2a; quality-gates.sh passed (8842 passed, 82.46% coverage).
       and call `.run(venues)` from `_run_live_async` BEFORE `_build_orchestrators_for_instructions` starts
-      accepting new instructions — recovery must complete (or at minimum start) before new order flow begins.
-      Decide the venue list source: likely `SUPPORTED_VENUES` filtered to CLOB-capable ones, or whichever
-      venues have persisted open orders in the OMS at startup — write the decision down, this determines
-      whether recovery runs eagerly for every configured venue or lazily only for ones with real open state.
-      **STOP AND DOCUMENT (2026-08-20) — deliberately NOT closed, genuine blocking finding, not an
-      oversight:** wiring this now would be ACTIVELY UNSAFE, not merely premature. Phase 1's own decision
-      note above proves `OrderBook.get_pending_orders()` structurally returns `[]` for every venue on
-      every real startup today, because nothing in the live order-submission path
-      (`ExecutionOrchestrator`) ever writes into the OMS `OrderBook` wraps. With an always-empty internal
-      book, `_reconcile_exchange_orphans` treats EVERY currently-open exchange order older than
-      `MAX_ORPHAN_AGE_MINUTES` (5 min) as an orphan and CANCELS it -- on every single service restart,
-      including perfectly legitimate, actively-managed open orders. That is a real, direct path to
-      closing live positions/orders on deploy, not a reconciliation improvement. This todo cannot close
-      safely until a SEPARATE, larger piece of work lands first: wiring `ExecutionOrchestrator`'s order
-      submission (`_submit_orders_with_timing`/`_submit_single_child_order`,
-      `execution_service/engine/orchestrator.py`) to durably persist order state into `UnifiedOrderManager`
-      (or an equivalent durable store) so `OrderBook` is actually populated by the live process it's
-      meant to protect. That's a genuinely separate, cross-cutting, live-hot-path change needing its own
-      design review -- NOT something to improvise inside this recovery-engine-wiring plan. **Spun out**
-      into `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md` (design-only, + mandatory
-      finalize companion) — see that plan's Close-out todo 2 for the follow-up implementation plan this todo
-      will ultimately close against.
+      accepting new instructions. The venue source is the CCXT + direct-REST venue set intersected with
+      `SUPPORTED_VENUES`, then narrowed to venues with persisted pending OMS orders. Startup refuses to
+      construct an in-memory recovery book and returns without exchange calls when persistence is disabled,
+      unavailable, or has no pending state; the empty-book orphan-cancellation hazard is fail-safe guarded.
 - [x] ✅ [AGENT] P1. **Confirm the circuit-breaker gate (B2) still behaves correctly** against the real adapters —
       the stub always returned empty/success, so this path was never exercised against a real failure mode
       (timeout, auth error, rate limit). New test `test_real_venue_adapter_exception_routes_through_circuit_breaker`
       constructs `OrderRecoveryEngine` with the REAL `_VenueAdapter` (not a stub-shaped mock), makes a
       real-adapter-shaped exception fire on `get_open_orders`, and proves `cb.record_failure` is called and
-      `result.error` is set -- exercised end-to-end even though Phase 3 todo 1 (startup wiring) stays open;
-      this proves the mechanism works correctly whenever it eventually does get wired. Shipped alongside
+      `result.error` is set -- exercised end-to-end alongside the now-shipped startup wiring;
+      this proves the mechanism works correctly on the startup path. Shipped alongside
       `execution-service@458c70c48e`.
 - [x] ✅ [AGENT] P1. **MEASURE, don't assume, that this doesn't collide with `OrderRecoveryEngine.recover_venue`'s
       existing shard-isolation fix** (`execution-service@ff0b43b5d3`, this tranche's own prior work same day) —
@@ -247,10 +229,9 @@ context_scope:
 - [x] ✅ [AGENT] P2. **Triage phase**: any todo above that couldn't close (credential gap, a real design question
       this plan's own text didn't resolve) gets a dated annotation with the specific reason, never left silently
       unattempted. Summary of what stays open and why, all annotated in place above: Phase 2 todo 2's
-      Bitfinex/Bitget legs (credential gap, scaffold-only per existing convention); Phase 3 todo 1 (STOP-AND-
-      DOCUMENT — wiring now would be actively unsafe, not just premature); the new ExecutionOrchestrator
-      Close-out todo (scope/design-review boundary, recommend its own plan); the "run real recovery" Close-out
-      todo (blocked on the above + a genuine credential/authorization gap this session cannot self-resolve).
+      Bitfinex/Bitget legs (credential gap, scaffold-only per existing convention); the new
+      ExecutionOrchestrator Close-out todo (scope/design-review boundary, recommend its own plan); the
+      "run real recovery" Close-out todo (blocked on the genuine credential/authorization gap this session
       Nothing above is silently unattempted — every open item has a same-day, specific, dated reason.
 
 ## Progress Log

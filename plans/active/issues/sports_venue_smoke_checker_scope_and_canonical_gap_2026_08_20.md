@@ -88,7 +88,7 @@ after those gates fail closed on the `No active venues`/zero-row case.
       separately (repo: market-tick-data-service; supporting contract: unified-api-contracts).
 - [x] [BACKEND] P0. Implement and run a Sports canonical-path verification leg that checks the actual test-bucket
       object against the applicable UAC machine oracle or Sports writer template, and fails closed when no object/row is
-      produced (repo: market-tick-data-service) — market-tick-data-service@70d0c7ed + runtime report
+      produced (repo: market-tick-data-service) — market-tick-data-service@01745226fa + QG=11102 passed, 28 skipped, 1 xpassed, 19 warnings; runtime report
       `data_pipeline_e2e_check_mtds_2025_12_20.md` (`canonical_no_matching_objects_in_test_bucket`, fail-closed).
 - [ ] [DATA] P1. Reconcile the 96 observed Sports `(venue, data_type)` cells absent from the UAC registry against the
       canonical venue/data-type declarations; either register them with source-scoped capabilities or classify them as
@@ -110,3 +110,6 @@ after those gates fail closed on the `No active venues`/zero-row case.
   `SPORTS:PINNACLE:odds` on `2025-12-20`; test-bucket consolidation succeeded (`shards=1 rows_in=1200 rows_out=1200`),
   but no matching `data_type=odds` object existed, so the report returned
   `canonical_no_matching_objects_in_test_bucket` with `status=failed`, proving the zero-object fail-closed gate.
+
+
+- **2026-08-20 — slot-18:** Final scoped quickmerge landed on LDR as `market-tick-data-service@01745226fa`; full QG passed with 11,102 tests passed, 28 skipped, 1 xpassed, and 19 warnings.
