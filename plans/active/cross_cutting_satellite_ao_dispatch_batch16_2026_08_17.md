@@ -108,7 +108,7 @@ source: >-
       changing canonicalization necessarily invalidates those historical hashes. The source’s count of 11 is not
       reproducible from the two cited audit commits (the replay yields 6 mismatches at the second-pass snapshot), so
       the unaccounted case must be recovered from the original audit output before treating it as a new cause.
-- [ ] [SCRIPT] P2. **Once item 3 above is fully root-caused, implement the complete fix in `generate_na_doc_tranche_inventory.py`
+- [x] ✅ [SCRIPT] P2. **Once item 3 above is fully root-caused, implement the complete fix in `generate_na_doc_tranche_inventory.py`
       and audit the 5 other importers for a duplicated reimplementation.** **Ordering NOT machine-enforced**: no
       `sequential:`/`gate_on_depends` links this todo to item 3 above — both are P2 same-priority in this plan and
       would dispatch concurrently under the default same-priority-concurrent rule, risking two workers editing
@@ -125,7 +125,9 @@ source: >-
       of the 5 importers is confirmed to import (not reimplement) the fixed logic, or is itself fixed if it
       doesn't. Source:
       `/plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md` todo 2. Repo:
-      unified-trading-pm.
+      unified-trading-pm@70fc5408f1 — QG: 2155 passed, 17 skipped; focused repeated-marker and same-date-marker
+      smoke checks passed. Audited all 5 named importers: `na_marker_helper.py` imports the shared implementation;
+      the other 4 contain no duplicate body-hash or verdict-marker parser.
 
 ## From `venue_readiness_and_registry_hardening_2026_08_16.md`
 
@@ -165,3 +167,4 @@ source: >-
   explains why the earlier marker is selected instead of the latest. No additional parser shape was found. The
   claimed 11-document population cannot be reconstructed from the cited commits; the “0/11” candidate-fix result
   compares new canonical hashes with old-function marker hashes and therefore cannot establish a third cause.
+- **2026-08-20 (infra worker, slot 17)**: Implemented and shipped the complete marker-hash fix in `unified-trading-pm@70fc5408f1`. The implementation consumes separator blanks between stacked bookkeeping markers, selects the latest same-date verdict marker, and retains shared importer usage. Full QG passed: 2155 tests passed, 17 skipped; focused repeated-marker and same-date-marker smoke checks passed.
