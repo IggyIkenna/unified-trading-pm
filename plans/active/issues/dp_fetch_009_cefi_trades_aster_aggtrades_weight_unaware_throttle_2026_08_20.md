@@ -141,7 +141,7 @@ non-throttled window.
       unchanged (2000/min ceiling never engages below the existing 10 req/s=600/min pace for
       weight-1 calls). Wired `AsterAdapter._agg_trades_page()`'s `throttle()` call to
       `weight=20.0`, the measured live value.
-      **DONE 2026-08-20 — `market-tick-data-service@<pending quickmerge>`.**
+      **DONE 2026-08-20 — `market-tick-data-service@8d51b537ef`.**
 - [ ] [DATA] P2. **Not investigated here (out of scope for this escalation's fresh-population
       diagnosis)**: whether the OTHER Aster endpoints this adapter calls (funding-rate/premiumIndex
       at `limit=1500`, exchangeInfo symbol lookups) also carry a weight >1 that the default
