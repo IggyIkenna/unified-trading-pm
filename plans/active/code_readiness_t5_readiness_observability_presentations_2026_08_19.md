@@ -347,14 +347,22 @@ todos only to confirm they are data-movement, then leave it.
       full per-leg table cited above — "Re-point the effort at strategy position-adapter coverage" is now the
       coordinator's own stated position, not just this tranche's finding.
 
-- [ ] [BACKEND] P1. Fix the execution-service capability probe failing on the full-fleet run. In the 288-venue run
+- [x] [BACKEND] P1. Fix the execution-service capability probe failing on the full-fleet run. In the 288-venue run
       `_execution_order_capability_probe.py` exited 1 with `No bucket configured for market_data/defi and no
       project ID available`, so `execution_orders` / `execution_fills` / `execution_trades` /
       `execution_account_balance` all reported `unverified=864`. The same probe SUCCEEDS on a single-venue run
       (`--venue OKX-FUTURES` derives `execution_orders=ready` at PAPER and LIVE via
       `validate_operation(place_order, env=testnet|mainnet)`), so this is environmental, not a missing capability.
       The dump degrades honestly, but the published execution-leg counts are a FLOOR, not a measurement — do not
-      quote them as capability until this is fixed.
+      quote them as capability until this is fixed. **Already fixed, earlier this session** — the "no bucket
+      configured" line was a misleading benign log, not the crash cause; the real cause was
+      `_place_order_supported()` catching only `UnsupportedOperationError`, not the sibling
+      `UnsupportedEnvironmentError` a no-testnet venue (e.g. upbit) raises, crashing the whole subprocess on the
+      first such venue and degrading every venue after it. Fixed by catching both (see the function's own
+      docstring in `_execution_order_capability_probe.py`). Re-confirmed live 2026-08-20 (full 288-venue run, no
+      `--skip-execution-probe`): zero "no bucket configured" errors, real per-venue variance
+      (`execution_orders ready=29 not_ready=829 unverified=30`, `execution_fills ready=0 not_ready=816
+      unverified=72`) — a genuine FLOOR measurement now, not a crash artifact.
 - [ ] [BACKEND] P1. Resolve the per-venue and per-data-type cells that remain pending at the finer grain inside each
       readiness tree.
 - [ ] [BACKEND] P1. Fix the tree gaps the artefacts name explicitly — Scroll and zkSync read `unverified — declared,
@@ -390,7 +398,10 @@ todos only to confirm they are data-movement, then leave it.
       `dump_coverage.py`'s human output prints all four states plus a
       `not-expected (stray) = N, Layer-1 holes (missing_tuples) = N` line per asset_group. Nothing to build.
 - [ ] [BACKEND] P1. Close the remaining data types the artefacts mark pending — on-chain, sports odds, prediction
-      and TradFi vendor datasets.
+      and TradFi vendor datasets. **BLOCKED-STANDING-RULE**: this is data capture/backfill, explicitly banned for
+      this tranche ("Do NOT run backfills, manifest migrations, corpus sweeps or GCS deletes" — operator ruling
+      2026-08-19). "Backfills still running" is itself one of the five allowed pending states for the artefacts —
+      not something T5 closes, something T5 reports honestly as in-progress.
 - [ ] [BACKEND] P1. Resolve the manifest-hygiene red findings. Evidence:
       `/plans/active/issues/manifest_hygiene_red_all_2026_08_17.md`, `/plans/active/issues/manifest_hygiene_red_all_2026_08_18.md`.
       **Re-checked 2026-08-20**: the 2026-08-18 doc is `status: resolved` (duplicate, closed). The 2026-08-17 doc
