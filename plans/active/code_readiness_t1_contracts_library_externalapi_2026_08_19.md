@@ -673,3 +673,41 @@ todos only to confirm they are data-movement, then leave it.
   "launch T1 first — four blocking edges terminate here". If another agent is also on T1, that agent should
   re-read this log before editing UAC/UTL.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- 2026-08-20 — **SECOND PRE-COMPACT CHECKPOINT — merges an audit run by a concurrent peer session sharing this
+  slot with this session's own subsequent work.** 18 done / 19 open on this plan as of this entry (peer's own
+  snapshot read 16/21 — three items it listed "actionable now" were closed by this session AFTER that snapshot:
+  venue→chain SSOT + VenueFeature/VenueCapability overlap (`unified-api-contracts@0d7afa29e`) and the
+  coverage-floor-registries P1 (`unified-trading-pm@26b8b3ed64`, closed by measurement — already resolved weeks
+  earlier). **Do not re-open or re-work those three** — the peer's "actionable now" list is stale on exactly
+  those items; everything else in it still stands.
+  **Audit (Step 1)**: all three touched repos (`unified-api-contracts`, `unified-trading-library`,
+  `unified-trading-pm`) confirmed clean, `ahead=0`, verified against `origin` content directly (not exit codes).
+  53 scratchpad files, all disposable probe scripts/QG-log captures — every finding already landed in a commit
+  message or this Progress Log; none referenced by path from any committed doc. No secrets, no chat-only findings.
+  **Lessons carried forward from the peer session's audit (verified still accurate, not re-derived)**:
+  - The plan's own citations of "Q12-Q16" for `reference_position`/`credit` are STALE. The actual current
+    blocker is `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` §15 ("OPEN —
+    needs an operator ruling next session"), which supersedes Q12-Q16 with a full FACTOR-STATE MODEL (§11-14,
+    shipped this session) and its own 4 named open questions plus 5 outstanding Wave-0 rulings. Read §11-14
+    before touching that todo again — it is a real design, not a stub. Worth checking (not yet done): whether
+    the `delta`/`gamma`/`underlying_instrument_id` fields already shipped on `QuoteInstruction`
+    (`unified-api-contracts@6be4b136d7`) are a valid special case of the §11 model or need revisiting once it's
+    formally adopted.
+  - `unified-api-contracts` quality-gates.sh runs 180-1076s (contention-dependent) — ALWAYS background it, never
+    foreground (this session independently hit the same 120s-foreground-cap lesson via a SIGTERM'd first attempt
+    early on).
+  - **This slot has a genuinely concurrent peer session actively working the SAME T1 plan.** `git pull --ff-only`
+    immediately before every plan edit; expect conflicts; resolve ADDITIVELY (never blind-overwrite) — this
+    session hit and cleanly recovered from exactly this twice (a `check_todo_regression` catch on its own
+    provenance-preservation edits, and a `SELF-INFLICTED CONFLICT MARKER` auto-recovery on the FACTOR-STATE MODEL
+    ship). `VenueType = {SINGLE_VENUE, META_BROKER, DATA_AGGREGATOR}` vs `VenueCategoryV2 = {CEFI, DEFI, ...}` are
+    easy to confuse in test fixtures — cost the peer session one failed run.
+  - **This session's own lesson, not yet in the peer's list**: before treating a locally-missing change as a
+    revert/data-loss event, run `git log HEAD..origin/<branch>` FIRST. This session spent real effort
+    reconstructing `TransferCapabilityV2` from a diff already in context after it "disappeared" locally — it had
+    actually already landed via this SAME slot's earlier (compacted-out) work (`unified-api-contracts@45a545e5ad`)
+    minutes before this checkpoint's predecessor was written; the "revert" was just the working tree resetting to
+    post-commit-clean state. A same-slot earlier-session commit reads identically to a hostile revert until you
+    check the log.
+  **Verdict: Safe to compact: YES.** All shipped work committed and pushed, `ahead=0` on every touched repo,
+  verified against actual trunk content.
