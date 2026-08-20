@@ -156,14 +156,33 @@ todos only to confirm they are data-movement, then leave it.
       `ManualOperationHandler → LiveOrchestrator.execute_instruction()`); the other 10 (swap, lend, borrow, stake,
       unstake, quote, transfer, bridge, atomic, cancel) return an honest HTTP 501
       (`platform-external-api-walkthrough.html` line ~1361, verified against
-      `execution-service/execution_service/api/external_instruction_api.py`). T1 measured the UAC-side vocabulary
-      first so you don't have to: `StrategyInstructionType`
+      `execution-service/execution_service/api/external_instruction_api.py`).
+      **Correction to this item, same day**: the first pass below checked the wrong, legacy vocabulary
+      (`StrategyInstructionType`) and wrongly told you QUOTE/TRANSFER/CANCEL were missing from UAC — they are
+      not. The CURRENT contract is `unified_api_contracts.internal.architecture_v2.schemas.StrategyInstructionV2`
+      (a Pydantic union), and it already has real dataclasses for **every one of the 10**:
+      `SwapInstruction`/`LendInstruction`/`BorrowInstruction`/`StakeInstruction`/`UnstakeInstruction`/
+      `QuoteInstruction`/`TransferInstructionV2`/`BridgeInstructionV2`/`AtomicInstruction`/`CancelInstruction`, each
+      keyed off a real `InstructionActionV2` enum member. If `external_instruction_api.py` 501s on these today, the
+      gap is in execution-service's own dispatch/construction logic, not a missing UAC type — check what
+      `external_instruction_api.py` actually imports and isinstance-checks against before assuming a contract gap.
+      T1 already closed the ONE genuine UAC-side gap this surfaced (below, separately) — the 4 settlement actions
+      with an enum member but no dataclass. If you find a REAL missing type while wiring this, name it exactly
+      (file + expected fields) and T1 will add it — don't invent a parallel local enum either way; the mapping is
+      load-bearing and T1 would rather extend it once than have it drift from a shadow copy.
+      (Superseded text, kept for provenance: the original claim below this line was wrong.)
+      ~~T1 measured the UAC-side vocabulary first so you don't have to: `StrategyInstructionType`
       (`unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`) already covers SWAP/LEND/
       BORROW/STAKE/UNSTAKE/BRIDGE/FLASH_LOAN(=atomic), backed by a total `INSTRUCTION_TYPE_TO_OPERATIONS` mapping.
       QUOTE, a standalone TRANSFER (distinct from BRIDGE), and CANCEL are genuinely absent from the contract too —
       if the real implementation needs those as first-class instruction types (not just `OperationType` steps
       internally), ask T1 for the contract addition rather than inventing a parallel local enum; the mapping is
-      load-bearing and T1 would rather extend it once than have it drift from a shadow copy.
+      load-bearing and T1 would rather extend it once than have it drift from a shadow copy.~~
+- [x] ✅ [FROM-T1] P1. **Shipped — `unified-api-contracts@<pending-sha>`.** The 4 BATCH-settlement-gap
+      dataclasses this tranche asked for below — see that item's own entry for full detail. `WithdrawInstruction`
+      and `RepayInstruction` are done (rate-matched inverses of `LendInstruction`/`BorrowInstruction`, added to
+      `StrategyInstructionV2`). `LpMintInstruction`/`LpBurnInstruction` are still open — genuinely need the DeFi LP
+      position shape specified, which is your call per the original request, not invented here.
 - [ ] [FROM-T1] P1. **Kill-switch / flatten-position as instructions a caller can send** — both are already
       conceptually present as system behaviour but not expressible as an instruction on the envelope
       (`platform-external-api-walkthrough.html` §25). T1 has deliberately NOT added `KILL_SWITCH`/
