@@ -449,3 +449,11 @@ down" narrative.
   `__init__.py` running first; any future bisection needs to control for that, not assume isolation is possible.
   Not pursued further this tick — the search space is now known to be much larger than one 37-entry list, and
   finding the real culprit warrants its own dedicated pass, not a quick follow-up.
+- **2026-08-20 — post-phase codex audit: stubbed the new pattern.** This whole effort had no codex SSOT — the
+  pattern, the two conversion pitfalls, and the top-level file's known-broken state all lived only in this plan's
+  Progress Log, which archives when the plan does. Wrote
+  `/codex/06-coding-standards/uac-init-lazy-loading-pattern.md` covering the `_LAZY_EXPORTS`/`__getattr__`/
+  `TYPE_CHECKING` pattern itself, the shipped-file table with shas, the top-level file's do-not-retry-without-
+  reading-this warning, both real bugs found (submodule-name collision, statement-ordering-before-`__getattr__`),
+  and the going-forward convention for adding new exports. Anyone picking up the top-level file next should start
+  there, not re-read this entire plan.
