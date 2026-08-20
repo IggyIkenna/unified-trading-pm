@@ -117,6 +117,13 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
       line, no Progress Log ruling record) — resolved 2026-08-12: the operator confirmed option A is the standing
       ruling. The breaking UAC change itself is NOT done here — only the doc-level contradiction is resolved; the
       rollout (consumer audit + migration + enum change) remains open work.
+      **UPDATE 2026-08-20 (T1 slice)**: UAC's own consumer audit is done — `unified-api-contracts`'s 14 internal call
+      sites (all 12 `external/*/normalize.py` venue adapters + `normalize_utils/_helpers.py` + the
+      `canonical/domain/execution/base.py:229` default) migrated from `OrderStatus.PENDING`/`.OPEN` to the canonical
+      `.PENDING_NEW`/`.NEW`. Non-breaking (the aliases are unchanged, still `is`-identical) — see
+      `unified-api-contracts@<pending, see Progress Log>`. **T4 tail unchanged and still open**: the 24
+      `execution-service` call sites + eventual alias deletion remain
+      `/plans/active/code_readiness_t4_execution_settlement_2026_08_19.md`'s scope, not this doc's.
 - [x] [TEST] P2. **DONE — shipped at a different (correct) path**, same commit `unified-api-contracts@a3c572f8`:
       `unified-api-contracts/tests/unit/test_order_state_machine.py` (109 lines, 9 tests, pins every enum member
       against the codex state table). Not at the originally-named `execution-service/...` path because the enum

@@ -690,18 +690,40 @@ are unaffected.
         work account in Google's chooser each sign-in. Declined both (b) (allowlisting the personal Gmail — a real
         access-grant expanding who can trigger prod deploys/kill-switches) and (c) (an `hd` hosted-domain hint biasing
         the account chooser). No further action.
-  - [ ] [BACKEND] P2. **ADDED 2026-08-18, NOT investigated — deliberately scoped out of this session's fix.**
-        `deployment-ui/src/api/clientReporting.ts`'s `crFetch()` calls `client-reporting-api` (a DIFFERENT Cloud Run
-        service from deployment-api, default `VITE_CLIENT_REPORTING_API_URL=http://localhost:8014`) with NO
-        Authorization header — same shape as the ~24-file gap this session fixed elsewhere, but deliberately left
-        alone here because `client-reporting-api`'s own auth model was never established (does it even have an
-        `_authenticated_router`-equivalent gate? does it accept the same Firebase token deployment-api does, or
-        something else entirely?). **Done when**: determine whether `client-reporting-api`'s
-        `/api/v1/clients/{client_id}/nav|pnl|positions|attribution|hwm-timeline` routes require auth at all today; if
-        they do, thread `authHeaders()` (deployment-ui/src/auth/GoogleAuth.tsx) through `crFetch()` the same way, and
-        confirm `client-reporting-api` actually accepts a Firebase Bearer token (it may need its own
-        `verify_firebase_token`-equivalent — do not assume it already has one). (repos: client-reporting-api,
-        deployment-ui)
+  - [ ] [OPERATOR-DECISION] P2. **INVESTIGATED 2026-08-20 (T1 slice) — the "done when" premise was wrong; this is a
+        design call now, not a mechanical thread-through.** Confirmed live in code (not assumed):
+        `client-reporting-api/api/main.py:169-192` DOES gate `nav|pnl|positions|attribution|hwm-timeline` (and every
+        other `/api/v1/clients/*` route) behind `_authenticated_router` + `create_api_auth("client-reporting-api")`.
+        But `create_api_auth` (`unified-trading-library/unified_trading_library/cloud_interface/api_auth.py:300-350`)
+        accepts exactly 4 credential types: `DISABLE_AUTH` mock, `X-Service-Token` (S2S), `X-API-Key` (legacy), or an
+        **HS256-signed Bearer JWT minted by this service's OWN `/auth/login`** (`create_auth_router`) — it has **no
+        Firebase-verification path at all**, unlike deployment-api's `verify_any_auth`. So "thread `authHeaders()`
+        through `crFetch()`" as originally scoped **would not work**: `authHeaders()` sends a Firebase ID token
+        (RS256, Google-issued), which `create_api_auth`'s JWT decode would simply reject — different signing scheme,
+        different issuer entirely, not a config gap.
+
+        There's also an architecture wrinkle the original todo didn't surface: `crFetch()`'s base URL
+        (`VITE_CLIENT_REPORTING_API_URL`) is a `VITE_`-prefixed env var, meaning it's baked into the **public browser
+        bundle** — this is a direct browser→client-reporting-api call, not proxied through deployment-api's backend.
+        Any of `X-Service-Token`/`X-API-Key` embedded client-side would be readable by anyone who opens devtools, so
+        those two credential types are unsafe to use here regardless of the Firebase question.
+
+        Three real options, none of them a same-session mechanical fix:
+        - **A** — Add Firebase-token acceptance to `client-reporting-api`'s auth (mirror deployment-api's
+          `verify_any_auth`/`verify_firebase_token` pattern). Cleanest long-term, but `client-reporting-api` is not a
+          T1-owned repo and this is a real backend auth-surface change there, not a config tweak.
+        - **B** — Proxy client-reporting-api calls through deployment-api's own backend (which already has a working
+          Firebase-verified session) instead of calling client-reporting-api directly from the browser. Fixes the
+          bundled-URL exposure too, but is a bigger architecture change (new deployment-api routes + a server-side
+          client-reporting-api credential deployment-api holds, not the browser).
+        - **C** — Have the SPA complete client-reporting-api's own `/auth/login` flow separately and hold a second
+          token alongside the Firebase one. Avoids touching either backend, but means the operator authenticates
+          twice against two different identity systems for one console — worse UX, two credential lifecycles to keep
+          in sync.
+
+        No operator ruling recorded yet — retagged `[BACKEND]`→`[OPERATOR-DECISION]` since which of A/B/C to build is
+        a real design call, not something to guess at. (repos: client-reporting-api, deployment-ui,
+        unified-trading-library)
 
   **Found, flagged, no operator decision yet — not actioned**: 3 stale tagged Cloud Run revision URLs
   (`prd-sa-precutover`, `predeploy-verify`, `sports-fix-verify`) on `uts-shared-deployment-api`, pointing at old
