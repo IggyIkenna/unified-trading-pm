@@ -94,6 +94,14 @@ purpose was installing this timer). The `mode="cefi_mtds_smoke"` dispatch handle
 `agents/cefi_mtds_smoke_tester.md` role are left intact (unused without a timer, but not deleted — no code/test cleanup
 was in scope for this decision).
 
+**Track B health audit (2026-08-20)**: every job in this table (minus the retired one above) was audited for the same
+review-gate-starves-escalation failure class `plan_reconciler` had before its 2026-08-16 graduation to direct-push —
+none reproduce it; every job ships direct via `quickmerge.sh --agent --files`, none route through a review-branch/PR
+gate. Two smaller gaps found instead: `context_scout_auditor`/`docs_reconciler` run with above-fleet-average
+reaped-stale rates (not yet root-caused), and `escalation-queue-reconciler` is structurally blind to external GitHub
+PR-backlog state (would not itself have caught the plan_reconciler problem). Full per-job table + both follow-ups:
+`/plans/active/issues/ao_scheduled_jobs_health_audit_findings_2026_08_20.md`.
+
 **`ci-reconciler` is the one job whose already-ran guard runs `--window hour`, not the default `--window day`** (added
 2026-08-10). Its timer fires every 15 minutes and the guard admits at most ONE successful run per clock hour, so the job
 is "hourly, with up to 4 attempts" rather than four sweeps an hour — a fire that hits no capacity, an error, or a
