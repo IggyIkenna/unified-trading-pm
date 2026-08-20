@@ -32,9 +32,23 @@ from typing import cast
 def _staging_v2(repo: str) -> tuple[str, str, str]:
     """Return (conclusion, run_url, failing_step) for the latest staging quality-gates-v2 run."""
     out = subprocess.run(
-        ["gh", "run", "list", "--repo", f"IggyIkenna/{repo}", "--workflow", "quality-gates-v2",
-         "--branch", "staging", "--limit", "1", "--json", "databaseId,conclusion,status,url"],
-        capture_output=True, text=True,
+        [
+            "gh",
+            "run",
+            "list",
+            "--repo",
+            f"IggyIkenna/{repo}",
+            "--workflow",
+            "quality-gates-v2",
+            "--branch",
+            "staging",
+            "--limit",
+            "1",
+            "--json",
+            "databaseId,conclusion,status,url",
+        ],
+        capture_output=True,
+        text=True,
     ).stdout
     try:
         runs = cast("list[dict[str, object]]", json.loads(out))
@@ -51,7 +65,8 @@ def _staging_v2(repo: str) -> tuple[str, str, str]:
     if conclusion == "failure":
         log = subprocess.run(
             ["gh", "run", "view", str(r.get("databaseId")), "--repo", f"IggyIkenna/{repo}", "--log-failed"],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         ).stdout
         for line in log.splitlines():
             low = line.lower()
@@ -93,7 +108,7 @@ created: {date}
 source:
   - "scripts/cicd/parity_watchdog.py"
   - "{url}"
-locked_by: live-defi-rollout
+locked_by:
 priority: P2
 status: active
 ---
