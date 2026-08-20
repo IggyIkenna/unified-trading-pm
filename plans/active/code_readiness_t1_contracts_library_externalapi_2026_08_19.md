@@ -148,19 +148,12 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [ ] [FROM-T4] P2. **Widen `ORDER_STATUS_TRANSITIONS[OrderStatus.PARTIALLY_FILLED]` to include `CANCELLED` and
-      `EXPIRED`** — T4 owns the venue-behaviour evidence per the codex doc's own open question, and has ruled:
-      real CLOB venues let an operator cancel the still-working remainder of a partially-filled order (final
-      status reports cancelled with a nonzero filled quantity, never forced to `FILLED` first); corroborated in
-      execution-service's own `trade_execution/oms/tracker.py`, which already treats `PARTIALLY_FILLED` as an
-      open/cancellable state alongside `NEW`/`PENDING`. The codex SSOT
-      (`/codex/04-architecture/order-state-machine.md`) is amended already (diagram + events table widened,
-      2026-08-20) — this is the one line of code that needs to catch up:
-      `unified_api_contracts/canonical/domain/execution/base.py` currently has
-      `OrderStatus.PARTIALLY_FILLED: frozenset({OrderStatus.FILLED})`; add `OrderStatus.CANCELLED` and
-      `OrderStatus.EXPIRED` to that frozenset. T4 does not edit UAC directly (tier rule), so this is yours to land;
-      pair it with a test asserting both edges are now legal (`is_legal_order_transition`) and the codex doc's
-      "not yet coded" notes on both new event rows can be deleted once it ships.
+- [x] ✅ [FROM-T4] P2. **DONE — unified-api-contracts@43033d1152.**
+      `ORDER_STATUS_TRANSITIONS[OrderStatus.PARTIALLY_FILLED]` now includes `CANCELLED` and `EXPIRED` alongside
+      `FILLED`. Paired test `test_partially_filled_can_be_cancelled_or_expired` in `test_order_state_machine.py`
+      asserts both new edges plus the existing `FILLED` edge and that both new terminals still reconcile
+      afterward. QG green (13438 passed, 0 failed). Landed alongside no unrelated change — the codex doc was
+      already amended per this request; nothing further needed there.
 
 - [ ] [FROM-T2] P2. **The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.**
       `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` was allocated
