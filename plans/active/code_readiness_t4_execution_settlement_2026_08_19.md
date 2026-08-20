@@ -187,21 +187,41 @@ todos only to confirm they are data-movement, then leave it.
 > `is_terminal_order_status()` and `is_legal_order_transition()`, all exported from the top-level
 > `unified_api_contracts` facade. You are unblocked on this edge; the two todos below are the follow-through.
 
-- [ ] [FROM-T1] P1. Migrate execution-service's `OrderStatus.PENDING` / `OrderStatus.OPEN` call sites to the
-      renamed `OrderStatus.PENDING_NEW` / `OrderStatus.NEW`, then tell T1 to DELETE the two transitional aliases.
-      **Nothing is broken right now** — T1 landed the rename as enum ALIASES (`OrderStatus.PENDING is
-      OrderStatus.PENDING_NEW` is True, `.value` byte-identical), precisely so this is not a stop-the-world edit.
-      Blast radius MEASURED at hand-off: **24 `OrderStatus.PENDING`/`.OPEN` call sites in execution-service** (plus
-      1 in unified-trading-system-ui, which T1 owns and will handle). Fleet-wide there is NO `.name`-based,
-      `OrderStatus[...]`, `len(OrderStatus)` or iteration coupling, so this is a mechanical rename with no
-      semantic edge cases. The aliases are a deliberate, tracked exception to the no-shims rule: the
-      entity-rename SSOT wants consumers migrated in the SAME change, and T1 is forbidden from editing your repo.
-      Evidence: `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
+- [x] ✅ [FROM-T1] P1. **Migrated — `execution-service@35f0bfb1b`.** `OrderStatus.PENDING`/`.OPEN` renamed to
+      `.PENDING_NEW`/`.NEW` in every site that genuinely imports UAC's enum: 5 source files
+      (`betfair_order_mapping.py`, `kalshi.py`, `polymarket_clob.py`, `kraken_futures_orders.py`,
+      `kraken_rest_adapter.py`) + their 2 test files (`test_kraken_adapter.py`, `test_kalshi_adapter.py`) — 18
+      call sites total. **Correction to the 24-site blast-radius estimate**: 6 of the original 24 were never UAC's
+      enum at all — `execution_service/orders/oms.py` and `trade_execution/oms/persistent_oms.py` each define
+      their OWN LOCAL `OrderStatus(StrEnum)` (7-state: PENDING/VALIDATED/SUBMITTED/PARTIAL_FILLED/FILLED/
+      REJECTED/CANCELLED — a different type, not an alias) plus 3 test files that exercise them
+      (`test_order_manager.py`, `test_oms.py`, `test_oms_decimal.py`). An initial pass renamed all 24
+      mechanically and hit `AttributeError: type object 'OrderStatus' has no attribute 'PENDING_NEW'` on those 6 —
+      reverted them to `.PENDING` (byte-identical to origin, confirmed via `git diff`) since they were never UAC's
+      alias to begin with. 18/18 true UAC sites now use the renamed members; repo-wide grep for
+      `OrderStatus\.PENDING\b`/`OrderStatus\.OPEN\b` against UAC's import returns zero. **Safe to delete the two
+      transitional aliases from execution-service's side** — T1 still needs to confirm no other fleet consumer (UI
+      aside, which T1 already owns) before actually deleting them.
 - [ ] [FROM-T1] P1. Write `execution-service/tests/unit/orders/test_state_machine.py` — the codex doc's own
       declared `verifier:`, which has never existed in the repo's history and is why the 9-state-vs-7-state
       divergence went unnoticed from 2026-05-12 to 2026-07-31. T1 already pins the ENUM against the codex table
       (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
       SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
+      **BLOCKED on the W11 finding below, MEASURED 2026-08-20**: `is_legal_order_transition`/
+      `ORDER_STATUS_TRANSITIONS` are imported NOWHERE in execution-service (repo-wide grep, zero hits) — there is
+      no code path that takes a previous status + a new one and validates the transition, so there is nothing
+      real to assert against yet. A test written today would either be synthetic (assert the imported function
+      directly, testing UAC not execution-service) or expose that THREE separate, unreconciled status
+      vocabularies coexist: UAC's canonical 9-state `OrderStatus` (used only when adapters map a fresh venue
+      response, never mutated in place), `execution_service/orders/oms.py` +
+      `trade_execution/oms/persistent_oms.py`'s own local `OrderStatus(StrEnum)` (7 states:
+      PENDING/VALIDATED/SUBMITTED/PARTIAL_FILLED/FILLED/REJECTED/CANCELLED — confirmed a DIFFERENT type, not an
+      alias, by the `AttributeError` hit and reverted while doing the sibling `.PENDING`/`.OPEN` rename todo
+      above), and `execution_service/orders/tracker.py`'s bare string literals (`"SUBMITTED"`/`"FILLED"`/
+      `"CANCELLED"`/`"AMENDED"` — no enum at all, and `"AMENDED"` exists in neither of the other two). Real fix
+      order: reconcile the three vocabularies (or pick ONE as the live-order source of truth and have the others
+      read through it) BEFORE this test can assert anything meaningful — that reconciliation is the W11 P0 below,
+      not a sub-step of this todo.
 - [x] ✅ [FROM-T1] P2. **Decided: `PARTIALLY_FILLED -> CANCELLED / EXPIRED` IS a legal transition** —
       `unified-trading-pm@c74d869b36` (codex `order-state-machine.md` amended: diagram + events table widened,
       ruling + evidence recorded 2026-08-20). Real CLOB venues let an operator cancel the still-working remainder
@@ -270,7 +290,16 @@ todos only to confirm they are data-movement, then leave it.
       called from the live surface (`api/manual_instruction_api.py:473` `/cancel`, `:551` `/amend`). The source
       issue's remaining open item is a P3 (`instruction_to_order_ids` staleness), not this P0. Evidence:
       `/plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
-- [ ] [BACKEND] P0. Implement the full 9-state order lifecycle once T1 lands the `OrderState` contract.
+- [ ] [BACKEND] P0. Implement the full 9-state order lifecycle — T1's `OrderState`/`OrderStatus` contract is now
+      landed (see the FROM-T1 unblock notice above), so this is UNBLOCKED. **Scope MEASURED 2026-08-20, real work
+      is reconciliation, not new-build**: three separate, unreconciled order-status vocabularies coexist in
+      execution-service today (full evidence on the `test_state_machine.py` todo above) — UAC's canonical 9-state
+      `OrderStatus` (mapping-only, never mutated in place), `orders/oms.py` + `trade_execution/oms/
+      persistent_oms.py`'s own local 7-state `OrderStatus(StrEnum)`, and `orders/tracker.py`'s bare 4-string
+      vocabulary with no enum. None of the three enforces `is_legal_order_transition`. This is a genuine
+      cross-file design call (which becomes the source of truth; how the other two read through it without
+      breaking `ManualOperationHandler`'s existing `/cancel`/`/amend` callers) — not a mechanical rename like the
+      `.PENDING`/`.OPEN` migration above turned out to be for the 5 files that really did import UAC's enum.
 - [ ] [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
       said.** Two independent defects, both measured: (a) no `/api/orders` route exists anywhere under
       `execution_service/api/`, so the strategy-side POST reaches nothing; (b) even the in-process path is a
