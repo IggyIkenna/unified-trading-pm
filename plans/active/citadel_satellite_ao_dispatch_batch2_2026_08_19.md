@@ -59,7 +59,7 @@ source: >-
 
 ## From `citadel_paper_batch_live_reconciliation_2026_06_19.md`
 
-- [ ] [INFRA] P2. **Reconcile terraform state for `blrs_daily_determinism_job` before the next real `tofu apply` of
+- [x] ✅ [INFRA] P2. **Reconcile terraform state for `blrs_daily_determinism_job` before the next real `tofu apply` of
       this module.** `tofu plan -target=module.blrs_daily_determinism_job` shows the resource as untracked ("1 to
       add") — this module's state is stale/missing relative to the live job, which was hotfixed out-of-band via
       `gcloud run jobs update` for P2.7.4 and likely originally created by a different deploy path than a plain
@@ -86,3 +86,7 @@ source: >-
   satellite batch corpus-wide.
 - **context-scout 2026-08-19**: populated context_scope (4 entries) — added the two source-code targets each item's
   own text names (the terraform module and the strategy-service CLI handler).
+- **2026-08-20**: persisted a targeted `tofu apply -refresh-only -target=module.blrs_daily_determinism_job`
+  against the production GCS state. Verified the live resource identity and hotfixed `daily-determinism` command;
+  the post-refresh targeted plan reports **No changes**. An untargeted full plan still reports unrelated existing
+  drift (`4 to add, 63 to change`), so no broad apply was run.
