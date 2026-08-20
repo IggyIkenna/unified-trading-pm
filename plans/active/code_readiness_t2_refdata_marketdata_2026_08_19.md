@@ -305,6 +305,22 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Make honest coverage measurable on EVERY axis and granularity, each figure carrying its
       denominator and date. This is the epic's own definition-of-done item. SSOT:
       `/codex/02-data/honest-coverage-model.md`.
+      **FINDING 2026-08-20 (T2, `/autonomous`) — today's daily rollup OOM'd, so coverage is currently
+      UNMEASURED, not just incomplete on some axis.** Ran `launch-measure-honest-coverage-vm.sh` (the
+      SSOT owner per the script's own docstring) to pick up this session's shipped code (league fold-in,
+      hollow-fraction). Result: `measure-honest-coverage-20260820-205216` (default `e2-highmem-8`, 64GB)
+      OOM-killed (`exit_code=137`) ~4.5min into loading DeFi's manifest (161,691,460 rows — this script's own
+      header comments document a LONG history of exactly this class of OOM as defi's manifest has grown,
+      already forcing 2 prior machine-type escalations: `e2-standard-4` → `e2-highmem-4` → `e2-highmem-8`,
+      the last one specifically because defi crossed ~158M rows on 2026-08-12). cefi's own Layer-1/projection
+      pass completed cleanly first (30.8M rows) — the kill landed specifically on defi's larger load. Cannot
+      yet rule out this session's own level-5c/5d/5e chain/league joins (3 new O(n) groupby projections, each
+      producing a result set roughly proportional to defi's higher cardinality) as a contributing factor on
+      top of the pre-existing growth-driven pressure, vs. this being purely the SAME recurring class already
+      documented — **relaunched at `e2-highmem-16` (128GB) to get an unblocked coverage.json first**; if THAT
+      also OOMs, the new projections become the leading suspect and need their own investigation (e.g.
+      bounding cardinality, or computing them from a leaner column projection) rather than another blind
+      machine bump.
 - [x] [OPERATOR] P0. **Rule on whether level 5 should drop fully-retired keys like level 4 does.** MEASURED
       2026-08-20: `by_venue_instrument_type` (level 4) passes through `_drop_fully_retired_nested`;
       `by_venue_instrument_type_data_type` (level 5) does not. After the 2026-08-20 naming fix the two levels
@@ -442,9 +458,17 @@ todos only to confirm they are data-movement, then leave it.
 
 ### instruments-service
 
-- [ ] [BACKEND] P0. Complete the `InstrumentRecord` schema ADD/REMOVE reconciliation against adapter kwargs and flip
-      `extra='forbid'`. Adapter kwargs are silently dropped on mismatch today. Evidence:
+- [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC), reconciliation half DONE.** Complete the `InstrumentRecord` schema
+      ADD/REMOVE reconciliation against adapter kwargs and flip `extra='forbid'`. Adapter kwargs are silently
+      dropped on mismatch today. Evidence:
       `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
+      **2026-08-20 (T2, `/autonomous`)** — the reconciliation half is fully done, this tranche's own work: all 6
+      systemically-dropped kwargs dispositioned (5 REMOVE incl. this session's `min_order_size`, 1 rename-fix),
+      every caller fixed (`instruments-service@ee2d6c75`, `@588f35aeb0`). What remains is ONLY the
+      `extra='forbid'` flip itself, which lives on `InstrumentRecord` in
+      `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py` — outside this tranche's 3
+      repos. Filed to T1 (`/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`
+      Inbound requests).
 - [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC)** — Lock and version the instruments schema — add
       `INSTRUMENTS_SCHEMA_VERSION`, a `schema_version` field on `SchemaContract`, make writers/readers actually
       consult the per-AG contracts, and add a golden/hash test so a silent column change cannot ship. Evidence:
