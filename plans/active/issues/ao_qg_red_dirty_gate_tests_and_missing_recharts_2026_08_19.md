@@ -139,4 +139,4 @@ Two independent, mechanical fixes — no judgment call:
   runs for real. Also observed on the first full-QG pass: ONE unrelated flaky failure —
   `tests/test_gemini_litellm_translation_smoke.py::test_tool_use_tool_result_roundtrip_through_real_proxy` (live
   integration/smoke test vs a real Gemini API; passes in isolation; passed on full re-run) — filed separately as
-  `plans/active/issues/gemini_smoke_test_flaky_under_full_suite_2026_08_20.md`.
+  `/plans/active/issues/gemini_smoke_test_flaky_under_full_suite_2026_08_20.md`.

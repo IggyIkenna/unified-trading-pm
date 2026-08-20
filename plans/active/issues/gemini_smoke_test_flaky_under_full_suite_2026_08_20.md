@@ -62,7 +62,7 @@ this flake burns a full ~6-min QG re-run, and the red has no relation to their d
 
 Make the live smoke test resilient to load so it cannot intermittently red QG:
 - Mark it `host_load_sensitive` (registered marker — precedent:
-  `plans/archive/issues/agent_orchestrator_qg_red_test_autospawn_magicmock_datetime_2026_07_30.md`), OR
+  `/plans/archive/issues/agent_orchestrator_qg_red_test_autospawn_magicmock_datetime_2026_07_30.md`), OR
 - Add a bounded single retry on proxy-startup / roundtrip for transient load-induced timeouts.
 
 ## Todos
