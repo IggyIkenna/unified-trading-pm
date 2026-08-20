@@ -63,8 +63,8 @@ follow-up.
 
 - [ ] [BACKEND] P0. Add strict bridge amount, recipient, token, chain, aggregator target/calldata, credential, and
       caller slippage/deadline validation in `bridge.py` (repo: execution-service).
-- [ ] [BACKEND] P0. Add durable idempotency and source-transaction tracking for Socket bridge retries in `bridge.py`
-      (repo: execution-service).
+- [x] ✅ [BACKEND] P0. Add durable idempotency and source-transaction tracking for Socket bridge retries in `bridge.py`
+      (repo: execution-service). — execution-service@ef899bf5b8; Evidence: quality-gates=8816 passed, 22 skipped, 1 xpassed.
 - [ ] [BACKEND] P0. Add CCTP amount/recipient validation and fail closed when source wallet credentials are absent
       before approve/burn (repo: execution-service).
 - [ ] [BACKEND] P0. Make CCTP burn tracking durable and idempotent, preserve the source burn transaction hash, and
