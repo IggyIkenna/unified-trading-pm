@@ -134,7 +134,7 @@ invisible to `regen_backlog_from_plan.py`).
   regardless of `--mode`, naming `phantom_captured_no_parquet`/`shard_4pillar_fail` on
   `--mode changed` runs even though those checks are scoped out entirely in that mode). Both
   fixed in one commit, `e2e-testing@0a43d0ec70`, with regression test
-  `test_run_what_i_found_names_only_actual_findings`. **Not checking todo 1 done yet** — its own
+  `test_run_what_i_found_names_only_actual_findings`. **Todo 1 remained open at that point** — its own
   "Done when" requires live verification against a re-run/the next real daily-cron output, which
   hasn't happened; the next reconcile pass or tomorrow's 08:00 UTC cron run should confirm the
   fresh issue-doc prose names only real findings, then flip this checkbox.
