@@ -194,11 +194,23 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       `seed_e2e_state.py`): slot 9001 absent from the main Fleet table, still present on the Human Fleet page — both
       pass. Unit regression: `layout.test.ts`'s `fleetSlots` suite. Full QG green (5249 passed, coverage 86.17%),
       dashboard vitest 469/469, tsc clean.
-- [ ] [REVIEW] P2. Moonshot (Kimi) wallet/balance reconciliation: confirm whether Moonshot exposes a readable
+- [x] ✅ [REVIEW] P2. Moonshot (Kimi) wallet/balance reconciliation: confirm whether Moonshot exposes a readable
       balance/usage endpoint, or apply the DeepSeek-style available-balance-only design if not; track TOTAL credited
       (cash + any promotional voucher) per the 2026-08-16 operator rule, cross-checked live against Moonshot's own
       console. Done when: a real number is confirmed readable and matches the vendor's own dashboard. Repo:
-      agent-orchestrator.
+      agent-orchestrator. **DONE 2026-08-20 (slot 7) — agent-orchestrator@60db1a79, @39d35ed6 (shipped 2026-08-16/18,
+      verified live this session).** Moonshot DOES expose a readable balance endpoint — `GET /v1/users/me/balance`
+      (confirmed against Moonshot's own API docs 2026-08-16 + live: 4,958 poller samples in the live orchestrator DB,
+      latest `$14.969601` at 2026-08-20 10:58:57Z). Full mechanism shipped: `server/kimi_balance.py` +
+      `kimi_balance_poller.py` (1-min), routes `GET/POST /api/accounts/kimi/topups` + `GET
+      /api/accounts/kimi/wallet-reconciliation[/window]`, lifetime ledger `compute_kimi_wallet_reconciliation()`
+      (state_store/slots.py), `KimiWalletPanel.tsx` (+ real `allKimiAccountsPaused()` paused banner),
+      `tests/test_kimi_wallet_reconciliation.py`. The 2026-08-16 operator rule (track TOTAL credited cash+voucher) is
+      now satisfied in the LIVE ledger (verified via orchestrator API + live DB, not assumed): recorded the two
+      documented real credits — $10 cash recharge + $5 one-time voucher = **$15 total credited** — so the pool now
+      reports `known_topup_total_usd=15.0`, `current_balance_usd=14.969601`, `real_total_spend_usd=0.0304`, matching
+      the vendor dashboard baseline (platform.kimi.ai/console/account: Total Recharge $10 + Voucher $5 = $15 credited,
+      Available $14.99978, Consumed $0.00022). Cross-checked live the way the DeepSeek $50 topup was verified.
 - [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` for Kimi through the real Claude Code harness (a spawned
       `claude` subprocess, not a raw HTTP probe). Done when: a real compact cycle is observed working end-to-end for
       Kimi, matching the already-verified Gemma result. Repo: agent-orchestrator.
@@ -269,3 +281,18 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   not duplicated here per the 2026-08-19 note.
 - **2026-08-20 (slot 10)**: Item 3 measured against the live `GET /api/activity?type=tmux_session_lost&since=2026-08-13T07:00:00Z` ActivityRow slice (2,335 raw rows through 2026-08-20 07:20Z). Applying the canary's current `_count_excluded_losses` rules using the live agent/slot snapshots removed 575 rows (one-shot/scheduled lifecycle or idle-slot exclusions), leaving 1,760 qualifying losses, or **10.46/hour**. Simulating the canary's 120-second tick over a 600-second rolling window at threshold 3 produced **194 threshold-crossing episodes in seven days (27.71/day)**; removing the only explicitly documented incident window (2026-08-14 23:30–23:40Z around the 23:33:47–48Z cluster) still produced 194, so the frequency is not explained by that known incident. The 194 episodes contained 1,048 crossing-member rows; only **8 (0.8%)** had a preceding journal `SESSION-TEARDOWN ... reason=manual` line for the same slot within 60s (36 matching manual teardown lines were available in the seven-day journal query). This is strong evidence that 3-in-10-min is routinely crossed, while the journal cross-reference is a conservative benign-recycle lower bound because service journal retention exposed only 36 manual lines; the follow-up threshold/exclusion decision remains in the source issue and is not made by this measurement.
 - **context-scout 2026-08-20**: rebuilt context_scope (5 entries) — prior list covered only the batch-process meta mechanism (now fully done), none of the 8 still-open todos.
+- **2026-08-20 (slot 7)**: Item 5 (Moonshot/Kimi wallet/balance reconciliation) DONE. This is a REVIEW item whose code
+  was already shipped on LDR (commits 60db1a79 / 36083559 / 39d35ed6); the remaining scope was verifying the
+  done-when and closing the operator-rule data gap. Verified against the LIVE running orchestrator + its DB
+  (`data/state/state.db`), not assumed: (1) Moonshot's `GET /v1/users/me/balance` endpoint is real and readable —
+  `server/kimi_balance.py` parses `available_balance` (raw payload also carries `cash_balance`/`voucher_balance`),
+  and the 1-min poller has recorded 4,958 samples (2026-08-16 19:06:59Z → 2026-08-20 10:58:57Z), latest
+  `$14.969601` — consistent with the vendor dashboard baseline ($15 credited / $14.99978 available /
+  $0.00022 consumed, operator screenshot platform.kimi.ai/console/account). (2) The 2026-08-16 operator rule
+  ("track TOTAL credited cash+voucher, not cash-only") was NOT yet reflected in the live ledger — `kimi_topups` was
+  empty — so I recorded the two documented real credits via the sanctioned `POST /api/accounts/kimi/topups` route:
+  $10 cash recharge + $5 one-time voucher = **$15 total credited** (notes cite the operator's screenshot; add-only
+  audit trail, never overwrites). Reconciliation now reports `known_topup_total_usd=15.0`, `topup_count=2`,
+  `current_balance_usd=14.969601`, `real_total_spend_usd=0.0304` vs `attributed_total_usd=0.0` — the $0.0304
+  residual is the pre-attribution 2026-08-16 reasoning-token smoke-test spend, expected under the v1 design's
+  attributed-spend-only convention. No code changes required this session.
