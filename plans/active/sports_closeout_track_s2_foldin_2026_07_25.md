@@ -605,5 +605,16 @@ context_scope:
     more days (~6.9 days total). Run.log 140,286 lines, actively growing. Done-when (VM exit 0, manifest rows written)
     unmet. Did NOT flip checkbox, did NOT launch a duplicate. Declining via `/skip-current-task` `reason_code=GATED` —
     ETA ~5.5 days.
+  - **CORRECTED 2026-08-20 (/plan-reconcile F-G27-2)** — the "status=RUNNING, ETA ~5.5 more days" claim above went
+    stale the same day it was written and was never re-checked for 9 days. Live GCS check this pass (via
+    `unified_trading_library.cloud_interface.get_storage_client()`, not raw gsutil):
+    `vm-logs/fts-backfill-20260809-012626/run.log` stops mid-stream at 2026-08-11T15:20:26Z with no exit marker
+    (compare sibling `fts-backfill-20260810-083557`, which has a clean `rc=0`/`DEPLOYMENT_COMPLETED` tail — this VM has
+    none); `DRAIN_REQUESTED.json` (2026-08-14T16:05:04Z) shows an automated alert `DP-VM-002` fired — "the VM is gone
+    having captured nothing, so downstream is about to read data that does not exist"; `REAPED`
+    (2026-08-15T17:48:07Z) confirms tombstone-cleanup. `gcloud compute instances list --filter="name~fts-backfill"`
+    today (2026-08-20) returns zero instances. No replacement VM for `TABLES=derived_features,fixture_features` has
+    launched since. This todo stays open — either relaunch the recompute or explicitly re-park it — but the doc must
+    stop reading as if a dead, reaped VM is live.
 - **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries) — all 5 citations still resolve.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

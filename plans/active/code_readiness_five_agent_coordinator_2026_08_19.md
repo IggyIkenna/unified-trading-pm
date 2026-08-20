@@ -188,13 +188,17 @@ Substitute per agent:
 
 ## Todos
 
-- [ ] [OPERATOR] P0. Launch agent 1 (T1 — contracts) in its own slot. Start this one first; four blocking edges
-      terminate here.
-- [ ] [OPERATOR] P0. Launch agent 4 (T4 — execution) in its own slot. Its per-venue instruction-path check unblocks
-      844 of the 864 readiness rows.
-- [ ] [OPERATOR] P0. Launch agent 2 (T2 — reference and market data) in its own slot.
-- [ ] [OPERATOR] P0. Launch agent 3 (T3 — features, ML, strategy) in its own slot.
-- [ ] [OPERATOR] P0. Launch agent 5 (T5 — readiness and artefacts) in its own slot.
+- [x] [OPERATOR] P0. Launch agent 1 (T1 — contracts) in its own slot — DONE. T1's own Progress Log shows "2026-08-19
+      — T1 CLAIMED by slot-6·laptop" plus extensive multi-session shipped work (904-line plan saturated with real
+      landed commits).
+- [x] [OPERATOR] P0. Launch agent 4 (T4 — execution) in its own slot — DONE. T4's Progress Log shows a full session
+      log with ~15 landed SHAs (842-line plan).
+- [x] [OPERATOR] P0. Launch agent 2 (T2 — reference and market data) in its own slot — DONE. T2 plan (644 lines)
+      shows real shipped work.
+- [x] [OPERATOR] P0. Launch agent 3 (T3 — features, ML, strategy) in its own slot — DONE. T3's Progress Log shows
+      "session 2/3/4" — multiple dispatch sessions (775-line plan).
+- [x] [OPERATOR] P0. Launch agent 5 (T5 — readiness and artefacts) in its own slot — DONE. T5 plan (807 lines) shows
+      extensive shipped work (grain fix, dedup stats, execution-instruction wiring).
 - [ ] [AGENT] P1. Re-run `scripts/plan-hygiene/allocate_code_readiness_tranches.py` weekly so newly-authored docs
       are allocated rather than orphaned. New docs land in a tranche automatically; docs that scored wrong get an
       entry in the script's hand-verified `OVERRIDES` table.

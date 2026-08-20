@@ -256,11 +256,10 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       `kimi_gemma_provider_onboarding_2026_08_16.md`. Done when: every one of the
       21 is classified expected-mid-onboarding vs. genuinely anomalous, with the anomalous set (if any) flagged as a
       fresh follow-up. Repo: agent-orchestrator.
-- [ ] [SCRIPT] P2. Investigate why `GET /api/agents?kind=human` returns zero rows for human slots in production
-      (`human_agent_rows: []` observed live 2026-08-18) — determine which endpoint the dashboard's human-fleet
-      overview actually consumes and whether human-slot rows should be added to `/api/agents`, or the overview
-      switched to read `/api/state`'s `slots[]` instead. Done when: the live state is confirmed with fresh evidence
-      and, if a real regression, root-caused (not just patched by re-registering). Repo: agent-orchestrator.
+- [x] [SCRIPT] P2. **DONE — already answered by a sibling doc, same day.** `ao_human_fleet_integration_2026_08_15.md`
+      re-verified `GET /api/agents?kind=human` live 2026-08-20: returns multiple live human rows (harsh, ikenna-tab5,
+      ikenna-tab6, ikenna-tab2) right now. The 2026-08-18 zero-rows report was a transient snapshot, not a persisting
+      regression — no reproducible bug remains to chase. Repo: agent-orchestrator.
 
 ## Progress Log
 

@@ -5,9 +5,8 @@ summary: >-
   W5 of the venue-readiness umbrella. Establishes the minimum provable bar for every venue: a batch smoke test per
   data type, so at minimum we know we can backtest it honestly. Databento-sourced venues are exempt per operator
   ruling (that source is already trusted). Where credentials exist or can be provisioned programmatically, add a
-  testnet smoke test too. Held at status draft alongside W4 for the same reason — the per-(venue x data type)
-  denominator does not exist yet, and a smoke-test bar over an undefined set measures nothing.
-status: draft
+  testnet smoke test too.
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [data, execution]
@@ -133,11 +132,15 @@ Contract step 1 (venue declared, batch/live capability axis) belongs to
 which also already declares `batch = none` for venues with no batch source — those must not be reported as smoke
 failures, they are declared absences.
 
-## Why `status: draft`
+## Why this was held at `status: draft`
 
-Same single blocker as W4: the per-(venue × data type) denominator does not exist yet. A smoke-test bar reported
+Same single blocker as W4: the per-(venue × data type) denominator did not exist yet. A smoke-test bar reported
 over an undefined set produces a percentage with no denominator — the exact shape of unfalsifiable progress this
-workspace bans. **Flip to `active`** when the umbrella's "Define the universe precisely for W4/W5" todo lands.
+workspace bans. **Flipped to `active` 2026-08-20 (/plan-reconcile F-G31-3)** — the umbrella's "Define the universe
+precisely for W4/W5" todo landed 2026-08-16 (**192 declared venues, 353 (venue, data_type) pairs**,
+`unified-api-contracts@e7ee398117`), the same day this doc's own text says it was waiting for. Its sibling W4
+(`venue_e2e_wiring_2026_08_16.md`) flipped to `active` on that same criterion the same day; this doc's flip was
+simply never applied, leaving 5 genuinely-unblocked P0/P1 todos undispatchable for 4 days.
 
 ## What a smoke test must actually prove
 
@@ -185,6 +188,11 @@ independently dispatched and shipped this doc's own P0 skills-audit todo as a to
 canonical-leg gap that audit found. Flipped this doc's todo to done, citing both: `unified-trading-pm@04fec8f2c4`
 (the per-skill audit) + `market-tick-data-service@f90bf09a37` (the MTDS canonical-leg fix the audit surfaced). Both
 SHAs independently re-verified as live ancestors of `origin/live-defi-rollout` and content spot-checked, not trusted
-from the batch plan's own copy of the evidence line. This does not flip this plan's `status` to `active` — the
-universe-denominator blocker for the plan's remaining todos is unaffected. Part of
+from the batch plan's own copy of the evidence line. Part of
 `venue_readiness_ao_dispatch_batch1_finalize_2026_08_16`'s reconciliation todo.
+
+**CORRECTED 2026-08-20 (/plan-reconcile F-G31-3)**: the claim above that "this does not flip this plan's `status` —
+the universe-denominator blocker... is unaffected" was itself wrong. The umbrella's "Define the universe precisely
+for W4/W5" todo had already landed the DAY BEFORE this entry was written (2026-08-16,
+`unified-api-contracts@e7ee398117`, 192 declared venues / 353 pairs) — this doc's own stated flip criterion. Flipped
+`status: draft` → `active` in this correction pass, 4 days later than it should have.

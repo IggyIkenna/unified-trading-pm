@@ -13,7 +13,7 @@ stage: [data]
 repos: [unified-api-contracts, market-tick-data-service]
 scope: [engineer, admin]
 tags: [data-pipeline, dp-fetch-009, dp-run-mostly-empty, schema-contract, registry-collision, cefi]
-related: [/plans/active/cefi_consolidated_closeout_2026_07_18.md, /codex/02-data/availability-manifest-and-data-status.md, /codex/05-infrastructure/data-pipeline-alerts.md]
+related: [/plans/active/cefi_consolidated_closeout_2026_07_18.md, /codex/02-data/availability-manifest-and-data-status.md, /codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/issues/dp_fetch_009_cefi_liquidations_batch_aster_2026_08_20.md]
 created: 2026-08-20
 last_updated: 2026-08-20
 parent_epic: observability_master

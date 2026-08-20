@@ -372,10 +372,17 @@ that path *designed*, not just funded.
 
 ## Build
 
+- [x] [DOC] P0. **DONE — shipped `unified-trading-pm@ec08cccad1`** ("Nick AI walkthrough aligned to verified
+      source-of-truth"): all 6 `live` badges re-graded to `partial`, cross-referencing
+      `client_artefact_remediation_nickai_2026_08_18.md`'s own already-closed matching todo rather than re-doing the
+      work.
 - [ ] [DOC] P0. **Re-grade every section mark in BOTH artefacts against the STRICTER `live` definition** (operator, 2026-08-18): `live` now means reachable on a production path **AND validated with real capital**. The definition
       landed (`unified-trading-pm@832033d094`); **the section marks did not change.** Since the epic excludes going live
       with capital before 2026-08-25, expect most `live` marks to drop to `partial` — a section can be complete, wired
       and paper-exercised and still not earn `live`. Do not leave the two documents grading on different definitions.
+- [x] [DOC] P0. **DONE — shipped `unified-trading-pm@ec08cccad1`.** The forward claim was cut, not softened; live
+      `grep` for "most of the venues and strategies" in
+      `codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html` returns 0 hits.
 - [ ] [DOC] P0. **Ground or remove the forward claim in the platform guide's intro** — *"most of the venues and
       strategies on the current plan complete over the remainder of this year"*. It came from operator framing and has
       **no cited basis in any plan**. A counterparty will hold us to it: cite what supports it, or cut it. This is the

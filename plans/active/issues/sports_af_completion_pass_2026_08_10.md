@@ -814,5 +814,14 @@ automator still alive, re-launch if session teardown killed it.
   completed, stalled, or was abandoned. Flagging for the next session with infra-query scope: re-check
   `af-backfill-*` VM state and the chain automator's liveness before assuming this task is still genuinely
   in-flight rather than silently stalled.
+- **CORRECTED 2026-08-20 (/plan-reconcile F-G21-15)** — the 2026-08-16 flag above was never acted on; still no
+  progress entry in the 4 days since. Live check this pass: `gcloud compute instances list
+  --filter="name~af-backfill"` returns ZERO instances — no AF backfill VM is running today. Combined with zero
+  Progress Log entries since 2026-08-11, this P1 data-completion campaign (closing a ~976-object honest-coverage
+  tail) has been silently stalled for 9 days. Whether STANDINGS completed cleanly before the VM died or is genuinely
+  abandoned mid-range was NOT determined this pass (would need a manifest census read). Next worker: run
+  `census_all_af_entities_completion_2026_08_03.py` fresh for the current residual, and if not converged, relaunch
+  attached to genuine AO-dispatch babysitting rather than a session-bound background process — the exact failure
+  mode `session_bound_vm_monitoring_reliability_gap_2026_07_26.md` already documents is reproducing here live.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).

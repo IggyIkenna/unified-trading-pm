@@ -432,15 +432,15 @@ not because anything needs follow-up.
       writeup of the reader-routing regression:
       `/plans/archive/issues/mtds_combo_chain_rename_broke_three_tests_2026_08_11.md`; the blanket-suppression-header
       fix is detailed in item 10 above. (repo: market-tick-data-service)
-- [ ] [CODE] P2. **Add an AO `wall_type` for Cloud Build failures** (Structural finding A): no escalation path exists
-      from a `cloud-build-failure-watcher` CRITICAL alert to an AO-dispatched fix attempt today — every Cloud-Build-
-      only failure (GH Actions can stay green) depends on a human reading Slack. Needs a new `wall_type` in
-      `agent-orchestrator/server/escalation.py`'s `WALL_TYPES`, a routing decision (likely the generic `escalate`
-      worker, same shape as `main_ci_red`), and a trigger wired from `cloud-build-failure-watcher.yml`'s CRITICAL path.
-      (repo: agent-orchestrator)
-- [ ] [CODE] P2. **Add an AO `wall_type` for `main-backmerge-to-ldr` sync failures** (Structural finding B): same gap as
-      above for a distinct failure class (backmerge `git fetch`/merge failures, not promotion-PR QG failures). Item 4
-      happened to self-heal; a non-self-healing recurrence has zero AO coverage today. (repo: agent-orchestrator)
+- [x] [CODE] P2. **Add an AO `wall_type` for Cloud Build failures** (Structural finding A) — DONE.
+      `agent-orchestrator@8380074d580c2bbb0a22e90f903413c78be75221` adds `"cloud_build_failure"` to
+      `agent-orchestrator/server/escalation.py`'s `WALL_TYPES`, routed to the generic `escalate` worker; confirmed
+      actively firing in production (`cloud_build_router_failure_escalation_undercoverage_2026_08_16.md` cites live
+      escalation `agt-09c955, wall_type=cloud_build_failure` for instruments-service). (repo: agent-orchestrator)
+- [x] [CODE] P2. **Add an AO `wall_type` for `main-backmerge-to-ldr` sync failures** (Structural finding B) — DONE, same
+      commit as above: `agent-orchestrator@8380074d580c2bbb0a22e90f903413c78be75221` adds `"backmerge_sync_failure"`
+      to `WALL_TYPES` (in-code comment cites this exact "Structural Finding B" phrase). +141/-, +7, +140 test lines —
+      a real, tested implementation. (repo: agent-orchestrator)
 - [x] [OPERATOR] P2. **Verify the unified-api-contracts Cloud Build fix actually clears the TIMEOUT loop on its next
       real trigger** (item 11 follow-up) — VERIFIED CLEARED.
       `gcloud builds list --project=central-element-323112 --region=asia-northeast1 --filter='substitutions.REPO_NAME="unified-api-contracts"'`
