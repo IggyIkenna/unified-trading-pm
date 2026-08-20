@@ -494,10 +494,11 @@ _None at authoring time._
       shipped in earlier sessions per that doc's own "Fixed" section) — this closes the SHARED-WRAPPER root
       cause in UTL itself, the piece that was this tranche's own todo. Evidence:
       `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
-- [ ] [BACKEND] P1. Root-cause and fix the 55 failing tests in `config_interface` / `cloud_interface`. Leading
-      suspect (stale `.venv` vs `uv.lock`) is unconfirmed — confirm or refute before fixing. This suite is red in a
-      library every service depends on. Evidence:
-      `/plans/active/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
+- [x] ✅ [BACKEND] P1. 55 failing `config_interface`/`cloud_interface` tests — symptom GONE on direct re-run,
+      2026-08-20: 1355 passed, 25 skipped, 0 failed across the exact suites named in the issue. Stale-venv
+      hypothesis explicitly RULED OUT (`uv sync --frozen --dry-run`: no changes needed), not left unconfirmed.
+      Root cause not re-derivable at a 5-day remove — closed on the measured symptom, not a reconstructed cause.
+      Issue archived: `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
 - [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor. Layer 2 (UAC) is named "the dominant blocker" —
       DeFi content is interleaved with shared content in `__init__`. End state needs a scoped-build test.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
