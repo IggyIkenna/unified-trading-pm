@@ -141,9 +141,13 @@ sports instrument_type finding above.
       Verified: re-classifying all 34 against the shipped fix + new accepted-exception registries confirms
       exactly the 5 above remain flagged — the other 29 now resolve correctly (26 canonical, 3
       accepted-exception).
-- [ ] [DATA] P1. Root-cause the 2 defi non-canonical data_types (`dex_pools`, `dex_swaps`) — add to
+- [x] ✅ [DATA] P1. Root-caused the 2 defi non-canonical data_types (`dex_pools`, `dex_swaps`) — do NOT add to
       `DATA_TYPES_BY_ASSET_GROUP['defi']` if genuinely produced, else trace the writer emitting them. Repo:
-      unified-api-contracts / market-tick-data-service. Done-when: a written determination + fix lands.
+      unified-api-contracts / market-tick-data-service. Done-when: a written determination + fix lands. **DONE
+      2026-08-20:** both values are retired legacy labels; current writers emit `dex_pool_state` and
+      `dex_pool_swaps`, and the reversible content-verified retirement tool shipped in
+      `market-tick-data-service@d4fdc643`. The live apply intentionally leaves legacy keys without a canonical twin
+      captured for separate migration follow-up; it does not change the registry or silently discard those rows.
 - [x] ✅ [DATA] P1. Investigate the sports instrument_types axis carrying lowercase bookmaker names (`betmgm`,
       `betway`, `bovada`, `coral`, `fanduel`, `ladbrokes_uk`, `paddypower`, `pinnacle`, `skybet`, `unibet_uk`,
       `williamhill`) — this looks like a venue/instrument_type column swap in the writer, not naming drift.
@@ -227,3 +231,6 @@ sports instrument_type finding above.
     still-current vocabulary) — the fix is manifest retirement of the legacy-labeled rows, which is what this session
     executed.
 - **2026-08-20 (slot 10, data_engineering) — sports lowercase bookmaker instrument_types root cause:** confirmed historical column-swap bug, not canonical naming drift. Before market-data-processing-service@c9b7f4a85 (2026-07-24), generic VENUE:TYPE:SYMBOL parsing read position 1 of SPORT:BOOKMAKER:MARKET:... as instrument_type, stamping bookmaker keys such as betmgm, pinnacle, and williamhill on that axis. The fix reads the market token at position 2 via ODDS_API_MARKET_TO_CANONICAL and threads the asset_group gate through batch, streaming, live, and empty/failed-shard paths; regression tests cover the distinction. The fix is ancestry-verified on origin/live-defi-rollout. The only ungated _infer_instrument_type call is the CeFi-only _renormalize_wire_cefi helper, so it cannot reproduce this sports defect. Live B21 values are historical residue; no new writer change or P0 issue is justified.
+- **2026-08-20 (slot 1, data_engineering) — item 2 closeout:** re-read the shipped UAC registry and MTDS writers and
+  confirmed neither legacy label is current vocabulary. The shipped retirement tool is the fix; its bounded live apply
+  safety pass measured 3,446,390 legacy keys and excluded 180,643 without canonical twins for separate follow-up.
