@@ -388,28 +388,40 @@ _None at authoring time._
 
 ### unified-trading-library
 
-- [ ] [BACKEND] P0. `PATH_REGISTRY` honours the `mode=` kwarg. `execution_fills` / `positions` /
-      `strategy_instructions` / `pnl_attribution` templates carry no `{mode}` placeholder and `build_path()`'s bare
-      `str.format` silently discards it — **batch, paper and live rows for the same (date, id) write to the
-      IDENTICAL GCS path today and overwrite each other.** This directly threatens the paper(W) == batch-rerun(W)
-      determinism spine. Land the CODE; the data migration strategy stays operator-gated. Evidence:
+- [x] ✅ [BACKEND] P0. `PATH_REGISTRY` honours the `mode=` kwarg — unified-trading-library@783d98ec73. All 5
+      templates (`execution_fills`/`positions`/`pnl_attribution`/`strategy_orders`/`strategy_instructions` —
+      confirming the previous scoping's own correction: it's 5, not 4) now carry `{mode}`, placed right after
+      `day=` to match `unified-trading-api/.../live_service.py`'s OWN parallel path map, which already assumed
+      mode-partitioning was real. `partition_keys` updated to match; the `_MODE_KWARG_PENDING_MIGRATION`
+      carve-out that let `build_path()` silently swallow `mode=` for these 5 datasets is DELETED.
+      **One premise in the scoping note was measured WRONG and is corrected here**: the note called the 6
+      call sites `pnl.py:40`/`positions.py:41`/`strategy.py:39,50`/`execution.py:59,72` "LIVE" — a repo-wide
+      census (not assumed) found ZERO fleet-wide call sites for any of them (`PnLDomainClient`,
+      `PositionsDomainClient`, `StrategyDomainClient`, `ExecutionDomainClient`'s domain_client variant are
+      exported but never instantiated anywhere outside the package's own `__init__.py`/tests). They would not
+      have raised in production; they were dead code that would only have raised on some FUTURE call. Migrated
+      anyway — added `mode: str = "live"` to all 6, mirroring every real reader's own default
+      (`strategy-service` `domain_adapter.py`), so the placeholder landing doesn't turn a future call into a
+      landmine. `get_instructions` in particular already carried a code comment claiming zero call sites;
+      confirmed true by this census, not just re-quoted.
+      **Found in passing, not fixed (T1 cannot edit strategy-service): the `strategy_instructions` REGISTRY
+      entry now diverges from its real writer** — `gcs_storage_service.py::write_instructions` hardcodes its
+      own path string and bypasses `PATH_REGISTRY`/`build_path()` entirely, so it will keep emitting the OLD
+      mode-less shape regardless of this fix. Filed as a `[FROM-T1]` inbound request on T3's plan.
+      Existing smoke tests (`test_paths_registry_smoke.py`) updated to pass `mode=` and assert the new shape;
+      new dedicated suite (`test_path_registry_mode_kwarg.py`, 11 tests) proves live/batch no longer collide on
+      one path, that omitting `mode=` now raises `KeyError` (never silently defaults), and that the carve-out
+      constant is actually gone (not just unused). QG green — real exit captured directly (309s), not via pipe.
+      **Also found and set aside, not lost**: an unrelated peer's dead WIP (8+ hrs stale, no live process) sat
+      in this same checkout on `unified_trading_library/cloud_interface/providers/gcp.py` — a `__getattr__`
+      loud-fail guard for the GCS-client-silent-write-failure P0, T1's OWN next todo. It was failing this
+      tranche's own quality gate (908 lines, over the 900 hard cap) purely by co-residence, not because of
+      anything in this change. Stashed by name rather than touched or discarded:
+      `stash@{0}: inherited-dead-wip-gcp-blob-getattr-guard-2026-08-20` in the UTL checkout — recovered and
+      finished as its own dedicated unit under the next todo, not folded into this commit.
+      Data migration stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule, per the ruling's own
+      text. Evidence:
       `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
-      **UNBLOCKED 2026-08-19 — the design gate this was waiting on is ANSWERED.** Operator Ruling 3
-      (`/plans/audit/results/code_completion_scope_2026_08_19.md` § rulings): _"Add `{mode}` to all four templates
-      AND migrate existing data"_ / _"migrate, do not quarantine … Writer-only fixes are explicitly NOT what was
-      chosen."_ The issue's own `[OPERATOR]` todo is stale against that ruling and has been retagged.
-      **Scoping MEASURED 2026-08-19 by T1 (this is the expensive part — do not re-derive it):** the change is 5
-      templates, not 4 (`strategy_orders` too), plus `partition_keys`, plus deleting the
-      `_MODE_KWARG_PENDING_MIGRATION` carve-out in `build_path()`. **The trap: six LIVE UTL callers do NOT pass
-      `mode=` and will raise `KeyError: 'mode'` the moment the placeholder lands** —
-      `domain_client/clients/pnl.py:40`, `positions.py:41`, `strategy.py:39`, `strategy.py:50`,
-      `execution.py:59`, `execution.py:72`. These are UTL-owned, so migrating them IS the "same change" the
-      entity-rename rule demands — but it changes those getters' public signatures, so confirm first which are
-      dead: `registry.py`'s own comment claims `StrategyDomainClient.get_instructions` /
-      `get_gcs_instructions_path` have ZERO call sites. Writers live in T3/T4 repos (`save_operations.py`,
-      both `domain_adapter.py`s) and already pass `mode=`, so they need no edit — but writer↔reader byte-parity
-      must be re-checked read-only, and any mismatch filed as an inbound request rather than fixed across tranches.
-      The DATA migration the ruling also mandates stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule.
 - [ ] [BACKEND] P0. Fix the GCS client silent write failure — wrong method names swallowed by a broad exception
       handler. Evidence: `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
 - [ ] [BACKEND] P1. Root-cause and fix the 55 failing tests in `config_interface` / `cloud_interface`. Leading
@@ -454,6 +466,17 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-20 — **PATH_REGISTRY mode= fix landed — unified-trading-library@783d98ec73.** batch/paper/live rows
+  for 5 datasets no longer collide on one GCS object path. Full details in the todo flip; noted here because it
+  had TWO recoveries worth remembering: (1) a `check_todo_regression` gate catch of my own doing — a perl splice
+  glued a following P1 todo onto the flip block with no newline, silently dropping it from the count (32->31);
+  re-diffed against origin line-by-line, restored the newline, re-verified 32=32 before shipping. (2) a shared-
+  checkout collision — running quality-gates.sh surfaced an 8-hour-stale, uncommitted peer edit on
+  `unified_trading_library/cloud_interface/providers/gcp.py` (a `__getattr__` loud-fail guard for the GCS-
+  client-silent-write-failure P0, this tranche's own NEXT todo) that was failing the gate on a 900-line file
+  cap purely by co-residence. Confirmed dead (no live process, mtime 8h+ stale) before touching it, then set
+  aside via a NAMED stash rather than fixed, discarded, or force-committed:
+  `stash@{0}: inherited-dead-wip-gcp-blob-getattr-guard-2026-08-20` in the UTL checkout — recovered next.
 - 2026-08-20 — **Oracle VALUE blindness closed — unified-api-contracts@03e8e90f.** Third violation class
   (`CanonicalViolationClass.VALUE`) answers "does this partition value name a real entity", checked against the
   venue / data_type / instrument_type / chain registries. CLAUDE.md's own conditional index warns agents that the
