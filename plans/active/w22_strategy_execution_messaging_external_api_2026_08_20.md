@@ -95,7 +95,7 @@ context_scope:
 
 ### Messaging bridge
 
-- [ ] [BACKEND] P0. Build the execution-service `EventTransport` subscriber reading strategy-published
+- [x] [BACKEND] P0. Build the execution-service `EventTransport` subscriber reading strategy-published
       instructions. New module (suggest `execution_service/engine/strategy_instruction_subscriber.py`): a loop
       calling `get_transport().read(asset_group, "atomic_instruction", after=<last-seen>)` per subscribed
       `asset_group`, converting each `CanonicalPersistEnvelope`'s payload into the engine's `Instruction` type
@@ -104,7 +104,7 @@ context_scope:
       converter), then routing through `ExecutionOrchestrator.execute_instruction()` (the SAME orchestrator TRADE
       already uses, not a parallel dispatch path). Done-when: a real (non-mock) `InMemoryTransport` round-trip
       test proves a published `AtomicInstruction` envelope reaches `ExecutionOrchestrator` and produces a
-      settlement result, end to end.
+      settlement result, end to end. -- execution-service@79e951ea; Evidence: bash scripts/quality-gates.sh --no-fix
 - [ ] [BACKEND] P0. Wire the subscriber into service startup (`execution_service/api/main.py`'s lifespan, next to
       the existing `_lifespan` wiring for `manual_instruction_api`) so it runs as a background task under the
       real deployed entrypoint, not just `api/app.py`'s CLI-serve path (same "which entrypoint actually runs in
