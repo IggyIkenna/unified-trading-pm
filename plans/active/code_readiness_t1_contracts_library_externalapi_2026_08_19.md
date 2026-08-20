@@ -148,6 +148,14 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T2] P2. **The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.**
+      `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` was allocated
+      into T2's tranche plan as a P1, but the writer lives in
+      `unified-trading-library/unified_trading_library/manifest_writer/` and every remaining todo is UTL-side: the
+      append-only "delta shard" pattern (P2), a reworded P3, and a `[SCRIPT] P3` verification gated on "once either
+      fix above ships". Flagging so it does not sit unworked in a tranche that cannot action it. Its own doc
+      priority is P2. No response needed if it is already queued.
+
 - [ ] [FROM-T2] P0. **`INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
       before B23's schema lock can be enforced anywhere.** MEASURED 2026-08-20 by building B23 part 4's write-time
       gate in `instruments-service` and running it before shipping (then reverting it — shipping would have blocked
@@ -212,6 +220,34 @@ todos only to confirm they are data-movement, then leave it.
       `instruments-service@2b482a1247`. That makes UAC the single point where this is fixable.
 
 _None at authoring time._
+
+- [ ] [FROM-T4] P2. **Pendle's dispatcher is wired now — the SIT cascade invariant still calls it unreachable, and
+      only you can fix that.** Wired in `execution-service@0c0b6a1a40`: `DeFiAdapter` gained a `pendle_connector`
+      and an `_execute_pendle_lending` handler, `PENDLE-ETHEREUM` routes LEND to it, and production
+      (`live_execution_handler._build_defi_adapter`) constructs it.
+
+      The blocker is in YOUR repo:
+      `unified-api-contracts/tests/test_execution_service_venue_coverage_cascade_invariant.py` maintains
+      `DEFI_VENUE_TO_CONNECTOR_CLASS` (`:165`) and `DEFI_VENUE_TO_GATE_MARKER` (`:179`) by hand, and neither has a
+      `pendle` entry. That file's own reachability baseline
+      (`tests/data/execution_service_venue_reachability_baseline.json`) records why this matters — with no entry,
+      `class_name is None` makes the venue "unconditionally unreachable regardless of any execution-service
+      wiring — a false signal from a stale checker dict, not (only) a dispatcher gap". Symbiotic hit exactly this
+      and flapped for most of 2026-08-16 before anyone noticed the dict was the cause.
+
+      Needed, and per the ratchet convention these must land in the SAME change:
+      1. `DEFI_VENUE_TO_CONNECTOR_CLASS["pendle"] = "PendleConnector"`, plus the matching
+         `DEFI_VENUE_TO_GATE_MARKER` entry (the marker `DeFiAdapter` actually gates on is the venue substring
+         `"PENDLE"`, resolved via `adapters/defi_instruction_routes.DEFI_INSTRUCTION_ROUTES`).
+      2. Remove `pendle` from the reachability baseline, after re-running the measurement — the baseline's header
+         says "remove a venue from this list in the SAME change that wires its dispatcher path".
+
+      **One caveat to encode, not paper over**: Pendle is wired for **LEND only**. `PendleConnector.withdraw()` is
+      simulation-only by its own docstring (real `YT.redeemPY()` needs maturity-date branching that is not
+      implemented), so routing a live WITHDRAW there would fabricate a success. If the invariant asserts a full
+      lending family per venue, Pendle should assert LEND only rather than being widened to pass.
+
+      `karak` is separately tracked for decommission and is NOT part of this request.
 
 ## Todos
 
