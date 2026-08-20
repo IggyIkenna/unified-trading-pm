@@ -219,11 +219,23 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       "Safe to compact: YES"). `/compact` exit 0 → post `/context`: 6.6k/1m, Messages 3.2k (~95% Messages drop,
       matching the Gemma result's 42k→8.1k). Compacted session confirmed resumable (follow-up turn returned
       "session-ok"). See Progress Log 2026-08-20.**
-- [ ] [BACKEND] P2. Add `overage_status == "rejected"` as an explicit 5th account-failover trigger condition
+- [x] ✅ [BACKEND] P2. Add `overage_status == "rejected"` as an explicit 5th account-failover trigger condition
       (covering both `out_of_credits` and `org_level_disabled`) in the account-monitoring path that feeds
       `rotate_all_slots_off_account` (`server.py`, per `main.md` § "Account-failover triggers"). Should fire
       regardless of `weekly_pct`/`five_hour_pct`. Done when: a session on an overage-rejected account is proactively
-      rotated rather than left to die `death_class: unexplained`. Repo: agent-orchestrator.
+      rotated rather than left to die `death_class: unexplained`. Repo: agent-orchestrator. **DONE 2026-08-20 (slot
+      18) — agent-orchestrator@acf72243d5.** Root-caused: `overage_status` was captured on `AccountUsageRow` but
+      never read by any routing check (`server/orm.py` comment literally said "Operator-facing detail, not used for
+      routing"). Fixed at the single shared gate every failover path already consults —
+      `account_is_usable()` (`server/state_store/account_usage.py`) now returns `False` when
+      `overage_status == "rejected"`, regardless of `weekly_pct`/`five_hour_pct`, covering both
+      `out_of_credits` and `org_level_disabled`. This flows through unchanged to every existing caller: dispatch-time
+      account picking (`_pick_headroom_account`/`pick_next_account`), the proactive worker-slot failover kill
+      (`_drain_worker_account_failover`), and main agent's `_handle_account_unusable`. Updated the stale
+      "not used for routing" comment in `orm.py` and added the 5th row to `main.md`'s "Account-failover triggers"
+      table. Tests: 3 new cases in `tests/test_auth_failed_rotation.py::TestAccountIsUsable` (rejected+out_of_credits
+      fires regardless of weekly_pct=90; rejected+org_level_disabled fires; overage_status="allowed" stays usable).
+      Full QG green (5275 passed, coverage 86.14%, dashboard vitest 469/469, tsc clean).
 - [ ] [BACKEND] P2. Investigate whether account rotation's selection-pool logic already excludes (or should exclude)
       overage-rejected accounts from being assigned to a slot in the first place, separate from the trigger fix
       above. Done when: the rotation-pool selection code path is read directly and the answer (excludes / does not
