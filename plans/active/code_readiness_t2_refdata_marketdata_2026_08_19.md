@@ -379,13 +379,48 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
 - [ ] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
       `/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`.
-- [ ] [BACKEND] P2. Decide and implement the MTDS WS venue-fallback removal for Polymarket. Evidence:
-      `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
-- [ ] [BACKEND] P2. Confirm the MDPS `--force` subprocess fix is live and that only a data relaunch remains — that
+- [ ] [BACKEND] P2. **BLOCKED-OPERATOR** — Decide and implement the MTDS WS venue-fallback removal for Polymarket.
+      Evidence: `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
+      **Reason 2026-08-20**: the issue's sole todo is `[OPERATOR] P3` — a binary product/architecture call the doc
+      itself says it "doesn't have the authority to make" (accept polymarket's two-connector dual-casing split as
+      permanent, vs. keep a narrower documented fallback). Two independent `na-eligibility-audit` passes (08-17,
+      08-19) both ruled KEEP-NA valid. Not this tranche's decision to make.
+      **What I did add — the doc's factual premise is now VERIFIED, so the decision is de-risked**: both connectors
+      register under their OWN canonical-cased key and each resolves via `resolve_ws_feed_venue_key`'s FIRST branch
+      (`if venue in registered_keys: return venue`), so neither depends on the `.lower()`/`.upper()` fallback today.
+      Evidence: `live/connectors/polymarket_ws.py:322-325` registers `venue="polymarket"` (auto-registers on import,
+      line 331); `live/connectors/polymarket_clob_ws.py:537-540` registers UPPERCASE `"POLYMARKET"` with a docstring
+      stating it is keyed that way "so it is distinct from" the Gamma-API one. Choosing (a) therefore requires zero
+      registration changes and cannot break polymarket dispatch. Note `WS_FEED_CONNECTOR_FACTORIES` is EMPTY at
+      import time (registration is lazy, on connector-module import), so a static probe of the dict proves nothing —
+      the registration call sites are the evidence.
+- [x] [BACKEND] P2. Confirm the MDPS `--force` subprocess fix is live and that only a data relaunch remains — that
       relaunch is out of scope. Evidence:
       `/plans/active/issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`.
-- [ ] [BACKEND] P2. Ensure `source=` is threaded through every `record_captured()` call — it is crosscutting and
+      ✅ 2026-08-20 — **confirmed live in the shipped tree.** `market-data-processing-service@e9f9819f`
+      ("fix(process_handler): forward --force to per-date subprocess spawns") is an ANCESTOR of current HEAD —
+      verified with `git merge-base --is-ancestor`, not by reading a changelog. The forwarding is present at both
+      spawn sites: `cli/handlers/process_handler.py:695-696` (`argv.append("--force")`) and `:776-777`
+      (`cmd.append("--force")`). Its own commit message states the defect it closed: `_run_date_as_subprocess`
+      built the child cmd from only `--operation/--mode/--start-date/--end-date`, silently dropping the parent's
+      `--force`, so every multi-day `process --force` backfill ran with `force=False` on each child. Only the data
+      relaunch remains, and that is operator-gated data movement, out of scope per this tranche's standing rules.
+- [x] [BACKEND] P2. Ensure `source=` is threaded through every `record_captured()` call — it is crosscutting and
       required. SSOT: `/codex/02-data/pipeline-mode-partition.md`.
+      ✅ 2026-08-20 — **already satisfied, and "every call" is the wrong bar.** Ran the shipped QG checker
+      (`check_tradfi_source_explicit_at_record_captured.py`, STEP 5.64) against all three owned repos:
+      **0 baselined occurrences and 0 new occurrences in each**, with `tradfi_source_explicit_baseline.yaml` at
+      `entries: []` — the legacy backlog is fully cleared, not merely parked. **Scope of that claim, stated
+      precisely**: the rule is registry-driven, not universal
+      (`data_source_provenance_all_asset_groups_2026_06_01.md` Phase 6). The UTL writer AUTO-STAMPS the sole
+      external source for single-source cells and only requires an explicit `source=` when
+      `source_required(asset_group, data_type)` is True — verified live: `('cefi','trades')` and
+      `('prediction','trades')` → True, `('tradfi','ohlcv')`, `('defi','lending_indices')`, `('sports','odds')` →
+      False. Demanding `source=` at every callsite would false-fail the single-source ones that legitimately rely
+      on auto-stamp. **What the static check does NOT cover** (so this is not claimed): it skips `scripts/` and
+      `tests/`, and cannot resolve callsites whose category/data_type are runtime variables. The backstop for
+      those is the runtime gate — `MissingSourceError`, verified importable from UTL and raised from
+      `manifest_writer/_writer_captured.py` / `_writer_record.py`.
 
 ### Close-out
 
