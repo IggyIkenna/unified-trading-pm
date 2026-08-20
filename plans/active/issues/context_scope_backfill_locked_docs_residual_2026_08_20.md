@@ -66,3 +66,7 @@ confirmation the lock is stale.
       workspace's liveness-gated inherited-dirty-WIP convention), and either archive them (if the lock naturally clears
       via their own resolution path) or backfill `context_scope` on them directly (only after an operator-approved
       unlock, never autonomously). Repo: unified-trading-pm.
+
+## Progress Log
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
