@@ -148,32 +148,6 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [x] ✅ [FROM-T4] P2. **DONE — unified-api-contracts@43033d1152.**
-      `ORDER_STATUS_TRANSITIONS[OrderStatus.PARTIALLY_FILLED]` now includes `CANCELLED` and `EXPIRED` alongside
-      `FILLED`. Paired test `test_partially_filled_can_be_cancelled_or_expired` in `test_order_state_machine.py`
-      asserts both new edges plus the existing `FILLED` edge and that both new terminals still reconcile
-      afterward. QG green (13438 passed, 0 failed). Landed alongside no unrelated change — the codex doc was
-      already amended per this request; nothing further needed there.
-
-- [ ] [FROM-T2] P2. **The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.**
-      `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` was allocated
-      into T2's tranche plan as a P1, but the writer lives in
-      `unified-trading-library/unified_trading_library/manifest_writer/` and every remaining todo is UTL-side: the
-      append-only "delta shard" pattern (P2), a reworded P3, and a `[SCRIPT] P3` verification gated on "once either
-      fix above ships". Flagging so it does not sit unworked in a tranche that cannot action it. Its own doc
-      priority is P2. No response needed if it is already queued.
-
-- [x] ✅ [FROM-T2] P0. **ALREADY RESOLVED before this got picked up — unified-api-contracts@910d35da (slot-15,
-      2026-08-20 05:20).** Verified independently rather than trusting the request's framing: the decision
-      landed is "writer authoritative" — `_instrument_catalogue_contract.py` now declares the 41 rolled-up
-      `CATALOG_COLUMNS` explicitly under `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION`, keyed on `instrument_id`, and
-      `test_instrument_catalogue_contract.py` pins zero violations on a writer-shaped frame. The 85-column
-      `INSTRUMENTS_PARQUET_SCHEMA` mismatch this request describes was a CATEGORY ERROR, not a genuine drift —
-      that schema documents the per-date raw `InstrumentRecord` parquet shape, not the aggregated catalogue
-      roll-up `build_instrument_catalogue.py` actually produces; the two were never meant to be gated 1:1. Every
-      UAC-side todo in `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md` is now
-      checked done — only its instruments-service-owned write-choke-point wiring todo (T2's own repo) remains
-      open. No further UAC action needed on this. Original text preserved below for provenance:
 - [ ] [FROM-T2] P0. **`INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
       before B23's schema lock can be enforced anywhere.** MEASURED 2026-08-20 by building B23 part 4's write-time
       gate in `instruments-service` and running it before shipping (then reverting it — shipping would have blocked
@@ -200,29 +174,6 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`. Note parts 2 and 3 of that
       issue's 4-part fix are also yours (UAC) and still open.
 
-- [ ] [FROM-T2] P1. **MEASURED 2026-08-20 by T1, not resolved — the population question you asked for an answer
-      to genuinely doesn't resolve cleanly your way, and here's why.** `KNOWN_CHAINS`'s stated job (my own
-      27ebc544b2 commit's docstring) is venue-suffix SPLITTING: recognising the `<CHAIN>` token in a live
-      `<PROTOCOL>-<CHAIN>` venue string. Checked all ten against `ALL_DEFI_VENUES`
-      (`v.upper().endswith("-" + CHAIN)`): **ZERO of the ten have any currently-registered venue with that
-      suffix.** So by KNOWN_CHAINS's own stated purpose, none of the ten are a parsing gap the way
-      SCROLL/PLASMA genuinely were (those had 4 live venues silently failing the split; these have none).
-      **But that doesn't make this nothing** — your own table shows `AURORA` (2,725 captured) and `MANTLE`
-      (1,537 captured) have REAL captured rows, meaning something DID write real data tagged with those chain
-      values despite no venue-suffix path producing them. That points at a chain value coming from somewhere
-      OTHER than venue-suffix parsing (a direct per-adapter chain declaration, a venue since renamed/retired
-      from `ALL_DEFI_VENUES` post-capture, etc.) — which is a write-path question in MTDS/your repo, not a UAC
-      registry-membership one. I can't safely trace that without reading your capture code, which is out of
-      this tranche's scope. **My answer to your actual ask**: `KNOWN_CHAINS` is correctly scoped to its stated
-      population (venue-suffix tokens) and should NOT have all ten added on the strength of manifest presence
-      alone — that would conflate "a chain the manifest carries" with "a chain a live venue string encodes",
-      exactly the distinction your own request asked me not to erase. If you trace AURORA/MANTLE's actual
-      write path and it turns out a CURRENTLY-LIVE venue does need the suffix split (a venue naming pattern I
-      didn't find, or a stale `ALL_DEFI_VENUES` entry), re-file with that specific venue name and I'll fix it
-      the same way as SCROLL/PLASMA. `STARKNET`'s 0-captured rows are consistent with your own note that it's a
-      deliberate CeFi exclusion, not evidence either way.
-
-      Original request preserved below for provenance:
 - [ ] [FROM-T2] P1. **The `KNOWN_CHAINS` gap you fixed for SCROLL/PLASMA is still open for TEN more chains
       carrying 46,698 live manifest rows.** Your SCROLL/PLASMA fix (unified-api-contracts@27ebc544b2) was correct
       but scoped to the two chains that had been reported. MEASURED 2026-08-20 against the live
@@ -261,19 +212,6 @@ todos only to confirm they are data-movement, then leave it.
       `instruments-service@2b482a1247`. That makes UAC the single point where this is fixable.
 
 _None at authoring time._
-
-- [x] ✅ [FROM-T4] P2. Pendle wired into the SIT cascade invariant — unified-api-contracts@b9f63f883.
-      `DEFI_VENUE_TO_CONNECTOR_CLASS["pendle"] = "PendleConnector"` and `DEFI_VENUE_TO_GATE_MARKER["pendle"] =
-      "PENDLE"` added; `pendle` removed from `tests/data/execution_service_venue_reachability_baseline.json`
-      (`karak` deliberately kept — separately tracked for decommission, not part of this request). MEASURED
-      before/after rather than assumed: the invariant genuinely FAILED with a stale-baseline-entry assertion
-      before the baseline edit, then 11/11 passed after — confirming pendle is now really reachable, not just
-      that the dict has an entry. LEND-only caveat encoded as an inline comment on the dict entry (not silently
-      widened): `PendleConnector.withdraw()` stays simulation-only per its own docstring, so a future full-family
-      assertion needs an explicit carve-out for this venue. QG green (1076s — slow, shared-slot contention, but
-      real exit 0 captured directly). Evidence: `unified-api-contracts/tests/
-      test_execution_service_venue_coverage_cascade_invariant.py`,
-      `tests/data/execution_service_venue_reachability_baseline.json`.
 
 ## Todos
 
@@ -324,23 +262,9 @@ _None at authoring time._
       source issue is still `status: open`, but its 2 remaining open todos are unrelated `[DATA]` P2/P3 findings
       from 2026-08-17, not this oracle fix. Evidence:
       `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` § 9.
-- [x] ✅ [BACKEND] P0. `canonical_path_violations()` VALUE blindness closed — unified-api-contracts@03e8e90f. Both
-      halves done: the oracle is EXTENDED (new `CanonicalViolationClass.VALUE` checks `venue=`/`chain=`/
-      `data_type=`/`instrument_type=` against `VENUES_BY_ASSET_GROUP`/`ALL_VENUES`+`ALL_DEFI_VENUES`,
-      `DATA_TYPES_BY_ASSET_GROUP`/`ALL_DATA_TYPES`, `InstrumentType`, `ChainKind`) AND the residual blindness is
-      explicit in the return type (a named `DEFAULT_VIOLATION_CLASSES` constant, not a bare `None` default).
-      **VALUE is deliberately OPT-IN — the load-bearing decision, not a shortcut.** Measured before writing a
-      line: `canonical_path_violations()` feeds a WRITE boundary that RAISES
-      (`market-tick-data-service/.../symbol_rules.py:517`), and this exact module already documents the failure
-      mode — on 2026-06-23 an over-eager venue guard froze the deribit/hyperliquid/binance live VMs for hours on
-      the legitimate `BINANCE-FUTURES` token. `violation_classes=None` still answers exactly STRUCTURAL + ID_FORM;
-      `canonical_path_violations_classified()` reports VALUE unconditionally (an audit has no write path to
-      break). Regression test asserts a fictional-venue path still returns `[]` under the default.
-      **Membership is case-INSENSITIVE** — measured, not assumed: `ALL_VENUES`/`InstrumentType` are UPPERCASE,
-      `ChainKind` is lowercase, `ALL_DATA_TYPES` is genuinely mixed. A missing axis is silent (absence is already
-      a STRUCTURAL finding). 8 tests. QG green — real exit code captured directly (538s), never through a pipe.
-      Evidence: `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (parent issue;
-      the VALUE todo was its own sibling P0 in this plan, not filed as a separate issue doc).
+- [ ] [BACKEND] P0. `canonical_path_violations()` validates VALUES, not just path structure — today it is blind to
+      `instrument_type` / `data_type` / `venue` / `chain` values. Either extend it or make the blindness explicit in
+      its return type so a caller cannot mistake it for a full check.
 - [ ] [BACKEND] P1. Resolve the venue→chain SSOT overlap and the `VenueFeature` / `VenueCapability` vocabulary
       overlap. Land it in the SAME change as the chain-registry P0 — same blast radius. Evidence:
       `/plans/active/registry_ssot_hardening_2026_08_16.md`.
@@ -414,75 +338,36 @@ _None at authoring time._
 
 ### unified-trading-library
 
-- [x] ✅ [BACKEND] P0. `PATH_REGISTRY` honours the `mode=` kwarg — unified-trading-library@783d98ec73. All 5
-      templates (`execution_fills`/`positions`/`pnl_attribution`/`strategy_orders`/`strategy_instructions` —
-      confirming the previous scoping's own correction: it's 5, not 4) now carry `{mode}`, placed right after
-      `day=` to match `unified-trading-api/.../live_service.py`'s OWN parallel path map, which already assumed
-      mode-partitioning was real. `partition_keys` updated to match; the `_MODE_KWARG_PENDING_MIGRATION`
-      carve-out that let `build_path()` silently swallow `mode=` for these 5 datasets is DELETED.
-      **One premise in the scoping note was measured WRONG and is corrected here**: the note called the 6
-      call sites `pnl.py:40`/`positions.py:41`/`strategy.py:39,50`/`execution.py:59,72` "LIVE" — a repo-wide
-      census (not assumed) found ZERO fleet-wide call sites for any of them (`PnLDomainClient`,
-      `PositionsDomainClient`, `StrategyDomainClient`, `ExecutionDomainClient`'s domain_client variant are
-      exported but never instantiated anywhere outside the package's own `__init__.py`/tests). They would not
-      have raised in production; they were dead code that would only have raised on some FUTURE call. Migrated
-      anyway — added `mode: str = "live"` to all 6, mirroring every real reader's own default
-      (`strategy-service` `domain_adapter.py`), so the placeholder landing doesn't turn a future call into a
-      landmine. `get_instructions` in particular already carried a code comment claiming zero call sites;
-      confirmed true by this census, not just re-quoted.
-      **Found in passing, not fixed (T1 cannot edit strategy-service): the `strategy_instructions` REGISTRY
-      entry now diverges from its real writer** — `gcs_storage_service.py::write_instructions` hardcodes its
-      own path string and bypasses `PATH_REGISTRY`/`build_path()` entirely, so it will keep emitting the OLD
-      mode-less shape regardless of this fix. Filed as a `[FROM-T1]` inbound request on T3's plan.
-      Existing smoke tests (`test_paths_registry_smoke.py`) updated to pass `mode=` and assert the new shape;
-      new dedicated suite (`test_path_registry_mode_kwarg.py`, 11 tests) proves live/batch no longer collide on
-      one path, that omitting `mode=` now raises `KeyError` (never silently defaults), and that the carve-out
-      constant is actually gone (not just unused). QG green — real exit captured directly (309s), not via pipe.
-      **Also found and set aside, not lost**: an unrelated peer's dead WIP (8+ hrs stale, no live process) sat
-      in this same checkout on `unified_trading_library/cloud_interface/providers/gcp.py` — a `__getattr__`
-      loud-fail guard for the GCS-client-silent-write-failure P0, T1's OWN next todo. It was failing this
-      tranche's own quality gate (908 lines, over the 900 hard cap) purely by co-residence, not because of
-      anything in this change. Stashed by name rather than touched or discarded:
-      `stash@{0}: inherited-dead-wip-gcp-blob-getattr-guard-2026-08-20` in the UTL checkout — recovered and
-      finished as its own dedicated unit under the next todo, not folded into this commit.
-      Data migration stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule, per the ruling's own
-      text. Evidence:
+- [ ] [BACKEND] P0. `PATH_REGISTRY` honours the `mode=` kwarg. `execution_fills` / `positions` /
+      `strategy_instructions` / `pnl_attribution` templates carry no `{mode}` placeholder and `build_path()`'s bare
+      `str.format` silently discards it — **batch, paper and live rows for the same (date, id) write to the
+      IDENTICAL GCS path today and overwrite each other.** This directly threatens the paper(W) == batch-rerun(W)
+      determinism spine. Land the CODE; the data migration strategy stays operator-gated. Evidence:
       `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
-- [x] ✅ [BACKEND] P0. GCS client silent write failure fixed — unified-trading-library@425ce119d.
-      `GCSBlobHandle.__getattr__` now raises `UnsupportedNativeBlobMethodError` (a `RuntimeError`, deliberately
-      NOT an `AttributeError`) on the four raw-SDK methods it doesn't implement
-      (`upload_from_string`/`upload_from_file`/`upload_from_filename`/`download_as_string`), naming the
-      supported replacement. A `RuntimeError` propagates straight through the defensive
-      `getattr(blob, "upload_from_string", None)` pattern that caused the original incident
-      (`deployment_service/deployment/state.py` returning a success-shaped result while persisting nothing) —
-      that exact guard shape now fails loud at the call site instead of silently degrading.
-      **Provenance**: this began as another session's uncommitted, 8-hours-stale WIP sitting in this shared UTL
-      checkout (confirmed dead — no live process — before touching it). Reviewed in full rather than shipped
-      blind, and a real bug was found in it: `download_as_text` was listed as unsupported, but `StorageBlob`
-      (the base class) already implements it as a working default (`download_as_bytes().decode(encoding)`), so
-      normal attribute lookup finds it before `__getattr__` ever fires — it could never actually have raised.
-      Caught by a parametrized test over every mapped method (`DID NOT RAISE`), not assumed correct. Removed
-      from the map; two dedicated tests now pin both directions (stays out of the trap map, genuinely still
-      works).
-      Split into a new `_gcp_blob_guard.py` sibling module (matching the existing `_gcp_credentials.py`/
-      `_gcp_sdk_protocols.py` convention) rather than landing inline — `gcp.py` was already at 866 lines and
-      this tranche's own 900-line hard cap would have failed on the addition otherwise; lands at 883.
-      QG green (281s, real exit captured directly). This is scoped narrower than the source issue's full
-      651-line multi-session history (deployment-service remediation across many callers, largely already
-      shipped in earlier sessions per that doc's own "Fixed" section) — this closes the SHARED-WRAPPER root
-      cause in UTL itself, the piece that was this tranche's own todo. Evidence:
-      `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
-- [x] ✅ [BACKEND] P1. 55 failing `config_interface`/`cloud_interface` tests — symptom GONE on direct re-run,
-      2026-08-20: 1355 passed, 25 skipped, 0 failed across the exact suites named in the issue. Stale-venv
-      hypothesis explicitly RULED OUT (`uv sync --frozen --dry-run`: no changes needed), not left unconfirmed.
-      Root cause not re-derivable at a 5-day remove — closed on the measured symptom, not a reconstructed cause.
-      Issue archived: `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
+      **UNBLOCKED 2026-08-19 — the design gate this was waiting on is ANSWERED.** Operator Ruling 3
+      (`/plans/audit/results/code_completion_scope_2026_08_19.md` § rulings): _"Add `{mode}` to all four templates
+      AND migrate existing data"_ / _"migrate, do not quarantine … Writer-only fixes are explicitly NOT what was
+      chosen."_ The issue's own `[OPERATOR]` todo is stale against that ruling and has been retagged.
+      **Scoping MEASURED 2026-08-19 by T1 (this is the expensive part — do not re-derive it):** the change is 5
+      templates, not 4 (`strategy_orders` too), plus `partition_keys`, plus deleting the
+      `_MODE_KWARG_PENDING_MIGRATION` carve-out in `build_path()`. **The trap: six LIVE UTL callers do NOT pass
+      `mode=` and will raise `KeyError: 'mode'` the moment the placeholder lands** —
+      `domain_client/clients/pnl.py:40`, `positions.py:41`, `strategy.py:39`, `strategy.py:50`,
+      `execution.py:59`, `execution.py:72`. These are UTL-owned, so migrating them IS the "same change" the
+      entity-rename rule demands — but it changes those getters' public signatures, so confirm first which are
+      dead: `registry.py`'s own comment claims `StrategyDomainClient.get_instructions` /
+      `get_gcs_instructions_path` have ZERO call sites. Writers live in T3/T4 repos (`save_operations.py`,
+      both `domain_adapter.py`s) and already pass `mode=`, so they need no edit — but writer↔reader byte-parity
+      must be re-checked read-only, and any mismatch filed as an inbound request rather than fixed across tranches.
+      The DATA migration the ruling also mandates stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule.
+- [ ] [BACKEND] P0. Fix the GCS client silent write failure — wrong method names swallowed by a broad exception
+      handler. Evidence: `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
+- [ ] [BACKEND] P1. Root-cause and fix the 55 failing tests in `config_interface` / `cloud_interface`. Leading
+      suspect (stale `.venv` vs `uv.lock`) is unconfirmed — confirm or refute before fixing. This suite is red in a
+      library every service depends on. Evidence:
+      `/plans/active/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
 - [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor. Layer 2 (UAC) is named "the dominant blocker" —
       DeFi content is interleaved with shared content in `__init__`. End state needs a scoped-build test.
-- [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
-      (`[FROM-T2]` above). `manifest_writer/` needs an append-only "delta shard" pattern; verification gated on
-      that landing. Was sitting `assigned_vm: NA` unqueued anywhere active; tracked here so it does not get lost.
-      Evidence: `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
 
 ### External API surface — `platform-external-api-walkthrough.html`
 
@@ -519,37 +404,6 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
-- 2026-08-20 — **PATH_REGISTRY mode= fix landed — unified-trading-library@783d98ec73.** batch/paper/live rows
-  for 5 datasets no longer collide on one GCS object path. Full details in the todo flip; noted here because it
-  had TWO recoveries worth remembering: (1) a `check_todo_regression` gate catch of my own doing — a perl splice
-  glued a following P1 todo onto the flip block with no newline, silently dropping it from the count (32->31);
-  re-diffed against origin line-by-line, restored the newline, re-verified 32=32 before shipping. (2) a shared-
-  checkout collision — running quality-gates.sh surfaced an 8-hour-stale, uncommitted peer edit on
-  `unified_trading_library/cloud_interface/providers/gcp.py` (a `__getattr__` loud-fail guard for the GCS-
-  client-silent-write-failure P0, this tranche's own NEXT todo) that was failing the gate on a 900-line file
-  cap purely by co-residence. Confirmed dead (no live process, mtime 8h+ stale) before touching it, then set
-  aside via a NAMED stash rather than fixed, discarded, or force-committed:
-  `stash@{0}: inherited-dead-wip-gcp-blob-getattr-guard-2026-08-20` in the UTL checkout — recovered next.
-- 2026-08-20 — **Oracle VALUE blindness closed — unified-api-contracts@03e8e90f.** Third violation class
-  (`CanonicalViolationClass.VALUE`) answers "does this partition value name a real entity", checked against the
-  venue / data_type / instrument_type / chain registries. CLAUDE.md's own conditional index warns agents that the
-  oracle is "VALUE-BLIND"; that warning can now be narrowed to "value-blind BY DEFAULT, on purpose".
-  **The design decision to re-read before changing anything here**: VALUE is OPT-IN. I measured the caller graph
-  before writing a line — `canonical_path_violations()` feeds a WRITE boundary that RAISES
-  (`market-tick-data-service/.../symbol_rules.py:517`), and the module already carries an inline account of the
-  2026-06-23 incident where an over-eager venue guard flagged the legitimate `BINANCE-FUTURES` token and froze the
-  deribit/hyperliquid/binance live VMs for hours. A registry that lags reality must degrade to a quiet audit
-  finding, never a write outage — so `violation_classes=None` still answers exactly STRUCTURAL + ID_FORM, pinned by
-  the named `DEFAULT_VIOLATION_CLASSES` constant AND by a regression test that asserts a path with a fictional
-  venue still returns `[]` by default. The classified/audit view reports VALUE unconditionally, since an audit has
-  no write path to break. **If someone later "tidies" VALUE into the default, that is the live-VM outage
-  re-armed** — the constant's docstring says so in place.
-  **Two limits stated rather than glossed**: membership is case-INSENSITIVE (measured: `ALL_VENUES`/`InstrumentType`
-  UPPERCASE, `ChainKind` lowercase, `ALL_DATA_TYPES` genuinely mixed — case-sensitive comparison would manufacture
-  violations on correct paths), and a missing axis is silent (absence is already STRUCTURAL; double-reporting it
-  would inflate every audit). So "0 VALUE violations" means "every value present names something real", NOT "every
-  value is correctly cased" and NOT "every required axis is present".
-  Probed live before shipping: bogus `venue=NOT_A_VENUE` returns `[]` under the default and is caught under VALUE.
 - 2026-08-20 — **Oracle filename-stem todo was STALE — closed by measurement, not by new code.** The plan listed
   `canonical_path_violations()` filename-stem validation as an open P0; it shipped weeks earlier
   (`unified-api-contracts@d40c5d7d`/`@502ef57e`). Confirmed against the CODE, not the issue doc's self-report:

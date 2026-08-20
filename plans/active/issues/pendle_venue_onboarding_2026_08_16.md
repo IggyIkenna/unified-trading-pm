@@ -74,15 +74,9 @@ context_scope:
 
 ## What's needed
 
-- [x] ✅ [AGENT] P2. **Wire `PendleConnector` into `DeFiAdapter`** — **execution-service@0c0b6a1a40**. Facade export,
-      constructor param + `ensure_connected` entry, `_execute_pendle_lending` handler, route-table entry, and
-      real construction in `live_execution_handler._build_defi_adapter`. **LEND only**: `withdraw()` is
-      simulation-only by this connector's own docstring, so routing a live WITHDRAW there would fabricate a
-      success; `PENDLE_OPERATIONS` is a strict subset of `LENDING_OPERATIONS` and the other three operations
-      raise "Unsupported lending venue" until real `YT.redeemPY()` redemption is implemented.
-- [ ] [AGENT] P2. **Implement Pendle PT redemption (`withdraw`) for real**, then widen `PENDLE_OPERATIONS` to
-      include WITHDRAW in the SAME change. Needs the transfer-then-call pattern plus pre- vs post-maturity
-      branching. Until then the operation is refused rather than simulated — do not widen the set first.
+- [ ] [AGENT] P2. **Wire `PendleConnector` into `DeFiAdapter`'s constructor + `_dispatch_defi_operation`**, matching
+      the pattern Symbiotic's dispatch wiring just established (`defi_adapter.py`, gate on a `"PENDLE"` venue-name
+      branch calling a `_execute_pendle_yield_tokenization`-shaped method).
 - [ ] [AGENT] P2. **Add `"pendle": "PendleConnector"` to `DEFI_VENUE_TO_CONNECTOR_CLASS`** and the matching
       gate-marker comment to `DEFI_VENUE_TO_GATE_MARKER` in
       `unified-api-contracts/tests/test_execution_service_venue_coverage_cascade_invariant.py` — the same two-map

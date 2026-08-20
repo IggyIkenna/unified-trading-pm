@@ -509,66 +509,6 @@ the coverage gate or not) — it DOES mean that ruling should NOT be made on the
 current live orchestrator code is what's producing these specific manifest rows; it structurally
 is not, for either candidate CQG-bundle writer that exists today.
 
-## Diagnosis update (2026-08-20, slot-33) — ROOT-CAUSED + FIXED via live reproduction: Gamma's pagination-offset ceiling
-
-Per the still-open P1 todo ("trace WHY instruments-service's POLYMARKET catalogue writer stopped emitting"),
-traced the URDI fetch stage upstream of the write path slot-19 pinpointed (2026-08-18): `_write_prediction_venue`
-only ever runs when `venue_str in df.groupby("venue")` — i.e. only if the URDI fetch stage
-(`urdi_reference_provider.py::_fetch_one_venue` → `PolymarketReferenceDataAdapter.get_instruments_cached`)
-returned at least one record for POLYMARKET that day. Traced the fetch call chain
-(`process_fetch.py::_fetch_urdi_records` → `fetch_instruments_for_all_venues` → `_fetch_one_venue` →
-`get_adapter_for_canonical_venue` → `PolymarketReferenceDataAdapter.get_instruments`) and ruled out the two
-`4b55c57b` refactor (2026-08-09 23:36, deleted the dead `_cross_reference_fixture()` capability) call sites —
-`get_adapter_for_canonical_venue`'s `elif adapter_key == "polymarket"` branch it removed just falls through to
-the generic `create_reference_data_adapter("polymarket", ...)` else-branch, which resolves `_ADAPTERS["polymarket"]
-= PolymarketReferenceDataAdapter` correctly (confirmed by direct read) — not the bug.
-
-**Live-reproduced the actual bug** (bounded, read-only, public no-auth Gamma endpoint — no GCS/prod credentials
-touched): ran `PolymarketReferenceDataAdapter().get_instruments(date=None)` directly (this slot's own freshly
-`uv sync`'d venv) and it failed with `RuntimeError: Polymarket gamma/markets fetch failed (error_code=UNKNOWN,
-retry_safe=True): 422, message='Unprocessable Entity', url='https://gamma-api.polymarket.com/markets?...
-&offset=2100&order=volume24hr&ascending=false'` — i.e. **right now, today, the live Gamma `/markets` endpoint
-has an undocumented hard pagination-offset ceiling: it 422s once `offset` crosses ~2000-2100.**
-
-**Mechanism, confirmed by code read**: `57c71bd4` (2026-08-09 08:55 UTC, "fix(polymarket): remove silent
-top-2000-by-volume live-market cap") raised `_MAX_PAGES_ACTIVE` from 20 to 10000 specifically to stop the
-live-mode pagination loop (`adapter.py::get_instruments`) from silently truncating the active-market universe
-below 2000 markets. That fix's OWN intent was correct (the old cap WAS silently truncating), but it didn't
-account for Gamma's real offset ceiling. Once the live universe exceeds ~2100 markets (apparently the normal
-case now — reproduced today), the loop always pages into the 422. `adapter.py::_fetch_page`'s error handler
-deliberately RAISES on any page failure (documented, correct CF-11 behaviour for genuine transient errors — "a
-mid-pagination page failure must NOT silently truncate the live universe... RAISE so the per-venue handler
-records the cell attempted_failed"), but the raise happens INSIDE the same loop that's still accumulating
-`results` locally, with no try/except around the loop preserving what was already fetched — so the exception
-propagates out of `get_instruments()` entirely and **discards every already-successfully-fetched page along
-with it**. `urdi_reference_provider.py::_fetch_one_venue` catches the `RuntimeError`, classifies it
-`RETRY_EXHAUSTED`/retryable, and returns `[]` for POLYMARKET that call. Since the underlying 422 is a
-deterministic API-side wall (not a transient blip), every retry hits the identical boundary — POLYMARKET
-contributes literally zero `InstrumentRecord`s to that day's fetch, so `venue == "POLYMARKET"` never appears in
-the write-stage groupby and `_write_prediction_venue` is never invoked at all. This is exactly why NO GCS
-objects (not even an `attempted_failed`/`empty_confirmed` manifest stamp) appear for POLYMARKET on affected
-days — nothing downstream of the fetch ever runs. 57c71bd4 turned "truncate at ~2000" into "return zero, every
-run" the moment the live universe crossed the offset ceiling (which it apparently did definitively by
-2026-08-10, matching the observed 62→33→0 blob-count collapse slot-19 measured 2026-08-08→08-10).
-
-**Fix shipped** (`instruments-service@a586f34102`): in `adapter.py`'s live-mode pagination loop, catch the
-SPECIFIC `(page > 0, HTTP 422)` shape and treat it exactly like a genuinely-short final page — stop paging, keep
-every market already fetched (restores the ~2000-2100-market universe instead of losing it entirely). Any other
-failure (network, 5xx, auth, or a 422 on page 0 itself) still raises exactly as before — unchanged CF-11
-fail-loud behaviour for genuine outages, regression-tested (`test_live_page_failure_raises_not_truncates`,
-`test_clob_scan_midscan_failure_raises_not_truncates` still pass; two new tests added:
-`test_live_pagination_422_ceiling_preserves_partial_universe`,
-`test_live_pagination_non_422_failure_past_page_zero_still_raises`). `bash scripts/quality-gates.sh` green.
-
-**Residual note — this is a partial-universe recovery, not a full fix for Gamma's ceiling.** The adapter now
-returns ~2000-2100 markets (sorted `volume24hr desc`, so the highest-volume ones) instead of zero, matching (and
-slightly improving on) the pre-57c71bd4 behaviour — but any market beyond the offset ceiling is still silently
-absent from the catalogue, same as before 57c71bd4. A genuine fix for the FULL universe would need a different
-Gamma query strategy (e.g. cursor/id-based pagination if the API supports it, or a supplemental
-lowest-volume-first pass) — out of scope for this todo (which was to root-cause and stop the zero-output
-regression); if the full >2100-market long tail matters, file a fresh todo for that separately rather than
-scope-creep this fix.
-
 ## Todos
 
 - [x] ✅ [CODE] P1. Manifest hygiene RED — diagnosed (not fully fixed) 2026-08-17 slot-14. See "Diagnosis"
@@ -653,13 +593,16 @@ scope-creep this fix.
       before editing. Found the SAME unscoped claim, verbatim, in `kalshi_adapter.py`'s own copy of
       `_emit_lifecycle_prefetch_skips` while fixing this (not named in the original todo) — fixed both in the
       same commit per CLAUDE.md "a doc/comment that misled you is a finding, fix it in the same turn".
-- [x] ✅ [DATA] P1. Traced + FIXED 2026-08-20 slot-33 — `instruments-service@a586f34102`. See "Diagnosis update
-      (2026-08-20, slot-33)" below for the full live-reproduced root cause + fix. Note: the code lives in
-      `process_write_venue.py::_write_prediction_venue` (split out of `process_write.py` since this todo was
-      filed — `process_write.py` now only imports it), but the actual bug is upstream of that write stage
-      entirely (the URDI fetch never returns any POLYMARKET records to write, so `_write_prediction_venue` is
-      never even invoked for that venue on an affected day) — filing this correction inline per CLAUDE.md "a
-      doc/comment that misled you is a finding, fix it in the same turn" rather than leaving the stale path.
+- [ ] [DATA] P1. Trace WHY instruments-service's `_write_prediction_venue`
+      (`instruments_service/engine/orchestrator/process_write.py`) stopped emitting POLYMARKET catalogue objects
+      (`instrument_availability/by_date/day={date}/.../venue=POLYMARKET/...`) starting 2026-08-10 (corrected
+      2026-08-19, plan-reconcile observability_master: rewrapped for line-1 completeness) — confirmed live via GCS
+      listing (see "Diagnosis update (2026-08-18, slot-19)" above for the per-date blob-count table) while every
+      other venue's catalogue objects kept writing on the same days. Check `instruments-service`'s own orchestrator
+      run logs for `venue=POLYMARKET` around 2026-08-09→2026-08-10 for a source-fetch error, credential/rate-limit
+      failure, or a filter/classification change that now excludes POLYMARKET from the write set.
+      `instruments-service` repo. This is the upstream fix that would resolve the downstream MTDS raw-`trades`
+      `DIVERGENT_EMPTY` finding — MTDS itself needs no code change (its CF-11 signalling is correct).
 - [ ] [DATA] P2. Launch a VM to run `detect_manifest_divergence.py --asset-group cefi` (14M+ row manifest OOMs the
       shared host at a 4GB cap) and get the real per-cell CSV breakdown (not the stdout-tail sample) — determine
       which venue(s)/data_type(s) actually drive the 58,362 DIVERGENT_EMPTY count before triaging real-gap vs
@@ -695,16 +638,3 @@ scope-creep this fix.
   doc's todo as a cross-reference rather than re-diagnosing; the two P2 and one P1 todos above
   remain the tracked fix work for cefi/tradfi/prediction.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **slot-33 2026-08-20**: root-caused + FIXED the still-open POLYMARKET-catalogue-writer P1 todo —
-  `instruments-service@a586f34102`. Live-reproduced (bounded, read-only, no-auth public endpoint):
-  Polymarket's Gamma `/markets` endpoint 422s past pagination offset ~2000-2100 — an undocumented API
-  ceiling `57c71bd4` (2026-08-09) didn't account for when it raised `_MAX_PAGES_ACTIVE` to stop a DIFFERENT
-  silent-truncation bug. The mid-loop raise (deliberate CF-11 fail-loud design) discarded every
-  already-fetched page along with the failure, so POLYMARKET returned zero records — hence zero GCS
-  catalogue objects — on any day its live universe crossed the ceiling (matches the measured 62→33→0
-  blob-count collapse 2026-08-08→08-10). Fixed to preserve already-fetched pages on this specific
-  (page>0, HTTP 422) shape while keeping fail-loud for every other failure kind; 2 regression tests added,
-  `quality-gates.sh` green. See "Diagnosis update (2026-08-20, slot-33)" above for the full trace + the
-  residual-scope note (still capped at ~2000-2100 by volume, same as pre-57c71bd4 — the long tail beyond
-  that is a separate, unscoped follow-up if it matters). Also corrected the todo's stale file pointer
-  (`process_write.py` → `process_write_venue.py`, split out since this todo was filed) inline per CLAUDE.md.

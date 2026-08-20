@@ -361,23 +361,6 @@ todos only to confirm they are data-movement, then leave it.
       and is now ratcheted — both counts can only go down. Owner resolution reads the tag's `title` attribute (the
       machine-readable doc path) before the visible label; label-only resolution produced 3 false violations on
       this corpus, so the checker was corrected before seeding rather than baselining the lie.
-
-      **INVARIANT NOW SATISFIED, 2026-08-20 — 37 → 0.** Every claim-bearing section in every artefact carries a
-      real `owner:` tag, each citing a doc verified to exist on disk (not invented): `platform-architecture.html`
-      (13 sections) → `system_readiness_master` (readiness matrix, data coverage, batch=live spine, funds-isolation
-      hard rule, risk/isolation, expansion breadth, definition-of-done) / `execution_master` (algorithm selection)
-      / `elysium_october_delivery_and_code_disclosure_readiness` (Phase 2 archetype scope) /
-      `code_readiness_t5_readiness_observability_presentations` (the CI/delivery section — literally T5's own
-      repos, agent-orchestrator + unified-trading-ci); `carveout-engineering.html` (9 sections) → the Elysium
-      carve-out spec plan; `strategy-service-deep-dive.html` (10 sections) → `strategy_master`;
-      `strategy-service-walkthrough.html` (1) → `strategy_master`; `platform-external-api-walkthrough.html` (1) →
-      `system_readiness_master` W21; `platform-api-reference.html` (2) → `system_readiness_master` W21 and, for
-      the Authentication section specifically (T1's `unified_trading_library/cloud_interface/api_auth.py`), →
-      `code_readiness_t1_contracts_library_externalapi` — the correct owning tranche, not force-fit into T5's own
-      epic. Baseline lowered `37→0` / markers held at `189` (no regression). Verified via
-      `check_artefact_claim_ownership.py` after every batch, not just at the end — one self-correction caught
-      mid-pass (an early edit added a spurious duplicate marker instead of only an owner tag; found by re-running
-      the checker before shipping, fixed before it ever landed).
 - [ ] [DOC] P0. Extend the same disclosure standard to the four sibling client artefacts the 2026-08-18 audit found
       violating it and which no remediation plan covers — `carveout-engineering.html` and
       `ODUM_Elysium_Phase2_Update_2026-07-24.html` alongside the two already in scope. Evidence:

@@ -106,12 +106,12 @@ the other 29/34.
 
 Per-value, in priority order:
 
-- [x] ✅ [DATA] P2. **HYPERLIQUID / ASTER — add to `ALL_DEFI_VENUES`** (repo: unified-api-contracts,
+- [ ] [DATA] P2. **HYPERLIQUID / ASTER — add to `ALL_DEFI_VENUES`** (repo: unified-api-contracts,
       `unified_api_contracts/registry/defi_venues.py`). Confirm phase (`live` if an IS/MTDS adapter genuinely
       produces the captured rows behind the b21 finding — the `perp-funding-{pid}` bucket table in
       `/codex/02-data/availability-manifest-and-data-status.md` already lists HYPERLIQUID/ASTER as observed DEX-perp
       venues there, suggesting real capture exists; `pipeline` if not yet IS-producible). Done-when: both registered
-      with the correct phase, `DEFI_PERP_VENUES` updated to match, and this pair drops off the b21 defi venues count. — unified-api-contracts@1286df8c54 + Evidence: quality-gates.sh ✅; runtime registry assertions ✅
+      with the correct phase, `DEFI_PERP_VENUES` updated to match, and this pair drops off the b21 defi venues count.
 - [ ] [DATA] P2. **EXTENDED — trace the writer stamping bare `"EXTENDED"`** (repo: market-tick-data-service /
       instruments-service, whichever adapter/`record_captured*` call feeds the `perp-funding` bucket for this
       venue). Confirm whether the real writer stamps `"EXTENDED-STARKNET"` (per `perp_funding_cadence.py`'s
@@ -138,5 +138,3 @@ Per-value, in priority order:
   exception registries). These 5 need real registry-phase/writer-trace judgment calls, out of the parent item's
   read-only-audit-safe scope.
 - **context-scout 2026-08-20**: populated context_scope (5 entries)
-- **2026-08-20 (slot-10)**: Registered HYPERLIQUID and ASTER in `ALL_DEFI_VENUES` as `pipeline` phase entries, restored both in `DEFI_PERP_VENUES`, and exempted these chain-agnostic venue tokens from the live-chain invariant.
-  Shipped as `unified-api-contracts@1286df8c54`; full quality gates passed.

@@ -334,12 +334,3 @@ resolved_by:
   `BASE_IMAGE_DIGEST` bump + rebuild) — but the marker-restore recovery works with the CURRENT image (after restamp the
   incremental path runs normally), and the guard becomes active on the cron once the image is rebuilt.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-
-- **2026-08-20T08:04Z (data_pipeline_alerts_reconciler, slot 29, dispatch agt-88ddd3)**: reconciliation re-confirmed
-  this remains an alerting/infra follow-up rather than a quiet-channel result. The 24-hour channel read contained 2,609
-  messages; live dp-alerting-subscriber errors still recorded repeated Consolidator DOWN and Manifest consolidation
-  STALLED messages for CEFI and TradFi market-data buckets. The CEFI consolidator job was enabled and executing on
-  schedule, so this is the documented locked/no-op or stale-index class, not a scheduler-dead job. The MTDS image rebuild
-  in P2 remains the unresolved deploy-chain step. The earlier 2026-08-19T21:5xZ handoff saying recovery was not
-  executed is superseded by the later 22:2xZ entry documenting execution 6cfs6 and canonical-index advancement; retain
-  that later entry as authoritative.

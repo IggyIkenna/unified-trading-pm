@@ -14,6 +14,7 @@
       "KelpDAOConnector",
       "OrcaConnector",
       "PacificaConnector",
+      "PendleConnector",
       "RaydiumConnector",
       "RenzoConnector",
       "SocketBridgeConnector",

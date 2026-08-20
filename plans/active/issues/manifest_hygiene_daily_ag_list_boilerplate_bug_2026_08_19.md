@@ -101,12 +101,12 @@ invisible to `regen_backlog_from_plan.py`).
       `candidate_csvs` entry, not every AG the script iterates — same fix shape for both `-changed` and `-full`
       modes. Done when: a fresh daily run's issue-doc prose names exactly the AGs its own attached CSV list covers,
       verified against a re-run or the next real daily-cron output. Repo: e2e-testing.
-- [x] ✅ [DATA] P1. Determine whether defi's manifest-hygiene leg has run at all in the last ~53 days (log/cron
+- [ ] [DATA] P1. Determine whether defi's manifest-hygiene leg has run at all in the last ~53 days (log/cron
       history for `manifest_hygiene_daily.py`'s defi branch) and, if it's silently failing, root-cause + fix that
       leg specifically. If defi genuinely has zero candidates every day, state that explicitly (a comment/log
       line) so the next reconcile pass doesn't re-raise the same "is this stalled?" question from CSV-absence
       alone. Done when: a definite verdict (broken vs. genuinely-clean) is on record, evidenced by cron/log history
-      or a live re-run. Repo: e2e-testing. — e2e-testing@f76412e746
+      or a live re-run. Repo: e2e-testing.
 - [ ] [DATA] P2. Re-verify whether `manifest_hygiene_red_cefi_2026_08_16.md`'s suppression fix
       (`e2e-testing@9ed5f78e3f`, widened `_active_backfill_residual_venues`'s glob) is actually holding —
       `manifest_hygiene_cefi_2026_08_18.csv` (dated 2 days after that fix) has 5 of 6 rows for venue=UPBIT,
@@ -127,29 +127,3 @@ invisible to `regen_backlog_from_plan.py`).
   design-judgment call found. Flipped `assigned_vm: NA -> planning`, added `assigned_role: worker` (was missing).
   Companion: `manifest_hygiene_daily_ag_list_boilerplate_bug_2026_08_19_finalize_2026_08_19.md`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **2026-08-20 (slot-33, escalation agt-56f0d4)**: todo 1's AG-list bug recurred live in today's
-  daily run (`plans/active/issues/manifest_hygiene_red_changed_all_2026_08_20.md` — defi named
-  in prose again with no CSV) and was fixed at the root in the same session, alongside a second,
-  independently-found half of the same pattern (the Finding-classes sentence was ALSO hardcoded
-  regardless of `--mode`, naming `phantom_captured_no_parquet`/`shard_4pillar_fail` on
-  `--mode changed` runs even though those checks are scoped out entirely in that mode). Both
-  fixed in one commit, `e2e-testing@0a43d0ec70`, with regression test
-  `test_run_what_i_found_names_only_actual_findings`. **Not checking todo 1 done yet** — its own
-  "Done when" requires live verification against a re-run/the next real daily-cron output, which
-  hasn't happened; the next reconcile pass or tomorrow's 08:00 UTC cron run should confirm the
-  fresh issue-doc prose names only real findings, then flip this checkbox.
-- **2026-08-20 (slot-32, P1 [DATA] verdict + fix)**: defi's manifest-hygiene leg IS running and genuinely clean —
-  NOT broken. Verdict evidence: (1) `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf` runs
-  `manifest_hygiene_daily.py --mode changed` daily 08:00 UTC with NO `--asset-group` filter → all 5 AGs (incl.
-  defi) iterate every run; (2) retained Cloud Run logs (`uts-prod-dp-manifest-hygiene-changed`, 2026-08-18 +
-  08-19) show `invoking divergence ... --asset-group defi` (≈3 min over defi's 6.75GB availability index) →
-  `schema_version_not_v9: count=0` (independent DuckDB check over the real defi index) → `oracle_expects_but_empty:
-  count=0` → `defi hygiene: GREEN` → container exit(0); (3) PM git history confirms only 2 defi hygiene CSVs ever
-  committed (2026-06-22, 2026-06-27) — none in the 06-27→now window; June's findings (22,140/15,697
-  DIVERGENT_EMPTY, 988 legacy non-v9) match the defi onchain backfill/canonical work that began 2026-06-27
-  (`mvp_backfill_defi_onchain_v10_2026_06_27.md` + `defi_cf2_cf3_legacy_canonical_backfill_2026_08_08.md`). A clean
-  AG writes no candidate CSV by design (`if rows:` gate in `run()`), so ~53 days of CSV-absence == checked-and-clean,
-  not a stall. **Code shipped** (`e2e-testing@f76412e746`): explicit GREEN-verdict log line + code comment in
-  `manifest_hygiene_daily.py` stating a missing `manifest_hygiene_<ag>_<date>.csv` means checked-and-clean (a
-  stalled/broken leg logs SKIPPED/errors/warnings, never a silent GREEN) — so the next reconcile pass does not
-  re-raise "is defi being checked?" from CSV-absence alone.
