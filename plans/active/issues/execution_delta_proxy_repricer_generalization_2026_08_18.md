@@ -739,3 +739,179 @@ same concern in two places.
 - [ ] [BACKEND] P1. **Retire the `underlying_instrument_id = instrument`, `delta = 1.0` default** once the general
       model lands — it is the self-underlying special case, and leaving it as a silent default will hide missing
       sensitivity data exactly the way other silent fallbacks have this week.
+
+### 11. FACTOR-STATE MODEL — adopted direction, 2026-08-20 (supersedes parts of sections 3-10)
+
+An external HFT-practice document was reviewed against this design. Its central idea is **stronger than the
+suppression rule we were about to specify**. Recorded here because it changes several earlier rulings.
+
+**The unified fair-value function.** Do not treat premium, greeks and position adjustment as separate instructions
+with separate reaction rules. The slow path publishes a versioned approximation of the whole reservation-price
+function; the fast path holds two mutable inputs — market-factor displacement `Dz` and position displacement `Dq`:
+
+```
+F_i(t) = U_i0 + J_i.Dz + 0.5 Dz' H_i Dz + Theta_i.Dt + a_i0 + [A Dq]_i + c_i
+   where Dz = z_hat_t - z_0 ,  Dq = q_t - q_0 ,  Dt = t - t_0
+```
+
+No more "Binance moved therefore move OKX" / "position changed therefore add adjustment" / "time passed therefore
+decay". Those events merely update state variables in one function.
+
+**Canonical FACTORS, not per-venue prices — this dissolves double-reaction.** `Dz` must NOT be each venue's raw
+price change; that recreates the problem. The vector is common-BTC, USDT/USD, KRW/USD, CME basis, perp/funding
+basis, per-venue transient basis residuals, vol factors. A Binance move updates the *posterior* on common BTC
+(+$75, not +$100, because OKX already moved $20). When OKX catches up the observation is already predicted, `Dz`
+barely changes, and **the greeks do not fire twice**. No debounce, no per-venue-pair threshold. Explicitly rejects a
+crude price+time debounce in favour of computing residual innovation.
+
+**Supersedes section 10's primary/correlated split**: all venues load onto canonical factors; defensive vs
+aggressive becomes a **confidence threshold on `(F_i, sigma_F_i)`**, not a second mechanism. Upbit does not move
+common BTC one-for-one — part loads onto KRW and Korea-local-premium factors.
+
+**Transmit states, not reactions.** Hot messages carry *absolute* factor state with epoch + sequence, not deltas.
+Newer replaces older; a missed packet heals on the next image. Over UDP that beats any retransmit scheme.
+
+**A is position-independent (operator ruling) but NOT market-independent.** An option position's delta moves with
+the underlying; inverse-contract risk per unit moves with price. Needs cross-tensors `A^(k)` for important factors,
+or a tighter trust region forcing earlier refresh. OPEN — section 15.
+
+**Snapshot watermarks are a CORRECTNESS requirement.** Snapshot carries generation, reference time/factors/
+positions, per-venue fill watermarks, market-data watermarks, coefficient version, basis-model version. Without the
+fill watermark, fills landing while a snapshot is in flight are double-applied or dropped, silently. Rebase =
+verify monotonic generation -> replay only events after the watermarks -> evaluate new snapshot at CURRENT state ->
+compare against old model at the same state -> quarantine unexplained discontinuity -> atomic switch.
+
+**Validity envelope** (concrete form of our warn/error thresholds): max |Dz_k|, max |Dq_j|, max Dt, per-output
+approximation error, supported source-health regimes, hard expiry. Outside it: request refresh, disable aggression,
+widen/withdraw passive, keep defensive cancellation while the stale approximation stays conservative.
+
+**Absolute recomputation is the correctness backstop** — incremental column updates for speed, periodic full
+re-evaluation from the immutable snapshot to stop numerical drift.
+
+**Repricing thousands of options cheaply.** Precompute per option the next upper/lower underlying levels at which
+its bid tick, ask tick, size tier or cancel/replace policy changes; a small move recomputes only instruments whose
+thresholds crossed; SIMD/SoA scan for large or multi-factor shocks. **Publish only when the desired ORDER STATE
+changes** (price >=1 tick, size, cancel/replace, risk permission). Illustrative: 128-byte factor state at 20k/s is
+~2.56 MB/s per receiver; 5,000 option values at 16 bytes would be ~1.6 GB/s. Ship the model once, compute locally.
+
+**Feed arbitration.** No single "fastest feed" — choose per (venue, instrument, event class, regime, action). Race
+*exact duplicates* by venue sequence/event id (CME A/B: process first valid, discard processed, recover on gap).
+*Complementary* feeds are conditioned, not discarded: a later BBO confirming a trade contributes ~zero price
+innovation but may reduce uncertainty and unlock aggression. Measure pairwise lead using local monotonic NIC/kernel
+receive timestamps, never exchange clocks.
+
+**Per-colo factor engine.** No central global fair everyone waits for. Venue-local adapters decode and de-duplicate;
+compact source observations cross the WAN; each colo fuses remote observations with its faster local feed and
+publishes its own factor state locally. Regions legitimately hold different information sets at the same instant.
+
+**Cloud multicast billing may invalidate part of section 10.** Cited: AWS Transit Gateway bills per-receiver data
+processing and warns TGW multicast may not suit HFT; GCP charges multicast infrastructure/processing and has no
+cross-region multicast. If so, multicast cuts producer serialisation and NIC bandwidth while billed bytes still
+scale with receivers -> transport becomes substrate-conditional (colo L2 -> multicast; cloud -> reconsider).
+**VERIFY BEFORE BUILDING.**
+
+**Also verify**: quoted venue feed specifics (Binance ~20ms incremental depth / 50ms top-20, OKX 10ms BBO +
+tick-by-tick, Coinbase 250ms trade aggregation). Venue-specific, time-varying, and the arbitration policy keys off
+them.
+
+### 12. Currency, numeraire and the anchor (operator, 2026-08-20)
+
+**USD is the global canonical numeraire.** FX and stablecoin rates are their own explicit fast factors.
+
+**Prices in quote currency, risk in USD.** `U_i0` is published in the instrument's quote currency (BTC/KRW in KRW —
+what you send to Upbit) with the FX loading carried in `J_i`. Positions and the adjustment matrix operate in USD
+canonical risk units via `q = Lp`, where `L` absorbs contract multipliers, inverse-vs-linear and FX/stablecoin
+conversion. Prices in quote ccy, risk in USD, `L` is the bridge.
+
+**Same infra handles BTC/USD, BTC/USDT and BTC/KRW** — one row of loadings each, no new code path. Adding a venue or
+quote currency adds a row and sometimes a factor. Spot and perps as joint canonical influencers are two rows.
+
+**The trap**: a slow path embedding an FX or stablecoin assumption inside `U_i0` without exposing it as a factor
+leaves the fast path no lever. Every conversion must appear in `z` with a loading in `J`. Corollary — **any basis
+that can move materially inside one slow-path interval MUST be an explicit fast factor** (USDT/USD during a depeg
+worst case; also KRW/USD, perp funding). Ask this per factor before building.
+
+**Structure is configured; loadings are calibrated.** Config says which factors an instrument loads on; it cannot
+say how much of an Upbit move is common-BTC vs KRW vs local premium — empirical and regime-dependent. An
+under-specified factor vector fails silently: omit local-premium and Upbit observations have nowhere to go but
+common BTC, and the model mis-attributes confidently.
+
+### 13. Rebase without jaggedness (operator, 2026-08-20)
+
+Execution has the faster feed; strategy is delayed. The rebase must not jump.
+
+**`z_0` is an ANCHOR, not a price opinion.** Execution never adopts it as current state — it keeps its fresher
+`z_hat` and evaluates the new coefficients AT THE CURRENT STATE. Both generations evaluated at the same state, so
+strategy's delay is absorbed by replaying forward from the watermarks. What remains in `F_new - F_old` is genuine
+model change plus approximation error. Strategy sends the SHAPE; execution supplies the STATE.
+
+**`t_0` must be the validity time of strategy's inputs, not publish time** (strategy timestamps its own delay).
+Otherwise `Dt` is understated, theta under-applied, and a systematic bias reads as jitter.
+
+**Natural damper**: publish-only-on-order-state-change means a sub-tick revision produces zero wire traffic.
+Jaggedness reaches the venue only when a revision crosses a tick — a real signal. **Do not blend/ramp** between old
+and new fair: it quotes a number neither generation believes and corrupts the rebase error measurement. Accept the
+new fair, let tick thresholds gate the wire; if extra caution is wanted gate *aggression* for a beat — posture, not
+price.
+
+**The real risk**: if strategy is slow relative to market movement, `Dz` is already large at rebase, so the snapshot
+lands where its Taylor approximation is least accurate — possibly already outside its own envelope. Fix is faster
+cadence or cheaper slow-path compute, NOT a wider envelope (which hides use outside validity). **Instrument
+`Dz`-at-rebase as a distribution from day one**; if p99 approaches the envelope the cadence is wrong for that
+universe. This is the honest input to the per-slot cadence ruling.
+
+**Separate the two causes of the rebase gap**: approximation error (quality signal, trips warn/error) vs genuine
+model update (slow path recalibrated). Measuring only the total makes every legitimate recalibration look like an
+approximation failure. Coefficient version and basis-model version exist for this.
+
+### 14. The anchor is an ESTIMATE, and it lives in FEATURES-SERVICE (operator, 2026-08-20)
+
+**Last-trade is not fair value.** One aggressive order sweeping levels prints a number that was never fair value; if
+`z_0` adopts it the fast path carries that offset until the next snapshot. The slow path runs the same factor
+machinery properly: `z_0` is a posterior estimate of the common efficient price given all venue observations,
+weighted by liquidity, spread and staleness — microprice/imbalance-weighted rather than mid, prints evaluated
+against the book state at the time.
+
+**Spike immunity falls out of the factor model**: a single-venue spike no other venue echoes does not look like a
+common-BTC move — it loads onto that venue's basis residual.
+
+**Internal consistency protects the basis.** Absolute anchor error is common-mode and largely cancels in a spread;
+independent per-instrument error does not. **Every `U_i0` in a generation must derive from ONE consistent `z_0`** —
+price the factors once, then project through `J`. Pricing instruments independently and inferring the basis
+afterwards builds noise into the exact relative values being traded. Same reason the snapshot needs a coherent time
+slice (leg A at t, leg B at t+50ms is an unrecoverable basis error).
+
+**Uncertainty travels with the estimate.** `Sigma_z` alongside `z_hat`; a suspicious print should WIDEN uncertainty
+rather than move the mean, so the action layer quotes less aggressively instead of confidently quoting wrong.
+
+**The slow path should be SMOOTHER than the fast path, not merely slower.** Its job is an unbiased anchor plus
+accurate coefficients — not a fresh price, which execution already has. A slow path chasing every tick manufactures
+snapshot-to-snapshot jitter, surfacing as rebase discontinuity.
+
+**PLACEMENT RULING: the efficient-price/factor estimator, and any smoothing, EMA or averaging, belong in
+FEATURES-SERVICE** — alongside the volatility and greeks computation already there. MDPS owns normalisation and
+canonical book/trade state; features-service owns factor estimate + uncertainty + greeks + vol; strategy-service
+consumes those and adds valuation, the adjustment matrix and credit. Each strategy deriving its own fair value gives
+N disagreeing estimators for one BTC — duplication, and two strategies quoting inconsistent prices on the same
+underlying. Consistent with the standing "strategy reads only processed data, never MTDS directly" invariant.
+
+### 15. OPEN — needs an operator ruling next session
+
+1. **Market-state dependence of A** — cross-tensors `A^(k)` for important factors + trust-region the rest (external
+   doc's recommendation), full `Dz' B_i Dq`, or keep A fixed relying on trust region + refresh cadence?
+2. **Formally adopt the factor model** in place of section 10's primary/correlated split? (Recommend yes — strictly
+   more general, removes per-venue-pair suppression tuning.)
+3. **Position vectors** — adopt `q_confirmed` / `q_pricing` (fill-probability-weighted) / `q_worst`? Do not weight a
+   pending order at 100% through `A` AND treat it as full inventory risk elsewhere unless deliberately conservative.
+4. **Substrate-conditional transport** — should derived topology take deployment substrate as input (colo L2 ->
+   multicast; cloud -> unicast/relay) given per-receiver cloud multicast billing?
+5. Five outstanding Wave-0 rulings: CloudKmsCustodyProvider wallet check, UAC `__init__` restructure scope,
+   instruments catalogue ratification, instrument-universe hot-swap safety, venue-eligibility generalisation shape.
+
+- [ ] [DOC] P0. **Write the full build spec** — a CTO-level document covering slow/fast split, worked examples,
+      infrastructure, feed arbitration, instrument selection for fast updates, and the options fast path. A peer
+      agent was asked for one; reconcile it against sections 11-14 if it arrives, otherwise author it.
+- [ ] [REVIEW] P0. **Verify before building**: cloud multicast billing (AWS TGW per-receiver, GCP no cross-region)
+      and the quoted venue feed latencies. Decision-changing and inherited from a summary, not measured.
+- [ ] [BACKEND] P1. **Instrument `Dz`-at-rebase** as a distribution per strategy slot — the empirical input to the
+      sync-cadence decision.
