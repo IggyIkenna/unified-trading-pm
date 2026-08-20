@@ -73,6 +73,9 @@ last_updated:
   # folded plans from ../active/ to ../archive/2026_07/
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # MTDS/MDPS Master — Market Data Pipeline Coordination

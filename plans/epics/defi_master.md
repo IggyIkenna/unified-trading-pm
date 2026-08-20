@@ -64,6 +64,9 @@ related_plans:
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~75 open `- [ ]` todos
