@@ -211,9 +211,10 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       reports `known_topup_total_usd=15.0`, `current_balance_usd=14.969601`, `real_total_spend_usd=0.0304`, matching
       the vendor dashboard baseline (platform.kimi.ai/console/account: Total Recharge $10 + Voucher $5 = $15 credited,
       Available $14.99978, Consumed $0.00022). Cross-checked live the way the DeepSeek $50 topup was verified.
-- [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` for Kimi through the real Claude Code harness (a spawned
+- [x] ✅ [REVIEW] P2. Live-test `/pre-compact` → `/compact` for Kimi through the real Claude Code harness (a spawned
       `claude` subprocess, not a raw HTTP probe). Done when: a real compact cycle is observed working end-to-end for
-      Kimi, matching the already-verified Gemma result. Repo: agent-orchestrator.
+      Kimi, matching the already-verified Gemma result. Repo: agent-orchestrator. **DONE 2026-08-20 (slot 10)** — see
+      Progress Log.
 - [ ] [BACKEND] P2. Add `overage_status == "rejected"` as an explicit 5th account-failover trigger condition
       (covering both `out_of_credits` and `org_level_disabled`) in the account-monitoring path that feeds
       `rotate_all_slots_off_account` (`server.py`, per `main.md` § "Account-failover triggers"). Should fire
@@ -242,6 +243,27 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
 
 ## Progress Log
 
+- **2026-08-20 (slot 10)**: Item "Live-test `/pre-compact` → `/compact` for Kimi" DONE — real, decisive, positive
+  result, same shape as the already-verified Gemma test (`kimi_gemma_provider_onboarding_2026_08_16.md`). Spawned a
+  real `claude` CLI session in a tmux pane on the orchestrator VM (not a raw HTTP probe) using the real
+  `kimi-k3` account's proxy credentials (`~/.claude-accounts/kimi-k3.env`, `ANTHROPIC_MODEL=kimi-k3`, pointed at the
+  live `litellm-grok-gemini-proxy` on `127.0.0.1:8768` — confirmed live via a direct `/v1/chat/completions` probe
+  before spawning). Controlled for the same methodology gotcha the Gemma session found (a scratch cwd has no
+  `.claude/skills/`): copied the real `pre-compact` skill from
+  `unified-trading-pm/cursor-configs/skills/pre-compact/` into the scratch dir before spawning; `/skills` in-session
+  showed 14 skills including `pre-compact`. Built genuine context by having the live session read a real 6,000-line
+  filler file in full (Kimi's own agent loop chose to read it in 2 chunks + auto-compacted once mid-read on its own
+  built-in auto-compact, unprompted — a separate, real signal that Kimi's context accounting is live and working,
+  not just our own skill). Confirmed via `/context` before our manual cycle: **126.1k/200k tokens (63%)**. Ran
+  `/pre-compact`: genuinely executed the real 8-step ritual (not silently swallowed) — audited git status (none,
+  bare scratchpad), swept the scratchpad, checked dangling references, chat-only findings, secrets, and issued a
+  real Step-8 verdict ("Safe to compact: YES"). Ran `/compact`: "Compacted (ctrl+o to see full summary)" +
+  "Skills restored (pre-compact)". **Real, measured context drop** via a follow-up `/context` read:
+  **10.5k/200k tokens (5%)** — Messages usage dropped 122.7k→7k. This closes the Kimi half of the pre-compact
+  live-test item this doc's own `na-eligibility-audit 2026-08-19` entry split off from
+  `kimi_gemma_provider_onboarding_2026_08_16.md` (item 6) — both halves (Gemma + Kimi) of that original todo are now
+  verified DONE. Tmux session cleaned up after the test; nothing shipped to any repo (this was a live-harness
+  probe, not a code change) — this doc's checkbox flip + Progress Log entry is the full evidence trail.
 - **2026-08-19 (cross-reference note, not this batch's own dispatch)**: item 2 above ("Harden the na-eligibility-audit
   same-tranche concurrent-dispatch case… a dispatch-time lock per tranche in `server/plan_health.py::dispatch()`") is
   now **already shipped** by `agent-orchestrator@bfe8fb28a0` — `_tranche_dispatch_gate`/`_last_tranche_dispatch`,
