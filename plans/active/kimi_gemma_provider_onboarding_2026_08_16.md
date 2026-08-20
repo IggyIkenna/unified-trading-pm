@@ -824,3 +824,35 @@ work.
       `model`/`account_id` on `TaskUsageView` but never rendering them — added both next to the existing
       provider text (App.tsx), closing the operator's "details tab should show the model" ask for every
       provider, not just Ollama. **Evidence: agent-orchestrator@c48e37e281**.
+- [ ] [INFRA] P1. **New, found live 2026-08-20 — the REAL reason gemma-self-hosted never completes a real
+      turn (the timeout fix above was real and worth keeping, but not the actual blocker)**: every
+      interactive Claude Code turn sends Anthropic's `thinking` request field unconditionally (confirmed
+      live via the real `POST /v1/messages?beta=true` bodies this proxy receives — not something AO's own
+      spawn flags control; `_build_claude_flags` already gates `--max-thinking-tokens` to
+      `provider == "anthropic"` only, so no CLI flag is requesting this for gemma-self-hosted). Ollama
+      rejects it outright for `gemma3:27b` with a real, correct error:
+      `{"error":"\"gemma3:27b\" does not support thinking"}` (gemma3 has no reasoning-model variant) —
+      litellm re-raises this as a generic-looking `APIConnectionError`, which is why it first looked like
+      the timeout/connectivity issue fixed above. Root-caused to one exact, confirmed-unconditional line:
+      `litellm/llms/ollama/chat/transformation.py::map_openai_params` sets `optional_params["think"]`
+      whenever `reasoning_effort` is non-None, WITHOUT checking the `drop_params` argument it's passed (a
+      real, narrow litellm library gap — confirmed by direct source read, not guessed).
+      **Three real remedies tried live and confirmed NOT to work, in order**: (1)
+      `additional_drop_params: ["thinking"]` on the model's `litellm_params` — no effect, this specific
+      transformer doesn't consult drop_params at all. (2) `model_info: {supports_reasoning: false}` on the
+      same model entry — no effect, this transformer never queries model capability either. (3) A real
+      litellm `CustomLogger.async_pre_call_hook` callback (litellm's own sanctioned, documented extension
+      point for exactly this class of request mutation) that pops `thinking` from the raw request before
+      any litellm-internal translation — the callback loaded and the service started cleanly with zero
+      import errors, but never actually fired: the request goes through litellm's EXPERIMENTAL Anthropic-
+      passthrough handler (`litellm/llms/anthropic/experimental_pass_through/...`), which appears to bypass
+      the standard callback pipeline entirely. All three attempts were live-tested then cleanly reverted
+      (confirmed via `git status` showing empty) — nothing broken, nothing left half-applied.
+      **What's left, not yet attempted**: a genuine patch to the vendored litellm package on the VM
+      (`.venvs/litellm-proxy/lib/python3.13/site-packages/litellm/llms/ollama/chat/transformation.py`) —
+      the exact line is known, but this is a real third-party-dependency patch outside version control,
+      fragile against any future `pip install`/litellm upgrade, and wasn't done live without it being a
+      deliberate, reviewed decision rather than a late-session hack. Alternative not yet explored: whether
+      a DIFFERENT self-hosted model (a real reasoning-capable variant, or one where `think` is simply
+      accepted-and-ignored rather than rejected) would sidestep this without touching litellm at all. Repo:
+      agent-orchestrator.
