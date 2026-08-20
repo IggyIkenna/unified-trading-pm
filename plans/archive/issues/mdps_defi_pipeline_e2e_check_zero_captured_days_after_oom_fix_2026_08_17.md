@@ -18,7 +18,7 @@ summary: >-
   `mdps_mvp_universe(DEFI)` matched any of those 115 keys, at ANY historical day (`--auto-day` found nothing to
   fall back to for any of them) — a 0% intersection between the shard universe and what's actually captured under
   `service_name=market-tick-data-service` in the raw manifest.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -36,7 +36,7 @@ author: slot-20 (data_engineering)
 assigned_vm: planning
 parent_epic: security_and_cross_cutting_master
 priority: P1
-resolved_by:
+resolved_by: slot-1 (data_engineering), 2026-08-20
 locked_by:
 source:
   - data_pipeline_check_mdps_features_2026_07_20.md's "mdps-e2e-defi-oom-fix-and-full-matrix-completion" todo —
@@ -55,6 +55,9 @@ context_scope:
 ---
 
 # DEFI pipeline_e2e_check: OOM fixed + root-caused, but the driver now proves the shard universe doesn't match captured data
+
+> **✅ RESOLVED 2026-08-20 (slot-1).** All items closed — chain-axis fix, streamed manifest read, terminal-report
+> consolidation, and leg-over-leg `gc.collect()` all landed and verified on origin/live-defi-rollout.
 
 ## What I found
 
@@ -180,12 +183,14 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    this relaunch): explicit `del`/`gc.collect()` of each leg's large intermediate structures
    (`_captured_days_by_cell`'s frame/groupby results) in `pipeline_e2e_check.py` between legs, or run each leg
    in its own subprocess so OS-level cleanup is guaranteed.
-- [ ] [SCRIPT] P2. Extracted from item 5's own "Real fix still needed" tail (was prose-only, not a tracked
-      checkbox — converted 2026-08-19 by `/plan-reconcile security_and_cross_cutting_master` Phase 2.4 zero-checkbox
-      sweep). Explicit `del`/`gc.collect()` of each leg's large intermediate structures
-      (`_captured_days_by_cell`'s frame/groupby results) between legs in `pipeline_e2e_check.py`, or run each leg
-      in its own subprocess, so RSS doesn't accumulate leg-over-leg (the item-5 relaunch used a bigger VM as a
-      mitigation, not a fix — this is the real fix).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-20 (slot-1).** Extracted from item 5's own "Real fix still needed" tail (was
+      prose-only, not a tracked checkbox — converted 2026-08-19 by `/plan-reconcile security_and_cross_cutting_master`
+      Phase 2.4 zero-checkbox sweep). Added explicit `gc.collect()` calls in `_run_shard_batch_legs`
+      (`pipeline_e2e_check.py`) immediately after the force leg and immediately after the skip leg complete, so
+      each leg's large intermediate structures are reclaimed before the next leg starts instead of accumulating
+      leg-over-leg (the item-5 relaunch used a bigger VM as a mitigation, not a fix — this is the real fix). QG
+      green (72s), all 2359 tests passed. **Evidence: market-data-processing-service@4990d23619 — verified on
+      origin/live-defi-rollout.**
 
 ## Progress Log
 
@@ -215,3 +220,7 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
   count — the next AG whose manifest outgrows DeFi's current 160M rows will not re-hit the driver OOM ceiling. The
   old full-read path is fully gone from the driver (only a docstring reference remains). Checkbox flipped with evidence
   in the same commit.
+- **2026-08-20 (slot-1, data_engineering)**: last open item DONE — added explicit `gc.collect()` calls in
+  `_run_shard_batch_legs` after the force and skip legs so RSS is reclaimed between legs instead of accumulating
+  across a multi-leg shard batch. QG green, all tests passed. Evidence: market-data-processing-service@4990d23619.
+  **All items in this doc are now closed — status flipped to `resolved`.**
