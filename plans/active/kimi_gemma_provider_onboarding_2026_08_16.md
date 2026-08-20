@@ -744,6 +744,12 @@ needs the waitlist to activate first) — both correctly operator-gated, not som
      `rob@odum-research.com`, likely not part of this fleet's pool). The 4th same-owner project
      (`371216509644`) is NOT currently wired into the proxy config as a `PROJ4` — real, unclaimed follow-up if
      the extra headroom is wanted, not done in this entry (doc update only, per this entry's own scope).
+
+     **CLOSED, not a follow-up — operator scope ruling, 2026-08-20**: the 4th project is the BILLED one; this
+     pool is explicitly unbilled/free-tier projects only ("gemini billed project is NOT part of scope only the
+     unbilled projects"). Wiring `371216509644` in as `PROJ4` would pull real metered spend into what this
+     plan's own Why section frames as a free-tier hedge — do NOT wire it in. Leaving it unwired is the correct,
+     intended end state, not a gap.
   2. **A parallel Gemma self-hosting effort is underway in a different session/tab (2026-08-19, operator-confirmed
      — "an agent in another tab is tryna sort out gemma via self hosting").** Not this doc's initiative and not
      tracked here in detail — noted so a reader of this doc knows the "Gemma via NVIDIA NIM" framing throughout
