@@ -18,11 +18,7 @@ scope: [engineer]
 tags: [tradfi, macro, economic-calendar, consensus, forexfactory, scraper, features-service]
 related:
   [
-    /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
-    /plans/archive/2026_07/macro_econ_adapter_scaffolds_2026_06_09.md,
-    /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
     /plans/archive/corporate_actions_+_earnings_to_calendar_56d63c2c.plan.md,
-    /plans/archive/issues/features_calendar_pipeline_mode_gap_2026_05_12.md,
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
@@ -208,7 +204,7 @@ surfacing of this data (a separate, later consumer-side concern).
       calendar-family write needs. Done when: a real invocation against ForexFactory returns correctly typed, non-empty
       `MacroResultRecord` results — including a real `actual_value` — for both a rolling-window and a historical-week
       request, AND the new `--operation` is confirmed registered + reachable via `python -m features_service.calendar`.
-- [ ] [DATA] P1. **BLOCKED-CREDENTIALS — provision a residential-proxy account, then wire it into
+- [ ] [DATA] P1. **CREDENTIAL APPROVAL REQUEST — provision a residential-proxy account, then wire it into
       `CalendarFeaturesConfig.forexfactory_proxy_url` (Secret Manager, `forexfactory-residential-proxy-url` by
       default).** The code path is ready (`ForexFactoryAdapter.__init__(proxy_url=...)` passes it straight through to
       `--proxy-server=` on the launched Chrome); nothing to build here, just an operator account signup. Recommended
