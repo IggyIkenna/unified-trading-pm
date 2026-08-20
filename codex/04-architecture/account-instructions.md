@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: Account Instructions
-summary:
-  AccountInstruction — the operator-driven account-ops envelope parallel to StrategyInstruction (CLOSE_ALL,
+summary: AccountInstruction — the operator-driven account-ops envelope parallel to StrategyInstruction (CLOSE_ALL,
   SET_MARGIN_MODE, EMERGENCY_LIQUIDATE, WITHDRAW, ROTATE_CREDENTIAL, PAUSE/RESUME); NOT strategy-attributed, skips
   Layer-1 self-check, per-action authorization + permanent audit.
 status: current
@@ -250,6 +249,12 @@ Critical AccountInstructions require operator authorization:
 Auto-recovery flows pre-authorize specific actions per the
 [autonomous-recovery-matrix.md](autonomous-recovery-matrix.md).
 
+**(This table is the DESIGN TARGET, not what ships today — verified 2026-08-20.**
+`AccountInstructionOrchestrator.dispatch()` checks only that `authorization_id` is a non-empty string; it does not
+look up who authorized it, what role they hold, or whether the action-specific requirement above (e.g. "Compliance
+
+- 2-of-N" for `WITHDRAW`) was actually met. Per-action, role-based authorization is real remaining work, not built.)**
+
 ## Audit
 
 Every AccountInstruction is audit-logged with:
@@ -262,6 +267,15 @@ Every AccountInstruction is audit-logged with:
 - Post-state snapshot
 
 Retention: permanent per compliance.
+
+**(DESIGN TARGET — verified 2026-08-20.** The shipped path logs two `log_event` calls
+(`ACCOUNT_INSTRUCTION_RECEIVED`/`ACCOUNT_INSTRUCTION_RESULT`) carrying `instruction_id`/`org_id`/`action`/`venue`/
+`account_id`/`accepted`/`reason` — no post-state snapshot, no dedicated permanent-audit-log store beyond whatever
+the `log_event` sink itself retains. Only `CLOSE_ALL` has a real venue-facing runner today
+(`execution_service/v2/account_orchestrator.py::AccountInstructionOrchestrator._execute_close_all`, reachable via
+`POST /account/instruction` — `execution_service/api/account_instruction_api.py`); every other action in the table
+above is still a log-only accept with no venue call, so "Venue result (ack + fills + timing)" has nothing to log
+for them yet.)**
 
 ## Attribution handling
 
