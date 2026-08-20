@@ -305,37 +305,6 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Make honest coverage measurable on EVERY axis and granularity, each figure carrying its
       denominator and date. This is the epic's own definition-of-done item. SSOT:
       `/codex/02-data/honest-coverage-model.md`.
-      **FINDING 2026-08-20 (T2, `/autonomous`) — today's daily rollup OOM'd, so coverage is currently
-      UNMEASURED, not just incomplete on some axis.** Ran `launch-measure-honest-coverage-vm.sh` (the
-      SSOT owner per the script's own docstring) to pick up this session's shipped code (league fold-in,
-      hollow-fraction). Result: `measure-honest-coverage-20260820-205216` (default `e2-highmem-8`, 64GB)
-      OOM-killed (`exit_code=137`) ~4.5min into loading DeFi's manifest (161,691,460 rows — this script's own
-      header comments document a LONG history of exactly this class of OOM as defi's manifest has grown,
-      already forcing 2 prior machine-type escalations: `e2-standard-4` → `e2-highmem-4` → `e2-highmem-8`,
-      the last one specifically because defi crossed ~158M rows on 2026-08-12). cefi's own Layer-1/projection
-      pass completed cleanly first (30.8M rows) — the kill landed specifically on defi's larger load. Cannot
-      yet rule out this session's own level-5c/5d/5e chain/league joins (3 new O(n) groupby projections, each
-      producing a result set roughly proportional to defi's higher cardinality) as a contributing factor on
-      top of the pre-existing growth-driven pressure, vs. this being purely the SAME recurring class already
-      documented — relaunched at `e2-highmem-16` (128GB).
-      **RESOLVED 2026-08-20 — succeeded, and it was never actually stuck.** Two launcher-side false starts
-      first (both this session's own known stale-tarball freshness-check false-negative, self-resolving on
-      retry — `unified-api-contracts`/`market-tick-data-service` pattern recurring for `deployment-service`
-      this time). The real run (`measure-honest-coverage-20260820-212202`) then appeared to stall after
-      loading defi's manifest — 12+ minutes of only `PIPELINE_HEARTBEAT` lines, past the launcher's own 20min
-      poll-and-give-up window (which correctly reported FAILURE rather than a blind success, per its own
-      design). Watched it directly rather than assuming either outcome: `gcloud compute instances describe`
-      confirmed the VM itself was still `RUNNING` (not OOM-killed, no `exit_code=137`), and a longer watchdog
-      confirmed it was making real, if slow, progress — cefi finished ~20:33, defi's heavier computation (5
-      projection levels including this session's 3 new joins, over 162M rows / 82M reachable) simply took
-      until sometime before 20:55, then sports+prediction finished quickly after. **`rc=0`,
-      `DEPLOYMENT_COMPLETED`, `gs://central-element-323112-honest-coverage/2026-08-20/coverage.json` written
-      — a genuine success, not a stall or an OOM.** Live reachable-coverage: cefi 47.40%, defi 36.61%,
-      tradfi 86.95%, sports 99.26%, prediction 92.86%. This IS visible on deployment-api's
-      `/data-status/honest-coverage` route (deployment-ui's data-status tab) now — the operator's original ask
-      for this session. Real signal for a future pass, not urgent: the `--asset-group all` run now takes
-      ~35-40 minutes end-to-end (vs whatever it was before this session's 3 new projection levels landed) —
-      worth profiling if it keeps growing, but not a bug today.
 - [x] [OPERATOR] P0. **Rule on whether level 5 should drop fully-retired keys like level 4 does.** MEASURED
       2026-08-20: `by_venue_instrument_type` (level 4) passes through `_drop_fully_retired_nested`;
       `by_venue_instrument_type_data_type` (level 5) does not. After the 2026-08-20 naming fix the two levels
@@ -354,19 +323,12 @@ todos only to confirm they are data-movement, then leave it.
       attempted_failed) keeps its real counts rather than being dropped. Per W3's "any denominator change lands
       as a dated supersession, never a silent edit", this SHRINKS the reachable denominator — dated here,
       2026-08-20 — and reaches the live artefact on the next nightly `measure-honest-coverage` cron run.
-- [x] [BACKEND] P1. **Report coverage grain PER asset_group, or publish the hollow fraction beside the label.**
+- [ ] [BACKEND] P1. **Report coverage grain PER asset_group, or publish the hollow fraction beside the label.**
       MEASURED 2026-08-19: 1,973 of 3,962 cells (49.8%) carry a blank or `'nan'` instrument_type while
       `detect_grain()` reports `"instrument_type"` for the whole payload — `defi` 1,871/2,804 (66.7%), `tradfi`
       82/244 (33.6%), `prediction` 10/19 (52.6%), `sports` 10/822 (1.2%), `cefi` 0/73 (0%). A single payload-wide
       grain label overstates the breakdown available for half the corpus. Same failure mode as the mislabelled
       `grain` in the readiness dump (filed to T5, who owns that writer).
-      ✅ 2026-08-20 — **took the todo's own "or" branch**: published `hollow_instrument_type_fraction` as a new
-      additive field on every `by_asset_group[ag]` cell (fraction of level-5 cells with a blank/`"nan"`
-      instrument_type; `None` — not `0.0` — when an AG has zero level-5 cells, so "no data" and "fully
-      populated" can't be confused). 4 regression tests (half-blank, all-real, no-column, `"nan"`-string cases).
-      Also directly benefits from this same session's separate `nan`-string write-time fix
-      (`market-tick-data-service@79ce0c89`) — future runs should show the fraction trending down as that fix's
-      effect accumulates. Evidence: `instruments-service@540a3bd94d`.
 - [x] [BACKEND] P1. **Trace the 9 blank-venue `sports` cells to the writer that emits them.** MEASURED
       2026-08-19: 9 cells in coverage.json carry `venue == ""` (all `sports`, data_types `odds_movement`,
       `odds_snapshot`, `ODDS_MOVEMENT`, `ODDS_SNAPSHOT`, `ARBITRAGE_OPPORTUNITY`, each `empty_confirmed: 1`).
@@ -473,17 +435,9 @@ todos only to confirm they are data-movement, then leave it.
 
 ### instruments-service
 
-- [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC), reconciliation half DONE.** Complete the `InstrumentRecord` schema
-      ADD/REMOVE reconciliation against adapter kwargs and flip `extra='forbid'`. Adapter kwargs are silently
-      dropped on mismatch today. Evidence:
+- [ ] [BACKEND] P0. Complete the `InstrumentRecord` schema ADD/REMOVE reconciliation against adapter kwargs and flip
+      `extra='forbid'`. Adapter kwargs are silently dropped on mismatch today. Evidence:
       `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`.
-      **2026-08-20 (T2, `/autonomous`)** — the reconciliation half is fully done, this tranche's own work: all 6
-      systemically-dropped kwargs dispositioned (5 REMOVE incl. this session's `min_order_size`, 1 rename-fix),
-      every caller fixed (`instruments-service@ee2d6c75`, `@588f35aeb0`). What remains is ONLY the
-      `extra='forbid'` flip itself, which lives on `InstrumentRecord` in
-      `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py` — outside this tranche's 3
-      repos. Filed to T1 (`/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`
-      Inbound requests).
 - [ ] [BACKEND] P0. **BLOCKED-UPSTREAM (T1/UAC)** — Lock and version the instruments schema — add
       `INSTRUMENTS_SCHEMA_VERSION`, a `schema_version` field on `SchemaContract`, make writers/readers actually
       consult the per-AG contracts, and add a golden/hash test so a silent column change cannot ship. Evidence:
@@ -525,19 +479,9 @@ todos only to confirm they are data-movement, then leave it.
       something to grab mid-flight without first checking whether an AO worker already has it in progress. Not
       investigated further this session (discovered near session end) — next session: check each batch's
       current open/done state before doing any work here, to avoid racing an AO worker on the same files.
-- [x] [BACKEND] P0. Close the CeFi and TradFi G1-G5 gate execution CODE paths. Evidence:
+- [ ] [BACKEND] P0. Close the CeFi and TradFi G1-G5 gate execution CODE paths. Evidence:
       `/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
       `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
-      ✅ 2026-08-20 (T2, `/autonomous`) — **CeFi doc: fully closed, 0 open todos.** G2/G3/G3b/G4 were already
-      SIGNED OFF by prior sessions; G1's own 4 named blocking defects (G1.1-G1.4) plus a follow-up finding were
-      already done, and this session closed the last real G1-scope item — EXTENDED's CF-11 honest-absence
-      violation (raise-on-fetch-failure fix, `instruments-service@c58802b9cc`) — then flipped the G1 rollup
-      checkbox itself, which had never been flipped despite every child completing.
-      **TradFi doc: CODE paths done; 2 residual items are DATA-MOVEMENT, correctly out of this tranche's "no
-      backfills/manifest migrations" standing rule** — both already extracted into their own dedicated,
-      currently-active AO-dispatch plan (`/plans/active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`,
-      2 open / 1 done), not duplicated here. Nothing further actionable in either doc from this tranche's 3
-      repos.
 - [x] [BACKEND] P1. Fix the CeFi `instrument_type` casing active-writer regression. Evidence:
       `/plans/archive/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`.
       ✅ 2026-08-20 — **the writer-side CODE fix is shipped and live; everything left is data movement.**
@@ -557,23 +501,13 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Land the CF-canonicalization single-walk CODE. Any NEW whole-corpus GCS walk is
       review-blocking — reuse the existing walk. Evidence:
       `/plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`.
-      **2026-08-20 (T2, `/autonomous`) — checked, mostly code-complete.** 18/26 todos done. Of the 8 remaining,
-      6 are explicitly `[DATA]`-tagged whole-corpus walks/manifest rebuilds/dry-VM runs (C0, C-source RIDER,
-      E3-E6) — correctly out of this tranche's "no backfills/manifest migrations" standing rule, not this
-      todo's CODE scope. The 2 genuinely code-only remainders are both P3: a `canonicalize_instruments_store_
-      index.py` prediction-bucket resolution bug, and an MTDS schema-drift-dup investigation. Left open at P3
-      weight rather than falsely closed; not picked up this pass given the P0/P1 backlog still ahead.
 - [x] [BACKEND] P1. Resolve the DeFi golden/red capability drift — `test_expected_matches_golden[defi]` failing
       fleet-wide. Re-verify current red/green state first; the prior pass did not. Evidence:
       `/plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`.
       ✅ 2026-08-20 — **re-verified as instructed, and the todo's premise is stale: it is NOT red.** Ran the full
       instruments-service suite (`5367 passed, 6 skipped, 4 xfailed`): `test_expected_matches_golden[defi]` is
       **XFAIL** — a managed expected-failure carrying a written reason, not a failure. Nor is it defi-specific:
-      `[defi]`, `[tradfi]`, `[sports]` and `[prediction]` are all xfailed; `[cefi]` was the only green one AT THE
-      TIME OF THIS CHECK — **stale as of later the same session**: a fresh `PACIFICA-SOLANA` golden-fixture
-      drift was found (unrelated, while shipping the Extended-adapter CF-11 fix) and `[cefi]` is now xfailed
-      too, same pattern, `instruments-service@c58802b9cc`. All 5 asset groups now xfail this test; none are a
-      genuine failure. The
+      `[defi]`, `[tradfi]`, `[sports]` and `[prediction]` are all xfailed; `[cefi]` is the only green one. The
       cited issue doc has ZERO open todos. Each xfail reason already names the reconciliation its own AG owner must
       do (e.g. the defi one flags that `defi_satellite_ao_dispatch_batch9_2026_08_06.md` claims to have REMOVED the
       AAVE_V3 rewards seed while the live universe still HAS it — so either the removal is incomplete or the golden
@@ -633,25 +567,8 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Land the MDPS adapter-protocol / polars-seam migration as ONE atomic change across the 18
       adapter files sharing the ABC/Protocol boundary. Evidence:
       `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
-      **2026-08-20 (T2, `/autonomous`) — checked, deliberately NOT attempted this pass.** The cited issue doc is
-      itself the finding: a concrete file-by-file scope survey (already done, not redone here) confirms this is
-      an atomic single-PR migration across all 18 adapters at once (a partial conversion breaks the shared
-      Protocol polymorphically), 5 of which do genuine groupby feature-engineering with no trivial 1:1 polars
-      swap — correctness-risk on LIVE candle production, not a mechanical change. Estimated 2.0 calibrated
-      AI-days on its own, and **already operator-deferred TWICE** across two archived predecessor plans before
-      this doc was even filed. Forcing this through in the remaining time of a long multi-item session would
-      trade rigor for a checkbox — left open at its real size, a genuine candidate for its own dedicated
-      session.
-- [x] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
+- [ ] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
       `/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`.
-      ✅ 2026-08-20 — **nothing further actionable from this tranche's 3 repos.** The issue doc has been
-      extensively worked by other sessions: 5 of 9 sub-todos done (defi venue/data_type root-causes, sports
-      column-swap bug, sports FOOTBALL/ODDS_API/UNKNOWN venue-axis leakage — real MTDS/MDPS writer fixes,
-      several already ancestor-verified on `live-defi-rollout`). The 4 remaining sub-todos are explicitly
-      scoped to `unified-api-contracts` (registry extensions for confirmed-legitimate bookmaker/instrument_type/
-      data_type spellings — T1's repo, not mine) or are manifest-row reconciliation (`venue=UNKNOWN` residual
-      rows — data movement, operator-gated per this tranche's standing rules). Nothing in
-      instruments-service/market-tick-data-service/market-data-processing-service remains open on this issue.
 - [x] [BACKEND] P2. Decide and implement the MTDS WS venue-fallback removal for Polymarket.
       Evidence: `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
       **Reason 2026-08-20**: the issue's sole todo is `[OPERATOR] P3` — a binary product/architecture call the doc

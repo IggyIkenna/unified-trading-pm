@@ -40,7 +40,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 - [ ] [BACKEND] P0. Execute the canonical batch smoke contract for every current Prediction row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status.
 - [ ] [BACKEND] P1. Record one testnet verdict for every Prediction venue, including matching-engine simulation where that is the honest answer; Gate: every distinct venue has a written verdict.
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: every attempted path has a measured terminal result.
+- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and mark unavailable accounts BLOCKED-CREDENTIALS; Gate: every attempted path has a measured terminal result.
 - [ ] [BACKEND] P1. Track every failed or absent Prediction row with its source and data type; Gate: no expected-unattempted row is reported as captured.
 - [ ] [BACKEND] P0. Verify source-scoped exemptions, canonical checks, and manifest atom checks with a negative control; Gate: an invalid path or missing capture exits non-zero.
 

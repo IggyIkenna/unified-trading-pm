@@ -329,27 +329,6 @@ None of the 71 resources classified as stale/abandoned/conflicting.
       (the required prod-state wrapper, never bare `tofu`) — the resource itself shows **zero** diff; the plan's only
       "1 to add" line is the unrelated, already-known-pending `google_secret_manager_secret_iam_member.t1_batch_gh_pat_accessor`
       grant (ready-to-apply-list item 4, pulled in only because `-target` follows `depends_on`, not yet applied).
-- [ ] [INFRA] P1. **`google_monitoring_alert_policy.cloud_run_service_crash_loop`'s 3 instances
-      (`central-market-data-tardis-loader`/`market-data-query-service`/`uts-prod-data-status-rollup-svc`,
-      `cloud_run_service_liveness.tf`) reference a metric that does not exist**:
-      `run.googleapis.com/container/restart_count`. Confirmed 2026-08-20 by querying the real
-      `metricDescriptors` API for `central-element-323112` — the complete `run.googleapis.com/container/*` list (25
-      real metrics: `billable_instance_time`, `completed_probe_attempt_count`, `completed_probe_count`, `containers`,
-      `cpu/*`, `gpu/*`, `instance_count`, `instance_count_with_readiness`, `max_request_concurrencies`, `memory/*`,
-      `network/*`, `probe_attempt_latencies`, `probe_latencies`, `startup_latencies`) has no restart/crash-count
-      metric — likely a GKE-convention (`kubernetes.io/container/restart_count` genuinely exists there) mistakenly
-      assumed to carry over to Cloud Run, which doesn't expose an equivalent built-in. Also checked for an existing
-      `logging.googleapis.com/*` substitute or a pre-defined log-based metric in this project (`gcloud logging
-      metrics list`) — neither exists (`RnDLogCounter` is the only log-based metric in the project, unrelated).
-      **Correct fix likely requires a NEW `google_logging_metric` resource** (a log-based metric derived from Cloud
-      Run's own container-lifecycle log entries) that the alert policy then references via
-      `logging.googleapis.com/user/<metric_name>` — NOT implemented here: the exact Cloud Logging filter/message
-      pattern that reliably signals a container crash needs verifying against real historical logs from one of the 3
-      target services (ideally during the "9.5mo crash-loop" incident `deployment-service@fa07db64`'s own commit
-      message cites) before shipping, since a wrong filter creates successfully but never fires — a SILENT failure
-      mode, unlike every other bug this session (all failed loudly at `tofu apply` time, non-destructively). Left
-      the 3 alert policies unapplied pending this design work — do not guess-substitute a metric name without
-      re-running the same real-metric verification this finding used. Repo: deployment-service.
 
 ## Progress Log
 
@@ -391,54 +370,6 @@ None of the 71 resources classified as stale/abandoned/conflicting.
   resources INTENDED (2 flagged verify-before-apply, not blocking), 1 cosmetic (`subgraph_health_probe` — new P2 todo
   filed, same `ignore_changes` gap as the already-fixed 65), 0 stale/conflicting. Phase 2 (`tofu apply`) NOT run —
   remains gated on operator review of this section.
-- **2026-08-20 (Phase-2 continued — full remaining backlog, operator go-ahead "yeah do all this")** — code fixes
-  shipped `deployment-service@47442e0e73`: AR `:latest`
-  freshness verified first (`gcloud artifacts docker images describe .../e2e-audit:latest` → digest
-  `sha256:cf2eb741...`, IDENTICAL to the pinned digest already live — the 5 image reversions are a no-op on real
-  content, not a rollback). Fresh full plan matched the prior classification exactly (7/19/1, i.e. the original
-  7/63/1 minus the 43 already-applied bucket-lifecycle resources and minus `subgraph_health_probe`, now
-  ignore_changes-suppressed). Applied in stages as failures surfaced (first attempt: 13/27 resources landed clean,
-  then blocked):
-  - **3 genuine, previously-untested bugs found in `paper_determinism_workflow.tf`'s embedded Workflows YAML** — this
-    workflow (`deployment-service@200c4791`) had evidently NEVER been through a real `tofu apply` before today (matches
-    this doc's own recurring observation that no CI runs `tofu plan`/`apply` against live prod). Fixed all in sequence,
-    each only surfacing once the prior one cleared:
-    1. `return:` step mixed literal YAML map syntax with 3 separate `${}` field substitutions — GCP Workflows'
-       expression grammar does not support inline `{key: value}` map-literal construction inside `${}` at all (3 failed
-       attempts before landing on the actual fix: reused the string-concatenation pattern already proven 6× elsewhere
-       in the same file, sacrificing a structured JSON result for a plain status string rather than keep guessing at
-       unverifiable map-literal syntax on live infra).
-    2. Two `map.get(map, key, default)` calls — GCP's `map.get` takes only 2 positional args (no default parameter);
-       fixed by wrapping with `default(map.get(map, key), fallback)`.
-    3. Two duplicate step names (`parse`, `keep_newest`, each used once per `for` loop) — GCP Workflows requires step
-       names unique across the WHOLE workflow, not just within their own loop scope; renamed the second occurrence of
-       each (`parse_batch`, `keep_newest_batch`).
-  - **1 genuine bug in `defi_collection_scheduler.tf`**: the `risk-params` collector's `description` field was 757
-    chars against GCP's hard 499-char RE2 limit — trimmed to 412 chars, same substance (memory-bump history + doc
-    cite), less verbose comparative reasoning.
-  - **Real, temporarily-live coverage gap discovered and closed**: the first apply attempt destroyed the OLD
-    `blrs_daily_determinism_cron` scheduler (an independent resource in the graph, applied before the new workflow's
-    creation failed) — confirmed via `gcloud scheduler jobs describe`: `NOT_FOUND`. Between that destroy and the
-    workflow fix landing, NOTHING was auto-triggering daily paper/batch determinism reconciliation (the underlying
-    Cloud Run job itself was untouched, just nothing scheduled it). Closed same-session by prioritizing the workflow
-    fix over everything else once discovered — the doc's own dependency-ordering guidance (destroy AFTER the
-    replacement is live) turned out to matter in exactly the way it warned about, just via an unavoidable
-    partial-apply ordering quirk rather than operator error.
-  - **2 t1_recon label updates initially missed**: the first apply's plan file had stale module addressing
-    (`module.instruments_cefi_t1_recon_job`, a pre-2026-07-26-refactor name no longer in current `.tf` source) —
-    those "succeeded" against a target that doesn't correspond to current config; the REAL current addresses
-    (`module.t1_recon_instruments_job["cefi"|"prediction"]`) still showed pending on a fresh plan and were applied
-    separately once caught.
-  - **Landed**: all 7 creates except the 3 alert policies (batch_rerun_job, the paper_determinism workflow + its
-    scheduler trigger, the GH_PAT accessor), the blrs cron destroy, and all 19 originally-flagged updates (5
-    manifest_consolidator timeouts, 1 cost_snapshot_cron header, 1 defi_collect_cron description text — now also a
-    real length fix, 5 `dp_*_job` image reversions, 1 dp_exit_code_monitor_cron schedule bump, 2 t1_recon labels; the
-    5 `expected_universe_v2_job` entries are BY-DESIGN recurring on every fresh plan per this doc's own prior
-    classification, re-confirmed unchanged).
-  - **NOT applied, tracked as a new todo above**: the 3 `cloud_run_service_crash_loop` alert policies — real,
-    previously-undiscovered bug (nonexistent metric), deliberately not guess-fixed given the silent-failure risk of a
-    wrong log-based-metric substitute (see the new P1 todo for the full evidence + why this is categorically
-    different from the workflow bugs above, all of which failed loudly and safely).
 - **2026-08-20 (Phase-2, item 7 applied — operator go-ahead given in-session)**: the 42 canonical-bucket +
   `deployment_state` lifecycle-rule removal batch applied against PROD via the required `ENV=prod ./tofu.sh`
   wrapper (never bare `tofu` — the wrapper is what prevents silently targeting the near-empty dev state).

@@ -95,10 +95,9 @@ source: >-
 
 ## Track 14 — Scheduled-job reliability + concurrency/OOM defects + manifest reprocessing tooling · P1/P2
 
-**Sources**: `issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` — **RESOLVED 2026-08-20 (T1 slice),
-correcting a stale claim this line carried for weeks**: the doc is `status: resolved` (archived, fixed 2026-07-26, all
-3 next-steps closed); live-verified via `gcloud run jobs executions list --job=uts-prod-cf-manifest-audit` that the
-last 3 daily runs (2026-08-18/19/20) all succeeded. + `issues/pipeline_smoke_sweep_findings_2026_07_20.md` (mostly done — 3 tooling
+**Sources**: `issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` (fully open, unresolved — the
+`uts-prod-cf-manifest-audit` Cloud Run Job has never successfully produced output, failing daily since 2026-07-04;
+affects all 5 AGs' daily CF-audit) + `issues/pipeline_smoke_sweep_findings_2026_07_20.md` (mostly done — 3 tooling
 false-green defects fixed, a 15h CeFi outage caught + a watchdog added; residual: prediction/sports staleness
 re-checks) + `issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md` (3 of 4+ findings fixed
 same-day; open: DeFi handlers have zero concurrency at any level, needs an `asyncio.gather`+`Semaphore` refactor, plus
