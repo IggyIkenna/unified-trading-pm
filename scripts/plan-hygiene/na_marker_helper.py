@@ -22,6 +22,7 @@ strip regex correctly recognizing the just-added line in the same pass it's addi
 Usage:
   python3 na_marker_helper.py hash <pm_relative_path>
   python3 na_marker_helper.py append <pm_relative_path> <date YYYY-MM-DD> <marker_suffix_text>
+  python3 na_marker_helper.py truncate <max_chars> <marker_suffix_text>
   python3 na_marker_helper.py batch <path to JSON: [{"path":...,"date":...,"suffix":...}, ...]>
 
 "append"/"batch" insert:  - **na-eligibility-audit <date>** [body-hash:<hash>]: <marker_suffix_text>
@@ -30,11 +31,104 @@ as the last bullet of the doc's "## Progress Log" section (creating the section 
 
 import importlib.util
 import json
+import re
 import sys
 from pathlib import Path
 
 PM = Path("/home/ubuntu/unified-trading-system-repos/unified-trading-pm")
 INVENTORY_SCRIPT = PM / "scripts" / "plan-hygiene" / "generate_na_doc_tranche_inventory.py"
+TRUNCATION_NOTICE = " … [rationale truncated]"
+
+
+def _delimiters_balanced(text: str) -> bool:
+    """Return whether ``text`` has balanced (), [], and {} delimiters."""
+    pairs = {')': '(', ']': '[', '}': '{'}
+    opening = set(pairs.values())
+    stack: list[str] = []
+    for char in text:
+        if char in opening:
+            stack.append(char)
+        elif char in pairs and (not stack or stack.pop() != pairs[char]):
+            return False
+    return not stack
+
+
+def _reclose_open_delimiters(text: str) -> str:
+    """Close delimiters left open by an intentional suffix cut."""
+    closing = {"(": ")", "[": "]", "{": "}"}
+    stack: list[str] = []
+    for char in text:
+        if char in closing:
+            stack.append(char)
+        elif char in closing.values() and stack and closing[stack[-1]] == char:
+            stack.pop()
+    return text + "".join(closing[char] for char in reversed(stack))
+
+
+def _last_balanced_boundary(text: str, boundaries: tuple[str, ...], minimum: int) -> int:
+    """Find the latest delimiter-balanced boundary at or after ``minimum``."""
+    candidates: list[int] = []
+    for boundary in boundaries:
+        start = 0
+        while True:
+            position = text.find(boundary, start)
+            if position < 0:
+                break
+            end = position + len(boundary)
+            if end >= minimum and _delimiters_balanced(text[:end]):
+                candidates.append(end)
+            start = position + 1
+    return max(candidates, default=-1)
+
+
+def _last_balanced_whitespace(text: str, minimum: int) -> int:
+    """Find the latest whitespace boundary that leaves delimiters balanced."""
+    for position in range(len(text) - 1, minimum - 1, -1):
+        if text[position].isspace() and _delimiters_balanced(text[:position]):
+            return position
+    return -1
+
+
+def truncate_marker_suffix(suffix: str, max_chars: int = 400) -> str:
+    """Shorten a long marker at a readable, explicitly marked boundary.
+
+    Normal marker writes must pass the complete rationale to ``append``. This
+    opt-in helper exists for callers that have a real line-length constraint;
+    unlike an inline ``suffix[:N]`` it never silently presents a cut as a
+    complete sentence and prefers balanced sentence, clause, then word ends.
+    """
+    if max_chars <= len(TRUNCATION_NOTICE):
+        raise ValueError("max_chars must leave room for the truncation notice")
+    if len(suffix) <= max_chars:
+        return suffix
+
+    content_limit = max_chars - len(TRUNCATION_NOTICE)
+    prefix = suffix[:content_limit]
+    minimum = content_limit // 2
+    boundary = _last_balanced_boundary(prefix, ('. ', '! ', '? '), minimum)
+    if boundary < 0:
+        boundary = _last_balanced_boundary(prefix, (', ', '; ', ' - ', ' — '), minimum)
+    if boundary < 0:
+        boundary = _last_balanced_whitespace(prefix, minimum)
+    if boundary > 0:
+        content = prefix[:boundary].rstrip()
+    else:
+        content = prefix[:content_limit].rstrip()
+        closed = _reclose_open_delimiters(content)
+        while len(closed) > content_limit and content:
+            content = content[:-1].rstrip()
+            closed = _reclose_open_delimiters(content)
+        content = closed
+    return content + TRUNCATION_NOTICE
+
+
+def _validate_marker_suffix(suffix: str) -> None:
+    """Reject the known silent-loss signature before it reaches a PM doc."""
+    if re.search(r'\.\.\.\s*$', suffix):
+        raise ValueError(
+            "marker suffix ends with a bare ellipsis; pass the complete rationale "
+            "or use truncate_marker_suffix()"
+        )
 
 
 def _load_inventory_module():
@@ -68,6 +162,7 @@ def find_progress_log_insert_point(text: str) -> tuple[int, bool]:
 
 
 def append_one(mod, rel_path: str, date: str, suffix: str) -> str:
+    _validate_marker_suffix(suffix)
     full_path = PM / rel_path
     text = full_path.read_text(encoding="utf-8")
     h = mod.body_content_hash(text)
@@ -98,6 +193,11 @@ def main():
         suffix = sys.argv[4]
         h = append_one(mod, rel_path, date, suffix)
         print(f"OK hash={h} path={rel_path}")
+        return
+
+    if cmd == "truncate":
+        max_chars = int(sys.argv[2])
+        print(truncate_marker_suffix(sys.argv[3], max_chars))
         return
 
     if cmd == "batch":
