@@ -36,6 +36,19 @@ summary: >-
   (confirmed zero matches for `reserved_slot_ids` in the whole file) — unlike `plan_health`'s
   picker, it never mirrored the 2026-08-16 Finding-1 fix. Gap B: neither picker's general-pool
   fallback checks for competing queued plan-item demand before claiming a non-reserved slot.
+
+  2026-08-19 second follow-up (operator: "we are not hunting the review agent slot 2
+  specifically, this is happening with other slots as well"): a fleet-wide 24h kill-reason audit
+  (`journalctl -u orchestrator.service`, every `SESSION-TEARDOWN kill_session` line) found the
+  "slots getting killed / agents dying mid-task" symptom spans at least 3 distinct mechanisms —
+  only ONE confirmed as a destructive bug so far. **CONFIRMED root cause**:
+  `ensure_review_agents`'s successful-respawn path (`server/autospawn.py:483-494`) never sets
+  `SlotRow.status` back to `working`, so a respawned review slot keeps reading `status=="killed"`
+  even while genuinely alive — `WorkerLivenessWatchdog`'s `orphan_session_reclaim` sweep then
+  trusts that stale status ~30+ min later and kills the actually-alive session. Confirmed via
+  direct log proof on slot 2 (18 kills/24h, clean repeating cycle). See "CONFIRMED:
+  orphan_session_reclaim kills genuinely-alive workers" below for the full breakdown, evidence,
+  and one-line fix.
 status: open
 resolved_by:
 nature: issue
@@ -43,7 +56,7 @@ asset_group: [ao]
 stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
-tags: [agent-orchestrator, tmux, slot-lifecycle, worker-liveness-watchdog, scheduled-jobs, orphaned-session, escalation-dispatch, reserve-preference]
+tags: [agent-orchestrator, tmux, slot-lifecycle, worker-liveness-watchdog, scheduled-jobs, orphaned-session, escalation-dispatch, reserve-preference, orphan-session-reclaim, account-failover]
 related:
   [
     /plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md,
@@ -55,7 +68,7 @@ last_updated: "2026-08-19"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only
-priority: P2
+priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
@@ -70,6 +83,8 @@ context_scope:
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/dispatch.py,
     agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/death_forensics.py,
+    agent-orchestrator/server/resume_lifecycle.py,
   ]
 supersedes:
 superseded_by:
@@ -78,7 +93,9 @@ source: >-
   Interactive session 2026-08-19 (slot 3) — surfaced while investigating why the scheduled-task
   slot reserve (27-30) wasn't being used for new `ag_closeout_auditor` dispatches; operator asked
   directly why the reserve wasn't working, which led to finding 3 of the 4 reserved slots had
-  orphaned live sessions from earlier completed work.
+  orphaned live sessions from earlier completed work. Escalated by the operator into a fleet-wide
+  "unpaused slots idle, agents dying mid-task, slots getting killed" root-cause request, then
+  further corrected ("not just slot 2") into the full 24h multi-mechanism audit below.
 assigned_role: infra
 drift_direction: correct-codex
 ---
@@ -141,10 +158,15 @@ The catch-mechanism this refers to, `WorkerLivenessWatchdog._reclaim_idle_linger
 Given slots 28/29/30's `last_spawned_at` has stayed constant across multiple checks spanning
 over an hour (ruling out the key silently changing and resetting the counter), and given
 4+ hours is far longer than any reasonable tick-count threshold should take to reach, this
-points at one of a few real possibilities — **none confirmed yet**:
+points at one of a few real possibilities — **partially updated by the 2026-08-19 second
+follow-up below**:
 
-1. The `WorkerLivenessWatchdog` loop itself may not be ticking (a bigger, more urgent finding
-   than a narrow function bug, if true).
+1. ~~The `WorkerLivenessWatchdog` loop itself may not be ticking~~ — **less likely now**: the
+   fleet-wide 24h kill audit (see the new section below) confirms `idle_lingering_session_reclaim`
+   DOES fire periodically, hitting 9 slots (16,21,27,28,29,30,31,32,33) 46 times in 24h in
+   batched ticks roughly every 1-6 hours. The loop is alive; the open question is why the
+   INTER-TICK gap leaves genuinely-idle slots looking falsely occupied for that long, not
+   whether it ticks at all.
 2. `_IDLE_SESSION_RECLAIM_TICKS` may be set far higher than intended, or a per-tick interval
    change elsewhere may have silently stretched the effective wait far past what the
    original design assumed.
@@ -205,15 +227,100 @@ CI reserve via `autospawn._apply_fleet_cap`'s count clamp (`server/autospawn.py:
 gap is one-directional: scheduled/escalation tasks can wrongly land on normal slots, never the
 reverse.
 
+## CONFIRMED (2026-08-19, second follow-up): `orphan_session_reclaim` kills genuinely-alive workers — fleet-wide kill audit
+
+Operator pushed back on scoping this to slot 2 alone: "we are not hunting the review agent slot
+2 specifically, this is happening with other slots as well." A fleet-wide 24h kill-reason audit
+(`journalctl -u orchestrator.service --since "-24 hours" | grep "SESSION-TEARDOWN kill_session"`)
+found the "slots getting killed / agents dying mid-task" symptom spans **at least 3 distinct
+mechanisms**, graded by confidence:
+
+| `kill_session(reason=...)` | slots hit (24h) | count | confidence |
+| --- | --- | --- | --- |
+| `orphan_session_reclaim` | slot 2 only | 18 | **CONFIRMED destructive bug** — see below |
+| `idle_lingering_session_reclaim` | 16,21,27,28,29,30,31,32,33 | 46 | likely legitimate — this status is set only via an explicit `/done`, unlike `killed` below (see "Why this isn't a missing teardown bug" above for the same mechanism's OTHER symptom, the reserve-starvation delay) |
+| `worker_account_unusable_failover` | nearly every slot (1,3,4,7,10,11,14,16,21,28-33) | ~20 | by-design failover; resume-success not yet verified |
+| `account_rotation_canonical` | 7,14,21,32,33 | 7 | not yet traced |
+
+### The confirmed bug
+
+`ensure_review_agents`'s successful-respawn path (`server/autospawn.py:483-494`) persists
+`claude_session_id`/`tmux_session`/`account_id`/`last_spawned_at` on a successful spawn — but
+**never sets `slot_row.status`**. Compare the RESUME-specific path
+(`server/autospawn.py:4105-4135`), which correctly does `if slot_row.status == "killed":
+slot_row.status = "working"` — `ensure_review_agents` has no equivalent line. So a review slot
+that gets killed and successfully respawned keeps reading `status=="killed"` in the DB
+indefinitely, even though a genuine, healthy, working agent now occupies it.
+
+`WorkerLivenessWatchdog`'s orphan-session-reclaim sweep (`server/worker_liveness_watchdog.py:
+888-918`) is built on exactly one assumption, stated in its own comment: *"status=killed + tmux
+still alive" always means a respawn whose boot-paste raised — an empty stuck pane, safe to
+kill.* That assumption is false whenever `ensure_review_agents` is the reason `status` is stale.
+Roughly 30+ minutes after every successful respawn, the sweep finds the (wrongly) stale
+`status=="killed"` row, sees the session is still alive, and kills it — destroying genuinely
+in-flight work.
+
+**Direct log proof** (slot 2, the currently-active review slot):
+
+```
+13:21:38  agentkeeper_review_succeeded          <- respawn succeeds; status stays "killed" (the bug)
+  ... genuinely alive, genuinely working for the next 34 minutes ...
+13:56:03  WorkerLivenessWatchdog slot 2: reclaiming orphan session orch-slot-2
+          (status=killed + live, spawn_age=2067s)
+13:56:03  SESSION-TEARDOWN kill_session session=orch-slot-2 reason=orphan_session_reclaim
+```
+
+That single kill cascades exactly as observed: `tmux_session_lost` -> `unexplained_death_forensics`
+(correctly finds no OOM — `cgroup_oom_counters` all zero — and no external kill, because there
+wasn't one; the orchestrator killed its own worker on purpose, a category `death_forensics.py`
+doesn't check) -> `spawn_retry_cap_reached` -> `agentkeeper_review_succeeded` (new respawn, same
+bug, status stuck at "killed" again) -> repeat. Confirmed via the full 24h log: this exact cycle
+fired 18 times in 24h on slot 2 alone, roughly every 35 minutes to a few hours depending on how
+long each respawn survives before the next reclaim tick catches it — not 18 separate mysteries,
+one bug on a repeating cadence.
+
+**The fix** is one line: add `slot_row.status = "working"` inside the existing
+`if slot_row is not None:` block in `ensure_review_agents`'s success branch (`server/autospawn.py`
+around line 490), mirroring the pattern already used at `server/autospawn.py:4120`.
+
+### Why 1/4/10/11 showing idle + "died mid-task" is a SEPARATE story, not this bug
+
+Dashboard showed slots 1/4/10/11 idle with a red "died mid-task" badge and last-message "idle:
+447 task(s) blocked on gate-upstream-open:sports_taxonomy_p2_migration_2026_...". Verified both
+halves separately — they are two unrelated facts:
+
+- **Why idle right now — legitimate, not a bug.** Slot 1's own `idle_blocker_inferred` diagnostic
+  shows 446 blocked tasks, top blockers `gate-upstream-open:sports_taxonomy_p2_migration_2026_08_08`
+  (14), `gate-upstream-open:sports_satellite_ao_dispatch_batch14_2026_08_16` (11), and a stuck
+  `sports_taxonomy_p4_backfill` task (7). `gate-upstream-open:*` is `regen_backlog_from_plan.py`'s
+  real, intentional `depends_on`-derived prerequisite — it stays closed until the referenced
+  upstream plan completes. The backlog genuinely has nothing eligible for a generic slot right
+  now; this is correct behavior.
+- **Why "died mid-task" (historical) — a third, distinct, by-design mechanism.**
+  `worker_account_unusable_failover` (`server/autospawn.py:3844-3881`) — confirmed via direct log
+  evidence, 3 separate batch-kills today (14:34:23 slots 1/3/4 on account `sub-b-iggy2london`;
+  14:43:15 slots 1/4/7/10/11/14/31/32 on account `sub-a-ikenna`; 14:48:37 slots 10/11 on
+  `sub-b-iggy2london` again). This mechanism correctly checks `has_session()` before killing and
+  only fires when the bound account is confirmed over its dispatch-headroom ceiling —
+  **operator-confirmed both accounts are legitimately capacity-blocked right now, not a
+  false-positive detection bug**: `sub-a` (ikennaigboaka@gmail.com) is on its 5-hour usage limit,
+  `sub-b` is on its weekly usage limit. What's NOT yet verified: whether the worker's in-flight
+  WIP actually gets resumed on a fresh account afterward
+  (`resume_lifecycle.classify_dead_worker` + the resume-respawn path at
+  `server/autospawn.py:4105-4135`), or whether it's effectively lost/requeued-from-scratch — that
+  determines whether this by-design mechanism is actually safe in practice, tracked as a
+  follow-up below.
+
 ## Follow-up
 
-- [ ] [BACKEND] P2. **Root-cause why `_reclaim_idle_lingering_sessions` has not reclaimed slots
-      28/29/30 after 4+ hours.** Check first whether `WorkerLivenessWatchdog`'s tick loop is
-      genuinely running at all (recent activity-log entries attributable to it, e.g. any
-      `idle_lingering_session_reclaim` event fired recently for ANY slot) before assuming the
-      bug is narrow to this function. If the loop is ticking, inspect the disk-persisted
-      per-slot tick-counter state (`dedup_state.watchdog_idle_session_ticks_path`) directly for
-      these 3 keys to see whether the counter is accumulating, stuck, or absent entirely.
+- [ ] [BACKEND] P2. **Root-cause why `_reclaim_idle_lingering_sessions` leaves slots
+      orphaned for hours between ticks.** Updated 2026-08-19: the fleet-wide 24h audit confirms
+      the loop DOES tick and DOES reclaim (46 kills across 9 slots in 24h — hypothesis 1, "loop
+      not ticking," is now unlikely). The open question narrows to why the inter-tick gap (batches
+      seen roughly 1-6h apart) leaves a slot like 28/29/30 looking falsely occupied for that long.
+      Inspect the disk-persisted per-slot tick-counter state
+      (`dedup_state.watchdog_idle_session_ticks_path`) and `_IDLE_SESSION_RECLAIM_TICKS` /
+      the per-tick interval to see whether the effective wait is longer than intended by design.
 - [ ] [BACKEND] P2. **Fix the confirmed root cause** once found. Add/extend test coverage in
       whichever test file already covers `_reclaim_idle_lingering_sessions`
       (`tests/test_worker_liveness_watchdog.py` or similar — locate via grep before assuming a
@@ -244,6 +351,26 @@ reverse.
       reinventing the check). Needs a short design decision first — whether "competing demand"
       means any queued backlog task, or specifically one eligible for THIS slot — resolve that
       before implementing, not while implementing.
+- [ ] [BACKEND] P1. **Fix the confirmed `ensure_review_agents` bug**: add
+      `slot_row.status = "working"` to the successful-respawn branch (`server/autospawn.py`
+      around line 490), mirroring `server/autospawn.py:4120`'s existing pattern. Add/extend test
+      coverage for `ensure_review_agents`'s success path (`tests/test_autospawn.py` or similar —
+      locate via grep) asserting `status` transitions to `working` on a successful respawn
+      regardless of the slot's prior status. This is the highest-priority item in this doc — it
+      is confirmed to be actively destroying in-flight review-agent work on a recurring cycle,
+      not just wasting idle capacity like the other findings here.
+- [ ] [BACKEND] P2. **Trace `worker_account_unusable_failover`'s resume-success** — verify
+      whether a worker killed by this mechanism (`server/autospawn.py:3844-3881`) actually gets
+      its in-flight task/WIP resumed on a fresh account afterward
+      (`resume_lifecycle.classify_dead_worker` + `server/autospawn.py:4105-4135`'s resume-respawn
+      path), or whether it's effectively lost/requeued-from-scratch. Confirmed today this
+      mechanism fires legitimately (both `sub-a`/ikennaigboaka@gmail.com on its 5-hour limit and
+      `sub-b` on its weekly limit are genuinely capacity-blocked, not a false-positive detection
+      bug) — the open question is purely whether the SAFETY NET (resume) actually works, since
+      slots 1 and 4 were failover-killed twice in 9 minutes against two different accounts today.
+- [ ] [BACKEND] P3. **Trace `account_rotation_canonical`** (7 kills/24h across slots
+      7,14,21,32,33) — not yet investigated at all; lowest priority of the 4 mechanisms in the
+      breakdown table above since its volume is smallest, but still unconfirmed.
 
 ## Codex SSOTs
 
