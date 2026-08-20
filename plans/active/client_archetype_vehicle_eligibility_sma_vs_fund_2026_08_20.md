@@ -110,14 +110,21 @@ cross-plan same-file collision rather than relying on `sequential: true` alone (
   `test_every_seeded_client_has_an_explicit_vehicle_type` (iterates `CLIENT_REGISTRY.get_all_active()`), plus
   `test_default_clients_are_backfilled_fund` pinning the exact backfilled value per client_id.
 
-- [ ] [BACKEND] P0. Add the routing gate at fund-administration-service's redemption-creation endpoint
-  (`fund_administration_service/api/main.py`, the handler that calls `create_redemption()` from
-  `fund_administration_service/redemption/state_machine.py`) — look up the requesting client's `vehicle_type` from
-  the config chosen in todo 1; an `sma`-typed client_id is rejected at this endpoint (a clear 4xx, not a silent
-  accept) — that vehicle never creates an `AllocatorRedemption`, its withdrawals are a direct execution-service
-  concern entirely outside fund-administration-service, out of this plan's scope. `fund`-typed clients proceed exactly
-  as today. Done-when: a test posting a redemption request for an `sma`-typed client_id gets a clear rejection, and a
-  `fund`-typed client_id's request is unaffected (existing `tests/unit/test_api_end_to_end.py` stays green).
+- [x] [BACKEND] P0. Add the routing gate at fund-administration-service's redemption-creation endpoint — ✅
+  fund-administration-service@fb7dc9d7b1, verified ancestor of origin/live-defi-rollout. `post_redemption()`
+  (`fund_administration_service/api/main.py`) looks up `body.allocator_id` (== `client_id`, per
+  `AllocatorRedemption`'s own docstring) via `CLIENT_REGISTRY.get()` — imported from the public
+  `unified_api_contracts.strategy` surface, not the deep `internal.domain.strategy_service.client_registry` path,
+  per todo 1's flag about which module to import from. An `sma`-typed client_id is rejected with `403` before
+  `create_redemption()` is called; an unregistered client_id (not yet in the registry) proceeds as today's default
+  (backward-compatible with existing test fixtures that predate the registry) rather than being rejected — the plan's
+  resolved design only requires rejecting a client CONFIRMED `sma`, not defaulting unknowns to a hard-block.
+  Evidence: `bash scripts/quality-gates.sh` passed (34s, sentinel `fb7dc9d7b15839eb152ab74115db3416da61c141`); new
+  tests `test_sma_client_redemption_request_rejected` (asserts 403) and
+  `test_fund_client_redemption_request_unaffected` (asserts 200) in `tests/unit/test_api_end_to_end.py`, both
+  monkeypatching `CLIENT_REGISTRY` with a scoped test registry; existing
+  `test_full_lifecycle_loop_emits_all_events_in_order` (unregistered `allocator_id="client-IT"`) stays green
+  unmodified, confirming the done-when's "fund-typed client_id's request is unaffected" bar.
 
 - [ ] [REVIEW] P1. Confirm no regression: run `bash scripts/quality-gates.sh` in both the UAC/strategy-service config
   repo and fund-administration-service after the above land, and cite the green runs.
@@ -135,3 +142,6 @@ cross-plan same-file collision rather than relying on `sequential: true` alone (
   instances — a required field with no default cannot land without every existing instance supplying it in the same
   change. QG green (272s). Item 3 (routing gate) and item 4 ([REVIEW]) remain open — item 3's implementer should read
   item 1's flag about which module to import from.
+- **2026-08-20**: [interactive session, `.tabs/5`] Item 3 (routing gate) shipped —
+  fund-administration-service@fb7dc9d7b1, verified ancestor of origin/live-defi-rollout. See item 3's own evidence
+  line for the full detail. QG green (34s). Only item 4 ([REVIEW] confirm-no-regression) remains open.
