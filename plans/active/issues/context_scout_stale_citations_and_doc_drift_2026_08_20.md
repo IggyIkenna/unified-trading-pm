@@ -41,6 +41,13 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
+context_scope:
+  [
+    cursor-configs/skills/context-scout/SKILL.md,
+    /plans/active/sports_taxonomy_p2_migration_2026_08_08.md,
+    /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
+    /plans/active/issues/backlog_500_malformed_depends_on_comment_2026_08_19.md,
+  ]
 ---
 
 # context-scout 2026-08-20 — findings outside this skill's writable scope
@@ -114,3 +121,4 @@ flagging rather than guessing it into `context_scope`.
 - **2026-08-20 (context_scout_auditor, dispatch agt-23fb1b, slot 28)**: filed from the daily context-scout sweep's
   Phase 1 hunter reports — none of these 6 findings were fixed by this sweep (out of scope by design), all
   6 todos above are fresh and unclaimed.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

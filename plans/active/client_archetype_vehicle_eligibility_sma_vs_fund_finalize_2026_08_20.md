@@ -36,6 +36,8 @@ context_scope:
   [
     /plans/active/client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    unified-api-contracts/unified_api_contracts/internal/reporting/client_config.py,
+    unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/client_config.py,
   ]
 ---
 
@@ -66,3 +68,8 @@ plan doesn't sit `active` with zero open todos.
 ## Progress Log
 
 - **2026-08-20**: Finalize plan authored alongside its source plan per the STRICT companion-finalize-plan rule.
+- **context-scout 2026-08-20**: populated context_scope (4 entries) — added the two `ClientConfig` source files
+  (`unified-api-contracts/.../internal/reporting/client_config.py` and
+  `.../internal/domain/strategy_service/client_config.py`) todo 2 names directly, since confirming their sync is
+  this doc's one non-purely-gating todo; the other two todos (evidence reconciliation, archival ritual) are pure
+  gating covered by the source plan + archival-discipline codex pointers already present.

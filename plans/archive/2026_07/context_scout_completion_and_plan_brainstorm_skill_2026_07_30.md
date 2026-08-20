@@ -11,7 +11,11 @@ summary: >-
   along the way (docspec.py had `context_scope` in its machine schema, the human SSOT doc didn't), added test coverage
   matching the sibling `na_eligibility` mode's precedent, and authored a new `/plan-brainstorm` skill for the
   pre-authoring clarifying-questions gap the audits currently only catch post-hoc.
-status: active
+status:
+  archived # (was: active) 2026-08-20 -- sole remaining open todo (corpus-wide context_scope backfill + docspec.py
+  # FieldSpec hardening) done-by-citation via ao_satellite_ao_dispatch_batch3_2026_07_31.md todo 1 (888/888
+  # UP_TO_DATE, Req.E -> Req.R shipped); done=11, 0 open todos, locked_by empty -- archival-eligible per
+  # plan-completion-and-archival-discipline.md.
 nature: process
 asset_group:
   [ao] # corrected 2026-08-09 (/ag-closeout-audit ao) -- was [ao, cross-cutting]. Content is 100% agent-orchestrator
@@ -150,7 +154,11 @@ choice (human-executed, not AO-dispatched).
       commit (lost the same way this doc's own predecessor plan file did — see note below) and this later session's
       drift-fix pass only caught the `doc-frontmatter-schema.md` copy, not these two. Added a `context_scope:` example
       line to both templates' frontmatter blocks.
-- [ ] [SCRIPT] P0. **Backfill `context_scope` across the full active plans/issues corpus** — the operator's original ask
+- [x] ✅ [SCRIPT] P0. **DONE-BY-CITATION 2026-08-20 — batch3's todo 1 (the live tracking home this todo's own text
+      names) completed the corpus-wide backfill + the `docspec.py` FieldSpec hardening flip.**
+      `generate_context_scope_inventory.py` now reports 888/888 UP_TO_DATE; `check_frontmatter_schema.py` corpus-wide
+      is clean except 4 genuinely `locked_by`-locked docs (follow-up filed, not bypassed). Full detail:
+      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` todo 1. Backfill `context_scope` across the full active plans/issues corpus** — the operator's original ask
       for this whole workstream (tag ALL active plans + issues with a minimal reading-list, as a hardened requirement),
       which this plan's own scope never covered (it only finished the plumbing). Per
       `generate_context_scope_inventory.py`'s live count: 559 in-scope docs, 553 `NEVER_SCOUTED`. In progress as of this

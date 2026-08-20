@@ -25,9 +25,9 @@ related:
   ]
 context_scope:
   [
-    batch-live-reconciliation-service/engine/trade_recon.py,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/engine/trade_recon.py,
     deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf,
-    strategy-service/strategy_service/cli/handlers/daily_determinism_handler.py,
+    batch-live-reconciliation-service/batch_live_reconciliation_service/cli/handlers/daily_determinism_handler.py,
     /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
   ]
 created: 2026-08-20
@@ -130,3 +130,8 @@ GCS-JSONL mechanism that never imports it.
 
 **2026-08-20 — filed.** No code touched. Operator ruled the sequencing (after the state-fabric build) at filing time,
 so this is a dated, accepted gap rather than an open question.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries); corrected 2 stale paths —
+  `trade_recon.py` was missing its `batch_live_reconciliation_service/` package-dir prefix, and
+  `daily_determinism_handler.py` was attributed to `strategy-service` (per the doc's own body-text citation at
+  line 67) but actually lives in `batch-live-reconciliation-service` — both now verified on disk.

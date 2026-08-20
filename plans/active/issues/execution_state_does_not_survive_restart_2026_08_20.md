@@ -40,7 +40,7 @@ context_scope:
     execution-service/execution_service/engine/live/persistence/postgresql.py,
     execution-service/execution_service/engine/startup/order_recovery.py,
     execution-service/execution_service/pre_crash_checkpoint.py,
-    execution-service/execution_service/providers/account_history_client.py,
+    execution-service/execution_service/services/account_history_client.py,
   ]
 created: 2026-08-20
 last_updated: "2026-08-20"
@@ -141,3 +141,6 @@ which is worse than the others because a CLI flag and a docstring both actively 
 are preserved in the P2 todo above rather than dropped. `PubSubTransport`'s module docstring still calls it a "stub
 pending Plan 03 infra" while the implementation looks complete — not resolved here, and it is unclear which of the doc
 or the code is stale.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries); corrected 1 stale path —
+  `account_history_client.py` lives under `execution_service/services/`, not `execution_service/providers/`.

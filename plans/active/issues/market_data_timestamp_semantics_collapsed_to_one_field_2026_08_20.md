@@ -128,3 +128,6 @@ models, unrelated to this defect.
 correction narrowed the finding from "no receive-time capture" (wrong) to "one overloaded field with adapter-dependent
 semantics" (measured). The corrected claim is worse than the original, because a missing field fails loudly on first
 use while an ambiguous one does not fail at all.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries); all paths re-verified on disk,
+  unchanged.

@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [fund-administration, redemption, nav, ledger, strategy-agnostic]
 related:
   [
-    /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
+    /plans/archive/2026_08/redemption_wallet_transfer_execution_2026_08_20.md,
     /plans/epics/strategy_master.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
@@ -42,15 +42,12 @@ superseded_by:
 source: operator conversation relay (Greg/Patrick SMA-redemption chat) + interactive session slot 5, 2026-08-20
 context_scope:
   [
-    /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
     /codex/04-architecture/client-funds-isolation.md,
-    fund-administration-service/fund_administration_service/redemption/state_machine.py,
+    /codex/04-architecture/tier-and-import-architecture.md,
+    /plans/archive/2026_08/redemption_wallet_transfer_execution_2026_08_20.md,
+    /plans/archive/2026_08/fund_administration_redemption_cadence_engine_finalize_2026_08_20.md,
     fund-administration-service/fund_administration_service/background/grace_period_handler.py,
-    fund-administration-service/fund_administration_service/background/nav_strike_scheduler.py,
     fund-administration-service/fund_administration_service/api/main.py,
-    unified_api_contracts/internal/domain/fund_administration/_types.py,
-    unified_api_contracts/internal/reporting/fee_structure.py,
-    /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
   ]
 ---
 
@@ -288,3 +285,9 @@ plan is a serial chain by file-topology, not a reflexive default.
   `test_settle_redemption_via_api_writes_treasury_ledger_row` green. **Flagging again for the operator** (per item 4's
   same flag, now a recurring pattern across 4 sessions on one plan): AO's plan-claim/dispatch model does not appear to
   prevent two workers from picking up the same in-progress `sequential: true` plan.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries). Trimmed from the 9 entries authored
+  alongside the plan (dropped `pnl-attribution.md`, `state_machine.py`, `nav_strike_scheduler.py`, and the two UAC
+  type files — all 9 todos are now done, so the doc's own hot-file rationale ("nearly every todo touches
+  `grace_period_handler.py` and/or `api/main.py`") is the sharper source-path signal than the full touched-file set)
+  and added `fund_administration_redemption_cadence_engine_finalize_2026_08_20.md`, the doc's own stated handoff
+  target. All 6 entries verified to resolve on disk.

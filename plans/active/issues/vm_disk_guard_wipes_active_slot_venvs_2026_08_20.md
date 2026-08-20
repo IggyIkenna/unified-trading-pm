@@ -38,6 +38,13 @@ source:
     /var/log/vm-disk-guard.log,
     /plans/active/ao_satellite_ao_dispatch_batch24_2026_08_18.md,
   ]
+context_scope:
+  [
+    agent-orchestrator/scripts/vm-disk-guard.sh,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /plans/active/ao_satellite_ao_dispatch_batch24_2026_08_18.md,
+  ]
 ---
 
 # vm-disk-guard reclaims the venv of ACTIVE slots
@@ -163,3 +170,7 @@ operator call, not a worker's.
 - [ ] [INFRA] P3. Bring baseline `/` usage down far enough that the guard is genuinely exceptional rather than firing
       on most 2-hourly passes — it has run at 80-81% on 3 of the last 4 logged passes, so today the fleet is
       effectively running with venv reclamation always-on. (repo: agent-orchestrator)
+
+## Progress Log
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

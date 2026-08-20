@@ -39,6 +39,14 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 4
 assigned_role:
 drift_direction: none
+context_scope:
+  [
+    /codex/09-strategy/architecture-v2/capability-wizard.md,
+    /codex/04-architecture/transfer-architecture.md,
+    /codex/06-coding-standards/strategy-identity-versioning.md,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/dated_contract_resolver.py,
+    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py,
+  ]
 depends_on: []
 locked_by:
 locked_since:

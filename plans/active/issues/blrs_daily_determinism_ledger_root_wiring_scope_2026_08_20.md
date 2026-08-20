@@ -172,3 +172,5 @@ changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op
   `_gen_run_id()` uuid4 suffix, and both live Cloud Run execution logs cited above. Corrected the misleading Stage-B
   comment in `paper_week_determinism_scheduler.tf` in the same session (it asserted the CLI op exists). No code for the
   wiring itself was written — the four todos above carry it.
+- **context-scout 2026-08-20**: reviewed context_scope (already populated at authoring time with 4 real source
+  paths across the 3 involved repos) — no changes needed, left at 4 entries.

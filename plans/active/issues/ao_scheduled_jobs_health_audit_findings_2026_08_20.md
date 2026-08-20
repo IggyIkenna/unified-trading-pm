@@ -34,6 +34,9 @@ context_scope:
   [
     /plans/archive/2026_08/ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md,
     /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
+    /plans/active/issues/ao_scheduled_job_reaped_stale_rate_2026_08_18.md,
+    agent-orchestrator/scripts/orchestrator/check-scheduled-job-health.sh,
+    agent-orchestrator/scripts/orchestrator/list_operator_gated_queue.py,
   ]
 source: >-
   Interactive session, 2026-08-20 — completing Track B of
@@ -108,3 +111,4 @@ designed to watch git/GitHub state.
 
 - **2026-08-20**: doc authored, completing the Track B synthesis todo in
   `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

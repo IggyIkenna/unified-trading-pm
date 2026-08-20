@@ -145,3 +145,4 @@ cross-plan same-file collision rather than relying on `sequential: true` alone (
 - **2026-08-20**: [interactive session, `.tabs/5`] Item 3 (routing gate) shipped —
   fund-administration-service@fb7dc9d7b1, verified ancestor of origin/live-defi-rollout. See item 3's own evidence
   line for the full detail. QG green (34s). Only item 4 ([REVIEW] confirm-no-regression) remains open.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

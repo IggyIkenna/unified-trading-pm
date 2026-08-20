@@ -49,6 +49,7 @@ context_scope:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf,
     strategy-service/strategy_service/cli/handlers/batch_rerun.py,
+    /plans/active/issues/blrs_daily_determinism_ledger_root_wiring_scope_2026_08_20.md,
   ]
 source: >-
   /na-eligibility-audit cross-cutting tranche, dispatch agt-dc3dbe, slot 30, 2026-08-19. Each item's own Source:
@@ -114,3 +115,6 @@ source: >-
   `/plans/active/issues/blrs_daily_determinism_ledger_root_wiring_scope_2026_08_20.md` with 5 tracked todos + that
   decision, annotated the P2.7.5 line above, and corrected the identical false claim in the terraform module's own
   Stage-B comment. Checkbox deliberately left unticked.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries) — added the new
+  `blrs_daily_determinism_ledger_root_wiring_scope_2026_08_20.md` issue doc, the redirect target the P2.7.5 line's
+  own premise-correction note names ("work those, not this line").
