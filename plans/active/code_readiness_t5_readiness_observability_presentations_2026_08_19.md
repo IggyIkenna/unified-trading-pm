@@ -864,3 +864,41 @@ todos only to confirm they are data-movement, then leave it.
   2 new regression tests added (`test_nudge_ahead_not_sustained_does_not_fire`,
   `test_nudge_ahead_sustained_fires_with_age`); file 26/26 passing, broader worker-liveness suite 103/103.
   **NOT YET LANDED, 2026-08-20** — ship failed on `dashboard/node_modules` missing `@vitest/coverage-v8` (environmental, unrelated to this change; exit 0 with nothing landed, caught by per-file origin verification, not by the exit code). Fix + 2 tests preserved locally AND backed up outside git (scratchpad/agent-orchestrator-backup/) since this session already measured local edits as fragile under contention. Needs `npm --prefix dashboard install` (or equivalent) before the next agent-orchestrator ship attempt — flagged as its own todo below since it will block ANY future ship to this repo, not just this fix.
+
+## Deferred work after 2026-08-20
+
+| Item | State / why deferred | Blocked on |
+| --- | --- | --- |
+| 4 DOC "re-derive artefacts" todos | Not started — plan-conflict with `/plans/active/state_fabric_artefacts_2026_08_20.md`'s ledger-based approach | Operator/coordinator decision on which approach to follow |
+| FROM-T1 API-surface regeneration | Same plan-conflict (also a hand-HTML-edit) | Same as above |
+| `git stash push/pop` core fix | Not done — real work exists in `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`, not yet landed | AO dispatch queue, not mine to force |
+| Manifest-hygiene 4 residual P2 items | Cannot be done yet — 2 need a VM launch (`detect_manifest_divergence.py` OOMs locally on 14M+-row manifests) | A deliberate VM-launch decision |
+| `dp_cron_did_not_fire` serving-revision verification | Cannot be done yet — needs gcloud auth this session doesn't have; already being tracked by dedicated 6-hourly sweeps | GCP credentials |
+| AO watchdog scheduled-timer wiring | Operator-owned — needs VM SSH | Operator |
+| Alert-bookend audit (every actionable alert gets a ✅ close) | Not done — large, open-ended, needs real audit time across Slack history | Nobody — real work, pick up next |
+| W19 corpus audit | Partially satisfied (`/docs-reconcile` ran fully today, 11 findings fixed) — `/plan-reconcile` half not independently confirmed run today | Nobody — quick to verify next |
+| 433-doc non-spine tail | Not scoped this session — large | Nobody — needs a dedicated pass |
+| Post-phase codex audit, final gate | Gated on everything above | — |
+| `unified-trading-ci` slot-3 checkout, 3 stale unpushed commits from other slots | Filed as its own issue (`/plans/active/issues/unified_trading_ci_slot3_checkout_has_3_stale_unpushed_commits_2026_08_20.md`) — pre-existing, not from this session | Needs someone to read the 3 diffs before deciding push vs. discard |
+
+**Recommended next**: verify `/plan-reconcile` ran today (quick check, likely closes W19 outright), then the alert-bookend audit — both are self-contained and don't need the plan-conflict resolved first.
+
+## Lessons carried forward (2026-08-20)
+
+- **`bash cmd 2>&1 | tee LOG | tail -N` silently discards `cmd`'s real exit code** — the pipeline returns `tail`'s
+  status. Confirmed live: `false | tee x | tail -5; echo $?` → `0`. This explains most of this session's own
+  "exited with code 0 but the banner said FAILED" confusion, including in `quickmerge_exit_zero_on_failed_regate_
+  and_silent_directory_files_2026_08_20.md`'s own Defect 1 evidence — re-measure with `${PIPESTATUS[0]}` before
+  trusting a piped exit code again.
+- **A diagnostic grep pattern is never exhaustive.** `ruff format --check` fails with `Would reformat: <path>`,
+  matching neither `❌` nor `FAILED`/`ERROR`/`E `. When a "REAL failure" banner fires with no visible evidence,
+  run each formatter/linter standalone against the exact files being shipped rather than trusting a keyword grep
+  over the full log a second time.
+- **Extending an existing check's dimensionality surfaces latent gaps in how it handles missing data.** Adding
+  MANUAL as a 4th mode wasn't itself risky, but it immediately exposed `execution_instruction()` conflating
+  "probe measured none" with "probe never had this field at all" — a real overclaim (`not_ready` instead of
+  `unverified`) that existed for the 3 original modes too, just never triggered because every mode DID have a
+  probe field. Adding an axis is a free correctness test for the axes that already existed.
+- **A stash-quarantine collision is recoverable if the diff is a clean superset** — verified via
+  `diff stash-version current-version` showing ONLY your own additions missing, nothing else different, before
+  restoring. Don't restore blind even when you're confident; the check costs one command.
