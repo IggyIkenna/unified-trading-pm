@@ -78,11 +78,11 @@ work is not evidence the original one now does). GH Actions billing-API access (
   API needed): 12 public / 14 private of 26 fleet repos. `unified-trading-pm` remains public (unchanged since
   2026-08-06, per finding (l)). No visibility flips detected since the last entry that reported a mix.
 - **CI VM resource health**: no full CloudWatch-lookback rightsizing check run against `i-042a6332509482556` in
-  > 24h — same gap the last several passes deferred. A live snapshot was pulled instead (not a substitute for the
-  > real rightsizing check, but cheap corroboration): load average 0.00/0.02/0.16, CPU ~100% idle, 31.5GB RAM with
-  > 29GB available, swap in use 267MB/16GB. Consistent with the previously-established "burst pattern, idle at
-  > baseline" read — this session's snapshot lands during a quiet window, so it neither confirms nor overturns that
-  > verdict on its own. `/vm-resource-rightsizing-check` still needs an actual run to close this out properly.
+  over 24 hours — same gap the last several passes deferred. A live snapshot was pulled instead (not a substitute
+  for the real rightsizing check, but cheap corroboration): load average 0.00/0.02/0.16, CPU ~100% idle, 31.5GB RAM
+  with 29GB available, swap in use 267MB/16GB. Consistent with the previously-established "burst pattern, idle at
+  baseline" read — this session's snapshot lands during a quiet window, so it neither confirms nor overturns that
+  verdict on its own. `/vm-resource-rightsizing-check` still needs an actual run to close this out properly.
 
 **Sweep 1 (26 repos)**: all 26 confirmed clean — 25/26 `quality-gates-v2` `success` on `live-defi-rollout`;
 `unified-trading-ci` confirmed by design (its push gate is `lint.yml`, green, no `quality-gates-v2.yml` run
@@ -119,6 +119,18 @@ resolve `SLACK_ALERTS_READER_BOT_TOKEN` via both the pinned `unified-trading-sa`
 host) and the ambient default account. Per §6 this makes the "nothing more in Slack" claim unavailable rather than
 confirmed — the ground-truth `gh`/`gcloud`/SSM sweeps above stand on their own and found nothing red, but a
 Slack-only alert with no matching CI-state symptom would have been invisible this pass.
+
+**Self-inflicted finding, fixed same turn**: the first `safe-doc-push.sh` of this entry landed a paragraph where a
+wrapped line began with `>24h` — the commit-hook prettier pass reinterpreted the leading `>` as a markdown
+blockquote marker on 5 consecutive lines, silently changing the rendered structure of this doc's own CI-VM-health
+bullet (confirmed live on `origin/live-defi-rollout` post-push, not just a local diff artifact). This is a THIRD,
+distinct mechanism from the two already-tracked prosewrap-mangling root causes
+(`prettier_prosewrap_mangles_long_inline_code_spans_2026_07_31`,
+`prosewrap_padding_root_cause_mismatched_fence_indent_2026_08_20`) — neither reflow-padding nor fence-indent-drift,
+just a bare line-leading `>` being valid Markdown blockquote syntax. Fixed by rewording to avoid a line-leading `>`
+(`over 24 hours` instead of `>24h`) and re-shipped. Noting here rather than opening a third full issue doc for one
+self-contained, already-fixed instance — flag it as a pattern if a future `/ci-reconcile` (or any doc-authoring
+session) hits the same `>`-at-line-start mangling again elsewhere in the corpus.
 
 **Bar for "unblocked" met, with two stated coverage gaps**: sweeps 1-5 all done and clean, host-dispatched monitors
 verified live (not deferred), zero persistent alerts, zero fixes needed this pass. The two explicit gaps (Slack
