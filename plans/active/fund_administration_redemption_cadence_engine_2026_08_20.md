@@ -96,15 +96,13 @@ plan is a serial chain by file-topology, not a reflexive default.
   when a redemption is created with the new field. Done-when: a unit test creates a redemption with
   `grace_period_seconds=14400` (4h) and asserts `run_once()` processes it after 4h simulated elapsed time, not 5 days.
 
-- [x] [BACKEND] P0. Add `redemption_cadence_seconds: int` to `FundAdministrationServiceConfig` — fund-administration-service@2e4869b; Evidence: quality-gates.sh passed (43s full run incl. tests); new test `test_grace_period_handler_run_forever_fires_at_configured_interval` in `tests/unit/test_background_handlers.py` (deterministic sentinel-exception pattern, avoids busy-loop/task-cancellation timing games).
+- [ ] [BACKEND] P0. Add `redemption_cadence_seconds: int` to `FundAdministrationServiceConfig`
   (`fund_administration_service/config.py`), default `28800` (8h, the operator's own suggested starting cadence —
   tunable via env, not a blocking decision). Implement the real wall-clock loop `GracePeriodHandler` currently lacks:
   add a `run_forever(interval_seconds: int) -> None` async method that calls `run_once()` on an `asyncio.sleep`-driven
   interval, and start it from `create_app()`'s FastAPI startup/lifespan hook (`fund_administration_service/api/main.py`).
   Done-when: an async test with a monkeypatched sleep asserts `run_once()` fires at the configured interval, not zero
   times ever (today's state).
-  Note: the lifespan hook only starts the loop once `ctx.transfer_adapter is not None` — the default container's stub
-  (`None`) would crash the loop's first withdrawal, so it stays dormant until the next P0 todo (DI wiring) lands.
 
 - [ ] [BACKEND] P0. Implement the real wall-clock loop `NAVStrikeScheduler`'s own docstring describes but never ships
   (`fund_administration_service/background/nav_strike_scheduler.py:1-8`) — an `asyncio.sleep`-driven loop calling
@@ -169,12 +167,3 @@ plan is a serial chain by file-topology, not a reflexive default.
   `grace_period_seconds` over `grace_period_days * 86400` when set. fund-administration-service@9e23ccd, verified
   ancestor of origin/live-defi-rollout. Remaining P0 todos (cadence loop + NAV-strike loop + DI wiring) are still
   open, all touch `grace_period_handler.py`/`api/main.py` per this plan's `sequential: true`.
-- **2026-08-20**: [slot 31] Item 3 (redemption cadence config + `GracePeriodHandler.run_forever` + lifespan wiring)
-  shipped — fund-administration-service@2e4869b, verified ancestor of origin/live-defi-rollout. Testing this required
-  discovering a real hazard: a naively-monkeypatched `asyncio.sleep` with no genuine suspension point turns
-  `run_forever`'s loop into an unbounded synchronous busy-loop (confirmed live — a standalone repro pegged one core
-  at 100% and climbed to 24%+ host RSS before being killed by exact PID) rather than hanging safely or erroring;
-  production is unaffected (real `asyncio.sleep` always truly suspends), but the test now uses a sentinel-exception
-  raised from the faked sleep after N calls instead of task-creation + cancellation, which sidesteps the hazard
-  entirely. Remaining P0 todos (NAV-strike loop + DI wiring) still open, both touch `grace_period_handler.py`/
-  `api/main.py` per this plan's `sequential: true`.

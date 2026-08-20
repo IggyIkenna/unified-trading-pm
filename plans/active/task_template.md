@@ -109,10 +109,8 @@ tags: [<tag>, ...]
 related: [<doc>, ...]
 created: <YYYY-MM-DD>
 last_updated: <YYYY-MM-DD>
-# REQUIRED — absence = orphan = review-blocking
-parent_epic: <epic-slug>
-# planning = AO executes | NA = not dispatched
-assigned_vm: planning
+parent_epic: <epic-slug> # REQUIRED — absence = orphan = review-blocking
+assigned_vm: planning # planning = AO executes | NA = not dispatched
 execution_scope: orchestrator-agent
 priority: P0
 estimate_class: infra # refactor 0.4x | design 0.6x | infra 0.8x | brand-new 1.0x | research 1.2x
@@ -125,8 +123,7 @@ assigned_role: <default craft — data_engineering | infra | backend_engineer | 
 # attempt a cross-model substitution (see model_tier.models_are_substitutable). Defers to assigned_role's own
 # model_strict when absent here too.
 drift_direction: advance-code
-# optional — upstream plan slugs (documents ordering + gates archival)
-depends_on:
+depends_on: # optional — upstream plan slugs (documents ordering + gates archival)
 # gate_on_depends: true    # optional — machine-hold this plan's tasks until depends_on tasks are done
 # sequential: true         # optional — STRICT serial: task N waits for N-1 done — SHIPPED (was: "[ROLLING OUT — see §4]" — corrected 2026-07-12, doc-reconciliation finding 380, §A2 B-queue ruling: ao@ff6100ad shipped `_wire_sequential_prereqs` + `plan_order` with tests, and 3+ production plans/issues already set `sequential: true` in frontmatter, e.g. active/issues/v1_enumerator_dispatch_not_deletable_2026_07_06.md)
 ---

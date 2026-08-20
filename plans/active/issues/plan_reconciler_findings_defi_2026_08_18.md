@@ -28,8 +28,7 @@ locked_by:
 priority: P2
 assigned_vm: NA
 execution_scope: local-only
-# was: defi_master (epic-assignment audit 2026-08-19) -- same as its 08-16/08-17
-parent_epic: plan_hygiene_master
+parent_epic: plan_hygiene_master # was: defi_master (epic-assignment audit 2026-08-19) -- same as its 08-16/08-17
   # predecessors: a plan-reconciliation run report over the defi tranche, not defi asset-group content itself
 resolved_by:
 depends_on: []

@@ -137,26 +137,7 @@ frontmatter claim in the second example is simply absent.
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P3. Root-cause the truncation (recommended next step 1 above). **DONE 2026-08-20 (slot-7,
-      review).** Read `scripts/plan-hygiene/na_marker_helper.py` in full: it writes `marker_suffix_text` VERBATIM
-      (`marker_line = f"- **na-eligibility-audit {date}** [body-hash:{h}]: {suffix}\n"`, `append_one()`) — no length
-      limit, no slicing, anywhere in the file. `git log --follow` confirms the script has existed since 2026-08-17
-      (`f57cd9eaf4`/`6a858c6895`), before every confirmed 2026-08-18-dated truncated instance, and it has never
-      contained truncation logic. **Verdict: not a shipped-script bug.** The truncation is introduced upstream, by
-      individual na-eligibility-audit agent sessions composing the `suffix` text themselves (as a CLI arg or a
-      JSON-batch field) before calling this helper — exactly what this doc's own 2026-08-19 corroborating Progress
-      Log entry caught live: a session's own ad hoc "naive fixed-length (220-char) clip of a long evidence string,"
-      not a defect inside any file this repo ships. The likely trigger: `SKILL.md`'s own marker guidance (line 75,
-      `"<one-line why>"`) tells agents to keep the marker short but gives no canonical HOW — no length constant, no
-      safe-truncation helper, no worked example — so, under that "keep it one-line" pressure, individual sessions
-      each improvise their own inline slice (`text[:220]` or equivalent) when the real evidence rationale runs long,
-      and a naive character-offset slice has no clause/paren awareness, producing the bare mid-word/mid-clause cuts
-      this doc catalogs. This explains why every confirmed instance is `na-eligibility-audit 2026-08-18` (same
-      guidance, read independently by several parallel tranche sessions the same day, each re-deriving the same
-      failure-prone pattern) rather than a single script defect that would recur on every date the audit has run.
-      Root cause for todo 2: add a canonical safe-truncation helper (clause/paren-boundary-aware, matching the fix
-      this doc's own 2026-08-19 entry already hand-rolled once) either inside `na_marker_helper.py` or as documented
-      SKILL.md guidance, so future sessions call it instead of re-inventing an unsafe one.
+- [ ] [SCRIPT] P3. Root-cause the truncation (recommended next step 1 above).
 - [ ] [SCRIPT] P3. Implement the fix once root-caused (recommended next step 2 above).
 - [ ] [DOC] P3. Corpus-wide sweep for the same signature once the fix ships, to find + backfill every other instance
       (recommended next step 3 above).

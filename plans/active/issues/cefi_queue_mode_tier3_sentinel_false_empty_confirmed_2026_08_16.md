@@ -30,8 +30,7 @@ related:
     /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
-# was: cefi_master (epic-assignment audit 2026-08-19) -- root cause + fix are in sentinels.py::_emit_tier3_for_dt, a generic asset-group-parameterized MTDS orchestrator sentinel emitter shared identically by CEFI/TRADFI/DEFI/SPORTS, not CeFi-specific code
-parent_epic: mtds_mdps_master
+parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- root cause + fix are in sentinels.py::_emit_tier3_for_dt, a generic asset-group-parameterized MTDS orchestrator sentinel emitter shared identically by CEFI/TRADFI/DEFI/SPORTS, not CeFi-specific code
 source: "Interactive session 2026-08-16, slot 4 — operator asked to check queue-VM ETA/correctness, discovered live
   manifest corruption in progress, killed the VM, root-caused + fixed on operator's explicit /autonomous authorization"
 assigned_vm: NA

@@ -45,8 +45,7 @@ assigned_role: data_engineering
 model_tier: sonnet-doable
 thinking_tier: high
 drift_direction: advance-code
-# wired 2026-08-19 (na-eligibility-audit) per plan_reconciler's
-depends_on: [tardis_concurrent_ip_lockout_2026_07_12]
+depends_on: [tardis_concurrent_ip_lockout_2026_07_12] # wired 2026-08-19 (na-eligibility-audit) per plan_reconciler's
   # 2026-08-18 finding — the sole open P3 todo's own prose names this as the inner gate of its two-part
   # dependency chain. NOTE: the sibling doc is now archived/resolved (`plans/archive/issues/`) — worth a fresh
   # live check of the actual outer gate (`cefi-recapture-sweep-complete` AO prerequisite condition) before

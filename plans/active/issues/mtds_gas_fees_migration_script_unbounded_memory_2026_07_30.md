@@ -39,8 +39,7 @@ related:
 created: "2026-07-30"
 author: unknown
 last_updated: "2026-08-17"
-# was: defi_master (epic-assignment audit 2026-08-19) -- root cause + both open todos
-parent_epic: manifest_master
+parent_epic: manifest_master # was: defi_master (epic-assignment audit 2026-08-19) -- root cause + both open todos
   # live entirely in shared ManifestWriter (UTL) default behavior; doc's own text: "not unique to the gas_fees
   # migration...a missing safe-default in a widely-used shared utility"
 assigned_vm: NA

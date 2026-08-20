@@ -717,28 +717,3 @@ todos only to confirm they are data-movement, then leave it.
     check the log.
   **Verdict: Safe to compact: YES.** All shipped work committed and pushed, `ahead=0` on every touched repo,
   verified against actual trunk content.
-
-- 2026-08-20 — **THIRD PRE-COMPACT CHECKPOINT — lightweight, since the second checkpoint landed only minutes
-  earlier and this session's only work since was one closure.** 19 done / 18 open on this plan as of this entry.
-  **Closed since the second checkpoint**: the `(venue, instrument_type) -> data_types` combinator P1 —
-  STALE, already resolved weeks earlier (`unified-api-contracts@fa9cece5`, confirmed a real ancestor of
-  `origin/live-defi-rollout`, not a doc claim taken on faith); every `[CODE]`/`[DESIGN]` todo in the source issue
-  was already checked, only 2 out-of-scope `[DATA]` backfill items remain open there.
-  **Audit**: `unified-api-contracts` and `unified-trading-library` clean, `ahead=0`. `unified-trading-pm` was
-  momentarily 9 commits behind (routine fleet activity — T4's own plan + manifest housekeeping, unrelated to
-  T1) and carried one stale staged artifact (matched HEAD byte-for-byte, unstaged harmlessly) — `ff-only` pulled
-  clean, now `ahead=0` / status empty. **Observed but deliberately NOT touched**: the concurrent peer session
-  sharing this slot is actively mid-edit on `execution_delta_proxy_repricer_generalization_2026_08_18.md`
-  (mtime <2 min at observation time) and had a new `/codex/04-architecture/cross-domain-state-fabric.md` doc
-  in progress — that is their own live WIP, not mine to commit, stage, or promote. If a future session finds
-  this file dirty again, check its own commit/push status before assuming loss — the same "check git log before
-  panicking" lesson from the prior checkpoint applies.
-  **In-progress, not yet started**: the W8 weightings SSOT todo (line ~416) — read-only investigation only so
-  far (`strategy-service/strategy_service/portfolio_allocator/__init__.py`'s docstring: three real weighting
-  concepts exist — generic portfolio-statistic weighting engines (axis-agnostic: FIXED/PNL_WEIGHTED/
-  SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) vs per-archetype RANK allocators that weight
-  along a named axis (coin/venue/protocol/expiry/LST) — no UAC-side code written yet. Next step: read
-  `archetypes_simple.py` + `archetypes_rank.py` + `param_schema.py` for the exact current field/param names
-  before declaring the SSOT, so the declaration uses real terminology, not invented names.
-  **Verdict: Safe to compact: YES.** Zero uncommitted work of this session's own exists anywhere; the one
-  dirty file observed belongs to a different, live session.

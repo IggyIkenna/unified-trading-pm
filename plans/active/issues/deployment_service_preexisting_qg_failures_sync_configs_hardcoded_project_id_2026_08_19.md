@@ -33,8 +33,7 @@ related:
   ]
 created: 2026-08-19
 last_updated: "2026-08-19"
-# was: infrastructure_master (renamed 2026-08-18, epic-taxonomy restructure; corrected cross-epic sweep 2026-08-19)
-parent_epic: security_and_cross_cutting_master
+parent_epic: security_and_cross_cutting_master # was: infrastructure_master (renamed 2026-08-18, epic-taxonomy restructure; corrected cross-epic sweep 2026-08-19)
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

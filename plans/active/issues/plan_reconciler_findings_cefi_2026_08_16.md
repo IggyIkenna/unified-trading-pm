@@ -16,8 +16,7 @@ related: [/plans/active/cefi_consolidated_closeout_2026_07_18.md]
 created: 2026-08-16
 author: plan_reconciler
 source: agt-2e82f7
-# was: cefi_master (epic-assignment audit 2026-08-19) -- doc is a plan-reconciliation run report (stale checkboxes, digest corrections, archival, dangling refs) over the cefi tranche, not cefi asset-group content itself
-parent_epic: plan_hygiene_master
+parent_epic: plan_hygiene_master # was: cefi_master (epic-assignment audit 2026-08-19) -- doc is a plan-reconciliation run report (stale checkboxes, digest corrections, archival, dangling refs) over the cefi tranche, not cefi asset-group content itself
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

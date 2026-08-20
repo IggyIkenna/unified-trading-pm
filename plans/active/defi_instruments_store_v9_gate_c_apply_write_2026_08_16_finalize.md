@@ -17,8 +17,7 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-# was: defi_master (epic-assignment audit 2026-08-19) -- finalize companion of
-parent_epic: manifest_master
+parent_epic: manifest_master # was: defi_master (epic-assignment audit 2026-08-19) -- finalize companion of
   # defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md, same shared v9-migration gate, retargeted with it
 assigned_vm: planning
 execution_scope: orchestrator-agent
