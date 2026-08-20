@@ -247,7 +247,7 @@ source: >-
       `execution-service@3448247dba`). **New finding, not fixed**: 7 more `DomainConfig`-family classes in the
       same UTL file share this identical shape (narrow schema + inherited `.env`-reading + `extra="forbid"`) and
       carry the same latent risk — out of scope for this todo, flagged for a follow-up.
-- [ ] [AGENT] P2. Migrate Kamino's `supply()`/`withdraw()` uncited `0x01`/`0x02` discriminator bytes to Kamino's
+- [x] ✅ [AGENT] P2. Migrate Kamino's `supply()`/`withdraw()` uncited `0x01`/`0x02` discriminator bytes to Kamino's — execution-service@95f449c13d + evidence: quality-gates.sh (8767 passed, 22 skipped, 1 xfailed; coverage 82.57%)
       real Transactions API (`POST /ktx/klend/{deposit,withdraw}`), the same pattern already used for this
       connector's own `borrow()`/`repay()`. Source:
       `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`. Repo:
