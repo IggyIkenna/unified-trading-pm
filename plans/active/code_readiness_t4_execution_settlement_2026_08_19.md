@@ -202,12 +202,14 @@ todos only to confirm they are data-movement, then leave it.
       divergence went unnoticed from 2026-05-12 to 2026-07-31. T1 already pins the ENUM against the codex table
       (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
       SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
-- [ ] [FROM-T1] P2. Decide whether `PARTIALLY_FILLED -> CANCELLED / EXPIRED` is a legal transition. T1 transcribed
-      `ORDER_STATUS_TRANSITIONS` edge-for-edge from the codex diagram, which draws exactly ONE edge out of
-      `PARTIALLY_FILLED` (full fill) — deliberately NOT widened on intuition, because a too-permissive machine
-      silently accepts an illegal transition whereas a too-strict one fails loudly. Real venues do cancel
-      partially-filled orders, so this likely needs the codex diagram amended first (the doc is the SSOT; the UAC
-      map is its projection). You own the venue behaviour evidence, so this is your call to make and T1's to land.
+- [x] ✅ [FROM-T1] P2. **Decided: `PARTIALLY_FILLED -> CANCELLED / EXPIRED` IS a legal transition** —
+      `unified-trading-pm@<pending>` (codex `order-state-machine.md` amended: diagram + events table widened,
+      ruling + evidence recorded 2026-08-20). Real CLOB venues let an operator cancel the still-working remainder
+      of a partially-filled order (final status reports cancelled with nonzero filled quantity, never forced to
+      `FILLED` first); corroborated in execution-service's own code, which already treats `PARTIALLY_FILLED` as an
+      open/cancellable state (`trade_execution/oms/tracker.py`). The codex doc — the SSOT — is now amended; the
+      code (`ORDER_STATUS_TRANSITIONS` in UAC) is NOT yet widened to match, filed as a `[FROM-T4]` inbound request
+      on T1's plan since T4 does not edit UAC directly.
 
 ## Todos
 
