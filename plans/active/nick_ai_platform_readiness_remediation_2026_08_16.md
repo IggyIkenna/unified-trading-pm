@@ -552,7 +552,7 @@ which raises `ValueError("Unsupported cloud provider")` on every real (non-empty
 **3 more instances of the same bug pattern found but NOT fixed** (different files, outside this task's scope,
 `infra_health.py` in particular being a CI/CD-adjacent health gate that deserves its own blast-radius check before
 an ad-hoc fix) — filed as
-[`/plans/archive/issues/deployment_api_client_factory_positional_project_id_bug_2026_08_16.md`](/plans/archive/issues/deployment_api_client_factory_positional_project_id_bug_2026_08_16.md).
+[`/plans/active/issues/deployment_api_client_factory_positional_project_id_bug_2026_08_16.md`](/plans/active/issues/deployment_api_client_factory_positional_project_id_bug_2026_08_16.md).
 Operator notified in this session's final report per the findings-triage HARD RULE (CI/CD-adjacent = worth a flag,
 even though not itself data-correctness/cross-repo).
 
