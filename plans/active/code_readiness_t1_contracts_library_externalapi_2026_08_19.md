@@ -242,27 +242,6 @@ todos only to confirm they are data-movement, then leave it.
       test_execution_service_venue_coverage_cascade_invariant.py`,
       `tests/data/execution_service_venue_reachability_baseline.json`.
 
-- [ ] [FROM-T4] P1. **4 of the 5 BATCH-settlement-gap actions have no UAC schema class at all — need new
-      `StrategyInstructionEnvelope` subclasses, not just a handler.** MEASURED 2026-08-20 closing
-      `/plans/active/code_readiness_t4_execution_settlement_2026_08_19.md`'s "Close the BATCH settlement gap"
-      todo: `InstructionActionV2` has 16 members; `execution_service/backtest_v2/action_handlers.py`'s
-      `resolve_settlement` dispatches on `isinstance(instruction, <Type>)` over `StrategyInstructionEnvelope`
-      subclasses. `CONVERT_DUST` already had a real subclass (`ConvertDustInstruction`, defined in
-      `unified_api_contracts/internal/architecture_v2/restaking_rewards.py`, just never wired into
-      `resolve_settlement` or the `StrategyInstructionV2` union) — that one is now closed,
-      `execution-service@6f664e80a0`. **`WITHDRAW`,
-      `REPAY`, `LP_MINT`, `LP_BURN` have NO instruction dataclass anywhere in UAC** — confirmed via
-      `grep -rln "InstructionActionV2.WITHDRAW\|InstructionActionV2.REPAY\|InstructionActionV2.LP_MINT\|
-      InstructionActionV2.LP_BURN" unified_api_contracts/`, which hits only `enums.py` (the enum itself) and
-      `reference/ledger_asset_resolution.py` — no `class *Instruction(StrategyInstructionEnvelope)` for any of
-      the four. This tranche does not own `unified-api-contracts`, so it cannot add them. The ask: 4 new
-      subclasses — `WithdrawInstruction`/`RepayInstruction` are natural rate-matched inverses of the shipped
-      `LendInstruction`/`BorrowInstruction` (same `protocol`/`asset`/target-amount shape, opposite direction);
-      `LpMintInstruction`/`LpBurnInstruction` need whatever the DEFI_LP position shape actually is (not designed
-      here — that's a UAC-side call). Once they exist, T4's `resolve_settlement` gets 4 more `isinstance`
-      branches — mechanical once the schema exists, same pattern as the CONVERT_DUST fix. Tracked open on T4's
-      own plan as `BLOCKED` on this request.
-
 ## Todos
 
 ### Registry SSOT — the P0s everything else is wrong without
@@ -434,22 +413,8 @@ todos only to confirm they are data-movement, then leave it.
       from `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`, no invented names.
       5 tests incl. a JSON round-trip. QG green (481s, full 13k+ suite). W22 transfer routing is now unblocked on
       the schema side; still needs real per-venue population before W22 can consume live values.
-- [x] ✅ [BACKEND] P1. W8 weightings SSOT declared — unified-api-contracts@e55fc5a9d. New `WeightingDimension`
-      enum (`PORTFOLIO_PER_CLIENT` / `ARCHETYPE_LEVEL`, deliberately binary) plus `ALLOCATOR_ARCHETYPE_DIMENSION`,
-      a TOTAL mapping over all 17 `AllocatorArchetype` members. Grounded in real terminology, not invented:
-      read `strategy-service/strategy_service/portfolio_allocator/archetypes_base.py` +
-      `archetypes.py`/`archetypes_simple.py`/`archetypes_rank.py` first — `AllocatorArchetype` was ALREADY a
-      UAC-owned enum (strategy-service imports it via `from unified_api_contracts.internal import
-      AllocatorArchetype`), so this is additive to the existing contracts registry, not a new one. The 8 generic
-      engines (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) weight
-      `StrategyInputSeries.strategy_instance_id` → `PORTFOLIO_PER_CLIENT`; the 9 rank allocators
-      (CARRY_FUNDING_RANK + 7 per-archetype ranks + CARRY_FUNDING_DISPERSION_RANK) weight along an axis inside
-      one archetype's own universe via `BaseRankAllocator` → `ARCHETYPE_LEVEL`. Totality is ENFORCED, not just
-      documented — a future archetype added without a matching dimension entry fails
-      `test_allocator_archetype_dimension_is_total`. 5 tests total (totality, both groups' membership, the
-      no-overlap/no-gap partition property, `WeightingDimension` staying a deliberate binary). Exported at both
-      package levels matching `AllocatorArchetype`'s own existing surface. QG green (240s). Evidence:
-      `/plans/epics/system_readiness_master.md` § W8.
+- [ ] [BACKEND] P1. Declare the W8 weightings SSOT in the contracts registry — which dimension each weighting
+      applies to. P0 in the epic with **no owning plan** at authoring time; this todo is that owner.
 
 ### unified-trading-library
 

@@ -419,24 +419,9 @@ todos only to confirm they are data-movement, then leave it.
       `backtest_v2.action_handlers.BATCH_UNHANDLED_ACTIONS`: `resolve_settlement` has no handler for
       `CONVERT_DUST`, `LP_BURN`, `LP_MINT`, `REPAY`, `WITHDRAW`, so each raises `UnhandledActionError` and
       `paper(W) == batch-rerun(W)` cannot hold for any instruction using them — this is why every lending venue
-      derives `batch=wired` instead of `deployed`. SSOT: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.
-
-      **1/5 CLOSED 2026-08-20 — `execution-service@6f664e80a0`.** `CONVERT_DUST` is now handled: the UAC
-      `ConvertDustInstruction` schema already existed (`unified_api_contracts/internal/architecture_v2/
-      restaking_rewards.py`), it just was never wired into `resolve_settlement` or the `StrategyInstructionV2`
-      union — the isinstance branch takes the base `StrategyInstructionEnvelope` type so no UAC-side union edit
-      was needed. Priced order-matched (like `ATOMIC`), fill_size = Σ input-token amounts. 2 new tests.
-      `BATCH_UNHANDLED_ACTIONS` measured shrinking from 5 to exactly `{LP_BURN, LP_MINT, REPAY, WITHDRAW}`.
-
-      **The remaining 4 are NOT "cheap rate-matched inverses" as this todo originally assumed — re-measured
-      2026-08-20.** `WITHDRAW`/`REPAY`/`LP_MINT`/`LP_BURN` have **no `StrategyInstructionEnvelope` subclass
-      anywhere in UAC** (confirmed via `grep -rln "InstructionActionV2.WITHDRAW\|...REPAY\|...LP_MINT\|...LP_BURN"
-      unified_api_contracts/` — only the enum definition and `reference/ledger_asset_resolution.py` reference
-      them; no `class *Instruction` exists). This tranche does not own `unified-api-contracts`, so it cannot add
-      the schema itself. Filed as `[FROM-T4] P1` on
-      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s Inbound requests section —
-      once T1 lands 4 new subclasses, T4's side is mechanical (4 more `isinstance` branches, same pattern as the
-      CONVERT_DUST fix above). `BLOCKED-` on that request until then.
+      derives `batch=wired` instead of `deployed`. `REPAY`/`WITHDRAW` are rate-matched inverses of the shipped
+      `BORROW`/`LEND` handlers and should be cheap; `LP_MINT`/`LP_BURN` need the DEFI_LP position shape. SSOT:
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.
 
 ### W12 — reconciliation
 
@@ -477,21 +462,9 @@ todos only to confirm they are data-movement, then leave it.
       implementations into one sent value, stop no-op'ing the lending path, de-duplicate the algo vocabulary across
       two modules. Evidence: `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md`.
 - [ ] [BACKEND] P2. Complete per-venue scope-key provisioning. Evidence:
-      `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`. **CHECKED 2026-08-20, still
-      genuinely open, no new action found**: that doc's own 3-week audit trail (na-eligibility-audit
-      2026-07-30 through 2026-08-20) already exhaustively covers it — 2 of 3 remaining todos are `[HUMAN]`-only
-      (the operator's own exchange-login credential creation for Bybit / Upbit-Kraken-Bitfinex-Bitget), the third
-      (`[BACKEND] P2` OKX/Hyperliquid scope-separation) is operator-approved to build but every audit since
-      2026-08-08 correctly flags it as still unbounded ("scope the exact per-venue mechanism... before
-      estimating") — a genuine multi-hour design+build task, not attempted this session for the same reason as
-      the file-split above: better done as its own focused pass than rushed here.
-- [x] ✅ [BACKEND] P3. **VERIFIED 2026-08-20 — already correctly done, nothing further to build.** Checked
-      `test_tenderly_fork_full_cycle` directly: still real (not deleted), still `@pytest.mark.skip(reason=
-      "BLOCKED-CREDENTIALS: Tenderly fork + Aave V3 RPC — issues/exec_tenderly_2026_08_15.md")` — correctly
-      tracked, not descoped. That issue doc's sole todo is `[OPERATOR]`-tagged (provision a real Tenderly fork RPC
-      + API key) — not agent-self-serviceable per
-      `/codex/02-data/external-data-always-available-rule.md`'s BLOCKED-CREDENTIALS pattern, which this already
-      correctly follows.
+      `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`.
+- [ ] [BACKEND] P3. Keep the Tenderly-fork integration test as a real test and tag it credential-gated —
+      do NOT delete the skip and do NOT descope. Evidence: `/plans/active/issues/exec_tenderly_2026_08_15.md`.
 
 ### Settlement, reporting and Elysium
 
@@ -546,40 +519,11 @@ todos only to confirm they are data-movement, then leave it.
       `execution_service/api/manual_instruction_api.py` and `execution_service/cli/handlers/live_execution_handler.py`.
       Both were hit twice this session (once each) by unrelated changes that pushed them 1-10 lines over; both fixes
       had to be made net-zero on line count to land. Any future addition to either needs the same net-zero dance
-      until this is done. Confirm the split doesn't change import-time behavior (see this session's
+      until this is done. No split design decided yet — pick natural seams (manual_instruction_api: request
+      validation vs. orchestrator-dispatch vs. pending-queue endpoints; live_execution_handler: connector
+      construction vs. CLI dispatch) and confirm the split doesn't change import-time behavior (see this session's
       lifespan lesson above — `api/main.py` imports at module load).
-
-      **Investigated 2026-08-20, deliberately NOT executed this session — a real hazard found, not scope-avoidance.**
-      Read the full 900 lines of `manual_instruction_api.py`. Natural seams exist (submit/precheck path; cancel+
-      amend+status path; record-only-fill path; venues/algos+pending-queue path), but EVERY endpoint reads the
-      module-level `_orchestrator`/`_manual_handler`/`_limiter` globals, and `set_manual_handler()`/
-      `set_orchestrator()` are the ONLY sanctioned mutation path — a naive `from .manual_instruction_api import X`
-      in a new submodule captures a snapshot at import time, not a live reference, silently breaking that
-      contract. Worse: **12 test files patch names inside this module's namespace**
-      (`patch("execution_service.api.manual_instruction_api.persist_audit_log", ...)` etc. —
-      `test_manual_record_only.py`, `test_manual_cancel_real_wiring.py`, `test_manual_amend_real_wiring.py`,
-      `test_manual_instruction_close_all_contract.py`, `test_manual_instruction_live_orchestrator_protocol.py`,
-      `test_dynamic_venues.py`, `test_api_app_health.py`, `test_api_main.py`, `engine/test_kill_switch.py`,
-      `engine/test_venue_cascade_kill_switch_chain.py`, `engine/test_pretrade_wiring.py`,
-      `engine/test_wallet_preflight_wire_in.py`). Moving a function to a new module without updating its test's
-      patch target doesn't fail loud — the mock silently stops applying and the test exercises the REAL
-      `persist_audit_log`/`log_event`/etc. instead, in a suite covering live order cancel/amend/manual-submit. The
-      correct pattern (module-qualified access — `import ... as _core; _core._orchestrator`, never
-      `from ... import _orchestrator`) is known and stated here; execute it in one pass that also greps and
-      updates every one of the 12 test files' patch targets in the same commit, verified by actually running the
-      full list, not just the file's own local tests — this is safety-critical order-management code, so a rushed
-      split that silently defangs a live mock is worse than leaving the file at cap.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/04-architecture/` for every contract changed.
-- [ ] [BACKEND] P2. **Build real per-action, role-based authorization + structured audit for AccountInstruction —
-      surfaced by the post-phase codex audit 2026-08-20.** `/codex/04-architecture/account-instructions.md`'s
-      Authorization table (Ops lead / Strategy owner + ops / Compliance + 2-of-N / firm officer / etc., one row
-      per `AccountActionV2` member) and Audit section (per-instruction post-state snapshot, permanent structured
-      retention) are the DESIGN TARGET, now annotated as such in that doc. The REAL shipped
-      `AccountInstructionOrchestrator.dispatch()` (`execution_service/v2/account_orchestrator.py`) checks only
-      that `authorization_id` is a non-empty string — no role lookup, no per-action requirement — and audit is
-      two `log_event` calls with no post-state snapshot. Not started this session (design-heavy: needs a role
-      registry + an authorization-record lookup neither this tranche nor UAC currently define). SSOT:
-      `/codex/04-architecture/account-instructions.md` §Authorization, §Audit.
 - [ ] [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
       pending states.
 
@@ -612,8 +556,6 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@197e80116` | live-orchestrator protocol mismatch: real fix, not the diagnosed one — see below |
 | `execution-service@96411b68c9` | real CLOSE_ALL: flattens every open position, CLOB/CeFi-scoped, 8 new tests — landing independently verified (empty `git diff --stat origin/live-defi-rollout`, clean tree, HEAD matches) |
 | `execution-service@c0839616be` | `POST /account/instruction` route on both `app.py` and `main.py` in front of the CLOSE_ALL wiring above — 5 new HTTP tests; emergency close-all todo now CLOSED |
-| `execution-service@6f664e80a0` | BATCH settlement gap 1/5 closed: `CONVERT_DUST` now handled by `resolve_settlement`, 2 new tests |
-| `unified-trading-pm@0db97a5b47` | codex audit: `account-instructions.md`'s authorization table + audit section annotated as design-target-not-shipped (verified against the real `AccountInstructionOrchestrator.dispatch()`) |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
@@ -681,7 +623,7 @@ unilaterally). Left as-is for a future dedicated pass, not silently skipped.
 | Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | T1's superseded-shape ruling (Q12-Q16) |
 | Delta-proxy doc (30 todos) + policy/fill-model-gaps doc (13 todos) | open, design-heavy | genuinely open-ended judgment calls, not single-session scope |
 | Three-way OrderStatus vocabulary fragmentation | open P0 (W11) | UAC canonical / `oms.py` local / `tracker.py` bare-strings — real cross-file reconciliation, not mechanical |
-| BATCH settlement gap | open P1, 1/5 done | `CONVERT_DUST` closed `execution-service@6f664e80a0`; `LP_BURN, LP_MINT, REPAY, WITHDRAW` `BLOCKED-` on new UAC schema classes, `[FROM-T4]` filed on T1's plan |
+| BATCH settlement gap | open P1 | `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW` have no handler |
 | `api/app.py` vs `api/main.py` | open P0, operator | app.py holds startup wiring the container never runs |
 | Split the two at-cap files | open | blocks any further addition to either |
 | W22 strategy→execution messaging | untouched | no `EventTransport` subscriber in execution-service |

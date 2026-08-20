@@ -106,14 +106,10 @@ plan is a serial chain by file-topology, not a reflexive default.
   Note: the lifespan hook only starts the loop once `ctx.transfer_adapter is not None` — the default container's stub
   (`None`) would crash the loop's first withdrawal, so it stays dormant until the next P0 todo (DI wiring) lands.
 
-- [x] [BACKEND] P0. Implement the real wall-clock loop `NAVStrikeScheduler`'s own docstring describes but never ships — fund-administration-service@4fc12f4 (rebase-reconciled onto a concurrent peer-agent's overlapping todo-2/3 commits @9e23ccd/@2e4869b) + @a9b1af15e (post-merge dedup fixup); Evidence: quality-gates.sh passed (34s full run incl. tests, 40 passed); new test `test_nav_strike_scheduler_run_forever_fires_tick_at_configured_interval` in `tests/unit/test_background_handlers.py`; wired into `create_app()`'s lifespan via `_make_lifespan(ctx)` in `api/main.py` alongside `GracePeriodHandler.run_forever()`.
+- [ ] [BACKEND] P0. Implement the real wall-clock loop `NAVStrikeScheduler`'s own docstring describes but never ships
   (`fund_administration_service/background/nav_strike_scheduler.py:1-8`) — an `asyncio.sleep`-driven loop calling
   `tick()` every `nav_publish_cadence_seconds` (config field already exists, default 86400s), started from the same
   FastAPI startup hook as the prior todo. Done-when: equivalent interval test to the prior todo, for `tick()`.
-  Note: `run_forever(interval_seconds, fund_share_classes: Sequence[tuple[str, str]] = ())` — no fund-registry API
-  exists yet in fund-administration-service to enumerate active (fund_id, share_class) pairs (out of every todo's
-  stated scope), so the loop starts at boot with zero registered pairs by default; the mechanism is real, tested, and
-  wired, but strikes nothing until a caller supplies pairs. Flagged as a genuine scope gap, not silently papered over.
 
 - [ ] [BACKEND] P0. Wire `_default_container()`'s stub dependencies to real implementations
   (`fund_administration_service/api/main.py`, ~line 130): `nav_provider=_EmptyNavProvider()` and `transfer_adapter=None`
@@ -182,26 +178,3 @@ plan is a serial chain by file-topology, not a reflexive default.
   raised from the faked sleep after N calls instead of task-creation + cancellation, which sidesteps the hazard
   entirely. Remaining P0 todos (NAV-strike loop + DI wiring) still open, both touch `grace_period_handler.py`/
   `api/main.py` per this plan's `sequential: true`.
-- **2026-08-20**: [interactive session, `.tabs/5`] Item 4 (NAVStrikeScheduler wall-clock loop) shipped —
-  fund-administration-service@4fc12f4 + @a9b1af15e. **Multi-agent collision encountered and resolved**: at least two
-  other AO-dispatched workers (`[slot-5·planning]` @9e23ccd/@2e4869b, `[slot-14·planning]` @90603d9) picked up this
-  same plan concurrently and independently shipped items 2 and 3 while this session was mid-implementation of the
-  same two items. `quickmerge.sh`'s auto-rebase surfaced two rounds of genuine same-line conflicts (grace-period
-  expiry math in `grace_period_handler.py`, then `run_forever`'s own definition + a duplicated
-  `redemption_cadence_seconds` config field + a duplicated test function name) — resolved by hand per the
-  multi-agent-safety recipe (`rebase --continue`, never `stash drop`, re-verify green QG post-reconcile before
-  re-pushing), keeping the peer commits' already-landed logic and dropping this session's now-redundant duplicate
-  implementations, with one behavioral alignment: `GracePeriodHandler.run_forever()`'s loop order was changed from
-  sleep-then-run to run-then-sleep to match the peer's already-shipped test (`90603d9`) rather than rewriting a
-  test already on `origin`. **Flagging for the operator**: this is the second consecutive plan session where AO
-  dispatched multiple concurrent workers against the same `sequential: true` plan — worth an orchestrator-side
-  dedup check (a plan already claimed/in-progress by one dispatch shouldn't be handed to a second worker), since the
-  wasted-compute + merge-friction cost compounds with plan size. Item 4 itself: `NAVStrikeScheduler.run_forever()`
-  wired into `create_app()`'s lifespan via `_make_lifespan(ctx)` alongside `GracePeriodHandler.run_forever()`
-  (closure-based, not `app.state`, to keep basedpyright clean); QG green (34s, 40 tests passed). Item 5 (DI wiring)
-  starts next — flagging now, ahead of implementing it, that its literal instruction ("wire `transfer_adapter` to
-  execution-service's `CompositeTransferAdapter`") conflicts with the T4 no-service-imports HARD RULE
-  (`/codex/04-architecture/tier-and-import-architecture.md` rule 2/5 — fund-administration-service and
-  execution-service are both T4; execution-service also has no synchronous REST endpoint for this today, only
-  read-only `GET /transfers/active`) — will implement a same-repo-scope real adapter instead and document the
-  deviation on that todo's own evidence line rather than importing across the service boundary.
