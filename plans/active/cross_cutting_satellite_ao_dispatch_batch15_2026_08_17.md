@@ -247,12 +247,14 @@ source: >-
       `execution-service@3448247dba`). **New finding, not fixed**: 7 more `DomainConfig`-family classes in the
       same UTL file share this identical shape (narrow schema + inherited `.env`-reading + `extra="forbid"`) and
       carry the same latent risk — out of scope for this todo, flagged for a follow-up.
-- [ ] [AGENT] P2. Migrate Kamino's `supply()`/`withdraw()` uncited `0x01`/`0x02` discriminator bytes to Kamino's
+- [x] ✅ [AGENT] P2. Migrate Kamino's `supply()`/`withdraw()` uncited `0x01`/`0x02` discriminator bytes to Kamino's
       real Transactions API (`POST /ktx/klend/{deposit,withdraw}`), the same pattern already used for this
       connector's own `borrow()`/`repay()`. Source:
       `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`. Repo:
       execution-service. Done-when: `supply()`/`withdraw()` call the real API instead of hand-rolled discriminator
-      bytes, existing tests still green.
+      bytes, existing tests still green. **Landed:** execution-service@95f449c1; UAC market-address contract
+      dependency@a30191a1. **Evidence:** execution-service `quality-gates.sh --no-fix` — ALL QUALITY GATES PASSED;
+      Kamino API/signing tests passed.
 - [ ] [AGENT] P2. Fix `AAVEConnector.get_user_account_data()` to make a real `Pool.getUserAccountData()` view call
       instead of returning hardcoded placeholder values (`total_collateral_eth=10`, `total_debt_eth=5`). Source:
       `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`. Repo:
@@ -322,3 +324,7 @@ source: >-
   are now done; the 3 items still open all come from `venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`'s
   Kamino/Aave connector fixes, so narrowed to that source doc plus its two confirmed execution-service code targets
   (`defi_execution/protocols/kamino.py`, `defi_execution/protocols/aave.py`) and the companion finalize plan.
+- **2026-08-20 (slot 9, infra; overlapping slot-13 shipment reconciled)**: Kamino supply/withdraw migration
+  verified on `live-defi-rollout`: execution-service@95f449c1 routes both operations through Kamino's
+  Transactions API and signs the returned transaction; unified-api-contracts@a30191a1 makes the required
+  `market_address` explicit. Execution-service quality gates passed; the focused Kamino API/signing tests passed.
