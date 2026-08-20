@@ -1335,7 +1335,7 @@
               <tr>
                 <td>Instructions</td>
                 <td><code>POST /external/instructions</code></td>
-                <td><b>TRADE only</b> — the other 10 action types return HTTP 501</td>
+                <td><b>TRADE and QUOTE</b> — the other 9 action types return HTTP 501</td>
                 <td>One instruction envelope, any asset class</td>
               </tr>
               <tr>
@@ -1355,9 +1355,12 @@
         <span class="tag">The honest state behind "you get the contract our own execution service gets"</span>
         <p>
           That is true only for the endpoints marked reachable above. On instructions specifically:
-          <b>only the TRADE action is live end-to-end</b> today, routed through the same
+          <b>the TRADE action is live end-to-end</b> today, routed through the same
           <code>ManualOperationHandler → LiveOrchestrator.execute_instruction()</code> path our own internal
-          manual-trade surface uses. Every other action on the envelope — swap, lend, borrow, stake, unstake, quote,
+          manual-trade surface uses. <b>QUOTE is wired too, but not the same way</b> — it registers the instrument
+          for delta-proxy repricing (<code>QuoteMaintainer</code>) and answers <code>REGISTERED</code>, never
+          <code>SUBMITTED</code>: no order is placed, since nothing in execution-service drives the underlying-tick
+          loop that would trigger one yet. Every other action on the envelope — swap, lend, borrow, stake, unstake,
           transfer, bridge, atomic, cancel — returns an honest HTTP 501: not a silent drop, but not yet the same
           contract either. Strategy-service itself has no counterparty-facing surface at all yet; its real endpoints
           today are admin-token-gated internal tooling (registry reads, a restriction-profile router, an
@@ -17112,10 +17115,16 @@
           <code>execution_instruction</code>) — a different framework from any step-count contract quoted elsewhere.
         </p>
         <p>
-          The largest contributor is structural: the <b>execution-instruction leg is unverified on all 864 rows</b> —
-          that check does not exist anywhere in the fleet yet, so it cannot pass. The strategy leg passes 24 of 864,
-          dominated by archetypes whose input declarations are deliberately incomplete rather than by venues that cannot
-          trade.
+          <b>Corrected 2026-08-20</b> — the structural gap behind the prior "execution-instruction is unverified on
+          all 864 rows" claim is fixed: the per-venue-per-mode check now exists
+          (<code>execution_service.readiness.instruction_path</code>) and the dump calls it
+          (<code>unified-trading-pm@8d47cf3393</code>). Re-run and independently re-verified on the <code>defi</code>
+          asset group alone: 540 rows went from blanket-<code>unverified</code> to a real
+          <code>{unverified: 20, ready: 133, not_ready: 387}</code> distribution. The full 864-row fleet-wide number
+          has not been re-derived since this fix landed — stated here rather than guessed, so this page does not
+          quote a number nobody has actually re-run. The strategy leg passes 24 of 864 (pre-fix count, not
+          re-measured either), dominated by archetypes whose input declarations are deliberately incomplete rather
+          than by venues that cannot trade.
         </p>
       </div>
       <div class="callout">
