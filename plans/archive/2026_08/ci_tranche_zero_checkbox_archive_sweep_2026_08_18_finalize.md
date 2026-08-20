@@ -5,7 +5,8 @@ summary: >-
   Gated closeout for `ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md` — once all 6 named docs are archived,
   verifies zero orphan referrers corpus-wide and that each archival's codex-alignment step was genuinely performed
   (not skipped), then archives the sweep plan itself.
-status: active
+status: archived
+superseded_by:
 nature: process
 asset_group: [ci]
 stage: [meta]
@@ -14,7 +15,7 @@ scope: [engineer]
 tags: [ci, ao-dispatch, close-out, finalize, archival]
 related:
   [
-    /plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md,
+    /plans/archive/2026_08/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-18"
@@ -38,7 +39,7 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md,
+    /plans/archive/2026_08/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 source: >-
@@ -48,7 +49,7 @@ source: >-
 
 # ci-tranche zero-checkbox archive sweep — finalize
 
-> **Machine-gated on `/plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md`**
+> **Machine-gated on `/plans/archive/2026_08/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md`**
 > (`depends_on` + `gate_on_depends: true`) — will not dispatch until all 6 of that plan's todos are `done`.
 
 ## Todos

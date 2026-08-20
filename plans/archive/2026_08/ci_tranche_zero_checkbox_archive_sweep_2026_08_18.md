@@ -9,7 +9,8 @@ summary: >-
   a 6th). Both prior passes explicitly left this as "a clearly-evidenced, ready-to-archive worklist for the next
   full ci-tranche archival sweep" — this plan IS that sweep, tracked as real `- [ ]` todos rather than left as prose
   in either audit's own findings doc a third time.
-status: active
+status: archived
+superseded_by:
 nature: process
 asset_group: [ci]
 stage: [meta]
