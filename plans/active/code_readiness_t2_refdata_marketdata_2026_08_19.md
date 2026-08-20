@@ -279,8 +279,33 @@ todos only to confirm they are data-movement, then leave it.
       `manifest_consolidated_staleness_sec = 120`. A genuinely-empty bucket is correctly NOT treated as an outage.
       **Ownership note**: this mechanism lives in `unified-trading-library` — T1's repo, not one of this tranche's
       three. The todo was mis-scoped to T2; nothing was needed in instruments-service / MTDS / MDPS.
-- [ ] [BACKEND] P0. Build the orphan-shard consumption check — no shard stored that nothing consumes. Epic
+- [x] [BACKEND] P0. Build the orphan-shard consumption check — no shard stored that nothing consumes. Epic
       definition-of-done item. SSOT: `/codex/02-data/orphan-object-detection.md`.
+      ✅ 2026-08-20 — **built and shipped as the `shard-utilisation-sweep` skill.** The existing sweeps
+      (`migration_orphan_sweep.py`, `candle_orphan_sweep.py`, MTDS's sports fork) all run GCS→manifest ("is this
+      stored object manifested?"); nothing ran the other direction. This does: a CONSUMPTION verdict per declared
+      venue / data_type / instrument_type / chain, resolved by IMPORTING the real registries
+      (`VENUE_TO_ASSET_GROUP`, `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`, `KNOWN_CHAINS`) rather than inferring
+      from grep counts, with `unverified` as a first-class verdict. Reuses `shard_universe.py` per the epic's
+      consistency constraint, so it cannot disagree with the two shipped dumps about the denominator. Always exits
+      0 — a gate that can legitimately answer `unverified` must not fail a build. 11 tests.
+      **The safety constraint earned its place — the naive version cried wolf twice on live data, and both guards
+      are regression-tested:**
+      - **95 FALSE venue orphans**, including `AAVE_V3`, `LIDO`, `MORPHO`, `ETHERFI` at 50+ live cells each.
+        Measured cause: `VENUE_TO_ASSET_GROUP` keys DeFi in the GLUED `PROTOCOL-CHAIN` form (135 of its 209
+        entries, all glued) while the manifest carries the BARE protocol with chain in its own column — the two
+        are on opposite sides of the venue/chain canonicalisation cutover. Now CONSUMED, with the cutover
+        mismatch reported as its own finding. Venue axis went 85→158 consumed, 95→22 not_consumed.
+      - **86 FALSE instrument_type orphans.** `defi` has ZERO entries in the registry; `sports` declares 5
+        odds-SHAPE types against a manifest carrying ~84 MARKET types (`MATCH_ODDS`, `OVER_UNDER_2_5`,
+        `SOCCER_EPL`) — one coincidental shared token (`odds`) was enough to condemn the other 83. Fixed with a
+        proportional guard: the registry must cover a MAJORITY of what an asset_group actually carries before
+        absence means anything (cefi 100% → meaningful; sports 1% → `unverified`). Went 86→**3** not_consumed.
+      **What it found that is real** (verdicts, not delete suggestions): `AAVEV3` bare-alias ghost venue still
+      carrying 25 cells; **`BARCHART` — a RETIRED vendor — still carrying 10 cells**; a literal `UNKNOWN` venue (3);
+      `tradfi/nan` instrument_type at 63 cells (the same `'nan'` leak fixed upstream in the coverage writer this
+      session); and the 10 chains outside `KNOWN_CHAINS`, correctly reported `unverified` rather than condemned.
+      **Priority note**: the epic lists this as `[SKILL] P1`, not the `[BACKEND] P0` this todo carried.
 - [ ] [BACKEND] P1. **BLOCKED-UPSTREAM (T1/UTL)** — Fix the manifest-writer per-VM shard flush that does a full
       read-merge-reserialize-upload on every debounced flush — past ~1M rows the flush outlasts the debounce
       interval and the VM stalls. CODE only. Evidence:

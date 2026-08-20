@@ -298,9 +298,23 @@ _None at authoring time._
       source issue is still `status: open`, but its 2 remaining open todos are unrelated `[DATA]` P2/P3 findings
       from 2026-08-17, not this oracle fix. Evidence:
       `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` § 9.
-- [ ] [BACKEND] P0. `canonical_path_violations()` validates VALUES, not just path structure — today it is blind to
-      `instrument_type` / `data_type` / `venue` / `chain` values. Either extend it or make the blindness explicit in
-      its return type so a caller cannot mistake it for a full check.
+- [x] ✅ [BACKEND] P0. `canonical_path_violations()` VALUE blindness closed — unified-api-contracts@03e8e90f. Both
+      halves done: the oracle is EXTENDED (new `CanonicalViolationClass.VALUE` checks `venue=`/`chain=`/
+      `data_type=`/`instrument_type=` against `VENUES_BY_ASSET_GROUP`/`ALL_VENUES`+`ALL_DEFI_VENUES`,
+      `DATA_TYPES_BY_ASSET_GROUP`/`ALL_DATA_TYPES`, `InstrumentType`, `ChainKind`) AND the residual blindness is
+      explicit in the return type (a named `DEFAULT_VIOLATION_CLASSES` constant, not a bare `None` default).
+      **VALUE is deliberately OPT-IN — the load-bearing decision, not a shortcut.** Measured before writing a
+      line: `canonical_path_violations()` feeds a WRITE boundary that RAISES
+      (`market-tick-data-service/.../symbol_rules.py:517`), and this exact module already documents the failure
+      mode — on 2026-06-23 an over-eager venue guard froze the deribit/hyperliquid/binance live VMs for hours on
+      the legitimate `BINANCE-FUTURES` token. `violation_classes=None` still answers exactly STRUCTURAL + ID_FORM;
+      `canonical_path_violations_classified()` reports VALUE unconditionally (an audit has no write path to
+      break). Regression test asserts a fictional-venue path still returns `[]` under the default.
+      **Membership is case-INSENSITIVE** — measured, not assumed: `ALL_VENUES`/`InstrumentType` are UPPERCASE,
+      `ChainKind` is lowercase, `ALL_DATA_TYPES` is genuinely mixed. A missing axis is silent (absence is already
+      a STRUCTURAL finding). 8 tests. QG green — real exit code captured directly (538s), never through a pipe.
+      Evidence: `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (parent issue;
+      the VALUE todo was its own sibling P0 in this plan, not filed as a separate issue doc).
 - [ ] [BACKEND] P1. Resolve the venue→chain SSOT overlap and the `VenueFeature` / `VenueCapability` vocabulary
       overlap. Land it in the SAME change as the chain-registry P0 — same blast radius. Evidence:
       `/plans/active/registry_ssot_hardening_2026_08_16.md`.
@@ -440,6 +454,26 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-20 — **Oracle VALUE blindness closed — unified-api-contracts@03e8e90f.** Third violation class
+  (`CanonicalViolationClass.VALUE`) answers "does this partition value name a real entity", checked against the
+  venue / data_type / instrument_type / chain registries. CLAUDE.md's own conditional index warns agents that the
+  oracle is "VALUE-BLIND"; that warning can now be narrowed to "value-blind BY DEFAULT, on purpose".
+  **The design decision to re-read before changing anything here**: VALUE is OPT-IN. I measured the caller graph
+  before writing a line — `canonical_path_violations()` feeds a WRITE boundary that RAISES
+  (`market-tick-data-service/.../symbol_rules.py:517`), and the module already carries an inline account of the
+  2026-06-23 incident where an over-eager venue guard flagged the legitimate `BINANCE-FUTURES` token and froze the
+  deribit/hyperliquid/binance live VMs for hours. A registry that lags reality must degrade to a quiet audit
+  finding, never a write outage — so `violation_classes=None` still answers exactly STRUCTURAL + ID_FORM, pinned by
+  the named `DEFAULT_VIOLATION_CLASSES` constant AND by a regression test that asserts a path with a fictional
+  venue still returns `[]` by default. The classified/audit view reports VALUE unconditionally, since an audit has
+  no write path to break. **If someone later "tidies" VALUE into the default, that is the live-VM outage
+  re-armed** — the constant's docstring says so in place.
+  **Two limits stated rather than glossed**: membership is case-INSENSITIVE (measured: `ALL_VENUES`/`InstrumentType`
+  UPPERCASE, `ChainKind` lowercase, `ALL_DATA_TYPES` genuinely mixed — case-sensitive comparison would manufacture
+  violations on correct paths), and a missing axis is silent (absence is already STRUCTURAL; double-reporting it
+  would inflate every audit). So "0 VALUE violations" means "every value present names something real", NOT "every
+  value is correctly cased" and NOT "every required axis is present".
+  Probed live before shipping: bogus `venue=NOT_A_VENUE` returns `[]` under the default and is caught under VALUE.
 - 2026-08-20 — **Oracle filename-stem todo was STALE — closed by measurement, not by new code.** The plan listed
   `canonical_path_violations()` filename-stem validation as an open P0; it shipped weeks earlier
   (`unified-api-contracts@d40c5d7d`/`@502ef57e`). Confirmed against the CODE, not the issue doc's self-report:
