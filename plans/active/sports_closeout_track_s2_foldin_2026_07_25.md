@@ -35,13 +35,8 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25_finalize.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
-    /plans/archive/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
-    /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
-    /plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md,
-    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
   ]
 created: "2026-07-25"

@@ -341,17 +341,13 @@ source: >-
       `- [ ]` checkboxes — every one of its todos is independently marked `[x]` done. No further code change
       needed; this item was pure checkbox-reconciliation.
 
-- [ ] [REVIEW] P3. **Reconcile `sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md`'s stale duplicate
-      item** (line ~160, "re-check after LDR goes quiet") — directly answered by the doc's own 2026-08-10 measured
-      section ("the streak DOES reset — there is no masked second bug"), a duplicate of the already-closed item at
-      line ~141. Flip `[x]` citing the doc's own existing evidence.
+- [x] ✅ [REVIEW] P3. **ALREADY DONE — verified 2026-08-20.** The target doc's line ~198 item ("Re-check after LDR
+      goes quiet") is already `[x]` — "✅ Answered live 2026-08-10 (see the measured section above): the streak DOES
+      reset". No further edit needed on the source doc; this reconciliation todo's own bar is met.
 
-- [ ] [REVIEW] P3. **Reconcile `codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`'s
-      2 remaining open items** (lines ~190, ~218) — both already done: the SUPERSEDED-banner item is satisfied by the
-      same pre-existing banners verified in `ci_satellite_ao_dispatch_batch14_2026_08_15.md` item 2 (already present on
-      origin, pre-dating batch13); the no-frontmatter-vs-yaml-parse-error distinction was shipped in batch13
-      (`unified-trading-pm@a68d8b716d`, `FrontmatterParseError`). Flip both `[x]` with citations. Gate: verify both
-      citations resolve to real, currently-live content before flipping.
+- [x] ✅ [REVIEW] P3. **ALREADY DONE — verified 2026-08-20.** The target doc is now fully resolved and archived
+      (`plans/archive/issues/codex_freshness_ratchet_trips_on_calendar_blocking_all_pm_code_commits_2026_08_11.md`,
+      `status: archived`, 0 open `- [ ]` checkboxes). No further reconciliation edit needed.
 
 - [ ] [REVIEW] P3. **Reconcile `qg_host_adaptive_resource_governor_2026_07_14.md`'s 2 already-satisfied items**
       (lines ~217, ~227) — both already marked in-doc "DEFERRED (already satisfied functionally / count-based

@@ -65,7 +65,10 @@ identity and not a legitimate cross-reference to a sibling key before changing i
 
 # Follow-up todo
 
-- [ ] [SCRIPT] P3. Reconcile the stale `DP-WATCHER-003` self-identity strings in
+- [ ] [SCRIPT] P3. **BLOCKED-ON:deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15** — code
+      already written + verified correct (slot 15, 2026-08-15) but unshippable until that doc's still-open
+      `[OPERATOR] BLOCKED-OPERATOR-DECISION` resolves (confirmed still open 2026-08-20; live grep confirms the fix
+      has NOT landed on origin/live-defi-rollout). Reconcile the stale `DP-WATCHER-003` self-identity strings in
       `deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py` (lines 1, 15, 71)
       and `.../cli.py` (lines 87, 498, 516, 835) to `DP-WATCHER-004` to match the registered `registry_id` (watcher line
       136). Do NOT alter `cli.py:167`'s `DP-WATCHER-002` (a different sibling watcher); before changing any `-003`

@@ -16,18 +16,12 @@ scope: [engineer, admin]
 tags: [backfill, manifest, honest-coverage, data-completion, mtds, instruments, live-trading, data-correctness]
 related:
   [
-    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
-    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
     /plans/active/data_completion_defi_2026_07_15.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
     /plans/active/data_completion_prediction_2026_07_15.md,
     /plans/active/data_completion_sports_2026_07_24.md,
     /plans/active/legacy_bucket_dual_write_decommission_2026_07_24.md,
     /plans/active/data_source_provenance_enforcement_2026_07_24.md,
-    /plans/archive/2026_07/data_completion_to_100_all_ag_history_2026_07_24.md,
-    /plans/archive/2026_07/data_completion_to_100_all_ag_history2_2026_07_24.md,
-    /plans/archive/2026_08/sports_live_availability_and_source_latency_2026_07_24.md,
-    /plans/archive/2026_08/data_completion_to_100_all_ag_history3_2026_08_03.md,
   ]
 created: 2026-06-21
 parent_epic: mtds_mdps_master
