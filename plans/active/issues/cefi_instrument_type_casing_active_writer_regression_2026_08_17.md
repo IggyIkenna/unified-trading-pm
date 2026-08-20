@@ -33,6 +33,8 @@ priority: P1
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
+archive_exempt: true # temporary bridge, dropped in the immediately-following archival commit — see
+  # /plans/archive/2026_08/issues/check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md
 resolved_by:
 drift_direction: advance-code
 depends_on: []
@@ -276,16 +278,39 @@ is genuinely VM-scale work, not shared-host-scale:
       not assumed. **`--apply` launched immediately after** — `cefi-itype-casing-apply-rw-20260820-185429`
       (`--workers 4 --apply-migration`, same `MACHINE_TYPE=e2-highmem-16`, a FRESH VM, not reusing the dry-run
       VM) — see Progress Log for the launch confirmation and terminal-state review.
-- [ ] [DATA] P2. After the `--apply` VM reaches a terminal state (0 exit, backups written, grand
+- [x] [DATA] P2. After the `--apply` VM reaches a terminal state (0 exit, backups written, grand
       total normalized matches the reviewed dry-run count), trigger the manifest consolidator to
       rebuild the merged `_index/availability_index.parquet` (per the script's own docstring) —
       see `/codex/05-infrastructure/manifest-consolidator-ssot.md` for the trigger mechanism.
-- [ ] [DATA] P2. Once the consolidator rebuild is confirmed complete, re-run
+      ✅ 2026-08-20 — **`--apply` reached a clean terminal state**: `cefi-itype-casing-apply-rw-20260820-185429`,
+      `rc=0`, `DEPLOYMENT_COMPLETED`. Log evidence: `[APPLY] ... uppercased 39286 instrument_type values
+      (collisions_dropped=8899, rows 30809984 -> 30801085)`, `→ backup written:
+      .../availability_index.parquet.instrumenttypecasingfix.20260820-192800.bak (494905473 bytes)`, `→
+      re-uploaded gs://.../availability_index.parquet`, `Grand total instrument_type values normalized: 39286
+      (collisions_dropped=8899)` — exact match to the reviewed dry-run count. **Consolidator rebuild is N/A, not
+      skipped-because-forgotten**: the apply script writes DIRECTLY to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` — the SAME file
+      path the consolidator itself produces/maintains, not a per-VM shard requiring a separate merge pass.
+      There is nothing left to consolidate; the canonical index already reflects the fix. Confirmed by the next
+      todo's live re-read finding the manifest at 30,801,085 rows, matching the apply log's post-write count
+      exactly.
+- [x] [DATA] P2. Once the consolidator rebuild is confirmed complete, re-run
       `market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`
       (the same script this doc's own live re-count used) to confirm the casing residual is 0. If
       not 0, diagnose before closing this issue doc out — a residual writer bug (the shipped P1 fix
       only stops NEW rows; it doesn't retroactively fix any writer callsite this doc's own
       root-cause trace didn't reach) is the most likely explanation for a nonzero post-apply count.
+      ✅ 2026-08-20 — **CONFIRMED 0.** Ran the exact audit script live against prod (column-projected read, no
+      VM needed — much lighter than the full-column AAVEV3-style read that OOM'd earlier this session):
+      manifest now 30,801,085 rows (matches the apply log). §2 DISTINCT INSTRUMENT_TYPES lists only
+      `PERPETUAL`/`SPOT_PAIR`/`FUTURE`/`OPTION`/`COMBO` (all canonical uppercase) plus the already-RESOLVED
+      non-casing categories (`None`/`futures_chain`/blank/`options_chain`/`index` — bundle-chain and
+      unclassified rows, explicitly out of this issue's scope per the Finding section above) — **zero lowercase
+      casing-variant rows anywhere** (`perpetual`/`future`/`spot_pair` do not appear in the list at all). The
+      casing residual is 0. §6's "32,200 orphan instrument_ids" finding is a DIFFERENT, separate pre-existing
+      question (canonical-shaped ids not in the IS catalogue) per the script's own docstring — out of scope for
+      this casing-specific issue, not a regression from this fix, not investigated further here.
+      **This issue doc's own todo chain is now fully closed** — every todo above is `[x]`. Ready to archive.
 
 ## Evidence
 
