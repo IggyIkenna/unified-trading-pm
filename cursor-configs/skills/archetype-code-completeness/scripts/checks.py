@@ -109,7 +109,30 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-VerdictState = Literal["ready", "not_ready", "unverified"]
+VerdictState = Literal["ready", "not_ready", "unverified", "excluded_by_policy"]
+
+POLICY_EXCLUDED_ARCHETYPES: dict[str, str] = {
+    "ARBITRAGE_MEV_SANDWICH": (
+        "POLICY exclusion, not an incompleteness: sandwiching extracts value from other users' "
+        "pending swaps by front- and back-running them, and the firm does not run it. "
+        "mev/sandwich_theoretical.py is a post-hoc profit TRACER (what a sandwicher would have made "
+        "against OUR OWN flow -- an adverse-selection measurement), never an execution engine, and it "
+        "structurally cannot execute without a mempool feed that does not exist. "
+        "strategy-service asserts the absence in test_sandwich_theoretical.py + "
+        "test_phase8_archetype_factory_smoke.py."
+    ),
+}
+"""Archetypes deliberately and permanently absent from ARCHETYPE_ENGINE_REGISTRY.
+
+These are NOT counted as ``not_ready``. Counting a deliberate policy exclusion as
+incomplete makes the matrix permanently unreachable and, worse, creates standing
+pressure to "finish" it by registering the very thing policy forbids. The state is
+reported separately so the denominator stays honest: 59 archetypes are in scope for
+code-completeness, 1 is out of scope by decision.
+
+Adding an entry here is a POLICY claim and needs a cited decision + an enforcing
+test in strategy-service — never a convenient way to silence a red cell.
+"""
 
 # Every dated agent-audit note in this module is stamped with the date the
 # underlying source was actually read -- re-date it (and re-verify the
@@ -137,6 +160,8 @@ class Verdict:
 # ---------------------------------------------------------------------------
 def engine_factory(archetype_value: str, in_registry: bool, resolves: bool, resolve_error: str | None) -> Verdict:
     """ARCHETYPE_ENGINE_REGISTRY membership -- the master gate for all 3 modes."""
+    if archetype_value in POLICY_EXCLUDED_ARCHETYPES:
+        return Verdict("excluded_by_policy", POLICY_EXCLUDED_ARCHETYPES[archetype_value])
     if not in_registry:
         return Verdict("not_ready", "absent from factory.ARCHETYPE_ENGINE_REGISTRY -- no v2 engine class at all")
     if not resolves:
@@ -262,6 +287,14 @@ def rollup(legs: dict[str, Verdict]) -> Verdict:
     """Same policy as readiness-state-dump's checks.rollup(): any not_ready dominates; all-ready is ready;
     otherwise (no failures, some unverified) is unverified."""
     states = {v.state for v in legs.values()}
+    # A policy exclusion dominates everything: the archetype is out of scope, so its
+    # other legs (no schema, no catalog rows) are consequences of the decision, not
+    # findings. Reporting it as not_ready would put a permanently-red row in the
+    # matrix for something nobody intends to build.
+    if "excluded_by_policy" in states:
+        excluded = sorted(k for k, v in legs.items() if v.state == "excluded_by_policy")
+        reason = next(v.evidence for v in legs.values() if v.state == "excluded_by_policy")
+        return Verdict("excluded_by_policy", f"{reason} (legs: {excluded})")
     if "not_ready" in states:
         failing = sorted(k for k, v in legs.items() if v.state == "not_ready")
         return Verdict("not_ready", f"failing legs: {failing}")

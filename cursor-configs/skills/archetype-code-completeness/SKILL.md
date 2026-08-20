@@ -1,7 +1,7 @@
 ---
 name: archetype-code-completeness
 description: >-
-  Derive, per StrategyArchetype (60 as of 2026-08-19) x mode (batch/paper/live), a CODE-completeness verdict --
+  Derive, per StrategyArchetype (60 as of 2026-08-20; 59 in scope + 1 policy-excluded) x mode (batch/paper/live), a CODE-completeness verdict --
   distinct from readiness-state-dump's `strategy — archetype half` leg, which answers "which archetypes can this
   VENUE'S DATA satisfy" via satisfying_archetypes(). This skill answers a different question: "are this archetype's
   code paths and hooks complete", independent of any venue's data. /plans/epics/system_readiness_master.md § W1:
@@ -42,20 +42,28 @@ python derive_archetype_completeness.py --archetype CARRY_STAKED_BASIS --mode LI
 python derive_archetype_completeness.py --json
 ```
 
-**Verified live 2026-08-19** against real strategy-service code (60 archetypes x 3 modes = 180 rows): counts
-cross-validate exactly against a direct read of every source registry (32 factory-registered engines, 35
-PARAM_SCHEMA_REGISTRY entries, 8 dedicated allocator-rank members, 12 paper tick-loader frozenset hits, 17
-STRATEGY_TYPE_TO_SLOT reverse-resolutions, 60/60 topology docs present). Overall rollup: ~6 ready / ~47 not_ready /
-~7 unverified per mode -- most archetypes are genuinely code-incomplete today (only 32/60 have an engine at all; the
-entire `VOL_*`/unbuilt `MARKET_MAKING_*` family accounts for most of the gap), which matches what
-`param_schema.py`'s and `factory.py`'s own module docstrings already say in prose -- this dump makes it a queryable,
-per-archetype, per-mode table instead.
+**Re-measured 2026-08-20** after the VOL / MARKET_MAKING / PORTFOLIO registration wave
+(`strategy-service`, code-readiness ruling): 59 factory-registered engines, 40 PARAM_SCHEMA_REGISTRY entries,
+59/59 target-universe catalogs, 8 dedicated allocator-rank members, 12 paper tick-loader frozenset hits, 17
+STRATEGY_TYPE_TO_SLOT reverse-resolutions, 60/60 topology docs present. Overall rollup per mode:
+**6 ready / 19 not_ready / 1 excluded_by_policy / 34 unverified** (BATCH; PAPER is 5/19/1/35).
+
+The 19 `not_ready` are now EXACTLY the archetypes with a factory-registered engine but no
+`PARAM_SCHEMA_REGISTRY` entry -- `engine_factory` and `target_universe_catalog` are 177/177 ready. That is the
+whole remaining code gap, and it is the same set `param_schema.py`'s `_SCHEMA_COVERAGE_BASELINE_MISSING_SCHEMA`
+shrinking ratchet already tracks.
+
+The **prior baseline (2026-08-19) was ~6 ready / ~47 not_ready / ~7 unverified** with only 32/60 engines
+registered. Most of that gap was not missing code: 22 of the 28 unregistered archetypes had engines shipped WITH
+unit tests, deliberately withheld from the registry under a since-superseded policy that required a passing
+backtest before registration. The dump under-reported wiring that genuinely existed, which is precisely why
+"is it backtested" must never again be inferred from registry absence.
 
 ## The five hooks
 
 | Hook                      | Real check reused                                                                                                           | Scope          | Absence means                                                                                                                                                                                                                        |
 | ------------------------- | --------------------------------------------------------------------------------------------------------------------------- | -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `engine_factory`          | `factory.ARCHETYPE_ENGINE_REGISTRY` membership + the lazy import actually resolving                                         | mode-invariant | `not_ready` -- no v2 engine class exists; `V2EngineOrchestrator.build()` raises `KeyError` in every mode                                                                                                                             |
+| `engine_factory`          | `factory.ARCHETYPE_ENGINE_REGISTRY` membership + the lazy import actually resolving                                         | mode-invariant | `not_ready` -- no v2 engine class exists; `V2EngineOrchestrator.build()` raises `KeyError` in every mode. EXCEPT for an archetype in `checks.POLICY_EXCLUDED_ARCHETYPES`, which reports `excluded_by_policy` instead -- see below    |
 | `param_schema`            | `param_schema.PARAM_SCHEMA_REGISTRY` membership (keyed by `archetype.value`)                                                | mode-invariant | `not_ready` -- distinguishes a known baselined gap (`check_archetype_schema_coverage().missing_schema`) from a NEW regression                                                                                                        |
 | `target_universe_catalog` | `target_universe.catalog.specs_for_archetype(archetype)` non-empty                                                          | mode-invariant | `not_ready` -- the exact condition `paper_run_handler.py` itself raises `ValueError` on; no rollout instance exists                                                                                                                  |
 | `allocator_rank`          | dedicated `AllocatorArchetype.<VALUE>_RANK` member in `ALLOCATOR_ARCHETYPE_REGISTRY`                                        | mode-invariant | **`unverified`, never `not_ready`** -- 8 of 16 `AllocatorArchetype` members are generic and may legitimately apply; see `checks.py`'s module docstring for why this deliberately departs from readiness-state-dump's proxy asymmetry |
@@ -69,8 +77,26 @@ docstring -- read it before extending this skill, not this file.
 
 ## Rollup
 
-Same policy as readiness-state-dump's `checks.rollup()`: any leg `not_ready` dominates the mode's overall verdict;
-all-`ready` legs give `ready`; otherwise (no failures, some `unverified`) the overall is `unverified`.
+`excluded_by_policy` dominates first; then any leg `not_ready` dominates the mode's overall verdict; all-`ready`
+legs give `ready`; otherwise (no failures, some `unverified`) the overall is `unverified`. Apart from the
+exclusion tier this is readiness-state-dump's `checks.rollup()` policy unchanged.
+
+## `excluded_by_policy` -- a deliberate exclusion is not a gap
+
+`checks.POLICY_EXCLUDED_ARCHETYPES` names archetypes that are permanently and intentionally absent from
+`ARCHETYPE_ENGINE_REGISTRY`. Today that is exactly one: **`ARBITRAGE_MEV_SANDWICH`**. Sandwiching extracts value
+from other users' pending swaps by front- and back-running them, and the firm does not run it;
+`mev/sandwich_theoretical.py` is a post-hoc profit TRACER measuring what a sandwicher would have made against our
+OWN flow (an adverse-selection metric), never an execution engine. strategy-service asserts the absence in
+`test_sandwich_theoretical.py` and `test_phase8_archetype_factory_smoke.py`.
+
+Such an archetype reports `excluded_by_policy` on EVERY leg, not just `engine_factory` -- its missing schema and
+catalog rows are consequences of the decision, not independent findings. Counting them as `not_ready` would leave
+a permanently-red row in the matrix and create standing pressure to "finish" it by registering the very thing
+policy forbids. So the honest denominator is **59 archetypes in scope, 1 out of scope by decision**.
+
+Adding an entry is a POLICY claim: it needs a cited decision plus an enforcing test in strategy-service. It is
+never a way to silence an inconvenient red cell.
 
 ## Dated agent-audit records
 
