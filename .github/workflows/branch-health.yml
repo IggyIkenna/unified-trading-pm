@@ -103,6 +103,11 @@ jobs:
       cleared: ${{ steps.scan.outputs.cleared }}
       cleared_key: ${{ steps.scan.outputs.cleared_key }}
       cleared_report: ${{ steps.scan.outputs.cleared_report }}
+      backmerge_failed: ${{ steps.scan.outputs.backmerge_failed }}
+      backmerge_failure_report: ${{ steps.scan.outputs.backmerge_failure_report }}
+      backmerge_failure_cleared: ${{ steps.scan.outputs.backmerge_failure_cleared }}
+      backmerge_failure_cleared_key: ${{ steps.scan.outputs.backmerge_failure_cleared_key }}
+      backmerge_failure_cleared_report: ${{ steps.scan.outputs.backmerge_failure_cleared_report }}
       report: ${{ steps.scan.outputs.report }}
     steps:
       - uses: actions/checkout@v5
@@ -129,6 +134,13 @@ jobs:
           key: promotion-lag-state-${{ github.run_id }}
           restore-keys: |
             promotion-lag-state-
+      - name: Restore failed-backmerge state cache
+        uses: actions/cache@v5
+        with:
+          path: .backmerge-failure-state.json
+          key: backmerge-failure-state-${{ github.run_id }}
+          restore-keys: |
+            backmerge-failure-state-
       - name: Authenticate to GCP (Firestore — best-effort)
         id: gcp_auth_lag
         continue-on-error: true
@@ -176,6 +188,76 @@ jobs:
             CLEARED_KEY=$(head -n 1 .lag-cleared.txt)
             CLEARED_REPORT=$(tail -n +2 .lag-cleared.txt)
           fi
+          # Detect the latest failed main→LDR run independently of branch-pair lag. Query errors
+          # preserve prior failures, so an API outage cannot manufacture a false recovery.
+          BACKMERGE_REPOS=$(python3 -c "
+          import json
+          out = {'unified-trading-pm'}
+          try:
+              with open('workspace-manifest.json') as mf:
+                  manifest = json.load(mf)
+              if manifest.get('staging_dormant_mode'):
+                  out.update(str(name) for name in manifest.get('repositories', {}))
+              else:
+                  out.update(str(name) for name, cfg in manifest.get('repositories', {}).items()
+                             if isinstance(cfg, dict) and cfg.get('promotion_model') == 'ldr_main')
+          except (OSError, json.JSONDecodeError, TypeError, AttributeError):
+              pass
+          print('\\n'.join(sorted(out)))
+          " 2>/dev/null || echo "unified-trading-pm")
+          PREV_BACKMERGE_FAILURES=""
+          if [ -f .backmerge-failure-state.json ]; then
+            PREV_BACKMERGE_FAILURES=$(python3 -c "import json; print('\\n'.join(json.load(open('.backmerge-failure-state.json'))))" 2>/dev/null || echo "")
+          fi
+          CURRENT_BACKMERGE_FAILURES=()
+          BACKMERGE_FAILURE_LINES=""
+          UNAVAILABLE_BACKMERGE_REPOS=()
+          OWNER="${GITHUB_REPOSITORY_OWNER:-IggyIkenna}"
+          while IFS= read -r REPO; do
+            [ -z "$REPO" ] && continue
+            RUN_JSON=$(gh run list --repo "${OWNER}/${REPO}" --workflow main-backmerge-to-ldr.yml --limit 1 --json databaseId,status,conclusion,createdAt,url 2>/dev/null)
+            if [ "$?" -ne 0 ]; then
+              UNAVAILABLE_BACKMERGE_REPOS+=("$REPO")
+              continue
+            fi
+            RUN_RESULT=$(printf '%s' "$RUN_JSON" | python3 -c "
+          import json, sys
+          try:
+              runs = json.load(sys.stdin)
+              if runs:
+                  run = runs[0]
+                  print('\\t'.join(str(run.get(key) or '') for key in ('databaseId', 'status', 'conclusion', 'createdAt', 'url')))
+          except (json.JSONDecodeError, TypeError, IndexError):
+              pass
+          " 2>/dev/null)
+            [ -n "$RUN_RESULT" ] || { UNAVAILABLE_BACKMERGE_REPOS+=("$REPO"); continue; }
+            IFS=$'\t' read -r RUN_ID RUN_STATUS RUN_CONCLUSION RUN_CREATED RUN_URL <<< "$RUN_RESULT"
+            if [ "$RUN_STATUS" = "completed" ] && [ "$RUN_CONCLUSION" = "failure" ]; then
+              CURRENT_BACKMERGE_FAILURES+=("$REPO")
+              BACKMERGE_FAILURE_LINES="${BACKMERGE_FAILURE_LINES}\\n*${REPO}*: run #${RUN_ID} failed (${RUN_CREATED}) — ${RUN_URL}"
+            fi
+          done <<< "$BACKMERGE_REPOS"
+          for REPO in "${UNAVAILABLE_BACKMERGE_REPOS[@]}"; do
+            if printf '%s\\n' "$PREV_BACKMERGE_FAILURES" | grep -qxF "$REPO"; then
+              CURRENT_BACKMERGE_FAILURES+=("$REPO")
+              BACKMERGE_FAILURE_LINES="${BACKMERGE_FAILURE_LINES}\\n*${REPO}*: latest run unavailable; retaining prior failure state"
+            fi
+          done
+          printf '%s\\n' "${CURRENT_BACKMERGE_FAILURES[@]}" | sed '/^$/d' | sort -u > .backmerge-failure-current.txt
+          printf '%s\\n' "$PREV_BACKMERGE_FAILURES" | sed '/^$/d' | sort -u > .backmerge-failure-prev.txt
+          BACKMERGE_CLEARED_REPOS=$(comm -23 .backmerge-failure-prev.txt .backmerge-failure-current.txt | sed '/^$/d')
+          BACKMERGE_FAILED=false
+          [ -s .backmerge-failure-current.txt ] && BACKMERGE_FAILED=true
+          BACKMERGE_FAILURE_CLEARED=false
+          BACKMERGE_FAILURE_CLEARED_KEY=""
+          BACKMERGE_FAILURE_CLEARED_REPORT=""
+          if [ -n "$BACKMERGE_CLEARED_REPOS" ]; then
+            CLEARED_LIST=$(echo "$BACKMERGE_CLEARED_REPOS" | paste -sd, -)
+            BACKMERGE_FAILURE_CLEARED=true
+            BACKMERGE_FAILURE_CLEARED_KEY="main-backmerge-failure-resolved:${CLEARED_LIST}"
+            BACKMERGE_FAILURE_CLEARED_REPORT=":large_green_circle: *main→LDR backmerge failure RESOLVED* for: ${CLEARED_LIST} — latest observed run is healthy."
+          fi
+          python3 -c "import json; json.dump(sorted(set(l.strip() for l in open('.backmerge-failure-current.txt') if l.strip())), open('.backmerge-failure-state.json', 'w'))"
           {
             echo "lag=$LAG"
             echo "cleared=$CLEARED"
@@ -185,6 +267,15 @@ jobs:
             echo "__EOR__"
             echo "cleared_report<<__EOR__"
             echo "$CLEARED_REPORT"
+            echo "__EOR__"
+            echo "backmerge_failed=$BACKMERGE_FAILED"
+            echo "backmerge_failure_report<<__EOR__"
+            printf ':rotating_light: *main→LDR backmerge FAILED* — latest completed run failed for one or more main-direct repos:%b\\n' "$BACKMERGE_FAILURE_LINES"
+            echo "__EOR__"
+            echo "backmerge_failure_cleared=$BACKMERGE_FAILURE_CLEARED"
+            echo "backmerge_failure_cleared_key=$BACKMERGE_FAILURE_CLEARED_KEY"
+            echo "backmerge_failure_cleared_report<<__EOR__"
+            echo "$BACKMERGE_FAILURE_CLEARED_REPORT"
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
 
@@ -241,11 +332,45 @@ jobs:
       # (deployment-ui Alerts page) silently never ran.
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
-  # ── JOB 3: AR lag metric (G9a) ───────────────────────────────────────────────────────
+  # ── JOB 3: Failed backmerge alerts ──────────────────────────────────────────────────
+  backmerge-failure-notify:
+    needs: lag-monitor
+    if: needs.lag-monitor.outputs.backmerge_failed == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.lag-monitor.outputs.backmerge_failure_report }}
+      severity: CRITICAL
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: main-backmerge-failure
+      cooldown_min: 120
+      concurrency_suffix: backmerge-failure
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  backmerge-failure-notify-resolved:
+    needs: lag-monitor
+    if: needs.lag-monitor.outputs.backmerge_failure_cleared == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.lag-monitor.outputs.backmerge_failure_cleared_report }}
+      severity: INFO
+      recovery: true
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: ${{ needs.lag-monitor.outputs.backmerge_failure_cleared_key }}
+      cooldown_min: 30
+      concurrency_suffix: backmerge-failure-cleared
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
   # Checks published-vs-required Artifact Registry lag: for each repo on main, asserts its
   # internal dep floors are published to GCP AR. Surfaces any unpublished gap as a WARNING.
   # Fail-open design: GCP auth errors / missing gcloud → exit 0 (never blocks promotion).
   # Wire this into the image-build gate when cloud-build cutover lands (see assert_deps_published_to_ar.py).
+  # ── JOB 4: AR lag metric (G9a) ───────────────────────────────────────────────────────
   ar-lag:
     runs-on: ubuntu-latest
     timeout-minutes: 10
