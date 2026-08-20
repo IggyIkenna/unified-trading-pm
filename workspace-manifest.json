@@ -73,7 +73,7 @@
     "deployment-ui": "0.1.0",
     "execution-service": "0.89.0",
     "features-service": "0.91.1",
-    "fund-administration-service": "0.11.1",
+    "fund-administration-service": "0.12.0",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.103.35",
     "market-tick-data-service": "0.146.3",
@@ -152,7 +152,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "bd6ef54fb0a22793b679b54267cb100228c5501e"
+      "ldr_ci_status_sha": "6fecf580bf614d572e71648b147878ff8c6151df"
     },
     "batch-live-reconciliation-service": {
       "promotion_model": "ldr_main",
@@ -214,7 +214,7 @@
         "large_file_count": 0,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "b36585ed94844ad040073232b2191facf1a75125"
+      "ldr_ci_status_sha": "f77d24e16c85194ec756c868038b59e30a0dcb5c"
     },
     "client-reporting-api": {
       "promotion_model": "ldr_main",
@@ -281,7 +281,7 @@
         "large_file_count": 0,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "a3186d514bd6cb2a24d8920434771ae57abd77c6"
+      "ldr_ci_status_sha": "735853a816ec5dd9cfeabb6658b3bf2693b249dd"
     },
     "deployment-api": {
       "promotion_model": "ldr_main",
@@ -350,7 +350,7 @@
         "coverage_pct": null,
         "warn_file_count": 17
       },
-      "ldr_ci_status_sha": "12fadfa1d2fa997cf52e6030a28046cb25f86050"
+      "ldr_ci_status_sha": "9d6bf2eed9600fd9a04235e395c87cd3ecc89bac"
     },
     "deployment-service": {
       "promotion_model": "ldr_main",
@@ -402,7 +402,7 @@
         "large_file_count": 6,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "18b750d26a13a8cb0110b129e37511083dcb1980"
+      "ldr_ci_status_sha": "27e9f53cd41c9848de84806e464b1716a1d917f2"
     },
     "execution-service": {
       "promotion_model": "ldr_main",
@@ -467,7 +467,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "6f664e80a016c955b5050cd27b65cff3d30b787e"
+      "ldr_ci_status_sha": "03f57b955e8fef6eb0cbef2e8ea6366b0320a2e2"
     },
     "features-service": {
       "promotion_model": "ldr_main",
@@ -542,9 +542,9 @@
         "coverage_pct": 86.65,
         "warn_file_count": 16
       },
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "cf2a5b45cabc08a19f95721f9f21a99e26ec3c2a"
+      "ldr_ci_status_sha": "db392629446bb320685c65b9d284c1c6e826de98"
     },
     "fund-administration-service": {
       "promotion_model": "ldr_main",
@@ -608,7 +608,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "151235055282633abf772d615e5725a9c0b5e9c6"
+      "ldr_ci_status_sha": "a1b89344762d17f8a59f149305b86dc4cdb22a6e"
     },
     "greeks-service": {
       "promotion_model": "ldr_main",
@@ -780,7 +780,7 @@
         "coverage_pct": 91.04,
         "warn_file_count": 11
       },
-      "ldr_ci_status_sha": "977f4b3a1a73b95a07b7f9e3308eeddeab0ff71c"
+      "ldr_ci_status_sha": "78350f8fe5ee9e2a2a4e2911814a87344fe117d9"
     },
     "market-data-processing-service": {
       "promotion_model": "ldr_main",
@@ -905,7 +905,7 @@
         "qg_red_reason": null
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "3c142f0d4a080c37f564013c77ca5c8617645657"
+      "ldr_ci_status_sha": "c66588a94b321dbfb213238ee50c423fbb3315f3"
     },
     "ml-service": {
       "promotion_model": "ldr_main",
@@ -974,7 +974,7 @@
       },
       "ldr_ci_status": "GREEN",
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "fd80bfdd545b5cb2e87243017c2ef9f71e56a73b"
+      "ldr_ci_status_sha": "f4c20b35406b37de453304a16c73f08c7589b64e"
     },
     "strategy-service": {
       "promotion_model": "ldr_main",
@@ -1039,7 +1039,7 @@
         "warn_file_count": 10
       },
       "cascade_invalidated_by": "unified-trading-library=0.72.0",
-      "ldr_ci_status_sha": "78163d69be8150ded10d585704f3f742987eabad"
+      "ldr_ci_status_sha": "97b9f308f41b751a4305c112063d5228b900de54"
     },
     "system-integration-tests": {
       "promotion_model": "ldr_main",
@@ -1132,7 +1132,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "b27654bc39bbd7ae92392af1c071f66f721440df"
+      "ldr_ci_status_sha": "0937916b4ede8f5b332492b8a3910ac42e36fa12"
     },
     "trading-agent-service": {
       "promotion_model": "ldr_main",
@@ -1244,7 +1244,7 @@
         "coverage_pct": null,
         "qg_red_reason": null
       },
-      "ldr_ci_status_sha": "e55fc5a9de4eca46a130580ccbe084c0e30ea604"
+      "ldr_ci_status_sha": "d8bd540f238950b42da00205a3002c17c7eb4152"
     },
     "unified-trading-library": {
       "promotion_model": "ldr_main",
@@ -1290,14 +1290,14 @@
         "critical",
         "cross-domain"
       ],
-      "ldr_ci_status": "RED",
+      "ldr_ci_status": "GREEN",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 22,
         "qg_red_reason": null,
         "large_file_count": 7
       },
-      "ldr_ci_status_sha": "ce301da3fda266d20a4f53a4b1455b6e9c49df20"
+      "ldr_ci_status_sha": "abb0fc05e50a8a1cd256af2cf83d59bbfdf41ab1"
     },
     "unified-trading-pm": {
       "type": "devops",
@@ -1327,14 +1327,14 @@
         "cross-domain",
         "standard"
       ],
-      "ldr_ci_status": "GREEN",
+      "ldr_ci_status": "RED",
       "codebase_health": {
         "coverage_pct": null,
         "warn_file_count": 0,
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "ac502e5edc1e4c0cad700d43597626b97a1c7775"
+      "ldr_ci_status_sha": "013a1d013cfffe7e55bd7993dcbacb09cd015eb9"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "0ec1f010d21e7a68230ea7ef88c5c13344eb175d"
+      "ldr_ci_status_sha": "6da596a8310d8b82ecd2f613c7b53da389d59fe3"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
