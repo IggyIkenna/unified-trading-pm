@@ -26,7 +26,7 @@ related:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-08-17" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
+last_updated: "2026-08-20" # F-CROSSCUTTING-8 wave-launcher FOLDED-IN claim vs code verification
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only # was: orchestrator-agent — corrected 2026-08-19 (plan_reconciler, cross-cutting) — only valid NA-paired value
@@ -90,28 +90,47 @@ items:
 > trades/tbbo/mbp_10 + corporate_action/earnings refdata).
 
 - [x] ✅ [INFRA] P0. **Autonomous wave-launcher → tradfi 100% — LIVE 2026-06-22** (`deployment-service@ebfe6e3`
-      `scripts/wave_launcher.py`). Reads the tradfi index, groups gap cells by root×year×data_type (BOTH
-      `expected_unattempted` AND `attempted_failed` — the P1 retry is FOLDED IN), caps at `WAVE_MAX_CONCURRENT=12` (hard
-      ceiling 20, `budget=cap-running`), drops cells running VMs own, launches via the per-venue
-      `launch-tradfi-bf-*-ohlcv-1m.sh`. **LIVE-PROVEN**: a controlled tick launched NYSE-2023/NASDAQ-2024/NYSE-2024
-      (fleet 8→11, cap-respected, 1 expected fail = CBOE-2025-no-shards). **Automated** via a `0 */3 * * *` cron on the
-      planning host (gcloud+workspace+venv present; needs `WORKSPACE_ROOT` so the launchers resolve UAC). **Caveats /
-      follow-ups**: (a) CBOE-2025 + ICE + YAHOO cells are permanently un-backfillable (no databento shards /
-      out-of-subscription) → they stay `expected_unattempted` forever, so the completion target must EXCLUDE unfillable
-      cells or it never reads 100% (refine the completion oracle). (b) host-cron is the immediate autonomy; the durable
-      cloud-native form is a Cloud Scheduler → gcloud-equipped ephemeral runner (a Cloud Run Job can't launch VMs — no
-      gcloud) — follow-up. (c) wave events emit mode='local' (DP_TRADFI_WAVE_LAUNCHED isn't registered in the alert
-      registry, so wouldn't route anyway; the VMs it launches ARE covered by the exit_code/heartbeat monitors). The
-      alerting is now live so launcher failures alert. **(was: trailing "— NOT DONE (the building agent hit the session
-      limit at 22:10 UTC reset). Need `deployment-service/scripts/wave_launcher.py` (reads tradfi `expected_unattempted`
-      gaps by root×year×data_type, launches `launch-tradfi-backfill-vm.sh` waves, HARD cap `MAX_CONCURRENT≤12`
-      never >20, dry-run-first, completion at expected_unattempted=0) + a Cloud Scheduler firing every 2-3h. Without it
-      the 8-VM manual wave stalls; tradfi never reaches 100% autonomously." — corrected 2026-07-14, doc-reconciliation
-      verify-rerun-2 finding 178: this same-bullet tail was stale leftover text from a pre-build session that hit the
-      limit before the launcher existed; it directly contradicted this bullet's own checked `[x]` + "LIVE-PROVEN"
-      framing above, and later sections of this doc (§ "wave-launcher multi-source" + the auto-kill heartbeat-stalled-VM
-      section) already treat the wave-launcher as live, functioning infrastructure with no correction of this tail.)** —
-      deployment-service
+      `scripts/wave_launcher.py`). Reads the tradfi index, builds per-`(venue,root,year)` dispatch atoms (NOT
+      root×year×data_type — `data_type` is not part of the `Dispatch` grouping key; a launcher venue backfills
+      whichever OHLCV data_types it owns) from cells whose status is `expected_unattempted` OR `attempted_failed`
+      (`NEEDS_WORK`), caps at `WAVE_MAX_CONCURRENT=12` (hard ceiling 20, `budget=cap-running`), drops cells running VMs
+      own, launches via the per-venue `launch-tradfi-bf-*-ohlcv-1m.sh`. **LIVE-PROVEN**: a controlled tick launched
+      NYSE-2023/NASDAQ-2024/NYSE-2024 (fleet 8→11, cap-respected, 1 expected fail = CBOE-2025-no-shards). **Automated**
+      via a `0 */3 * * *` cron on the planning host (gcloud+workspace+venv present; needs `WORKSPACE_ROOT` so the
+      launchers resolve UAC). **Caveats / follow-ups**: (a) CBOE-2025 + ICE + YAHOO cells are permanently
+      un-backfillable (no databento shards / out-of-subscription) → they stay `expected_unattempted` forever, so the
+      completion target must EXCLUDE unfillable cells or it never reads 100% (refine the completion oracle). (b)
+      host-cron is the immediate autonomy; the durable cloud-native form is a Cloud Scheduler → gcloud-equipped
+      ephemeral runner (a Cloud Run Job can't launch VMs — no gcloud) — follow-up. (c) wave events emit mode='local'
+      (DP_TRADFI_WAVE_LAUNCHED isn't registered in the alert registry, so wouldn't route anyway; the VMs it launches ARE
+      covered by the exit_code/heartbeat monitors). The alerting is now live so launcher failures alert. **(was:
+      trailing "— NOT DONE (the building agent hit the session limit at 22:10 UTC reset). Need
+      `deployment-service/scripts/wave_launcher.py` (reads tradfi `expected_unattempted` gaps by root×year×data_type,
+      launches `launch-tradfi-backfill-vm.sh` waves, HARD cap `MAX_CONCURRENT≤12` never >20, dry-run-first, completion
+      at expected_unattempted=0) + a Cloud Scheduler firing every 2-3h. Without it the 8-VM manual wave stalls; tradfi
+      never reaches 100% autonomously." — corrected 2026-07-14, doc-reconciliation verify-rerun-2 finding 178: this
+      same-bullet tail was stale leftover text from a pre-build session that hit the limit before the launcher existed;
+      it directly contradicted this bullet's own checked `[x]` + "LIVE-PROVEN" framing above, and later sections of this
+      doc (§ "wave-launcher multi-source" + the auto-kill heartbeat-stalled-VM section) already treat the wave-launcher
+      as live, functioning infrastructure with no correction of this tail.)** **(was: "BOTH `expected_unattempted` AND
+      `attempted_failed` — the P1 retry is FOLDED IN" — corrected 2026-08-20, F-CROSSCUTTING-8 verification against the
+      live `deployment-service/scripts/wave_launcher.py` code (this doc's own `context_scope` citation): `NEEDS_WORK`
+      does include `attempted_failed`, but the wave-launcher is OHLCV-ONLY per its own docstring — a manifest row only
+      enters the candidate pool if its `data_type` is in `OHLCV_DATA_TYPES` (`ohlcv_1m`/`ohlcv_1s`) AND its `venue` has
+      an entry in `LAUNCHER_FOR_VENUE` (CME/CBOE/NASDAQ/NYSE only). Rows failing either filter land in `out_of_scope`
+      and are explicitly "reported but never launched" (docstring's own words; code path: `compute_dispatch_candidates`'s
+      `addressable_mask`). So "the P1 retry is FOLDED IN" only holds for `attempted_failed` cells that are
+      `ohlcv_1m`/`ohlcv_1s` at one of those 4 venues — any cell outside that (a non-OHLCV data_type, or a venue like
+      ICE/FX/KRX with no launcher) is NOT retried by this mechanism at all, contra the unqualified "FOLDED IN" framing.
+      Separately, even for genuinely in-scope OHLCV cells, a wave-launcher dispatch does not guarantee resolution: the
+      archived `plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md` found ohlcv_1s/ohlcv_1m
+      `attempted_failed` at exactly these 4 venues still large and ACTIVE 4+ weeks after this bullet's "LIVE" date
+      (224,204 / 81,220 rows, shrinking only 1.3%/11.3% over the prior 16 days) because most of that population is a
+      real upstream Databento silent-zero-row gap (`WithinBoundsTradfiSourceZero`) that reproduces on a plain retry —
+      the wave-launcher keeps re-attempting these cells forever, it doesn't root-cause or purge them. No doc in this
+      corpus records the venue/data_type breakdown of the specific "13 cells / ~12.5k rows" the open P1 todo below
+      names, so whether they are even in the wave-launcher's addressable set was never actually checked before this
+      bullet claimed FOLDED IN — see that todo's own note.)** — deployment-service
 - [x] ✅ [DATA] P1. **tradfi schema-drift — `DP_NOT_V9=13670` RESOLVED 2026-06-22**
       (`populate_v9_index_columns_inplace --asset-group tradfi --apply`: the 13,670 rows were `schema_version=4` legacy;
       derived pipeline_mode/source in-place + bumped to 9; ALSO filled 903k blank pipeline_mode + 1.4M blank source on
@@ -125,7 +144,16 @@ items:
       **`DP_NOT_V9`** originally (13,670 tradfi rows NOT at canonical schema_version=9), surfaced by the now-live
       `manifest_hygiene_daily` audit. Re-walk/canonicalise those rows to v9. — market-tick-data-service
 - [ ] [DATA] P1. **Retry the tradfi `attempted_failed`** (13 cells / ~12.5k rows) — surfaced by the digest. Re-run the
-      backfill for the failed (venue,data_type,day) cells. — market-tick-data-service
+      backfill for the failed (venue,data_type,day) cells. **Left open 2026-08-20 (F-CROSSCUTTING-8 verification)**:
+      the wave-launcher bullet above claims this is "FOLDED IN" — traced `wave_launcher.py`'s actual selection logic and
+      that claim only holds conditionally (OHLCV `data_type` at a CME/CBOE/NASDAQ/NYSE launcher venue — everything else
+      is reported-but-never-launched `out_of_scope`), and nobody had traced that logic before checking this box off. No
+      surviving doc records which venue/data_type this specific 13-cell population is, so it's unverified whether it's
+      even in the wave-launcher's addressable set; genuinely non-OHLCV or non-launcher-venue cells need a manual retry
+      this todo still covers. Also note the 13-cell/~12.5k-row count is from 2026-06-22 and is very likely stale — the
+      manifest showed `attempted_failed=342,211` by 2026-07-13 and the OHLCV subset alone was 305k+ rows by 2026-07-23
+      (`plans/archive/issues/tradfi_ohlcv_attempted_failed_cluster_2026_07_23.md`) — a fresh manifest read is needed
+      before this todo can be sized or closed. — market-tick-data-service
 - [x] ✅ [INFRA] P2. **UAC image-packaging bug — already RESOLVED 2026-06-23** (see this doc's own "2026-06-23
       follow-ups RESOLVED" note above: clean alerting image bundles `registry/data/*.json`, `dp-alerting-subscriber`
       redeployed clean rev 00008-csc with NO datafix layer, UAC wheel 0.48.0 exports `build_fetch_evidence`).
