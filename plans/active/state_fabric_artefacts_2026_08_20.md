@@ -131,3 +131,15 @@ both read — declare once, consume many.
 **2026-08-20 — authored.** No artefact edited. Created because R27 had zero tracked todos and the shard-drilldown gap
 was measured, not assumed. The readiness-ledger todos lead deliberately: writing the drilldown by hand first would
 mean transcribing thousands of shard numbers into HTML, which rots the day it is written.
+
+**2026-08-20 (T5, cross-plan note — no todo here claimed or edited):** the two named source skills got real
+extensions today, landed on LDR, directly relevant to the ledger todo: `readiness-state-dump/scripts/
+derive_readiness.py` now emits `row_grain`/`coverage_source_grain` as two separate fields instead of one
+conflated `grain` key (`unified-trading-pm@065067f345`), and its `execution_instruction` leg is now wired to a
+real per-venue probe instead of a hardcoded `unverified` (`unified-trading-pm@8d47cf3393`).
+`honest-coverage-dump/scripts/dump_coverage.py` now reports a dedup'd distinct-shard count and a per-asset-group
+hollow-instrument_type fraction as first-class `dedup_stats` output (`unified-trading-pm@bb81afbcaa`) — the raw
+cell count was inflated ~2% by case-variant/nan-vs-blank duplicate keys, still present in the 2026-08-20
+coverage.json (measured: 3965 raw / 3877 distinct / 88 duplicates). Flagged the conflict this plan creates with
+`/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md`'s own DOC "re-derive the
+four artefacts by hand" todos there — held pending coordination on which approach to follow, not started blind.
