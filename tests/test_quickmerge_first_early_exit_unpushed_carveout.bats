@@ -42,8 +42,9 @@ setup() {
   git push -q origin HEAD:live-defi-rollout
   git fetch -q origin
 
-  # Load the REAL function under test.
+  # Load the REAL functions under test.
   eval "$(sed -n '/^_qm_early_exit_nothing_to_commit() {/,/^}/p' "$QM_SH")"
+  eval "$(sed -n '/^_qm_nothing_to_commit_with_files() {/,/^}/p' "$QM_SH")"
 }
 
 @test "clean tree, content matches origin/main, no unpushed commits: fast-exit is safe" {
@@ -81,4 +82,14 @@ setup() {
 
   run _qm_early_exit_nothing_to_commit
   [ "$status" -eq 1 ]
+}
+
+@test "nothing-to-commit with --files named fails loudly (exit 12), never a silent no-op" {
+  # P2 (quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md): a --files run that
+  # exits without committing anything must be a non-zero, printed failure -- a silent no-op
+  # is how work gets lost. The helper is the shared exit both early-exit call sites now use.
+  FILES_ARG="doc.md"
+  run _qm_nothing_to_commit_with_files
+  [ "$status" -eq 12 ]
+  [[ "$output" == *"NOTHING TO COMMIT, but --files named: doc.md"* ]]
 }

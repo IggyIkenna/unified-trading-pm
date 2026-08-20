@@ -1488,9 +1488,29 @@ _qm_early_exit_nothing_to_commit() {
   [ "${_unpushed:-0}" = "0" ]
 }
 
+# _qm_nothing_to_commit_with_files -- the loud, non-zero counterpart to a bare "nothing to
+# commit" exit. A run that names --files but exits without committing anything is the
+# silent-success family (quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md P2): the
+# caller reads "success" while their named files sit untracked/absent. Both early-exit paths
+# below (nothing-to-commit, and identical-to-main) share this one loud exit so an agent can
+# never mistake "nothing left to do" for "shipped". Never softens to exit 0.
+_qm_nothing_to_commit_with_files() {
+  echo "[$REPO_NAME] ❌ NOTHING TO COMMIT, but --files named: $FILES_ARG" >&2
+  echo "   Named files are not dirty. They were almost certainly PARKED, not lost." >&2
+  echo "   Do NOT re-run blindly -- a retry can add a stash entry and make this fire sooner." >&2
+  echo "     git stash list | head" >&2
+  echo "     git checkout 'stash@{N}' -- $FILES_ARG   # never a blind pop; may hold a peer's WIP" >&2
+  echo "   SSOT: /codex/12-agent-workflow/ship-tooling-silent-success.md" >&2
+  exit 12
+}
+
 git fetch origin main --quiet 2>/dev/null || true
 if [ "$NO_PR" != "true" ]; then
   if _qm_early_exit_nothing_to_commit; then
+    # --files named + nothing to commit is a silent no-op, not a ship (P2). Fail loudly.
+    if [ -n "$FILES_ARG" ]; then
+      _qm_nothing_to_commit_with_files
+    fi
     echo "[$REPO_NAME] Nothing to commit — exiting fast"
     exit 0
   elif [ -z "$(git status --porcelain)" ] && git diff origin/main --quiet 2>/dev/null; then
@@ -2358,6 +2378,11 @@ if [ "$NO_PR" != "true" ]; then
   if git rev-parse origin/main &>/dev/null \
     && [ -z "$(git diff origin/main 2>/dev/null)" ] \
     && { [ -z "$FILES_ARG" ] || [ -z "$(git status --porcelain -- $FILES_ARG 2>/dev/null)" ]; }; then
+    # --files named + nothing to merge is the same silent-success family as the first early
+    # exit above (P2) -- a no-op must never read as a ship. Fail loudly.
+    if [ -n "$FILES_ARG" ]; then
+      _qm_nothing_to_commit_with_files
+    fi
     echo "[$REPO_NAME] No differences from main — nothing to merge"
     exit 0
   fi
@@ -2378,13 +2403,7 @@ if [ "$NO_PR" != "true" ]; then
       # Catch-all for the silent-success family measured 2026-08-10 (guard quarantine, STAGE-5
       # stash-then-fatal, peer checkout): each ended here, exited 0, and left the NEXT ship looking
       # complete while carrying a fraction of the change. Gated on --files. Never soften to exit 0.
-      echo "[$REPO_NAME] ❌ NOTHING TO COMMIT, but --files named: $FILES_ARG" >&2
-      echo "   Named files are not dirty. They were almost certainly PARKED, not lost." >&2
-      echo "   Do NOT re-run blindly -- a retry can add a stash entry and make this fire sooner." >&2
-      echo "     git stash list | head" >&2
-      echo "     git checkout 'stash@{N}' -- $FILES_ARG   # never a blind pop; may hold a peer's WIP" >&2
-      echo "   SSOT: /codex/12-agent-workflow/ship-tooling-silent-success.md" >&2
-      exit 12
+      _qm_nothing_to_commit_with_files
     else
       echo "[$REPO_NAME] No changes to commit"
       exit 0
