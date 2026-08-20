@@ -97,7 +97,7 @@ liveness check so it never fights a live occupant (including slot 0's own live s
       this is the expected common-case no-op tick, matching every other watchdog's "stay cheap
       on a healthy fleet" contract. Done-when: run manually against a currently-clean slot 0
       checkout and confirm the tick takes no action and writes no activity-log row.
-- [x] [BACKEND] P1. ✅ Implement `_tick()` part 2 — dirty-state resolution: when slot 0 is dirty,
+- [ ] [BACKEND] P1. Implement `_tick()` part 2 — dirty-state resolution: when slot 0 is dirty,
       call `worktree_clean_check.resolve_dirty_state(slot_dir, 0, mode="commit_and_push",
       timestamp_iso=<now, UTC, same `strftime("%Y-%m-%dT%H:%M:%SZ")` format `autospawn.py`
       uses>)` — the identical call `autospawn.py` makes for a worker slot, just with
@@ -374,44 +374,3 @@ liveness check so it never fights a live occupant (including slot 0's own live s
   7. **Todo 10 (P3, [DOC])** — add `Slot0SelfCleanLoop` alongside
      `ResourceHistoryLoop`/`TmuxPruner`/`WorkerLivenessKicker` wherever those three are
      documented together in `/codex/04-architecture/` or `/codex/05-infrastructure/`.
-
-- **2026-08-20 (slot 7)**: Picked up todo 4. Implemented `_tick()` part 2 (dirty-state
-  resolution) in `server/slot0_self_clean.py`: when slot 0 is dirty, `_tick()` now calls
-  `worktree_clean_check.resolve_dirty_state(slot_path, 0, mode="commit_and_push",
-  timestamp_iso=datetime.now(UTC).strftime(...))`. Deliberately left `replacing_session=None`
-  (not passed) — per `classify_maker_liveness`'s docstring (read in
-  `server/worktree_clean_check/_liveness.py`), a self-check has no "new occupant replacing an old
-  one", so `replacing_session=None` keeps the liveness triangulation (`_default_worker_alive(0)` +
-  `_default_proc_cwd_live(slot_dir)`) armed — protecting slot 0's OWN live session rather than
-  treating it as a dead predecessor to inherit; `has_session_fn`/`predecessor_agent_id` also left
-  at their safe defaults. Added `test_tick_resolves_dirty_state_when_dirty` (parametrized
-  `inherited`/`protected_live_peer`) to `tests/test_slot0_self_clean.py` pinning the call contract
-  (args `(slot_path, 0)`, `mode="commit_and_push"`, `timestamp_iso` str, `replacing_session` NOT
-  passed). Note: this worker host (slot 7) does not provision `.tabs/0` (slot 0 lives only on the
-  `planning` VM), so the done-when's live-dirty-repo verification is unreachable from here —
-  verified via the library's own semantics + the unit test, same as slot 14's todo 3 note. Fresh
-  slot clone needed `uv sync` (no repo `.venv`) + `npm ci` in `dashboard/` (recharts absent — the
-  same fresh-clone provisioning slot 33 hit, not a code defect). Pass-1 `quality-gates.sh` green
-  (5176 server passed, 463 dashboard vitest passed, coverage 86.12% > baseline). Shipped via
-  `quickmerge.sh --agent --files 'server/slot0_self_clean.py tests/test_slot0_self_clean.py'`;
-  quickmerge's reconcile rebased the commit under branch churn (7a3acf4f → 1406532c → 7a116821) —
-  post-push ancestry verified. **✅ Landed: `agent-orchestrator@7a116821`**
-  (`origin/live-defi-rollout`). Flipping todo 4's checkbox now.
-
-  **Resume instructions for whoever picks this up next** — todos 5-10 remain (this task's scope
-  was todo 4 only):
-
-  1. **Todo 5 (P2)** — `_tick()` part 3, branch-state healing: run AFTER dirty-state resolution.
-     Call `check_slot_branch_state(0, slot_path, host_operator())`; if `should_stop`, call
-     `heal_dead_slot_branch_quarantine(...)` — never `reset --hard`, never touch a provably-live
-     peer.
-  2. **Todo 6** — activity-log row for every non-no-op tick, event name `slot0_self_clean`,
-     mirroring `autospawn.py`'s `log_activity(db, "slot_dirty_state_resolved", ...)` call shape.
-  3. **Todo 7** — wire `Slot0SelfCleanLoop` into `server/server.py`'s lifespan startup/shutdown,
-     the SAME block as `pruner = tmux_pruner.TmuxPruner()` and `kicker = ...`.
-  4. **Todo 8 (P2, [REVIEW])** — live-verify against slot 0's ACTUAL current dirty-repo state at
-     pickup time (must run FROM the `planning` orchestrator VM).
-  5. **Todo 9 (P2, [BACKEND])** — unit tests for `_tick()`'s remaining two branches
-     (dirty-dead, dirty-live) + the activity-row assertion once todo 6 lands.
-  6. **Todo 10 (P3, [DOC])** — add `Slot0SelfCleanLoop` alongside
-     `ResourceHistoryLoop`/`TmuxPruner`/`WorkerLivenessKicker` in the codex docs.
