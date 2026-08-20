@@ -203,7 +203,7 @@ todos only to confirm they are data-movement, then leave it.
       (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
       SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
 - [x] ✅ [FROM-T1] P2. **Decided: `PARTIALLY_FILLED -> CANCELLED / EXPIRED` IS a legal transition** —
-      `unified-trading-pm@<pending>` (codex `order-state-machine.md` amended: diagram + events table widened,
+      `unified-trading-pm@c74d869b36` (codex `order-state-machine.md` amended: diagram + events table widened,
       ruling + evidence recorded 2026-08-20). Real CLOB venues let an operator cancel the still-working remainder
       of a partially-filled order (final status reports cancelled with nonzero filled quantity, never forced to
       `FILLED` first); corroborated in execution-service's own code, which already treats `PARTIALLY_FILLED` as an
