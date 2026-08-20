@@ -157,7 +157,12 @@ frontmatter claim in the second example is simply absent.
       Root cause for todo 2: add a canonical safe-truncation helper (clause/paren-boundary-aware, matching the fix
       this doc's own 2026-08-19 entry already hand-rolled once) either inside `na_marker_helper.py` or as documented
       SKILL.md guidance, so future sessions call it instead of re-inventing an unsafe one.
-- [ ] [SCRIPT] P3. Implement the fix once root-caused (recommended next step 2 above).
+- [x] ✅ [SCRIPT] P3. Implement the fix once root-caused (recommended next step 2 above). **DONE 2026-08-20 (slot-4,
+      review).** Added `truncate_marker_suffix()` and the `truncate` subcommand to
+      `scripts/plan-hygiene/na_marker_helper.py`; it prefers sentence/clause boundaries, preserves balanced
+      delimiters, labels intentional shortening as `… [rationale truncated]`, and rejects bare trailing ellipses on
+      normal `append`/`batch` writes. Updated `cursor-configs/skills/na-eligibility-audit/SKILL.md` to require the
+      complete rationale or this explicit helper.
 - [ ] [DOC] P3. Corpus-wide sweep for the same signature once the fix ships, to find + backfill every other instance
       (recommended next step 3 above).
 
@@ -206,3 +211,6 @@ frontmatter claim in the second example is simply absent.
   much larger than the 13 instances now confirmed across both runs combined (2 original + 11 here); todo 3's own
   planned sweep should treat 116 as the upper-bound candidate count to check, not a fresh unknown.
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries)
+- **2026-08-20 (slot-4, review)**: implemented todo 2 with the safe truncation helper and append validation; focused
+  syntax/regression checks pass. Todo 3 (corpus-wide sweep for the bare-trailing-ellipsis signature) remains open for
+  a separate dispatch.

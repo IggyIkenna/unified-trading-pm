@@ -72,8 +72,12 @@ cadence AND this skill's per-todo RECLASSIFY extraction rate.
 For each `assigned_vm: NA`, `status` ∈ `{active, open}` doc with ≥1 open todo:
 
 1. **KEEP-NA, valid** — genuinely human/design/judgment/operator-gated work, content still accurate. Record a dated
-   Progress Log line in the doc itself (`**na-eligibility-audit YYYY-MM-DD**: KEEP-NA, valid — <one-line why>`) so a
-   future incremental run can skip it (see Phase 0). No other action.
+   Progress Log line in the doc itself (`**na-eligibility-audit YYYY-MM-DD**: KEEP-NA, valid — <why>`) so a future
+   incremental run can skip it (see Phase 0). Pass the complete rationale to
+   `scripts/plan-hygiene/na_marker_helper.py append`; do not slice it to force a one-line limit. Markdown formatting
+   may wrap long markers safely. If a genuine output limit requires shortening, use the helper's explicit `truncate`
+   command, which cuts only at a sentence/clause/word boundary and labels the result `[rationale truncated]`. A suffix
+   ending in a bare `...` is rejected as likely silent content loss. No other action.
 2. **KEEP-NA, stale items** — some open checkboxes are superseded/decommissioned/already-done-elsewhere. Close those
    specific items with evidence (same HARD-evidence bar as `/plan-reconcile` Phase 2); doc stays NA otherwise.
    **Distinct sub-case (2026-08-07 finding, do not conflate with ordinary staleness)**: an item can have full HARD
