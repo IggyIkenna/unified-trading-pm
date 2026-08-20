@@ -744,3 +744,10 @@ context_scope:
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
 - **na-eligibility-audit 2026-08-18** [body-hash:0dbf0233de00254b]: KEEP-NA, valid -- 4 open items re-confirmed: the manifest migration carries two live unresolved operator decisions (bundle-normalization choice, --remove-stragglers sign-off) plus un-run catalogue dedupe; the instrument_type casing re-verify and the 3x-cadence reconciliation top-up both explicitly chain on that same migration landing first. Re-examined the fixture-attribute (A4) historical backfill item flagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE this run: the todo offers two resolution methods ("OR by parsing...") with no stated preference/done-when and is a historical write across all prod instrument records -- does not clear the bounded-outcome bar; downgraded to KEEP-NA, consistent with prior passes' decision (2026-08-17) not to promote it either. Doc stays NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
+- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — 4 open items re-confirmed live
+  (`grep -cE '^- \[ \]'` = 4): the enumeration-driven manifest migration `--apply` (still carries 2 live unresolved
+  operator-decision legs — bundle normalization sign-off, `--remove-stragglers` sign-off — plus the catalogue dedupe
+  itself un-run), the fixture-attribute (A4) historical backfill, the `instrument_type` casing re-verify to literal
+  100%, and the 3x-cadence reconciliation top-up (both chain on the migration landing first). Consistent with the
+  2026-08-18 marker's decision not to promote the A4 backfill (2 unweighted resolution methods, no stated
+  preference — does not clear the bounded-outcome bar). Doc stays NA.

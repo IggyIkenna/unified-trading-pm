@@ -48,8 +48,9 @@ context_scope:
 > `predictions_master.md`" — so these are predictions-owned, NOT sports-owned.
 
 > **🔴 GATED ON `sports_master:Group E`** — the walk-forward run is BLOCKED until the sports half's FSS produces ≥95%
-> non-NULL features for the trained universe at the buckets (`sports_master` line 644 as of 2026-08-16 — CORRECTED,
-> plan_reconciler, was stale-cited "line 463" —
+> non-NULL features for the trained universe at the buckets (`sports_master` line 649 as of 2026-08-21 — RE-CORRECTED,
+> na-eligibility-audit, was stale-cited "line 644" since 2026-08-16 — the gate drifted 5 lines from unrelated edits to
+> that epic doc; content/status unaffected, still `[ ]` unchecked — was previously stale-cited "line 463" —
 > `[GATE] P0. Block predictions Group E until FSS produces ≥95% non-NULL features`). The sports half (288M ODDS_API row
 > migration + MDPS bucketing + FSS run) lives in `sports_master`; this plan picks up the moment that gate is GREEN.
 
@@ -72,8 +73,9 @@ downstream of the sports-half FSS feature production (the Group E gate).
 - [ ] [ANALYSIS] P0. Run the acceptance-metrics computation above against the real walk-forward output (BLOCKED-ON line
       65's walk-forward run [corrected 2026-08-19 (/plan-reconcile predictions_master) — was mis-cited "line 53", which
       is this doc's own gate-banner quoting `sports_master.md`, not the walk-forward todo itself], itself BLOCKED-ON
-      `sports_master:Group E` gate — `plans/epics/sports_master.md` line 644 as of 2026-08-16 (CORRECTED,
-      plan_reconciler, was stale-cited "line 598"), still unchecked).
+      `sports_master:Group E` gate — `plans/epics/sports_master.md` line 649 as of 2026-08-21 (RE-CORRECTED,
+      na-eligibility-audit, was stale-cited "line 644" since 2026-08-16, itself CORRECTED from "line 598"), still
+      unchecked).
 - [x] ✅ [SCRIPT] P0. Training-config sanity check: feature columns match the FSS schema, label leakage absent,
       walk-forward window correct. — ml-service@872acbb | Fixed: (1) `SPORTS_MODEL_2A_GRID.feature_groups` corrected
       from 15 invalid calculator-level names to `["derived_features","odds_features"]` (the two valid GCS path groups);
@@ -266,3 +268,8 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
   tranche worker. Once that gate clears, item 1 (the walk-forward run itself) may become bounded/RECLASSIFY-eligible —
   not re-derived further while the gate stays open, per the never-relitigate rule. Doc stays NA.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21 (prediction tranche)**: KEEP-NA, valid — 4 open items re-confirmed all chained on
+  the still-open cross-plan `sports_master:Group E` gate. Fixed a stale line-number citation to that gate as an
+  adjacent hygiene fix (the "line 644" citation, itself already corrected once from "line 598"/"line 629", had
+  drifted a further 5 lines to line 649 from unrelated edits to that epic doc since 2026-08-16 — content/status
+  unaffected, gate confirmed still `[ ]` unchecked at its current line). Doc stays NA.
