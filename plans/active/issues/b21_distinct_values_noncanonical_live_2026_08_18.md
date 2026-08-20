@@ -154,10 +154,11 @@ sports instrument_type finding above.
       `williamhill`) — this looks like a venue/instrument_type column swap in the writer, not naming drift.
       Repo: market-data-processing-service or sports data writer. Done-when: root cause identified; if a real
       writer bug, filed as its own P0 issue (data-correctness, per CLAUDE.md governance rule). **Determination 2026-08-20:** historical writer bug, already fixed; no new P0 filed.
-- [ ] [DATA] P2. Investigate sports venue-axis entries `FOOTBALL`, `ODDS_API`, `UNKNOWN` — these read as
+- [x] ✅ [DATA] P2. Investigate sports venue-axis entries `FOOTBALL`, `ODDS_API`, `UNKNOWN` — these read as
       source/category labels leaking into the venue column rather than real bookmaker names. Repo: sports data
       writer. Done-when: root cause identified and either fixed at the writer or added as an accepted exception
-      with a stated reason.
+      with a stated reason. **DONE 2026-08-20 (MDPS existing fixes; no new registry exception):** `FOOTBALL` was the sports-token-as-venue bug in positional `instrument_id.split(":")[0]` inference, fixed by the asset-group-aware venue helper and regression coverage (`market-data-processing-service@45ceb993`, `@c9b7f4a8`, `@551ca82f`). `ODDS_API` is not a bookmaker: it remains deliberately valid as the coarse `odds_horizon_bucket` aggregate/source sentinel and for recognized-but-unconsumable raw meta snapshots; fine bookmaker rows were split to real venues (`market-data-processing-service@561f1776`). `UNKNOWN` is the explicit unresolved-coordinate fallback for empty/failed shards, not an accepted sports venue; keeping it actionable prevents a future writer regression from being masked. Residual `UNKNOWN` rows require the separate manifest reconciliation below.
+- [ ] [DATA] P2. Reconcile residual sports `venue=UNKNOWN` rows by status/path and remove or repair only after content-verified evidence identifies their producer; do not add `UNKNOWN` to an accepted-exception registry.
 - [ ] [DATA] P2. Extend `SPORTS_ODDS_API_ACCEPTED_NONCANONICAL_BOOKMAKERS` / add a new registry export for the
       remaining sports venues (`BETANO_UK`, `BETFRED_UK`, `BETUS`, `BOYLESPORTS`, `FANATICS`, `GROSVENOR`,
       `LADBROKES_UK`, `LEOVEGAS`, `LOWVIG`, `MYBOOKIEAG`, `SPORT888`, `WILLIAMHILL_US`) once each is confirmed a
@@ -235,4 +236,5 @@ sports instrument_type finding above.
 - **2026-08-20 (slot 1, data_engineering) — item 2 closeout:** re-read the shipped UAC registry and MTDS writers and
   confirmed neither legacy label is current vocabulary. The shipped retirement tool is the fix; its bounded live apply
   safety pass measured 3,446,390 legacy keys and excluded 180,643 without canonical twins for separate follow-up.
+- **2026-08-20 (slot 15, data_engineering) — sports venue-axis investigation:** traced all three values through the current MDPS writer and shipped history. `FOOTBALL` is historical residue from the pre-asset-group-aware positional venue inference; the live/batch/streaming chain-bundle paths now derive the bookmaker from position 1 and split multi-venue frames before writing. `ODDS_API` has two intentional uses that must not be conflated with a bookmaker: raw meta-snapshot/vendor identity and the coarse derived-odds aggregate row; fine rows use the real bookmaker. `UNKNOWN` is emitted only by the honest failed/empty-shard fallback when neither an instrument id nor input venue resolves; it is deliberately not accepted. Evidence: `market-data-processing-service@45ceb993`, `@c9b7f4a8`, `@53344dfa`, `@e4fc0fd9`, `@551ca82f`, `@ef9e38b9`, and `@561f1776`; current source and tests were read on `live-defi-rollout` and the worktree was clean before this plan-only update.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries).
