@@ -57,7 +57,7 @@ source: >-
 
 ## From `git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
 
-- [ ] [SCRIPT] P2. **Attempt a clean repro of BOTH the stash-pathspec-staleness defect AND the transient-empty-pathspec
+- [x] ✅ [SCRIPT] P2. **Attempt a clean repro of BOTH the stash-pathspec-staleness defect AND the transient-empty-pathspec
       no-op-push variant, in a scratch repo.** Two distinct hypotheses to test, both
       already fully specified by the source doc: (a) stash push a static file list → pull → pop with conflict →
       resolve → stash push the SAME static list again without re-querying `git status` → pull → pop — confirm or
@@ -74,6 +74,7 @@ source: >-
       are about a SINGLE session's own repeated push/pull/pop cycling, a mechanically distinct claim. Source:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
       todo 1. Repo: unified-trading-pm (scratch repro, not shipped code).
+      — `unified-trading-pm@9e5e873988`; Evidence: `bash scripts/dev/repro-stash-pathspec-cycles.sh` reproduced both hypotheses.
 - [ ] [SCRIPT] P2. **Promote the CONFIRMED `git pull --rebase --autostash` per-batch fix into the durable recovery
       guidance** (reconcile with the existing nuanced `--ff-only`-from-a-clean-tree guidance already at
       `/codex/05-infrastructure/per-tab-worktrees.md:602`, don't blanket-override it). Not a hypothesis — the source doc's own "Third incident" section confirms `git pull --ff-only`
@@ -145,3 +146,8 @@ source: >-
   the hash-fix items, `venue_granularity.py` for the granularity-view item); all paths confirmed resolving on disk.
 - **context-scout 2026-08-20**: trimmed context_scope to 3 entries — the venue-granularity todo is now done, so
   dropped its 2 tied entries; the 4 remaining open todos are still fully covered by the 3 kept entries.
+- **2026-08-20 (infra worker, slot 19)**: Ran the saved scratch-repo repro
+  `scripts/dev/repro-stash-pathspec-cycles.sh` successfully. Hypothesis A reproduced a stale static pathspec
+  omission (`stash` count unchanged and `d.txt` remained dirty after the second push); hypothesis B reproduced an
+  empty-pathspec no-op (`stash` count unchanged) followed by an unconditional `stash pop` applying the unrelated
+  leftover stash. Script shipped in `unified-trading-pm@9e5e873988`.
