@@ -105,11 +105,12 @@ Two independent, mechanical fixes — no judgment call:
 
 ## Todos
 
-- [ ] [BACKEND] P1. Fix `tests/test_ao_self_pull_dirty_gate.py`'s `_make_checkout` (or equivalent origin-repo
+- [x] ✅ [BACKEND] P1. Fix `tests/test_ao_self_pull_dirty_gate.py`'s `_make_checkout` (or equivalent origin-repo
       fixture helper) to create its synthetic origin on branch `main` explicitly (`git init -b main` /
       `--initial-branch=main`), independent of the host's `init.defaultBranch` config. Done-when: all 6 tests in
       this file pass under `.venv/bin/python -m pytest tests/test_ao_self_pull_dirty_gate.py -q` with no other
-      changes. Repo: agent-orchestrator.
+      changes. Repo: agent-orchestrator. — agent-orchestrator@1e65044677 (all 6 tests pass; see Progress Log for
+      the corrected root cause).
 - [ ] [INFRA] P1. Install the missing `recharts` npm dependency in `dashboard/` (`npm ci` from a clean
       `package-lock.json`, verify `dashboard/node_modules/recharts` exists afterward) and confirm both
       `npm run typecheck` (`tsc --noEmit`) and `npm run test` (`vitest run`) go green with zero suite-load
@@ -125,3 +126,17 @@ Two independent, mechanical fixes — no judgment call:
   pytest rerun (root-caused the `fetch origin main` fixture/host-git-config mismatch) and a direct
   `node_modules`/`package.json` check for `recharts`. Declaring a `qg_red` repo-blocker per RULES.md § 4b in the
   same turn.
+
+- **2026-08-20 (slot 14)**: BACKEND todo done — agent-orchestrator@1e65044677 (shipped via quickmerge, QG green,
+  all 6 tests pass). **Corrected root cause vs the original filing**: the `git init -b main` fixture fix (already
+  present in 6b430b1d) was necessary but NOT sufficient — all 6 tests still failed on "fetch origin main failed —
+  skip" because `ao-self-pull.sh`'s `run_git()` wraps every git call in `sudo -u "$SLOT_USER"` and the orchestrator
+  worker harness sets the kernel `no_new_privileges` flag (`sudo: The "no new privileges" flag is set, which
+  prevents sudo from running as root`), so every sudo-git op silently returned nothing / failed — including the
+  dirty-gate `git status`, which is why the tracked-modification test also failed. Fix: `_run_self_pull` now injects
+  a test-only `sudo` shim on PATH (drops `-u <user>`; the test already runs as the slot user, so exec-ing git
+  directly is semantically identical). The credential wrapper is isolated; every git op + tick/alert logic still
+  runs for real. Also observed on the first full-QG pass: ONE unrelated flaky failure —
+  `tests/test_gemini_litellm_translation_smoke.py::test_tool_use_tool_result_roundtrip_through_real_proxy` (live
+  integration/smoke test vs a real Gemini API; passes in isolation; passed on full re-run) — filed separately as
+  `plans/active/issues/gemini_smoke_test_flaky_under_full_suite_2026_08_20.md`.
