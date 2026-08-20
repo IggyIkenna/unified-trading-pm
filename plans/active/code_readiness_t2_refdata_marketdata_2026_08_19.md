@@ -469,6 +469,16 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/instruments_catalogue_definitions_and_field_history_2026_08_17.md`.
 - [ ] [BACKEND] P0. Land the venue smoke-test bar and the venue E2E wiring. Evidence:
       `/plans/active/venue_smoke_test_bar_2026_08_16.md`, `/plans/active/venue_e2e_wiring_2026_08_16.md`.
+      **NOTE 2026-08-20 (T2, `/autonomous`) — do not duplicate, check status first next session.** Pulled origin
+      mid-session and found the master plan (7 open / 3 done) has since been fanned out into 5 fresh
+      `assigned_vm: planning` (AO-dispatched) per-asset-group batches: `cefi_venue_smoke_batch1_2026_08_20.md`,
+      `defi_venue_smoke_batch1_2026_08_20.md`, `prediction_venue_smoke_batch1_2026_08_20.md`,
+      `sports_venue_smoke_batch1_2026_08_20.md`, `tradfi_venue_smoke_batch1_2026_08_20.md` (each with a
+      `_finalize` companion). Each batch's `repos:` spans beyond this tranche's 3 (also
+      unified-api-contracts/features-service/execution-service) — genuinely cross-tranche, AO track, not
+      something to grab mid-flight without first checking whether an AO worker already has it in progress. Not
+      investigated further this session (discovered near session end) — next session: check each batch's
+      current open/done state before doing any work here, to avoid racing an AO worker on the same files.
 - [ ] [BACKEND] P0. Close the CeFi and TradFi G1-G5 gate execution CODE paths. Evidence:
       `/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
       `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
