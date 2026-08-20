@@ -314,4 +314,17 @@ agent-orchestrator@c48e37e281**. A separate, real, transient coverage-ratchet ba
 any of the above — confirmed via a YAML-only diff triggering the identical failure) was also realigned
 (**agent-orchestrator@90b372ea9f**) since it was blocking quickmerge fleet-wide, not just this work.
 
+- [ ] [BACKEND] P2. **New, found live 2026-08-20, not yet fixed**: `switch_slot_account`'s
+      `--resume`-onto-a-different-provider path breaks a large existing Claude session on GLM specifically —
+      slot 7's forced Claude→GLM switch hit a real context-compaction failure immediately on resume ("Prompt
+      is too long · automatic compaction failed"), while the SAME switch onto Gemini/Gemma completed a real
+      turn successfully first, only failing on a LATER unrelated bug (the stale-`--model` issue, already
+      fixed as agent-orchestrator@7a1be88b8c). Not yet root-caused to the same precision as the codex-bridge
+      streaming bug above — plausible working theory, unconfirmed: a `--resume`'d Claude Code session may
+      carry provider-specific compaction/context-window assumptions baked into its own local session state
+      that don't transfer cleanly to GLM's real context window, independent of anything AO's own spawn code
+      controls. Operator-flagged non-urgent relative to the codex-bridge/ollama-thinking findings above and
+      below. Organic (fresh-spawn, no resume) dispatch onto GLM is confirmed unaffected — this is
+      resume-path-specific. Repo: agent-orchestrator.
+
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
