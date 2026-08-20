@@ -206,10 +206,12 @@ anywhere in this corpus; flag to the operator whether it needs its own per-AG pl
 - **G2/M-1** → `data_completion_to_100_all_ag_2026_06_21.md` (mostly historical shell, AG-specific work moved to 5
   per-AG siblings; residual: VM-launcher canon-gate check, CeFi Extended-Starknet backfill, oracle-prices launcher run
   [BLOCKED-OPERATOR pyth ack], manifest_consolidator CAST hardening, CF-2/CF-3 ~703-date gap,
-  `uts-prod-cf- manifest-audit` never-succeeded (**NOT started — see Track 14**; was: "[IN FLIGHT 2026-07-25]", which
-  contradicted Track 14's own "fully open, unresolved" and is not borne out by history: the owning doc
-  `issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` still reads 3 open / 0 done and its last content
-  commit is `unified-trading-pm@98090f60a`, 2026-07-23, a corpus-wide reference-path migration), bybit-futures delete
+  `uts-prod-cf-manifest-audit` — **RESOLVED 2026-08-20 (T1 slice), correcting a stale claim this line carried for
+  weeks**: the owning doc `issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md` is `status: resolved`
+  (archived, fixed 2026-07-26, all 3 next-steps closed) — live-verified via `gcloud run jobs executions list
+  --job=uts-prod-cf-manifest-audit`: the last 3 daily runs (2026-08-18/19/20) all succeeded (`succeededCount=1`, no
+  failures). Track 14's own "fully open, unresolved" framing (below, and in
+  `cross_cutting_closeout_observability_and_monitoring_2026_08_09.md`) is the stale side — fixed there too), bybit-futures delete
   [BLOCKED-OPERATOR]) → forks `data_source_provenance_enforcement_2026_07_24.md` (~17 open todos: source-column
   backfills, cefi empty/failed-path forwarding, 23 remaining MTDS handlers needing DeFi-catalog preflight, prod
   source-distribution audit, a dedup-key decision needing human sequencing) and
@@ -705,10 +707,12 @@ batch)
 
 ## Todos
 
-- [ ] [DOC] P1. **Track open items are not tracked as checkbox work in this digest** — e.g. Track 1's G5 ("no AG has
-      started backfill-to-100%", gated but not tracked as executable work anywhere in this corpus) and Track 14's
-      CF-manifest-audit job (`uts-prod-cf-manifest-audit` Cloud Run Job, failing daily since 2026-07-04, fully open and
-      unresolved).
+- [ ] [OPERATOR-DECISION] P1. **Track 1's G5 ("no AG has started backfill-to-100%") is gated but not tracked as
+      executable work anywhere in this corpus** — needs an operator ruling on whether that's in-scope here or lives
+      entirely inside each AG's own consolidated closeout (this doc's own close-out criterion states the same
+      question, unresolved). **NARROWED 2026-08-20 (T1 slice)**: this todo's other named example, Track 14's
+      CF-manifest-audit job, is RESOLVED (see the Track 1/G2 entry above) — G5 is now the sole remaining untracked
+      item.
 
 ## Codex SSOTs (read before touching a track)
 
