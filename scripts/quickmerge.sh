@@ -1230,6 +1230,34 @@ REPO_DIR="${REPO_DIR:-$REPO_ROOT}"
 REPO_NAME=$(basename "$REPO_DIR")
 cd "$REPO_DIR"
 
+# ── EXIT GUARD: fail loudly when quickmerge stops before a commit landed ──────────────────
+# quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md (P2): the worst failure mode of a
+# shipping tool is a SILENT no-op -- `set -e` aborts this script on a mid-pipeline command
+# failure (the observed "re-enters setup.sh, then exits with no message" symptom) and the caller
+# cannot tell "blocked by a gate" from "succeeded" without running `git ls-files` afterwards. Most
+# non-zero exits already print their own message; this trap is the catch-all for the ones that do
+# not (a bare errexit abort at any stage before the push). _QM_PUSHED is set to 1 only after the
+# post-push ancestry check passes, so a non-zero exit with _QM_PUSHED still unset is, by
+# construction, "stopped before committing". Exit 10 (pushed but your change did not land) keeps
+# its own message: _QM_PUSHED=1 is set before exit 10 can fire, so it is not re-labelled. $1 lets
+# a test call this with an explicit rc; the trap passes nothing, so $? (the exit status) is used.
+_qm_exit_guard() {
+  local rc="${1:-$?}"
+  [ "$rc" -eq 0 ] && return 0
+  [ "${_QM_PUSHED:-0}" = "1" ] && return 0
+  {
+    echo
+    echo "[${REPO_NAME:-?}] ❌ quickmerge exited WITHOUT committing/pushing (exit code $rc)."
+    echo "   No commit landed on ${BRANCH:-<target-branch>} — your files may still be uncommitted or untracked."
+    echo "   Treat this as BLOCKED, not SHIPPED. If the output above names no specific failure,"
+    echo "   surface the hidden gate error directly:"
+    echo "     bash scripts/setup.sh            # env-prep failure (setup.sh re-entry)"
+    echo "     prek run --files <paths>         # pre-commit hook failure (frontmatter / conflict-marker / ...)"
+    echo "   See plans/active/issues/quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md."
+  } >&2
+}
+trap _qm_exit_guard EXIT
+
 # ── Per-repo auto-build default (observability surfaces) ──────────────────────
 # Operator decision 2026-06-15: the operator-facing observability surfaces
 # (deployment-api / deployment-ui / unified-trading-api / unified-trading-system-ui)
@@ -3362,6 +3390,9 @@ if ! git merge-base --is-ancestor "$_QM_PUSHED_SHA" "origin/$BRANCH" 2>/dev/null
   exit 1
 fi
 echo "[$REPO_NAME] ✅ post-push ancestry verified — ${_QM_PUSHED_SHA:0:9} is an ancestor of origin/$BRANCH"
+# Mark the push as landed so the EXIT guard (top of file) does not re-label a later non-zero
+# exit (e.g. exit 10, "pushed but your change did not land") as "exited without committing".
+_QM_PUSHED=1
 # Ancestry proves A commit landed. It does not prove YOURS is in it -- measured 2026-08-10, a
 # scoped run passed this exact gate having pushed a commit with neither named file. Exit 10 is
 # the fleet-wide "your edits are not where you think they are, recover before re-running" code
