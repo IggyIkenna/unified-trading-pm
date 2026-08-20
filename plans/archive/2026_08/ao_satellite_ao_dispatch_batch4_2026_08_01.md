@@ -26,7 +26,7 @@ related:
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
-    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"

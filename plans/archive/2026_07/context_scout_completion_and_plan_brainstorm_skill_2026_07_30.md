@@ -58,7 +58,7 @@ context_scope:
     scripts/plan-hygiene/generate_context_scope_inventory.py,
     agent-orchestrator/server/prompts.py,
     cursor-configs/skills/context-scout/SKILL.md,
-    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
   ]
 ---
 
@@ -158,7 +158,7 @@ choice (human-executed, not AO-dispatched).
       names) completed the corpus-wide backfill + the `docspec.py` FieldSpec hardening flip.**
       `generate_context_scope_inventory.py` now reports 888/888 UP_TO_DATE; `check_frontmatter_schema.py` corpus-wide
       is clean except 4 genuinely `locked_by`-locked docs (follow-up filed, not bypassed). Full detail:
-      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` todo 1. Backfill `context_scope` across the full active plans/issues corpus** — the operator's original ask
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md` todo 1. Backfill `context_scope` across the full active plans/issues corpus** — the operator's original ask
       for this whole workstream (tag ALL active plans + issues with a minimal reading-list, as a hardened requirement),
       which this plan's own scope never covered (it only finished the plumbing). Per
       `generate_context_scope_inventory.py`'s live count: 559 in-scope docs, 553 `NEVER_SCOUTED`. In progress as of this
@@ -166,7 +166,7 @@ choice (human-executed, not AO-dispatched).
       by unrelated transient conditions (see Progress Log) — continue in small clean batches until the corpus is fully
       scouted, then flip `docspec.py`'s `context_scope` FieldSpec from `Req.E` to `Req.R` for `plan`+`issue` as the
       final hardening commit. **This is the same item actively tracked and worked as todo 1 of
-      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`** (that doc is the live tracking home — see this
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`** (that doc is the live tracking home — see this
       doc's own Progress Log entry below). **Not flipped here — still open.**
       `ao_satellite_ao_dispatch_batch20_2026_08_13.md`'s finalize session (2026-08-14) confirmed this todo was a
       duplicate extraction of the same batch3 work and, rather than leave a re-dispatchable duplicate, did real
@@ -196,7 +196,7 @@ choice (human-executed, not AO-dispatched).
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA-STALE
   (already-duplicated) — citation fix only, not a reclassification. This doc's sole remaining checkbox (`[SCRIPT] P0`,
   backfill `context_scope` corpus-wide) is the SAME work item actively extracted and tracked as todo 1 of
-  `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (already `assigned_vm: planning`, with real incremental
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (already `assigned_vm: planning`, with real incremental
   progress recorded there as of 2026-08-01: `NEVER_SCOUTED` reduced 609→386). This doc's own checkbox simply never got a
   pointer back to that extraction. Added the citation inline above; `assigned_vm` correctly stays `NA` here — flipping
   it would dispatch a duplicate of already-active work.

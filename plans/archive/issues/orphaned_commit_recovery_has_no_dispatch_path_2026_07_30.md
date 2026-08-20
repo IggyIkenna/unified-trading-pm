@@ -320,7 +320,7 @@ authority is the expensive answer to a question that a verifier answers for free
       `ip-172-31-5-118` (the prior attempt only checked local filesystem access, never tried SSM) — ran the verifier
       against all 24 distinct repo paths across the 9 named slots (29 refs now, up from 25, 4 new cascade branches
       accumulated in the 2 intervening days). Result: **16 SUPERSEDED, 10 STILL-ORPHANED, 3 WOULD-REGRESS, 0 GONE** —
-      full per-ref table in `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log (2026-08-01,
+      full per-ref table in `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log (2026-08-01,
       "todo 3 sub-part 3 — completed" entry). Confirms this doc's own first-pass predictions: slot-2/3's near-misses are
       genuinely WOULD-REGRESS (net -139/-198), slot-12's `unified-trading-library c927ec58` residual is real
       (STILL-ORPHANED, net 0, the `lst_staking_yields`→`lst_yields` docstring question is still open), and the ~16
