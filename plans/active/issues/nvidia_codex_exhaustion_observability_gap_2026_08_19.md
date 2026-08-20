@@ -281,23 +281,33 @@ additions this surfaces, worth stating precisely rather than just appended:
       reversed-primary/secondary case), a real `GetAccountRateLimitsResponse`/`RateLimitSnapshot`/
       `RateLimitWindow` round-trip through the actual DB write path, and graceful SDK-call-failure handling.
       **Real live verification post-deploy**: `journalctl -u codex-bridge` shows `CodexRateLimitPoller started
-      (interval=300s)` — the poller is genuinely running in production. **New finding surfaced by this same
-      deploy, not yet fixed — flagged as its own item below**: the poller's first real tick will fail, because
-      `~/.codex/auth.json`'s token is expired on the production VM (confirmed via the SAME journal read, see
-      next item). **Evidence: agent-orchestrator@25589117c3.** Repo: agent-orchestrator.
+      (interval=300s)` — the poller is genuinely running in production. **Evidence:
+      agent-orchestrator@25589117c3.** Repo: agent-orchestrator.
 
-- [ ] [OPERATOR] P1. **NEW, found live 2026-08-20 during the rate-limit-poller deploy above — real,
-      currently-blocking**: `codex-bridge.service`'s `~/.codex/auth.json` token is EXPIRED on the production
-      VM. `journalctl -u codex-bridge` shows repeated real failures well before this session's own changes:
-      `TransportClosedError: Codex process closed stdout`, with the captured `stderr_tail` showing
+- [x] ✅ [OPERATOR] P1. **NEW, found live 2026-08-20 during the rate-limit-poller deploy — self-corrected within
+      the same session, not currently blocking.** `journalctl -u codex-bridge` initially showed a real
+      `TransportClosedError: Codex process closed stdout` with a captured `stderr_tail` reading
       `codex_models_manager::manager: failed to refresh available models: unexpected status 401 Unauthorized:
-      Provided authentication token is expired.` (multiple real timestamps, ~08:50-09:35 UTC 2026-08-20).
-      This affects EVERY Codex/Luna capability on this fleet, not just the new poller — any real dispatched
-      Codex turn is presumably ALSO failing with the same expired-token error, a bigger, more urgent gap than
-      the poller alone. **BLOCKED-CREDENTIALS**: needs the operator to re-run the Codex CLI's login flow on
-      the VM (`codex login` or equivalent, whichever the original `~/.codex/auth.json` provisioning used) —
-      not something a service credential can self-refresh. Done when: a real Codex turn (or this poller's own
-      next tick) succeeds against the VM without a 401. Repo: agent-orchestrator.
+      Provided authentication token is expired.` (timestamps ~08:50-09:35 UTC 2026-08-20) — read at first as a
+      currently-expired token needing an operator re-login. **Corrected by direct re-check, not assumed**:
+      inspecting `~/.codex/auth.json`'s structure (key names/types only, never the token values) showed
+      `auth_mode: "chatgpt"` with a standard `access_token`/`refresh_token` pair (the same short-lived-access
+      + rotating-refresh-token shape Claude's OWN interactive `/login` path uses —
+      `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`'s comparison table — NOT a
+      long-lived install-once credential) plus `last_refresh: 2026-08-20T09:21:34Z`, only ~4h before this
+      check — meaning the refresh_token silently self-healed shortly after the observed crash. A real live
+      probe (`Codex().thread_start(...).run(...)` — the exact construction `run_codex_turn`/the new poller
+      use) confirmed a genuine turn succeeding right now (`"alive"`), not a stale/cached success. **Net: the
+      401 was a real, transient failure (not yet root-caused — network blip vs. a race between concurrent
+      codex subprocess launches are both plausible, neither confirmed), auto-recovered via the CLI's own
+      refresh logic, and is NOT currently blocking anything.** Left open as a real, unresolved question for a
+      future session: whether `auth_mode: "chatgpt"` (session-based, needs periodic silent refresh, apparently
+      not always reliable) should be swapped for an API-key-based login (`auth.json`'s own `OPENAI_API_KEY`
+      field, currently `null`; the SDK exposes `Codex().login_api_key()` / `ApiKeyLoginAccountParams` for
+      exactly this) — that would remove the refresh dependency entirely, mirroring Claude's own
+      `setup-token`/`ANTHROPIC_API_KEY` split, but shifts billing from whatever ChatGPT plan is behind the
+      current login to metered OpenAI API credits. An operator decision (cost tradeoff), not something to
+      switch unilaterally. Repo: agent-orchestrator.
 - [ ] [BACKEND] P3. **Stronger proof, if wanted**: reproduce the NVIDIA 429 through a real (isolated,
       non-fleet) AO dispatch path end-to-end and confirm via the instance's own `activity_log`/
       `AccountUsageRow` whether anything gets recorded — the piece explicitly not done in this doc (see
