@@ -345,7 +345,8 @@ todos only to confirm they are data-movement, then leave it.
       that first, then either register `manual_router` on `main.py` or record why it is deliberately CLI-only.
 - [ ] [BACKEND] P1. Verify the production live orchestrator actually satisfies the `LiveOrchestrator` protocol it is
       cast to — untested end to end, and the prior pass spot-checked location only. Evidence:
-      `/plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      `/plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`
+      (archived — fixed, see this plan's own Progress Log for the corrected root cause).
 
 ### Correctness P0s — silently wrong today
 
@@ -517,7 +518,7 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@0c0b6a1a40` | Pendle wired, LEND only |
 | `execution-service@7202047877` | per-action `instruction_action_support` (T5's 2nd, action-level ask) |
 | `execution-service@35f0bfb1b` | `OrderStatus.PENDING`/`.OPEN`→`.PENDING_NEW`/`.NEW` rename, UAC sites only |
-| `execution-service@<see next flip>` | live-orchestrator protocol mismatch: real fix, not the diagnosed one — below |
+| `execution-service@197e80116` | live-orchestrator protocol mismatch: real fix, not the diagnosed one — see below |
 | `batch-live-reconciliation-service@1e210addb1` | W12 pause / exclusion / soft-delete audit |
 | `unified-trading-pm@291da5e837` | (sub-agent) greeks-service promote-PR issue closed + archived |
 
