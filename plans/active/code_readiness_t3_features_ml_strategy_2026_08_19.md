@@ -162,6 +162,38 @@ todos only to confirm they are data-movement, then leave it.
       the same pattern market data already uses), (2) the counterparty-facing HTTP/WebSocket surface itself. A
       matching item is filed on T4's `## Inbound requests` for the execution-subscribing half — don't let either
       side stall waiting on the other.
+      **Correction + scoping, 2026-08-20 (investigated, deliberately NOT built this session — see reasoning
+      below)**: the "no internal messaging" finding is TRUE for the general case but needs one correction — a
+      narrow instance of exactly this bridge already exists and works end-to-end for 3 strategy families
+      (`CARRY_AND_YIELD`, `ARBITRAGE_STRUCTURAL`, `STAT_ARB_PAIRS`, the "Group B" multi-leg `AtomicInstruction`
+      mechanism): `strategy_service/engine/strategies/v2/live_routing.py::publish_atomic_instruction` (real
+      production caller: `cli/handlers/group_b_handler.py`) publishes via UTL `EventTransport`;
+      `execution_service/v2/atomic_instruction_router.py::route_atomic_instructions` subscribes and calls
+      `AtomicLegExecutor` directly — ruled + shipped 2026-07-28
+      (`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`). **This is the exact pattern to
+      mirror for the general case, not a design question** — the architecture (InMemoryTransport for paper,
+      Pub/Sub for live, same code path) is already proven.
+      **What's genuinely still missing, and why not built this session**: the other ~56 archetypes' `on_tick()`
+      returns `list[StrategyInstructionEnvelope]` (the general, single-leg instruction type — distinct from
+      `AtomicInstruction`) via `V2EngineOrchestrator.on_tick()`. Traced every production caller of
+      `V2EngineOrchestrator.on_tick(` and found: (a) `phase6_driver.py`'s `Phase6Driver.tick()` wraps it and
+      explicitly just returns the list to ITS caller — but `Phase6Driver` itself has ZERO production
+      instantiation sites anywhere in the repo (unwired, matching the state-fabric doc's R20 "mirror failure"
+      pattern — code that exists, is presumably tested, but is wired to nothing); (b) `batch_harness.py`'s
+      `V2BatchHarness` is the other caller, but it's explicitly BATCH-only (`STRATEGY_DISPATCH_MODE={v2_shadow,
+      v2_prod}`, historical backtesting), not live/paper. **Net: for the general (non-Group-B) case, no live/paper
+      caller of the orchestrator's tick loop was found at all in this pass** — the gap is deeper than "add a
+      publish call", it may require first confirming/building the live/paper tick-driver itself, or that driver
+      may exist under a name/pattern this pass didn't find (paper mode's real path — `paper_run_attribution.py`/
+      `paper_run_passive.py` in `engine/backtest/`, per this session's earlier PnL investigation — was NOT traced
+      against `V2EngineOrchestrator.on_tick()` specifically; they may or may not be the same call chain). This is
+      genuinely unresolved, not merely unbuilt, and routes real trading decisions once live — not something to
+      guess at rather than trace fully. The counterparty-facing HTTP/WebSocket surface (the second half) needs
+      separate real product/security design (auth model, rate limits, what data is exposed) not attempted here
+      either. **Recommended next step for whoever picks this up**: trace `paper_run_attribution.py`/
+      `paper_run_passive.py`'s actual call chain back to confirm whether it goes through
+      `V2EngineOrchestrator.on_tick()` or a separate path, before designing the publish wiring — that single trace
+      resolves the open question above.
 - [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
       unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
       edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
@@ -806,3 +838,22 @@ know my own slot's state) or ignoring it (the next reader gets no signal at all)
 **Shipped**: `features-service@fa78040e30` — Yahoo Finance replaces the banned-vendor Polygon.io
 `corporate_actions` adapter (full detail on the flipped checkbox above). `unified-trading-pm@ebaa20df4d` — corrected
 `tradfi-databento-sourcing-ssot.md`'s stale removal-complete banner (third time this exact claim needed correcting).
+
+## Progress Log — 2026-08-20 session 6
+
+**Worked the `## Inbound requests` section for the first time** — 2 of T1's `[FROM-T1]` items were small, well-scoped,
+mechanical fixes; both shipped `strategy-service@8a7f80e8`: (1) `gcs_storage_service.py::write_instructions` was
+hand-rolling its own `strategy_instructions` path, bypassing T1's `mode=` PATH_REGISTRY fix — now routes through
+`build_path()`, byte-parity with the read side (`pnl/adapters/domain_adapter.py`), zero behavior change since it had
+zero callers. (2) `staked_basis.py`'s 8-entry hardcoded `_STAKING_PROTOCOL_CHAIN` dict deleted, replaced with UAC's
+`get_chain_for_protocol()` — a cross-repo parity test on the UAC side already pins all 8 of this repo's exact values.
+
+**The P0 item (counterparty-facing surface + messaging bridge) got a real, evidence-based re-scoping, not a build.**
+Traced the actual code: a working publish→subscribe→execute bridge already exists via UTL `EventTransport` but is
+scoped narrowly to 3 multi-leg strategy families (`AtomicInstruction`/"Group B"). For the other ~56 archetypes
+(`StrategyInstructionEnvelope`, the general type), the live/paper caller of the orchestrator's tick loop could not be
+located — one candidate (`Phase6Driver`) is itself unwired dead code, the other (`V2BatchHarness`) is batch-only. This
+is a genuine open question (not yet a design decision, not yet buildable) rather than a straightforward "add a publish
+call" — routes real trading decisions once live, so traced rather than guessed. Full detail + the recommended next
+trace (follow `paper_run_attribution.py`'s real call chain) on the flipped-but-still-partially-open checkbox above.
+Did not attempt the HTTP/WebSocket counterparty surface (needs real product/security design, not mine to invent).
