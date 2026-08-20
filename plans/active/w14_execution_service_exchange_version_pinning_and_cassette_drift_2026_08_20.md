@@ -71,12 +71,13 @@ context_scope:
 
 ### Phase 1 — establish what "version" means per transport (design, blocks everything after)
 
-- [ ] [AGENT] P0. **Enumerate every venue adapter by transport type**, real directory walk (not estimated, same
+- [x] [AGENT] P0. **Enumerate every venue adapter by transport type**, real directory walk (not estimated, same
       discipline W15 used): ccxt-wrapped CeFi, native-REST CeFi
       (`trade_execution/adapters/*_native.py`/`*_rest_transport.py`), DeFi on-chain protocol connectors
       (`defi_execution/protocols/`), sports bookmaker/exchange adapters (`sports_execution/adapters/`), TradFi
       gateway adapters. Record the count and file list per category — this is the input every later todo sizes
-      against.
+      against. — Evidence: `rg --files` walk in execution-service; CCXT 8, native REST 3 (+ 1 shared transport),
+      DeFi 31, sports external 7, TradFi 7; cassette files 17 across the three scoped cassette trees.; slot 4 inventory commit 8fa0a150a1
 - [ ] [AGENT] P0. **Decide what "exchange version" concretely means per transport category** — this is the real
       open design question, not mechanical. Candidates to evaluate per category, pick one (or a per-category mix)
       and write the decision down with reasoning: (a) an explicit API-version STRING the adapter asserts against
