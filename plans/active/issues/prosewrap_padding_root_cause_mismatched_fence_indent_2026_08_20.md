@@ -53,7 +53,7 @@ source: >-
   Discovered 2026-08-20 while resolving an ldr_qg_failure escalation (agt-bb4764) for
   unified-trading-pm@f49bfafa; confirmed as a distinct, still-open root cause after observing a peer worker's
   fix (unified-trading-pm@ec98ae0d8a, agt-910a14) regress within the same CI cycle. Fixed for this one file at
-  unified-trading-pm@c2dc7d85b6 by dedenting each closing fence + trailing prose to the 6sp continuation indent;
+  unified-trading-pm@4d87f3a42d by dedenting each closing fence + trailing prose to the 6sp continuation indent;
   verified content-preserving (`git diff -w` empty) and held across a real pre-commit prettier pass.
 ---
 
@@ -92,21 +92,47 @@ independent worker sessions hit this in the same CI cycle for the same file (`un
 doc's author, then `unified-trading-pm@ec98ae0d8a` a peer) — both verified clean locally, both regressed within
 minutes of landing.
 
-## The real fix
+## UPDATE 2026-08-20 (agt-bb4764, second pass): the "dedent closing fence to match opening" fix was NOT sufficient
 
-Dedent the closing fence (and its trailing prose paragraph) to match the OPENING fence's indent — the list-item
-continuation indent, 6sp in this doc's convention. Applied for this file at `unified-trading-pm@c2dc7d85b6`; verified
-idempotent-enough to survive a real pre-commit prettier pass (0 violations post-commit) and content-preserving
-(`git diff -w` empty).
+The fix described below (dedent closing fence to the opening fence's 6sp) was applied at `c2dc7d85b6` and landed at
+`8a03c44b20`, but the file regressed AGAIN within the same CI cycle — a subsequent `quality-gates-v2` run (`32325480914`)
+still failed `check_prosewrap_padding` with 14 violating lines, now at DIFFERENT line numbers (249-365) and with the
+code-fence CONTENT itself ballooned to 40-56sp indent (vs the original ~14-18sp) — i.e. matching-the-closing-fence was
+not idempotent under repeated `prettier --write` passes from this high-churn branch; it only bought one extra cycle
+before regrowing worse.
+
+**The actual durable fix**: this file already has 5 fenced blocks that NEVER trip the checker — `​```yaml` at lines
+123/178/228/384/426 (frontmatter-style blocks) — and every one of them is a **column-0 fence**, not nested inside a
+list-item's indented continuation. Every unstable block was a `​```bash`/`​```python` fence opened at 6sp (the list
+continuation indent) to visually "hang" under a `- [ ]` bullet. Prettier's markdown printer does not idempotently
+re-indent a fenced block nested inside a list-item continuation across repeated passes on this branch/version — each
+pass grows it further. Moving all 9 unstable blocks (2 previously-unaudited ones at B.1.2/B.1.3 plus the 7 already
+attempted at B.2.1/B.2.2/B.2.3/B.2.5/B.2.6/B.3.2/B.3.4) to column-0 fences, matching the 5 proven-stable ones, and also
+deduping a verbatim-duplicated trailing "Note:" paragraph found at B.3.4 (lines 362-365, a second, distinct casualty of
+the same repeated-reformat churn) is the fix that actually holds. Verified via the SAME reproduction method used to
+diagnose this originally: `bash scripts/hooks/prettier-autostage.sh` run twice in a row on the file post-fix produces
+byte-identical output (true idempotency, not just "0 violations this one time"), and `check_prosewrap_padding.sh`
+reports 0 violations both before and after. Landed at `unified-trading-pm@<TBD — see quickmerge output>`.
+
+**Lesson for the corpus-wide audit todo below**: the structural check should test for **fences nested inside a
+list-item continuation indent at all** (opening-fence-indent > 0 while not being a stand-alone top-level block), not
+just "opening indent != closing indent" — a doc could have both fences at an equally-wrong non-zero indent and still be
+unstable under repeated prettier passes.
+
+## The real fix (SUPERSEDED — see UPDATE above; kept for history)
+
+~~Dedent the closing fence (and its trailing prose paragraph) to match the OPENING fence's indent — the list-item
+continuation indent, 6sp in this doc's convention.~~ This did not hold. See UPDATE 2026-08-20 above for the fix that did.
 
 ## Open follow-up
 
-- [ ] [SCRIPT] P2. Audit the rest of the corpus for the same opening/closing-fence indent mismatch pattern —
-      `check_prosewrap_padding.sh` only flags a doc AFTER the trailing prose crosses its indent threshold, so a doc
-      with a mismatched fence but short/absent trailing prose could be silently carrying the same landmine, waiting
-      to trip on some future unrelated prettier pass. A grep-based structural check (compare each fenced block's
-      opening-fence indent to its closing-fence indent, corpus-wide) would catch this class directly instead of
-      waiting for the symptom.
+- [ ] [SCRIPT] P2. Audit the rest of the corpus for fenced code blocks nested inside a list-item continuation indent
+      (opening fence indented >0sp and not a stand-alone top-level block) — this is the actual unstable pattern, not
+      merely an opening/closing indent MISMATCH (a block with both fences equally non-zero-indented is still unstable
+      under repeated prettier passes, per the UPDATE above). `check_prosewrap_padding.sh` only flags a doc AFTER the
+      trailing prose crosses its indent threshold, so a doc with this pattern but short/absent trailing prose could be
+      silently carrying the same landmine. A grep-based structural check (any fence opened at column >0 inside a list
+      item, corpus-wide) would catch this class directly instead of waiting for the symptom.
 - [ ] [SCRIPT] P3. Consider extending `check_prosewrap_padding.sh` (or a small companion check) to detect
-      opening/closing fence indent mismatches directly — this would let a worker fix the ROOT CAUSE the first time
-      instead of a downstream symptom that silently regrows.
+      list-continuation-nested fences directly (not just indent mismatches) — this would let a worker fix the ROOT
+      CAUSE the first time instead of a downstream symptom that silently regrows across every subsequent prettier pass.
