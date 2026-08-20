@@ -224,7 +224,7 @@ below don't need todo 5's code to have landed first): a new module
       `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md` (filed, out of this
       todo's scope).
 
-- [x] ✅ [REVIEW] P2. Audit-only (no fix) — for every OTHER function in `deployment_api/clients/deployment_service_client.py`
+- [ ] [REVIEW] P2. Audit-only (no fix) — for every OTHER function in `deployment_api/clients/deployment_service_client.py`
       (`calculate_shards`, `get_data_status`, `cancel_vm_jobs`, `get_vm_status_batch`, `quota_acquire_batch`,
       `get_cloud_run_status_batch`, `quota_release_batch`, `get_deployment_events`, `get_vm_events`, `live_rollback`,
       `get_live_health`), determine whether each has a real, currently-invoked caller — grep every route/service in
@@ -236,26 +236,7 @@ below don't need todo 5's code to have landed first): a new module
       todo's evidence, AND — if the table finds any OTHER live-broken function beyond `create_deployment` — a new
       issue doc is filed at `plans/active/issues/deployment_service_client_broken_functions_<date>.md` (fix-scoped
       follow-up, out of THIS plan's scope) per the findings-triage HARD RULE (never leave a live-broken function as a
-      dangling prose note). **Evidence (slot-15 audit, 2026-08-20):**
-      | function | live caller | recommendation |
-      |---|---|---|
-      | `calculate_shards` | Yes — `deployment_manager.py:200,320` | Fix like `create_deployment` |
-      | `get_data_status` | Yes — `routes/data_status_helpers.py:43` | Fix like `create_deployment` |
-      | `cancel_vm_jobs` | Yes — `_deployment_processor_helpers.py:53`, used by VM processor/cleanup | Fix like `create_deployment` |
-      | `get_vm_status_batch` | Yes — `routes/deployment_state.py:287` | Fix like `create_deployment` |
-      | `quota_acquire_batch` | No route/service/worker/UI caller found | Remove after external-import check |
-      | `get_cloud_run_status_batch` | Yes — `routes/deployment_state.py:223`, `_deployment_processor_cloud_run.py:33`, `services/event_processor.py:332` | Fix like `create_deployment` |
-      | `quota_release_batch` | No route/service/worker/UI caller found | Remove after external-import check |
-      | `get_deployment_events` | Yes — `_lifecycle.py:303`; UI `client.ts:3804` → `DeploymentDetails.tsx:411` | Fix like `create_deployment` |
-      | `get_vm_events` | Yes — `_lifecycle.py:331`; UI wrapper `client.ts:3816` has no component caller found | Fix backend; remove or wire unused UI wrapper |
-      | `live_rollback` | Yes — `_lifecycle.py:361`; UI `client.ts:3826` → `DeploymentDetails.tsx:441` | Fix like `create_deployment` |
-      | `get_live_health` | Yes — `_lifecycle.py:400`; UI `client.ts:3840` → `DeploymentDetails.tsx:423` | Fix like `create_deployment` |
-
-      All nine live functions still POST via `_base_url()` and share the documented unreachable `localhost:9000`
-      transport (`deployment_service_client.py:6-16,29-31`; `deployment_api_config.py:615-619`; no
-      `google_cloud_run_v2_service` in `deployment-service/terraform/gcp/`). Follow-up issue filed:
-      `/plans/active/issues/deployment_service_client_broken_functions_2026_08_20.md`. No code was changed by this
-      audit.
+      dangling prose note).
 
 - [ ] [DOC] P2. Correct `deployment-service/docs/ARCHITECTURE.md`'s claim "It is not a long-lived service —
       deployment-api orchestrates it as a library." Verify precisely what "library" means today: deployment-api's

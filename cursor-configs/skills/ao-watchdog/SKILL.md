@@ -199,11 +199,6 @@ when per-slot spend isn't available, not the primary source now that it is.
 real ratio from actual usage; its own module docstring states list price "does NOT" reflect real spend, and the
 last calibration on record (2026-08-10, a 4h25m window) measured **~190x** — read this module's current live
 value at run time, don't hardcode 190x here either, it's a measured-not-fixed number that will keep moving.
-**Correction (2026-08-20, live run):** there is currently no continuously-updated STORED value to read —
-`scripts/orchestrator/calibrate_account_value.py` is read-only/print-to-log only and persists nothing, so "read
-the live value" in practice today means re-reading the 2026-08-10-dated docstring constant, not a fresh
-measurement. Say so explicitly when reporting this figure, and treat persisting calibration runs somewhere
-queryable as an open follow-up rather than assuming freshness.
 
 **Do not conflate this with the separate ~20x figure in `unified-trading-pm/codex/11-project-management/
 cloud-spend-forecast-and-credits-2026-08.md`** — that doc's "~20x gap … IS the credit ask" is a different,
@@ -260,10 +255,7 @@ online`) forces the dashboard to `level="crit"`. Read that directly rather than 
   (2) **`ResourceHistoryLoop`** (`server/resource_history.py`, standalone `resource-history-sampler.service`)
   samples `host_resources.py::snapshot()` (cpu%, iowait%, load avg, ram/swap/disk %, cgroup mem) every 5s to a
   **per-day JSONL file** at `config.resource_history_dir()/<date>.jsonl` (`STATE_DIR/resource_history/`, live —
-  `resource_history.py:202-206`; **confirmed live path (2026-08-20)**:
-  `/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/resource_history/<date>.jsonl` — use
-  this directly over SSM rather than a blind `find /` sweep, which timed out at the default 20s on the first live
-  run), mirrored to GCS/S3 via the separate `resource-history-backup.timer` +
+  `resource_history.py:202-206`), mirrored to GCS/S3 via the separate `resource-history-backup.timer` +
   `resource_history_backup_once.py`. **Correction (2026-08-18, this skill previously said BigQuery here — verified
   wrong):** this JSONL log is NOT the same system as BigQuery `deployment_operational_data.resource_samples` — that
   table is written via Pub/Sub from deployment-service's `HeartbeatDaemon` and is scoped to
@@ -495,14 +487,7 @@ amended often; re-read it fresh this run).
 - **Read today's/this-week's actual channel history** via `python3 unified-trading-pm/scripts/dev/slack-read-channel.py
 agent-orchestrator-alerts <hours>` (also check `ci-failures` if the run's findings touch CI) before asserting
   anything about what "actually paged" — don't infer it from the code alone; the doc and the live channel can
-  drift apart, and that drift is itself the kind of finding this step exists to catch. **Gap confirmed live
-  (2026-08-20)**: this script can fail in a fresh interactive/laptop session with
-  `gcloud failed to resolve SLACK_ALERTS_READER_BOT_TOKEN` when the pinned service account isn't activated
-  locally — try `gcloud auth activate-service-account` for the SA named in
-  `/codex/05-infrastructure/agent-slack-read-access.md` first; if that's not available in-session, fall back to
-  reading the VM's `data/state/*.dedup.json` files (which alert conditions fired + when, from dedup-state
-  timestamps) as a partial substitute rather than skipping the alert-quality pass entirely, and say explicitly
-  that the check is partial/degraded in the report.
+  drift apart, and that drift is itself the kind of finding this step exists to catch.
 
 ## Step 10 — day-over-day diff: yesterday vs the day before
 
@@ -525,13 +510,7 @@ generic "give me day N" API across this fleet) — use the one that actually exi
    (`/codex/04-architecture/agent-orchestrator-alerting.md` digest glossary), grouped by day, as one more query in
    the same aggregated remote script Step 1 already runs — don't add a separate round trip. File a follow-up plan
    todo for a real `by_day` route mirroring `compute_dispatch_efficiency_by_day` (`fleet_kpis.py:363-385`) rather
-   than re-deriving this ad hoc every run. **Gap confirmed live (2026-08-20)**: a direct
-   `GET /api/activity?types=escalation_dispatched,escalation_resolved,slot_blocked&since=...` attempt **500'd** on
-   the live server — don't treat this as a permanently-missing route without re-checking; file/confirm a follow-up
-   to root-cause the 500 (param combination vs a genuine route bug) rather than assuming it's simply absent. **Gap confirmed live (2026-08-20)**: a direct
-   `GET /api/activity?types=escalation_dispatched,escalation_resolved,slot_blocked&since=...` attempt **500'd** on
-   the live server — don't treat this as a permanently-missing route without re-checking; file/confirm a follow-up
-   to root-cause the 500 (param combination vs a genuine route bug) rather than assuming it's simply absent.
+   than re-deriving this ad hoc every run.
 4. **Slack alert volume — no offset param; split it yourself.** `slack-read-channel.py <channel> 48 --json-only`
    (there is no "hours N-to-M ago" flag) pulls a 48h window to one JSON file; bucket its messages by `ts` at the
    24h boundary to get yesterday's count vs the day-before's.

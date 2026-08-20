@@ -202,14 +202,12 @@ todos only to confirm they are data-movement, then leave it.
       divergence went unnoticed from 2026-05-12 to 2026-07-31. T1 already pins the ENUM against the codex table
       (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
       SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
-- [x] ✅ [FROM-T1] P2. **Decided: `PARTIALLY_FILLED -> CANCELLED / EXPIRED` IS a legal transition** —
-      `unified-trading-pm@c74d869b36` (codex `order-state-machine.md` amended: diagram + events table widened,
-      ruling + evidence recorded 2026-08-20). Real CLOB venues let an operator cancel the still-working remainder
-      of a partially-filled order (final status reports cancelled with nonzero filled quantity, never forced to
-      `FILLED` first); corroborated in execution-service's own code, which already treats `PARTIALLY_FILLED` as an
-      open/cancellable state (`trade_execution/oms/tracker.py`). The codex doc — the SSOT — is now amended; the
-      code (`ORDER_STATUS_TRANSITIONS` in UAC) is NOT yet widened to match, filed as a `[FROM-T4]` inbound request
-      on T1's plan since T4 does not edit UAC directly.
+- [ ] [FROM-T1] P2. Decide whether `PARTIALLY_FILLED -> CANCELLED / EXPIRED` is a legal transition. T1 transcribed
+      `ORDER_STATUS_TRANSITIONS` edge-for-edge from the codex diagram, which draws exactly ONE edge out of
+      `PARTIALLY_FILLED` (full fill) — deliberately NOT widened on intuition, because a too-permissive machine
+      silently accepts an illegal transition whereas a too-strict one fails loudly. Real venues do cancel
+      partially-filled orders, so this likely needs the codex diagram amended first (the doc is the SSOT; the UAC
+      map is its projection). You own the venue behaviour evidence, so this is your call to make and T1's to land.
 
 ## Todos
 
@@ -326,20 +324,9 @@ todos only to confirm they are data-movement, then leave it.
       `custody/local_key.py:15,140` is wired the same way. The issue's remaining open item is `[OPERATOR]` P0
       (inspect live `wallet_provisioning.json`), which this tranche cannot self-serve. Evidence:
       `/plans/active/issues/defi_cloud_kms_silent_wrong_chain_id_fallback_2026_08_16.md`.
-- [x] ✅ [BACKEND] P0. Reach-test every connector module — **execution-service@0c0b6a1a40**. **Two of this
-      todo's three claims were stale; the third was real.** MEASURED: Marinade, Kamino and Jupiter do NOT have
-      zero production callers — `cli/handlers/live_execution_handler.py:519-521` constructs all three and passes
-      them to `DeFiAdapter` at `:553`. Pendle WAS genuinely unreachable: the connector and its `PENDLE-ETHEREUM`
-      venue map existed, but nothing instantiated it, and it was absent from the `defi_execution` facade, from
-      `DeFiAdapter`, and from production construction. Now wired end to end — facade export, adapter constructor
-      + `ensure_connected`, route table, real construction in `_build_defi_adapter`.
-      **Wired for LEND ONLY, deliberately.** `PendleConnector` has no borrow/repay, and its `withdraw()` is
-      simulation-only by its own docstring (real `YT.redeemPY()` with maturity branching is unwired). Routing a
-      live WITHDRAW there would return a fabricated success — the same defect class as the CCXT `withdraw()`
-      stub this tranche already fixed — so `PENDLE_OPERATIONS` is a strict subset of `LENDING_OPERATIONS` and
-      WITHDRAW/BORROW/REPAY raise "Unsupported lending venue". Tests pin that so nobody "completes" the family
-      without implementing redemption. The readiness check now derives `PENDLE-ETHEREUM` as `live=deployed`,
-      actions `('LEND',)` instead of all-`none`. Evidence:
+- [ ] [BACKEND] P0. Reach-test every connector module. Marinade, Kamino and Jupiter connectors have zero production
+      callers; the Pendle connector is built but never instantiated in `DeFiAdapter` and is absent from
+      `DEFI_VENUE_TO_CONNECTOR_CLASS` / `DEFI_VENUE_TO_GATE_MARKER`. Wire them or delete them — no shims. Evidence:
       `/plans/active/issues/pendle_venue_onboarding_2026_08_16.md`.
 - [x] ✅ [BACKEND] P0. Enforce the funds-isolation invariant in code — **ALREADY ENFORCED; this plan's todo was
       stale at authoring.** MEASURED 2026-08-20: `execution_service/transfer_coordinator.py:275` raises
@@ -412,89 +399,103 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag on every remainder.
-- [ ] [AGENT] P2. **Split the two files sitting at EXACTLY the 900-line file cap** —
-      `execution_service/api/manual_instruction_api.py` and `execution_service/cli/handlers/live_execution_handler.py`.
-      Both were hit twice this session (once each) by unrelated changes that pushed them 1-10 lines over; both fixes
-      had to be made net-zero on line count to land. Any future addition to either needs the same net-zero dance
-      until this is done. No split design decided yet — pick natural seams (manual_instruction_api: request
-      validation vs. orchestrator-dispatch vs. pending-queue endpoints; live_execution_handler: connector
-      construction vs. CLI dispatch) and confirm the split doesn't change import-time behavior (see this session's
-      lifespan lesson above — `api/main.py` imports at module load).
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/04-architecture/` for every contract changed.
 - [ ] [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
       pending states.
 
 ## Progress Log
 
-> Append-only in spirit; CONDENSED 2026-08-20 to stay inside the 500-line soft cap. Per-item detail lives on the
-> checkboxes above — this log keeps what a successor cannot reconstruct from them: shas, corrections, and traps.
+> Append-only. One entry per shippable unit — what you changed, the `<repo>@<sha>`, and what you MEASURED (not what
+> you assume). This log is the handoff document if this agent's context ends and a fresh one resumes the tranche.
+> **Condensed 2026-08-20** to stay inside the 500-line soft cap; every durable fact below is preserved.
 
-- 2026-08-19 — Plan authored from the 892-doc active corpus. No code work started.
+- 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
+  against the 892-doc active corpus. No code work started yet.
 
 ### 2026-08-20 session
 
-**Where to work.** `.tabs/5`, NOT `.tabs/7` — tab 7 has no `execution-service/.venv` so its gate cannot run. Tab 5
-is provisioned for all seven owned repos and is shared with another live session on other repos: scope every
-commit by name, never `git add .`.
+**Where to work.** Use `.tabs/5`, NOT `.tabs/7`: tab 7 has no `execution-service/.venv`, so its quality gate
+cannot run. Tab 5 is provisioned for all seven owned repos, and is shared with one other live session working
+other repos — scope every commit by name, never `git add .`.
 
-**Landed (each verified against origin, never by quickmerge's exit code):**
+**Shipped, each verified in origin rather than by trusting quickmerge's exit code:**
 
-| sha | unit |
-|---|---|
-| `execution-service@b70d2edb16` | per-venue instruction-path check + DeFi route-table SSOT (the 864-row unblocker) |
-| `execution-service@dc4fad8de7` | delta-proxy sensitivity triple + rebuilt QUOTE receipt point |
-| `execution-service@9c79bfa0ef` | deployed service serves `/manual/*` (was a production 404) |
-| `execution-service@0c0b6a1a40` | Pendle wired, LEND only |
-| `batch-live-reconciliation-service@1e210addb1` | W12 pause / exclusion / soft-delete audit |
+1. **`execution-service@b70d2edb16` — the 864-row unblocker.** `readiness/instruction_path.py` exposes
+   `instruction_path_availability(venue)` → `{batch, paper, live, actions, handlers, batch_unhandled_actions,
+   detail}`, each mode `none|wired|deployed`, derived from three registries the runtime really dispatches on (the
+   order-adapter factory, the new DeFi route table, the sports exchange adapters). No I/O.
+   `python -m execution_service.readiness` is the cross-venv probe. To make "reads the real registry" true rather
+   than aspirational, `DeFiAdapter`'s three private substring `if`-chains were extracted into
+   `adapters/defi_instruction_routes.py`, which the adapter now dispatches through — match order and all three
+   error wordings pinned by tests. `backtest_v2/action_handlers.py` gained `BATCH_SETTLEMENT_ACTIONS` /
+   `BATCH_NO_FILL_ACTIONS` and a DERIVED `BATCH_UNHANDLED_ACTIONS`, so a new enum member lands in the gap set
+   automatically. MEASURED verdicts and the `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW` batch gap are on the
+   checkbox above; `COINBASE-FUTURES` correctly derives all-`none` because the factory refuses it and the check
+   inherits that rather than stripping the suffix.
 
-**Traps worth more than the code — all measured, none anticipated:**
+2. **`execution-service@dc4fad8de7` — delta-proxy price leg + QUOTE receipt point.** Detail on its checkbox.
 
-- **quickmerge exit 0 does NOT mean landed.** Run 1 returned 0 with `Re-gate FAILED` in its log and nothing in
-  origin. Verify with `git cat-file -e origin/<branch>:<path>` + an empty `git diff --stat origin/<branch>`.
-  Capture the log to a FILE — `| tail -N` discards the itemised violation. Separately, STAGE-1
-  `unified-trading-library: DIFFERS` is NOT a failure (clean tree, one commit behind, branch-isolation mode);
-  grep for `Quality gates FAILED` / `Re-gate FAILED` instead.
-- **`api/main.py` runs `app = create_app()` at IMPORT**, so any global mutation in the factory is an import-time
-  side effect on the whole suite. It broke four tests that build a bare `FastAPI()` with no `app.state.limiter`.
-- **A lifespan that only sets still leaks.** It must RESTORE on shutdown, or the new test contaminates later tests
-  on the same xdist worker. `set_limiter_instance`/`set_manual_handler` now accept `None` for exactly this.
-- **TWO files sit at EXACTLY the 900-line cap**: `api/manual_instruction_api.py` and
-  `cli/handlers/live_execution_handler.py`. Any addition breaks the gate; both need splitting first, so changes to
-  them must currently be net-zero on line count.
-- **Run size + ruff + basedpyright BEFORE gating, after EVERY edit.** Unit 3 burned three gate cycles on
-  regressions a 10-second local check would have caught; Pendle passed first attempt once I did.
-- **Test harness gotchas**: recon-service tests patch `get_recon_config`/`get_storage_client` in the MODULE (see
-  `test_resolution_api.py`) — an ad-hoc harness without that dies on `GCP_PROJECT_ID`; and UTL `log_event` needs
-  `setup_events(service_name=..., mode=..., sink=...)` outside `conftest.py`.
+3. **`unified-trading-pm@34999f0adf` / `694423478b` / `d262ccdaca`** — T5's frozen probe contract (posted BEFORE
+   the code landed so T5 was never idle-waiting), checkbox flips, and findings.
 
-**Corrections to my own earlier claims — kept, not deleted, because both were wrong in instructive ways:**
+**Gate lessons worth more than the code (all measured, none anticipated):**
 
-- **Emergency close-all**: I wrote "reports success while closing nothing" in production.
-  `AccountInstructionOrchestrator` has ZERO production callers — an unreachable latent trap, not a live defect.
-  The fix ORDER is what matters: real CLOSE_ALL wiring first, route second, never the reverse.
-- **`DEFI_VENUE_TO_CONNECTOR_CLASS`**: I recorded it as absent everywhere. It is in UAC's *tests*
-  (`test_execution_service_venue_coverage_cascade_invariant.py:165`, `DEFI_VENUE_TO_GATE_MARKER` at `:179`) — I
-  grepped UAC's source and execution-service, not its tests, and reported absence from an incomplete probe.
-  Consequence: those dicts have no `pendle` entry, and the baseline's own note says a missing entry makes
-  `class_name is None`, so the venue reads "unreachable" regardless of wiring. The SIT cascade invariant will
-  still call Pendle unreachable until T1 adds the entry and drops it from the baseline in ONE change.
+- **quickmerge exit 0 does NOT mean landed.** Run 1 returned exit 0 while its log ended `❌ Re-gate FAILED`.
+  Always verify with `git cat-file -e origin/<branch>:<path>` and an empty `git diff --stat origin/<branch>`.
+  Capture the log to a FILE — `| tail -N` threw away the itemised violation and cost a diagnosis round-trip.
+  Also: `❌ unified-trading-library: DIFFERS` at STAGE 1 is NOT a failure (clean tree, one commit behind, branch
+  isolation mode) — grep for `Quality gates FAILED` / `Re-gate FAILED` instead.
+- **`api/main.py` runs `app = create_app()` at IMPORT.** Any global mutation inside the factory is therefore an
+  import-time side effect on the whole test suite. Wiring the manual handler there broke four pre-existing tests
+  that build a bare `FastAPI()` with no `app.state.limiter` and then 500 inside slowapi.
+- **A lifespan that only sets still leaks.** Moving the wiring to a lifespan was not enough: it never restored the
+  globals, so the new test contaminated later tests on the same xdist worker and the same four failed again.
+  `set_limiter_instance` / `set_manual_handler` now accept `None` so the previous values are restored on shutdown
+  (a no-op in production, where shutdown is process exit).
+- **`api/manual_instruction_api.py` sits at EXACTLY the 900-line file cap.** Ten lines of docstring took it to 910
+  and failed the gate. Anything added there needs the file split first.
+- **Re-run the size check after EVERY edit, not once per unit.** Two of the three unit-3 failures were size/state
+  regressions introduced by a later edit in the same unit.
 
-**Also measured:** four of this plan's "silently wrong today" P0s were already fixed before it was authored —
-verified in CODE, not from the issue docs' checkboxes (OrderTracker CANCELLED/AMENDED, the CCXT `withdraw()` stub,
-`CloudKmsCustodyProvider`'s `chain_id=1` fallback, funds isolation). And two of the connector reach-test's three
-claims were stale: Marinade/Kamino/Jupiter are all constructed in production; only Pendle was unreachable.
+**Measured findings that changed this plan's picture:**
+
+- Four of this plan's "silently wrong today" P0s were already fixed before it was authored — verified in CODE, not
+  from the issue docs' checkboxes. Flipped above with file:line: OrderTracker CANCELLED/AMENDED, the CCXT
+  `withdraw()` stub, `CloudKmsCustodyProvider`'s `chain_id=1` fallback, and the funds-isolation invariant.
+- **`POST /manual/instruction` 404s on the deployed service** — its own P0 above. Found by answering "which app
+  does the container actually serve".
+- **CORRECTION to an earlier entry**: I first logged emergency close-all as "reports success while closing
+  nothing" in production. `AccountInstructionOrchestrator` has ZERO production callers, so it is an unreachable
+  latent trap, not a live defect. The todo carries the corrected reading and the required fix ORDER.
+
+**W12 — built and verified, gating behind unit 3 (gates must stay serial).** New
+`batch-live-reconciliation-service/api/resolution_state.py` + endpoints in `resolution_api.py` implement all three
+W12 P0s. Verified by driving the real store: interlock raises without a pause; pause lookup is case-insensitive
+(recon output casing vs operator input); a revoked pause is retained but no longer satisfies the interlock; a
+VIRTUAL exclusion applies only to its own `run_date` and does NOT survive a new store; VIRTUAL without a
+`run_date` is REJECTED rather than silently promoted to persistent; PERSISTENT ignores a supplied `run_date`,
+reaches GCS, and survives a new store; revoke is a soft delete that retains the record and stops suppressing.
+A corrupt exclusions object fails OPEN (breaks re-raised) rather than suppressing on half-parsed state.
+Note: `client.upload_bytes` returns a value — this repo's convention is `_ = client.upload_bytes(...)`.
 
 ## Deferred work after 2026-08-20
 
 | item | state | why |
 |---|---|---|
-| Pendle `withdraw()` redemption | open P2 | widen `PENDLE_OPERATIONS` only in the SAME change that implements it |
-| Pendle SIT cascade entry | inbound on T1 | needs UAC test-dict entry + baseline removal together |
-| Emergency close-all | open P0 | wiring BEFORE route — order matters |
+| Emergency close-all | open P0 | needs real CLOSE_ALL wiring BEFORE any route — order matters |
 | Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | T1's superseded-shape ruling (Q12-Q16) |
 | BATCH settlement gap | open P1 | `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW` have no handler |
-| `api/app.py` vs `api/main.py` | open P0, operator | app.py holds startup wiring the container never runs |
-| Split the two at-cap files | open | blocks any further addition to either |
-| W22 strategy→execution messaging | untouched | no `EventTransport` subscriber in execution-service |
+| `api/app.py` vs `api/main.py` | open P0, needs operator | app.py holds production startup wiring the container never runs |
+| W22 strategy→execution messaging | untouched | no `EventTransport` subscriber exists in execution-service |
 | W11 9-state order lifecycle | untouched | needs T1's `OrderState` contract |
 | W14/W15/W17, Elysium, settlement tail | untouched | not reached this session |
+
+- 2026-08-20 — **W12 shipped: `batch-live-reconciliation-service@1e210addb1`** (verified by an empty
+  `git diff --stat origin/live-defi-rollout` over all four files plus confirming `resolution_state.py` and
+  `require_pause` resolve in the landed tree). Its first gate failed on two PRE-EXISTING tests
+  (`test_book_correction_positive_delta_is_buy` / `..._negative_delta_is_sell`) which called `book_correction`
+  with no pause and passed — they encode the pre-W12 contract, and the interlock is precisely the change. They
+  now establish a pause first; the refusal itself stays asserted in `test_resolution_state.py`, so the behaviour
+  they used to cover is not silently lost. Size + basedpyright were run BEFORE gating this time (the lesson from
+  execution-service's four-attempt unit) and were clean.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

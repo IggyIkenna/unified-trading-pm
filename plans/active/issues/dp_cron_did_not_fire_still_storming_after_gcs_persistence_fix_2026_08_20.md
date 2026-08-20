@@ -167,13 +167,3 @@ so they are recorded here and tagged for the owning tranche rather than acted on
 - 2026-08-20 — Issue opened from the T5 tranche. Measurement above is the whole of the evidence; the serving
   revision is explicitly unverified and the "fix ineffective" conclusion is deliberately NOT drawn.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **2026-08-20T06:55Z corrective live verification (slot 27, dispatch agt-21dce5)**: The prior deploy-chain claim above is
-  superseded by direct evidence: both `origin/main` and `origin/live-defi-rollout` contain the dedup fixes; serving
-  revision `dp-alerting-subscriber-00135-6q8` has 100% traffic, and Cloud Logging shows successful cooldown-state
-  persistence. The repeat storm nevertheless had a second live consumer: both `dp-alerting-subscriber` and the
-  `uts-prod-alerting-paging` Cloud Run Job consumed `lifecycle-events-sub`. Its hourly scheduler was `ENABLED` despite
-  the archived dual-consumer fix, so `uts-prod-alerting-paging-cron` was paused and verified `PAUSED`; the already
-  running pre-pause execution was still draining at 06:55Z. The post-action 1-hour Slack re-sweep returned 47 messages,
-  with the latest DP-CRON batch at 06:37Z and no later batch observed. Classification is **(b) duplicate-consumer
-  routing/dedup regression** (reversible scheduler fix applied) plus genuine underlying DP-LIVE-004/003 capture gaps
-  (not resolved by this action). No registry append was warranted.

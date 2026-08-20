@@ -124,7 +124,7 @@ source: >-
 
 ## From `venue_readiness_and_registry_hardening_2026_08_16.md`
 
-- [x] ✅ [AGENT] P1. **Publish the granularity view.** Render `unified_api_contracts.registry.venue_granularity`'s
+- [ ] [AGENT] P1. **Publish the granularity view.** Render `unified_api_contracts.registry.venue_granularity`'s
       `VENUE_GRANULARITY_CAPABILITIES` + `get_granularity(venue, instrument_type, data_type)` (already shipped,
       412 populated `(venue, data_type)` cells across all 5 asset groups, instrument_type expressed as a default +
       per-instrument exceptions) as a table a human can read: venue, instrument type, data type, granularity,
@@ -133,10 +133,7 @@ source: >-
       `generate_venue_universe_denominator.py`/`generate_venue_consumability_report.py` pattern in the same repo,
       not a one-off) produces the table, and it is genuinely readable by a human without further processing.
       Source: `/plans/active/venue_readiness_and_registry_hardening_2026_08_16.md`, "Publish the granularity
-      view" todo (§ GRANULARITY). Repo: unified-api-contracts. — shipped `unified-api-contracts@2f74bd8da2`
-      (`scripts/generate_venue_granularity_report.py`, re-runnable; renders all 412 (venue, data_type) cells
-      across the 5 asset groups + an honest "unclassified" bucket for the 25 registry venues absent from
-      `VENUE_TO_ASSET_GROUP`).
+      view" todo (§ GRANULARITY). Repo: unified-api-contracts.
 
 ## Progress Log
 
