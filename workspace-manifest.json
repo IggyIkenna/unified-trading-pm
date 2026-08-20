@@ -2254,13 +2254,13 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.151.4.dev1+g004acc1dc",
-      "published_at": "2026-08-20T13:53:38Z",
+      "version": "0.151.5.dev1+g3c6c93958",
+      "published_at": "2026-08-20T14:22:02Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.103.36.dev1+gfe77db562",
-      "published_at": "2026-08-20T12:52:33Z",
+      "version": "0.103.36.dev2+g25c7f4a09",
+      "published_at": "2026-08-20T14:23:27Z",
       "registry": "artifact-registry"
     }
   }
