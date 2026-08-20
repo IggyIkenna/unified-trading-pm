@@ -159,10 +159,16 @@ operator call, not a worker's.
       sweep. Verified: functional test against the live `/proc` (slots 1/7/14/21/29 all judged LIVE, a nonexistent
       slot judged IDLE) + `bash -n`; full QG green (5272 passed/2 skipped backend + 469 dashboard vitest, coverage
       86.13%), sentinel==HEAD `616e15a4`, landed + ancestry-verified on `origin/live-defi-rollout`.
-- [ ] [INFRA] P1. Make the guard refuse to sweep a venv that is in use REGARDLESS of the slot's idle verdict — a
+- [x] ✅ [INFRA] P1. Make the guard refuse to sweep a venv that is in use REGARDLESS of the slot's idle verdict — a
       belt-to-the-suspenders check for the mid-run deletion that produced the `NoSuchModuleError` +
       false-coverage-failure signature above (e.g. honour the QG ledger lock `quality-gates.sh` already takes).
       (repo: agent-orchestrator)
+      **DONE `agent-orchestrator@087f1723ca`** — added a `_slot_venv_in_use()` belt, a second independent check after
+      `slot_has_live_process`: refuses to sweep a slot when any live process's COMMAND LINE references the slot's
+      absolute worktree path (`pgrep -f "<slot>/"`), catching a venv still in use even when the CWD scan reads the slot
+      idle — complements (does not duplicate) `616e15a4`'s CWD-based liveness signal. Verified: `bash -n` + functional
+      test against live `/proc`; full QG green (5272 passed/2 skipped backend + 469 dashboard, coverage 86.13%),
+      sentinel==HEAD `087f1723`, landed + ancestry-verified on `origin/live-defi-rollout`.
 - [ ] [INFRA] P2. Make `quality-gates.sh` detect a venv that vanished or was truncated MID-RUN and abort with the same
       explicit message it already prints when the venv is missing UP FRONT, instead of surfacing it as
       `NoSuchModuleError` + a coverage-ratchet failure. A worker should never have to reverse-engineer a disk sweep
