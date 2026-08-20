@@ -53,7 +53,7 @@ source: >-
   Discovered 2026-08-20 while resolving an ldr_qg_failure escalation (agt-bb4764) for
   unified-trading-pm@f49bfafa; confirmed as a distinct, still-open root cause after observing a peer worker's
   fix (unified-trading-pm@ec98ae0d8a, agt-910a14) regress within the same CI cycle. Fixed for this one file at
-  unified-trading-pm@8d3f71ff50 by dedenting each closing fence + trailing prose to the 6sp continuation indent;
+  unified-trading-pm@c2dc7d85b6 by dedenting each closing fence + trailing prose to the 6sp continuation indent;
   verified content-preserving (`git diff -w` empty) and held across a real pre-commit prettier pass.
 ---
 
@@ -95,7 +95,7 @@ minutes of landing.
 ## The real fix
 
 Dedent the closing fence (and its trailing prose paragraph) to match the OPENING fence's indent — the list-item
-continuation indent, 6sp in this doc's convention. Applied for this file at `unified-trading-pm@8d3f71ff50`; verified
+continuation indent, 6sp in this doc's convention. Applied for this file at `unified-trading-pm@c2dc7d85b6`; verified
 idempotent-enough to survive a real pre-commit prettier pass (0 violations post-commit) and content-preserving
 (`git diff -w` empty).
 
