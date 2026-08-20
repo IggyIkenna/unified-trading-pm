@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [context-scout, context_scope, frontmatter-schema, locked-doc]
 related:
   [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
@@ -33,7 +33,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     scripts/docs/docspec.py,
     scripts/plan-hygiene/check_frontmatter_schema.py,
   ]

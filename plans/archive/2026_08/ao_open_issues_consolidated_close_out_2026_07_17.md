@@ -52,8 +52,8 @@ related:
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
     /plans/archive/2026_07/ao_slot_capacity_policy_ci_scheduled_split_2026_07_29.md,
     /plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
@@ -499,7 +499,7 @@ NOT AO and are deliberately out of scope here.
       `locked_by: live-defi-rollout`). `regenerate_active_plan_inventory.py` re-run clean (0 orphans, 297 plans). NOTE
       (2026-08-10, slot 24 re-verify): the corpus-wide gates have since drifted — `check_archive_candidates.sh` now
       flags 2 candidates and the inventory reports 3 orphans, both from new 2026-08-10 work; tracked as todo 5 in
-      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`.
+      `/plans/active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`.
 
 ### Phase 6 — operator-reported dispatch-policy gaps (2026-07-17, verified this session before writing)
 
@@ -545,7 +545,7 @@ NOT AO and are deliberately out of scope here.
       ✅ **DONE via `ao_failover_multi_vm_readiness_2026_07_20.md` (archived 2026_07); flipped 2026-07-20.** Its entire
       premise is cross-HOST re-routing ("a host e.g. harsh-pc goes offline and its soft-pinned tasks never dispatch"),
       but multi-VM dispatch was **deprecated 2026-06-27** in favour of the single central VM + role-based dispatch
-      (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈ `{planning, NA}`).
+      (`/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; `assigned_vm` ∈ `{planning,     NA}`).
       Live state agrees: failover is stopped, has never fired, and `fleet_registry_entries: 0` — it has no registry data
       to act on even if enabled. Per CLAUDE.md ("**Delete deprecated code** — no shims"), the honest resolution may be
       to DELETE the module + its config knobs rather than fix the paused-slot bug above. **Decide before doing the P2
@@ -622,7 +622,7 @@ NOT AO and are deliberately out of scope here.
       plan_reconciler has NEVER ONCE COMPLETED A RUN since it was first installed.** Evidence: 5 reconcile-mode
       dispatches exist in `activity_log` for all time (07-15 `agt-2d8441`, 07-17 `agt-55b581`, 07-18 `agt-c02414`, 07-19
       `agt-722a19`, 07-20 `agt-99684d`); **0 of the 5 posted a `plan_health_result`**,
-      `git ls-remote origin 'plan_reconciler/*'` returns **0 branches**, and there are **0 PRs** — i.e. zero work
+      `git ls-remote origin     'plan_reconciler/*'` returns **0 branches**, and there are **0 PRs** — i.e. zero work
       product against a contract (`agents/plan_reconciler.md` §258/§334) that REQUIRES pushing
       `plan_reconciler/$DISPATCH_ID` and POSTing a result even when it finds nothing. The timer itself is HEALTHY
       (`is-active`, `LastTrigger=2026-07-20 01:02:01`, `NextElapse=2026-07-21 01:04:31`) — arming it was never the

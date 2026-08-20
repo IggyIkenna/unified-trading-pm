@@ -7,7 +7,7 @@ summary: >-
   (the batch was an extraction, so the source docs' own checkboxes are the ones that go stale), re-checks whether either
   Deferred item's gate has since cleared, archives the source docs that reach zero open todos, and runs the standard
   6-step archival ritual on the batch plan itself.
-status: resolved
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -16,7 +16,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-3, finalize]
 related:
   [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
@@ -37,13 +37,12 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: >-
-  All 6 finalize todos completed 2026-08-20; batch 3 and its zero-open-todo source docs were archived with referrers fixed.
-depends_on: []
+depends_on: [ao_satellite_ao_dispatch_batch3_2026_07_31]
+gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/cross-reference-path-convention.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -57,13 +56,14 @@ source: >-
 
 # AO satellite AO batch 3 — finalize
 
-> **ARCHIVED 2026-08-20.** The batch and finalize plan are both resolved; the former was archived after all three
-> batch todos completed and the latter after all six finalize todos completed.
+> **Machine-gated on `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`** (`depends_on` +
+> `gate_on_depends: true`) — will not dispatch until every todo in that batch is `done`. The batch itself stays
+> `status: draft` until the operator approves it; this finalize plan needs no separate flip either way.
 
 ## Todos
 
 - [x] ✅ [REVIEW] P0. **Re-verify every batch-3 done-claim against reality, not against its checkbox** — for each of the 3
-      todos in `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, re-run `git show --stat <sha>` for every
+      todos in `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, re-run `git show --stat <sha>` for every
       cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
       own stated done-when check where it is a command (the `generate_context_scope_inventory.py` zero-remaining check,
       the priority-inversion replay test, the orphan-verifier's 10-verdict reproduction + the liveness discriminator's
@@ -157,16 +157,15 @@ source: >-
       corpus-wide → clear the lock) on any doc that IS fully done. **Done when**: `grep -rl <slug> plans/ codex/`
       returns only the archived copy's own path for each archived doc, and
       `bash scripts/plan-hygiene/run_hygiene_sweep.sh --ci` reports zero hard failures.
-- [x] ✅ [INFRA] P0. **DONE 2026-08-20 — ran the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
-      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, migrate any still-Deferred item into batch 4 (never
-      leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_08/`, fix
+- [ ] [INFRA] P0. **Run the 6-step archival ritual on the batch plan itself, then regenerate the inventory** — banner
+      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, migrate any still-Deferred item into batch 4 (never
+      leave a deferral that is not already a `- [ ]` todo somewhere), move the file to `plans/archive/2026_07/`, fix
       every corpus-wide referrer including this finalize plan's own `related:`/ `depends_on:`, then run
       `.venv/bin/python scripts/plans/regenerate_active_plan_inventory.py` (CORRECTED 2026-08-18 /plan-reconcile —
       was `scripts/plan-hygiene/regenerate_active_plan_inventory.py`, which does not exist; the real script lives at
-      `scripts/plans/regenerate_active_plan_inventory.py`, verified via `find`). **Evidence**: archived batch + finalize pair; `regenerate_active_plan_inventory.py` measured 379 plans and 2
-      unrelated newly-created `state_fabric_*` plans without epic-body refs; `regenerate_active_plan_index.py` measured 379 active
-      plans and 0 uncategorized; `check_finalize_plan_coverage.py --only` and `check_terminal_status_archived.py --only` both
-      passed, and no old active-path referrer remains.
+      `scripts/plans/regenerate_active_plan_inventory.py`, verified via `find`). **Done when**: the batch plan is
+      archived with a banner, the inventory regenerates with an orphan count of 0, and `check_finalize_plan_coverage.py`
+      no longer names this pair.
 
 ## Codex SSOTs
 

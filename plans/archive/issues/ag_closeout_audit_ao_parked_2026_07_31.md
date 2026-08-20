@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, parked-findings, data-correctness, ssot-contradiction]
 related:
   [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md,
     /codex/11-project-management/doc-frontmatter-schema.md,
     /plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,

@@ -24,11 +24,11 @@ related:
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
-    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-03"
@@ -53,7 +53,7 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
-    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 source: >-
   /ag-closeout-audit ao skill run 2026-08-03 (autonomous, scheduled ag_closeout_auditor dispatch, slot 2) — Phase 0
@@ -99,7 +99,7 @@ below rather than duplicated here.
   called out below.
 - **File-adjacency #1 (hard sequencing, same file)**: todo 2 (archive `ao_db_lock_storm_and_stuck_shutdown_outage`) and
   todo 3 (`ao_tranche_full_content_audit_findings` bookkeeping) BOTH edit
-  `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md` — todo 2 corrects one stale "MISTAGGED" table row,
+  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` — todo 2 corrects one stale "MISTAGGED" table row,
   todo 3 corrects a different MOVED-item summary sentence + table cell. **Land todo 2 before todo 3** (re-pull fresh
   immediately before todo 3's edit and re-check for a merge conflict on that file — it is actively co-edited by
   na-eligibility-audit/context-scout passes on an almost-daily cadence and measured 983/1000 lines on 2026-08-06
@@ -113,7 +113,7 @@ below rather than duplicated here.
   but whoever picks up todo 7 should re-grep that file for a fresh diff before starting in case that sibling doc's item
   has since landed.
 - **File-adjacency #3 (soft caution, not a hard collision)**: todo 10 (`agent-orchestrator/server/orphan_reap.py`)
-  shares that file with `/plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s
+  shares that file with `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`'s
   own still-open `[SCRIPT] P3` "optional, defense-in-depth" todo (a different facet — parent-shell identity vs.
   descendant CPU-progress — and that doc is `assigned_vm: NA`, not concurrently AO-dispatched today). Same
   re-grep-before-starting caution as above.
@@ -143,7 +143,7 @@ below rather than duplicated here.
       cross-role auto-routing `agents/main.md` STEP 2B already describes (verified by a side-by-side diff of the two
       sections, adapted only for review's own STEP numbering/message-flow context); the target issue doc's line-182 todo
       is flipped `[x]` with the shipping commit sha cited in the same turn. Source:
-      `/plans/archive/2026_08/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` (its
+      `/plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md` (its
       4th, docs-only item — its P1 backend-routing-code item and P3 operator-sign-off item are explicitly self-gated in
       the source doc and NOT in scope here). Repo: unified-trading-pm. — unified-trading-pm@6c4e57b8a (corrected
       2026-08-08: original citation `ea5d699c9` was fabricated/unresolvable; real shipping commit verified via
@@ -160,9 +160,9 @@ below rather than duplicated here.
       `/plans/archive/issues/orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md` and
       `/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md` to the doc's `related:`, and
       recorded this finding in the doc's own Progress Log. The
-      `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md` MISTAGGED-row correction is deferred with it —
+      `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` MISTAGGED-row correction is deferred with it —
       the doc is not actually closed yet, so there is nothing to retag out of that bucket. Source:
-      `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo: unified-trading-pm. —
+      `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`. Repo: unified-trading-pm. —
       unified-trading-pm (this commit)
 
 - [x] [DOCS] P3. ✅ **Close `ao_tranche_full_content_audit_findings_2026_07_31.md`'s §3 (duplicate-doc merge) and §4
@@ -248,7 +248,7 @@ below rather than duplicated here.
       naming this failure mode (grep for "sharing one slot"/"multi-operator" hits each); `check_agent_rules_size_cap.py`
       still passes; the source issue doc's `[DOCS] P2` todo flips `[x]` with the commit sha. Source:
       `/plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md` (its
-      `[DOCS] P2` item only — items 2-4, the operator-decision cluster, are NOT in scope). Repo: unified-trading-pm.
+      `[DOCS]     P2` item only — items 2-4, the operator-decision cluster, are NOT in scope). Repo: unified-trading-pm.
 
 - [x] ✅ [BACKEND] P3. **Thread the already-shipped `self_declared_complete` kick-classification signal
       (`agent-orchestrator/server/worker_liveness/__init__.py`, computed ~line 717 via `_SELF_DECLARED_COMPLETE_RE`,
@@ -288,7 +288,7 @@ below rather than duplicated here.
       releases the held sessions, and asserts a fresh session succeeds promptly (both exhaustion and recovery
       demonstrated in one test). `quality-gates.sh` green (2779 passed, 2 skipped) on this exact SHA. Source
       `[BACKEND] P2` todo flipped in
-      `/plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` citing the same test
+      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` citing the same test
       module + SHA. Repo: agent-orchestrator.
 
 - [x] ✅ [SCRIPT] P3. **Close out the stale `[SCRIPT] P3]` todo on
@@ -296,7 +296,7 @@ below rather than duplicated here.
       2026-08-06 (slot 2). Verified `unified-trading-pm@2db15bb21`
       (`fix(dev): env-var fallback for slack-read-channel.py when gcloud ADC fails`, 2026-07-28): the
       `SLACK_ALERTS_READER_BOT_TOKEN` env-var fallback at `scripts/dev/slack-read-channel.py:65`
-      (`os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa: qg-empty-fallback`) satisfies the original Gate
+      (`os.environ.get("SLACK_ALERTS_READER_BOT_TOKEN", "")  # noqa:     qg-empty-fallback`) satisfies the original Gate
       — documented as secondary (script header lines 12-30), never touches disk/argv (env var only), and the
       `# noqa: qg-empty-fallback` marker permanently exempts it from the `no_empty_string_fallback_baseline` ratchet.
       The na-eligibility-audit's 2026-07-30 "direction superseded" annotation (ruling: grant IAM + REMOVE fallback)

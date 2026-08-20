@@ -13,7 +13,7 @@ summary: >-
   bounded work — this batch extracts those 3, each conflict-checked against the whole `plans/active` corpus before
   drafting (one genuine duplicate found and folded into a combined todo rather than drafted twice). Every todo below
   targets files disjoint from every sibling todo, so the plan needs no `sequential` gate.
-status: resolved
+status: active
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -22,7 +22,7 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-3, satellite-docs]
 related:
   [
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_finalize_2026_07_30.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
@@ -45,8 +45,6 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by: >-
-  All 3 todos completed and the paired finalize ritual completed 2026-08-20; source docs reconciled and batch archived.
 depends_on: []
 context_scope:
   [
@@ -54,7 +52,7 @@ context_scope:
     /cursor-configs/skills/context-scout/SKILL.md,
     scripts/docs/docspec.py,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
-    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
+    /plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md,
   ]
 source: >-
   /ag-closeout-audit ao skill run 2026-07-31 (autonomous, scheduled dispatch agt-23935a, role ag_closeout_auditor, slot
@@ -67,9 +65,6 @@ source: >-
 ---
 
 # AO satellite AO batch 3
-
-> **ARCHIVED 2026-08-20 — RESOLVED.** All 3 todos completed, source docs reconciled, and the paired finalize ritual
-> completed. The archived copy is now the canonical reference for this batch.
 
 > **Operator-approved 2026-08-01** — flipped `status: draft` → `active`. Authored autonomously (scheduled dispatch);
 > deliberately stopped at draft per the skill's Autonomous-mode contract until this approval.
@@ -106,7 +101,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 - **Put each todo's new test cases in a test module named for that todo's own concern** — never add to a test module
   another todo on this plan also touches. The todos below are file-disjoint by construction; keep them that way.
 - **Do not edit the source issue doc's checkboxes** beyond appending your evidence line to the todo you executed. The
-  paired finalize plan (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`) reconciles evidence back
+  paired finalize plan (`/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`) reconciles evidence back
   into every source doc and runs archival.
 - No todo below deletes prod data, mutates a GCS bucket, or launches a VM.
 
@@ -154,7 +149,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       zero-blockers the whole time) against the new check produces a fired page, verified via a unit/integration test
       constructing the equivalent backlog state and asserting the alert fires — not just a manual demonstration — and
       the live-backlog backfill-check result is recorded in the source doc. Source:
-      `/plans/archive/issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` (both its
+      `/plans/active/issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` (both its
       `[BACKEND] P2` and dependent `[SCRIPT] P3` items — combined into one todo since the second is a direct, sequential
       consequence of the first landing, not independent work). **Evidence (2026-08-01)**: shipped
       `agent-orchestrator@af98fcd` — new standalone `server/dispatch_priority_inversion_watchdog.py`

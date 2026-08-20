@@ -48,8 +48,8 @@ related:
     /plans/archive/issues/branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md,
     /plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
     /plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
-    /plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
-    /plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
+    /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
+    /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: 2026-07-30
@@ -70,7 +70,7 @@ archive_exempt: true # inline status comment is stale (all 3 prevention todos no
 locked_by:
 context_scope:
   [
-    /plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
+    /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
     /plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md,
     agent-orchestrator/server/worktree_clean_check/_liveness.py,
     /codex/05-infrastructure/per-tab-worktrees.md,
@@ -258,7 +258,7 @@ and no operator authority — and it would have auto-closed 8 of these 10 rows w
 authority is the expensive answer to a question that a verifier answers for free.
 
 - [x] ✅ **SHIPPED 2026-08-01 — agent-orchestrator@623009e3.** Added a read-only `verify_orphan()` in
-      `server/worktree_clean_check/_orphan_verify.py`: reports `git merge-base --is-ancestor <sha> origin/<branch>`,
+      `server/worktree_clean_check/_orphan_verify.py`: reports `git merge-base --is-ancestor <sha>     origin/<branch>`,
       a per-touched-file blob-level `SAME-AS-ORIGIN`/`DIFFERS`/`ABSENT-ON-ORIGIN`/`ABSENT-IN-COMMIT` verdict, and the
       `git diff <remote>/<branch> <sha>` line-delta SIGN, emitting exactly `SUPERSEDED`/`STILL-ORPHANED`/`WOULD-REGRESS`
       (plus a 4th `GONE` state for a sha with no resolvable commit object at all — the slot-3 shape below).
@@ -293,12 +293,12 @@ authority is the expensive answer to a question that a verifier answers for free
 - [x] [DATA] P3. **Triage the 24 previously-uninventoried `refs/wip-preserve/**` refs this sweep found fleet-wide.**
       This doc tracked exactly ONE (`cascade-strategy-service-a77eb6d170ca`, now verified SUPERSEDED); a fleet-wide
       `for-each-ref`found **25**, dated 2026-07-26..2026-07-29. First-pass blob-compare says ~16 are content-identical
-      to origin (superseded) and the rest are near-misses:`slot-2 unified-api-contracts f1e109bc`and
-      `slot-3 unified-api-contracts ce7d7d1e`are net-NEGATIVE vs origin (origin already ahead — would regress);
-      `slot-12 deployment-service 0e62096`is fully upstream;`slot-9 strategy-service b76f37db`adds
-      **comment-only** lines (the functional`runs-on: [self-hosted, glue]`migration is already on origin); the three
-      `slot-11 scripts/setup.sh`refs are a cosmetic`uv==0.10.8`→`"uv==0.10.8"`shell-quoting nit. The only
-      substantive residual found is`slot-12 unified-trading-library c927ec58`(docstring`lst_staking_yields`→
+      to origin (superseded) and the rest are near-misses:`slot-2     unified-api-contracts f1e109bc`and
+      `slot-3 unified-api-contracts     ce7d7d1e`are net-NEGATIVE vs origin (origin already ahead — would regress);
+      `slot-12 deployment-service     0e62096`is fully upstream;`slot-9 strategy-service     b76f37db`adds
+      **comment-only** lines (the functional`runs-on: [self-hosted,     glue]`migration is already on origin); the three
+      `slot-11     scripts/setup.sh`refs are a cosmetic`uv==0.10.8`→`"uv==0.10.8"`shell-quoting nit. The only
+      substantive residual found is`slot-12     unified-trading-library c927ec58`(docstring`lst_staking_yields`→
       `lst_yields`, 2 lines) — needs a check of which feature_group name is actually correct before shipping either way.
       **Done when**: each of the 25 refs has a recorded SUPERSEDED / RECOVER / DELETE verdict. Depends on the verifier
       above — do not hand-triage these one by one. **Attempted 2026-08-01 (batch3 todo 3), using the now-shipped
@@ -308,7 +308,7 @@ authority is the expensive answer to a question that a verifier answers for free
       exist ONLY in the specific slot's OWN `.git` on the host that created them. The session that built the verifier
       ran on a laptop host with local filesystem access to slots 1-5 and 21-30 only (not 6/9/10/11/12/13/15/16 — those
       live on `ip-172-31-5-118`, a different physical host, not reachable from that session's filesystem or an
-      authorized network path for that task). An exhaustive `git for-each-ref 'refs/wip-preserve/**'` across all 375
+      authorized network path for that task). An exhaustive `git for-each-ref     'refs/wip-preserve/**'` across all 375
       git repos in every one of that session's reachable slots (1-5, 21-30) found ZERO local wip-preserve refs anywhere
       — confirming this specific 25-ref population genuinely has no presence outside the original sweep's host. (A much
       larger, UNRELATED, ongoing population of `refs/heads/wip-preserve/orchestrator-slot-<N>-<sha>` and
@@ -320,7 +320,7 @@ authority is the expensive answer to a question that a verifier answers for free
       `ip-172-31-5-118` (the prior attempt only checked local filesystem access, never tried SSM) — ran the verifier
       against all 24 distinct repo paths across the 9 named slots (29 refs now, up from 25, 4 new cascade branches
       accumulated in the 2 intervening days). Result: **16 SUPERSEDED, 10 STILL-ORPHANED, 3 WOULD-REGRESS, 0 GONE** —
-      full per-ref table in `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log (2026-08-01,
+      full per-ref table in `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log (2026-08-01,
       "todo 3 sub-part 3 — completed" entry). Confirms this doc's own first-pass predictions: slot-2/3's near-misses are
       genuinely WOULD-REGRESS (net -139/-198), slot-12's `unified-trading-library c927ec58` residual is real
       (STILL-ORPHANED, net 0, the `lst_staking_yields`→`lst_yields` docstring question is still open), and the ~16
@@ -331,7 +331,7 @@ authority is the expensive answer to a question that a verifier answers for free
 ## Follow-ups that are NOT this doc's scope
 
 The prevention side is already owned and should not be duplicated here:
-`/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` item 8 owns the `cascade_dep_branch`
+`/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` item 8 owns the `cascade_dep_branch`
 prevention-vs-preserve fix (its item 7 proved the current preserve-guard has an inherent TOCTOU race), and
 `/plans/archive/2026_08/wip_preserve_refs_silently_unrecovered_2026_07_29.md`'s `[SCRIPT] P3` owns the
 `refs/wip-preserve/**` surfacing sweep. This doc is only about routing the ALREADY-orphaned backlog.
