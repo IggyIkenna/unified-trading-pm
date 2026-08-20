@@ -131,10 +131,15 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    `SHARD_AXIS_MATRIX` — regression-tested). 3 new tests
    (`tests/unit/test_pipeline_e2e_check_defi_chain_axis.py`): composed-key match, no-chain-column fallback,
    blank-chain fallback. QG green (64s). **Evidence: market-data-processing-service@fae666bef2.**
-- [ ] [SCRIPT] P2. Still open. Separately, `_read_input_index_frame` should genuinely bound its read (date-range or
-   asset_group-scoped row-group pushdown, not just column pushdown) rather than relying on a bigger VM — the
-   160.4M-row full-manifest read is real waste even once (1)/(2) are fixed, and the next AG whose manifest grows
-   past DEFI's current size will re-hit the same OOM ceiling on `e2-highmem-8` too.
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-20 (slot-7)** — the `_read_input_index_frame` full-manifest read is replaced,
+   not just resized. `_captured_days_by_cell` now reads through the row-group-STREAMED UTL
+   `read_captured_days_by_cell` (unified-trading-library@11f1ebd1: `iter_batches(batch_size=131072)` + per-batch
+   `min_day` filter + bounded legacy fallback) with a 400-day `_CAPTURED_DAYS_LOOKBACK_DAYS` date-range bound —
+   peak memory ≈ compressed bytes + one batch, never the ~160M-row decode, on any machine size
+   (market-data-processing-service@6ee153a0 removed `_read_input_index_frame` entirely; regression tests
+   `test_resolve_shard_day_bounds_scan_to_lookback` + streamed-read coverage shipped in the same commit).
+   **Evidence: market-data-processing-service@6ee153a0, unified-trading-library@11f1ebd1 — both verified on
+   origin/live-defi-rollout by direct code read.**
 - [ ] [DATA] P1. Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
    --auto-day` matrix again to get a REAL (non-"PROVED NOTHING") verdict, then consolidate all 5 AGs' reports per
    `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo. **2026-08-17 note**: the plan's own CEFI driver
@@ -189,3 +194,12 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
   before assuming it's still pending.
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries).
+- **2026-08-20 (slot-7, quant_dev)**: item 3 DONE — closed as already-shipped-and-verified, not re-implemented. Direct
+  code reads of both repos on origin/live-defi-rollout confirmed: the MDPS driver
+  (`market-data-processing-service@6ee153a0`) removed `_read_input_index_frame` and re-pointed `_captured_days_by_cell`
+  at UTL's streamed `read_captured_days_by_cell` with a 400-day `min_day` lookback bound; the UTL engine
+  (`unified-trading-library@11f1ebd1`) streams the consolidated index one row-group batch at a time (131072 rows/batch,
+  per-batch `min_day` filter, bounded legacy fallback) so peak memory no longer scales with the manifest's total row
+  count — the next AG whose manifest outgrows DeFi's current 160M rows will not re-hit the driver OOM ceiling. The
+  old full-read path is fully gone from the driver (only a docstring reference remains). Checkbox flipped with evidence
+  in the same commit.
