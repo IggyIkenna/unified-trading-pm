@@ -22,7 +22,7 @@ related:
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18
-last_updated: 2026-08-18 # (was: 2026-08-08 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, now through 2026-08-17)
+last_updated: 2026-08-20 # (was: 2026-08-18 -- todo 2 design gate resolved + todo 4 N/A this session, now through 2026-08-20)
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -87,19 +87,49 @@ real fix is to never load the whole manifest per request.
 - [x] ✅ [BACKEND] P1. **Measure + profile** — instrument the current cell-grid build to confirm the per-service memory
       footprint + the exact read pattern (which manifest columns/partitions a full-history request touches). Baseline
       the numbers this plan must beat. — deployment-api@8a36931
-- [ ] [BACKEND] P1. **Design doc — bound vs stream vs precompute** — evaluate the three directions against the
+- [x] ✅ [BACKEND] P1. **Design doc — bound vs stream vs precompute** — evaluate the three directions against the
       single-walk discipline (no new whole-corpus walk), Cloud Run memory, and UI latency; pick one (or a hybrid) and
-      record the decision + the projection schema. This is the design gate.
+      record the decision + the projection schema. This is the design gate. Decision: **BOUND** (date_window
+      pushdown), extended to the on-demand live-build fallback path. Full evidence + exact implementation spec in the
+      2026-08-20 Progress Log entry. — unified-trading-pm (design doc only, no code repo touched by this decision)
 - [ ] [BACKEND] P1. **Implement the bounded read** — the API cell-grid endpoint reads ONLY the requested window from the
-      manifest (or the precomputed projection), never the whole corpus; column-pruned + TTL-cached.
-- [ ] [BACKEND] P2. **Precompute projection (if chosen)** — an offline job materialises the per-window cell-grid
-      projection (respecting single-walk); the API reads it; manifest stays SSOT + fallback.
+      manifest (or the precomputed projection), never the whole corpus; column-pruned + TTL-cached. **READY TO APPLY —
+      exact edit spec in the 2026-08-20 Progress Log entry** (BLOCKED-SANDBOX: the 2026-08-20 session had no write
+      access to `deployment-api`; needs a session/slot with a real `deployment-api` checkout to apply + ship).
+- [x] ✅ [BACKEND] P2. **Precompute projection (if chosen)** — N/A, not chosen. The `uts-prod-data-status-rollup`
+      Cloud Run job + `full.json.gz`-per-service blob (`_manifest_status_rollup_fast_path` in
+      `deployment_api/services/data_status/manifest.py`) already IS a working precompute projection and already
+      serves every filter-free request (incl. full-history) cheaply today — no new precompute job needed. Its
+      documented gap (row-filtered / venue-filtered requests bypass it, `any_row_filter` in `manifest.py`) is
+      pre-existing and out of this plan's scope. See 2026-08-20 Progress Log entry.
 - [ ] [UI] P2. **Lift the 90-day default** — once the backend is bounded/precomputed, allow full-history windows in the
-      UI without the OOM-guard stopgap; add a pw:L2 regression spec for a full-history render.
+      UI without the OOM-guard stopgap; add a pw:L2 regression spec for a full-history render. **Scope note (2026-08-20):
+      the "All" full-history preset already exists (`deployment-ui/src/components/DataStatusTab.tsx`,
+      `FULL_HISTORY_START_DATE`) as an explicit one-click action, and the operator's 2026-07-14 ruling
+      (`data-status-default-range.spec.ts`) deliberately keeps 90-day as the silent DEFAULT — this todo does NOT
+      require changing `DEFAULT_LOOKBACK_DAYS`, only proving the "All" preset renders reliably + adding its pw:L2
+      spec.** BLOCKED-SANDBOX — no write access to `deployment-ui` this session.
 - [ ] [BACKEND] P2. **Load-test at full history** — prove a full-history cell-grid request stays within Cloud Run memory
-      at production concurrency (cite memory p99 + latency); retire the per-request OOM guard.
+      at production concurrency (cite memory p99 + latency); retire the per-request OOM guard. **Do not mark this done
+      on Bound alone** — see the full-history limitation recorded in the 2026-08-20 Progress Log entry; this gate is
+      honestly unmet until either todo 8 (streaming aggregation) ships or a real production load test proves the
+      worst-case (MTDS/cefi full-history + venue filter, or stale-rollup fallback at full-history) stays under the
+      4 GiB limit.
 - [ ] [REVIEW] P2. **Post-phase codex audit** — update `deployment-observability.md` with the new cell-grid
-      architecture; confirm no plan↔codex drift.
+      architecture; confirm no plan↔codex drift. Sequenced AFTER todo 3 actually ships (premature before then —
+      the codex doc must describe shipped behavior, not a design decision alone).
+- [ ] [BACKEND] P1. **Phase 2 — row-group-streamed full-history aggregation** — `date_window` pushdown (todo 3) does
+      NOT bound a genuinely full-history request: pyarrow row-group pushdown only skips groups entirely OUTSIDE the
+      window, and cefi/MTDS-scale manifests have row groups spanning 2-2.5 calendar years each (measured,
+      `manifest_source.iter_manifest_row_groups` docstring / `venue_year_coverage_cefi_oom_deployment_api_2026_08_09.md`)
+      — a full-history window overlaps virtually every row group, so pushdown provides ~0 reduction for that specific
+      case. The proven fix for THIS case already exists for a sibling endpoint:
+      `deployment_api/routes/data_status/_live_coverage_venue_year.py` streams `iter_manifest_row_groups(bucket)` one
+      row group at a time and accumulates compact per-key COUNTS (never holding more than one row group's raw rows in
+      memory, bounded regardless of corpus size). Extend the SAME pattern to `_build_manifest_category`'s aggregation
+      pipeline (venue breakdown, MTDS honest-coverage override, sub-dimension grouping, dual-scope) — a materially
+      larger rewrite (~10-15 methods) than todo 3, hence split out as its own todo rather than folded into it. This is
+      the todo that actually unblocks todo 6 (guard retirement) for the worst case.
 
 ## Progress Log
 
@@ -191,3 +221,79 @@ real fix is to never load the whole manifest per request.
   consecutive audit pass reaching this verdict; `ui_satellite_ao_dispatch_batch1_2026_08_06.md` explicitly defers this
   doc's todo 2 back here rather than extracting it.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+
+- **2026-08-20 — Todo 2 (design gate) complete + todo 4 resolved N/A (agent session, unified-trading-pm only —
+  see BLOCKED-SANDBOX note below).**
+
+  **Decision: BOUND** — extend the `date_window` row-group-pushdown pattern `_coverage_grid.py` already proved
+  (`manifest_source.read_manifest_index(bucket, date_window=(start,end))`) into the on-demand live-build fallback
+  path (`ManifestStatusMixin._get_manifest_status_sync` → `_dispatch_category_builds` → `_build_manifest_category` →
+  `_resolve_category_bucket_and_index` → `_read_defi_merged_index`/sports.py → `data_status_service._read_index_cached`
+  → bare `read_availability_index(bucket)`, no `date_window`, no row-group pushdown — confirmed via direct code read,
+  not inference). Rejected "Stream" and "Precompute" as the PRIMARY todo-3 direction (both still land, see below) for:
+
+  - **Precompute already exists** — `uts-prod-data-status-rollup` (Cloud Run job, `*/5`) writes
+    `{service}/full.json.gz`; `get_manifest_status` (`manifest.py`) tries `_manifest_status_rollup_fast_path` FIRST
+    for every filter-free request (including full-history — `slice_rollup_to_window` has no window cap) and only
+    falls to the memory-heavy live build when the rollup is stale/missing OR the request carries a row filter
+    (venue/league_id/chain/etc — `any_row_filter`). Building a second precompute mechanism would duplicate this.
+    Todo 4 is marked done/N/A on this finding.
+  - **Stream (full rewrite) is higher-risk than needed for todo 3's scope** — `_build_manifest_category`'s pipeline
+    (venue breakdown, MTDS honest-coverage override, sub-dimension grouping, dual-scope) is ~15 methods deep and
+    heavily unit-tested; rewriting it to consume row-group-streamed accumulators in one pass carries real regression
+    risk. Bound is a 6-file, additive, optional-kwarg change with zero behavior change for existing callers
+    (`date_window=None` default) — ships now, safely.
+
+  **Safety check performed**: `_clamp_manifest_dates` (`manifest_category_builder.py`) reads
+  `index["date"].min()` across the WHOLE loaded index to clamp `effective_start` UP toward the data-observed genesis
+  when later than the configured/requested start. Windowing the read to `[start_date, end_date]` does not change
+  this: `effective_start` is already `>= start_date` before the clamp runs, so the clamp only ever needs genesis
+  dates `>= start_date` (never earlier) — exactly what a `[start_date, end_date]`-windowed read still contains.
+  Confirmed no other downstream consumer (`_apply_manifest_filters`, MTDS override, sub-dimension regroup,
+  missing-shards) needs manifest rows outside the requested window.
+
+  **Known limitation — full-history is NOT solved by Bound alone**: pyarrow row-group pushdown only skips groups
+  entirely OUTSIDE the requested window. Measured (2026-08-09 cefi OOM audit, `manifest_source
+  .iter_manifest_row_groups` docstring): cefi/MTDS-scale manifest row groups span 2-2.5 CALENDAR YEARS each (rows
+  are not date-sorted at write time), so a genuinely full-history window (2018-01-01→today) overlaps virtually
+  every row group — pushdown provides ~0 reduction for that specific case, same failure mode the venue-year-coverage
+  endpoint hit and fixed via row-group-streamed aggregation (`_live_coverage_venue_year.py` +
+  `iter_manifest_row_groups`, proven: bounds peak memory to ~10 MB/row-group for cefi regardless of corpus size).
+  Recorded as a new todo (the list's 8th item, "Phase 2 — row-group-streamed full-history aggregation") rather than
+  left as prose, per the HARD RULE. **Todo 6 (retire the OOM guard) must not be marked done on Bound alone** — the
+  guard is still the only thing protecting the full-history + venue-filter / stale-rollup-fallback worst case.
+
+  **Ready-to-apply implementation spec for todo 3** (fully designed, NOT yet shipped — see BLOCKED-SANDBOX below):
+  1. `deployment_api/services/data_status_service.py::_read_index_cached` — add `date_window: tuple[str, str] |
+     None = None` param; cache key becomes `(bucket, date_window)`; call
+     `read_availability_index(bucket, date_window=date_window)` (was bare `read_availability_index(bucket)`).
+  2. `deployment_api/services/data_status/defi.py::_read_defi_merged_index` +
+     `_collect_defi_index_frames` — add the same optional `date_window` param, thread to both
+     `_read_index_cached` call sites (main bucket + per-sub-dimension bucket loop).
+  3. `deployment_api/services/data_status/manifest_category_builder.py::_resolve_category_bucket_and_index` —
+     add the same optional param, thread to `_read_defi_merged_index`; at `_build_manifest_category`'s call site,
+     pass `date_window=(start_date, end_date)` (the method already has both in scope).
+  4. `deployment_api/services/data_status/manifest_category_builder_dual_scope.py::_build_manifest_category_dual_scope`
+     — same call-site change.
+  5. `deployment_api/services/data_status/sports.py::_read_upstream_venue_dates` — pass
+     `date_window=(start_date, end_date)` to its `_read_index_cached` call (same bottleneck, already has the window
+     in scope).
+  6. `deployment_api/services/data_status/missing_shards.py::_scan_category_manifest` — same, via
+     `_read_defi_merged_index(service, cat, cloud=cloud, date_window=(start_date, end_date))` (sibling endpoint,
+     identical pre-existing bug).
+  Deliberately OUT of scope: `coverage.py::_build_coverage_for_cat` / `coverage_dual_scope.py`
+  (`GET /coverage-summary`) — that endpoint has no date-range param at all (whole-history stats by design), so
+  `date_window` does not apply there. All 6 changes are additive (new optional kwarg, default `None` = byte-identical
+  prior behavior) — verified against existing tests (`test_manifest_status_dual_scope.py`,
+  `test_data_status_service.py::TestReadIndexCached`, `test_coverage_summary_dual_scope.py`) which patch these
+  methods via `patch.object(..., return_value=...)` without `autospec`, so the new kwarg cannot break them.
+
+  **BLOCKED-SANDBOX (environment finding, not a content judgment call)**: this session's `isolation: "worktree"`
+  scope covers `unified-trading-pm` ONLY — `EnterWorktree` confirmed refusal to cross into `deployment-api` /
+  `deployment-ui` ("not under .../.claude/worktrees... limited to worktrees managed by Claude Code created under
+  .claude/worktrees/ of this repository"), and direct git/Edit operations against those repos' shared checkouts are
+  guard-blocked ("a worktree-isolated agent's git operations must target its own worktree"). Todos 3, 5, 6 need a
+  session/slot with real write access to `deployment-api`/`deployment-ui` to apply the spec above, run
+  `quality-gates.sh`, and ship via `quickmerge.sh`. Todo 7 (codex audit) is correctly sequenced after todo 3 actually
+  ships, so also not yet actionable. Flagging this because it blocks 4 of this plan's 8 todos, not because the
+  plan's own content is wrong.
