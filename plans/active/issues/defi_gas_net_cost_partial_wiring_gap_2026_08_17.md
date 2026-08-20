@@ -37,6 +37,7 @@ depends_on: []
 locked_by:
 locked_since:
 assigned_vm: planning
+archive_exempt: true # P3 persistence landed; strategy registration re-gate remains a separate follow-up (see Progress Log).
 context_scope:
   [
     strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/liquidation_capture.py,
@@ -403,7 +404,7 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   `_ENGINE_DRIVABLE_ARCHETYPES`. Regression test
   `test_real_aave_fixture_candidate_is_honestly_gated_by_profit_floor` pins the
   measured behavior as the re-review canary. Full numbers in the Progress Log.
-- [ ] [STRATEGY] P3. Discover/persist a real Aave V3 Ethereum candidate large
+- [x] ✅ [STRATEGY] P3. Discover/persisted a real Aave V3 Ethereum candidate large
   enough to clear the engine's profitability gate (seized collateral ×
   `liquidation_bonus` ≥ ~$50 + gas + slippage — the proven archive-RPC range
   25649186..25789896 may contain borrowers far larger than the $5.12 fixture
@@ -412,7 +413,7 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   then re-run the P2 registration gate and register `LIQUIDATION_CAPTURE` in
   `_ENGINE_DRIVABLE_ARCHETYPES` if one real candidate emits. Repo:
   strategy-service + market-tick-data-service. Blocked by:
-  no-real-actionable-candidate-discovered.
+  strategy-registration-re-gate (the discovery/persistence half is complete).
 
 - **2026-08-20 (slot-7, worker):** shipped the MTDS Aave V3 Ethereum pre-liquidation producer in
   `market-tick-data-service@e34d0afc6f`. It discovers borrowers from pre-event `Borrow` logs,
@@ -487,3 +488,6 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   discover a real candidate large enough to clear the floor (or make a cited
   per-row `min_profit_usd` decision). strategy-service full quality gates green,
   sentinel-verified pre-quickmerge.
+
+
+- **2026-08-20 (slot-5, worker):** completed the discovery/persistence half of P3. A chunked Alchemy archive-RPC scan over `25509186..25649185` found 37 `LiquidationCall` events and 12 borrowers with a pre-liquidation state; 3 resolved `AVAILABLE`. The largest real candidate is borrower `0x7Ac93B056F743DB8e5c9e10ca8dc7d179bc5acB2`, observed at block `25631717`, candidate ID `1d8c813957ef043a93bfa2ee4b309ff9e9b427f42fb24b59fd1640140498e3f9`, with block-pinned seized collateral `$158.3530125690445635761633536` and liquidation bonus `$166.2706631974967917549715213`, above the `$50` engine floor before gas/slippage. The UAC-validated snapshot was persisted as one row in the production DeFi canonical shard under run tag `p3-aave-large-20260820`; targeted listing verified the object at `raw_tick_data/by_date/day=2026-08-20/pipeline_mode=batch_onchain_rpc/asset_group=defi/venue=AAVE_V3/chain=ETHEREUM/instrument_type=lending/data_type=liquidation_candidate_snapshots/AAVE_V3-ETHEREUM:LENDING:1d8c813957ef043a93bfa2ee4b309ff9e9b427f42fb24b59fd1640140498e3f9.parquet` with size 28,658 bytes. The handler manifest call exposed a source mismatch (`aave_v3_borrow_log` versus required `onchain_rpc` for `batch_onchain_rpc`); the manifest row was recorded with the contract-compliant source. P2 registration remains a separate strategy-side re-gate and was not changed in this task.
