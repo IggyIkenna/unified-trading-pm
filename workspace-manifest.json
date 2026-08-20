@@ -68,7 +68,7 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.52.4",
-    "deployment-api": "0.93.10",
+    "deployment-api": "0.94.0",
     "deployment-service": "0.155.20",
     "deployment-ui": "0.1.0",
     "execution-service": "0.90.0",
@@ -79,18 +79,18 @@
     "market-tick-data-service": "0.147.10",
     "system-integration-tests": "0.15.6",
     "unified-api-contracts": "0.154.0",
-    "unified-trading-library": "0.92.0",
+    "unified-trading-library": "0.92.2",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.32.0",
     "e2e-testing": "0.41.39",
     "agent-orchestrator": "0.100.39",
-    "greeks-service": "0.18.75",
+    "greeks-service": "0.18.76",
     "trading-agent-service": "0.13.17",
     "strategy-service": "0.82.0",
     "ml-service": "0.58.54",
     "alerting-service": "0.66.11",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.80"
+    "client-reporting-api": "0.32.81"
   },
   "repositories": {
     "alerting-service": {
