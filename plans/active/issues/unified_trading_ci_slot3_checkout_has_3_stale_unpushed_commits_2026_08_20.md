@@ -78,11 +78,19 @@ are plausible without reading the actual workflow content and the commits' own d
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Read each of the 3 commits' actual diffs and determine: (a) do they still apply cleanly against
+- [x] [SCRIPT] P2. Read each of the 3 commits' actual diffs and determine: (a) do they still apply cleanly against
       current `origin/live-defi-rollout`, (b) is their content already landed via a different commit/path (check
       `git log --all --grep` for similar messages), (c) if genuinely still needed and not superseded, push them; if
       superseded or abandoned, this slot's local branch should be reset to match origin (never `git reset --hard`
-      without confirming first — a plain fast-forward-safe rebase may suffice if these really are dead weight).
+      without confirming first — a plain fast-forward-safe rebase may suffice if these really are dead weight). —
+      **Done, 2026-08-20**: all 3 are superseded. `origin/live-defi-rollout` landed equivalent-content commits
+      under different SHAs — `93209b7`/`403c921` are byte-identical patches (diff shows only the commit-hash line
+      differing) to local `6e92bcd`/`c0d10ba`; `239b407` matches local `bbdbbb3`'s same hunks offset by exactly
+      69 lines (the file grew by 69 lines from an intervening unrelated change before the equivalent fix landed —
+      same shape, same content, different position). Resolved via `git rebase origin/live-defi-rollout` (not
+      `reset --hard`, which this slot's own guardrail hook blocks for autonomous workers): git's own
+      equivalent-change detection recognized and skipped all 3 as "previously applied". Result: `ahead=0
+      behind=0`, tree clean. No push needed — the content was never actually missing from origin.
 - [ ] [OPERATOR] P3. If the audit above finds these are genuinely someone's abandoned work, consider whether
       `scripts/dev/check-slot-commit-identity.sh` or a similar periodic sweep should catch "a slot checkout carries
       >0 commits ahead of origin for >24h with no activity" as a standing alert — this was found by chance during an
@@ -93,3 +101,7 @@ are plausible without reading the actual workflow content and the commits' own d
 - 2026-08-20 — Filed from T5's pre-compact Step 1 loss audit. Not investigated further this session (out of scope);
   flagging so it isn't silently lost or mistaken for "nothing to see here" on the next `git status` check of this
   checkout.
+- **2026-08-20 (T5, follow-up)**: investigated per the P2 todo. All 3 commits confirmed superseded by
+  equivalent-content commits already on `origin/live-defi-rollout`; resolved via rebase (git's built-in
+  equivalent-commit detection dropped all 3 automatically). Checkout now `ahead=0 behind=0`. Sole remaining todo
+  is the P3 OPERATOR monitor-design question — genuinely their call, not resolved here.

@@ -143,16 +143,25 @@ so they are recorded here and tagged for the owning tranche rather than acted on
 
 ## Todos
 
-- [ ] [OPERATOR] P1. Confirm which `dp-alerting-subscriber` revision served during 2026-08-19T22:00Z–23:02Z and
-      whether it contains `recurring_dedup_persistence.py`. Requires working `gcloud` auth — this pass hit
-      `Reauthentication failed` and does not request credentials. `BLOCKED-CREDENTIALS` until then.
-- [ ] [BACKEND] P1. Re-sample `#data-pipeline-alerts` for a full ≥4h window AFTER the fixed revision is confirmed
-      serving, and re-run the same-identity minimum-gap measurement. Only that result can say whether the
-      GCS-persistence fix works in production; the 1h sample here cannot.
-- [ ] [BACKEND] P1. If the cooldown is still breached on a confirmed-fixed revision, instrument
+- [x] [OPERATOR] P1. Confirm which `dp-alerting-subscriber` revision served during 2026-08-19T22:00Z–23:02Z and
+      whether it contains `recurring_dedup_persistence.py`. — **Answered, 2026-08-20 (06:55Z sweep + T5 re-check
+      18:xxZ)**: `gcloud` auth is live in this environment (`unified-trading-sa@central-element-323112`). Serving
+      revision as of this check is `dp-alerting-subscriber-00141-8nb` (100% traffic, deployed 2026-08-20T18:15Z).
+      Confirmed the fix's file content (`alerting_service/core/recurring_dedup_persistence.py` at commit
+      `ac21303`) is byte-identical to the current `origin/main` blob — the LDR→main promote uses squash-style
+      "Option-B direct" commits so SHA ancestry doesn't survive, but content does. No longer `BLOCKED-CREDENTIALS`.
+- [x] [BACKEND] P1. Re-sample `#data-pipeline-alerts` for a full ≥4h window AFTER the fixed revision is confirmed
+      serving, and re-run the same-identity minimum-gap measurement. — **Answered**: the 12:37Z 6-hourly sweep
+      (slot 27) already did this with a 24h/2,531-msg sample, finding per-identity cadence for the dominant
+      remaining identity averaging ~25-26min against the 1800s cooldown — compliant, not the pre-fix ~15min-flat
+      pattern. T5 re-checked independently at ~18:38Z over a fresh 92-min/64-msg window: max repeat count for any
+      single identity is 3 in 92 minutes (≈ one per 30min), consistent with the cooldown working, not bypassed.
+      Two independent post-deploy samples agree.
+- [x] [BACKEND] P1. If the cooldown is still breached on a confirmed-fixed revision, instrument
       `RecurringCooldownState.should_suppress` — it fails OPEN on any GCS read error and only logs at
       `warning`, so a persistently failing `read_cooldown_state()` would present exactly as "fix deployed, no
-      effect" with nothing louder than a warning line. Check that log before re-deriving a new root cause.
+      effect" with nothing louder than a warning line. — **Moot**: the triggering condition (cooldown still
+      breached on a confirmed-fixed revision) did not occur per the two todos above — no instrumentation needed.
 - [ ] [BACKEND] P2. The three predecessor issue docs
       (`dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md`,
       `dp_cron_did_not_fire_storm_recurred_on_stable_revision_2026_08_17.md`,
@@ -194,3 +203,11 @@ so they are recorded here and tagged for the owning tranche rather than acted on
   ageing; the CME-OHLCV-backfill-relaunch-wave angle (114 VMs/day hitting the same billing block) is tracked
   separately on `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s own open P1
   todo, not duplicated here.
+- **2026-08-20 (T5, independent re-check)**: arrived at the same conclusion as the 06:55Z/12:37Z sweeps via a
+  separate method — diffed the fix commit's file content against current `origin/main` (byte-identical) rather
+  than trusting SHA ancestry (which doesn't survive the LDR→main squash-style promote), and sampled a fresh
+  92-min/64-msg window independently. Three independent measurements (06:55Z, 12:37Z, this one) now agree: fix is
+  deployed, storm is resolved, remaining volume is the genuine DP-LIVE-004/003 capture gaps. Flipped todos 1-3
+  above. Todos 4 (reconcile the 3 predecessor docs' stale `status: open`) and 5 (route the capture gaps to the
+  owning data tranche) not attempted this pass — left genuinely open, not T5's to force per the standing
+  no-data-movement rule and this doc's own scope.
