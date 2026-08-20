@@ -68,15 +68,15 @@
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.52.0",
-    "deployment-api": "0.93.6",
-    "deployment-service": "0.155.10",
+    "deployment-api": "0.93.7",
+    "deployment-service": "0.155.11",
     "deployment-ui": "0.1.0",
     "execution-service": "0.89.2",
-    "features-service": "0.91.3",
+    "features-service": "0.92.0",
     "fund-administration-service": "0.12.2",
     "ibkr-gateway-infra": "0.5.3",
-    "instruments-service": "0.103.36",
-    "market-tick-data-service": "0.147.3",
+    "instruments-service": "0.103.38",
+    "market-tick-data-service": "0.147.4",
     "system-integration-tests": "0.15.5",
     "unified-api-contracts": "0.153.4",
     "unified-trading-library": "0.92.0",
@@ -84,13 +84,13 @@
     "market-data-processing-service": "0.30.31",
     "e2e-testing": "0.41.35",
     "agent-orchestrator": "0.100.36",
-    "greeks-service": "0.18.70",
+    "greeks-service": "0.18.75",
     "trading-agent-service": "0.13.17",
     "strategy-service": "0.81.2",
-    "ml-service": "0.58.48",
+    "ml-service": "0.58.53",
     "alerting-service": "0.66.8",
     "unified-trading-api": "0.4.2",
-    "client-reporting-api": "0.32.77"
+    "client-reporting-api": "0.32.78"
   },
   "repositories": {
     "alerting-service": {
@@ -2249,8 +2249,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.92.0",
-      "published_at": "2026-08-20T17:38:15Z",
+      "version": "0.92.1.dev1+gddffd92be",
+      "published_at": "2026-08-20T17:52:12Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
@@ -2259,8 +2259,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.103.37.dev1+g05c606508",
-      "published_at": "2026-08-20T16:32:30Z",
+      "version": "0.103.38.dev1+gd4c48a7d3",
+      "published_at": "2026-08-20T17:49:20Z",
       "registry": "artifact-registry"
     }
   }
