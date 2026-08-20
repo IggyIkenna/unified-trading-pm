@@ -125,7 +125,7 @@ production DI wiring has landed yet.
   maps a venue to a wallet (zero matches for `venue ==` / `TREASURY`). So two funds settling in the same tick cannot
   collide on a custody wallet, because no custody wallet is selected on the source side by any code path today.
 
-- [ ] [BACKEND] P1. **Resolve the redemption treasury SOURCE wallet per `(fund_id, share_class)` before any real custody
+- [x] [BACKEND] P1. **Resolve the redemption treasury SOURCE wallet per `(fund_id, share_class)` before any real custody
   adapter is wired** — the deferred half of the audit directly above, filed per its own "or a scoped follow-up todo
   naming the fix" branch. The hazard that audit looked for is real but not yet reachable: the only two source
   identifiers that exist today are `config.treasury_wallet_id` (a flat process-wide `"treasury-default"`) and the flat
@@ -138,7 +138,11 @@ production DI wiring has landed yet.
   to different source wallets — the source-side mirror of todo 1's existing destination-side isolation test.
   Sequencing: this is a precondition of replacing `LocalSimulatedTransferAdapter` with a real custody/on-chain
   adapter, not a follow-on to it (that adapter's own docstring names this plan as the owner of the real settlement
-  leg). Repo: fund-administration-service.
+  leg). Repo: fund-administration-service. — fund-administration-service@b877fa8775; Evidence: quality-gates.sh
+  passed (65s); new `resolve_treasury_source_wallet_id(fund_id, share_class)` in
+  `fund_administration_service/ledger/treasury_ledger.py`, consumed by `build_treasury_ledger_row`'s `account_id`;
+  new test `test_treasury_ledger_source_wallet_isolated_across_funds_in_one_tick` proves 2 different funds settling
+  in ONE `run_once()` tick resolve to different, non-default source wallets.
 
 ## Progress Log
 
@@ -168,3 +172,10 @@ production DI wiring has landed yet.
   therefore stays `active` (one open todo) rather than becoming archivable on this checkbox.
 
 - **2026-08-20**: Shipped todo 4 (AML/KYC re-evaluation audit). **Finding (fact)**: `AmlKycGate` is evaluated at ONLY ONE site — subscription-approval time, `api/main.py:297` (`ctx.aml_gate.evaluate(sub.allocator_id, ...)`); neither the redemption-request handler (`post_redemption`) nor `GracePeriodHandler._drive_unchecked` (grace-expiry) evaluated it, so a client's AML status flipping to rejected during the grace window would still be paid out. Fixed: `GracePeriodHandler` now takes an `aml_gate` (wired `aml_gate=ctx.aml_gate` in `create_app`) and `_drive_unchecked` calls `_assert_aml_clear()` before `_withdraw_to_allocator` — a rejection raises `GracePeriodProcessingError` (shard-isolated) so the redemption is NOT paid and is re-checked each tick while still APPROVED. Test `test_rejected_aml_at_expiry_does_not_pay_out` proves zero withdrawals when the gate rejects at expiry. QG green (fund-administration-service@a1b8934).
+
+- **2026-08-20**: [operator's interactive main session, `/autonomous`] Shipped the deferred source-wallet todo a peer
+  filed above — `resolve_treasury_source_wallet_id(fund_id, share_class)` in the same `treasury_ledger.py` module
+  this session wrote for the sibling cadence-engine plan's treasury-ledger-writer todo (fund-administration-service@
+  b877fa8775), consumed by `build_treasury_ledger_row`'s `account_id`. Test proves 2 different funds settling in one
+  `run_once()` tick resolve to different, non-default source wallets. **All 6 todos in this plan are now done.**
+  Handing off to `redemption_wallet_transfer_execution_finalize_2026_08_20.md` next.
