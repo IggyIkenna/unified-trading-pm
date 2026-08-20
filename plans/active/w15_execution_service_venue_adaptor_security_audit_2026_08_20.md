@@ -105,7 +105,7 @@ impression:
 
 - [x] ✅ [BACKEND] P0. Fix Uniswap NPM partial-success reporting: an optional `burn_nft=True` request must return a
       failed/partial result when `_maybe_burn_nft()` catches a reverted burn instead of returning `success=True` with
-      only `burn_error` (`uniswap.py:529-538,568-580`). — execution-service@0be361333d + evidence: QG passed (8,807 passed, 82.54% coverage); post-push ancestry verified.
+      only `burn_error` (`uniswap.py:529-538,568-580`). — execution-service@124042b4 + evidence: QG passed (8,807 passed, 82.54% coverage); post-push ancestry verified.
 
 - [ ] [BACKEND] P0. Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection
       around `/swap` plus Solana broadcast (`jupiter.py:120-199,205-224,261-279`). A retry after an ambiguous
