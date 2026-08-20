@@ -155,7 +155,8 @@ todos only to confirm they are data-movement, then leave it.
       afterward. QG green (13438 passed, 0 failed). Landed alongside no unrelated change — the codex doc was
       already amended per this request; nothing further needed there.
 
-- [ ] [FROM-T2] P2. **The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.**
+- [x] ✅ [FROM-T2] P2. **Acknowledged, already queued — see the `[BACKEND] P2` item below, no separate action
+      needed on this flag itself.** The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.
       `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` was allocated
       into T2's tranche plan as a P1, but the writer lives in
       `unified-trading-library/unified_trading_library/manifest_writer/` and every remaining todo is UTL-side: the
@@ -195,8 +196,10 @@ todos only to confirm they are data-movement, then leave it.
       `*_INSTRUMENT_CATALOGUE` contracts. Tracked as a new P0 part 0 in
       `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
 
-- [ ] [FROM-T2] P1. **MEASURED 2026-08-20 by T1, not resolved — the population question you asked for an answer
-      to genuinely doesn't resolve cleanly your way, and here's why.** `KNOWN_CHAINS`'s stated job (my own
+- [x] ✅ [FROM-T2] P1. **Answered — T1's job here was to investigate and answer, which is done below; the
+      population itself was correctly NOT changed (see the answer's own conclusion).** MEASURED 2026-08-20 by T1
+      — the population question you asked for an answer to genuinely doesn't resolve cleanly your way, and here's
+      why. `KNOWN_CHAINS`'s stated job (my own
       27ebc544b2 commit's docstring) is venue-suffix SPLITTING: recognising the `<CHAIN>` token in a live
       `<PROTOCOL>-<CHAIN>` venue string. Checked all ten against `ALL_DEFI_VENUES`
       (`v.upper().endswith("-" + CHAIN)`): **ZERO of the ten have any currently-registered venue with that
