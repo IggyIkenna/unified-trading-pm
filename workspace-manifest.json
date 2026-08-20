@@ -78,12 +78,12 @@
     "instruments-service": "0.103.31",
     "market-tick-data-service": "0.144.25",
     "system-integration-tests": "0.15.5",
-    "unified-api-contracts": "0.143.1",
+    "unified-api-contracts": "0.144.1",
     "unified-trading-library": "0.90.8",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.30.28",
     "e2e-testing": "0.41.32",
-    "agent-orchestrator": "0.100.21",
+    "agent-orchestrator": "0.100.22",
     "greeks-service": "0.18.70",
     "trading-agent-service": "0.13.13",
     "strategy-service": "0.77.0",
@@ -1334,7 +1334,7 @@
         "qg_red_reason": "qg",
         "large_file_count": 0
       },
-      "ldr_ci_status_sha": "5df6fe541c7789c1871e67d2dbe33ca146a34b85"
+      "ldr_ci_status_sha": "1927cf28f2d80372d14f0a891fd37b8b9e781688"
     },
     "unified-trading-api": {
       "promotion_model": "ldr_main",
@@ -1562,7 +1562,7 @@
       },
       "ldr_ci_status": "GREEN",
       "breaking_scan_dir": "server",
-      "ldr_ci_status_sha": "ad70a9465fefe405c0fe5f34fc85cc7775d06da3"
+      "ldr_ci_status_sha": "ae0145b032abea4d28eda6b4083210b5fbf0617b"
     },
     "unified-trading-ci": {
       "type": "infrastructure",
@@ -2254,8 +2254,8 @@
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
-      "version": "0.143.2.dev1+gca7a54141",
-      "published_at": "2026-08-19T23:37:36Z",
+      "version": "0.144.1.dev1+g013bb1b67",
+      "published_at": "2026-08-20T05:07:08Z",
       "registry": "artifact-registry"
     },
     "instruments-service": {

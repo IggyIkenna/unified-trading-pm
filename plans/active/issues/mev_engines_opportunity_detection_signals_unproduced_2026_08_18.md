@@ -5,7 +5,7 @@ summary: >-
   BACKRUN, JIT_LIQUIDITY, and LIQUIDATION_BUNDLE are all `implementation_status: code-shipped` with real, wired
   cost/profitability math (gas, fees) — but the feature keys that answer "is there an opportunity right now"
   (backrun_target_swap_size_usd_<chain>, backrun_arb_spread_bps_<chain>, jit_pending_swap_size_usd_<pool>,
-  liq_candidate_debt_amount_<id>, liq_candidate_health_factor_<id>, liq_candidate_liq_bonus_pct_<id>) have zero
+  liq_candidate_debt_amount_<id>, liq_candidate_liq_bonus_pct_<id>) have zero
   producer anywhere in the workspace. `features.get(key, 0.0)` silently defaults, so these engines cannot fire in a
   real paper/live run today, despite being registered and "shipped." A distinct root cause from the ARBITRAGE_MEV_
   SANDWICH mempool-feed gap (that one is genuinely blocked on infrastructure that doesn't exist; this one just needs
@@ -84,9 +84,9 @@ each specific key name — not the feature_group's existence, the EXACT key.
    `.get(key, 0.0)`. Same shape: `pending_size < min_swap_threshold_usd` is always true when the key defaults to
    0.0, so the position never mints. The codex archetype doc's claim ("today the engine reads a features-onchain
    inferred signal") was not confirmed by this search — no calculator anywhere produces this specific key.
-3. **`LIQUIDATION_BUNDLE`** (`strategy-service/.../mev/liquidation_bundle.py:265-269`, `_candidate_from_features`) —
-   `liq_candidate_debt_amount_<id>`, `liq_candidate_health_factor_<id>`, `liq_candidate_liq_bonus_pct_<id>`, all
-   `.get(id_key)` with **no default — confirmed 2026-08-18**: on any missing key the function returns `None` for
+3. **`LIQUIDATION_BUNDLE`** (`strategy-service/.../mev/liquidation_bundle.py:271-303`, `_candidate_from_features`) —
+   `liq_candidate_debt_amount_<id>`, `liq_candidate_liq_bonus_pct_<id>`, both `.get(id_key)` with **no default —
+   confirmed 2026-08-18 (re-verified 2026-08-20)**: on any missing key the function returns `None` for
    that whole candidate (explicit `is None` checks, own docstring: "Returns `None` when any required key is
    missing — the orchestrator should backfill the calculator before this engine emits"), and `on_tick()` `continue`s
    past it. This is a clean skip, not a raise and not a silent-zero — genuinely different failure mode from
@@ -97,6 +97,15 @@ each specific key name — not the feature_group's existence, the EXACT key.
    at all, distinct from `LIQUIDATION_CAPTURE`'s already-declared `liquidation_clusters`/`liquidation_band_prediction`
    feature_groups, which this engine does NOT read from directly (not confirmed as the same underlying data by this
    pass).
+
+   **Correction (re-verified 2026-08-20 against current code):** `liq_candidate_health_factor_<id>` is NOT a feature
+   key this engine reads. The module docstring states "A candidate's health factor is no longer a features key" —
+   `health_factor` is a keyword-only arg to `_candidate_from_features`, resolved by `on_tick()` from
+   `strategy_service/position/core/margin_health_cache.py::get_current_margin_health(borrower, pool)`
+   (candidate-wallet-parameterized, fail-closed on absent/stale per `system_readiness_master.md` W16). The docstring
+   further notes "No live scanner populates this cache for arbitrary candidate wallets yet (a genuine, separate infra
+   gap)". So LIQUIDATION_BUNDLE has TWO distinct upstream gaps: (a) no producer for the 2 `liq_candidate_*` feature
+   keys, and (b) no live scanner feeding the margin-health cache — both must close before this engine can fire.
 
 ## Why this wasn't fixed in the same commit
 
@@ -135,9 +144,13 @@ data) — the calculator-build todo below should verify this as its first step, 
 `TenderlyExecutionProvider` already exists (`execution-service/execution_service/providers/tenderly.py`) — Tenderly
 Virtual TestNet fork + `simulate-bundle` support (`TenderlyTx`/`BundleSimResult`), wired into the core
 `matching_engine.py` (not governance-only — `governance/proposal_simulator.py` is a separate consumer of the same
-generic provider). **Not confirmed**: whether `liquidation_bundle.py`/`jit_liquidity.py`/`sandwich_theoretical.py`
-actually call it before submitting a bundle, or whether it's available-but-unused for MEV specifically (matching
-this doc's own established pattern of infrastructure existing without being wired to its obvious consumer).
+generic provider). **Confirmed absent (2026-08-19, re-verified 2026-08-20)**: the 3 MEV engines
+(`liquidation_bundle.py`/`jit_liquidity.py`/`sandwich_theoretical.py`) do NOT call `simulate_bundle()` or
+`gate_or_advise()` before submitting — `gate_or_advise()` has zero production callers anywhere in the repo tree, and
+`matching_engine.py` only names Tenderly in docstrings and raises `NotImplementedError` for EVM DeFi legs. A real
+pre-submission safety gap (worst for LIQUIDATION_BUNDLE's atomic flash-loan bundle) — filed as
+`plans/active/issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md` (needs a design call on
+call-site placement, not a mechanical fix).
 
 ## Todos
 
@@ -163,8 +176,11 @@ this doc's own established pattern of infrastructure existing without being wire
       speeds up reacting to a signal, it does not produce one; sequence this todo first regardless.
 - [ ] [STRATEGY] P2. **Build the LIQUIDATION_BUNDLE candidate-identification producer**
       (`liq_candidate_*_<id>`) — likely reuses `LIQUIDATION_CAPTURE`'s existing `liquidation_clusters`/
-      `liquidation_band_prediction` feature_groups, but the exact ID-keyed shape these `.get()` calls expect needs
-      confirming against what those feature_groups actually emit.
+      `liquidation_band_prediction` feature_groups. **Shape confirmed 2026-08-20 (re-verified):** the engine reads
+      exactly TWO feature keys — `liq_candidate_debt_amount_<id>` and `liq_candidate_liq_bonus_pct_<id>`, both
+      `.get()` no-default — plus `candidate_ids` from a static `self.params` config string; `health_factor` is NOT a
+      feature key (margin-health-cache-derived, see item 3). The producer must emit the 2 feature keys AND a live
+      scanner must populate the margin-health cache for arbitrary candidate wallets (a separate infra gap).
 - [ ] [AGENT] P3. **Once any of the above lands, declare the corresponding archetype in UAC's
       `ARCHETYPE_FEATURE_GROUPS`** the same way the other MEV-adjacent archetypes were declared 2026-08-18 — real
       dispatch-site citation required, not inferred.
@@ -185,3 +201,12 @@ specific feature key, not a corpus-wide sweep.
   question — stay genuine build/design work, not bounded. Todo 6 is explicitly gated on 3-5 landing. Doc stays
   `assigned_vm: NA` for the 4 remaining items (3-6).
 - **context-scout 2026-08-19**: populated/refreshed context_scope (6 entries).
+- **re-verified 2026-08-20 (review, slot-7, batch17 finalize)**: independently re-verified both of batch17's
+  reported findings against current code. (1) Tenderly call-site — CONFIRMED ABSENT: the 3 MEV engines import only
+  `unified_api_contracts.internal` + sibling `strategy_service` modules (zero Tenderly/simulate/gate_or_advise refs);
+  `gate_or_advise()` has zero production callers; `simulate_bundle()`'s only production caller is `gate_or_advise`
+  (`tenderly.py:484`); `matching_engine.py` only names Tenderly in docstrings + raises `NotImplementedError` for EVM
+  DeFi legs. (2) default behavior — CONFIRMED: `_candidate_from_features` (`liquidation_bundle.py:271-303`, moved from
+  265-269) uses `.get(id_key)` no-default → `None` → `on_tick()` continues. Folded two corrections into this doc's own
+  text (item 3 + todo 5 + §"Bundle-simulation"): `liq_candidate_health_factor_<id>` is NOT a feature key, and the
+  "Not confirmed" is now "Confirmed absent".

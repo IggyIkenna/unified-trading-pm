@@ -440,15 +440,7 @@ in this read-only audit pass (time-bounded scope).
       venues). Once the fwd cron re-lands 08-19/08-20 raw and the [INFRA] P1 skew fix ships, backfill/re-capture
       day=2026-08-18 (single-day launch e.g. `launch-cefi-forward-poll.sh --force 2026-08-18 2026-08-18`, Tardis cap
       permitting). **Repo: deployment-service** (verify + relaunch).
-- [x] ✅ [INFRA] P1. **DONE 2026-08-20 (slot-10) — `deployment-service@42bf066f63`.** Fixed the D-1/same-day skew root
-      cause pinned below: `launch-cefi-perp-funding-daily-cron-vm.sh` now fires 10:00 UTC (was 07:00) computing
-      `$(date -u -d yesterday +%F)` for both `--start-date`/`--end-date` (was `+%F`, i.e. TODAY) — after the 09:00 UTC
-      cefi-fwd fire has landed that day's raw. Live `cefi-perp-funding-daily-cron-20260815-212924` crontab hot-fixed
-      to match (verified via SSH read post-fix: `0 10 * * *` + `date -u -d yesterday +\%F` both occurrences) so the
-      corpus compute no longer perpetually honest-skips. QG green; `quickmerge --agent` landed + ancestry-verified on
-      `origin/live-defi-rollout`. First live fire not yet verified this session (next fire is hours out — a fresh fire
-      verification is a natural follow-up, not filed as a new todo here since none of this doc's other cron-fix
-      entries file one either; the doc's existing pattern is to verify on the next pickup). **NEW 2026-08-19 (slot-4) — the corpus-freshness gate structurally CANNOT clear under the current
+- [ ] [INFRA] P1. **NEW 2026-08-19 (slot-4) — the corpus-freshness gate structurally CANNOT clear under the current
       cron cadence; one-day skew mechanism pinned with direct evidence (the real blocker behind every prior GATED
       re-check).** Both crons verified FIRED and healthy this pass: fwd-cron log 2026-08-19 09:00Z launched
       `cefi-fwd-20260819-090020` capturing `day=2026-08-18`; perp-funding cron log 2026-08-19 07:00Z launched
