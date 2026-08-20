@@ -112,13 +112,13 @@ context_scope:
       `main.py`'s own routes, not assuming). Done-when: a live check confirms the subscriber task is running
       under the container's actual startup path. -- execution-service@99962afa1f; Evidence: bash
       scripts/quality-gates.sh --no-fix (8808 passed, 22 skipped)
-- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-20 — execution-service@0be361333d. Features-service → execution subscription, same `EventTransport.read()` pattern, subscribed
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-20 — execution-service@f0a33fd3d8. Features-service → execution subscription, same `EventTransport.read()` pattern, subscribed
       to ONLY the feature groups execution actually needs — start with whatever `DeltaProxyRepricer`'s
       underlying-tick loop needs (this IS the missing "underlying-tick loop" the linked delta-proxy issue doc
       names as blocking real `QuoteMaintainer.on_underlying_tick` calls — closing this todo should let that
       issue's own remaining todos proceed, cross-link both directions in `related:` once landed). Done-when: a
       live `QUOTE` instruction's repricing responds to a published feature-group tick within one round trip,
-      not just a registered-but-inert state.
+      not just a registered-but-inert state. Evidence: bash scripts/quality-gates.sh --no-fix (8816 passed, 22 skipped, 1 xpassed).
 - [ ] [BACKEND] P0. Sink every strategy-emitted instruction consumed by the new subscriber to GCS, one record at
       a time, via the EXISTING manifest/shard pipeline (reuse, do not invent a parallel writer) — queryable via
       the same BigQuery external-table pattern other shard types already use. Distinct from market-tick-data
