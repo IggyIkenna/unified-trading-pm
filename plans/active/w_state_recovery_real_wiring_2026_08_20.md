@@ -166,7 +166,8 @@ context_scope:
 
 ### Phase 3 — wire into startup
 
-- [ ] [AGENT] P0. **Instantiate `OrderRecoveryEngine` with the REAL `OrderBook`/`_VenueAdapter`** (not defaults)
+- [ ] [AGENT] P0. **`BLOCKED-OPERATOR` (design-review gate — see Close-out): Instantiate `OrderRecoveryEngine`
+      with the REAL `OrderBook`/`_VenueAdapter`** (not defaults)
       and call `.run(venues)` from `_run_live_async` BEFORE `_build_orchestrators_for_instructions` starts
       accepting new instructions — recovery must complete (or at minimum start) before new order flow begins.
       Decide the venue list source: likely `SUPPORTED_VENUES` filtered to CLOB-capable ones, or whichever
@@ -186,8 +187,10 @@ context_scope:
       `execution_service/engine/orchestrator.py`) to durably persist order state into `UnifiedOrderManager`
       (or an equivalent durable store) so `OrderBook` is actually populated by the live process it's
       meant to protect. That's a genuinely separate, cross-cutting, live-hot-path change needing its own
-      design review -- NOT something to improvise inside this recovery-engine-wiring plan. New tracked
-      follow-up: see Close-out todo below.
+      design review -- NOT something to improvise inside this recovery-engine-wiring plan. **Spun out**
+      into `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md` (design-only, + mandatory
+      finalize companion) — see that plan's Close-out todo 2 for the follow-up implementation plan this todo
+      will ultimately close against.
 - [x] ✅ [AGENT] P1. **Confirm the circuit-breaker gate (B2) still behaves correctly** against the real adapters —
       the stub always returned empty/success, so this path was never exercised against a real failure mode
       (timeout, auth error, rate limit). New test `test_real_venue_adapter_exception_routes_through_circuit_breaker`
@@ -204,37 +207,31 @@ context_scope:
 
 ### Close-out
 
-- [ ] [AGENT] P0. **NEW (2026-08-20): wire `ExecutionOrchestrator`'s order submission
-      (`_submit_orders_with_timing`/`_submit_single_child_order`, `execution_service/engine/orchestrator.py`)
-      to durably persist order state via `UnifiedOrderManager` (or equivalent)** — the genuine, separate,
-      cross-cutting prerequisite Phase 3 todo 1's STOP-AND-DOCUMENT annotation names. Needs its own design
-      review (live hot-path change): does every child order get an OMS `create_order` call at submission
-      and an `update_order_status` on fill/cancel/reject, or is there a lighter-weight approach? Until this
-      lands, `OrderRecoveryEngine.run()` cannot be safely wired into `_run_live_async` (Phase 3 todo 1 stays
-      open) — verify by re-running Phase 3 todo 1 once this closes.
-      **DELIBERATELY NOT attempted in this dispatch (2026-08-20), even after an explicit "continue at your
-      own pace" go-ahead from the coordinator** — this is a live-hot-path change to the order SUBMISSION
-      flow (every real trade), a categorically different risk class from the STARTUP-only recovery code
-      this dispatch spent its budget building and testing. This todo's own text already says it "needs its
-      own design review"; that was written deliberately, and doing it inline here — under a "continue" nudge
-      rather than a considered decision to expand scope into the hot path — would be exactly the kind of
-      scope-creep-without-review this workspace's own AO-eligibility rule warns against ("AO-eligible =
-      outcome DETERMINABLE by the worker alone, never an open-ended judgment/design call"). Recommend this
-      become its OWN plan doc, scoped and reviewed on its own terms, not a tail todo on a recovery-engine
-      plan.
-- [ ] [AGENT] P0. **Run real recovery against every wired venue and record the actual result** — this is the
-      first genuine evidence the mechanism works, not a smoke test. For any venue where real testing isn't
-      possible (BLOCKED-CREDENTIALS), record that honestly rather than claiming coverage.
-      **DELIBERATELY NOT attempted in this dispatch (2026-08-20) — TWO independent reasons, either alone
-      sufficient:** (1) blocked on the ExecutionOrchestrator todo immediately above — there is no safe "real
-      recovery run" to record while `OrderBook` is structurally guaranteed empty (would prove nothing beyond
-      "the exchange-orphan-cancellation half works," already covered by this session's own real-adapter
-      tests). (2) Genuinely making LIVE API calls against real exchanges (even read-only `fetch_open_orders`)
-      requires real operator-provided credentials and explicit authorization to hit production venue APIs
-      from an ad-hoc session — not something a dispatched sub-agent should self-authorize regardless of
-      credential availability. This dispatch's own tests already prove the real code paths correctly
-      (mocked at the ccxt/HTTP boundary, not at `fetch_open_orders` itself, per the dispatch brief's own
-      verification bar) — that is the honest ceiling of what this session could verify.
+- [x] ✅ [AGENT] P0. **SPUN OUT (2026-08-20) — `BLOCKED-OPERATOR` (design-review gate, not credentials):**
+      wire `ExecutionOrchestrator`'s order submission (`_submit_orders_with_timing`/`_submit_single_child_order`,
+      `execution_service/engine/orchestrator.py`) to durably persist order state via `UnifiedOrderManager` (or
+      equivalent) — the genuine, separate, cross-cutting prerequisite Phase 3 todo 1's STOP-AND-DOCUMENT
+      annotation names. This is a live-hot-path change to the order SUBMISSION flow (every real trade), a
+      categorically different risk class from the STARTUP-only recovery code this dispatch built and tested —
+      deliberately NOT attempted inline here, even after an explicit "continue at your own pace" go-ahead from
+      the coordinator, per this workspace's own AO-eligibility rule ("never an open-ended judgment/design call
+      inline — resolve that first as its own plan"). Coordinator agreed: spun out into its own design-only plan,
+      `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md` (+ mandatory finalize companion) —
+      this todo is CLOSED here, tracked THERE. Verify Phase 3 todo 1 (below) by re-running it once that plan's
+      own follow-up IMPLEMENTATION plan lands.
+- [ ] [AGENT] P0. **`BLOCKED-OPERATOR` + `BLOCKED-CREDENTIALS` (two independent gates, either alone
+      sufficient): run real recovery against every wired venue and record the actual result** — this is the
+      first genuine evidence the mechanism works, not a smoke test. (1) `BLOCKED-OPERATOR`: blocked on the
+      ExecutionOrchestrator todo immediately above (now spun out, see there) — there is no safe "real recovery
+      run" to record while `OrderBook` is structurally guaranteed empty (would prove nothing beyond "the
+      exchange-orphan-cancellation half works," already covered by this session's own real-adapter tests).
+      (2) `BLOCKED-CREDENTIALS`: genuinely making LIVE API calls against real exchanges (even read-only
+      `fetch_open_orders`) requires real operator-provided credentials and explicit authorization to hit
+      production venue APIs from an ad-hoc session — not something a dispatched sub-agent should self-authorize
+      regardless of credential availability. This dispatch's own tests already prove the real code paths
+      correctly (mocked at the ccxt/HTTP boundary, not at `fetch_open_orders` itself, per the dispatch brief's
+      own verification bar) — that is the honest ceiling of what this session could verify. Re-check both gates
+      at finalize time per that plan's own todo 3.
 - [x] ✅ [AGENT] P1. **Post-phase codex audit**: check `/codex/04-architecture/` for any doc describing state
       recovery as already guaranteed (the original T4 todo cited "the artefacts describe this as guaranteed") —
       correct any that were wrong, now that it genuinely is (or precisely isn't, per what actually ships).
@@ -246,7 +243,7 @@ context_scope:
       false-success trap" to a real, tracked prerequisite gap one level up the stack (the same doc's own
       `PostgreSQLOrderPersistence`-shaped pattern). The other three components that doc lists
       (`TransferCoordinator`, `HealthFactorMonitor`, `PostgreSQLOrderPersistence`) were outside this plan's
-      scope and were not re-measured. Shipped `unified-trading-pm@<pending — see next quickmerge>`.
+      scope and were not re-measured. Shipped `unified-trading-pm@e9832cbd49`.
 - [x] ✅ [AGENT] P2. **Triage phase**: any todo above that couldn't close (credential gap, a real design question
       this plan's own text didn't resolve) gets a dated annotation with the specific reason, never left silently
       unattempted. Summary of what stays open and why, all annotated in place above: Phase 2 todo 2's

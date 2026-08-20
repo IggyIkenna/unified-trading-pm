@@ -474,6 +474,10 @@ todos only to confirm they are data-movement, then leave it.
       `BLOCKED-CREDENTIALS`, build the scaffold regardless). Sized into 3 phases (real `OrderBook`; real
       `_VenueAdapter` incl. the new fetch-open-orders capability; startup wiring) plus close-out and the
       mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
+      **Final status (2026-08-20):** Phase 1+2 shipped real (`execution-service@458c70c48e`/`e856d72999`/
+      `945d84d946`/`32ad0cfa4a`); Phase 3 startup-wiring deliberately `BLOCKED-OPERATOR` (a genuine, deeper
+      prerequisite gap found mid-dispatch — nothing in the live order-submission path durably persists order
+      state — spun into its own design plan, `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
 - [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
       **execution-service@9c79bfa0ef** (landing verified by an empty `git diff --stat origin/live-defi-rollout`
       over all three files plus grepping the landed `api/main.py` for `manual_router`). The defect existed only in
@@ -679,6 +683,10 @@ todos only to confirm they are data-movement, then leave it.
       means per transport; build the pinning; build drift detection; triage + close-out), deliberately front-
       loading the 3 real design questions as P0s since everything else depends on their outcome, plus the
       mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
+      **Final status (2026-08-20):** Phase 1+2 shipped real (`execution-service@458c70c48e`/`e856d72999`/
+      `945d84d946`/`32ad0cfa4a`); Phase 3 startup-wiring deliberately `BLOCKED-OPERATOR` (a genuine, deeper
+      prerequisite gap found mid-dispatch — nothing in the live order-submission path durably persists order
+      state — spun into its own design plan, `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md`).
 - [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
       `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, per the 2026-08-19
       operator ruling. Sized into 11 phases against a real, enumerated ~85-file adapter inventory (bridge/
