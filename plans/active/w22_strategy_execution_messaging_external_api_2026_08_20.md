@@ -112,7 +112,7 @@ context_scope:
       `main.py`'s own routes, not assuming). Done-when: a live check confirms the subscriber task is running
       under the container's actual startup path. -- execution-service@99962afa1f; Evidence: bash
       scripts/quality-gates.sh --no-fix (8808 passed, 22 skipped)
-- [ ] [BACKEND] P0. Features-service → execution subscription, same `EventTransport.read()` pattern, subscribed
+- [x] [BACKEND] P0. ✅ SHIPPED 2026-08-20 — execution-service@0be361333d. Features-service → execution subscription, same `EventTransport.read()` pattern, subscribed
       to ONLY the feature groups execution actually needs — start with whatever `DeltaProxyRepricer`'s
       underlying-tick loop needs (this IS the missing "underlying-tick loop" the linked delta-proxy issue doc
       names as blocking real `QuoteMaintainer.on_underlying_tick` calls — closing this todo should let that
