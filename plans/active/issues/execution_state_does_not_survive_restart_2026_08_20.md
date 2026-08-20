@@ -100,9 +100,11 @@ which is worse than the others because a CLI flag and a docstring both actively 
       `PostgreSQLOrderPersistence` properly and offer it from `create_oms()`, or replace the persistence protocol with
       something that is durable by construction. Do NOT leave a `NotImplementedError` stub reachable by config — a
       `USE_DATABASE=true` that crashes on first save is worse than no option at all.
-- [ ] [BACKEND] P0. **Wire `OrderRecoveryEngine` into the live startup path with a real venue adapter**, or delete it.
-      A component that a CLI flag and a docstring both claim runs, and which does not, is worse than an absent one —
-      it defeats the check a reader would make.
+- [ ] [BACKEND] P0. **Wire `OrderRecoveryEngine` into the live startup path with a real venue adapter.** A component
+      that a CLI flag and a docstring both claim runs, and which does not, is worse than an absent one — it defeats the
+      check a reader would make. **Deleting it is NOT an option** (operator ruling R20, 2026-08-20): removing the
+      declaration would satisfy any gate while moving the platform further from target state. The same applies to
+      `PostgreSQLOrderPersistence` and to the unused `RedisStreamTransport` — build what is declared.
 - [ ] [BACKEND] P0. **Make `--skip-recovery` do something or remove it.** Its attribute is defined and never read.
 - [ ] [BACKEND] P1. **Implement `AccountHistoryClient` per venue, or make its emptiness loud.** Returning `[]`
       unconditionally means funding reconciliation reports PENDING forever and never fails — the same silent-plausible
