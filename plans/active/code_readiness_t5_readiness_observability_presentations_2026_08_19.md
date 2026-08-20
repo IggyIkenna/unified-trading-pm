@@ -231,7 +231,7 @@ todos only to confirm they are data-movement, then leave it.
          field in `readiness_pipeline_stage_per_shard_2026_08_18.json` (next item). Report grain per asset_group,
          or report the hollow fraction beside the label.
 
-- [ ] [FROM-T2] P1. **Your readiness dump's `grain` field is mislabelled — the writer, not the file.** This is the
+- [x] [FROM-T2] P1. **Your readiness dump's `grain` field is mislabelled — the writer, not the file.** This is the
       `/plans/epics/system_readiness_master.md` § W3 `[DOC] P1` item, and it lands in a file this tranche owns, so
       T2 has not touched it. MEASURED: `plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18.json`
       declares top-level `grain: "instrument_type"` while all 864 rows carry only
@@ -241,6 +241,11 @@ todos only to confirm they are data-movement, then leave it.
       the grain of the **readiness rows**, which are built at `venue x asset_group x mode`. The two are different
       things. Suggested shape: emit `row_grain: "venue_asset_group_mode"` for what the rows actually are, and keep
       the source's grain under its own key (`coverage_source_grain`), so neither is silently claiming the other.
+      **Fixed exactly per T2's suggested shape, 2026-08-20**: `unified-trading-pm@065067f345`. Verified end-to-end
+      (both human-readable and `--json` output paths) against a live dump: header now prints
+      `rows: venue_asset_group_mode, coverage source: instrument_type`; JSON carries `row_grain` +
+      `coverage_source_grain`, the old ambiguous `grain` key is gone (0 occurrences). The 9-blank-venue-row note
+      in this same item is T2's own separate tracking, not touched here.
       Also worth a look while you are in there: 9 rows carry an EMPTY `venue` string (all `asset_group: sports`) —
       they come straight through from 9 blank-venue cells in coverage.json, which T2 is tracking separately.
 
