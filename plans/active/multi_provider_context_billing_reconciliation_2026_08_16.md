@@ -38,7 +38,7 @@ related:
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-19
+last_updated: 2026-08-20
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -210,6 +210,15 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       means accurate usage is already live the moment real dispatch starts. Done when: a real post-deploy smoke
       test against the VM's `codex-bridge.service` shows non-estimated (`TurnResult.usage`-sourced) numbers in the
       response, not the old `len(text)//4` shape.
+      **STILL NOT DONE, live-confirmed 2026-08-20** (investigating the slot-31 context-99% incident below): SSM'd
+      directly into `i-0c9b283b31d6b5ca7`'s real `codex-bridge.service` checkout
+      (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator`) — the checked-out `server/codex_bridge_server.py`
+      DOES already carry the real-usage mapper (`_codex_usage_to_anthropic_usage`, 2 matches), but
+      `.venv/bin/python -c 'import tiktoken'` still raises `ModuleNotFoundError` — `uv sync` was never run. The
+      service HAS restarted since the code landed (`systemctl show codex-bridge`: `ActiveState=active`,
+      `ExecMainStartTimestamp=2026-08-20T00:10:46Z`), so this is a restart-without-`uv-sync`, not a not-yet-restarted
+      state — the exact half-deployed condition this todo's own "Done when" bar was written to catch. `codex-luna`
+      is enabled and live-dispatched right now (slot 31), so this is not a hypothetical.
 - [ ] [REVIEW] P2. New (2026-08-19) — once real fleet traffic flows through Codex/Luna (gated on
       `codex_mcp_tool_use_bridge_2026_08_18.md`'s operator-gated unpause, not mine to flip), cross-check a real
       sample of captured token counts against the actual ChatGPT/Codex usage dashboard within a stated tolerance —
@@ -230,6 +239,38 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       identically to the already-proven DeepSeek case. Done when: a dated Progress Log entry records this for all 3
       remaining providers, each independently verified, not assumed to transfer from DeepSeek's or each other's
       result.
+      **Real live failure observed for Codex specifically, 2026-08-20 (not yet the full test above, but directly
+      relevant new evidence)**: operator reported slot 31 (real `codex-luna` dispatch, `used_by_slots: [31]`
+      confirmed via `/api/accounts`) hit 99% context in the dashboard before compacting — AO's 60%/70% guided
+      pre-compact/compact tiers never intervened; only Claude Code's own hard auto-compact eventually fired
+      (`compactions_total: 11` on this slot, `last_compacted_at: 2026-08-20T05:22:59Z`, matching the operator's "now
+      around 30%" observation). Root cause traced to the model-window-registration gap, see the new `[INFRA] P0`
+      todo below — not yet the systematic multi-turn test this todo asks for, but real, unplanned confirmation that
+      Codex's `/pre-compact`→`/compact` path is NOT yet proven safe end-to-end.
+- [ ] [INFRA] P0. **New (2026-08-20, live incident — root cause of the slot-31 context-99% failure noted on the
+      `[REVIEW] P0` todo above)** — register `gpt-5.6-luna` in `model_tier._ALLOWED_MODEL_WINDOWS`, or give it
+      `is_deepseek()`-style special-casing in `context_probe.context_window_for()`. Confirmed by reading
+      `model_tier.py` directly: `_ALLOWED_MODEL_WINDOWS` is a CLOSED set — the 5 Anthropic snapshots
+      (haiku-4-5/sonnet-4-6/sonnet-5/opus-5/fable-5) plus DeepSeek matched by substring — and `gpt-5.6-luna` (the
+      real `message.model` string the bridge echoes into the transcript, confirmed live) is in neither, so
+      `context_window()` would raise `UnknownModelContextWindowError` for it. Because a learned-registry entry
+      already exists for it, `context_window_for()` never even reaches that failure — it takes the STORED
+      `calibrated_window` instead, and that path has NO guard against the exact "poisoned calibration" bug class
+      `context_probe.py`'s own docstring documents as already having burned DeepSeek and sonnet-4.6: Claude Code
+      doesn't recognise an unregistered model string, falls back to its own ~200K internal guess, and a pane-scraped
+      pct calibrated against THAT wrong denominator gets stored as if it were real. DeepSeek is protected from this
+      by an explicit `is_deepseek()` early-return in `context_window_for()`; `gpt-5.6-luna` has no equivalent.
+      **Live-confirmed 2026-08-20** via `data/state/learned_context_windows.json` on `i-0c9b283b31d6b5ca7`:
+      `gpt-5.6-luna` → `calibrated_window: 263941`, `watermark_hits: 1` (not yet corroborated —
+      `_WATERMARK_CONFIRM_HITS` is 3) — a suspiciously ~200-280K figure sitting in exactly the same band as the
+      CLI's known-wrong DeepSeek/sonnet-4.6 fallback, against GPT-5.6's own published (still unverified per the
+      `[REVIEW] P2` todo below) ~1.05M/128K claim. A too-small learned window does not by itself explain a run to
+      99% (it would make AO's own pct read HIGH, triggering compaction too early, not too late) — the live-tickle
+      leans toward the codex-bridge fake-token-estimate deploy gap (`[INFRA] P1` todo above) as the more likely
+      DIRECT cause of the 99% spike, with this registration gap as a compounding, independently-real problem — both
+      need fixing, and this todo should not be closed by fixing only the other one. Done when: `gpt-5.6-luna` has a
+      real registered prior or deepseek-style guard, AND the stale `263941` `calibrated_window` entry is purged so a
+      fresh, unpoisoned reading replaces it.
 - [ ] [REVIEW] P2. **Narrowed 2026-08-18 (Grok decommissioned, its 4.3's 1M claim dropped — untested and now moot)**
       — live-test the remaining context-window claims from this session's research table (GLM's 1M/131K, Gemini's
       1,048,576/65,536 — already confirmed live for Gemini, DeepSeek's 1,048,576/384,000,
@@ -907,4 +948,35 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   Also fixed in the sibling plan while in this exact code area:
   `deepseek_claude_blended_provider_routing_2026_07_28.md`'s `[INFRA] P2` `glm_quota_poller.py` real bug (wrong
   ceiling constants AND wrong unit, prompt-count vs credits) — see that doc's own Progress Log for the fix detail;
+  cross-linked here since it shares this session and this code area.
+
+- **2026-08-20 (interactive session, investigating a live incident, not a scoped todo) — operator reported slot 31
+  (real `codex-luna` dispatch) showed 99% context in the dashboard before compacting, despite AO's guided
+  pre-compact/compact tiers being configured to fire at 60%/70%. Confirmed live, not guessed, via SSM against the
+  real orchestrator VM (`i-0c9b283b31d6b5ca7`) and reading `agent-orchestrator/server/model_tier.py` +
+  `context_probe.py` directly:
+
+  1. `codex-luna` is currently enabled and live-dispatched (`GET /api/accounts` → `codex-luna` `status: healthy`,
+     `used_by_slots: [31]`) — this is real fleet traffic, not a stale/paused config; the account's own plan
+     (`codex_mcp_tool_use_bridge_2026_08_18.md`) still shows the unpause as "ready for operator review" as of
+     2026-08-19, so it was flipped on since.
+  2. `gpt-5.6-luna` (the real `message.model` the bridge's Anthropic-shaped responses echo back — confirmed by
+     reading `codex_bridge_server.py`'s own docstring on `_drive_codex_turn`) is not registered in
+     `model_tier._ALLOWED_MODEL_WINDOWS`, and has no `is_deepseek()`-style guard in `context_probe.context_window_for()`
+     protecting it from calibrating off Claude Code's own wrong internal window guess for an unrecognized model —
+     see the new `[INFRA] P0` todo above for the full mechanism and the live `calibrated_window: 263941` figure
+     pulled from the VM's `learned_context_windows.json`.
+  3. Separately, and independently real: `[INFRA] P1`'s "deploy the real-usage fix to `codex-bridge.service`" todo
+     (open since 2026-08-19) is confirmed STILL not done as of this session — `tiktoken` is missing from the
+     deployed venv even though the service has restarted since the fix's code landed. See that todo's own updated
+     evidence above.
+
+  Both gaps are independently real and both need closing; which one was the PROXIMATE cause of this specific
+  99% spike is not fully disambiguated this session (a too-small learned window alone would make AO's own pct
+  read HIGH and compact EARLY, not late — so the fake/missing-tiktoken usage-estimate path is the more likely
+  direct explanation for the CLI running all the way to its own hard ceiling before anything intervened, with the
+  window-registration gap as a second, compounding problem). No code changed this session — investigation only,
+  new evidence appended to the 3 todos above (2 existing, 1 new) rather than left as unstructured chat, per this
+  workspace's own findings-triage rule. `[unresolved]`: neither underlying todo is fixed; slot 31's context risk
+  is UNCHANGED by this session and could recur on its next long run.
   cross-linked here since it shares this session and this code area.
