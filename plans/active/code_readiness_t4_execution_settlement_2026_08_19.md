@@ -361,10 +361,13 @@ todos only to confirm they are data-movement, then leave it.
       fields did not exist). Evidence:
       `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 - [ ] [BLOCKED-OPERATOR] P1. Delta-proxy — the POSITION and CREDIT legs of the triple. NOT deferred by this
-      tranche: T1 recorded a superseded-shape ruling (Q12-Q16) and retagged `reference_position` / `credit` on
-      `StrategyInstructionEnvelope` as `BLOCKED-OPERATOR` when landing the sensitivity triple
-      (`unified-trading-pm@3353254d7a`). Execution-side work resumes the moment that shape is decided; the price
-      leg above is independent of it and is already shipped. Evidence: same issue doc, plus T1's plan.
+      tranche. **RE-CHECKED 2026-08-20, still genuinely blocked — reference updated, was stale.** The Q12-Q16
+      citation this todo carried is itself stale per T1's own plan: the actual current blocker is
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` §15 ("OPEN — needs an
+      operator ruling next session"), which supersedes Q12-Q16 with a full FACTOR-STATE MODEL (§11-14) and its
+      own 4 named open questions plus 5 outstanding Wave-0 rulings — a real design, not a stub. Execution-side
+      work resumes the moment that shape is decided; the price leg above is independent of it and is already
+      shipped.
 
 ### W11 — order lifecycle and execution state
 
