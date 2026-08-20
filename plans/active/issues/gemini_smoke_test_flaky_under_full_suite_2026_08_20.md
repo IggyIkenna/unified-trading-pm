@@ -16,7 +16,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, quality-gates, flaky-test, integration, smoke]
-related: [ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19]
+related: [ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19, ao_consolidated_closeout_2026_08_12]
 created: "2026-08-20"
 author: worker (slot 14)
 assigned_vm: planning

@@ -191,26 +191,26 @@ Operator-action items:
 - [ ] **B.1.2** Create per-asset_group HSM-backed CMK:
 
       ```bash
-              for ag in defi cefi tradfi sports prediction; do
-                gcloud kms keys create "trading-${ag}-master-v1" \
-                  --keyring=wallets-prod --location=asia-northeast1 \
-                  --purpose=encryption --protection-level=hsm --rotation-period=90d \
-                  --next-rotation=$(date -u -v+90d +%Y-%m-%dT%H:%M:%SZ) \
-                  --project=central-element-323112
-              done
-              ```
+                  for ag in defi cefi tradfi sports prediction; do
+                    gcloud kms keys create "trading-${ag}-master-v1" \
+                      --keyring=wallets-prod --location=asia-northeast1 \
+                      --purpose=encryption --protection-level=hsm --rotation-period=90d \
+                      --next-rotation=$(date -u -v+90d +%Y-%m-%dT%H:%M:%SZ) \
+                      --project=central-element-323112
+                  done
+                  ```
 
 - [ ] **B.1.3** Bind KMS Decrypter to trading-VM SA **only** (no human principals):
 
       ```bash
-              for ag in defi cefi tradfi sports prediction; do
-                gcloud kms keys add-iam-policy-binding "trading-${ag}-master-v1" \
-                  --keyring=wallets-prod --location=asia-northeast1 \
-                  --member="serviceAccount:trading-vm-${ag}@central-element-323112.iam.gserviceaccount.com" \
-                  --role=roles/cloudkms.cryptoKeyDecrypter \
-                  --project=central-element-323112
-              done
-              ```
+                  for ag in defi cefi tradfi sports prediction; do
+                    gcloud kms keys add-iam-policy-binding "trading-${ag}-master-v1" \
+                      --keyring=wallets-prod --location=asia-northeast1 \
+                      --member="serviceAccount:trading-vm-${ag}@central-element-323112.iam.gserviceaccount.com" \
+                      --role=roles/cloudkms.cryptoKeyDecrypter \
+                      --project=central-element-323112
+                  done
+                  ```
 
 - [ ] **B.1.4** Verify NO `roles/cloudkms.cryptoKeyEncrypterDecrypter` is granted to ANY human principal:
       `gcloud kms keys get-iam-policy ... | grep -v "serviceAccount:"`. Should return only `serviceAccount:` entries.
@@ -236,44 +236,44 @@ execution:
 - [ ] **B.2.1** Create CMK per asset_group (use `AWS_KMS` for May-23; swap `AWS_CLOUDHSM` post-cluster-provisioning):
 
       ```bash
-              for ag in defi cefi tradfi sports prediction; do
-                aws kms create-key \
-                  --description "trading-${ag}-master-v1" \
-                  --key-usage ENCRYPT_DECRYPT \
-                  --customer-master-key-spec SYMMETRIC_DEFAULT \
-                  --origin AWS_KMS \
-                  --region ap-northeast-1
-              done
-              ```
+                  for ag in defi cefi tradfi sports prediction; do
+                    aws kms create-key \
+                      --description "trading-${ag}-master-v1" \
+                      --key-usage ENCRYPT_DECRYPT \
+                      --customer-master-key-spec SYMMETRIC_DEFAULT \
+                      --origin AWS_KMS \
+                      --region ap-northeast-1
+                  done
+                  ```
 
-              Note the `KeyId` (UUID) returned per key — needed for alias + ARN construction.
+          Note the `KeyId` (UUID) returned per key — needed for alias + ARN construction.
 
 - [ ] **B.2.2** Create human-readable aliases (required for `kms_key_uri` ARN in `WalletProvisioningConfig`):
 
       ```bash
-              for ag in defi cefi tradfi sports prediction; do
-                aws kms create-alias \
-                  --alias-name "alias/trading-${ag}-master-v1" \
-                  --target-key-id <key-id-from-B.2.1-for-${ag}> \
-                  --region ap-northeast-1
-              done
-              ```
+                  for ag in defi cefi tradfi sports prediction; do
+                    aws kms create-alias \
+                      --alias-name "alias/trading-${ag}-master-v1" \
+                      --target-key-id <key-id-from-B.2.1-for-${ag}> \
+                      --region ap-northeast-1
+                  done
+                  ```
 
-              The full ARN form used in code: `arn:aws:kms:ap-northeast-1:427895769566:key/<key-id>`.
+          The full ARN form used in code: `arn:aws:kms:ap-northeast-1:427895769566:key/<key-id>`.
 
 - [ ] **B.2.3** Bind `kms:Decrypt` to trading-VM EC2 instance role **only**. NO human IAM principals:
 
       ```bash
-              aws kms put-key-policy \
-                --key-id <key-id> \
-                --policy-name default \
-                --policy '{"Version":"2012-10-17","Statement":[{"Sid":"AllowDecryptByTradingVMRoleOnly","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::427895769566:role/trading-vm-role"},"Action":["kms:Decrypt"],"Resource":"*"}]}' \
-                --region ap-northeast-1
-              ```
+                  aws kms put-key-policy \
+                    --key-id <key-id> \
+                    --policy-name default \
+                    --policy '{"Version":"2012-10-17","Statement":[{"Sid":"AllowDecryptByTradingVMRoleOnly","Effect":"Allow","Principal":{"AWS":"arn:aws:iam::427895769566:role/trading-vm-role"},"Action":["kms:Decrypt"],"Resource":"*"}]}' \
+                    --region ap-northeast-1
+                  ```
 
-              Verify:
-              `aws kms get-key-policy --key-id <key-id> --policy-name default --region ap-northeast-1 | grep -v "trading-vm-role"`
-              should return only the KMS service principle, no human principals.
+          Verify:
+          `aws kms get-key-policy --key-id <key-id> --policy-name default --region ap-northeast-1 | grep -v "trading-vm-role"`
+          should return only the KMS service principle, no human principals.
 
 - [ ] **B.2.4** CloudTrail logging enabled for all CMK actions. Verify via AWS Console → CloudTrail → Event history
       filter: `eventSource=kms.amazonaws.com, eventName=Decrypt`.
@@ -281,43 +281,43 @@ execution:
       B.3.2):
 
       ```bash
-              # Step 1: encrypt PK with AWS KMS (offline cold laptop with AWS CLI configured)
-              echo -n "$RAW_PK" | \
-              aws kms encrypt \
-              --key-id arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id> \
-              --plaintext fileb:///dev/stdin \
-              --query CiphertextBlob \
-              --output text \
-              --region ap-northeast-1 > /tmp/wrapped.b64
+                  # Step 1: encrypt PK with AWS KMS (offline cold laptop with AWS CLI configured)
+                  echo -n "$RAW_PK" | \
+                  aws kms encrypt \
+                  --key-id arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id> \
+                  --plaintext fileb:///dev/stdin \
+                  --query CiphertextBlob \
+                  --output text \
+                  --region ap-northeast-1 > /tmp/wrapped.b64
 
-              # Step 2: store wrapped ciphertext as-is in Secrets Manager (SecretString = base64-encoded ciphertext blob)
-              aws secretsmanager create-secret \
-              --name "defi-eth-hot-aave-v1-wrapped" \
-              --secret-string "$(cat /tmp/wrapped.b64)" \
-              --region ap-northeast-1
+                  # Step 2: store wrapped ciphertext as-is in Secrets Manager (SecretString = base64-encoded ciphertext blob)
+                  aws secretsmanager create-secret \
+                  --name "defi-eth-hot-aave-v1-wrapped" \
+                  --secret-string "$(cat /tmp/wrapped.b64)" \
+                  --region ap-northeast-1
 
-              # Step 3: wipe temp file immediately
-              shred -u /tmp/wrapped.b64
-              ```
+                  # Step 3: wipe temp file immediately
+                  shred -u /tmp/wrapped.b64
+                  ```
 
-              Secret name must match byte-for-byte with `WalletProvisioningConfig.private_key_secret_ref`.
+          Secret name must match byte-for-byte with `WalletProvisioningConfig.private_key_secret_ref`.
 
 - [ ] **B.2.6** Populate `WalletProvisioningConfig` row with AWS ARN form for `kms_key_uri`:
 
       ```python
-              WalletProvisioningConfig(
-                  wallet_id="defi-eth-hot-aave-v1",
-                  chain="ETHEREUM",
-                  kind=WalletKind.HOT_TRADING,
-                  signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,
-                  kms_key_uri="arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id>",
-                  private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",
-                  archetype_id="carry_staked_basis",
-              )
-              ```
+                  WalletProvisioningConfig(
+                      wallet_id="defi-eth-hot-aave-v1",
+                      chain="ETHEREUM",
+                      kind=WalletKind.HOT_TRADING,
+                      signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,
+                      kms_key_uri="arn:aws:kms:ap-northeast-1:427895769566:key/<defi-key-id>",
+                      private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",
+                      archetype_id="carry_staked_basis",
+                  )
+                  ```
 
-              The `CloudKmsCustodyProvider` detects `cloud_provider="aws"` and routes to `boto3.client("kms")` +
-              `client.decrypt(CiphertextBlob=wrapped, KeyId=kms_key_uri)` automatically (no code change needed).
+          The `CloudKmsCustodyProvider` detects `cloud_provider="aws"` and routes to `boto3.client("kms")` +
+          `client.decrypt(CiphertextBlob=wrapped, KeyId=kms_key_uri)` automatically (no code change needed).
 
 ### B.3 Per-wallet envelope-encrypted PK provisioning
 
@@ -328,41 +328,41 @@ For each May-23 cutover wallet (≥10 mainnet wallets per Plan Phase 4.A: 2 arch
 - [ ] **B.3.2** Envelope-encrypt the PK:
 
       ```bash
-              gcloud kms encrypt \
-                --key=trading-defi-master-v1 --keyring=wallets-prod --location=asia-northeast1 \
-                --plaintext-file=/dev/stdin --ciphertext-file=- \
-                --project=central-element-323112 <<< "$RAW_PK" | base64 > /tmp/wrapped.b64
-              ```
+                  gcloud kms encrypt \
+                    --key=trading-defi-master-v1 --keyring=wallets-prod --location=asia-northeast1 \
+                    --plaintext-file=/dev/stdin --ciphertext-file=- \
+                    --project=central-element-323112 <<< "$RAW_PK" | base64 > /tmp/wrapped.b64
+                  ```
 
-              Then store the wrapped ciphertext in Secret Manager:
-              `gcloud secrets create defi-eth-hot-aave-v1-wrapped --data-file=/tmp/wrapped.b64`.
+          Then store the wrapped ciphertext in Secret Manager:
+          `gcloud secrets create defi-eth-hot-aave-v1-wrapped --data-file=/tmp/wrapped.b64`.
 
 - [ ] **B.3.3** Securely wipe the cold-laptop key material per data-destruction policy (operator-runbook).
 - [ ] **B.3.4** Populate `WalletProvisioningConfig` row in `gs://wallet-config-{pid}/mainnet/wallet_provisioning.json`:
 
       ```python
-              WalletProvisioningConfig(
-                  wallet_id="defi-eth-hot-aave-v1",
-                  chain="ETHEREUM",
-                  kind=WalletKind.HOT_TRADING,
-                  signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,
-                  kms_key_uri="projects/central-element-323112/locations/asia-northeast1/keyRings/wallets-prod/cryptoKeys/trading-defi-master-v1",
-                  private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",  # Secret Manager ref to wrapped ciphertext
-                  allowed_protocols=frozenset({"AAVE_V3", "UNISWAP_V3"}),
-                  spending_caps=SpendingCaps(
-                      per_tx_usd=Decimal("50000"),
-                      per_day_usd=Decimal("1000000"),
-                      per_protocol_usd={"AAVE_V3": Decimal("500000")},
-                  ),
-                  kill_switch_id="KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS",
-                  archetype_id="carry_staked_basis",
-              )
-              ```
+                  WalletProvisioningConfig(
+                      wallet_id="defi-eth-hot-aave-v1",
+                      chain="ETHEREUM",
+                      kind=WalletKind.HOT_TRADING,
+                      signing_surface=SigningSurface.CLOUD_KMS_ENCRYPTED,
+                      kms_key_uri="projects/central-element-323112/locations/asia-northeast1/keyRings/wallets-prod/cryptoKeys/trading-defi-master-v1",
+                      private_key_secret_ref="defi-eth-hot-aave-v1-wrapped",  # Secret Manager ref to wrapped ciphertext
+                      allowed_protocols=frozenset({"AAVE_V3", "UNISWAP_V3"}),
+                      spending_caps=SpendingCaps(
+                          per_tx_usd=Decimal("50000"),
+                          per_day_usd=Decimal("1000000"),
+                          per_protocol_usd={"AAVE_V3": Decimal("500000")},
+                      ),
+                      kill_switch_id="KILL_PER_ARCHETYPE_CARRY_STAKED_BASIS",
+                      archetype_id="carry_staked_basis",
+                  )
+                  ```
 
-              Note: `private_key_secret_ref` is OVERLOADED for CLOUD_KMS_ENCRYPTED (wrapped ciphertext lives in Secret Manager;
-              CMK decrypts at runtime). Adapter-side wiring per Plan Phase 3.C.1.
-              Note: `private_key_secret_ref` is OVERLOADED for CLOUD_KMS_ENCRYPTED (wrapped ciphertext lives in Secret Manager;
-              CMK decrypts at runtime). Adapter-side wiring per Plan Phase 3.C.1.
+          Note: `private_key_secret_ref` is OVERLOADED for CLOUD_KMS_ENCRYPTED (wrapped ciphertext lives in Secret Manager;
+          CMK decrypts at runtime). Adapter-side wiring per Plan Phase 3.C.1.
+          Note: `private_key_secret_ref` is OVERLOADED for CLOUD_KMS_ENCRYPTED (wrapped ciphertext lives in Secret Manager;
+          CMK decrypts at runtime). Adapter-side wiring per Plan Phase 3.C.1.
 
 ### B.4 Sepolia + Solana devnet smoke (pre-cutover gate)
 
