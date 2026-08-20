@@ -11992,7 +11992,7 @@
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
             All 8 registry-declared TradFi venues (<code>VENUES_BY_ASSET_GROUP["tradfi"]</code>). Vendor-sourced
-            (Databento-first, per <code>tradfi-databento-sourcing-ssot.md</code>); the boundary disclosure differs per
+            (one primary provider, per internal TradFi sourcing documentation); the boundary disclosure differs per
             dataset and is stated inline where it diverges. <code>FRED</code> carries data types
             (<code>yield_curve</code>, <code>ohlcv_1d</code>) that the instrument-type roster could not classify — shown
             under its own “Unclassified” node rather than folded into a category it does not belong to.
@@ -17285,7 +17285,7 @@
           the remaining work there depends on which venues you want. Testnet readiness is currently mixed rather than
           uniformly complete: real progress exists (AAVE on Sepolia, a Solana LST devnet, a Kalshi demo host), and real
           gaps remain (no per-venue CeFi testnet declaration yet, sports' live-credential probe is still stubbed,
-          TradFi's only live probe covers Tardis, and Polymarket has neither a testnet nor a written paper-trading
+          TradFi's only live probe covers one vendor-sourced feed, and Polymarket has neither a testnet nor a written paper-trading
           ruling). Schemas and contracts do not change between these steps, so beginning at step 1 costs nothing later.
         </p>
       </div>
