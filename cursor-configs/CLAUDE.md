@@ -421,7 +421,7 @@ proxy ES256 / accounts via GSM, never `.credentials.json`; backlog plan-driven (
 hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill (central + role registry); runtime
 self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). **Orchestrator `tuning.*` knobs are env-free**
 (`TuningDefaults`) — change the code default + redeploy; `.env.local` silently no-ops. **Checking live backlog/dispatch
-status from a dev checkout** (no JWT, VM:8765 has no inbound rule): `/check-agent-orchestrator` skill or
+status from a dev checkout** (no JWT; `:8765` IS public, auth-gated): `/check-agent-orchestrator` skill or
 `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only via AWS SSM, never a manual
 API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.
