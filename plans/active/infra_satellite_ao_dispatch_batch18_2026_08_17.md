@@ -142,7 +142,7 @@ rather than split into two same-priority concurrent items on the same file.
       the one confirmed-dead import block, not the broader unresolved items. Repo: deployment-service. Source:
       `deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md` item 3.
 
-- [ ] [INFRA] P2. **Pin gcloud identity per-invocation in VM launcher scripts.** Audit `launcher_common.sh` and
+- [x] ✅ [INFRA] P2. **Pin gcloud identity per-invocation in VM launcher scripts.** Audit `launcher_common.sh` and
       `launch-*.sh` for any bare `gcloud` call relying on the ambient/global active account instead of an explicit
       `--account=`/`CLOUDSDK_CORE_ACCOUNT`, and pin it explicitly — prevents a cross-slot active-account clobber on
       the shared host from silently redirecting a launcher's `gcloud` calls to the wrong identity. **Coordination
@@ -151,7 +151,7 @@ rather than split into two same-priority concurrent items on the same file.
       latest before editing to avoid a stale-base diff. **Done when**: every bare ambient-account `gcloud` call in
       these files is pinned, verified via a targeted grep (`gcloud (?!.*--account)` or equivalent) showing zero
       remaining bare calls. Repo: deployment-service. Source:
-      `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` item 1.
+      `shared_host_gcloud_active_account_cross_slot_clobber_2026_08_04.md` item 1. — deployment-service@062c79c3f9; Evidence: quality-gates.sh PASS (3652 passed, 5 skipped), bash -n PASS on all four modified launchers, and all launchers with host-side gcloud references inherit or declare CLOUDSDK_CORE_ACCOUNT.
 
 - [ ] [INFRA] P2. **Author the Terraform diff for the 45 classified-STRIP-buckets lifecycle policy; re-run the
       cost-delta query once shipped.** The source doc's full 105-bucket STRIP/KEEP/UNCLEAR classification is done (5
