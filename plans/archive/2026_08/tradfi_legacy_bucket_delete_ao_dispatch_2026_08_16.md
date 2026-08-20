@@ -11,7 +11,7 @@ summary: >-
   2026-08-02 re-opening): complete for the MIGRATED corpus only — ~2,008 legacy-only tradfi days destroyed
   without migration are irrecoverable and NOT part of the "100%" claim; do not let this checkbox imply full
   completeness.
-status: active
+status: complete
 nature: process
 asset_group: [tradfi]
 stage: [data]
@@ -24,7 +24,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -51,6 +51,10 @@ context_scope:
 locked_since:
 resolved_by:
 ---
+
+> **ARCHIVED 2026-08-20 — COMPLETE/GATED.** Both tracked verification todos are resolved: the live CF-8 gate
+> remains RED at 97.4958%, so the irreversible delete was correctly withheld. Reopen the delete work only after a
+> fresh CF-1..CF-12 verification proves GREEN.
 
 # TradFi legacy bucket delete — E7 verify-then-delete
 

@@ -11,7 +11,7 @@ scope: [engineer]
 tags: [tradfi, finalize]
 related:
   [
-    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+    /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
     /plans/active/data_completion_tradfi_2026_07_15.md,
   ]
 created: "2026-08-16"
@@ -34,7 +34,7 @@ source: "na-eligibility-audit follow-up Q&A round 8, 2026-08-16"
 locked_by:
 context_scope:
   [
-    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+    /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
     /plans/archive/2026_08/issues/gate_on_depends_checks_completion_not_outcome_2026_08_17.md,
     /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
   ]

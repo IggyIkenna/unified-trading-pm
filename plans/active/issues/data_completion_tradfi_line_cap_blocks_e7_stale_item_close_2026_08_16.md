@@ -22,7 +22,7 @@ tags: [tradfi, plan-hygiene, line-cap, check_line_caps, na-eligibility-audit, bl
 related:
   [
     /plans/active/data_completion_tradfi_2026_07_15.md,
-    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16_finalize.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 parent_epic: tradfi_master
@@ -40,7 +40,7 @@ depends_on: []
 context_scope:
   [
     /plans/active/data_completion_tradfi_2026_07_15.md,
-    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16_finalize.md,
     scripts/plan-hygiene/check_line_caps.sh,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -52,7 +52,7 @@ context_scope:
 
 Verified live that `data_completion_tradfi_2026_07_15.md`'s E7 todo ("verify CF-1..CF-12 GREEN, then delete legacy
 `market-data-tick-tradfi` + bulk-delete 12 placeholder prefixes") was extracted to
-`/plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` — that doc exists, `status: active`,
+`/plans/archive/2026_08/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` — that doc exists, `status: complete`,
 `assigned_vm: planning`, and its own todo cites `Source: data_completion_tradfi_2026_07_15.md E7 (line 211)`. The
 E7 checkbox should close to match.
 
