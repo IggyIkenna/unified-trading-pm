@@ -93,7 +93,7 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       — unified-api-contracts@d384e840b7: added `check_instruments_schema_lock.py`, a checked-in SHA-256 golden
       snapshot, and falsifier tests covering both unchanged-version failure and bumped-version success; quickmerge quality gates passed; commit is
       ancestry-verified on `origin/live-defi-rollout`.
-- [ ] [DATA] P2. Add a `schema_version: str` field to `SchemaContract`
+- [x] ✅ [DATA] P2. Add a schema_version field to SchemaContract — unified-api-contracts@553c8e5f01 + Evidence: quality-gates.sh PASS; five catalogue contracts assert INSTRUMENTS_SCHEMA_VERSION
       (`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py`, currently has none) and populate
       it from `INSTRUMENTS_SCHEMA_VERSION` in `_make_catalogue_contract()`
       (`unified-api-contracts/unified_api_contracts/internal/schemas/_instrument_catalogue_contract.py`). Depends on

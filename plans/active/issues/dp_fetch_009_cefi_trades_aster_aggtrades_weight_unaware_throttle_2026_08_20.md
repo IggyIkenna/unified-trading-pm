@@ -163,3 +163,55 @@ non-throttled window.
   root-causing DP-FETCH-009 for cefi/trades to a weight-unaware Aster throttle (aggTrades weight
   20/call vs. the 1.0-weight-per-request pacing assumption). Fixed in
   `aster_base_client.py`/`aster_adapter.py`, shipping via quickmerge this session.
+- 2026-08-20, `data_pipeline_failure` worker (slot 1, escalation `agt-2efe94`): re-fire of the
+  SAME DP-FETCH-009 condition (cefi/trades: 97,578 attempted_failed / 1,604,161 attempted, 6.1%;
+  3,055 fresh in last 1d) after the code fix landed. Verified NOT a new regression — see the
+  `## Re-fire resolution` section appended below.
+
+## Re-fire resolution (agt-2efe94, 2026-08-20)
+
+DP-FETCH-009 re-fired for `asset_group=cefi data_type=trades` (97,578 attempted_failed of
+1,604,161 attempted, 6.1%; 3,055 fresh in the last 1d) after this doc's code fix shipped. This is
+a re-fire of the SAME already-root-caused condition, NOT a new regression.
+
+### Verified
+
+- **Fix landed**: `market-tick-data-service@8d51b537ef` (weight-aware Aster throttle) is an
+  ancestor of `origin/live-defi-rollout` (verified via `git merge-base --is-ancestor`).
+- **Fresh population is the same cause** (bounded pyarrow probe of the live cefi consolidated
+  availability index, row-group streaming under the shared-host memory cap; ~4G peak):
+  - LIFETIME attempted_failed/trades: 360,828 rows.
+  - FRESH last-1d: **3,027 rows — 100% `batch_aster` / `venue=ASTER`, error_reason exclusively
+    `"Aster aggTrades HTTP 429 for <symbol>"`** (~150+ distinct symbols; BTCUSDT 223, ETHUSDT 107,
+    SOLUSDT 79, ...).
+  - FRESH last-6h: 483 rows, max `attempted_at` 2026-08-20T04:00Z — **still actively climbing at
+    probe time**, i.e. not a static backlog.
+- **Why it kept re-firing**: the 3 ASTER year-shard backfill VMs
+  (`cefi-aster-2024/2025/2026-20260819-000150`, launched 2026-08-18, **pre-fix**) were STILL
+  RUNNING the old weight-unaware throttle. Backfill VMs deploy code from a MANUAL GCS tarball
+  (`create-code-tarballs.sh` → `gs://deployment-scripts-{project}/code/mtds-code.tar.gz`) at boot —
+  they do not self-pull LDR, so the shipped fix never reached them. Each VM burns its full
+  2400-weight/min budget in ~12s and gets 429'd ~48s of every minute, indefinitely.
+
+### Action taken (main-agent endorsed Option A via BLK-573b0aee)
+
+1. **Rebuilt the code tarballs** (`bash scripts/vm/create-code-tarballs.sh`, default core scope):
+   `mtds-code.tar.gz` fixed-name + `@801e0d31efad...` SHA-pinned copy re-uploaded 2026-08-20
+   04:47Z from `market-tick-data-service@801e0d31` (= origin/live-defi-rollout, whose ancestor
+   chain includes the fix `8d51b537ef`). Manifest verified: `commit_sha=801e0d31efad370d...`,
+   `git_status_clean=True`, `created_at=2026-08-20T04:46:55Z`.
+2. **Restarted the 3 ASTER VMs** (`gcloud compute instances stop` → `start`, zone
+   asia-northeast1-c): all 3 now RUNNING with fresh external IPs
+   (34.180.101.206 / 34.84.63.145 / 35.200.107.78). The `startup-script-url` re-runs
+   `setup-data-pipeline-vm.sh` on boot → re-installs the fixed `mtds-code.tar.gz` → resumes
+   `collect-onchain-perp-batch` from manifest progress (standard VM recovery pattern; no
+   `START_DATE` replay).
+
+### Follow-on verification (not waited for in this one-shot escalation)
+
+- Confirm fresh `attempted_failed` stops accumulating for cefi/trades on the next DP-FETCH-009
+  sweep (or any later manifest probe) once the restarted VMs finish setup + resume fetching.
+- The **historical** `attempted_failed` cells (this doc's original population) still convert to
+  `captured` only when a future ASTER batch run passes over them (todo 2's retry-failed path) —
+  the restart alone re-captures the cells the running VMs had already failed; the older failed
+  cells need a resumed run, unchanged by this action.
