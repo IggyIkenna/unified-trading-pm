@@ -173,27 +173,39 @@ todos only to confirm they are data-movement, then leave it.
       (`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`). **This is the exact pattern to
       mirror for the general case, not a design question** — the architecture (InMemoryTransport for paper,
       Pub/Sub for live, same code path) is already proven.
-      **What's genuinely still missing, and why not built this session**: the other ~56 archetypes' `on_tick()`
-      returns `list[StrategyInstructionEnvelope]` (the general, single-leg instruction type — distinct from
-      `AtomicInstruction`) via `V2EngineOrchestrator.on_tick()`. Traced every production caller of
-      `V2EngineOrchestrator.on_tick(` and found: (a) `phase6_driver.py`'s `Phase6Driver.tick()` wraps it and
-      explicitly just returns the list to ITS caller — but `Phase6Driver` itself has ZERO production
-      instantiation sites anywhere in the repo (unwired, matching the state-fabric doc's R20 "mirror failure"
-      pattern — code that exists, is presumably tested, but is wired to nothing); (b) `batch_harness.py`'s
-      `V2BatchHarness` is the other caller, but it's explicitly BATCH-only (`STRATEGY_DISPATCH_MODE={v2_shadow,
-      v2_prod}`, historical backtesting), not live/paper. **Net: for the general (non-Group-B) case, no live/paper
-      caller of the orchestrator's tick loop was found at all in this pass** — the gap is deeper than "add a
-      publish call", it may require first confirming/building the live/paper tick-driver itself, or that driver
-      may exist under a name/pattern this pass didn't find (paper mode's real path — `paper_run_attribution.py`/
-      `paper_run_passive.py` in `engine/backtest/`, per this session's earlier PnL investigation — was NOT traced
-      against `V2EngineOrchestrator.on_tick()` specifically; they may or may not be the same call chain). This is
-      genuinely unresolved, not merely unbuilt, and routes real trading decisions once live — not something to
-      guess at rather than trace fully. The counterparty-facing HTTP/WebSocket surface (the second half) needs
-      separate real product/security design (auth model, rate limits, what data is exposed) not attempted here
-      either. **Recommended next step for whoever picks this up**: trace `paper_run_attribution.py`/
-      `paper_run_passive.py`'s actual call chain back to confirm whether it goes through
-      `V2EngineOrchestrator.on_tick()` or a separate path, before designing the publish wiring — that single trace
-      resolves the open question above.
+      **Correction to this todo's OWN prior entry, same day**: the paragraph originally here (written earlier
+      today) claimed "no live/paper caller of the orchestrator's tick loop was found" — that was wrong, from an
+      incomplete grep (missed a match my own search pattern should have caught). Traced further and found the
+      real driver: `strategy_service/engine/backtest/runner.py::GroupBRunner` (despite the "Group B" name, its
+      own docstring: "maintains a non-shadow `V2EngineOrchestrator` — emitted instructions are captured and
+      benchmark-filled inline", `backtest_group` is just an internal harness-taxonomy label, not an archetype
+      restriction — it's registered against whichever instance(s) a caller wires in, per-archetype, not scoped to
+      3 families). `paper_run_handler.py` (the actual `--operation paper-run` T+1-cron caller) instantiates it
+      too, for a promoted `carry_staked_basis` instance — confirming this IS the real live/paper driver.
+      **The actual, now-precise gap**: `GroupBRunner._process_tick()` (`runner.py:244-270`) calls
+      `orchestrator.on_tick(...)`, then UNCONDITIONALLY runs every returned instruction through
+      `self._fill_engine.settle(...)` — a **local `BenchmarkFillEngine` simulation**, regardless of mode. The
+      ONLY real external publish is a narrow, explicit exception: `if instruction is AtomicInstruction AND
+      execution_mode is LEADER_HEDGE: self._atomic_publisher(instruction)` (`__init__`'s own comment: "Wire-in
+      seam 2026-07-30 ruling... `None` (default) keeps the runner byte-identical for non-multi-leg / legacy
+      backtests — no forward, no event-spine touch"). So the gap isn't a missing driver — it's that this driver's
+      own 2026-07-30 wiring deliberately scoped the real-publish branch to ONLY `LEADER_HEDGE AtomicInstruction`;
+      every other `StrategyInstructionEnvelope` (all ~56 non-Group-B archetypes) is always benchmark-filled
+      locally and never reaches an external transport in ANY mode today, paper or nominally-live. This is now a
+      well-scoped, buildable extension (mirror the existing `atomic_publisher` seam for the general instruction
+      type) rather than an open architectural question — **but two things need resolving first, not guessed**:
+      (1) whether "live" mode should SKIP local benchmark-fill settlement entirely once a real publish path
+      exists (so real venue fills come back instead of a simulated one), or run both — settling AND publishing —
+      which would be a real double-count risk; (2) `build_paper_run_attribution`/`build_paper_run_passive`
+      (`engine/backtest/paper_run_attribution.py`/`paper_run_passive.py`) — grepped and found ZERO production
+      callers, only their own file + 2 test files. **This also corrects an earlier claim from this session's own
+      PnL investigation** (session 4, this plan's W9/W10/W13 row) that called these "the shared batch=paper=live
+      code path... confirmed real, wired" — that was a second-hand subagent claim relayed without independently
+      re-verifying the literal call site, and it does not hold up against a direct grep. Whatever function
+      `GroupBRunner`/`PaperRunHandler` actually uses for attribution was NOT identified in this pass either — a
+      real open item, not resolved here. The counterparty-facing HTTP/WebSocket surface (the second half of the
+      original ask) still needs separate real product/security design (auth model, rate limits, what data is
+      exposed), not attempted here.
 - [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
       unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
       edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
@@ -408,12 +420,15 @@ todos only to confirm they are data-movement, then leave it.
       no cron/systemd/Terraform trigger was found anywhere in the repo, unlike `--operation paper-run` which is
       documented as the T+1 cron's Stage A (`service_entry.py:827-834`). Real decision needed: wire
       `pnl-attribution` into a cron trigger, or delete the orphaned CLI operation if `paper_run_attribution.py`
-      already supersedes it. `paper_run_passive.py`/`paper_run_attribution.py` (`engine/backtest/`, not
-      `pnl/engine/` — path corrected) confirmed real: both cite
-      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §1 directly, i.e. they ARE the shared
-      batch=paper=live code path per the determinism-spine architecture, not a paper-only surface as the
-      original phrasing implied — so "collapse to one path" may already be closer to done than the todo states;
-      what's left is retiring/merging the two stragglers, not building a new unified path from scratch. HWM
+      already supersedes it. **Correction, session 6, same day**: the "`paper_run_passive.py`/
+      `paper_run_attribution.py` confirmed real" claim below was WRONG — a second-hand subagent relay taken at
+      face value rather than independently re-verified against the literal call site. Direct grep (session 6):
+      `build_paper_run_attribution(` and `build_paper_run_passive(` have ZERO production callers anywhere in the
+      repo — only their own definition files + 2 test files. The real live/paper driver is
+      `engine/backtest/runner.py::GroupBRunner` (traced in the "Counterparty-facing surface" inbound-request
+      item above) — it does NOT call either of these two functions; what it actually uses for attribution was
+      not identified. "They ARE the shared batch=paper=live code path" is retracted — unverified, do not cite it.
+      HWM
       confirmed compliant in the live path (`param_schema.py:1361,1371` uses UAC's `hwm_ledger` explicitly on
       TWR/Notional/PnL-recovery); the one raw-equity HWM implementation found (`pnl_monitor.py:70,201-202`) has
       no confirmed production instantiation site (dead code, not a live violation) and mock_data_provider's is
@@ -653,7 +668,7 @@ section is now done.
 | `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@<see Progress Log>`. | Nothing. |
 | DeFi/vol/sports/ML/MM config-key contract drift | **DONE — sweep was already comprehensive, not vol-scoped.** The systemic construct-and-fire test parametrizes all 59 registered archetypes, confirmed green (143 passed/3 xfailed with `GCP_PROJECT_ID` set). 2 genuine remaining bugs, both `[DESIGN]`-blocked not mechanical: `RULES_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED` (real per-row threshold/instrument-ID decisions, not derivable). | Nothing agent-executable. The 2 xfails need a human to pick real DSL thresholds / Betfair-Matchbook instrument IDs — don't fabricate plausible-looking values for live financial strategies. |
 | W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
-| W9/W10/W13 PnL, risk, exposure | **Re-verified, not stale — genuinely open, but re-scoped smaller.** `paper_run_attribution.py`/`paper_run_passive.py` already ARE the shared batch=paper=live path (not paper-only); `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Decide compute_handler's fate (wire a cron trigger or delete the orphaned op) and confirm compute_pnl's 3 capabilities are covered elsewhere before retiring it — smaller, more bounded than the original "build a unified path" framing suggested. |
+| W9/W10/W13 PnL, risk, exposure | **Genuinely open, re-scoped, with a correction.** Session 4's "`paper_run_attribution.py`/`paper_run_passive.py` confirmed real, shared batch=paper=live path" claim is RETRACTED (session 6) — zero production callers found on direct grep, was an unverified second-hand relay. The real live/paper driver is `GroupBRunner` (`engine/backtest/runner.py`); what it uses for attribution is unidentified. `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Identify `GroupBRunner`'s real attribution path (not `paper_run_attribution.py`/`paper_run_passive.py` — those are dead code candidates now, not the answer) before touching PnL surfaces further. Decide `compute_handler`'s fate and confirm `compute_pnl`'s 3 capabilities are covered elsewhere before retiring it. |
 | W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
 | Position adapters / venue coverage | **DONE — whole section found already resolved** (all 4 sub-items: CeFi dispatch, asymmetry, hot-swap, orphan-coverage), all shipped 2026-08-14 through 17 by prior sessions, predating this plan's 2026-08-19 authorship. This plan section was written stale from birth. Residue is entirely non-agent-executable: 2 `[OPERATOR]` decisions (instrument hot-swap A/B, out-of-mandate adapter disclosure) + 1 `[AGENT]` Solana-SDK item in execution-service (T4's repo). | Nothing. If picking this back up, it's an operator-decision chase (hot-swap A/B, disclosure), not new engineering. |
 | features-service | **Swept 2026-08-20 — every item already correctly gated, not "untouched-and-actionable" as this row implied.** Onchain featureless shards: mechanical part shipped 2026-07-30, remaining scope independently reconfirmed 5x as needing human data-source scoping (not a build task). `corporate_actions`: zero live blast radius (built-but-never-run) + genuinely `[OPERATOR]`-gated vendor decision. Calendar manifest gap: gated on a `[REVIEW]` shard-atom design decision. `delta_one` PREDICTION-bucket bug: already fixed (`features-service@09be801b`); one test-mode-only caveat noted. Settlement-suffix (P2): already fully resolved. | Nothing agent-executable remains in this section. If revisited: chase the operator decisions (corporate_actions re-sourcing, calendar shard-atom question), or scope the on-chain MTDS collectors as their own dedicated human-sized work. |
@@ -857,3 +872,12 @@ is a genuine open question (not yet a design decision, not yet buildable) rather
 call" — routes real trading decisions once live, so traced rather than guessed. Full detail + the recommended next
 trace (follow `paper_run_attribution.py`'s real call chain) on the flipped-but-still-partially-open checkbox above.
 Did not attempt the HTTP/WebSocket counterparty surface (needs real product/security design, not mine to invent).
+
+**Same-session correction, immediately after**: did the recommended trace myself rather than leave it for later,
+and found a DIFFERENT answer than the "no live/paper caller found" claim just written above — corrected in place
+on both the inbound-request item and the W9/W10/W13 deferred-table row, not left to mislead. Real driver:
+`GroupBRunner` (`engine/backtest/runner.py`); `paper_run_attribution.py`/`paper_run_passive.py` have zero
+production callers and are retracted as "the shared path." Lesson worth stating plainly: a subagent's relayed
+claim ("confirmed real, wired") was carried forward and re-asserted twice this session without independently
+re-checking the literal call site each time — the fix each time was a direct grep, seconds of work. Cite a
+subagent's finding as ITS finding until independently re-verified, not as an established fact.
