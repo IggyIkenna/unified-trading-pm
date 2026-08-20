@@ -570,3 +570,26 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
   covered the FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (data_pipeline_failure escalation worker, slot 29, agt-910641)**: dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-sports-odds-api-odds-20260816-145019
+  venue=MATCHBOOK data_type=odds` (no issue slug — alert-carries-the-details path). Confirmed this is the SAME
+  VM already logged firing across ~30 distinct sports-odds bookmaker venues in one burst by the 2026-08-19
+  slot-10/slot-14/slot-1/slot-4 dispatches above — MATCHBOOK is explicitly named in slot-10's ~30-venue burst
+  list — a duplicate/spam symptom of THIS doc's already-open root cause, not a new failure mode; did not file a
+  separate issue doc. Checked whether MATCHBOOK falls into the slot-1 MYBOOKIEAG-class scope-mismatch theory
+  (live `OddsApiWSFeedConnector` unfiltered `regions=uk,us` fetch vs the batch adapter's curated
+  `REQUESTED_ODDS_API_BOOKMAKERS` list): it does NOT — direct code read
+  (`market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py:125`)
+  confirms `"matchbook"` IS present in `REQUESTED_ODDS_API_BOOKMAKERS` (listed under the "NOT AUDITED (free —
+  same 2 implicit regions)" block, included at no extra cost), same as the slot-4 LADBROKES conclusion —
+  MATCHBOOK is in-scope on both the live and batch side, so the region-vs-bookmakers scope-mismatch theory does
+  not explain this venue's alert either. Cross-checked against the newer same-day
+  `dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md` (T5 tranche, slot 3): its fresh
+  channel measurement independently found the alerting-service cooldown storm this doc tracks STILL breaching
+  41/46 identities one hour after the 2026-08-19T21:41:59Z merge-fix (`ac21303714`) deploy, and separately named
+  this exact VM's odds-never-captured condition as one of the two real, ageing live-capture gaps underneath the
+  storm — consistent with, not contradicting, this dispatch's duplicate/spam classification. No code changes
+  shipped this session (repo: market-tick-data-service; no MTDS-side bug found for this venue; worktree
+  confirmed clean, 0 ahead, before and after). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id,
+  so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
+  covered the FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
