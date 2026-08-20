@@ -11,7 +11,7 @@ stage: [strategy]
 repos: [strategy-service, fund-administration-service, unified-api-contracts]
 scope: [engineer]
 tags: [vehicle-eligibility, sma, fund-administration, finalize, archival]
-related: [/plans/active/client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20.md]
+related: [/plans/archive/2026_08/client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20.md]
 created: 2026-08-20
 last_updated: 2026-08-20
 parent_epic: strategy_master
@@ -34,7 +34,7 @@ superseded_by:
 source: companion finalize plan per task_template.md §4 STRICT rule, 2026-08-20
 context_scope:
   [
-    /plans/active/client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20.md,
+    /plans/archive/2026_08/client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     unified-api-contracts/unified_api_contracts/internal/reporting/client_config.py,
     unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/client_config.py,
@@ -64,7 +64,7 @@ plan doesn't sit `active` with zero open todos.
   (`_DEFAULT_CLIENTS`, hardcoded Python) and client-reporting-api's `ClientConfig` (loaded from
   `credentials-registry.yaml`) are separate data sources, not two views of one file — so the field could not have
   auto-synced. Filed
-  `plans/active/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md` (latent today — zero
+  `/plans/archive/2026_08/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md` (latent today — zero
   SMA clients exist — real once one is onboarded) rather than leaving it unactioned prose.
 
 - [x] [DOC] P2. Run the 6-step archival ritual on

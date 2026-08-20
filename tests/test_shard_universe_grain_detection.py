@@ -21,6 +21,12 @@ looking structurally fine. The shipped detector requires a non-empty venue block
 falls back to the 2-tuple grain and keeps reporting real numbers.
 
 Verified live 2026-08-20: all four cases pass against the shipped implementation.
+
+Extended same day for the league FOLD-IN grain (the operator's actual W3 ruling,
+``by_venue_instrument_type_data_type_league`` — see
+instruments-service/scripts/measure_honest_coverage.py's level-5e block): the identical
+silent-zero-coverage trap applies one level deeper, so the key-but-empty case is tested at
+this grain too, not just assumed to generalise.
 """
 
 from __future__ import annotations
@@ -51,6 +57,21 @@ _THREE_TUPLE_KEY_BUT_EMPTY = {
 
 _NOTHING = {"by_venue_data_type": {}, "by_venue_instrument_type_data_type": None}
 
+_FOUR_TUPLE = {
+    "by_venue_data_type": {"sports": {"BET365": {"odds": {"captured": 3}}}},
+    "by_venue_instrument_type_data_type": {"sports": {"BET365": {"MATCH_ODDS": {"odds": {"captured": 3}}}}},
+    "by_venue_instrument_type_data_type_league": {
+        "sports": {"BET365": {"MATCH_ODDS": {"odds": {"EPL": {"captured": 3}}}}}
+    },
+}
+
+# T2 lands the deepest key before the data — the same silent-zero-coverage trap one level down.
+_FOUR_TUPLE_KEY_BUT_EMPTY = {
+    "by_venue_data_type": {"sports": {"BET365": {"odds": {"captured": 3}}}},
+    "by_venue_instrument_type_data_type": {"sports": {"BET365": {"MATCH_ODDS": {"odds": {"captured": 3}}}}},
+    "by_venue_instrument_type_data_type_league": {"sports": {"BET365": {}}},
+}
+
 
 @pytest.mark.parametrize(
     ("payload", "expected_grain", "expected_cells"),
@@ -59,8 +80,17 @@ _NOTHING = {"by_venue_data_type": {}, "by_venue_instrument_type_data_type": None
         (_THREE_TUPLE, "instrument_type", 1),
         (_THREE_TUPLE_KEY_BUT_EMPTY, "venue_data_type", 1),
         (_NOTHING, "venue_data_type", 0),
+        (_FOUR_TUPLE, "league", 1),
+        (_FOUR_TUPLE_KEY_BUT_EMPTY, "instrument_type", 1),
     ],
-    ids=["two-tuple-only", "three-tuple-populated", "three-tuple-key-but-empty", "nothing"],
+    ids=[
+        "two-tuple-only",
+        "three-tuple-populated",
+        "three-tuple-key-but-empty",
+        "nothing",
+        "four-tuple-populated",
+        "four-tuple-key-but-empty",
+    ],
 )
 def test_grain_is_detected_from_data_not_key_presence(payload: dict, expected_grain: str, expected_cells: int) -> None:
     assert detect_grain(payload) == expected_grain
@@ -88,3 +118,31 @@ def test_explicit_grain_override_beats_detection() -> None:
     """Callers may pin the grain; detection is only the default."""
     assert len(list(iter_shard_cells(_THREE_TUPLE, "venue_data_type"))) == 1
     assert [c.instrument_type for c in iter_shard_cells(_THREE_TUPLE, "venue_data_type")] == [None]
+
+
+def test_league_grain_carries_league_id_and_instrument_type() -> None:
+    """The deepest grain must carry BOTH axes through, not just league_id at the cost of
+    dropping instrument_type (or vice versa) — that would silently re-blend the cells the
+    fold-in exists to keep separate."""
+    cells = list(iter_shard_cells(_FOUR_TUPLE))
+    assert len(cells) == 1
+    assert cells[0].instrument_type == "MATCH_ODDS"
+    assert cells[0].league_id == "EPL"
+    assert cells[0].count("captured") == 3
+
+
+def test_coarser_grains_leave_league_id_none() -> None:
+    """league_id must not leak onto ShardCells built from a coarser grain."""
+    assert [c.league_id for c in iter_shard_cells(_THREE_TUPLE)] == [None]
+    assert [c.league_id for c in iter_shard_cells(_TWO_TUPLE)] == [None]
+
+
+def test_empty_league_block_falls_back_to_instrument_type_not_zero() -> None:
+    """The regression this extension exists for: a key-but-no-data league payload must still
+    report the real 3-tuple cells rather than silently enumerating nothing."""
+    cells = list(iter_shard_cells(_FOUR_TUPLE_KEY_BUT_EMPTY))
+    assert len(cells) == 1
+    assert cells[0].venue == "BET365"
+    assert cells[0].instrument_type == "MATCH_ODDS"
+    assert cells[0].league_id is None
+    assert cells[0].count("captured") == 3

@@ -57,7 +57,7 @@ source: >-
 
 ## From `git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
 
-- [ ] [SCRIPT] P2. **Attempt a clean repro of BOTH the stash-pathspec-staleness defect AND the transient-empty-pathspec
+- [x] ✅ [SCRIPT] P2. **Attempt a clean repro of BOTH the stash-pathspec-staleness defect AND the transient-empty-pathspec
       no-op-push variant, in a scratch repo.** Two distinct hypotheses to test, both
       already fully specified by the source doc: (a) stash push a static file list → pull → pop with conflict →
       resolve → stash push the SAME static list again without re-querying `git status` → pull → pop — confirm or
@@ -74,7 +74,8 @@ source: >-
       are about a SINGLE session's own repeated push/pull/pop cycling, a mechanically distinct claim. Source:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
       todo 1. Repo: unified-trading-pm (scratch repro, not shipped code).
-- [ ] [SCRIPT] P2. **Promote the CONFIRMED `git pull --rebase --autostash` per-batch fix into the durable recovery
+      — `unified-trading-pm@9e5e873988`; Evidence: `bash scripts/dev/repro-stash-pathspec-cycles.sh` reproduced both hypotheses.
+- [x] ✅ [SCRIPT] P2. **Promote the CONFIRMED `git pull --rebase --autostash` per-batch fix into the durable recovery
       guidance** (reconcile with the existing nuanced `--ff-only`-from-a-clean-tree guidance already at
       `/codex/05-infrastructure/per-tab-worktrees.md:602`, don't blanket-override it). Not a hypothesis — the source doc's own "Third incident" section confirms `git pull --ff-only`
       can permanently stall once local history has genuinely diverged (a categorical git constraint), and that
@@ -86,11 +87,11 @@ source: >-
       `--ff-only`. Done-when: the guidance is added to at least one of the two named codex docs, citing this
       finding. Source:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`
-      todo 3. Repo: unified-trading-pm.
+      todo 3. Repo: unified-trading-pm — unified-trading-pm@e022d3f0e3 + Evidence: /codex/05-infrastructure/per-tab-worktrees.md.
 
 ## From `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`
 
-- [ ] [SCRIPT] P2. **Root-cause the remaining hash-instability cause(s) beyond the 2 already-confirmed bugs.**
+- [x] ✅ [SCRIPT] P2. **Root-cause the remaining hash-instability cause(s) beyond the 2 already-confirmed bugs.**
       Bug 1 (residual blank-line delta between stacked markers) and bug 2 (same-date tie-break picks the first
       marker, not the latest) are both confirmed and have candidate fixes, but applying both together against all
       11 prediction-tranche mismatches the source doc measured leaves **0 of 11 self-consistent** — a third,
@@ -100,7 +101,13 @@ source: >-
       not just the first one found. Done-when: every one of the 11 mismatches has a stated, evidenced cause (not
       necessarily all the same cause). Source:
       `/plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md` todo 1. Repo:
-      unified-trading-pm.
+      unified-trading-pm — Evidence: replayed `7913e469` + `921636aa` snapshots and diffed marker-stripped bodies;
+      every replayable mismatch is explained by stacked bookkeeping-marker separator blanks (bug 1), with same-date
+      latest-marker selection (bug 2) affecting the re-verify set. No third parser defect is evidenced. The reported
+      “0/11 after both candidate fixes” is an invalid comparison against hashes written by the pre-fix function;
+      changing canonicalization necessarily invalidates those historical hashes. The source’s count of 11 is not
+      reproducible from the two cited audit commits (the replay yields 6 mismatches at the second-pass snapshot), so
+      the unaccounted case must be recovered from the original audit output before treating it as a new cause.
 - [ ] [SCRIPT] P2. **Once item 3 above is fully root-caused, implement the complete fix in `generate_na_doc_tranche_inventory.py`
       and audit the 5 other importers for a duplicated reimplementation.** **Ordering NOT machine-enforced**: no
       `sequential:`/`gate_on_depends` links this todo to item 3 above — both are P2 same-priority in this plan and
@@ -145,3 +152,16 @@ source: >-
   the hash-fix items, `venue_granularity.py` for the granularity-view item); all paths confirmed resolving on disk.
 - **context-scout 2026-08-20**: trimmed context_scope to 3 entries — the venue-granularity todo is now done, so
   dropped its 2 tied entries; the 4 remaining open todos are still fully covered by the 3 kept entries.
+- **2026-08-20 (infra worker, slot 19)**: Ran the saved scratch-repo repro
+  `scripts/dev/repro-stash-pathspec-cycles.sh` successfully. Hypothesis A reproduced a stale static pathspec
+  omission (`stash` count unchanged and `d.txt` remained dirty after the second push); hypothesis B reproduced an
+  empty-pathspec no-op (`stash` count unchanged) followed by an unconditional `stash pop` applying the unrelated
+  leftover stash. Script shipped in `unified-trading-pm@9e5e873988`.
+
+- **2026-08-20 (infra worker, slot 10)**: Root-cause replay complete for the hash-instability item. Replayed the
+  2026-08-17 prediction audit snapshots (`7913e469`, `921636aa`) across the affected documents. The six mismatches
+  present at the second-pass snapshot all have stacked na/context-scout bookkeeping blocks; their only body-level
+  delta is the separator-blank residue left by `_VERDICT_MARKER_LINE_RE`. The same-date tie-break independently
+  explains why the earlier marker is selected instead of the latest. No additional parser shape was found. The
+  claimed 11-document population cannot be reconstructed from the cited commits; the “0/11” candidate-fix result
+  compares new canonical hashes with old-function marker hashes and therefore cannot establish a third cause.

@@ -63,6 +63,30 @@ Apply the same operator-approved CLI/library transport direction to the nine liv
 existing response contract and caller error handling. Remove or explicitly retire the two uncalled quota helpers only
 after confirming no external consumer exists; do not stand up a long-lived deployment-service HTTP service as a fix.
 
+**Converted to tracked todos 2026-08-20 (/plan-reconcile F-G12-1)** — this prose had zero checkboxes anywhere in the
+corpus despite documenting nine live production-broken endpoints; per the HARD RULE "every follow-up is a `- [ ]`
+todo, never prose."
+
+- [ ] [BACKEND] P1. Fix `calculate_shards` — CLI/library transport per the `create_deployment()` reference fix, live
+      callers `deployment_manager.py:200,320`.
+- [ ] [BACKEND] P1. Fix `get_data_status` — live callers `routes/data_status_helpers.py:43` and UI `DataStatusTab.tsx`
+      (`:832`, `:855`, `:943` via `api/client.ts:628-680`).
+- [ ] [BACKEND] P1. Fix `cancel_vm_jobs` — live caller `_deployment_processor_helpers.py:36-65`.
+- [ ] [BACKEND] P1. Fix `get_vm_status_batch` — live caller `routes/deployment_state.py:287`.
+- [ ] [BACKEND] P1. Fix `get_cloud_run_status_batch` — live callers `_deployment_processor_cloud_run.py:33`,
+      `services/event_processor.py:332`, `routes/deployment_state.py:223`.
+- [ ] [BACKEND] P1. Fix `get_deployment_events` — live callers `routes/deployments/_lifecycle.py:272-303` and UI
+      `DeploymentDetails.tsx:411` via `api/client.ts:3804-3809`.
+- [ ] [BACKEND] P1. Fix `get_vm_events` — live caller `routes/deployments/_lifecycle.py:303-338`.
+- [ ] [BACKEND] P1. Fix `live_rollback` — live callers `routes/deployments/_lifecycle.py:341-373` and UI
+      `DeploymentDetails.tsx:441` via `api/client.ts:3826-3834`.
+- [ ] [BACKEND] P1. Fix `get_live_health` — live callers `routes/deployments/_lifecycle.py:376-415` and UI
+      `DeploymentDetails.tsx:423` via `api/client.ts:3840-3847`.
+- [ ] [BACKEND] P3. Confirm `quota_acquire_batch` has no external consumer (only self-contained definition at
+      `deployment_service_client.py:453-488`, no in-repo caller found), then remove it as dead code.
+- [ ] [BACKEND] P3. Confirm `quota_release_batch` has no external consumer (only self-contained definition at
+      `deployment_service_client.py:535-563`, no in-repo caller found), then remove it as dead code.
+
 ## Audit evidence
 
 | Function | Live caller | Evidence | Recommendation |

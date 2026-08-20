@@ -50,7 +50,7 @@ code_refs:
 >
 > **Positioning SSOT for anything client-facing is <https://www.odum-research.com>, not this doc.** Section 5 records
 > what was verified there on 2026-08-09 and what must NOT be asserted without re-verifying. Quickmerge could not commit
-> from this host (4/4 failures, see `/plans/active/issues/quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md`);
+> from this host (4/4 failures, see `/plans/archive/issues/quickmerge_setup_bootstrap_loop_blocks_commit_2026_08_09.md`);
 > this doc and the `code_refs` tooling landed via a path-scoped `git commit` instead.
 >
 > **Client-facing deliverable**: <https://claude.ai/code/artifact/4b2f07d2-2db2-4b07-a388-c6158af593c2> (private

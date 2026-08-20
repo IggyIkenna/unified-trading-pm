@@ -53,11 +53,21 @@ Machine-gated: `depends_on: [ao_finished_oneshot_sessions_not_reaped_blocks_esca
 
 ## Todos
 
-- [ ] [REVIEW] P1. Reconcile: confirm the source doc's re-verification todo carries real evidence (a cited SSM check
+- [x] ✅ [REVIEW] P1. Reconcile: confirm the source doc's re-verification todo carries real evidence (a cited SSM check
       showing idle+live slots past 2 reclaim ticks are torn down, and a queued escalation claiming a freshly-reaped
       slot) before treating it as closed. If the honest-caveat's "not fully explained" residual (the 14:18:51
       single-uninterrupted-lifetime reclaim delay) recurred after this fix deployed, spin a fresh tracked follow-up
-      todo/issue for the DEBUG-logging diagnostic step rather than letting it drop silently.
+      todo/issue for the DEBUG-logging diagnostic step rather than letting it drop silently. — RECONCILED 2026-08-20
+      (review, slot 3, colocated on planning VM): source re-verification evidence REAL + independently confirmed — fix
+      `89ca5609e0` ⊇ running-checkout HEAD `17ebb603` and claimed-deployed `47e1b04e`; running orchestrator (pid
+      3113623) env has `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true`; disk-persisted
+      `watchdog_idle_session_ticks.dedup.json` live with per-occupant (slot_id, last_spawned_at) keys; journal shows
+      `idle_lingering_session_reclaim` teardowns ~20s post-restart (15:08:42-44 slots 1/9/10/14 from pid 3113623;
+      15:14:44 slot 31) — persisted tick counter surviving restart PROVEN; escalations healthy (agt-6f7acf→slot 33,
+      agt-500b74→slot 32, zero "no free configured slot"); reclaim cadence regular (14:42×10, 14:56×2, 15:08×4,
+      15:14×1) — multi-hour stalls did NOT recur, so conditional DEBUG-logging correctly NOT added; slow-git-sweep
+      residual pre-tracked in `idle_lingering_session_reclaim_not_firing_2026_08_19.md`. Note: worker verified
+      colocated, not SSM — equivalent/stronger (colocated = already on the VM SSM shells into).
 - [ ] [DOC] P1. Once reconciled, run the standard 6-step archival ritual on
       `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18.md`.
       git mv to `plans/archive/issues/`, SUPERSEDED-not-needed banner not required for a clean close, fix every
@@ -67,3 +77,10 @@ Machine-gated: `depends_on: [ao_finished_oneshot_sessions_not_reaped_blocks_esca
 ## Progress Log
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)
+- **2026-08-20 (review, slot 3 — reconcile of the source re-verification todo)**: RECONCILED PASS — the source doc's
+  re-verification evidence is real, independently confirmed colocated on the planning VM (fix `89ca5609e0` deployed in
+  running checkout `17ebb603` ⊇ claimed `47e1b04e`, watchdog enabled, disk-persisted tick counter live + reclaim
+  post-restart proven in journal, escalations claiming reserve slots 32/33 with zero "no free configured slot", no
+  multi-hour stall recurrence → conditional DEBUG-logging correctly NOT added; slow-git-sweep residual pre-tracked in
+  `idle_lingering_session_reclaim_not_firing_2026_08_19.md`). Todo 1 flipped. Todo 2 (archival) remains a separate
+  dispatched task.

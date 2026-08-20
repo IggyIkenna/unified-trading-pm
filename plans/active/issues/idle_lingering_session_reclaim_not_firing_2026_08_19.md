@@ -224,6 +224,15 @@ CI reserve via `autospawn._apply_fleet_cap`'s count clamp (`server/autospawn.py:
 gap is one-directional: scheduled/escalation tasks can wrongly land on normal slots, never the
 reverse.
 
+**RESOLVED (operator ruling, 2026-08-20)**: the 3-tier dispatch priority is **escalation > plan
+items > scheduled tasks** — not symmetric. "If escalator agents' reserved slots are full and
+there are still some queued tasks, then they can be dispatched to fleet workers. Scheduled
+workers['] reserved slots [being] full, then they should wait and be dispatched when a slot is
+available." So the demand-aware gate applies ONLY to `plan_health._pick_free_slot` (scheduled
+tasks rank below plan items, must wait) — `escalation._pick_free_slot` is deliberately left
+unchanged (escalation outranks plan items, keeps its existing "claim any free slot" fallback).
+Shipped: `agent-orchestrator@c63ba376cc`.
+
 ## CONFIRMED (2026-08-19, second follow-up): `orphan_session_reclaim` kills genuinely-alive workers — fleet-wide kill audit
 
 Operator pushed back on scoping this to slot 2 alone: "we are not hunting the review agent slot
@@ -337,10 +346,17 @@ halves separately — they are two unrelated facts:
       dirty/unpushed git sweeps — a pure reorder, no logic change to any individual function, 114/114
       existing tests still pass. Does not fix a slow git op itself, but stops that unrelated
       slowness from starving capacity-recovery for the rest of the fleet.
-- [ ] [BACKEND] P2. **Fix the confirmed root cause** once found. Add/extend test coverage in
-      whichever test file already covers `_reclaim_idle_lingering_sessions`
-      (`tests/test_worker_liveness_watchdog.py` or similar — locate via grep before assuming a
-      new file is needed) for the specific failure mode found.
+- [x] N. ✅ [BACKEND] P2. **Add regression test coverage for the `_tick_once` reorder fix
+      (`agent-orchestrator@b6ca7d1730`) — DONE, shipped `agent-orchestrator@c63ba376cc`.**
+      That fix's own shipped evidence was "114/114 existing tests still pass" — which only
+      proves the reorder didn't break anything ELSE, not that the specific ORDER (the 5
+      capacity-recovery reclaim/reconcile calls before the 3 git sweeps) is enforced going
+      forward; nothing would fail if a future edit innocently added a call back before the
+      reclaim passes. Added `test_tick_once_runs_capacity_recovery_before_git_sweeps`
+      (`tests/test_worker_liveness_watchdog.py`) — mocks all 8 calls with a shared
+      call-order-recording list, short-circuits via `_daily_cap_reached=True` to stay scoped to
+      the ordering question only (not the separately-tested active_slots reap loop), and
+      asserts every reclaim/reconcile call's index precedes every git-sweep call's index.
 - [x] N. ✅ [OPERATOR] P3. **Kill the 3 currently-orphaned sessions — STALE, moot.** Live-checked
       2026-08-20 ~14:35 UTC: slots 28/29/30 no longer hold the 2026-08-19 orphaned sessions —
       `tmux list-sessions` shows no `orch-slot-28/29/30` session at all, `SlotRow.tmux_session`
@@ -385,18 +401,29 @@ halves separately — they are two unrelated facts:
       logic mid-session), `b74c8433` (server.py bugs+tests), `d09344d7` (slack.py tests),
       `91c881ee` (slots_ops.py tests), `0e1def35` (watchdog.py tests), `d2bc7687` (accounts.py
       tests), `29c9f69a` (baseline ratchet).
-      **Separate finding, NOT cleaned up (flagged, not actioned)**: an untracked `keys.env`
+      **Separate finding — RESOLVED (operator confirmed 2026-08-20)**: an untracked `keys.env`
       (plaintext NVIDIA API key) was found sitting in the agent-orchestrator repo root during this
       session, not gitignored, unrelated to this session's diff — pre-existing debris, likely from
-      the NVIDIA/Gemma wiring work (`86cd2066`). Never staged/committed by this session. Flagged to
-      the operator; not deleted/moved without explicit authorization.
-- [ ] [BACKEND] P2. **Make the general-pool fallback demand-aware for both pickers** (Gap B
-      above) — before `plan_health._pick_free_slot` or `escalation._pick_free_slot` claims a
-      non-reserved slot as a fallback, check whether the backlog has queued/eligible plan-item
-      work waiting (reuse `autospawn._has_queued_work`/`_queued_undispatched_count` rather than
-      reinventing the check). Needs a short design decision first — whether "competing demand"
-      means any queued backlog task, or specifically one eligible for THIS slot — resolve that
-      before implementing, not while implementing.
+      the NVIDIA/Gemma wiring work (`86cd2066`). Never staged/committed by this session; flagged to
+      the operator rather than deleted/moved without authorization. Operator has since moved the
+      file — no longer present, nothing further to do here.
+- [x] N. ✅ [BACKEND] P2. **Make the scheduled-task fallback demand-aware (Gap B)** — DONE,
+      shipped `agent-orchestrator@c63ba376cc`. Resolved per the "RESOLVED (operator ruling,
+      2026-08-20)" note under Gap B above, in this same doc
+      (`/plans/active/issues/idle_lingering_session_reclaim_not_firing_2026_08_19.md`) —
+      asymmetrically (escalation > plan items > scheduled): only `plan_health._pick_free_slot`'s
+      fallback got the demand check
+      (`autospawn.has_queued_backlog_work(session)`, a new public wrapper around the
+      already-private `_has_queued_work` — added to avoid a `basedpyright reportPrivateUsage`
+      cross-module violation, never a `# type: ignore` suppression); when the scheduled reserve
+      is full AND the backlog has queued plan-item work, `_pick_free_slot` now returns `None`
+      (the caller's existing no-capacity queue path takes over) instead of stealing a normal
+      slot. `escalation._pick_free_slot` deliberately left unchanged. 2 new tests
+      (`tests/test_plan_health.py`): waits when plan items are queued, still uses a normal slot
+      when nothing competes for it. 6 pre-existing tests needed a
+      `has_queued_backlog_work=MagicMock(return_value=False)` default added to their patch
+      blocks (the shared `_patches()` fixture plus 5 tests with their own inline blocks) so the
+      new gate didn't silently change their unrelated scenarios.
 - [x] N. ✅ [BACKEND] P1. **Fix the confirmed `ensure_review_agents` bug** — DONE:
       `agent-orchestrator@ad70a9465f`. Added `slot_row.status = "working"` to the
       successful-respawn branch (`server/autospawn.py`, inside the `if spawn_ok:` block),

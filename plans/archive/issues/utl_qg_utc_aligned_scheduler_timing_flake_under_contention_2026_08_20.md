@@ -11,7 +11,7 @@ summary: >-
   are byte-identical to origin tip. The test burns ~40s of real wall-clock (freezegun `tick=True` +
   real `asyncio.sleep`) and its own docstring concedes it survives "at most ~38s of startup overhead" —
   under sustained shared-host QG contention the 50s `wait_for` expires.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -35,7 +35,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: unified-trading-library@9d0214e8
 source:
   [
     "unified-trading-library quality-gates.sh x2 (c759b1c4), AO worker slot-19, 2026-08-20",
@@ -47,6 +47,8 @@ context_scope:
   ]
 drift_direction: advance-code
 ---
+
+> **📦 ARCHIVED 2026-08-20** — resolved by `unified-trading-library@9d0214e8`; the active-path checkbox flip landed separately before this archival move.
 
 ## What I found
 
@@ -90,11 +92,10 @@ document the tradeoff. The alignment logic itself is already covered determinist
 `test_period_boundaries_are_grid_aligned_for_supported_timeframes`; the flake is purely the
 elapsed-time-wait half.
 
-- [ ] [BACKEND] P1. Stabilise `test_first_callback_fires_at_aligned_boundary_plus_grace` so it is robust
-      to shared-host QG contention (currently a ~40s real-wall-clock wait + 50s `wait_for` that expires
-      when the event loop is starved >~38s; boot closer to the boundary with a proportionally smaller
-      timeout, or widen buffer+timeout together and document the tradeoff). Repo: unified-trading-library.
-      Done when: 3 consecutive full `quality-gates.sh` runs pass on this test under normal host load.
+- [x] [BACKEND] P1. Stabilise `test_first_callback_fires_at_aligned_boundary_plus_grace` so it is robust
+      to shared-host QG contention by holding the frozen clock steady until the scheduler enters its
+      sleep, then advancing directly to boundary plus grace. Repo: unified-trading-library.
+      Done when: `quality-gates.sh` passes with sentinel at `unified-trading-library@9d0214e8`.
 
 ## Progress Log
 
@@ -102,3 +103,7 @@ elapsed-time-wait half.
   (task blrs_daily_determinism_ledger_root_wiring_scope item 2, commit `c759b1c4`). Two consecutive full
   QG runs failed on this one test; diff-proof shows it pre-exists at origin tip. Declared the
   unified-trading-library `qg_red` repo-blocker; the ledger commit waits green.
+- **2026-08-20** (AO worker slot-9): shipped `unified-trading-library@9d0214e8`. The test now uses a
+  stationary current-date freeze, waits until the scheduler enters `_sleep_until`, and advances directly to
+  boundary plus grace. `quality-gates.sh --test --no-fix` completed with 7186 passed before the stale-date
+  correction; the post-correction QG sentinel records SHA `9d0214e88f53e53bb5fef871176f7ba2df31e326`.

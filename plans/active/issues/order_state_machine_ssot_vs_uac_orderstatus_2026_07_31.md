@@ -99,6 +99,14 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
 
 ## Follow-ups
 
+- [x] [CODE] P2. **DONE — shipped `unified-api-contracts@a3c572f8` ("feat(execution): OrderStatus becomes the full
+      9-state order state machine")**, verified ancestor of `origin/live-defi-rollout`; commit message cites this
+      exact ruling. `unified_api_contracts/canonical/domain/execution/base.py:48-82` now has all 9 codex-named
+      members (PENDING_NEW, NEW, PARTIALLY_FILLED, FILLED, CANCELLED, REJECTED, EXPIRED, FAIL_OUTBOUND, RECONCILED),
+      PENDING/OPEN kept as deliberate transitional aliases. NOTE — a separate, still-genuinely-open tail: the 24
+      execution-service call sites still use the PENDING/OPEN aliases; their migration + eventual alias deletion is
+      tracked as a T4 inbound request in `/plans/active/code_readiness_t4_execution_settlement_2026_08_19.md`, not
+      here.
 - [ ] [CODE] P2. **RULED 2026-08-06 (operator), option A: advance the contract — CONFIRMED 2026-08-12 (/plan-reconcile,
       operator confirmed interactively).** `[CODE]` tag (was `[OPERATOR]`) — add `FAIL_OUTBOUND` + `RECONCILED` to UAC
       `OrderStatus`, rename `PENDING`/`OPEN` → `PENDING_NEW`/`NEW`. This is a breaking, fleet-wide UAC change — every
@@ -109,6 +117,11 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
       line, no Progress Log ruling record) — resolved 2026-08-12: the operator confirmed option A is the standing
       ruling. The breaking UAC change itself is NOT done here — only the doc-level contradiction is resolved; the
       rollout (consumer audit + migration + enum change) remains open work.
+- [x] [TEST] P2. **DONE — shipped at a different (correct) path**, same commit `unified-api-contracts@a3c572f8`:
+      `unified-api-contracts/tests/unit/test_order_state_machine.py` (109 lines, 9 tests, pins every enum member
+      against the codex state table). Not at the originally-named `execution-service/...` path because the enum
+      lives in UAC and this tranche was forbidden to edit execution-service per the commit message — substance
+      satisfied.
 - [ ] [TEST] P2. Once ruled, create `execution-service/tests/unit/orders/test_state_machine.py` (the doc's declared
       `verifier:`, never written) asserting the enum members match the codex state table, so this cannot silently
       diverge again.

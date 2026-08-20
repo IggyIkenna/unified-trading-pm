@@ -205,3 +205,11 @@ apology** — an honest "we could not determine 40 of these" is worth more than 
       preamble verbatim and its own single-repo scope.
 - [ ] [REVIEW] P1. **Check tranche collision with in-flight agent work** before dispatch — agents are
       already running refactor tasks and must not have their repos audited out from under them mid-edit.
+      **Partial data point, 2026-08-20 (not a resolution — one tranche's view only)**: the T3 code-readiness
+      agent (`/plans/active/code_readiness_t3_features_ml_strategy_2026_08_19.md`, features-service + ml-service +
+      strategy-service) is actively mid-session as of this note, having shipped real code to strategy-service
+      today (`strategy-service@06253843`, `@ed9ff26875` — rank-buffer hysteresis, no-trade band, an allocator
+      rewiring). A live AO-backlog check for a dispatched state-fabric-T4 job failed with a connection error
+      (`localhost:8765` refused on the orchestrator VM) at the time this note was written — inconclusive, not a
+      clean "not dispatched" signal. This does not cover T1/T2/T4(execution)/T5's own in-flight state, so it does
+      not itself close this review item.

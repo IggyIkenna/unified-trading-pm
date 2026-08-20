@@ -109,16 +109,32 @@ currently sitting uncommitted, blocked on this.
 
 ## Follow-up
 
+- [x] [INFRA] P1. **DONE — the generator was `fix_frontmatter.py`'s auto-fixer, not `manifest_hygiene_daily.py`**
+      (correcting this doc's own premise per CLAUDE.md "a doc that misled you is a finding"). Root-caused: its
+      `_apply_field_defaults()` was unconditionally stamping plan-shaped defaults (`doc_type=plan`, `status=active`,
+      `nature=process`, `asset_group=cross-asset`) onto issue docs regardless of path. Fixed at
+      `unified-trading-pm@94e9bf8f4c` ("stop auto-fixer seeding plan-shaped defaults onto issue docs") — corpus-wide
+      `check_frontmatter_schema` now reports 2167 docs, zero violations; full `quality-gates.sh` passes.
 - [ ] [INFRA] P1. **Diagnose why `manifest_hygiene_daily.py` (or whatever last wrote this file)
       produces/produced invalid frontmatter**, and whether it's still actively running — check
       for a live cron/systemd-timer process, recent log output, or another session's claim on
       this file before touching it. Fix the GENERATOR (so this doesn't recur on the next daily
       run), not just this one instance.
+- [x] [INFRA] P1. **DONE — confirmed stable.** `manifest_hygiene_red_all_2026_08_19.md`'s current frontmatter read
+      directly: `doc_type: issue` ✓, `status: open` (valid) ✓, `asset_group: [cross-cutting]` (valid enum) ✓,
+      non-empty `tags:` ✓, `resolved_by: slot-7 (e2e-testing@e8c41f618c)` present ✓ — satisfies this todo's
+      done-condition verbatim. Fixed at `unified-trading-pm@94e9bf8f4c` + `314abf445b` ("correct issue-doc frontmatter
+      schema... unblocks ldr-docs-gate + promote-PR checks slice"), both verified ancestors of
+      `origin/live-defi-rollout`.
 - [ ] [INFRA] P1. **Once the file is confirmed stable** (not actively changing —
       `check_frontmatter_schema.py` clean twice in a row a few minutes apart), fix its
       frontmatter to satisfy `check_frontmatter_schema` (`doc_type: issue`, a valid `status`
       from the issue enum, a valid `asset_group`, non-empty `tags`, `resolved_by:` present) —
       metadata-only, do not alter the audit's actual findings/content.
+- [x] [SCRIPT] P2. **DONE — shipped.** `worker_slot_account_exhaustion_no_rotation_2026_08_19.md`'s own Progress Log
+      states "todo 3's `unified-trading-pm` half shipped cleanly at `cc38229b57` on the first retry" and "the
+      generator issue itself is unrelated to this doc and remains tracked only in its own issue doc above."
+      `unified-trading-pm@cc38229b57` verified ancestor of `origin/live-defi-rollout`.
 - [ ] [SCRIPT] P2. **Once clear, ship the blocked doc-schema work**:
       `/plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md` todo 3's
       unified-trading-pm half (`agents/main.md`, `plans/PLAN_FORMAT.md`,

@@ -18,11 +18,11 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, parked-findings, data-correctness, ssot-contradiction]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
-    /plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md,
-    /plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
-    /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
-    /plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
+    /plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
+    /plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-31
@@ -58,7 +58,7 @@ drift_direction: advance-code
 
 ## Finding 1 — data-correctness / SSOT-adjacent contradiction (the operator-notify-worthy one)
 
-`/plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today (2026-07-30)" section
+`/plans/archive/2026_08/issues/context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today (2026-07-30)" section
 (lines 46-51) asserts, as established fact:
 
 > "Every `plans/active/*.md` + `plans/active/issues/*.md` doc carries a `context_scope` frontmatter field... The field
@@ -105,11 +105,11 @@ by whoever picks this up next).
 
 ## Finding 2 — orphaned, genuinely not AO-eligible (restated per the standalone-doc requirement; full reasoning lives in `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Deferred section)
 
-- `/plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`'s sole open `[REVIEW] P3`
+- `/plans/archive/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`'s sole open `[REVIEW] P3`
   item (host-resource dashboard/alerting surfacing `MemoryAvailable`/cgroup-vs-host RAM mismatch) is self-assessed real
   feature-sized, cross-repo work (new agent-orchestrator backend reader + new deployment-ui dashboard tile with its own
   `pw:L2` regression spec) — not a bounded AO todo. Candidate for `/plan-brainstorm` to scope properly.
-- `/plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md` — 7 open todos that individually read AO-dispatch
+- `/plans/archive/2026_08/omniroute_llm_gateway_pilot_design_2026_07_30.md` — 7 open todos that individually read AO-dispatch
   grade, but the doc carries an explicit, session-fresh operator ruling to stay `assigned_vm: NA`/human-only. Drafting a
   batch todo would override a recorded operator decision. No action needed unless the operator lifts the ruling.
 

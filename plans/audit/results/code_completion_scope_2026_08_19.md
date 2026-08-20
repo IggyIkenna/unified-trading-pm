@@ -34,7 +34,7 @@ tags:
 related:
   [
     /plans/epics/system_readiness_master.md,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     /plans/active/issues/three_chain_registries_disagree_none_authoritative_2026_08_19.md,
     /plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md,
     /plans/audit/results/registry_ground_truth_2026_08_19.md,
@@ -89,7 +89,7 @@ under "Scope note" below rather than silently absorbed.
 
 ## Known P0s (already filed — cited, not re-derived)
 
-- **`/plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`** —
+- **`/plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`** —
   `unified_api_contracts.execution.get_venue_asset_group()` does `_VENUE_ASSET_GROUP.get(venue.lower(), "cefi")` —
   every unresolved venue (AAVE_V3-ARBITRUM, LIDO-ETHEREUM, JUPITER-SOLANA, MORPHO-BASE all tested) silently returns
   `"cefi"`. No exception, no `None` — a caller cannot tell a real hit from a miss. Any per-asset-group split routed
@@ -153,7 +153,7 @@ evidence.
 
 | Item | What's missing | Evidence | Size | Blocks | Ext. blocked |
 | --- | --- | --- | --- | --- | --- |
-| `PATH_REGISTRY` silently drops the `mode=` kwarg | `execution_fills`/`positions`/`strategy_instructions`/`pnl_attribution` path templates have no `{mode}` placeholder; `build_path()`'s bare `str.format` silently discards the unconsumed `mode=` kwarg real callers already pass — **batch/paper/live rows for the same (date, id) write to the IDENTICAL GCS path today, overwriting each other** | `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md` | M | Data integrity across every mode for 4 core artefact types — directly threatens the paper(W)==batch-rerun(W) determinism spine | **Y** — OPERATOR must decide the migration/backward-compat strategy (line 114) before the code change ships |
+| `PATH_REGISTRY` silently drops the `mode=` kwarg | `execution_fills`/`positions`/`strategy_instructions`/`pnl_attribution` path templates have no `{mode}` placeholder; `build_path()`'s bare `str.format` silently discards the unconsumed `mode=` kwarg real callers already pass — **batch/paper/live rows for the same (date, id) write to the IDENTICAL GCS path today, overwriting each other** | `/plans/archive/2026_08/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md` | M | Data integrity across every mode for 4 core artefact types — directly threatens the paper(W)==batch-rerun(W) determinism spine | **Y** — OPERATOR must decide the migration/backward-compat strategy (line 114) before the code change ships |
 | 55 failing tests in `config_interface`/`cloud_interface` | **RESOLVED 2026-08-20** — symptom gone on direct re-run (1355 passed, 0 failed), stale-venv hypothesis ruled out by measurement. See `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`. | `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md` | S-M | ~~Currently-red test suite~~ (resolved) | N |
 | Manifest-writer per-VM shard flush scales with shard size | Full read-merge-reserialize-upload on every debounced flush; once a shard passes ~1M rows the flush takes longer than the debounce interval and the VM stalls near-zero-progress while looking healthy | `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` | M | Backfill throughput directly (in-scope per the deployment carve-out) | N |
 | GCS client silent write failure | Wrong method names swallowed by a broad exception handler — cited in the epic as **already CLOSED/fixed** | epic W2 issue list | — | — | **CODE-COMPLETE** |

@@ -183,7 +183,13 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       deliberately NOT a dependency of this repo's `pyproject.toml` (see that file's own comment).
       `agent-orchestrator@2dafd5a14c` (dependency, later reverted) → `@31687b54dc` (isolated-venv fix + Gemini headroom
       wiring, see below).
-- [x] [REVIEW] P0. ✅ DONE 2026-08-18 — `server/gemini_translation_smoke.py` starts the real litellm proxy subprocess
+- [ ] [REVIEW] P0. **CORRECTED 2026-08-20 (/plan-reconcile F-G33-2)** — reverted from a false `[x]` DONE claim. This
+      doc's own Done-when requires BOTH Grok and Gemini proven; three later spots in the SAME doc (2026-08-19 entry,
+      plus lines ~522 and ~260) explicitly say "the checkbox stays open" because Grok hit a real `400 Invalid model
+      name` error and is confirmed broken, while only the Gemini half passed. The 2026-08-18 Grok-decommission banner
+      does NOT retroactively satisfy the two-provider bar per the doc's own later (2026-08-19) text. If Grok's
+      decommission is meant to moot the Grok half of the done-when, that needs an explicit dated ruling here, not a
+      silently-flipped box. Gemini's half genuinely is done — `server/gemini_translation_smoke.py` starts the real litellm proxy subprocess
       against the real deployed `config/litellm/grok_gemini_proxy.yaml` and drives a real 2-turn tool_use→tool_result
       exchange through `/v1/messages` against a real Gemini backend (project `gen-lang-client-0008266149`). Verified
       live 3 separate times: tool name/id/input args survive translation exactly, `stop_reason` correctly becomes

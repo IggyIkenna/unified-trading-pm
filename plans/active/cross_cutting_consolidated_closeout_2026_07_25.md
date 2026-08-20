@@ -66,19 +66,10 @@ tags:
 related:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
-    /plans/archive/2026_07/bucket_estate_fold_design_2026_07_13.md,
     /plans/active/bucket_estate_consolidation_closeout_2026_07_24.md,
-    /plans/archive/2026_08/bucket_iam_write_protection_per_tier_2026_06_09.md,
-    /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_pipeline_reconciliation_skill_2026_07_20.md,
-    /plans/archive/issues/silent_wrong_answer_bucket_resolution_class_2026_07_20.md,
-    /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
-    /plans/archive/2026_08/cross_cutting_consolidated_closeout_history_2026_08_09.md,
-    /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch4_2026_08_09.md,
-    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08.md,
-    /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
   ]
 created: 2026-07-25
 last_updated: "2026-08-09"

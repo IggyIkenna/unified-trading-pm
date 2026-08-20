@@ -97,7 +97,8 @@ _BOOKKEEPING_MARKER_ALTERNATION = "|".join(re.escape(n) for n in _BOOKKEEPING_MA
 _BOOKKEEPING_MARKER_START = r"\*\*(?:" + _BOOKKEEPING_MARKER_ALTERNATION + r") \d{4}-\d{2}-\d{2}"
 _VERDICT_MARKER_LINE_RE = re.compile(
     r"^[^\n]*" + _BOOKKEEPING_MARKER_START + r"[^\n]*\n?"
-    r"(?:(?![ \t]*\n)(?!-[ \t])(?!#)(?!" + _BOOKKEEPING_MARKER_START + r")[^\n]*\n)*",
+    r"(?:(?![ \t]*\n)(?!-[ \t])(?!#)(?!" + _BOOKKEEPING_MARKER_START + r")[^\n]*\n)*"
+    r"(?:[ \t]*\n(?=[^\n]*" + _BOOKKEEPING_MARKER_START + r"))*",
     re.MULTILINE,
 )
 
@@ -126,7 +127,18 @@ def body_content_hash(text: str) -> str:
     a different hash.
     """
     body = strip_frontmatter(text)
-    body = _VERDICT_MARKER_LINE_RE.sub("", body)
+    matches = list(_VERDICT_MARKER_LINE_RE.finditer(body))
+    if matches:
+        chunks: list[str] = []
+        cursor = 0
+        for index, match in enumerate(matches):
+            prefix = body[cursor : match.start()]
+            if index > 0 and prefix == "\n":
+                prefix = ""
+            chunks.append(prefix)
+            cursor = match.end()
+        chunks.append(body[cursor:])
+        body = "".join(chunks)
     return hashlib.sha256(body.encode("utf-8")).hexdigest()[:16]
 
 

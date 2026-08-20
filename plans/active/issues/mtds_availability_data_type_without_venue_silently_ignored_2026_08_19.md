@@ -17,7 +17,7 @@ related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /codex/14-customer-journeys/commercial-model/platform-api-reference.html,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
   ]
 created: 2026-08-19
 last_updated: "2026-08-19"
@@ -39,7 +39,7 @@ context_scope:
   [
     market-tick-data-service/market_tick_data_service/api/routers/external.py,
     /codex/14-customer-journeys/commercial-model/platform-api-reference.html,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
   ]
 ---
 
@@ -57,7 +57,7 @@ caller narrowing by `data_type` will believe they received a filtered availabili
 indicates otherwise.
 
 It is the same defect shape as
-[get_venue_asset_group returning cefi for everything](/plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md):
+[get_venue_asset_group returning cefi for everything](/plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md):
 a miss path that returns a plausible, valid-looking result instead of failing loudly. Two independent instances in
 one day suggests the pattern is worth a sweep, not just two point fixes.
 

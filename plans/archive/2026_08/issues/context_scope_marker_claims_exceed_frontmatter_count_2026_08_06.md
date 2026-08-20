@@ -21,7 +21,7 @@ summary: >-
   trimmed list with NO marker written at all, i.e. a false-negative on STALE detection). This bug is the inverse shape:
   a marker WAS written, and its claimed count is simply wrong relative to what actually landed — a false sense that the
   doc is fully scouted when a real content regression sits underneath it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +39,7 @@ related:
   ]
 created: 2026-08-06
 author: context_scout_auditor (dispatch agt-23f116, slot 4)
-last_updated: 2026-08-06
+last_updated: 2026-08-20
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -53,7 +53,7 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: slot-19 (backend_engineer), unified-trading-pm@03de572ff8 + 8f39e5e650
 source: >-
   Found incidentally while running the scheduled `/context-scout` daily-incremental dispatch (2026-08-06,
   agent-orchestrator slot 4, dispatch agt-23f116). Each of the 4 read-only Phase-1 scouting sub-agents independently
@@ -72,6 +72,8 @@ context_scope:
     scripts/plan-hygiene/check_line_caps.sh,
   ]
 ---
+
+> **ARCHIVED 2026-08-20 — RESOLVED** — the missing migration-script context entry was restored and the final issue todo was completed. Original path: `plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`.
 
 # context-scout markers claim more entries than the live frontmatter contains
 
@@ -156,13 +158,13 @@ frontmatter, exactly as today's Phase 1 sub-agents did incidentally.
       notice it. **Done when**: either the script gains this check (with a test fixture reproducing one of the 4
       confirmed instances), or a documented decision that it's not worth adding (e.g. if todo 1 finds this was a
       one-time batch bug already fully remediated, not an ongoing risk). — unified-trading-pm@a4fbf7f61
-- [ ] [DOC] P2. **Premise corrected 2026-08-19 (plan_reconciler, cross-cutting) — the `[OPERATOR]` line-cap gate no
+- [x] ✅ [DOC] P2. **Premise corrected 2026-08-19 (plan_reconciler, cross-cutting) — the `[OPERATOR]` line-cap gate no
       longer applies.** `data_completion_defi_2026_07_15.md` is now 520L (a 2026-08-15 history-extraction already
       trimmed it, well under the 1000L cap), and its `context_scope:` already carries 3 entries including
       `data_completion_to_100_all_ag_2026_06_21.md` (restored by a concurrent edit, per this doc's own 2026-08-07
       context-scout note). **Only 1 entry remains genuinely missing**: add `migrate_defi_full_v9_canonical.py` to
       `data_completion_defi_2026_07_15.md`'s `context_scope:` list, and align the 2026-08-01 marker's claimed count
-      to match. Purely mechanical now, no human line-cap trim needed first (repo: unified-trading-pm).
+      to match. Purely mechanical now, no human line-cap trim needed first (repo: unified-trading-pm). — unified-trading-pm@03de572ff8
 
 ## Corpus-wide sweep results (2026-08-06)
 
@@ -293,6 +295,8 @@ for a human glance instead of being dropped.
   Pass 2 → verify SHA → POST /done. SHAs current as of this bullet: 8 commits ahead (`92bd7b601` sweep, `2af352ecf`
   marker fixes, `15a26a4ab` flip, `85b8ebfc9`/`9e6af71c3` block records, `c14332842` deferred table, `d7b002ba6` block
   #2 record, `dda85c8cc` archival completion).
+
+- **2026-08-20 (backend_engineer, slot 19)**: Verified the concurrent PM context-scout landing `03de572ff8` restored the specifically named `migrate_defi_full_v9_canonical.py` source path (and retained the already-restored M-1 parent path), bringing `data_completion_defi_2026_07_15.md` to 5 live `context_scope` entries with a matching `context-scout 2026-08-20` marker. Flipped the final todo; no source-code change was required.
 
 ## Deferred work after 2026-08-06
 

@@ -38,12 +38,6 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
-    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/archive/2026_07/tradfi_consolidated_native_ao_extract_2026_07_25_finalize.md,
-    /plans/archive/2026_07/tradfi_consolidated_closeout_history_2026_07_25.md,
-    /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
-    /plans/archive/issues/tradfi_mvp_mode_unreachable_dead_gate_2026_07_08.md,
-    /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
   ]
 created: "2026-07-25"
 last_updated: "2026-08-16" # bumped 2026-08-18 (plan_reconciler) to real git last-touch date; phantom-manifest dry-run attempted, aborted for shared-host memory safety — see the Phase C todo's addendum; needs a dedicated VM re-run

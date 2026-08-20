@@ -99,7 +99,14 @@ from unified_api_contracts.registry.market_data_categories import (
 )
 from unified_api_contracts.registry.processed_data_dependencies import MDPS_DERIVABLE_DATA_TYPES
 
-MODES: tuple[str, ...] = ("BATCH", "PAPER", "LIVE")
+# MANUAL added 2026-08-20 (W1 addition, code_readiness_t5_...) -- first-class alongside automated per
+# unified_api_contracts.internal.modes.OperationalMode { LIVE, MANUAL, BACKTEST, PAPER } (codex/04-architecture/
+# operational-modes.md's SSOT): "Real trades + real endpoints; only the trigger differs (operator-driven)" --
+# MANUAL shares LIVE's mainnet endpoint config, so every existing check's mode->env mapping (mode == "PAPER" ->
+# testnet, else mainnet) already resolves MANUAL correctly without a per-check special case. No probe currently
+# distinguishes manual-vs-automated triggering, so MANUAL rows report `unverified` honestly wherever a check
+# does not exist -- exactly this dump's own standing discipline, not a new pattern.
+MODES: tuple[str, ...] = ("BATCH", "PAPER", "LIVE", "MANUAL")
 
 
 def _uac_venue_asset_group_map() -> dict[str, str]:

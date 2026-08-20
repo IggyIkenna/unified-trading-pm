@@ -302,7 +302,15 @@ spelling variant survives, which is the entire point of the panel". It does not.
       (`ht_home_goals`/`ht_away_goals`) are NOT covered by Q6 at all (no halftime columns in `_Q6_OUTCOME_COLUMNS`) —
       whether they have an equivalent post-cutover gap is unverified, flagged in the codex section as a follow-up rather
       than silently expanding this todo's scope.
-- [ ] [CODE] P1. **Move the sports feature loader off its PATH-PREFIX read of bucketed odds.**
+- [ ] [CODE] P1. **REWRITE NEEDED 2026-08-20 (/plan-reconcile F-SPORTS-4)** — this todo's target state ("both
+      disappear") was the ruling operator-REVERSED 2026-08-15 (`/codex/02-data/sports-data-types-catalog.md`, commit
+      `4a0f0d6c0d`: "operator reversed the 'collapse to ONE raw type' ruling for `odds_horizon_bucket` only... survives
+      as its own **derived** type"). The PATH-PREFIX consumer-migration mechanism described below may still be real
+      work, but "both disappear" is the overturned direction — do not dispatch against this todo's literal text as
+      written until it's rewritten against the 2026-08-15 ruling. Also check whether any of the ≥4 confirmed premature
+      AO dispatches on this todo (slots 22/15/10/30, cited inline below) re-dispatched against this stale premise
+      after 2026-08-15.
+      **Original text, pending rewrite**: Move the sports feature loader off its PATH-PREFIX read of bucketed odds.
       `sports_feature_loader._ODDS_BUCKETED_PREFIXES` matches
       `processed/by_date/day={date}/pipeline_mode=batch_mdps_odds_horizon_bucket/` and
       `.../data_type=odds_horizon_bucket/` by string prefix — both disappear under the P1 `horizon`-axis model. This is

@@ -356,7 +356,19 @@ def execution_instruction(venue: str, mode: str, probe: dict[str, dict] | None) 
     row = probe.get(venue)
     if row is None:
         return Verdict("unverified", "execution-service instruction-path probe returned no row for this venue")
-    status = row.get(mode.lower(), "none")
+    # Distinguish "the probe measured this mode and it's genuinely none" from "this mode was
+    # never asked about" -- InstructionPathAvailability only models batch/paper/live (added
+    # 2026-08-20, MANUAL mode): a plain `.get(mode.lower(), "none")` would silently claim a
+    # REAL NEGATIVE ("not_ready", a measured route absence) for a mode the probe never had a
+    # field for at all, overclaiming past what was measured.
+    _absent = object()
+    status = row.get(mode.lower(), _absent)
+    if status is _absent:
+        return Verdict(
+            "unverified",
+            f"execution-service instruction-path probe has no '{mode.lower()}' field for this venue "
+            "(InstructionPathAvailability models batch/paper/live only)",
+        )
     # "detail" is always populated -- row came from asdict(InstructionPathAvailability),
     # whose "detail" field always has a real value (default or computed), never absent.
     detail = row["detail"]

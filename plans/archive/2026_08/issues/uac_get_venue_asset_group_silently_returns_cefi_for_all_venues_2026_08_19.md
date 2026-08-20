@@ -7,7 +7,7 @@ summary: >-
   probed — AAVE_V3-ARBITRUM, LIDO-ETHEREUM, JUPITER-SOLANA, MORPHO-BASE and BINANCE-SPOT alike. Because the miss
   path returns a real asset-group string rather than raising or returning None, every caller sees a plausible
   answer and no error. Any per-asset-group split computed through this function is wrong, silently.
-status: open
+status: closed
 nature: issue
 asset_group: [cross-cutting, defi]
 stage: [meta]
@@ -103,10 +103,15 @@ should have failed loudly returned a plausible default instead.
       (`getattr(mod, "get_venue_asset_group")`) would also have matched that grep, so this is conclusive for
       by-name access. **Nothing wrote a per-asset-group split through this function**, so no stored data, manifest
       or published metric needs re-checking on its account.
-- [ ] [REVIEW] P1. **Cross-check against the venue-count discrepancy already recorded** in
-      [registry ground truth](/plans/audit/results/registry_ground_truth_2026_08_19.md): 192 venues declared in
-      `VENUE_DATA_TYPE_CAPABILITIES` but only 177 appearing in asset-group buckets. Confirm whether that 15-venue
-      gap and this fallback share a root cause.
+- [x] ✅ [REVIEW] P1. **Answered 2026-08-20 — no, cannot share a root cause; the cited figure has also since been
+      corrected.** `get_venue_asset_group()` was already established (this doc's own zero-caller measurement) to
+      have NO code callers fleet-wide — nothing calls it, so it cannot be the mechanism producing any bucketed
+      venue count, correct or wrong. Whatever DOES produce the asset-group bucketing is necessarily a different
+      function entirely. Separately: `/plans/audit/results/registry_ground_truth_2026_08_19.md` has since
+      self-corrected the "15-venue gap" this todo cites — its own inline correction states "Unbucketed venues are
+      24, not 15 — I derived 15 by subtracting 177 from 192; the real answer needs a set-difference, because the
+      bucket set and the capability set are not nested." Citing "15" here would now perpetuate a number the source
+      doc itself already retracted.
 - [x] ✅ [REVIEW] P1. **Published coverage percentages are UNAFFECTED by this defect.** Follows directly from the
       zero-caller measurement above: `measure_honest_coverage.py` does not reference `get_venue_asset_group` (it
       appears in no code file fleet-wide), so the §05 per-asset-group figures (sports 99.26 / prediction 92.81 /

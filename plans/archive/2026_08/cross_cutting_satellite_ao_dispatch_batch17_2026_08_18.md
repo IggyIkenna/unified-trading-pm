@@ -11,7 +11,7 @@ summary: >-
   fleet_workflow_template_dedup_to_unified_trading_ci, github_actions_operator_gated_followups,
   june_2026_vintage_audit_findings), the cross-cutting consolidated closeout, and existing satellite batches
   (13-16) before drafting — no item here duplicates ground an existing dispatched todo already claims.
-status: active
+status: complete # archived 2026-08-20 — every todo done; close-out verified by finalize plan
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -25,7 +25,7 @@ related:
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,7 +39,7 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
-superseded_by:
+superseded_by: cross_cutting_satellite_ao_dispatch_batch17_2026_08_18_finalize
 depends_on: []
 context_scope:
   [
@@ -52,6 +52,8 @@ source: >-
   /na-eligibility-audit cross-cutting tranche, dispatch agt-4d9716, slot 19, 2026-08-18. Each item's own Source:
   line below names the exact source doc + todo it was extracted from.
 ---
+
+> **🟢 ARCHIVED 2026-08-20 — COMPLETE.** All three extracted items landed and were re-verified by the finalize plan.
 
 # cross-cutting satellite AO dispatch batch 17
 
@@ -81,7 +83,7 @@ source: >-
       becomes. Done-when: the comment accurately describes the post-P1 fleet-wide, hourly safety-net. Source:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md` todo 2.
       Repo: 25 fleet caller stubs.
-- [ ] [CI] P2. **Add a detection surface for a FAILED backmerge run**, distinct from the already-shipped
+- [x] ✅ [CI] P2. **Add a detection surface for a FAILED backmerge run**, distinct from the already-shipped — unified-trading-pm@2ead733819 + Evidence: YAML parse OK; embedded shell bash -n OK; commit hooks YAML/provenance passed; origin ancestry verified.
       `backmerge_sync_failure` escalation wall_type (which polls for RESOLUTION of an already-open escalation on
       `DECISION=error` — a different mechanism, not proactive detection; see
       `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md`'s Progress Log). `branch-health.yml`'s
@@ -94,6 +96,8 @@ source: >-
       Repo: unified-trading-pm.
 
 ## Progress Log
+
+- **2026-08-20 (worker, slot 7, dispatch cross_cutting_satellite_ao_dispatch_batch17-4873e1ae623b)**: shipped unified-trading-pm@2ead733819, adding a fleet-aware latest-run query for main-backmerge-to-ldr.yml, cached per-repo failure state, state-transition deduplication, and recovery/all-clear Slack carrier jobs. YAML parsing, embedded shell syntax, diff checks, commit hooks, and origin ancestry all passed. The full QG/quickmerge reservation remained queued for 24 minutes on a saturated shared host; the workflow-only .github/** carve-out was used after stopping only this session's stalled quickmerge process.
 
 - **2026-08-18 (na_eligibility_auditor, dispatch agt-4d9716, slot 19)**: drafted from the cross-cutting tranche's
   2026-08-18 audit — 3 of the source doc's 4 open todos are bounded/deterministic with cited existing patterns

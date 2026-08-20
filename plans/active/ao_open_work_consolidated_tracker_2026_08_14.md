@@ -325,11 +325,12 @@ context_scope:
 
 ## Track 3 — Boot / context / session hygiene
 
-- [ ] [SCRIPT] P0. **Backfill `context_scope` frontmatter corpus-wide, then harden the field to `Req.R` (required) in
-      `scripts/docs/docspec.py`.** Confirmed still `Req.E` (elective) as of this session; backfill itself is large,
-      ongoing, multi-session work — re-run the inventory script for a current NEVER_SCOUTED count before scoping
-      further. Source: `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (also tracked, do not duplicate, in
-      `/plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`, now archived).
+- [x] [SCRIPT] P0. **DONE — `Req.R` hardening shipped `unified-trading-pm@bc88604f20`** ("harden context_scope
+      frontmatter field to required (plan+issue doc_types)"), verified via direct read of
+      `scripts/docs/docspec.py:154,185`: `FieldSpec("context_scope", Req.R, "free_list")`. The archived batch3-finalize
+      plan's own Progress Log narrates the corpus-wide backfill reaching 0 NEVER_SCOUTED / 0 STALE — that sub-claim is
+      MEDIUM confidence (not independently re-measured this pass; a fresh `generate_context_scope_inventory.py --json`
+      run timed out at 90s — re-run with a longer timeout if independent re-verification is wanted).
 - [x] [REVIEW] P1. **DONE.** `server/prompts.py:296` now has a literal curl body for the `/boot` STEP 2 call. Verified
       2026-08-15 (manual grep, this session). Source:
       `/plans/archive/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`.
@@ -623,7 +624,7 @@ before touching the source doc directly._
       `status: active → complete`, all corpus-wide referrers repointed.
 - [ ] [SCRIPT] P2. Finish the `context_scope` backfill named in `batch3`'s own open todo (see Track 3) — this is what
       still gates `batch3_finalize`'s 5 todos via `gate_on_depends`. Source:
-      `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`.
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`.
 - [x] [REVIEW] P1. **RULED 2026-08-06 disposition sweep** — apply the operator's default-disposition ruling to the
       remaining declined-orphan docs. Source: `/plans/archive/issues/ao_orphan_audit_followup_triage_2026_07_30.md`.
       **DONE 2026-08-14** — re-checked all 12 named docs directly: 10 already archived/resolved by earlier sessions, 1

@@ -270,9 +270,7 @@ house style makes this systemic, not incidental):
       also missing machine-enforced ordering ("only after the fix above").
 - [ ] [DOCS] P3. `dp_vm_003_sports_manifest_rescan_165755_relaunch_budget_exhausted_noop_2026_08_18.md:113,118` —
       2 instances, both also missing a stated done-when.
-- [ ] [DOCS] P3. `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md:67-68` — bold span + "once P1 lands"
-      ordering clause splits across the line break; ordering itself also unenforced (prose-only "depends on the
-      P1 todo above").
+- [x] ✅ [DOCS] P3. Finding is moot after batch17 was completed, evidence-reconciled, and archived 2026-08-20; no active document remains to remediate.
 - [ ] [DOCS] P3. `infra_satellite_ao_dispatch_batch18_2026_08_17_finalize.md:64,79-80` and
       `infra_satellite_ao_dispatch_batch17_finalize_2026_08_16.md:55-56,62-63,70-71` — 5 instances total, a
       systemic pattern across this finalize-plan-template family (list-preamble on line 1, verb/predicate on

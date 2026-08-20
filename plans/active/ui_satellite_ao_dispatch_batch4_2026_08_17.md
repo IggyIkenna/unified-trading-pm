@@ -63,7 +63,7 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [UI] P3. **Denominator-freshness / coverage-% staleness trust annotation.** Add a UI trust/staleness indicator
+- [x] ✅ [UI] P3. **Denominator-freshness / coverage-% staleness trust annotation.** Add a UI trust/staleness indicator
       to the data-status tab (deployment-ui) showing how fresh the denominator (coverage-%) computation is, mirroring
       the annotation pattern `consolidator_throughput_backlog_monitor_2026_07_09.md` already ships (a "denominator
       last computed Nh ago" stale-warning caveat on the coverage-% headline). Source:
@@ -71,7 +71,7 @@ drift_direction: advance-code
       own checkbox is flipped citing this doc). First confirm whether the backend (deployment-api) already exposes a
       "denominator last computed" timestamp for the data-status rollup; if not, add it as part of this same todo (a
       small, bounded backend addition — not a design question). Repo: deployment-api + deployment-ui. Done when: the
-      coverage-% headline shows the staleness annotation live, `[UI]` + `pw:L2 ✓` + a regression spec covering it.
+      coverage-% headline shows the staleness annotation live, `[UI]` + `pw:L2 ✓` + a regression spec covering it. Evidence: deployment-ui@153eae2cf1 + deployment-api@3180b1c22e + tests/smoke/data_status_denominator_freshness.spec.ts + tests/unit/test_data_status_denominator_freshness.py + pw:L2 ✓.
 
 ## Codex SSOTs
 

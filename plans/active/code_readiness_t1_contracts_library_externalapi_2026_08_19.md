@@ -267,6 +267,49 @@ todos only to confirm they are data-movement, then leave it.
       `UniswapConnector.mint_position()`/`burn_position()` per the enum's own comment — read those signatures for
       the real shape) and T1 will add both in one pass.
 
+      **Shape specified 2026-08-20, T4's call as asked.** Read BOTH real connector families before proposing — they
+      genuinely differ, not just in naming: `UniswapConnector.mint_position(token0, token1, fee_tier,
+      sqrt_price_lower, sqrt_price_upper, amount0_desired, amount1_desired, amount0_min=None, amount1_min=None,
+      deadline_offset_seconds=1800)` / `burn_position(token_id, liquidity, amount0_min=0, amount1_min=0,
+      deadline_offset_seconds=1800, burn_nft=False)` (`execution_service/defi_execution/protocols/uniswap.py:450,
+      500`) is NFT-position-based with sqrt-price bounds; `OrcaConnector.add_liquidity(whirlpool, amount_a,
+      amount_b, lower_tick, upper_tick)` / `remove_liquidity(whirlpool, liquidity_amount)` and Raydium's identical
+      shape (`orca.py:168,292`, `raydium.py:181,304`) are pool-address + raw-tick, no NFT. Proposed generalized
+      schema (superset, protocol-specific fields nullable):
+
+      ```python
+      class LpMintInstruction(StrategyInstructionEnvelope):
+          action: Literal[InstructionActionV2.LP_MINT] = InstructionActionV2.LP_MINT
+          protocol: str  # "uniswap_v3" | "orca" | "raydium" | ...
+          pool_id: str  # pool/whirlpool address (Uniswap: derivable from asset_a/asset_b/fee_tier, still populated for logging)
+          asset_a: str
+          asset_b: str
+          amount_a_desired: Decimal
+          amount_b_desired: Decimal
+          amount_a_min: Decimal | None = None  # slippage floor -- Uniswap's connector already enforces this;
+          amount_b_min: Decimal | None = None  # Orca/Raydium's connectors do NOT yet -- a real gap the W15 security
+                                                # audit's checklist point 4 (slippage/deadline bounds) will surface
+          lower_tick: int
+          upper_tick: int  # universal range representation -- Orca/Raydium's native input; execution-service's own
+                            # wiring converts to sqrt_price_lower/upper before calling Uniswap's mint_position (a
+                            # T4-side wiring detail, not a UAC schema concern)
+          fee_tier: int | None = None  # Uniswap-specific tiered-pool selector; None for single-pool-per-pair protocols
+
+      class LpBurnInstruction(StrategyInstructionEnvelope):
+          action: Literal[InstructionActionV2.LP_BURN] = InstructionActionV2.LP_BURN
+          protocol: str
+          pool_id: str
+          position_token_id: str | None = None  # Uniswap V3's NFT position id; None for Orca/Raydium (no NFT)
+          liquidity_amount: Decimal  # universal across all 3 -- Uniswap's `liquidity` param, Orca/Raydium's
+                                     # `liquidity_amount` param, identical concept
+          amount_a_min: Decimal | None = None
+          amount_b_min: Decimal | None = None
+      ```
+
+      `deadline_utc` reuses the base envelope's existing field rather than a redundant offset-seconds param.
+      Once these land, T4's `resolve_settlement` gets 2 more `isinstance` branches, closing the BATCH settlement
+      gap todo 5/5, matching the pattern `CONVERT_DUST`/`WITHDRAW`/`REPAY` already established.
+
 ## Todos
 
 ### Registry SSOT — the P0s everything else is wrong without
@@ -281,7 +324,7 @@ todos only to confirm they are data-movement, then leave it.
       no-op: a fleet-wide grep found ZERO code callers — every hit was docs/plans. Also fixed a collision found in
       the classifier itself (bare `COINBASE` → `defi` via false-match on `COINBASE-ETHEREUM`, the same trap its own
       comment documents for `BINANCE`) plus two systematic invariants so the next one fails the suite. Evidence:
-      `/plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`.
+      `/plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`.
 - [x] ✅ [BACKEND] P0. Chain registries reconciled to ONE vocabulary SSOT — unified-api-contracts@27ebc544b2.
       `ChainKind` is now declared the vocabulary SSOT in its own docstring, with the other two DERIVING their legal
       values from it (the issue's own "derive from it or die" option A) — they are NOT merged, because measurement
@@ -494,7 +537,7 @@ todos only to confirm they are data-movement, then leave it.
       finished as its own dedicated unit under the next todo, not folded into this commit.
       Data migration stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule, per the ruling's own
       text. Evidence:
-      `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
+      `/plans/archive/2026_08/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
 - [x] ✅ [BACKEND] P0. GCS client silent write failure fixed — unified-trading-library@425ce119d.
       `GCSBlobHandle.__getattr__` now raises `UnsupportedNativeBlobMethodError` (a `RuntimeError`, deliberately
       NOT an `AttributeError`) on the four raw-SDK methods it doesn't implement
@@ -534,9 +577,16 @@ todos only to confirm they are data-movement, then leave it.
       converter) discovered and partially done. Real measured win once all land: 1,766→1,295 modules (~27%) on
       `from unified_api_contracts.internal import StrategyArchetype`.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
-      (`[FROM-T2]` above). `manifest_writer/` needs an append-only "delta shard" pattern; verification gated on
-      that landing. Was sitting `assigned_vm: NA` unqueued anywhere active; tracked here so it does not get lost.
-      Evidence: `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
+      (`[FROM-T2]` above). **2026-08-20: investigated and designed, not yet implemented.** Read the real
+      implementation (`_writer_io.py`'s `_flush_per_vm_pending`/`_read_per_vm_shard`,
+      `manifest_consolidator.py`'s `consolidate()`) and validated the load-bearing fact the design depends on: the
+      consolidator already dedups by content key across every `_index/per_vm/*.parquet` glob match, not by source
+      filename — so a delta-shard file needs ZERO consolidator-side changes, only writer-side ones. Full 5-step
+      proposal (delta upload on non-final flush, glob+concat on the writer's own read-back, compact-and-delete on
+      `process_final=True`, the crash-safety argument, explicitly-not-designed collision/orphan-cleanup edges) is
+      in the issue doc's Progress Log. Real code changes to a durability-critical, fleet-wide hot path deserve
+      their own review + a SIGKILL-mid-delta test written first — not a same-session implementation. Evidence:
+      `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
 
 ### External API surface — `platform-external-api-walkthrough.html`
 
@@ -565,19 +615,39 @@ todos only to confirm they are data-movement, then leave it.
       this is doc-generation work reading routes across repos, not editing any of them — redirected to T5 (already
       builds route-surface tooling for the readiness dump) with a note that it needs T2/T4 to hold their routers
       stable while it walks them.
-- [ ] [BACKEND] P1. Build the kill-switch (scoped halt) and flatten-position external endpoints — **split in two**:
-      the contract half (adding `KILL_SWITCH`/`FLATTEN_POSITION` members + dataclasses to the CURRENT v2 vocabulary
-      — `InstructionActionV2` / `StrategyInstructionV2` in `unified_api_contracts.internal.architecture_v2`, not the
-      legacy `StrategyInstructionType` this item originally, wrongly, named — confirmed genuinely absent from both)
-      is genuinely T1's, but is an open design call, not a mechanical enum fill: does a control instruction
-      decompose the way `LendInstruction`/`TradeInstruction` etc. do (protocol/asset/target-amount shape), or does
-      it need its own dispatch path entirely (no notional, no venue in the trade sense)? Held pending T4's answer
-      on what shape execution-service actually needs (asked via `[FROM-T1]` in T4's plan) rather than guessing and
-      shipping a contract T4 has to rework. The endpoint half is T4's regardless. SSOT:
-      `/codex/04-architecture/autonomous-recovery-matrix.md`.
-- [ ] [UI] P1. Wizard stage detail, screenshots and the generated-config example are `pending, to be expanded` in
-      the artefact — build the wizard surface to the point those can be generated from the real UI. Needs `[UI]` +
-      `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
+- [x] ✅ [BACKEND] P1. **Closed by T4's answer, 2026-08-20 — no contract change needed.** T4 answered the
+      `[FROM-T1]` question on their own plan: do NOT add `KILL_SWITCH`/`FLATTEN_POSITION` to the strategy
+      instruction vocabulary at all. Both capabilities already exist, correctly, on the DELIBERATELY separate
+      `AccountInstruction` envelope — `kill_switch.activate()`/`.deactivate()` (durable state-file, admin-only,
+      `POST /kill-switch/activate`) and `AccountInstruction.CLOSE_ALL` (operator-driven, `authorization_id`-gated,
+      real per-venue wiring — `execution-service@96411b68c9` + `@c0839616be`). Adding these to
+      `StrategyInstructionType`/`InstructionActionV2` would expose them on `/external/instructions` — the
+      third-party-reachable surface — under the WRONG authority model (strategy-engine, not operator-only); T4
+      cited `/codex/04-architecture/account-instructions.md`'s own stated rationale for keeping the two envelopes
+      separate ("different authority model... different risk gates, some ops bypass strategy-layer checks by
+      design"). External partner-facing kill/flatten access, if ever wanted, is a product/security policy call for
+      the operator, not something to build speculatively. **Correct outcome: T1 does nothing here** — the original
+      artefact marker calling this "planned, not yet" was itself the thing that needed correcting, not the code.
+- [x] ✅ [UI] P1. **Closed by measurement, 2026-08-20 — the wizard already exists and is functional; there was
+      nothing to build.** The artefact's "build the wizard surface" framing was stale: `unified-trading-system-ui`
+      already has a full 6-stage wizard implementation (`app/(wizard)/wizard/`, `components/wizard/` — 13
+      components mapping directly onto the artefact's Archetype/Universe/Sizing/Risk/Execution/Identity stages,
+      plus `ConfigOutput.tsx` for the generated-config example the artefact asks for) and 11 spec files / 34 tests
+      under `tests/smoke/wizard*.spec.ts` (portfolio mode, screener mode, custody stage, data coverage, jurisdiction
+      filter, save-session, readiness badges, isolation mode, param forms — every feature area the artefact
+      describes and more). **`pw:L2 ✓`**: ran the full suite fresh — 33/34 passed on first run; the one failure was
+      a hardcoded venue count (`"225"`) drifted stale against the live registry (now 230) — the exact same drift
+      class the test's own comment already documents happening once before (was "195"→"225", now "225"→"230"), not
+      a functional regression. Fixed and re-verified green —
+      `unified-trading-system-ui@109a488a78` (`tests/smoke/wizard.spec.ts`). **Regression spec**:
+      `tests/smoke/wizard.spec.ts` + the 10 sibling `wizard-*.spec.ts` files, all passing.
+      **What's still genuinely missing is artefact-side, not UI-side** — real screenshots and a real
+      generated-config example IN the HTML artefact — and per the close-out rule ("never hand-edit the HTML"),
+      that's a regeneration task, not something to hand-write here. Not filing a fresh redirect for it: the exact
+      artefact file (`platform-external-api-walkthrough.html`) already shows large, active, in-flight edits from a
+      concurrent session this same day (5 related `codex/14-customer-journeys/commercial-model/*.html` files, 2000+
+      line diffs observed) — flagging here so whoever lands that regeneration knows the wizard itself is real,
+      tested, and ready to be captured, not still pending a build.
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P2. ~~Ceffu integration is a stub pending its API
       spec...~~ Target is `execution-service/execution_service/transfer_coordinator.py` (T4-owned, confirmed by the
       artefact's own citation at line 16915) — see `[FROM-T1]` in T4's plan.
@@ -596,7 +666,15 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation (see § "Your allocated corpus") to zero open
       todos or an explicit `BLOCKED-*` tag on every remainder.
 - [ ] [AGENT] P0. Post-phase codex audit — update every changed contract doc, stub new patterns, add SUPERSEDED
-      banners to invalidated docs. Plan↔codex drift is review-blocking.
+      banners to invalidated docs. Plan↔codex drift is review-blocking. **In progress, 2026-08-20 — one pattern
+      stubbed, not a full sweep yet.** The lazy-loading refactor had no codex SSOT at all (pattern + both real bugs
+      + the top-level file's known-broken state lived only in the plan's own Progress Log, which archives when the
+      plan does) — wrote `/codex/06-coding-standards/uac-init-lazy-loading-pattern.md`. Order-state-machine SSOT
+      was already handled by T4 earlier today (`c74d869b36`, stale 7-state warning + diagram). Remaining
+      contract-shaped changes this tranche shipped that have NOT yet been checked against an existing codex doc for
+      drift: `QuoteInstruction` sensitivity fields, `TransferCapabilityV2`, W17 fee breakdown, `WithdrawInstruction`/
+      `RepayInstruction`, the venue→chain SSOT + `VenueFeature`/`VenueCapability` overlap fix, W8 weightings. Not
+      claiming this todo done off one doc.
 - [ ] [AGENT] P0. Confirm every artefact marker owned by this tranche now reads live, or is one of the five allowed
       pending states. Re-derive; never hand-edit the HTML.
 

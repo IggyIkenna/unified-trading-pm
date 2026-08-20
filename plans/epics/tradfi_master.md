@@ -15,16 +15,7 @@ scope: [engineer, admin]
 tags: [tradfi, databento, backfill, manifest, ml, audit, data-correctness]
 related:
   [
-    /plans/archive/2026_06/mvp_backfill_tradfi_ohlcv1m_v10_2026_06_27.md,
-    /plans/archive/2026_06/tradfi_cme_event_contract_backfill_2026_06_20.md,
     /plans/active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md,
-    /plans/archive/tradfi_massive_dual_source_2026_05_28.md,
-    /plans/archive/2026_07/tradfi_manifest_canonicalisation_2026_06_01.md,
-    /plans/archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
-    /plans/archive/2026_05/trading_agent_service_architecture_unlock_2026_05_22.md,
-    /plans/archive/2026_05/cme_polymarket_arb_2026_05_08.md,
-    /plans/archive/2026_05/tradfi_l1_l2_l3_tick_data_post_cutover_2026_06_01.md,
-    /plans/archive/2026_05/tradfi_ohlcv_only_mvp_backfill_2026_05_15.md,
   ]
 created: 2026-05-07
 name: tradfi_master
@@ -58,6 +49,10 @@ related_plans:
 last_updated: 2026-08-12
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+parent_epic: tradfi_master
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Report

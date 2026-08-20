@@ -319,7 +319,7 @@ below don't need todo 5's code to have landed first): a new module
       one-line cross-pointer each way. Done-when: the new section exists; doc frontmatter's `last_reviewed`/`code_refs`
       updated.
 
-- [ ] [UI] P2. Add a deployment-ui surface rendering `GET /api/cloud-run-jobs` (prior route todo) — investigate what
+- [x] ✅ [UI] P2. Add a deployment-ui surface rendering `GET /api/cloud-run-jobs` (prior route todo) — investigate what
       deployment-ui currently renders for the VM-launcher registry
       (`deployment-ui/src/components/DeployMissingButton.tsx`'s pattern, reachable from the Data Status drill-down)
       and check `deployment-ui/src/pages/` (`Cockpit.tsx`, `Deployments.tsx`, `HomeShell.tsx`) for a natural existing
@@ -329,6 +329,8 @@ below don't need todo 5's code to have landed first): a new module
       Phase 3 preview-only from a deferred Phase-4 auto-launch). Done-when: `pw:L2` check green + a regression spec
       cited (`tests/smoke/routes.spec.ts` for a new route, or `tests/widgets/<widget-id>.test.tsx` for a new widget)
       per the UI Verification Gate — tick evidence MUST include `repo@sha | pw:L2 ✓ | regression: <path>`.
+      Evidence: deployment-ui@cd13cfa | pw:L2 ✓ (`tests/smoke/cloud-run-jobs.spec.ts`) | read-only `/cloud-run-jobs`
+      page, nav entry, API client, and mock route committed; focused Playwright smoke passed (1 test).
 
 ---
 
@@ -358,3 +360,6 @@ below don't need todo 5's code to have landed first): a new module
   `uts-prod-dp-heartbeat-watcher-kfzvt`, `uts-prod-dp-meta-watchers-rsq6v`, `uts-prod-monitoring-deadman-4swb7`).
   Shipped: `deployment-service@873d88a0a1`, `deployment-api@8bdec86e9d`, `deployment-service@9a60be47a7`.
 - **context-scout 2026-08-20**: refreshed context_scope (9 entries)
+- **2026-08-20 (slot 7)**: Completed the deployment-ui Cloud Run Job registry surface. The committed page renders
+  `GET /api/cloud-run-jobs` as a read-only table of job, Terraform file, scheduler cadence, and purpose; no trigger
+  action is exposed. Focused Playwright verification passed: `tests/smoke/cloud-run-jobs.spec.ts` (1 passed).

@@ -434,7 +434,12 @@ consolidation).
       `sports_consolidated_closeout_2026_07_19.md`'s Track H todo, with pre-snapshots and the same safe-rollback pattern
       as the 2026-07-14 attempt. Does not scale-test past the ~286K/~652K remaining rows until the rewritten script is
       reviewed. **What genuinely remains: only sub-item (3), the operator-coordinated maintenance-window execution — the
-      same gate the sibling `[DATA] P1` todo above already tracks.** (repo: market-tick-data-service)
+      same gate the sibling `[DATA] P1` todo above already tracks.**
+      **UPDATED 2026-08-20 (F-SPORTS-5)**: sub-item (3) WAS attempted 2026-08-15, hit a dropped-`timeframe`-field
+      bug, was safely stopped, and spawned
+      `/plans/active/issues/sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md` +
+      `/plans/active/issues/sports_cf8_out_of_window_mechanism_reconciliation_2026_08_16.md` (6/7 items resolved
+      between them) — check those before re-attempting, not a clean unattempted step. (repo: market-tick-data-service)
 
 - [x] ✅ [INFRA] P2. Verify whether the row_count-preferring multi-source dedup tie-break (`manifest_consolidator.py`'s
       `CASE WHEN capture_status = 'captured' AND captured_distinct_sources > 1 THEN COALESCE(TRY_CAST(row_count AS BIGINT), 0) ELSE NULL END DESC`)

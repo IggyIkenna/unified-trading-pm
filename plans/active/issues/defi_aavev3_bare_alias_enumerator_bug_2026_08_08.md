@@ -230,3 +230,41 @@ defect (phantom-venue emission) without touching a registry other code may depen
   `gcs_bucket_soft_delete_retention_seconds` (all from `unified_trading_library.cloud_interface`); no
   `gcs_delete_object`/`gcs_conditional_delete` call made; no `gsutil`/`gcloud storage` subprocess.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries) — unchanged, still accurate
+- **2026-08-20 (T2 tranche, `/autonomous`, VM-launch path built + 5 launch attempts)**: per the two-laptop-failure
+  diagnosis above, wired a VM-launch path — new
+  `deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` (`deployment-service@9ae1a78e9e`),
+  reusing the existing generic `VM_TASK=defi-manifest-force-consolidate` one-off-script dispatch route in
+  `setup-data-pipeline-vm.sh` (no deployment-service core-script edit needed) with `VM_SERVICE=instruments_service`
+  for the correct tarball. **5 launch attempts, 3 distinct environmental failure signatures, still UNRESOLVED —
+  this is now a real infra-reliability blocker, not a code defect**:
+  1. Env var missing (`GCP_PROJECT_ID`) — fixed, not a real failure.
+  2. Stale-tarball false-negative (freshness-check compared against a cached pre-drift sha after my own
+     `unified-api-contracts` checkout auto-advanced mid-build) — confirmed via direct `git rev-parse HEAD` the
+     tarball was actually fresh; not a real failure, retried.
+  3. **Real code bug, found + fixed**: the launcher's `BACKFILL_CMD` used a relative script path
+     (`scripts/purge_...py`); the generic dispatch route does not `cd` into any per-service directory before exec,
+     so it resolved against `/` and failed `rc=2` "No such file or directory". Fixed to the absolute path
+     `/home/ikennaigboaka/workspace/instruments/scripts/purge_...py` (TARBALL_DIRS maps
+     `instruments-service-code` -> `instruments`, not `instruments-service`). Confirmed via the VM's own `run.log`,
+     not assumed. The sibling `cefi-itype-casing-apply-reduced-workers` launcher had the identical bug, fixed the
+     same way, same session.
+  4. **Genuine network timeout** uploading tarballs to GCS during the launcher's own freshness-recheck
+     (`RetryError: Timeout of 600.0s exceeded`) — laptop-side, not VM-side. Retried once after a pause (not blind
+     — the two-consecutive-identical-failure retry-discipline threshold was hit and respected).
+  5. **VM self-deleted with ZERO log output** — `defi-aavev3-bare-alias-purge-20260820-162142` launched
+     (confirmed `RUNNING` at launch time, path-fix included), a 20-minute bounded watchdog polling `run.log` via
+     UTL's sanctioned storage client got 40/40 `404 No such object` (the blob never existed), then
+     `gcloud compute instances describe` confirmed the VM itself is gone ("was not found") — self-deleted per its
+     own `VM_SHUTDOWN_ON_COMPLETION=true` before ever writing a log, meaning it failed somewhere between boot and
+     the heartbeat-daemon's first upload (which attempt 3's run.log shows happens within seconds of `vm-exec`
+     starting) — an even earlier failure than the path bug. Checked `deployments/active/` (17 objects) and
+     `deployments/archive/2026-08-20/` (118 objects) for a name match — none, since deployment records are keyed
+     by a UUID this attempt's run.log never surfaced, and grepping all 118 archive JSON bodies for content was not
+     attempted (unbounded cost for a single diagnostic attempt). Given three genuinely different failure layers
+     hit across this session (laptop download timeout, laptop upload timeout, and now an unlogged VM-side death)
+     within roughly an hour, this reads as broader network/infra instability today, not a fixable code path.
+  **Not attempting a 6th blind retry.** The purge script itself remains unexecuted (dry-run never completed even
+  once) — still genuinely open, not this session's to force further. **Next step**: retry
+  `bash deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` once network conditions are
+  independently confirmed stable (e.g. a plain `gcloud compute instances list` and a small GCS upload succeed
+  cleanly first) — the script itself is now correct and needs no further changes.

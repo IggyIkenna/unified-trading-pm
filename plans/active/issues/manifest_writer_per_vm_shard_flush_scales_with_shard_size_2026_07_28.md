@@ -151,3 +151,49 @@ its own review):
 - **context-scout 2026-08-17**: refreshed context_scope (5 entries), unchanged.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 3 open todos — shared-infra (unified-trading-library manifest-writer) performance-design investigation/tradeoff work with an explicit SIGKILL-durability-preservation constraint; reaffirmed KEEP-NA 5x.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries).
+- **2026-08-20 — the P2 "investigate a delta-shard pattern" todo, actually investigated, not just re-affirmed
+  KEEP-NA a 6th time.** Read the real implementation (`unified_trading_library/manifest_writer/_writer_io.py`'s
+  `_flush_per_vm_pending`/`_read_per_vm_shard`, `manifest_consolidator.py`'s `consolidate()`) rather than the doc's
+  own prose description, to check one specific question before proposing a shape: **would a delta-shard file need
+  the consolidator to change at all, or does it already tolerate this?**
+  **Answer: the consolidator already tolerates it, with zero changes, and this is the load-bearing fact for the
+  whole design.** `consolidate()` lists every `_index/per_vm/*.parquet` (glob, not a fixed per-VM filename) and
+  merges via DuckDB **last-write-wins on a content key, not source-file identity** — its own docstring states
+  "Idempotent: same shards in → same consolidated bytes out." A delta file is just one more blob matching that
+  glob, and its rows dedup against the base shard's rows the same way two DIFFERENT VMs' shards already dedup
+  against each other today. **The entire remaining risk is writer-side, not consolidator-side.**
+  **Proposed shape** (append-only delta + close-time compaction, preserving the existing SIGKILL-durability
+  contract exactly):
+  1. **Non-final flush** (`process_final=False`, the debounced hot path): stop doing the O(existing-shard-size)
+     read-merge-rewrite. Instead, upload `pending_new` alone as a new blob —
+     `_index/per_vm/{instance}.delta.{uuid4}.parquet` — O(new rows) only, matching the actual complexity the
+     debounce was always supposed to buy. No read, no merge, no lock contention with the base shard.
+  2. **Writer's own read-back** (`_read_per_vm_shard`, used to build `existing_df` before any in-process merge):
+     currently reads ONE fixed path. Must change to glob `{instance}.parquet` + `{instance}.delta.*.parquet` and
+     concat — otherwise the writer under-counts its own prior rows the moment a delta exists but hasn't been
+     compacted yet (silently reintroducing a lost-row class, just a different one than the bug this issue is
+     about).
+  3. **Final flush** (`process_final=True` — close()/atexit/emergency drain, the ONE path this issue's own
+     durability constraint is about): unchanged in SPIRIT, changed in mechanism — read base + ALL matching deltas
+     (step 2's glob), merge+dedup, upload ONE consolidated `{instance}.parquet`, then delete the delta blobs. End
+     state is byte-identical in SHAPE to today's (one file per VM) — any reader that never learns about deltas at
+     all still sees a correct, complete shard once `process_final=True` has run, same as today.
+  4. **Crash safety, the property that actually matters here**: kill the process between step 1 and step 3 (a
+     delta uploaded, compaction never ran) — the delta blob persists in GCS regardless. The consolidator picks it
+     up on its next cycle via the existing glob (0 code change, per the answer above). A preemption-recovery
+     restart under the SAME `VM_NAME` picks it up via step 2's updated read-back. **No entry is lost in either
+     case** — this preserves the exact guarantee `na-eligibility-audit`'s KEEP-NA reasoning named as the hard
+     constraint, 6 times running.
+  5. **Not designed here, deliberately**: delta-filename collision avoidance under true concurrency (two threads
+     for the SAME instance flushing near-simultaneously) — `uuid4()` suffixes make collision astronomically
+     unlikely but the PROCESS-level `_per_vm_shard_lock` this file already takes for the read-merge-write critical
+     section would need to also wrap the delta upload for a formal guarantee, not just a probabilistic one; orphan
+     delta cleanup if a VM is permanently retired mid-backfill (never reaches its own `process_final=True`) — the
+     consolidator already correctly reads orphaned deltas forever, but nothing ever deletes them, a slow-accumulating
+     cost the P3 todo's own "large shards get bigger, less-frequent batches" framing doesn't address either.
+  **Why this is a design proposal, not a diff, still**: real code changes to a hot, durability-critical,
+  fleet-wide-shared write path deserve their own review pass and test-authored-first cycle (a SIGKILL-mid-delta
+  integration test is the one this issue is actually about), not a same-tick implementation squeezed in alongside
+  everything else this session has already shipped today. Flagging this as ready for someone to pick up and
+  implement against, not asking for another round of "is this still NA" — the investigation this todo asked for is
+  now done.

@@ -197,7 +197,7 @@ todos only to confirm they are data-movement, then leave it.
       "edit ONLY the repos this tranche owns"; they'll see it's safe to delete on their next pass since the gate
       itself is now clean independent of that set.
 
-- [ ] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
+- [x] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
       "re-run at the finer grain the moment T2 lands `instrument_type` / `data_type`" todo below is waiting on
       something that is already true in production, so the wait is the only thing left to remove. MEASURED
       2026-08-19 by reading the live artefact through your own engine
@@ -230,6 +230,16 @@ todos only to confirm they are data-movement, then leave it.
          has a finer breakdown than exists for half the corpus — the same failure mode as the mislabelled `grain`
          field in `readiness_pipeline_stage_per_shard_2026_08_18.json` (next item). Report grain per asset_group,
          or report the hollow fraction beside the label.
+
+      **Done properly, 2026-08-20**: both caveats resolved as durable tool fixes, not a one-off manual report —
+      `unified-trading-pm@bb81afbcaa` added `compute_dedup_stats()` to `shard_universe.py` + a `dedup_stats`
+      report block to `dump_coverage.py` (distinct-shard count after collapsing case-variant/nan-vs-blank keys,
+      plus per-asset-group hollow-instrument_type fraction). Re-measured against 2026-08-20's coverage.json (a
+      day newer than T2's 2026-08-19 measurement — the writer fix had NOT self-corrected the existing artefact by
+      the next cron run): raw 3965 / distinct **3877** / 88 duplicates collapsed; hollow fractions per asset_group
+      `cefi 0/73 (0%) defi 1888/2807 (67.3%) prediction 11/19 (57.9%) sports 18/822 (2.2%) tradfi 145/244
+      (59.4%)`. Every future `dump_coverage.py` run now reports both automatically — this does not need re-doing
+      by hand again.
 
 - [x] [FROM-T2] P1. **Your readiness dump's `grain` field is mislabelled — the writer, not the file.** This is the
       `/plans/epics/system_readiness_master.md` § W3 `[DOC] P1` item, and it lands in a file this tranche owns, so
@@ -286,9 +296,12 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W1 — readiness derivation and the state dump
 
-- [ ] [BACKEND] P0. Derive a batch / paper / live state for EVERY venue with a code path, surfacing `unverified`
+- [x] [BACKEND] P0. Derive a batch / paper / live state for EVERY venue with a code path, surfacing `unverified`
       honestly wherever a check does not exist. Epic definition-of-done item. Engine:
-      `cursor-configs/skills/readiness-state-dump/`.
+      `cursor-configs/skills/readiness-state-dump/`. **All 14 legs now do exactly this** — every one either
+      derives a real per-venue verdict or reports `unverified` with a specific reason, never a silent pass; the
+      MANUAL-mode addition below closed the last gap by surfacing this same discipline for a 4th mode, not just
+      the original 3.
 - [x] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
       moves 844 `not_ready` rows off their structural blocker. Track the dependency; do not wait idle on it.
       **2026-08-20 — dependency tracked and the non-blocked half DONE, `unified-trading-pm@c3a3e870f4`.** Request
@@ -314,9 +327,21 @@ todos only to confirm they are data-movement, then leave it.
       this session): `checks.credentials()` wired as the `credentials` leg in `derive_readiness.py:414`, derived
       from UAC's own declared `auth_scope`/`auth_environments`/`supports_testnet`/`supports_mainnet`. Re-confirmed
       live 2026-08-20: present with real counts (`ready=8 not_ready=10 unverified=846`) in a fresh dump run.
-- [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19). **Checked
+- [x] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19). **Checked
       2026-08-20: genuinely not yet implemented** — no `manual`/`MANUAL` mode reference anywhere in
-      `derive_readiness.py` or `checks.py`. Real remaining work, not a stale todo.
+      `derive_readiness.py` or `checks.py`. Real remaining work, not a stale todo. **Built and shipped same day**,
+      `unified-trading-pm@a13d577aea`: `MODES` now `(BATCH, PAPER, LIVE, MANUAL)` per
+      `unified_api_contracts.internal.modes.OperationalMode`'s own SSOT (`codex/04-architecture/
+      operational-modes.md`) — MANUAL shares LIVE's mainnet endpoint config, so every existing check's
+      `mode == "PAPER" -> testnet, else mainnet` mapping already resolves it correctly with no per-check special
+      case. Live-tested (`--venue OKX-FUTURES --mode MANUAL`): `execution_orders` correctly resolves via mainnet
+      exactly like LIVE; every other leg honestly reports `unverified` since no probe distinguishes
+      manual-vs-automated triggering yet. **Caught and fixed a real correctness bug this surfaced**:
+      `execution_instruction()`'s `.get(mode.lower(), "none")` treated "no probe field for this mode" the same as
+      "probe measured none" — MANUAL initially reported a false `not_ready` instead of honest `unverified`, since
+      `InstructionPathAvailability` only models batch/paper/live. Fixed with an explicit absent-vs-measured
+      sentinel in the same commit. Confirmed LIVE/PAPER/BATCH unaffected by either change (re-ran, identical
+      `ready` verdicts as before).
 - [x] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
       unverified 20`) against §17's own table — the artefacts flag it as not reconciled. — **RECONCILED
       2026-08-20**, live full-fleet run against `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`
@@ -325,52 +350,88 @@ todos only to confirm they are data-movement, then leave it.
       date (2026-08-19). Two caveats recorded as their own todos below: the execution-service probe failed in this
       run, and the plan's stated cause for the number is wrong.
 
-- [ ] [BACKEND] P0. **The stated critical path is WRONG and should be re-pointed** (measured 2026-08-20). This plan
+- [x] [BACKEND] P0. **The stated critical path is WRONG and should be re-pointed** (measured 2026-08-20). This plan
       and the coordinator both say T4's execution-instruction check is "the structural reason all 864 rows read
       `unverified`". Measured per-leg counts say otherwise: the rows read **`not_ready` (844), not `unverified`**,
       and the dominant failing leg is **`strategy` = 840 `not_ready`** — specifically
       `position_read_mode_availability(venue).<mode> = none`. `execution_instruction` is `unverified` on all 864,
       but rollup lets any `not_ready` dominate, so closing the instruction leg alone moves **zero** rows off
       `not_ready`. The headline number is gated by **strategy position-adapter coverage (strategy-service, T3)**,
-      not by T4. Raise with the coordinator before more effort is spent on the assumed critical path.
+      not by T4. Raise with the coordinator before more effort is spent on the assumed critical path. **Raised and
+      landed**: `unified-trading-pm@1aa865da41` corrects the coordinator plan's own critical-path claim with the
+      full per-leg table cited above — "Re-point the effort at strategy position-adapter coverage" is now the
+      coordinator's own stated position, not just this tranche's finding.
 
-- [ ] [BACKEND] P1. Fix the execution-service capability probe failing on the full-fleet run. In the 288-venue run
+- [x] [BACKEND] P1. Fix the execution-service capability probe failing on the full-fleet run. In the 288-venue run
       `_execution_order_capability_probe.py` exited 1 with `No bucket configured for market_data/defi and no
       project ID available`, so `execution_orders` / `execution_fills` / `execution_trades` /
       `execution_account_balance` all reported `unverified=864`. The same probe SUCCEEDS on a single-venue run
       (`--venue OKX-FUTURES` derives `execution_orders=ready` at PAPER and LIVE via
       `validate_operation(place_order, env=testnet|mainnet)`), so this is environmental, not a missing capability.
       The dump degrades honestly, but the published execution-leg counts are a FLOOR, not a measurement — do not
-      quote them as capability until this is fixed.
+      quote them as capability until this is fixed. **Already fixed, earlier this session** — the "no bucket
+      configured" line was a misleading benign log, not the crash cause; the real cause was
+      `_place_order_supported()` catching only `UnsupportedOperationError`, not the sibling
+      `UnsupportedEnvironmentError` a no-testnet venue (e.g. upbit) raises, crashing the whole subprocess on the
+      first such venue and degrading every venue after it. Fixed by catching both (see the function's own
+      docstring in `_execution_order_capability_probe.py`). Re-confirmed live 2026-08-20 (full 288-venue run, no
+      `--skip-execution-probe`): zero "no bucket configured" errors, real per-venue variance
+      (`execution_orders ready=29 not_ready=829 unverified=30`, `execution_fills ready=0 not_ready=816
+      unverified=72`) — a genuine FLOOR measurement now, not a crash artifact.
 - [ ] [BACKEND] P1. Resolve the per-venue and per-data-type cells that remain pending at the finer grain inside each
-      readiness tree.
+      readiness tree. **Same shape as the "close remaining data types" item above — data capture/backfill, not a
+      tool or artefact fix. BLOCKED-STANDING-RULE** for the same reason: this tranche does not run backfills.
 - [ ] [BACKEND] P1. Fix the tree gaps the artefacts name explicitly — Scroll and zkSync read `unverified — declared,
       never attempted`, and Plasma is `not a ChainKind member`. Consume T1's single chain SSOT; do not re-derive.
+      **Investigated 2026-08-20**: T1's SSOT (`unified-api-contracts/unified_api_contracts/registry/chain_env.py`)
+      already has all three fully declared — genesis dates, mainnet+testnet chain IDs, and per-protocol onboarding
+      dates for SCROLL/ZKSYNC/PLASMA. Neither `readiness-state-dump` nor `honest-coverage-dump` reference chains
+      at all (both operate at venue/asset_group/instrument_type grain) — this gap is not a tool wiring defect on
+      T5's side. It lives in the artefact HTML's own (evidently stale) chain-status table — held under the
+      plan-conflict flag above (`/plans/active/state_fabric_artefacts_2026_08_20.md`), not a separate fix needed.
 
 ### Honest coverage — every shard, with a denominator
 
-- [ ] [BACKEND] P0. Dump honest coverage per shard across the full shard universe, every figure carrying its
+- [x] [BACKEND] P0. Dump honest coverage per shard across the full shard universe, every figure carrying its
       denominator and date. Engine: `cursor-configs/skills/honest-coverage-dump/` reading the already-computed
-      `coverage.json` — never re-derive the expected universe and never re-walk GCS.
-- [ ] [BACKEND] P0. Re-run the dump at the finer grain the moment T2 lands `instrument_type` / `data_type` in
+      `coverage.json` — never re-derive the expected universe and never re-walk GCS. **Verified live 2026-08-20**:
+      `dump_coverage.py` run against `coverage.json` date=2026-08-20 reports per-shard totals with the source
+      path and date printed in the header, plus the `dedup_stats` block (distinct-shard count + denominator) added
+      today. Tool does this correctly; re-run whenever a fresh figure is needed.
+- [x] [BACKEND] P0. Re-run the dump at the finer grain the moment T2 lands `instrument_type` / `data_type` in
       `coverage.json`. The skill auto-detects grain from the payload — verify that, do not assume it.
       **2026-08-20 — the "verify that, do not assume it" half is DONE, `unified-trading-pm@c3a3e870f4`.**
       `tests/test_shard_universe_grain_detection.py`, 7 tests green. The case that matters for this exact handoff:
       when T2 lands the `by_venue_instrument_type_data_type` KEY before landing data under it, a presence-keyed
       detector would flip to the fine grain and enumerate **zero** shard cells — every coverage figure silently
       collapsing while looking structurally fine. The shipped detector requires a non-empty venue block and falls
-      back correctly, still reporting the real 2-tuple cells. Confirmed by test, not by reading. The re-run itself
-      still waits on T2.
-- [ ] [BACKEND] P0. Report the 4-state capture ledger per shard (captured / expected-absent / attempted_failed /
+      back correctly, still reporting the real 2-tuple cells. Confirmed by test, not by reading. **The re-run
+      itself is DONE too, 2026-08-20**: T2's axes are landed, run repeatedly today at `instrument_type` grain
+      (3965 raw cells, `instrument_type` grain confirmed by `Grain:` header line each time) — no longer waiting.
+- [x] [BACKEND] P0. Report the 4-state capture ledger per shard (captured / expected-absent / attempted_failed /
       expected_unattempted) plus a not-expected section for tuples outside the Layer-1 expected universe.
+      **Already the tool's core output** (pre-existing, not built today) — confirmed live 2026-08-20:
+      `dump_coverage.py`'s human output prints all four states plus a
+      `not-expected (stray) = N, Layer-1 holes (missing_tuples) = N` line per asset_group. Nothing to build.
 - [ ] [BACKEND] P1. Close the remaining data types the artefacts mark pending — on-chain, sports odds, prediction
-      and TradFi vendor datasets.
+      and TradFi vendor datasets. **BLOCKED-STANDING-RULE**: this is data capture/backfill, explicitly banned for
+      this tranche ("Do NOT run backfills, manifest migrations, corpus sweeps or GCS deletes" — operator ruling
+      2026-08-19). "Backfills still running" is itself one of the five allowed pending states for the artefacts —
+      not something T5 closes, something T5 reports honestly as in-progress.
 - [ ] [BACKEND] P1. Resolve the manifest-hygiene red findings. Evidence:
       `/plans/active/issues/manifest_hygiene_red_all_2026_08_17.md`, `/plans/active/issues/manifest_hygiene_red_all_2026_08_18.md`.
-- [ ] [BACKEND] P1. Resolve the empty-reprobe disagreement finding. Evidence:
+      **Re-checked 2026-08-20**: the 2026-08-18 doc is `status: resolved` (duplicate, closed). The 2026-08-17 doc
+      has 10/14 items `[x]` — real diagnosis + 3 confirmed fixes landed (`market-tick-data-service@f67a7480b3`,
+      `instruments-service@a586f34102`, plus others cited inline). The 4 remaining `[ ]` are `[DATA]` P2: 2 are
+      investigative (git-history check, find-recurring-process), 2 need a VM launch to run
+      `detect_manifest_divergence.py` against 14M+-row cefi/tradfi manifests (OOMs locally by design). Not
+      attempted here — a VM launch for a non-trivial data audit is a deliberate action, not something to fold
+      into a fast batch-flip pass; leaving genuinely open rather than forcing it.
+- [x] [BACKEND] P1. Resolve the empty-reprobe disagreement finding. Evidence:
       `/plans/active/issues/empty_reprobe_disagreement_all_2026_08_17.md`. — **Found already resolved 2026-08-20**:
       the issue doc's own `status: resolved` (corrected 2026-08-19), sole todo `[x]` with hard evidence
-      (`market-tick-data-service@bf9fe5c4cc`). Nothing to do.
+      (`market-tick-data-service@bf9fe5c4cc`). Nothing to do. (Checkbox-flip oversight from earlier this session
+      corrected now — the resolution note was written but the box itself was never ticked.)
 - [x] [BACKEND] P0. **No orphans** (epic DoD item, `system_readiness_master.md`) — run the new
       `/shard-utilisation-sweep` skill (consumption verdict per venue/data_type/instrument_type/chain, opposite
       direction from the existing GCS→manifest orphan sweeps; never emits a delete suggestion). **RUN 2026-08-20**
@@ -508,14 +569,17 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`.
 - [ ] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`.
-- [ ] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
+- [x] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
       (missing `@vitest/coverage-v8`), unrelated to any specific change — blocks EVERY future ship to this repo, not
       just one. Fix: `npm --prefix dashboard install` (or equivalent dependency sync) before the next
       agent-orchestrator ship attempt. Found blocking the git-status ahead-nudge sustain-gate fix below; that fix and
       its 2 regression tests are complete and tested locally (26/26 file, 103/103 broader suite) but NOT YET SHIPPED
       — preserved both in the working tree and backed up outside git
       (`scratchpad/agent-orchestrator-backup/_git_alerts.py` + `test_git_staleness_alerting.py`) since this session
-      already measured local uncommitted edits as fragile under quickmerge contention.
+      already measured local uncommitted edits as fragile under quickmerge contention. **Resolved 2026-08-20**:
+      this was per-checkout local environment state, not a repo code defect — `npm --prefix dashboard install` ran
+      once, and every subsequent agent-orchestrator ship this session gated clean on it. Moot now regardless: the
+      git-status-nudge fix this was blocking landed at `agent-orchestrator@0ec1f010d2` (see below).
 
 ### Infrastructure defects that cost other agents time
 
@@ -527,14 +591,12 @@ todos only to confirm they are data-movement, then leave it.
       eligible) — items 1-2 (repro + promote the confirmed `--rebase --autostash` fix into durable recovery docs)
       still open there, not yet landed. Not duplicating that work here; this doc's own remaining items are P3
       conditional-future ("if velocity recurs") or a P2 design-review call, neither blocking.**
-- [ ] [BACKEND] P1. Add the retry safety net for `main-backmerge-to-ldr` on non-PM repos. Evidence:
+- [x] [BACKEND] P1. Add the retry safety net for `main-backmerge-to-ldr` on non-PM repos. Evidence:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`.
-      **Re-verified 2026-08-20: extracted to
-      `/plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` (`status: active`) — item 1 (the
-      fleet-wide `branch-health.yml` drift-tick safety net, the actual P1 fix) is `[x]` LANDED,
-      `unified-trading-pm@96c163347f`. Items 2-3 there (a stale comment, a failed-backmerge detection surface) are
-      P2 polish, still open, not blocking. This doc's own remaining item is a P3 third-party-action-pinning
-      evaluation.**
+      **Re-verified 2026-08-20: all three extracted fixes are landed and cited in the source issue —
+      `unified-trading-pm@96c163347f` (fleet-wide drift-tick), 25 caller-stub commits (comment correction), and
+      `unified-trading-pm@2ead733819` (failed-backmerge detection). This doc's own remaining item is a P3
+      third-party-action-pinning evaluation.**
 - [x] ✅ [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
       `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`. **The core defect
       is fixed**: `unified-trading-ci main` added to `scripts/dev/cron-branch-overrides.txt` (`[x]`), verified no

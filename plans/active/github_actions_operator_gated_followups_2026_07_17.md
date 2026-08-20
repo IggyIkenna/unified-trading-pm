@@ -21,19 +21,7 @@ scope: [engineer, admin]
 tags: [ci-cd, github-actions, cost, self-hosted-runner, workflows, spend-reduction, operator-decision]
 related:
   [
-    /plans/archive/2026_07/github_actions_self_hosted_runner_migration_2026_07_15.md,
-    /plans/archive/2026_07/github_actions_staging_machinery_shutdown_2026_07_24.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
-    /plans/archive/issues/quickmerge_agent_sentinel_race_vs_own_rebase_2026_07_16.md,
-    /plans/archive/issues/persist_cicd_event_ledger_read_modify_write_race_2026_07_17.md,
-    /plans/archive/issues/reconcile_release_tags_dead_since_d13_git_tag_migration_2026_07_17.md,
-    /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
-    /plans/archive/issues/digest_drift_sweep_silent_noop_github_token_scope_2026_07_16.md,
     /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
-    /plans/archive/2026_07/deployment_durable_operational_data_bigquery_2026_07_21.md,
-    /plans/archive/2026_08/github_actions_operator_gated_followups_progress_log_history_2026_08_03.md,
-    /plans/archive/2026_08/github_actions_operator_gated_followups_hard_won_context_and_cost_ruling_history_2026_08_16.md,
-    /plans/archive/2026_08/operator_ruling_record_ci_line_cap_splits_2026_08_16.md,
   ]
 created: "2026-07-24"
 last_updated: 2026-08-16 # 2nd line-cap remediation split (Trust Mode) -- extracted "Hard-won context" + "Cost ruling 2026-07-23" to the archive doc above; regrew past 1000L since the 08-03 split

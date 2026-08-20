@@ -194,6 +194,29 @@ todos only to confirm they are data-movement, then leave it.
       sweep output (all axes, incl. the DeFi/sports vocabulary-coverage gaps that are NOT orphans):
       `/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md`'s "No orphans" todo.
 
+      **PARTIAL 2026-08-20 — instrument_type half resolved, data_type half still open.** Traced via a dedicated
+      investigation, not guessed: `tradfi/nan` + `prediction/nan` were a genuine WRITE-TIME defect —
+      `market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py`'s
+      `_resolve_instrument_type_column()` cast an already-present `instrument_type` column via `.astype(str)` with
+      no null guard, so a NaN/None/`pd.NA` cell rendered as the literal string `"nan"` and became a real
+      hive-partition segment + manifest row_key value — the write-side counterpart of a gap
+      `measure_honest_coverage.py`'s own `_casefold_instrument_type_series` already defended against on the read
+      side. Fixed with `.fillna("")` before the cast, 4 new regression tests (null/NaN/pd.NA/unaffected-real-value
+      cases), 39/39 passing. Evidence: `market-tick-data-service@79ce0c89`.
+      `tradfi/UNKNOWN` is **NOT a defect** — confirmed sanctioned, documented vendor pass-through
+      (`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py:1089-1095`: Databento's
+      `stype_out=UNKNOWN` for continuous/calendar-spread futures contracts, already in `CONTRACT_REGISTRY`); the
+      `not_consumed` verdict here is a vocabulary-registry mismatch in the sweep's checked source
+      (`VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE` doesn't mirror `CONTRACT_REGISTRY`'s sanctioned `UNKNOWN`
+      entries), not a data problem — worth a follow-up to the sweep tool itself if it keeps false-flagging this,
+      not tracked as a new todo here since it's a single already-understood cell.
+      **Still open**: the 5 `data_type` findings (`tradfi/macro_result`, `tradfi/yield_curve`, `tradfi/ohlcv_1d`,
+      `tradfi/futures_chain`, `prediction/prediction_canonical_question_group`) and the
+      `market_lifecycle`/`MARKET_LIFECYCLE` casing-drift question — confirmed the lowercase `market_lifecycle` is
+      the real writer value (`instruments-service/instruments_service/engine/orchestrator/writers.py`'s
+      `_write_market_lifecycle`, GCS prefix `market_lifecycle/by_canonical_group`); the uppercase variant's source
+      was not located.
+
 ## Todos
 
 ### W3 — granularity and the shard denominator
@@ -237,11 +260,20 @@ todos only to confirm they are data-movement, then leave it.
       cannot be derived from the artefact by any consumer. `chain` is already read (`_READ_COLUMNS_WITH_CHAIN`) and
       already grouped marginally (`by_chain`), so this is an ADDITIVE projection, not a change to any published
       number — it can land without a supersession, and the reconciled denominator can then be quoted from it.
-- [ ] [OPERATOR] P0. **Rule on the sports league axis before it is built.** The W3 ruling names leagues as a real
-      sports axis and excludes FIXTURES from the shard COUNT while keeping them in the full denominator. Neither
-      distinction is expressible today — no league axis exists in the manifest projections at all. Whether league
-      belongs on the shard atom (multiplying 822 sports cells by league cardinality) or stays a drill-down is a
-      denominator-defining decision, so it is the operator's, not this tranche's.
+- [x] [OPERATOR] P0. **Rule on the sports league axis before it is built.** ✅ 2026-08-20 — **operator ruling**
+      (recorded here in `/plans/active/code_readiness_t2_refdata_marketdata_2026_08_19.md`'s own Progress Log —
+      answered via an interactive `AskUserQuestion` exchange, no separate issue doc; this todo's own text is the
+      traceable record): **fold league_id into the FULL primary shard atom** (venue, instrument_type, data_type, league_id), not the
+      lighter (venue, data_type, league_id) drill-down first proposed. Shipped as level 5e,
+      `by_venue_instrument_type_data_type_league` — a dated supersession, not a silent edit: the coarser
+      `by_venue_instrument_type_data_type` (level 5) keeps its exact prior shape/meaning; the one real in-workspace
+      consumer of its nested shape (`unified-trading-pm`'s `shard_universe.py` `iter_shard_cells`/`detect_grain`,
+      confirmed via workspace-wide grep — zero other hits) is unaffected and separately extended to recognise the
+      new `"league"` grain. FIXTURES-excluded-from-count is still unbuilt — out of scope for this ruling, tracked
+      separately if needed. Evidence: `instruments-service@6056d46d5c` (level 5e + 6 regression tests, 70/70
+      passing), `unified-trading-pm@25b428ee8f` (shard_universe.py grain extension + 6 regression tests, 12/12
+      passing) — verified live via `git log --oneline -1` against `origin/live-defi-rollout`, not assumed from a
+      queued push.
 - [x] [BACKEND] P0. Add `instrument_type` and `data_type` columns to the coverage payload. **T5's coverage dump
       blocks on this** — it can only report at `(venue, data_type)` grain until these land. Tell T5 when shipped.
       ✅ 2026-08-20 — **already live before this tranche started; verified by execution, not by reading the writer.**
@@ -251,8 +283,15 @@ todos only to confirm they are data-movement, then leave it.
       `"instrument_type"`, 3,962 cells at `(ag, venue, instrument_type, data_type)`. T5 told, in their plan's
       `## Inbound requests`, with the two caveats that make the finer grain honest. Evidence:
       `unified-trading-pm@89fab080bd`. The axes needed no code; making them honest did — next item.
-- [ ] [BACKEND] P0. Fix the mislabelled `grain` field. A wrong grain label silently misstates every denominator
-      derived from it.
+- [x] [BACKEND] P0. Fix the mislabelled `grain` field. A wrong grain label silently misstates every denominator
+      derived from it. ✅ 2026-08-20 — **fixed by T5** (this todo's outbound request), not this tranche directly:
+      `derive_readiness.py`'s single `grain` key conflated the COVERAGE-SOURCE grain (`detect_grain()`'s output)
+      with the ROW grain (always `venue_asset_group_mode`, unconditionally) — split into `coverage_source_grain`/
+      `row_grain`. Verified by reading the actual diff, not trusting the commit message alone:
+      `unified-trading-pm@065067f345` (code) + `@e1051d80dd` (T5 plan flip, "FROM-T2 grain-mislabel fixed").
+      Re-checked for conflict with this session's league-grain work before shipping — `detect_grain()`/
+      `iter_shard_cells()` are called generically (no hardcoded grain-value list), so the new `"league"` grain
+      value flows through with zero further changes needed there.
 - [ ] [BACKEND] P0. Ensure the shard atom is IDENTICAL across writer, manifest, status, gate and UI. Any divergence
       makes two honest components disagree with no error. SSOT:
       `/codex/02-data/availability-manifest-and-data-status.md`.

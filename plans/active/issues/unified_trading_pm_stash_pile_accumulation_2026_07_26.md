@@ -468,6 +468,16 @@ precisely because they were corrupt. Do not read the unique/stale split as work-
       clean at entry and conflicted after any of those is restored from the entry snapshot and the run exits 15
       (new, documented in the header alongside 2–14) — never reaching the pre-commit checker. Dirty-at-entry is
       untouched by the new guard and still resolves to exit 6, unchanged.
+      **Residual gap found 2026-08-20 (T3 session), not a new bug in the safety property**: hit exit 15 live under
+      real peer-content collision on `code_readiness_t3_features_ml_strategy_2026_08_19.md`. The core guarantee
+      held — nothing corrupted was committed. But the restore only resets the WORKING TREE to the entry snapshot;
+      the git INDEX was left holding the conflict-marker-corrupted content from the failed cycle (`git status`
+      showed `MM` — index diverged from HEAD with markers, worktree clean). Recovered manually with
+      `git restore --staged <file>` before retrying, which worked, but a caller that only checks the working tree
+      for markers (as the guard itself does) would see clean and not know the index needs resetting too. Not
+      filed as its own todo — small, bounded fix (extend the restore to also run `git restore --staged` on the
+      same file, or verify the index is index==HEAD after the recovery path) for whoever next touches
+      `_sdp_assert_no_self_conflict`.
       **Reproduced twice** (sandbox repo mirroring this layout, real git operations, no mocking):
       (1) POSITIVE — a file verified clean via `check_conflict_markers.sh` at entry, corrupted mid-run when
       `sdp_recover_named_from_any_stash` pulled a conflicted blob out of a landmine stash entry after a legitimate

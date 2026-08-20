@@ -21,7 +21,7 @@ related:
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
+    /codex/11-project-management/doc-frontmatter-schema.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ao_parked_2026_08_10.md,
@@ -29,8 +29,8 @@ related:
     /plans/active/issues/claude_anthropic_flat_rate_billing_calibration_2026_08_12.md,
     /plans/archive/2026_08/issues/forced_compact_reports_submitted_but_never_executes_2026_08_08.md,
     /plans/active/issues/mac_slot0_base_checkout_stuck_dirty_files_2026_08_11.md,
-    /plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
-    /plans/active/issues/plan_reconciler_findings_ao_2026_08_10.md,
+    /plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md,
+    /plans/archive/2026_08/issues/plan_reconciler_findings_ao_2026_08_10.md,
   ]
 created: "2026-08-13"
 last_updated: "2026-08-14"
@@ -112,7 +112,7 @@ source: >-
       from Req.E to Req.R for plan+issue as the final hardening commit — **DUPLICATE-MERGED, closing this dispatch with
       a real net-new contribution rather than re-running the full scope.** This todo's source doc itself already states
       it's "the SAME work item actively extracted and tracked as todo 1 of
-      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`" — confirmed by 5 independent na-eligibility-audit
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`" — confirmed by 5 independent na-eligibility-audit
       passes (2026-08-01 through 2026-08-10) which each ruled it genuinely unbounded, ongoing corpus-scale work "not
       bounded to a single-worker AO dispatch," i.e. this batch20 extraction duplicating it as a bounded single todo was
       itself a conflict-check miss (it chased this source doc's citation rather than following that doc's own pointer
@@ -183,7 +183,7 @@ source: >-
       `agent-orchestrator@a3eda085f6` (2026-08-13, verified on `origin/live-defi-rollout` —
       `DeepSeekWalletOpeningBalanceRow` + `record_deepseek_opening_balance`/`get_deepseek_opening_balance`,
       `opening_balance_usd` + `residual_since_observability_usd` on the lifetime reconciliation,
-      `POST     /api/accounts/deepseek/wallet-reconciliation/opening-balance`, and the `DeepSeekWalletPanel` freeze
+      `POST /api/accounts/deepseek/wallet-reconciliation/opening-balance`, and the `DeepSeekWalletPanel` freeze
       form). The source doc's own copy of this exact todo was already flipped `[x]` there but this batch20 extraction
       never picked up the SHA. Per the AO-dispatch conflict-check protocol's rule 4 ("already-shipped elsewhere,
       checkbox just never flipped"), citing the SHA here rather than re-doing the work — same pattern as the two
@@ -239,7 +239,7 @@ source: >-
       issues (#27705, #27734) reported-affected versions (2.1.47, 2.1.50) — CONFIRMED fleet is well past both affected
       versions, no code change needed: `bootstrap_vm.sh` pins `CLAUDE_CODE_VERSION=2.1.175`
       (`agent-orchestrator/scripts/bootstrap_vm.sh:332`) and the actual running production spawn binary is
-      `claude     2.1.202` (independently confirmed 2026-08-13,
+      `claude 2.1.202` (independently confirmed 2026-08-13,
       `plans/active/ao_satellite_ao_dispatch_batch20_2026_08_13.md`'s own earlier todo) — both newer than 2.1.47/2.1.50.
       Read both upstream issues via `gh issue view`: #27705 ("[Bug] Crash on network interruption (VPN disconnect) with
       no session recovery", v2.1.47, closed `stale` — auto-bot closure, no maintainer fix confirmation or cited fix
@@ -266,7 +266,7 @@ source: >-
 - [x] ✅ [CODE] P2. Wire resource-watchdog's existing pressure/cgroup_mem tick log into the same death-correlation
       capture path as the other host/account/pane fields — STALE-CHECKBOX correction, not new work: the source doc's own
       copy of this exact todo is already
-      `[x] [INFRA] P3. Wire resource-watchdog's tick log into death correlation —     superseded, root cause found.`
+      `[x] [INFRA] P3. Wire resource-watchdog's tick log into death correlation — superseded, root cause found.`
       (line 241, in its "All 32 items below predate the confirmed root cause" section) — the tmux-server death root
       cause was confirmed 2026-08-13 (`ROOT CAUSE CONFIRMED + Two-layer fix`) via a different mechanism (live-catch +
       strace + auditd), making the resource-watchdog pressure/cgroup_mem correlation wiring moot before it was ever
@@ -302,7 +302,7 @@ source: >-
       classifies as expected/unavoidable, not the queued-message bug these 3 fixes targeted); the only other wedge in
       the full activity history since the fixes landed was role=main (excluded from the worker-scoped rate; cooperative-
       path main/review wedging is a separate, already-ruled-on concern per
-      `ao_main_review_force_compact_idle_gate_     unreachable_2026_08_09.md`). QG green (3740 passed, 2 skipped). Not
+      `ao_main_review_force_compact_idle_gate_ unreachable_2026_08_09.md`). QG green (3740 passed, 2 skipped). Not
       touching the source doc's own copy of this todo here — per this batch's own stated design ("checkbox
       reconciliation back into each source doc happens in the paired finalize plan"), citing the finding for
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` to reconcile. Source:
@@ -332,7 +332,7 @@ source: >-
       `ao_satellite_ao_dispatch_batch20_2026_08_13_finalize.md` per this batch's stated design. Source:
       `plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`
 - [x] ✅ [CODE] P2. ALREADY-DONE 2026-08-14 — verified via
-      `git log -S"execution_scope: local-only" --     plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`: the
+      `git log -S"execution_scope: local-only" -- plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md`: the
       frontmatter fix landed in commit c7cddb75f6 ("docs(plans): reconcile ao delta — 5 fixes (frontmatter
       contradiction, ...)") prior to this dispatch. Current file
       (`plans/active/orchestrator_vm_e2e_hardening_2026_07_24.md:22-23`) already reads `assigned_vm: NA` +

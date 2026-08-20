@@ -45,20 +45,13 @@ tags:
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/archive/issues/cf_manifest_audit_scheduled_job_daily_failure_2026_07_13.md,
-    /plans/archive/2026_08/issues/pipeline_smoke_sweep_findings_2026_07_20.md,
     /plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md,
-    /plans/archive/issues/manifest_index_read_oom_canonical_cache_2026_06_24.md,
-    /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
-    /plans/archive/2026_08/data_feed_sla_registry_and_active_self_healing_2026_06_19.md,
-    /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md,
     /plans/active/data_pipeline_self_healing_completion_residual_2026_07_24.md,
     /plans/active/data_status_catalogue_true_source_phase2_2026_07_24.md,
     /plans/active/data_status_cell_grid_rearchitecture_2026_07_18.md,
     /plans/active/data_status_tab_and_downloads_remediation_2026_06_16.md,
-    /plans/archive/2026_08/issues/live_mode_event_sink_topic_missing_2026_06_21.md,
   ]
 created: "2026-08-09"
 last_updated: "2026-08-09"

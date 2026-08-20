@@ -95,7 +95,7 @@ DISPLAY_LABELS: dict[str, str] = {
 #: invariant).
 NOT_EXPECTED_LABEL = "not-expected"
 
-Grain = Literal["instrument_type", "venue_data_type"]
+Grain = Literal["instrument_type", "venue_data_type", "league"]
 
 
 @dataclass(frozen=True)
@@ -107,6 +107,10 @@ class ShardCell:
     instrument_type: str | None  # None at the 2-tuple (venue, data_type) grain
     data_type: str
     counts: dict[str, int]  # keyed by CAPTURE_STATE_FIELDS (missing keys => 0)
+    # None outside the "league" grain (operator's 2026-08-20 W3 fold-in ruling — see
+    # instruments-service/scripts/measure_honest_coverage.py's level-5e block, which is the
+    # writer of ``by_venue_instrument_type_data_type_league``, the payload key this grain reads).
+    league_id: str | None = None
 
     def count(self, field: str) -> int:
         return int(self.counts.get(field, 0))
@@ -188,6 +192,11 @@ def detect_grain(payload: dict) -> Grain:
     itself -- never from a hardcoded assumption about whether the
     instrument_type axis has landed on VenueCapabilityRecord yet.
     """
+    by_vitdl = payload.get("by_venue_instrument_type_data_type_league") or {}
+    for ag_block in by_vitdl.values():
+        for venue_block in (ag_block or {}).values():
+            if venue_block:
+                return "league"
     by_vitd = payload.get("by_venue_instrument_type_data_type") or {}
     for ag_block in by_vitd.values():
         for venue_block in (ag_block or {}).values():
@@ -199,6 +208,16 @@ def detect_grain(payload: dict) -> Grain:
 def iter_shard_cells(payload: dict, grain: Grain | None = None) -> Iterator[ShardCell]:
     """Yield one ShardCell per (asset_group, venue[, instrument_type], data_type) node."""
     resolved_grain: Grain = grain if grain is not None else detect_grain(payload)
+    if resolved_grain == "league":
+        by_vitdl = payload.get("by_venue_instrument_type_data_type_league") or {}
+        for ag, venues in by_vitdl.items():
+            for venue, itypes in (venues or {}).items():
+                for itype, dtypes in (itypes or {}).items():
+                    for dt, leagues in (dtypes or {}).items():
+                        for league_id, counts in (leagues or {}).items():
+                            yield ShardCell(ag, venue, itype, dt, counts or {}, league_id)
+        return
+
     if resolved_grain == "instrument_type":
         by_vitd = payload.get("by_venue_instrument_type_data_type") or {}
         for ag, venues in by_vitd.items():

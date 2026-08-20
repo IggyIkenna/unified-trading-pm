@@ -32,20 +32,10 @@ tags: [cefi, close-out, consolidation, canonicalisation, manifest, coverage, bac
 related:
   [
     /plans/active/issues/cefi_residual_followups_after_honest_done_2026_07_17.md,
-    /plans/archive/2026_07/issues/cefi_canonical_blueprint_2026_07_17.md,
-    /plans/archive/issues/cefi_tardis_throughput_collapse_350x_2026_07_17.md,
-    /plans/archive/2026_08/data_completion_cefi_2026_07_15.md,
-    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
     /plans/active/instruments_completion_tracker_2026_07_06.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
     /plans/active/issues/instruments_docs_audit_outstanding_items_2026_07_08.md,
-    /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
-    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_2026_07_25.md,
-    /plans/archive/2026_07/cefi_satellite_ao_dispatch_batch1_finalize_2026_07_25.md,
-    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25.md,
-    /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
   ]
 created: 2026-07-18
 last_updated: "2026-07-25" # 2026-07-25: 4-child split (migration-cutover, coverage-backfill, candle-namespace, misc-hygiene) + Track 0 cryptovenue-phases embed (cefi.1) + 11 AO-readiness fixes; was 2026-07-24

@@ -124,17 +124,19 @@ rather than split into two same-priority concurrent items on the same file.
       `/plans/active/issues/cloud_run_crash_loop_alert_policy_invalid_metric_2026_08_20.md`. No code change needed
       for this todo (config fix tracked in the issue doc).
 
-- [ ] [INFRA] P2. **Re-add `cost_snapshot_cron`'s X-API-Key header via Secret Manager.** `cost_snapshot_scheduler.tf`
+- [x] ✅ [INFRA] P2. **Re-add `cost_snapshot_cron`'s X-API-Key header via Secret Manager.** — deployment-service@13ebe52635; Evidence: quality-gates.sh PASS (3650 passed, 5 skipped), tofu fmt -check PASS. `cost_snapshot_scheduler.tf`
       dropped the `X-API-Key` header when it migrated off a hardcoded literal; re-add it sourced from a proper Secret
       Manager reference (never a literal). This is now load-bearing since `DISABLE_AUTH=false` went live — the cron
       currently 401s silently every 12h without it. **Done when**: the cron's next scheduled fire succeeds
       (non-401), verified via Cloud Scheduler execution history or Cloud Run request logs. Repo: deployment-service.
       Source: `deployment_service_prod_terraform_drift_2026_08_07.md`.
 
-- [ ] [INFRA] P2. **Remove the dead `alerting_paging_cron` import block.** `_imports_reconcile.tf` lines 13-16 import
-      a Cloud Run resource confirmed live `NOT_FOUND` — matches this same file's own documented precedent for 2 prior
+- [x] ✅ [INFRA] P2. **Remove the dead `alerting_paging_cron` import block.** `_imports_reconcile.tf`'s import block
+      for the Cloud Scheduler resource was confirmed live `NOT_FOUND` — matches this same file's own documented precedent for 2 prior
       identical dead-import removals. Currently hard-blocks any untargeted `ENV=dev tofu plan`. **Done when**: the
-      import block is removed and a fresh untargeted `ENV=dev tofu plan` no longer errors on this resource. Note:
+      import block is removed and a fresh untargeted `ENV=dev tofu plan` no longer errors on this resource. Evidence:
+      `deployment-service@77d89c8887`; `ENV=dev ./tofu.sh plan -no-color` exit 0; quality-gates.sh PASS (3650 passed, 5 skipped).
+      Note:
       this file is also touched by `deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md`'s
       remaining `[OPERATOR]`-gated items (module-duplication + prod-hardcoding decisions) — this todo only removes
       the one confirmed-dead import block, not the broader unresolved items. Repo: deployment-service. Source:

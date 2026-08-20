@@ -96,12 +96,12 @@ todos of its own**. The plans that actually work these docs' open items:
   [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md),
   also archived. Superseded by
   [ao_satellite_ao_dispatch_batch2_2026_07_30](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md),
-  [batch3_2026_07_31](/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
+  [batch3_2026_07_31](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
   [batch4_2026_08_01](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md) (now archived, complete),
   and [batch5_2026_08_03](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`,
   awaiting operator approval) — each with its own gated `_finalize` pair — as the tranche's iterative-drain audit cycle
   continued per the skill's own methodology.
-- [ao_open_issues_consolidated_close_out_2026_07_17](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
+- [ao_open_issues_consolidated_close_out_2026_07_17](/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md)
   — an earlier AO-scope tracker (8 open todos as of 2026-08-04) that is **not** in the Sources lists below but does
   cover some of them (its Recovery-audit Layer-1 producer todo owns
   `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`). Confirmed (2026-08-04) as a genuine `ao`-tranche covering
@@ -154,7 +154,7 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 ## Track 2 — Worker/slot lifecycle + multi-agent git-safety · P0/P1
 
 **Sources**:
-[issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md](/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md)
+[issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md](/plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md)
 (killed slot's watchdog frozen-kick loop leaves orphaned unpushed commits) ·
 [issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md](/plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md)
 (idle-slot dirty WIP never triggers orphan-inherit — spawn-only mechanism gap) ·
@@ -164,13 +164,13 @@ reaper-false-done, clean-exit-signal, auto-park-enforcement).
 (slot recurring wedge at `context_pct=75` needing manual `/compact` confirmation) ·
 [issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md](/plans/archive/issues/autostash_pop_restores_foreign_wip_into_the_index_2026_07_17.md)
 (shared-worktree autostash restores foreign WIP into the index) ·
-[issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md](/plans/active/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md)
+[issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md](/plans/archive/issues/ahead_push_sentinel_stale_after_amend_no_rejected_push_retry_2026_07_24.md)
 (ahead-push sentinel stale after amend, no rejected-push retry) ·
-[issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md](/plans/active/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md)
+[issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md](/plans/archive/issues/git_status_reporter_stale_public_url_token_expiry_2026_07_24.md)
 (per-slot git-health reporter goes silent on token expiry) ·
 [issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md](/plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md)
 (git-health reporter races the FF-pull cron, phantom-dirty flicker) ·
-[issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md](/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md)
+[issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md](/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md)
 (shared UTL clone repeatedly reset to origin, destroying local commits) ·
 [issues/orphan_rootm_branch_unmerged_work_2026_06_05.md](/plans/archive/issues/orphan_rootm_branch_unmerged_work_2026_06_05.md)
 (orphaned unmerged work on dead root-VM agent-slot branches) ·
@@ -188,7 +188,7 @@ guard); orphaned branch work recovered or explicitly written off with evidence.
 **Sources**:
 [issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md](/plans/archive/issues/central_vm_relaunch_does_not_reregister_glue_runners_2026_07_24.md)
 (planning-VM relaunch doesn't reprovision the self-hosted glue-runner pool) ·
-[issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md](/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md)
+[issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md](/plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md)
 (SQLAlchemy `QueuePool` exhaustion under concurrent slot traffic) ·
 [issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md](/plans/archive/issues/orchestrator_jwt_secret_not_pinned_causes_fleet_git_status_outage_2026_07_24.md)
 (unpinned JWT secret causes fleet-wide auth outage) ·
@@ -230,11 +230,11 @@ posts; dead code refs restored or removed cleanly; Playwright port-collision fix
 route-collision + backlog-relations-view, are DEFERRED per operator instruction rather than held open) ·
 [issues/ao_recovery_audit_layer1_deleted_2026_07_15.md](/plans/archive/issues/ao_recovery_audit_layer1_deleted_2026_07_15.md)
 (AO custom recovery-audit-signoff role/agent deleted as cleanup collateral) ·
-[ao_open_issues_consolidated_close_out_2026_07_17.md](/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md)
+[ao_open_issues_consolidated_close_out_2026_07_17.md](/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md)
 (9 open/32 done — added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #25, option A/C
 combined: this doc was the single most-important covering plan actually tracking real AO-tranche work and had been
 missing from Sources entirely) ·
-[context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md](/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+context_scout frontmatter contract (see /codex/11-project-management/doc-frontmatter-schema.md)
 (retagged `[ao]` 2026-08-09 from a `[ao, cross-cutting]` mistag — `context_scout`/`plan-brainstorm` skill-authoring
 plumbing, 1 of 11 items still open).
 
@@ -274,14 +274,14 @@ plumbing, 1 of 11 items still open).
       operator sequencing ruling above; do not start this todo first.** Escalate the watchdog from soft-kick to
       hard-kill + respawn after N consecutive `post_kick_classification=frozen` observations (e.g. N=3, ~15-20 min)
       instead of soft-kicking indefinitely, per
-      `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s own spec; the
+      `/plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`'s own spec; the
       daily hard-kill budget (50) is ample. Re-scope N/timing against the CORRECTED classifier from the todo above, not
       before landing it. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`. Repo: agent-orchestrator. —
       agent-orchestrator@77fc60a: **audit finding — the escalation mechanism this todo asks for was already shipped**
       (`kick_escalation_threshold` config field, default 3, introduced in `5b07bd3`; the ping-advanced-reset bug that
       let the 2026-07-21 incident's wedged worker dodge escalation for 55 kicks was already fixed in `2a48eda`,
       pre-dating this plan). `WorkerLivenessKicker._tick_once` already forces
-      `_maybe_auto_respawn_stuck_slot(...,     force=True)` — which kills the wedged tmux session and resumes the
+      `_maybe_auto_respawn_stuck_slot(..., force=True)` — which kills the wedged tmux session and resumes the
       in-flight task via `--resume` (`_kill_wedged_for_resume`) — once `_consecutive_kick_failures` reaches
       `kick_escalation_threshold`, gated on `genuinely_recovered` (pane verified 'working'), not merely `ping_advanced`.
       Re-scope check (the actual remaining ask, now that the host-load-aware grace-shield fix — the todo directly above,
@@ -324,7 +324,7 @@ plumbing, 1 of 11 items still open).
   per-doc fan-out could not be used; recorded as this run's main coverage caveat). Result: **2 archivable now** (the
   `ao_repo_docs_deleted…` and `orchestrator_slots_context_directive…` docs, both 100% `[x]` with gates re-measured), **1
   covered** (`issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`, by
-  `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`'s Layer-1-producer todo), and **32 orphaned** —
+  `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md`'s Layer-1-producer todo), and **32 orphaned** —
   the direct consequence of this doc carrying zero todos while no `ao_*batch*` plan had ever existed. Phase 3 drafted
   `ao_satellite_ao_dispatch_batch1_2026_07_26` + its finalize pair (both **`status: draft`** — flipping to `active` is
   the operator's call) covering 13 source-doc todos across 10 conflict-cleared docs, one of which folds a genuine

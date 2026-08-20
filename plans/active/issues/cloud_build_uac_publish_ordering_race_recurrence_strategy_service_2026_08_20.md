@@ -156,6 +156,68 @@ dispatch (and therefore the floor-bump commit, promotion, and Cloud Build trigge
 
 Not yet implemented — see Todos.
 
+## Finalized implementation design (session 2026-08-20, continued — operator review requested before shipping)
+
+Three follow-up questions from the operator refined the design below. Each is answered with what was actually checked,
+not assumed.
+
+**Q1: does the wait need to cover the producer's wheel-build time too, or just AR propagation lag?** Checked
+`semver-agent.yml` (the workflow that actually dispatches `version-bump`, triggering this whole fan-out chain) — it has
+ZERO references to "wheel" or "publish-package" anywhere in it. It mints the version and dispatches `version-bump`
+completely independently of, and unsequenced with, `publish-package.yml`'s wheel build+upload. **They are parallel,
+racing reactions to the same push/tag event, not a pipeline.** So the wait this gate needs to absorb is the FULL
+producer-side latency — wheel build+upload time (comparable builds in this fleet run several minutes) PLUS the AR
+indexing/propagation lag already measured today (12-31 min) — not propagation lag alone. This raises the priority of
+the "verify retry budget" todo below; the current ~20 min budget (5 min × 3 `fanout_retry` retries) may not be enough
+once build time is added on top, and should be re-sized deliberately rather than assumed sufficient.
+
+A structurally cleaner alternative exists — **sequence `semver-agent`'s dispatch behind `publish-package.yml`'s own
+AR-confirmation** (have the publish workflow, which is already running and already paying for its own runtime, be the
+thing that fires the fan-out once AR is confirmed, instead of two independent workflows racing) — which would need
+zero incremental wait at all. That is a real rewire of the trigger graph across two workflows, bigger than the
+poll-based fix below. Noting it here as the eventual "does this properly" option; not in scope for the initial fix.
+
+**Q2 + Q3: will the wait bill GitHub Actions minutes, and can we avoid that by using the self-hosted glue pool
+instead?** Confirmed: GitHub-hosted runner billing (`ubuntu-latest`, which is what this job currently uses) is
+wall-clock, not CPU-based — a step that just polls/sleeps is billed the same as one doing real compute for the full
+duration the runner is held. So yes, widening this gate's wait window costs real (if modest, compared to the Cloud
+Build alternative) GH Actions spend, scaling with how often the race happens.
+
+**CORRECTED 2026-08-20 (`/plan-reconcile` finding F-G09-1)**: the original text above claimed PM is a **private**
+repo (`gh api repos/IggyIkenna/unified-trading-pm --jq .private` → `true`) as part of the billing analysis. Re-checked
+live this session: PM is **public** (`{"private":false,"visibility":"public"}`). This matters beyond billing —
+`plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md` documents that every self-hosted-routed
+workflow in this repo, including this exact job, was deliberately reverted to `runs-on: ubuntu-latest` on 2026-08-07
+specifically because self-hosted-runner-on-a-public-repo is a fork-PR security exposure. **The self-hosted-glue-runner
+half of the "Decided approach" below (todo item 4a) must NOT ship as designed while PM stays public** — it would
+reintroduce the exact exposure that revert fixed.
+
+Operator direction: the self-hosted glue-runner pool is already running 24/7 as effectively sunk capacity, and exists
+specifically to absorb this class of cheap/bounded workflow rather than paying GH-hosted per-minute rates — same
+reasoning already applied fleet-wide to move lightweight per-repo dispatcher stubs there (e.g. `publish-package.yml`'s
+per-repo trigger). Checked whether that's a clean move for this job specifically: `cloud-build-router.yml` (the other
+GCP-orchestration workflow in this same repo) runs on `ubuntu-latest` with an explicit `google-github-actions/auth@v3`
+step (WIF-first, SA-key fallback) — self-hosted runners in this fleet do NOT carry ambient GCP credentials, so moving
+runner type doesn't remove the need for an auth step either way. `update-repo-version.yml` already HAS this exact
+auth pattern in-file (`digest-auth-wif` / `digest-auth-key` steps, used later in the same job for the
+`unified-trading-library` base-image-digest case) — reuse it rather than inventing a new one.
+
+**Decided approach** (pending operator review of this doc, not yet shipped):
+
+1. Change the `update-manifest` job's `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]`. This moves the WHOLE
+   job (checkout, manifest edit, git push-with-retry, DAG check, digest resolution, resolve-gate poll, dispatch
+   fan-out) onto the cheap pool, not just the poll step — simplest change, no job-splitting, stays a single workflow
+   file (operator preference: no new workflow file).
+2. Add a GCP auth step near the top of the job (before `resolve-gate` needs it), mirroring the existing
+   `digest-auth-wif`/`digest-auth-key` steps already in this file rather than a new pattern.
+3. Extend `check_resolvable()` (as already scoped below) with the AR check, now sized against Q1's finding (build time
+   + propagation lag, not propagation lag alone).
+
+Residual consideration, not a blocker: this job holds the `concurrency: group: version-bump, cancel-in-progress: false`
+slot for its entire duration, so moving it to the glue pool adds ONE bounded, serialized (never-concurrent) occupant —
+predictable footprint, not a fan-out of parallel runners. A quick sanity check on current glue-pool headroom before
+shipping is worth doing, but nothing found this session suggests a real contention risk.
+
 ## Todos
 
 - [x] ✅ [CICD] P1. **Diagnose + verify resolved.** Root-caused to the publish-ordering race; re-ran the
@@ -166,16 +228,30 @@ Not yet implemented — see Todos.
       unwired, built for exactly this; `update-repo-version.yml`'s `resolve-gate` step is the correct single fan-out
       point but checks git resolvability, not AR. Supersedes the prior `[OPERATOR] P3` "judgment call" framing — the
       mechanism is now identified, this is implementation work, not an open design question.
-- [ ] [CICD] P2. **Implement**: extend `check_resolvable()` in `update-repo-version.yml`'s `resolve-gate` step
-      (~line 534-555) with a third check against Artifact Registry (`gcloud artifacts versions list
-      --repository=unified-libraries --location=asia-northeast1 --package=$REPO --format="value(name)"`, compare
-      against `$VERSION`), required alongside the existing git-tag/branch-pyproject checks. Needs `gcloud` auth in that
-      job (currently absent — check what SA/WIF is available to `update-repo-version.yml` or add one). Test against
-      this incident's real timeline: a floor-bump for `unified-api-contracts=0.149.0` dispatched before 11:14:57Z should
-      have been held; after, allowed through immediately.
-- [ ] [CICD] P3. **Verify the retry budget is still sufficient** once the AR check is added (current: ~5 min ×
-      up to 3 `fanout_retry` retries ≈ 20 min total; today's real gap was ~12-20 min, close to the edge). Widen
-      `MAX_FANOUT_RETRY` or the per-attempt poll count if needed.
+- [x] ✅ [CICD] P2. **Finalize the implementation design** (runner choice, auth reuse, wait-budget scope) — done this
+      session, see "Finalized implementation design" above. Pending operator review of this doc before shipping.
+- [ ] [CICD] P2. **Implement** (operator review pending — do not ship until reviewed):
+      (a) **BLOCKED-OPERATOR — do NOT ship while PM stays public** (see "CORRECTED 2026-08-20" note above):
+      `update-repo-version.yml`'s `update-manifest` job: `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]`.
+      Either re-verify PM has been deliberately re-privatized before doing this, or drop this sub-item and keep the
+      job on `ubuntu-latest`;
+      (b) add a GCP auth step (WIF-first, SA-key fallback) mirroring the existing `digest-auth-wif`/`digest-auth-key`
+      steps already in this file, placed before `resolve-gate` — independent of (a), ships either way;
+      (c) extend `check_resolvable()` (~line 534-555) with a third check against Artifact Registry (`gcloud artifacts
+      versions list --repository=unified-libraries --location=asia-northeast1 --package=$REPO
+      --format="value(name)"`, compare against `$VERSION`), required alongside the existing git-tag/branch-pyproject
+      checks. Test against this incident's real timeline: a floor-bump for `unified-api-contracts=0.149.0` dispatched
+      before 11:14:57Z should have been held; after, allowed through immediately. Independent of (a), ships either way.
+- [ ] [CICD] P2. **Re-size the retry budget** for the combined build-time + propagation-lag wait (current: ~5 min ×
+      up to 3 `fanout_retry` retries ≈ 20 min total; today's real gap was ~12-20 min of propagation lag ALONE, before
+      adding producer build time on top — re-derive a real number, don't assume 20 min still covers it). Widen
+      `MAX_FANOUT_RETRY` or the per-attempt poll count as needed.
+- [ ] [CICD] P3. **Quick glue-pool headroom sanity check** before shipping (a); confirm adding one bounded, serialized
+      occupant doesn't meaningfully change current utilization.
+- [ ] [CICD] P3. **Longer-term option, not in scope for the initial fix**: sequence `semver-agent`'s `version-bump`
+      dispatch behind `publish-package.yml`'s own AR-confirmation instead of racing them, eliminating the need for
+      this gate's wait entirely. Bigger change (trigger-graph rewire across two workflows); track separately once the
+      poll-based fix above is shipped and stable.
 - [ ] [CICD] P3. **Optional defense-in-depth**: also wire `assert_deps_published_to_ar.py` into `cloudbuild.yaml` as a
       cheap, single-shot (no poll loop) preflight check, in case some future path bypasses the
       `update-repo-version.yml` fan-out (e.g. a manually-edited `pyproject.toml` floor bump). Lower priority than the

@@ -95,13 +95,24 @@ partition walk anywhere (single-walk discipline):
 
 ### Phase 1 — Bundle `pipeline_mode=` into each non-DeFi bucket's next whole-corpus walk
 
+**STALE BANNER STRUCK 2026-08-20 (/plan-reconcile F-G25-4)**: both todos below still framed the 5-AG canonicalization
+walk as "not yet run" — but `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s G4 row shows all 5 AGs'
+`--apply` complete (defi/cefi/sports/prediction since 2026-06-29, tradfi since 2026-08-04), and all 5 named L3 owner
+plans this doc cites are archived-complete. The "instruments bucket — no canonicalisation plan exists yet" claim
+below is also stale: one exists, archived-complete 2026-06-26
+(`plans/archive/2026_06/instruments_manifest_canonicalisation_2026_06_01.md`). **Not independently re-verified against
+live GCS state this pass** (object-listing is routed through UTL, not a raw CLI, in this sandbox) — a worker with GCS
+read access should run this doc's own prescribed spot-check (a `pipeline_mode=` path-segment listing across all 5
+buckets, per the Success Criteria table below) before flipping these to `[x]`.
+
 - [ ] [INFRA] P2. **cefi / tradfi / sports / prediction** — the `pipeline_mode=` partition is the named C-pipeline_mode
       RIDER inside each AG's L3 manifest-canonicalisation walk (table above). This plan's row for each AG is satisfied
       when that walk completes — do NOT open a standalone partition walk (single-walk discipline). Verify post-walk:
       selective path-listing on `pipeline_mode=batch` / `pipeline_mode=live` returns the expected file set; manifest row
-      keys unchanged.
-- [ ] [INFRA] P2. **instruments bucket** — no canonicalisation plan exists yet; bundle `pipeline_mode=` into
-      instruments-service's next scheduled whole-corpus walk. Coordinate window with the IS migration owner.
+      keys unchanged. **Named L3 walks all show archived-complete as of this correction — verify live before closing.**
+- [ ] [INFRA] P2. **instruments bucket** — a canonicalisation plan DOES exist, archived-complete 2026-06-26
+      (`plans/archive/2026_06/instruments_manifest_canonicalisation_2026_06_01.md`) — verify `pipeline_mode=` landed as
+      part of that walk rather than treating this as still-unscheduled work.
 
 ## Success criteria
 

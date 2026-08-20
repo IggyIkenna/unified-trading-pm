@@ -179,11 +179,15 @@ Every plan that adds transfer / rebalancing / fund-movement code MUST include:
    isolation model rather than adding a new dimension). Fund-administration-service's redemption-creation endpoint
    (`post_redemption()`) rejects `sma`-typed client_ids with `403` before creating an `AllocatorRedemption` —
    `fund-administration-service@fb7dc9d7b1` — since the whole grace-period/NAV-per-share/redemption-fee machinery is
-   pooled-fund-only by construction. **Known gap** (filed
-   `plans/active/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md`): client-reporting-api's
-   NAV aggregation reads a SEPARATE client registry (`credentials-registry.yaml` via
-   `unified_api_contracts.internal.reporting.client_config.ClientConfig`) with no `vehicle_type` awareness — latent
-   today (no SMA client exists yet), real once one is onboarded.
+   pooled-fund-only by construction. **client-reporting-api's separate client registry** (`credentials-registry.yaml`
+   via `unified_api_contracts.internal.reporting.client_config.ClientConfig`) is genuinely disjoint from
+   `CLIENT_REGISTRY` (no join key between the two id spaces) — resolved
+   (`plans/archive/2026_08/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md`,
+   `client-reporting-api@2af6176688`) by reusing `ClientConfig.is_pooled` as the reporting-side vehicle-type proxy
+   (`"fund"` if pooled, else `"sma"`) rather than a cross-registry lookup. Both `nav.py` and `fund_operations.py` now
+   carry a per-row `vehicleType` label plus a `nav_by_vehicle_type`/`aum_by_vehicle_type` breakdown — the blended
+   `current_nav`/`total_aum` totals were deliberately left unchanged rather than excluding `"sma"`-classified clients,
+   since only one real client currently sets `is_pooled` at all and excluding everyone else would misrepresent AUM.
 
 ## Related SSOTs
 

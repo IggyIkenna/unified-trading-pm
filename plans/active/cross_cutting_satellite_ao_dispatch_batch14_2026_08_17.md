@@ -102,12 +102,17 @@ source: >-
       (`test_mtds_venue_coverage_cascade_invariant.py`, `PHOENIX-SOLANA` stale ratchet-baseline entry — verified
       byte-identical on a clean tree via `git stash`, small/mechanical per RULES.md § 4b, fixed inline). Full
       `bash scripts/quality-gates.sh` green before shipping.
-- [ ] [CODE] P2. Give the Unity books capability entries with `route=broker:UNITY`, `batch = none`, `live = none`
+- [x] ✅ [CODE] P2. Give the Unity books capability entries with `route=broker:UNITY`, `batch = none`, `live = none`
       (flips to wired in the MTDS plan). DoD: no batch backfill is implied for any Unity book; operator ruling
       2026-08-14 is that no history is needed beyond what Odds API already captures. Depends on the prior todo's
       registration landing first. Repo: unified-api-contracts. Source:
-      `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
-- [ ] [CODE] P2. Wire NOVIG / PROPHETX / ONEXBET to `route=aggregator:SHARPAPI` — all three are on SharpAPI's active
+      `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`. —
+      unified-api-contracts@267b535504. Declared the 8 net-new Unity child-book venues' `VENUE_DATA_TYPE_CAPABILITIES`
+      entries (route=broker:UNITY, `odds` batch_start_date=None, live="none") in `market_data_categories.py`; resolved
+      the `_UNITY_PENDING_CAPABILITY_VENUES` test exemption (test now asserts all 39 sports venues declare) + added a
+      DoD-encoding regression test. Full quality-gates.sh green before shipping.
+- [x] ✅ [CODE] P2. Wire NOVIG / PROPHETX / ONEXBET to `route=aggregator:SHARPAPI` — all three are on SharpAPI's active
+ — unified-api-contracts@6aa2d5797f
       31-book list yet have zero manifest rows, so this is a routing fix, not a build. DoD: each resolves a route;
       actual capture is proven by the MTDS plan, not this one. Repo: unified-api-contracts. Source:
       `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
@@ -311,3 +316,16 @@ source: >-
   match the current open-todo mix (6 sequenced Unity-venue items + 2 non-Unity items); this doc is a dispatch-batch
   coordinator with its finalize + naming-convention codex pointer already present, and the source-of-most-items
   plan + its confirmed code target already lead the list.
+
+- **2026-08-20 (slot 5, infra) — CODE P2 "give the Unity books capability entries with route=broker:UNITY, batch=none,
+  live=none" flipped — unified-api-contracts@267b535504.** Added `VENUE_DATA_TYPE_CAPABILITIES` entries for the 8
+  net-new Unity child-book venues (3ET/BROKER5/CROWN/SBO/SHARPBET/VX/BETDEX/IBC) in `market_data_categories.py`:
+  route="broker:UNITY" with `odds` declared as `DataTypeAvailability(batch_start_date=None, live="none")` — honest
+  absence (no batch backfill implied for any Unity book; operator ruling 2026-08-14: no history needed beyond what
+  Odds API already captures) and live="none" until the MTDS plan
+  (mtds_sports_live_arb_feeds_sharpapi_oddsapiio_unity_2026_08_14.md) flips the axis to wired. BETFAIR/MATCHBOOK are
+  REUSED tokens — MATCHBOOK already carries its route=aggregator:ODDS_API entry and bare BETFAIR is deliberately not
+  a data-axis venue, so neither gained a Unity-specific entry. Resolved the transitional
+  `_UNITY_PENDING_CAPABILITY_VENUES` test exemption (those venues ARE now declared): `test_all_sports_venues_declared`
+  asserts all 39 sports venues declare, and new `test_unity_books_declared_broker_route_no_capture` encodes item 4's
+  DoD. Full `bash scripts/quality-gates.sh` green (364s) before quickmerge.

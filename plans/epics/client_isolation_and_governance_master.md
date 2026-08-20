@@ -15,8 +15,6 @@ scope: [engineer, admin]
 tags: [client-isolation, governance, uac, execution, strategy, data-correctness]
 related:
   [
-    /plans/archive/2026_05/per_client_isolation_and_venue_fanout_topology_2026_05_20.md,
-    /plans/archive/2026_05/global_ledger_pnl_attribution_discovery_2026_05_21.md,
   ]
 created: 2026-05-21
 name: client_isolation_and_governance_master

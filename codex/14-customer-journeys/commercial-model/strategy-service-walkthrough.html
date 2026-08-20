@@ -2699,8 +2699,11 @@
         <div>
           <b>Emergency flatten</b
           ><span
-            >Path now settled: it re-points onto the manual instruction surface rather than a new endpoint. Remaining
-            work is request-shape mapping plus a contract test across the service boundary</span
+            >Shipped end to end for CLOB/CeFi: <code>POST /account/instruction</code> — a dedicated endpoint, not a
+            re-point onto the manual instruction surface — drives <code>AccountInstructionOrchestrator</code>'s real
+            per-venue CLOSE_ALL, which reads live positions and submits offsetting market orders, proven by a
+            contract test across the service boundary. DeFi and sports venues have no equivalent close-out primitive
+            yet</span
           >
         </div>
         <div>

@@ -150,7 +150,10 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [ ] [FROM-T1] P0. **Replace the honest HTTP 501s in `execution-service`'s `/external/instructions` router** — T1
+- [x] ✅ [FROM-T1] P0. **Spun out into the dedicated W22 AO plan, 2026-08-20 —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`** (same underlying ask as this
+      tranche's own "Build the external instruction API surface" todo, closed the same way above). Original
+      text kept below for provenance. **Replace the honest HTTP 501s in `execution-service`'s `/external/instructions` router** — T1
       re-triaged its own plan's "External API surface" section 2026-08-20 and found this targets `execution-service`,
       not any T1-owned repo. Only the TRADE action is live end-to-end today (routed through
       `ManualOperationHandler → LiveOrchestrator.execute_instruction()`); the other 10 (swap, lend, borrow, stake,
@@ -192,21 +195,29 @@ todos only to confirm they are data-movement, then leave it.
       you then have to rework. State what execution-service actually needs and T1 will land it, or say if T1's
       first reasonable draft is fine to just ship.
 
-      **Answered 2026-08-20 — recommendation is DON'T add these to `StrategyInstructionType`, not "ship a
-      draft shape."** Both capabilities already exist, on the DELIBERATELY separate `AccountInstruction`
-      envelope: `kill_switch.activate()`/`.deactivate()` (durable state-file, admin-authenticated via
-      `POST /kill-switch/activate` in `api/app.py`) and `AccountInstruction.CLOSE_ALL` (operator-driven,
-      `authorization_id`-gated, real per-venue wiring `execution-service@96411b68c9` + HTTP route
-      `execution-service@c0839616be`, `POST /account/instruction`). Adding `KILL_SWITCH`/`FLATTEN_POSITION` to
-      `StrategyInstructionType` would expose them on `/external/instructions` — the surface EXTERNAL/third-party
-      callers reach — a materially different authority model than the current operator-only paths. `codex/
-      04-architecture/account-instructions.md`'s own stated rationale for keeping two separate envelopes is exactly
-      this: "Different authority model (operator role, not strategy engine)... Different risk gates (some ops
-      bypass strategy-layer checks by design)." Bolting kill/flatten onto the strategy envelope would quietly erode
-      that boundary. If external partner-facing kill/flatten access is genuinely wanted, that's a product/security
-      policy call for the operator, not something to build speculatively into a Pydantic union today — don't add
-      the enum members, and don't build a matching execution-service handler, until that call is made.
-- [ ] [FROM-T1] P1. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
+      **Answered 2026-08-20, then CORRECTED same day — my first answer was wrong, caught by re-checking today's
+      LDR rulings before proceeding further.** First pass recommended NOT adding `KILL_SWITCH`/`FLATTEN_POSITION`
+      to `StrategyInstructionType`, reasoning from `AccountInstruction`'s separate-authority-model rationale alone
+      — I hadn't re-read `/plans/epics/system_readiness_master.md` W22 before answering. **That epic section is
+      the actual operator-ruled scope for this exact question**, and it explicitly requires the opposite: "Add
+      kill-switch and flatten-position as instructions, not only as internal system behaviour... a caller must be
+      able to send them, scoped the same way the internal kill-switch is (all-live / per-archetype / per-venue)."
+      **Corrected recommendation: DO add them.** The two answers reconcile, they don't actually conflict on
+      substance — the epic's own "scoped the same way the internal kill-switch is" clause is exactly my original
+      authority-model concern, just answered as an implementation requirement (external kill/flatten needs the
+      SAME authorization gating `AccountInstruction`/`kill_switch.py` already enforce — `authorization_id` +
+      admin auth, not open access) rather than a reason to skip the feature. T1: please add `KILL_SWITCH`/
+      `FLATTEN_POSITION` to `StrategyInstructionType`, each carrying an authorization/approval field mirroring
+      `AccountInstruction`'s `authorization_id` (this tranche will wire the execution-service handler to reuse
+      the existing `kill_switch.py`/`AccountInstructionOrchestrator.CLOSE_ALL` machinery underneath, not
+      duplicate it — a strategy-envelope KILL_SWITCH/FLATTEN_POSITION instruction becomes a thin translation into
+      the SAME already-authorized internal call, never a second independent authority path). Apologies for the
+      churn — should have re-checked the epic section before answering the first time.
+- [x] ✅ [FROM-T1] P1. **Spun out into the dedicated W22 AO plan, 2026-08-20 —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Messaging bridge" section**
+      (execution-service opened its own EventTransport subscriber build there; T3's matching inbound item is
+      T3's own to track — this tranche's side is no longer stalled waiting). Original text kept below for
+      provenance. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
       T3's `## Inbound requests` for full detail (no internal messaging connects strategy-service's decisions to
       execution-service today). Whichever tranche has capacity first can open the UTL `EventTransport` subscription
       on the execution side (subscribing to strategy's instruction stream + the features-service groups it needs)
@@ -316,10 +327,12 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W22 — strategy to execution messaging and the external instruction API
 
-- [ ] [BACKEND] P0. Build the strategy→execution messaging path end to end. Confirmed unbuilt by a 2026-08-19
-      workspace-wide search — the only live path is manual. Publish/read via the UTL `EventTransport` facade
-      (`InMemoryTransport` for paper/colocated, Pub/Sub for live) so `paper(W) == batch-rerun(W)` holds at epsilon
-      zero. SSOT: `/codex/02-data/live-data-persistence-and-event-log.md`.
+- [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`, per the 2026-08-19 operator
+      ruling directing this + the security audit be authored as dedicated plans rather than tracked inline here.
+      That plan carries the full real detail (strategy-service already publishes via `EventTransport` keyed on
+      `atomic_instruction`; the missing piece is execution-service's subscribe side) plus its mandatory gated
+      finalize plan. This todo closes here; track further progress there, not in this doc.
 - [x] ✅ [BACKEND] P0. **Expose a real per-venue execution-instruction-path check** — **execution-service@b70d2edb16**
       (landing verified independently of quickmerge's exit code: all six new files resolve under
       `git cat-file -e origin/live-defi-rollout:<path>`, and `git diff --stat origin/live-defi-rollout` is empty for
@@ -327,12 +340,13 @@ todos only to confirm they are data-movement, then leave it.
       `instruction_path_availability(venue)`; `python -m execution_service.readiness` is the cross-venv probe.
       T5 has the frozen contract under their `## Inbound requests` (`unified-trading-pm@34999f0adf`), posted before
       the code landed so they were never idle-waiting. Measured verdicts are in the Progress Log.
-- [ ] [BACKEND] P0. Build the external instruction API surface, coordinating the contract with T1. **Partial
-      progress, still open**: `POST /external/instructions` handles `TRADE` and `QUOTE` (the latter shipped this
-      session, `execution-service@dc4fad8de7`) — every other `InstructionActionV2` member (`SWAP`, `LEND`,
-      `BORROW`, `WITHDRAW`, `REPAY`, `STAKE`, `UNSTAKE`, `TRANSFER`, `BRIDGE`, `ATOMIC`, `CANCEL`, `CONVERT_DUST`,
-      `LP_MINT`, `LP_BURN`) still 501s (`external_instruction_api.py`'s own error message says so). Full DeFi/
-      staking/lending external submission is the remaining scope.
+- [x] ✅ [BACKEND] P0. **Spun out into the same dedicated W22 AO plan, 2026-08-20** —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Instruction action
+      vocabulary" section carries the real remaining scope: `TRADE`/`QUOTE` are wired
+      (`execution-service@dc4fad8de7` for QUOTE); every other `InstructionActionV2` member 501s, and the plan
+      names the exact blocker (no `DeFiAdapter` construction/caching factory exists yet — modeled on
+      `account_orchestrator.py`'s `_default_order_adapter_factory` pattern) plus per-action wiring todos. This
+      todo closes here; track further progress there, not in this doc.
 - [x] ✅ [BACKEND] P1. **Delta-proxy repricer — PRICE leg generalized + receipt point rebuilt** —
       **execution-service@dc4fad8de7**. T1's `QuoteInstruction` extension landed
       (`unified-api-contracts@6be4b136d7`), unblocking this. `quote_instruction_to_delta_proxy_params` now reads
@@ -436,17 +450,20 @@ todos only to confirm they are data-movement, then leave it.
       `/manual/instruction` 422 (validation, not routing); after teardown both `None` again; a bare app with a
       patched handler answers 422 not 500. Took four gate attempts — the three failures are recorded in the
       Progress Log because each was a distinct, reusable trap.
-- [ ] [BACKEND] P0. **Reconcile the deployed HTTP surface with what this plan and the artefacts claim.** MEASURED
-      2026-08-20: `Dockerfile` CMD is `uvicorn execution_service.api.main:create_app --factory`, and
-      `execution_service/api/main.py:43-44` registers ONLY the UTL health router and
-      `external_instruction_api.router`. `manual_router` (`/instruction`, `/cancel`, `/amend`,
-      `/instructions/{id}`, `/venues`, `/algos`, `/pending`) is registered on `api/app.py:127`, which the container
-      never serves — `api/app.py` is imported only by CLI handlers and `evidence_router`. So on the DEPLOYED
-      service the single HTTP instruction path is `POST /external/instructions`, which 501s every action except
-      TRADE. **This contradicts this plan's own framing that "the only live instruction path today is manual".**
-      NOT YET MEASURED, and required before deciding the fix: how DART's manual-trade surface actually reaches
-      execution-service (a second deployment target, an in-process CLI path, or genuinely unreachable). Resolve
-      that first, then either register `manual_router` on `main.py` or record why it is deliberately CLI-only.
+- [x] ✅ [BACKEND] P0. **Reconciled — RESOLVED BY THE SAME-DAY FIX, `execution-service@9c79bfa0ef`.** This todo's
+      own "MEASURED 2026-08-20" text captured the state BEFORE that commit landed later the same day (01:01:43
+      UTC+1). RE-MEASURED 2026-08-20 against current `main.py`: `create_app()` (`execution_service/api/main.py:107-125`)
+      unconditionally registers all four routers — `health_router`, `external_instruction_router`, `manual_router`,
+      `account_instruction_router` (the last added by the CLOSE_ALL-route todo above, same day) — with no
+      conditional gating any of them. The Dockerfile's `uvicorn execution_service.api.main:create_app --factory`
+      CMD therefore serves `/manual/*` (instruction/cancel/amend/instructions/{id}/venues/algos/pending),
+      `/external/instructions`, and `/account/instruction` together, not `/external/instructions` alone. DART's
+      manual-trade surface reaches this via `unified-trading-api`'s `/execution-service/manual/instruction` proxy
+      (`unified-trading-system-ui/context/api-contracts/openapi/unified-trading-system.openapi.yaml:15434` — a
+      second deployment target, not an in-process CLI-only path), which now resolves against a real registered
+      route instead of 404ing. `api/app.py` still separately registers `manual_router` too (used only by CLI
+      handlers per the original finding) — a harmless second FastAPI instance, not a conflict, since the two never
+      share a running process.
 - [x] ✅ [BACKEND] P1. **Fixed — `execution-service@197e80116`.** Verified the production live orchestrator did
       NOT satisfy the `LiveOrchestrator` protocol it was cast to; real root cause corrected the original
       diagnosis (see Progress Log). Evidence:
@@ -521,9 +538,12 @@ todos only to confirm they are data-movement, then leave it.
       to exactly `{LP_BURN, LP_MINT}`. Fixed a test that had pinned the OLD gap as expected behavior
       (`test_lending_venue_is_only_wired_on_batch` asserted `AAVE-V3-ETHEREUM.batch == "wired"` — now genuinely
       `"deployed"`, rewritten to assert the fixed reality rather than the historical gap). 4 new tests total.
-      **Still open**: `LP_MINT`/`LP_BURN` — T1's own note on the DONE item above says these "still need the DeFi
-      LP position shape specified, which is your [T4's] call per the original request, not invented here." Genuine
-      open design question, not attempted this session.
+      **Still open, but no longer a blank design question — shape specified 2026-08-20** on
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s `[FROM-T4]` thread,
+      grounded in both real connector families (`UniswapConnector.mint_position()`/`burn_position()` — NFT
+      position id + sqrt-price bounds — vs. Orca/Raydium's `add_liquidity()`/`remove_liquidity()` — pool address +
+      raw ticks, no NFT). `BLOCKED-ON:` T1 landing `LpMintInstruction`/`LpBurnInstruction`; once shipped, T4's
+      side is the same mechanical 2-branch `isinstance` addition as `CONVERT_DUST`/`WITHDRAW`/`REPAY` — 5/5.
 
 ### W12 — reconciliation
 
@@ -551,13 +571,13 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W14, W15, W17 — fidelity, security, cost
 
-- [ ] [BACKEND] P0. Implement per-venue error codes and classify through UAC `classify_venue_error()`. Shard-level
-      failure isolation, no `raise` in per-shard loops. SSOT:
-      `/codex/04-architecture/shard-level-failure-isolation.md`. **Re-measured 2026-08-20: `classify_venue_error`
-      is already widely adopted (20 files: sports adapters, DeFi protocols, trade_execution adapters, the engine
-      orchestrator/router) — this was NOT unbuilt from scratch, contrary to the todo's original framing.** Audited
-      real per-venue loops for the actual "no raise in per-shard loop" invariant instead (`grep -rn "for venue in"`,
-      ~20 sites) and found + fixed one genuine, safety-relevant violation: `OrderRecoveryEngine.recover_venue()`
+- [x] ✅ [BACKEND] P0. **Implement per-venue error codes and classify through UAC `classify_venue_error()` — CLOSED,
+      full sweep done 2026-08-20.** Shard-level failure isolation, no `raise` in per-shard loops. SSOT:
+      `/codex/04-architecture/shard-level-failure-isolation.md`. **`classify_venue_error` is already widely adopted**
+      (20 files: sports adapters, DeFi protocols, trade_execution adapters, the engine orchestrator/router) — this
+      was NOT unbuilt from scratch, contrary to the todo's original framing. Audited real per-venue loops for the
+      actual "no raise in per-shard loop" invariant instead (`grep -rn "for venue in"`, 21 non-test sites) and
+      found + fixed one genuine, safety-relevant violation: `OrderRecoveryEngine.recover_venue()`
       (`execution_service/engine/startup/order_recovery.py`) only wrapped `fetch_open_orders()` in a try/except —
       `_reconcile_exchange_orphans`'s `cancel_order()`/`confirm_cancel()` calls were NOT wrapped, so any venue-
       adapter exception there propagated uncaught through `run()`'s `for venue in venues:` loop, silently
@@ -566,15 +586,46 @@ todos only to confirm they are data-movement, then leave it.
       reconciliation body, records via the file's own existing `CanonicalNetworkError` + `cb.record_failure()`
       pattern (not `classify_venue_error` — that's a vendor-error-CODE classifier, doesn't fit an arbitrary Python
       exception; kept consistent with this file's own established convention instead). New regression test proves
-      one venue's failure does not abort the second venue in `run()`. **Not done**: a full audit of the other ~19
-      "for venue in" sites for the same class of bug — this fixed the one found to be genuinely unsafe, not a
-      sweep of every site.
+      one venue's failure does not abort the second venue in `run()`.
+      **The remaining ~20 sites, individually audited 2026-08-20, MEASURED zero further violations**: most are pure
+      computation over already-fetched data (`sor_twap.py`'s local `set_liquidity` cache write,
+      `algo_library/solver_auction.py`'s weighted-split math, `sports_router.py`'s in-memory scoring,
+      `engine/live/router.py`'s candidate filtering) — no per-venue I/O, so no exception a venue outage could throw.
+      Several already correctly wrap the risky call: `algo_library/sor_dex.py:165`'s `get_all_quotes()` (catches
+      ValueError/KeyError/TypeError plus TimeoutError/ConnectionError separately),
+      `_venue_book_types.py:153` (ValueError/KeyError/AttributeError), `registry.py`'s `reconnect_all()` (each
+      `reconnect()` call is internally wrapped for ConnectionError/TimeoutError/OSError/ValueError, the only
+      unguarded `KeyError` path is unreachable since it only iterates already-registered keys),
+      `cli/handlers/live_execution_handler.py:263`'s orchestrator-build loop (`_create_orchestrator_for_venue`
+      already catches ValueError/TypeError/KeyError/AttributeError/RuntimeError internally and returns `None`
+      rather than propagating). **One near-miss, deliberately NOT changed**: `algorithms/sor.py:177`'s
+      `get_all_quotes()` catches a narrower exception set than its `algo_library/sor_dex.py` sibling (no
+      TimeoutError/ConnectionError) — but its `_get_venue_quote()` is pure-simulation today (its own comment says
+      "In production, would query actual pool state"), so those exceptions cannot actually fire; adding a catch
+      clause for an I/O error a function never performs would be defensive code for a scenario that can't happen.
+      Flagged here rather than silently dropped — worth revisiting if/when that function is wired to real venue
+      I/O. `execution_service/algorithms/` is confirmed live (imported by `instruction_convert.py`,
+      `handler_registry.py`, `config_validator.py` — not dead code), so this is a real, if currently inert, gap.
+      Preflight's `_check_venue_api_keys` (`engine/preflight.py:77`) and the dependency-checker's
+      `for venue in venues` (`utils/dependency_checker.py:683`) are deliberately out of scope — both are startup
+      preflight/validation, where propagating an exception to halt startup is the correct behaviour, not a
+      per-shard-isolation violation of the live-trading-loop kind this SSOT targets.
 - [ ] [BACKEND] P0. Pin the exchange version per venue and re-run cassettes on drift, so a silent venue-version
       change cannot go undetected (W14). No owning plan existed at authoring time.
-- [ ] [BACKEND] P0. Run a security audit of EVERY venue adaptor, especially DeFi, covering every on-chain write
-      path (W15). P0 in the epic with no plan doing it systematically. Size this into phases and track them here.
-- [ ] [BACKEND] P0. Build the full fees and gas breakdown — clearing, broker, exchange, gas, other — on the
-      execution side (W17). Coordinate the strategy-side half with T3.
+- [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
+      `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, per the 2026-08-19
+      operator ruling. Sized into 11 phases against a real, enumerated ~85-file adapter inventory (bridge/
+      cross-chain first as highest-stakes, then DeFi by primitive, then CeFi/TradFi by transport, then sports),
+      each applying a fixed 7-point checklist (credential handling / signing correctness / input validation /
+      slippage-deadline bounds / approval scope / idempotency / honest error handling), plus a triage phase and
+      the mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
+- [x] ✅ [BACKEND] P0. **Build the full fees and gas breakdown (W17) — DONE, `execution-service@760b41a251`.**
+      T1 shipped the contracts-side half same day (`clearing_fee_bps`/`broker_fee_bps`/`other_fee_bps` added to
+      `ExecutionCostEstimate`, `unified-api-contracts`); this session wired the execution-service half —
+      `ExecutionCostEstimator.estimate_cost()` now explicitly computes and returns all 3 new fields (honestly 0 +
+      a note for TradFi pending a real sourced fee schedule, never an invented bps figure) alongside a real fix:
+      every TradFi venue (CME/CBOE/NASDAQ/NYSE/ICE/FX) was silently misclassified as CEFI before this, applying
+      wrong fee/spread assumptions. 12 new/updated tests.
 - [ ] [BACKEND] P1. Complete the execution policy and fill-model gaps — collapse the two independent benchmark
       implementations into one sent value, stop no-op'ing the lending path, de-duplicate the algo vocabulary across
       two modules. Evidence: `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md`.
@@ -718,14 +769,13 @@ todos only to confirm they are data-movement, then leave it.
       `strategy-service-walkthrough.html`'s "Emergency flatten" bullet likely understates what's shipped now that
       `test_account_instruction_api.py` exists — the sub-agent was NOT confident enough to edit it itself; tracked
       as its own new todo below rather than silently dropped.
-- [ ] [AGENT] P3. **Re-check `strategy-service-walkthrough.html`'s "Emergency flatten" bullet (~line 2694,
-      "What is still open") against what's actually shipped.** Surfaced by the artefact-marker audit 2026-08-20,
-      not confirmed enough to edit inline. Current text says "remaining work is request-shape mapping plus a
-      contract test across the service boundary" — `execution-service` now has real CLOSE_ALL wiring
-      (`execution-service@96411b68c9`), an HTTP route (`execution-service@c0839616be`), and
-      `tests/unit/test_account_instruction_api.py` explicitly proving `POST /account/instruction ->
-      AccountInstructionOrchestrator` end to end. Needs someone to read the actual current bullet text (it may
-      have already been edited since 2026-08-15) and cross-check the specific claim, not just assume stale.
+- [x] ✅ [AGENT] P3. **Re-checked and fixed — `unified-trading-pm@359be094ab`.** The bullet's "re-points onto the
+      manual instruction surface rather than a new endpoint" claim was itself wrong, not just stale — confirmed
+      live via `execution_service/api/account_instruction_api.py:32` (`APIRouter(prefix="/account")`, a genuinely
+      separate router, not `manual_router`). Rewrote to state what's actually shipped: `POST /account/instruction`
+      is a dedicated endpoint driving `AccountInstructionOrchestrator`'s real per-venue CLOSE_ALL (reads live
+      positions, submits offsetting market orders), proven by `tests/unit/test_account_instruction_api.py`, with
+      the one genuinely still-open gap named honestly (DeFi/sports have no equivalent close-out primitive).
 
 ## Progress Log
 
@@ -761,6 +811,8 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `unified-trading-pm@8d47cf3393` | readiness-dump `execution_instruction` leg now calls the real per-venue-per-mode check (`execution_service.readiness.instruction_path`, shipped `execution-service@b70d2edb16` but never wired in) instead of a hardcoded venue-independent unverified — new `_execution_instruction_path_probe.py`, `checks.py`/`derive_readiness.py` updated; independently re-verified live after landing |
 | `unified-trading-pm@78508ce4e7` | artefact-marker sub-agent audit: fixed 2 factually-wrong prose claims in `platform-external-api-walkthrough.html` (QUOTE falsely listed as still-501; the 864-rows-unverified claim falsely said the check doesn't exist) |
 | `execution-service@ff0b43b5d3` | shard-level failure isolation fix: `OrderRecoveryEngine.recover_venue()` no longer lets one venue's reconciliation exception abort recovery for every other venue on startup; new regression test |
+| `execution-service@760b41a251` | W17 fee-breakdown contract wired (`clearing_fee_bps`/`broker_fee_bps`/`other_fee_bps`) + a real TradFi venue-classification bug fixed (was silently falling through to CEFI) |
+| `unified-trading-pm@68c1d2cf82` | authored + dispatched `w22_strategy_execution_messaging_external_api_2026_08_20` and `w15_execution_service_venue_adaptor_security_audit_2026_08_20` as active AO plans, each with a mandatory gated finalize plan, per the 2026-08-19 operator ruling |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 

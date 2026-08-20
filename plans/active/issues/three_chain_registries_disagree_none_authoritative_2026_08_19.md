@@ -17,13 +17,13 @@ tags: [uac, chain-registry, ssot, duplication, under-declaration]
 related:
   [
     /plans/audit/results/registry_ground_truth_2026_08_19.md,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     /plans/epics/system_readiness_master.md,
   ]
 context_scope:
   [
     /plans/audit/results/registry_ground_truth_2026_08_19.md,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py,
     unified-api-contracts/tests/unit/test_chain_registry_ssot.py,
     unified-api-contracts/unified_api_contracts/registry/chain_env.py,
@@ -97,19 +97,25 @@ answers. The consequences are not cosmetic.
       in T2-owned repos** — filed on T2's plan as `[FROM-T1]` rather than assumed clean. (Also found: several
       instruments-service scripts hand-roll their OWN `KNOWN_CHAINS` literal instead of importing UAC's — a
       duplicate-vocabulary risk in a repo this tranche does not own; included in the same T2 request.)
-- [ ] [REVIEW] P1. **Resolve the 13-vs-14 discrepancy**: two independent agents counted chains-with-live-venues
-      today and got 13 and 14. Both derived it from registries rather than guessing, so one of the two filters is
-      subtly wrong. Settle it and record the correct filter, since this number now appears in client artefacts.
-      **NOT resolved 2026-08-19** — a naive `venue.split("-", 1)[1]` over `ALL_DEFI_VENUES` yields 14, but two of
-      those (`native-solana`, `onchain`) are split artifacts, not chains: `parse_defi_venue()` correctly resolves
-      `SOLANA-NATIVE-SOLANA` → `SOLANA` and `ALCHEMY-ONCHAIN` → the declared `ONCHAIN` pseudo-chain. So the "14"
-      filter is demonstrably one of the wrong ones, but settling the correct count needs the `ONCHAIN`
-      keep-or-remove decision `chain_env.py` already flags as pending — left open rather than answered with a
-      number that would re-rot.
-- [ ] [REVIEW] P1. **Check whether the published coverage denominators read any of these three.** A peer verified
-      `measure_honest_coverage.py` does not read `VENUE_CHAIN_MAP`; the equivalent check for `KNOWN_CHAINS` and
-      `ChainKind` has not been done. If a denominator reads the 10-chain or 4-chain list, published coverage is an
-      under-count.
+- [ ] BLOCKED-OPERATOR-DECISION [REVIEW] P1. **Resolve the 13-vs-14 discrepancy — still genuinely blocked, same
+      operator decision, re-verified 2026-08-20 not re-solved.** `chain_env.py:655-656` still reads "ONCHAIN
+      pseudo-chain — Alchemy Infrastructure data, not a real L1/L2; pending operator decision on whether to keep or
+      remove this venue" — unchanged since this doc was filed. The two counts are precisely characterized (not
+      newly re-derived, confirming the earlier finding still holds): naive `venue.split("-", 1)[1]` over
+      `ALL_DEFI_VENUES` = 14 (includes `ONCHAIN` and the `native-solana` split artifact); `parse_defi_venue()`
+      correctly resolves both, and whether `ONCHAIN` counts as a "chain" is exactly the pending decision — keep it
+      → 13 real chains + `ONCHAIN` as a declared pseudo-chain; remove it → 13 real chains, full stop, no separate
+      count needed. **Retagged from `[REVIEW]` — nothing left to review, this is purely waiting on the operator
+      call `chain_env.py` itself already names.**
+- [x] ✅ [REVIEW] P1. **Answered 2026-08-20 — No, none of the three denominators feed published coverage; no
+      under-count risk from this doc's finding.** Checked `instruments-service/scripts/measure_honest_coverage.py`
+      directly (the peer's earlier check only covered `VENUE_CHAIN_MAP`): its ONLY UAC import is
+      `OUT_OF_COVERAGE_WINDOW_REASONS`/`EmptyConfirmedReason` — no `KNOWN_CHAINS`, `VENUE_CHAIN_MAP`, or `ChainKind`
+      import anywhere in the file. `KNOWN_CHAINS` appears exactly once, in a docstring explaining WHY
+      `_normalise_chain_series()` doesn't need case-migration handling ("chains are UPPERCASE wire tokens") — not
+      as a denominator. The function groups by whatever chain STRING VALUES actually appear in the data (data-driven),
+      never against a fixed/complete registry list — so this doc's chain-registry disagreement cannot silently
+      under-count published coverage, regardless of which of the three registries (or none) is "authoritative."
 
 ## Progress Log
 

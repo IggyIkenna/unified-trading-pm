@@ -16,6 +16,7 @@ tags: [data-pipeline, dp-fetch-009, dp-run-mostly-empty, cefi, liquidations, ast
 related:
   - /codex/05-infrastructure/data-pipeline-alerts.md
   - /plans/active/issues/cefi_hl_aster_batch_data_gaps_2026_06_22.md
+  - /plans/active/issues/dp_fetch_009_cefi_liquidations_raw_contract_overwritten_2026_08_20.md
 parent_epic: observability_master
 source:
   - DP-FETCH-009 escalation agt-9d9a98 (2026-08-20)
@@ -61,7 +62,14 @@ empty/captured rows; retain existing historical failures for separate reclassifi
 
 ## Todos
 
-- [ ] [DIAGNOSE] P1. Obtain the candidate breakdown and identify the actual failing venue/source/error path; fix and regression-test the owning producer once identified.
+- [ ] [DIAGNOSE] P1. **NARROWED 2026-08-20 (/plan-reconcile F-CEFI-4)** — the venue/error breakdown was already
+      obtained by a sibling doc filed the same day against the SAME escalation (`agt-9d9a98`):
+      `/plans/active/issues/dp_fetch_009_cefi_liquidations_raw_contract_overwritten_2026_08_20.md`. It found 1,632
+      schema-contract violations (Binance-Futures 720, Bybit 509, Bitget-Futures 395, Bitfinex-Futures 8) and shipped
+      a fix at `unified-api-contracts@cff7a237`. Separately, 810 Tardis HTTP 403 code=274 concurrent-IP-lock failures
+      are a distinct population that sibling doc explicitly does NOT cover ("do not mark those failures as resolved
+      by the registry fix"). **This todo's remaining true scope is only the Tardis code-274 lockout slice** — the
+      schema-contract diagnosis is done, do not re-derive it.
 
 ## Progress Log
 

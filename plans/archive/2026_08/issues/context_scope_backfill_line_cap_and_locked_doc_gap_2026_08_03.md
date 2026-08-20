@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [unified-trading-pm, context-scout, line-cap, locked-plan, plan-hygiene, docspec]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-08-03"
@@ -39,7 +39,7 @@ context_scope:
     /cursor-configs/skills/context-scout/SKILL.md,
     /plans/active/issues/fleet_audit_triad_deferred_followups_2026_06_01.md,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
-    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
   ]
 ---
 
@@ -70,7 +70,7 @@ self-reported pre-edit line count without an independent `git show HEAD:<path>` 
 async-wait-discipline "measured, not activity" rule elsewhere in this workspace.
 
 All 9 docs' computed `context_scope` was reverted from the working tree before shipping (to keep the 2026-08-03 ship
-clean — see `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` Progress Log for that session's full ship
+clean — see `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md` Progress Log for that session's full ship
 record), but the sub-agents' analysis work is **not lost** — every entry below was independently verified to resolve on
 disk by the scouting agent that computed it, during the same session this issue was filed.
 
@@ -256,7 +256,7 @@ lock check before doing Phase-1 analysis; a future pass should do the full scout
 
 - **2026-08-03**: filed during the `/context-scout` corpus-wide backfill session, after auditing which of the 78
   `NEVER_SCOUTED` docs' scouting output could not ship due to the 1000-line hard cap or a `locked_by:` field. See
-  `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` Progress Log for that session's full ship record (66/78
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md` Progress Log for that session's full ship record (66/78
   docs shipped clean, `unified-trading-pm@00037ae0c`).
 - **2026-08-03 (slot-12) — DONE.** Trimmed all 6 exactly-1000L docs per the extraction pattern (completed/historical
   Progress Log entries moved verbatim to a new `plans/archive/2026_08/<doc>_progress_log_history_2026_08_03.md`

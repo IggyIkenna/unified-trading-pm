@@ -531,9 +531,13 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
       [`/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md`](/plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md)
       § PRE-AUDIT MEASUREMENTS §1) are useful input to that denominator work but do not by themselves satisfy it —
       that todo needs one machine-readable list, not five separately-measured counts.
-- [x] [AGENT] P0. ✅ **W5 — smoke-test bar.** Intended to fork to `/plans/active/venue_smoke_test_bar_2026_08_16.md`
-      (held at `status: draft`), but **that file was never actually created** either — same broken-link discovery
-      as W4 above, delinked for the same reason. Records that the Databento exemption is by **SOURCE, not asset
+- [x] [AGENT] P0. ✅ **W5 — smoke-test bar.** **Correction 2026-08-20 (/plan-reconcile F-G31-1)**: the file DOES
+      exist — a prior entry here claimed it "was never actually created," mirroring the identical W4 claim above,
+      which was itself corrected same-day for W4 but never corrected here. `/plans/active/venue_smoke_test_bar_2026_08_16.md`
+      exists (190 lines, 9 open + 1 done todo), was created in the SAME commit as W4's child plan
+      (`c6c5ca34984a3f23f03f11e1d01be9f336e627f5`), and has a companion
+      `/plans/active/venue_smoke_test_bar_finalize_2026_08_16.md` (6 open todos) gated on it. That claim was itself
+      wrong. Records that the Databento exemption is by **SOURCE, not asset
       group** (a TradFi venue sourced elsewhere is in scope), and specifies that a smoke test must provably FAIL on
       a venue with no data — the pass-on-zero-rows trap has already cost this corpus real time. That content lives
       only in this line until the fork actually happens.
@@ -881,7 +885,7 @@ RULED and W3 as resolved (folded into an existing plan, no new plan needed). Rew
 | "Consolidate `venue_universe` into a clean UAC SSOT" (P2, L265) | Not started | Natural fit for W4 once its own blocker (below) clears; not needed for the shipped "at least one archetype" reading of step 17 |
 | W3 "service-config abstraction" child plan | ✅ Resolved, no new plan | Folded into `/plans/active/service_config_ownership_and_instruction_contract_2026_08_12.md` § D delta |
 | W4 "venue e2e wiring" child plan | Forked (`status: draft`) | ✅ Unblocked 2026-08-16 — "Define the universe precisely for W4/W5" resolved, see § "Design rulings needed before the mechanical children dispatch" above |
-| W5 "smoke-test bar" child plan | Not forked yet | ✅ Unblocked 2026-08-16 — same resolution as W4 |
+| W5 "smoke-test bar" child plan | **Corrected 2026-08-20**: DOES exist (`plans/active/venue_smoke_test_bar_2026_08_16.md`, 9 open/1 done todos + a gated finalize plan) — the "not forked yet" claim was itself stale | ✅ Unblocked 2026-08-16 — same resolution as W4; per F-G31-3, still sat at `status: draft` (undispatchable) 4 days past its own unblock condition — separately corrected in that doc |
 | "Error-code SSOT shape" design ruling (L321) | ✅ RULED 2026-08-16 | Extend `classify_venue_error()` into a (venue, code) registry — see L397-403 |
 | "Config-abstraction target shape" design ruling (L325) | ✅ RULED 2026-08-16 | One `config.py` per service, domain-split only when cap-forced — see L404-410 |
 | "Declare capability for the 8 undeclared DeFi venues" (P1, new) | Not started | Actionable now — Alchemy gas-fee-oracle spellings + Fluid/Sushiswap-Arbitrum need `VENUE_DATA_TYPE_CAPABILITIES` entries |

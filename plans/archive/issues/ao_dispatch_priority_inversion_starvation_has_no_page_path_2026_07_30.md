@@ -29,7 +29,7 @@ summary: >-
   `wall_type` escalation system (`escalation.py::escalate()`, `EscalateRequest` requires `repo`+ `pr_number`,
   structurally can't represent "task A vs task B priority ordering within a plan"). Without operator visibility, this
   class of deadlock persists until a human happens to read the plan/backlog directly.
-status: open
+status: archived
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -70,10 +70,15 @@ estimate_class: design
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  agent-orchestrator@af98fcd
 archive_exempt: true # archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
-context_scope: [/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md, agent-orchestrator/server/dispatch_priority_inversion_watchdog.py, /codex/04-architecture/agent-orchestrator-alerting.md, /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md]
+context_scope: [/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md, agent-orchestrator/server/dispatch_priority_inversion_watchdog.py, /codex/04-architecture/agent-orchestrator-alerting.md, /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md]
 ---
+
+> **🗄️ ARCHIVED 2026-08-20** — both recommended-decision todos shipped in `agent-orchestrator@af98fcd`; the
+> dispatcher watchdog and actionable Slack page are now part of the alerting contract in
+> `/codex/04-architecture/agent-orchestrator-alerting.md`. Zero open todos, unlocked.
 
 # AO dispatch priority-inversion / plan-slot starvation has no page path
 
@@ -157,7 +162,7 @@ this, each time invisible until someone reads the backlog by hand.
   change to the orchestrator's own paging logic is a design call worth a human decision on approach, even though the
   eventual code change is bounded.
 - 2026-08-01: both recommended-decision todos shipped as todo 2 of
-  `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (`agent-orchestrator@af98fcd`) — see that todo's
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (`agent-orchestrator@af98fcd`) — see that todo's
   evidence line and this doc's own updated checkboxes above for the full detail (watchdog design, test proving the
   replayed incident pages, and the clean live-backlog backfill-check result). Both items now `[x]`.
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): ARCHIVE-eligible (0 open
@@ -188,7 +193,7 @@ this, each time invisible until someone reads the backlog by hand.
 
 - **context-scout 2026-08-07**: populated/refreshed context_scope (4 entries) — swapped the generic
   `agent-orchestrator-single-vm-architecture.md` codex pointer for
-  `/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`, the doc that actually explains why this
+  `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`, the doc that actually explains why this
   0-open-todo, `archive_exempt: true` doc still exists (its `[REVIEW] P0` todo is the one that will eventually archive
   it) — the single most decision-relevant pointer for a future toucher, still not previously in the list.
 
