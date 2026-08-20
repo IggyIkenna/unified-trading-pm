@@ -16,6 +16,7 @@ tags: [client-disclosure, nick-ai, artifact-remediation, audit-followup]
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
     /plans/audit/results/client_artefact_live_regrade_2026_08_18.md,
     /plans/audit/results/client_artefact_forward_claim_and_reverification_2026_08_18.md,
@@ -46,7 +47,7 @@ source: >-
   Todos MOVED here from the parent's § C and § D plus the Nick-AI-scoped items of § E and § F.
 context_scope:
   [
-    /plans/archive/2026_08/client_artefact_remediation_2026_08_18.md,
+    /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
     /codex/14-customer-journeys/commercial-model/platform-external-api-walkthrough.html,
   ]
@@ -138,7 +139,7 @@ and nothing else. Gated on the parent only for the evidence-tier spec.
 
 ## Progress Log
 
-**2026-08-18 — split out** of [`client_artefact_remediation_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md)
+**2026-08-18 — split out** of [`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 per operator direction. Todos moved, not copied.
 
 **context-scout 2026-08-19**: populated context_scope (3 entries) — added the owned HTML file the remaining

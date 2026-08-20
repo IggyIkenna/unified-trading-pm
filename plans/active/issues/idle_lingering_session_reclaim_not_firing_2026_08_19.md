@@ -341,23 +341,17 @@ halves separately — they are two unrelated facts:
       whichever test file already covers `_reclaim_idle_lingering_sessions`
       (`tests/test_worker_liveness_watchdog.py` or similar — locate via grep before assuming a
       new file is needed) for the specific failure mode found.
-- [x] N. ✅ [OPERATOR] P3. **Kill the 3 currently-orphaned sessions — STALE, moot.** Live-checked
-      2026-08-20 ~14:35 UTC: slots 28/29/30 no longer hold the 2026-08-19 orphaned sessions —
-      `tmux list-sessions` shows no `orch-slot-28/29/30` session at all, `SlotRow.tmux_session`
-      is blank for all three, and `last_spawned_at` is 2026-08-20 (today), not the 08-19
-      timestamps this todo was written against. The specific sessions this todo targeted are
-      long gone (reclaimed or cycled through since); no manual kill needed.
-- [x] N. ✅ [BACKEND] P3. **Sweep for other slots in the same state — STALE, superseded by
-      today's spot-check.** Not a full fresh fleet-wide sweep, but the equivalent question was
-      re-asked live 2026-08-20: an operator-directed check of slots 10 and 12 (both idle with a
-      lingering one-off session, ages 2h+ and 2 days respectively at time of check) found both
-      self-resolved within ~20-30 minutes — no live session on either afterward. Live proof the
-      reclaim mechanism is actively working, not stuck: the persisted tick-counter
-      (`data/state/watchdog_idle_session_ticks.dedup.json`) was fresh (written seconds prior)
-      and showed 10 different slots (1,7,8,9,13,22,29,31,32,33) mid-count at `ticks=1`, one tick
-      short of the `_IDLE_SESSION_RECLAIM_TICKS=2` threshold — normal in-progress state. The
-      original 08-19 symptom (multi-hour orphans) is not reproducing under the now-shipped
-      fixes; closing this rather than re-running a redundant full sweep against a moved target.
+- [ ] [OPERATOR] P3. **Kill the 3 currently-orphaned sessions** (`orch-slot-28/29/30`) as
+      immediate remediation, separate from the code fix — their work is confirmed already
+      shipped (`unified-trading-pm@ae65a23c08`), nothing is lost by reclaiming them manually.
+      Not done in this session — flagged for operator action or a follow-up session, since a
+      manual `tmux kill-session` bypasses the reclaimer this issue is about auditing, and doing
+      it silently would remove the live repro case before the root-cause todo above is done.
+- [ ] [BACKEND] P3. **Once root-caused, sweep for any OTHER slots in the same state** (not just
+      27-30) — this session only checked the 4 slots in the scheduled-task reserve because that
+      is what surfaced the finding; the same gap, wherever it is, plausibly affects any
+      completed one-shot dispatch fleet-wide (review/escalate/conflict_resolver included, per
+      the reclaimer's own documented scope), not just `ag_closeout_auditor`.
 - [x] N. ✅ [BACKEND] P2. **Give `escalation._pick_free_slot` the same reserve-preference logic
       `plan_health._pick_free_slot` already has — DONE, shipped 2026-08-20 (interactive session,
       slot 3): `agent-orchestrator@aa34262886`.**

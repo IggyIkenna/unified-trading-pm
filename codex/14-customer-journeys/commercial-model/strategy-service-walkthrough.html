@@ -1365,7 +1365,7 @@
       </div>
     </details>
     <details class="sec-body">
-      <summary>The thirteen action types, with their real fields</summary>
+      <summary>The eleven action types, with their real fields</summary>
       <div class="code">
         <span class="k">class</span> <b>TradeInstruction</b>(StrategyInstructionEnvelope): target_position_units:
         Decimal <i># a TARGET, not a delta — idempotent by design</i>
@@ -1383,12 +1383,6 @@
         <span class="k">class</span> <b>BorrowInstruction</b>(StrategyInstructionEnvelope): protocol: str asset: str
         target_debt_amount: Decimal max_borrow_apy_bps: int | None = None collateral_health_min: Decimal | None = None
         <i># refuse if it would breach</i>
-
-        <span class="k">class</span> <b>WithdrawInstruction</b>(StrategyInstructionEnvelope): protocol: str asset: str
-        target_supplied_amount: Decimal <i># target remaining supplied balance; 0 is a full exit</i>
-
-        <span class="k">class</span> <b>RepayInstruction</b>(StrategyInstructionEnvelope): protocol: str asset: str
-        target_debt_amount: Decimal <i># target remaining debt; 0 is full repayment</i>
 
         <span class="k">class</span> <b>StakeInstruction</b>(StrategyInstructionEnvelope): protocol: str asset: str
         target_staked_amount: Decimal lst_asset: str | None = None <i># the receipt token expected back</i>
@@ -1427,7 +1421,7 @@
           is what makes the contract safe to retry across a service restart.
         </p>
         <p>
-          <b class="ev ev-verified">✓ verified</b> — all thirteen subclasses above, and the
+          <b class="ev ev-verified">✓ verified</b> — all eleven subclasses above, and the
           <code>StrategyInstructionV2</code> union that lists them, checked directly against
           <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> (2026-08-18). An earlier edition of
           this document said nine and omitted <code>TransferInstructionV2</code> and <code>BridgeInstructionV2</code>,

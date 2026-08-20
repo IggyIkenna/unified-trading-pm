@@ -16,6 +16,7 @@ tags: [client-disclosure, registry, venues, chains, archetypes, ground-truth]
 related:
   [
     /plans/epics/system_readiness_master.md,
+    /plans/active/client_artefact_remediation_2026_08_18.md,
   ]
 created: 2026-08-19
 last_updated: "2026-08-19"

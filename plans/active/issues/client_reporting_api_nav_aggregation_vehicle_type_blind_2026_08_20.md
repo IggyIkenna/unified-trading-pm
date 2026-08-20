@@ -1,85 +1,65 @@
 ---
 doc_type: issue
-title: client-reporting-api's NAV Aggregation Is Vehicle-Type-Blind
-summary:
-  client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20's `vehicle_type` field landed on
-  `unified_api_contracts.internal.domain.strategy_service.client_registry.CLIENT_REGISTRY` — a genuinely separate data
-  source (hardcoded `_DEFAULT_CLIENTS` Python instances) from client-reporting-api's own client registry
-  (`unified_api_contracts.internal.reporting.client_config.ClientConfig`, loaded from `credentials-registry.yaml`).
-  `client-reporting-api`'s NAV route (`/nav`, `_aggregate_nav_investors`) has no concept of vehicle_type and would
-  include an SMA-typed client in the pooled fund's NAV aggregate if one existed — currently latent (all 5 seeded
-  clients are `vehicle_type="fund"`), not an active bug, but a real gap once a real SMA client is onboarded.
-status: open
-resolved_by:
-nature: process
-asset_group: [cross-cutting]
-stage: [strategy]
-repos: [client-reporting-api, unified-api-contracts]
-scope: [engineer]
-tags: [vehicle-eligibility, sma, client-reporting, nav]
-related:
-  [
-    /plans/archive/2026_08/client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20.md,
-    /plans/epics/strategy_master.md,
-    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-  ]
-created: 2026-08-20
-last_updated: 2026-08-20
-parent_epic: strategy_master
+title: client-reporting-api NAV aggregation was blind to vehicle_type (pooled fund vs direct SMA)
+status: active
 assigned_vm: planning
-execution_scope: orchestrator-agent
-priority: P2
-estimate_class: infra
-estimate_baseline_ai_days: 1
-estimate_calibrated_ai_days: 0.8
-assigned_role: backend_engineer
-effort: low
-drift_direction: advance-code
-depends_on:
-locked_by:
-locked_since:
-supersedes:
-superseded_by:
-source: filed per client_archetype_vehicle_eligibility_sma_vs_fund_finalize_2026_08_20's own todo 2, 2026-08-20
-context_scope:
-  [
-    client-reporting-api/client_reporting_api/api/routes/reporting/nav.py,
-    client-reporting-api/client_reporting_api/core/tranche_router.py,
-    unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/client_registry.py,
-    unified-api-contracts/unified_api_contracts/internal/reporting/client_config.py,
-  ]
+created: 2026-08-20
+author: worker-slot-11
+source: [client-reporting-api]
+tags: [client-reporting-api, nav, vehicle_type, reporting]
 ---
 
-# client-reporting-api's NAV Aggregation Is Vehicle-Type-Blind
+# client-reporting-api NAV aggregation was blind to `vehicle_type`
 
-**Why this doc exists**: filed per `client_archetype_vehicle_eligibility_sma_vs_fund_finalize_2026_08_20`'s own todo
-2 ("if client-reporting-api's registry needs `vehicle_type` too... spin that into a new tracked todo rather than
-leaving a second client-config surface without the field"). Investigation confirmed the gap is real: `CLIENT_REGISTRY`
-(`_DEFAULT_CLIENTS`, hardcoded Python) and client-reporting-api's `ClientConfig` (loaded from
-`execution-service/configs/credentials-registry.yaml` via `tranche_router.load_registry()`) are genuinely separate
-data sources, not two views of one file — so adding `vehicle_type` to one did not, and could not have, silently
-synced into the other.
+## What I found
 
-**Not urgent today**: all 5 currently-seeded `CLIENT_REGISTRY` entries are `vehicle_type="fund"` — no SMA client
-exists anywhere in the system yet, so `nav.py`'s `_aggregate_nav_investors` isn't currently wrong in practice. This
-is a latent gap, not an active bug.
+`GET /nav` (`client_reporting_api/api/routes/reporting/nav.py`) aggregated every client's equity-curve NAV into a flat
+`investors` list with no distinction between a **pooled fund vehicle** (one execution account whose NAV is actually
+shared across several underlying investors) and a **direct SMA-style managed account** (one execution account, one
+investor).
+
+UAC's domain-layer `ClientDefinition` (`unified_api_contracts/internal/domain/strategy_service/client_registry.py`)
+already models this distinction as a required `vehicle_type: Literal["fund", "sma"]` field (see
+`/plans/active/client_archetype_vehicle_eligibility_sma_vs_fund_2026_08_20.md` for why it lives there). But
+`client-reporting-api`'s client universe is a **disjoint id namespace** — its `ClientConfig` registry
+(`client-reporting-api/configs/credentials-registry.yaml`, loaded via `tranche_router.load_registry()`) keys clients by
+tranche-desk ids ("PR", "NN", "IK", …), not UAC's client_ids ("acme-fund", "patrick-elysium", …), so there is no direct
+join to `ClientRegistry.vehicle_type`.
+
+The reporting-side equivalent signal was already present but unused for NAV purposes: `ClientConfig.is_pooled` +
+`ClientConfig.pool_investors` (`unified_api_contracts/internal/reporting/client_config.py`) — e.g. client `IK` is
+`is_pooled: true` with `pool_investors: {jihane: 0.253, amaka: 0.216, ik: 0.531}`, a genuine pooled-fund vehicle, but
+`nav.py` reported it as one undifferentiated investor row identical in shape to a single-investor SMA client like `PR`
+or `NN`. A grep confirmed `is_pooled`/`pool_investors` had **zero consumers anywhere in the codebase** before this fix.
+
+## Why it matters
+
+NAV/investor-register consumers of `/nav` (UI, downstream reporting) could not tell a pooled-fund NAV line from a
+direct-managed-account NAV line — the vehicle-type axis UAC now treats as load-bearing for the client model was
+invisible in the reporting aggregation layer.
+
+## Recommended decision
+
+Surface vehicle type in the NAV response using the already-present `is_pooled` signal as the reporting-side analogue of
+UAC's `vehicle_type` (mapping: `is_pooled: true` → `"fund"`, else → `"sma"`) rather than attempting a cross-namespace
+join to UAC's `ClientRegistry` (the two client-id spaces don't overlap). Scope kept to NAV aggregation per the task
+brief — splitting a pooled client's NAV row into one row per underlying `pool_investors` entry (which would need
+display names for "jihane"/"amaka"/etc. that don't exist anywhere in this codebase today) is a materially bigger,
+separate change and is flagged below as a follow-up rather than folded in here.
 
 ## Todos
 
-- [ ] [BACKEND] P2. Add `vehicle_type` awareness to client-reporting-api's NAV aggregation
-  (`client_reporting_api/api/routes/reporting/nav.py`'s `_nav_investor_for_client`/`_aggregate_nav_investors`) —
-  either (a) cross-reference the client_id against `CLIENT_REGISTRY` and exclude/flag any `sma`-typed client from
-  the pooled-fund NAV aggregate, or (b) if `credentials-registry.yaml`'s own `ClientConfig` should instead carry its
-  OWN `vehicle_type` field (avoiding a cross-registry lookup from client-reporting-api into strategy-service's UAC
-  domain), state that as the chosen design and implement it there instead. Either path is acceptable; picking one and
-  stating why is the deliverable. Done-when: a test seeds one `fund` and one `sma` client, and asserts the `sma`
-  client is excluded from (or clearly flagged out of) the NAV aggregate `investors`/`current_nav` totals.
-
-- [ ] [REVIEW] P3. Confirm no other client-reporting-api view (fee summary, capital flows) has the same blind spot —
-  state the finding as a fact per view checked, not just the NAV route.
+- [x] [BACKEND] P2. Add `vehicle_type` awareness to client-reporting-api's NAV aggregation — `nav.py`:
+  `_vehicle_type_for_client()` classifies each client `"fund"` (pooled) / `"sma"` (direct) from `ClientConfig.is_pooled`;
+  each investor row now carries `vehicleType`; `_aggregate_nav_investors()` returns and `GET /nav` exposes a new
+  `nav_by_vehicle_type: {"fund": ..., "sma": ...}` breakdown. (repo: client-reporting-api) — ✅
+  client-reporting-api@1e7baa3383
+- [ ] [BACKEND] P3. Split a pooled client's NAV investor row (e.g. `IK`) into one row per `pool_investors` entry
+  (weighted by their pool share) instead of one blended row per execution account — needs display names for pool
+  sub-investors (none exist today; `CLIENT_NAMES` only maps execution-account ids). (repo: client-reporting-api)
 
 ## Progress Log
 
-- **2026-08-20**: Filed by `client_archetype_vehicle_eligibility_sma_vs_fund_finalize_2026_08_20`'s own todo 2,
-  during the operator's `/autonomous` session that shipped the vehicle-eligibility work this issue follows on from.
-- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- 2026-08-20 (slot 11): Filed + fixed inline. `is_pooled`/`pool_investors` were unused fields on `ClientConfig` prior to
+  this change (confirmed via grep — zero call sites). Implemented `vehicle_type` mapping in `nav.py` only, per the
+  task's `context_scope`. Follow-up (per-pool-investor NAV split) tracked as a separate P3 todo above, left open.

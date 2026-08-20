@@ -56,32 +56,21 @@ context_scope:
 
 # Recorded reasons for the three currently-paused scheduled-dispatch modes
 
-## Current state — re-checked against the LIVE registry 2026-08-20
+## Current state (confirmed live 2026-08-18 via `GET /api/scheduled-dispatch/status`)
 
 ```
-paused: ["ag_closeout", "cefi_mtds_smoke", "ci_reconcile", "na_eligibility", "reconcile", "report"]
+paused: ["ag_closeout", "cefi_mtds_smoke", "ci_reconcile"]
 ```
-
-**Live read 2026-08-20 (slot 6, task ao_scheduled_dispatch_pause_reasons-7434f3d0c871)**: this section was
-originally written 2026-08-18 from `GET /api/scheduled-dispatch/status` (3 modes), then updated same-day after
-the `ci_reconcile` resume (2 modes). Re-checked today against the persisted registry the running server loads —
-`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/state/scheduled_dispatch_paused_modes.dedup.json`
-(mtime 2026-08-19 22:56) — the current paused set is **6 modes**: `ag_closeout`, `cefi_mtds_smoke`,
-`ci_reconcile`, `na_eligibility`, `reconcile`, `report`. `ao_watchdog` is NOT paused (resumed 2026-08-19 per the
-Todos section). `ci_reconcile` is paused again (it was resumed 2026-08-18, then re-paused — see the
-`ci_reconcile` section + MEASURED UPDATE below). This live re-check is exactly the maintenance this todo
-exists to force: a hand-maintained list went stale within 24h (3 → 7 → 6), which is the measured argument for
-the open `paused_at`/`reason` schema-fix todo, not just the theoretical one.
 
 `scheduled_dispatch_pause.py` stores this as a bare `set[str]` — no timestamp, no reason. The
-reasons below come from the operator directly, not from any system field.
+three reasons below come from the operator directly (2026-08-18 chat), not from any system field.
 
-**Original same-day update (2026-08-18, historical)**: operator explicitly authorized resuming `ci_reconcile`
-only (`ag_closeout` and `cefi_mtds_smoke` stayed paused — the smoke test in particular for VM-capacity reasons).
-Resumed via `POST /api/scheduled-dispatch/ci_reconcile/resume` and verified end-to-end: a triggered dispatch
-returned `status: "queued"` (the modern AutoSpawn-drain queue path, not the old "paused by operator" 503) — the
-pause was genuinely lifted at that time. `ci_reconcile` has since been re-paused (see the MEASURED UPDATE
-2026-08-19 section below).
+**Update, same day**: operator explicitly authorized resuming `ci_reconcile` only (`ag_closeout`
+and `cefi_mtds_smoke` stay paused — the smoke test in particular for VM-capacity reasons). Resumed
+via `POST /api/scheduled-dispatch/ci_reconcile/resume` and verified end-to-end: a triggered dispatch
+returned `status: "queued"` (the modern AutoSpawn-drain queue path, not the old "paused by operator"
+503) — the pause is genuinely lifted, not just API-flipped. Current paused set as of this update:
+`["ag_closeout", "cefi_mtds_smoke"]`. See the `ci_reconcile` section below for the resume rationale.
 
 ## `cefi_mtds_smoke` — paused: cost/orphan-resource risk, pending deployment-service registration
 
@@ -176,14 +165,6 @@ itself "done," so the next natural tick after unpause dispatches normally with n
       are still open.
 - **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. 2 of 3 follow-up items already shipped same-day with evidence; sole remaining todo (add reason + paused_at field, surface on API + dashboard) is a scoped, deterministic schema/code change. Conflict-check clear: grepped plans/active/*.md for `scheduled_dispatch_pause` — zero hits outside this doc. Companion gated finalize: `ao_scheduled_dispatch_pause_reasons_2026_08_18_finalize_2026_08_19.md`.
 - **context-scout 2026-08-19**: populated context_scope (5 entries).
-- **2026-08-20 (slot 6, task ao_scheduled_dispatch_pause_reasons-7434f3d0c871)**: re-checked the "Current state"
-  section against the live registry per this doc's own [REVIEW] P2 todo. Live read from the running server's
-  persisted registry (`agent-orchestrator/data/state/scheduled_dispatch_paused_modes.dedup.json`, mtime
-  2026-08-19 22:56): **6 modes paused** — `ag_closeout`, `cefi_mtds_smoke`, `ci_reconcile`, `na_eligibility`,
-  `reconcile`, `report` — i.e. the 3-mode listing written 2026-08-18 had gone stale again (3 → 7 → 6 across
-  2026-08-18/19/20), reinforcing the schema-fix todo. `ao_watchdog` confirmed NOT paused (resumed 2026-08-19).
-  Updated the section + flipped the todo checkbox. No schema change made here (that's the separate open
-  `[SCRIPT] P2` todo).
 
 ## MEASURED UPDATE 2026-08-19 — the paused set has grown from 3 to 7, and `ci_reconcile` is paused again
 
@@ -220,7 +201,7 @@ dispatch"` — consistent with the account snapshots seen the same hour
 
 ## Todos (added 2026-08-19)
 
-- [x] P1. Record the reason + rough date for the three still-unrecorded pauses
+- [ ] [OPERATOR] P1. Record the reason + rough date for the three still-unrecorded pauses
       (`na_eligibility`, `reconcile`, `report`) and for the re-pause of `ci_reconcile` in the
       sections above — or resume the ones that turn out to be forgotten.
       **`ao_watchdog` RESOLVED 2026-08-19**: operator authorized resuming it and only it;
@@ -230,22 +211,11 @@ dispatch"` — consistent with the account snapshots seen the same hour
       report). It was the urgent one — it is the fleet's own daily health check
       (`/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer),
       so while it was paused nothing was running the check that would have surfaced the other six.
-      **RESOLVED 2026-08-20 (operator ruling on todo
-      ao_scheduled_dispatch_pause_reasons-53b859c93847 — source:
-      /plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md)**: the three
-      still-unrecorded pauses (`na_eligibility`, `reconcile`, `report`) were intentional — those
-      skills were being run by operators on their own hosts because the fleet's claude accounts
-      were exhausted at the time (roughly 2026-08-19), not forgotten. Nothing to resume, nothing
-      further to record.
       (repo: NA — operator knowledge, not derivable from any system field)
-- [x] ✅ [REVIEW] P2. Re-check the "Current state" section against the live registry file whenever
+- [ ] [REVIEW] P2. Re-check the "Current state" section against the live registry file whenever
       this doc is touched, until the `paused_at`/`reason` schema change lands — a hand-maintained
       list of paused modes went stale within 24h of being written, which is the measured argument
-      for the schema fix, not just the theoretical one. — re-checked 2026-08-20 (slot 6): "Current state"
-      section updated to the live 6-mode set read from the running server's persisted registry
-      (`agent-orchestrator/data/state/scheduled_dispatch_paused_modes.dedup.json`, mtime 2026-08-19 22:56) —
-      `["ag_closeout","cefi_mtds_smoke","ci_reconcile","na_eligibility","reconcile","report"]`; prior 3-mode
-      listing was stale. (repo: unified-trading-pm)
+      for the schema fix, not just the theoretical one. (repo: unified-trading-pm)
 - [ ] [INFRA] P2. Decide whether scheduled-job capacity starvation deserves its own alert: the
       three `plan_health`-family jobs above sat queued ~20h on 2026-08-19 with `no free configured
       slot` / `no headroom account`, and nothing paged. Distinct from the pause question — these

@@ -429,7 +429,7 @@ remain unchecked, correctly blocked on that review.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — Client-facing disclosure artifact with a hard, operator-set disclosure boundary; all 7 pre-audit measurement todos are already done (checked). Of the 4 currently-open todos: 2 are the previously-audited. (1/4 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
 
 **2026-08-19 — 2026-08-18 artefact-remediation pass reconciled (`platform-external-api-walkthrough.html`)**: the
-[`client_artefact_remediation`](/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md) family (parent + nickai
+[`client_artefact_remediation`](/plans/active/client_artefact_remediation_2026_08_18.md) family (parent + nickai
 child + siblings + elysium children) shipped and was independently re-verified this session (finalize pass) — §2/§3
 external-API framing now names the concrete live surface and states TRADE-only-live / 10-of-11-types-501, all 6
 `live` badges re-graded to `partial`, the forward claim cut, §4 coverage table + 288-venue figure reconciled, §14

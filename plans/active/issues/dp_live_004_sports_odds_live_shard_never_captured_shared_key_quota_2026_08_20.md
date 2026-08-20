@@ -47,15 +47,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 created: 2026-08-20
-context_scope:
-  [
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/02-data/honest-absence-downstream-handling.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py,
-    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
-    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
-  ]
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md]
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P1
@@ -191,7 +183,3 @@ Ask the operator for the credential decision (see the /blocked ask on this escal
 - [ ] [OPERATOR] P0 — top-up `odds-api-key` quota / pause `mtds-backfill-odds-*`, and
   relaunch `mtds-live-sports-odds-api-odds-20260816-145019` on current LDR. Provenance:
   the /blocked ask for escalation `agt-f712d7`.
-
-## Progress Log
-
-- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -2,7 +2,6 @@
 doc_type: issue
 title: "Empty re-probe disagreements — today's new empties may be C1 bugs (2026_08_19)"
 created: 2026-08-19
-context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
 parent_epic: observability_master
 assigned_vm: planning
 source:

@@ -46,6 +46,7 @@ related:
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
     /plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md,
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    /plans/active/client_artefact_remediation_2026_08_18.md,
   ]
 created: 2026-08-18
 tags: [client-disclosure, nick-ai, elysium, audit, cross-document-consistency, anchor-integrity]
@@ -81,7 +82,7 @@ installed) was also run per file as a second opinion.
 **Confirmed still live as of 2026-08-18.** `strategy-service-walkthrough.html` line 220 (`§01`'s stat-row) still
 reads `<span class="v">9</span><span class="k">Instruction types</span>`, and line 314 (`§02`'s keypoints) still
 lists the invented 5-family set including `"Liquidity provision"`. Neither fix from
-`/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md` § A has landed — that plan's own todos are all still
+`/plans/active/client_artefact_remediation_2026_08_18.md` § A has landed — that plan's own todos are all still
 unchecked `- [ ]`, consistent with this. `strategy-service-deep-dive.html` correctly shows `11` instruction types
 (factbar line 162, stat-row line 202) and the correct 9-member family list (stat-row line 204, keypoints line 876:
 "Carry and yield, structural arbitrage, statistical-arbitrage pairs, volatility, market making, event-driven,
@@ -249,6 +250,6 @@ in three additional locations across two documents never in scope of the first-p
 third, independent corroborating document. Validated HTML structure via two independent methods (a custom
 Python `html.parser` stack-walker and `tidy`, with `tidy`'s legacy-ruleset false positives filtered and disclosed).
 No file was edited. Findings are ready for the operator to fold into
-[`/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md)
+[`/plans/active/client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 (currently scoped to only the two walkthrough documents) or a follow-up plan covering
 `carveout-engineering.html` and `platform-architecture.html`, which that plan does not currently touch.

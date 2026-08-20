@@ -693,22 +693,16 @@ own long-lived setup-token env file (`~/.claude-accounts/<id>.env`); spawns are 
 global "active account" file to swap. **Failover triggers across all three rate-limit dimensions** — not just the 5-hour
 window:
 
-| Limit dimension      | Field on AccountView                           | Threshold to swap                                                                    |
-| -------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 5-hour window        | `five_hour_pct`                                | ≥ 95%                                                                                |
-| Weekly (all models)  | `weekly_pct`                                   | ≥ 95%                                                                                |
-| Weekly (Sonnet-only) | `weekly_sonnet_pct`                            | ≥ 95%                                                                                |
-| Already rate-limited | `rate_limited_until` is not null AND `> now()` | always swap immediately                                                              |
-| Overage rejected     | `overage_status`                               | `== "rejected"`, always swap immediately, regardless of `weekly_pct`/`five_hour_pct` |
+| Limit dimension      | Field on AccountView                           | Threshold to swap       |
+| -------------------- | ---------------------------------------------- | ----------------------- |
+| 5-hour window        | `five_hour_pct`                                | ≥ 95%                   |
+| Weekly (all models)  | `weekly_pct`                                   | ≥ 95%                   |
+| Weekly (Sonnet-only) | `weekly_sonnet_pct`                            | ≥ 95%                   |
+| Already rate-limited | `rate_limited_until` is not null AND `> now()` | always swap immediately |
 
-Overage-rejected fires regardless of pct thresholds — a functionally-dead-on-overage account (both observed
-`overage_disabled_reason` values, `out_of_credits` and `org_level_disabled`) can sit well under every pct ceiling while
-still failing every request (`account_failover_ignores_overage_rejected_2026_08_18`). Check all five conditions every
-poll cycle (kicker tick + every operator dashboard refresh) — the shared gate is `account_is_usable` in
-`server/state_store/account_usage.py`, consulted by `rotate_all_slots_off_account`'s callers, dispatch-time account
-picking, and the proactive worker-slot failover kill alike. Any single condition true → rotate that slot to a sibling
-account whose five conditions are all FALSE (see `rotate_all_slots_off_account` in `server.py`). **Failover order**:
-rotate to the next non-exhausted account in `accounts.json`; if all exhausted, log
+Check all four conditions every poll cycle (kicker tick + every operator dashboard refresh). Any single condition true →
+rotate that slot to a sibling account whose four conditions are all FALSE (see `rotate_all_slots_off_account` in
+`server.py`). **Failover order**: rotate to the next non-exhausted account in `accounts.json`; if all exhausted, log
 `account_swap_blocked_all_exhausted` + ping operator via Telegram. Existing in-memory workers stay on their spawn-time
 token until they `/clear` or compact (which forces a fresh spawn via the new account's env file). SSOT for the
 multi-account auth architecture: `codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`.

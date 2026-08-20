@@ -42,12 +42,7 @@ assigned_role: backend_engineer
 drift_direction: advance-code
 sequential: false
 locked_by:
-context_scope:
-  [
-    agent-orchestrator/scripts/quality-gates.sh,
-    agent-orchestrator/scripts/quality_gates/check_coverage_ratchet.py,
-    /codex/06-coding-standards/quality-gates.md,
-  ]
+context_scope: [agent-orchestrator/scripts/quality-gates.sh]
 resolved_by:
 source: >-
   Discovered 2026-08-20 (slot-33, cicd one-shot escalation agt-5581af) while diagnosing why the local
@@ -140,4 +135,3 @@ Two independent tracks:
   failure while shipping a coverage-ratchet regression fix for PR#847. The actual escalation (coverage ratchet fix) was
   shipped and closed independently (agent-orchestrator@52e153d65a) — this issue tracks the underlying host/QG-infra
   finding, which is out of scope for that one-shot task but too valuable to lose.
-- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).

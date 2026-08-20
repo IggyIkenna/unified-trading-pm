@@ -213,37 +213,13 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
       out-of-window + non-git-dir excluded, `[]` when window searched with zero matching commits, None when no
       `assigned_at` / worktree unresolvable) — full backend suite **5179 passed / 2 skipped** + dashboard
       463 vitest, full `quality-gates.sh` green (no UI touched).
-- [x] ✅ [DATA] P2. **Persist the task's `context_scope` size onto the completed-task record.** The reading-list already
+- [ ] [DATA] P2. **Persist the task's `context_scope` size onto the completed-task record.** The reading-list already
       passed to the worker at dispatch (`server/dispatch.py` — symbol, not a line number, corrected 2026-08-18
       /plan-reconcile) is dispatch-time-only today and never carried
       through to `TaskUsageRow` or any other durable per-task table. **Done when**: a real completed task's record
       shows both its `context_scope` size and its real outcome metrics (turns/tokens/compacted) joinable in one
       query. Source: same doc, "[DATA] P2. New (2026-08-17): persist the task's `context_scope`...". Repo:
       agent-orchestrator.
-      **DONE `agent-orchestrator@5b9094cb3a`** — new `SlotRow.context_scope_size` (nullable int; dispatch-time
-      snapshot set by `assign_task_to_slot`, which all 4 dispatch call sites now call with `len(task.context_scope)`;
-      cleared by `claim_slot_for_typed_agent`, since a typed one-off runs no queued backlog task and so carries no
-      reading-list) plus new `TaskUsageRow.context_scope_size` (nullable int; populated at `/done` via new
-      `state_store.context_scope_size_for_slot()`, read strictly BEFORE the next task's dispatch overwrites the
-      snapshot — mirrors `peak_context_used_pct`'s read-before-reset pattern from item 2 of this same plan).
-      Migration entries added to BOTH `bootstrap._SLOTS_MIGRATION_COLUMNS` and `_TASK_USAGE_MIGRATION_COLUMNS`
-      (fourth and LAST of this plan's `sequential: true` `TaskUsageRow` migration gate; the static check in
-      `test_migration_completeness.py` covers the schema-drift class behind the 2026-08-05 `/done` outage).
-      **Design call worth recording** (the one real judgment in this todo): the size is captured at DISPATCH, never
-      re-read from the backlog at `/done`. The backlog is a REGENERATED projection of the plan files — `/context-scout`
-      rewrites a plan's `context_scope` frontmatter on its daily sweep (this very plan's own list changed on
-      2026-08-19 AND again on 2026-08-20) and `regen_backlog_from_plan.py` then overwrites `task.context_scope` in
-      place, while a completed checkbox is PRUNED from `backlog.yaml` on the next regen tick — which lands between the
-      worker's plan-flip and its `/done` call. A `/done`-time re-read would therefore silently return a refreshed
-      value, or nothing at all, for exactly the tasks that completed correctly. NULL = no backlog dispatch owns the
-      slot; a real 0 = dispatched carrying an EMPTY reading-list (same None-not-a-fabricated-0 convention as
-      `compact_count`/`peak_context_used_pct`/`repos_touched`). Evidence: 4 new pytest cases in
-      `tests/test_record_done_task_usage_isolation.py` — size persisted AND joinable against the same row's real
-      turn/token metrics (the "done when" bar verbatim), a real 0 preserved rather than collapsed to None, None when
-      no dispatch snapshot exists, and the snapshot cleared on a typed-agent claim. Full `quality-gates.sh` green (no
-      skip flags): **5272 passed / 2 skipped** backend + **469** dashboard vitest, sentinel `00f5814b` == the
-      pre-rebase HEAD it gated (landed SHA is the post-rebase `5b9094cb3a`, content-identical per quickmerge's own
-      rebase-retry), post-push ancestry verified against `origin/live-defi-rollout`.
 - [ ] [DOC] P3. **Write the tranche-reopening convention into `plan-completion-and-archival-discipline.md`.** The
       convention `ao_consolidated_closeout_2026_08_12.md` already invented and used ("open a
       `<ag>_consolidated_closeout_<new-date>.md` for the new cycle, leave the archived one untouched") is not recorded
@@ -288,20 +264,3 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
   an origin-reachability check per repo — the latter would add a network fetch per repo to `/done`'s telemetry path;
   the commit itself is the evidence, and the worker has already pushed by the time `/done` runs.
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries).
-- **2026-08-20 (data_engineering, slot 7)**: Item 4 (persist the task's `context_scope` size) shipped
-  `agent-orchestrator@5b9094cb3a` — see the flipped checkbox above for the full evidence and the dispatch-time-capture
-  design call. FOURTH and final todo of the 4 sharing the `sequential: true` `TaskUsageRow` migration gate: added
-  `context_scope_size` to `bootstrap._TASK_USAGE_MIGRATION_COLUMNS` after `repos_touched`, plus a matching
-  `_SLOTS_MIGRATION_COLUMNS` entry (items 1-3's `compact_count`/`peak_context_used_pct`/`repos_touched` all already
-  present, as their own Progress Log entries said they would be). **The migration gate is now fully drained** — only
-  item 5 (the `[DOC] P3` tranche-reopening convention, a `unified-trading-pm` codex edit that was never inside the
-  gate) remains open, so this plan stays `active` and is NOT yet archivable.
-- **2026-08-20 (slot 7) — environment finding, NOT caused by item 4's change; filed as
-  `/plans/active/issues/vm_disk_guard_wipes_active_slot_venvs_2026_08_20.md`.** Item 4's first two QG attempts failed
-  for a reason that had nothing to do with the diff: this slot had NO `.venv` in ANY of its 25 repos, and slots 5/6/8/9
-  were the same (the root clone's venv was intact). Root cause measured, not inferred — `vm-disk-guard.sh` reclaims
-  `.tabs/<N>/*/.venv` for every slot it judges IDLE, and its idle test is "no live `orch-slot-<N>` tmux session", but
-  `tmux ls` on this host lists no `orch-slot-*` session at all, so every slot reads idle and every venv is swept
-  including one with a QG actively running. Recorded here because items 2 and 3 of this plan each lost time to a
-  "stale `.venv`, fixed via `uv sync`" detour and diagnosed it as staleness — plausibly this same guard, third
-  recurrence on this one plan. `uv sync` restores it; QG then passed clean on an unchanged diff.

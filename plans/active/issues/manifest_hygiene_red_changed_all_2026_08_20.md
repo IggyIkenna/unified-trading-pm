@@ -139,6 +139,3 @@ across cefi/tradfi/sports/prediction were NOT individually triaged this session 
 candidate CSVs referenced by the escalation payload are unreadable (never committed,
 ephemeral-container-only per the 2026-08-18 change); tracked as the remaining P2 todo above,
 to be re-run against a fresh, honest daily output once the fix lands.
-
-- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries); all paths re-verified on disk,
-  unchanged.

@@ -648,7 +648,7 @@ batch)
   (RESOLVED 2026-08-15, `agent-orchestrator@7889a7c` — evidence: `ag_closeout_audit_cross_cutting_parked_2026_08_01.md`
   finding 2),
   [`ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md`](/plans/active/issues/ao_dashboard_e2e_pre_existing_flakiness_2026_08_07.md),
-  [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`](/plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+  [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`](/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
   (dual-tagged `[ao, cross-cutting]`, orthogonality mistag),
   [`slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`](/plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md)
   — evidence for the latter 3: `ag_closeout_audit_cross_cutting_parked_2026_08_08.md`.
@@ -728,7 +728,6 @@ batch)
 
 ## Progress Log
 
-- **context-scout 2026-08-20**: re-verified context_scope, no change needed (6 entries)
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 <!-- Append newest entries at the top: `- **YYYY-MM-DD** — <what landed> (<repo>@<sha> / evidence).` -->
 

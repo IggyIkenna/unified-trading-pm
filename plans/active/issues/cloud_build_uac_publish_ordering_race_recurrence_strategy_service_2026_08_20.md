@@ -1,9 +1,8 @@
 ---
 doc_type: issue
 title:
-  strategy-service Cloud Build FAILURE = recurrence of the unified-api-contracts publish-ordering race — this instance
-  self-healed, but the recurring CLASS has an identified root-cause fix (update-repo-version.yml resolvability gate
-  checks git, not Artifact Registry) that has not been implemented yet
+  strategy-service Cloud Build FAILURE = recurrence of the unified-api-contracts publish-ordering race — transient,
+  self-healed once the wheel landed; no code fix warranted
 summary: >-
   `cloud-build-failure-watcher` paged CRITICAL for strategy-service build `77fbf981` (main @ `bb3ff1b`,
   2026-08-20T11:02:18Z): docker step 6 `uv pip install` failed "× No solution found ... strategy-service==0.79.2
@@ -16,13 +15,9 @@ summary: >-
   strategy-service's GAR auth path (BuildKit-secret `gar_token` + `UV_EXTRA_INDEX_URL` + retry wrapper, shipped in the
   fleet-wide 2026-07-29/30 rollout) is present and correct, and the failing build log proves uv reached AR (it found the
   index, just not the version). VERIFIED RESOLVED by re-running the same commit: build `10283751` SUCCESS (7m47s) with
-  log line `+ unified-api-contracts==0.149.0` and a fresh `strategy-service:latest` digest pushed. **UPDATE (same day,
-  interactive slot-1 deep-dive)**: the operator explicitly asked for the real fix rather than another self-heal
-  writeup. Found the exact gate this needs: `update-repo-version.yml`'s existing "Resolvability gate" step (built for a
-  DIFFERENT resolution path — git tag / branch pyproject.toml — not Artifact Registry) is the single fan-out point for
-  every consumer's floor-bump; extending its check to also require the wheel be live on AR closes the race at its
-  source, before the downstream Cloud Build trigger ever fires, at zero Cloud Build cost (the wait happens in cheap
-  GitHub Actions compute, not a billed Cloud Build worker). See "Root-cause fix" section below. NOT YET IMPLEMENTED.
+  log line `+ unified-api-contracts==0.149.0` and a fresh `strategy-service:latest` digest pushed. Systemic gap worth
+  triaging: the floor-bump-promoted-before-wheel-published ordering race recurred ~3 weeks after the 2026-07-29 storm
+  and hit at least 4 repos in the same window.
 status: open
 nature: issue
 asset_group: [ci]
@@ -33,7 +28,6 @@ tags: [ci, cloud-build, publish-ordering, artifact-registry, unified-api-contrac
 related:
   - /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md
   - /plans/active/issues/mtds_ldr_cloud_build_docker_step6_failure_2026_08_10.md
-  - /plans/active/issues/agent_orchestrator_qg_cancel_notifier_same_sha_rerun_gap_2026_08_20.md
 created: 2026-08-20
 author: cloud-build-failure-watcher escalation (cicd, slot-11)
 parent_epic: ci_master
@@ -53,7 +47,6 @@ context_scope:
     strategy-service/Dockerfile,
     strategy-service/pyproject.toml,
     strategy-service/cloudbuild.yaml,
-    /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
   ]
 ---
 
@@ -104,107 +97,15 @@ race recurs on the fleet's routine floor-bump cadence.
 - 2nd occurrence of this class in ~3 weeks, 4 repos this window → without an ordering guard, every future
   `re-pin unified-api-contracts` floor-bump that races its wheel publish re-pages the watcher.
 
-## Root-cause fix — where the ordering gate actually belongs (session 2026-08-20, interactive slot-1 deep-dive)
-
-**Why the 2026-07-29 fix didn't prevent this recurrence**: that incident shipped a build-time retry wrapper
-(`uv pip install` × 3 attempts, 15s/30s/45s backoff ≈ 90s total) into every affected Dockerfile — see
-`/codex/06-coding-standards/dockerfile-standards.md` § "uv pip install Retry Wrapper". It's present and working
-correctly in today's logs (you can see the 3 retry attempts before the final failure). It just isn't a big enough
-window: today's real gap between the floor-bump landing on `main` (~11:01-11:03Z) and the wheel actually being
-resolvable on AR (11:14:57Z) was **~12-20 minutes**, roughly 8-13x the wrapper's absorption budget. A build-time retry
-can never be sized correctly because it's guessing a delay instead of checking the real condition — and widening it
-further just burns more BILLED Cloud Build compute per race (this is why option "just widen the retry window" was
-rejected in favor of the below — see the operator discussion this session).
-
-**A purpose-built check for this already exists, unwired**: `scripts/cicd/assert_deps_published_to_ar.py`. Its own
-docstring: *"STATUS (2026-06-16): NOT currently wired into any workflow — RESERVED for the production IMAGE-BUILD
-dep-publish gate... Wire this in at the image/cloud-build step when that cutover happens."* That cutover (Cloud Build
-resolving internal deps from live AR) has since happened — this incident IS the condition the docstring anticipated.
-The script queries AR directly (`gcloud artifacts versions list --package=<dep> ...`) rather than the racy
-`published_packages` manifest field, and is FAIL-OPEN on any ambiguity (only blocks on a confirmed "AR doesn't have
-it yet" signal) — exactly the right contract for a gate.
-
-**The correct wiring point is NOT a Cloud Build step** (that would mean paying for a live, billed `E2_HIGHCPU_8`
-worker to sit and poll for up to ~10-20 min every time this races — real, recurring GCP spend for pure idle-wait).
-It's `unified-trading-pm/.github/workflows/update-repo-version.yml`, the ONE fan-out point that decides when to
-dispatch the `dependency-update` event that eventually produces the `chore(deps): re-pin ...` commit → promotion →
-push to `main` → (for these repos) the native Cloud Build trigger. This workflow **already has** a step built for
-almost exactly this purpose:
-
-- Job `update-manifest`, step id `resolve-gate`, name *"Resolvability gate — dep promoted before consumer fan-out
-  (DEFECT-2)"* (~line 502-568). Bounded poll: 10 attempts × 30s (~5 min), and on timeout it does NOT fail outright —
-  it re-dispatches itself with `fanout_retry+1` (max 3 retries, so up to ~20 min total across retries) before finally
-  paging CRITICAL via the `notify-fanout-unresolvable` job. This is exactly the shape we want.
-- Its `check_resolvable()` function (~line 534-555) checks TWO things: (a) does git tag `v$VERSION` exist on the
-  producer repo, (b) does the producer's `$BRANCH` `pyproject.toml` already carry `version = "$VERSION"`. **Neither
-  checks Artifact Registry.** Per this same file's own comment (~line 484-490), this gate was built to protect a
-  DIFFERENT consumer of "is this version available" — `python-quality-gates-v2`'s dev-time `clone_repo()`, which
-  resolves internal deps from git (tag / branch / PR-base-tier), not from AR. The Cloud Build image pipeline is a
-  SECOND, separate consumer of the same underlying fact, added later, and this gate was never extended to also protect
-  it.
-
-**Proposed fix**: add a third condition (c) to `check_resolvable()` — query AR the same way
-`assert_deps_published_to_ar.py` already does, and require it alongside the existing (a)/(b) checks before the fan-out
-dispatch (and therefore the floor-bump commit, promotion, and Cloud Build trigger) is allowed to fire. This:
-- Runs in ordinary GitHub Actions compute (this workflow's existing job), not billed Cloud Build minutes — closes the
-  operator's cost objection to a build-time wait.
-- Is a single-file change (one fan-out point covers the whole fleet) — no per-repo `cloudbuild.yaml`/Dockerfile edits,
-  no drift-ratchet risk (`check_cloudbuild_template_drift.py` is untouched).
-- Reuses proven retry/backoff/loop-breaker machinery already in this file rather than inventing new polling logic.
-- Needs its own sizing check: today's real gap (~12-20 min) is close to the CURRENT total retry budget (~20 min across
-  3 fanout_retry attempts) — verify that's still enough headroom once the AR check is added, or widen it.
-
-Not yet implemented — see Todos.
-
 ## Todos
 
 - [x] ✅ [CICD] P1. **Diagnose + verify resolved.** Root-caused to the publish-ordering race; re-ran the
       `strategy-service-build` trigger on the same failing commit (`bb3ff1b3`) → build `10283751` SUCCESS; log confirms
       `+ unified-api-contracts==0.149.0`; fresh `:latest` pushed. Wall closed, no strategy-service code change made.
-- [x] ✅ [CICD] P2. **Root-cause the recurring CLASS (not just this instance) and find the correct fix location.**
-      Done this session — see "Root-cause fix" section above. Confirmed: `assert_deps_published_to_ar.py` exists,
-      unwired, built for exactly this; `update-repo-version.yml`'s `resolve-gate` step is the correct single fan-out
-      point but checks git resolvability, not AR. Supersedes the prior `[OPERATOR] P3` "judgment call" framing — the
-      mechanism is now identified, this is implementation work, not an open design question.
-- [ ] [CICD] P2. **Implement**: extend `check_resolvable()` in `update-repo-version.yml`'s `resolve-gate` step
-      (~line 534-555) with a third check against Artifact Registry (`gcloud artifacts versions list
-      --repository=unified-libraries --location=asia-northeast1 --package=$REPO --format="value(name)"`, compare
-      against `$VERSION`), required alongside the existing git-tag/branch-pyproject checks. Needs `gcloud` auth in that
-      job (currently absent — check what SA/WIF is available to `update-repo-version.yml` or add one). Test against
-      this incident's real timeline: a floor-bump for `unified-api-contracts=0.149.0` dispatched before 11:14:57Z should
-      have been held; after, allowed through immediately.
-- [ ] [CICD] P3. **Verify the retry budget is still sufficient** once the AR check is added (current: ~5 min ×
-      up to 3 `fanout_retry` retries ≈ 20 min total; today's real gap was ~12-20 min, close to the edge). Widen
-      `MAX_FANOUT_RETRY` or the per-attempt poll count if needed.
-- [ ] [CICD] P3. **Optional defense-in-depth**: also wire `assert_deps_published_to_ar.py` into `cloudbuild.yaml` as a
-      cheap, single-shot (no poll loop) preflight check, in case some future path bypasses the
-      `update-repo-version.yml` fan-out (e.g. a manually-edited `pyproject.toml` floor bump). Lower priority than the
-      primary fix above — the fan-out path is the one that actually produced every failure seen in this incident.
-
-## Related alerts from the same Slack #ci-failures batch (2026-08-20, ~16:23-16:49 IST)
-
-This incident was one of six alerts the operator asked to be triaged together. Disposition of the other five:
-
-- **9 more Cloud Build failures in the same window** (fund-administration-service, client-reporting-api, ml-service,
-  trading-agent-service, market-data-processing-service, greeks-service, instruments-service, +2 more) — same class,
-  confirmed via direct log pull on 3 of them (instruments-service, fund-administration-service, ml-service): byte-for-
-  byte identical "`unified-api-contracts<=0.148.1.dev1+gfd4391914` ... needs `>=0.149.0`" error. All triggered by the
-  SAME `ldr-to-main-promote-fleet` batch-promote tick (11:01:50-11:03:16Z, confirmed via each repo's `chore(promote):
-  LDR → main` commit timestamp). instruments-service self-cleared on its own next natural build (11:37:49Z, after the
-  wheel went live) — no manual re-run needed there.
-- **`publish-package` "FAILED" for unified-api-contracts v0.149.0`** (Slack, ~11:19Z) — does not match current run
-  history: `v0.149.0`'s `publish-package` GH Actions run (`32360286459`) shows `conclusion: success`, and the last 50
-  runs of that workflow are all `success`. Likely the SAME underlying incident viewed from the publish side (the
-  workflow's `twine upload` step reporting success while AR's indexing/propagation genuinely lagged ~12-31 min behind
-  — consistent with the wheel-availability timeline above) rather than a distinct failure. NOT fully reconciled —
-  whoever picks this up should treat "publish-package succeeded but wasn't immediately resolvable" as the same root
-  cause, not a separate one.
-- **agent-orchestrator "QG slice CANCELLED/TIMED-OUT" ×2** — unrelated class, own finding + doc: see
-  `/plans/active/issues/agent_orchestrator_qg_cancel_notifier_same_sha_rerun_gap_2026_08_20.md`.
-- **unified-trading-pm LDR went RED at `664cd60f`** (Plan hygiene hard gate slice) — self-healed within ~1 hour via the
-  repo's normal high-velocity `docs(plans):` commit flow (green again by `ac502e5e`, 11:09Z). Which specific commit
-  fixed the underlying violation, and whether it's a recurring/flaky check vs. a genuine one-off, was NOT identified
-  this session — flagging as an open question, not closing it out.
+- [ ] [OPERATOR] P3. **Decide whether to enforce wheel-published-before-promotion ordering** for
+      `unified-api-contracts` floor-bumps (e.g. a release-pipeline gating step, or a wider build-time retry window) so
+      this class stops recurring — 2nd storm in ~3 weeks (2026-07-29 ×7 repos, 2026-08-20 ×≥4 repos). Judgment call on
+      mechanism + effort; leave this issue `open` until decided. Repo: unified-trading-pm / unified-api-contracts.
 
 ## Progress Log
 
@@ -213,12 +114,3 @@ This incident was one of six alerts the operator asked to be triaged together. D
   `strategy-service-build` on the same main HEAD → `10283751` SUCCESS (11:30:26→11:38:13Z), log shows
   `+ unified-api-contracts==0.149.0` installed from AR and `strategy-service:latest` re-pushed. No code change shipped —
   the pipeline was never structurally broken. Sibling failures noted for their own walls. Escalation closed.
-- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
-- **2026-08-20 (interactive, slot-1)** — Operator asked for the actual root-cause fix, not another self-heal
-  confirmation, and specifically pushed back on a build-time-retry-inside-Cloud-Build design on cost grounds. Traced
-  the fan-out chain (`unified-api-contracts` publish-package.yml → `update-repo-version.yml` → per-consumer
-  `dependency-update` dispatch → floor-bump commit → promote → native Cloud Build trigger) and found the correct,
-  cheap wiring point: `update-repo-version.yml`'s existing `resolve-gate` step, currently blind to AR. Documented the
-  concrete fix above; not implemented this session (operator asked for the issue doc first so the implementation has
-  full context). Also confirmed instruments-service self-cleared without intervention, and reconciled the
-  `publish-package` "FAILED" alert against real run history (does not match — same incident, different vantage point).

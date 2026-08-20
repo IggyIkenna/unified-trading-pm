@@ -15,14 +15,31 @@ scope: [engineer, admin]
 tags: [defi, backfill, manifest, mtds, pipeline-mode, execution, data-correctness, live-trading]
 related:
   [
+    /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
+    /plans/archive/2026_06/defi_governance_params_refresh_2026_06_20.md,
+    /plans/archive/2026_07/defi_onchain_derivable_values_and_date_drift_2026_06_20.md,
     ../archive/2026_06/defi_mtds_subgraph_and_adapter_fixes_2026_06_20.md,
     ../active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
+    /plans/archive/2026_07/defi_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/2026_07/data_source_provenance_all_asset_groups_2026_06_01.md,
+    /plans/archive/2026_07/master_to_live_defi_2026_05_23.md,
     ../archive/2026_05/available_at_lookahead_bias_completion_2026_05_08.md,
     ../archive/audit03_drift_remediation_backlog_2026_05_22.plan.md,
     ../archive/2026_05/api_keys_wallets_accounts_readiness_2026_05_10.md,
     ../archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md,
+    /plans/archive/2026_05/codex_vs_citadel_infrastructure_audit_2026_05_10.md,
+    /plans/archive/2026_05/cross_cutting_may_23_deliverables_2026_05_08.md,
+    /plans/archive/2026_05/d8_perf_upgrade_2026_05_20.md,
+    /plans/archive/2026_05/defi_catalogue_chain_primitives_2026_05_10.md,
     ../archive/2026_05/defi_protocol_outage_detector_2026_05_20.md,
+    /plans/archive/2026_05/features_tick_observation_audit_2026_05_18.md,
     ../archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md,
+    /plans/archive/2026_05/missing_question_docs_disposition_2026_05_10.md,
+    /plans/archive/mock_data_pipeline_benchmarking_2026_05_10.md,
+    /plans/archive/2026_05/post_freeze_roadmap_2026_05_16_to_05_23.md,
+    /plans/archive/2026_05/ruff_workspace_cleanup_2026_05_12.md,
+    /plans/archive/2026_05/simulation_scenarios_post_cutover_2026_06_01.md,
+    /plans/archive/2026_05/simulation_scenarios_topology_price_shocks_2026_05_09.md,
   ]
 created: 2026-05-07
 name: defi_master
@@ -64,9 +81,6 @@ related_plans:
 last_updated: 2026-06-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
-execution_scope: orchestrator-agent
-drift_direction: advance-code
-depends_on: []
 ---
 
 > **🔧 RESTRUCTURED 2026-06-20 (asset-group-umbrella thinning)**: this epic had accumulated ~75 open `- [ ]` todos

@@ -211,31 +211,14 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       reports `known_topup_total_usd=15.0`, `current_balance_usd=14.969601`, `real_total_spend_usd=0.0304`, matching
       the vendor dashboard baseline (platform.kimi.ai/console/account: Total Recharge $10 + Voucher $5 = $15 credited,
       Available $14.99978, Consumed $0.00022). Cross-checked live the way the DeepSeek $50 topup was verified.
-- [x] ✅ [REVIEW] P2. Live-test `/pre-compact` → `/compact` for Kimi through the real Claude Code harness (a spawned
+- [ ] [REVIEW] P2. Live-test `/pre-compact` → `/compact` for Kimi through the real Claude Code harness (a spawned
       `claude` subprocess, not a raw HTTP probe). Done when: a real compact cycle is observed working end-to-end for
-      Kimi, matching the already-verified Gemma result. Repo: agent-orchestrator. **DONE 2026-08-20 (slot 3) — real
-      compact cycle observed end-to-end via `kimi-k2-6` (Moonshot, through the live litellm proxy). Baseline
-      `/context`: 72.3k/1m tokens, Messages 69k. `/pre-compact` executed as a real skill (full 8-step ritual, verdict
-      "Safe to compact: YES"). `/compact` exit 0 → post `/context`: 6.6k/1m, Messages 3.2k (~95% Messages drop,
-      matching the Gemma result's 42k→8.1k). Compacted session confirmed resumable (follow-up turn returned
-      "session-ok"). See Progress Log 2026-08-20.**
-- [x] ✅ [BACKEND] P2. Add `overage_status == "rejected"` as an explicit 5th account-failover trigger condition
+      Kimi, matching the already-verified Gemma result. Repo: agent-orchestrator.
+- [ ] [BACKEND] P2. Add `overage_status == "rejected"` as an explicit 5th account-failover trigger condition
       (covering both `out_of_credits` and `org_level_disabled`) in the account-monitoring path that feeds
       `rotate_all_slots_off_account` (`server.py`, per `main.md` § "Account-failover triggers"). Should fire
       regardless of `weekly_pct`/`five_hour_pct`. Done when: a session on an overage-rejected account is proactively
-      rotated rather than left to die `death_class: unexplained`. Repo: agent-orchestrator. **DONE 2026-08-20 (slot
-      18) — agent-orchestrator@acf72243d5.** Root-caused: `overage_status` was captured on `AccountUsageRow` but
-      never read by any routing check (`server/orm.py` comment literally said "Operator-facing detail, not used for
-      routing"). Fixed at the single shared gate every failover path already consults —
-      `account_is_usable()` (`server/state_store/account_usage.py`) now returns `False` when
-      `overage_status == "rejected"`, regardless of `weekly_pct`/`five_hour_pct`, covering both
-      `out_of_credits` and `org_level_disabled`. This flows through unchanged to every existing caller: dispatch-time
-      account picking (`_pick_headroom_account`/`pick_next_account`), the proactive worker-slot failover kill
-      (`_drain_worker_account_failover`), and main agent's `_handle_account_unusable`. Updated the stale
-      "not used for routing" comment in `orm.py` and added the 5th row to `main.md`'s "Account-failover triggers"
-      table. Tests: 3 new cases in `tests/test_auth_failed_rotation.py::TestAccountIsUsable` (rejected+out_of_credits
-      fires regardless of weekly_pct=90; rejected+org_level_disabled fires; overage_status="allowed" stays usable).
-      Full QG green (5275 passed, coverage 86.14%, dashboard vitest 469/469, tsc clean).
+      rotated rather than left to die `death_class: unexplained`. Repo: agent-orchestrator.
 - [ ] [BACKEND] P2. Investigate whether account rotation's selection-pool logic already excludes (or should exclude)
       overage-rejected accounts from being assigned to a slot in the first place, separate from the trigger fix
       above. Done when: the rotation-pool selection code path is read directly and the answer (excludes / does not
@@ -313,23 +296,3 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   `current_balance_usd=14.969601`, `real_total_spend_usd=0.0304` vs `attributed_total_usd=0.0` — the $0.0304
   residual is the pre-attribution 2026-08-16 reasoning-token smoke-test spend, expected under the v1 design's
   attributed-spend-only convention. No code changes required this session.
-- **2026-08-20 (slot 3)**: Item 6 (Kimi `/pre-compact` → `/compact` live-harness test) DONE — real, decisive,
-  positive result, matching the already-verified Gemma half. Spawned an actual `claude` CLI subprocess (v2.1.237,
-  `-p` print mode) pointed at the real `kimi-k2-6` account's proxy credentials (`~/.claude-accounts/kimi-k2-6.env`
-  → `ANTHROPIC_BASE_URL=http://127.0.0.1:8768`, live litellm proxy, real Moonshot auth), run from a scratch dir
-  with the real pre-compact SKILL.md copied into `.claude/skills/` (confirmed loaded via the `/context` skills
-  table — Project source). Sent a real 42,533-word prompt to build genuine context; confirmed via a real `/context`
-  reading: **72.3k/1m tokens (7%), Messages 69k**. Ran `/pre-compact`: genuinely executed as a real skill — full
-  8-step ritual output with a real session audit ("Not a git repository", scratchpad absent, verdict **"Safe to
-  compact: YES"**, Step 8b "Does not trigger") — not silently swallowed. Ran `/compact`: exit 0 — the session
-  transcript records the exact "Compacted (ctrl+o to see full summary)" banner as a `<local-command-stdout>` entry
-  plus a "This session is being continued from a previous conversation that ran out of context. The summary below
-  covers..." continuation message; the benign `[claude-code:unrecognized_model]` capability-query warning also prints.
-  Follow-up `/context`: **6.6k/1m tokens (1%),
-  Messages 3.2k** — Messages dropped 69k→3.2k (~95%), total 72.3k→6.6k. **Session continuity confirmed**: the 72k
-  baseline persisted across `--continue` calls (a fresh session would read ~3.4k), and a post-compact `--continue`
-  turn returned `session-ok`, proving the compacted session is healthy/resumable. The session-title/`sdk`/`compact`
-  capability queries emit a cosmetic `[claude-code:unrecognized_model]` warning (Claude Code's internal model-info
-  path doesn't recognize `kimi-k2.6` at the proxy) — non-blocking, the chat/compact/continue all work. No code
-  changes required. This closes the Moonshot/Kimi half; both halves of the item are now verified (Gemma 2026-08-18,
-  Kimi today).
