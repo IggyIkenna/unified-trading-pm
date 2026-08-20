@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [strategy-agnostic, vehicle-eligibility, sma, fund-administration, client-config]
 related:
   [
-    /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
+    /plans/archive/2026_08/fund_administration_redemption_cadence_engine_2026_08_20.md,
     /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
     /plans/epics/strategy_master.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
@@ -50,7 +50,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/client_config.py,
     fund-administration-service/fund_administration_service/api/main.py,
     fund-administration-service/fund_administration_service/redemption/state_machine.py,
-    /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
+    /plans/archive/2026_08/fund_administration_redemption_cadence_engine_2026_08_20.md,
   ]
 ---
 
@@ -80,21 +80,35 @@ cross-plan same-file collision rather than relying on `sequential: true` alone (
 
 ## Todos
 
-- [ ] [BACKEND] P0. Add `vehicle_type: Literal["fund", "sma"]` (required — no default, must loud-fail if unset) to the
-  canonical per-client config. Two `ClientConfig` types currently exist in UAC:
-  `unified_api_contracts/internal/reporting/client_config.py` (`TypedDict`, consumed by
-  `client-reporting-api/client_reporting_api/core/tranche_router.py`'s registry) and
-  `unified_api_contracts/internal/domain/strategy_service/client_config.py`'s `ClientConfigRegistry` (`BaseModel`,
-  the closer relative of `clients.yaml`/`ClientRuntimeContext`). Prefer the strategy_service one — `vehicle_type` is a
-  property of the same relationship `ClientRuntimeContext` already binds — unless investigation shows
-  fund-administration-service (Tier-4, no service-to-service imports) needs its own independent copy, in which case
-  state that finding explicitly rather than silently picking one. Done-when: the field round-trips through the chosen
-  model and an unset value raises, not silently defaults.
+- [x] [BACKEND] P0. Add `vehicle_type: Literal["fund", "sma"]` (required — no default, must loud-fail if unset) to the
+  canonical per-client config — ✅ unified-api-contracts@60237ba19d. **Deviation from the literal instruction,
+  documented per this todo's own escape hatch**: neither of the two named `ClientConfig` types was actually the right
+  home. `unified_api_contracts/internal/reporting/client_config.py`'s `ClientConfig` `TypedDict` is
+  tranche-router-scoped (a different concern). The suggested preference,
+  `unified_api_contracts/internal/domain/strategy_service/client_config.py`'s `ClientConfigRegistry`/
+  `ClientStrategyOverride`, is keyed per-**(client_id, strategy_id)** and `overrides` starts `[]` by default — it
+  cannot guarantee exactly one declared `vehicle_type` per client_id (a client with zero strategy overrides would have
+  none at all), which breaks "required, must loud-fail if unset" at the registry level, not just the field level.
+  Investigation found a THIRD, better-fitting home the plan didn't name:
+  `unified_api_contracts/internal/domain/strategy_service/client_registry.py`'s `ClientDefinition`/`CLIENT_REGISTRY` —
+  already the genuine 1:1-per-client_id SSOT (used by RecordEnricher + API gateway for identity resolution), with the
+  plan's own example client_ids (`acme-fund`) already seeded there. Added `vehicle_type` as a required
+  (no-default) field on the frozen `ClientDefinition` dataclass — omitting it raises `TypeError` at construction time
+  (Python's own dataclass enforcement), not a silent default. **Flag for todo 3's implementer**: fund-administration-
+  service must look up `vehicle_type` via `CLIENT_REGISTRY.get(client_id)` from `client_registry.py`, NOT from
+  `client_config.py` as todo 3's text below currently says. Evidence: quality-gates.sh passed (272s); new tests in
+  `tests/internal/unit/domain/strategy_service/test_client_registry.py`
+  (`test_vehicle_type_round_trips`, `test_vehicle_type_unset_raises_not_silently_defaults`).
 
-- [ ] [BACKEND] P0. Backfill `vehicle_type: "fund"` for every EXISTING client_id in the registry chosen above — every
-  current client predates this field and is, by construction, running the only path that existed (pooled fund).
-  Done-when: every client_id in the live registry has an explicit `vehicle_type`, zero blanks, verified by a script
-  that fails loudly on any missing value.
+- [x] [BACKEND] P0. Backfill `vehicle_type: "fund"` for every EXISTING client_id in the registry chosen above — ✅
+  unified-api-contracts@60237ba19d (same commit as todo 1 — inseparable for this data model: `ClientDefinition` is a
+  literal Python dataclass with hardcoded `_DEFAULT_CLIENTS` instances, so adding a required field without a default
+  demands every existing instantiation supply it in the SAME change or the module fails to import). All 5 seeded
+  entries (`odum-paper`, `odum-live`, `patrick-elysium`, `acme-fund`, `internal-prop`) backfilled `vehicle_type="fund"`
+  per this todo's own rationale. Done-when satisfied two ways: Python's own required-field enforcement (stronger than
+  "a script" — the module cannot even import with a missing value) + an explicit test,
+  `test_every_seeded_client_has_an_explicit_vehicle_type` (iterates `CLIENT_REGISTRY.get_all_active()`), plus
+  `test_default_clients_are_backfilled_fund` pinning the exact backfilled value per client_id.
 
 - [ ] [BACKEND] P0. Add the routing gate at fund-administration-service's redemption-creation endpoint
   (`fund_administration_service/api/main.py`, the handler that calls `create_redemption()` from
@@ -113,3 +127,11 @@ cross-plan same-file collision rather than relying on `sequential: true` alone (
 - **2026-08-20**: Doc authored as a LOCAL design doc (`assigned_vm: NA`) with 3 blocking `[OPERATOR]` questions.
   Resolved the same session via interactive Q&A — flipped to `assigned_vm: planning` and rewritten as a bounded
   4-todo implementation plan against the resolved (client-alone, soft, two-client-ids) design.
+- **2026-08-20**: [interactive session, `.tabs/5`] Items 1+2 (add `vehicle_type` field + backfill) shipped together —
+  unified-api-contracts@60237ba19d, verified ancestor of origin/live-defi-rollout. Neither `ClientConfig` type the
+  plan named was the right fit (see item 1's own evidence line for the full reasoning); landed on a third existing
+  home, `client_registry.py`'s `ClientDefinition`/`CLIENT_REGISTRY`, which is genuinely 1:1-per-client_id. Items 1
+  and 2 merged into one commit because they're mechanically inseparable for a Python dataclass with hardcoded default
+  instances — a required field with no default cannot land without every existing instance supplying it in the same
+  change. QG green (272s). Item 3 (routing gate) and item 4 ([REVIEW]) remain open — item 3's implementer should read
+  item 1's flag about which module to import from.

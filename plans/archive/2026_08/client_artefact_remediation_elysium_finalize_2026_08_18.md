@@ -4,7 +4,7 @@ title: Client artefact remediation (Elysium) — finalize
 summary: >-
   Gated finalize companion for client_artefact_remediation_elysium_2026_08_18.md. Verifies each claimed edit against
   the live HTML, reconciles finding status back into the audit reports, and archives the parent once done.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,11 +14,11 @@ tags: [client-disclosure, elysium, artifact-remediation, finalize]
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/client_artefact_remediation_elysium_2026_08_18.md,
+    /plans/archive/2026_08/client_artefact_remediation_elysium_2026_08_18.md,
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
   ]
 created: 2026-08-18
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: system_readiness_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -85,7 +85,7 @@ Gated on [`client_artefact_remediation_elysium_2026_08_18.md`](/plans/active/cli
       `status: partial → pass`. This session's narrower Elysium-only edit (attempted independently, same day) was a
       strict subset and was dropped on rebase in favor of the broader landed version — see that audit doc's own
       Progress Log for the full accounting.
-- [ ] [DOC] P2. **Archive the parent plan** once every todo above is done — standard 6-step ritual.
+- [x] ✅ [DOC] P2. **Archived the parent plan** ([`client_artefact_remediation_elysium_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_elysium_2026_08_18.md)) — standard 6-step ritual: all 25 todos `[x]`, unlocked, `status: active→complete`, `git mv` to `plans/archive/2026_08/` (this finalize archives in the same commit, mode-1 combined flip+archival). Referrer sweep: removed the elysium-child entry from 4 active docs' `related:` (rule-13 codex, subagent foreign-checkout issue, six-surface + venue-transfer audits); grand-parent prose + INDEX left to their own archival/auto-regen. No codex contract change — remediation facts already recorded in [`nick_ai_and_elysium_artefact_audit_2026_08_18.md`](/plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md) (`status: pass`).
 
 ## Progress Log
 
@@ -120,3 +120,14 @@ then added a `Status` column reconciling all 13 rows: 9 Elysium rows → resolve
 `Both`-tagged row → partial (Elysium half only), 4 Nick-AI-only rows left `open` (separate, unverified-here plan).
 Item 4 (archive the parent) still gated on this item — now unblocked, left for a follow-up dispatch since archival's
 referrer-sweep step is a distinct unit of work.
+
+**2026-08-20 (slot 14, infra) — item 4 done, archived.** Ran the standard 6-step archival ritual on the parent
+(`client_artefact_remediation_elysium_2026_08_18.md`): all 25 todos `[x]`, unlocked, no active dependents after this
+finalize archives with it. `status: active→complete`, `git mv` to `plans/archive/2026_08/`. Referrer sweep — removed the
+elysium-child entry from 4 active docs' `related:` (rule-13 codex `_ssot-rules/13-artefact-claim-marks.md`, the subagent
+foreign-checkout issue, and the six-surface + venue-transfer audit reports); the grand-parent's CANCELLED/SUPERSEDED
+prose lines are historical and archive with the grand-parent's own finalize; `INDEX.md` is auto-regenerated. No codex
+contract change — the remediation's durable facts are already in
+[`nick_ai_and_elysium_artefact_audit_2026_08_18.md`](/plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md)
+(`status: pass`). This finalize archives together with the parent in one commit (single-repo/mode-1 combined
+flip+archival, per `plan-completion-and-archival-discipline.md`).

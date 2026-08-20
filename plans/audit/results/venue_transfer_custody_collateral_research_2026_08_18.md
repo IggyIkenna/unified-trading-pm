@@ -32,7 +32,6 @@ tags: [client-disclosure, venue-registry, custody, collateral, cross-margin, tra
 related:
   [
     /plans/active/client_artefact_remediation_2026_08_18.md,
-    /plans/active/client_artefact_remediation_elysium_2026_08_18.md,
     /plans/active/client_artefact_remediation_nickai_2026_08_18.md,
     /plans/epics/system_readiness_master.md,
   ]

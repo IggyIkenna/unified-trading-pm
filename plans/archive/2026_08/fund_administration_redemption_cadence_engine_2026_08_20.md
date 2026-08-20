@@ -7,7 +7,8 @@ summary:
   fund-level total_equity used as a per-unit-NAV stand-in. Adds hour-granularity grace periods, a real units-outstanding
   NAV-per-share, a redemption-processing fee charged against the redeemed amount only, and the acked-but-unimplemented
   treasury ledger writer.
-status: active
+status: archived
+superseded_by: fund_administration_redemption_cadence_engine_finalize_2026_08_20
 nature: process
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -52,6 +53,9 @@ context_scope:
     /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-20** — all 9 todos done, evidence-reconciled by
+> `fund_administration_redemption_cadence_engine_finalize_2026_08_20.md`. See that doc for the finalize verdict.
 
 # Fund Administration — Redemption/NAV Cadence Engine Made Real
 
@@ -157,7 +161,7 @@ plan is a serial chain by file-topology, not a reflexive default.
   changes correctly across a subscribe-then-redeem sequence and is never equal to raw `nav_usd` once units outstanding
   != 1.
 
-- [ ] [BACKEND] P1. Add `redemption_fee_pct: Decimal` to UAC `FeeStructure`
+- [x] [BACKEND] P1. Add `redemption_fee_pct: Decimal` to UAC `FeeStructure` — fund-administration-service@48f52c25e; Evidence: quality-gates.sh passed (59s full run incl. tests); new test `test_redemption_fee_pct_deducted_only_from_redeemed_amount` in `tests/unit/test_redemption_state_machine.py` (UAC field already present @20eacf7d).
   (`unified_api_contracts/internal/reporting/fee_structure.py`), default `Decimal("0")`. Deduct it in
   `process_redemption()` (`fund_administration_service/redemption/state_machine.py:99-102`) alongside the existing
   `trader_fee_pct`/`odum_fee_pct` — same computation shape (`gross_usd * total_fee_pct`), added into the existing
@@ -167,22 +171,41 @@ plan is a serial chain by file-topology, not a reflexive default.
   a nonzero `redemption_fee_pct` reduces `cash_amount_due_usd` proportionally with zero effect on other redemptions'
   fee math.
 
-- [ ] [BACKEND] P1. Strike ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick and reuse it across every
+- [x] [BACKEND] P1. Strike ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick and reuse it across every — fund-administration-service@64bc3505e; Evidence: quality-gates.sh passed (32s full run incl. tests); new test `test_run_once_strikes_one_snapshot_per_fund_share_class_per_tick` in `tests/unit/test_background_handlers.py` (2 same-fund redemptions in one `run_once()` settle against identical `snapshot_id`, provider called once).
   redemption settled in that tick, instead of `run_once()`'s current per-redemption `nav_provider.latest_snapshot()`
   call (`grace_period_handler.py:106`) — this is what makes "all outstanding withdrawals processed on one cadence,
   same NAV strike" real rather than incidental. Done-when: a test with 2 pending redemptions for the same fund/share
   class in one `run_once()` call asserts both settle against the identical `snapshot_id`.
 
-- [ ] [BACKEND] P2. Implement the acked-but-unimplemented `ledger_type=treasury/client_id={cid}/` writer
+- [x] [BACKEND] P2. Implement the acked-but-unimplemented `ledger_type=treasury/client_id={cid}/` writer
   (confirmed zero code hits fleet-wide as of `strategy_master.md`'s 2026-08-18 fold-in note) — record each redemption's
   cash movement as a canonical UAC `LedgerRow` at the point `_persist_processed`/`_persist_settled`
   (`grace_period_handler.py:138-180`) already emit their fund-admin events, so accounting has a real source for
   redemption cash flows. Done-when: processing one redemption in a test produces a `ledger_type=treasury` row
-  queryable by `client_id`.
+  queryable by `client_id`. — unified-api-contracts@87802bb141 (corrected the stale TreasuryLedger-writer docstring
+  found while implementing this — it said strategy-service, contradicting the acked Phase 6 decision),
+  fund-administration-service@a1f44576f (new `fund_administration_service/ledger/` module +
+  `PersistenceStore.put_treasury_ledger_row`/`list_treasury_ledger_rows`, wired into `_persist_settled`); Evidence:
+  quality-gates.sh passed both repos; new test `test_grace_period_handler_writes_treasury_ledger_row_on_settle` in
+  `tests/unit/test_background_handlers.py` (asserts a queryable-by-client_id row with correct `delta`/
+  `counterparty_client_id=None`, and a second client's query returns empty). **Residual scope note** (not silently
+  faked): this persists via `PersistenceStore` (in-memory today, matching every other object this store holds) — the
+  actual GCS parquet partition writer has no shipped precedent anywhere in the fleet to mirror and is out of scope
+  here; a durable backend is the same documented follow-up this store's own docstring already flags. **Parity
+  follow-up** (found + closed by a separate concurrent `.tabs/5` interactive session after the above landed):
+  fund-administration-service@80407f9 wires the same `build_treasury_ledger_row` into the manual API settle path
+  (`api/main.py`'s `settle_red()`) too — the commit above wired only the automatic `GracePeriodHandler._persist_settled`
+  cadence path, so an operator-triggered `POST /redemptions/{id}/settle` silently produced no treasury ledger row
+  until this follow-up. Verified ancestor of origin/live-defi-rollout; QG green (33s);
+  `test_settle_redemption_via_api_writes_treasury_ledger_row` green.
 
-- [ ] [REVIEW] P2. Confirm no regression: run `fund-administration-service`'s full test suite
+- [x] [REVIEW] P2. Confirm no regression: run `fund-administration-service`'s full test suite
   (`bash scripts/quality-gates.sh`) after all prior todos land and cite the green run. Done-when: QG passes with the
-  new interval loops, schema fields, fee field, and ledger writer all exercised by tests (not just present).
+  new interval loops, schema fields, fee field, and ledger writer all exercised by tests (not just present). —
+  fund-administration-service@a1f44576f; Evidence: `bash scripts/quality-gates.sh --no-fix` passed clean (60s,
+  sentinel `2502d542b789a67f0a5057901b8da1d033bba6d9`) — every prior todo's tests (interval loops, hour-granularity
+  grace period, real DI wiring, units-outstanding NAV, `redemption_fee_pct`, shared-NAV-strike batching, treasury
+  ledger writer) run green in the same pass, not just present in source.
 
 ## Progress Log
 
@@ -228,3 +251,40 @@ plan is a serial chain by file-topology, not a reflexive default.
   execution-service are both T4; execution-service also has no synchronous REST endpoint for this today, only
   read-only `GET /transfers/active`) — will implement a same-repo-scope real adapter instead and document the
   deviation on that todo's own evidence line rather than importing across the service boundary.
+- **2026-08-20**: [slot 5] Item 7 (`redemption_fee_pct` deduction) shipped — fund-administration-service@48f52c25e.
+  UAC `FeeStructure.redemption_fee_pct` was already present (@20eacf7d), so only the fund-admin deduction
+  (`total_fee_pct += redemption_fee_pct` in `process_redemption`) + the done-when test
+  `test_redemption_fee_pct_deducted_only_from_redeemed_amount` landed here. QG green (59s).
+- **2026-08-20**: [slot 5] Item 8 (one-NAV-snapshot-per-tick) shipped — fund-administration-service@64bc3505e.
+  `run_once()` now strikes ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick (a per-tick
+  `snapshot_cache`) and reuses it across every redemption settled in that tick, replacing the prior per-redemption
+  `latest_snapshot()` call. QG green (32s).
+- **2026-08-20**: [operator's interactive main session, `/autonomous`] Implemented the final 2 todos directly
+  (treasury ledger writer + final QG confirmation) — both were queued/unclaimed in the live backlog at check time, so
+  no collision risk. Along the way found + fixed a real cross-repo SSOT contradiction: UAC's `LedgerRow` docstring
+  said the treasury-partition writer was strategy-service, contradicting the archived, operator-acked (2026-05-23,
+  `unified-trading-pm@351a47b61`) Phase 6 decision assigning it to fund-administration-service — corrected in the
+  same change rather than building in the wrong place on a stale pointer. Also resolved a stash-pop conflict on
+  `state_machine.py`/`test_redemption_state_machine.py` from an earlier concurrent session's leftover dirty WIP
+  colliding with real peer commits (kept upstream's already-evidenced content, dropped the redundant duplicate).
+  **All 9 todos in this plan are now done.** Handing off to
+  `fund_administration_redemption_cadence_engine_finalize_2026_08_20.md` next.
+- **2026-08-20**: [interactive session, `.tabs/5`] Independently began implementing item 9 (treasury ledger writer) in
+  parallel with the session above — **a fourth collision on this same `sequential: true` plan** (see item 4's entry
+  for the first two; this is the third). Mid-implementation, `git push` surfaced a rebase conflict against
+  `fund-administration-service@a1f4457` — the same commit the session above shipped, landing between this session's
+  local commit and its push. Resolved per the established multi-agent-safety recipe: took the peer's already-landed
+  `fund_administration_service/ledger/` module + `PersistenceStore.put_treasury_ledger_row`/`list_treasury_ledger_rows`
+  wholesale (`git show <peer-sha>:<path>` per conflicted file — `in_memory_store.py`, `grace_period_handler.py`,
+  `test_background_handlers.py`), and dropped this session's own now-redundant
+  `redemption/state_machine.py::build_treasury_ledger_row` + `PersistenceStore.put_ledger_row`/
+  `list_ledger_rows_for_client` + their tests entirely — the rebase completed with an empty diff (zero net functional
+  change from this session's own attempt). While resolving, found one genuine residual gap in the shipped
+  implementation: it wired the ledger write only into `GracePeriodHandler._persist_settled` (the automatic cadence
+  path) — the manual API settle endpoint (`POST /redemptions/{id}/settle`, `settle_red()` in `api/main.py`) drove the
+  identical PROCESSED→SETTLED transition without writing the ledger row. Closed that gap as a small, additive
+  follow-up reusing the already-landed `fund_administration_service.ledger` module rather than re-implementing —
+  fund-administration-service@80407f9, verified ancestor of origin/live-defi-rollout, QG green (33s),
+  `test_settle_redemption_via_api_writes_treasury_ledger_row` green. **Flagging again for the operator** (per item 4's
+  same flag, now a recurring pattern across 4 sessions on one plan): AO's plan-claim/dispatch model does not appear to
+  prevent two workers from picking up the same in-progress `sequential: true` plan.
