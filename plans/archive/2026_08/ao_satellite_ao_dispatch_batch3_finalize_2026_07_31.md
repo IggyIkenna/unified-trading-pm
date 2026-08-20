@@ -92,7 +92,7 @@ source: >-
       (`/plans/active/issues/dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`) is now
       missing a REQUIRED field — a genuine `check_frontmatter_schema.py` violation. Docs to scout:
       `/plans/active/issues/dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`
-      (NEVER_SCOUTED), `/plans/active/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md`,
+      (NEVER_SCOUTED), `/plans/archive/2026_08/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md`,
       `/plans/active/issues/context_scope_backfill_locked_docs_residual_2026_08_20.md`,
       `/plans/active/issues/live_sports_odds_upstream_failure_masked_as_honest_absence_2026_08_20.md`, and
       `/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (all STALE). **Done when**: fresh
