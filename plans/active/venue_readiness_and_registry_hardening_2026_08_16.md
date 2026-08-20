@@ -217,7 +217,7 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       **Concrete target, from the W2 evidence below**: extend `VenueCapabilityRecord` — it already carries the
       (venue × data-type) axis this needs. Keyed per (venue x instrument-type x data-type), expressing exceptions at
       that granularity, read by both MDPS and execution-service. **Cross-reference (2026-08-16, W2 resolved)**:
-      `/plans/active/registry_ssot_hardening_2026_08_16.md` todo 1 resolved the three `VenueCapability*`-named UAC
+      `/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md` todo 1 resolved the three `VenueCapability*`-named UAC
       types as genuinely orthogonal — no merge, all three survive. Of the three, `VenueCapabilityRecord`
       (`unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:2508`) is the shape closest
       to this item's need — it is already keyed per-venue with a per-data_type `dict[str, DataTypeAvailability]`
@@ -242,6 +242,9 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       `get_granularity(venue, instrument_type, data_type)`, 412 populated `(venue, data_type)` cells across all 5 asset
       groups (instrument_type expressed as a default + per-instrument exceptions, not a literal per-triple row) — this
       todo is now purely a rendering task, not a data-population one.
+      Landed evidence reconciled: `unified-api-contracts@2f74bd8da2` shipped
+      `scripts/generate_venue_granularity_report.py`; the batch16 plan flip is recorded in
+      `unified-trading-pm@2bfe44b0e6`.
 
 ## STRATEGY CONSUMABILITY — a venue with no consumer is not ready (operator ruling 2026-08-16)
 
@@ -503,7 +506,7 @@ rulings stay in this LOCAL plan; mechanical per-venue sweeps fork to AO-dispatch
       [`/plans/active/lazy_scoped_loading_refactor_2026_08_16.md`](/plans/active/lazy_scoped_loading_refactor_2026_08_16.md).
       Three layers; UAC is the dominant one with fleet-wide blast radius. Referenced by carve-out §A5 P0 #2.
 - [x] [AGENT] P0. ✅ **W2 — registry SSOT hardening.** Forked to
-      [`/plans/active/registry_ssot_hardening_2026_08_16.md`](/plans/active/registry_ssot_hardening_2026_08_16.md) —
+      [`/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md`](/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md) —
       unified-trading-pm@a8465760e5. A same-pattern grep sweep across all 7 umbrella repos, done at authoring
       time, found 4 of 5 concerns (adapter keys, instrument types, data types, error-code classification) already
       single-SSOT with zero per-service redefinitions; the child plan's real open scope is a same-repo
@@ -622,7 +625,7 @@ not exist in the repo (working tree or git history, confirmed by full recursive 
 Progress Log for the independent spot-check of the numbers this file was meant to back.
 
 **2026-08-16 — contract step 1 ("Declared") partially evidenced by W2.** Per
-`/plans/active/registry_ssot_hardening_2026_08_16.md`'s Measured Baseline (2026-08-16 sweep), three of the five
+`/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md`'s Measured Baseline (2026-08-16 sweep), three of the five
 "one declaration, no per-service copies" concerns are **clean, no fold needed**: adapter keys (exactly one
 `VENUE_TO_ADAPTER_KEY` dict), instrument types (zero redefinitions outside UAC), and data types (zero redefinitions
 outside UAC) — all across the 7 umbrella repos. The capability-record concern (three orthogonal `VenueCapability*`

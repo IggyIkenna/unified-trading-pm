@@ -455,14 +455,19 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W4 — observability, alerting and auto-recovery
 
-- [ ] [BACKEND] P0. Close the `dp_cron_did_not_fire` alert defects — the storm recurring on a stable revision, dedup
+- [x] [BACKEND] P0. Close the `dp_cron_did_not_fire` alert defects — the storm recurring on a stable revision, dedup
       state lost on redeploy, and the volatile dedup field. Evidence: the three
       `/plans/active/issues/dp_cron_did_not_fire_*` docs. **2026-08-20 status: all three fixes ARE shipped and
-      tested (`alerting-service` `core/recurring_dedup_persistence.py`, `f48a611` + `ac21303`, 14 tests green, on
-      `main` since 2026-08-19T21:41:59Z) — do NOT re-implement them.** What is open is verification: measured live,
-      the storm was still breaching the 30-min cooldown one hour after the fix reached `main` (41/46 repeating
-      identities). Whether the fixed revision was actually serving is UNVERIFIED (gcloud auth expired; no credential
-      requests in this tranche). Evidence:
+      tested (`alerting-service` `core/recurring_dedup_persistence.py`, `f48a611` + `ac21303`, 14 tests green).**
+      **Verification CLOSED, 2026-08-20** — the earlier "UNVERIFIED, gcloud expired" blocker no longer holds:
+      gcloud auth is live this session. Confirmed serving revision `dp-alerting-subscriber-00141-8nb` (100%
+      traffic, asia-northeast1, deployed 18:15Z) carries the fix — its file content is byte-identical to the fix
+      commit (SHA ancestry doesn't survive the LDR→main squash-style promote, so content-diff was the right test,
+      not `--is-ancestor`). Three independent post-deploy measurements now agree the storm is resolved: a 06:55Z
+      dedicated sweep (found + fixed a second contributing cause, a duplicate Cloud Run Job consumer), a 12:37Z
+      24h re-sample (per-identity cadence ~25-26min against the 1800s cooldown, compliant), and this session's own
+      92-min/64-msg re-check (max 3 repeats per identity, consistent with the cooldown holding). Remaining volume
+      traces to genuine DP-LIVE-004/003 capture gaps (real, ageing, out of T5 scope), not the dedup bug. Evidence:
       `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md`.
 - [x] [BACKEND] P0. Fix the escalation-pool-exhaustion alert being unreachable when halted. Evidence:
       `/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`. — **Found
@@ -470,8 +475,23 @@ todos only to confirm they are data-movement, then leave it.
       passing on current code. The issue doc's own `status: open` was stale for an already-fixed, already-tested
       defect; corrected in place rather than re-implemented. Its P3 live-verify todo stays genuinely open — needs
       a real future exhaustion window's journalctl output this pass does not have.
-- [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
-      `/codex/04-architecture/agent-orchestrator-alerting.md`.
+- [x] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
+      `/codex/04-architecture/agent-orchestrator-alerting.md`. **Verified 2026-08-20** via two independent layers:
+      (1) code — `agent-orchestrator/tests/test_alert_quality_overhaul.py`, 29/29 passing, including the two
+      SSOT-cited test-locks (`test_escalation_resolved_pages_only_when_it_previously_paged`,
+      `test_account_auth_recovered_still_pages`); the git-staleness close path
+      (`_maybe_fire_staleness_resolved`, `server/worker_liveness/_git_alerts.py:631`) is structurally guarded —
+      `if kicker._last_staleness_alert.pop(key, None) is None: return` — so the close notifier can never fire for
+      a condition that never paged OPEN. (2) live traffic — read `#agent-orchestrator-alerts` for the trailing 24h
+      (504 msgs). Every BLOCKED-question-answered message carries "closes the BLOCKED question opened `<ts>`
+      (`BLK-xxx`)"; every git-RED-recovered message either carries "closes the RED alert opened `<ts>`" or falls
+      back to a bare "RECOVERED" line — traced the bare form to `notify_git_staleness_resolved`'s own documented
+      fallback (`opened_at` lives in an in-memory, non-persisted dict; a server restart mid-episode loses it while
+      the persisted "was alerted" flag survives — an acknowledged degradation, not a silent-close bug: the
+      bookend still fires, only the timestamp-correlation detail is sometimes missing). Found no instance of an
+      alert paging OPEN with no matching close in the observable window. Not exhaustive over multi-day history
+      (several `[OPERATOR]` questions open before the 24h window couldn't be traced to a close from this sample
+      alone) — scoped to what the window could actually show, not claimed beyond it.
 - [x] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
       `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md` (11 open). **Mis-scoped at authoring,
       corrected 2026-08-20**: the doc's own frontmatter `repos:` is `[strategy-service, execution-service,
@@ -552,6 +572,9 @@ todos only to confirm they are data-movement, then leave it.
       `check_artefact_claim_ownership.py` after every batch, not just at the end — one self-correction caught
       mid-pass (an early edit added a spurious duplicate marker instead of only an owner tag; found by re-running
       the checker before shipping, fixed before it ever landed).
+> **Same plan-conflict applies below** — the disclosure-standard extension is the same class of
+> hand-HTML-edit work `/plans/active/state_fabric_artefacts_2026_08_20.md` would supersede; it also names
+> `carveout-engineering.html`/`ODUM_Elysium_Phase2_Update` as in-scope for its corrected 7-artefact count.
 - [ ] [DOC] P0. Extend the same disclosure standard to the four sibling client artefacts the 2026-08-18 audit found
       violating it and which no remediation plan covers — `carveout-engineering.html` and
       `ODUM_Elysium_Phase2_Update_2026-07-24.html` alongside the two already in scope. Evidence:
@@ -562,13 +585,30 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W19, W20 — corpus and automation
 
-- [ ] [AGENT] P1. Run the corpus audit — nothing relevant left un-folded, nothing stale left believed. Epic
-      definition-of-done item. Use `/plan-reconcile` and `/docs-reconcile`.
+- [x] [AGENT] P1. Run the corpus audit — nothing relevant left un-folded, nothing stale left believed. Epic
+      definition-of-done item. Use `/plan-reconcile` and `/docs-reconcile`. — **Confirmed run today, 2026-08-20**:
+      full-corpus `/plan-reconcile` sweep landed at `unified-trading-pm@2af2763f9b`
+      (`/plans/active/issues/plan_reconciler_full_corpus_sweep_2026_08_20.md` — 892 docs read in full, 301
+      findings, all 3 P0 + all 33 P1 actioned; P2/P3 long tail converted to tracked class-level todos, not left
+      as ephemeral findings). `/docs-reconcile` already confirmed run today per the entry below. Both audit tools
+      ran this session-day; the remaining findings from either are tracked work, not an un-run audit.
 - [ ] [AGENT] P1. Fix the docs-reconcile findings and the remaining broken links. Evidence:
       `/plans/active/issues/docs_reconcile_findings_2026_08_17.md`,
-      `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`.
-- [ ] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
-      `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`.
+      `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`. **Checked 2026-08-20, corrected**:
+      first pass at this mischaracterized the remainder as "mechanical" without reading each item — on actual
+      read, most of the ~13 P2/P3 items are already well-triaged and genuinely stuck on human judgment (ambiguous
+      redirect targets, doc authorship, content-reconciliation calls), each already carrying its own "needs a
+      human" note from prior audit passes; force-fixing them would mean guessing, which the prior passes correctly
+      declined to do. One item WAS resolvable: the root `README.md` P2 finding had gone stale in the other
+      direction — the 3 claims it named were already fixed by another session since 2026-08-02 — flipped with
+      evidence, `unified-trading-pm@<pending>`. Genuinely 2 `[OPERATOR]` decisions + ~11 human-judgment items
+      remain; not a bounded mechanical pass.
+- [x] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
+      `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`. — **Checked 2026-08-20**: the
+      wiring itself is done — 6 of 7 todos `[x]` (dispatch handler, role wrapper, install script, cadence update,
+      tests, operator cadence decision). The sole remaining item is `[OPERATOR] P2. Re-run
+      install-ao-watchdog-timer.sh on the central orchestrator VM` — needs VM SSH access this tranche doesn't
+      have, genuinely operator-owned, not a T5 code gap.
 - [x] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
       (missing `@vitest/coverage-v8`), unrelated to any specific change — blocks EVERY future ship to this repo, not
       just one. Fix: `npm --prefix dashboard install` (or equivalent dependency sync) before the next
@@ -864,3 +904,42 @@ todos only to confirm they are data-movement, then leave it.
   2 new regression tests added (`test_nudge_ahead_not_sustained_does_not_fire`,
   `test_nudge_ahead_sustained_fires_with_age`); file 26/26 passing, broader worker-liveness suite 103/103.
   **NOT YET LANDED, 2026-08-20** — ship failed on `dashboard/node_modules` missing `@vitest/coverage-v8` (environmental, unrelated to this change; exit 0 with nothing landed, caught by per-file origin verification, not by the exit code). Fix + 2 tests preserved locally AND backed up outside git (scratchpad/agent-orchestrator-backup/) since this session already measured local edits as fragile under contention. Needs `npm --prefix dashboard install` (or equivalent) before the next agent-orchestrator ship attempt — flagged as its own todo below since it will block ANY future ship to this repo, not just this fix.
+
+## Deferred work after 2026-08-20
+
+| Item | State / why deferred | Blocked on |
+| --- | --- | --- |
+| 4 DOC "re-derive artefacts" todos | Not started — plan-conflict with `/plans/active/state_fabric_artefacts_2026_08_20.md`'s ledger-based approach | Operator/coordinator decision on which approach to follow |
+| Disclosure-standard extension (2 sibling artefacts) | Not started — same plan-conflict (also a hand-HTML-edit) | Same as above |
+| FROM-T1 API-surface regeneration | Same plan-conflict (also a hand-HTML-edit) | Same as above |
+| `git stash push/pop` core fix | Not done — real work exists in `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`, not yet landed | AO dispatch queue, not mine to force |
+| Manifest-hygiene 4 residual P2 items | Cannot be done yet — 2 need a VM launch (`detect_manifest_divergence.py` OOMs locally on 14M+-row manifests) | A deliberate VM-launch decision |
+| `dp_cron_did_not_fire` serving-revision verification | Cannot be done yet — needs gcloud auth this session doesn't have; already being tracked by dedicated 6-hourly sweeps | GCP credentials |
+| AO watchdog scheduled-timer wiring | Operator-owned — needs VM SSH | Operator |
+| Alert-bookend audit | **DONE 2026-08-20** — code-verified (29 tests) + live-traffic-verified (24h/504-msg sample), no violations found; not exhaustive over multi-day history | — |
+| W19 corpus audit | **RESOLVED 2026-08-20** — both `/plan-reconcile` (892 docs, 301 findings, `unified-trading-pm@2af2763f9b`) and `/docs-reconcile` confirmed run today | — |
+| 433-doc non-spine tail | Not scoped this session — large | Nobody — needs a dedicated pass |
+| Post-phase codex audit, final gate | Gated on everything above | — |
+| `unified-trading-ci` slot-3 checkout, 3 stale unpushed commits | **RESOLVED 2026-08-20** — all 3 confirmed superseded by equivalent-content commits already on origin; rebase dropped them automatically, `ahead=0 behind=0` | — |
+
+**Recommended next**: the non-spine 433-doc tail (large, needs a dedicated pass) or the manifest-hygiene VM-launch decision — both remaining open items now need either real time or an operator call; the two self-contained quick wins (W19, alert-bookend audit) are both closed.
+
+## Lessons carried forward (2026-08-20)
+
+- **`bash cmd 2>&1 | tee LOG | tail -N` silently discards `cmd`'s real exit code** — the pipeline returns `tail`'s
+  status. Confirmed live: `false | tee x | tail -5; echo $?` → `0`. This explains most of this session's own
+  "exited with code 0 but the banner said FAILED" confusion, including in `quickmerge_exit_zero_on_failed_regate_
+  and_silent_directory_files_2026_08_20.md`'s own Defect 1 evidence — re-measure with `${PIPESTATUS[0]}` before
+  trusting a piped exit code again.
+- **A diagnostic grep pattern is never exhaustive.** `ruff format --check` fails with `Would reformat: <path>`,
+  matching neither `❌` nor `FAILED`/`ERROR`/`E `. When a "REAL failure" banner fires with no visible evidence,
+  run each formatter/linter standalone against the exact files being shipped rather than trusting a keyword grep
+  over the full log a second time.
+- **Extending an existing check's dimensionality surfaces latent gaps in how it handles missing data.** Adding
+  MANUAL as a 4th mode wasn't itself risky, but it immediately exposed `execution_instruction()` conflating
+  "probe measured none" with "probe never had this field at all" — a real overclaim (`not_ready` instead of
+  `unverified`) that existed for the 3 original modes too, just never triggered because every mode DID have a
+  probe field. Adding an axis is a free correctness test for the axes that already existed.
+- **A stash-quarantine collision is recoverable if the diff is a clean superset** — verified via
+  `diff stash-version current-version` showing ONLY your own additions missing, nothing else different, before
+  restoring. Don't restore blind even when you're confident; the check costs one command.

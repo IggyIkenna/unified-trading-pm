@@ -215,6 +215,10 @@ context_scope:
 
 ## Progress Log
 
+- **2026-08-20T18:22:10Z (slot 17)**: Re-ran the downstream venue-scoped completeness check after the aggregate backfill advanced. The exact bounded `read_availability_index(columns=[venue,data_type,capture_status,date], filters=[("venue","in",["BINANCE-FUTURES","ASTER","OKX-FUTURES"])])` query against the live prod CeFi manifest returned **7,025,707 rows** across **2018-01-01..2026-08-20**. Reachable coverage: **BINANCE-FUTURES 64.72%** (2,310,769 captured / 216,249 attempted_failed / 1,043,198 expected_unattempted; 513,205 empty_confirmed), **ASTER 78.25%** (1,205,249 / 39,144 / 295,807; 1,031,489 empty_confirmed), **OKX-FUTURES 77.72%** (214,643 / 18,949 / 42,593; 94,412 empty_confirmed). None clears the paper-run completeness bar, so the gate remains closed. Evidence: bounded live query from instruments-service; no code changes.
+
+- **2026-08-20T18:18:30Z (slot 17, data_engineering)**: The exact post-backfill venue-scoped production read for BINANCE-FUTURES/ASTER/OKX-FUTURES returned 7,024,976 rows. Reachable coverage remains **64.72%** for BINANCE-FUTURES (captured=2,310,043; attempted_failed=216,249; expected_unattempted=1,043,198; empty_confirmed=513,205), **78.25%** for ASTER (1,205,247; 39,153; 295,807; 1,031,477), and **77.72%** for OKX-FUTURES (214,642; 18,949; 42,593; 94,413). Query: `read_availability_index(columns=["venue","data_type","capture_status","date"], filters=[("venue","in",["BINANCE-FUTURES","ASTER","OKX-FUTURES"])])` against `market-data-tick-cefi-prd-central-element-323112`; row-group-pushdown, no whole-corpus walk. **FAIL**: the paper gate remains closed, with BINANCE-FUTURES the binding constraint.
+
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **2026-07-28 (slot-6)**: The POST-BACKFILL FINAL GATE todos (`/data-pipeline-check-is` + `/data-pipeline-check-mtds`)
   were dispatched via the backlog but PARKED — the coverage backfill VM

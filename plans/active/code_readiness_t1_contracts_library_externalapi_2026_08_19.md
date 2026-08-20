@@ -394,7 +394,7 @@ todos only to confirm they are data-movement, then leave it.
       `VenueCapabilityV2.supported_operations: list[str]` already existed as the free-form home for
       action-level data, so `.features` was never actually the right place for these. 3 tests pin the surviving
       vocabulary and assert zero remaining name collisions between the two enums. QG green (214s). Evidence:
-      `/plans/active/registry_ssot_hardening_2026_08_16.md`.
+      `/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md`.
 - [x] ✅ [BACKEND] P1. **STALE — already resolved weeks before this tranche existed; closed by measurement, not
       new code.** Every code-level todo in the source issue is checked done: sports registries 1+3 confirmed
       structurally one SSOT (registry 1 imports `league_data.SOURCE_COVERAGE_START` directly — not a duplicate
@@ -977,3 +977,9 @@ todos only to confirm they are data-movement, then leave it.
   nothing for a live execution path, asked T4 to name the fields (pointed them at
   `UniswapConnector.mint_position()`/`burn_position()`'s real signatures, which the enum's own comment already
   cites as the dispatch target) — held open, not fabricated.
+
+- [ ] [FROM-T2] P3. **Flip `InstrumentRecord.model_config = ConfigDict(extra="forbid")`** in
+      `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`. Every REMOVE-verdict caller
+      is now clean fleet-wide — T2 finished the last one (`min_order_size`, zero consumers, removed from all 5
+      call sites, `instruments-service@588f35aeb0`). Full disposition history + evidence:
+      `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`. P3, not blocking.

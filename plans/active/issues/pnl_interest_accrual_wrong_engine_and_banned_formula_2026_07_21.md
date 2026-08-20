@@ -32,6 +32,7 @@ related:
   [
     /plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md,
     /plans/archive/issues/silent_wrong_answer_audit_candidates_2026_07_20.md,
+    /plans/active/issues/pnl_true_native_staking_return_spec_2026_08_20.md,
   ]
 created: 2026-07-21
 author: unknown
@@ -834,3 +835,8 @@ code.
   Still under the standing `## OPERATOR GATE` (3-lens money-path review required before any accrual/NAV change
   ships) — not re-litigated. Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
+
+- **2026-08-20 (line-cap remediation)**: split the build-ready "true native staking return" (Option B) implementation
+  spec out to `/plans/active/issues/pnl_true_native_staking_return_spec_2026_08_20.md` — this doc hit its 1000-line
+  hard cap. Spec is SPEC ONLY, not yet reviewed/approved, stays under this doc's standing OPERATOR GATE. The open
+  todo it documents (line ~774, Option B) stays tracked HERE, not in the spec doc.

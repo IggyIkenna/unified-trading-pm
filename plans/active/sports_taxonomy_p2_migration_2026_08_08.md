@@ -603,10 +603,9 @@ returns < 604800, the delete falls back to approve-executes and the todo must st
 
 ### Added 2026-08-08 (operator, mid-flight) — re-stamp the collapsed derived types
 
-- [ ] [DATA] P0. **BLOCKED-OPERATOR-DECISION 2026-08-15 — re-stamp odds_snapshot/odds_movement premise is FALSE:**
-      both adapters are dead code, never scheduled, 0 real captures (3,234 phantom rows/type only, not the claimed
-      16,521/16,470). Second correction, same day. Evidence + operator decision options:
-      `/codex/02-data/sports-data-types-catalog.md` correction banner, this doc's Progress Log below.
+- [x] ✅ [DATA] P0. **RESOLVED 2026-08-20 — re-stamp premise is FALSE (nothing to re-stamp), so the todo is moot;
+      the real "wire up vs retire" question underneath it got operator sign-off (wire up) in a separate tracked doc**:
+      `/plans/active/issues/sports_odds_movement_snapshot_candle_wireup_2026_08_20.md` (full verification + decision).
 - [x] ✅ [REVIEW] P1. **Assert the vocabulary has collapsed to TWO types — REVISED 2026-08-15.** Live census (slot-20):
       tick bucket ✓ `odds`/`odds_horizon_bucket`/unchanged `arbitrage_opportunity`. **Gap**: IS-bucket SSOT manifest
       still carries 43,726 captured `trades` mirror rows untouched by the P0 restamp — issue doc

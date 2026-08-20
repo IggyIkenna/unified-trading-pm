@@ -249,7 +249,7 @@ next step). Flagged here only so this daily report doesn't silently omit a live-
   `_ACCEPTED_EXCEPTIONS` suppression bullet (§1 above).
 - **`unified-trading-pm/cursor-configs/skills/data-pipeline-reconciliation/SKILL.md`** §3f — same addition, kept in
   sync with its codex SSOT.
-- **`unified-trading-pm/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`** —
+- **`unified-trading-pm/plans/archive/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`** —
   Progress Log entry appended (§4's finding); no checkbox flipped (the work itself is not done).
 
 ## 7. Todos

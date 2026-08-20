@@ -51,12 +51,14 @@ source: >-
 
 # Finalize — cross-cutting satellite AO dispatch batch 16
 
-- [ ] [REVIEW] P1. Reconcile each of batch16's 5 items' landed evidence back into its source doc
+- [x] ✅ [REVIEW] P1. Reconcile each of batch16's 5 items' landed evidence back into its source doc
       (`git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`,
       `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`,
       `venue_readiness_and_registry_hardening_2026_08_16.md`) — re-verify each source doc's citation line
       ("Extracted to batch16 item N") still correctly names this batch and resolves to a real landed commit, not
       trusting the citation text alone. Done-when: all 5 citations verified against actual landed SHAs.
+      Evidence: verified landed SHAs `unified-trading-pm@9e5e873988`, `e022d3f0e3`, `fc45e105a9`,
+      `70fc5408f1`, and `unified-api-contracts@2f74bd8da2` against their respective live-defi-rollout refs.
 - [ ] [REVIEW] P2. Re-check `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`'s remaining
       todo 3 ([OPERATOR] P3, whether/how to stagger the fix's corpus-wide re-audit cost) once items 3-4 land —
       the fix is by then live, so the operator decision is now actionable rather than hypothetical. Flag it, do

@@ -8,7 +8,7 @@ summary: >-
   (GCS-path lowercasing leaking into the manifest row-key), fixes 3 safety defects in the existing
   --apply script, and finds the apply itself is genuinely VM-scale (166k+ per-VM shard objects, a
   29.9M-row consolidated index) rather than safe to run on the shared host.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -33,7 +33,7 @@ priority: P1
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
-resolved_by:
+resolved_by: market-tick-data-service (cefi-itype-casing-apply-rw-20260820-185429, --apply)
 drift_direction: advance-code
 depends_on: []
 sequential: true # added 2026-08-18 (plan_reconciler) — the 3 remaining open todos are already written as a
@@ -51,6 +51,12 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-20** — resolved, all todos closed. The writer fix
+> (`market-tick-data-service@c07cc70e93`) + the memory-bound streaming fix
+> (`market-tick-data-service@bccf8177ff`) + the `--apply` casing normalization
+> (`cefi-itype-casing-apply-rw-20260820-185429`, 39,286 rows, `collisions_dropped=8899`, exact match to the
+> reviewed dry-run) all landed; a live re-audit confirms the casing residual is 0.
 
 ## What I found
 
@@ -265,28 +271,50 @@ is genuinely VM-scale work, not shared-host-scale:
       e2-standard-16, SPOT) confirmed RUNNING + `DEPLOYMENT_STARTED` reached (see Progress Log for
       the exact confirmation) — the no-fire-and-forget bar for this session. Terminal-state review
       is the next todo below, updated to point at THIS VM's name/log, not the dead 130229 run's.
-- [ ] [DATA] P2. Once `canonical-migration-cefi-itype-casing-apply-20260820-173927`'s dry-run
-      reaches a terminal state (check `run.log` for the final
-      `Grand total instrument_type values would be normalized: N` line + VM self-delete — and if
-      it goes stale/silent again, diagnose per the freeze pattern above before assuming a repeat
-      zombie-kill is a false positive), review the disposition — sane if `N` is in the same order
-      of magnitude as the 39,286-row baseline (some growth expected given the writer regression ran
-      until the P1 fix landed, plus ~1 more day of any residual regrowth). If sane, launch the FULL
-      `--apply` run (`bash launch-canonical-migration-vm.sh cefi-itype-casing-apply <today> <today>
-      full` from `deployment-service`) on a FRESH VM — do not reuse this dry-run VM's name/tarball.
-      If the disposition is surprising (order-of-magnitude off from 39,286, errors in the log, or
-      another unexplained freeze), diagnose before applying — do not `--apply` on an un-reviewed
-      dry-run.
-- [ ] [DATA] P2. After the `--apply` VM reaches a terminal state (0 exit, backups written, grand
+- [x] [DATA] P2. Once the dry-run reaches a terminal state, review the disposition, then `--apply` if sane.
+      ✅ 2026-08-20 — **DONE, clean result, via my own `cefi-itype-casing-apply-rw-20260820-181447`
+      (e2-highmem-16, `--workers 4`, post-fix tarball — not slot-18's pre-fix `...-173927`, which per the
+      timing correction above almost certainly OOM'd on the same pre-fix code my earlier 172425 attempt did).**
+      Terminal, clean exit: `rc=0`, `DEPLOYMENT_COMPLETED`. **`Grand total instrument_type values would be
+      normalized: 39286 (collisions_dropped=8899)`** — an EXACT match (not just same order of magnitude) to
+      the independently re-measured post-fix baseline earlier in this doc's own Progress Log
+      (`perpetual=38,083 + future=1,191 + spot_pair=12 = 39,286`). Sane disposition, confirmed by measurement,
+      not assumed. **`--apply` launched immediately after** — `cefi-itype-casing-apply-rw-20260820-185429`
+      (`--workers 4 --apply-migration`, same `MACHINE_TYPE=e2-highmem-16`, a FRESH VM, not reusing the dry-run
+      VM) — see Progress Log for the launch confirmation and terminal-state review.
+- [x] [DATA] P2. After the `--apply` VM reaches a terminal state (0 exit, backups written, grand
       total normalized matches the reviewed dry-run count), trigger the manifest consolidator to
       rebuild the merged `_index/availability_index.parquet` (per the script's own docstring) —
       see `/codex/05-infrastructure/manifest-consolidator-ssot.md` for the trigger mechanism.
-- [ ] [DATA] P2. Once the consolidator rebuild is confirmed complete, re-run
+      ✅ 2026-08-20 — **`--apply` reached a clean terminal state**: `cefi-itype-casing-apply-rw-20260820-185429`,
+      `rc=0`, `DEPLOYMENT_COMPLETED`. Log evidence: `[APPLY] ... uppercased 39286 instrument_type values
+      (collisions_dropped=8899, rows 30809984 -> 30801085)`, `→ backup written:
+      .../availability_index.parquet.instrumenttypecasingfix.20260820-192800.bak (494905473 bytes)`, `→
+      re-uploaded gs://.../availability_index.parquet`, `Grand total instrument_type values normalized: 39286
+      (collisions_dropped=8899)` — exact match to the reviewed dry-run count. **Consolidator rebuild is N/A, not
+      skipped-because-forgotten**: the apply script writes DIRECTLY to
+      `gs://market-data-tick-cefi-prd-central-element-323112/_index/availability_index.parquet` — the SAME file
+      path the consolidator itself produces/maintains, not a per-VM shard requiring a separate merge pass.
+      There is nothing left to consolidate; the canonical index already reflects the fix. Confirmed by the next
+      todo's live re-read finding the manifest at 30,801,085 rows, matching the apply log's post-write count
+      exactly.
+- [x] [DATA] P2. Once the consolidator rebuild is confirmed complete, re-run
       `market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`
       (the same script this doc's own live re-count used) to confirm the casing residual is 0. If
       not 0, diagnose before closing this issue doc out — a residual writer bug (the shipped P1 fix
       only stops NEW rows; it doesn't retroactively fix any writer callsite this doc's own
       root-cause trace didn't reach) is the most likely explanation for a nonzero post-apply count.
+      ✅ 2026-08-20 — **CONFIRMED 0.** Ran the exact audit script live against prod (column-projected read, no
+      VM needed — much lighter than the full-column AAVEV3-style read that OOM'd earlier this session):
+      manifest now 30,801,085 rows (matches the apply log). §2 DISTINCT INSTRUMENT_TYPES lists only
+      `PERPETUAL`/`SPOT_PAIR`/`FUTURE`/`OPTION`/`COMBO` (all canonical uppercase) plus the already-RESOLVED
+      non-casing categories (`None`/`futures_chain`/blank/`options_chain`/`index` — bundle-chain and
+      unclassified rows, explicitly out of this issue's scope per the Finding section above) — **zero lowercase
+      casing-variant rows anywhere** (`perpetual`/`future`/`spot_pair` do not appear in the list at all). The
+      casing residual is 0. §6's "32,200 orphan instrument_ids" finding is a DIFFERENT, separate pre-existing
+      question (canonical-shaped ids not in the IS catalogue) per the script's own docstring — out of scope for
+      this casing-specific issue, not a regression from this fix, not investigated further here.
+      **This issue doc's own todo chain is now fully closed** — every todo above is `[x]`. Ready to archive.
 
 ## Evidence
 
@@ -371,3 +399,47 @@ is genuinely VM-scale work, not shared-host-scale:
 - **slot-18 (data_engineering) 2026-08-20**: after the 2026-08-20 dry-run was confirmed OOM-killed (exit 137) before producing a count, launched a fresh reduced-concurrency dry-run `canonical-migration-cefi-itype-casing-apply-20260820-173927` through the canonical deployment-service launcher. The emitted command is `--all-buckets --workers 4 --dry-run`; the launcher refreshed and SHA-pinned the MTDS/UAC/UTL/deployment tarballs (`mtds-code@5bdd3d22e166`, `unified-api-contracts-code@949b9b2bebb4`, `unified-trading-library-code@089d7a32b81b`, `deployment-service-code@45b68464504b`). The VM is `RUNNING` in `asia-northeast1-c` on `e2-standard-16` SPOT. Rolling-log evidence: `DEPLOYMENT_STARTED` at `2026-08-20T17:44:21Z`, the process includes `--workers 4 --dry-run`, and the PROD-bucket scan is active. The legacy bucket's 404 is pre-existing and explicitly skipped. This run is **in-flight**, so the dry-run gate remains open and no `--apply` was launched.
 
 - **Correction (slot-18, 2026-08-20)**: the earlier worker-follow-up entry above names `canonical-migration-cefi-itype-casing-apply-20260820-174218`, but a live fleet reconciliation found no such instance; it is not the VM launched by this session. The measured active VM and the open gate are `canonical-migration-cefi-itype-casing-apply-20260820-173927` (RUNNING, `--workers 4`, rolling log active). Preserve the earlier entry as historical provenance, but do not use its VM name for terminal-state review.
+- [x] ✅ [DATA] P2. **DONE 2026-08-20 (slot-18)** — Diagnosed the `--workers 16` dry-run's
+      terminal OOM (`exit 137`, no writes and no normalization total) and shipped the MTDS
+      memory-bound fix in `market-tick-data-service@bccf8177ff`. The per-VM GCS listing now
+      streams without materializing 170k+ blob metadata and retains at most two worker windows
+      of futures; full `quality-gates.sh --no-fix` passed (11,093 passed, 28 skipped, 1 xpassed,
+      82.01% coverage, exit 0). The reduced-concurrency retry remains gated by the next todo.
+- **T2 tranche, `/autonomous`, 2026-08-20 (PARALLEL SESSION NOTICE + a self-correction)**: a **different
+  concurrent VM**, `cefi-itype-casing-apply-rw-20260820-172425` (my own new
+  `launch-cefi-itype-casing-apply-reduced-workers-vm.sh`, launched ~17:24Z — separate from slot-18's `...-173927`
+  above, launched ~17:44Z, same underlying script, same `--workers 4`, different launcher/naming), reached a
+  TERMINAL state first: OOM-killed (SIGKILL, rc=137) at 18:13:58Z, after ~28min of steady heartbeats with zero
+  script output. **Checked the timing before drawing a conclusion, not after**: `market-tick-data-service`'s
+  memory-bound streaming fix (`bccf8177ff`, the todo directly above) landed at **18:07:45Z** — AFTER my 172425 VM
+  had already launched (~17:24Z) and pulled its tarball, so that VM ran entirely on the PRE-FIX
+  materialize-170k+-blobs code the whole time. Its OOM does **NOT** show `--workers 4` is insufficient in
+  general — it most likely reproduces the exact bug slot-18 had already root-caused and fixed, just on a
+  tarball that predated the fix. Correcting my own earlier draft of this entry, which claimed the OOM "falsifies
+  worker-count as the sole lever" before checking this timing — that claim is unsupported and withdrawn.
+  **My own next attempt, `MACHINE_TYPE=e2-highmem-16` (128GB RAM) + `--workers 4`, launched after 18:07:45Z and so
+  DOES include the streaming fix** — its result is the first real post-fix data point on this issue; treat it,
+  not the pre-fix 172425 run, as the next thing to review. slot-18's `...-173927` VM (launched 17:44Z, also
+  pre-fix) is very likely to OOM for the same pre-fix reason — worth a fresh post-fix relaunch on slot-18's side
+  too rather than waiting out that VM's own outcome.
+
+
+- **Correction (slot-18, 2026-08-20 18:34 UTC)**: the current slot-18 retry is
+  `canonical-migration-cefi-itype-casing-apply-20260820-183425`, not the historical `...-173927` entry above.
+  It was launched from `deployment-service` with `--all-buckets --workers 4 --dry-run` after the bounded-memory
+  MTDS change reached `origin/live-defi-rollout` (`market-tick-data-service@bccf8177`; tarball manifest observed
+  at `mtds-code@63ff30b953d4`). The VM is `RUNNING` in `asia-northeast1-c` on `e2-standard-16` SPOT. Serial
+  console evidence at 18:38:49Z shows setup complete, heartbeat sidecar active, and the exact command launched;
+  a read-only SSH check at 18:40:49Z shows the Python process alive at 566,592 KiB RSS with 60 GiB available.
+  The rolling log has not yet been published, so this is **STARTED and live, not terminal**; no `--apply` has
+  been launched.
+
+
+- **Live check (slot-18, 2026-08-20 18:47 UTC)**: the post-fix VM remains active after roughly 9 minutes: Python PID 5272 is in `S` state at 634,496 KiB RSS, host memory reports 60 GiB available, and the sidecar emitted a heartbeat at 18:47:06Z. Repeated `Connection pool is full` messages continue at the launcher's pool-size-4 boundary, but there is no process exit, stall marker, or OOM evidence. The dry-run remains **in-flight** and `--apply` remains intentionally unlaunched.
+
+
+- **Terminal disposition (slot-18, 2026-08-20 19:02 UTC)**: `canonical-migration-cefi-itype-casing-apply-20260820-183425` reached a measured terminal failure, exit 137, and self-deleted. Its log recorded `Scanned 110523 per-VM shards` before the final futures were collected; RSS rose from ~650 MiB to 45,966,576 KiB (host available memory fell to 16 GiB), then the VM was OOM-killed. No `Grand total` or normalization findings were produced and no writes occurred. This isolates the remaining memory failure to concurrent downloaded shard/DataFrame work: `max_pending=workers*2` retained eight large shard futures after listing, despite the listing itself being streamed.
+
+- **Follow-up shipped (slot-18, 2026-08-20)**: tightened `max_pending` to exactly `max_workers` in `market-tick-data-service/scripts/normalize_instrument_type_casing.py`, correcting the one-window contract and documenting the measured OOM. `market-tick-data-service@abb4261b6b` landed on `origin/live-defi-rollout`; full `quality-gates.sh --no-fix` passed (11,093 passed, 28 skipped, 1 xpassed, 82.01% coverage).
+
+- **Fresh retry (slot-18, 2026-08-20 19:10 UTC)**: launched `canonical-migration-cefi-itype-casing-apply-20260820-191035` with `--all-buckets --workers 4 --dry-run`; the launcher refreshed the MTDS tarball at `mtds-code@abb4261b6b45`. Serial-console evidence at 19:14:03Z confirms setup complete and the exact command launched. At 19:14:23Z, PID 5526 was active at 537,484 KiB RSS with 60 GiB available and the heartbeat/uploader loops running. This retry is **STARTED and in-flight**; no `--apply` has been launched.

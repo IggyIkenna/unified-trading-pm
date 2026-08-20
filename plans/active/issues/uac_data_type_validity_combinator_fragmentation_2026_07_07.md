@@ -280,6 +280,12 @@ just belongs on a different layer than instrument_type does, and conflating the 
 
 ## Progress Log
 
+- **2026-08-20 (T1 slice, read-only check)** — `gcloud compute instances list --filter="name~mtds-oracle-prices-backfill"`
+  returns **zero instances** — the VM is not running, 5 days after the last (6th-launch) checkpoint below. Not
+  investigated further (this doc's 2 remaining opens are `market-tick-data-service` VM-ops work, outside T1's repo
+  ownership) — flagging the current state for whoever next picks up the terminal-state-verification todo rather than
+  leaving it silently stale. No manifest coverage check performed; unknown whether the 6th launch completed cleanly,
+  was preempted a 7th time, or was abandoned.
 - **2026-08-15 (slot-22) — 5th SPOT preemption, relaunched (6th, chunk-days 60→5); still not complete.** VM absent,
   `run.log` stalled `17:29Z` vs check `17:50Z`. Relaunched `--chunk-days 5`, confirmed RUNNING+progressing in ~4min.
   **Root cause**: `[[VM_PROGRESS]]` fires only on whole-chunk completion; 60-day chunks (1.3-7.4h at pace) exceeded the

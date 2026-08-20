@@ -16,7 +16,7 @@ tags: [cefi, canonicalization, casing]
 related:
   [
     /plans/active/cefi_consolidated_closeout_2026_07_18.md,
-    /plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md,
+    /plans/archive/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md,
   ]
 created: "2026-08-16"
 last_updated: "2026-08-17"

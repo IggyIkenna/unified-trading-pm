@@ -294,26 +294,23 @@ todos only to confirm they are data-movement, then leave it.
       `OrderStatus\.PENDING\b`/`OrderStatus\.OPEN\b` against UAC's import returns zero. **Safe to delete the two
       transitional aliases from execution-service's side** — T1 still needs to confirm no other fleet consumer (UI
       aside, which T1 already owns) before actually deleting them.
-- [ ] [FROM-T1] P1. Write `execution-service/tests/unit/orders/test_state_machine.py` — the codex doc's own
-      declared `verifier:`, which has never existed in the repo's history and is why the 9-state-vs-7-state
-      divergence went unnoticed from 2026-05-12 to 2026-07-31. T1 already pins the ENUM against the codex table
-      (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
-      SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
-      **BLOCKED on the W11 finding below, MEASURED 2026-08-20**: `is_legal_order_transition`/
-      `ORDER_STATUS_TRANSITIONS` are imported NOWHERE in execution-service (repo-wide grep, zero hits) — there is
-      no code path that takes a previous status + a new one and validates the transition, so there is nothing
-      real to assert against yet. A test written today would either be synthetic (assert the imported function
-      directly, testing UAC not execution-service) or expose that THREE separate, unreconciled status
-      vocabularies coexist: UAC's canonical 9-state `OrderStatus` (used only when adapters map a fresh venue
-      response, never mutated in place), `execution_service/orders/oms.py` +
-      `trade_execution/oms/persistent_oms.py`'s own local `OrderStatus(StrEnum)` (7 states:
-      PENDING/VALIDATED/SUBMITTED/PARTIAL_FILLED/FILLED/REJECTED/CANCELLED — confirmed a DIFFERENT type, not an
-      alias, by the `AttributeError` hit and reverted while doing the sibling `.PENDING`/`.OPEN` rename todo
-      above), and `execution_service/orders/tracker.py`'s bare string literals (`"SUBMITTED"`/`"FILLED"`/
-      `"CANCELLED"`/`"AMENDED"` — no enum at all, and `"AMENDED"` exists in neither of the other two). Real fix
-      order: reconcile the three vocabularies (or pick ONE as the live-order source of truth and have the others
-      read through it) BEFORE this test can assert anything meaningful — that reconciliation is the W11 P0 below,
-      not a sub-step of this todo.
+- [x] ✅ [FROM-T1] P1. **Written and shipped — `execution-service@69a9a088be`.** Real validation now exists to
+      assert against: `orders/oms.py` and `trade_execution/oms/persistent_oms.py`'s `update_order_status()` were
+      MEASURED 2026-08-20 to accept any status string with ZERO transition enforcement (real production callers
+      confirmed via `handle_nautilus_order_event`/`reconcile_with_nautilus`) — a late fill racing a cancel could
+      silently overwrite a terminal CANCELLED record back to FILLED. Fixed via a local-status -> UAC-canonical
+      mapping + `is_terminal_order_status()`. **Deliberately narrower than the full `ORDER_STATUS_TRANSITIONS`
+      edge set** — the pre-existing `tests/unit/live/test_oms.py::test_oms_handle_nautilus_order_canceled` (et
+      al.) correctly cover a real fast-path where a venue-confirmed terminal event arrives while the local record
+      is still PENDING (no separate `OrderSubmitted` ack processed first); strict edge-by-edge enforcement broke
+      those 4 real tests on first attempt, so the invariant actually shipped is narrower but still real: **once
+      terminal (CANCELLED/FILLED/REJECTED/EXPIRED/FAIL_OUTBOUND), the only legal further move is RECONCILED** —
+      catches state resurrection, tolerates the legitimate skip-ahead path. `tests/unit/orders/test_state_machine.py`
+      pins both the mapping function and the `update_order_status()` integration on both files.
+      `execution_service/orders/tracker.py`'s bare-string vocabulary (`"AMENDED"` etc.) was investigated
+      separately and found to be **dead code — zero production instantiation sites of `OrderTracker` anywhere in
+      the repo** (only test/re-export references), so it was correctly left untouched rather than reconciled —
+      not a gap, a confirmed non-issue.
 - [x] ✅ [FROM-T1] P2. **Decided: `PARTIALLY_FILLED -> CANCELLED / EXPIRED` IS a legal transition** —
       `unified-trading-pm@c74d869b36` (codex `order-state-machine.md` amended: diagram + events table widened,
       ruling + evidence recorded 2026-08-20). Real CLOB venues let an operator cancel the still-working remainder
@@ -364,10 +361,13 @@ todos only to confirm they are data-movement, then leave it.
       fields did not exist). Evidence:
       `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 - [ ] [BLOCKED-OPERATOR] P1. Delta-proxy — the POSITION and CREDIT legs of the triple. NOT deferred by this
-      tranche: T1 recorded a superseded-shape ruling (Q12-Q16) and retagged `reference_position` / `credit` on
-      `StrategyInstructionEnvelope` as `BLOCKED-OPERATOR` when landing the sensitivity triple
-      (`unified-trading-pm@3353254d7a`). Execution-side work resumes the moment that shape is decided; the price
-      leg above is independent of it and is already shipped. Evidence: same issue doc, plus T1's plan.
+      tranche. **RE-CHECKED 2026-08-20, still genuinely blocked — reference updated, was stale.** The Q12-Q16
+      citation this todo carried is itself stale per T1's own plan: the actual current blocker is
+      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` §15 ("OPEN — needs an
+      operator ruling next session"), which supersedes Q12-Q16 with a full FACTOR-STATE MODEL (§11-14) and its
+      own 4 named open questions plus 5 outstanding Wave-0 rulings — a real design, not a stub. Execution-side
+      work resumes the moment that shape is decided; the price leg above is independent of it and is already
+      shipped.
 
 ### W11 — order lifecycle and execution state
 
@@ -391,15 +391,20 @@ todos only to confirm they are data-movement, then leave it.
       issue's remaining open item is a P3 (`instruction_to_order_ids` staleness), not this P0. Evidence:
       `/plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
 - [ ] [BACKEND] P0. Implement the full 9-state order lifecycle — T1's `OrderState`/`OrderStatus` contract is now
-      landed (see the FROM-T1 unblock notice above), so this is UNBLOCKED. **Scope MEASURED 2026-08-20, real work
-      is reconciliation, not new-build**: three separate, unreconciled order-status vocabularies coexist in
-      execution-service today (full evidence on the `test_state_machine.py` todo above) — UAC's canonical 9-state
-      `OrderStatus` (mapping-only, never mutated in place), `orders/oms.py` + `trade_execution/oms/
-      persistent_oms.py`'s own local 7-state `OrderStatus(StrEnum)`, and `orders/tracker.py`'s bare 4-string
-      vocabulary with no enum. None of the three enforces `is_legal_order_transition`. This is a genuine
-      cross-file design call (which becomes the source of truth; how the other two read through it without
-      breaking `ManualOperationHandler`'s existing `/cancel`/`/amend` callers) — not a mechanical rename like the
-      `.PENDING`/`.OPEN` migration above turned out to be for the 5 files that really did import UAC's enum.
+      landed (see the FROM-T1 unblock notice above), so this is UNBLOCKED. **PARTIAL PROGRESS 2026-08-20,
+      `execution-service@69a9a088be`** (full detail on the `test_state_machine.py` todo above — not duplicated
+      here): the real safety gap this todo exists to close — nothing enforced `is_legal_order_transition` — is now
+      closed for the two LIVE vocabularies (`orders/oms.py` + `trade_execution/oms/persistent_oms.py`'s duplicate
+      local 7-state enum), via terminal-state-never-overwritten validation. **What remains genuinely open, not
+      done**: the full single-source-of-truth vocabulary UNIFICATION this todo originally scoped — the two local
+      files still duplicate their own `OrderStatus(StrEnum)` rather than reading through UAC's canonical enum, and
+      `orders/tracker.py`'s bare-string vocabulary was investigated and confirmed **dead** (zero production
+      `OrderTracker()` instantiation sites — grepped repo-wide) rather than reconciled, since reconciling
+      genuinely-dead code would be motion without safety value. Collapsing `orders/oms.py` and
+      `trade_execution/oms/persistent_oms.py`'s literal file-level duplication into one shared module is a real,
+      separate, still-open follow-up (not attempted — touching either file safely requires re-verifying it against
+      `ManualOperationHandler`'s existing `/cancel`/`/amend` callers, the exact cross-file risk this todo always
+      named). Left open rather than closed on a technicality.
 - [x] ✅ [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
       said.** Two independent defects, both measured: (a) no `/api/orders` route exists anywhere under
       `execution_service/api/`, so the strategy-side POST reaches nothing; (b) even the in-process path is a
@@ -433,8 +438,42 @@ todos only to confirm they are data-movement, then leave it.
       new HTTP-level tests, including one exercising real CLOSE_ALL flattening through the router via the same fake
       order-adapter-factory convention `test_account_orchestrator.py` established. Both halves now done — this todo
       is CLOSED.
-- [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
+- [x] ✅ [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
+
+      **Real scope MEASURED 2026-08-20 — more nuanced than "not built": the FRAMEWORK exists and is even
+      already-hardened this session, but its two core dependencies are explicit stubs, and it is never invoked at
+      startup at all.** `engine/startup/order_recovery.py`'s `OrderRecoveryEngine` (407 lines: per-venue
+      circuit-breaker-gated recovery, orphan reconciliation, partial-fill application — this session's own
+      shard-isolation fix, `execution-service@ff0b43b5d3`, already hardened its `recover_venue()`) is real,
+      tested, working machinery. But: (1) `OrderBook`'s own docstring says "Minimal in-memory order registry for
+      testing/stub purposes. Production wiring should inject the live Nautilus OMS order registry" — it is never
+      backed by `orders/oms.py`/`trade_execution/oms/persistent_oms.py` (this session's own transition-validation
+      fix, `execution-service@69a9a088be`) or any other real persistence; (2) `_VenueAdapter`'s docstring says
+      "Stub venue adapter... Production implementation should delegate to market-tick-data-service market_interface
+      (UMI) venue adapters... stub returns deterministic empty data" — `fetch_open_orders()` always returns `[]`,
+      `cancel_order()`/`confirm_cancel()` always return `True` without calling anything; (3) `grep -rln
+      "OrderRecoveryEngine("` across the whole repo (excluding tests) returns ZERO production instantiation
+      sites — it is never called from `main.py`, `_run_live_async`, or anywhere else at startup. Wiring
+      `OrderRecoveryEngine()` into startup with its DEFAULT construction would produce real-looking
+      `ORDER_RECOVERY_COMPLETED` log events while silently reconciling nothing — the same defect class as the
+      already-fixed `AccountInstructionOrchestrator` ("accepted=True while closing nothing") and CCXT-withdraw-stub
+      bugs this tranche found earlier. **Real fix is 3 pieces, not 1**: implement a real `OrderBook` backed by the
+      persistent OMS, a real `_VenueAdapter` backed by `get_order_adapter()` (`trade_execution/factory.py:461`,
+      same factory `_create_orchestrator_for_venue` already uses), then wire `OrderRecoveryEngine.run(venues)`
+      into `_run_live_async` before instructions start flowing.
+
+      **Spun out into a dedicated AO plan, 2026-08-20** —
+      `/plans/active/w_state_recovery_real_wiring_2026_08_20.md`, operator directly authorized both the spin-out
+      AND an immediate sub-agent dispatch against it (not waiting for normal fleet pickup). Second-pass scoping
+      found the gap is even deeper than first measured: `_VenueAdapter.fetch_open_orders()` has NO real backing
+      capability anywhere in the adapter layer (`grep -n "open_orders\|fetch_open\|get_orders"
+      trade_execution/base_adapter.py adapters/order_adapter.py`: zero hits) — building it needs a NEW
+      capability added across 8 ccxt-wrapped venues (likely cheap: ccxt has a standard `fetch_open_orders()` most
+      exchanges support) plus native REST adapters (kraken/bitfinex/bitget, several already
+      `BLOCKED-CREDENTIALS`, build the scaffold regardless). Sized into 3 phases (real `OrderBook`; real
+      `_VenueAdapter` incl. the new fetch-open-orders capability; startup wiring) plus close-out and the
+      mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
 - [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
       **execution-service@9c79bfa0ef** (landing verified by an empty `git diff --stat origin/live-defi-rollout`
       over all three files plus grepping the landed `api/main.py` for `manual_router`). The defect existed only in
@@ -514,22 +553,28 @@ todos only to confirm they are data-movement, then leave it.
       `paper(W) == batch-rerun(W)` cannot hold for any instruction using them — this is why every lending venue
       derives `batch=wired` instead of `deployed`. SSOT: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.
 
-      **1/5 CLOSED 2026-08-20 — `execution-service@6f664e80a0`.** `CONVERT_DUST` is now handled: the UAC
-      `ConvertDustInstruction` schema already existed (`unified_api_contracts/internal/architecture_v2/
-      restaking_rewards.py`), it just was never wired into `resolve_settlement` or the `StrategyInstructionV2`
-      union — the isinstance branch takes the base `StrategyInstructionEnvelope` type so no UAC-side union edit
-      was needed. Priced order-matched (like `ATOMIC`), fill_size = Σ input-token amounts. 2 new tests.
-      `BATCH_UNHANDLED_ACTIONS` measured shrinking from 5 to exactly `{LP_BURN, LP_MINT, REPAY, WITHDRAW}`.
+      **3/5 CLOSED — stale text corrected 2026-08-20, this todo had drifted behind its own shipped progress.**
+      `CONVERT_DUST` — `execution-service@6f664e80a0`. The UAC `ConvertDustInstruction` schema already existed
+      (`unified_api_contracts/internal/architecture_v2/restaking_rewards.py`), it just was never wired into
+      `resolve_settlement` or the `StrategyInstructionV2` union — the isinstance branch takes the base
+      `StrategyInstructionEnvelope` type so no UAC-side union edit was needed. Priced order-matched (like
+      `ATOMIC`), fill_size = Σ input-token amounts. 2 new tests. `WITHDRAW`/`REPAY` — `execution-service@59627fa2d2`.
+      **RE-MEASURED 2026-08-20 directly against current code** (this todo's own prior text incorrectly claimed
+      these two also had no UAC schema — they do, this was fixed the same session but the todo was never
+      updated): `WithdrawInstruction`/`RepayInstruction` exist at
+      `unified_api_contracts/internal/architecture_v2/schemas.py:337,347` and are wired in
+      `action_handlers.py:215-228`, rate-matched like `LEND`/`BORROW`. `BATCH_UNHANDLED_ACTIONS` is DERIVED
+      (`frozenset(InstructionActionV2) - BATCH_SETTLEMENT_ACTIONS - BATCH_NO_FILL_ACTIONS`), MEASURED now =
+      exactly `{LP_BURN, LP_MINT}`, down from the original 5.
 
-      **The remaining 4 are NOT "cheap rate-matched inverses" as this todo originally assumed — re-measured
-      2026-08-20.** `WITHDRAW`/`REPAY`/`LP_MINT`/`LP_BURN` have **no `StrategyInstructionEnvelope` subclass
-      anywhere in UAC** (confirmed via `grep -rln "InstructionActionV2.WITHDRAW\|...REPAY\|...LP_MINT\|...LP_BURN"
-      unified_api_contracts/` — only the enum definition and `reference/ledger_asset_resolution.py` reference
-      them; no `class *Instruction` exists). This tranche does not own `unified-api-contracts`, so it cannot add
-      the schema itself. Filed as `[FROM-T4] P1` on
-      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s Inbound requests section —
-      once T1 lands 4 new subclasses, T4's side is mechanical (4 more `isinstance` branches, same pattern as the
-      CONVERT_DUST fix above). `BLOCKED-` on that request until then.
+      **`LP_MINT`/`LP_BURN` genuinely remain — no `StrategyInstructionEnvelope` subclass exists in UAC for
+      either.** This tranche does not own `unified-api-contracts`, so it cannot add the schema itself. The
+      `[FROM-T4]` inbound request on
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md` now carries the full shape
+      spec (grounded in real connector signatures — Uniswap's NFT-position `mint_position`/`burn_position` vs.
+      Orca/Raydium's pool-address `add_liquidity`/`remove_liquidity`), not just a bare ask — once T1 lands the 2
+      subclasses, T4's side is mechanical (2 more `isinstance` branches, same pattern as the 3 fixes above).
+      `BLOCKED-` on that request until then.
 
       **3/5 CLOSED 2026-08-20 — `execution-service@59627fa2d2`.** T1 landed `WithdrawInstruction`/
       `RepayInstruction` (`unified-api-contracts@f5fc118ae1`) same day, exactly as the request predicted —
@@ -566,8 +611,23 @@ todos only to confirm they are data-movement, then leave it.
       exclusion rewrites the GCS object with the record RETAINED. `/breaks` hides actively-excluded breaks;
       `include_excluded=true` shows them as `status=excluded` so suppression is auditable. MEASURED: after revoke
       the break is re-raised, the record persists with `active=false`, and `active_only=true` filters it out.
-- [ ] [BACKEND] P1. Implement manual trade entry on EVERY venue — epic definition-of-done item, and manual execution
-      mode is first-class alongside automated per the 2026-08-19 addition to W1.
+- [x] ✅ [BACKEND] P1. **CLOSED 2026-08-20 — manual trade entry now covers every venue type.** Epic
+      definition-of-done item, manual execution mode first-class alongside automated per the 2026-08-19 addition
+      to W1. Root-caused: `ManualOperationHandler.execute()` unconditionally called `get_or_create_orchestrator()`
+      — CLOB-shaped, cannot represent a `DeFiAdapter` or sports adapter. Confirmed by reading
+      `_execute_instructions`'s automated path that DeFi instructions there are dispatched straight to
+      `DeFiAdapter.execute_instruction()`, never through an `ExecutionOrchestrator`. **DeFi —
+      `execution-service@8cd47073b5`**: added `get_defi_adapter_singleton()` + a process-wide-singleton
+      `get_or_create_defi_adapter()` cache; `execute()` branches on `DEFI_VENUES` before the CLOB fallback. 6 new
+      tests. **Sports — `execution-service@053a1ee136`**: `_execute_sports_instruction`/`_execute_sports_bet`
+      previously returned `None` unconditionally despite building a real result dict internally and discarding
+      it (the automated path never needed the return value) — now both return the dict, automated caller
+      unaffected (Python allows discarding a return value). Added the analogous
+      `get_sports_adapter_singleton()`/`execute_sports_instruction()` wrappers +
+      `get_or_create_sports_adapter()` cache; `execute()` branches on `SPORTS_VENUES` between the DeFi and CLOB
+      branches. 8 new tests, including regression guards that CLOB/DeFi venues each still route correctly
+      unaffected by the other branches. Manual trade entry is now genuinely first-class across CLOB/CeFi/TradFi,
+      DeFi, and sports.
 
 ### W14, W15, W17 — fidelity, security, cost
 
@@ -610,8 +670,15 @@ todos only to confirm they are data-movement, then leave it.
       `for venue in venues` (`utils/dependency_checker.py:683`) are deliberately out of scope — both are startup
       preflight/validation, where propagating an exception to halt startup is the correct behaviour, not a
       per-shard-isolation violation of the live-trading-loop kind this SSOT targets.
-- [ ] [BACKEND] P0. Pin the exchange version per venue and re-run cassettes on drift, so a silent venue-version
-      change cannot go undetected (W14). No owning plan existed at authoring time.
+- [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
+      `/plans/active/w14_execution_service_exchange_version_pinning_and_cassette_drift_2026_08_20.md`, operator
+      directly authorized this specific spin-out (asked mid-session via AskUserQuestion, "AO plan" selected — no
+      prior blanket ruling covered W14 the way W15/W22 had one). Scoped via real measurement: 8 cassette
+      directories exist, `ccxt` is already pinned via the standard pyproject/uv.lock range but native (non-ccxt)
+      REST adapters carry zero explicit per-venue API-version markers. Sized into 4 phases (design what "version"
+      means per transport; build the pinning; build drift detection; triage + close-out), deliberately front-
+      loading the 3 real design questions as P0s since everything else depends on their outcome, plus the
+      mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
 - [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
       `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, per the 2026-08-19
       operator ruling. Sized into 11 phases against a real, enumerated ~85-file adapter inventory (bridge/
@@ -626,9 +693,18 @@ todos only to confirm they are data-movement, then leave it.
       a note for TradFi pending a real sourced fee schedule, never an invented bps figure) alongside a real fix:
       every TradFi venue (CME/CBOE/NASDAQ/NYSE/ICE/FX) was silently misclassified as CEFI before this, applying
       wrong fee/spread assumptions. 12 new/updated tests.
-- [ ] [BACKEND] P1. Complete the execution policy and fill-model gaps — collapse the two independent benchmark
-      implementations into one sent value, stop no-op'ing the lending path, de-duplicate the algo vocabulary across
-      two modules. Evidence: `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md`.
+- [ ] [BACKEND] P1. **7/13 CLOSED 2026-08-20 — `unified-trading-pm@f582a4e724`.** Complete the execution policy
+      and fill-model gaps — collapse the two independent benchmark implementations into one sent value, stop
+      no-op'ing the lending path, de-duplicate the algo vocabulary across two modules. Evidence:
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` (own doc tracks full detail, not
+      duplicated here). Most closed todos turned out to be already-shipped by commits pre-dating the doc itself
+      (`ea0bbf807`, `b8989ae55`, `c2053c47b`, `bbf99a61d` — all 2026-06-19/08-14) — the doc had drifted stale
+      before this tranche ever touched it. 6 remain open with dated, measured reasons (not guesses): a mechanism
+      built + unit-tested but zero production callers (sub-candle rung wiring, participation-cap routing), a real
+      design gap the shipped code doesn't resolve (`SubCandleBar` has no aggressor-side field for PB.8's
+      correction), 1 todo outside this dispatch's granted repo access (`e2e-testing`), 1 needing a real manifest
+      query this dispatch's tooling doesn't have. 1 new todo added tracking `HandlerRegistry.select_algorithm`
+      having zero production callers despite a real, tested resolver chain beneath it.
 - [ ] [BACKEND] P2. Complete per-venue scope-key provisioning. Evidence:
       `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`. **CHECKED 2026-08-20, still
       genuinely open, no new action found**: that doc's own 3-week audit trail (na-eligibility-audit
@@ -659,6 +735,22 @@ todos only to confirm they are data-movement, then leave it.
       none are execution-service-scoped or T4-allocated. Full detail: this plan's Progress Log, 2026-08-20.
 - [ ] [BACKEND] P1. Wire transfer netting and custody routing end to end in production — the artefacts mark these
       target-state, not wired.
+
+      **Scoped 2026-08-20, not built — two independent blockers, not one.** Grepped execution-service repo-wide
+      for any "netting" concept relevant to fund transfers: zero hits — every existing "netting" reference
+      (`config/grid_builder.py` etc.) is NautilusTrader's `oms_type: "NETTING"` position-netting-vs-hedging
+      setting, an unrelated concept. **Netting** (deciding which pending transfer intents can be combined before
+      any custody call happens) is explicitly documented as STRATEGY-service-owned in the related
+      `execution_service_policy_and_fill_model_gaps_2026_08_19.md`'s Progress Log ("§ A/C/D/H strategy-owned:
+      ... transfer-emit netting") — so the "emit" decision is out of this repo's scope entirely, not merely
+      unbuilt here. **Custody routing** is genuinely execution-service's to build, but is the SAME blocker the
+      `[FROM-T1]` Ceffu-integration todo above already tracks: `transfer_coordinator.py` has a real
+      `TransferHandler` protocol + one concrete `_SubaccountMoveHandler` (Binance/OKX only), but building a
+      real Ceffu/Copper custody-routing handler needs the actual Ceffu API spec, which does not exist in this
+      workspace (not a credentials gap — a documentation gap). Real next step once unblocked: build the custody
+      routing half against whichever real transfer-provider spec lands first, wire it into
+      `TransferCoordinator.register_handler()`; the netting half needs a strategy-service-side design session
+      this tranche cannot self-serve (cross-repo, cross-team boundary).
 - [x] ✅ [BACKEND] P2. **Closed — all 4 sub-items resolved.** Close the batch-live-reconciliation-service, fund-administration-service, greeks-service and
       client-reporting-api items in this tranche's allocation. **fund-administration-service: zero docs allocated**
       (confirmed via `plans/audit/results/code_readiness_allocation_2026_08_19.json`, key
@@ -695,33 +787,32 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag on every remainder.
-- [ ] [AGENT] P2. **Split the two files sitting at EXACTLY the 900-line file cap** —
-      `execution_service/api/manual_instruction_api.py` and `execution_service/cli/handlers/live_execution_handler.py`.
-      Both were hit twice this session (once each) by unrelated changes that pushed them 1-10 lines over; both fixes
-      had to be made net-zero on line count to land. Any future addition to either needs the same net-zero dance
-      until this is done. Confirm the split doesn't change import-time behavior (see this session's
-      lifespan lesson above — `api/main.py` imports at module load).
-
-      **Investigated 2026-08-20, deliberately NOT executed this session — a real hazard found, not scope-avoidance.**
-      Read the full 900 lines of `manual_instruction_api.py`. Natural seams exist (submit/precheck path; cancel+
-      amend+status path; record-only-fill path; venues/algos+pending-queue path), but EVERY endpoint reads the
-      module-level `_orchestrator`/`_manual_handler`/`_limiter` globals, and `set_manual_handler()`/
-      `set_orchestrator()` are the ONLY sanctioned mutation path — a naive `from .manual_instruction_api import X`
-      in a new submodule captures a snapshot at import time, not a live reference, silently breaking that
-      contract. Worse: **12 test files patch names inside this module's namespace**
-      (`patch("execution_service.api.manual_instruction_api.persist_audit_log", ...)` etc. —
-      `test_manual_record_only.py`, `test_manual_cancel_real_wiring.py`, `test_manual_amend_real_wiring.py`,
-      `test_manual_instruction_close_all_contract.py`, `test_manual_instruction_live_orchestrator_protocol.py`,
-      `test_dynamic_venues.py`, `test_api_app_health.py`, `test_api_main.py`, `engine/test_kill_switch.py`,
-      `engine/test_venue_cascade_kill_switch_chain.py`, `engine/test_pretrade_wiring.py`,
-      `engine/test_wallet_preflight_wire_in.py`). Moving a function to a new module without updating its test's
-      patch target doesn't fail loud — the mock silently stops applying and the test exercises the REAL
-      `persist_audit_log`/`log_event`/etc. instead, in a suite covering live order cancel/amend/manual-submit. The
-      correct pattern (module-qualified access — `import ... as _core; _core._orchestrator`, never
-      `from ... import _orchestrator`) is known and stated here; execute it in one pass that also greps and
-      updates every one of the 12 test files' patch targets in the same commit, verified by actually running the
-      full list, not just the file's own local tests — this is safety-critical order-management code, so a rushed
-      split that silently defangs a live mock is worse than leaving the file at cap.
+- [x] ✅ [AGENT] P2. **Split, shipped — `execution-service@1e243e975e`.** `manual_instruction_api.py`
+      (900 -> 162 lines, split into `manual_instruction_submit.py`/`cancel_amend.py`/`record.py`/`pending.py`,
+      sharing one `router`) and `live_execution_handler.py` (900 -> 447 lines, split into a pure-constants
+      `live_execution_venues.py` plus three mixins — `_CredentialsMixin`/`_DefiAdapterMixin`/
+      `_SportsExecutionMixin` — `LiveExecutionHandler` inherits, required because production code in
+      `v2/account_orchestrator.py`/`engine/transfers/wiring.py` calls
+      `LiveExecutionHandler._load_venue_trade_credentials(...)` as an explicit class-level static method, so
+      standalone functions wouldn't have preserved that call surface). Full test suite green (8806 passed).
+      **The dispatched sub-agent's own investigation superseded this todo's pre-analysis in two real ways**:
+      (1) the "12 test files patch `persist_audit_log`/`log_event`/etc. via `patch("...")` string literals" claim
+      was only PARTLY right — several of those files actually use `patch.object(manual_instruction_api,
+      "_orchestrator", ...)` / `monkeypatch.setattr` instead, a wider patch surface than a literal-string grep
+      would find, caught only by reading the actual test bodies; (2) trimming `manual_instruction_api.py` broke
+      `test_pretrade_wiring.py::test_kill_switch_blocks_all_submissions` (imports `ManualInstructionRequest`
+      directly from that module) — fixed by re-exporting the original schema surface, a real regression the full
+      test-suite run caught before shipping, not assumed away. Also removed a backward-compat re-export shim this
+      tranche itself introduced mid-split (`DEFI_VENUES`/`SPORTS_EXCHANGE_VENUES`/`SPORTS_VENUES` etc. kept alive
+      in `live_execution_handler.py` "for compat") — the repo's own `quality-gates.sh` "no-backward-compat-shims"
+      check caught it; fixed by migrating every real consumer (`test_sports_execution.py`, `test_routing_matrix.py`,
+      `test_live_execution_handler.py`) to import from `live_execution_venues`, the constants' actual owner,
+      instead of re-exporting. **Process note for future dispatches**: this sub-agent's background quickmerge kept
+      running after multiple "completed" task notifications had already fired, causing a real, if harmless,
+      duplicate-quickmerge race against this session's own redundant ship attempt for the same split — no data
+      was lost (working tree already matched HEAD by the time the second attempt resolved), but a `run_in_background`
+      agent's own nested backgrounded shell commands can outlive what its "completed" status implies; verify via
+      `git log`/`ps`, not the notification text alone, before assuming a dispatched agent is truly done.
 - [x] ✅ [AGENT] P0. **Post-phase codex audit across `/codex/04-architecture/` for every contract changed — DONE
       2026-08-20.** Every contract this tranche touched, checked: `order-state-machine.md` (fixed a prior session,
       9-state warning + PARTIALLY_FILLED ruling); `account-instructions.md` (fixed this session —

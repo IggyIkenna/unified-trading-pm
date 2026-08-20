@@ -934,7 +934,7 @@
       <span><b class="st st-live">live</b> reachable on a production path AND validated with real capital</span>
       <span><b class="st st-part">partial</b> built, reachable for some cases</span>
       <span><b class="st st-plan">planned</b> specified, not yet built</span>
-      <span><b class="pend">pending</b> figure not yet measured — never estimated</span>
+      <span><b class="pend">pending</b> not measured recently, or not yet captured though it can be — never estimated</span>
     </div>
     <div class="legend">
       <span
@@ -1100,8 +1100,9 @@
           because a venue is only useful for the data types it actually carries.
         </p>
         <p>
-          Where a number has not been measured yet it says <b class="pend">pending</b> rather than carrying an estimate.
-          An estimate that survives into an integration plan becomes a commitment nobody agreed to.
+          Where a number has not been measured recently, or where the data has not been captured yet though it can
+          be, this reads <b class="pend">pending</b> rather than carrying an estimate. An estimate that survives into
+          an integration plan becomes a commitment nobody agreed to.
         </p>
       </div>
     </details>
@@ -1161,7 +1162,7 @@
             <text x="565" y="120" text-anchor="middle" font-weight="600">Execution</text>
             <text x="565" y="140" text-anchor="middle" font-size="11">algos + routing</text>
             <text x="795" y="120" text-anchor="middle" font-weight="600">Venues</text>
-            <text x="795" y="140" text-anchor="middle" font-size="11">CeFi, DeFi, more</text>
+            <text x="795" y="140" text-anchor="middle" font-size="11">CeFi, DeFi, TradFi, sports, prediction</text>
             <text x="450" y="265" text-anchor="middle" font-size="12" font-style="italic">
               Security, audit and client isolation span every layer
             </text>
@@ -11973,7 +11974,7 @@
         <div class="tree-body">
           <p style="font-size: 0.93rem; color: var(--ink-3)">
             All 8 registry-declared TradFi venues (<code>VENUES_BY_ASSET_GROUP["tradfi"]</code>). Vendor-sourced
-            (Databento-first, per <code>tradfi-databento-sourcing-ssot.md</code>); the boundary disclosure differs per
+            (one primary provider, per internal TradFi sourcing documentation); the boundary disclosure differs per
             dataset and is stated inline where it diverges. <code>FRED</code> carries data types
             (<code>yield_curve</code>, <code>ohlcv_1d</code>) that the instrument-type roster could not classify — shown
             under its own “Unclassified” node rather than folded into a category it does not belong to.
@@ -17263,7 +17264,7 @@
           the remaining work there depends on which venues you want. Testnet readiness is currently mixed rather than
           uniformly complete: real progress exists (AAVE on Sepolia, a Solana LST devnet, a Kalshi demo host), and real
           gaps remain (no per-venue CeFi testnet declaration yet, sports' live-credential probe is still stubbed,
-          TradFi's only live probe covers Tardis, and Polymarket has neither a testnet nor a written paper-trading
+          TradFi's only live probe covers one vendor-sourced feed, and Polymarket has neither a testnet nor a written paper-trading
           ruling). Schemas and contracts do not change between these steps, so beginning at step 1 costs nothing later.
         </p>
       </div>
@@ -17863,8 +17864,9 @@
     <p class="lede">
       <span class="who">Odum Research</span> — platform integration guide.
       <b>Measured edition, 2026-08-18.</b> Coverage, denominator and readiness figures are live measurements with their
-      date and denominator stated. Remaining <b class="pend">pending</b> markers are figures not yet measured — they are
-      placeholders, never estimates, and a figure with no measured basis is omitted rather than approximated.
+      date and denominator stated. Remaining <b class="pend">pending</b> markers are figures not measured recently, or
+      not yet captured though they can be — placeholders, never estimates, and a figure with no measured basis is
+      omitted rather than approximated.
     </p>
     <p>
       Status reflects what is reachable on a production path AND validated with real capital — not what exists in a

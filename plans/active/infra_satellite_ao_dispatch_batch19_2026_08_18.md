@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: Infra satellite — na-eligibility-audit RECLASSIFY_SPLIT extraction batch (batch 19, single-todo)
+title: Infra satellite — na-eligibility-audit RECLASSIFY_SPLIT extraction batch (batch 19)
 summary: >-
   Single-todo extraction from the infra tranche's 2026-08-18 `/na-eligibility-audit` run — the bounded, mechanical
   half of `issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md`'s todo 1 (work the
@@ -9,8 +9,9 @@ summary: >-
   --diff-base mode later" forward-looking design question) is NOT extracted — stays `assigned_vm: NA` on the source
   doc. Conflict-checked: grepped every active plan for `check_active_refs_archived_plans` — only the source doc
   itself references the mechanism (it was only created 2026-08-17, ratchet baseline seeded same day); this is its
-  first dispatch. No finalize twin, per the established single-todo carve-out precedent
-  (`infra_satellite_ao_dispatch_batch4_2026_07_31.md` / `batch5_2026_08_01.md`).
+  first dispatch. A gated finalize companion is tracked at
+  `/plans/active/infra_satellite_ao_dispatch_batch19_2026_08_18_finalize_2026_08_20.md` because this extracted tracker has
+  two todos (the single-todo carve-out does not apply).
 status: active
 nature: process
 asset_group: [infrastructure]
@@ -31,6 +32,7 @@ last_updated: "2026-08-18"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
+archive_exempt: true # batch tracker remains active while the source issue's corpus cleanup continues
 priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
@@ -57,9 +59,9 @@ context_scope:
   ]
 ---
 
-# Infra satellite — archived-plan referrer cleanup (batch 19, single-todo)
+# Infra satellite — archived-plan referrer cleanup (batch 19)
 
-> **Fresh carve-out, single-todo, no finalize twin** (same pattern as batch4/batch5). Extracted from
+> **Fresh extraction batch with a gated finalize twin.** Extracted from
 > `issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md` todo 1 — that doc's own body already carries
 > a complete, self-sufficient dispatch prompt (§ "Dispatch prompt"). The todo below is a pointer to it plus
 > extraction provenance, not a re-derivation — read the source doc's "Dispatch prompt" section in full before
@@ -67,7 +69,7 @@ context_scope:
 
 ## Todo
 
-- [ ] [SCRIPT] P2. **Work `check_active_refs_archived_plans.py`'s baseline down from 925 toward 0** — follow
+- [x] [SCRIPT] P2. ✅ **Batch 5 shipped in `unified-trading-pm@9ceb806a92`; corpus continuation remains tracked in the source issue. Work `check_active_refs_archived_plans.py`'s baseline down from 925 toward 0** — follow
       `issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md`'s own "Dispatch prompt" section verbatim
       (batches of ~20-30 `related:` entries at a time; per entry: read the archived plan the entry points at,
       identify the durable fact it establishes that the referring doc still needs, check whether that fact already
@@ -96,6 +98,8 @@ context_scope:
       simultaneously dirty in the shared checkout with OTHER sessions' own unrelated uncommitted edits (confirmed
       via `git status`), so a surgical `related:`-only edit risked entangling with live WIP this session didn't
       own — deliberately left for whoever actually works this batch (with a fresh look at what's still dirty then).
+
+- [ ] [SCRIPT] P2. Continue the corpus cleanup from the current ratchet, processing the next verified batch of archived-plan `related:` entries and lowering the baseline until the source issue is resolved.
 
 ## Progress Log
 
@@ -142,3 +146,4 @@ context_scope:
 - **slot-21 2026-08-20 (pointer-review follow-up)**: The scoped gate initially exposed five remaining entries in this batch whose basenames were not repeated in body text. After reading each archived plan, all five were confirmed resolved or already represented by the referring document’s existing evidence; they were dropped as non-load-bearing historical clutter. `--only` is clean, and the live corpus count/baseline is 681 after concurrent cleanup.
 
 - **slot-22 2026-08-20 (fifth execution batch)**: Removed 25 redundant archived-plan `related:` citations from three clean active plans after confirming every archived basename remained in that referring document body as source evidence: `prediction_consolidated_closeout_2026_07_18.md` (9), `cross_cutting_consolidated_closeout_2026_07_25.md` (9), and `cross_cutting_closeout_observability_and_monitoring_2026_08_09.md` (7). No codex migration was needed; no pointers lacking body evidence were removed. Re-ran the checker: live count 668 (the prior 694 measurement moved during concurrent cleanup), below the prior baseline 671; `--update-baseline` lowered the ratchet to 668. The corpus-wide cleanup todo remains open.
+- **slot-22 2026-08-20 (sixth execution batch)**: Removed 4 redundant archived-plan `related:` citations from four clean active plans (`solana_dex_pool_swaps_indexer_2026_08_08.md`, `cross_ag_live_capture_parity_2026_08_14.md`, `deployment_registry_firestore_p5_verify_2026_07_14.md`, and `strategy_archetype_latency_deployment_profile_execution_2026_08_10.md`) after confirming each archived basename was already retained in the referring document body, source, or dependency context. No codex migration was needed. The live checker measured 653 citations; `--update-baseline` lowered the ratchet 657 → 653. The corpus-wide cleanup todo remains open.

@@ -160,6 +160,8 @@ today: one dispatch's worth of redundant investigation time, not an incorrect co
       11 prediction-tranche mismatches the same way this doc traces
       `prediction_phase_e_football_arb_live_2026_07_24.md` (parent-commit hash vs. declared marker hash vs. current
       hash, diffed at the stripped-body level) until every case is explained, not just the first one found.
+      Landed evidence reconciled: `unified-trading-pm@fc45e105a9` recorded the replay of snapshots `7913e469` and
+      `921636aa` and its six-mismatch/no-third-cause conclusion in the batch16 plan.
 - [x] ✅ [SCRIPT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` item 4 (na-eligibility-audit 2026-08-17). Once fully root-caused, implement the complete fix in
       `scripts/plan-hygiene/generate_na_doc_tranche_inventory.py` (`body_content_hash()` /
       `_VERDICT_MARKER_LINE_RE` / `_latest_verdict_marker()`), and audit the 5 other importers
@@ -167,6 +169,8 @@ today: one dispatch's worth of redundant investigation time, not an incorrect co
       `generate_tranche_doc_inventory.py`, `na_marker_helper.py`) for any function that re-implements rather than
       imports the same hashing/marker-parsing logic (a duplicated, independently-drifted copy would need the same
       fix applied twice).
+      Landed evidence reconciled: `unified-trading-pm@70fc5408f1` shipped the shared fix; the batch16 plan records
+      QG evidence (`2155 passed, 17 skipped`) and the five-importer audit, with flip commit `dc4370f955`.
 - [ ] [OPERATOR] P3. Before merging the fix, decide whether to warn/stagger against other in-flight tranche
       dispatches -- the fix invalidates every existing `[body-hash:...]` corpus-wide in one commit, so the NEXT run
       of every one of the 10 tranches will see 100% of its own population as "in scope" once, a full-corpus

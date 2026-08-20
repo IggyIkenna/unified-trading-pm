@@ -22,7 +22,7 @@ related:
     /plans/epics/deployment_and_user_management_master.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only
@@ -32,7 +32,7 @@ estimate_baseline_ai_days: 0.1
 estimate_calibrated_ai_days: 0.1
 assigned_role: ui_developer
 drift_direction: none
-locked_by: plan_reconciler (agt-c82f06) since 2026-08-19T19:24:38Z
+locked_by:
 locked_since:
 resolved_by:
 source: "plan_reconciler dispatch agt-c82f06 — sharded ui tranche run 2026-08-19"
@@ -117,3 +117,22 @@ _Filled in at STEP 7._
   concurrent sibling runs on cefi/ao/cross-cutting/sports/tradfi today/recently, none on `ui`). Fan-out hunters
   dispatched next for the 18 docs not yet directly read this run.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-20 (manual dead-lock clear, ikennaigboaka interactive session, slot 6)**: cleared `locked_by:` —
+  dispatch `agt-c82f06` confirmed terminated via a read-only SQLite query against AO's live orchestrator VM
+  `state.db` `agents` table (AWS SSM `send-command`, no HTTP API — `/api/agents` timed out under load): a bare
+  `curl localhost:8765/api/backlog` doesn't cover single-agent status; `/api/agents?include_finished=true` and
+  `/api/scheduled-jobs/recent` were both tried and either timed out or had the row coalesced away by a later
+  same-tranche retry report — the direct `sqlite3` query against `data/state/state.db` was the only reliable
+  read-only path). Result: `status=archived`, `exit_reason=superseded-plan_reconciler`,
+  `registered_at=2026-08-19 19:17:32.711027`, `finished_at=2026-08-19 19:35:34.175624` (~23.0h old at clear time).
+  **Not `reaped-stale`** — the automated `PlanReconcilerDeadLockSweep` (Option A,
+  `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`) only auto-clears that exact
+  `exit_reason` and would not have cleared this lock on its own. Root-caused instead: a concurrent-sibling
+  `plan_reconciler` dispatch on a DIFFERENT tranche (`agt-d46d9a`) was archived by AO's `reap_orphan_agents()`
+  singleton-agent-kind dedup at the identical microsecond (`.175602` vs `.175624`) as this one — `plan_reconciler`
+  is wrongly treated as a system-wide singleton (`_SINGLETON_AGENT_KINDS`) even though the tranche-sharded daily
+  design runs several concurrent instances by design; the dedup falsely killed 2 of 3 concurrently-running tranche
+  workers mid-task, this one only 18min into its run. Filed as a new cross-repo P1 finding:
+  `ao_singleton_agent_kind_dedup_kills_concurrent_tranche_workers_2026_08_20.md`. Since the dispatch is
+  unambiguously terminated (archived, will never resume to unlock this doc itself), clearing now matches the
+  2026-08-15 operator ruling's underlying intent even though the literal `exit_reason` differs from the precedent.

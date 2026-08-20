@@ -150,62 +150,45 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [ ] [FROM-T1] P0. **Counterparty-facing surface for `strategy-service`** — T1 re-triaged its own plan's "External
-      API surface" section 2026-08-20 and found this targets a repo T1 doesn't own.
-      `platform-external-api-walkthrough.html` §02 states strategy-service has no counterparty-facing surface at
-      all today; its real endpoints are admin-token-gated internal tooling (registry reads, restriction-profile
-      router, operational-mode flip). §25 (owner: W22) additionally found "a workspace-wide search found no
-      internal messaging — Pub/Sub or otherwise — connecting strategy-service's decisions to execution-service
-      today, and no direct API client either" — the only live instruction path is manual
-      (`ManualOperationHandler → LiveOrchestrator.execute_instruction()`). Two halves, likely joint with T4: (1) the
-      messaging bridge (UTL `EventTransport`, strategy publishes its instruction stream, execution subscribes —
-      the same pattern market data already uses), (2) the counterparty-facing HTTP/WebSocket surface itself. A
-      matching item is filed on T4's `## Inbound requests` for the execution-subscribing half — don't let either
-      side stall waiting on the other.
-      **Correction + scoping, 2026-08-20 (investigated, deliberately NOT built this session — see reasoning
-      below)**: the "no internal messaging" finding is TRUE for the general case but needs one correction — a
-      narrow instance of exactly this bridge already exists and works end-to-end for 3 strategy families
-      (`CARRY_AND_YIELD`, `ARBITRAGE_STRUCTURAL`, `STAT_ARB_PAIRS`, the "Group B" multi-leg `AtomicInstruction`
-      mechanism): `strategy_service/engine/strategies/v2/live_routing.py::publish_atomic_instruction` (real
-      production caller: `cli/handlers/group_b_handler.py`) publishes via UTL `EventTransport`;
-      `execution_service/v2/atomic_instruction_router.py::route_atomic_instructions` subscribes and calls
-      `AtomicLegExecutor` directly — ruled + shipped 2026-07-28
-      (`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`). **This is the exact pattern to
-      mirror for the general case, not a design question** — the architecture (InMemoryTransport for paper,
-      Pub/Sub for live, same code path) is already proven.
-      **Correction to this todo's OWN prior entry, same day**: the paragraph originally here (written earlier
-      today) claimed "no live/paper caller of the orchestrator's tick loop was found" — that was wrong, from an
-      incomplete grep (missed a match my own search pattern should have caught). Traced further and found the
-      real driver: `strategy_service/engine/backtest/runner.py::GroupBRunner` (despite the "Group B" name, its
-      own docstring: "maintains a non-shadow `V2EngineOrchestrator` — emitted instructions are captured and
-      benchmark-filled inline", `backtest_group` is just an internal harness-taxonomy label, not an archetype
-      restriction — it's registered against whichever instance(s) a caller wires in, per-archetype, not scoped to
-      3 families). `paper_run_handler.py` (the actual `--operation paper-run` T+1-cron caller) instantiates it
-      too, for a promoted `carry_staked_basis` instance — confirming this IS the real live/paper driver.
-      **The actual, now-precise gap**: `GroupBRunner._process_tick()` (`runner.py:244-270`) calls
-      `orchestrator.on_tick(...)`, then UNCONDITIONALLY runs every returned instruction through
-      `self._fill_engine.settle(...)` — a **local `BenchmarkFillEngine` simulation**, regardless of mode. The
-      ONLY real external publish is a narrow, explicit exception: `if instruction is AtomicInstruction AND
-      execution_mode is LEADER_HEDGE: self._atomic_publisher(instruction)` (`__init__`'s own comment: "Wire-in
-      seam 2026-07-30 ruling... `None` (default) keeps the runner byte-identical for non-multi-leg / legacy
-      backtests — no forward, no event-spine touch"). So the gap isn't a missing driver — it's that this driver's
-      own 2026-07-30 wiring deliberately scoped the real-publish branch to ONLY `LEADER_HEDGE AtomicInstruction`;
-      every other `StrategyInstructionEnvelope` (all ~56 non-Group-B archetypes) is always benchmark-filled
-      locally and never reaches an external transport in ANY mode today, paper or nominally-live. This is now a
-      well-scoped, buildable extension (mirror the existing `atomic_publisher` seam for the general instruction
-      type) rather than an open architectural question — **but two things need resolving first, not guessed**:
-      (1) whether "live" mode should SKIP local benchmark-fill settlement entirely once a real publish path
-      exists (so real venue fills come back instead of a simulated one), or run both — settling AND publishing —
-      which would be a real double-count risk; (2) `build_paper_run_attribution`/`build_paper_run_passive`
-      (`engine/backtest/paper_run_attribution.py`/`paper_run_passive.py`) — grepped and found ZERO production
-      callers, only their own file + 2 test files. **This also corrects an earlier claim from this session's own
-      PnL investigation** (session 4, this plan's W9/W10/W13 row) that called these "the shared batch=paper=live
-      code path... confirmed real, wired" — that was a second-hand subagent claim relayed without independently
-      re-verifying the literal call site, and it does not hold up against a direct grep. Whatever function
-      `GroupBRunner`/`PaperRunHandler` actually uses for attribution was NOT identified in this pass either — a
-      real open item, not resolved here. The counterparty-facing HTTP/WebSocket surface (the second half of the
-      original ask) still needs separate real product/security design (auth model, rate limits, what data is
-      exposed), not attempted here.
+- [x] ✅ [FROM-T1] P0. **Counterparty-facing surface for `strategy-service`** — the messaging-bridge half is
+      SHIPPED, `strategy-service@a8b53d9cc7`. T1's "no internal messaging" finding was true for the
+      general instruction type but not the whole picture: a working publish→subscribe→execute bridge already
+      existed via UTL `EventTransport`, narrowly scoped to LEADER_HEDGE `AtomicInstruction` (3 families) —
+      `live_routing.py::publish_atomic_instruction` → `execution_service/v2/atomic_instruction_router.py`
+      (ruled + shipped 2026-07-28). Traced its real driver, `engine/backtest/runner.py::GroupBRunner` (despite
+      the "Group B" name it is NOT archetype-restricted — registered per whatever instance a caller wires in;
+      confirmed via `paper_run_handler.py`, the real `--operation paper-run` T+1-cron caller). Its
+      `_process_tick()` unconditionally benchmark-fills every instruction locally and only forwards the
+      LEADER_HEDGE-atomic subset externally — so the real gap was that seam's scope, not a missing driver.
+      **Built the general-instruction counterpart, mirroring the exact proven pattern**: `live_routing.py` gained
+      `publish_strategy_instruction`/`_sync`, `filter_general_instructions` (complement of
+      `filter_leader_hedge_atomics` by construction — an instruction is routed on exactly one of the two shards,
+      never both, never neither), and `publish_general_instructions_sync`, all publishing onto a NEW, separate
+      `strategy_instruction` shard. `GroupBRunner` gained an `instruction_publisher` seam (byte-identical when
+      `None`, same as the existing `atomic_publisher` contract) firing for every non-LEADER_HEDGE instruction;
+      `group_b_handler.py` wires both seams the same way. 10 new tests, including an explicit no-double-publish
+      proof. **Deliberately NOT resolved, flagged not guessed**: whether live mode should skip local
+      benchmark-fill settlement once a real publish path exists (settle+publish both would double-count) — that's
+      a real design decision for whoever connects this to an actual live deployment, not decided here; this
+      session shipped the publish-side plumbing only, additive and opt-in. Execution-service has no subscriber
+      for the new shard yet — T4's half, matching how the atomic seam itself was wired ahead of its route side.
+      **Also corrected in the same pass**: an earlier claim from this session's own PnL investigation (session 4,
+      W9/W10/W13 row) that `paper_run_attribution.py`/`paper_run_passive.py` were "confirmed real, wired" was a
+      second-hand subagent relay never independently re-verified — direct grep found zero production callers;
+      retracted there. The counterparty-facing HTTP/WebSocket surface (the second half of the original ask)
+      still needs separate real product/security design (auth model, rate limits, what data is exposed) —
+      genuinely not attempted, correctly still open.
+- [ ] [BACKEND] P0. **Operator decision 2026-08-20: run BOTH local benchmark-fill settlement AND the new
+      general-instruction publish in live mode** (not skip-settlement) — explicitly needs its own downstream
+      reconciliation logic to avoid double-counting the same trade's position/PnL impact once a real venue fill
+      also comes back through execution-service. NOT built — design + build the reconciliation mechanism before
+      wiring `instruction_publisher` into any real live deployment (it is currently opt-in/unwired in production
+      regardless, per the checkbox above, so this is not blocking today, but IS the prerequisite before someone
+      connects it). Needs: how to correlate a local benchmark fill against the real venue fill for the same
+      instruction (likely `instruction_id`/`correlation_id`), which one is authoritative for PnL once both
+      exist, and whether the local fill becomes a shadow/comparison value rather than a real position delta once
+      live. No existing SSOT covers this — check `/codex/09-strategy/operational/paper-batch-live-reconciliation.md`
+      first, it may already define the right pattern for a different reconciliation case.
 - [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
       unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
       edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
@@ -223,7 +206,8 @@ todos only to confirm they are data-movement, then leave it.
       OPTIONAL (a "flavor", never a mandatory field — pure-passive, fire-immediately and patient-then-escalate are
       all valid consumers), and it is strategy-COMPUTED and strategy-OWNED, with execution merely consuming it.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [FROM-T1] P1. `strategy_instructions` writer/registry DIVERGENCE — your repo's own
+- [x] ✅ [FROM-T1] P1. **SHIPPED `strategy-service@8a7f80e8` (2026-08-20 session 6) — checkbox missed at ship
+      time, flipped now.** `strategy_instructions` writer/registry DIVERGENCE — your repo's own
       `strategy_service/engine/core/gcs_storage_service.py::write_instructions` hardcodes its own blob-path
       string (`f"strategy_instructions/client_id={client_id}/strategy_id={strategy_id}/day={date_str}/
       instructions.parquet"`) and bypasses UTL's `PATH_REGISTRY`/`build_path()` entirely. T1 just added a
@@ -241,7 +225,8 @@ todos only to confirm they are data-movement, then leave it.
       paths/registry.py` (`strategy_instructions` row + its own comment on this writer being the "unwired stub"
       case), `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_
       pnl_attribution_2026_08_15.md`.
-- [ ] [FROM-T1] P2. **Migrate `staked_basis.py`'s `_STAKING_PROTOCOL_CHAIN` off its own hardcoded dict onto UAC's
+- [x] ✅ [FROM-T1] P2. **SHIPPED `strategy-service@8a7f80e8` (2026-08-20 session 6) — checkbox missed at ship
+      time, flipped now.** Migrate `staked_basis.py`'s `_STAKING_PROTOCOL_CHAIN` off its own hardcoded dict onto UAC's
       new `get_chain_for_protocol()`.** Registry SSOT hardening 2026-08-16 todo 6 measured that your 8-entry
       lowercase protocol→chain map (`strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:186`)
       genuinely duplicates data UAC already has: 7 of your 8 entries resolve exactly via UAC's existing
@@ -261,7 +246,7 @@ todos only to confirm they are data-movement, then leave it.
       genuine miss), then delete `_STAKING_PROTOCOL_CHAIN` itself — `_ALLOWED_CHAINS`/`ALLOWED_CHAINS` stay,
       they're a separate concern (which chains this strategy permits, not protocol→chain resolution). This is
       T3's own repo so T1 cannot make this edit. Evidence:
-      `/plans/active/registry_ssot_hardening_2026_08_16.md` todo 6, `unified-api-contracts/unified_api_contracts
+      `/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md` todo 6, `unified-api-contracts/unified_api_contracts
       /registry/venue_constants.py::get_chain_for_protocol`.
 
 ## Todos
@@ -358,11 +343,12 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Delete entries from `clients_yaml_coverage.PENDING_CROSS_REPO_WAIVER` as T5 lands each
       archetype's `clients.yaml`/`clients_waiver.yaml` in `deployment-service`. Filed as an inbound request on T5's
       plan (`unified-trading-pm@96d5d2e1f1`); the frozenset is the shrinking worklist. 27 entries at authoring.
-- [ ] [BACKEND] P2. Audit the other 3 engine families named in the config-key contract-drift issue (sports,
-      ML-directional, market-making) the same way the vol family was audited on 2026-08-19 — by making the systemic
-      construct-and-fire test exercise them and seeing which no-op. That method found 2 real drifts (8 keys) the
-      A4 gate structurally cannot catch, because A4 compares the CATALOGUE against the schema and both sides can
-      agree while the ENGINE reads a third spelling. Evidence:
+- [x] ✅ [BACKEND] P2. **Duplicate of the already-flipped todo above (line 306) — same finding, same resolution,
+      tracked twice in this plan.** Audit the other 3 engine families named in the config-key contract-drift
+      issue (sports, ML-directional, market-making) the same way the vol family was audited on 2026-08-19. Done
+      2026-08-20 (session 3): the systemic construct-and-fire test already parametrizes all 59 registered
+      archetypes, not vol-scoped — confirmed green except 2 genuine `[DESIGN]`-blocked xfails. See the flipped
+      checkbox above and the deferred table for full detail; not re-done here. Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
 
 ### W6 — wizard, config and scaffolding
@@ -433,6 +419,22 @@ todos only to confirm they are data-movement, then leave it.
       TWR/Notional/PnL-recovery); the one raw-equity HWM implementation found (`pnl_monitor.py:70,201-202`) has
       no confirmed production instantiation site (dead code, not a live violation) and mock_data_provider's is
       explicitly D2-smoke/mock-only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
+      **Operator decision 2026-08-20 (confirmed strategy-service is the right home)**: wire `compute_handler`
+      into a real cron trigger — do NOT delete it. **Operator's own spec for what PnL attribution IS, verbatim,
+      captured here so it isn't lost**: "PnL attribution takes snapshots of market data processing service and
+      feature service data and pretty much tries to attribute it to the total PnL change from account balance
+      changes. We need a PnL total change, and then you attribute it and you get the residual, which is your
+      error, so the error should become zero, of course. We should have alerts in Slack in one of our existing
+      channels that UTS live alerts, probably if the attribution is wrong and broken down by which asset group,
+      deployment, instruments, whatever." Concretely: `total_pnl_change` (from real account-balance deltas) −
+      `sum(attributed factors, from MTDS + features-service snapshots)` = `residual`; residual should trend to
+      ~0 for a correct attribution model; alert to the existing `uts-live-alerts`-style Slack channel (confirm
+      exact channel name — SSOT `/codex/04-architecture/agent-orchestrator-alerting.md`'s adjacent
+      `/codex/04-architecture/ci-alerting.md` doc names the pattern, not necessarily this exact channel) when
+      residual is non-zero beyond a to-be-set tolerance, broken down by asset_group / deployment / instrument.
+      **This is new scope beyond "wire the existing cron"** — the residual-computation + Slack-alerting
+      machinery does not exist yet per this session's investigation; check `compute_handler.py`'s current
+      output shape before assuming what's missing vs already there.
 - [ ] [BACKEND] P0. Build PnL attribution across every dimension the artefacts describe (W13) — currently
       "specified, not built".
 - [ ] [BACKEND] P1. Fix the interest-accrual wrong engine and banned formula. Evidence:
@@ -493,15 +495,39 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Fix the 5 of 7 on-chain feature groups writing byte-identical zero-feature-column parquets
       stamped `captured=True`, plus the 6 false-`captured` rows with zero GCS objects, plus the 4-repo
       `feature_group` vocabulary split. **Re-verified 2026-08-20 — narrower than titled, correctly NOT
-      agent-attempted**: the false-`captured`-rows + consolidator portions already shipped 2026-07-30
-      (`features-service@d8a643a0`). The one remaining piece (build 5 new protocol-specific MTDS chain-field
-      collectors — ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor per on-chain protocol)
-      has been independently re-confirmed FIVE separate times (na-eligibility-audits 07-30, 08-03, 08-06, 08-16,
-      round11-sweep 08-09) as needing a human sizing/scoping decision — which on-chain data source per
-      protocol/field — not a bare mechanical build. Not attempted here for the same reason; a sixth re-derivation
-      of this conclusion would waste the exact effort those audits exist to prevent. The vocabulary-split half
-      also explicitly needs an operator ruling per the doc's own summary. Evidence:
+      agent-attempted before this correction**: the false-`captured`-rows + consolidator portions already shipped
+      2026-07-30 (`features-service@d8a643a0`). The remaining piece (5 protocol-specific on-chain chain-field
+      collectors for ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor) had been
+      independently re-confirmed FIVE times as "needs a human data-source-per-protocol decision" — **that framing
+      was too broad, corrected 2026-08-20 (operator challenge: batch=live symmetry means whatever data source we
+      already have for one mode we should have for the other — investigated rather than re-asserted)**:
+      `execution-service/execution_service/defi_execution/protocols/aave_live.py::get_user_account_data()`
+      already makes a REAL on-chain call (`Pool.getUserAccountData()` via a real Web3 ABI fragment, not
+      simulated) returning exactly `ltv`, `currentLiquidationThreshold`, and `healthFactor` for AAVE_V3 — a
+      proven, working data-source answer the 5 prior audits never found because they only searched inside
+      features-service, not execution-service, for the same technical problem solved for a different purpose
+      (execution needs it for borrow-safety checks; features needs it for feature computation). Grepped the
+      other 6 protocols' execution-service modules (COMPOUND_V3, FLUID, EULER_V2, RADIANT, VENUS, BENQI, MORPHO)
+      for the same pattern — none found; only AAVE_V3 has this today. **Operator decision 2026-08-20: build all
+      7 protocols, not just AAVE_V3** — split into two todos below. Evidence:
       `/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
+- [ ] [AGENT] P0. **Build the AAVE_V3 on-chain feature collector NOW — unblocked, low-risk, pattern already
+      proven.** Mirror `execution-service/execution_service/defi_execution/protocols/aave_live.py`'s exact ABI
+      fragment + `Pool.getUserAccountData(account).call()` RPC pattern (lines ~113-125 for the ABI, ~143-152 for
+      the call + field mapping) inside features-service's on-chain feature engine, producing real
+      `ltv`/`liquidation_threshold`/`health_factor` values instead of the current byte-identical empty parquet
+      for AAVE_V3's feature group. `reward_rate`/`flash_loan_liquidity` are NOT covered by
+      `getUserAccountData()` — still need their own real on-chain source even for AAVE_V3 (check Aave's
+      `AaveProtocolDataProvider`/incentives contracts before guessing). Not a design question anymore for the 3
+      fields `getUserAccountData` answers — a port.
+- [ ] [OPERATOR] P0. **Find each of the other 6 protocols' (COMPOUND_V3, FLUID, EULER_V2, RADIANT, VENUS, BENQI,
+      MORPHO) real on-chain read method for ltv/liquidation_threshold/health_factor(/reward_rate/
+      flash_loan_liquidity where applicable), one at a time, mirroring the AAVE_V3 investigation above** — none
+      have an execution-service equivalent to copy from (confirmed by grep 2026-08-20), so each needs the same
+      "find the real contract call" research AAVE_V3 already had answered for it elsewhere. Operator offered to
+      help identify each protocol's method 2026-08-20 — do this interactively, protocol by protocol, not by
+      guessing an ABI. Once each is found, the collector build itself is the same mechanical port as AAVE_V3
+      above.
 - [x] ✅ [BACKEND] P0. Remove the banned-vendor dependency — `corporate_actions` is sourced exclusively from
       `polygon_corporate_actions_adapter.py` and Massive-fka-Polygon.io is a FLEET-WIDE banned vendor. **SHIPPED
       2026-08-20 — `features-service@fa78040e30`**, unblocked mid-session by operator ruling R6
@@ -531,8 +557,12 @@ todos only to confirm they are data-movement, then leave it.
       session's beta-hedge/vol-target caution. 2 of the doc's todos were already extracted to a dispatched satellite
       batch (archived 2026-08-20). Evidence:
       `/plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md`.
-- [ ] [BACKEND] P1. Give the calendar domain manifest visibility — `economic_events` / `forexfactory` /
-      `corporate_actions` / `earnings_results` never call `record_captured`. Evidence:
+- [ ] [AGENT] P1. **UNBLOCKED 2026-08-20 — operator ruled: YES, calendar belongs in Layer-1** (the event-driven
+      shape doesn't disqualify it; it needs its own shard-atom definition, not exclusion). Give the calendar
+      domain manifest visibility — wire `record_captured` (or the calendar-appropriate equivalent, since the
+      shard-atom is event-driven not per-venue-per-instrument) into `corporate_actions_handler.py`,
+      `economic_results_handler.py`, `forexfactory_handler.py`, and the `calendar_orchestrator.py` dispatch
+      path. Now mechanically buildable — the `[REVIEW]` gate that blocked it is resolved. Evidence:
       `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`.
 - [x] ✅ [BACKEND] P1. Fix the `delta_one` dependency checker resolving the wrong PREDICTION bucket token —
       `_format_template_vars` does a naive `asset_group.lower()` with no abbreviation map, but PREDICTION's real
@@ -665,7 +695,7 @@ section is now done.
 | Area | State | Next concrete step |
 | --- | --- | --- |
 | Archetype code-completeness (all 7 legs, all 3 modes) | **DONE — 59/59 ready every leg/mode** | Nothing. |
-| `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@<see Progress Log>`. | Nothing. |
+| `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@ed9ff26875` (corrected 2026-08-20 — this cell had reverted to a stale placeholder, likely during an earlier stash-conflict incident, and a blanket SHA-fill script mistakenly overwrote it with the wrong commit; fixed against `git log`, the authoritative source). | Nothing. |
 | DeFi/vol/sports/ML/MM config-key contract drift | **DONE — sweep was already comprehensive, not vol-scoped.** The systemic construct-and-fire test parametrizes all 59 registered archetypes, confirmed green (143 passed/3 xfailed with `GCP_PROJECT_ID` set). 2 genuine remaining bugs, both `[DESIGN]`-blocked not mechanical: `RULES_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED` (real per-row threshold/instrument-ID decisions, not derivable). | Nothing agent-executable. The 2 xfails need a human to pick real DSL thresholds / Betfair-Matchbook instrument IDs — don't fabricate plausible-looking values for live financial strategies. |
 | W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
 | W9/W10/W13 PnL, risk, exposure | **Genuinely open, re-scoped, with a correction.** Session 4's "`paper_run_attribution.py`/`paper_run_passive.py` confirmed real, shared batch=paper=live path" claim is RETRACTED (session 6) — zero production callers found on direct grep, was an unverified second-hand relay. The real live/paper driver is `GroupBRunner` (`engine/backtest/runner.py`); what it uses for attribution is unidentified. `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Identify `GroupBRunner`'s real attribution path (not `paper_run_attribution.py`/`paper_run_passive.py` — those are dead code candidates now, not the answer) before touching PnL surfaces further. Decide `compute_handler`'s fate and confirm `compute_pnl`'s 3 capabilities are covered elsewhere before retiring it. |
@@ -881,3 +911,43 @@ production callers and are retracted as "the shared path." Lesson worth stating 
 claim ("confirmed real, wired") was carried forward and re-asserted twice this session without independently
 re-checking the literal call site each time — the fix each time was a direct grep, seconds of work. Cite a
 subagent's finding as ITS finding until independently re-verified, not as an established fact.
+
+## Progress Log — 2026-08-20 session 7
+
+**Built the general-instruction publish seam**, `strategy-service@a8b53d9cc7`: `GroupBRunner` now
+forwards every non-LEADER_HEDGE instruction to an optional `instruction_publisher`, mirroring the proven
+`atomic_publisher` seam exactly — additive, opt-in, byte-identical when unset, complementary shard so no
+instruction is ever double-published or dropped. Full detail on the flipped checkbox. The "should live mode skip
+local settlement" question is correctly left for whoever wires this into a real deployment, not decided here.
+
+**Also this session: caught two shipped-but-unflipped checkboxes** (`strategy-service@8a7f80e8`'s two fixes had
+real Progress Log entries but the actual todo checkboxes were never flipped — found only because the operator
+asked "how many tasks are left" and a fresh count exposed the gap) and one duplicate todo tracking the same
+already-resolved config-drift finding twice. Both fixed. **Lesson**: a Progress Log entry is not the same
+artifact as a flipped checkbox — writing the former does not guarantee the latter happened; re-count `- [ ]` vs
+`- [x]` periodically rather than trusting memory of what got flipped.
+
+## Progress Log — 2026-08-20 session 8 (operator design-decision round)
+
+**Operator challenged the "on-chain collectors need a human data-source decision" finding** (independently
+re-confirmed 5× by prior audits) with a sharp, correct instinct: batch=live symmetry means whatever data source
+batch already has, live should too — so why would this be unresolved? Investigated rather than re-asserting: the
+5 prior audits were right that features-service itself has no data source, but wrong to frame it as unknown —
+`execution-service/execution_service/defi_execution/protocols/aave_live.py::get_user_account_data()` already
+makes a REAL on-chain call (`Pool.getUserAccountData()`, real Web3 ABI, not simulated) answering `ltv`/
+`liquidation_threshold`/`health_factor` for AAVE_V3. **Lesson**: "needs a data-source decision" claims should be
+checked against SIBLING repos solving the same underlying technical problem for a different purpose, not just
+re-confirmed within the one repo that's missing it — the same real-world fact (how to read Aave's account data)
+existed in the codebase the whole time, just in execution-service instead of features-service. The other 6
+protocols (COMPOUND_V3, FLUID, EULER_V2, RADIANT, VENUS, BENQI, MORPHO) do NOT have an execution-service
+equivalent (confirmed by grep) — for those, the "needs investigation" framing was and remains correct.
+
+**Four operator design decisions resolved this session, todos updated accordingly** (see each item above for
+full detail): (1) build all 7 on-chain protocol collectors, starting with AAVE_V3 now (pattern proven) and the
+other 6 interactively with operator help finding each real read method; (2) run BOTH local settlement AND the
+new publish seam in live mode — needs a downstream reconciliation mechanism, not yet built; (3) calendar data
+DOES belong in Layer-1 honest-coverage — the manifest-visibility wiring is now mechanically buildable, not
+design-gated; (4) wire `compute_handler` into a real cron trigger (confirmed strategy-service is correct), plus
+a full operator-specified PnL-attribution design (residual = total PnL change − sum(attributed factors) →
+should trend to ~0; Slack-alert on non-zero residual broken down by asset_group/deployment/instrument) captured
+verbatim on that todo — this is new scope beyond "wire the existing cron", not yet built.

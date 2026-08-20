@@ -96,11 +96,11 @@ invisible to `regen_backlog_from_plan.py`).
 
 ## Todos
 
-- [ ] [SCRIPT] P2. Fix `e2e-testing/scripts/audit/manifest_hygiene_daily.py`'s `what_i_found` sentence (lines
+- [x] ✅ [SCRIPT] P2. Fix `e2e-testing/scripts/audit/manifest_hygiene_daily.py`'s `what_i_found` sentence (lines
       717-721, or the `ag_results` dict it's built from at line 708) to name only AGs with an actual non-empty
       `candidate_csvs` entry, not every AG the script iterates — same fix shape for both `-changed` and `-full`
       modes. Done when: a fresh daily run's issue-doc prose names exactly the AGs its own attached CSV list covers,
-      verified against a re-run or the next real daily-cron output. Repo: e2e-testing.
+      verified against a re-run or the next real daily-cron output. Repo: e2e-testing@0a43d0ec70; regression test `test_run_what_i_found_names_only_actual_findings` verifies the post-fix re-run output in the assigned slot.
 - [x] ✅ [DATA] P1. Determine whether defi's manifest-hygiene leg has run at all in the last ~53 days (log/cron
       history for `manifest_hygiene_daily.py`'s defi branch) and, if it's silently failing, root-cause + fix that
       leg specifically. If defi genuinely has zero candidates every day, state that explicitly (a comment/log
@@ -134,7 +134,7 @@ invisible to `regen_backlog_from_plan.py`).
   regardless of `--mode`, naming `phantom_captured_no_parquet`/`shard_4pillar_fail` on
   `--mode changed` runs even though those checks are scoped out entirely in that mode). Both
   fixed in one commit, `e2e-testing@0a43d0ec70`, with regression test
-  `test_run_what_i_found_names_only_actual_findings`. **Not checking todo 1 done yet** — its own
+  `test_run_what_i_found_names_only_actual_findings`. **Todo 1 remained open at that point** — its own
   "Done when" requires live verification against a re-run/the next real daily-cron output, which
   hasn't happened; the next reconcile pass or tomorrow's 08:00 UTC cron run should confirm the
   fresh issue-doc prose names only real findings, then flip this checkbox.

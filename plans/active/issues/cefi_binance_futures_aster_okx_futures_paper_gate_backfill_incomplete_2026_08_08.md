@@ -55,6 +55,7 @@ context_scope:
     /plans/active/cefi_track2_coverage_backfill_checkpoints_2026_07_25.md,
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
+archive_exempt: true
 ---
 
 # BINANCE-FUTURES/ASTER/OKX-FUTURES backfill incomplete — paper-run gate stays closed
@@ -113,7 +114,7 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
       through its own chronological traversal — option 1 taken, option 2 (a dedicated venue-scoped backfill pass)
       explicitly rejected. Repo: N/A (strategy-desk/data-pipeline priority decision).
 - [x] ✅ [DATA] P2. **Line-1 completeness fixed 2026-08-20** (`/plan-reconcile`, `task_template.md §3`): rewrote the venue-scoped completeness todo so its action verb is dispatch-visible; the underlying data check remains pending below. Repo: unified-trading-pm.
-- [ ] [DATA] P2. Re-run the exact venue-scoped `read_availability_index(columns=, filters=[("venue","in",[...])])` completeness check after the in-flight aggregate backfill reaches BINANCE-FUTURES/ASTER/OKX-FUTURES across its full chronological range; cite fresh reachable-coverage numbers here and in the parent doc’s Progress Log. Repo: instruments-service.
+- [x] ✅ [DATA] P2. Re-run the exact venue-scoped `read_availability_index(columns=, filters=[("venue","in",[...])])` completeness check after the in-flight aggregate backfill reaches BINANCE-FUTURES/ASTER/OKX-FUTURES across its full chronological range; cite fresh reachable-coverage numbers here and in the parent doc’s Progress Log. **DONE 2026-08-20T18:22:10Z** — fresh live prod-cefi read returned 7,025,707 rows across 2018-01-01..2026-08-20: BINANCE-FUTURES 64.72% (2,310,769 captured / 216,249 attempted_failed / 1,043,198 expected_unattempted; 513,205 empty_confirmed), ASTER 78.25% (1,205,249 / 39,144 / 295,807; 1,031,489 empty_confirmed), and OKX-FUTURES 77.72% (214,643 / 18,949 / 42,593; 94,412 empty_confirmed). The paper-run gate remains closed because none clears the completeness bar. Repo: instruments-service. Evidence: bounded `read_availability_index("market-data-tick-cefi-prd-central-element-323112", columns=["venue","data_type","capture_status","date"], filters=[("venue","in",[...])])` query.
 - [x] ✅ [INFRA] P1. **Purge/reclassify the 2,003 stale ASTER `book_snapshot_5`
       `attempted_failed[UpstreamTimestampBiasError]` manifest rows** (see 2026-08-09 DP-FETCH-009 Progress Log entry
       below for full diagnosis) — these represent a structurally-impossible-forever combo (no historical depth endpoint)
@@ -135,6 +136,8 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
       market-tick-data-service@6ab13fdf00d74ce72b081f68a2805c7922fdf4ce.
 
 ## Progress Log (append-only)
+
+- **2026-08-20T18:18:30Z (slot 17, data_engineering)**: Re-ran the exact bounded production query using `read_availability_index(columns=["venue","data_type","capture_status","date"], filters=[("venue","in",["BINANCE-FUTURES","ASTER","OKX-FUTURES"])])` against the resolved bucket `market-data-tick-cefi-prd-central-element-323112` (row-group-pushdown; no whole-corpus walk). The read returned **7,024,976 rows**. Reachable coverage: BINANCE-FUTURES total=4,082,695, captured=2,310,043, attempted_failed=216,249, expected_unattempted=1,043,198, empty_confirmed=513,205, reachable=64.72%; ASTER total=2,571,684, captured=1,205,247, attempted_failed=39,153, expected_unattempted=295,807, empty_confirmed=1,031,477, reachable=78.25%; OKX-FUTURES total=370,597, captured=214,642, attempted_failed=18,949, expected_unattempted=42,593, empty_confirmed=94,413, reachable=77.72%. The manifest evidence is **not clean** and does not clear the paper-run gate; BINANCE-FUTURES remains the binding constraint. The assigned P2 checkbox is flipped with this measured FAIL verdict.
 
 - 2026-08-08 (slot 33, `no_active_paper_run_blocks_p1_2_determinism_recheck-001`): filed after running the parent doc's
   `[DIAG] P1` venue-scoped completeness check. Full unfiltered `measure_honest_coverage.py --asset-group cefi` run was
@@ -590,3 +593,5 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
   disk and remain accurate; the operator ruling + subsequent gating checks since the last marker reference only the
   already-scoped sibling backfill plan, no new dependency.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).
+- **2026-08-20T18:22:10Z (slot 17)**: Re-ran the exact venue-scoped `read_availability_index(columns=[venue,data_type,capture_status,date], filters=[("venue","in",["BINANCE-FUTURES","ASTER","OKX-FUTURES"])])` query against the live prod CeFi manifest using the bounded-analysis wrapper. The read returned **7,025,707 rows** across **2018-01-01..2026-08-20**. Fresh reachable coverage is **BINANCE-FUTURES 64.72%** (2,310,769 captured / 216,249 attempted_failed / 1,043,198 expected_unattempted; 513,205 empty_confirmed), **ASTER 78.25%** (1,205,249 / 39,144 / 295,807; 1,031,489 empty_confirmed), and **OKX-FUTURES 77.72%** (214,643 / 18,949 / 42,593; 94,412 empty_confirmed). The aggregate backfill has advanced, but none of the three venues clears the paper-run completeness bar; the gate remains closed. Evidence: bounded live query; no code changes.
+- **2026-08-20T18:22:10Z (slot 17)**: `archive_exempt: true` is intentional: the measurement todo is complete, but this issue remains the durable blocking record while the paper-run gate is closed and the parent aggregate backfill continues.

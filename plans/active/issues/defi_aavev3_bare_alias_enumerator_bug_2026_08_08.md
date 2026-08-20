@@ -129,10 +129,21 @@ defect (phantom-venue emission) without touching a registry other code may depen
       `cefi-itype-casing-apply` category's pattern) or run it via the generic `setup-data-pipeline-vm.sh`
       startup script. **Not attempting a third local retry** — two failures on the identical operation is the
       retry-discipline threshold; the fix is infra placement, not another attempt with different flags.
-      **Next step**: wire a VM-launch path for this script (or a bare `setup-data-pipeline-vm.sh` invocation),
-      run the dry-run there, confirm the row count still matches 46,300 (script REFUSES on drift via
-      `--allow-count-drift`-gated arithmetic) and the gate output (`row-arithmetic` /
-      `empty_confirmed-drop` / `no-non-empty-confirmed-collateral` all `True`), then `--apply` from the same VM. Twin-exists-collision precondition CONFIRMED SATISFIED 2026-08-09
+      **UPDATE 2026-08-20 — VM path built (`deployment-service@9ae1a78e9e`), 6 launch attempts, STILL
+      UNRESOLVED — see the Progress Log for the full attempt-by-attempt breakdown.** Summary: a real relative-path
+      bug (fixed), a real launcher freshness-check false-negative (not a bug, retried), a genuine laptop-side
+      network timeout uploading tarballs (retried after a pause), then attempts #5 and #6 BOTH self-deleted with
+      **zero run.log output at all** across a full 20-minute bounded watchdog each — a distinct, reproducible
+      failure mode not seen on the sibling CeFi launcher (which reliably produces logs on the same underlying
+      dispatch route), so this looks specific to this script/launcher combination, not generic infra flake.
+      **Not attempting a 7th blind retry.** The dry-run has never completed even once. **Next step for the next
+      session**: since `run.log`-based diagnosis has failed twice in a row (no log ever written means the
+      failure is pre-heartbeat-daemon, i.e. very early boot/tarball-pull), pull the VM's GCE serial-port output
+      via `gcloud compute instances get-serial-port-output <name> --zone=asia-northeast1-c` **while the VM is
+      still alive** (launch it, then immediately start polling serial output every ~30s rather than waiting on
+      `run.log` — serial output survives boot-time failures that never reach the point of writing to GCS) — this
+      is a `gcloud` CLI call, not a GCS object op, so it's sanctioned.
+      Twin-exists-collision precondition CONFIRMED SATISFIED 2026-08-09
       (see Progress Log) — full-population live-manifest check found 0 of the 46,300 bare cells lacking a
       correct-key `AAVE_V3`-ETHEREUM twin; "0 backing GCS objects" was independently established by the 2026-08-08
       root-cause session (see Finding section above) and cited rather than re-derived, since the population is
@@ -268,3 +279,13 @@ defect (phantom-venue emission) without touching a registry other code may depen
   `bash deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` once network conditions are
   independently confirmed stable (e.g. a plain `gcloud compute instances list` and a small GCS upload succeed
   cleanly first) — the script itself is now correct and needs no further changes.
+- **T2 tranche, `/autonomous`, 2026-08-20, attempt #6**: network conditions DID stabilize (confirmed separately:
+  the sibling `cefi-itype-casing-apply-rw-` launcher succeeded at tarball upload/republish around the same
+  window). Relaunched `defi-aavev3-bare-alias-purge-20260820-174551` — confirmed `RUNNING` at launch, tarballs
+  fresh (`instruments-service-code @ e17ed2368fa9`). **Result: identical to attempt #5 — self-deleted with ZERO
+  bytes ever written to `run.log`**, across a full 20-minute bounded watchdog (40 checks × 30s, all 404 "No such
+  object"), then `gcloud compute instances describe` confirmed the VM is gone. Two consecutive identical
+  failures on the SAME failure signature (not just "another failure" — the exact same zero-log-output pattern)
+  is the retry-discipline stop signal. **Not attempting a 7th retry this session.** This is now a distinct,
+  reproducible failure class specific to this launcher/script pairing — see the updated todo above for the
+  serial-console diagnostic approach the next session should use instead of another `run.log`-based attempt.

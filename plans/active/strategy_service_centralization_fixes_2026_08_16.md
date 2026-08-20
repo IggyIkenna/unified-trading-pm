@@ -69,7 +69,6 @@ context_scope:
     /plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md,
     /plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md,
     /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
-    /plans/active/registry_ssot_hardening_2026_08_16.md,
     strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
   ]
 ---
@@ -346,7 +345,7 @@ and symbiotic — **3 of the 8**. Absent: rocketpool, coinbase_staking, eigenlay
 file did not duplicate UAC, it **extended** venue→chain knowledge locally instead of upstreaming it. Note the two
 are not obviously the same registry: UAC's is commented "DeFi smart order routing: shared wallet" and feeds
 `SHARED_WALLET_GROUPS` — same axis, different purpose. Resolving that overlap is tracked in W2
-([registry_ssot_hardening_2026_08_16](/plans/active/registry_ssot_hardening_2026_08_16.md)); this plan consumes that
+([registry_ssot_hardening_2026_08_16](/plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md)); this plan consumes that
 answer rather than pre-empting it.
 
 > **MEASUREMENT TRAP, recorded because it nearly produced a false finding here.** Probing UAC for these 8 with

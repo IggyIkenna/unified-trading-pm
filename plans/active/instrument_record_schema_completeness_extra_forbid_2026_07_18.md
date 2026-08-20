@@ -112,21 +112,34 @@ authoritative list comes from the full-suite `extra='forbid'` run (todo 1).
       under the wrong kwarg name across 6 TradFi/Databento/IBKR call sites, defaulting `asset_class` to CRYPTO
       regardless of real class); `min_order_size`→**LEFT AMBIGUOUS** (operator-judgment flag stands, distinct from
       `min_size`, execution-sizing use unclear — not yet resolved).
-- [ ] [DATA] P1. **ADD the kept fields** — declare them on `InstrumentRecord` + align `INSTRUMENTS_PARQUET_SCHEMA` (1:1
+- [x] [DATA] P1. **ADD the kept fields** — declare them on `InstrumentRecord` + align `INSTRUMENTS_PARQUET_SCHEMA` (1:1
       model↔column contract); additive + optional (non-breaking added-optional-field), so existing rows/validators are
-      unaffected. UAC unit test per added field. — **N/A so far**: no field's verdict is ADD (only `min_order_size` is
-      still ambiguous/pending — this todo only applies if a future ruling adds it as a genuinely-new field). Stays open
-      pending that ruling.
-- [ ] [DATA] P1. **FIX the callers** — for REMOVE fields, drop the undeclared kwarg from each adapter; for ADD fields,
-      point the adapter at the new declared field. Cover every call site the todo-1 run surfaced. — **PARTIAL, DONE for
-      the REMOVE-verdict subset** — `instruments-service@ee2d6c75`: dropped `symbol`/`is_active`/`updated_at`/`lot_size`
+      unaffected. UAC unit test per added field. — ✅ 2026-08-20: **N/A, confirmed final** — `min_order_size` (the
+      one field left ambiguous) resolved to REMOVE, not ADD (see todo 2's update below), so no field's verdict is
+      ADD. This todo needs no further action.
+- [x] [DATA] P1. **FIX the callers** — for REMOVE fields, drop the undeclared kwarg from each adapter; for ADD fields,
+      point the adapter at the new declared field. Cover every call site the todo-1 run surfaced. — **DONE**
+      (batch1, `instruments-service@ee2d6c75`): dropped `symbol`/`is_active`/`updated_at`/`lot_size`
       from all 9 production + test-fixture call sites; renamed `asset_group`→`asset_class` at all 6 real sites (a
       correctness fix, not cosmetic) + opportunistically fixed `ibkr.py::_build_instrument_from_uac`'s missing
-      `raw_symbol=`. instruments-service `quality-gates.sh --no-fix` ALL PASSED (4988 passed / 0 failed). Still open:
-      `min_order_size` is unresolved (todo 2's ambiguous verdict), so this todo can't fully close until that ruling
-      lands and any resulting caller change ships.
+      `raw_symbol=`. instruments-service `quality-gates.sh --no-fix` ALL PASSED (4988 passed / 0 failed).
+      ✅ 2026-08-20 (T2 tranche, `/autonomous`) — **`min_order_size` resolved + fixed, todo now fully closed.**
+      Applied the operator's own three-part test with a concrete code check (grep, not assumption): zero
+      consumers of `min_order_size`/`minimum_order_size` anywhere across execution-service, strategy-service,
+      risk-and-exposure-service, or unified-trading-library — the one plausible consumer named in the 2026-07-18
+      ambiguity note ("execution sizing could legitimately want it") does not exist. Verdict: REMOVE, matching
+      every other field's disposition. Dropped `min_order_size=` (and the now-dead intermediate `min_order`
+      variable) from all 5 call sites: `polymarket/parsing.py`, `kalshi.py`, `betfair.py` (production adapters) +
+      `test_base_adapter.py` (2 test fixtures); corrected a stale docstring in
+      `test_prediction_adapters_comprehensive.py`. 421 adapter tests + full `quality-gates.sh` green. Evidence:
+      `instruments-service@588f35aeb0`.
 - [ ] [DATA] P1. **Flip `extra='forbid'`** — add `model_config = ConfigDict(extra="forbid")`; UAC + IS suites green
       (proves no remaining undeclared-kwarg caller). Add a UAC test asserting an unknown kwarg now RAISES.
+      **Filed to T1 2026-08-20** — `InstrumentRecord` lives in `unified-api-contracts/unified_api_contracts/internal/
+      reference/instrument.py`, outside this tranche's 3 owned repos (instruments-service, market-tick-data-service,
+      market-data-processing-service). Every REMOVE-verdict caller is now clean (todo above, fully done) — the flip
+      itself is unblocked and ready whenever T1 picks it up. See
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s `## Inbound requests`.
 - [ ] [REVIEW] P2. **Post-phase codex audit** — note the extra='forbid' contract + any new fields in
       `honest-absence-downstream-handling.md` + the InstrumentRecord docstring; confirm no plan↔codex drift.
 

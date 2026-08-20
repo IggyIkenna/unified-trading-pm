@@ -8,7 +8,7 @@ summary: >-
   zero redefinitions anywhere, and error-code CLASSIFICATION already routes through classify_venue_error with zero
   local ERROR_CODE_MAP dicts — the actual open work is narrower than the umbrella assumed: a same-repo naming overlap
   on the capability-record concept, and unverified error-code COVERAGE completeness per venue.
-status: active
+status: closed
 nature: process
 asset_group: [cross-cutting]
 stage: [data, strategy, execution]
@@ -142,7 +142,14 @@ needs a coverage audit (not a dedup).
       `VenueCapability*` types survive orthogonally (todo 1), and of the three, `VenueCapabilityRecord` is the
       closest-fit shape (already keyed per-venue × per-data_type) for the operator to evaluate — evidence only, the
       operator decision itself is untouched.
-- [ ] [BACKEND] P2. **Adjacent finding: `VenueFeature` enum vocabulary overlaps `VenueCapability`'s.** Surfaced while
+- [x] ✅ [BACKEND] P2. **Closed by measurement, 2026-08-20 — code already shipped this session, only this doc's
+      checkbox was stale.** `unified_api_contracts/internal/architecture_v2/enums.py:617-632`'s `VenueFeature`
+      docstring cites this exact todo ("registry SSOT hardening 2026-08-20 (registry_ssot_hardening_2026_08_16.md
+      todo 5) found and removed six members here that duplicated VenueCapability concepts") — the 6 duplicates
+      (`FLASH_LOAN`/`NATIVE_STAKING`/`LP_PROVISION`/`OPTIONS_TRADING`/`PERPS_TRADING`/`SPOT_TRADING`) are confirmed
+      gone, measured ZERO fleet-wide call sites affected. Shipped `unified-api-contracts@0d7afa29e`.
+      **Adjacent finding, superseded text kept for provenance:** `VenueFeature` enum vocabulary overlaps
+      `VenueCapability`'s. Surfaced while
       resolving todo 1 — `VenueCapabilityV2.features: list[VenueFeature]`
       (`unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py:563`) and `VenueCapability`
       (`registry/venue_constants.py:593`) encode overlapping operation concepts under inconsistent
@@ -155,7 +162,16 @@ needs a coverage audit (not a dedup).
       must stay distinct (e.g. it mixes execution ops with account-structure features like `SUBACCOUNT`/`DARK_POOL`
       that `VenueCapability` doesn't cover) is recorded here — resolve before or at the point `VenueCapabilityV2`
       gets its first real instance, not before.
-- [ ] [BACKEND] P1. **Resolve the venue→chain SSOT overlap — a SIXTH concern, found 2026-08-16 and not covered by
+- [x] ✅ [BACKEND] P1. **Closed by measurement, 2026-08-20 — code already shipped this session, only this doc's
+      checkbox was stale.** Verdict: NOT a merge — `get_chain_for_protocol()`
+      (`unified_api_contracts/registry/venue_constants.py`) does SSOT-derivation from `ALL_DEFI_VENUES` via
+      venue-suffix parsing, not a second hand-maintained map, with `coinbase_staking` kept as one documented,
+      deliberate exception (custodial product, no on-chain wallet). `strategy-service/.../staked_basis.py`
+      confirmed migrated — imports and calls `get_chain_for_protocol()` (lines 142, 395), the old
+      `_STAKING_PROTOCOL_CHAIN` hand-maintained dict is gone entirely (grepped, zero matches). Shipped
+      `unified-api-contracts@0d7afa29e` + the T3-side migration this doc's own "Done-when" asked for.
+      **Superseded text kept for provenance:** Resolve the venue→chain SSOT overlap — a SIXTH concern, found
+      2026-08-16 and not covered by
       the Measured Baseline sweep above.** The sweep looked for redefinitions of five named concepts; this one hid
       because the local copy carries a different NAME, so a name-keyed grep could never surface it.
       - **UAC has**: `VENUE_CHAIN_MAP` (`unified-api-contracts/unified_api_contracts/registry/venue_constants.py:907`),
