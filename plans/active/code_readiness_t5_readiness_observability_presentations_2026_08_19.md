@@ -379,7 +379,8 @@ todos only to confirm they are data-movement, then leave it.
       (`execution_orders ready=29 not_ready=829 unverified=30`, `execution_fills ready=0 not_ready=816
       unverified=72`) — a genuine FLOOR measurement now, not a crash artifact.
 - [ ] [BACKEND] P1. Resolve the per-venue and per-data-type cells that remain pending at the finer grain inside each
-      readiness tree.
+      readiness tree. **Same shape as the "close remaining data types" item above — data capture/backfill, not a
+      tool or artefact fix. BLOCKED-STANDING-RULE** for the same reason: this tranche does not run backfills.
 - [ ] [BACKEND] P1. Fix the tree gaps the artefacts name explicitly — Scroll and zkSync read `unverified — declared,
       never attempted`, and Plasma is `not a ChainKind member`. Consume T1's single chain SSOT; do not re-derive.
       **Investigated 2026-08-20**: T1's SSOT (`unified-api-contracts/unified_api_contracts/registry/chain_env.py`)
