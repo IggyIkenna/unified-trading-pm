@@ -63,15 +63,6 @@ code_refs:
 > its whole `source=` plumbing (that chain existed solely to re-point a Databento venue at Massive), the `MASSIVE`
 > pseudo-venue key-reloader branch, and the `sessions.py` `EXCHANGE_HOURS`/`get_session_metadata` aliases whose only
 > consumer was `massive.py`. **Databento is now the sole TradFi reference-data source in code as well as in policy.**
->
-> **2026-08-20 — "COMPLETE ACROSS ALL REPOS" (above) was wrong a THIRD time; corrected, not just re-asserted.**
-> `features-service`'s `corporate_actions` feature-group calculator was still sourcing exclusively from
-> `polygon_corporate_actions_adapter.py` (Massive-fka-Polygon.io) as of this date — found during a 2026-08-18 review,
-> ruled by the operator to migrate to Yahoo Finance (ruling R6). `features-service`'s Polygon adapter + its local
-> `_polygon_types.py` are now deleted; dividends/splits are sourced via a new `yfinance_corporate_actions_adapter.py`,
-> mirroring this doc's own established yfinance-dividend precedent below. **Do not re-assert "complete" again without
-> grepping for `polygon` case-insensitively across every repo first** — this banner has now been wrong on that exact
-> claim twice after being written.
 > Deliberately still present (NOT a gap): UAC's `external/massive/` normalisers + schemas, `PipelineMode.BATCH_MASSIVE`
 > / `possible_manifest` recognition, and the `source="massive"` mentions in instruments-service `scripts/` +
 > `tests/scripts/` — those describe **historical data provenance**, not adapter wiring.
@@ -135,8 +126,8 @@ variant") source it from **yfinance** instead: trailing-12mo dividend sum ÷ las
 `Ticker.dividends` raw history — NOT the `info["dividendYield"]` field, which has a documented stale/pre-split bug (e.g.
 it read 0.45% for NVDA vs. the raw-history-derived 0.125%). This mirrors the established yfinance precedent already used
 elsewhere for non-Databento TradFi data (`market-tick-data-service`'s `yahoo_finance_adapter.py`, `features-service`'s
-`yfinance_earnings_adapter.py` and, since 2026-08-20, `yfinance_corporate_actions_adapter.py` — the Polygon-based
-corporate-actions adapter this paragraph used to point at is deleted, not merely unadopted). Do not add a
+`yfinance_earnings_adapter.py`). Polygon's corporate-actions adapter would close this gap but needs a separate
+`polygon-api-key` secret + a cross-repo import from `features-service` — not adopted for this one consumer. Do not add a
 Databento dividends fetch path; there is no such schema to fetch.
 
 ### KRX + ICE + FX are YAHOO FINANCE, not Databento, and NOT operator-blocked (operator correction 2026-06-27)

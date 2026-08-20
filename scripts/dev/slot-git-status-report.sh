@@ -170,27 +170,7 @@ TOKEN_EXPIRY_STATE_DIR="${TOKEN_EXPIRY_STATE_DIR:-${TABS_DIR}/.token-expiry-stat
 
 # Cross-platform helpers.
 HOST_OS="$(uname -s)"
-
-# Stable per-machine host identity (git_health_laptop_hostname_ghost_never_
-# tombstoned_2026_08_19.md): a laptop's OS-level hostname can change (DHCP/
-# Bonjour rename, System Settings rename) — this machine's flipped MacBook-Pro ->
-# Mac -> MacBook-Pro within 24h. slot_git_status is keyed by the literal (host,
-# slot_id) string with no rename mechanism, so re-deriving `hostname -s` live on
-# every tick forks a brand-new, permanently-orphaned host bucket on every flip.
-# Pin the identity once, on the FIRST tick this machine ever runs this script,
-# and reuse it forever after regardless of what the OS hostname later becomes.
-# ORCHESTRATOR_HOST_LABEL (same env var name the server side already uses for its
-# own host_label config) is an explicit override that always wins over the pin
-# file, for an operator who wants a friendlier fixed name.
-HOST_LABEL_FILE="${ORCH_HOST_LABEL_FILE:-${HOME}/.orch_host_label}"
-HOSTNAME_SHORT="${ORCHESTRATOR_HOST_LABEL:-}"
-if [[ -z "${HOSTNAME_SHORT}" && -r "${HOST_LABEL_FILE}" ]]; then
-    HOSTNAME_SHORT="$(cat "${HOST_LABEL_FILE}" 2>/dev/null || true)"
-fi
-if [[ -z "${HOSTNAME_SHORT}" ]]; then
-    HOSTNAME_SHORT="$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo unknown)"
-    printf '%s' "${HOSTNAME_SHORT}" > "${HOST_LABEL_FILE}" 2>/dev/null || true
-fi
+HOSTNAME_SHORT="$(hostname -s 2>/dev/null || hostname 2>/dev/null || echo unknown)"
 
 stat_mtime_epoch() {
     # Print mtime as epoch seconds for $1 ("" on failure).
@@ -209,15 +189,6 @@ epoch_to_iso() {
     else
         date -u -d "@$1" +%Y-%m-%dT%H:%M:%SZ 2>/dev/null || true
     fi
-}
-
-oldest_commit_epoch() {
-    # Print the epoch-seconds commit timestamp of the OLDEST commit in `git log
-    # $1` ("" if the range is empty/invalid). `git log` defaults to newest-first,
-    # so `tail -1` is the oldest. Ground truth for ahead/behind staleness —
-    # recomputed fresh every tick straight from the commit graph, no server-side
-    # carry-forward state involved (unlike not_clean_since).
-    git log "$1" --format=%ct 2>/dev/null | tail -1
 }
 
 NOW_ISO="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
@@ -306,13 +277,8 @@ log_df_sample_mismatch_if_any() {
 }
 
 # Classify one repo worktree → emits TAB-separated row to stdout:
-#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample<TAB>repo_dirty_ticks<TAB>ahead_oldest_iso<TAB>behind_oldest_iso
+#   name<TAB>branch<TAB>state<TAB>dirty_files<TAB>ahead<TAB>behind<TAB>local_sha<TAB>int_branch<TAB>dirty_oldest_iso<TAB>unpushed_plans<TAB>dirty_sample<TAB>repo_dirty_ticks
 #
-# ahead_oldest_iso / behind_oldest_iso: commit timestamp (ISO-8601) of the OLDEST
-#   commit in `git log <remote>..HEAD` / `git log HEAD..<remote>` — ground truth
-#   for ahead/diverged/behind staleness, computed fresh every tick via
-#   oldest_commit_epoch (mirrors dirty_oldest_iso's mtime-based approach for the
-#   working tree). Empty when ahead/behind is 0.
 # repo_dirty_ticks: THIS repo's own dirty_consecutive_ticks from slot-cron-ff-pull.sh's
 #   repo_dirty_ticks map (see read_repo_dirty_ticks above) — always a non-negative int
 #   (0 when the FF-cron has never observed this specific repo dirty, or hasn't run at
@@ -334,7 +300,7 @@ log_df_sample_mismatch_if_any() {
 classify_repo() {
     local repo_dir="$1"
     local repo_name branch local_sha int_branch state dirty_files ahead behind dirty_oldest_iso unpushed_plans dirty_sample
-    local repo_key repo_dirty_ticks ahead_oldest_iso behind_oldest_iso
+    local repo_key repo_dirty_ticks
     repo_name=$(basename "${repo_dir}")
     # Skip frozen snapshot backup clones (*.stale-*) — these are intentional
     # pre-history-rewrite backups, not real drift or dirt. Excluding them
@@ -370,7 +336,7 @@ classify_repo() {
     local_sha=$(git rev-parse --short=12 HEAD 2>/dev/null || echo "")
 
     if [[ "${branch}" == "DETACHED" || "${branch}" == "HEAD" || -z "${local_sha}" ]]; then
-        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\t%s\t\t\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}" "${repo_dirty_ticks}"
+        printf '%s\t%s\tdetached\t0\t0\t0\t%s\t%s\t\t\t\t%s\n' "${repo_name}" "${branch:-DETACHED}" "${local_sha}" "${int_branch}" "${repo_dirty_ticks}"
         popd >/dev/null || return 0
         return 0
     fi
@@ -434,14 +400,10 @@ classify_repo() {
 
     ahead=0
     behind=0
-    ahead_oldest_iso=""
-    behind_oldest_iso=""
     local remote_ref="origin/${int_branch}"
     if git rev-parse --verify --quiet "${remote_ref}" >/dev/null 2>&1; then
         ahead=$(git rev-list --count "${remote_ref}..HEAD" 2>/dev/null || echo 0)
         behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
-        ahead_oldest_iso=$(epoch_to_iso "$(oldest_commit_epoch "${remote_ref}..HEAD")")
-        behind_oldest_iso=$(epoch_to_iso "$(oldest_commit_epoch "HEAD..${remote_ref}")")
     else
         # Last-resort fallback ONLY when this repo has no live-defi-rollout ref at all
         # (e.g. a main-only repo). NB: agent-orchestrator is NOT such a repo — it
@@ -454,11 +416,9 @@ classify_repo() {
             remote_ref="origin/main"
             ahead=$(git rev-list --count "${remote_ref}..HEAD" 2>/dev/null || echo 0)
             behind=$(git rev-list --count "HEAD..${remote_ref}" 2>/dev/null || echo 0)
-            ahead_oldest_iso=$(epoch_to_iso "$(oldest_commit_epoch "${remote_ref}..HEAD")")
-            behind_oldest_iso=$(epoch_to_iso "$(oldest_commit_epoch "HEAD..${remote_ref}")")
         else
             state="no-remote-ref"
-            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t\t\n' \
+            printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
                 "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${repo_dirty_ticks}"
             popd >/dev/null || return 0
             return 0
@@ -478,8 +438,8 @@ classify_repo() {
         state="clean"
     fi
 
-    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
-        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${repo_dirty_ticks}" "${ahead_oldest_iso}" "${behind_oldest_iso}"
+    printf '%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\t%s\n' \
+        "${repo_name}" "${branch}" "${state}" "${dirty_files}" "${ahead}" "${behind}" "${local_sha}" "${int_branch}" "${dirty_oldest_iso}" "${unpushed_plans}" "${dirty_sample}" "${repo_dirty_ticks}"
     popd >/dev/null || return 0
 }
 
@@ -577,9 +537,9 @@ for line in sys.stdin:
     if not line:
         continue
     parts = line.split("\t")
-    if len(parts) < 14:
-        parts += [""] * (14 - len(parts))
-    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw, repo_dirty_ticks_raw, ahead_oldest, behind_oldest = parts[:14]
+    if len(parts) < 12:
+        parts += [""] * (12 - len(parts))
+    name, branch, state, dirty_files, ahead, behind, local_sha, int_branch, dirty_oldest, unpushed_raw, dirty_sample_raw, repo_dirty_ticks_raw = parts[:12]
     repo = {
         "name": name,
         "branch": branch,
@@ -592,10 +552,6 @@ for line in sys.stdin:
     }
     if dirty_oldest:
         repo["dirty_oldest_mtime"] = dirty_oldest
-    if ahead_oldest:
-        repo["ahead_oldest_commit_ts"] = ahead_oldest
-    if behind_oldest:
-        repo["behind_oldest_commit_ts"] = behind_oldest
     if unpushed_raw:
         repo["unpushed_plans"] = [p for p in unpushed_raw.split("|") if p]
     if dirty_sample_raw:
