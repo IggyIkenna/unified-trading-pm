@@ -17,13 +17,13 @@ tags: [uac, chain-registry, ssot, duplication, under-declaration]
 related:
   [
     /plans/audit/results/registry_ground_truth_2026_08_19.md,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     /plans/epics/system_readiness_master.md,
   ]
 context_scope:
   [
     /plans/audit/results/registry_ground_truth_2026_08_19.md,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py,
     unified-api-contracts/tests/unit/test_chain_registry_ssot.py,
     unified-api-contracts/unified_api_contracts/registry/chain_env.py,

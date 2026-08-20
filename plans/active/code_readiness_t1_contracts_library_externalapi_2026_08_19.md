@@ -324,7 +324,7 @@ todos only to confirm they are data-movement, then leave it.
       no-op: a fleet-wide grep found ZERO code callers — every hit was docs/plans. Also fixed a collision found in
       the classifier itself (bare `COINBASE` → `defi` via false-match on `COINBASE-ETHEREUM`, the same trap its own
       comment documents for `BINANCE`) plus two systematic invariants so the next one fails the suite. Evidence:
-      `/plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`.
+      `/plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`.
 - [x] ✅ [BACKEND] P0. Chain registries reconciled to ONE vocabulary SSOT — unified-api-contracts@27ebc544b2.
       `ChainKind` is now declared the vocabulary SSOT in its own docstring, with the other two DERIVING their legal
       values from it (the issue's own "derive from it or die" option A) — they are NOT merged, because measurement

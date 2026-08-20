@@ -34,7 +34,7 @@ tags:
 related:
   [
     /plans/epics/system_readiness_master.md,
-    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    /plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     /plans/active/issues/three_chain_registries_disagree_none_authoritative_2026_08_19.md,
     /plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md,
     /plans/audit/results/registry_ground_truth_2026_08_19.md,
@@ -89,7 +89,7 @@ under "Scope note" below rather than silently absorbed.
 
 ## Known P0s (already filed — cited, not re-derived)
 
-- **`/plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`** —
+- **`/plans/archive/2026_08/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md`** —
   `unified_api_contracts.execution.get_venue_asset_group()` does `_VENUE_ASSET_GROUP.get(venue.lower(), "cefi")` —
   every unresolved venue (AAVE_V3-ARBITRUM, LIDO-ETHEREUM, JUPITER-SOLANA, MORPHO-BASE all tested) silently returns
   `"cefi"`. No exception, no `None` — a caller cannot tell a real hit from a miss. Any per-asset-group split routed
