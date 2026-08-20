@@ -442,11 +442,25 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P3. Fix the git-status red-nudge false positive from the wrong branch comparison. Evidence:
       `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`. **Both
       original todos were already `[x]`, shipped 6 days prior. Its 2026-08-19 addendum named a third, still-open
-      mechanism (`maybe_nudge_on_red_repos`'s `ahead` branch has no sustain gate) — FIXED + TESTED 2026-08-20,
-      NOT YET LANDED, do not tick without a sha.** `server/worker_liveness/_git_alerts.py`, gated on
-      `not_clean_since` sustained past 600s matching the function's own `behind`-branch precedent. 2 new
-      regression tests, 26/26 file passing, 103/103 broader suite passing. Building/shipping in agent-orchestrator
-      (separate repo, own queue).
+      mechanism (`maybe_nudge_on_red_repos`'s `ahead` branch has no sustain gate) — FIXED + TESTED, NOT YET
+      LANDED, do not tick without a sha.** `server/worker_liveness/_git_alerts.py`, gated on `not_clean_since`
+      sustained past 600s matching the function's own `behind`-branch precedent. 2 new regression tests, 26/26
+      file passing, 103/103 broader suite passing.
+
+      **BLOCKED-INFRA, 2026-08-20 — 3 ship attempts, correctly stopped rather than blind-retried a 4th time.**
+      Attempt 1 failed on stale `dashboard/node_modules` (fixed via `npm --prefix dashboard install`, confirmed
+      `@vitest/coverage-v8` present afterward). Attempts 2 and 3 both failed with the IDENTICAL generic banner
+      `❌ Re-gate FAILED against the current tree` and **no specific check name anywhere in either log** — attempt
+      3's log was captured in full (9,265 lines, no `tail` truncation this time) specifically to rule out my own
+      earlier self-inflicted truncation as the cause; the vitest suite immediately above the failure shows 20/20
+      files, 468/468 tests passing, then the banner fires with nothing in between. A **standalone**
+      `bash scripts/quality-gates.sh --no-fix` run against this exact tree produced **zero** `❌` lines. Two
+      identical consecutive failures with a clean standalone gate is the documented signal to stop retrying and
+      diagnose deeper, not flap — this looks like quickmerge's own re-gate wrapper losing or swallowing a
+      per-check result under the heavy fleet contention observed all session (5-13 concurrent quickmerge
+      processes), not a defect in this fix. The fix remains preserved in the working tree AND backed up outside
+      git (`scratchpad/agent-orchestrator-backup/`). Needs either a lower-contention retry window or someone with
+      quickmerge-internals context to diagnose why re-gate's failure path drops its own check name.
 
 ### Close-out
 
