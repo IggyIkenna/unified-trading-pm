@@ -864,3 +864,6 @@ offered to the queue once these are the only real blockers.
   to flip. No flip, no extraction (would duplicate the tracked prereqs pair).
 - **na-eligibility-audit 2026-08-17** [body-hash:11e001d00bd4ee15]: KEEP-NA-STALE (already-duplicated) — sole open item (Track H registry-aware honest-coverage denominator) tracked via sports_track_h_denominator_gated_2026_07_28.md + its _prereqs_2026_07_28.md sibling (both confirmed to exist). Note: per ag_closeout_audit_sports_parked_2026_08_16.md, the Track-H Path-A-vs-Path-B design fork has now sat unruled for 18+ days — worth an operator nudge, but that finding belongs to that doc, not a new item here.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated) — reconfirmed, sole open item (Track H
+  denominator) still tracked via `sports_track_h_denominator_gated_2026_07_28.md` + its `_prereqs_` sibling (both
+  confirmed to still exist, `status: open`). No drift.

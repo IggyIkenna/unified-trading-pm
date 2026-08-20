@@ -818,3 +818,10 @@ into the same fix — carried forward here so it isn't lost with the archive:
 - **na-eligibility-audit 2026-08-17** [body-hash:98c13a91e4fea158]: KEEP-NA-STALE (already-duplicated) — 5 of 6 open items verified as duplicate-citations to sports_consolidated_closeout_2026_07_19.md Track V and sports_satellite_ao_dispatch_batch9_2026_08_04.md (both status:active); the 6th (§M, line ~684, runtime rate-budget re-division) is a genuine architecture/mechanism-choice judgment call, correctly stays NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **na-eligibility-audit 2026-08-21**: KEEP-NA-STALE (already-duplicated) — open-item count dropped from 6 to 3
+  since the 2026-08-17 marker (the 2026-08-18 plan_reconciler run flipped §J/§N/§O). Re-verified the remaining 3:
+  lines ~211 and ~251 (§G "Step 4"/"let backfill run to completion") both cite the same still-open
+  `sports_consolidated_closeout_2026_07_19.md` Track V catalogue-reroll item (itself tracked via
+  `sports_satellite_ao_dispatch_batch14_2026_08_16.md` todo 2 per that issue doc) — citation-only, not duplicated
+  here. Line ~677 (§M runtime rate-budget re-division) remains a genuine architecture/mechanism-choice judgment
+  call, correctly stays NA.
