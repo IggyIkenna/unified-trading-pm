@@ -343,8 +343,22 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Close the CeFi and TradFi G1-G5 gate execution CODE paths. Evidence:
       `/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
       `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
-- [ ] [BACKEND] P1. Fix the CeFi `instrument_type` casing active-writer regression. Evidence:
+- [x] [BACKEND] P1. Fix the CeFi `instrument_type` casing active-writer regression. Evidence:
       `/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`.
+      ✅ 2026-08-20 — **the writer-side CODE fix is shipped and live; everything left is data movement.**
+      `market-tick-data-service@c07cc70e93` verified an ANCESTOR of MTDS HEAD (`git merge-base --is-ancestor`),
+      not taken from the checkbox. Root cause it closed: `_tradfi_manifest_shard.py::_tradfi_manifest_itype`
+      hardcoded `if VENUE_TO_ASSET_GROUP.get(venue) != "tradfi": return itype`, so every CeFi venue fell straight
+      through and the lowercase `instrument_type` landed verbatim in the manifest row-key — even though UTL's
+      shared `canonicalize_manifest_instrument_type` already shipped a `cefi` mapping table that was simply never
+      reached. The fix calls that canon unconditionally and lets its own asset_group gating decide, including the
+      bundle-grain exclusion set (`futures_chain`/`options_chain`/`combo`/`combo_chain`/`continuous_future` pass
+      through unchanged). GCS path-building still uses the lowercase value verbatim — only the manifest column
+      casing changed. **The 3 remaining todos on that issue are all `[DATA] P2` and out of scope here**: review the
+      `canonical-migration-cefi-itype-casing-apply-*` dry-run, launch the full `--apply` VM, trigger the
+      consolidator rebuild, then re-run the audit to confirm a 0 residual. That is exactly the "relaunch the VM /
+      apply the delete" class this tranche leaves to the operator. Note the fix stops NEW lowercase rows being
+      minted; it does not retroactively fix the ~39,286-row existing residual.
 - [ ] [BACKEND] P1. Land the CF-canonicalization single-walk CODE. Any NEW whole-corpus GCS walk is
       review-blocking — reuse the existing walk. Evidence:
       `/plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`.
@@ -365,8 +379,18 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Close the foundation-completeness and phase-0 cross-cutting CODE items. Evidence:
       `/plans/active/instruments_foundation_completeness_2026_06_24.md`,
       `/plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`.
-- [ ] [BACKEND] P2. Fix the AAVEV3 bare-alias enumerator CODE (already root-caused — duplicate dict key plus missing
+- [x] [BACKEND] P2. Fix the AAVEV3 bare-alias enumerator CODE (already root-caused — duplicate dict key plus missing
       alias canonicalisation). The 46,300 bad `empty_confirmed` manifest rows stay operator-gated, not yours.
+      ✅ 2026-08-20 — **verified in place by reading the code, not by trusting the issue's checkbox.** Both halves of
+      the root cause are closed in `instruments-service/scripts/enumerate_expected_universe.py`'s
+      `_yield_v2_defi_pre_launch_rows` (line ~1457): (1) alias canonicalisation —
+      `venue_label = VenueMapping._canonicalise_defi_protocol_spelling(protocol.upper())` maps `AAVEV3` → `AAVE_V3`,
+      matching the per-instrument v2 path; (2) the duplicate-key guard — an `_emitted_chain_venues` set with
+      `if (chain_upper, venue_label) in _emitted_chain_venues: continue`, so the legacy no-underscore alias key in
+      `PROTOCOL_LAUNCH_DATES` can no longer re-emit every row its canonical twin already emitted. The inline comment
+      cites this exact issue doc. The issue's two remaining todos are `[OPERATOR] P2` (purge the 46,300 rows via the
+      human-gated `--apply` delete) and `[DESIGN] P3` (whether `chain_env.py` should keep alias dict-keys at all) —
+      neither is this tranche's, exactly as this todo already stated.
 
 ### MTDS and MDPS
 
