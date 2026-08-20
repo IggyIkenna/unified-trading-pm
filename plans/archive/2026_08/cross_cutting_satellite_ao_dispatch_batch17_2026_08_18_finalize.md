@@ -6,7 +6,7 @@ summary: >-
   evidence back into its source doc's citation, re-checks the source doc's remaining todo 4 (local action-cache
   investigation) for relevance once P1/P2 land, archives the source doc if left at zero open todos, then archives
   batch17 itself.
-status: active
+status: complete # archived 2026-08-20 — all finalize todos done
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -15,11 +15,10 @@ scope: [engineer, admin]
 tags: [ao-dispatch, close-out, finalize, na-eligibility-audit]
 related:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md,
     /plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,7 +38,6 @@ gate_on_depends: true
 sequential: true
 context_scope:
   [
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md,
     /plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
@@ -48,19 +46,13 @@ source: >-
   Mandatory finalize companion per task_template.md §4 ("every AO-dispatched plan needs a gated finalize plan").
 ---
 
+> **🟢 ARCHIVED 2026-08-20 — COMPLETE.** Reconciled all three source citations; the source issue remains active for its independent cache investigation.
+
 # Finalize — cross-cutting satellite AO dispatch batch 17
 
-- [ ] [REVIEW] P1. Reconcile each of batch17's 3 items' landed evidence back into
-      `main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`'s citation lines ("extracted to
-      batch17 item N") — re-verify each resolves to a real landed commit, not trusting the citation text alone.
-      Done-when: all 3 citations verified against actual landed SHAs.
-- [ ] [DOC] P2. Check whether reconciliation (todo 1 above) left the source doc with zero open todos (only todo
-      4, the local action-cache investigation, would remain open otherwise) — if so, run the standard 6-step
-      archival ritual on it. Done-when: the source doc's open-todo count is confirmed, and it is archived if
-      genuinely zero.
-- [ ] [DOC] P3. Run the standard 6-step archival ritual on `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md`
-      itself once every todo above is done and all 3 of its own items are `[x]`. Done-when: batch17 is archived
-      with corpus-wide referrer-path fixup complete.
+- [x] ✅ [REVIEW] P1. Reconciled all three source citations with verified landed evidence: `unified-trading-pm@96c163347f`, 25 caller-stub commits, and `unified-trading-pm@2ead733819` (live run/test evidence recorded in the source issue).
+- [x] ✅ [DOC] P2. Re-checked the source issue: exactly one open todo remains (the independent warm action-cache investigation), so it is correctly left active and was not archived.
+- [x] ✅ [DOC] P3. Ran the 6-step archival ritual on batch17 and this finalize plan; active referrers were repointed or removed, and both docs moved to `plans/archive/2026_08/`.
 
 ## Progress Log
 
