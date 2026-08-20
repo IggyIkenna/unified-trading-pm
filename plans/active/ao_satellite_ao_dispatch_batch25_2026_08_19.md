@@ -240,6 +240,11 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       overage-rejected accounts from being assigned to a slot in the first place, separate from the trigger fix
       above. Done when: the rotation-pool selection code path is read directly and the answer (excludes / does not
       exclude) is confirmed with a citation, with a follow-up fix if it does not. Repo: agent-orchestrator. **DONE 2026-08-20 (slot 1) — agent-orchestrator@acf72243d5.**
+      Additional direct path evidence: the shared `account_is_usable()` predicate
+      (`server/state_store/account_usage.py:340-364`) returns false for `overage_status == "rejected"`;
+      `_account_meets_dispatch_headroom()` applies it to ordinary dispatch (`server/autospawn.py:1075-1121`),
+      and `_live_free_combo_ids()` applies it to stratified non-Anthropic rotation (`server/autospawn.py:1870-1895`).
+      Regression coverage for both observed rejection reasons is in `tests/test_auth_failed_rotation.py:161-184`.**
 - [ ] [BACKEND] P3. Classify the overage-rejected-at-kill-time failure shape (e.g. `account_overage_exhausted`)
       instead of leaving it `death_class: unexplained` when a killed slot's `account_snapshot.overage_status ==
       "rejected"` at kill time. Done when: a fresh occurrence of this failure shows the new, diagnosable
