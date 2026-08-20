@@ -266,74 +266,16 @@ todos only to confirm they are data-movement, then leave it.
 ### W2 — data pipeline integrity (code only, no runs)
 
 - [ ] [BACKEND] P0. Land the manifest canonicalisation and skip-logic CODE. Do NOT run the migration.
-- [x] [BACKEND] P0. Build consolidator-freshness gating so a stale index loud-fails rather than serving stale
+- [ ] [BACKEND] P0. Build consolidator-freshness gating so a stale index loud-fails rather than serving stale
       coverage. SSOT: `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
-      ✅ 2026-08-20 — **already shipped, and it loud-fails BY DEFAULT.** Verified in code, not from the codex prose:
-      `unified-trading-library/manifest_writer/_read_index.py:357` —
-      `if fail_fast_legacy or (shards_exist and not _resolve_allow_stale_fallback()):` → raise. Two distinct
-      `ManifestConsolidatorStaleError` raise sites (`:406`, `:422`) deliberately separate "staleness budget too
-      tight for this bucket's cadence" (age < 5x budget) from "consolidator appears DOWN" (blob missing or far past
-      budget), each carrying its own remediation. The per-VM recovery merge is opt-IN only via
-      `MANIFEST_ALLOW_STALE_FALLBACK` — refused by default precisely because it can be a 12+ GB pandas heap
-      (cefi: 1700+ shards → SIGKILL at startup). Live default confirmed:
-      `manifest_consolidated_staleness_sec = 120`. A genuinely-empty bucket is correctly NOT treated as an outage.
-      **Ownership note**: this mechanism lives in `unified-trading-library` — T1's repo, not one of this tranche's
-      three. The todo was mis-scoped to T2; nothing was needed in instruments-service / MTDS / MDPS.
-- [x] [BACKEND] P0. Build the orphan-shard consumption check — no shard stored that nothing consumes. Epic
+- [ ] [BACKEND] P0. Build the orphan-shard consumption check — no shard stored that nothing consumes. Epic
       definition-of-done item. SSOT: `/codex/02-data/orphan-object-detection.md`.
-      ✅ 2026-08-20 — **built and shipped as the `shard-utilisation-sweep` skill.** The existing sweeps
-      (`migration_orphan_sweep.py`, `candle_orphan_sweep.py`, MTDS's sports fork) all run GCS→manifest ("is this
-      stored object manifested?"); nothing ran the other direction. This does: a CONSUMPTION verdict per declared
-      venue / data_type / instrument_type / chain, resolved by IMPORTING the real registries
-      (`VENUE_TO_ASSET_GROUP`, `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`, `KNOWN_CHAINS`) rather than inferring
-      from grep counts, with `unverified` as a first-class verdict. Reuses `shard_universe.py` per the epic's
-      consistency constraint, so it cannot disagree with the two shipped dumps about the denominator. Always exits
-      0 — a gate that can legitimately answer `unverified` must not fail a build. 11 tests.
-      **The safety constraint earned its place — the naive version cried wolf twice on live data, and both guards
-      are regression-tested:**
-      - **95 FALSE venue orphans**, including `AAVE_V3`, `LIDO`, `MORPHO`, `ETHERFI` at 50+ live cells each.
-        Measured cause: `VENUE_TO_ASSET_GROUP` keys DeFi in the GLUED `PROTOCOL-CHAIN` form (135 of its 209
-        entries, all glued) while the manifest carries the BARE protocol with chain in its own column — the two
-        are on opposite sides of the venue/chain canonicalisation cutover. Now CONSUMED, with the cutover
-        mismatch reported as its own finding. Venue axis went 85→158 consumed, 95→22 not_consumed.
-      - **86 FALSE instrument_type orphans.** `defi` has ZERO entries in the registry; `sports` declares 5
-        odds-SHAPE types against a manifest carrying ~84 MARKET types (`MATCH_ODDS`, `OVER_UNDER_2_5`,
-        `SOCCER_EPL`) — one coincidental shared token (`odds`) was enough to condemn the other 83. Fixed with a
-        proportional guard: the registry must cover a MAJORITY of what an asset_group actually carries before
-        absence means anything (cefi 100% → meaningful; sports 1% → `unverified`). Went 86→**3** not_consumed.
-      **What it found that is real** (verdicts, not delete suggestions): `AAVEV3` bare-alias ghost venue still
-      carrying 25 cells; **`BARCHART` — a RETIRED vendor — still carrying 10 cells**; a literal `UNKNOWN` venue (3);
-      `tradfi/nan` instrument_type at 63 cells (the same `'nan'` leak fixed upstream in the coverage writer this
-      session); and the 10 chains outside `KNOWN_CHAINS`, correctly reported `unverified` rather than condemned.
-      **Priority note**: the epic lists this as `[SKILL] P1`, not the `[BACKEND] P0` this todo carried.
-- [ ] [BACKEND] P1. **BLOCKED-UPSTREAM (T1/UTL)** — Fix the manifest-writer per-VM shard flush that does a full
-      read-merge-reserialize-upload on every debounced flush — past ~1M rows the flush outlasts the debounce
-      interval and the VM stalls. CODE only. Evidence:
-      `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
-      **Reason 2026-08-20**: the manifest writer is
-      `unified-trading-library/unified_trading_library/manifest_writer/` — T1's repo, not one of this tranche's
-      three. The issue doc declares `repos: [unified-trading-library, market-tick-data-service]`, and every
-      remaining todo is UTL-side: the append-only "delta shard" pattern (P2), a reworded P3, and a `[SCRIPT] P3`
-      verification explicitly gated on "once either fix above ships". There is no instruments-service / MTDS / MDPS
-      change available to make here. Filed to T1. The issue's own priority is P2, below this todo's P1 framing.
+- [ ] [BACKEND] P1. Fix the manifest-writer per-VM shard flush that does a full read-merge-reserialize-upload on
+      every debounced flush — past ~1M rows the flush outlasts the debounce interval and the VM stalls. CODE only.
+      Evidence: `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
 - [ ] [BACKEND] P1. Fix blocking GCS writes on the event loop, cross-asset-group. Evidence:
       `/plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`.
-      **PARTIAL 2026-08-20 — the headline fix is SHIPPED; what remains is a P3 residual tail.** Verified
-      `market-tick-data-service@eeade63b0c` ("perf(defi): fan out evm_defi_collectors/liquidations/
-      liquidation_events via ParallelPerSymbolRunner") is an ANCESTOR of MTDS HEAD via
-      `git merge-base --is-ancestor` — 3 of 8 sites, landed 2026-08-15. The issue's remaining todos are all **P3**,
-      not P1: async-ify the collection loops in `cli/handlers/dex_swaps_handler.py` (`_collect_all_protocols`),
-      `gas_fee_handler.py` (`_collect_evm_chains`), `vault_share_price_handler.py` (`_collect_vault_rows`),
-      re-assess `lst_rates_handler.py` for whether any per-shard fan-out axis exists at all, and fix 2 blocking
-      writes in sync functions. All four handler files confirmed present here, so this residual IS T2-owned — kept
-      OPEN, at its real P3 weight, behind this tranche's outstanding P0s.
-- [x] [BACKEND] P1. Ensure `expected_unattempted` is materialised by the WRITER and never re-derived downstream.
-      ✅ 2026-08-20 — **already satisfied.** `instruments_service/engine/orchestrator/process_write.py:604` calls
-      `manifest.record_expected_unattempted(...)` at write/pre-flight time — the writer-side materialisation the
-      todo asks for. Checked the downstream reader for the violation this guards against (re-deriving the status
-      instead of trusting it): `scripts/measure_honest_coverage.py` has ZERO functions that recompute or infer
-      `expected_unattempted` — it only reads the pre-stamped `capture_status` column via `_count_statuses` and the
-      four-state groupby. Nothing to change in this tranche's three repos.
+- [ ] [BACKEND] P1. Ensure `expected_unattempted` is materialised by the WRITER and never re-derived downstream.
 
 ### instruments-service
 
@@ -374,22 +316,8 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Close the CeFi and TradFi G1-G5 gate execution CODE paths. Evidence:
       `/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
       `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
-- [x] [BACKEND] P1. Fix the CeFi `instrument_type` casing active-writer regression. Evidence:
+- [ ] [BACKEND] P1. Fix the CeFi `instrument_type` casing active-writer regression. Evidence:
       `/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`.
-      ✅ 2026-08-20 — **the writer-side CODE fix is shipped and live; everything left is data movement.**
-      `market-tick-data-service@c07cc70e93` verified an ANCESTOR of MTDS HEAD (`git merge-base --is-ancestor`),
-      not taken from the checkbox. Root cause it closed: `_tradfi_manifest_shard.py::_tradfi_manifest_itype`
-      hardcoded `if VENUE_TO_ASSET_GROUP.get(venue) != "tradfi": return itype`, so every CeFi venue fell straight
-      through and the lowercase `instrument_type` landed verbatim in the manifest row-key — even though UTL's
-      shared `canonicalize_manifest_instrument_type` already shipped a `cefi` mapping table that was simply never
-      reached. The fix calls that canon unconditionally and lets its own asset_group gating decide, including the
-      bundle-grain exclusion set (`futures_chain`/`options_chain`/`combo`/`combo_chain`/`continuous_future` pass
-      through unchanged). GCS path-building still uses the lowercase value verbatim — only the manifest column
-      casing changed. **The 3 remaining todos on that issue are all `[DATA] P2` and out of scope here**: review the
-      `canonical-migration-cefi-itype-casing-apply-*` dry-run, launch the full `--apply` VM, trigger the
-      consolidator rebuild, then re-run the audit to confirm a 0 residual. That is exactly the "relaunch the VM /
-      apply the delete" class this tranche leaves to the operator. Note the fix stops NEW lowercase rows being
-      minted; it does not retroactively fix the ~39,286-row existing residual.
 - [ ] [BACKEND] P1. Land the CF-canonicalization single-walk CODE. Any NEW whole-corpus GCS walk is
       review-blocking — reuse the existing walk. Evidence:
       `/plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`.
@@ -410,18 +338,8 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Close the foundation-completeness and phase-0 cross-cutting CODE items. Evidence:
       `/plans/active/instruments_foundation_completeness_2026_06_24.md`,
       `/plans/active/instruments_foundation_phase0_cross_cutting_2026_07_24.md`.
-- [x] [BACKEND] P2. Fix the AAVEV3 bare-alias enumerator CODE (already root-caused — duplicate dict key plus missing
+- [ ] [BACKEND] P2. Fix the AAVEV3 bare-alias enumerator CODE (already root-caused — duplicate dict key plus missing
       alias canonicalisation). The 46,300 bad `empty_confirmed` manifest rows stay operator-gated, not yours.
-      ✅ 2026-08-20 — **verified in place by reading the code, not by trusting the issue's checkbox.** Both halves of
-      the root cause are closed in `instruments-service/scripts/enumerate_expected_universe.py`'s
-      `_yield_v2_defi_pre_launch_rows` (line ~1457): (1) alias canonicalisation —
-      `venue_label = VenueMapping._canonicalise_defi_protocol_spelling(protocol.upper())` maps `AAVEV3` → `AAVE_V3`,
-      matching the per-instrument v2 path; (2) the duplicate-key guard — an `_emitted_chain_venues` set with
-      `if (chain_upper, venue_label) in _emitted_chain_venues: continue`, so the legacy no-underscore alias key in
-      `PROTOCOL_LAUNCH_DATES` can no longer re-emit every row its canonical twin already emitted. The inline comment
-      cites this exact issue doc. The issue's two remaining todos are `[OPERATOR] P2` (purge the 46,300 rows via the
-      human-gated `--apply` delete) and `[DESIGN] P3` (whether `chain_env.py` should keep alias dict-keys at all) —
-      neither is this tranche's, exactly as this todo already stated.
 
 ### MTDS and MDPS
 

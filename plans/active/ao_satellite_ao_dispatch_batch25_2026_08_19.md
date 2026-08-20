@@ -174,12 +174,12 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       `test_dispatch_na_eligibility_mode_different_tranche_still_spawns`) prove the same-day same-(mode, tranche)
       coalesce that closes the agt-72629d/agt-9095fb defi collision class; commit `bfe8fb28a0` confirmed on
       origin/live-defi-rollout.
-- [x] ✅ [SCRIPT] P2. Query `ActivityRow` for `tmux_session_lost` events over the trailing 7 days, bucket into rolling
+- [ ] [SCRIPT] P2. Query `ActivityRow` for `tmux_session_lost` events over the trailing 7 days, bucket into rolling
       10-min windows matching `_count_excluded_losses`'s own method, count how often the 3-in-10-min threshold is
       crossed outside any known incident window, and for each crossing cross-reference every member against a
       preceding `reason="manual"` `SESSION-TEARDOWN` log line within ~60s. Done when: a measured baseline exists
       (crossing frequency + benign-recycle share) to inform whether `tmux_session_loss_rate_min_count`/
-      `_window_seconds` needs raising. Repo: agent-orchestrator. **DONE — see Progress Log 2026-08-20.**
+      `_window_seconds` needs raising. Repo: agent-orchestrator.
 - [ ] [UI] P2. Exclude human-kind slots (`config.human_slot_ids()`) from the main agent-orchestrator dashboard Fleet
       table's per-slot role-badge computation (NOT the dedicated `HumanFleet.tsx` page, which already excludes them
       correctly). Done when: a live dashboard check shows slot 9001 (and any other human slot) absent from the main
@@ -257,4 +257,3 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   `bfe8fb28a0` confirmed on origin/live-defi-rollout. Related-but-distinct from
   `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4 (same generalized gate, shipped in the same commit) —
   not duplicated here per the 2026-08-19 note.
-- **2026-08-20 (slot 10)**: Item 3 measured against the live `GET /api/activity?type=tmux_session_lost&since=2026-08-13T07:00:00Z` ActivityRow slice (2,335 raw rows through 2026-08-20 07:20Z). Applying the canary's current `_count_excluded_losses` rules using the live agent/slot snapshots removed 575 rows (one-shot/scheduled lifecycle or idle-slot exclusions), leaving 1,760 qualifying losses, or **10.46/hour**. Simulating the canary's 120-second tick over a 600-second rolling window at threshold 3 produced **194 threshold-crossing episodes in seven days (27.71/day)**; removing the only explicitly documented incident window (2026-08-14 23:30–23:40Z around the 23:33:47–48Z cluster) still produced 194, so the frequency is not explained by that known incident. The 194 episodes contained 1,048 crossing-member rows; only **8 (0.8%)** had a preceding journal `SESSION-TEARDOWN ... reason=manual` line for the same slot within 60s (36 matching manual teardown lines were available in the seven-day journal query). This is strong evidence that 3-in-10-min is routinely crossed, while the journal cross-reference is a conservative benign-recycle lower bound because service journal retention exposed only 36 manual lines; the follow-up threshold/exclusion decision remains in the source issue and is not made by this measurement.
