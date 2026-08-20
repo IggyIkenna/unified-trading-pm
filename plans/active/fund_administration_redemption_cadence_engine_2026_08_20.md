@@ -167,7 +167,7 @@ plan is a serial chain by file-topology, not a reflexive default.
   a nonzero `redemption_fee_pct` reduces `cash_amount_due_usd` proportionally with zero effect on other redemptions'
   fee math.
 
-- [ ] [BACKEND] P1. Strike ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick and reuse it across every
+- [x] [BACKEND] P1. Strike ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick and reuse it across every — fund-administration-service@64bc3505e; Evidence: quality-gates.sh passed (32s full run incl. tests); new test `test_run_once_strikes_one_snapshot_per_fund_share_class_per_tick` in `tests/unit/test_background_handlers.py` (2 same-fund redemptions in one `run_once()` settle against identical `snapshot_id`, provider called once).
   redemption settled in that tick, instead of `run_once()`'s current per-redemption `nav_provider.latest_snapshot()`
   call (`grace_period_handler.py:106`) — this is what makes "all outstanding withdrawals processed on one cadence,
   same NAV strike" real rather than incidental. Done-when: a test with 2 pending redemptions for the same fund/share
@@ -232,3 +232,7 @@ plan is a serial chain by file-topology, not a reflexive default.
   UAC `FeeStructure.redemption_fee_pct` was already present (@20eacf7d), so only the fund-admin deduction
   (`total_fee_pct += redemption_fee_pct` in `process_redemption`) + the done-when test
   `test_redemption_fee_pct_deducted_only_from_redeemed_amount` landed here. QG green (59s).
+- **2026-08-20**: [slot 5] Item 8 (one-NAV-snapshot-per-tick) shipped — fund-administration-service@64bc3505e.
+  `run_once()` now strikes ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick (a per-tick
+  `snapshot_cache`) and reuses it across every redemption settled in that tick, replacing the prior per-redemption
+  `latest_snapshot()` call. QG green (32s).
