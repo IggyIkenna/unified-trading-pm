@@ -150,7 +150,7 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [x] ✅ [FROM-T5] P0. **Shipped — `execution-service@7202047877`.** Expose a real per-venue instruction-path check in `execution-service` — this is the leg the
+- [ ] [FROM-T5] P0. **Expose a real per-venue instruction-path check in `execution-service`** — this is the leg the
       readiness dump names as the structural reason its rows cannot confirm execution readiness. T5 has done the
       groundwork and needs only the venue-aware surface; the shape asked for is deliberately minimal.
 
@@ -181,11 +181,6 @@ todos only to confirm they are data-movement, then leave it.
       the global handler gap is surfaced as a dump-level finding. Wire-up on T5's side is a one-line probe call.
       Evidence: `/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md` Progress Log,
       2026-08-20.
-
-      **Shipped 2026-08-20**: `instruction_action_support(venue)` on `execution_service.readiness` returns exactly
-      the requested shape — `{"mainnet": {...}, "testnet": {...}}` over every `InstructionActionV2` member, each
-      `"supported"`/`"unsupported"`/`"unknown"` — additive to the already-frozen `instruction_path_availability`
-      contract (same probe call, new key, no breaking change). T5 still needs to wire the consuming side.
 
 > **T1 unblock notice 2026-08-20** — UAC `OrderStatus` is now the full 9-state machine the codex SSOT describes.
 > `FAIL_OUTBOUND` and `RECONCILED` exist, and so do `ORDER_STATUS_TRANSITIONS`, `TERMINAL_ORDER_STATUSES`,
@@ -251,12 +246,7 @@ todos only to confirm they are data-movement, then leave it.
       `instruction_path_availability(venue)`; `python -m execution_service.readiness` is the cross-venv probe.
       T5 has the frozen contract under their `## Inbound requests` (`unified-trading-pm@34999f0adf`), posted before
       the code landed so they were never idle-waiting. Measured verdicts are in the Progress Log.
-- [ ] [BACKEND] P0. Build the external instruction API surface, coordinating the contract with T1. **Partial
-      progress, still open**: `POST /external/instructions` handles `TRADE` and `QUOTE` (the latter shipped this
-      session, `execution-service@dc4fad8de7`) — every other `InstructionActionV2` member (`SWAP`, `LEND`,
-      `BORROW`, `WITHDRAW`, `REPAY`, `STAKE`, `UNSTAKE`, `TRANSFER`, `BRIDGE`, `ATOMIC`, `CANCEL`, `CONVERT_DUST`,
-      `LP_MINT`, `LP_BURN`) still 501s (`external_instruction_api.py`'s own error message says so). Full DeFi/
-      staking/lending external submission is the remaining scope.
+- [ ] [BACKEND] P0. Build the external instruction API surface, coordinating the contract with T1.
 - [x] ✅ [BACKEND] P1. **Delta-proxy repricer — PRICE leg generalized + receipt point rebuilt** —
       **execution-service@dc4fad8de7**. T1's `QuoteInstruction` extension landed
       (`unified-api-contracts@6be4b136d7`), unblocking this. `quote_instruction_to_delta_proxy_params` now reads
@@ -325,16 +315,6 @@ todos only to confirm they are data-movement, then leave it.
       it, `accepted=True` becomes a lie about an emergency stop. Fix needs BOTH, in this order: real per-venue
       CLOSE_ALL wiring behind `AccountActionV2.CLOSE_ALL` (and a loud rejection for any action with no runner),
       THEN a route on the deployed app. Never the route first.
-
-      **Wiring half SHIPPED 2026-08-20 — `execution-service@96411b68c9`.** `AccountInstructionOrchestrator._execute_close_all`
-      now resolves a real credentialed `OrderAdapter` (same trusted credential path `LiveExecutionHandler` uses),
-      reads real open positions via `BaseCLOBAdapter.get_positions()`, and submits an offsetting MARKET order per
-      position (SELL for LONG, BUY for SHORT) — one leg's failure does not abort the rest, and the result honestly
-      reports a partial failure. CLOB/CeFi-scoped only; DeFi/sports have no equivalent close-out primitive.
-      Deliberately does NOT bundle cancelling resting orders (CLOSE_ALL means flatten positions, not also
-      CANCEL_ALL). 8 new tests. **Still open**: no HTTP route exists in front of this yet — per this todo's own
-      ordering rule, the route is the ONLY remaining piece, and per that same rule it must not land before the
-      wiring did (wiring is now safely first).
 - [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
 - [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
@@ -363,11 +343,10 @@ todos only to confirm they are data-movement, then leave it.
       NOT YET MEASURED, and required before deciding the fix: how DART's manual-trade surface actually reaches
       execution-service (a second deployment target, an in-process CLI path, or genuinely unreachable). Resolve
       that first, then either register `manual_router` on `main.py` or record why it is deliberately CLI-only.
-- [x] ✅ [BACKEND] P1. **Fixed — `execution-service@197e80116`.** Verified the production live orchestrator did
-      NOT satisfy the `LiveOrchestrator` protocol it was cast to; real root cause corrected the original
-      diagnosis (see Progress Log). Evidence:
+- [ ] [BACKEND] P1. Verify the production live orchestrator actually satisfies the `LiveOrchestrator` protocol it is
+      cast to — untested end to end, and the prior pass spot-checked location only. Evidence:
       `/plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`
-      (archived — fixed).
+      (archived — fixed, see this plan's own Progress Log for the corrected root cause).
 
 ### Correctness P0s — silently wrong today
 
@@ -460,18 +439,12 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Settlement, reporting and Elysium
 
-- [x] ✅ [BACKEND] P1. **Resolved — stale reference, not T4/execution-service scope.** The cited 88-todo doc
-      (`/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`) does not exist —
-      confirmed nowhere in `plans/active/`, `plans/archive/`, or git history under that path. It was split/renamed
-      before this plan's own 2026-08-19 authoring date, so the reference was stale from the start, not something
-      that rotted this session. "Elysium" here is a CLIENT name (unrelated to the fleet-wide-banned data vendor of
-      the same name). Successor docs traced — `client_artefact_remediation_elysium_2026_08_18.md` (0 open/25
-      closed, DONE), `..._finalize_2026_08_18.md` (1 open, a housekeeping archive-todo, `repos: [unified-trading-pm]`),
-      `elysium_carveout_stubbed_strategy_service_2026_08_12.md` (`status: draft`, not ingested, T3's/T1's repos) —
-      none are execution-service-scoped or T4-allocated. Full detail: this plan's Progress Log, 2026-08-20.
+- [ ] [BACKEND] P1. Work the Elysium October delivery and code-disclosure readiness plan (88 open todos) — the
+      largest single doc in this tranche. Split into phases here as you go. Evidence:
+      `/plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`.
 - [ ] [BACKEND] P1. Wire transfer netting and custody routing end to end in production — the artefacts mark these
       target-state, not wired.
-- [x] ✅ [BACKEND] P2. **Closed — all 4 sub-items resolved.** Close the batch-live-reconciliation-service, fund-administration-service, greeks-service and
+- [ ] [BACKEND] P2. Close the batch-live-reconciliation-service, fund-administration-service, greeks-service and
       client-reporting-api items in this tranche's allocation. **fund-administration-service: zero docs allocated**
       (confirmed via `plans/audit/results/code_readiness_allocation_2026_08_19.json`, key
       `T4-execution-settlement` — no `primary_repo: fund-administration-service` entries exist), nothing to close
