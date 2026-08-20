@@ -195,8 +195,9 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
       `plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`. **Lesson**: do
       not edit ANY file in a repo while that repo has a non-`--isolated` quickmerge in flight, even a
       `--files`-scoped one touching a different file — wait for it to land first.
-      **Converter script**: promoted to `unified-api-contracts/scripts/lazify_init.py` (2026-08-20, pre-compact
-      sweep) — no longer scratchpad-only; smoke-tested against `registry/__init__.py` post-promotion (reproduces
+      **Converter script**: promoted to `unified-api-contracts/scripts/lazify_init.py` —
+      `unified-api-contracts@c1b4c3cf0a` (2026-08-20, pre-compact sweep) — no longer scratchpad-only; smoke-tested
+      against `registry/__init__.py` post-promotion (reproduces
       584 lazy exports / 62 source modules, matching the already-shipped file).
 - [ ] [AGENT] P0. **Prove the end state with a scoped-build test** — construct a deployment declaring only
       `CARRY_BASIS_PERP` + `CARRY_STAKED_BASIS` (the contracted archetypes) and assert the loaded-module set excludes
@@ -424,7 +425,8 @@ down" narrative.
   touch the `_VENUES` loop or its 37 external modules, so none carry this risk. The measured 27% import-cost
   reduction already reported is real and already landed; only the 4th file's OWN portion remains undone.
   **Converter script** (fixed, both bugs above patched): promoted to `unified-api-contracts/scripts/lazify_init.py`
-  (2026-08-20) — no longer scratchpad-only, both fixes are baked into the committed version.
+  — `unified-api-contracts@c1b4c3cf0a` (2026-08-20) — no longer scratchpad-only, both fixes are baked into the
+  committed version.
 - **2026-08-20, later same day — correction to the entry above: the `_VENUES` hypothesis was WRONG, and (the
   important part) the already-shipped code is confirmed NOT affected.** Bisected properly instead of assuming:
   patched the reverted lazy top-level `__init__.py` to `_VENUES: list[str] = []` (zero external modules imported at
