@@ -86,7 +86,7 @@
     "agent-orchestrator": "0.100.37",
     "greeks-service": "0.18.75",
     "trading-agent-service": "0.13.17",
-    "strategy-service": "0.81.2",
+    "strategy-service": "0.82.0",
     "ml-service": "0.58.53",
     "alerting-service": "0.66.11",
     "unified-trading-api": "0.4.2",
