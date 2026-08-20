@@ -131,6 +131,18 @@ is independently shippable, no need to clear all 925 in one pass.
   ship-blocker this doc's prior note flagged is confirmed already resolved (those docs no longer appear in the
   live violation list). 761 citations remain; not yet at 0.
 
+- **slot-21 2026-08-20**: Follow-up batch removed 22 redundant archived-plan `related:` citations from three active documents, lowering the measured live count and baseline 761 → 740. Each removed entry was retained as an inline/body citation in its referring document; no codex migration was needed. The cleanup todo remains open.
+
+- **slot-21 2026-08-20 (ship-gate follow-up)**: Quickmerge exposed 19 scoped archive-safety violations after a peer fast-forward. Removed the 13 entries owned by this cleanup batch (2 CeFi + 11 corpus-hygiene); excluded 6 unrelated `tradfi_master.md` entries. `--only` is clean; measured corpus count/baseline is now 711.
+
+- **slot-21 2026-08-20 (third execution batch)**: Removed 16 redundant `related:` citations from the prediction and cross-cutting consolidated closeout docs after verifying body/source evidence; restored two non-redundant pointers. Live checker count/baseline is now 710. The cleanup todo remains open.
+
+- **slot-21 2026-08-20 (fourth execution batch)**: Removed 22 redundant archived-plan `related:` citations from four clean active documents after confirming each basename was already retained in document-body/source evidence; no codex migration was needed. The live checker and ratchet baseline are now 704 citations. The cleanup todo remains open.
+
+- **slot-21 2026-08-20 (refreshed-branch batch)**: Reapplied the verified frontmatter-only cleanup after a concurrent fast-forward swept the prior working copy. Removed 16 redundant archived-plan `related:` citations (prediction closeout 7; cross-cutting closeout 9); preserved the two entries without body evidence. Live checker/baseline is now 688 after concurrent peer cleanup. The cleanup todo remains open.
+
+- **slot-21 2026-08-20 (pointer-review follow-up)**: The scoped gate exposed five remaining entries without body repetitions. Each archived plan was read; all five were resolved or already represented by existing referring-document evidence, so the stale historical pointers were dropped rather than manufacturing codex content. `--only` is clean; live checker count/baseline is 681.
+
 ## Todos
 
 - [x] ✅ **EXTRACTED 2026-08-18 (na-eligibility-audit, infra tranche) →

@@ -19,15 +19,8 @@ related:
     # STALE-REF FIX (plan_reconciler, agt-4a2f8b, 2026-08-19): every entry below lacked the leading-slash
     # repo-root-relative form the cross-reference-path convention requires; 3 entries also pointed at the
     # wrong directory (all 3 confirmed archived via a fresh existence check before this fix).
-    /plans/archive/2026_07/prediction_venue_perps_and_live_clob_depth_2026_06_20.md,
-    /plans/archive/2026_07/prediction_perps_kalshi_polymarket_parked_2026_07_24.md,
     /plans/active/prediction_live_clob_depth_capture_2026_07_24.md,
-    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
     /plans/active/prediction_capture_incident_remediation_2026_07_06.md,
-    /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
-    /plans/archive/2026_07/prediction_cross_venue_arb_and_coverage_history_2026_07_24.md,
-    /plans/archive/2026_08/prediction_cross_venue_arb_and_coverage_history_2026_08.md,
-    /plans/archive/2026_08/issues/prediction_cross_venue_arb_line_cap_blocks_marker_2026_08_07.md,
   ]
 created: "2026-07-24"
 parent_epic: predictions_master
