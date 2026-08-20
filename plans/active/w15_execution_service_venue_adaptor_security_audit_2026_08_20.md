@@ -98,9 +98,9 @@ impression:
       attacks). Done-when: same evidence bar as the bridge todo above. **RESOLVED 2026-08-20 (slot-7): findings
       recorded in the Progress Log; HIGH findings are tracked below. No inline fix was made in this audit todo.**
 
-- [ ] [BACKEND] P0. Fix Uniswap live execution's ignored swap deadline, validate amount/slippage bounds, and add
+- [x] ✅ [BACKEND] P0. Fix Uniswap live execution's ignored swap deadline, validate amount/slippage bounds, and add
       retry/idempotency protection for the approval+swap transaction sequence (`uniswap.py:332-355`,
-      `uniswap_live.py:71-111,330-380`). Preserve the caller's minimum output rather than silently lowering it.
+      `uniswap_live.py:71-111,330-380`). Preserve the caller's minimum output rather than silently lowering it. — execution-service@7481405df2 + evidence: quickmerge preflight passed; post-push ancestry verified.
       (repo: execution-service)
 
 - [ ] [BACKEND] P0. Fix Uniswap NPM partial-success reporting: an optional `burn_nft=True` request must return a
