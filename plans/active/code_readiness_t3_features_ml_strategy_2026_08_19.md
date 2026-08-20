@@ -273,8 +273,24 @@ todos only to confirm they are data-movement, then leave it.
       of guessing (the mode-dispatch todo below); `ARBITRAGE_MEV_SANDWICH` (1/mode) is `excluded_by_policy`, not a
       gap. **Zero `not_ready` does NOT mean the matrix is fully verified** — it means nothing FAILS a real machine
       check. The unverified population is different work and must not be reported as done.
-- [ ] [BACKEND] P1. Fix the DeFi catalog/engine config-key contract drift for the 5 remaining families
-      (sports, ML-directional, market-making, vol). Evidence:
+- [x] ✅ [BACKEND] P1. Fix the DeFi catalog/engine config-key contract drift for the 5 remaining families
+      (sports, ML-directional, market-making, vol). **Re-verified 2026-08-20**: the sweep is not "start the
+      vol-family method on the other 3 families" as this plan's deferred table framed it — the systemic test
+      (`test_all_catalogued_archetypes_construct_and_fire.py`) already parametrizes over the ENTIRE
+      `ARCHETYPE_ENGINE_REGISTRY` (all 59 archetypes, not vol-scoped), so the sweep has been comprehensive and
+      automated all along. Ran it clean (`GCP_PROJECT_ID` unset locally caused 3 unrelated DeFi bucket-naming
+      failures — set it, re-ran, 143 passed / 3 xfailed). The 3 xfails are a `strict=True` allow-list, not
+      silently-passing gaps: `RULES_DIRECTIONAL_EVENT_SETTLED` (9 rows, needs a real per-row
+      `'<feat>:<op>:<val>|<outcome>|<stake_frac>|<max_odds>'` DSL string — no row emits one) and
+      `MARKET_MAKING_EVENT_SETTLED` (6 rows, needs real per-exchange `back_instrument`/`lay_instrument` Betfair/
+      Matchbook instrument IDs), both dated 2026-07-24, both explicitly "NOT fixed here... a design decision, not
+      a rename" in the test's own allow-list comment — genuine remaining work, but `[DESIGN]`/`[STRATEGY]`-tagged
+      (inventing plausible-looking threshold values or instrument IDs for live financial strategies would be
+      fabrication, not a fix). One more open cross-repo design item in the issue doc
+      (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md:774`): the pollable-candidate-registry feed
+      for `LIQUIDATION_CAPTURE`/`ARBITRAGE_MEV_LIQUIDATION_BUNDLE` has its transport shape ruled (2026-08-09) but
+      needs a human design pass on features-service's per-candidate feature-naming before it can be broken into
+      AO-dispatchable todos. Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
 - [ ] [BACKEND] P1. Build the venue/currency curtailment mechanism — `allowed_venues` is dead code today, and the
       catalog and `archetype_leg_spec_seeds` describe the same domain with no cross-check. Evidence:
@@ -537,7 +553,7 @@ section is now done.
 | --- | --- | --- |
 | Archetype code-completeness (all 7 legs, all 3 modes) | **DONE — 59/59 ready every leg/mode** | Nothing. |
 | `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@<see Progress Log>`. | Nothing. |
-| DeFi/vol config-key contract drift | **Vol family DONE** (2 real drifts, 8 keys, fixed this tranche) | Same method — make the systemic construct-and-fire test exercise the archetype and see which no-op — for sports, ML-directional, market-making. A4's catalogue-vs-schema comparison structurally cannot catch this class (both can agree while the ENGINE reads a third spelling); the method that found the vol drifts is the one that generalises. |
+| DeFi/vol/sports/ML/MM config-key contract drift | **DONE — sweep was already comprehensive, not vol-scoped.** The systemic construct-and-fire test parametrizes all 59 registered archetypes, confirmed green (143 passed/3 xfailed with `GCP_PROJECT_ID` set). 2 genuine remaining bugs, both `[DESIGN]`-blocked not mechanical: `RULES_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED` (real per-row threshold/instrument-ID decisions, not derivable). | Nothing agent-executable. The 2 xfails need a human to pick real DSL thresholds / Betfair-Matchbook instrument IDs — don't fabricate plausible-looking values for live financial strategies. |
 | W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
 | W9/W10/W13 PnL, risk, exposure | **Re-verified, not stale — genuinely open, but re-scoped smaller.** `paper_run_attribution.py`/`paper_run_passive.py` already ARE the shared batch=paper=live path (not paper-only); `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Decide compute_handler's fate (wire a cron trigger or delete the orphaned op) and confirm compute_pnl's 3 capabilities are covered elsewhere before retiring it — smaller, more bounded than the original "build a unified path" framing suggested. |
 | W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
@@ -550,9 +566,14 @@ section is now done.
 the shrinking worklist) and the two `quickmerge.sh` defects
 (`/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`).
 
-**Recommended next item**: start on the W9/W10/W13 PnL collapse or the position-adapter venue-string fix — both are
-P0, self-contained, and don't depend on anything else in this list. The config-key drift sweep (sports/ML/MM) is
-lower-effort but lower-value; do it opportunistically alongside whichever W-item touches those families.
+**Recommended next item (superseded 2026-08-20 session 3 — see Progress Log)**: position adapters/venue coverage
+and config-key drift are both now DONE (found already-resolved or already-comprehensive). What's left with real
+agent-executable scope: **W6 wizard/config** (untouched — rank-buffer hysteresis, no-trade band, beta-hedge
+overlay, vol-target-at-book-layer; the PORTFOLIO engines' `rebalance_band` is a reusable shape) and **W16/W18
+preflight + canonical paths** (untouched, blocked on T1's `PATH_REGISTRY` `mode=` fix for the paths half, but the
+fail-closed startup readiness check has no such dependency). The PnL item is real but narrower than it reads —
+see its row above; `compute_handler`'s cron-trigger decision and `compute_pnl`'s formula-uniqueness check are the
+actual next actions there, not a from-scratch unification.
 
 ## Progress Log — 2026-08-20 session 2
 
