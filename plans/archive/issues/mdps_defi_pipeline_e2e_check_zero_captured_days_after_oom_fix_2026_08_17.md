@@ -18,7 +18,7 @@ summary: >-
   `mdps_mvp_universe(DEFI)` matched any of those 115 keys, at ANY historical day (`--auto-day` found nothing to
   fall back to for any of them) — a 0% intersection between the shard universe and what's actually captured under
   `service_name=market-tick-data-service` in the raw manifest.
-status: open
+status: resolved
 nature: issue
 asset_group: [defi]
 stage: [data]
@@ -36,7 +36,7 @@ author: slot-20 (data_engineering)
 assigned_vm: planning
 parent_epic: security_and_cross_cutting_master
 priority: P1
-resolved_by:
+resolved_by: slot-1 (data_engineering), 2026-08-20
 locked_by:
 source:
   - data_pipeline_check_mdps_features_2026_07_20.md's "mdps-e2e-defi-oom-fix-and-full-matrix-completion" todo —
@@ -55,6 +55,9 @@ context_scope:
 ---
 
 # DEFI pipeline_e2e_check: OOM fixed + root-caused, but the driver now proves the shard universe doesn't match captured data
+
+> **✅ RESOLVED 2026-08-20 (slot-1).** All items closed — chain-axis fix, streamed manifest read, terminal-report
+> consolidation, and leg-over-leg `gc.collect()` all landed and verified on origin/live-defi-rollout.
 
 ## What I found
 
@@ -140,14 +143,21 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    `test_resolve_shard_day_bounds_scan_to_lookback` + streamed-read coverage shipped in the same commit).
    **Evidence: market-data-processing-service@6ee153a0, unified-trading-library@11f1ebd1 — both verified on
    origin/live-defi-rollout by direct code read.**
-- [ ] [DATA] P1. Still open. Now that (1)/(2) have landed, re-run DEFI's `--legs force,skip --require-captured
-   --auto-day` matrix again to get a REAL (non-"PROVED NOTHING") verdict, then consolidate all 5 AGs' reports per
-   `data_pipeline_check_mdps_features_2026_07_20.md`'s open todo. **2026-08-17 note**: the plan's own CEFI driver
-   (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) was STILL RUNNING (not terminal) as of this check — do not
-   relaunch it; the DEFI re-run this todo needs is independent and can proceed without waiting on CEFI.
-   **2026-08-17 update — first re-run attempt (`pipeline-e2e-check-mdps-20260817-005300-c59390`, launched 00:53
-   UTC) CRASHED silently, relaunching (see item 5 for root cause + why this is a relaunch-safe mitigation, not a
-   blind retry).**
+- [x] ✅ [DATA] P1. **DONE 2026-08-20 (slot-1, data_engineering).** Confirmed the `pipeline-e2e-check-mdps-20260817-024215-f56c11`
+   relaunch (item 5, chain-axis fix live) reached a terminal, REAL verdict — no relaunch needed, this session only
+   read + consolidated the already-terminal GCS reports (all under
+   `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mdps/2026-07-05/`):
+   DEFI is no longer "PROVED NOTHING" — `total=518 passed=0 failed=182 skipped=336` (status=fail; run window
+   2026-08-17T02:47Z-08:42Z), with real per-cell reasons now populated (`no_captured_input_for_cell` for genuinely
+   absent shard-days, `no_matching_row` for others) instead of a blanket zero-verified skip. **All 5 AGs are now
+   terminal** for day=2026-07-05, legs=force,skip: SPORTS `total=4 passed=2 failed=0 skipped=2` (status=pass,
+   the cleanest); CEFI `total=890 passed=145 failed=341 skipped=404` (status=partial); TRADFI
+   `total=86 passed=10 failed=30 skipped=46` (status=partial); PREDICTION `total=28 passed=0 failed=14 skipped=14`
+   (status=fail); DEFI as above (status=fail). This closes the plan's headline
+   `mdps-e2e-full-matrix-terminal-consolidation` (b)+(c) scope — the driver mechanism itself is now proven
+   end-to-end for every AG; the individual failed/skipped cells are DATA/coverage findings, not driver bugs, and
+   are out of this todo's scope (worth their own follow-up audits per AG if the operator wants pass-rate
+   improvement, not filed here since none of the 5 reports' failure reasons look like a new driver defect).
 5. `[DATA] P1.` NEW finding 2026-08-17 (slot-3, data_engineering). The 00:53 UTC DEFI re-run (`c59390`) died
    silently mid-run: `run.log` goes dead at `2026-08-17 01:18:49Z` (last line, no error/traceback), `EXIT_STATUS`
    never advanced past `RUNNING`, and the VM is **absent entirely** from `gcloud compute instances list` (not
@@ -173,12 +183,14 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
    this relaunch): explicit `del`/`gc.collect()` of each leg's large intermediate structures
    (`_captured_days_by_cell`'s frame/groupby results) in `pipeline_e2e_check.py` between legs, or run each leg
    in its own subprocess so OS-level cleanup is guaranteed.
-- [ ] [SCRIPT] P2. Extracted from item 5's own "Real fix still needed" tail (was prose-only, not a tracked
-      checkbox — converted 2026-08-19 by `/plan-reconcile security_and_cross_cutting_master` Phase 2.4 zero-checkbox
-      sweep). Explicit `del`/`gc.collect()` of each leg's large intermediate structures
-      (`_captured_days_by_cell`'s frame/groupby results) between legs in `pipeline_e2e_check.py`, or run each leg
-      in its own subprocess, so RSS doesn't accumulate leg-over-leg (the item-5 relaunch used a bigger VM as a
-      mitigation, not a fix — this is the real fix).
+- [x] ✅ [SCRIPT] P2. **DONE 2026-08-20 (slot-1).** Extracted from item 5's own "Real fix still needed" tail (was
+      prose-only, not a tracked checkbox — converted 2026-08-19 by `/plan-reconcile security_and_cross_cutting_master`
+      Phase 2.4 zero-checkbox sweep). Added explicit `gc.collect()` calls in `_run_shard_batch_legs`
+      (`pipeline_e2e_check.py`) immediately after the force leg and immediately after the skip leg complete, so
+      each leg's large intermediate structures are reclaimed before the next leg starts instead of accumulating
+      leg-over-leg (the item-5 relaunch used a bigger VM as a mitigation, not a fix — this is the real fix). QG
+      green (72s), all 2359 tests passed. **Evidence: market-data-processing-service@4990d23619 — verified on
+      origin/live-defi-rollout.**
 
 ## Progress Log
 
@@ -192,6 +204,11 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
   fix — the doc's own claims were not re-verified this pass; whoever picks up item 4 should first check whether
   the 2026-08-17 02:42 UTC relaunch (`pipeline-e2e-check-mdps-20260817-024215-f56c11`) reached a terminal verdict
   before assuming it's still pending.
+- **2026-08-20 (slot-1, data_engineering)**: item 4 DONE — verified the item-5 relaunch (`...024215-f56c11`) already
+  reached a terminal state (no VM found running via `gcloud compute instances list --filter="name~pipeline-e2e-check"`,
+  consistent with the launcher's self-delete-on-terminal pattern) and its report is live in GCS with a REAL DEFI
+  verdict. Read all 5 AGs' `.md` reports via UTL `download_from_storage` (no gcloud CLI object ops) and consolidated
+  the pass/fail/skip counts into the checkbox above. Checkbox flipped in the same turn.
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries).
 - **2026-08-20 (slot-7, quant_dev)**: item 3 DONE — closed as already-shipped-and-verified, not re-implemented. Direct
@@ -203,3 +220,7 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
   count — the next AG whose manifest outgrows DeFi's current 160M rows will not re-hit the driver OOM ceiling. The
   old full-read path is fully gone from the driver (only a docstring reference remains). Checkbox flipped with evidence
   in the same commit.
+- **2026-08-20 (slot-1, data_engineering)**: last open item DONE — added explicit `gc.collect()` calls in
+  `_run_shard_batch_legs` after the force and skip legs so RSS is reclaimed between legs instead of accumulating
+  across a multi-leg shard batch. QG green, all tests passed. Evidence: market-data-processing-service@4990d23619.
+  **All items in this doc are now closed — status flipped to `resolved`.**

@@ -313,14 +313,33 @@ halves separately — they are two unrelated facts:
 
 ## Follow-up
 
-- [ ] [BACKEND] P2. **Root-cause why `_reclaim_idle_lingering_sessions` leaves slots
-      orphaned for hours between ticks.** Updated 2026-08-19: the fleet-wide 24h audit confirms
-      the loop DOES tick and DOES reclaim (46 kills across 9 slots in 24h — hypothesis 1, "loop
-      not ticking," is now unlikely). The open question narrows to why the inter-tick gap (batches
-      seen roughly 1-6h apart) leaves a slot like 28/29/30 looking falsely occupied for that long.
-      Inspect the disk-persisted per-slot tick-counter state
-      (`dedup_state.watchdog_idle_session_ticks_path`) and `_IDLE_SESSION_RECLAIM_TICKS` /
-      the per-tick interval to see whether the effective wait is longer than intended by design.
+- [x] N. ✅ [BACKEND] P2. **Root-cause + fix for the inter-tick reclaim delay — DONE, shipped
+      2026-08-20 (interactive session, slot 3): `agent-orchestrator@b6ca7d1730`.** Live SSM diagnostic (sqlite query + tmux
+      list-sessions on the orchestrator VM, ~04:18 UTC) found the symptom was fleet-wide, not
+      scoped to 27-30: 10 of 34 real slots (1, 4, 7[review-exempt], 11, 14, 15, 27, 28, 29, 30) were
+      simultaneously `idle`/`stale` with a genuinely-live orphaned tmux session, and 18/34 more were
+      `paused` (mostly on genuinely weekly-exhausted sub-accounts, confirmed via `account_usage`:
+      sub-b/c/d/f all `overage_status=rejected` with `rate_limited_until` spanning 2026-08-20
+      through 08-23) — leaving effectively ZERO free slots fleet-wide despite 2 Anthropic
+      sub-accounts (sub-a-ikenna at 11%/5%, sub-e-odum2default at 3%/14%) having real headroom.
+      `journalctl` for the same window showed `AutoSpawnLoop` repeatedly logging
+      `escalation ... queued (no capacity)` — directly matching the operator-reported symptom
+      ("2 accounts available, slots available, but nothing dispatching").
+      Root-cause (not "loop not ticking" — 0 `tick failed` exceptions in 6h, ruling that out):
+      `_tick_once()` ran `_sweep_dirty_slots()`/`_sweep_unpushed_slots()`/
+      `_flag_orphaned_sibling_dirty_repos()` — each invoking git subprocesses, several confirmed via
+      grep to have NO `subprocess.run` timeout (`_branch_state.py`, `_ahead_push.py`, `_stash.py`)
+      — BEFORE `_reclaim_idle_lingering_sessions()` and the other capacity-recovery calls in the
+      SAME function. A single lock-contended git op on ANY one slot's worktree (a documented,
+      recurring failure mode on this shared multi-agent VM) could stall the whole tick, delaying
+      reclaim for every OTHER lingering slot too — matching both the live observation (8 slots with
+      wildly different `last_spawned_at` — 00:47 to 03:30 UTC — all reclaiming in the exact SAME
+      tick, 04:20:14) and this doc's own earlier audit finding (`idle_lingering_session_reclaim`
+      firing in irregular 1-6h batches instead of the ~2-minute cadence `_IDLE_SESSION_RECLAIM_TICKS
+      =2` implies). **Fix**: reordered `_tick_once()` so the reclaim/reconcile passes run BEFORE the
+      dirty/unpushed git sweeps — a pure reorder, no logic change to any individual function, 114/114
+      existing tests still pass. Does not fix a slow git op itself, but stops that unrelated
+      slowness from starving capacity-recovery for the rest of the fleet.
 - [ ] [BACKEND] P2. **Fix the confirmed root cause** once found. Add/extend test coverage in
       whichever test file already covers `_reclaim_idle_lingering_sessions`
       (`tests/test_worker_liveness_watchdog.py` or similar — locate via grep before assuming a
@@ -336,14 +355,38 @@ halves separately — they are two unrelated facts:
       is what surfaced the finding; the same gap, wherever it is, plausibly affects any
       completed one-shot dispatch fleet-wide (review/escalate/conflict_resolver included, per
       the reclaimer's own documented scope), not just `ag_closeout_auditor`.
-- [ ] [BACKEND] P2. **Give `escalation._pick_free_slot` the same reserve-preference logic
-      `plan_health._pick_free_slot` already has** (Gap A above). Compute
-      `config.ci_escalation_reserved_slot_ids()` from the live non-review/non-human roster, try a
-      free-and-reserved slot first, fall back to the existing plain scan only when the reserve is
-      fully busy — mirror `server/plan_health.py:212-223`'s pattern exactly. Add/extend test
-      coverage in whichever test file covers `escalation._pick_free_slot`
-      (`tests/test_escalation.py` or similar — locate via grep before assuming a new file is
-      needed).
+- [x] N. ✅ [BACKEND] P2. **Give `escalation._pick_free_slot` the same reserve-preference logic
+      `plan_health._pick_free_slot` already has — DONE, shipped 2026-08-20 (interactive session,
+      slot 3): `agent-orchestrator@aa34262886`.**
+      Mirrored `server/plan_health.py:212-223`'s pattern exactly, symmetric: excludes
+      `config.scheduled_task_reserved_slot_ids()` (protects that reserve, which had ZERO protection
+      from escalations before this fix, not just zero preference) and PREFERS
+      `config.ci_escalation_reserved_slot_ids()` among remaining candidates, falling back to any
+      other eligible slot when the CI reserve is fully busy. 3 new tests added
+      (`tests/test_escalation.py`): prefers-CI-reserve-when-free, excludes-scheduled-reserve, and
+      falls-back-past-CI-reserve-when-busy.
+- [x] N. ✅ [BACKEND] P2. **Coverage-ratchet blocker resolved + real coverage raised — DONE
+      2026-08-20.** The initial 81.32%-vs-82.68%-baseline failure that briefly blocked shipping the
+      two fixes above was confirmed a MEASUREMENT FLAKE (a coverage-data merge artifact from
+      concurrent pytest/coverage runs sharing this checkout — a clean solo re-run measured 82.87%,
+      already above baseline). Per operator direction, raised real coverage anyway rather than just
+      re-baselining: 5 parallel agents (server.py 52%→89% + 2 real bugs fixed — 3 background loops
+      missing shutdown registration, 17 loops missing from `LoopSupervisor`'s auto-revival list;
+      notifications/slack.py 62%→87%; routes/accounts.py 52%→100%; routes/slots_ops.py 55%→97%;
+      worker_liveness_watchdog.py 81%→92%) plus `tests/test_slot0_self_clean.py` (0%→covered)
+      myself. Final clean full-suite run: 5172 passed, **86.10% total coverage**. Baseline ratcheted
+      up 82.68%→86.10% (`agent-orchestrator@29c9f69a`). All 8 commits shipped + synced with origin
+      (ahead=0/behind=0): `b6ca7d1730` (watchdog reorder), `aa34262886` (escalation Gap A),
+      `d7bc082a`/`c3e61462` (slot0 tests — the latter from a DIFFERENT concurrent AO-dispatched
+      agent on the same `slot0_self_cleaning_daemon_2026_08_18.md` plan implementing real `_tick()`
+      logic mid-session), `b74c8433` (server.py bugs+tests), `d09344d7` (slack.py tests),
+      `91c881ee` (slots_ops.py tests), `0e1def35` (watchdog.py tests), `d2bc7687` (accounts.py
+      tests), `29c9f69a` (baseline ratchet).
+      **Separate finding, NOT cleaned up (flagged, not actioned)**: an untracked `keys.env`
+      (plaintext NVIDIA API key) was found sitting in the agent-orchestrator repo root during this
+      session, not gitignored, unrelated to this session's diff — pre-existing debris, likely from
+      the NVIDIA/Gemma wiring work (`86cd2066`). Never staged/committed by this session. Flagged to
+      the operator; not deleted/moved without explicit authorization.
 - [ ] [BACKEND] P2. **Make the general-pool fallback demand-aware for both pickers** (Gap B
       above) — before `plan_health._pick_free_slot` or `escalation._pick_free_slot` claims a
       non-reserved slot as a fallback, check whether the backlog has queued/eligible plan-item

@@ -11,7 +11,7 @@ summary: >-
   defi covering doc (consolidated closeout, satellite batch2/11/14/16 + finalize pairs, track01/track5,
   defi_gas_net_cost_partial_wiring_gap — the explicitly cross-referenced sibling finding on the COST side of the
   same MEV engines) — zero prior claim found on either.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [strategy, features]
@@ -22,7 +22,7 @@ related:
   [
     /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
     /plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md,
-    /plans/active/defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-18"
@@ -41,13 +41,14 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
+  [mev_engines_opportunity_detection_signals_unproduced_2026_08_18, mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19]
 depends_on: []
 context_scope:
   [
     /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
     /plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md,
     /plans/active/issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md,
   ]
 source: >-
@@ -57,6 +58,14 @@ source: >-
 sequential: false
 drift_direction: advance-code
 ---
+
+> **🟢 COMPLETE 2026-08-20 — ARCHIVED.** Both confirm-and-report todos landed and were independently re-verified
+> (2026-08-20, slot-7 review): Tenderly `simulate_bundle`/`gate_or_advise` call-site CONFIRMED ABSENT; `_candidate_from_features`
+> default behavior CONFIRMED (`None` + `continue`, no silent-zero). Durable findings live in the open issue docs
+> `mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` and
+> `mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md`. Archived per
+> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` 6-step ritual; corpus referrers repointed,
+> active index + inventory regenerated (2026-08-20).
 
 # DeFi satellite AO batch 17 — 2026-08-18
 
@@ -120,3 +129,6 @@ drift_direction: advance-code
   now closed; not archiving this pass since `defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md` gates on it
   via `depends_on`/`gate_on_depends: true` — leave archival to that finalize plan's own flow.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (slot-7, batch17 finalize)**: archived per the 6-step ritual — all todos done, REVIEW independently
+  re-verified. Moved to `plans/archive/2026_08/` with COMPLETE banner + `superseded_by`; durable findings live in the
+  open issue docs; corpus referrers repointed; active index + inventory regenerated.

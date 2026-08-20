@@ -6,7 +6,7 @@ summary: >-
   reported findings against the source doc's own citations, folds any newly-confirmed gap back into
   mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md, then archives both docs per
   plan-completion-and-archival-discipline once every todo is done.
-status: active
+status: complete
 nature: process
 asset_group: [defi]
 stage: [meta]
@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [defi, ao-dispatch, finalize, batch-17, archival, mev]
 related:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch17_2026_08_18.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch17_2026_08_18.md,
     /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
   ]
 created: "2026-08-18"
@@ -39,7 +39,7 @@ supersedes:
 superseded_by:
 context_scope:
   [
-    /plans/active/defi_satellite_ao_dispatch_batch17_2026_08_18.md,
+    /plans/archive/2026_08/defi_satellite_ao_dispatch_batch17_2026_08_18.md,
     /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
@@ -48,6 +48,10 @@ source: >-
   (/plans/active/task_template.md §4).
 drift_direction: advance-code
 ---
+
+> **🟢 COMPLETE 2026-08-20 — ARCHIVED.** The REVIEW todo (independent re-verification of both batch17 findings) landed
+> 2026-08-20; the archival todo completed in this commit — `defi_satellite_ao_dispatch_batch17_2026_08_18.md` and this
+> finalize doc moved to `plans/archive/2026_08/`, corpus referrers repointed, active index + inventory regenerated.
 
 # Finalize — DeFi satellite AO batch 17 close-out
 
@@ -72,12 +76,17 @@ Do not start manually before then.
       `liquidation_bundle.py:271-303` (was 265-269): `.get(id_key)` no-default → `None` → `on_tick()` continues. Two
       corrections folded into the source doc: `liq_candidate_health_factor_<id>` is NOT a feature key (margin-health-cache-
       derived), and §"Bundle-simulation" flipped "Not confirmed"→"Confirmed absent". Batch doc "265-269" line range noted stale.
-- [ ] [DOC] P2. Once every batch17 todo + the REVIEW todo above are done: run the standard 6-step
+- [x] ✅ [DOC] P2. Once every batch17 todo + the REVIEW todo above are done: run the standard 6-step
       plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
       `defi_satellite_ao_dispatch_batch17_2026_08_18.md` and this finalize doc itself — archive both to
       `plans/archive/2026_08/`, fix every corpus referrer path. Done-when: `regenerate_active_plan_inventory.py` shows
       zero orphan referrers to the archived paths.
+      **DONE 2026-08-20 (slot-7):** both docs archived to `plans/archive/2026_08/`; referrers repointed
+      (`mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md` related+source; source issue doc extraction
+      notes); active index + inventory regenerated. Two na-eligibility incident-narrative docs intentionally left
+      untouched — their `batch17` references recount a retracted same-name draft (deleted pre-commit), not the
+      archived live plan.
 
 ## Progress Log
 
@@ -87,3 +96,8 @@ Do not start manually before then.
 - **2026-08-20 (slot-7 review)**: REVIEW todo done — both batch17 findings independently re-verified + CONFIRMED; two
   corrections folded into `mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` (health_factor not a
   feature key; Tenderly "confirmed absent"). Archival todo (todo 2) remains open — not this pass's scope.
+- **2026-08-20 (slot-7)**: archival todo (todo 2) DONE — 6-step ritual completed. Both docs archived to
+  `plans/archive/2026_08/` (COMPLETE banners; `superseded_by` on batch17 → the two open MEV issue docs); referrers
+  repointed in `mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md` (related+source) and the source
+  issue doc's extraction notes; `regenerate_active_plan_inventory.py` + `regenerate_active_plan_index.py` re-run —
+  zero orphan referrers to the archived paths in the active corpus.

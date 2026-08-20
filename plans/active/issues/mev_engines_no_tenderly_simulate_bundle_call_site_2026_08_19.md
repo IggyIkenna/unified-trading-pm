@@ -11,7 +11,7 @@ stage: [execution]
 repos: [strategy-service, execution-service]
 scope: [engineer]
 tags: [mev, tenderly, simulate-bundle, execution-safety]
-related: [mev_engines_opportunity_detection_signals_unproduced_2026_08_18, defi_satellite_ao_dispatch_batch17_2026_08_18]
+related: [mev_engines_opportunity_detection_signals_unproduced_2026_08_18]
 parent_epic: defi_master
 priority: P1
 created: 2026-08-19
@@ -19,8 +19,8 @@ author: slot-10 (review)
 assigned_vm: planning
 resolved_by: ""
 locked_by: ""
-source: [defi_satellite_ao_dispatch_batch17_2026_08_18.md item "Confirm whether the MEV engines actually call
-  TenderlyExecutionProvider.simulate-bundle"]
+source: [mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md todo 1 "Confirm whether the MEV engines
+  actually call TenderlyExecutionProvider.simulate-bundle" (extracted via defi satellite batch17, archived 2026-08-20)]
 context_scope:
   [
     strategy-service/strategy_service/engine/strategies/v2/mev/liquidation_bundle.py,
