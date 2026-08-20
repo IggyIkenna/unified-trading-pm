@@ -27,7 +27,6 @@ tags: [venue-readiness, e2e-wiring, transfers, carve-out-prerequisite, venue-cov
 related:
   [
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
-    /plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md,
     /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
     /plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md,
   ]

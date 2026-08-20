@@ -69,7 +69,6 @@ context_scope:
     /plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md,
     /plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md,
     /plans/active/issues/per_client_config_surface_keying_and_missing_axes_2026_08_12.md,
-    /plans/archive/2026_08/registry_ssot_hardening_2026_08_16.md,
     strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
   ]
 ---
