@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [orphan-wip, git-drift, recovery, plan-hygiene, died-with-unshipped-wip]
 related:
   [
-    /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
+    /plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
     /plans/archive/2026_08/issues/ag_closeout_linkage_baseline_regression_87_vs_69_2026_08_06.md,
     /plans/active/issues/venv_workspace_openapi_regen_batch11_findings_2026_08_09.md,
   ]

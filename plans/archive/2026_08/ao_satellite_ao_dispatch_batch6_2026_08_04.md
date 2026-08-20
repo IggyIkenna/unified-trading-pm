@@ -25,7 +25,7 @@ related:
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_finalize_2026_08_03.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
@@ -46,7 +46,7 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch6_finalize_2026_08_04.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 locked_by:
 locked_since:
@@ -128,7 +128,7 @@ evidence-backed, zero-risk housekeeping action, not new work.
       **Done when**: a new dated Progress Log entry on the source doc records both measurements with their raw numbers
       and the delta/pass-fail verdict; both `- [ ]` items (Phase 8, "Re-measure the `tmux_session_lost` rate" and
       "Stale-dispatch invariant — the live 24h spot-check") flip `[x]`. Source:
-      `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md` (its Phase-8 items 5+6 only — the doc's other
+      `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md` (its Phase-8 items 5+6 only — the doc's other
       6 open items stay local/NA, see this run's Workflow journal for why). Repo: agent-orchestrator (read-only). —
       unified-trading-pm@4f5a1e6ba
 

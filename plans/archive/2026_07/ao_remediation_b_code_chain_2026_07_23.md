@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
     /plans/archive/issues/git_health_phantom_dirty_flicker_ff_cron_race_2026_07_21.md,
     /plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
-    /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
+    /plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
   ]
 created: 2026-07-23
 last_updated: 2026-07-23

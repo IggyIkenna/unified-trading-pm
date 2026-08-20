@@ -21,7 +21,7 @@ related:
   - /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md
   - /plans/archive/2026_08/issues/ao_kick_escalation_rate_limit_blind_force_kill_2026_08_14.md
   - /codex/04-architecture/agent-orchestrator-scheduled-jobs.md
-  - /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md
+  - /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md
 created: "2026-08-13"
 author: main (Claude Code, interactive session)
 parent_epic: orchestrator_master

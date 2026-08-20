@@ -30,7 +30,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, backlog, plan-regen, prune-stale, dispatch, robustness, circuit-breaker, db-pool]
 related:
   [
-    /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
+    /plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]
@@ -50,7 +50,7 @@ context_scope:
   [
     /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
-    /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
+    /plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
   ]
 depends_on: []
 ---
@@ -111,7 +111,7 @@ result.
 - [x] [BACKEND] P2. Make regen robust to a wedged/unavailable DB: if the derivation cannot complete because DB reads are
       failing (pool exhaustion / timeouts), abort the tick WITHOUT pruning rather than completing with a partial/empty
       task set. Cross-ref the pool-wedge root cause in
-      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (fixing that removes the
+      `/plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (fixing that removes the
       trigger; this guard removes the blast radius). — already covered by
       plans/active/ao_satellite_ao_dispatch_batch1_2026_07_26.md (agent-orchestrator@d66fbf2) (see that doc for
       execution).

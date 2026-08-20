@@ -25,7 +25,7 @@ related:
     /plans/archive/issues/mtds_plan_flip_fabricated_commit_sha_evidence_2026_07_30.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch2_2026_08_09.md,
     /plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: 2026-08-09
 author: slot-3-infra

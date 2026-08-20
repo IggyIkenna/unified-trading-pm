@@ -31,7 +31,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, external-gate, promote-gate, auto-unpark, re-dispatch, churn, throughput, watchdog]
 related:
   [
-    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /plans/archive/issues/sit_validated_tree_treadmill_blocks_breaking_promotes_2026_07_20.md,
     /plans/active/issues/gate_on_depends_wiring_gap_defi_dex_pool_finalize_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,

@@ -52,7 +52,7 @@ context_scope:
   [
     /plans/active/codex_vs_repo_docs_ssot_audit_2026_06_01.md,
     /codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 ---

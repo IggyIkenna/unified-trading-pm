@@ -22,7 +22,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, self-pull, git-health, gitignore, silent-stall, observability-gap]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/ao_residuals_after_dispatch_hardening_2026_07_17.md,
   ]
 created: 2026-07-29

@@ -262,7 +262,7 @@ closest active tracking doc for this wall family):
   `/plans/archive/issues/main_ci_red_promotion_blocked_by_plan_hygiene_backlog_2026_08_06.md` — dispatch a worker to
   clear the backlog — but **re-scoped to per-doc content verification**, explicitly NOT the mechanical batch-archive
   that option A's original wording implied. This doc's central finding is the reason, and it was independently re-proven
-  the same day: closing two todos in `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`
+  the same day: closing two todos in `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md`
   dropped it to **0 open todos** — instantly making it an archive candidate — while its own prose documents an
   UNRESOLVED, ongoing SQLite lock storm (143 `database is locked` occurrences in 32 minutes, silently killing a
   plan-reconciler run). A batch pass would have archived a live production issue. That doc now carries an explicit

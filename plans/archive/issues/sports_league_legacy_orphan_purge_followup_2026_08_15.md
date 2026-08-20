@@ -227,7 +227,7 @@ Split the 1,814 objects into the two classes above and resolve each:
 - **2026-08-16 (slot-23, continuation 4) — root cause CORRECTED, was "undetermined"**: run2 also died silently, at
   113/280 (`journalctl` confirmed `orphan_reap sweep: slot 23 pid 3600518 age=318s KILLED`). This is the documented
   `nohup <cmd> & echo PID` anti-pattern from
-  `/plans/active/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — both run1 and run2
+  `/plans/archive/issues/nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md` — both run1 and run2
   were launched as `nohup … > log 2>&1 &` inside a plain Bash call, which detaches the real process from the tracked
   session tree; the orphan_reap sweep then SIGKILLs it ~300-355s after it reparents to init. Run1's "undetermined"
   verdict in the prior entry is corrected: it was almost certainly this same mechanism (89/280 took ~5:51 ≈ 351s,

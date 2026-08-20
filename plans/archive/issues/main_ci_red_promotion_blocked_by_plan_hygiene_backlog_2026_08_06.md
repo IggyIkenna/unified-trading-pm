@@ -113,7 +113,7 @@ requested rather than autonomously starting it.
   > record that each candidate needs a per-doc content read, because "a doc can have every listed `- [ ]` checked while
   > its own summary/Progress Log still describes an open question", and that blind batch-flipping "would risk silently
   > mis-marking still-open work as resolved — **worse than staying blocked**." Proven live the same day: closing two
-  > todos in `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` dropped it to 0 open todos
+  > todos in `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md` dropped it to 0 open todos
   > — instantly an archive candidate — while its own prose documents an unresolved, ongoing SQLite lock storm. A batch
   > pass would have archived a live production issue.
 

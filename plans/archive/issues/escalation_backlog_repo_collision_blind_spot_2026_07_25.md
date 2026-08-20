@@ -35,7 +35,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, escalation, repo-collision, duplicate-dispatch, backlog, cicd]
 related:
   [
-    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/agent-orchestrator-overview.md,
   ]
@@ -56,7 +56,7 @@ resolved_by: agent-orchestrator@7c937f99e0 (option b, symmetric fix)
 locked_by:
 context_scope:
   [
-    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/escalation.py,
     agent-orchestrator/server/dispatch.py,

@@ -159,7 +159,7 @@ commit; it resets the branch to origin and drops it:
 > so commit `3becc9ede`/`28ee61192` (`fix(ci): harden slot-cron-ff-pull.sh`) targets a MISDIAGNOSED cause and must NOT
 > be landed. The REAL mechanism for the `branch: Reset to origin/live-defi-rollout` signature is `quickmerge.sh`
 > `cascade_dep_branch()` (`git checkout -B`), already root-caused + partially fixed in
-> `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (preserve-guard `06dc7632`; independent
+> `/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (preserve-guard `06dc7632`; independent
 > fetch-bug fix `8ca436599`). slot-5 has since reset to origin and dropped the commit — a benign instance of that
 > tracked cascade reset. Backstops renamed `SUPERSEDED_by_408a92200_*`. **Live risk to chase there, NOT here:** why the
 > preserve-guard did not fire for the 07-27 `unified-trading-library` discards (`61efd2e5`/`dbb93c3a`, now unreachable)
@@ -264,7 +264,7 @@ each other.
       wave in this doc chased. This is NOT the `setup-tab-worktrees.sh`/ff-pull-cron/`reset --hard` candidates
       originally guessed below — those were exonerated by this doc's own later waves (slot-7's `408a92200` audit clears
       `slot-cron-ff-pull.sh` specifically). Already root-caused + partially fixed in
-      `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (preserve-guard `06dc7632`;
+      `/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (preserve-guard `06dc7632`;
       independent fetch-bug fix `8ca436599`) — that doc is the correct home for any remaining code-fix scope, not this
       one; do not re-implement here. **Original investigation prompt, preserved for context**: identify WHAT emits
       `branch: Reset to origin/live-defi-rollout` on a worktree that carries an unpushed local commit. Candidates: a

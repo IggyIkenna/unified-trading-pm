@@ -163,7 +163,7 @@ declare Massive intentionally retained as a non-priority fallback and correct th
 
 `/plans/active/issues/ao_park_disposition_blocked_answer_no_follow_through_2026_07_31.md:8-12` frames the park hand-edit
 as barred for agents and reachable only via an explicit operator step. Two live worker sessions did it themselves anyway
-and documented it as sanctioned: `/plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md:304` and
+and documented it as sanctioned: `/plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md:304` and
 `/plans/active/issues/backlog_park_lost_across_sibling_todo_insertion_2026_07_30.md:119,122` ("the documented sanctioned
 mechanism, not a code change"). Note CLAUDE.md's standing rule is "**Never hand-edit `backlog.yaml`** — author plans,
 the backend derives it", which reads as barring both.

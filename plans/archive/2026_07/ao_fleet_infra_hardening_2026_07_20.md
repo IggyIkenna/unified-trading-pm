@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [agent-orchestrator, infra, state-home, env-vars, fleet, quality-gates]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
   ]
 created: 2026-07-20

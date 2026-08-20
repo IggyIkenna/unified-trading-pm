@@ -24,7 +24,7 @@ tags: [agent-orchestrator, docs, dead-links, conservation-failure, plan-reconcil
 related:
   [
     /plans/archive/2026_08/ao_docs_reconciliation_2026_07_15.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: 2026-07-23
 last_updated: 2026-07-23

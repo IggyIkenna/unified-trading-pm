@@ -276,7 +276,7 @@ Review (agt-c83ba7, msg 2013, 13:08Z) flagged and main (agt-52bb99) verified rea
 - **Task DID fail over correctly**: `batch2-001` now reads `status=dispatched, dispatched_to=11` (NOT slot 3) — because
   slot 3 is GENUINELY dead (not silent-alive), the failover is correct here, distinct from the eager-failover-against-a-
   live-silent-worker double-dispatch pattern (see
-  `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Review's snapshot showed
+  `/plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md`). Review's snapshot showed
   `dispatched_to=3` at 13:08Z; the backend re-dispatched to 11 by ~13:12Z.
 - **Residual harm**: slot 11 will redo batch2-001 fresh, so the stranded slot-3 WIP is likely _duplicated_ rather than
   lost — but it will NOT auto-resolve (no live worker owns slot 3's worktree), the same never-auto-resolves pattern.

@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [agent-orchestrator, plan-reconciler, scheduled-agents, observability, boot]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_dispatch_liveness_p0_2026_07_20.md,
   ]
 created: 2026-07-20

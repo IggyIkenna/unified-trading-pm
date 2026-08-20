@@ -23,7 +23,7 @@ related:
   [
     /plans/archive/2026_08/issues/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08.md,
     /plans/archive/2026_08/autospawn_refill_slower_than_60s_sla_two_slots_2026_08_08_finalize_2026_08_08.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: 2026-08-09
 author: slot-25-infra

@@ -29,7 +29,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, dispatch, autospawn, role-routing, throughput, fleet-idle, watchdog, stale-slot]
 related:
   [
-    /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
+    /plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
     /plans/active/issues/orchestrator_planregen_prune_wipes_backlog_on_transient_zero_derivation_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/runtime-deployment-topology.md,

@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [cloudbuild, quality-gates, ratchet-baseline, template-drift, ship-blocker]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/06-coding-standards/quality-gates.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/12-agent-workflow/measurement-claims-discipline.md,

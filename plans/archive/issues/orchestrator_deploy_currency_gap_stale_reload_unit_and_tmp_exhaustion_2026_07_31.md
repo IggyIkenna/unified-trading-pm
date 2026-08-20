@@ -28,8 +28,8 @@ related:
   [
     /plans/active/issues/expand_defi_pool_catalogue_script_unbounded_memory_2026_07_31.md,
     /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
-    /plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
-    /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
+    /plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
+    /plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-31

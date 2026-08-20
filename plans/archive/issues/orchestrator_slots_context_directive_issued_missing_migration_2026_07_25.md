@@ -28,7 +28,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, database, sqlite, schema-migration, bootstrap, list_slots, api-state, regression]
 related:
   [
-    /plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
+    /plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]

@@ -16,7 +16,7 @@ tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-4, finalize]
 related:
   [
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md,
-    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"

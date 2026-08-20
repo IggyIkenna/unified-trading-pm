@@ -36,7 +36,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/ao_false_done_backlog_rows_and_unresolved_plan_refs_2026_08_08.md,
     /plans/active/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: 2026-08-09
 author: slot-25-infra

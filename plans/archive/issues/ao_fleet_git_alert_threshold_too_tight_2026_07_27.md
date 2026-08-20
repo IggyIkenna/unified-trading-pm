@@ -18,7 +18,7 @@ tags: [orchestrator, alerting, slack, fleet-git, threshold, noise]
 related:
   [
     /plans/archive/issues/ao_dispatch_health_idle_slot_thrash_2026_07_26.md,
-    /plans/active/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
+    /plans/archive/issues/ao_db_lock_storm_and_stuck_shutdown_outage_2026_07_26.md,
   ]
 created: 2026-07-27
 last_updated: 2026-07-27

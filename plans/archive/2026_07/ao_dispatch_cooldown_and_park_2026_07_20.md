@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [agent-orchestrator, dispatch, cooldown, auto-park, policy]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_backlog_regen_integrity_2026_07_20.md,
     /plans/archive/2026_07/ao_fleet_observability_kpis_2026_07_20.md,
   ]

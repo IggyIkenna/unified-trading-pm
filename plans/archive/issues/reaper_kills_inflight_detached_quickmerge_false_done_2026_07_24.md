@@ -23,7 +23,7 @@ tags:
   [agent-orchestrator, worker-lifecycle, quickmerge, orphan-reaper, frozen-pane, false-done, kicker, detached-process]
 related:
   [
-    /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
+    /plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
   ]
 created: 2026-07-24
@@ -45,7 +45,7 @@ resolved_by:
 locked_by:
 context_scope:
   [
-    /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
+    /plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     agent-orchestrator/server/orphan_reap.py,
     scripts/quality_gates/check_evidence_backed_completion.py,
@@ -85,7 +85,7 @@ depends_on: []
 5. Net: the code never pushes (stays `ahead=2`), the worker dies (`worker_alive=false`), retry cap is reached, and the
    task reads `done` with the code **absent from origin ~80min later** — a false-done + orphaned committed-unpushed work
    with no automatic push path (same terminal state as
-   `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`).
+   `/plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`).
 
 ## Why it matters
 
@@ -150,7 +150,7 @@ Confirmed a **second victim** of the same mechanism (review slot-1 msg 1892; mai
 - Operator flagged 2026-07-24 (host load + this defect). Now confirmed **NOT isolated to slot 9** — slot 8 is a second
   victim on the critical path (>2h), so the fix + recovery scope must cover both, and the shared-host QG-kill root cause
   (memory/CPU contention) is a shared driver with the host-oversubscription flag.
-- Sibling: /plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md (the orphaned
+- Sibling: /plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md (the orphaned
   commit terminal state); this doc adds the specific reaper-vs-in-flight-quickmerge mechanism that produces it.
 
 ## Progress Log

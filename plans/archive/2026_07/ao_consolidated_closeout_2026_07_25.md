@@ -96,7 +96,7 @@ todos of its own**. The plans that actually work these docs' open items:
   [ao_satellite_ao_dispatch_batch1_finalize_2026_07_26](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md),
   also archived. Superseded by
   [ao_satellite_ao_dispatch_batch2_2026_07_30](/plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md),
-  [batch3_2026_07_31](/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
+  [batch3_2026_07_31](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md),
   [batch4_2026_08_01](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_2026_08_01.md) (now archived, complete),
   and [batch5_2026_08_03](/plans/archive/2026_08/ao_satellite_ao_dispatch_batch5_2026_08_03.md) (`status: draft`,
   awaiting operator approval) — each with its own gated `_finalize` pair — as the tranche's iterative-drain audit cycle

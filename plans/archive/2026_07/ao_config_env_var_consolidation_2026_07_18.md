@@ -26,7 +26,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, config, env-vars, pydantic-settings, refactor, consolidation, tuning-defaults]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/06-coding-standards/config-reloader-pattern.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     ../epics/orchestrator_master.md,

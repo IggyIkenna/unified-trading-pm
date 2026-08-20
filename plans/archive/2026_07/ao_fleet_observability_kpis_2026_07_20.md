@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [agent-orchestrator, observability, kpi, escalation, plan-health, usage, snapshots]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_dispatch_cooldown_and_park_2026_07_20.md,
     /plans/archive/2026_07/ao_fleet_infra_hardening_2026_07_20.md,
   ]
@@ -34,7 +34,7 @@ context_scope:
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 model_tier: sonnet-doable # measurement + surfacing work; each item is bounded to a known subsystem
 drift_direction: advance-code

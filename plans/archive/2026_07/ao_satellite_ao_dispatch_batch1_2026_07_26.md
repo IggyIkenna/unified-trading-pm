@@ -20,7 +20,7 @@ related:
   [
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-26"
@@ -107,7 +107,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
       control proving the identical scenario genuinely blocks on a plain `session_scope` (validates the test harness).
       Full `agent-orchestrator` `quality-gates.sh` green (1760 passed, 1 skipped, 49.83s). Did NOT raise
       `pool_size`/`max_overflow` per the source doc's own occurrence #6/#7 evidence. Source:
-      `/plans/active/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (BACKEND P1 ×2 + P2 timeout
+      `/plans/archive/issues/orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25.md` (BACKEND P1 ×2 + P2 timeout
       alignment). Do NOT also raise `pool_size`/`max_overflow` — that doc's own occurrence #6/#7 evidence supersedes the
       resize direction.
 - [x] ✅ [BACKEND] P2. **Add a zero/collapse circuit-breaker to the PlanRegenLoop prune path** —
@@ -310,7 +310,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
 > `slot_recurring_wedge_at_context_pct_75_compact_confirmation_2026_07_25.md` (needs one more live check).
 
 - **The worker-liveness / watchdog kick+escalation cluster — a head-on directional contradiction.**
-  `/plans/active/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` (INFRA P2) wants the
+  `/plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md` (INFRA P2) wants the
   watchdog to escalate soft-kick → hard-kill + respawn FASTER ("after N consecutive `post_kick_classification=frozen`
   observations (e.g. N=3, ~15-20 min) instead of soft-kicking indefinitely"), while
   `/plans/archive/issues/host_saturation_false_worker_kicks_stall_fleet_completions_2026_07_26.md` (BACKEND P1, filed
@@ -378,7 +378,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   — dispatch it there as a normal AO todo (make the grant, verify a live read, remove the env-var fallback), not as an
   operator escalation.
 - **QG-harness worktree-isolation defects** —
-  `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` items 4 and 5. Item 5 (a `PROJECT_ROOT`
+  `/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` items 4 and 5. Item 5 (a `PROJECT_ROOT`
   override making the `.qg_last_passed_sha` sentinel record MAIN's HEAD instead of the worktree's) changes what "QG
   green" MEANS — the per-repo quality boundary itself. Too high blast-radius for a batch todo; needs its own scoped plan
   with operator sign-off.
@@ -449,7 +449,7 @@ the 35 satellite docs. This plan extracts the conflict-clear, bounded-outcome su
   the 35 Sources of `/plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md` (archived 2026-07-30) and found the
   closeout carries zero todos and no `ao_*batch*` plan exists. Phase 1 read all 35 docs end to end (single-threaded —
   the run environment exposed no Workflow/Agent tool, so the skill's per-doc fan-out could not be used); 2 docs are
-  archivable now, 1 is covered by `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md`, and 32 are
+  archivable now, 1 is covered by `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md`, and 32 are
   orphaned. Phase 3 grepped every candidate target file (`server/db.py`, `regen_backlog_from_plan`,
   `slot-git-status-report`, `routes/git_health`, `slot-cron-ff-pull`, `playwright.config.ts`, `head_backward_canary`,
   `auto_park.py`, `server/bootstrap.py`, `test_watchdog_unpushed_sweep`, `_ahead_push`, `stale_dispatch`,

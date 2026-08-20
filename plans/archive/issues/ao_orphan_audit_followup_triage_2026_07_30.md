@@ -19,7 +19,7 @@ repos: [unified-trading-pm]
 tags: [agent-orchestrator, ag-closeout-audit, triage, orphan-docs, consolidation]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
   ]
@@ -33,7 +33,7 @@ drift_direction: none
 depends_on: []
 context_scope:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,

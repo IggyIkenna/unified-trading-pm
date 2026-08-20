@@ -30,9 +30,9 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-10, satellite-docs, satellite-extraction]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
@@ -57,7 +57,7 @@ depends_on: []
 context_scope:
   [
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch2_2026_07_30.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/active/issues/dashboard_prettier_version_skew_vs_wrapper_pin_2026_08_06.md,
     agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh,
     agent-orchestrator/agents/,
@@ -76,7 +76,7 @@ source: >-
 # AO satellite AO batch 10
 
 > **ARCHIVED 2026-08-11** — all 6 todos done and evidence reconciled into the 3 source docs by
-> `/plans/active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` (each done-claim independently re-verified
+> `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md` (each done-claim independently re-verified
 > against reality; per-todo evidence reconciled back to each source doc's own checkbox). Original body preserved below.
 
 ## Why this plan exists
@@ -99,7 +99,7 @@ and the parent extraction session's own report for the full per-doc disposition.
 - **Do not edit the 3 source docs' remaining checkboxes** beyond what this plan's own todos below already changed at
   drafting time (a redirect-pointer replacing the extracted item's checkbox text). Append your evidence to THIS plan's
   own todo when you finish; the paired finalize plan
-  (`/plans/active/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`) reconciles the evidence back into each
+  (`/plans/archive/2026_08/ao_satellite_ao_dispatch_batch10_finalize_2026_08_09.md`) reconciles the evidence back into each
   source doc.
 - The 6 todos below are file-disjoint by construction — keep new test/evidence files scoped to the todo's own concern.
 - No todo below deletes prod data or launches a VM. Todo 6 mutates a `package.json` + lockfile only.
@@ -160,7 +160,7 @@ and the parent extraction session's own report for the full per-doc disposition.
       the candidate set fresh from a live grep/`check_archive_candidates.sh`-style pass scoped to `asset_group: [ao]` /
       `parent_epic: orchestrator_master` docs. **Done when**: `plans/active/issues/` contains no resolved-but-
       unarchived `ao`-tagged doc, and `regenerate_active_plan_inventory.py` is re-run clean. Source:
-      `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md:479` (Phase 5, its `[REVIEW] P0` item). Repo:
+      `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md:479` (Phase 5, its `[REVIEW] P0` item). Repo:
       unified-trading-pm. — unified-trading-pm@ (this commit). **Re-derived the candidate set fresh (not the stale "Docs
       #2 and #6" reference)**: found all 57 `plans/active/issues/*.md` docs matching `asset_group: [ao]` OR
       `parent_epic: orchestrator_master`, checked each for 0-open-todos-with-`>0`-done (mirroring
@@ -198,7 +198,7 @@ and the parent extraction session's own report for the full per-doc disposition.
       (investigate whether a restart archives/clears the AgentRow or its `tmux_session`). The operator-directed hold on
       retrying this (pending several other AO plans settling) has since cleared — all 6 named plans are confirmed
       archived as of the source doc's 2026-08-06 re-verification. **Done when**: (a)/(b)/(c) all recorded with evidence.
-      Source: `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md:806` (its `[BACKEND] P0` item). Repo:
+      Source: `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md:806` (its `[BACKEND] P0` item). Repo:
       agent-orchestrator. — **2026-08-10, evidence below** (queried the LIVE `data/state/state.db` +
       `journalctl -u orchestrator.service` directly on the `planning` VM; no SSM needed, per this todo's own
       context_scope pointer):
@@ -265,7 +265,7 @@ and the parent extraction session's own report for the full per-doc disposition.
       this is a declared-vs-actual documentation-integrity fix. **Done when**: each role's `lifecycle` field matches its
       real dispatch pattern, or a recorded decision states why the declared value intentionally stays (cite the reason
       inline in the role file or a codex doc). Source:
-      `/plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md:828` (its `[BACKEND] P0` item, itself sourced
+      `/plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md:828` (its `[BACKEND] P0` item, itself sourced
       from `ao_worker_lifecycle_dispatch_context_2026_07_21.md`, archived). Repo: agent-orchestrator. — DONE 2026-08-10:
       `agents/{backend_engineer,ui_developer,quant_dev,infra, data_engineering}.md` all now declare
       `lifecycle: persistent` (they're plan-backlog workers draining the backlog via the same /boot-work-/done loop as

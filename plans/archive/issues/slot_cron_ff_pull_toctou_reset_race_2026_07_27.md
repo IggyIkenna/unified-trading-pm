@@ -21,7 +21,7 @@ tags: [ci-cd, git, race-condition, slot-cron, multi-agent-safety, toctou, duplic
 related:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
+    /plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md,
   ]
 created: 2026-07-28
 priority: P1
@@ -41,7 +41,7 @@ locked_since:
 # slot-cron-ff-pull.sh TOCTOU race silently discards a fresh commit
 
 > **🟢 RESOLVED 2026-07-28** — duplicate tracking of an already-homed issue; consolidated into
-> `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (see `resolved_by` above). Archived.
+> `/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` (see `resolved_by` above). Archived.
 
 ## What I found
 
@@ -106,7 +106,7 @@ between the two git calls.
       exact reflog signature this doc's title names (`branch: Reset to origin/live-defi-rollout`) is produced by
       `scripts/quickmerge.sh`'s `cascade_dep_branch()` (line ~476:
       `git checkout -B "$branch_name"     "origin/$branch_name"`), an ALREADY-TRACKED, ALREADY-PARTIALLY-FIXED issue** —
-      `/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` root-caused this same mechanism on
+      `/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md` root-caused this same mechanism on
       2026-07-22 (todo 1, done) and shipped a preserve-before-reset guard (`unified-trading-pm@06dc7632`, todo 2, done):
       before the `checkout -B`, if the local branch has commits ahead of origin, the tip is saved to
       `refs/wip-preserve/cascade-<ancestor>-<sha12>` first. This doc's incident (`61efd2e5`/`dbb93c3a`, 2026-07-27
@@ -128,7 +128,7 @@ between the two git calls.
       origin ref can only ever make the ahead-count LARGER, never cause a false-negative skip), but it closes a real,
       independent correctness gap.
 - [x] [SCRIPT] P1. ✅ **DONE 2026-07-28 (slot 10)** — root-caused via live reproduction, see the canonical doc's todo 7
-      (`/plans/active/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`): the preserve-guard's ahead-check
+      (`/plans/archive/2026_08/issues/utl_shared_clone_commits_repeatedly_reset_2026_07_22.md`): the preserve-guard's ahead-check
       and its `checkout -B` are non-atomic, and a concurrent commit landing in that gap is silently discarded without
       ever triggering the preserve ref — reproduced exactly (matching reflog signature + missing preserve ref) against a
       scratch clone. Not a stale-PM-clone issue; the guard itself has an inherent TOCTOU race.

@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [agent-orchestrator, regen, backlog, data-integrity, audit]
 related:
   [
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/2026_07/ao_dispatch_cooldown_and_park_2026_07_20.md,
   ]
 created: 2026-07-20

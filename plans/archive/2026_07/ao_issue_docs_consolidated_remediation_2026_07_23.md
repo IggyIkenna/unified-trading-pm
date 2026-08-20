@@ -19,7 +19,7 @@ related:
     /plans/archive/2026_07/ao_remediation_a_independent_fixes_2026_07_23.md,
     /plans/archive/2026_07/ao_remediation_b_code_chain_2026_07_23.md,
     /plans/archive/issues/wedge_detector_lacks_liveness_by_progress_false_positive_2026_07_21.md,
-    /plans/active/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md,
+    /plans/archive/2026_08/issues/agent_reply_cannot_address_a_different_role_silent_cross_role_blind_spot_2026_07_22.md,
   ]
 created: 2026-07-23
 last_updated: 2026-07-27

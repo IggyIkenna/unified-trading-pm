@@ -22,7 +22,7 @@ related:
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /codex/08-workflows/ci-cd-flow.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 created: "2026-08-06"
 last_updated: "2026-08-06"

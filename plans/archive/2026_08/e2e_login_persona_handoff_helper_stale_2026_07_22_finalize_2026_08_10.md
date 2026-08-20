@@ -20,7 +20,7 @@ tags: [ao-dispatch, close-out, reclassification, ui, playwright, finalize]
 related:
   [
     /plans/active/issues/e2e_login_persona_handoff_helper_stale_2026_07_22.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
     /plans/active/issues/ui_admin_v1_routes_need_firebase_admin_creds_and_e2e_dev_server_instability_2026_08_09.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

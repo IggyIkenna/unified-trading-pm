@@ -19,7 +19,7 @@ tags: [ao-dispatch, close-out, reclassification, ci, host-contention, finalize]
 related:
   [
     /plans/archive/2026_08/issues/ldr_qg_v2_ci_host_contention_false_wall_2026_08_03.md,
-    /plans/active/ao_open_issues_consolidated_close_out_2026_07_17.md,
+    /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/08-workflows/ci-cd-flow.md,
   ]

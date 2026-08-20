@@ -26,7 +26,7 @@ related:
   [
     /plans/archive/issues/mdps_odds_horizon_bucket_reprocess_launch_prep_2026_07_25.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
-    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: 2026-07-27
