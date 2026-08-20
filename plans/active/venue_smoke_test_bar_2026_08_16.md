@@ -137,7 +137,8 @@ failures, they are declared absences.
 Same single blocker as W4: the per-(venue × data type) denominator did not exist yet. A smoke-test bar reported
 over an undefined set produces a percentage with no denominator — the exact shape of unfalsifiable progress this
 workspace bans. **Flipped to `active` 2026-08-20 (/plan-reconcile F-G31-3)** — the umbrella's "Define the universe
-precisely for W4/W5" todo landed 2026-08-16 (**192 declared venues, 353 (venue, data_type) pairs**,
+precisely for W4/W5" todo landed 2026-08-16 (**192 declared venues, 353 (venue, data_type) pairs at that
+measurement**,
 `unified-api-contracts@e7ee398117`), the same day this doc's own text says it was waiting for. Its sibling W4
 (`venue_e2e_wiring_2026_08_16.md`) flipped to `active` on that same criterion the same day; this doc's flip was
 simply never applied, leaving 5 genuinely-unblocked P0/P1 todos undispatchable for 4 days.
@@ -153,9 +154,15 @@ target wrote zero rows.
       oracle, not a re-implemented rule); the manifest reconciles for that shard atom; and the capture_status is a
       genuine capture rather than `expected_unattempted`. Done-when: the contract is written here and one reference
       implementation exists that provably FAILS on a venue with no data.
-- [ ] [BACKEND] P0. **Derive the in-scope unit list** — every (venue × data type) minus the Databento-sourced
-      exemptions, with the exemption set enumerated explicitly rather than described. Forks from the same universe
-      definition W4 waits on.
+- [x] ✅ [BACKEND] P0. **Derive the in-scope unit list** — every (venue × data type) minus the Databento-sourced
+      exemptions, with the exemption set enumerated explicitly rather than described. SHIPPED —
+      `unified-api-contracts@03c79c82a` adds the permanent, re-runnable
+      `scripts/generate_venue_smoke_test_work_list.py`, which resolves the first venue-capable source per cell rather
+      than applying a venue-wide exemption. Measured 2026-08-20: 361 declared pairs, 8 Databento exemptions, and 353
+      in-scope rows (CEFI 70, DEFI 232, PREDICTION 4, SPORTS 39, TRADFI 8). Explicit exemptions are CBOE/ohlcv_1m,
+      CBOE/ohlcv_1s, CME/ohlcv_1m, CME/ohlcv_1s, NASDAQ/ohlcv_1m, NASDAQ/ohlcv_1s, NYSE/ohlcv_1m, and NYSE/ohlcv_1s.
+      Focused tests cover uniqueness, dual-source CBOE routing, and Yahoo-only KRX routing; the full UAC quality gate
+      passed.
 - [ ] [BACKEND] P0. **Fork per-asset-group dispatch batches**, matching W4's structure so the two workstreams stay
       comparable per AG and do not each invent their own batching.
 - [ ] [BACKEND] P1. **Record the testnet answer per venue** — has one / behaves how / must be simulated. This feeds
@@ -196,3 +203,10 @@ the universe-denominator blocker... is unaffected" was itself wrong. The umbrell
 for W4/W5" todo had already landed the DAY BEFORE this entry was written (2026-08-16,
 `unified-api-contracts@e7ee398117`, 192 declared venues / 353 pairs) — this doc's own stated flip criterion. Flipped
 `status: draft` → `active` in this correction pass, 4 days later than it should have.
+
+
+**2026-08-20 — in-scope smoke-test list shipped.** `unified-api-contracts@03c79c82a` added the source-scoped
+generator and focused tests. The live registry now measures 200 declared venues / 361 pairs; the generator excludes
+only the eight explicitly listed Databento cells and reports 353 rows for batch smoke testing. It resolves source by
+`(venue, data_type)`, preserving CBOE's Yahoo Treasury-index cell and KRX's Yahoo daily cells in scope. UAC's full
+quality gates passed (1381s); the landed commit is an ancestor of `origin/live-defi-rollout`.
