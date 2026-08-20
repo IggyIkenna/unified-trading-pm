@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, docker, cloud-run, build-breakage, dockerfile]
 related:
   [
-    /plans/archive/2026_08/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
   ]
 created: 2026-08-19
