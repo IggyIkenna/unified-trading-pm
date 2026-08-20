@@ -193,6 +193,20 @@ destroys report signal:
 - **Decision-D `LENDING` keying** — never flag `lending` / `solana_lending` on defi market/event data_types.
 - **`batch_massive`** (source axis) is not non-canonical / not delete-eligible.
 - **Sports blank `pipeline_mode` / `source`** — already dropped as blank sentinels; never re-report.
+- **Operator-accepted dialect/bundle-grain aliases** — check the raw value against deployment-api
+  `_distinct_values.py`'s `_ACCEPTED_EXCEPTIONS` dict (`_accepted_exception_reason(axis, asset_group, value)`) BEFORE
+  emitting a `non_canonical_axis_value` finding; a hit is suppressed, not reported. Found live 2026-08-20 (cefi daily
+  reconciliation run): three of seven `venue`-axis "drift" values the census's own vocabulary comparison flags
+  (`BYBIT-FUTURES`, `OKEX-FUTURES`, `CRYPTOFACILITIES`) are members of UAC `CEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`
+  (`market_data_categories.py`, sourced from `CEFI_VENUE_FOLD` — writer-side dialect spellings `instruments-service`'s
+  own `_canon_venue()` already folds), and cefi's `futures_chain`/`options_chain` `instrument_type` values are members
+  of `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES` (the permanent MTDS Tardis-writer bundle-grain stamp, never
+  a per-contract `InstrumentType` member — see `honest-coverage-model.md`'s carve-out table). Prior daily cefi reports
+  (08-16 through 08-19) carried these as open "candidate for the accepted-exception list" findings without checking
+  whether they were already on it — they were. The dict is asset_group/axis-scoped (`("venues","cefi")`,
+  `("instrument_types","cefi")`, `("data_types","tradfi")`, `("data_types","sports")`, `("chains","tradfi")`, etc. — no
+  `("data_types","cefi")` entry exists, so cefi `data_type` drift is NOT covered by this mechanism and stays a genuine
+  finding) — re-check per (axis, asset_group) rather than assuming a hit/miss on one AG generalises to another.
 
 ### 1.6 Worked example (the 2026-07-20 slip)
 
