@@ -26,7 +26,8 @@ related:
   ]
 created: "2026-08-19"
 author: plan_reconciler
-parent_epic: plan_hygiene_master # was: infrastructure_master (stale slug, folded 2026-08-18; retargeted to plan_hygiene_master, not security_and_cross_cutting_master, since this doc's content — check_line_caps.sh glob coverage — is explicitly plan_hygiene_master-owned scope; corrected cross-epic sweep 2026-08-19)
+# was: infrastructure_master (stale slug, folded 2026-08-18; retargeted to plan_hygiene_master, not security_and_cross_cutting_master, since this doc's content — check_line_caps.sh glob coverage — is explicitly plan_hygiene_master-owned scope; corrected cross-epic sweep 2026-08-19)
+parent_epic: plan_hygiene_master
 source: >-
   Found live while running `/plan-reconcile sports_master`'s Phase 0 deterministic inventory
   (`check_line_caps.sh --quiet` full-corpus pass) and cross-checking it against the epic's own child-doc line counts.

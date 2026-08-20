@@ -21,7 +21,8 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-parent_epic: plan_hygiene_master # was: cefi_master (epic-assignment audit 2026-08-19) -- entire content is generic
+# was: cefi_master (epic-assignment audit 2026-08-19) -- entire content is generic
+parent_epic: plan_hygiene_master
   # AO-batch finalize/archival mechanics (checkbox reconciliation, archive-if-zero-open-todos, hygiene sweep) --
   # identical process for any asset group's satellite batch
 assigned_vm: planning

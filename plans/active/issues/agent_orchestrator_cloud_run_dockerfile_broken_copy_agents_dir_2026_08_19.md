@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, docker, cloud-run, build-breakage, dockerfile]
 related:
   [
-    /plans/active/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md,
+    /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
   ]
 created: 2026-08-19
@@ -44,7 +44,7 @@ context_scope:
   [
     agent-orchestrator/Dockerfile,
     agent-orchestrator/server/prompts.py,
-    /plans/active/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md,
+    /plans/archive/2026_08/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md,
     /codex/05-infrastructure/agent-orchestrator-deploy.md,
     /plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md,
   ]
@@ -101,3 +101,5 @@ now.
   `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md`), verified directly, scoped as its own
   issue since it's a different deployment target/plan than the work that surfaced it.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20**: referrer-path fixup — the AO plan above archived (`plans/archive/2026_08/`, all 5 phases done);
+  `related:`/`context_scope:` repointed to its new path.

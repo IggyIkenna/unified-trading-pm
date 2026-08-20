@@ -35,7 +35,8 @@ related:
 created: "2026-08-09"
 author: slot-22
 priority: P3
-parent_epic: plan_hygiene_master # was: tradfi_master (epic-assignment audit 2026-08-19) -- core finding is a
+# was: tradfi_master (epic-assignment audit 2026-08-19) -- core finding is a
+parent_epic: plan_hygiene_master
   # generic check_line_caps.sh carve-out gap (a net-zero-length content substitution can never satisfy the
   # DELETED=0 precondition); doc's own text says the identical bug already hit cross_cutting_consolidated_closeout_2026_07_25.md
 source: >-

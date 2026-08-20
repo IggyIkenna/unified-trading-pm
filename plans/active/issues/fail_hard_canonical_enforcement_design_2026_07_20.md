@@ -19,7 +19,8 @@ related:
   - plans/archive/issues/batch_live_filename_divergence_sanitize_symbol_2026_07_20.md
 created: 2026-07-20
 author: unknown
-parent_epic: uac_master # was: cefi_master (epic-assignment audit 2026-08-19) -- canonical/quarantine ID-form governance (UAC oracle + registry + ResolutionEvidence) is schema/contract-governance infra enforced at every write/manifest/read site system-wide, not cefi-specific
+# was: cefi_master (epic-assignment audit 2026-08-19) -- canonical/quarantine ID-form governance (UAC oracle + registry + ResolutionEvidence) is schema/contract-governance infra enforced at every write/manifest/read site system-wide, not cefi-specific
+parent_epic: uac_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P1

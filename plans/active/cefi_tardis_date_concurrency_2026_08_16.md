@@ -24,7 +24,8 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- Phase 1/2's correctness fixes
+# was: cefi_master (epic-assignment audit 2026-08-19) -- Phase 1/2's correctness fixes
+parent_epic: mtds_mdps_master
   # (KnownDeadShardGate lost-update race, checkpoint watermark, catalog re-registration race, UTL runner semaphore
   # sizing) are shared MTDS engine + UTL plumbing bugs; the doc's own text confirms the watermark bug is "already
   # live on TradFi... independent of CeFi" and the same session fixed a SPORTS-specific written_venues bug too --

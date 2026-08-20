@@ -435,10 +435,27 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Fix `git stash push/pop` silently dropping content under high branch velocity — this defect
       costs every tranche real work. Evidence:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`.
+      **Re-verified 2026-08-20: the bounded/mechanical portions are already extracted to
+      `/plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` (`status: active`, AO-dispatch
+      eligible) — items 1-2 (repro + promote the confirmed `--rebase --autostash` fix into durable recovery docs)
+      still open there, not yet landed. Not duplicating that work here; this doc's own remaining items are P3
+      conditional-future ("if velocity recurs") or a P2 design-review call, neither blocking.**
 - [ ] [BACKEND] P1. Add the retry safety net for `main-backmerge-to-ldr` on non-PM repos. Evidence:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`.
-- [ ] [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
-      `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`.
+      **Re-verified 2026-08-20: extracted to
+      `/plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` (`status: active`) — item 1 (the
+      fleet-wide `branch-health.yml` drift-tick safety net, the actual P1 fix) is `[x]` LANDED,
+      `unified-trading-pm@96c163347f`. Items 2-3 there (a stale comment, a failed-backmerge detection surface) are
+      P2 polish, still open, not blocking. This doc's own remaining item is a P3 third-party-action-pinning
+      evaluation.**
+- [x] ✅ [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
+      `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`. **The core defect
+      is fixed**: `unified-trading-ci main` added to `scripts/dev/cron-branch-overrides.txt` (`[x]`), verified no
+      new spurious `wip-preserve/` branches post-fix (`[x]`), and a CI/QG check now asserts every
+      `workspace-manifest.json` repo with a non-default integration branch has a matching override entry (`[x]`).
+      Remaining open items in that doc are 2 `[OPERATOR]` P3 decisions (registry collapse, reconciling specific
+      stale local slots) and 1 `[BACKEND]` P2 monitoring enhancement (fleet-wide quarantine rollup) — none of
+      these are the gap this todo names, so not blocking this close-out.
 - [ ] [BACKEND] P3. Fix the git-status red-nudge false positive from the wrong branch comparison. Evidence:
       `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`. **Both
       original todos were already `[x]`, shipped 6 days prior. Its 2026-08-19 addendum named a third, still-open
@@ -462,6 +479,21 @@ todos only to confirm they are data-movement, then leave it.
       git (`scratchpad/agent-orchestrator-backup/`). Needs either a lower-contention retry window or someone with
       quickmerge-internals context to diagnose why re-gate's failure path drops its own check name.
 
+      **ROOT CAUSE FOUND + FIXED, 2026-08-20 (4th attempt, fleet contention independently confirmed low — only 1
+      other quickmerge running, a different repo).** Attempt 4 reproduced the identical symptom, ruling out
+      contention as the sole explanation. Read `scripts/quickmerge.sh`'s re-gate diagnostic path directly
+      (~L2560-2571): the branch that decides "real failure vs. lost race" classifies on
+      `grep -E '❌|^FAILED |^ERROR |^E '`, but the very next line that PRINTS the evidence to the agent only
+      grepped literal `grep '❌'` — a failure surfacing as a bare pytest `FAILED test_x` / `E AssertionError`
+      line (no ❌ emoji) is correctly classified as real but the display step matches nothing, producing exactly
+      the observed banner-with-no-check-name. **Fixed**: broadened the display grep to the same 4-pattern set used
+      for classification, plus a fallback message (naming the regate exit code + the manual command to run) for
+      the case where even that finds nothing. Pure diagnostic-string change — no pass/fail semantics touched.
+      `scripts/quickmerge.sh` is the PM SSOT every repo's own copy symlinks to, so this fixes the diagnostic gap
+      fleet-wide, not just for this ship. `unified-trading-pm@<pending — see ship log>`. Re-attempting the
+      agent-orchestrator ship now that the fix is in place; if it still fails, the new diagnostic should finally
+      name the real check.
+
 ### Close-out
 
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's 433-doc allocation to zero open todos or an explicit
@@ -478,6 +510,22 @@ todos only to confirm they are data-movement, then leave it.
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+
+- 2026-08-20 — **Root `README.md` staleness fixed** (the concrete, mechanically-verifiable subset of the
+  `docs_reconcile_remaining_broken_links_2026_08_02.md` P2 finding — the doc's own prior audits deliberately
+  scoped this out as "needs a real onboarding-doc pass," which is why it survived 6+ na-eligibility passes;
+  narrowed here to only claims verified against the live filesystem/git history, not guessed):
+  `scripts/workspace/sync-rules-pull.sh` and `sync-workspace.sh` do not exist (confirmed via `find` + `git log
+  --diff-filter=D`: removed in `8c18241537` when the workspace moved from a rules-sync model to a
+  `.cursor/rules/` symlink — `setup-cursor-rules-symlink.sh`); the "Quickmerge... creates a branch, and opens a
+  PR" claim contradicted the actual default flow (direct commit to `live-defi-rollout`, no branch/PR — confirmed
+  `grep` on `quickmerge.sh` for rule-sync/PR-create logic, cross-checked against this same CLAUDE.md's own
+  `ci-cd-flow.md` pointer); `unified-trading-codex` is listed as a live sibling repo in two places but is
+  ARCHIVED (per this file's own CLAUDE.md); the workspace-structure diagram showed the pre-Path-B flat clone
+  layout, missing the `.tabs/<N>/` per-slot worktree model live since 2026-06-08 (confirmed against
+  `/codex/05-infrastructure/per-tab-worktrees.md`). 7 fixes, `unified-trading-pm@<pending — see ship log>`. The
+  remaining ~16 items in that issue doc and its 2026-08-17 sibling stay open — genuinely VALID_JUDGMENT per
+  6+ independent na-eligibility-audit passes, not re-litigated here.
 
 - 2026-08-20 — **The acceptance test now exists and is machine-enforced** — `unified-trading-pm@7b2dd29aaa`.
   `scripts/plan-hygiene/check_artefact_claim_ownership.py` + `artefact_claim_ownership_baseline.yaml`, wired into

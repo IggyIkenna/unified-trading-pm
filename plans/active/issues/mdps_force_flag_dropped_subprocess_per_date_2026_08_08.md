@@ -22,7 +22,8 @@ related:
 created: "2026-08-08"
 last_updated: "2026-08-08"
 author: slot-26 (data_engineering)
-parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- fix is in MDPS's generic
+# was: cefi_master (epic-assignment audit 2026-08-19) -- fix is in MDPS's generic
+parent_epic: mtds_mdps_master
   # process_handler.py::_run_date_as_subprocess, doc's own text says "not scoped to Track-7...ANY service consumer
   # relying on --force has been silently getting a no-op" -- surfaced via cefi, not cefi-specific
 assigned_vm: planning

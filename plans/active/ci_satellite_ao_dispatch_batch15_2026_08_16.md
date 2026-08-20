@@ -272,9 +272,10 @@ source: >-
 
 - [ ] [DEVOPS] P2. **Classify each of semver-agent's residual stalled-repo cases as correctly-quiet vs. a genuine
       patch-fallback gap** — same investigate-then-fix-if-mechanical pattern batch13 already used successfully for the
-      prior 7-repo residual (all 7 turned out correctly-quiet). Source:
-      `plans/active/issues/semver_agent_squash_promote_blind_to_patch_fixes_2026_08_07.md`. Gate: each residual case
-      has a recorded verdict with cited evidence (same shape as batch13's classification).
+      prior 7-repo residual (all 7 turned out correctly-quiet). Source doc archived 2026-08-18
+      (`ci_tranche_zero_checkbox_archive_sweep_2026_08_18`); contract now lives at
+      `/codex/08-workflows/ci-cd-flow.md`. Gate: each residual case has a recorded verdict with cited evidence (same
+      shape as batch13's classification).
 
 - [ ] [DEVOPS] P2. **Investigate why `update-dependency-version.yml`'s primary cascade has been dormant since
       2026-06-28** — bounded diagnostic question (grep trigger config, check dispatch history, diff against last-fired

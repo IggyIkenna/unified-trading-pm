@@ -2567,7 +2567,19 @@ if [ -f "scripts/quality-gates.sh" ]; then
           exit 1
         fi
         echo "[$REPO_NAME] ❌ Re-gate FAILED against the current tree — this is a REAL failure, not a lost race."
-        echo "$_qm_scope" | grep '❌' | grep -v 'must complete in <' | head -5 | sed 's/^/[re-gate] /'
+        # Mirror the SAME pattern used to classify this as a real failure above -- a prior
+        # version grepped only '❌' here while classifying on '❌|^FAILED |^ERROR |^E   ', so any
+        # failure surfacing as a bare pytest `FAILED test_x` / `E   AssertionError` line (no ❌
+        # emoji) was correctly classified as real but printed NOTHING, leaving the agent with a
+        # banner and no check name to act on (measured repeatedly,
+        # git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md, 2026-08-20).
+        _qm_regate_evidence=$(echo "$_qm_scope" | grep -E '❌|^FAILED |^ERROR |^E   ' | grep -v 'must complete in <' | head -5)
+        if [ -n "$_qm_regate_evidence" ]; then
+          echo "$_qm_regate_evidence" | sed 's/^/[re-gate] /'
+        else
+          echo "[re-gate] (no ❌/FAILED/ERROR/E-prefixed line found in the captured output —"
+          echo "[re-gate]  regate exited ${_qm_regate_rc}; run 'bash scripts/quality-gates.sh --no-fix' standalone to see the real failure)"
+        fi
         exit 1
       fi
     done

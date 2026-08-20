@@ -182,10 +182,18 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       preceding `reason="manual"` `SESSION-TEARDOWN` log line within ~60s. Done when: a measured baseline exists
       (crossing frequency + benign-recycle share) to inform whether `tmux_session_loss_rate_min_count`/
       `_window_seconds` needs raising. Repo: agent-orchestrator. **DONE — see Progress Log 2026-08-20.**
-- [ ] [UI] P2. Exclude human-kind slots (`config.human_slot_ids()`) from the main agent-orchestrator dashboard Fleet
+- [x] ✅ [UI] P2. Exclude human-kind slots (`config.human_slot_ids()`) from the main agent-orchestrator dashboard Fleet
       table's per-slot role-badge computation (NOT the dedicated `HumanFleet.tsx` page, which already excludes them
       correctly). Done when: a live dashboard check shows slot 9001 (and any other human slot) absent from the main
-      Fleet table's rows entirely, still correctly present on the Human Fleet page. Repo: agent-orchestrator.
+      Fleet table's rows entirely, still correctly present on the Human Fleet page. Repo: agent-orchestrator. **DONE —
+      agent-orchestrator@b25d40af36**. `fleetSlots()` (dashboard/src/layout.tsx) excluded only `kind !== "main"/
+      "review"`; a human identity slot has backend `kind="worker"` (no dedicated human literal exists server-side —
+      only `slot_id` distinguishes it), so it never got excluded. Added a `slot_id < 9000` clause mirroring
+      `HumanFleet.tsx`'s own `buildHumanFleetRows` range check. Verified live via a new Playwright spec
+      (`dashboard/tests/e2e/fleet-excludes-human-slots.spec.ts`, seeded `SlotRow(slot_id=9001, operator="ikenna")` in
+      `seed_e2e_state.py`): slot 9001 absent from the main Fleet table, still present on the Human Fleet page — both
+      pass. Unit regression: `layout.test.ts`'s `fleetSlots` suite. Full QG green (5249 passed, coverage 86.17%),
+      dashboard vitest 469/469, tsc clean.
 - [ ] [REVIEW] P2. Moonshot (Kimi) wallet/balance reconciliation: confirm whether Moonshot exposes a readable
       balance/usage endpoint, or apply the DeepSeek-style available-balance-only design if not; track TOTAL credited
       (cash + any promotional voucher) per the 2026-08-16 operator rule, cross-checked live against Moonshot's own

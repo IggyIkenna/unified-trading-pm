@@ -1,20 +1,21 @@
 ---
 doc_type: plan
-title: Client × Archetype Vehicle Eligibility — SMA vs Pooled Fund
+title: Client Vehicle Type (SMA vs Pooled Fund) — Gate Fund-Administration Redemptions
 summary:
-  Design doc for a still-open product question — a client relationship's investment vehicle (direct SMA vs pooled
-  fund) is a function of BOTH the client and the strategy archetype (a client may hold both vehicles; some archetypes
-  may only be offerable under one). This determines whether a redemption ever touches fund-administration-service's
-  AllocatorRedemption/NAV-cadence machinery (fund_administration_redemption_cadence_engine_2026_08_20.md) at all, or
-  routes straight to a direct execution-service withdrawal. Captures the real existing hook points found in the code,
-  the gap, a proposed shape, and the product questions still open before this can be scoped into dispatchable work.
+  Resolved 2026-08-20 (operator Q&A, interactive session) — vehicle eligibility collapses to a plain per-client_id
+  field, not a per-archetype capability matrix — each client_id maps to exactly ONE vehicle (strict 1:1), a client
+  needing both gets two distinct client_ids (e.g. "acme-fund"/"acme-sma", reusing the existing per-client-isolation
+  model with zero new identity machinery), and eligibility is a soft per-client business choice, not a hard
+  per-archetype constraint. Adds a `vehicle_type` field to the canonical client config and gates
+  fund-administration-service's redemption-creation endpoint on it — an SMA-typed client never creates an
+  AllocatorRedemption; that vehicle's withdrawals are a direct execution-service concern, out of scope here.
 status: active
-nature: design
+nature: process
 asset_group: [cross-cutting]
 stage: [strategy]
 repos: [strategy-service, fund-administration-service, unified-api-contracts]
-scope: [engineer, admin]
-tags: [strategy-agnostic, vehicle-eligibility, sma, fund-administration, archetype-capability]
+scope: [engineer]
+tags: [strategy-agnostic, vehicle-eligibility, sma, fund-administration, client-config]
 related:
   [
     /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
@@ -25,110 +26,90 @@ related:
 created: 2026-08-20
 last_updated: 2026-08-20
 parent_epic: strategy_master
-assigned_vm: NA
-execution_scope: local-only
-priority: P2
-estimate_class: design
-estimate_baseline_ai_days: 1
-estimate_calibrated_ai_days: 0.6
+assigned_vm: planning
+execution_scope: orchestrator-agent
+priority: P1
+estimate_class: infra
+estimate_baseline_ai_days: 2
+estimate_calibrated_ai_days: 1.6
 assigned_role: backend_engineer
 effort: medium
 drift_direction: advance-code
 depends_on: [fund_administration_redemption_cadence_engine_2026_08_20]
+gate_on_depends: true
+sequential: true
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-source: operator conversation relay (Greg/Patrick SMA-redemption chat) + interactive session slot 5, 2026-08-20
+source: operator conversation relay (Greg/Patrick SMA-redemption chat) + interactive Q&A, session slot 5, 2026-08-20
 context_scope:
   [
     strategy-service/strategy_service/client_context.py,
-    unified-api-contracts/unified_api_contracts/internal/architecture_v2/archetype_capability.py,
-    unified-api-contracts/unified_api_contracts/internal/architecture_v2/restriction_profiles.py,
+    unified-api-contracts/unified_api_contracts/internal/reporting/client_config.py,
+    unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/client_config.py,
+    fund-administration-service/fund_administration_service/api/main.py,
     fund-administration-service/fund_administration_service/redemption/state_machine.py,
     /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
-    /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
   ]
 ---
 
-# Client × Archetype Vehicle Eligibility — SMA vs Pooled Fund
+# Client Vehicle Type (SMA vs Pooled Fund) — Gate Fund-Administration Redemptions
 
-**Why this doc exists**: while scoping the redemption-cadence-engine plan, the operator raised a prior question the
-plan had implicitly assumed away — `AllocatorRedemption`'s whole grace-period/NAV-per-share/cadence-batch machinery
-only applies to a pooled-fund investor; a direct SMA client shares no NAV pool with anyone, so none of it applies to
-them. But *which* vehicle a given relationship uses is not a client-level constant — the operator's own framing:
-_"the same client [could] have an SMA and a fund, and it could be that some strategies you can't have an SMA or a
-fund — the combination would tell you."_ That means vehicle eligibility is a function of **(client, archetype)**, not
-either alone, and nothing in the codebase currently resolves that combination. This doc is the LOCAL/design capture
-of that gap per `plan-brainstorm`'s Step 4 (still a genuine judgment call, not yet a bounded todo) — not yet
-dispatchable AO work.
+**Why this doc exists**: originally authored as a LOCAL design doc capturing an open product question — whether a
+client's investment vehicle (SMA vs pooled fund) is a function of the client alone, the archetype alone, or both. The
+three blocking questions were resolved interactively with the operator the same day (see Resolved decisions below),
+which collapsed the design from a 2-axis (client × archetype) capability-matrix problem down to a 1-axis (client
+alone) field — so this is now a small, bounded implementation plan, not a design doc.
 
-## What already exists (real hook points, not greenfield)
+**Resolved decisions (2026-08-20, operator Q&A, interactive session slot 5 — do not re-litigate)**:
 
-- **`ClientRuntimeContext`** (`strategy-service/strategy_service/client_context.py`) already binds `client_id` +
-  `archetype_id` per running `ClientWorker` subprocess — this IS the (client, archetype) combination unit the
-  operator described, already first-class in the runtime. It currently carries no vehicle-type field.
-- A **separate** UAC `ClientContext` (JWT-claims model consumed by `prod_restrictions`/`access_control`) already
-  carries a `fund_id` field alongside `org_id`/`audience`/`business_unit` — not to be confused with strategy-service's
-  `ClientRuntimeContext` (the two share a name coincidentally; see that module's own docstring).
-- **`ARCHETYPE_CAPABILITY_REGISTRY`** (`unified_api_contracts/internal/architecture_v2/archetype_capability.py`,
-  G1.8 of `/codex/16-strategy-playbooks/infra-spec/stage-3e-refactor-plan.md`) is an already-shipped, established
-  pattern for exactly this SHAPE of question: a declarative per-archetype capability matrix (today: archetype →
-  supported `ArchetypeInstrumentType`/`VenueCategoryV2`), sourced from a committed JSON manifest, loaded into a
-  module-level registry, auto-mirrored to the UI's `coverage.ts` on every push. No vehicle-type axis exists on it
-  today.
-- **`restriction_profiles.py`** (same module) is a structurally-similar declarative YAML-driven profile resolver, but
-  scoped to demo-ops persona/flavour tile-locking, not production client-strategy vehicle assignment — a similar
-  idiom, not directly reusable.
-- **Not a candidate**: `deployment-service/deployment_service/deployment_profile_derivation.py` — despite the name,
-  this derives INFRA deployment-profile sizing (VM/shard sizing) from the active archetype set, not client-facing
-  investment-vehicle structuring. Checked and ruled out during this doc's authoring.
+1. **Mapping is strict 1:1** — each `(client, archetype)` relationship runs under exactly one vehicle.
+2. **Eligibility is a SOFT per-client business choice**, not a hard per-archetype constraint — no archetype is
+   structurally blocked from either vehicle. Consequence: no `ARCHETYPE_CAPABILITY_REGISTRY` axis is needed for this;
+   that was the original design doc's proposed shape and is now explicitly out of scope.
+3. **A client holding both vehicles gets two distinct `client_id`s** (e.g. `acme-fund` / `acme-sma`), reusing the
+   existing per-client-isolation model with zero new identity machinery.
 
-## The gap
+Combined, (1)+(3) mean every `client_id` maps to exactly one vehicle for ALL archetypes it runs — `vehicle_type`
+is a plain field on the client's own config, not a per-relationship or per-archetype matrix.
 
-Nothing today resolves, for a given `(client_id, archetype_id)` pair, which vehicle (SMA or pooled fund) that
-allocation runs under — no field on `ClientRuntimeContext`, no axis on `ARCHETYPE_CAPABILITY_REGISTRY`, no registry
-anywhere. Consequently `fund-administration-service`'s redemption routing (both shipped companion plans) has no way
-to know whether a given withdrawal request should ever create an `AllocatorRedemption` in the first place — today
-that decision, if it happens at all, happens outside code (a product/deployment choice of which service a client
-relationship is even wired to).
+**Why `gate_on_depends: true` on `fund_administration_redemption_cadence_engine_2026_08_20`**: todo 3 below edits the
+same file (`fund_administration_service/api/main.py`) that plan's DI-wiring todo edits — gating avoids a genuine
+cross-plan same-file collision rather than relying on `sequential: true` alone (which only orders within THIS plan).
 
-## Proposed shape (once the open questions below are resolved)
+## Todos
 
-Following the codebase's own established idiom rather than inventing a new one:
+- [ ] [BACKEND] P0. Add `vehicle_type: Literal["fund", "sma"]` (required — no default, must loud-fail if unset) to the
+  canonical per-client config. Two `ClientConfig` types currently exist in UAC:
+  `unified_api_contracts/internal/reporting/client_config.py` (`TypedDict`, consumed by
+  `client-reporting-api/client_reporting_api/core/tranche_router.py`'s registry) and
+  `unified_api_contracts/internal/domain/strategy_service/client_config.py`'s `ClientConfigRegistry` (`BaseModel`,
+  the closer relative of `clients.yaml`/`ClientRuntimeContext`). Prefer the strategy_service one — `vehicle_type` is a
+  property of the same relationship `ClientRuntimeContext` already binds — unless investigation shows
+  fund-administration-service (Tier-4, no service-to-service imports) needs its own independent copy, in which case
+  state that finding explicitly rather than silently picking one. Done-when: the field round-trips through the chosen
+  model and an unset value raises, not silently defaults.
 
-1. Extend the `ARCHETYPE_CAPABILITY_REGISTRY` pattern with a vehicle-eligibility axis — which archetypes may be
-   offered as SMA, pooled fund, or both — same manifest → registry → UI-mirror pipeline already in place for the
-   instrument/category axis.
-2. Add a per-`(client_id, archetype_id)` vehicle assignment alongside the existing per-client config surface
-   `client_context.py` already reads from (`clients.yaml`) — the actual "combination" record the operator described.
-3. Fund-administration-service's redemption entry point consults that assignment: `vehicle=FUND` routes into
-   `AllocatorRedemption` (the already-shipped cadence engine); `vehicle=SMA` routes directly to a plain
-   execution-service withdrawal, bypassing grace-period/NAV-per-share/fee machinery entirely — it was never meant to
-   apply there.
+- [ ] [BACKEND] P0. Backfill `vehicle_type: "fund"` for every EXISTING client_id in the registry chosen above — every
+  current client predates this field and is, by construction, running the only path that existed (pooled fund).
+  Done-when: every client_id in the live registry has an explicit `vehicle_type`, zero blanks, verified by a script
+  that fails loudly on any missing value.
 
-This is deliberately NOT written as dispatchable todos yet — steps 1-2 both depend on the open questions below, and
-"figure out the schema shape" is a judgment call, not a bounded outcome (`task_template.md` §4's dispatch-scope bar).
+- [ ] [BACKEND] P0. Add the routing gate at fund-administration-service's redemption-creation endpoint
+  (`fund_administration_service/api/main.py`, the handler that calls `create_redemption()` from
+  `fund_administration_service/redemption/state_machine.py`) — look up the requesting client's `vehicle_type` from
+  the config chosen in todo 1; an `sma`-typed client_id is rejected at this endpoint (a clear 4xx, not a silent
+  accept) — that vehicle never creates an `AllocatorRedemption`, its withdrawals are a direct execution-service
+  concern entirely outside fund-administration-service, out of this plan's scope. `fund`-typed clients proceed exactly
+  as today. Done-when: a test posting a redemption request for an `sma`-typed client_id gets a clear rejection, and a
+  `fund`-typed client_id's request is unaffected (existing `tests/unit/test_api_end_to_end.py` stays green).
 
-## Open questions (blocking — need an operator decision before this becomes a real plan)
-
-- [ ] [OPERATOR] P1. Is `(client, archetype) → vehicle` a strict 1:1 mapping (each relationship picks exactly one
-  vehicle), or can a single client split the SAME archetype's allocation across both an SMA sleeve and a fund sleeve
-  concurrently? A strict mapping is a simple enum field; a split needs per-allocation (not per-relationship) vehicle
-  tagging — materially different schema.
-- [ ] [OPERATOR] P1. Is vehicle eligibility a HARD per-archetype constraint (some archetypes are structurally
-  incapable of being offered as SMA — e.g. an operational/legal reason) or a SOFT per-client business choice (any
-  archetype could be either, it's just what's been sold)? This determines whether the capability-registry axis is a
-  real constraint the engine enforces or advisory metadata only.
-- [ ] [OPERATOR] P2. When a client holds BOTH an SMA and a fund sleeve, are they represented as the SAME `client_id`
-  with a vehicle dimension layered on, or as two DISTINCT `client_id`s (one per vehicle) — under the existing
-  per-client-isolation model (`client-funds-isolation.md`), two distinct client_ids may already be sufficient with NO
-  new field needed, just a registry/config decision. Worth ruling out the zero-code-change option first.
+- [ ] [REVIEW] P1. Confirm no regression: run `bash scripts/quality-gates.sh` in both the UAC/strategy-service config
+  repo and fund-administration-service after the above land, and cite the green runs.
 
 ## Progress Log
 
-- **2026-08-20**: Doc authored following `/plan-brainstorm` discipline after the operator raised the vehicle-
-  eligibility question mid-review of the redemption-cadence-engine plan. Confirmed real existing hook points
-  (`ClientRuntimeContext`, `ARCHETYPE_CAPABILITY_REGISTRY`, UAC `ClientContext.fund_id`) and ruled out
-  `deployment_profile_derivation.py` as a candidate home. Kept `assigned_vm: NA` — the three open questions above are
-  genuine product decisions, not yet a bounded AO todo.
+- **2026-08-20**: Doc authored as a LOCAL design doc (`assigned_vm: NA`) with 3 blocking `[OPERATOR]` questions.
+  Resolved the same session via interactive Q&A — flipped to `assigned_vm: planning` and rewritten as a bounded
+  4-todo implementation plan against the resolved (client-alone, soft, two-client-ids) design.

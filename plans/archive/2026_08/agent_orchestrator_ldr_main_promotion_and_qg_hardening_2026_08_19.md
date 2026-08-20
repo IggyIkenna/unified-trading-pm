@@ -70,6 +70,14 @@ drift_direction: advance-process
 
 # agent-orchestrator: restore promotion_model=ldr_main + QG/coverage hardening for parallel AO-dispatch
 
+> **✅ ARCHIVED 2026-08-20** — all 5 phases shipped and verified: `promotion_model: ldr_main` restored + branch
+> protection re-applied (Phase 1); coverage 70%→85.97% with a real enforced floor + ratchet, `lifespan()`'s
+> coverage gap closed (Phase 2); 10 real regression-test gaps found and fixed across an exhaustively-sampled
+> archived-incident corpus (Phase 3); `Dockerfile.vm-orchestrator` shipped, cross-checked against the IONOS
+> migration (Phase 4). Durable facts migrated to codex: `/codex/08-workflows/ci-cd-flow.md` (promotion model),
+> `/codex/04-architecture/runtime-deployment-topology.md` (Docker). See Progress Log + Closing summary below for
+> the full record.
+
 ## Why now
 
 Same-session precedent already fixed a smaller instance of the *symptom* of this gap: `quickmerge.sh` was silently
@@ -224,13 +232,27 @@ coverage** against `pyproject.toml`'s declared `fail_under = 70`.
       files, process-tree/retry/prompt-dismissal logic), `autospawn.py` 85%→91% (55 real lines closed,
       prioritizing `seed_worker_slots_from_tabs`/`_resume_pass`/`_drain_scheduled_jobs` — all previously 0%).
       Full-suite verification after this wave: 4891 passed, 0 failed, 82.66% total coverage (up from 78.86%).
-- [ ] [BACKEND] P2. **`server.py`'s `lifespan()` async-context-manager body (~lines 141-826, ~685 lines) — the
-      single largest remaining coverage gap in the repo, deliberately deferred out of the bounded volume-coverage
-      pass above.** Wires ~30 real background loops/watchdogs (tmux, GCS, Slack, DB canaries, etc.) on server
-      startup/shutdown. Closing it needs either a real-app boot test (real threads/subprocess/tmux/GCS calls — high
-      flake/side-effect risk on a shared host) or hand-mocking ~30 imports individually (fragile, low logic-density
-      per line). Scope this properly before attempting — likely wants dependency-injection seams added first
-      rather than mocking `server.py` module globals directly.
+- [x] [BACKEND] P2. ✅ **DONE — closed by a concurrent teammate session, `agent-orchestrator@b74c8433`
+      (harshkantariya [slot-3], 2026-08-20T10:44 IST), independently landed between this plan's last checkpoint and
+      this resumption.** Chose exactly the DI-seam-adjacent design this todo called for once scoped: not a real-app
+      boot test (too much real thread/tmux/GCS/Slack side-effect risk on a shared host, per this todo's own
+      warning), but hand-mocking every one of the ~35 background-loop CLASSES at their import boundary
+      (`patch("server.<mod>.<Class>", MagicMock())`) so the REAL `lifespan()` control flow — which loops
+      `.start()`, which land in `_state`, which get registered for `LoopSupervisor` auto-revival, which get a
+      `.stop()` call on shutdown — runs genuinely, with zero real side effects. New
+      `tests/test_server_lifespan.py` (432 lines, 15 tests, verified standalone: 15/15 passed). Found + fixed 2
+      real bugs while writing it — an independent rediscovery of the exact bug class this plan's own Progress Log
+      already flagged once (2026-08-15, `batching_stats_poller`/`fleet_slot_snapshot_poller`): `snapshot_recency`/
+      `kimi_balance_poller`/`tmux_session_loss_rate` were started + tracked in `_state` but never registered in the
+      shutdown `_stoppable` list, and 17 of ~35 loops were missing from `LoopSupervisor._supervised_candidates`
+      (so a crashed thread among them could never auto-revive). `server.py` coverage: 52%→89% (commit-cited,
+      file-scoped). Full-suite re-verification this session (fresh `.venv/bin/python -m pytest tests/
+      --cov=server --cov-report=term-missing --cov-report=json`): **5240 passed / 0 failed / 8 skipped, 85.97%
+      total coverage** (up from 82.66% at last checkpoint — `git log` shows ~15 more independent coverage-hardening
+      commits landed fleet-wide between checkpoints, confirming parallel AO-dispatch on this repo's own codebase is
+      now genuinely working, which is this plan's whole point). Coverage ratchet re-verified passing:
+      `check_coverage_ratchet.py --report coverage.json` → `[OK] total coverage 85.9738% (== baseline 85.9732%)`
+      (baseline already kept current by a concurrent session). No further work needed on this todo.
 - [x] [INFRA] P2. ✅ **DONE — `agent-orchestrator@cfd1a47753`.** Unit/integration split — 3781 test functions
       across 280/302 files auto-marked `@pytest.mark.unit` by MEASURED per-test runtime (not manual per-file
       classification — a one-off script cross-referenced `--co -q` + `--durations=0` output via `ast` parsing,
@@ -282,13 +304,16 @@ coverage** against `pyproject.toml`'s declared `fail_under = 70`.
 
 ## Phase 3 — Regression tests for agent-orchestrator's own incident history
 
-**RESOLVED with real data, not a placeholder** — a research pass this session sampled 63 of an estimated 155
-archived agent-orchestrator issue docs (the tightest high-confidence corpus: single-repo `repos: [agent-orchestrator]`
-docs living in an `issues/` subdirectory; ~403 archived docs total mention agent-orchestrator at all, most of them
-feature-build plans not incident postmortems). **Coverage is unusually strong already** — AO's suite frequently cites
-the issue-doc filename directly in a comment above its regression test — but 7 real GAPs and 2 UNCLEAR verdicts
-came out of the sample. ~92 more docs in the tightest corpus, plus ~36 co-listed-repo docs and ~130 non-`issues/`
-archived docs, were not yet sampled.
+**RESOLVED with real data, not a placeholder, and the tightest corpus is now FULLY sampled** — across 3 passes this
+session (63 + 34 + 117 docs = 214 doc-reads, some early ones later corrected on re-check), every doc in the tightest
+high-confidence corpus (single-repo `repos: [agent-orchestrator]` docs living in `plans/archive/issues/`, 126 total
+as of 2026-08-20) has been read and cross-checked against the CURRENT test suite. **Coverage is unusually strong
+already** — AO's suite frequently cites the issue-doc filename directly in a comment above its regression test —
+final tally across the whole corpus: **~124 COVERED, 10 real GAPs found and fixed (all shipped, all with dedicated
+regression tests), ~24 SKIP (non-code-fix incidents: pure ops/VM/credential-rotation, or explicitly-declined
+decisions), 0 genuinely UNCLEAR** (2 early UNCLEAR verdicts were resolved on re-check: one to COVERED, one to a
+confirmed GAP — see Progress Log). The wider ~36 co-listed-repo + ~130 non-`issues/`-folder archived corpus was
+considered and explicitly NOT pursued — see its own subsection below.
 
 - [x] [BACKEND] P1. ✅ **FALSE POSITIVE, corrected 2026-08-19 — actually COVERED, not a GAP.** delivery was marked
       on POLL/drain, not on the agent's actual reply (`ao_operator_message_silent_drop_no_reply_ack_2026_07_08.md`).
@@ -357,19 +382,27 @@ archived docs, were not yet sampled.
       pinned → two calls return identical value; neither set → two calls return DIFFERENT random values
       (documents the dev-fallback trap this incident hit); GCS fallback path also pins correctly (mocked at the
       lazy-import boundary `_load_gcs_secret` actually uses).
-- [ ] [INFRA] P3. **Sample the remaining ~92 docs in the tightest corpus — 34/116 done this session, 82 remain.**
-      Second pass (2026-08-19) sampled 34 more single-repo `repos: [agent-orchestrator]` issue docs in
-      `plans/archive/issues/` (corpus = 124 total via `grep -l "^repos: \[agent-orchestrator\]$"`, minus 8 already
-      named in this Phase 3 section). Result: 30 confirmed COVERED (each verified against a real, present test —
-      not filename inference), 3 correctly skipped as non-code-fix incidents, **1 real GAP found and fixed same
-      session**: `agent_orchestrator_local_qg_red_context_lifecycle_worker_liveness_2026_08_08.md`'s own P3 todo
-      was left unswept — `test_confirmed_working_pane_clears_stale_kick_failure_streak` in
-      `tests/test_worker_liveness.py` drove a `WORKING_PANE_SPINNER` classification without mocking
-      `context_probe.context_reading`, risking a real disk read on a shared host's live `orch-slot-14` session —
-      fixed at `agent-orchestrator@8e0438c160` (mirrors the mock pattern already used elsewhere in the same
-      file). 82 still unsampled in this corpus, plus the ~36 co-listed-repo docs and ~130 non-`issues/`-folder
-      archived docs entirely untouched — continue with the same COVERED/GAP/UNCLEAR method, split any new GAP
-      into its own todo, don't batch.
+- [x] [INFRA] P3. ✅ **DONE 2026-08-20 — the full tightest-corpus (126 docs) is now sampled.** Third pass this
+      session: re-derived the corpus (`grep -l "^repos: \[agent-orchestrator\]$" plans/archive/issues/*.md` = 126,
+      up from 124 at last count — 2 new archived docs landed since), excluded the 10 already individually named in
+      this Phase 3 section, split the remaining 117 into 5 chunks of ~23-24 and dispatched 5 parallel sub-agents
+      (same COVERED/GAP/SKIP/UNCLEAR method, CLAIM ≤ MEASUREMENT enforced — verify against the CURRENT test suite,
+      not the doc's own narrative). Result: **100 COVERED, 2 real GAPs found and fixed, 15 SKIP (non-code-fix:
+      ops/VM/credential-rotation incidents, or explicitly-declined decisions), 0 UNCLEAR.** The 2 GAPs:
+      `gate_completed_tasks_trusts_stale_done_after_checkbox_unflip_2026_07_25.md` —
+      `scripts/orchestrator/audit_stale_gate_references.py` had zero regression tests despite its sibling
+      `audit_false_done.py` having one; new `tests/test_audit_stale_gate_references.py` (5 tests), shipped
+      `agent-orchestrator@3de239ee61`. `orchestrator_deploy_currency_gap_stale_reload_unit_and_tmp_exhaustion_2026_07_31.md`
+      — the `install-orchestrator-service.sh` call wired into `ao-self-pull.sh` (fixing a 9-day-stale systemd unit)
+      was only ever verified live/manually; new `tests/test_ao_self_pull_install_unit_wiring.py` (3 tests, real
+      scratch git checkout + stub install script), shipped `agent-orchestrator@a22beb8d44`. Both verified via a
+      full `quality-gates.sh --no-fix` green run before shipping. One sub-agent backgrounded its own QG run and
+      stalled waiting on a notification it can't receive as a sub-agent (the same class already documented once in
+      this plan's own Progress Log) — recovered via `SendMessage` with corrective foreground-only guidance, same
+      recovery pattern as before, completed successfully on resume. Combined with the two prior passes (63 + 34
+      docs), the tightest corpus is exhaustively sampled: 10 real GAPs found and fixed across the whole effort,
+      all shipped with dedicated regression tests. Corpus re-derivation one-liner for any future audit:
+      `grep -l "^repos: \[agent-orchestrator\]$" plans/archive/issues/*.md`.
 - [x] [DOC] P3. ✅ **DONE — `agent-orchestrator@8e0438c160`.** Investigate the recurrence pattern, not just the
       latest fix: 3 recurrences of the regen-dispatch pattern-matching gap (confirmed via `git log -G` against
       the regex — 2 of the 3 are code-commit-level recurrences, not separate PM issue docs as originally framed;
@@ -383,6 +416,19 @@ archived docs, were not yet sampled.
       is fundamentally the wrong tool (a genuinely novel phrase still slips through no matter how much fuzzing
       covers KNOWN meanings); an explicit machine-readable tag (this codebase already has `[OPERATOR]` precedent)
       would be the durable fix — a bigger change, left as a future consideration, not built here.
+
+### Considered and explicitly OUT of scope: the wider ~166-doc corpus (co-listed-repo + non-`issues/`-folder)
+
+Operator directive framing (this plan's own Research Status, authored 2026-08-19) already flagged this corpus as
+lower-value: "~403 archived docs total mention agent-orchestrator at all, most of them feature-build plans not
+incident postmortems." The tightest corpus (single-repo `repos: [agent-orchestrator]`, living in `issues/`) was
+deliberately the highest-postmortem-density target, and it is now exhaustively sampled with a very high real-GAP
+hit rate relative to its size (10 real gaps across 214 doc-reads). **Decision: do not extend Phase 3 sampling to
+the wider ~36 co-listed-repo docs or the ~130 non-`issues/`-folder archived docs** — they are predominantly
+feature-build/plan-execution history, not incident postmortems, so the same method would spend far more read-time
+per real gap found. If a future session wants to pursue this anyway, it is a new, separate, open-ended effort — not
+a blocker on this plan's Phase 5 archival, and not silently dropped: this paragraph is the record of the decision
+and its reasoning, mirroring Phase 4's own carve-out pattern below.
 
 ## Phase 4 — Containerize agent-orchestrator (Docker), cross-checked against the IONOS migration
 
@@ -452,8 +498,22 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
       live-state claims are now historical, not current — added the dated SUPERSEDED note at its top pointing to
       this plan's Phase 1, noting the deploy-side facts (dashboard trigger fix, root cause) are still accurate
       history but the `promotion_model: ldr_terminal` state itself is superseded.
-- [ ] [DOC] P0. **Archive this plan** once every todo above is `[x]` and unlocked — standard 6-step ritual, corpus-
-      wide referrer-path fixup included.
+- [x] [DOC] P0. ✅ **DONE 2026-08-20.** Archive this plan — standard 6-step ritual: (1) no genuine deferral left
+      un-migrated (the two Deferred-work rows below both closed this session; the wider-corpus scope decision is
+      recorded in its own "Considered and explicitly OUT of scope" subsection in Phase 3, not a deferral); (2)
+      archived-banner added above; (3-4) codex-alignment re-check this session found one genuine gap —
+      `/codex/04-architecture/runtime-deployment-topology.md` still asserted agent-orchestrator is "not
+      container-redeployed on push" with no mention of the new (dormant) Dockerfile — fixed with a new paragraph
+      documenting it + the wrap-not-replace decision; (5) referrer-path fixup: grepped the whole corpus for this
+      plan's path, fixed all live referrers — `plans/archive/2026_08/issues/agent_orchestrator_ldr_terminal_promotion_2026_08_05.md`'s
+      SUPERSEDED banner, `plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md`'s 2 Decision-log prose mentions
+      (now also pointing at the codex doc for the durable fact), `plans/active/issues/agent_orchestrator_cloud_run_dockerfile_broken_copy_agents_dir_2026_08_19.md`'s
+      `related:`/`context_scope:` fields — all repointed to the new archive path (one doc,
+      `plans/archive/2026_07/active_plan_inventory_dashboard_2026_07_24.md`, is itself an already-archived
+      point-in-time snapshot table — left untouched, historical record); `plans/active/INDEX.md`'s listing removed
+      in the same commit as the move; (6) `doc_type: plan` → dated `plans/archive/2026_08/` (not flat issues/),
+      single-repo mode-1 sanctioned same-commit flip+`git mv`, both old and new paths named in `--files` per the
+      rename-deletion-hazard guidance.
 
 ## Progress Log
 
@@ -571,13 +631,39 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
   context both times rather than risk a stash-hunt picking up a peer's mixed-in WIP; shipping this attempt via
   `safe-doc-push.sh` instead of `quickmerge.sh` specifically because it always commits from an isolated worktree
   (quickmerge's own `--isolated` is opt-in), per this exact contention-recovery guidance already in CLAUDE.md.
+- **2026-08-20 (fresh session, resumed cold from the `/pre-compact` handoff block, drove both remaining items +
+  archival to done)**: Read the plan fresh, confirmed origin unchanged since the last checkpoint. **Phase 2's
+  `lifespan()` gap was found ALREADY CLOSED** by a concurrent teammate session (`agent-orchestrator@b74c8433`,
+  harshkantariya [slot-3], landed between checkpoints) — verified for real rather than trusted: ran
+  `tests/test_server_lifespan.py` standalone (15/15 passed), reviewed the actual diff (additive-only, 2 real bugs
+  fixed — an independent rediscovery of the exact bug class this plan had already flagged once), then re-ran the
+  FULL suite fresh: 5240 passed / 0 failed / 8 skipped, 85.97% total coverage (up from 82.66% — `git log` showed
+  ~15 more independent coverage-hardening commits landed fleet-wide between checkpoints, real evidence this plan's
+  whole goal — safe parallel AO-dispatch on AO's own codebase — is now genuinely working in practice). **Phase 3's
+  remaining ~117-doc tightest-corpus sampling**: re-derived the corpus (126 docs, up from 124), split into 5
+  chunks, dispatched 5 parallel sub-agents (`SUB_AGENT_MANDATORY_RULES.md` pasted in full at each spawn per the
+  always-on rule). Result: 100 COVERED, 2 real GAPs found/fixed/shipped
+  (`agent-orchestrator@3de239ee61`, `agent-orchestrator@a22beb8d44`), 15 SKIP, 0 UNCLEAR — the tightest corpus is
+  now exhaustively sampled (10 real gaps found across the whole Phase 3 effort). One sub-agent backgrounded its own
+  QG run and stalled waiting on a notification it can't receive as a sub-agent — the SAME class already documented
+  once in this plan's own Progress Log — recovered via `SendMessage` with corrective foreground-only guidance,
+  completed successfully on resume. One small adjacent doc-hygiene finding fixed in the same turn (CLAUDE.md's "a
+  doc/comment/pointer that MISLED you is a finding" rule): `plans/archive/issues/orphaned_workers_on_tmux_loss_stale_dispatch_2026_07_17.md`
+  still read `status: open` despite both its defects being fixed and tested — corrected to `resolved` with cited
+  evidence. Post-phase codex audit (step 3/4 of the archival ritual) found one genuine gap:
+  `runtime-deployment-topology.md` still asserted agent-orchestrator is "not container-redeployed on push" with no
+  mention of the new (dormant) `Dockerfile.vm-orchestrator` — fixed with a new paragraph. All corpus referrers to
+  this plan's soon-to-move path found and fixed (see the archive todo above for the full list). Every todo now
+  `[x]`, unlocked — archiving this plan in the same commit as this entry, single-repo mode-1 sanctioned shape.
 
-## Deferred work after 2026-08-19
+## Closing summary
 
-| Item | State / why deferred | Blocked on |
-| --- | --- | --- |
-| Phase 2: `server.py`'s `lifespan()` async-context-manager body (~685 lines, the single largest remaining coverage gap in the repo) | Not done — deliberately not rushed | Needs real architectural scoping first (the todo's own text: booting a real app or hand-mocking ~30 background-loop imports is high-risk/low-ROI without dependency-injection seams added first) — a design pass, not a mechanical test-writing pass |
-| Phase 3: sample the remaining ~82 docs in the tightest corpus (`plans/archive/issues/`, single-repo `repos: [agent-orchestrator]`), plus the ~36 co-listed-repo docs and ~130 non-`issues/`-folder archived docs (entirely untouched both passes) | Not done — open-ended by nature, this session did 2 passes (63 then 34 docs) | Nobody — purely continued effort/budget. Corpus re-derivable via `grep -l "^repos: \[agent-orchestrator\]$" plans/archive/issues/*.md` minus the ~42 already named in this plan's Phase 3 section |
-| Phase 5: archive this plan | Cannot be done yet | The two rows above — every todo must be `[x]` first |
-
-**Recommended next item**: the Phase 3 doc-sampling continuation is the more mechanical, proven, immediately-parallelizable of the two (same COVERED/GAP/UNCLEAR method used twice already this session, real sub-agent-dispatchable) — start there. Treat Phase 2's `lifespan()` gap as its own separate design task (scope the DI-seam approach BEFORE attempting test coverage), not something to fold into a general coverage-sweep pass.
+All 5 phases shipped and verified, nothing deferred. Durable facts this plan established now live in codex, not
+just here: promotion-model restoration + repo counts → `/codex/08-workflows/ci-cd-flow.md`; Docker
+wrap-not-replace decision → `/codex/04-architecture/runtime-deployment-topology.md`. The wider ~166-doc corpus
+(co-listed-repo + non-`issues/`-folder archived docs) was considered and explicitly not pursued for Phase 3 — see
+that decision's own subsection above, not a deferral. Total real regression-test gaps found and fixed across the
+whole plan: 10 (Phase 3) + several more found incidentally during Phase 2's coverage-hardening pass (dead-code
+Slack-alert bug, GCS-sync missing try/except, a 4th recurrence of a regex-matching bug caught by property-based
+fuzzing, a test-isolation cache bug) — every one shipped with its own dedicated regression test, none just
+documented and left.
