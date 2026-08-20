@@ -277,21 +277,21 @@ todos only to confirm they are data-movement, then leave it.
       THEN a route on the deployed app. Never the route first.
 - [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
-- [ ] [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — fix the registration.**
-      MEASURED 2026-08-20, three facts that only compose into a defect when read together:
-      `manual_instruction_api.py:57` declares `APIRouter(prefix="/manual")`; that router is registered ONLY in
-      `api/app.py:127`; and the container's `Dockerfile` CMD serves `api.main:create_app`, which registers just
-      the health router and `/external/*`. Meanwhile `unified-trading-api`
-      (`unified_trading_api/routes/execution.py:660`, T1's repo — the CALLER is correct, no inbound request
-      needed) POSTs to `f"{exec_url}/manual/instruction"` with
-      `exec_url = _cloud_cfg.live_service_execution_url`. That call is guarded by `if not mock_mode_val`, so it
-      only fires in real mode — which is exactly why nothing has caught it and why it sits on the pre-live-trading
-      critical path. **Registering the router alone is NOT the fix**: `_ensure_orchestrator_ready` (`:284`) then
-      returns 503 unless a handler is set, so `main.py` must also install one — and it must be the SAME
-      `ManualOperationHandler` instance `external_instruction_api.get_external_manual_handler()` returns, or
-      `/manual/instructions/{id}` will not see orders submitted through `/external/instructions`. Not yet
-      confirmed: that `live_service_execution_url` resolves to this Dockerfile's deployment (no second target was
-      found, but absence was not proven).
+- [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
+      **execution-service@9c79bfa0ef** (landing verified by an empty `git diff --stat origin/live-defi-rollout`
+      over all three files plus grepping the landed `api/main.py` for `manual_router`). The defect existed only in
+      the seam between three individually-correct pieces: `manual_instruction_api.py:57` declares
+      `APIRouter(prefix="/manual")`; that router was registered ONLY in `api/app.py:127`; and the `Dockerfile` CMD
+      serves `api.main:create_app`. `unified-trading-api`'s caller
+      (`unified_trading_api/routes/execution.py:660`, T1's repo) was correct as written — no inbound request was
+      needed. `main.py` now registers `manual_router` and installs the handler + limiter in a **symmetric
+      lifespan**: not in `create_app()` (which runs at import, so it would mutate globals for every importer), and
+      restoring previous values on shutdown (a set-only lifespan still leaked). The handler is the SAME instance
+      the external surface uses, so `/manual/instructions/{id}` sees orders submitted via
+      `/external/instructions`. MEASURED: before serve both globals `None`; served, `/manual/venues` 200 and
+      `/manual/instruction` 422 (validation, not routing); after teardown both `None` again; a bare app with a
+      patched handler answers 422 not 500. Took four gate attempts — the three failures are recorded in the
+      Progress Log because each was a distinct, reusable trap.
 - [ ] [BACKEND] P0. **Reconcile the deployed HTTP surface with what this plan and the artefacts claim.** MEASURED
       2026-08-20: `Dockerfile` CMD is `uvicorn execution_service.api.main:create_app --factory`, and
       `execution_service/api/main.py:43-44` registers ONLY the UTL health router and
