@@ -13,7 +13,7 @@ summary: >-
   (plus a few ci-status-update.yml runs that themselves failed), which is GitHub-side transient unavailability, not a
   code defect in any pending repo. No pending repo needed (or got) a fix; the cluster self-resolved once GitHub's API
   stabilized (3 consecutive green runs 18:45-19:12Z, stamping included).
-status: resolved # (was: open) 2026-08-20 — 0 open todos, archived per the 6-step ritual
+status: open
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -53,12 +53,6 @@ source: >-
 ---
 
 # SIT stamp-dispatch 503s misclassified as invariant failures
-
-> **📦 ARCHIVED 2026-08-20 — this issue is resolved.** Both follow-up items shipped:
-> `system-integration-tests@5b592dce92` (Stamp step emits `failure_class=stamp_infra_only` when `STAMP_FAILURES`
-> fires but every per-repo invariant PASSED) + `unified-trading-pm@5247fe641a` (`sit-unlock.yml` reads it and
-> branches the escalation `CONTEXT` instead of always asserting "identify which pending repo broke it"). No
-> successor doc.
 
 ## What actually happened
 
@@ -111,7 +105,7 @@ specific class was diagnosed down to the log line rather than assumed to be a re
 
 ## Follow-up
 
-- [x] ✅ [SCRIPT] P3. **Line-1 rewritten 2026-08-19 (plan_reconciler, task_template.md §3 line-1-completeness).** Emit a
+- [ ] [SCRIPT] P3. **Line-1 rewritten 2026-08-19 (plan_reconciler, task_template.md §3 line-1-completeness).** Emit a
       distinct signal (e.g. a `failure_class=stamp_infra_only` GitHub Actions output/annotation) in
       `system-integration-tests`' full-workspace-sit stamp-verification step when `STAMP_FAILURES` is non-empty but
       the invariant runner's own per-repo results were all PASS (no FAILED/SKIPPED invariants). Have
@@ -119,12 +113,6 @@ specific class was diagnosed down to the log line rather than assumed to be a re
       the actual per-invariant PASS/FAIL list (or "all green — stamp-dispatch-only failure, likely transient GitHub
       API 503s") in the `escalate-to-orchestrator` `context` payload, instead of the generic "identify which pending
       repo broke it" framing, so a future cicd worker doesn't have to re-derive this from raw GH Actions logs.
-      **Implemented 2026-08-20 (T5): `system-integration-tests@5b592dce92` (Stamp step sets `failure_class` on
-      `GITHUB_OUTPUT`, propagated via the Report-to-PM dispatch), `unified-trading-pm@5247fe641a` (`sit-unlock.yml`
-      branches `CONTEXT` on it). The per-invariant PASS/FAIL LIST itself is not included verbatim in the context
-      (only the class + a pointer to the Stamp step log) — narrower than the "include the actual list" phrasing
-      above, since the per-repo results JSON isn't otherwise surfaced as a step output; flagging the gap rather
-      than silently calling it a full match.
 
 ## Progress Log
 

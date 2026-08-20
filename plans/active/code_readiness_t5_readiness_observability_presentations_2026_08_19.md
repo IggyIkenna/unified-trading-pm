@@ -376,18 +376,8 @@ todos only to confirm they are data-movement, then leave it.
       `/codex/04-architecture/agent-orchestrator-alerting.md`.
 - [ ] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
       `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md` (11 open).
-- [x] ✅ [BACKEND] P2. Fix the SIT stamp-dispatch 503 false positive. Evidence:
-      `/plans/archive/2026_08/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md` (archived 2026-08-20,
-      resolved). **Implemented the doc's own
-      follow-up exactly as specified**: `full-workspace-sit.yml`'s Stamp step now emits
-      `failure_class=stamp_infra_only` when `STAMP_FAILURES` fires but every per-repo invariant result was PASS,
-      propagated through the "Report SIT result to PM" dispatch (switched `gh api -f` → curl+JSON since `-f`
-      cannot express a nested `client_payload` object) to `sit-unlock.yml`'s escalate-to-orchestrator step, which
-      now branches its `CONTEXT` message instead of always asserting "identify which pending repo broke it".
-      `system-integration-tests@5b592dce92`, `unified-trading-pm@5247fe641a`. Both YAML files verified to parse
-      (`python3 -c "import yaml; yaml.safe_load(...)"`) before shipping; not runtime-tested against a live GitHub
-      503 (would need to fabricate one), so the CONTEXT-branching logic itself is unverified in production — the
-      per-file landed content is confirmed, the end-to-end behavior on a real recurrence is not.
+- [ ] [BACKEND] P2. Fix the SIT stamp-dispatch 503 false positive. Evidence:
+      `/plans/active/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md`.
 
 ### W21 — the presentation artefacts (the acceptance test)
 

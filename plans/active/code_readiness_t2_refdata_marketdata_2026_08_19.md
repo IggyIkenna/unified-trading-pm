@@ -562,13 +562,6 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Close-out
 
-- [ ] [DATA] P1. **Locate the disposition of the 2026-08-20 CeFi itype-casing dry-run VM
-      (`canonical-migration-cefi-itype-casing-apply-20260820-115340`) — it self-deleted before its result was
-      retrieved.** Full context: `/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`
-      Progress Log, 2026-08-20 entry. Find the persisted run log via safe UTL tooling (never `gsutil`/`gcloud`
-      object CLI), confirm the `Grand total instrument_type values would be normalized: N` disposition, review
-      against the ~39,286-row baseline order of magnitude, then either launch the real `--apply` run on a fresh
-      VM or diagnose if something looks wrong. Do NOT assume success.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.

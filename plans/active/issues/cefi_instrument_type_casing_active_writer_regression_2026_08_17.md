@@ -301,23 +301,6 @@ is genuinely VM-scale work, not shared-host-scale:
 
 ## Progress Log
 
-- **2026-08-20 (T2 tranche, operator-authorized VM launch)**: launched a FRESH dry-run
-  (`canonical-migration-cefi-itype-casing-apply-20260820-115340`, SPOT, asia-northeast1-c) via
-  `deployment-service/scripts/vm/launch-canonical-migration-vm.sh cefi-itype-casing-apply 2026-08-20
-  2026-08-20 dry` after confirming the prior dry-run VM
-  (`canonical-migration-cefi-itype-casing-apply-20260818-012605`, referenced by this doc's own P2 todo below)
-  no longer exists — self-deleted per its documented terminal behavior, and no persisted run.log was located
-  for it via safe (non-`gsutil`) tooling in the time available. The fresh VM was confirmed RUNNING at launch
-  time. **As of this checkpoint the VM is GONE** (`gcloud compute instances describe` returns "resource ...
-  was not found") — consistent with either a completed dry-run self-deleting normally, or a failure that also
-  self-deleted. **NOT YET DETERMINED WHICH.** Its disposition (the `Grand total instrument_type values would be
-  normalized: N` line) has not been retrieved. Needs a fresh session to locate the persisted log (the launcher
-  script pipes VM output through `vm-exec-with-gcs-tee.sh`, which per its name tees to GCS — check
-  `gs://deployment-scripts-central-element-323112/` run-log conventions via `get_storage_client().list_blobs()`,
-  never `gsutil`) before deciding whether to launch the real `--apply` run. Do NOT assume this dry-run
-  succeeded — verify its actual disposition first.
-
-
 - **context-scout 2026-08-17**: populated context_scope (6 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
 - **slot-14 (data_engineering) 2026-08-18**: `canonical-migration-cefi-itype-casing-apply-20260817-130229`

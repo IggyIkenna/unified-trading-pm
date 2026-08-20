@@ -105,26 +105,13 @@ defect (phantom-venue emission) without touching a registry other code may depen
 
 - [x] [CODE] P2. Canonicalise `venue_label` + dedup emitted `(chain, venue)` pairs in `_yield_v2_defi_pre_launch_rows` —
       `instruments-service@2b2e9f124`, QG-verified + regression test added.
-- [ ] [DATA] P1. **Re-run the purge script's dry-run — first attempt 2026-08-20 hit a network timeout, not a
-      logic failure, no write occurred.** `instruments-service/scripts/purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`
-      (shipped `instruments-service@<pending, see plan Progress Log for sha>` — the script itself is code-reviewed
-      and safe: dry-run by default, snapshot + fresh §3a soft-delete retention check before any write, arithmetic
-      gate refusing to proceed if anything but `capture_status=empty_confirmed` rows would be touched). Bucket
-      `market-data-tick-defi-prd-central-element-323112` confirmed 2026-08-20 at exactly 604800s (7-day) soft-delete
-      retention — QUALIFIES for the §3a agent-autonomous execution path, no operator step needed once the dry-run
-      confirms the expected shape. **What happened**: `.venv/bin/python scripts/purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`
-      timed out downloading the ~3GB `_index/availability_index.parquet` (`google.api_core.exceptions.RetryError:
-      Timeout of 600.0s exceeded` — a `storage.googleapis.com` read timeout, not a script bug). No delete was
-      attempted (dry-run is the default; the timeout happened during the initial read, before any gate logic ran).
-      **Next step**: re-run from a host with a faster/more reliable link to GCS (or increase the storage client's
-      timeout), confirm the dry-run's row count matches the 46,300-row figure the 2026-08-09 investigation
-      confirmed (the script REFUSES to proceed on any drift via `--allow-count-drift`-gated arithmetic), review the
-      arithmetic gate output (`row-arithmetic` / `empty_confirmed-drop` / `no-non-empty-confirmed-collateral` must
-      all be `True`), then re-run with `--apply`. Twin-exists-collision precondition CONFIRMED SATISFIED 2026-08-09
-      (see Progress Log) — full-population live-manifest check found 0 of the 46,300 bare cells lacking a
-      correct-key `AAVE_V3`-ETHEREUM twin; "0 backing GCS objects" was independently established by the 2026-08-08
-      root-cause session (see Finding section above) and cited rather than re-derived, since the population is
-      capped by a fixed historical launch-date window and cannot have changed.
+- [ ] [OPERATOR] P2. Purge the 46,300 bare-`AAVEV3` `empty_confirmed` manifest rows via the human-gated `--apply` delete
+      path (`/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`) against bucket
+      `market-data-tick-defi-prd-central-element-323112`. **Twin-exists-collision precondition CONFIRMED SATISFIED
+      2026-08-09** (see Progress Log) — full-population live-manifest check found 0 of the 46,300 bare cells lacking a
+      correct-key `AAVE_V3`-ETHEREUM twin; this is a pure duplicate-row purge, not a re-key. Still needs the operator's
+      `--apply` run (Part 1 "0 backing GCS objects" not independently re-verified this session — re-confirm fresh per
+      §3a before executing, or cite the original investigation's finding).
 - [ ] [DESIGN] P3. Decide whether `chain_env.py`'s `PROTOCOL_LAUNCH_DATES` should keep alias dict-keys at all vs.
       resolving aliases inside a `get_protocol_launch_date()`-style accessor, removing the defensive- canonicalisation
       burden from every future iterator-style consumer of the raw dict.
