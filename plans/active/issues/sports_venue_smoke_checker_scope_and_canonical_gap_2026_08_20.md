@@ -82,10 +82,7 @@ after those gates fail closed on the `No active venues`/zero-row case.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Add a generator-scoped Sports execution mode to the MTDS pipeline checker (or a dedicated batch
-      runner) that runs exactly the 39 rows emitted by
-      `unified-api-contracts/scripts/generate_venue_smoke_test_work_list.py` and reports observed out-of-registry cells
-      separately (repo: market-tick-data-service; supporting contract: unified-api-contracts).
+- [x] [BACKEND] P0. Add a generator-scoped Sports execution mode to the MTDS pipeline checker that runs exactly the 39 rows emitted by the UAC work-list generator and reports observed out-of-registry cells separately (repo: market-tick-data-service; supporting contract: unified-api-contracts) — market-tick-data-service@aaa0c8b1b6; QG=11104 passed, 28 skipped, 1 xpassed, 19 warnings.
 - [x] [BACKEND] P0. Implement and run a Sports canonical-path verification leg that checks the actual test-bucket
       object against the applicable UAC machine oracle or Sports writer template, and fails closed when no object/row is
       produced (repo: market-tick-data-service) — market-tick-data-service@01745226fa + QG=11102 passed, 28 skipped, 1 xpassed, 19 warnings; runtime report
@@ -113,3 +110,4 @@ after those gates fail closed on the `No active venues`/zero-row case.
 
 
 - **2026-08-20 — slot-18:** Final scoped quickmerge landed on LDR as `market-tick-data-service@01745226fa`; full QG passed with 11,102 tests passed, 28 skipped, 1 xpassed, and 19 warnings.
+- **2026-08-20 — slot-7:** Shipped the generator-scoped Sports mode as `--generator-scoped-sports`; it loads exactly the 39 UAC work-list rows, preserves venue/data-type filters, and logs observed PROD cells outside the generator without widening the denominator. Quickmerge verified `market-tick-data-service@aaa0c8b1b6` on LDR; full QG passed with 11,104 tests passed, 28 skipped, 1 xpassed, and 19 warnings.
