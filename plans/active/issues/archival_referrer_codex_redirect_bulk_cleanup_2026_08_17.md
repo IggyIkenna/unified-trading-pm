@@ -125,6 +125,11 @@ is independently shippable, no need to clear all 925 in one pass.
   sessions' own unrelated uncommitted WIP at the time — not a safe or genuinely "cheap" fix to force in a tracking
   pass.
 - **context-scout 2026-08-19**: populated context_scope (4 entries).
+- **slot-13 2026-08-20**: `infra_satellite_ao_dispatch_batch19_2026_08_18.md` item 1, first execution batch —
+  worked the 6 highest-count referring docs (117 citations), ratchet baseline lowered 925 → 761 (live count was
+  already 878 at pickup). See that plan's own Progress Log for the full per-entry method. The 10-citation/6-doc
+  ship-blocker this doc's prior note flagged is confirmed already resolved (those docs no longer appear in the
+  live violation list). 761 citations remain; not yet at 0.
 
 ## Todos
 
