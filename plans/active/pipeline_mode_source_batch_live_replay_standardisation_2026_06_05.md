@@ -474,7 +474,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       Success-criteria log (lines ~600-608): I6a UTL manifest COLUMN (`unified-trading-library@dfe3385f`),
       deployment-api cadence dim/slice (`deployment-api@66e8562d`), and deployment-ui + unified-trading-system-ui
       cadence drilldown (`deployment-ui@687d4ce`). Only the writer-stamp sub-item (MTDS/IS) remains genuinely open.
-- [ ] [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
+- [x] ✅ [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
       CONTRADICTS M1–M8 and reconcile: CLAUDE.md (the `source=` provenance rule, the `pipeline_mode=` partition rule,
       the "Live = batch" rule, the VIX/sports source notes) · codex (`02-data/pipeline-mode-partition.md`,
       `availability-manifest-and-data-status.md`, `honest-absence-downstream-handling.md`,
