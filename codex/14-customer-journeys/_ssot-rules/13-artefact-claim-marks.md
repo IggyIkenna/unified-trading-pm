@@ -16,7 +16,6 @@ related:
   [
     /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
     /plans/epics/system_readiness_master.md,
-    /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/active/client_artefact_remediation_nickai_2026_08_18.md,
   ]
 created: 2026-08-18

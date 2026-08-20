@@ -13,7 +13,7 @@ summary: >-
   deliberately EXCLUDED here despite being bounded — it rewrites the worker prompt template + dispatch hook every
   slot spawn reads, matching this workspace's standing pattern of routing that exact class of change to a deliberate,
   human-attended session rather than casual batch-extraction; flagged prominently in this run's own report instead.
-status: draft
+status: active # flipped from draft 2026-08-20 (interactive session, operator-approved) — todo 1-3 already MOOT (shipped elsewhere), converted to CANCELLED-SUPERSEDED markers same turn; todos 4-6 are the real remaining dispatchable work
 nature: process
 asset_group: [ao]
 stage: [meta]
@@ -30,7 +30,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -63,8 +63,11 @@ source: >-
 
 # AO satellite AO batch 22
 
-> **`status: draft`** — the safety rail. Never auto-ingested/dispatched until an operator flips this to `active`.
-> **`assigned_vm: planning` / `execution_scope: orchestrator-agent`** once activated.
+> **`status: active`** — operator-approved 2026-08-20. Todos 1-3 were already MOOT (shipped elsewhere) by the time of
+> activation — converted to `CANCELLED-SUPERSEDED` markers the same turn (same convention as
+> `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s todo 1) so AO doesn't waste a dispatch re-diagnosing a dead
+> checkbox. Todos 4-6 are the real remaining dispatchable work. **`assigned_vm: planning` /
+> `execution_scope: orchestrator-agent`**.
 
 ## Why this plan exists
 
@@ -109,8 +112,11 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
 
 ## Todos
 
-- [ ] [BACKEND] P1. **Wire the `plan_reconciler` PM-repo lock-clear into AO's reaped-stale detection path (ruled
-      Option A, 2026-08-15).** When a PM-repo doc's `locked_by: plan_reconciler (agt-xxxxxx) since <ts>` correlates to
+- **[BACKEND] P1. CANCELLED — SUPERSEDED 2026-08-20 (interactive session, operator-approved batch22 activation) —
+      already shipped elsewhere (see evidence below); converted from an open checkbox to this marker per
+      `task_template.md` §3's CANCELLED/SUPERSEDED disposition, same convention as
+      `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s todo 1 — do not redispatch.** Wire the `plan_reconciler`
+      PM-repo lock-clear into AO's reaped-stale detection path (ruled Option A, 2026-08-15). When a PM-repo doc's `locked_by: plan_reconciler (agt-xxxxxx) since <ts>` correlates to
       an AO `AgentRow` whose `exit_reason` resolves to `reaped-stale` (or the agent is confirmed gone with no live
       tmux session) AND `locked_since` is older than a generous same-day threshold (6-12h — clears a same-day dead
       lock without racing a still-legitimately-running worker), auto-clear the PM-repo lock. Build either an AO-side
@@ -122,7 +128,10 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       source doc, this todo is now MOOT. Source (historical): `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md`
       todo "[BACKEND] P1. Implement Option A auto-clear". Durable contract:
       `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` § "PM-repo dead-lock correlation…".
-- [ ] [DOCS] P3. **Ensure `plan_reconciler`'s own lock-stamping step always includes the dispatch id + timestamp.**
+- **[DOCS] P3. CANCELLED — SUPERSEDED 2026-08-20 (interactive session, operator-approved batch22 activation) —
+      already shipped elsewhere (see evidence below); converted from an open checkbox per the same
+      `task_template.md` §3 disposition as todo 1 above — do not redispatch.** Ensure `plan_reconciler`'s own
+      lock-stamping step always includes the dispatch id + timestamp.
       2 of 4 dead 2026-08-09 docs (and a 3rd independently reproduced 2026-08-15, sports tranche) stamped a bare
       `locked_by: plan_reconciler` with no `(agt-xxxxxx) since <ts>` suffix, making dead-session correlation
       impossible for those rows even once todo 1 ships. Audit `cursor-configs/skills/plan-reconcile/SKILL.md`'s
@@ -134,7 +143,10 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       to live in `agents/plan_reconciler.md` STEP 2b, not `cursor-configs/skills/plan-reconcile/SKILL.md` as this
       todo's own text assumed (SKILL.md never contained that step — a misleading pointer this fix also corrected at
       the source). This todo is now MOOT.
-- [ ] [BACKEND] P1. **Pre-dispatch duplicate-tranche live-lock check in `plan_health.py`'s `dispatch()`.** A second
+- **[BACKEND] P1. CANCELLED — SUPERSEDED 2026-08-20 (interactive session, operator-approved batch22 activation) —
+      already shipped elsewhere (see evidence below); converted from an open checkbox per the same
+      `task_template.md` §3 disposition as todo 1 above — do not redispatch.** Pre-dispatch duplicate-tranche
+      live-lock check in `plan_health.py`'s `dispatch()`. A second
       same-day `tranche=X` `plan_reconciler`/`ag_closeout_auditor`/etc. worker can currently be spawned while a first
       worker for the SAME `(tranche, date)` is still alive and holding its findings-doc lock (live 2026-08-16
       instance: `agt-053eab` spawned into `tranche=ao` while `agt-3eb42b` was still active on the identical target).
@@ -192,3 +204,10 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
   — 6 conflict-clear, file-disjoint, bounded todos extracted from the run's 42 orphaned-doc population after Phase
   1-2 archived 10 fully-done docs directly. `status: draft` per autonomous-mode safety rail; flipping to `active`
   is an operator decision.
+- **2026-08-20 (interactive session, operator-approved)**: Reviewed for AO-dispatch readiness. Todos 1-3 were each
+  already independently shipped elsewhere by the time of this review (their own text already said so, but the
+  checkboxes were never flipped) — converted each to a `CANCELLED-SUPERSEDED` marker (same disposition convention
+  `ao_satellite_ao_dispatch_batch14_2026_08_09.md`'s todo 1 already established) so `regen_backlog_from_plan.py`
+  stops re-deriving dead dispatchable tasks from them. Todo 4 (already `[x]`, shipped `unified-trading-pm@f637aed3cf`)
+  and todos 5-6 (real, open, bounded work) are unaffected. Flipped `status: draft` → `active` — operator approved
+  activation now that the plan's live remainder is exactly 2 genuinely bounded, conflict-clear todos.

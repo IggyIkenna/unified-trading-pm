@@ -7,7 +7,7 @@ summary: >-
   edits to the two artefacts, citing real evidence for every change. Does NOT build new system functionality; where
   a finding traces to a genuine system gap rather than a documentation gap, this plan cites the existing tracked
   item instead of duplicating it (§ "Real system gaps — already tracked, not duplicated here").
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -22,7 +22,7 @@ related:
     /plans/epics/system_readiness_master.md,
   ]
 created: 2026-08-18
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: system_readiness_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
