@@ -351,14 +351,17 @@ halves separately — they are two unrelated facts:
       reinventing the check). Needs a short design decision first — whether "competing demand"
       means any queued backlog task, or specifically one eligible for THIS slot — resolve that
       before implementing, not while implementing.
-- [ ] [BACKEND] P1. **Fix the confirmed `ensure_review_agents` bug**: add
-      `slot_row.status = "working"` to the successful-respawn branch (`server/autospawn.py`
-      around line 490), mirroring `server/autospawn.py:4120`'s existing pattern. Add/extend test
-      coverage for `ensure_review_agents`'s success path (`tests/test_autospawn.py` or similar —
-      locate via grep) asserting `status` transitions to `working` on a successful respawn
-      regardless of the slot's prior status. This is the highest-priority item in this doc — it
-      is confirmed to be actively destroying in-flight review-agent work on a recurring cycle,
-      not just wasting idle capacity like the other findings here.
+- [x] N. ✅ [BACKEND] P1. **Fix the confirmed `ensure_review_agents` bug** — DONE:
+      `agent-orchestrator@ad70a9465f`. Added `slot_row.status = "working"` to the
+      successful-respawn branch (`server/autospawn.py`, inside the `if spawn_ok:` block),
+      mirroring the resume-respawn path's existing `if slot_row.status == "killed": ...`
+      pattern (`server/autospawn.py:4120`) but set unconditionally, since any prior status is
+      superseded by "a live worker now exists". Added
+      `test_ensure_review_agents_flips_status_to_working_on_successful_respawn`
+      (`tests/test_autospawn.py`), pinning the regression directly: sets `configured_slot.status
+      = "killed"` before a mocked successful respawn, asserts it flips to `"working"`. Full
+      fleet quality-gates green (4901 passed, coverage 82.73%, ratchet up available) before
+      shipping.
 - [ ] [BACKEND] P2. **Trace `worker_account_unusable_failover`'s resume-success** — verify
       whether a worker killed by this mechanism (`server/autospawn.py:3844-3881`) actually gets
       its in-flight task/WIP resumed on a fresh account afterward
