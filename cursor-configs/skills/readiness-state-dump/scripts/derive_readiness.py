@@ -171,96 +171,6 @@ def _query_execution_order_capability(
     return result, f"queried {len(result)} venues via execution-service/.venv"
 
 
-def _capability_facts_by_venue(venues: list[str]) -> tuple[dict[str, dict], str]:
-    """Flatten UAC SourceCapability auth facts per venue, for the `credentials` leg.
-
-    Venue -> capability-source resolution is a genuine ambiguity: capability keys are
-    source-style ("hyperliquid"), venues are canonical dash-form ("OKX-FUTURES").
-    execution-service owns the authoritative `_resolve_venue_str`, but importing a T4
-    service here would violate the tier rule, so this tries an ordered list of candidate
-    keys and reports NOTHING (leg -> unverified) when none resolve. It never guesses a
-    match, and an unresolved venue is reported as undeclared, never as "no credential
-    needed" -- that distinction is the whole point of the leg.
-    """
-    from unified_api_contracts.registry.capability import CapabilityResolutionError, resolve_capability
-    from unified_api_contracts.registry.capability_data import bootstrap_capabilities
-
-    bootstrap_capabilities()
-
-    out: dict[str, dict] = {}
-    unresolved = 0
-    for venue in venues:
-        cap = None
-        for candidate in (venue.lower(), venue.split("-")[0].lower(), venue.replace("-", "_").lower()):
-            try:
-                cap = resolve_capability(candidate)
-                break
-            except CapabilityResolutionError:
-                continue
-        if cap is None:
-            unresolved += 1
-            continue
-        required: set[str] = set()
-        for detail in (cap.operation_details or {}).values():
-            for env_detail in (detail.environments or {}).values():
-                if env_detail.required_credential:
-                    required.add(env_detail.required_credential)
-        out[venue] = {
-            "auth_scope": list(cap.auth_scope or []),
-            "auth_environments": dict(cap.auth_environments or {}),
-            "supports_testnet": bool(cap.supports_testnet),
-            "supports_mainnet": bool(cap.supports_mainnet),
-            "required_credentials": sorted(required),
-        }
-    note = f"resolved UAC capability for {len(out)}/{len(venues)} venues ({unresolved} unresolved -> unverified)"
-    return out, note
-
-
-def _query_archetype_completeness(workspace_root: Path, skip: bool) -> tuple[dict[str, dict[str, str]] | None, str]:
-    """Returns ({MODE: {archetype: state}}, note) from the archetype-code-completeness skill.
-
-    CONSUMES that skill's own JSON output rather than re-deriving the hooks here (W1's
-    explicit instruction), so the readiness dump and the archetype dump can never disagree
-    about whether an archetype is code-complete. Runs under strategy-service's venv, where
-    the engine factory / param-schema / allocator registries actually import.
-    """
-    if skip:
-        return None, "skipped via --skip-archetype-probe"
-    strategy_python = workspace_root / "strategy-service" / ".venv" / "bin" / "python3"
-    if not strategy_python.exists():
-        return None, f"{strategy_python} not found -- strategy-service venv unavailable in this environment"
-    script = _SKILLS_DIR / "archetype-code-completeness" / "scripts" / "derive_archetype_completeness.py"
-    if not script.exists():
-        return None, f"{script} not found -- archetype-code-completeness skill absent"
-    proc = subprocess.run(
-        [str(strategy_python), str(script), "--json"],
-        capture_output=True,
-        text=True,
-        check=False,
-        cwd=str(workspace_root / "strategy-service"),
-    )
-    if proc.returncode != 0:
-        return None, f"archetype probe subprocess failed (exit {proc.returncode}): {proc.stderr.strip()[-300:]}"
-    try:
-        payload = json.loads(proc.stdout)
-    except json.JSONDecodeError as exc:
-        return None, f"archetype probe returned non-JSON output: {exc}"
-
-    by_mode: dict[str, dict[str, str]] = defaultdict(dict)
-    for row in payload.get("rows") or []:
-        # No empty-string defaults: a row missing any of these is skipped, not coerced
-        # into a blank key that would silently read as "archetype absent" downstream.
-        mode = row.get("mode")
-        name = row.get("archetype")
-        state = (row.get("overall") or {}).get("state")
-        if isinstance(mode, str) and isinstance(name, str) and isinstance(state, str) and mode and name and state:
-            by_mode[mode][name] = state
-    if not by_mode:
-        return None, "archetype probe returned no usable rows"
-    counts = {m: sum(1 for s in d.values() if s == "ready") for m, d in sorted(by_mode.items())}
-    return dict(by_mode), f"archetype code-completeness read for {len(by_mode)} modes; code-complete per mode: {counts}"
-
-
 def _query_mtds_live_feed(workspace_root: Path, skip: bool) -> tuple[frozenset[str], str]:
     """Returns (frozenset of venues with a registered live WSFeedConnector, note)."""
     if skip:
@@ -296,7 +206,6 @@ def build_dump(
     execution_probe: dict[str, dict],
     mtds_live_registered: frozenset[str],
     workspace_root: Path | None = None,
-    archetype_states: dict[str, dict[str, str]] | None = None,
 ) -> tuple[list[dict], dict]:
     grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
     # Measured once for the whole dump -- InstructionActionV2 handler coverage is
@@ -320,8 +229,6 @@ def build_dump(
                 layer1_by_venue[venue] = block
 
     wallet_capability_venues = frozenset(VENUE_WALLET_CAPABILITIES.keys())
-    capability_facts, capability_note = _capability_facts_by_venue(venues)
-    print(f"Credential-requirement facts: {capability_note}")
 
     rows: list[dict] = []
     leg_state_counts: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
@@ -370,13 +277,11 @@ def build_dump(
 
             legs = {
                 "declared": vd_declared,
-                "credentials": checks.credentials(venue, mode, capability_facts.get(venue)),
                 "instruments_service": vd_is,
                 "market_tick_data": vd_mtds,
                 "market_data_processing": vd_mdps,
                 "features": vd_features,
                 "strategy": vd_strategy,
-                "strategy_archetype_code": checks.strategy_archetype_code_complete(satisfying, mode, archetype_states),
                 "execution_orders": vd_orders,
                 "execution_fills": vd_fills,
                 "execution_trades": vd_trades,
@@ -481,11 +386,6 @@ def main() -> int:
     parser.add_argument("--skip-strategy-probe", action="store_true", help="Skip the strategy-service subprocess")
     parser.add_argument("--skip-execution-probe", action="store_true", help="Skip the execution-service subprocess")
     parser.add_argument("--skip-mtds-probe", action="store_true", help="Skip the market-tick-data-service subprocess")
-    parser.add_argument(
-        "--skip-archetype-probe",
-        action="store_true",
-        help="Skip the archetype-code-completeness subprocess (the strategy_archetype_code leg reports unverified)",
-    )
     parser.add_argument("--json", action="store_true", help="Emit machine-readable JSON instead of the human report")
     parser.add_argument("--verbose", action="store_true", help="Print the full per-venue-per-mode table")
     parser.add_argument("--limit", type=int, default=40, help="Max rows to print in --verbose mode (default 40)")
@@ -530,18 +430,8 @@ def main() -> int:
         venues, workspace_root, args.skip_execution_probe
     )
     mtds_live_registered, mtds_probe_note = _query_mtds_live_feed(workspace_root, args.skip_mtds_probe)
-    archetype_states, archetype_note = _query_archetype_completeness(workspace_root, args.skip_archetype_probe)
-    print(f"Archetype code-completeness probe: {archetype_note}")
 
-    rows, summary = build_dump(
-        venues,
-        modes,
-        coverage_payload,
-        position_avail,
-        execution_probe,
-        mtds_live_registered,
-        archetype_states=archetype_states,
-    )
+    rows, summary = build_dump(venues, modes, coverage_payload, position_avail, execution_probe, mtds_live_registered)
     summary["coverage_source"] = coverage_note
     summary["strategy_probe"] = probe_note
     summary["execution_probe"] = execution_probe_note
