@@ -112,7 +112,8 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
       (`cefi_track2_coverage_backfill_checkpoints_2026_07_25.md`) to reach BINANCE-FUTURES/ASTER/OKX-FUTURES naturally**
       through its own chronological traversal — option 1 taken, option 2 (a dedicated venue-scoped backfill pass)
       explicitly rejected. Repo: N/A (strategy-desk/data-pipeline priority decision).
-- [ ] [DATA] P2. Re-run the exact venue-scoped `read_availability_index(columns=, filters=[("venue","in",[...])])` completeness check after the in-flight aggregate backfill reaches BINANCE-FUTURES/ASTER/OKX-FUTURES across its full chronological range; cite fresh reachable-coverage numbers here and in the parent doc’s Progress Log. Repo: instruments-service. — line-1 completeness fixed 2026-08-20 (`/plan-reconcile`, `task_template.md §3`).
+- [x] ✅ [DATA] P2. **Line-1 completeness fixed 2026-08-20** (`/plan-reconcile`, `task_template.md §3`): rewrote the venue-scoped completeness todo so its action verb is dispatch-visible; the underlying data check remains pending below. Repo: unified-trading-pm.
+- [ ] [DATA] P2. Re-run the exact venue-scoped `read_availability_index(columns=, filters=[("venue","in",[...])])` completeness check after the in-flight aggregate backfill reaches BINANCE-FUTURES/ASTER/OKX-FUTURES across its full chronological range; cite fresh reachable-coverage numbers here and in the parent doc’s Progress Log. Repo: instruments-service.
 - [x] ✅ [INFRA] P1. **Purge/reclassify the 2,003 stale ASTER `book_snapshot_5`
       `attempted_failed[UpstreamTimestampBiasError]` manifest rows** (see 2026-08-09 DP-FETCH-009 Progress Log entry
       below for full diagnosis) — these represent a structurally-impossible-forever combo (no historical depth endpoint)
