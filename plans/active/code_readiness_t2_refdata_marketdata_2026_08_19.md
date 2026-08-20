@@ -327,7 +327,13 @@ todos only to confirm they are data-movement, then leave it.
       re-assess `lst_rates_handler.py` for whether any per-shard fan-out axis exists at all, and fix 2 blocking
       writes in sync functions. All four handler files confirmed present here, so this residual IS T2-owned — kept
       OPEN, at its real P3 weight, behind this tranche's outstanding P0s.
-- [ ] [BACKEND] P1. Ensure `expected_unattempted` is materialised by the WRITER and never re-derived downstream.
+- [x] [BACKEND] P1. Ensure `expected_unattempted` is materialised by the WRITER and never re-derived downstream.
+      ✅ 2026-08-20 — **already satisfied.** `instruments_service/engine/orchestrator/process_write.py:604` calls
+      `manifest.record_expected_unattempted(...)` at write/pre-flight time — the writer-side materialisation the
+      todo asks for. Checked the downstream reader for the violation this guards against (re-deriving the status
+      instead of trusting it): `scripts/measure_honest_coverage.py` has ZERO functions that recompute or infer
+      `expected_unattempted` — it only reads the pre-stamped `capture_status` column via `_count_statuses` and the
+      four-state groupby. Nothing to change in this tranche's three repos.
 
 ### instruments-service
 
