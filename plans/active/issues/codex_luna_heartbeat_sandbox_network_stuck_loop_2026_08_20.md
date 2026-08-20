@@ -14,12 +14,19 @@ summary: >-
   ~1.48M-token jump AO's own state recorded between two checks 40 minutes apart. Failure reasons
   varied turn to turn — missing `AO_HUMAN_TOKEN`/bearer token, a sandbox network permission error
   (`RTM_NEWADDR: Operation not permitted`), and a tool-approval gate asking for explicit operator
-  confirmation that never comes in an unattended dispatch — strongly pointing at the Codex CLI
-  sandbox's own outbound-network policy being applied inconsistently to this local heartbeat call,
-  not a genuinely absent credential (the SAME session successfully delivered the same heartbeat 6
-  times). The session was eventually reaped (tmux server gone entirely) sometime after 06:39; AO then
-  correctly reports slot 31 as idle with 422 backlog tasks blocked on unrelated gates — that idle
-  message describes NOW, not what caused the prior session to loop.
+  confirmation that never comes in an unattended dispatch. **Root cause, confirmed by reading
+  `codex_bridge_server.py`/`codex_mcp_proxy.py` directly (2026-08-20, operator follow-up)**:
+  `sandbox=Sandbox.read_only` on `thread_start()` is a DELIBERATE, documented security mitigation —
+  NOT a testing leftover — against a separate, explicitly-flagged, still-NOT-live-validated open risk:
+  Codex ships its own native shell/file tools alongside the MCP-registered `claude_tools` server, and
+  nothing confirms Codex always prefers ours over reaching for its own. The inconsistent
+  success/failure pattern (6 successes, ~28 failures, no time-based trend) is the predicted shape of
+  that exact risk playing out live: when Codex routes the heartbeat command through the MCP-proxied
+  `claude_tools` Bash (really Claude Code CLI's own unrestricted tool execution), it succeeds; when it
+  instead reaches for its OWN native, `Sandbox.read_only`-restricted shell tool, the read-only sandbox
+  blocks the outbound network call. The session was eventually reaped (tmux server gone entirely)
+  sometime after 06:39; AO then correctly reports slot 31 as idle with 422 backlog tasks blocked on
+  unrelated gates — that idle message describes NOW, not what caused the prior session to loop.
 status: open
 resolved_by:
 nature: issue
@@ -53,6 +60,7 @@ context_scope:
   [
     agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/codex_bridge_server.py,
+    agent-orchestrator/server/codex_mcp_proxy.py,
     agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/server/tmux_pruner.py,
   ]
@@ -116,6 +124,39 @@ still here" — no code changed, no task progressed, in this window. This closel
 ~1.48M-token jump AO's own `session_input_tokens` counter showed between two `/api/state` snapshots
 ~40 minutes apart during this session (1,060,419 → 2,536,471).
 
+## Is the sandbox intentional, or a testing leftover? (operator follow-up, 2026-08-20)
+
+**Intentional — confirmed directly in code, not inferred.** `codex_bridge_server.py::_drive_codex_turn`
+calls `codex.thread_start(..., sandbox=Sandbox.read_only, ...)` with this comment attached:
+
+> "Read-only: a real, partial mitigation for the open risk documented in codex_mcp_proxy.py (Codex
+> reaching for its OWN native shell/file tools instead of ours) — does not fully close it."
+
+And `codex_mcp_proxy.py`'s own module docstring spells out the risk in full, under the heading
+"KNOWN OPEN RISK — Codex's own native tools vs. ours (real, not yet live-validated)":
+
+> "Codex ships its own native coding tools (shell exec, apply_patch) alongside whatever MCP tools we
+> register — nothing in the SDK surface inspected while building this module suggests registering
+> `mcp_servers` suppresses them. `thread_start(sandbox=Sandbox.read_only)` is used below as a real, if
+> partial, mitigation (Codex's own tools become read-only rather than fully disabled) while the
+> genuinely open question — does Codex actually prefer our registered tool over reaching for its own
+> shell when the two could both plausibly answer a request — gets a real answer only from a live
+> multi-step tool-calling exchange through the actual `claude` CLI, not from reading SDK source.
+> Documented here rather than silently assumed safe."
+
+So: **do not remove the sandbox setting** — it is a deliberate security boundary (stopping Codex from
+using its own unrestricted native tools when it should be going through the MCP-proxied `claude_tools`
+server instead), and the author explicitly flagged it as a real, live risk rather than something
+silently assumed safe. What IS still open is the underlying question the sandbox only partially
+mitigates: this session's `[REVIEW] P0` validation todo (`codex_mcp_tool_use_bridge_2026_08_18.md`,
+marked done 2026-08-19) tested a single real Edit-tool call through the MCP path and confirmed THAT
+works — it did not test a scenario where Codex could plausibly reach for its own native shell instead,
+so the exact risk this doc's docstring flags remains genuinely unvalidated. Slot 31's inconsistent
+heartbeat success/failure (6 succeeded, ~28 failed, no time-based pattern) is the predicted shape of
+that unvalidated risk playing out for real: succeeds when Codex routes through `claude_tools` (real
+Claude Code Bash, unrestricted), fails when Codex reaches for its own `Sandbox.read_only`-restricted
+native shell instead.
+
 ## Why this matters beyond slot 31
 
 `codex-luna` was only recently operator-enabled for live dispatch (per
@@ -129,30 +170,34 @@ an unbounded time until whatever eventually reaps the tmux session catches up.
 
 ## Non-goals
 
-- Not reproducing the exact sandbox network policy misconfiguration here — that needs someone with
-  the real `openai-codex` SDK/sandbox docs and a live Codex account to test directly (see todo below).
-- Not assuming this is unique to the heartbeat call specifically — the SAME sandbox network
-  restriction could plausibly affect any other tool call this session's role instructions have it
-  make against `localhost:8765` (e.g. a `/done` or `/blocked` submission), just not observed live
-  here because the session never reached one.
+- Not removing or relaxing `sandbox=Sandbox.read_only` — see the section above; it is a deliberate
+  security boundary, not the bug.
+- Not assuming this is unique to the heartbeat call specifically — the SAME native-tool-vs-MCP-tool
+  routing risk could plausibly affect any other tool call this session's role instructions have it
+  make (e.g. a `/done` or `/blocked` submission), just not observed live here because the session
+  never reached one.
 
 ## Todos
 
-- [ ] [INFRA] P1. Root-cause WHY the Codex/Luna sandbox's network policy toward `localhost:8765`
-      is inconsistent turn-to-turn within the SAME session (6 successes, ~28 failures, no pattern
-      tied to elapsed time or turn count) — read the `openai-codex` SDK's sandbox/approval
-      configuration (`codex_bridge_server.py`'s `_drive_codex_turn`/`Sandbox` usage) for whether
-      network access is meant to be a per-call approval prompt, a session-wide grant, or something
-      that should be pre-approved at spawn time for AO's own internal endpoints. Done when: the
-      actual mechanism producing `RTM_NEWADDR: Operation not permitted` vs a clean success is
-      understood and cited, not inferred from transcript text alone.
-- [ ] [INFRA] P1. Once root-caused, fix it so the worker-liveness heartbeat is either (a) exempted
-      from the sandbox's network-approval gate for the fleet's own internal `localhost:8765` origin,
-      or (b) delivered through a path that doesn't need it (e.g. the same pattern
-      `codex_bridge_server.py` itself uses to reach AO, if that path is more reliable than what the
-      spawned session's own tool-call sandbox permits). Done when: a real Codex/Luna dispatch runs
-      for 30+ minutes past its last real work with heartbeats succeeding on every attempt, not ~18%
-      of them.
+- [ ] [INFRA] P1. Root-cause WHY Codex intermittently reaches for its own native shell tool instead
+      of the MCP-registered `claude_tools` server for the SAME command shape across one session (6
+      successes via the MCP path, ~28 failures via the sandboxed native path, no pattern tied to
+      elapsed time or turn count). **Advanced 2026-08-20**: the MECHANISM is now identified and cited
+      (`codex_mcp_proxy.py`'s own "KNOWN OPEN RISK" docstring, `Sandbox.read_only`'s comment) — this
+      is that exact, previously-unvalidated risk, not a new mystery. **Still open**: WHY Codex chooses
+      one path over the other turn-to-turn — nothing in the SDK surface inspected so far explains the
+      selection logic; needs either OpenAI's own Codex SDK docs on tool-preference/routing, or a
+      live multi-step reproduction that varies one thing at a time (does registering the SAME tool
+      name Codex's native tool already has, e.g. `shell`/`bash`, change the odds vs. a differently-
+      named MCP tool?). Done when: the actual selection mechanism is understood and cited, not
+      inferred from transcript text alone.
+- [ ] [INFRA] P1. Once the selection mechanism is understood, close the gap fully rather than
+      partially — either make Codex's own native tools genuinely unable to reach the network/execute
+      at all (a stronger sandbox than `read_only`, if the SDK offers one) so a fallback to them fails
+      loudly and immediately instead of burning a full retry turn, or find a way to make Codex
+      reliably prefer the MCP-registered tool (e.g. naming/registration changes suggested by whatever
+      the todo above finds). Done when: a real Codex/Luna dispatch runs 30+ minutes past its last real
+      work with heartbeats succeeding on every attempt, not ~18% of them.
 - [ ] [INFRA] P2. Add a STUCK-LOOP detector distinct from idle detection: N consecutive turns whose
       only content is a failed heartbeat/liveness attempt (no tool_use, no code change, no new
       finding) should page the same way a genuine stall does — today this session ran ~34 such turns
@@ -172,3 +217,11 @@ an unbounded time until whatever eventually reaps the tmux session catches up.
   live transcript via SSM (`i-0c9b283b31d6b5ca7`), not guessed. Filed as a new issue — no existing
   plan/issue doc in this corpus covers heartbeat delivery reliability or Codex sandbox networking
   specifically (checked via grep before filing, per this workspace's pre-task conflict-check rule).
+- **2026-08-20 (later, operator follow-up: "is the sandbox intentional or a migration leftover")** —
+  read `codex_bridge_server.py`/`codex_mcp_proxy.py` directly rather than guessing: `Sandbox.read_only`
+  is a deliberate, documented mitigation for an explicitly-flagged "KNOWN OPEN RISK" (Codex reaching
+  for its own native shell/file tools instead of the MCP-registered ones), not a testing artifact —
+  confirmed the sandbox stays. Updated the summary and `[INFRA] P1` todo above with the precise
+  mechanism (two possible tool-execution paths, one sandboxed and one not, explaining the
+  6-succeed/~28-fail pattern) instead of the earlier, vaguer "sandbox network policy inconsistency"
+  framing.
