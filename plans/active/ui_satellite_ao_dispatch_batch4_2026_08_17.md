@@ -71,7 +71,7 @@ drift_direction: advance-code
       own checkbox is flipped citing this doc). First confirm whether the backend (deployment-api) already exposes a
       "denominator last computed" timestamp for the data-status rollup; if not, add it as part of this same todo (a
       small, bounded backend addition — not a design question). Repo: deployment-api + deployment-ui. Done when: the
-      coverage-% headline shows the staleness annotation live, `[UI]` + `pw:L2 ✓` + a regression spec covering it. Evidence: deployment-ui@153eae2cf1 + tests/smoke/data_status_denominator_freshness.spec.ts + pw:L2 ✓.
+      coverage-% headline shows the staleness annotation live, `[UI]` + `pw:L2 ✓` + a regression spec covering it. Evidence: deployment-ui@153eae2cf1 + deployment-api@3180b1c22e + tests/smoke/data_status_denominator_freshness.spec.ts + tests/unit/test_data_status_denominator_freshness.py + pw:L2 ✓.
 
 ## Codex SSOTs
 
