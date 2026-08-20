@@ -281,7 +281,17 @@ todos only to confirm they are data-movement, then leave it.
       three. The todo was mis-scoped to T2; nothing was needed in instruments-service / MTDS / MDPS.
 - [x] [BACKEND] P0. Build the orphan-shard consumption check — no shard stored that nothing consumes. Epic
       definition-of-done item. SSOT: `/codex/02-data/orphan-object-detection.md`.
-      ✅ 2026-08-20 — **built and shipped as the `shard-utilisation-sweep` skill.** The existing sweeps
+      ✅ 2026-08-20 — **built and shipped as the `shard-utilisation-sweep` skill.**
+      Evidence: `unified-trading-pm@d9a53d1d01` (`--isolated` quickmerge, ancestry-verified against
+      `origin/live-defi-rollout`, landed content re-read to confirm). Two earlier non-isolated attempts on this
+      shared checkout hit real-but-external gates: a `PendleConnector` reachability flap (confirmed transient — a
+      standalone re-run passed moments later) and an archive-safety-ratchet violation already committed to origin
+      4 days earlier inside a DIFFERENT live session's file (`kimi_gemma_provider_onboarding_2026_08_16.md`, not
+      touched by this tranche). `--isolated` mode — which builds the commit from a private index against origin
+      rather than this contended working tree — sidestepped both without needing to touch either. Also fixed a
+      real gap the first attempt surfaced: this skill's `tests/` dir was unreachable by `unified-trading-pm`'s
+      `PYTEST_UNIT_DIR`, so `cursor-configs/skills/` was added to `scripts/quality-gates.sh`'s `PYTEST_UNIT_DIR=`
+      list, verified against the fleet coverage baseline before shipping. The existing sweeps
       (`migration_orphan_sweep.py`, `candle_orphan_sweep.py`, MTDS's sports fork) all run GCS→manifest ("is this
       stored object manifested?"); nothing ran the other direction. This does: a CONSUMPTION verdict per declared
       venue / data_type / instrument_type / chain, resolved by IMPORTING the real registries
