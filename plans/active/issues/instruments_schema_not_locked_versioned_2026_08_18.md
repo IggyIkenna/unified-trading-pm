@@ -90,8 +90,8 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       was also bumped in the same change. Depends on the todo above (needs the version constant to exist). Repo:
       unified-api-contracts. Done-when: a deliberate schema-list edit without a version bump fails CI locally
       (`quality-gates.sh`), and the same edit WITH a version bump passes.
-      — unified-api-contracts@9c7e4807: added `check_instruments_schema_lock.py`, a checked-in SHA-256 golden
-      snapshot, and falsifier tests covering both unchanged-version failure and bumped-version success; commit is
+      — unified-api-contracts@d384e840b7: added `check_instruments_schema_lock.py`, a checked-in SHA-256 golden
+      snapshot, and falsifier tests covering both unchanged-version failure and bumped-version success; quickmerge quality gates passed; commit is
       ancestry-verified on `origin/live-defi-rollout`.
 - [ ] [DATA] P2. Add a `schema_version: str` field to `SchemaContract`
       (`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py`, currently has none) and populate
@@ -118,6 +118,12 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       write with a column outside the locked+versioned contract is rejected at write time, with a regression test.
 
 ## Progress Log
+
+- **2026-08-20 (slot 10 completion)**: shipped the part-2 lock implementation as
+  `unified-api-contracts@d384e840b7`. The standalone checker hashes the ordered schema list with sorted per-column
+  keys, compares it to `scripts/instruments_parquet_schema.golden.json`, and reports drift only when the live
+  `INSTRUMENTS_SCHEMA_VERSION` remains unchanged. Falsifier tests cover both no-bump failure and version-bump
+  allowance. Quickmerge's re-gate passed all quality gates (732s); ancestry was verified on LDR.
 
 - **2026-08-20 (T2 code-readiness tranche)**: **Part 4 is NOT implementable as written — the contract has never
   matched the writer.** Built the part-4 gate (`validate_dataframe` against
