@@ -104,6 +104,12 @@ jobs:
       cleared_key: ${{ steps.scan.outputs.cleared_key }}
       cleared_report: ${{ steps.scan.outputs.cleared_report }}
       report: ${{ steps.scan.outputs.report }}
+      backmerge_failed: ${{ steps.scan.outputs.backmerge_failed }}
+      backmerge_failure_key: ${{ steps.scan.outputs.backmerge_failure_key }}
+      backmerge_failure_report: ${{ steps.scan.outputs.backmerge_failure_report }}
+      backmerge_recovered: ${{ steps.scan.outputs.backmerge_recovered }}
+      backmerge_recovery_key: ${{ steps.scan.outputs.backmerge_recovery_key }}
+      backmerge_recovery_report: ${{ steps.scan.outputs.backmerge_recovery_report }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -125,7 +131,9 @@ jobs:
       - name: Restore lag state cache
         uses: actions/cache@v5
         with:
-          path: .lag-state.json
+          path: |
+            .lag-state.json
+            .backmerge-failure-state.json
           key: promotion-lag-state-${{ github.run_id }}
           restore-keys: |
             promotion-lag-state-
@@ -187,6 +195,90 @@ jobs:
             echo "$CLEARED_REPORT"
             echo "__EOR__"
           } >> "$GITHUB_OUTPUT"
+          # Detect the latest completed backmerge run per main-direct repo. The cached run ID
+          # makes failure alerts state-transitioned, and a later success emits the recovery edge.
+          python3 - <<'PY' > .backmerge-failure-output
+          import json
+          import os
+          import subprocess
+
+          try:
+              with open(".backmerge-failure-state.json", encoding="utf-8") as fh:
+                  previous = json.load(fh)
+          except (OSError, ValueError):
+              previous = {}
+          try:
+              with open("workspace-manifest.json", encoding="utf-8") as fh:
+                  manifest = json.load(fh)
+              repos = {"unified-trading-pm"}
+              repos.update(
+                  name for name, config in manifest.get("repositories", {}).items()
+                  if isinstance(config, dict) and config.get("promotion_model") == "ldr_main"
+              )
+          except (OSError, ValueError, AttributeError):
+              repos = {"unified-trading-pm"}
+          owner = os.environ.get("GITHUB_REPOSITORY_OWNER", "IggyIkenna")
+          current = dict(previous)
+          failures = []
+          recoveries = []
+          for repo in sorted(repos):
+              try:
+                  result = subprocess.run(
+                      ["gh", "run", "list", "--repo", f"{owner}/{repo}",
+                       "--workflow", "main-backmerge-to-ldr.yml", "--status", "completed",
+                       "--limit", "1", "--json", "databaseId,conclusion,createdAt,url,headSha"],
+                      capture_output=True, text=True, timeout=10, check=False
+                  )
+                  runs = json.loads(result.stdout) if result.returncode == 0 else []
+              except (OSError, subprocess.TimeoutExpired, ValueError):
+                  runs = []
+              if not runs:
+                  continue
+              run = runs[0]
+              run_id = str(run.get("databaseId", ""))
+              conclusion = str(run.get("conclusion", "")).lower()
+              if not run_id:
+                  continue
+              record = {"run_id": run_id, "url": run.get("url", ""),
+                        "created_at": run.get("createdAt", "unknown"),
+                        "head_sha": run.get("headSha", "unknown")}
+              if conclusion == "failure":
+                  current[repo] = record
+                  if previous.get(repo, {}).get("run_id") != run_id:
+                      failures.append((repo, record))
+              elif conclusion == "success" and repo in previous:
+                  recoveries.append((repo, record))
+                  current.pop(repo, None)
+          with open(".backmerge-failure-state.json", "w", encoding="utf-8") as fh:
+              json.dump(current, fh, sort_keys=True)
+          if failures:
+              print("backmerge_failed=true")
+              print("backmerge_failure_key=main-backmerge-to-ldr:failure:" + ",".join(f"{r}:{v['run_id']}" for r, v in failures))
+              print("backmerge_failure_report<<__EOR__")
+              print(":rotating_light: *FAILED main-backmerge-to-ldr run detected*")
+              for repo, run in failures:
+                  print(f"*{repo}*: run [{run['run_id']}]({run['url']}) failed ({run['created_at']}, head {str(run['head_sha'])[:12]})")
+              print("__EOR__")
+          else:
+              print("backmerge_failed=false")
+              print("backmerge_failure_key=")
+              print("backmerge_failure_report<<__EOR__")
+              print("__EOR__")
+          if recoveries:
+              print("backmerge_recovered=true")
+              print("backmerge_recovery_key=main-backmerge-to-ldr:recovered:" + ",".join(f"{r}:{v['run_id']}" for r, v in recoveries))
+              print("backmerge_recovery_report<<__EOR__")
+              print(":large_green_circle: *main-backmerge-to-ldr RECOVERED*")
+              for repo, run in recoveries:
+                  print(f"*{repo}*: healthy run [{run['run_id']}]({run['url']}) for main {str(run['head_sha'])[:12]}")
+              print("__EOR__")
+          else:
+              print("backmerge_recovered=false")
+              print("backmerge_recovery_key=")
+              print("backmerge_recovery_report<<__EOR__")
+              print("__EOR__")
+          PY
+          cat .backmerge-failure-output >> "$GITHUB_OUTPUT"
 
   lag-notify:
     needs: lag-monitor
@@ -239,6 +331,41 @@ jobs:
       # exact block silently ran the carrier's alert-ledger auth without a credential — fail-open
       # (continue-on-error), so the Slack post itself still went out, but dedup + the GCS ledger
       # (deployment-ui Alerts page) silently never ran.
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  backmerge-failure-notify:
+    needs: lag-monitor
+    if: needs.lag-monitor.outputs.backmerge_failed == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.lag-monitor.outputs.backmerge_failure_report }}
+      severity: CRITICAL
+      conclusion: failure
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: ${{ needs.lag-monitor.outputs.backmerge_failure_key }}
+      cooldown_min: 60
+      concurrency_suffix: backmerge-failure
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+
+  backmerge-recovery-notify:
+    needs: lag-monitor
+    if: needs.lag-monitor.outputs.backmerge_recovered == 'true'
+    uses: ./.github/workflows/notify-slack.yml
+    with:
+      message: ${{ needs.lag-monitor.outputs.backmerge_recovery_report }}
+      severity: INFO
+      conclusion: success
+      recovery: true
+      workflow_name: branch-health
+      run_url: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      dedup_key: ${{ needs.lag-monitor.outputs.backmerge_recovery_key }}
+      cooldown_min: 30
+      concurrency_suffix: backmerge-recovery
+    secrets:
+      SLACK_WEBHOOK_URL: ${{ secrets.SLACK_CI_WEBHOOK_URL }}
       GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
 
   # ── JOB 3: AR lag metric (G9a) ───────────────────────────────────────────────────────
