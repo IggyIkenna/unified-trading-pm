@@ -82,7 +82,7 @@
     "unified-trading-library": "0.92.0",
     "unified-trading-pm": "1.2.741",
     "market-data-processing-service": "0.30.34",
-    "e2e-testing": "0.41.37",
+    "e2e-testing": "0.41.38",
     "agent-orchestrator": "0.100.39",
     "greeks-service": "0.18.75",
     "trading-agent-service": "0.13.17",
