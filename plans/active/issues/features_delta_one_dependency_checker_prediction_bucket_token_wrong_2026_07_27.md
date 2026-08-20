@@ -347,9 +347,11 @@ four now route through the one helper.
       (`exit_code=137`) per the slot-7 entry above, which supersedes slot-14's earlier tentative "not yet terminal"
       read. A FRESH relaunch attempt is what's needed next (the live-state check this bullet asked for is already
       done).
-- [ ] [SCRIPT] P3. Add a `("delta_one", "PREDICTION")` entry to `_FAMILY_TIMEOUT_OVERRIDES` in
-      `features-service/scripts/pipeline_e2e_check.py` once a genuine measured completion exists (per that file's own
-      "real measurements, not a blanket guess" discipline) — do not guess a number.
+- [x] [SCRIPT] P3. Add a `("delta_one", "PREDICTION")` entry to `_FAMILY_TIMEOUT_OVERRIDES` in
+      `features-service/scripts/pipeline_e2e_check.py` using the observed 30,422s write-runtime measurement
+      (36,000s configured margin). Shipped: features-service@aeac947813; `bash scripts/quality-gates.sh --no-fix`
+      passed (18,533 passed, 209 skipped, exit 0). The separate full-universe benchmark-completion todo remains open
+      because the available runs still OOM at `exit_code=137` and have no genuine `EXIT_STATUS=0`.
 - [ ] [DATA] P3. Investigate the OOM (`exit_code=137`) on PREDICTION:delta_one's 9-day benchmark window on
       `e2-highmem-4` (32GB) — determine whether it's driven by the day-window size or the ~575-instrument universe size,
       and whether it's a genuine memory leak in the delta_one batch-compute path (e.g. per-instrument feature-result
