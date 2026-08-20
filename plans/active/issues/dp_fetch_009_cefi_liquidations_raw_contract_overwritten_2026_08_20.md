@@ -79,3 +79,9 @@ collision.
   delta-one feature-group list.
 - `market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py:863-880`
   calls `lookup_contract` and records the schema violation as a failed capture.
+
+
+
+## Post-fix audit
+
+A bounded read-only availability-index audit on 2026-08-20 after the UAC commit still measured 4,535 fresh `cefi/liquidations` `attempted_failed` rows, latest `attempted_at` 07:36:57 UTC: 1,998 schema-contract violations and 2,537 Tardis code-274 concurrent-IP-lock failures. The UAC fix is therefore shipped but not yet reflected in the production MTDS writer; keep the MTDS replay/deploy todo open.
