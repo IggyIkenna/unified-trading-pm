@@ -211,7 +211,8 @@ source: >-
       confirms the source issue doc's own note ("no evidence of it today — fleet PRs are per-SHA fresh"). Nothing to
       port; re-check only if the fleet workflow later grows an inflight-wait-shaped block. Issue-doc reconciliation
       deferred to the paired finalize plan, same as above.
-- [ ] [CODE] P2. PROVE the CI bootstrap script on a real bare host (VM launch + systemd/IMDS/GCP-ADC/runner-registration
+- [ ] [CODE] P2. BLOCKED-ON:check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09 (fleet-wide
+      ikenna-worker ssm:SendCommand/ssm:GetCommandInvocation IAM grant, still open — confirmed 2026-08-20). PROVE the CI bootstrap script on a real bare host (VM launch + systemd/IMDS/GCP-ADC/runner-registration
       verification) -- container leg already proven, bare-VM leg genuinely blocked only on provisioning Source:
       `plans/active/github_actions_operator_gated_followups_2026_07_17.md` **IN PROGRESS 2026-08-14 (slot 15, infra) —
       NOT complete, VM terminated, resume from here (do not restart from zero):** Launched a throwaway EC2 instance

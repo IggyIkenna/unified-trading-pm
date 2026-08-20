@@ -116,7 +116,9 @@ Mechanical, bounded remediation — not a design/judgment call:
 
 ## Todos
 
-- [ ] [BACKEND] P3. Batch-repair the leading-whitespace padding in the 82 flagged files (see § "What I found" — run
+- [x] ✅ [BACKEND] P3. **DONE — verified 2026-08-20.** `check_prosewrap_padding.sh` reports 0 violating lines; full
+      repair series landed across `unified-trading-pm@8a6dabdd71`…`@162661e410` (baseline 3655→0, git log confirmed).
+      Batch-repair the leading-whitespace padding in the 82 flagged files (see § "What I found" — run
       `bash scripts/plan-hygiene/check_prosewrap_padding.sh` for the live list), collapsing over-indented continuation
       lines back to their structurally-correct indent and any 3+-space run inside a backtick span back to a single
       space. Verify content-only via `git diff -w` per file before committing. Fine to split across multiple
@@ -130,9 +132,9 @@ Mechanical, bounded remediation — not a design/judgment call:
       check). Not treated as a blocking conflict — both fixes converge on the identical whitespace-only repair, so
       whichever lands first makes the other a no-op; skip re-touching that file if batch3's todo has already landed by
       the time this todo executes.** (repo: unified-trading-pm)
-- [ ] [BACKEND] P3. Once the flagged-line count reaches 0 (or a deliberately-accepted lower plateau), run
-      `check_prosewrap_padding.sh --update-baseline` to lower the ratchet from 4472 toward 0 and commit the updated
-      `scripts/plan-hygiene/prosewrap_padding_baseline.yaml`. (repo: unified-trading-pm)
+- [x] ✅ [BACKEND] P3. **DONE — verified 2026-08-20.** `scripts/plan-hygiene/prosewrap_padding_baseline.yaml` reads
+      `violation_count: 0`; live `check_prosewrap_padding.sh` run confirms 0 violations against baseline 0 — target
+      plateau reached. (repo: unified-trading-pm)
 - [ ] [OPERATOR] P2. **Decide whether to invest in a source-level fix for the generative mechanism itself** (confirmed
       2026-08-15, Progress Log below): `prettier-autostage.sh` reflowing an ordinary commit's own staged
       `plans/active/*.md` file can worsen pre-existing near-threshold indentation via prettier's non-idempotent

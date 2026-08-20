@@ -54,15 +54,18 @@ context_scope:
 
 ## Todos
 
-- [ ] [DATA] P3. Reconcile `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` — once batch-10 todo 1
+- [x] ✅ [DATA] P3. Reconcile `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md` — once batch-10 todo 1
       (upstream mojibake trace+fix) lands, flip that doc's P3 todo with the cited evidence, re-verify the P2
-      promotion-verification todo's status, and archive the doc if nothing else is open. Source:
+      promotion-verification todo's status, and archive the doc if nothing else is open. **DONE** — source doc is
+      already `status: archived` at `plans/archive/2026_08/issues/sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`,
+      every todo `[x]` ("every todo done... archived this same session", slot-23, 2026-08-16). Source:
       `sports_catalog_dp_catalog_001_junk_name_crash_2026_08_06.md`. Done when: the doc's checkboxes reflect the shipped
       fix, and the doc is archived (or its remaining open item is a stated operator-hold).
-- [ ] [CONFIG] P2. Reconcile `sports_features_layer_findings_sweep_2026_07_18.md` §E — once batch-10 todo 2 (trigger
+- [x] ✅ [CONFIG] P2. Reconcile `sports_features_layer_findings_sweep_2026_07_18.md` §E — once batch-10 todo 2 (trigger
       tiers + scheduler relaunch) lands, flip the §E [CONFIG] P2 checkbox with the manifest-verification evidence; §E
-      [MODEL] P2 + §F [AUDIT] P2 remain parked (operator/conflict-gated). Source:
-      `sports_features_layer_findings_sweep_2026_07_18.md`. Done when: the [CONFIG] P2 checkbox is flipped with evidence
+      [MODEL] P2 + §F [AUDIT] P2 remain parked (operator/conflict-gated). **DONE** — target doc's §E `[CONFIG] P2`
+      checkbox is already `[x]`, "SHIPPED — verified by plan_reconciler 2026-08-18" (`deployment-service@9e1fd57ae`).
+      Source: `sports_features_layer_findings_sweep_2026_07_18.md`. Done when: the [CONFIG] P2 checkbox is flipped with evidence
       and the residual open items are correctly tagged.
 - [x] ✅ [INFRA] P3. **DONE 2026-08-17 (na-eligibility-audit, dispatch agt-1c51ee).** Reconcile
       `sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md` — the 2026-08-12 correction's concern is
@@ -73,9 +76,12 @@ context_scope:
       (`sports_taxonomy_p3_consumers_2026_08_08.md`). The sole remaining `[INFRA] P3` checkbox (LC_TARBALL_FRESHNESS
       proposal) is now flipped citing `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 3's DONE status +
       the filed proposal doc. Doc archived to `plans/archive/issues/` this same commit.
-- [ ] [DATA] P1. Reconcile `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` — once batch-10 todo 4 (verify-then-fix
+- [x] ✅ [DATA] P1. Reconcile `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md` — once batch-10 todo 4 (verify-then-fix
       blank fixture_id) lands, flip the doc's blank-fixture_id checkbox per the outcome (fix shipped + evidence, or
-      fixed-already + citation); the 2,436-shard reconcile + CLV-retrain items stay open (conflict/time-gated). Source:
+      fixed-already + citation); the 2,436-shard reconcile + CLV-retrain items stay open (conflict/time-gated). **DONE**
+      — target doc's blank-fixture_id checkbox already `[x]`, "VERIFIED FIXED... Closed per
+      `sports_satellite_ao_dispatch_batch10_2026_08_06.md` todo 4 option (b)" (`market-tick-data-service@3401c0ab`+`@d6d539a8`);
+      remaining 1 open item (2,436-shard reconcile) matches the "stays open" framing exactly. Source:
       `sports_halftime_odds_sfi_vs_inplay_2026_07_16.md`. Done when: the blank-fixture_id checkbox reflects the verified
       outcome and the remaining items are correctly tagged.
 - [ ] [PROCESS] P2. Archive `sports_satellite_ao_dispatch_batch10_2026_08_06.md` + this finalize doc once all 4
