@@ -657,9 +657,18 @@ todos only to confirm they are data-movement, then leave it.
       a note for TradFi pending a real sourced fee schedule, never an invented bps figure) alongside a real fix:
       every TradFi venue (CME/CBOE/NASDAQ/NYSE/ICE/FX) was silently misclassified as CEFI before this, applying
       wrong fee/spread assumptions. 12 new/updated tests.
-- [ ] [BACKEND] P1. Complete the execution policy and fill-model gaps — collapse the two independent benchmark
-      implementations into one sent value, stop no-op'ing the lending path, de-duplicate the algo vocabulary across
-      two modules. Evidence: `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md`.
+- [ ] [BACKEND] P1. **7/13 CLOSED 2026-08-20 — `unified-trading-pm@f582a4e724`.** Complete the execution policy
+      and fill-model gaps — collapse the two independent benchmark implementations into one sent value, stop
+      no-op'ing the lending path, de-duplicate the algo vocabulary across two modules. Evidence:
+      `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md` (own doc tracks full detail, not
+      duplicated here). Most closed todos turned out to be already-shipped by commits pre-dating the doc itself
+      (`ea0bbf807`, `b8989ae55`, `c2053c47b`, `bbf99a61d` — all 2026-06-19/08-14) — the doc had drifted stale
+      before this tranche ever touched it. 6 remain open with dated, measured reasons (not guesses): a mechanism
+      built + unit-tested but zero production callers (sub-candle rung wiring, participation-cap routing), a real
+      design gap the shipped code doesn't resolve (`SubCandleBar` has no aggressor-side field for PB.8's
+      correction), 1 todo outside this dispatch's granted repo access (`e2e-testing`), 1 needing a real manifest
+      query this dispatch's tooling doesn't have. 1 new todo added tracking `HandlerRegistry.select_algorithm`
+      having zero production callers despite a real, tested resolver chain beneath it.
 - [ ] [BACKEND] P2. Complete per-venue scope-key provisioning. Evidence:
       `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`. **CHECKED 2026-08-20, still
       genuinely open, no new action found**: that doc's own 3-week audit trail (na-eligibility-audit
