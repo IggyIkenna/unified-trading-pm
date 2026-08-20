@@ -111,3 +111,6 @@ path (never hand-edit per-repo copies).
   `unified-api-contracts` 0.149.0 to AR; re-triggered `instruments-service-prod` → SUCCESS
   (`cloudbuild=a29956a9-06de-4d65-a6cc-3c4fa6693167`). The recurrence fix (tag-triggered publish) is a follow-up todo;
   the immediate wall is green.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries); all paths re-verified on disk,
+  unchanged.

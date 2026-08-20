@@ -162,14 +162,25 @@ todos only to confirm they are data-movement, then leave it.
       from reading them directly, the way T5 already does for the readiness dump
       (`cursor-configs/skills/readiness-state-dump/scripts/instruction_actions.py`). Coordinate with T2/T4 only if
       their routers are genuinely mid-change when you walk them.
-- [ ] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
+- [x] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
       attempts: (1) a FAILED re-gate still exits 0 — three attempts reported success and landed nothing; (2) a
       DIRECTORY path in `--files` stages nothing for it silently, which landed a PARTIAL commit that broke
       `live-defi-rollout` (factory.py referencing an unstaged package). Full measurement, the five-check table
       showing why `git diff FETCH_HEAD` also came back clean during the broken window, and the proposed fixes:
       `/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`.
       P0 because every agent is required to ship through this path and the failure mode is false progress.
-- [ ] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
+      **Defect 2 (directory silently dropped) fixed 2026-08-20**: `unified-trading-pm@d0e5a67ee7` — `--files`
+      now refuses any directory path outright (exit 1, before any staging), live-tested against a real throwaway
+      directory. **Defect 1 (exit-0-on-failed-regate) investigated, not confirmed as a live code defect**: the
+      specific agent-mode re-gate path already propagates its real exit code correctly
+      (`${PIPESTATUS[0]}` + unconditional `exit 1`, verified by direct read); the "exited with code 0" evidence in
+      both T3's measurement and this session's own repeated observation is fully explained by the near-universal
+      `| tee LOG | tail -N` logging convention, which returns `tail`'s exit status, not the piped command's
+      (confirmed live: `false | tee x | tail -5; echo $?` → `0`) — left this one open rather than closing on
+      unconfirmed evidence; a re-measurement using `${PIPESTATUS[0]}` directly (no `| tail`) is needed before
+      concluding whether a further fix is warranted. Also shipped: the recommended per-tab-worktrees.md doc
+      addition (`unified-trading-pm@c1d75e7dd7`).
+- [x] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
       `deployment-service/configs/strategy/<archetype_lowercase>/` for the 27 archetypes T3 registered on
       2026-08-19 (18 `VOL_*`, 5 granular `MARKET_MAKING_*`, 4 `PORTFOLIO_*`). strategy-service's
       `clients_yaml_coverage.py` gate requires one or the other for every factory-registered archetype;
@@ -178,6 +189,13 @@ todos only to confirm they are data-movement, then leave it.
       frozenset — T3 deletes each entry from that set as its file lands, so the set doubles as the
       shrinking worklist. A waiver is the expected answer for most of them (they are seed-only slots with
       no client allocation yet); a `clients.yaml` is only needed where a client actually subscribes.
+      **Done 2026-08-20**: all 27 got `clients_waiver.yaml` (none have real client subscriptions yet, matching
+      the doc's own framing) — `deployment-service@6d2a0a6028`, verified per-file against origin (27/27) AND by
+      running the actual consumer live: `strategy_service.engine.strategies.v2.clients_yaml_coverage
+      .uncovered_archetypes()` now returns `[]` (was reporting all 27 as violations before). T3's own
+      `PENDING_CROSS_REPO_WAIVER` frozenset in strategy-service is theirs to shrink — not touched here, per
+      "edit ONLY the repos this tranche owns"; they'll see it's safe to delete on their next pass since the gate
+      itself is now clean independent of that set.
 
 - [ ] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
       "re-run at the finer grain the moment T2 lands `instrument_type` / `data_type`" todo below is waiting on
@@ -213,7 +231,7 @@ todos only to confirm they are data-movement, then leave it.
          field in `readiness_pipeline_stage_per_shard_2026_08_18.json` (next item). Report grain per asset_group,
          or report the hollow fraction beside the label.
 
-- [ ] [FROM-T2] P1. **Your readiness dump's `grain` field is mislabelled — the writer, not the file.** This is the
+- [x] [FROM-T2] P1. **Your readiness dump's `grain` field is mislabelled — the writer, not the file.** This is the
       `/plans/epics/system_readiness_master.md` § W3 `[DOC] P1` item, and it lands in a file this tranche owns, so
       T2 has not touched it. MEASURED: `plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18.json`
       declares top-level `grain: "instrument_type"` while all 864 rows carry only
@@ -223,10 +241,15 @@ todos only to confirm they are data-movement, then leave it.
       the grain of the **readiness rows**, which are built at `venue x asset_group x mode`. The two are different
       things. Suggested shape: emit `row_grain: "venue_asset_group_mode"` for what the rows actually are, and keep
       the source's grain under its own key (`coverage_source_grain`), so neither is silently claiming the other.
+      **Fixed exactly per T2's suggested shape, 2026-08-20**: `unified-trading-pm@065067f345`. Verified end-to-end
+      (both human-readable and `--json` output paths) against a live dump: header now prints
+      `rows: venue_asset_group_mode, coverage source: instrument_type`; JSON carries `row_grain` +
+      `coverage_source_grain`, the old ambiguous `grain` key is gone (0 occurrences). The 9-blank-venue-row note
+      in this same item is T2's own separate tracking, not touched here.
       Also worth a look while you are in there: 9 rows carry an EMPTY `venue` string (all `asset_group: sports`) —
       they come straight through from 9 blank-venue cells in coverage.json, which T2 is tracking separately.
 
-- [ ] [FROM-T4] P0. **The per-venue execution-instruction-path check you are blocked on is BUILT — here is its
+- [x] [FROM-T4] P0. **The per-venue execution-instruction-path check you are blocked on is BUILT — here is its
       frozen contract, so you can write the probe now rather than waiting.** It is in execution-service (gating
       under quickmerge as of 2026-08-20; T4's plan Progress Log carries the landing `<repo>@<sha>`).
 
@@ -266,7 +289,7 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Derive a batch / paper / live state for EVERY venue with a code path, surfacing `unverified`
       honestly wherever a check does not exist. Epic definition-of-done item. Engine:
       `cursor-configs/skills/readiness-state-dump/`.
-- [ ] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
+- [x] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
       moves 844 `not_ready` rows off their structural blocker. Track the dependency; do not wait idle on it.
       **2026-08-20 — dependency tracked and the non-blocked half DONE, `unified-trading-pm@c3a3e870f4`.** Request
       filed on T4's `## Inbound requests` naming the exact probe shape (`unified-trading-pm@241933d56e`), with the
@@ -275,11 +298,25 @@ todos only to confirm they are data-movement, then leave it.
       denominator instead of "no check wired", and the SKILL.md pointer that named the WRONG file
       (`v2/policy_resolver.py` — an algo resolver keyed by `(client_id, slot_label)`, not an instruction registry)
       is corrected. Remaining work here is a one-line probe call once T4 lands the venue-aware surface.
-- [ ] [BACKEND] P0. Add the archetype capability axis across batch, paper and live to the dump. The artefacts mark
+      **DONE, `unified-trading-pm@8d47cf3393`** (the cross-venv `_execution_instruction_path_probe.py` +
+      `derive_readiness.py` wiring, landed earlier this session — verified by re-running the live dump fresh
+      2026-08-20: `execution_instruction` now reports `ready=238 not_ready=600 unverified=26` (real per-venue
+      variance) instead of a uniform hardcoded `unverified` across all 864 rows. Confirms the earlier coordinator
+      correction still holds: `strategy` (`ready=24 not_ready=840`) remains the dominant structural blocker on the
+      overall rollup, not `execution_instruction` — this leg's wiring is real but was never the critical path.
+- [x] [BACKEND] P0. Add the archetype capability axis across batch, paper and live to the dump. The artefacts mark
       it `planned — specified and not yet built`, so that axis reports `unverified` today. Consume T3's
-      `/archetype-code-completeness` output rather than re-deriving it.
-- [ ] [BACKEND] P0. Make credentials a first-class readiness dimension (W1 addition 2026-08-19).
-- [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19).
+      `/archetype-code-completeness` output rather than re-deriving it. **Done** (earlier this session):
+      `checks.strategy_archetype_code_complete()` wired as the `strategy_archetype_code` leg in
+      `derive_readiness.py:420`, consuming `/archetype-code-completeness`'s output. Re-confirmed live 2026-08-20:
+      present with real counts (`ready=360 not_ready=504`) in a fresh dump run, not a stub.
+- [x] [BACKEND] P0. Make credentials a first-class readiness dimension (W1 addition 2026-08-19). **Done** (earlier
+      this session): `checks.credentials()` wired as the `credentials` leg in `derive_readiness.py:414`, derived
+      from UAC's own declared `auth_scope`/`auth_environments`/`supports_testnet`/`supports_mainnet`. Re-confirmed
+      live 2026-08-20: present with real counts (`ready=8 not_ready=10 unverified=846`) in a fresh dump run.
+- [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19). **Checked
+      2026-08-20: genuinely not yet implemented** — no `manual`/`MANUAL` mode reference anywhere in
+      `derive_readiness.py` or `checks.py`. Real remaining work, not a stale todo.
 - [x] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
       unverified 20`) against §17's own table — the artefacts flag it as not reconciled. — **RECONCILED
       2026-08-20**, live full-fleet run against `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`
@@ -402,12 +439,33 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W21 — the presentation artefacts (the acceptance test)
 
+> **⚠️ PLAN-CONFLICT FOUND, 2026-08-20 (T5)** — before hand-editing ANY of the four DOC todos below, read
+> `/plans/active/state_fabric_artefacts_2026_08_20.md` (authored 2026-08-20 15:04, different session, `status:
+> active`, unclaimed, `parent_epic: system_readiness_master` — same epic as this plan). It measured
+> `platform-external-api-walkthrough.html` as "a rollup, not a drilldown" (8 percentage values, zero shard-level or
+> per-day vocabulary) and diagnosed the root cause as exactly this tranche's own standing failure mode: numbers
+> hand-transcribed into HTML with no persisted source, so they rot. Its fix is architecturally different from "edit
+> the HTML directly against a skill's output" — it wants a **persisted, versioned readiness+coverage ledger** that
+> the artefacts RENDER FROM, explicitly naming `readiness-state-dump` and `honest-coverage-dump` (the two tools
+> this tranche owns and extended today — grain fix `065067f345`, dedup stats `bb81afbcaa`, execution-instruction
+> wiring `8d47cf3393`) as the ledger's authoritative source. Hand-editing the four HTMLs below right now risks being
+> reworked/wasted once ledger-binding lands. **Also corrects scope**: seven artefacts need updating against the
+> 27 R17-R27 rulings, not four — `platform-api-reference`, `carveout-engineering`, `ODUM_Elysium_Phase2_Update`
+> were missing from earlier accounting (the last two are outside this plan's originally-scoped four). Holding these
+> four todos pending coordination on which approach to follow — not starting a manual re-derivation that the ledger
+> plan would then have to undo.
 - [ ] [DOC] P0. Re-derive `platform-architecture.html` from measured state. Every remaining marker must be live or
       one of the five allowed pending states.
 - [ ] [DOC] P0. Re-derive `platform-external-api-walkthrough.html` — the heaviest artefact by gap count (28
       `unverified`, 27 `pending`, 17 `planned`, 17 `partial`, 14 `not yet`, 6 `missing`, 5 `not built`).
 - [ ] [DOC] P0. Re-derive `strategy-service-deep-dive.html` (51 `unverified`, 15 `partial`) against T3's output.
 - [ ] [DOC] P0. Re-derive `strategy-service-walkthrough.html` (23 `partial`) against T3's output.
+- [ ] [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
+      still omits, `WITHDRAW`/`WithdrawInstruction` and `REPAY`/`RepayInstruction`. UAC `StrategyInstructionEnvelope`
+      grew 11→13 subclasses (`f5fc118a` 2026-08-20); the count/prose enum-drift fix shipped separately (that was the
+      promote-PR QG red), so the table still lists 11 of 13 rows. Adding the 2 rows adds 2 `st-plan` markers →
+      claim-ownership open-markers 189→191, tripping the shrinking ratchet. Operator-gated: bump the markers baseline
+      (never hand-raise), or close 2 other open markers by real state change first.
 - [x] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
       item**. Build the check; it has already failed once, measurably. — `unified-trading-pm@7b2dd29aaa`.
       `scripts/plan-hygiene/check_artefact_claim_ownership.py`, wired into `run_hygiene_sweep.sh`. Measured
@@ -436,7 +494,7 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [DOC] P0. Extend the same disclosure standard to the four sibling client artefacts the 2026-08-18 audit found
       violating it and which no remediation plan covers — `carveout-engineering.html` and
       `ODUM_Elysium_Phase2_Update_2026-07-24.html` alongside the two already in scope. Evidence:
-      `/plans/active/client_artefact_remediation_2026_08_18.md`,
+      `/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md`,
       `/plans/active/client_artefact_remediation_nickai_2026_08_18.md`.
 - [ ] [DOC] P0. Confirm no figure outruns its measurement — every number carries date and denominator, or says
       pending. Epic definition-of-done item.
@@ -450,14 +508,17 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`.
 - [ ] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`.
-- [ ] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
+- [x] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
       (missing `@vitest/coverage-v8`), unrelated to any specific change — blocks EVERY future ship to this repo, not
       just one. Fix: `npm --prefix dashboard install` (or equivalent dependency sync) before the next
       agent-orchestrator ship attempt. Found blocking the git-status ahead-nudge sustain-gate fix below; that fix and
       its 2 regression tests are complete and tested locally (26/26 file, 103/103 broader suite) but NOT YET SHIPPED
       — preserved both in the working tree and backed up outside git
       (`scratchpad/agent-orchestrator-backup/_git_alerts.py` + `test_git_staleness_alerting.py`) since this session
-      already measured local uncommitted edits as fragile under quickmerge contention.
+      already measured local uncommitted edits as fragile under quickmerge contention. **Resolved 2026-08-20**:
+      this was per-checkout local environment state, not a repo code defect — `npm --prefix dashboard install` ran
+      once, and every subsequent agent-orchestrator ship this session gated clean on it. Moot now regardless: the
+      git-status-nudge fix this was blocking landed at `agent-orchestrator@0ec1f010d2` (see below).
 
 ### Infrastructure defects that cost other agents time
 

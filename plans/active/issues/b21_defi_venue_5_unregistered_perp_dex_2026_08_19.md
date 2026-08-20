@@ -112,19 +112,41 @@ Per-value, in priority order:
       `/codex/02-data/availability-manifest-and-data-status.md` already lists HYPERLIQUID/ASTER as observed DEX-perp
       venues there, suggesting real capture exists; `pipeline` if not yet IS-producible). Done-when: both registered
       with the correct phase, `DEFI_PERP_VENUES` updated to match, and this pair drops off the b21 defi venues count. — unified-api-contracts@1286df8c54 + Evidence: quality-gates.sh ✅; runtime registry assertions ✅
-- [ ] [DATA] P2. **EXTENDED — trace the writer stamping bare `"EXTENDED"`** (repo: market-tick-data-service /
+- [x] ✅ [DATA] P2. **EXTENDED — trace the writer stamping bare `"EXTENDED"`** (repo: market-tick-data-service /
       instruments-service, whichever adapter/`record_captured*` call feeds the `perp-funding` bucket for this
       venue). Confirm whether the real writer stamps `"EXTENDED-STARKNET"` (per `perp_funding_cadence.py`'s
       documented invariant — in which case the b21 rollup's bare form is itself a bug elsewhere, e.g. a stale
       pre-2026-07-28 manifest row, and this is dead residue not a registration gap) or genuinely stamps bare
       `"EXTENDED"` (in which case `perp_funding_cadence.py`'s docstring claim is now stale and needs correcting, AND
       `ALL_DEFI_VENUES`/`DEFI_PERP_VENUES` needs the real canonical form registered). Done-when: root cause
-      confirmed and either the writer/doc is fixed or the registry gains the correct entry.
-- [ ] [DATA] P2. **LIGHTER — confirm true canonical venue form + register** (repo: unified-api-contracts +
+      confirmed and either the writer/doc is fixed or the registry gains the correct entry. — ROOT CAUSE CONFIRMED
+      (neither the two candidate explanations the todo posed): MTDS's `_classify_venue_write`
+      (`instruments_service/engine/orchestrator/writers.py`) correctly splits chain-qualified defi venues into
+      separate `venue`(bare)+`chain` manifest columns via `_canonical_manifest_venue_chain`, so `EXTENDED-STARKNET`
+      rows are genuinely, by-design, stamped `venue="EXTENDED"` + `chain="STARKNET"` — `perp_funding_cadence.py`'s
+      "never a bare EXTENDED" docstring claim was about the composite venue STRING, not this split-column storage
+      model, and was never actually contradicted. The bare form was flagged non-canonical purely because
+      `EXTENDED-STARKNET` was never a registered `ALL_DEFI_VENUES` member for `_defi_bare_venue_bases()` to derive
+      it from — a registration gap identical in kind to item 1's HYPERLIQUID/ASTER fix. Live bounded probe
+      (2026-08-20, column-projected read of the 161.6M-row defi `_index`) found 0 captured EXTENDED/LIGHTER rows —
+      all 22,680 EXTENDED rows are `expected_unattempted`/`attempted_failed`, `written_at` 2026-08-09→2026-08-20
+      (ongoing, not stale residue) — so registered as phase=`pipeline`, not `live`. —
+      unified-api-contracts@ecefea2dae (+2d4e3f5d) + Evidence: quality-gates.sh ✅ (13483 passed; fixed 2 test
+      failures the registration surfaced: `test_chain_registry_ssot.py` needed STARKNET added to
+      `_EXTRA_VENUE_PARTITION_CHAINS`, `test_protocol_launch_dates.py` needed `(STARKNET, EXTENDED)` added to
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION_BASE`)
+- [x] ✅ [DATA] P2. **LIGHTER — confirm true canonical venue form + register** (repo: unified-api-contracts +
       whichever writer produces LIGHTER rows). Determine whether the real writer stamps bare `LIGHTER` or the
       documented parallel form `LIGHTER-ZKSYNC`; register `ALL_DEFI_VENUES`/`DEFI_PERP_VENUES` accordingly (mirrors
       the EXTENDED-STARKNET precedent — chain suffix, not instrument-type suffix). Done-when: registered with the
-      confirmed correct form + phase.
+      confirmed correct form + phase. — CONFIRMED canonical form is `LIGHTER-ZKSYNC` (compound; `-ZKSYNC` is a CHAIN
+      suffix, already used repo-wide in venue_constants/venue_mapping/data_type_capability/venue_adapter_keys; the bare
+      `LIGHTER` is only ever the split-column `venue` value alongside `chain="ZKSYNC"`). Registered in `ALL_DEFI_VENUES`
+      + `DEFI_PERP_VENUES` with phase=`pipeline` (0 captured perp-funding rows; live WS connector is a
+      BLOCKED-CREDENTIALS stub → not IS-producible), mirroring EXTENDED-STARKNET. — unified-api-contracts@1fb854f3
+      (+cd4168cf) + Evidence: quality-gates.sh ✅ (13489 passed; the registration surfaced 1 test gap —
+      `test_every_defi_venue_declared_or_pending` — fixed by adding `(ZKSYNC, LIGHTER)` to
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION_BASE` in chain_env.py).
 - [ ] [DATA] P3. **KAMINO_LENDING — confirm product identity + register or fold** (repo: unified-api-contracts).
       Trace which adapter/data_type stamps `venue="KAMINO_LENDING"` and confirm whether it is a genuinely distinct
       Kamino product (needs its own `KAMINO_LENDING-SOLANA` registration) or a writer-side naming variant of the
@@ -140,3 +162,11 @@ Per-value, in priority order:
 - **context-scout 2026-08-20**: populated context_scope (5 entries)
 - **2026-08-20 (slot-10)**: Registered HYPERLIQUID and ASTER in `ALL_DEFI_VENUES` as `pipeline` phase entries, restored both in `DEFI_PERP_VENUES`, and exempted these chain-agnostic venue tokens from the live-chain invariant.
   Shipped as `unified-api-contracts@1286df8c54`; full quality gates passed.
+- **2026-08-20 (slot-4)**: EXTENDED item root-caused via a live bounded probe of the defi manifest `_index` — NOT
+  dead residue, NOT a writer bug: MTDS's writer correctly stores chain-qualified defi venues split as
+  `venue`(bare)+`chain` columns, and `EXTENDED-STARKNET` was simply never in `ALL_DEFI_VENUES`. Registered
+  `EXTENDED-STARKNET` as `pipeline` phase (0 captured rows measured — not yet IS-producible) in `ALL_DEFI_VENUES` +
+  `DEFI_PERP_VENUES`; also fixed two other SSOT registries the registration exposed as gapped
+  (`_EXTRA_VENUE_PARTITION_CHAINS` missing STARKNET, `PROTOCOL_LAUNCH_DATES`/pending-list missing `(STARKNET,
+  EXTENDED)`). Shipped as `unified-api-contracts@ecefea2dae` (+`2d4e3f5d`); full quality gates passed (13483
+  passed). LIGHTER and KAMINO_LENDING todos remain open for a follow-up worker.

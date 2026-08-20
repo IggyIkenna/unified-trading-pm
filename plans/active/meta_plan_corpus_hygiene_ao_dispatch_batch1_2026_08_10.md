@@ -232,7 +232,8 @@ Two independent causes, both now fixed:
       corrected to "1 open (re-verified 2026-08-16)" with the todo's text cited inline. — unified-trading-pm (this
       commit).
 - [x] ✅ [DOCS] P2. **Verify + flip the 3 already-resolved checkboxes** in
-      `/plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` —
+      `/plans/archive/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md`
+      (archived 2026-08-20) —
       unified-trading-pm@3fa34e2475. Items 2 (DP-FETCH-009 `[VERIFY] P1`) and 4 (code-fix `[REVIEW] P2`) were already
       `[x]` — confirmed by direct doc read. Item 1 (DP-VM-003 `[OPERATOR] P1`) flipped `[x] ✅ [DATA] P1`: live
       `gcloud compute instances describe` confirmed VM `mtds-backfill-odds-smallchunk14-20260809` RUNNING

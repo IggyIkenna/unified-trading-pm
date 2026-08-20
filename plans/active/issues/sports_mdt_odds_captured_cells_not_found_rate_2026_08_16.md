@@ -389,16 +389,98 @@ below (stop the writer, relabel the existing population, investigate the coincid
       `origin/live-defi-rollout`. **Live-production confirmation is a separate, genuinely time-gated step — see the
       new `[DIAG]` follow-up todo below** (cannot be done in this session: needs the fix to actually reach the
       deployed image and at least one real ~5-min capture cycle to elapse afterward).
-- [ ] [DIAG] P2. Once `market-tick-data-service@03cf5a20f4` (or later) is live in the deployed image, re-run a fresh
-      bounded manifest read for `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` rows and
-      confirm new rows are landing with `date` past the deploy timestamp (the pre-fix max was stuck at 2026-07-26 per
-      this doc's DIAG P2 finding above). Also spot-check that `fixture_id`-scoped rows now persist (pre-fix max was
-      stuck at 2026-06-09). Source: this doc's now-fixed `[CODE] P1` todo above — this is its own stated done-when
-      condition, deliberately split out since it cannot be verified same-session as the code fix. Done when: a fresh
-      manifest read shows `captured` rows for this shard with dates after the fix's production deploy time, or (if
-      still 0) a new root cause is identified for a still-open gap.
+- [x] ✅ [DIAG] P2. **DONE 2026-08-20 (slot-17, `infra`). Verdict: STILL STALE — but with a NEW ROOT CAUSE identified
+      (the todo's own "if still 0, identify a new root cause" branch).** Fix `market-tick-data-service@03cf5a20f4` IS
+      deployed (confirmed ancestor of `origin/live-defi-rollout`; the fast-t1-recon job's `:latest` image is `0.146.5` /
+      digest `e00fc61`, built 2026-08-20T14:44:10Z, weeks after the 2026-08-17T12:14 fix commit — the fix-bearing code
+      has been running capture cycles since 08-18). Yet the fresh bounded read
+      (`scripts/verify_odds_manifest_recording_fix_live_2026_08_20.py`,
+      `read_availability_index_safe` filtered to `pipeline_mode=batch_odds_api, data_type=odds,
+      capture_status=captured`) returns **0 rows past the pre-fix baseline**: `total_captured_rows=527,541`,
+      `max_date=2026-07-26` (identical to the pre-fix max), `rows_past_baseline=0`, `fixture_scoped_rows=0` — verdict
+      `STILL_STALE_OR_PARTIAL`. **New root cause (verified via two companion diagnostics, `market-tick-data-service@
+      e45a49bf`): the `batch_odds_api` manifest surface has gone entirely silent — a broad
+      `pipeline_mode=batch_odds_api` read (any data_type, any capture_status) shows **zero rows dated after
+      2026-08-15** (`max_date_all=2026-08-15`), while the consolidator is healthy (`_index/latest.json` `rows_in=0`,
+      `verdict=empty`, last run 2026-08-20T14:50:44Z — NOT a stale-index artifact), and on-disk GCS objects under
+      `raw_tick_data/by_date/day=…/pipeline_mode=batch_odds_api/` stop after 2026-08-17 (44 objects on 08-17, **0 on
+      08-18/19/20**). **The sports odds capture has MOVED its manifest recording to
+      `pipeline_mode=live_odds_api`**: the 2026-08-16..08-20 window read shows live_odds_api carrying `odds|captured`
+      (7,851 rows, max 08-16) + `odds|empty_confirmed` (31,664 rows, max 08-20) — the live leg is still recording
+      honest-absence through yesterday. So the sentinel dedup-collapse fix (03cf5a20f4) did resolve the *sentinel
+      clobbering* mechanism it targeted, but it does NOT restore `batch_odds_api` captured rows because that
+      pipeline_mode is no longer the surface where raw odds captures land — the batch label appears retired/superseded
+      by the live path, and the batch surface's last write predates even the fix deploy. **⚠️ PARTIAL-CORRECTION
+      (2026-08-20, slot-17, DIAG P1 resolution below):** the "moved to live_odds_api / batch retired" framing was
+      WRONG. `live_odds_api` is a LONG-STANDING, ratified, separate surface (manifest rows since 2026-06-21; real
+      `odds_api_ws` WSFeedConnector + UAC `LIVE_ODDS_API` PipelineMode), not a new migration destination. The
+      `batch_odds_api` surface is silent because the fast-t1-recon batch job (`--mode batch --asset-group SPORTS
+      PREDICTION`) is failing the-odds-api with **HTTP 401 Unauthorized since 2026-08-18** (0×401 on 08-15/16/17 → 2×
+      08-18 → 500× 08-19 → 337× 08-20 in job logs; last working fetch 08-17, per slot-6 evidence) — a CREDENTIAL
+      failure (expired/revoked the-odds-api key), NOT a routing migration and NOT the sentinel bug. Follow-up filed
+      below.
+- [x] ✅ [DIAG] P1. **DONE 2026-08-20 (slot-17, `infra`). Verdict: NOT a routing migration, NOT a writer regression —
+      the `batch_odds_api` surface is silent because the-odds-api returns HTTP 401 (credential failure) since
+      2026-08-18.** Answers to the three questions: (1) **`live_odds_api` is the SANCTIONED long-standing surface, but
+      it is NOT a migration destination from `batch_odds_api`** — both are ratified, closed-set PipelineModes
+      (`pipeline_mode-partition.md`; UAC `PipelineMode.BATCH_ODDS_API` + `.LIVE_ODDS_API`), and `live_odds_api` has
+      carried `data_type=odds` manifest rows continuously since **2026-06-21** (long before any of this window), backed
+      by a real `odds_api_ws` WSFeedConnector. The fast-t1-recon job is `--mode batch --asset-group SPORTS PREDICTION`
+      (`deployment-service/terraform/gcp/audit03_cron_provisioning.tf`) and writes `batch_odds_api`; nothing routes
+      batch captures to the live label. (2) **`live_odds_api` `odds|captured` stopping at 08-16 is an EXPECTED
+      off-season/quiet-odds gap, NOT the sentinel persistence bug recurring** — the live leg is healthy and continues
+      recording `odds|empty_confirmed` through 08-20 (31,664 rows, max 08-20), i.e. the live path polls, finds no
+      playable odds on those days, and records honest absence; captured rows require actual odds to exist. (3)
+      **`batch_odds_api` DOES still have a writer — the fast-t1-recon batch job — and it is FAILING, not absent**:
+      its 08-20T01:42 logs show `ERROR Venue ODDS_API: unexpected error (shard isolated): 401, message='Unauthorized',
+      url='https://api.the-odds-api.com/v4/historical/sports/soccer_usa_mls/odds?apiKey=5634d6f10…'` →
+      `Processed date=2026-08-20: 0 venues ok, 1 failed … 0 total records` + `SHARD_INCOMPLETE`. 401-count by day in
+      the job's logs: **0 (08-15/16/17) → 2 (08-18) → 500 (08-19) → 337 (08-20)** — the key authenticated through
+      08-17 (slot-6's `credits_used=780, remaining=2811392` evidence) and began failing 08-18. **Root cause of the
+      still-open batch gap: the-odds-api API key is unauthorized/expired since 2026-08-18.** This also explains why
+      the DIAG P2's "still stale after the sentinel fix" verdict held: 03cf5a20f4 (sentinel dedup-collapse) was
+      correctly deployed, but no captured rows can land while the vendor rejects the key with 401. Fix todo filed
+      below. Evidence: `market-tick-data-service@3d420cde` (diag scripts) + `gcloud logging read` on
+      `uts-prod-market-tick-data-service-fast-t1-recon` (401 counts + shard-isolated error lines).
+- [ ] [OPERATOR][CODE] P1. Rotate/replace the the-odds-api.com API key (HTTP 401 Unauthorized since 2026-08-18) in GCP
+      Secret Manager (`odds-api-key`, per `MarketDataProviderConfig.odds_api_secret_name`), then re-verify a fresh
+      `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` manifest read lands new rows with
+      `date` past the rotation time (pre-failure max was 2026-07-26, objects stopped 08-17, 401s since 08-18).
+      Operator-gated: the key is a vendor credential held in Secret Manager. Source: this doc's now-resolved [DIAG] P1
+      verdict above (root cause = credential failure, not routing/writer). Done when: a new key is in place (or the
+      existing one is re-authorized), the fast-t1-recon job logs show 0×401 on a fresh run, and a bounded manifest
+      read confirms new `batch_odds_api/odds/captured` rows landing past the rotation time (or the residual is
+      explained).
 
 ## Progress Log
+
+**2026-08-20 (slot-17, `infra`)** — closed the [DIAG] P1 todo (batch_odds_api → live_odds_api "migration"
+classification). Verdict: **NOT a migration, NOT a writer regression — the-odds-api credential failure (HTTP 401
+since 2026-08-18)**. `live_odds_api` is a long-standing (manifest rows since 2026-06-21) ratified surface with a real
+`odds_api_ws` connector — not a new destination. The fast-t1-recon job (`--mode batch --asset-group SPORTS
+PREDICTION`, terraform `audit03_cron_provisioning.tf`) is the `batch_odds_api` writer and is FAILING: its logs show
+`ERROR Venue ODDS_API: unexpected error (shard isolated): 401 Unauthorized … api.the-odds-api.com/…/soccer_usa_mls/odds`
+→ `0 venues ok, 1 failed, 0 total records` + `SHARD_INCOMPLETE`. 401-count by day in job logs: 0 (08-15/16/17) → 2
+(08-18) → 500 (08-19) → 337 (08-20); the key authenticated through 08-17 (slot-6 credits evidence) and began failing
+08-18. Corrected my own P2 annotation's "moved to live_odds_api / batch retired" framing (it was wrong — the surface
+is credential-blocked, not retired). The sentinel fix (03cf5a20f4) is deployed but can't land captured rows while the
+vendor rejects the key. New [OPERATOR][CODE] P1 fix todo filed (rotate/replace the-odds-api key + re-verify). Evidence:
+`market-tick-data-service@3d420cde` + `gcloud logging read` on the fast-t1-recon job.
+
+**2026-08-20 (slot-17, `infra`)** — closed the last open `[DIAG] P2` todo (fix-live verification). Confirmed
+`market-tick-data-service@03cf5a20f4` is deployed: ancestor of `origin/live-defi-rollout`; the fast-t1-recon Cloud Run
+Job's `:latest` image is `0.146.5`/digest `e00fc61`, built 2026-08-20T14:44:10Z (the fix commit is 2026-08-17T12:14Z),
+and the job has been executing successfully through today (executions 2026-08-20T01:40Z, status succeeded). Re-ran a
+fresh bounded `read_availability_index_safe` read for `(pipeline_mode=batch_odds_api, data_type=odds,
+capture_status=captured)`: **STILL STALE** — 527,541 total rows, max `date=2026-07-26`, 0 rows past baseline, 0
+fixture-scoped rows. Then root-caused WHY the fix didn't restore the surface: a broad `batch_odds_api` read (any
+data_type/status) shows **zero rows dated after 2026-08-15**; the consolidator is healthy (`latest.json` rows_in=0,
+verdict=empty, 2026-08-20T14:50:44Z); on-disk objects under `…/pipeline_mode=batch_odds_api/` stop after 08-17 (44 on
+08-17, 0 on 08-18/19/20). The odds capture has moved its manifest recording to `pipeline_mode=live_odds_api`
+(2026-08-16..20 window: `odds|captured` 7,851 max 08-16; `odds|empty_confirmed` 31,664 max 08-20). New [DIAG] P1
+follow-up filed (intended-vs-regression classification). Scripts: `market-tick-data-service@e45a49bf`
+(`verify_odds_manifest_recording_fix_live_2026_08_20.py` from the prior session's commit 39949d24, plus
+`diag_odds_manifest_landing_2026_08_20.py` + `diag_sports_recent_days_2026_08_20.py`), all read-only.
 
 **2026-08-16 (slot-30, `data_engineering`)** — filed while working `sports_satellite_ao_dispatch_batch9-010`. Measured
 93.15% not_found rate on a 50,000-cell (non-randomized) sample; corpus grew 275,136→4,240,790 captured `batch_odds_api`

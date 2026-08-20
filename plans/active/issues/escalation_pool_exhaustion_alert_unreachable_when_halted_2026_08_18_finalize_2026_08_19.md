@@ -59,8 +59,10 @@ completes.
       needs a real check, not a rubber stamp.
 - [ ] [DOC] P2. Once reconciled, run the standard 6-step archival ritual on
       `escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`.
-      Fix every corpus referrer (including `escalation_watchdog_retune_and_reconcile_2026_08_07.md` and
-      `escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md`'s `related:` links).
+      Fix every corpus referrer (including `escalation_watchdog_retune_and_reconcile_2026_08_07.md`; the
+      `escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md` `related:` link was already
+      repointed at `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md` when that doc archived
+      2026-08-20, so nothing further to do there).
 
 ## Progress Log
 

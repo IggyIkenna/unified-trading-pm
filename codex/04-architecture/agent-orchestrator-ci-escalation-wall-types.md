@@ -26,7 +26,7 @@ related:
     /plans/archive/issues/ci_escalation_wall_type_mismatch_silent_human_only_2026_07_27.md,
   ]
 created: 2026-08-12
-last_reviewed: 2026-08-18
+last_reviewed: 2026-08-20
 authoritative_for:
   [ci-escalation wall_type catalog, AO agent-role-to-wall_type mapping, 2-tier escalation timing pattern]
 referenced_by: []
@@ -167,6 +167,30 @@ schema-valid frontmatter) before diagnosing — closing the loop deployment-serv
 half-built (`route_finding`'s `no_pm_clone_on_disk` defer-to-agent branch). See
 `/codex/05-infrastructure/data-pipeline-alerts.md` § "Never raw-`git commit` a finding from an ephemeral/untracked
 runner" and `/plans/archive/2026_08/dp_audit_escalation_agent_backed_filing_2026_08_18.md`.
+
+## `_QG_SIGNAL_WALLS` scoping — the false-resolution fix (2026-08-09)
+
+`_poll_wall_resolution` (`server/escalation.py`) is the terminal-signal probe the watchdog uses to decide whether a
+dispatched wall has cleared. Before 2026-08-09 it fell through UNCONDITIONALLY to the repo's bare LDR
+`quality-gates-v2` conclusion for any `wall_type` not already special-cased — auto-closing `data_pipeline_failure`
+(599/604, 99%), `provenance_blocked` (80/80), `sit_failure` (39/39), and `plan_health` (221/222) escalations within
+minutes of dispatch, zero worker ever looking at the actual filed problem, regardless of whether that repo's unrelated
+LDR QG happening to be green had anything to do with the real issue. Two CRITICAL `data_pipeline_failure` escalations
+were confirmed auto-closed this way live (a stalled backfill VM, a 1% cefi cell-loss gap).
+
+**Fix**: the fallthrough is now gated by `_QG_SIGNAL_WALLS: frozenset[str] = frozenset({"ldr_qg_failure",
+"main_ci_red"})` (`server/escalation.py:296`) — `if wall_type not in _QG_SIGNAL_WALLS: return None`
+(`server/escalation.py:2545`), closed instead via the normal deadline → reescalate → eventually-unresolved lifecycle
+(pages a human) rather than a false-positive auto-resolve. `main_ci_red` and bare `ldr_qg_failure` are the only two
+wall types where the repo's LDR QG conclusion genuinely IS the resolution signal (the wall itself is "this repo's LDR
+QG is red"); every other wall type is unaffected by that signal.
+
+Shipped `agent-orchestrator@884a9bfe1c00ffcf395fd96c6191fefa405811e3` (2026-08-09), with a parametrized regression
+test (`tests/test_escalation.py::test_poll_wall_resolution_non_qg_signal_walls_never_auto_resolve`) sweeping every
+wall type NOT in `_QG_SIGNAL_WALLS` so a future new wall type defaults to the safe branch too, plus
+`test_poll_wall_resolution_main_ci_red_unaffected_still_resolves_via_qg_green` confirming the two QG-signal walls are
+unchanged. Full incident + historical blast-radius record:
+`/plans/archive/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md`.
 
 ## Still-open coverage gaps (not fixed this pass)
 

@@ -110,11 +110,19 @@ rather than split into two same-priority concurrent items on the same file.
       4/5 instead. No manifest mutation, code change, or ship was needed or performed. Source:
       `empty_confirmed_and_coverage_correctness_audit_2026_08_15.md` todos 4 & 5.
 
-- [ ] [INFRA] P2. **Retry the 3 crash-loop alert-policy creates.** Retry the 3
+- [x] ✅ [INFRA] P2. **Retry the 3 crash-loop alert-policy creates.** Retry the 3
       `google_monitoring_alert_policy.cloud_run_service_crash_loop` resource creates (3 named services) now that the
       `restart_count` metric should be queryable (was 404ing after 3 retries over ~30min as of 2026-08-16). **Done
       when**: `tofu plan` shows zero diff for all 3 alert-policy resources, or a fresh root-cause is filed if they
       still 404. Repo: deployment-service. Source: `deployment_service_prod_terraform_drift_2026_08_07.md`.
+      **RESOLVED 2026-08-20 (slot-12, task infra_satellite_ao_dispatch_batch18-bdde083837b7)**: retried via
+      `ENV=prod ./tofu.sh apply -target='google_monitoring_alert_policy.cloud_run_service_crash_loop'` — all 3 still
+      404 (`Cannot find metric(s) that match type = "run.googleapis.com/container/restart_count"`). Fresh root cause
+      filed: that metric type is not a real Cloud Run descriptor (verified via Monitoring REST API — 26
+      `run.googleapis.com/container/*` descriptors, none named restart_count; 0 time series; the memory-HIGH and
+      instance-zero policies for the same 3 services created fine). Issue:
+      `/plans/active/issues/cloud_run_crash_loop_alert_policy_invalid_metric_2026_08_20.md`. No code change needed
+      for this todo (config fix tracked in the issue doc).
 
 - [ ] [INFRA] P2. **Re-add `cost_snapshot_cron`'s X-API-Key header via Secret Manager.** `cost_snapshot_scheduler.tf`
       dropped the `X-API-Key` header when it migrated off a hardcoded literal; re-add it sourced from a proper Secret
@@ -198,3 +206,9 @@ rather than split into two same-priority concurrent items on the same file.
   batch's extraction snapshot was taken) already fully cover this exact scope. No new investigation, code, or manifest
   mutation was needed; only a citation correction on both docs. Read-only doc-only change, no code repo touched.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (7 entries)
+- **2026-08-20 (slot-12, infra, task infra_satellite_ao_dispatch_batch18-bdde083837b7)**: item 2 (retry the 3
+  crash-loop alert-policy creates) RESOLVED via root-cause filing — the targeted prod apply still 404s because
+  `run.googleapis.com/container/restart_count` is not a real Cloud Run metric descriptor (26 container descriptors
+  exist, none named restart_count; memory-HIGH + instance-zero policies for the same 3 services created fine). Fresh
+  issue doc: `plans/active/issues/cloud_run_crash_loop_alert_policy_invalid_metric_2026_08_20.md` carries the fix
+  todos (rework onto a logs-based metric, or remove). No deployment-service code change performed.

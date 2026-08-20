@@ -32,7 +32,7 @@ locked_since: 2026-08-20
 supersedes:
 superseded_by:
 source: "Escalation agt-9d9a98; DP_RUN_MOSTLY_EMPTY / DP-FETCH-009"
-context_scope: [unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py, unified-api-contracts/unified_api_contracts/internal/schemas/_feature_contracts.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py]
+context_scope: [unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py, unified-api-contracts/unified_api_contracts/internal/schemas/_feature_contracts.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_shared.py, /codex/02-data/availability-manifest-and-data-status.md]
 ---
 
 ## Finding
@@ -83,3 +83,7 @@ collision.
 ## Post-fix audit
 
 A bounded read-only availability-index audit on 2026-08-20 after the UAC commit still measured 4,535 fresh `cefi/liquidations` `attempted_failed` rows, latest `attempted_at` 07:36:57 UTC: 1,998 schema-contract violations and 2,537 Tardis code-274 concurrent-IP-lock failures. The UAC fix is therefore shipped but not yet reflected in the production MTDS writer; keep the MTDS replay/deploy todo open.
+
+## Progress Log
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

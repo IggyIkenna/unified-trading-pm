@@ -215,6 +215,72 @@ def iter_shard_cells(payload: dict, grain: Grain | None = None) -> Iterator[Shar
                 yield ShardCell(ag, venue, None, dt, counts or {})
 
 
+@dataclass(frozen=True)
+class DedupStats:
+    """Cell-count dedup + hollow-fraction stats at the instrument_type grain (FROM-T2 P0,
+    code_readiness_t5_readiness_observability_presentations_2026_08_19.md).
+
+    Measured 2026-08-19 (and re-confirmed still present 2026-08-20 -- the writer fix in
+    instruments-service/scripts/measure_honest_coverage.py had not yet self-corrected the
+    EXISTING artefact by the next nightly cron): a naive `len(list(iter_shard_cells(...)))`
+    over-counts by ~2%, because the same shard can appear under two case-variant
+    instrument_type keys (e.g. 'ODDS' and 'odds'), and a blank instrument_type key ('') and
+    a literal string 'nan' both mean "no instrument_type recorded" but are never collapsed.
+
+    This is COUNT-ONLY -- it does not merge or mutate the underlying per-cell capture-status
+    counts (that would risk silently misrepresenting real data if two case-variant entries
+    ever genuinely diverge). It answers "how many DISTINCT shards does this payload actually
+    describe", not "what are their combined counts".
+    """
+
+    raw_cell_count: int
+    distinct_cell_count: int
+    hollow_instrument_type_count: int
+    hollow_by_asset_group: dict[str, tuple[int, int]]  # ag -> (hollow_count, total_count)
+
+    @property
+    def duplicate_count(self) -> int:
+        return self.raw_cell_count - self.distinct_cell_count
+
+    def hollow_fraction(self, asset_group: str) -> float | None:
+        entry = self.hollow_by_asset_group.get(asset_group)
+        if entry is None or entry[1] == 0:
+            return None
+        return entry[0] / entry[1]
+
+
+def compute_dedup_stats(payload: dict) -> DedupStats:
+    """Only meaningful at the instrument_type grain -- the venue_data_type grain has no
+    instrument_type axis to collapse or report hollowness on."""
+    raw = 0
+    distinct: set[tuple[str, str, str, str]] = set()
+    hollow_total = 0
+    by_ag_hollow: dict[str, list[int]] = {}
+
+    for cell in iter_shard_cells(payload, "instrument_type"):
+        raw += 1
+        itype_raw = cell.instrument_type or ""
+        # Canonical form: case-folded, and 'nan' collapsed onto blank -- both mean "no
+        # instrument_type recorded", per the measured finding (26 'nan' keys sat beside 85
+        # blank ones, describing the same absence, never previously unified).
+        itype_canon = "" if itype_raw.strip().lower() == "nan" else itype_raw.strip().lower()
+        dt_canon = cell.data_type.strip().lower()
+        distinct.add((cell.asset_group, cell.venue, itype_canon, dt_canon))
+
+        counts = by_ag_hollow.setdefault(cell.asset_group, [0, 0])
+        counts[1] += 1
+        if itype_canon == "":
+            hollow_total += 1
+            counts[0] += 1
+
+    return DedupStats(
+        raw_cell_count=raw,
+        distinct_cell_count=len(distinct),
+        hollow_instrument_type_count=hollow_total,
+        hollow_by_asset_group={ag: (v[0], v[1]) for ag, v in by_ag_hollow.items()},
+    )
+
+
 def venue_asset_group_map(payload: dict, grain: Grain | None = None) -> dict[str, str]:
     """Build {venue: asset_group} straight from the payload -- no UAC import needed."""
     out: dict[str, str] = {}
