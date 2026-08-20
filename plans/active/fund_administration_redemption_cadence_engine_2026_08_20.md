@@ -157,7 +157,7 @@ plan is a serial chain by file-topology, not a reflexive default.
   changes correctly across a subscribe-then-redeem sequence and is never equal to raw `nav_usd` once units outstanding
   != 1.
 
-- [ ] [BACKEND] P1. Add `redemption_fee_pct: Decimal` to UAC `FeeStructure`
+- [x] [BACKEND] P1. Add `redemption_fee_pct: Decimal` to UAC `FeeStructure` — fund-administration-service@48f52c25e; Evidence: quality-gates.sh passed (59s full run incl. tests); new test `test_redemption_fee_pct_deducted_only_from_redeemed_amount` in `tests/unit/test_redemption_state_machine.py` (UAC field already present @20eacf7d).
   (`unified_api_contracts/internal/reporting/fee_structure.py`), default `Decimal("0")`. Deduct it in
   `process_redemption()` (`fund_administration_service/redemption/state_machine.py:99-102`) alongside the existing
   `trader_fee_pct`/`odum_fee_pct` — same computation shape (`gross_usd * total_fee_pct`), added into the existing
@@ -228,3 +228,7 @@ plan is a serial chain by file-topology, not a reflexive default.
   execution-service are both T4; execution-service also has no synchronous REST endpoint for this today, only
   read-only `GET /transfers/active`) — will implement a same-repo-scope real adapter instead and document the
   deviation on that todo's own evidence line rather than importing across the service boundary.
+- **2026-08-20**: [slot 5] Item 7 (`redemption_fee_pct` deduction) shipped — fund-administration-service@48f52c25e.
+  UAC `FeeStructure.redemption_fee_pct` was already present (@20eacf7d), so only the fund-admin deduction
+  (`total_fee_pct += redemption_fee_pct` in `process_redemption`) + the done-when test
+  `test_redemption_fee_pct_deducted_only_from_redeemed_amount` landed here. QG green (59s).
