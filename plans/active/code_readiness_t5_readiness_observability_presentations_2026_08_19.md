@@ -508,14 +508,17 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`.
 - [ ] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`.
-- [ ] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
+- [x] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
       (missing `@vitest/coverage-v8`), unrelated to any specific change — blocks EVERY future ship to this repo, not
       just one. Fix: `npm --prefix dashboard install` (or equivalent dependency sync) before the next
       agent-orchestrator ship attempt. Found blocking the git-status ahead-nudge sustain-gate fix below; that fix and
       its 2 regression tests are complete and tested locally (26/26 file, 103/103 broader suite) but NOT YET SHIPPED
       — preserved both in the working tree and backed up outside git
       (`scratchpad/agent-orchestrator-backup/_git_alerts.py` + `test_git_staleness_alerting.py`) since this session
-      already measured local uncommitted edits as fragile under quickmerge contention.
+      already measured local uncommitted edits as fragile under quickmerge contention. **Resolved 2026-08-20**:
+      this was per-checkout local environment state, not a repo code defect — `npm --prefix dashboard install` ran
+      once, and every subsequent agent-orchestrator ship this session gated clean on it. Moot now regardless: the
+      git-status-nudge fix this was blocking landed at `agent-orchestrator@0ec1f010d2` (see below).
 
 ### Infrastructure defects that cost other agents time
 
