@@ -279,21 +279,37 @@ def get_first_paragraph_after_heading(body_text: str) -> str | None:
 
     if paragraph_lines:
         result = " ".join(paragraph_lines)
-        # Truncate to reasonable length, respecting word/sentence boundaries
+        # Truncate to reasonable length, respecting word/sentence/clause boundaries.
         if len(result) > 200:
             truncated = result[:197]
-            # Prefer sentence boundary: period/exclamation/question-mark followed by space
-            last_sentence = -1
-            for punct in (". ", "! ", "? "):
-                pos = truncated.rfind(punct)
-                if pos > last_sentence:
-                    last_sentence = pos
-            if last_sentence > 0:
+            # A boundary only counts as "good" if it uses at least half the budget —
+            # otherwise the FIRST sentence-ending punctuation in a long paragraph (e.g.
+            # at char 20) would win via rfind() finding no later match, discarding most
+            # of the 197-char budget and producing a needlessly short, dangling summary.
+            min_boundary_pos = len(truncated) // 2
+
+            def _last_boundary(puncts: tuple[str, ...]) -> int:
+                pos = -1
+                for punct in puncts:
+                    found = truncated.rfind(punct)
+                    if found > pos:
+                        pos = found
+                return pos
+
+            last_sentence = _last_boundary((". ", "! ", "? "))
+            if last_sentence >= min_boundary_pos:
                 result = truncated[: last_sentence + 1] + " ..."
             else:
-                # Fall back to last whole-word boundary
-                last_space = truncated.rfind(" ")
-                result = truncated[:last_space] + " ..." if last_space > 0 else truncated + "..."
+                # No sentence boundary uses enough of the budget — try a clause
+                # boundary (comma/semicolon/dash) before falling back further.
+                last_clause = _last_boundary((", ", "; ", " - ", " — "))
+                if last_clause >= min_boundary_pos:
+                    result = truncated[:last_clause] + " ..."
+                else:
+                    # Last resort: cut at the last whole-word boundary — never mid-word
+                    # unless the paragraph has no word boundary at all (one giant token).
+                    last_space = truncated.rfind(" ")
+                    result = truncated[:last_space] + " ..." if last_space > 0 else truncated + "..."
         return result
     return None
 

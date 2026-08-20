@@ -138,10 +138,7 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       deliberately not enforced (state which, with the reasoning). Repo: strategy-service. Done when: either the
       threshold is implemented and unit-tested, or the docstring is corrected to match actual behavior with a cited
       reason. — strategy-service@fbf78dfe20 (see Progress Log for the scope note on the IL term).
-- [ ] [STRATEGY] P3. Net `BACKRUN`'s (`strategy-service/.../mev/backrun.py:73-93`) already-available
-      `block_priority_gas_p90_gwei_<chain>` feature against its `spread_bps` profitability gate (currently used only
-      for inclusion-bid sizing, never subtracted from the gated spread). Repo: strategy-service. Done when:
-      `spread_bps < min_spread_bps` (or equivalent) accounts for the priority-gas cost, with a regression test.
+- [x] ✅ [STRATEGY] P3. Net `BACKRUN` profitability against priority gas. The engine now uses the UAC-cited Uniswap V3 gas budget and the bid price (`P90 x priority_gas_uplift`) converted to USD/bps, and fails closed without a positive priority-gas observation. Repo: strategy-service. Done when: `spread_bps < min_spread_bps` (or equivalent) accounts for the priority-gas cost, with a regression test. — strategy-service@696094a9b9 + evidence: full quickmerge gate green; 6406 passed, 248 skipped, 3 xfailed, 103 warnings; sentinel `696094a9b9`.
 - [ ] [STRATEGY] P3. Confirm whether execution-service's `ExecutionCostEstimator`
       (`execution-service/.../services/execution_cost_estimator.py:170-190`) is genuinely unused by strategy-service
       (0 import/call sites confirmed this session) — if so, either wire it in as originally intended (module
@@ -150,6 +147,8 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       marker is corrected to reflect it is unused.
 
 ## Progress Log
+
+- **2026-08-20 (slot-7, strategy worker):** Implemented and shipped BACKRUN priority-gas netting in `strategy_service/engine/strategies/v2/mev/backrun.py`. The engine now fails closed without a positive P90 feature, calculates bid gas cost from the UAC Uniswap V3 gas schedule, subtracts cost bps from the spread gate, and records net-spread/gas attestations. Added a marginal-opportunity regression in `tests/unit/engine/strategies/v2/test_mev_engines.py`; strategy-service full tests passed 6406 with 248 skipped, 3 xfailed, and 103 warnings. Quickmerge verified `strategy-service@696094a9b9` on `origin/live-defi-rollout`.
 
 - **2026-08-17 (slot-7, data_engineering, via defi_satellite_ao_dispatch_batch16_2026_08_17.md)**: filed after a
   grep-then-read verification pass (Explore sub-agent, 29 tool calls) found the wiring genuinely mixed — see §2/§3
@@ -233,9 +232,177 @@ execution-service's gas-cost models and features-service's onchain calculators. 
   passed, sentinel-verified at HEAD before quickmerge — not a sentinel-hit skip). Shipped strategy-service@fbf78dfe20.
   Remaining sibling todos in this doc (STRATEGY P3 `BACKRUN`, STRATEGY P3 `ExecutionCostEstimator`, STRATEGY P2
   `LIQUIDATION_CAPTURE` paper-universe registration below) are untouched — separate scope, not part of this task.
-- [ ] [STRATEGY] P2. Register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
+- [ ] [STRATEGY] P2. BLOCKED-ON:liquidation_capture_paper_drivability_design — Register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
       `paper_run_handler.py` (mirroring how `ARBITRAGE_PRICE_DISPERSION`/DEX-pool archetypes are wired) so it can
       actually run end-to-end in a real paper run — currently NOT in `paper_universe.py`'s drivable
       `StrategyArchetype.*` set at all (confirmed via grep, 2026-08-17). Repo: strategy-service. Done when: a real
       paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — corrected the .tabs/7 absolute prefixes to workspace-root-relative; added the features-service gas_cost_usd_calculator producer
+
+- **2026-08-20 (slot-7, worker):** shipped MTDS Aave V3 Ethereum producer corrections in `market-tick-data-service@278e377daa` (four task-scoped commits; quickmerge ancestry verified). The producer discovers pre-event `Borrow` logs, resolves balances and health at the observation block, reads block-pinned Aave oracle USD prices, covers variable + stable debt, emits deterministic candidate/snapshot digests, and emits explicit `UNAVAILABLE` rows without reusing `liquidation_events`; MTDS quality gates passed with 11,075 tests, 28 skips, 82.07% coverage. The `[MTDS] P1` checkbox remains open because §7.5 additionally requires a persisted canonical shard and a `B < B2` evidence fixture, neither of which this producer-only slice supplies.
+
+### 6. Required prerequisite design — candidate snapshot and paper injection
+
+The existing `DEFI_LENDING_LIQUIDATIONS` / `liquidation_events` data is a record of positions that were already
+liquidated. It cannot be replayed as a pre-trade candidate feed: it has no current health factor, remaining debt and
+collateral balances, or as-of prices for deciding whether a new liquidation is executable. The features-service
+`health_factor` path is protocol-level aggregate data, not an arbitrary-wallet read, and strategy-service's
+`margin_health_cache` is fail-closed and is populated by the own-position risk path; no current writer scans third-party
+borrowers. Therefore static catalog values, the existing `position_data`, or the post-event liquidation rows must not be
+repurposed to fill the engine's `debt_asset`, `collateral_asset`, `underwater_address`, amounts, prices, bonus, or
+health-cache inputs.
+
+The follow-up design must resolve these boundaries before any paper-universe registration:
+
+1. **Raw producer ownership and honest source gate.** MTDS remains the owner of raw on-chain lending observations and
+canonical event/data-type persistence. The design must first prove, for one supported protocol/chain (recommended
+first slice: Aave V3 Ethereum, where the existing `liquidation_events` handler and live `LiquidationCall` connector
+provide source precedents), that a historical/live source can discover *candidate borrowers before liquidation* and
+provide an as-of block/timestamp. A post-event liquidation feed alone fails this gate. Compound, Morpho, Kamino, and
+the other catalog rows remain honest skips until each has the same source proof; no cross-protocol fallback is allowed.
+
+2. **Canonical candidate snapshot contract.** UAC must own a typed, versioned candidate record (rather than a
+strategy-local dict) containing at minimum: `candidate_id`/underwater account address, protocol, chain, observation
+block and UTC timestamp, debt asset + exact debt amount, collateral asset + exact seizable amount, collateral and debt
+USD prices with their source/as-of metadata, liquidation bonus/penalty, and a validity/staleness bound. It must also
+carry the source event/block identifiers needed for audit and deterministic paper↔batch replay. Missing or stale
+fields are an explicit unavailable status, never zero/default values. The contract must define whether the snapshot is
+keyed by candidate address, position, or liquidation opportunity when one wallet has multiple markets.
+
+3. **Feature enrichment and health-cache population.** Features-service should consume the canonical candidate snapshot,
+join only real oracle prices, protocol liquidation parameters, DEX slippage/liquidity, and the existing gas-cost
+calculator, then emit a deterministic candidate feature row for the paper tick. A separate, typed writer must update
+strategy-service's `margin_health_cache` for the same (`underwater_address`, `protocol`) subject and observation time,
+or the strategy contract must carry an equivalent signed/as-of health reading; the design must not bypass the cache's
+fail-closed semantics. The enrichment must expose provenance and validity so the engine can reject stale candidates.
+
+4. **Runtime and replay injection.** Strategy-service must add an explicit candidate-context injection seam between
+`paper_universe.py`/`paper_run_handler.py` and `LiquidationCaptureEngine.on_tick()`. It must bind the candidate's
+address and debt asset/amount to the generated atomic instruction without encoding an address as a float or mutating
+static catalog rows. The same immutable candidate snapshot and ordering must be recorded in the run manifest and used
+by batch rerun, preserving paper↔batch determinism. Only after this seam and a real source-backed fixture exist may
+`LIQUIDATION_CAPTURE` enter `_ENGINE_DRIVABLE_ARCHETYPES` and the catalog's static rows be mapped to discovered
+candidates.
+
+- [x] ✅ [STRATEGY] P1. Design and approve the cross-repo `LIQUIDATION_CAPTURE` candidate-snapshot contract and producer ownership before registering the archetype: validate a real pre-liquidation source for one protocol/chain, specify the UAC record plus provenance/staleness fields, define features-service enrichment and strategy-service margin-health/runtime injection, and define paper↔batch manifest replay; done when the design names the owning modules, rejects post-event/static fabrication, and provides an implementation-ready follow-up with an evidence-backed source gate. — unified-trading-pm@ac42d133fb + evidence: issue §7 (Aave V3/Ethereum source gate, UAC contract, ownership, replay, and follow-ups); registration remains blocked until the fixture passes.
+
+- **2026-08-20 (slot-7, resumed worker)**: operator answered the blocked-question chain with direction A — build the real cross-repo candidate-snapshot producer/contract, reject deriving fields from `position_data` or static catalog values. Per AO eligibility, this is an open-ended architecture decision, so this session records the design boundary and leaves implementation to a follow-up after approval. Existing `LIQUIDATION_CAPTURE` registration remains `BLOCKED-ON:liquidation_capture_paper_drivability_design`; no code or static registration was changed.
+- **2026-08-20 (slot-31, worker)**: shipped the approved cross-repo design in `unified-trading-pm@ac42d133fb`. Evidence names the Aave V3 Ethereum pre-liquidation source gate (block-pinned borrower discovery, reserve balances, protocol parameters, and oracle prices before `B2`), defines the UAC-owned opportunity snapshot and provenance/staleness states, assigns MTDS/UAC/features-service/strategy-service/UTL ownership, and specifies candidate-context injection plus paper↔batch manifest digest replay. Existing post-event rows and static catalog values are explicitly rejected; archetype registration remains blocked pending the real fixture.
+
+### 7. Approved candidate-snapshot design (2026-08-20)
+
+**Decision.** Build a real, opportunity-level candidate feed for the first slice
+`AAVE_V3/ETHEREUM`. Existing `liquidation_events` rows and the `LiquidationCall`
+WS connector remain post-event telemetry only. They MUST NOT be adapted into
+candidates, and neither `position_data` nor a static catalog row may populate
+`debt_asset`, `collateral_asset`, `underwater_address`, amounts, prices, bonus,
+or health. The design is approved for implementation; paper-universe
+registration remains blocked until the source gate below is green.
+
+#### 7.1 Evidence-backed source gate — Aave V3 Ethereum only
+
+MTDS already provides the needed primitives: `onchain_event_poller.py` reads
+Ethereum `eth_getLogs`, the Aave connector binds the pool address/topic and
+stamps block/transaction provenance, and strategy-service's Aave adapter decodes
+block-pinned account data. Its liquidation query is not suitable: `_liquidations_queries.py`
+queries `liquidationCalls`, whose user, amounts, and timestamp describe an event
+that has already happened.
+
+Before registration, a historical fixture MUST: (1) discover a borrower from
+Aave `Borrow`/reserve activity at block `B`; (2) resolve debt/collateral reserve
+balances, reserve liquidation parameters, close factor, and oracle prices using
+`blockTag=B`; (3) persist an `AVAILABLE` snapshot at `B` that precedes a known
+`LiquidationCall` at `B2 > B`, with source block/transaction references and no
+fields copied from `B2`; and (4) replay through the batch reader with a
+byte-stable digest, deterministic ordering, and a non-empty row. Missing
+borrower discovery, prices, balances, or block time produces `UNAVAILABLE` plus
+provenance, never a zero/static substitute. Other protocols remain
+`UNSUPPORTED_SOURCE` until independently proven.
+
+#### 7.2 UAC-owned contract (`LiquidationCandidateSnapshot` v1)
+
+UAC owns a versioned typed DeFi record; strategy-service must not use a local
+dictionary. Its identity grain is one liquidation opportunity, not one wallet,
+so multiple markets/pairs for one wallet are separate records. `candidate_id`
+is the stable digest of `(protocol, chain, market_id, borrower_address,
+debt_asset, collateral_asset, observed_at_block)`; the borrower address is
+retained and never encoded as a float.
+
+`AVAILABLE` requires non-null `schema_version`, identity fields, exact decimal
+`debt_amount` and `seizable_collateral_amount`, debt/collateral USD prices with
+individual source and as-of block/time, liquidation bonus or penalty, health
+factor, liquidation threshold, observation block/UTC time, `valid_until_utc`, a
+bounded max age, and provenance (`source_kind`, source ref, block hash, tx hash
+when applicable, and canonical input digest). The discriminated status union is
+`AVAILABLE`, `UNAVAILABLE`, `STALE`, or `UNSUPPORTED_SOURCE`; unavailable
+variants carry a machine-readable reason and provenance, never invented numeric
+values. Validation rejects missing source block, price as-of after observation,
+invalid validity bounds, and non-positive required amounts. `snapshot_digest`
+attests to the immutable input.
+
+#### 7.3 Ownership and data flow
+
+* **MTDS:** produce and persist the Aave candidate shard and publish the same
+  typed snapshot through UTL `EventTransport` in live mode; own raw provenance
+  and capture status.
+* **UAC:** own the schema, vocabularies, status/reason enums, serialization, and
+  digest; no service duplicates the candidate key.
+* **Features-service:** consume only `AVAILABLE` snapshots and join real,
+  as-of oracle prices, protocol liquidation parameters, DEX liquidity/slippage,
+  and the existing gas calculator. Propagate candidate ID, input digest, join
+  provenance, validity, and explicit unavailable reasons; never use catalog
+  fallback values.
+* **Strategy-service:** add a typed `LiquidationCandidateContext` seam from
+  paper/live input through the V2 orchestrator into `LiquidationCaptureEngine`.
+  Address/assets/amounts/provenance travel as strings/Decimals, not float
+  features or mutated static params. A typed consumer records as-of health for
+  `(borrower_address, protocol)` through `record_margin_health`; the engine
+  continues its fail-closed `get_current_margin_health` read. Stale/non-available
+  snapshots are rejected and the cache SLA is unchanged.
+* **UTL:** provide transport only; no service-to-service Python import is added.
+
+#### 7.4 Paper/batch replay and registration gate
+
+Both runners consume the same immutable snapshot shard. The run manifest records
+`candidate_id`, observation block/time, `snapshot_digest`, schema version, source
+ref, and feature validity, sorted by `(observed_at_block, candidate_id)`. A batch
+rerun loads the recorded digest rather than rediscovering later state; a changed
+digest or expired validity is a manifest mismatch and emits no instruction. Tests
+must prove `paper(W) == batch_rerun(W)` and exact borrower/assets/amounts/source
+attestations on atomic legs. Only after the source fixture, UAC, enrichment,
+cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
+`LIQUIDATION_CAPTURE`; registration cannot manufacture a source fixture.
+
+#### 7.5 Implementation follow-up
+
+- [ ] [UAC] P1. Add `LiquidationCandidateSnapshot` v1,
+  `LiquidationCandidateContext`, availability/provenance/validity/digest tests,
+  and missing/stale-value rejection in `unified-api-contracts`.
+- [x] ✅ [MTDS] P1. Implement the Aave V3 Ethereum pre-liquidation producer and
+  canonical snapshot row shape with block-pinned Borrow discovery, pool balances,
+  reserve parameters, oracle prices, deterministic digests, and honest unavailable
+  paths; do not reuse `liquidation_events`. — market-tick-data-service@e34d0afc6f
+  + evidence: `tests/unit/test_aave_candidate_producer.py`; `quality-gates.sh`
+  (11,075 passed, 28 skipped, 1 xpassed). The real historical `B < B2` fixture and
+  CLI canonical-shard wiring remain a separate gate below and do not authorize
+  archetype registration.
+- [ ] [MTDS] P1. BLOCKED-ON:uac_snapshot_contract_and_source_fixture — add the
+  canonical shard handler and prove a real Aave V3 Ethereum `B < B2` replay fixture
+  before the downstream UAC/features/strategy gates are closed.
+- [x] ✅ [FEATURES] P1. Add snapshot enrichment and provenance propagation using
+  only real as-of prices, parameters, slippage/liquidity, and gas cost; test stale/missing joins as unavailable. — features-service@b2fcc11518 + evidence: QG_SLICE=tests (18491 passed, 209 skipped); QG_SLICE=typecheck passed.
+- [ ] [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
+  replay; keep the engine fail-closed and add paper↔batch parity/exact-leg tests.
+- [ ] [STRATEGY] P2. After all gates pass, register the archetype and prove one
+  real Aave V3 Ethereum candidate emits an instruction; otherwise retain the
+  blocked state with the measured gate failure.
+
+
+- **2026-08-20 (slot-7, worker):** shipped the MTDS Aave V3 Ethereum pre-liquidation producer in
+  `market-tick-data-service@e34d0afc6f`. It discovers borrowers from pre-event `Borrow` logs,
+  resolves account/reserve balances and liquidation parameters at the observation block, reads
+  block-pinned Aave oracle prices, emits deterministic candidate IDs/input/snapshot digests, and
+  returns explicit `UNAVAILABLE` rows for missing/stale inputs. It never consumes post-event
+  `liquidation_events`. Full MTDS quality gates passed: 11,075 passed, 28 skipped, 1 xpassed.
+  The real `B < B2` historical fixture and CLI shard integration remain tracked as the explicit
+  blocked follow-up above; archetype registration remains prohibited until that source gate passes.

@@ -835,8 +835,8 @@
     </div>
     <div class="legend">
       <span
-        ><b class="own" title="Example — hover any owner mark for the full reference">owner: W5</b> the workstream,
-        plan or epic that closes this gap — hover for the full citation; omitted once status reaches
+        ><b class="own" title="Example — hover any owner mark for the full reference">owner: W5</b> the workstream, plan
+        or epic that closes this gap — hover for the full citation; omitted once status reaches
         <b class="st st-live">live</b>, because a live claim has no open gap to own</span
       >
     </div>
@@ -925,7 +925,14 @@
     <div class="sec-head">
       <span class="num">01</span>
       <h2>What this service is, and what it isn't</h2>
-      <span class="marks"><b class="ev ev-check">? check</b></span>
+      <span class="marks"
+        ><b class="ev ev-check">? check</b
+        ><b
+          class="own"
+          title="plans/epics/strategy_master.md — the epic owning strategy-service's boundary (features/MDPS in, typed instructions out, no venue connection)"
+          >owner: strategy_master</b
+        ></span
+      >
     </div>
     <p class="lede">
       This service decides. It consumes features and market state — always the processed kind, delivered through
@@ -1024,15 +1031,14 @@
       </p>
       <p>
         <b class="ev ev-verified">✓ verified</b> — this now exists as a queryable check, not merely specified. The
-        <code>archetype-code-completeness</code> derivation checks five machine-detectable hooks per archetype per
-        mode — engine registration, parameter schema, target-universe catalogue, allocator rank, and mode-specific
-        dispatch — and falls back to a dated, cited agent-audit record rather than a guess wherever a hook has no
-        clean registry lookup. Measured 2026-08-19 across all 60 archetypes × 3 modes:
-        <b>~6 ready / ~47 not_ready / ~7 unverified</b> per mode, essentially flat across batch, paper and live. The
-        gap is concentrated, not spread evenly: <b>18 of 19 VOL_TRADING</b> archetypes and <b>all 4 PORTFOLIO</b>
-        archetypes have no registered v2 engine at all, against <b>0 of 11</b> in <code>CARRY_AND_YIELD</code> — so an
-        archetype's family is a strong predictor of whether it is runnable today, well before the mode axis is even
-        reached.
+        <code>archetype-code-completeness</code> derivation checks five machine-detectable hooks per archetype per mode
+        — engine registration, parameter schema, target-universe catalogue, allocator rank, and mode-specific dispatch —
+        and falls back to a dated, cited agent-audit record rather than a guess wherever a hook has no clean registry
+        lookup. Measured 2026-08-19 across all 60 archetypes × 3 modes:
+        <b>~6 ready / ~47 not_ready / ~7 unverified</b> per mode, essentially flat across batch, paper and live. The gap
+        is concentrated, not spread evenly: <b>18 of 19 VOL_TRADING</b> archetypes and <b>all 4 PORTFOLIO</b> archetypes
+        have no registered v2 engine at all, against <b>0 of 11</b> in <code>CARRY_AND_YIELD</code> — so an archetype's
+        family is a strong predictor of whether it is runnable today, well before the mode axis is even reached.
       </p>
       <p>
         <b class="ev ev-verified">✓ verified</b> — the input side of that check is itself partial today: the registry
@@ -1116,8 +1122,8 @@
     <details class="sec-body">
       <summary>All 60 archetypes, grouped by their family</summary>
       <p class="lede">
-        The families above are the 9-member classification; this is every archetype inside them, so "9 families"
-        does not read as a flattened summary of a much larger surface it is quietly hiding.
+        The families above are the 9-member classification; this is every archetype inside them, so "9 families" does
+        not read as a flattened summary of a much larger surface it is quietly hiding.
       </p>
       <div class="plate">
         <div class="plate-head">
@@ -1213,17 +1219,17 @@
           <b class="ev ev-verified">✓ verified</b> — all 60 <code>StrategyArchetype</code> members checked against
           <code>ARCHETYPE_TO_FAMILY</code> in
           <code>unified_api_contracts/internal/architecture_v2/strategy_naming.py</code> (2026-08-19): 2 + 3 + 11 + 8 +
-          10 + 1 + 19 + 2 + 4 = 60, none unmapped and none mapped twice. <b>VOL_TRADING</b> is the single largest
-          family at 19 members — nearly a third of the total — and, per the callout above, also the family with the
-          fewest archetypes actually wired to a v2 engine today.
+          10 + 1 + 19 + 2 + 4 = 60, none unmapped and none mapped twice. <b>VOL_TRADING</b> is the single largest family
+          at 19 members — nearly a third of the total — and, per the callout above, also the family with the fewest
+          archetypes actually wired to a v2 engine today.
         </p>
         <p>
-          <b class="ev ev-verified">✓ verified</b> — the <b>55 of 60</b> <code>ARCHETYPE_FEATURE_GROUPS</code>
-          coverage figure cited above was re-checked against the current registry (2026-08-19, unchanged since
-          2026-08-18): the 5 still undeclared are <code>ARBITRAGE_MEV_BACKRUN</code>,
-          <code>ARBITRAGE_MEV_JIT_LIQUIDITY</code>, <code>ARBITRAGE_MEV_LIQUIDATION_BUNDLE</code>,
-          <code>ARBITRAGE_MEV_SANDWICH</code> and <code>PORTFOLIO_MULTI_STRATEGY</code> — all four MEV archetypes in
-          <code>ARBITRAGE_STRUCTURAL</code>, plus one of the four <code>PORTFOLIO</code> members.
+          <b class="ev ev-verified">✓ verified</b> — the <b>55 of 60</b> <code>ARCHETYPE_FEATURE_GROUPS</code> coverage
+          figure cited above was re-checked against the current registry (2026-08-19, unchanged since 2026-08-18): the 5
+          still undeclared are <code>ARBITRAGE_MEV_BACKRUN</code>, <code>ARBITRAGE_MEV_JIT_LIQUIDITY</code>,
+          <code>ARBITRAGE_MEV_LIQUIDATION_BUNDLE</code>, <code>ARBITRAGE_MEV_SANDWICH</code> and
+          <code>PORTFOLIO_MULTI_STRATEGY</code> — all four MEV archetypes in <code>ARBITRAGE_STRUCTURAL</code>, plus one
+          of the four <code>PORTFOLIO</code> members.
         </p>
       </div>
     </details>
@@ -1306,15 +1312,17 @@
         </p>
       </div>
       <div class="callout">
-        <span class="tag">Target-state: a reference price, position and credit — per instrument, not per instruction</span>
+        <span class="tag"
+          >Target-state: a reference price, position and credit — per instrument, not per instruction</span
+        >
         <b class="st st-plan">planned</b>
         <b class="ev ev-assumed">~ assumed</b>
         <p>
-          <code>reference_price</code> only tells execution what the market looked like at instruction time — it
-          says nothing about whether execution's view of strategy's <em>position</em> agrees with strategy's own
-          view. A price gap is a market observation; a position gap is an integrity problem. Price, position, and
-          credit at the same reference point are the whole reference mechanism, not price alone. Because a strategy
-          instance can hold a universe of many instruments at once, that triple has to be a
+          <code>reference_price</code> only tells execution what the market looked like at instruction time — it says
+          nothing about whether execution's view of strategy's <em>position</em> agrees with strategy's own view. A
+          price gap is a market observation; a position gap is an integrity problem. Price, position, and credit at the
+          same reference point are the whole reference mechanism, not price alone. Because a strategy instance can hold
+          a universe of many instruments at once, that triple has to be a
           <strong>vector — one entry per instrument</strong>, not a single flat value on the instruction; an earlier
           draft of this design put a single per-venue value straight on the envelope, which solves the venue axis
           (needed for <code>SOR_AT_EXECUTION</code>) but not the instrument axis, and was corrected for that reason.
@@ -1325,9 +1333,7 @@
           <i># proposed addition to StrategyInstructionEnvelope — one entry per instrument in the universe</i>
           references: list[InstrumentReferenceEntry] = []
 
-          <span class="k">class</span> <b>InstrumentReferenceEntry</b>:
-          instrument_id: str
-          reference_price: Decimal
+          <span class="k">class</span> <b>InstrumentReferenceEntry</b>: instrument_id: str reference_price: Decimal
           reference_position: dict[str, Decimal]
           <i># per-venue — SOR_AT_EXECUTION-safe, nested per instrument</i>
           credit: CreditBand | None = None
@@ -1335,25 +1341,23 @@
           position_adjustment_bps_per_unit_risk: Decimal | None = None
           <i># symmetric coefficient, against RAW position — generalizes QuoteInstruction.skew_on_inventory</i>
 
-          <span class="k">class</span> <b>CreditBand</b>:
-          entry_threshold: Decimal | None = None
+          <span class="k">class</span> <b>CreditBand</b>: entry_threshold: Decimal | None = None
           <i># minimum edge to act</i>
           abandon_threshold: Decimal | None = None
           <i># max adverse move tolerated once committed — optional even when entry_threshold is set</i>
         </div>
         <p>
-          Both fields are governing boundaries strategy sets, not instructions execution must follow mechanically —
-          the same intent-vs-mechanism split <code>execution_policy_ref</code> and <code>AtomicInstruction</code>'s
-          own <code>hedge_deadline_ms</code> already draw above. On mismatch, execution would reuse the risk
-          engine's existing four-way consequence rather than a new decision model — but the trigger type itself
-          doesn't exist yet; none of the risk engine's 13 typed trigger conditions covers a position mismatch today.
-          How the vector keys the venue axis, and whether credit varies per entry, are both still open.
+          Both fields are governing boundaries strategy sets, not instructions execution must follow mechanically — the
+          same intent-vs-mechanism split <code>execution_policy_ref</code> and <code>AtomicInstruction</code>'s own
+          <code>hedge_deadline_ms</code> already draw above. On mismatch, execution would reuse the risk engine's
+          existing four-way consequence rather than a new decision model — but the trigger type itself doesn't exist
+          yet; none of the risk engine's 13 typed trigger conditions covers a position mismatch today. How the vector
+          keys the venue axis, and whether credit varies per entry, are both still open.
         </p>
         <p>
           <b class="ev ev-assumed">~ assumed</b> — design only, not yet implemented; the shape above is illustrative,
           not final. Full record:
-          <a
-            href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md"
+          <a href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md"
             >execution_delta_proxy_repricer_generalization_2026_08_18.md</a
           >
           § "The reference triple is a vector per instrument, not a scalar per instruction."
@@ -1440,9 +1444,7 @@
       <h2>Configuration surface and the wizard</h2>
       <span class="marks"
         ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
-        ><b
-          class="own"
-          title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard"
+        ><b class="own" title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard"
           >owner: W6</b
         ></span
       >
@@ -1599,25 +1601,28 @@
       <summary>Venue and chain breadth, by the numbers</summary>
       <p class="lede">
         The two sections above describe how venue support is <em>tracked</em>; this is how large the surface actually
-        <em>is</em>. Every figure below comes from importing the registry directly, never from counting entries by
-        eye.
+        <em>is</em>. Every figure below comes from importing the registry directly, never from counting entries by eye.
       </p>
       <div class="stat-row">
         <div class="stat"><span class="v">192</span><span class="k">Venues declared</span></div>
         <div class="stat"><span class="v">103</span><span class="k">DeFi venues</span></div>
-        <div class="stat"><span class="v">23</span><span class="k">Chains declared in <code class="mono">ChainKind</code></span></div>
-        <div class="stat"><span class="v">13</span><span class="k">Of those with a confirmed DeFi venue today</span></div>
+        <div class="stat">
+          <span class="v">23</span><span class="k">Chains declared in <code class="mono">ChainKind</code></span>
+        </div>
+        <div class="stat">
+          <span class="v">13</span><span class="k">Of those with a confirmed DeFi venue today</span>
+        </div>
       </div>
       <h3>The chains</h3>
       <p>
         <code>ChainKind</code> — the canonical chain enum consumed by strategy-service archetype configs,
-        execution-service connector routing and MTDS adapter dispatch — declares <b>23</b> members: ethereum,
-        arbitrum, base, optimism, polygon, avalanche, bsc, gnosis, linea, scroll, zksync, blast, mode, celo, aurora,
-        fantom, mantle, metis, moonbeam, solana, bitcoin, starknet, hyperliquid_l1. Cross-referencing that list
-        against the chain token in every <code>VENUE_DATA_TYPE_CAPABILITIES</code> key finds a confirmed venue on
-        <b>13</b> of the 23 today: arbitrum, avalanche, base, bsc, ethereum, hyperliquid_l1, linea, optimism, polygon,
-        scroll, solana, starknet and zksync. The other <b>10</b> — aurora, bitcoin, blast, celo, fantom, gnosis,
-        mantle, metis, mode, moonbeam — are declared with no venue found on them yet.
+        execution-service connector routing and MTDS adapter dispatch — declares <b>23</b> members: ethereum, arbitrum,
+        base, optimism, polygon, avalanche, bsc, gnosis, linea, scroll, zksync, blast, mode, celo, aurora, fantom,
+        mantle, metis, moonbeam, solana, bitcoin, starknet, hyperliquid_l1. Cross-referencing that list against the
+        chain token in every <code>VENUE_DATA_TYPE_CAPABILITIES</code> key finds a confirmed venue on <b>13</b> of the
+        23 today: arbitrum, avalanche, base, bsc, ethereum, hyperliquid_l1, linea, optimism, polygon, scroll, solana,
+        starknet and zksync. The other <b>10</b> — aurora, bitcoin, blast, celo, fantom, gnosis, mantle, metis, mode,
+        moonbeam — are declared with no venue found on them yet.
       </p>
       <p>
         <b>plasma</b> is the inverse case, and worth naming precisely because it is easy to miss: it carries two live
@@ -1629,14 +1634,16 @@
         <p>
           <code>VENUE_CHAIN_MAP</code> — an older, narrower registry used for wallet-grouping logic — covers only
           <b>15 venues across 4 chains</b> (ethereum, base, plasma, hyperliquid_l1). Separately,
-          <code>KNOWN_CHAINS</code> in the DeFi capability-declarations module lists 12 raw entries, two of which
-          (<code>ASTER</code> — a venue name, not a chain; <code>HYPERLIQUID</code> — spelled differently from
-          <code>ChainKind</code>'s <code>hyperliquid_l1</code>) are not valid <code>ChainKind</code> members at all,
-          leaving 10 real chains declared. That set is missing 13 of <code>ChainKind</code>'s 23 members, including
-          two — <b>scroll and starknet</b> — that already carry a confirmed venue. Neither map is wrong for its own
-          narrow original purpose, but anything that derives chain coverage, or a coverage denominator, from either
-          map specifically, rather than from the venue registry directly, under-reports by construction. This is a
-          live code gap, not a documentation one.
+          <code>KNOWN_CHAINS</code> in the DeFi capability-declarations module lists 12 raw entries, two of which (<code
+            >ASTER</code
+          >
+          — a venue name, not a chain; <code>HYPERLIQUID</code> — spelled differently from <code>ChainKind</code>'s
+          <code>hyperliquid_l1</code>) are not valid <code>ChainKind</code> members at all, leaving 10 real chains
+          declared. That set is missing 13 of <code>ChainKind</code>'s 23 members, including two —
+          <b>scroll and starknet</b> — that already carry a confirmed venue. Neither map is wrong for its own narrow
+          original purpose, but anything that derives chain coverage, or a coverage denominator, from either map
+          specifically, rather than from the venue registry directly, under-reports by construction. This is a live code
+          gap, not a documentation one.
         </p>
         <p>
           <b class="ev ev-verified">✓ verified</b> — <code>ChainKind</code> enumerated directly from
@@ -1724,8 +1731,8 @@
       <div class="callout">
         <span class="tag">Illustrative, not exhaustive</span>
         <p>
-          The table above names the protocols with the widest chain spread and the single-chain venues worth calling
-          out individually; it is not the full 103-venue DeFi list.
+          The table above names the protocols with the widest chain spread and the single-chain venues worth calling out
+          individually; it is not the full 103-venue DeFi list.
         </p>
         <p>
           <b class="ev ev-verified">✓ verified</b> — every row checked directly against
@@ -1733,10 +1740,10 @@
           <code>unified_api_contracts/registry/market_data_categories.py</code>, and the 103-venue DeFi total against
           direct membership in <code>VENUES_BY_ASSET_GROUP["defi"]</code> in the same file, 2026-08-19 — a plain
           dict-key read, not a name filter. A name-prefix filter over the same base registry is unstable and gives a
-          different count depending on exactly which prefixes are treated as "DeFi" (a companion same-day audit
-          tried several and got results ranging from the high 50s past 100; see
-          <code>plans/audit/results/registry_ground_truth_2026_08_19.md</code>). 103 is reported here because it
-          comes from registry membership rather than a filter choice.
+          different count depending on exactly which prefixes are treated as "DeFi" (a companion same-day audit tried
+          several and got results ranging from the high 50s past 100; see
+          <code>plans/audit/results/registry_ground_truth_2026_08_19.md</code>). 103 is reported here because it comes
+          from registry membership rather than a filter choice.
         </p>
       </div>
     </details>
@@ -1804,9 +1811,7 @@
       <h2>How a strategy picks: coins, venues, funding</h2>
       <span class="marks"
         ><b class="st st-part">partial</b><b class="ev ev-check">? check</b
-        ><b
-          class="own"
-          title="system_readiness_master.md — W8: Weightings, declared not inferred; W17: Fees and gas"
+        ><b class="own" title="system_readiness_master.md — W8: Weightings, declared not inferred; W17: Fees and gas"
           >owner: W8, W17</b
         ></span
       >
@@ -2395,8 +2400,8 @@
       <h3>Emergency flatten is a plan, not a loop</h3>
       <div class="code">
         <i># carry_staked_basis unwind order (close_all/carry_staked_basis.py docstring):</i>
-        1. cancel resting perp orders on the hedge venue 2. close the perp hedge (reduce-only) 3. repay the Aave
-        borrow 4. unstake / redeem the LST 5. settle on-chain transfers 6. post-close recon check
+        1. cancel resting perp orders on the hedge venue 2. close the perp hedge (reduce-only) 3. repay the Aave borrow
+        4. unstake / redeem the LST 5. settle on-chain transfers 6. post-close recon check
         <i># venue-priority: hedge (CeFi) closed first, then DeFi unwind</i>
       </div>
       <p>
@@ -2424,9 +2429,7 @@
       <h2>Auto-resolution and escalation</h2>
       <span class="marks"
         ><b class="st st-part">partial</b><b class="new">new</b><b class="ev ev-check">? check</b
-        ><b
-          class="own"
-          title="system_readiness_master.md — W4: Observability, alerting and auto-recovery"
+        ><b class="own" title="system_readiness_master.md — W4: Observability, alerting and auto-recovery"
           >owner: W4</b
         ></span
       >

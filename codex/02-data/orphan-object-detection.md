@@ -59,6 +59,30 @@ code_refs:
 
 ---
 
+## The CONSUMPTION direction (added 2026-08-20)
+
+Everything else in this doc is the **storage→manifest** direction: walk GCS, ask "is this stored object
+manifested?" (`instruments-service/scripts/migration_orphan_sweep.py`,
+`market-data-processing-service/scripts/candle_orphan_sweep.py`, and MTDS's sports fork). The opposite direction —
+**"is this manifested axis value consumed by anything?"** — is answered by the `shard-utilisation-sweep` skill
+(`unified-trading-pm/cursor-configs/skills/shard-utilisation-sweep/`), which closes the `[SKILL] P1` "Shard
+utilisation / orphan sweep" definition-of-done item in `/plans/epics/system_readiness_master.md`.
+
+It emits a **consumption verdict ONLY, never a delete suggestion**, and `unverified` is a first-class verdict.
+Two guards exist because the naive version produced false orphan verdicts on real 2026-08-20 data — both are
+worth knowing before writing any similar check:
+
+- **DeFi venues are bare in the manifest, glued in the registry.** `VENUE_TO_ASSET_GROUP` keys DeFi as
+  `PROTOCOL-CHAIN` (135 of its 209 entries); the manifest writer emits the bare protocol with `chain` in its own
+  column. A bare membership test condemned 95 live venues including `AAVE_V3` and `LIDO`. The registry and the
+  manifest sit on opposite sides of the venue/chain canonicalisation cutover.
+- **An asset_group's registry vocabulary may be a different naming system entirely.** `defi` has NO entry in
+  `VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE`; `sports` declares 5 odds-SHAPE types against ~84 manifest MARKET
+  types. Absence from a registry that does not model your vocabulary is not evidence of an orphan.
+
+The general rule both encode: **absence is only evidence once you have confirmed you probed the vocabulary the
+WRITER actually emits.**
+
 ## §1 — What an orphan IS, in terms of the four surfaces
 
 An **orphan** is an object that exists on surface 1 and on no other surface:

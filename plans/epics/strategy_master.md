@@ -19,9 +19,11 @@ repos:
     deployment-api,
     deployment-ui,
     execution-service,
+    fund-administration-service,
     greeks-service,
     instruments-service,
     strategy-service,
+    unified-api-contracts,
     unified-trading-system-ui,
   ]
 scope: [engineer, admin]
@@ -81,7 +83,9 @@ related_plans:
   - ../active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md
   - /plans/archive/2026_08/strategy_service_family2_close_unwind_emission_2026_08_09.md
   - ../active/v2_engine_venue_buildout_2026_06_15.md
-last_updated: 2026-08-19 # was 2026-08-19 (plan-reconcile pass) -- added venue archetype-registration audit +
+last_updated: 2026-08-20 # was 2026-08-19 -- added fund-administration-service + unified-api-contracts to repos:, the
+  # redemption/NAV-cadence-engine work in fund_administration_redemption_cadence_engine_2026_08_20.md lands here.
+  # Prior entry: was 2026-08-19 (plan-reconcile pass) -- added venue archetype-registration audit +
   # manual/automated live-mode cross-cutting requirement + instruction/order-type/venue registry cross-reference for
   # the priority venue/protocol set, see body. Prior entry: was 2026-08-18 -- /plan-reconcile strategy_master:
   # repointed 2 dangling active/ links to their real archive/2026_08/ paths (carry_strategy_ensemble_productionization,

@@ -28,7 +28,7 @@ related:
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -193,13 +193,25 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
       `package-lock.json` since a prior LDR commit, never `npm install`'d on this slot) and this slot's Python `.venv`
       missing `tiktoken`/`openai-codex`/`mcp` (declared `pyproject.toml` deps, `uv sync` resolved it) — both fixed via
       the standard sync command for their package manager, not a code change.
-- [ ] [DATA] P2. **Capture which repo(s) a task actually touched, from real commit/push evidence.** Not the plan's
+- [x] ✅ [DATA] P2. **Capture which repo(s) a task actually touched, from real commit/push evidence.** Not the plan's
       declared `repos:` frontmatter (a stated intent, not a measurement) — confirmed no such field exists today
       (`repos_touched`/`repo_count` in `server/` only match unrelated dirty-worktree-state concepts, in
       `server/routes/git_health.py` and `server/worktree_clean_check/_report.py` — symbols, not line numbers,
       corrected 2026-08-18 /plan-reconcile). **Done when**: a real completed
       task's record shows the real repo(s) it committed to, sourced from actual commit/push evidence. Source: same
       doc, "[DATA] P2. New (2026-08-17): capture which repo(s) a task actually touched...". Repo: agent-orchestrator.
+      **DONE `agent-orchestrator@36d37fe9eb`** — new `TaskUsageRow.repos_touched` (nullable TEXT; JSON-encoded
+      sorted list of repo names; NULL when `assigned_at` is None — no window to search, distinct from a real
+      computed `[]` for a genuinely commit-free task), populated at `/done` time via new
+      `state_store.repos_touched_for_slot()` — a best-effort scan of the slot's worktree (resolved from
+      `SlotRow.worktree`) running `git log --all --author='slot-<N>·' --since/--until` against every repo to find
+      commits authored by this slot's commit identity inside `[assigned_at, completed_at]`: REAL git commit
+      evidence, not the plan's declared `repos:` frontmatter. Migration entry added to
+      `bootstrap._TASK_USAGE_MIGRATION_COLUMNS`. Evidence: 4 new pytest cases in
+      `tests/test_record_done_task_usage_isolation.py` (in-window/right-slot repo counted, wrong-slot +
+      out-of-window + non-git-dir excluded, `[]` when window searched with zero matching commits, None when no
+      `assigned_at` / worktree unresolvable) — full backend suite **5179 passed / 2 skipped** + dashboard
+      463 vitest, full `quality-gates.sh` green (no UI touched).
 - [ ] [DATA] P2. **Persist the task's `context_scope` size onto the completed-task record.** The reading-list already
       passed to the worker at dispatch (`server/dispatch.py` — symbol, not a line number, corrected 2026-08-18
       /plan-reconcile) is dispatch-time-only today and never carried
@@ -241,3 +253,12 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
   (a dep-sync, not a code change), no separate issue doc needed.
 - **context-scout 2026-08-19**: verified the pre-existing context_scope (4 entries, set at authoring) — all paths
   confirmed resolving on disk, still the correct source-doc reading list; no change needed.
+- **2026-08-20 (data_engineering, slot 32)**: Item 3 (capture which repo(s) a task actually touched) shipped
+  `agent-orchestrator@36d37fe9eb` — see the flipped checkbox above for the full evidence. Third of the 4 todos
+  sharing the `sequential: true` `TaskUsageRow` migration gate — added `repos_touched` to
+  `bootstrap._TASK_USAGE_MIGRATION_COLUMNS` after `peak_context_used_pct` (items 1-2's `compact_count` +
+  `peak_context_used_pct` already present); the next worker (item 4, context_scope size) should re-fetch this file
+  before adding its own column, per the frontmatter coordination note. Design note for the record: "commit/push
+  evidence" is implemented as a commit-author + task-window scan of the slot's worktree (the real measurement), not
+  an origin-reachability check per repo — the latter would add a network fetch per repo to `/done`'s telemetry path;
+  the commit itself is the evidence, and the worker has already pushed by the time `/done` runs.

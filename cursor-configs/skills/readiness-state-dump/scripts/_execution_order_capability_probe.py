@@ -43,15 +43,26 @@ import sys
 from execution_service.trade_execution.factory import _resolve_venue_str, get_supported_venues
 from unified_api_contracts.registry import (
     CapabilityResolutionError,
+    UnsupportedEnvironmentError,
     UnsupportedOperationError,
     validate_operation,
 )
 
 
 def _place_order_supported(venue_str: str, env: str) -> bool | None:
+    """Root-cause fix, 2026-08-20: measured live, a venue that structurally does not
+    support an environment at all (e.g. upbit has no testnet -- 'Supported: [mainnet]')
+    raises UnsupportedEnvironmentError from validate_mode_env_auth, not
+    UnsupportedOperationError. The prior version caught only the latter, so the FIRST
+    such venue in the input list crashed this whole subprocess -- every venue after it
+    in the batch silently degraded to unverified, and the crash looked identical to a
+    genuine environment/config problem (a benign 'no bucket configured' log line right
+    above it was the misleading red herring). Both exceptions mean the same thing here
+    -- the operation is not available in this env -- so both resolve to False, the same
+    real negative UnsupportedOperationError already produced."""
     try:
         validate_operation(venue_str, "place_order", env)
-    except UnsupportedOperationError:
+    except (UnsupportedOperationError, UnsupportedEnvironmentError):
         return False
     except CapabilityResolutionError:
         return None
