@@ -74,7 +74,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-19
+last_updated: 2026-08-20
 locked_since:
 context_scope:
   [
@@ -570,6 +570,40 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
   covered the FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (data_pipeline_failure escalation worker, slot 11, agt-b9315d):** dispatched off a CRITICAL
+  `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-cefi-consolidated-20260817-025031
+  venue=BYBIT-FUTURES data_type=book_snapshot_5` (last attempt 0.2h ago, never captured, staleness budget 3d;
+  no issue slug — alert-carries-the-details path). Read this doc first per the pre-task conflict-check rule and
+  found the exact same VM+venue already root-caused here on 2026-08-18 (the SPOT_PAIR-filter fix,
+  `market-tick-data-service@5f88715e`) with an explicit open note that "this VM needs a fresh cycle to pick up
+  the new code." **Live-reconfirmed the gap is STILL open, 2 days later, with fresh evidence (not a re-citation
+  of the 08-18 finding):** SSH'd the VM (`gcloud compute ssh ... --tunnel-through-iap`), located the real
+  per-shard log via `/proc/<pid>/fd` (`/home/ikennaigboaka/logs/live-bybit-futures-book-snapshot-5.log`, pid
+  5220, process alive since Aug17 with ~540min accumulated CPU time — genuinely running, not hung). The log
+  confirms the VM is still the SAME pre-fix build: its 2026-08-17 startup errors reference
+  `cefi/BYBIT-FUTURES/book_snapshot_5/BYBIT:SPOT_PAIR:*` instrument-window flushes — i.e. it is still building
+  subscribe topics for SPOT_PAIR ids on the Bybit LINEAR (perp-only) endpoint, exactly the poisoned-batch
+  mechanism `5f88715e` fixed. Only 66 total log lines mention `book_snapshot_5` across 3+ days of runtime and
+  zero contain `record_captured`/`record_failed` — consistent with the 08-18 finding's "100% empty_confirmed
+  across ALL id types" result, not just the SPOT_PAIR subset. `git log` confirms the VM (created
+  2026-08-16T19:50:40-07:00 = `-20260817-025031`) predates `5f88715e` (2026-08-18T10:49:19Z) by ~1 day — the fix
+  was never live for this instance. **No new code change**: the fix is already correct and on
+  `origin/live-defi-rollout`; the only remaining action is an operational VM relaunch via the sanctioned
+  `deployment-service/scripts/vm/launch-mtds-live-cefi-consolidated.sh`. Did NOT perform that relaunch this
+  session — its singleton lock means the new VM would need to run alongside (or replace) the current
+  actively-productive one, and its full verification (the new VM must first clear the documented cold-start
+  IS-universe-empty gap — `mtds_live_cefi_redeploy_cold_start_is_universe_gap_2026_08_17.md`, self-resolving at
+  the 13:30 UTC daily `is-daily-enum-cefi` refresh — then confirm a real BYBIT-FUTURES `captured` row, then the
+  old VM can be safely deleted) spans ~3.6h from this dispatch's 09:52 UTC start, well beyond a one-shot
+  escalation session, and temporarily zeroes ALL cefi live venues on this shared 24-shard VM, not just
+  BYBIT-FUTURES. This matches the same judgment call two prior dispatches (2026-08-18, 2026-08-19) already made
+  on this exact doc. Posted a bounded `/blocked` (`BLK-a32e913b`, recommendation B = defer/document, not
+  relaunch) rather than deciding unilaterally, given `dp_cron_did_not_fire_still_storming_after_gcs_persistence_
+  fix_2026_08_20.md`'s own same-day `[OPERATOR]` tag already routes this exact gap to the owning data tranche.
+  No 2-minute answer arrived; proceeding per my own stated recommendation (B) as the blocked-question response
+  allowed (`can_continue: true`). No GCS/manifest write, no VM launch, no code change this session (PM plan-doc
+  edit only). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id, so skipped the authoring-slot ping
+  per the boot-prompt's skip rule — the dispatch-time Slack alert already covered the FYI.
 - **2026-08-20 (data_pipeline_failure escalation worker, slot 29, agt-910641)**: dispatched off a CRITICAL
   `DP_CRON_DID_NOT_FIRE` (DP-LIVE-004) escalation naming `vm=mtds-live-sports-odds-api-odds-20260816-145019
   venue=MATCHBOOK data_type=odds` (no issue slug — alert-carries-the-details path). Confirmed this is the SAME
