@@ -422,8 +422,30 @@ _None at authoring time._
       Data migration stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule, per the ruling's own
       text. Evidence:
       `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
-- [ ] [BACKEND] P0. Fix the GCS client silent write failure — wrong method names swallowed by a broad exception
-      handler. Evidence: `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
+- [x] ✅ [BACKEND] P0. GCS client silent write failure fixed — unified-trading-library@425ce119d.
+      `GCSBlobHandle.__getattr__` now raises `UnsupportedNativeBlobMethodError` (a `RuntimeError`, deliberately
+      NOT an `AttributeError`) on the four raw-SDK methods it doesn't implement
+      (`upload_from_string`/`upload_from_file`/`upload_from_filename`/`download_as_string`), naming the
+      supported replacement. A `RuntimeError` propagates straight through the defensive
+      `getattr(blob, "upload_from_string", None)` pattern that caused the original incident
+      (`deployment_service/deployment/state.py` returning a success-shaped result while persisting nothing) —
+      that exact guard shape now fails loud at the call site instead of silently degrading.
+      **Provenance**: this began as another session's uncommitted, 8-hours-stale WIP sitting in this shared UTL
+      checkout (confirmed dead — no live process — before touching it). Reviewed in full rather than shipped
+      blind, and a real bug was found in it: `download_as_text` was listed as unsupported, but `StorageBlob`
+      (the base class) already implements it as a working default (`download_as_bytes().decode(encoding)`), so
+      normal attribute lookup finds it before `__getattr__` ever fires — it could never actually have raised.
+      Caught by a parametrized test over every mapped method (`DID NOT RAISE`), not assumed correct. Removed
+      from the map; two dedicated tests now pin both directions (stays out of the trap map, genuinely still
+      works).
+      Split into a new `_gcp_blob_guard.py` sibling module (matching the existing `_gcp_credentials.py`/
+      `_gcp_sdk_protocols.py` convention) rather than landing inline — `gcp.py` was already at 866 lines and
+      this tranche's own 900-line hard cap would have failed on the addition otherwise; lands at 883.
+      QG green (281s, real exit captured directly). This is scoped narrower than the source issue's full
+      651-line multi-session history (deployment-service remediation across many callers, largely already
+      shipped in earlier sessions per that doc's own "Fixed" section) — this closes the SHARED-WRAPPER root
+      cause in UTL itself, the piece that was this tranche's own todo. Evidence:
+      `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
 - [ ] [BACKEND] P1. Root-cause and fix the 55 failing tests in `config_interface` / `cloud_interface`. Leading
       suspect (stale `.venv` vs `uv.lock`) is unconfirmed — confirm or refute before fixing. This suite is red in a
       library every service depends on. Evidence:
