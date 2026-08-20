@@ -21,7 +21,7 @@ summary: >-
   trimmed list with NO marker written at all, i.e. a false-negative on STALE detection). This bug is the inverse shape:
   a marker WAS written, and its claimed count is simply wrong relative to what actually landed — a false sense that the
   doc is fully scouted when a real content regression sits underneath it.
-status: open
+status: resolved
 nature: issue
 asset_group: [cross-cutting]
 stage: [meta]
@@ -39,7 +39,7 @@ related:
   ]
 created: 2026-08-06
 author: context_scout_auditor (dispatch agt-23f116, slot 4)
-last_updated: 2026-08-06
+last_updated: 2026-08-20
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -49,12 +49,11 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.2
 assigned_role: data_engineering
 drift_direction: advance-code
-archive_exempt: true # temporary flip-then-archive bridge; remove with the follow-up archival move
 locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: slot-19 (backend_engineer), unified-trading-pm@03de572ff8 + 8f39e5e650
 source: >-
   Found incidentally while running the scheduled `/context-scout` daily-incremental dispatch (2026-08-06,
   agent-orchestrator slot 4, dispatch agt-23f116). Each of the 4 read-only Phase-1 scouting sub-agents independently
@@ -73,6 +72,8 @@ context_scope:
     scripts/plan-hygiene/check_line_caps.sh,
   ]
 ---
+
+> **ARCHIVED 2026-08-20 — RESOLVED** — the missing migration-script context entry was restored and the final issue todo was completed. Original path: `plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md`.
 
 # context-scout markers claim more entries than the live frontmatter contains
 
