@@ -269,33 +269,18 @@ todos only to confirm they are data-movement, then leave it.
 
 _None at authoring time._
 
-- [ ] [FROM-T4] P2. **Pendle's dispatcher is wired now — the SIT cascade invariant still calls it unreachable, and
-      only you can fix that.** Wired in `execution-service@0c0b6a1a40`: `DeFiAdapter` gained a `pendle_connector`
-      and an `_execute_pendle_lending` handler, `PENDLE-ETHEREUM` routes LEND to it, and production
-      (`live_execution_handler._build_defi_adapter`) constructs it.
-
-      The blocker is in YOUR repo:
-      `unified-api-contracts/tests/test_execution_service_venue_coverage_cascade_invariant.py` maintains
-      `DEFI_VENUE_TO_CONNECTOR_CLASS` (`:165`) and `DEFI_VENUE_TO_GATE_MARKER` (`:179`) by hand, and neither has a
-      `pendle` entry. That file's own reachability baseline
-      (`tests/data/execution_service_venue_reachability_baseline.json`) records why this matters — with no entry,
-      `class_name is None` makes the venue "unconditionally unreachable regardless of any execution-service
-      wiring — a false signal from a stale checker dict, not (only) a dispatcher gap". Symbiotic hit exactly this
-      and flapped for most of 2026-08-16 before anyone noticed the dict was the cause.
-
-      Needed, and per the ratchet convention these must land in the SAME change:
-      1. `DEFI_VENUE_TO_CONNECTOR_CLASS["pendle"] = "PendleConnector"`, plus the matching
-         `DEFI_VENUE_TO_GATE_MARKER` entry (the marker `DeFiAdapter` actually gates on is the venue substring
-         `"PENDLE"`, resolved via `adapters/defi_instruction_routes.DEFI_INSTRUCTION_ROUTES`).
-      2. Remove `pendle` from the reachability baseline, after re-running the measurement — the baseline's header
-         says "remove a venue from this list in the SAME change that wires its dispatcher path".
-
-      **One caveat to encode, not paper over**: Pendle is wired for **LEND only**. `PendleConnector.withdraw()` is
-      simulation-only by its own docstring (real `YT.redeemPY()` needs maturity-date branching that is not
-      implemented), so routing a live WITHDRAW there would fabricate a success. If the invariant asserts a full
-      lending family per venue, Pendle should assert LEND only rather than being widened to pass.
-
-      `karak` is separately tracked for decommission and is NOT part of this request.
+- [x] ✅ [FROM-T4] P2. Pendle wired into the SIT cascade invariant — unified-api-contracts@b9f63f883.
+      `DEFI_VENUE_TO_CONNECTOR_CLASS["pendle"] = "PendleConnector"` and `DEFI_VENUE_TO_GATE_MARKER["pendle"] =
+      "PENDLE"` added; `pendle` removed from `tests/data/execution_service_venue_reachability_baseline.json`
+      (`karak` deliberately kept — separately tracked for decommission, not part of this request). MEASURED
+      before/after rather than assumed: the invariant genuinely FAILED with a stale-baseline-entry assertion
+      before the baseline edit, then 11/11 passed after — confirming pendle is now really reachable, not just
+      that the dict has an entry. LEND-only caveat encoded as an inline comment on the dict entry (not silently
+      widened): `PendleConnector.withdraw()` stays simulation-only per its own docstring, so a future full-family
+      assertion needs an explicit carve-out for this venue. QG green (1076s — slow, shared-slot contention, but
+      real exit 0 captured directly). Evidence: `unified-api-contracts/tests/
+      test_execution_service_venue_coverage_cascade_invariant.py`,
+      `tests/data/execution_service_venue_reachability_baseline.json`.
 
 ## Todos
 
