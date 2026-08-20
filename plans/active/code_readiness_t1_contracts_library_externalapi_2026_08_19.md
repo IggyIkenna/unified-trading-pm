@@ -666,7 +666,15 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation (see § "Your allocated corpus") to zero open
       todos or an explicit `BLOCKED-*` tag on every remainder.
 - [ ] [AGENT] P0. Post-phase codex audit — update every changed contract doc, stub new patterns, add SUPERSEDED
-      banners to invalidated docs. Plan↔codex drift is review-blocking.
+      banners to invalidated docs. Plan↔codex drift is review-blocking. **In progress, 2026-08-20 — one pattern
+      stubbed, not a full sweep yet.** The lazy-loading refactor had no codex SSOT at all (pattern + both real bugs
+      + the top-level file's known-broken state lived only in the plan's own Progress Log, which archives when the
+      plan does) — wrote `/codex/06-coding-standards/uac-init-lazy-loading-pattern.md`. Order-state-machine SSOT
+      was already handled by T4 earlier today (`c74d869b36`, stale 7-state warning + diagram). Remaining
+      contract-shaped changes this tranche shipped that have NOT yet been checked against an existing codex doc for
+      drift: `QuoteInstruction` sensitivity fields, `TransferCapabilityV2`, W17 fee breakdown, `WithdrawInstruction`/
+      `RepayInstruction`, the venue→chain SSOT + `VenueFeature`/`VenueCapability` overlap fix, W8 weightings. Not
+      claiming this todo done off one doc.
 - [ ] [AGENT] P0. Confirm every artefact marker owned by this tranche now reads live, or is one of the five allowed
       pending states. Re-derive; never hand-edit the HTML.
 
