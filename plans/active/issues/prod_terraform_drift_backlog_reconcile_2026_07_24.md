@@ -315,13 +315,20 @@ None of the 71 resources classified as stale/abandoned/conflicting.
           the shared module, so it needed its own copy — extended its existing `ignore_changes = [launch_stage]` rather
           than duplicating). Code-only (no `tofu apply` — that's this doc's still-open P1 item); `tofu fmt -check` clean
           on the added lines; full `quality-gates.sh` green.
-- [ ] [INFRA] P2. **Extend the `f57c96e` `ignore_changes = [client, client_version]` fix to
+- [x] ✅ [INFRA] P2. **Extend the `f57c96e` `ignore_changes = [client, client_version]` fix to
       `terraform/gcp/subgraph_health_probe_scheduler.tf`'s standalone `google_cloud_run_v2_job.subgraph_health_probe`
       resource** (found 2026-08-20 — see the fresh-plan section above). This resource is NOT built via the shared
       `../modules/container-job/gcp` module and was missed when `f57c96e` patched the shared module +
       `vm_log_archival`'s standalone copy; it still shows the identical client/client_version-only cosmetic diff on
       every `tofu plan`. Same fix, same pattern, one more file. **Done when**: a fresh `tofu plan` shows 0 changes for
       `google_cloud_run_v2_job.subgraph_health_probe`. Repo: deployment-service.
+
+      **DONE 2026-08-20 — deployment-service@59d5061c88.** Same pattern as `f57c96e`: added
+      `lifecycle { ignore_changes = [client, client_version] }` to the standalone resource. `tofu validate` clean at
+      write time; verified post-ship via `ENV=prod ./tofu.sh plan -target='google_cloud_run_v2_job.subgraph_health_probe'`
+      (the required prod-state wrapper, never bare `tofu`) — the resource itself shows **zero** diff; the plan's only
+      "1 to add" line is the unrelated, already-known-pending `google_secret_manager_secret_iam_member.t1_batch_gh_pat_accessor`
+      grant (ready-to-apply-list item 4, pulled in only because `-target` follows `depends_on`, not yet applied).
 
 ## Progress Log
 
