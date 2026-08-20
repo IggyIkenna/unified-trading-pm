@@ -943,24 +943,23 @@ todos only to confirm they are data-movement, then leave it.
   `test_nudge_ahead_sustained_fires_with_age`); file 26/26 passing, broader worker-liveness suite 103/103.
   **NOT YET LANDED, 2026-08-20** — ship failed on `dashboard/node_modules` missing `@vitest/coverage-v8` (environmental, unrelated to this change; exit 0 with nothing landed, caught by per-file origin verification, not by the exit code). Fix + 2 tests preserved locally AND backed up outside git (scratchpad/agent-orchestrator-backup/) since this session already measured local edits as fragile under contention. Needs `npm --prefix dashboard install` (or equivalent) before the next agent-orchestrator ship attempt — flagged as its own todo below since it will block ANY future ship to this repo, not just this fix.
 
-## Deferred work after 2026-08-20
+## Deferred work after 2026-08-20 (revised 2026-08-20, pre-compact — fully-resolved rows removed, evidence lives on
+the todo checkboxes themselves; only genuinely-still-open items stay here)
 
 | Item | State / why deferred | Blocked on |
 | --- | --- | --- |
-| 4 DOC "re-derive artefacts" todos | Not started — plan-conflict with `/plans/active/state_fabric_artefacts_2026_08_20.md`'s ledger-based approach | Operator/coordinator decision on which approach to follow |
-| Disclosure-standard extension (2 sibling artefacts) | Not started — same plan-conflict (also a hand-HTML-edit) | Same as above |
-| FROM-T1 API-surface regeneration | Same plan-conflict (also a hand-HTML-edit) | Same as above |
+| 4 DOC "re-derive artefacts" todos | Not started — **operator decision 2026-08-20: wait for the ledger plan** (`/plans/active/state_fabric_artefacts_2026_08_20.md`), do not hand-edit | That plan landing its ledger-binding, or an explicit reprioritization |
+| Disclosure-standard extension (2 sibling artefacts) | Not started — same operator decision (also a hand-HTML-edit) | Same as above |
+| FROM-T1 API-surface regeneration | Same operator decision (also a hand-HTML-edit) | Same as above |
 | `git stash push/pop` core fix | Not done — real work exists in `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`, not yet landed | AO dispatch queue, not mine to force |
 | Manifest-hygiene 4 residual P2 items | Cannot be done yet — 2 need a VM launch (`detect_manifest_divergence.py` OOMs locally on 14M+-row manifests) | A deliberate VM-launch decision |
-| `dp_cron_did_not_fire` serving-revision verification | Cannot be done yet — needs gcloud auth this session doesn't have; already being tracked by dedicated 6-hourly sweeps | GCP credentials |
-| AO watchdog scheduled-timer wiring | Operator-owned — needs VM SSH | Operator |
-| Alert-bookend audit | **DONE 2026-08-20** — code-verified (29 tests) + live-traffic-verified (24h/504-msg sample), no violations found; not exhaustive over multi-day history | — |
-| W19 corpus audit | **RESOLVED 2026-08-20** — both `/plan-reconcile` (892 docs, 301 findings, `unified-trading-pm@2af2763f9b`) and `/docs-reconcile` confirmed run today | — |
-| 433-doc non-spine tail | **DONE 2026-08-20** — all 352 docs with open todos triaged, 24 docs' worth of real fixes applied + shipped, 2 archived | — |
-| Post-phase codex audit, final gate | Gated on everything above | — |
-| `unified-trading-ci` slot-3 checkout, 3 stale unpushed commits | **RESOLVED 2026-08-20** — all 3 confirmed superseded by equivalent-content commits already on origin; rebase dropped them automatically, `ahead=0 behind=0` | — |
+| AO watchdog scheduled-timer wiring | Wiring itself is done (6/7 todos); sole remainder is re-running the install script on the central VM | Operator — needs VM SSH |
+| `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` 2 verified fixes | Written, evidence-checked, ready to paste — see the dedicated `- [ ]` todo above | Pre-existing line-cap block (needs a split or a 5th `check_line_caps.sh` carve-out) |
+| Post-phase codex audit, final gate | Gated on the 3 plan-conflict-parked artefact items above landing first | Same as those 3 |
 
-**Recommended next**: the non-spine 433-doc tail (large, needs a dedicated pass) or the manifest-hygiene VM-launch decision — both remaining open items now need either real time or an operator call; the two self-contained quick wins (W19, alert-bookend audit) are both closed.
+**Recommended next**: none of the remaining items are quick wins — every one needs either the operator's ledger-plan
+call, a VM-launch decision, or someone else's AO-dispatched work landing first. Nothing here is actionable by simply
+spending more session time on it.
 
 ## Lessons carried forward (2026-08-20)
 
@@ -981,3 +980,20 @@ todos only to confirm they are data-movement, then leave it.
 - **A stash-quarantine collision is recoverable if the diff is a clean superset** — verified via
   `diff stash-version current-version` showing ONLY your own additions missing, nothing else different, before
   restoring. Don't restore blind even when you're confident; the check costs one command.
+- **SHA ancestry doesn't survive a squash-style LDR→main promote** — `git merge-base --is-ancestor <sha> origin/main`
+  can report "not an ancestor" for a fix that genuinely IS live, because "Option-B direct" promotes rewrite history.
+  Content-diff the actual file against the target ref instead; that's what settled the `dp_cron_did_not_fire`
+  serving-revision question this session, not ancestry.
+- **A large-corpus bookkeeping triage parallelizes safely as read-only fan-out + serial human apply.** 15 sub-agents
+  (3 waves of ≤5) each read ~20-25 docs in full and reported proposed old/new diffs — none edited or shipped. This
+  let the expensive part (read + cross-check every doc) run in parallel on a live shared checkout without any
+  concurrent-write collision risk, while I stayed the sole writer/shipper. Yield was consistently low (~24 real
+  fixes across 352 docs) because this corpus already runs recurring audit skills — that's the correct outcome, not
+  a wasted pass; the value was catching the ~24 genuine misses those recurring audits don't check for.
+- **Even a pure checkbox-flip can trip `check_line_caps.sh` if the file was already over cap before you touched
+  it** — the fix is never "shrink my edit," it's recognizing a pre-existing structural blocker and routing around
+  it (revert, track the specific fix content as its own todo so it isn't lost, don't force through the gate).
+- **Re-run the gate after editing evidence text, not just before shipping** — citing a regex pattern inside
+  backticks in `ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md`'s evidence tripped the exact
+  prosewrap-padding bug that same doc tracks. Caught by re-running `check_prosewrap_padding.sh` standalone before
+  the ship attempt, not by the ship gate itself catching it first.
