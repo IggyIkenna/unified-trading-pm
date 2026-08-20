@@ -477,9 +477,21 @@ todos only to confirm they are data-movement, then leave it.
       implementations into one sent value, stop no-op'ing the lending path, de-duplicate the algo vocabulary across
       two modules. Evidence: `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md`.
 - [ ] [BACKEND] P2. Complete per-venue scope-key provisioning. Evidence:
-      `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`.
-- [ ] [BACKEND] P3. Keep the Tenderly-fork integration test as a real test and tag it credential-gated —
-      do NOT delete the skip and do NOT descope. Evidence: `/plans/active/issues/exec_tenderly_2026_08_15.md`.
+      `/plans/active/issues/per_venue_scope_key_provisioning_incomplete_2026_07_23.md`. **CHECKED 2026-08-20, still
+      genuinely open, no new action found**: that doc's own 3-week audit trail (na-eligibility-audit
+      2026-07-30 through 2026-08-20) already exhaustively covers it — 2 of 3 remaining todos are `[HUMAN]`-only
+      (the operator's own exchange-login credential creation for Bybit / Upbit-Kraken-Bitfinex-Bitget), the third
+      (`[BACKEND] P2` OKX/Hyperliquid scope-separation) is operator-approved to build but every audit since
+      2026-08-08 correctly flags it as still unbounded ("scope the exact per-venue mechanism... before
+      estimating") — a genuine multi-hour design+build task, not attempted this session for the same reason as
+      the file-split above: better done as its own focused pass than rushed here.
+- [x] ✅ [BACKEND] P3. **VERIFIED 2026-08-20 — already correctly done, nothing further to build.** Checked
+      `test_tenderly_fork_full_cycle` directly: still real (not deleted), still `@pytest.mark.skip(reason=
+      "BLOCKED-CREDENTIALS: Tenderly fork + Aave V3 RPC — issues/exec_tenderly_2026_08_15.md")` — correctly
+      tracked, not descoped. That issue doc's sole todo is `[OPERATOR]`-tagged (provision a real Tenderly fork RPC
+      + API key) — not agent-self-serviceable per
+      `/codex/02-data/external-data-always-available-rule.md`'s BLOCKED-CREDENTIALS pattern, which this already
+      correctly follows.
 
 ### Settlement, reporting and Elysium
 
