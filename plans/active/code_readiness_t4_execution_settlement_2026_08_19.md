@@ -410,6 +410,14 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag on every remainder.
+- [ ] [AGENT] P2. **Split the two files sitting at EXACTLY the 900-line file cap** —
+      `execution_service/api/manual_instruction_api.py` and `execution_service/cli/handlers/live_execution_handler.py`.
+      Both were hit twice this session (once each) by unrelated changes that pushed them 1-10 lines over; both fixes
+      had to be made net-zero on line count to land. Any future addition to either needs the same net-zero dance
+      until this is done. No split design decided yet — pick natural seams (manual_instruction_api: request
+      validation vs. orchestrator-dispatch vs. pending-queue endpoints; live_execution_handler: connector
+      construction vs. CLI dispatch) and confirm the split doesn't change import-time behavior (see this session's
+      lifespan lesson above — `api/main.py` imports at module load).
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/04-architecture/` for every contract changed.
 - [ ] [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
       pending states.
@@ -478,7 +486,6 @@ claims were stale: Marinade/Kamino/Jupiter are all constructed in production; on
 
 | item | state | why |
 |---|---|---|
-| Persistent-exclusion write hardening | gating | 503 + explicit "NOT saved" instead of a bare 500 |
 | Pendle `withdraw()` redemption | open P2 | widen `PENDLE_OPERATIONS` only in the SAME change that implements it |
 | Pendle SIT cascade entry | inbound on T1 | needs UAC test-dict entry + baseline removal together |
 | Emergency close-all | open P0 | wiring BEFORE route — order matters |
