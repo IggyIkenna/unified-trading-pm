@@ -180,7 +180,7 @@ todos only to confirm they are data-movement, then leave it.
       unconfirmed evidence; a re-measurement using `${PIPESTATUS[0]}` directly (no `| tail`) is needed before
       concluding whether a further fix is warranted. Also shipped: the recommended per-tab-worktrees.md doc
       addition (`unified-trading-pm@c1d75e7dd7`).
-- [ ] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
+- [x] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
       `deployment-service/configs/strategy/<archetype_lowercase>/` for the 27 archetypes T3 registered on
       2026-08-19 (18 `VOL_*`, 5 granular `MARKET_MAKING_*`, 4 `PORTFOLIO_*`). strategy-service's
       `clients_yaml_coverage.py` gate requires one or the other for every factory-registered archetype;
@@ -189,6 +189,13 @@ todos only to confirm they are data-movement, then leave it.
       frozenset — T3 deletes each entry from that set as its file lands, so the set doubles as the
       shrinking worklist. A waiver is the expected answer for most of them (they are seed-only slots with
       no client allocation yet); a `clients.yaml` is only needed where a client actually subscribes.
+      **Done 2026-08-20**: all 27 got `clients_waiver.yaml` (none have real client subscriptions yet, matching
+      the doc's own framing) — `deployment-service@6d2a0a6028`, verified per-file against origin (27/27) AND by
+      running the actual consumer live: `strategy_service.engine.strategies.v2.clients_yaml_coverage
+      .uncovered_archetypes()` now returns `[]` (was reporting all 27 as violations before). T3's own
+      `PENDING_CROSS_REPO_WAIVER` frozenset in strategy-service is theirs to shrink — not touched here, per
+      "edit ONLY the repos this tranche owns"; they'll see it's safe to delete on their next pass since the gate
+      itself is now clean independent of that set.
 
 - [ ] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
       "re-run at the finer grain the moment T2 lands `instrument_type` / `data_type`" todo below is waiting on
