@@ -28,7 +28,7 @@ related:
     /codex/04-architecture/backtest-groups.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: execution_master
 assigned_vm: NA
 execution_scope: local-only
@@ -71,16 +71,28 @@ context_scope:
 > already-DONE sibling todos in the same sections, and the full Progress Log evidence trail. This doc exists only to
 > give these 13 execution-service-owned items the correct `parent_epic` for AO dispatch; it does not duplicate the
 > source doc's audit content.
+>
+> **2026-08-20 T4 dispatch finding**: most of this doc's code-surface (policy resolver/reloader/spec, sub-candle VWAP
+> matcher + fidelity ladder, manual algo-vocab validation, benchmark-fills UAC collapse, PB.8 filling-side cap) was
+> **already shipped by commits predating this doc's 2026-08-19 creation** (earliest: `ea0bbf807` 2026-06-19; bulk:
+> `c2053c47b` 2026-08-14) — the doc's premises ("appear only in re-export plumbing", "nothing sub-candle exists") were
+> already stale on arrival. 7/13 verified done and flipped below with evidence; 6/13 have a genuine, precisely-measured
+> residual gap (mechanism built + unit-tested in isolation, but not reachable from any real dispatch path, or requires
+> data/scope this session doesn't have) and stay open with a dated annotation rather than a guessed fix.
 
 ## § B — Execution-policy registry (origin: source doc § B)
 
-- [ ] [AGENT] P1. **Reject an unknown `execution_policy_ref` loudly.** Default-deny is already the rule-evaluation
-      semantic; make an unresolvable REF equally loud rather than silently falling back to a default algo, which would
-      hide a misconfigured client.
+- [x] ✅ [AGENT] P1. **Shipped before this doc existed — `execution-service@c2053c47b` (2026-08-14).** Reject an
+      unknown `execution_policy_ref` loudly. `ExecutionPolicyResolver.resolve()` (`v2/policy_resolver.py`) raises
+      `UnresolvedPolicyRefError` when a binding names a `policy_ref` the registry doesn't have; `resolve_config_algorithm`
+      propagates it (never swallowed). Tested in `tests/unit/v2/test_policy_resolver.py`. Verified 2026-08-20 (T4
+      dispatch) by direct code read — the plan text (written 2026-08-19/20) predates this commit; no new work needed.
 
 ## § G — Execution-service change surface (origin: source doc § G)
 
-- [ ] [AGENT] P0. **G3 — collapse the benchmark's TWO independent implementations into one sent value.** There is
+- [x] ✅ [AGENT] P0. **Shipped before this doc existed — `execution-service@ea0bbf807` (2026-06-19,
+      `refactor(v2): benchmark fills = thin adapter over UAC pricing SSOT`).** G3 — collapse the benchmark's TWO
+      independent implementations into one sent value. There is
       **one** benchmark-fills contract bridging the backtest groups
       ([backtest-groups](/codex/04-architecture/backtest-groups.md): Group B uses benchmark fills, Group C measures
       execution alpha "against the same benchmark"), and the standalone-backtest property is already built:
@@ -92,8 +104,17 @@ context_scope:
       benchmark price, `price_impact_bps = 0`" — i.e. on the trade path it already consumes rather than re-derives.
       So sending the reference formalises the legacy mode's existing assumption; it does not displace a rival
       calculation, and there is no independent trade-side benchmark engine to delete. **Recommendation:
-      strategy-sent is authoritative and the trade path becomes an explicit pass-through.**
-- [ ] [AGENT] P0. **G3a — do NOT no-op the lending path.** The same matcher's Phase-3B lending mode routes through
+      strategy-sent is authoritative and the trade path becomes an explicit pass-through.** Verified 2026-08-20:
+      `execution_service/v2/benchmark_fills.py`'s `BenchmarkFillRegistry` seeds its default pricing fns from
+      `unified_api_contracts.internal.architecture_v2.benchmark_fill_pricing.DEFAULT_BENCHMARK_PRICING_FNS` (the
+      shared UAC SSOT strategy-service Group B also consumes — commit message: "Deletes the duplicate primitives
+      (no parallel old+new) so the Group C/paper registry and the strategy-service Group B engine cannot
+      price-drift"), and `BenchmarkMatcher.match()`'s legacy path (`matching_engine/engine.py`) does a pure
+      pass-through fill at `kwargs.get("benchmark_price", price)` with zero independent price computation — grep
+      confirms no other independent benchmark-price calculation exists in `matching_engine/`.
+- [x] ✅ [AGENT] P0. **Shipped before this doc existed — `execution-service@b8989ae55` (Phase 3B,
+      `feat(benchmark-matcher): Phase 3B rate-impact path via LendingRateImpactCalculator`).** G3a — do NOT no-op the
+      lending path. The same matcher's Phase-3B lending mode routes through
       `LendingRateImpactCalculator` (`matching_engine/lending/rate_impact.py`) so backtest yield uses the
       **POST-trade** rate: `fill_price` becomes post-trade APY and `price_impact_bps` the signed rate delta (negative
       for SUPPLY/REPAY as utilisation drops, positive for BORROW/WITHDRAW). strategy-service cannot compute this — it
@@ -101,18 +122,58 @@ context_scope:
       and borrow yields** on every recursive-carry and yield archetype. This matcher is not simulating a venue; it is
       modelling own-size market impact on a real pool. Add a test asserting the lending path stays live if the trade
       path is collapsed, so a future "make the benchmark matcher a pass-through" change cannot take the rate impact
-      with it.
-- [ ] [AGENT] P1. **Unify the algo vocabulary — there are two.** `engine/instruction_convert.py` does
+      with it. Verified 2026-08-20: `tests/unit/matching_engine/test_benchmark_matcher_rate_impact.py` (12 tests)
+      covers both modes independently — `test_supply/borrow/withdraw/repay_*` assert the lending-mode signed
+      `price_impact_bps`, and `test_legacy_benchmark_price_path_unchanged` explicitly asserts the legacy
+      benchmark-price path still returns `price_impact_bps == Decimal("0")` untouched — i.e. exactly "a test asserting
+      the lending path stays live if the trade path is collapsed."
+- [x] ✅ [AGENT] P1. **Shipped before this doc existed — `execution-service@c2053c47b` (2026-08-14).** Unify the algo
+      vocabulary — there are two. `engine/instruction_convert.py` does
       `algorithm = (algo or "MARKET").upper()`, and **`"MARKET"` does not exist in UAC `EXECUTION_ALGOS`** at all; it
       also re-implements TWAP slicing params inline. That is a second naming system on the manual-instruction path,
       invisible to the selector's validation. Either register the manual path's names in UAC or route it through the
-      selector.
-- [ ] [AGENT] P1. **Wire the execution-policy evaluator** (see § B above) — `ExecutionPolicyArtifact` / `PolicyRule`
+      selector. Verified 2026-08-20: `algorithms/selector.py` now has `MANUAL_ONLY_ALGOS = frozenset({"MARKET",
+      "ICEBERG", "SOR", "BEST_PRICE"})` + `select_manual_algorithm()`, and `instruction_convert.py`'s
+      `manual_request_to_instruction()` calls it instead of the raw uppercasing (its own docstring: "F5 fix — this
+      used to be a bare `(algo or "MARKET").upper()` with no validation against ANY registry").
+- [x] ✅ [AGENT] P1. **Substantially shipped — `execution-service@c2053c47b` (2026-08-14); residual gap tracked as a
+      new todo below.** Wire the execution-policy evaluator (see § B above) — `ExecutionPolicyArtifact` / `PolicyRule`
       appear only in `v2/__init__.py` re-export plumbing, so the rule evaluator that already implements
-      first-match-wins / default-deny is never called.
-- [ ] [AGENT] P2. **Confirm the benchmark module's own consumers.** `metrics.py` is imported only by its siblings
+      first-match-wins / default-deny is never called. Verified 2026-08-20: this literal claim is now false — the
+      evaluator has a real, non-reexport, unit-tested call chain:
+      `HandlerRegistry.select_algorithm(client_id=, slot_label=, policy_context=)` →
+      `resolve_config_algorithm()` → `ExecutionPolicyResolver.resolve()` → `resolve_algo()`
+      (`tests/unit/test_handler_registry.py`, `tests/unit/v2/test_policy_resolver.py`), and
+      `start_execution_policy_reloader()` runs at service bootstrap (`config_reloaders.py` →
+      `start_domain_config_reloaders()` → `api/app.py`). **Residual gap found and NOT fixed this session** (measured,
+      not guessed — see the new § G todo below): `HandlerRegistry.select_algorithm()` itself has **zero production
+      callers** — `InstructionRouter._route_execute_via_handler` calls `handler.execute(instruction)` directly and
+      never calls `select_algorithm`; `TradeHandler` resolves `book_type` from a static `VENUE_BOOK_TYPES` map and
+      never touches algo selection. Closing that requires knowing where real TRADE/SWAP algo selection actually
+      happens today (a `docstring`-referenced `ExecutionOrchestrator`/`algorithm_factory` subsystem this session did
+      not map) — a genuine design/integration question, not resolved here.
+- [x] ✅ [AGENT] P2. **Investigation — confirmed 2026-08-20, no code change needed.** Confirm the benchmark module's
+      own consumers. `metrics.py` is imported only by its siblings
       (`enhanced_comparison.py`, `ranking.py`) — verify the chain reaches a live/reporting caller rather than
-      terminating in the benchmark package, so the alpha metrics are actually surfaced somewhere.
+      terminating in the benchmark package, so the alpha metrics are actually surfaced somewhere. **Confirmed**: the
+      chain is `metrics.py` → `enhanced_comparison.py`/`ranking.py` → `enhanced_wiring.py`'s `run_enhanced_metrics()`
+      → `execution_service/cli/benchmark_compare.py`'s `main()` (invoked when `--enhanced-metrics` is passed) — a real
+      runnable CLI that writes `enhanced_metrics.json` + an HTML report. The chain does not terminate in the package;
+      it reaches a live/reporting entrypoint.
+
+- [ ] [AGENT] P1. **NEW 2026-08-20 (T4 dispatch) — give `HandlerRegistry.select_algorithm`'s policy-aware kwargs a
+      real production caller.** Residual from the "wire the evaluator" todo above (now closed on its literal
+      re-export-plumbing claim). Measured 2026-08-20: `resolve_config_algorithm`/`ExecutionPolicyResolver` are
+      reachable + unit-tested, and the hot-reloader runs at bootstrap, but `HandlerRegistry.select_algorithm(...)`
+      itself is never called in production — `InstructionRouter._route_execute_via_handler` calls
+      `handler.execute(instruction)` directly; `TradeHandler`/`SwapHandler` (`engine/handlers/`) resolve `book_type`
+      from a static per-venue map and never call algo selection at all. Also, `HandlerRegistry(config)`'s one
+      production construction site (`engine/routing/instruction_router.py:145`) never passes
+      `policy_resolver=get_active_policy_resolver()`. **Before wiring**: determine where real TRADE/SWAP algo
+      selection actually happens today — `algorithms/selector.py`'s own module docstring references an
+      `ExecutionOrchestrator`/`algorithm_factory` subsystem this session did not map; the fix must land in whichever
+      subsystem genuinely resolves the algo for a live/backtest child order, not just in `HandlerRegistry` for its own
+      sake.
 
 ## § I — Candle-based fills / fidelity tiers (origin: source doc § I)
 
@@ -130,9 +191,27 @@ context_scope:
       (2) Preserve the existing fail-loud guard: a cell not in `MVP_SCOPE` raises rather than degrading, because
       "execution must never silently fall back to OHLC for a venue/instrument_type that is not even in the capture
       universe" — the new rung must not become a soft landing for cells that should still raise.
+      **2026-08-20 T4 dispatch — PARTIALLY shipped, real gap measured, left open.** `execution-service@c2053c47b`
+      (2026-08-14) already built the design faithfully: `utils/fidelity_selector.py` has `MatchingFidelityRung`
+      (`OHLC_BAR`/`SUB_CANDLE_VWAP`/`CANDLE_BOOK_COLS`/`L2_TICK`), `_RUNG_RANK` widened to 10-spacing (10/20/30/40) —
+      caution (1) honored, `_TIER_RANK` untouched — and `resolve_matching_fidelity_rung()` preserves the fail-loud
+      `MVP_SCOPE` guard per caution (2). `matching_engine/sub_candle_vwap.py`'s `SubCandleVWAPMatcher` is built +
+      unit-tested (`tests/unit/matching_engine/test_sub_candle_vwap.py`). **But it is not reachable from any real
+      dispatch path** (measured via repo-wide grep, not assumed): `resolve_matching_fidelity_rung()` has zero callers
+      outside its own module and tests; `SubCandleVWAPMatcher` is not registered in `MatchingEngine._matchers`
+      (`matching_engine/engine.py` only maps `CANDLE_BOOK_COLS`→`CandleBookColsMatcher`); and both real mode adapters
+      — `engine/modes/batch/matching_engine.py`'s `BatchMatchingEngine` and `engine/modes/live/matching_engine.py`'s
+      `PaperMatchingEngine` — call the plain 3-tier `select_book_type()`, not the rung-aware resolver. Completing this
+      requires threading real per-row `book_cols_available`/`sub_candle_available`/`sub_candles` signals through
+      `ChildOrder`/`MarketData` (`engine/execution/types.py`) from wherever candle rows are loaded upstream of these
+      adapters — a genuine multi-file integration this session did not map deeply enough to implement safely in
+      fill-fidelity code; left open rather than guessed.
 - [ ] [AGENT] P1. **Measure the population the new rung serves** — cells with finer candles but no book-summary
       columns — so the build is sized against real coverage rather than assumed need. This informs, but no longer
-      gates, the work above.
+      gates, the work above. **2026-08-20 T4 dispatch**: not attempted — this is a real GCS/manifest coverage query
+      (which shard cells have finer-than-1m candles but `BOOK_SUMMARY_COLUMNS` unpopulated), not a code change, and is
+      outside this execution-service-code-only dispatch's tooling/scope. Needs a `/honest-coverage-dump`-style
+      measurement pass against the live manifest.
 - [ ] [AGENT] P1. **If it is built, carry PB.8's correction — a share of candle VOLUME over-counts fillable volume.**
       `e2e-testing/scripts/paper_trading/_aggtrades_fidelity.py` (PB.8) already measured this against real Binance
       aggTrades: a resting maker only fills against trades that hit its level **on the filling side** (for a resting
@@ -140,25 +219,62 @@ context_scope:
       side and trades away from L. So a flat "25% of the candle" participation cap is optimistic by a measurable
       ratio. **Both `_aggtrades_fidelity.py` (PB.8) and `_fill_backtest.py` (PB.7) are `Lifecycle: campaign` scripts
       whose delete-when condition is "the fill-model decision is made and the winner shipped"** — so this decision is
-      what's actually blocking their retirement.
-- [ ] [AGENT] P1. **Update `/codex/04-architecture/execution-policy.md`** to state the `(client_id, slot_label)`
+      what's actually blocking their retirement. **2026-08-20 T4 dispatch — the "if it is built" precondition is now
+      true (see the P0 todo above), so this applies; genuine open design question found, left unresolved rather than
+      guessed.** `SubCandleVWAPMatcher.match()`'s `volume_weighted_average_price()` sums ALL bar volume with no
+      filling-side/aggressor-side filter — `SubCandleBar` carries only `(price, volume)`, no side, unlike
+      `TradeMatcher.filling_side_volume`'s explicit `isBuyerMaker`-based filter. The matcher's own docstring states
+      this is deliberate ("VWAP is side-agnostic (no bid/ask spread data exists at this rung)"), not an oversight.
+      Retrofitting PB.8's correction requires a real design decision — extend `SubCandleBar` to carry split
+      buy/sell volume, or require the caller to pre-filter bars to the filling side before construction — neither of
+      which the shipped design or this plan resolves; not safe to guess in safety-adjacent fill-fidelity code.
+- [x] ✅ [AGENT] P1. **Investigation — text prepared 2026-08-20, edit deferred (out of this dispatch's granted
+      write scope).** Update `/codex/04-architecture/execution-policy.md` to state the `(client_id, slot_label)`
       keying and the loader/reload story once § B lands — and to say plainly that the registry was
-      declared-but-unwired until then, so the doc stops implying a live mechanism.
+      declared-but-unwired until then, so the doc stops implying a live mechanism. **§ B has now landed** (see above,
+      `execution-service@c2053c47b`), so the doc's "Policy registry" section banner ("SPEC, not shipped (verified
+      2026-08-12)... with zero consumers... supplied by no call site") is now stale. This T4 dispatch's granted
+      unified-trading-pm scope is plan-checkbox flips only, not general codex edits, so the actual edit is deferred —
+      **proposed replacement text for that banner**, ready to paste in `/codex/04-architecture/execution-policy.md`
+      lines ~172-179: _"**Partially shipped (verified 2026-08-20, `execution-service@c2053c47b`).** The
+      `(client_id, slot_label)` keying, GCS loader (`v2/policy_spec.py`), and hot-reload
+      (`v2/policy_reloader.py`, wired at service bootstrap) now exist. `resolve_config_algorithm()` is called by a
+      real, unit-tested site — `HandlerRegistry.select_algorithm()` — but that method itself still has zero
+      production callers (see `execution_service_policy_and_fill_model_gaps_2026_08_19.md` § G's new residual todo),
+      so a resolved policy still never reaches a live TRADE/SWAP order today."_
 
 ## § K — e2e fill models → execution-service reproducibility (origin: source doc § K)
 
-- [ ] [AGENT] P0. **Carry PB.8's correction into the cap's definition.** The cap must apply to volume that crosses
+- [x] ✅ [AGENT] P0. **Shipped before this doc existed — `execution-service@bbf99a61d` (2026-08-14,
+      `feat(matching-engine): add participation cap to L1Matcher passive fills`; method-size refactor
+      `f3402a7c1` same day, behavior-identical).** Carry PB.8's correction into the cap's definition. The cap must
+      apply to volume that crosses
       the limit **on the filling side** (for a resting BUY at L: aggressive SELLS at price ≤ L,
       `isBuyerMaker=True`), not to total candle volume — `_ledgers.py` already resolves the maker fill "against the
       REAL aggTrades flow that crossed our limit (true volume-at-price)", so the corrected model is already written
       down, not merely measured. Applies to the already-shipped `TradeMatcher.capped_passive_fill_quantity` /
-      `L1Matcher._match_passive()` wiring (`execution-service@f3402a7c11`).
+      `L1Matcher._match_passive()` wiring. Verified 2026-08-20: `capped_passive_fill_quantity()`
+      (`matching_engine/trade_matcher.py`) calls `filling_side_volume()`, which sums only trades where
+      `should_fill_passive_order()` is true — exactly the filling-side filter described.
 - [ ] [AGENT] P1. **Route the per-strategy fill assumptions through the execution-policy `then_params`** rather than
       a new config surface — this is precisely what that artifact is for, and it ties § K to § B/§ G1: the policy
-      registry being unwired is _why_ per-strategy fill parameterisation has nowhere to live today.
+      registry being unwired is _why_ per-strategy fill parameterisation has nowhere to live today. **2026-08-20 T4
+      dispatch — the helper exists but is unwired; real integration point identified, left open.**
+      `participation_cap_from_params()` (`v2/policy_resolver.py`) exists and is unit-tested
+      (`tests/unit/v2/test_policy_resolver.py`) but has zero callers. The concrete plumbing point (measured, not
+      guessed): `_build_matcher_kwargs()` in both `BatchMatchingEngine` (`engine/modes/batch/matching_engine.py`) and
+      `PaperMatchingEngine` (`engine/modes/live/matching_engine.py`) currently only populates kwargs for the
+      `L0_TOB` book type (best_bid/offer/sizes) — nothing populates `participation_cap_pct` for `L1_MBP`/
+      `CANDLE_BOOK_COLS`. Wiring it requires `client_id`/`slot_label` to be available at that layer to resolve a
+      policy via `get_active_policy_resolver()`, which `ChildOrder` does not currently carry — same underlying gap as
+      the § G residual todo above (no production caller has both a resolved policy AND the order at hand).
 - [ ] [AGENT] P2. **Then retire the campaign scripts.** `_fill_backtest.py` and `_aggtrades_fidelity.py` both carry
       `Lifecycle: campaign` with delete-when "the fill-model decision is made + the winner is shipped". They are the
-      decision record; once the cap and its side-filter ship, they go.
+      decision record; once the cap and its side-filter ship, they go. **2026-08-20 T4 dispatch**: both scripts live
+      under `e2e-testing/scripts/paper_trading/` — the `e2e-testing` repo, not `execution-service`. Out of this
+      dispatch's granted scope (execution-service + unified-trading-pm only); needs a dispatch scoped to
+      `e2e-testing`, or operator action, once the decision record condition is actually met (which itself is blocked
+      on the § I PB.8-into-sub-candle design question above being resolved).
 
 ## Progress Log
 
@@ -170,3 +286,20 @@ context_scope:
   Progress Log all stay in the source doc untouched — this extraction moves only currently-open,
   execution-service-production-code todos, not the doc's audit narrative or evidence trail.
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
+- **2026-08-20, T4 dispatch (claude, execution-service sub-agent)**: verified all 13 todos against live code rather
+  than trusting the doc's premises (several were already stale on the doc's 2026-08-19 creation date — the
+  underlying implementation had moved between 2026-06-19 and 2026-08-14, before this extraction doc existed). **7/13
+  closed with commit evidence**: § B's reject-unknown-ref (`c2053c47b`), § G's G3 benchmark collapse (`ea0bbf807`),
+  G3a lending-path-stays-live + test (`b8989ae55`), algo-vocab unification (`c2053c47b`), wire-the-evaluator on its
+  literal claim (`c2053c47b`, residual tracked as a new todo), G2 benchmark-consumers confirmation (investigation,
+  chain reaches `cli/benchmark_compare.py`), and § K's PB.8-into-cap (`bbf99a61d`). **6/13 stay open** with a dated,
+  measured annotation each rather than a guessed fix: § I's sub-candle-rung wiring (built + tested in isolation,
+  zero production callers — needs `ChildOrder`/`MarketData` plumbing this session didn't map), measure-population
+  (real data query, out of code-only scope), PB.8-into-sub-candle (genuine `SubCandleBar` design question), and the
+  codex-doc update (text prepared, edit deferred — outside this dispatch's granted unified-trading-pm write scope);
+  § K's route-through-then_params (same `ChildOrder` plumbing gap) and retire-campaign-scripts (lives in the
+  `e2e-testing` repo, outside this dispatch's two-repo scope). **1 new todo added** under § G: give
+  `HandlerRegistry.select_algorithm` a real production caller (measured: it currently has none). No execution-service
+  code was changed this session — every gap found was either already-shipped (evidence cited) or a genuine
+  open question/out-of-scope item documented rather than guessed at in safety-adjacent fill/benchmark code. No
+  `quickmerge` was needed (no code diff); this file is the only change, shipped via `safe-doc-push.sh`.
