@@ -1,7 +1,7 @@
 ---
 doc_type: plan
 title: cefi venue batch smoke tests — batch 1 — 2026-08-20
-summary: Per-asset-group smoke-test batch for the 70 in-scope CeFi (venue, data_type) rows from the canonical work list.
+summary: Per-asset-group smoke-test batch for the 73 in-scope CeFi (venue, data_type) rows from the canonical work list.
 status: active
 nature: process
 asset_group: [cefi]
@@ -34,7 +34,8 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 # CeFi venue smoke-test batch 1
 
 > **Parent**: [/plans/active/venue_smoke_test_bar_2026_08_16.md](/plans/active/venue_smoke_test_bar_2026_08_16.md).
-> Filter the generator output to `asset_group=cefi`; re-run it before acting because 70 is a measured scope.
+> Filter the generator output to `asset_group=cefi`; re-run it before acting because 73 is the current measured scope
+> (the generator currently reports 364 declared pairs, 8 Databento exemptions, and 356 in-scope rows).
 
 ## Todos
 
@@ -48,3 +49,18 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 **2026-08-20 — forked from W5.** This batch follows the five-todo W4 decomposition and keeps its denominator
 re-runnable through the UAC generator.
+
+**2026-08-20 — execution evidence (slot 18).** Re-running
+`unified-api-contracts/scripts/generate_venue_smoke_test_work_list.py` measured 73 current CeFi rows (not the stale
+70 in the original summary). The canonical MTDS driver was launched for `--day 2026-08-20 --asset-group CEFI
+--legs force,skip,canonical --mvp-only --require-captured --auto-day --wall-clock-timeout-sec 14400`; it enumerated
+98 service shards, but the full driver was externally deleted at 19:54:53 UTC with `EXIT_STATUS=RUNNING` and no
+report. A bounded diagnostic report at
+`gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`
+measured `total=3`, `passed=0`, `failed=1`, `skipped=2`: both force/skip legs were `tardis_guard_busy`, and the
+canonical leg failed `canonical_no_matching_objects_in_test_bucket`. The completed BYBIT-SPOT diagnostic's VM log
+recorded `0 records`, `SHARD_INCOMPLETE`, and a missing staging CeFi catalogue; the VM nevertheless reported
+`DEPLOYMENT_COMPLETED ... exit_code=0`. Therefore the P0 gate remains unchecked: the full 73-row contract has not
+completed, zero-row success is observable, and the missing staging catalogue/Tardis lease must be resolved before a
+bounded serial rerun can produce valid captured-row, canonical-path, manifest, and capture-status evidence. Details:
+[/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md].
