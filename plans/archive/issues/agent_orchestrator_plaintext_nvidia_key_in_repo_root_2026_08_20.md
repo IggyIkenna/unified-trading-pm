@@ -11,8 +11,8 @@ summary: >-
   check-ignore` found no match but nothing has ever `git add`ed it), but a live API key sitting
   in plaintext in a shared multi-operator checkout is bad hygiene regardless — any slot/operator
   on this VM can read it, and a future broad `git add -A`/`-.` by anyone would commit it.
-status: open
-resolved_by:
+status: resolved
+resolved_by: operator (moved keys.env off the shared checkout; GSM migration explicitly deferred)
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -45,6 +45,10 @@ drift_direction: none
 
 # Plaintext NVIDIA API key in agent-orchestrator repo root
 
+> **🟢 RESOLVED 2026-08-20** — operator relocated `keys.env` off the shared `agent-orchestrator`
+> checkout directly; GSM migration explicitly declined for now. Sole todo `[x]`, 0 remaining,
+> `locked_by:` empty. Archived per the 6-step ritual.
+
 ## What was found
 
 `ls -la agent-orchestrator/keys.env`: 82 bytes, created 2026-08-20 08:39 UTC, owner `hk`, mode
@@ -66,11 +70,17 @@ flagging the correlation, not asserting it.
 
 ## Follow-up
 
-- [ ] [OPERATOR] P3. **Decide correct storage for the NVIDIA key and remove the plaintext file.**
-      This codebase's convention is GSM (Google Secret Manager) + `UnifiedCloudConfig`, never a
-      loose `.env`-style file in a repo root — confirm whether `nvidia_headroom.py`/the account
-      registry already expects a GSM-backed credential path (if so, this file is genuinely
-      orphaned test debris and can just be deleted) or whether local `.env` files are an
-      intentionally-supported dev-only credential path for this specific provider (check
-      `.env.local` conventions in `server/config.py`) before deleting. Either way, don't leave the
-      plaintext copy sitting in the repo root once resolved.
+- [x] [OPERATOR] P3. **Decide correct storage for the NVIDIA key and remove the plaintext file.**
+      Resolved 2026-08-20 by the operator directly: the key is being moved off the shared
+      `agent-orchestrator` repo-root checkout to a location of the operator's choosing. GSM
+      migration was explicitly declined for now ("we dont have to push the key to GSM for now") —
+      so this is a relocation, not a GSM-backed credential wiring change; `nvidia_headroom.py`'s
+      actual credential-loading path was not re-examined as part of this resolution.
+
+## Resolution
+
+Operator moved `keys.env` out of the shared checkout on 2026-08-20. No GSM/`UnifiedCloudConfig`
+migration was done or requested at this time — if `nvidia_headroom.py` still expects a local
+`.env`-style credential file, that convention question remains genuinely open should someone
+revisit secrets hygiene for this provider later, but it is not blocking and not tracked as a
+separate open todo here.
