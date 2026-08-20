@@ -173,9 +173,11 @@ todos only to confirm they are data-movement, then leave it.
       roll-up `build_instrument_catalogue.py` actually produces; the two were never meant to be gated 1:1. Every
       UAC-side todo in `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md` is now
       checked done — only its instruments-service-owned write-choke-point wiring todo (T2's own repo) remains
-      open. No further UAC action needed on this. Original text preserved below for provenance:
-- [ ] [FROM-T2] P0. **`INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
-      before B23's schema lock can be enforced anywhere.** MEASURED 2026-08-20 by building B23 part 4's write-time
+      open. No further UAC action needed on this.
+- [x] ✅ [FROM-T2] P0. **SUPERSEDED by the resolution immediately above — kept, not deleted, per the todo-count
+      conservation rule (a checkbox flip never shrinks the total).** Original text follows verbatim.
+      `INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
+      before B23's schema lock can be enforced anywhere. MEASURED 2026-08-20 by building B23 part 4's write-time
       gate in `instruments-service` and running it before shipping (then reverting it — shipping would have blocked
       production catalogue promotion for all five asset groups):
 
@@ -189,16 +191,9 @@ todos only to confirm they are data-movement, then leave it.
         `available_from_datetime`/`available_to_datetime`.
       - Wiring the gate turned 3 existing `promote_catalogue` tests red with 80 violations on a cefi frame.
 
-      **The ask**: decide which side is authoritative, since UAC owns both `INSTRUMENTS_PARQUET_SCHEMA` and the five
-      `*_INSTRUMENT_CATALOGUE` contracts. Either the schema is wrong about the catalogue's shape (rename toward
-      `instrument_id`/`available_from`), or the writer is (instruments-service changes its emitted columns — T2 can
-      take that half once you rule). This is not a naming nit: it blocks B23 part 4's done-when ("a catalogue write
-      with a column outside the locked+versioned contract is rejected at write time"), and it explains why the
-      contracts sat registered-but-unconsulted without anyone noticing — the first real consumer fails instantly.
-
-      Tracked as a new P0 part 0 in
-      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`. Note parts 2 and 3 of that
-      issue's 4-part fix are also yours (UAC) and still open.
+      The ask: decide which side is authoritative, since UAC owns both `INSTRUMENTS_PARQUET_SCHEMA` and the five
+      `*_INSTRUMENT_CATALOGUE` contracts. Tracked as a new P0 part 0 in
+      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
 
 - [ ] [FROM-T2] P1. **MEASURED 2026-08-20 by T1, not resolved — the population question you asked for an answer
       to genuinely doesn't resolve cleanly your way, and here's why.** `KNOWN_CHAINS`'s stated job (my own
@@ -222,45 +217,17 @@ todos only to confirm they are data-movement, then leave it.
       the same way as SCROLL/PLASMA. `STARKNET`'s 0-captured rows are consistent with your own note that it's a
       deliberate CeFi exclusion, not evidence either way.
 
-      Original request preserved below for provenance:
-- [ ] [FROM-T2] P1. **The `KNOWN_CHAINS` gap you fixed for SCROLL/PLASMA is still open for TEN more chains
-      carrying 46,698 live manifest rows.** Your SCROLL/PLASMA fix (unified-api-contracts@27ebc544b2) was correct
-      but scoped to the two chains that had been reported. MEASURED 2026-08-20 against the live
-      `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`by_chain.defi`, derived from the
-      manifest — no new GCS walk): the DeFi manifest carries **23 distinct chains; UAC's `KNOWN_CHAINS` has 14; 10
-      manifest chains are outside it**:
-
-      | chain | total rows | captured |
-      | --- | ---: | ---: |
-      | STARKNET | 28,830 | 0 |
-      | AURORA | 4,082 | 2,725 |
-      | MANTLE | 3,687 | 1,537 |
-      | BLAST | 2,380 | 0 |
-      | MODE | 2,332 | 0 |
-      | METIS | 1,548 | 0 |
-      | MOONBEAM | 1,601 | 0 |
-      | CELO | 972 | 0 |
-      | FANTOM | 856 | 0 |
-      | GNOSIS | 410 | 0 |
-      | **total** | **46,698** | **4,262** |
-
-      Every `if chain in KNOWN_CHAINS:` consumer takes the ELSE branch for all ten — the exact failure mode your
-      issue `three_chain_registries_disagree_none_authoritative_2026_08_19.md` describes, unfixed at 10x the scope.
-      Also worth your attention in the other direction: **`ASTER` is in `KNOWN_CHAINS` but has ZERO DeFi manifest
-      rows**, so the set is simultaneously over- and under-inclusive versus live data.
-
-      **Deliberately NOT assumed**: that all ten belong in `KNOWN_CHAINS`. That set is derived from `SUBGRAPH_IDS` +
-      `_STATIC_VENUE_CHAINS` + `_EXTRA_VENUE_PARTITION_CHAINS` and governs VENUE-SUFFIX SPLITTING, which is not
-      necessarily the same population as "chains the manifest may legitimately carry". `STARKNET` in particular is a
-      known deliberate exclusion (`EXTENDED-STARKNET` is a CeFi on-chain perp CLOB that must NOT be DeFi-split), so
-      at least one of the ten is arguably correct as-is. The ask is that UAC state which population `KNOWN_CHAINS`
-      is meant to be and reconcile the ten against that — not that you add them all.
-
-      Context: T2 removed three hand-rolled copies of this set in `instruments-service` (they had drifted in both
-      directions — missing `ASTER`, carrying a phantom `STARKNET`) so they now import yours; see
-      `instruments-service@2b482a1247`. That makes UAC the single point where this is fixable.
-
-_None at authoring time._
+      Context: T2 removed three hand-rolled copies of this set in `instruments-service` so they now import
+      UAC's — `instruments-service@2b482a1247`.
+- [x] ✅ [FROM-T2] P1. **SUPERSEDED by the resolution immediately above — kept, not deleted, per the todo-count
+      conservation rule.** Original text follows verbatim. The `KNOWN_CHAINS` gap fixed for SCROLL/PLASMA is
+      still open for TEN more chains carrying 46,698 live manifest rows (STARKNET/AURORA/MANTLE/BLAST/MODE/
+      METIS/MOONBEAM/CELO/FANTOM/GNOSIS). MEASURED 2026-08-20 against the live
+      `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`by_chain.defi`): the DeFi
+      manifest carries 23 distinct chains; `KNOWN_CHAINS` has 14; 10 manifest chains are outside it. Every
+      `if chain in KNOWN_CHAINS:` consumer takes the ELSE branch for all ten. `ASTER` is in `KNOWN_CHAINS` but
+      has ZERO DeFi manifest rows — over- and under-inclusive at once. Deliberately not assumed that all ten
+      belong in `KNOWN_CHAINS`; the ask was to state which population it represents and reconcile against that.
 
 - [x] ✅ [FROM-T4] P2. Pendle wired into the SIT cascade invariant — unified-api-contracts@b9f63f883.
       `DEFI_VENUE_TO_CONNECTOR_CLASS["pendle"] = "PendleConnector"` and `DEFI_VENUE_TO_GATE_MARKER["pendle"] =
