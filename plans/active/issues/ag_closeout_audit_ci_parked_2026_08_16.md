@@ -28,9 +28,14 @@ related:
     /plans/active/ci_satellite_ao_dispatch_batch13_2026_08_13_finalize.md,
     /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md,
     /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16_finalize.md,
+    /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md,
     /plans/active/issues/ci_alert_failure_resolution_linkage_2026_08_16.md,
     /plans/active/issues/deployment_api_events_global_state_leak_flaky_metadata_probe_2026_08_06.md,
+    /plans/archive/2026_08/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md,
+    /plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md,
+    /plans/archive/issues/plan_reconciler_findings_ci_2026_08_16.md,
     /plans/active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md,
+    /plans/archive/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
     /plans/active/issues/ff_pull_fleet_drift_rca_2026_08_11.md,
     /plans/active/issues/todo_cancelled_disposition_format_breaks_todo_regression_check_2026_08_09.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -48,7 +53,7 @@ execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 supersedes: ag_closeout_audit_ci_parked_2026_08_10
-context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md, /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md, /plans/archive/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md, /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md, /plans/active/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md]
 ---
 
 # ag-closeout-audit ci delta report — 2026-08-16
@@ -57,14 +62,6 @@ context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active
 > basis differs from that immediate predecessor: batches 11-15 shipped/archived in the 6-day gap between the two
 > reports, so this run delta-checks against batch15's own same-day survey, not against the 2026-08-10 report's
 > candidate list.
->
-> Additional archived historical context (cited as evidence, not routed to as live pointers, per the archival ritual —
-> `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md` step 5): the predecessor report itself lives at
-> `plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md`; the gcloud WIF-poisoning operator ruling at
-> `plans/archive/2026_08/issues/operator_ruling_record_gcloud_wif_poisoning_2026_08_08.md`; two plan-reconciler CI
-> findings sweeps at `plans/archive/issues/plan_reconciler_ci_late_findings_2026_08_06.md` and
-> `plans/archive/issues/plan_reconciler_findings_ci_2026_08_16.md`; and the placeholder-prettier-mangling incident at
-> `plans/archive/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`.
 
 ## Method note — delta audit, not a fresh 51-agent Workflow sweep
 
@@ -211,8 +208,8 @@ chat-ephemeral, home" rule regardless.
       out of scope (stop future reconfirmation churn) or provide the missing design call so it becomes AO-eligible.
       Done when: operator rules, or the doc is explicitly marked won't-fix.
 - [x] ✅ [DOCS] P2. **DONE 2026-08-18 (na-eligibility-audit, ci tranche).** Extracted into
-      `plans/archive/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md` (content carried
-      forward verbatim; the issue was later archived after a live re-check). Source doc
+      `plans/active/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md` (content carried
+      forward verbatim, not resolved — the new doc still needs a live re-check). Source doc
       (`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`) checkbox flipped citing the
       extraction; it now has 0 open todos. Was: **Pre-scope `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`'s
       surviving P2 item** (investigate why a promote-PR wasn't superseded after greeks-service@f5a63a8 landed —

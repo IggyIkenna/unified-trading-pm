@@ -601,15 +601,6 @@ hardened `@d16d737` + `@5462959` (wedge alert on a silently-drifted deploy). Ful
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`; service overview:
 `/codex/04-architecture/agent-orchestrator-overview.md`.
 
-**Docker (added 2026-08-19/20, currently dormant)**: `Dockerfile.vm-orchestrator` (`agent-orchestrator@8e0438c160`) —
-kept separate from the pre-existing, unrelated Cloud Run `Dockerfile` — packages this same systemd-service ExecStart
-into a container. **Wraps, does not replace, the self-pull model above**: the deploy TRIGGER stays
-self-pull-detects-a-new-LDR-commit; only the restart action would change (container restart vs. bare `uvicorn`
-restart), once/if ever activated. Its build workflow (`.github/workflows/image-build-vm-orchestrator.yml`) has no
-push step — inactive by design, no registry target/credentials configured yet. Verified only via a local
-`ORCHESTRATOR_MODE=mock` boot (`GET /api/healthz` → 200), never deployed. Motivation + decision record:
-`/plans/active/ao_ci_aws_to_ionos_migration_2026_08_18.md`'s Decision log (cross-cloud portability).
-
 ---
 
 ## 6. The Strategy-Execution-Position Loop

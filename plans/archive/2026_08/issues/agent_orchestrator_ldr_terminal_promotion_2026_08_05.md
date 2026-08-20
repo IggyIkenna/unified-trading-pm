@@ -61,8 +61,7 @@ context_scope:
 > `check_archive_candidates` ratchet fix.
 >
 > **⚠️ SUPERSEDED IN PRACTICE 2026-08-19** by
-> `/plans/archive/2026_08/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md` (archived
-> 2026-08-20, all 5 phases done) — agent-orchestrator is
+> `/plans/active/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md` — agent-orchestrator is
 > `promotion_model: ldr_main` again (fleet parity restored ahead of parallel AO-dispatched agents landing on its
 > own LDR). The deploy-side facts below are still historically accurate (the dashboard trigger fix, the original
 > root cause) — but the "What changed" section's `promotion_model: ldr_terminal` state is no longer current. Read
@@ -167,21 +166,21 @@ Confirmed by direct code/config reading before changing anything (not assumed):
       push:[live-defi-rollout] trigger now live on LDR).
 
       **Blocker cleared**: this item was parked as conflict-gated in
-      `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` because it
-      targets the same files as `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18. **That todo
-      is now `[x]` done** (verified at HEAD 2026-08-06), so the file collision no longer exists.
+                                                  `/plans/archive/issues/external_promote_gated_task_redispatch_churn_no_durable_park_2026_07_25.md` because it
+                                                  targets the same files as `/plans/archive/2026_08/shared_ci_workflow_repo_extraction_2026_08_06.md` todo 18. **That todo
+                                                  is now `[x]` done** (verified at HEAD 2026-08-06), so the file collision no longer exists.
 
-      **Gap re-measured 2026-08-06, and it is narrower than this todo's original wording implies — but real.**
-      `agent-orchestrator/.github/workflows/quality-gates-v2.yml` triggers on `push:[main]` and
-      `pull_request:[main, staging]` — there is **no `push:[live-defi-rollout]` trigger**, and since the repo stopped
-      producing promote PRs there is no PR-context run either, so **nothing ENFORCES a gate**. However it is not
-      unwatched: 5 `workflow_dispatch` runs on LDR in the preceding ~14 hours, all green, roughly every 1-2 hours.
-      **So the true state is verification without enforcement** — a red commit is noticed within an hour or two, but
-      nothing stops it landing on the branch the live orchestrator deploys from within ~15 minutes. For the repo that
-      dispatches and supervises the entire fleet, that is the wrong side of the line. **Do not "fix" this by
-      hand-editing the per-repo workflow copy** — CLAUDE.md requires editing the template + `rollout-workflow-
-      templates.sh`, and a hand-edit would be reverted by the next rollout. Repo: unified-trading-pm (template) +
-      unified-trading-ci (shared workflow).
+                                                  **Gap re-measured 2026-08-06, and it is narrower than this todo's original wording implies — but real.**
+                                                  `agent-orchestrator/.github/workflows/quality-gates-v2.yml` triggers on `push:[main]` and
+                                                  `pull_request:[main, staging]` — there is **no `push:[live-defi-rollout]` trigger**, and since the repo stopped
+                                                  producing promote PRs there is no PR-context run either, so **nothing ENFORCES a gate**. However it is not
+                                                  unwatched: 5 `workflow_dispatch` runs on LDR in the preceding ~14 hours, all green, roughly every 1-2 hours.
+                                                  **So the true state is verification without enforcement** — a red commit is noticed within an hour or two, but
+                                                  nothing stops it landing on the branch the live orchestrator deploys from within ~15 minutes. For the repo that
+                                                  dispatches and supervises the entire fleet, that is the wrong side of the line. **Do not "fix" this by
+                                                  hand-editing the per-repo workflow copy** — CLAUDE.md requires editing the template + `rollout-workflow-
+                                                  templates.sh`, and a hand-edit would be reverted by the next rollout. Repo: unified-trading-pm (template) +
+                                                  unified-trading-ci (shared workflow).
 
 - [x] ✅ [OPERATOR] P3 (stretch, only if agent-orchestrator ever needs a real tagged release). Design a
       `ldr_terminal`-aware retarget of `semver-agent.yml.tmpl` — genuinely non-trivial (943 lines, ~20+ hardcoded `main`
@@ -192,11 +191,11 @@ Confirmed by direct code/config reading before changing anything (not assumed):
       what should not sit open being re-read and re-deferred by every audit.
 
       **Re-open trigger, stated so the closure is reversible rather than lossy**: agent-orchestrator needing a real
-      tagged release — i.e. something starts consuming its version number (a published wheel, an external pin, a
-      deploy keyed to a git tag). Today nothing does: a grep of every repo's `pyproject.toml` / `requirements*.txt` /
-      `package.json` for `agent-orchestrator` as a dependency returns zero hits (recorded in this doc's "Why"
-      section). **Known limitation, accepted**: until then, `agent-orchestrator` cannot cut a semver-tagged release,
-      because `semver-agent.yml.tmpl` is hardcoded to `main` and this repo no longer promotes to `main`.
+                                                  tagged release — i.e. something starts consuming its version number (a published wheel, an external pin, a
+                                                  deploy keyed to a git tag). Today nothing does: a grep of every repo's `pyproject.toml` / `requirements*.txt` /
+                                                  `package.json` for `agent-orchestrator` as a dependency returns zero hits (recorded in this doc's "Why"
+                                                  section). **Known limitation, accepted**: until then, `agent-orchestrator` cannot cut a semver-tagged release,
+                                                  because `semver-agent.yml.tmpl` is hardcoded to `main` and this repo no longer promotes to `main`.
 
 - [x] ✅ [INFRA] P2. Fix propagation lag: `unified-trading-pm`'s own `main` branch still reads
       `agent-orchestrator.promotion_model="ldr_main"` (confirmed 2026-08-06, `main`'s `workspace-manifest.json` via
@@ -255,7 +254,7 @@ Confirmed by direct code/config reading before changing anything (not assumed):
       actually running it — found live because PRs #817 and #814 (both plain, non-promote fixes against `main`) sat
       permanently `mergeStateStatus: BLOCKED` despite a fully green `quality-gates-v2`, with zero path to clear short of
       an admin-override merge. Fixed:
-      `python3 scripts/repo-management/pin_branch_protection_rulesets.py --repo agent-orchestrator --apply` (dry-run
+      `python3 scripts/repo-management/pin_branch_protection_rulesets.py --repo     agent-orchestrator --apply` (dry-run
       confirmed the exact expected diff first) — ruleset `require-quality-gates` now requires only
       `Quality Gates (agent-orchestrator) / quality-gates-v2`. Verified: PR #817 immediately flipped to
       `mergeStateStatus: CLEAN` and merged normally, no bypass. **Only scoped to `agent-orchestrator`** — did not run
@@ -275,7 +274,7 @@ Confirmed by direct code/config reading before changing anything (not assumed):
       MISSING `sit-gate/fleet-green` (opposite of expected direction but correct fix — code comment in the script
       calling it "non-ldr_main" is stale; manifest has `promotion_model=ldr_main`). Applied: `require-quality-gates`
       ruleset for `system-integration-tests` now requires both
-      `Quality Gates (system-integration-tests) / quality-gates-v2` and `sit-gate/fleet-green`. Second dry-run
+      `Quality Gates (system-integration-tests) /     quality-gates-v2` and `sit-gate/fleet-green`. Second dry-run
       confirmed 0 changes fleet-wide (fully idempotent). No non-`ldr_main` repo was found carrying stale
       `sit-gate/fleet-green` — agent-orchestrator's prior `--repo` fix was the only instance of that gap class.
 
