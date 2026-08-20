@@ -486,7 +486,7 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [DOC] P0. Extend the same disclosure standard to the four sibling client artefacts the 2026-08-18 audit found
       violating it and which no remediation plan covers — `carveout-engineering.html` and
       `ODUM_Elysium_Phase2_Update_2026-07-24.html` alongside the two already in scope. Evidence:
-      `/plans/active/client_artefact_remediation_2026_08_18.md`,
+      `/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md`,
       `/plans/active/client_artefact_remediation_nickai_2026_08_18.md`.
 - [ ] [DOC] P0. Confirm no figure outruns its measurement — every number carries date and denominator, or says
       pending. Epic definition-of-done item.

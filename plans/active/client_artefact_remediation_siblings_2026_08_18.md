@@ -17,7 +17,6 @@ tags: [client-disclosure, artifact-remediation, audit-followup, stop-ship, discl
 related:
   [
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
-    /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/audit/results/client_artefact_sibling_docs_audit_2026_08_18.md,
     /plans/audit/results/client_artefact_cross_document_consistency_2026_08_18.md,
     /codex/14-customer-journeys/_ssot-rules/06-show-dont-show-discipline.md,
@@ -136,7 +135,7 @@ codex rule, not a plan's restatement of it.
 
 ## Progress Log
 
-**2026-08-18 — split out** of [`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
+**2026-08-18 — split out** of [`client_artefact_remediation_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md)
 per operator direction, to run in parallel with the Elysium and Nick AI children. Deliberately **ungated**
 (`depends_on: []`) while its siblings gate on the parent's evidence-tier spec: these are stop-ship disclosure
 violations and must not wait on a presentation-layer decision.

@@ -45,7 +45,6 @@ related:
     /plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md,
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
-    /plans/active/client_artefact_remediation_2026_08_18.md,
   ]
 created: 2026-08-18
 ---

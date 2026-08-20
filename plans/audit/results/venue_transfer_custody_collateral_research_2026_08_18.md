@@ -21,7 +21,7 @@ auditor: >-
   strategy-service (risk/v2/{margin_sim,preflight,orchestrator}.py), plus a workspace-wide grep for every
   consumer of the schemas found.
 severity: P1
-resulting_plan: /plans/active/client_artefact_remediation_2026_08_18.md
+resulting_plan: /plans/archive/2026_08/client_artefact_remediation_2026_08_18.md
 lib_version:
 doc_versions_checked:
 asset_group: [cross-cutting]
@@ -31,7 +31,6 @@ scope: [engineer, admin]
 tags: [client-disclosure, venue-registry, custody, collateral, cross-margin, transfer-rails, artifact-remediation]
 related:
   [
-    /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/active/client_artefact_remediation_nickai_2026_08_18.md,
     /plans/epics/system_readiness_master.md,
   ]
@@ -43,7 +42,7 @@ parent_epic: system_readiness_master
 # Per-venue transfer rails, custody eligibility, collateral and cross-margin — research findings
 
 Research deliverable for
-[`client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md) § E's
+[`client_artefact_remediation_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md) § E's
 `[RESEARCH] P1` todo: *"Research real per-venue transfer rails / custody eligibility / collateral / cross-margin,
 then write the best current answer into the artefact marked `assumption` or `needs-check`."* This doc does not
 touch either artefact HTML directly (out of scope for this todo's owning session — the elysium and nickai children

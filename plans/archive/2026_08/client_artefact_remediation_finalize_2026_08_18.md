@@ -5,7 +5,7 @@ summary: >-
   Gated finalize companion for client_artefact_remediation_2026_08_18.md. Reconciles completed-todo evidence back
   into the audit report and the two owning artefact plans, re-checks whether any deferred system-gap gate has since
   cleared, and archives the parent plan once fully done.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -14,12 +14,12 @@ scope: [admin, engineer]
 tags: [client-disclosure, nick-ai, elysium, artifact-remediation, finalize]
 related:
   [
-    /plans/active/client_artefact_remediation_2026_08_18.md,
+    /plans/archive/2026_08/client_artefact_remediation_2026_08_18.md,
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-18
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: system_readiness_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -73,9 +73,7 @@ being fully done. Do not start before then.
       `elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md`) and `system_readiness_master.md`
       W5/W10/W12/W13/W16/W17/W18 remain `- [ ]` open with zero items checked off — no target-state→present-deep
       re-frame warranted, no new todo spun up. See Progress Log below.
-- [ ] [DOC] P2. **Archive the parent plan** once every todo above is done — standard 6-step ritual (status →
-      `archived`, `git mv` into the dated archive folder, exact-successor banner if applicable, corpus-wide
-      referrer-path fixup, verify no broken links, confirm line caps still hold).
+- [x] ✅ [DOC] P2. **Archived the parent plan** ([`client_artefact_remediation_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md)) — standard 6-step ritual: all todos `[x]`, unlocked, `status: active→complete`, `git mv` to `plans/archive/2026_08/` (this finalize archives in the same commit, single-repo mode-1 combined flip+archival). Referrer sweep — removed the parent entry from 12 docs' `related:` (rule-13 codex, nickai + siblings children, 9 audit results); `resulting_plan`/body-prose refs left as historical record; `INDEX.md` auto-regenerated. No codex contract change — remediation facts already in [`nick_ai_and_elysium_artefact_audit_2026_08_18.md`](/plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md) (`status: pass`).
 
 ## Progress Log
 
@@ -114,3 +112,12 @@ target-state to present-deep and no new todo is warranted:
   latency/tracing/preflight/SLA (W16), fee/gas (W17), canonical output paths (W18) — every P0 still `- [ ]` open, zero
   checked off. (W16's fail-closed ruling and W5's populate-not-design refinements landed on 2026-08-18 as *new* tracked
   items, not capability landings.) Todo 3 (archive parent) is now unblocked.
+
+**2026-08-20 (slot 5, infra) — todo 3 done, archived the parent + this finalize.** Ran the standard 6-step archival
+ritual on the parent (`client_artefact_remediation_2026_08_18.md`): all todos `[x]`, unlocked, `status: active→complete`,
+`git mv` to `plans/archive/2026_08/`. Referrer sweep — removed the parent entry from 12 docs' `related:` (rule-13
+codex, nickai + siblings children, 9 audit results); `resulting_plan`/body-prose references left as historical record;
+`INDEX.md` auto-regenerated. No codex contract change — the remediation's durable facts are already in
+[`nick_ai_and_elysium_artefact_audit_2026_08_18.md`](/plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md)
+(`status: pass`). This finalize archives together with the parent in one commit (single-repo/mode-1 combined
+flip+archival, per `plan-completion-and-archival-discipline.md`).
