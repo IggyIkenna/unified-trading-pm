@@ -531,13 +531,22 @@ already prioritized toward these 6 docs now).
       precedent already proved the mechanical-fix-plus-live-verify pattern works fleet-wide]**. **B) human-authored
       plan** — the original coordinating session's own note flagged these as "one-off/historical scripts in an
       unfamiliar repo per-file context, not a blind batch-replace," which leans toward closer human review per file.
-- [ ] [REVIEW] P2. Scope a fix for the other 7 `DomainConfig`-family classes in
-      `unified_trading_library/.../domain_configs.py` sharing the identical `extra="forbid"` + `.env`-auto-read
-      latent-crash risk that `StrategyDomainConfig` had (`InstrumentDomainConfig`/`ClientDomainConfig`/
-      `VenueDomainConfig`/`TickerUniverseConfig`/`RiskDomainConfig`/`AlertRuleDomainConfig`/`RateLimitDomainConfig`/
-      `FeatureFlagDomainConfig`) — same `extra="ignore"` fix pattern already shipped for `StrategyDomainConfig`
-      (`unified-trading-library@1da1a095d4`) is the likely fix, but each class needs its own confirm-then-fix pass,
-      not a blind sweep.
+- [x] ✅ [REVIEW] P2. **Confirmed and fixed all 8, 2026-08-20 — `unified-trading-library@9f6a8f964c`.** Read
+      `domain_configs.py` directly rather than assuming: all 8 named classes (`InstrumentDomainConfig`/
+      `ClientDomainConfig`/`VenueDomainConfig`/`TickerUniverseConfig`/`RiskDomainConfig`/`AlertRuleDomainConfig`/
+      `RateLimitDomainConfig`/`FeatureFlagDomainConfig`) genuinely had the identical `extra="forbid"` +
+      `SettingsConfigDict`/`BaseConfig` (→ `pydantic_settings.BaseSettings`, auto-reads `.env` on EVERY
+      construction) shape `StrategyDomainConfig` had before its fix — confirmed by direct read, not inferred from
+      the class name. Applied the same `extra="ignore"` fix (`unified-trading-library@1da1a095d4`'s pattern) to
+      all 8, same explanatory comment. **Deliberately did NOT touch** the 5 sibling `model_config = {"extra":
+      "forbid"}` sub-models (`AlertRule`/`VenueRateLimit`/`FeatureFlag`/`StrategyRiskSubscriptionConfig`/
+      `CustomRiskScenarioConfig`) — these are plain `BaseModel`, not `BaseSettings`, so they never had the
+      `.env`-auto-read risk this fix addresses; an existing test already locks in that they must stay strict.
+      Added 10 new regression tests (`tests/config_interface/unit/test_domain_configs.py`,
+      `TestDomainConfigExtraIgnoreAcrossAllDomains`) covering all 8 fixed classes tolerating an unrelated extra
+      kwarg, plus one test locking in the 3 correctly-untouched sub-models still reject one. Found and fixed one
+      now-obsolete pre-existing test (`TestRiskDomainConfig.test_extra_fields_forbidden`) that asserted the OLD,
+      now-intentionally-changed behavior — 35/35 tests green.
 
 ## Progress Log
 
