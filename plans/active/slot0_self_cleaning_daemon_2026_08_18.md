@@ -74,7 +74,7 @@ liveness check so it never fights a live occupant (including slot 0's own live s
 
 ## Todos
 
-- [ ] [BACKEND] P1. Add `slot0_self_clean_interval_seconds` to `TuningDefaults` in
+- [x] [BACKEND] P1. ✅ Add `slot0_self_clean_interval_seconds` to `TuningDefaults` in
       `server/config.py`, mirroring `tmux_prune_interval_seconds`'s `Field(default=..., gt=0)`
       shape exactly (same file/class as the other daemon tuning knobs — these are env-free,
       code-default-only per this workspace's `tuning.*` convention). Default `3600` (hourly,
@@ -189,7 +189,7 @@ liveness check so it never fights a live occupant (including slot 0's own live s
   Field(default=3600, gt=0)` to `TuningDefaults` in `server/config.py`, immediately after
   `tmux_prune_interval_seconds` (same shape/comment style). Live-verified:
   `get_config().tuning.slot0_self_clean_interval_seconds == 3600`. Committed
-  (`agent-orchestrator@4ec54c82`, `Quickmerge: agent` trailer pre-stamped) — **but Pass-1
+  (`agent-orchestrator@ac01c2fa`, `Quickmerge: agent` trailer pre-stamped) — **but Pass-1
   `quality-gates.sh` came back RED on an otherwise-clean tree, for two causes verified
   pre-existing and unrelated to this one-line diff**: (1) all 6 tests in
   `tests/test_ao_self_pull_dirty_gate.py` fail because the fixture's synthetic origin repo is
@@ -197,20 +197,34 @@ liveness check so it never fights a live occupant (including slot 0's own live s
   fixture's own `fetch origin main` step fails before real assertions run; (2) the dashboard's
   `vitest`/`tsc --noEmit` fail because `recharts` is declared in `dashboard/package.json` but
   was never `npm install`ed (`dashboard/node_modules/recharts` doesn't exist). Filed
-  `/plans/active/issues/ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19.md` (2 fix
+  `/plans/archive/issues/ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19.md` (2 fix
   todos) and declared repo-blocker **RB-38a23126** (`agent-orchestrator`, `qg_red`, escalation
-  `agt-2beb85`) per RULES.md § 4b. **`agent-orchestrator@4ec54c82` sits committed locally,
+  `agt-2beb85`) per RULES.md § 4b. **`agent-orchestrator@ac01c2fa` sits committed locally,
   1 commit ahead of `origin/live-defi-rollout`, NOT yet pushed** — this is the correct,
   intentional state (pushing an unshipped commit around a red gate is banned); it is
   recoverable from the slot-33 checkout / git reflog regardless of session boundaries. Todo 1's
   checkbox stays unflipped until the commit actually lands on origin — do not flip it on the
   strength of "the code is written and correct."
 
+- **2026-08-20 (slot 33)**: RB-38a23126 resolved via the RepoHealthWatcher (`watcher_green`,
+  delivered on a `/heartbeat` response, no self-poll). Fresh-pulled agent-orchestrator (rebased
+  `4ec54c82` onto origin — the dirty-gate fixture fix had already landed upstream as `1e650446`,
+  "make dirty-gate tests hermetic to sudo under no_new_privileges"), `uv sync`'d the venv, then
+  installed the missing `recharts` npm dep (`npm ci` in `dashboard/`) to close the second half of
+  the same red gate. Pass-1 `quality-gates.sh` went fully green: 4902 passed (server, coverage
+  82.88% > baseline), 463 passed / 20/20 suites (dashboard vitest), `tsc --noEmit` clean. Shipped
+  via `quickmerge.sh --agent --files server/config.py`; post-push ancestry verified.
+  **✅ Landed: `agent-orchestrator@ac01c2faf2`** (`origin/live-defi-rollout`, `ahead=0` confirmed).
+  Flipping todo 1's checkbox now that it's actually durable. Both fix-todos in
+  `/plans/archive/issues/ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19.md` are also
+  now resolved (one upstream, one by this commit's prerequisite work) — flipped there too, same
+  turn. Continuing to todo 2 (`server/slot0_self_clean.py` / `Slot0SelfCleanLoop`) next.
+
   **Resume instructions for whoever picks this up next** (goalposts, not just the next step —
   this plan has 8 more todos untouched, all downstream of todo 1):
 
   1. **First, check RB-38a23126's status** (`GET /api/repo-blockers` or the dashboard) and
-     whether `agent-orchestrator@4ec54c82` has reached `origin/live-defi-rollout`
+     whether `agent-orchestrator@ac01c2fa` has reached `origin/live-defi-rollout`
      (`git merge-base --is-ancestor 4ec54c82 origin/live-defi-rollout`). If the blocker
      resolved and the commit is on origin: flip todo 1's checkbox with that citation, then
      continue to step 2. If the exact commit `4ec54c82` is somehow gone from the local
