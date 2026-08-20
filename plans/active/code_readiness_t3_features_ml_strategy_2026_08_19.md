@@ -455,16 +455,23 @@ todos only to confirm they are data-movement, then leave it.
       of this conclusion would waste the exact effort those audits exist to prevent. The vocabulary-split half
       also explicitly needs an operator ruling per the doc's own summary. Evidence:
       `/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
-- [ ] [BACKEND] P0. Remove the banned-vendor dependency — `corporate_actions` is sourced exclusively from
-      `polygon_corporate_actions_adapter.py` and Massive-fka-Polygon.io is a FLEET-WIDE banned vendor. Build the
-      replacement adapter; tag it credential-gated if the new source needs a key. **Re-verified 2026-08-20,
-      correctly NOT agent-attempted**: this is a data-quality/vendor decision, not a credentials gap — the issue
-      doc's own todo 2 is `[OPERATOR] P1`: confirm whether yfinance's `Ticker.dividends`/`Ticker.splits` (same
-      library already live in this file for `earnings_results`, a real, well-reasoned candidate) has acceptable
-      coverage/reliability for the tickers this needs, before building a replacement on an unvetted source. Not
-      unilaterally decided here. **Lowers urgency**: blast-radius confirmation (issue doc, 2026-08-19) found ZERO
-      live production dispatch today — no scheduler, no Cloud Run job, no orchestrator dispatch calls this
-      Polygon.io calculator at all; it is built-but-never-run, not an active compliance exposure. Evidence:
+- [x] ✅ [BACKEND] P0. Remove the banned-vendor dependency — `corporate_actions` is sourced exclusively from
+      `polygon_corporate_actions_adapter.py` and Massive-fka-Polygon.io is a FLEET-WIDE banned vendor. **SHIPPED
+      2026-08-20 — `features-service@fa78040e30`**, unblocked mid-session by operator ruling R6
+      (`/plans/audit/results/code_completion_scope_2026_08_19.md` § "Ruling 6 — Yahoo Finance"), which landed
+      AFTER this todo was first written re-verified-not-attempted above — re-checked LDR mid-session per operator
+      instruction and found the ruling. Built `yfinance_corporate_actions_adapter.py` (no credentials needed,
+      mirrors the already-live `yfinance_earnings_adapter.py` pattern), wired it into
+      `corporate_actions_handler.py`/`corporate_actions_calculator.py`, deleted the Polygon adapter +
+      `_polygon_types.py` entirely (no shim). Honestly documented coverage gap: yfinance's
+      `Ticker.dividends`/`Ticker.splits` don't carry pay_date/record_date/declaration_date/dividend_type the way
+      Polygon did — left `None`/`UNSPECIFIED` rather than fabricated; `split_from`/`split_to` are derived from
+      yfinance's own ratio via `Fraction`, not invented. Rewrote both test files (63 unit tests green) and the
+      Polygon live-API integration test → a yfinance equivalent. Also corrected
+      `/codex/02-data/tradfi-databento-sourcing-ssot.md`'s stale "COMPLETE ACROSS ALL REPOS" banner (a THIRD
+      occurrence of this exact claim being wrong — `pm@ebaa20df4d`). **Still open, correctly not mine**: whether
+      yfinance's coverage is complete/reliable enough vs Polygon's was never independently validated — the ruling
+      decided the VENDOR, not the coverage-adequacy question; real diligence work if it matters later. Evidence:
       `/plans/active/issues/features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md`.
 - [ ] [BACKEND] P0. Build opportunity-detection feature producers for the 3 code-shipped MEV engines (BACKRUN,
       JIT_LIQUIDITY, LIQUIDATION_BUNDLE). `features.get(key, 0.0)` silently defaults, so these engines are
@@ -773,3 +780,29 @@ question, `CARRY_FUNDING_DISPERSION_RANK`-class rulings), needs real design work
 tranche (T1's `PATH_REGISTRY` `mode=` fix for W16/W18's canonical-paths half). The Close-out section's non-spine-tail
 sweep and the two-artefact re-derivation remain legitimate next steps, but are sweep/verification work, not new
 builds.
+
+## Progress Log — 2026-08-20 session 5
+
+**Operator directive mid-session: "did you recheck plans at LDR because several rulings landed today."** Had not —
+pulled LDR (17 commits behind) and found a real, materially-relevant batch: `PATH_REGISTRY {mode}` ruled (migrate,
+not quarantine — the W16/W18 blocker), `corporate_actions` vendor ruled (Yahoo Finance — my own P0 item marked
+`[OPERATOR]`-gated last session), plus a large new architecture doc
+(`/codex/04-architecture/cross-domain-state-fabric.md`, R1-R27) with real strategy-service implications (position
+vectors R22, kill-switch declare/detect split R21) not yet built anywhere. **Lesson carried forward**: mid-session
+LDR re-pulls for operator rulings are not optional on a long session — this workspace ships rulings continuously
+and a plan's "blocked" state can go stale hours into the same session, not just across sessions.
+
+**Collision risk found and handled, not silently worked around.** A separate, freshly-created 8-tranche
+"state-fabric reconciliation audit" dispatch
+(`/plans/audit/results/state_fabric_reconciliation_dispatch_2026_08_20.md`) has its OWN T3 (features-service +
+greeks-service) / T4 (strategy-service) numbering, colliding with this plan's T3 identity, and its own
+collision-check safety item was unchecked before dispatch. Live AO-backlog check for a dispatched job failed
+(orchestrator `:8765` connection refused — infra issue, not routed around). Per operator decision: continued this
+session's work (audit-only tranches don't refactor code, worst case is a finding filed against a stale snapshot —
+a cheap, familiar class of problem this session has fixed a dozen times already) and left an honest partial-data-
+point note on that dispatch doc's collision-check item rather than either checking it off (would overclaim — I only
+know my own slot's state) or ignoring it (the next reader gets no signal at all).
+
+**Shipped**: `features-service@fa78040e30` — Yahoo Finance replaces the banned-vendor Polygon.io
+`corporate_actions` adapter (full detail on the flipped checkbox above). `unified-trading-pm@ebaa20df4d` — corrected
+`tradfi-databento-sourcing-ssot.md`'s stale removal-complete banner (third time this exact claim needed correcting).
