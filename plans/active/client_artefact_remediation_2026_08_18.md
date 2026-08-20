@@ -81,7 +81,7 @@ each child owns a disjoint file set and the three run **concurrently**.
 | Child                                                                                                                   | Owns                                                                        | Gated?                     |
 | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------- |
 | [siblings](/plans/active/client_artefact_remediation_siblings_2026_08_18.md)                                             | deep-dive · platform-architecture · carveout-engineering · ODUM Phase2        | **No — P0 stop-ship**      |
-| [elysium](/plans/active/client_artefact_remediation_elysium_2026_08_18.md)                                                | `strategy-service-walkthrough.html`                                          | on this plan's spec        |
+| [elysium — archived](/plans/archive/2026_08/client_artefact_remediation_elysium_2026_08_18.md)                              | `strategy-service-walkthrough.html`                                          | on this plan's spec        |
 | [nickai](/plans/active/client_artefact_remediation_nickai_2026_08_18.md)                                                  | `platform-external-api-walkthrough.html`                                     | on this plan's spec        |
 
 Todos were **moved, not copied** — nothing below duplicates a child. This plan deliberately holds no per-file edit:
