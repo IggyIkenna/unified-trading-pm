@@ -405,3 +405,6 @@ is genuinely VM-scale work, not shared-host-scale:
   a read-only SSH check at 18:40:49Z shows the Python process alive at 566,592 KiB RSS with 60 GiB available.
   The rolling log has not yet been published, so this is **STARTED and live, not terminal**; no `--apply` has
   been launched.
+
+
+- **Live check (slot-18, 2026-08-20 18:47 UTC)**: the post-fix VM remains active after roughly 9 minutes: Python PID 5272 is in `S` state at 634,496 KiB RSS, host memory reports 60 GiB available, and the sidecar emitted a heartbeat at 18:47:06Z. Repeated `Connection pool is full` messages continue at the launcher's pool-size-4 boundary, but there is no process exit, stall marker, or OOM evidence. The dry-run remains **in-flight** and `--apply` remains intentionally unlaunched.
