@@ -486,6 +486,36 @@ todos only to confirm they are data-movement, then leave it.
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-20 — **PRE-COMPACT CHECKPOINT.** Context hit 67%; ran `/pre-compact` per the harness hook. Two significant
+  finds during the audit, both from earlier (compacted-out) work in this same session:
+  1. **Shipped**: 180 lines of FACTOR-STATE MODEL design work on the delta-proxy repricer issue doc
+     (`execution_delta_proxy_repricer_generalization_2026_08_18.md` §11-15) were sitting uncommitted —
+     unified-trading-pm@(latest, verified via `grep FACTOR-STATE` on origin post-push). Covers the unified
+     fair-value function, canonical factors vs per-venue prices, snapshot watermarks, currency/numeraire ruling,
+     rebase-without-jaggedness, and a placement ruling (anchor estimator lives in features-service, not
+     strategy-service). Carries its own 3 tracked todos (`[DOC]`/`[REVIEW]`/`[BACKEND]`) plus 5 open items for
+     the next operator session (§15) — READ THAT SECTION before touching `reference_position`/`credit` again;
+     it may supersede the Q12-Q16 framing this plan cites elsewhere. The ship hit a self-healing collision
+     (safe-doc-push detected its own corruption attempt from a concurrent peer edit, restored my content from a
+     snapshot, verified zero conflict markers before proceeding) — landed clean, verified on origin.
+  2. **IN FLIGHT, not yet shipped**: `unified-api-contracts` has complete, tested, uncommitted work for the
+     `VenueCapabilityV2` transfer-capability todo below (P1, line ~376) — a new `TransferCapabilityV2` schema
+     (`copper_eligible`/`ceffu_eligible`/`manual_transfer_eligible`/`prime_broker_eligible`), wired into
+     `VenueCapabilityV2.transfer_capability`, exported at both `internal/__init__.py` and
+     `internal/architecture_v2/__init__.py`, with 5 passing unit tests
+     (`tests/internal/unit/test_venue_capability_transfer_eligibility.py`) confirmed via direct pytest run.
+     Files: `unified_api_contracts/internal/architecture_v2/schemas.py`,
+     `unified_api_contracts/internal/__init__.py`, `unified_api_contracts/internal/architecture_v2/__init__.py`,
+     `tests/internal/unit/test_venue_capability_transfer_eligibility.py`. **A `quality-gates.sh` run was
+     launched in the background (task id referenced in this session's scratchpad, not durable — re-run it) and
+     had not finished when this checkpoint was written.** NEXT SESSION: `cd unified-api-contracts`, `git status`
+     to confirm these 4 files are still present uncommitted, re-run `bash scripts/quality-gates.sh`, then ship
+     via `quickmerge.sh --agent --files` with those 4 paths, then flip the P1 checkbox at line ~376 with the
+     landed sha.
+  **Standing state, unaffected by either item above**: 22 of T1's remaining todos need no gate finished, no
+  outstanding uncommitted work exists in `unified-trading-library` (clean, 0 ahead) or `unified-trading-pm`
+  (clean, 0 ahead, 0 behind after the restore above). All prior Progress Log entries in this file remain the
+  authoritative record of what shipped before this checkpoint — do not re-derive.
 - 2026-08-20 — **PATH_REGISTRY mode= fix landed — unified-trading-library@783d98ec73.** batch/paper/live rows
   for 5 datasets no longer collide on one GCS object path. Full details in the todo flip; noted here because it
   had TWO recoveries worth remembering: (1) a `check_todo_regression` gate catch of my own doing — a perl splice
