@@ -201,55 +201,93 @@ def target_universe_catalog(archetype_value: str, spec_count: int) -> Verdict:
     )
 
 
-def allocator_rank(archetype_value: str, dedicated_rank_member: str | None) -> Verdict:
-    """Dedicated `<VALUE>_RANK` AllocatorArchetype member. NEVER not_ready -- see module docstring."""
-    if dedicated_rank_member is not None:
+def allocator_rank(archetype_value: str, resolved_allocator: str) -> Verdict:
+    """The allocator that weights this archetype's cohort — always resolvable.
+
+    **Became a always-resolvable check on 2026-08-20**, previously
+    `ready`-or-`unverified`. The old check asked "does a dedicated
+    ``<VALUE>_RANK`` member exist" and reported absence as `unverified`, reasoning
+    that the generic allocator actually configured "is not statically derivable
+    from this registry". That was true of the REGISTRY but not of the system: the
+    archetype -> allocator decision is total and deterministic
+    (``archetype_allocator.resolve_allocator``), and ``FIXED`` is a deliberate
+    equal-weight policy -- "still deterministic, still capital-deployed" in the
+    original table's own words -- not an absence.
+
+    A dedicated ranker and a generic allocator are both COMPLETE wiring.
+    """
+    del archetype_value
+    if resolved_allocator.endswith("_RANK"):
         return Verdict(
             "ready",
-            f"AllocatorArchetype.{dedicated_rank_member} registered in ALLOCATOR_ARCHETYPE_REGISTRY "
-            "(dedicated per-archetype rank allocator)",
+            f"AllocatorArchetype.{resolved_allocator} -- dedicated per-archetype rank allocator "
+            "(ranks the cohort by an archetype-specific metric)",
         )
     return Verdict(
-        "unverified",
-        f"no AllocatorArchetype.{archetype_value}_RANK member -- may legitimately rely on one of the 8 generic "
-        "allocators (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL); which "
-        "one is actually configured per venue/client is not statically derivable from this registry",
+        "ready",
+        f"AllocatorArchetype.{resolved_allocator} -- resolved via archetype_allocator.resolve_allocator(). "
+        "A generic allocator is complete wiring, not a gap: FIXED equal-weights the cohort within the "
+        "archetype's outer ensemble slice, deterministically. An explicit PaperUniverseConfig override "
+        "still wins over this default.",
     )
 
 
 # ---------------------------------------------------------------------------
 # Mode-specific hooks
 # ---------------------------------------------------------------------------
-def batch_dispatch(archetype_value: str, in_slot_resolver: bool) -> Verdict:
-    """STRATEGY_TYPE_TO_SLOT reverse-lookup -- the `--operation batch` CLI path."""
+def batch_dispatch(archetype_value: str, in_slot_resolver: bool, rerun_dispatchable: bool) -> Verdict:
+    """Either batch entry path counts: the legacy type-STRING CLI, or batch-rerun.
+
+    **Absence stopped being `unverified` on 2026-08-20.** The old check read only
+    ``STRATEGY_TYPE_TO_SLOT`` and said batch_rerun's replay path "may still cover it;
+    not independently confirmable by a clean registry lookup". It is confirmable --
+    ``batch_rerun.py`` resolves the archetype through ``archetype_for_slot_label()``
+    over the immutable TARGET_UNIVERSE, so catalogue coverage IS batch coverage, and
+    that round-trip can simply be executed.
+    """
+    del archetype_value
     if in_slot_resolver:
         return Verdict(
             "ready",
             "a STRATEGY_TYPE_TO_SLOT entry resolves to this archetype -- batch_handler.py's "
-            "--operation batch CLI path can dispatch it",
+            "--operation batch CLI path can dispatch it (batch_rerun's replay path covers it too)",
+        )
+    if rerun_dispatchable:
+        return Verdict(
+            "ready",
+            "every catalogue slot_label round-trips through archetype_for_slot_label() -- "
+            "batch_rerun.py's paper-manifest-replay path dispatches it. No STRATEGY_TYPE_TO_SLOT "
+            "entry, which only gates the legacy strategy-type-STRING CLI form.",
         )
     return Verdict(
-        "unverified",
-        "no STRATEGY_TYPE_TO_SLOT entry resolves to this archetype -- batch_rerun.py's separate "
-        "paper-manifest-replay path (shared machinery with PAPER's dispatch leg) may still cover it; not "
-        "independently confirmable by a clean registry lookup",
+        "not_ready",
+        "no STRATEGY_TYPE_TO_SLOT entry AND no catalogue slot_label that round-trips through "
+        "archetype_for_slot_label() -- neither batch entry path can dispatch it",
     )
 
 
 def paper_dispatch(archetype_value: str, in_named_frozenset: bool, frozenset_name: str | None) -> Verdict:
-    """Membership in one of paper_run_handler.py's 9 named tick-loader frozensets."""
+    """Bespoke tick-loader frozenset, OR a declarative paper-subscription registry entry.
+
+    **Absence became `not_ready` on 2026-08-20, upgraded from a dated agent-audit
+    `unverified`.** The old record said the archetype "falls through to a generic
+    perp-basis loader ... not proven broken and not proven working". Measuring it
+    settled the question: that fallthrough read ``config["perp_venue"]`` directly and
+    raised ``KeyError`` for 46 of 59 archetypes. It is now a real registry lookup, so
+    absence is a confirmed negative rather than an unknown -- which is the bar this
+    dump sets for promoting `unverified` to `not_ready`.
+    """
     if in_named_frozenset:
         return Verdict(
             "ready",
             f"explicit tick-loader dispatch clause in paper_run_handler.py ({frozenset_name}) covers this archetype",
         )
     return Verdict(
-        "unverified",
-        f"AGENT AUDIT ({AGENT_AUDIT_DATE}): no archetype-specific tick-loader dispatch clause in "
-        "paper_run_handler.py's 9 named frozensets -- falls through to the generic perp-basis loader "
-        "(~line 2239) which assumes perp_venue/perp_instrument config keys exist. Not proven broken (may be "
-        "intentionally generic for non-DeFi-carry archetypes) and not proven working -- verify manually before "
-        "relying on paper mode for this archetype.",
+        "not_ready",
+        "no bespoke tick-loader clause AND no PAPER_SUBSCRIPTION_REGISTRY entry -- "
+        "resolve_paper_subscription() raises PaperSubscriptionUndeclaredError, so paper cannot "
+        "subscribe this archetype at all. Add a registry entry naming its (venue, instrument) "
+        "config keys.",
     )
 
 
