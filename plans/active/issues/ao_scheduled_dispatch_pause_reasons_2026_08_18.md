@@ -201,7 +201,7 @@ dispatch"` — consistent with the account snapshots seen the same hour
 
 ## Todos (added 2026-08-19)
 
-- [ ] [OPERATOR] P1. Record the reason + rough date for the three still-unrecorded pauses
+- [x] P1. Record the reason + rough date for the three still-unrecorded pauses
       (`na_eligibility`, `reconcile`, `report`) and for the re-pause of `ci_reconcile` in the
       sections above — or resume the ones that turn out to be forgotten.
       **`ao_watchdog` RESOLVED 2026-08-19**: operator authorized resuming it and only it;
@@ -211,6 +211,13 @@ dispatch"` — consistent with the account snapshots seen the same hour
       report). It was the urgent one — it is the fleet's own daily health check
       (`/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md` wired its timer),
       so while it was paused nothing was running the check that would have surfaced the other six.
+      **RESOLVED 2026-08-20 (operator ruling on todo
+      ao_scheduled_dispatch_pause_reasons-53b859c93847 — source:
+      /plans/active/issues/ao_scheduled_dispatch_pause_reasons_2026_08_18.md)**: the three
+      still-unrecorded pauses (`na_eligibility`, `reconcile`, `report`) were intentional — those
+      skills were being run by operators on their own hosts because the fleet's claude accounts
+      were exhausted at the time (roughly 2026-08-19), not forgotten. Nothing to resume, nothing
+      further to record.
       (repo: NA — operator knowledge, not derivable from any system field)
 - [ ] [REVIEW] P2. Re-check the "Current state" section against the live registry file whenever
       this doc is touched, until the `paused_at`/`reason` schema change lands — a hand-maintained

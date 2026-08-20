@@ -463,3 +463,22 @@ archival — no live Databento dependency).
   role contract carve-out. No code changed; doc-only.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 - **2026-08-20 (slot 1, data_pipeline_failure escalation agt-f6fbb5)**: Shipped `market-tick-data-service@6836a68eb5484e7d424405d557921cda30de47a4`. Databento auth/payment failures now surface from the live connector and route empty windows to `record_failed` with the classified reason instead of `empty_confirmed[SOURCE_RETURNED_ZERO]`; the billing P0 remains operator-gated.
+- **2026-08-20 (data_pipeline_alerts_reconciler, slot 27, dispatch agt-41775d), 6-hourly sweep**: `slack-read-channel.py
+  data-pipeline-alerts 24` (2,531 msgs/24h) confirms the P1 todo above (line 162, "the fleet-wide relaunch wave keeps
+  hitting the same billing block") is not a one-time 2026-08-17 event — it recurs daily. `DP_VM_EXIT_NONZERO` (122
+  msgs/24h) resolves to 114 DISTINCT `tradfi-bf-cme-ohlcv-1m-*` VMs (one exit each, not one VM repeating), all
+  `exit_code=137` stall-induced, launched in a single ~12:05-12:17Z wave on 2026-08-19 — consistent with the
+  2/shard/day relaunch budget applied across ~55-60 distinct CME-OHLCV shards, all doomed by the same GLBX.MDP3 402
+  block. `gcloud compute instances list` confirms a FRESH wave of 17 more launched today (2026-08-20 ~12:03-12:09Z,
+  all `RUNNING`) — the pattern is ongoing, not historical. This is pure reconfirmation of the already-open P1 todo
+  above (pause-vs-accept the relaunch actuator for this launcher prefix while billing stays blocked), not a new
+  finding — no new issue doc filed. Separately, `DP_CRON_DID_NOT_FIRE` (2,122 msgs/24h) is dominated by
+  `mtds-live-sports-odds-api-odds-20260816-145019` (1,797 msgs, ~33 venues, never-captured odds) and this VM's own
+  `DP_CRON_DID_NOT_FIRE` fire-cadence for individual identities is now averaging ~25-26min (occasional dips to
+  ~13-14min) against the 1800s(30min) cooldown — down from the ~15min-flat storm the 2026-08-18/19 dedup-fix chain
+  was chasing, and the `uts-prod-alerting-paging-cron` duplicate-consumer fix (paused 06:55Z today per the sibling
+  doc) is confirmed still `PAUSED` with no regression; `dp-alerting-subscriber` is on a fresh revision
+  (`-00138-lzr`, 100% traffic). Full per-alert classification recorded in
+  `/plans/active/issues/dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md` and
+  `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md` rather than
+  duplicated here — this entry only adds the CME-OHLCV-relaunch-wave reconfirmation, which belongs on this doc.
