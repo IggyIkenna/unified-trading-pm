@@ -280,3 +280,10 @@ unblocked on a CI runner.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:498e5d37d2cac002]: KEEP-NA, valid -- Zero open todos of its own (it is a reachability-map/coordination hub over 5 Tracks), but explicitly not moot: `archive_exempt: true` is set in frontmatter with a clear stated reason, and the doc carries a dated REVIVED banner (2026-08-10, operator ruling BLK-9a03622c option A) explaining it was un-archived specifically because archiving it left two substantial shipped P1 plans with no consolidated-closeout coordinator. The banner names a live, still-open 'next action' (verify both plans' remaining work is tracked here; fold new ci-tagged issues into a fresh batch plan). This is a standing coordination hub deliberately kept alive, not a stale/moot doc.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 0 open todos (a reachability-map hub over 5 Tracks, not primary work itself) but explicitly not moot: archive_exempt:true + REVIVED 2026-08-10 per operator ruling BLK-9a03622c to keep coordinating 2 shipped dual-tagged.
+- **interactive slot-1, 2026-08-20**: filed
+  [/plans/active/issues/agent_orchestrator_qg_cancel_notifier_same_sha_rerun_gap_2026_08_20.md](/plans/active/issues/agent_orchestrator_qg_cancel_notifier_same_sha_rerun_gap_2026_08_20.md)
+  — agent-orchestrator's "QG slice CANCELLED/TIMED-OUT" notifier pages correctly-by-design on a cancelled run that is
+  still the ref tip, but doesn't recognize a same-sha rerun that succeeds seconds later as non-actionable (a gap in
+  `supersede-check`'s coverage, filed alongside the same day's UAC publish-ordering-race root-cause deep-dive in
+  [/plans/active/issues/cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md](/plans/active/issues/cloud_build_uac_publish_ordering_race_recurrence_strategy_service_2026_08_20.md)).
+  This entry IS the link-back fix for that doc's `asset_group: [ci]` family membership.
