@@ -18,7 +18,7 @@ scope: [engineer, admin]
 tags: [infra, terraform, drift, prod, reconcile-apply]
 created: "2026-07-24"
 author: unknown
-last_updated: "2026-07-24"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: orchestrator-agent
@@ -147,6 +147,111 @@ todo below.
 5. Do **NOT** apply the 65 client/client_version-only changes — ship the `ignore_changes` code fix first (they'll
    disappear from `tofu plan` entirely once that lands), then confirm zero drift remains.
 
+## 2026-08-20 fresh `tofu plan` + full re-classification (read-only Phase-1 sanity gate — no `apply`)
+
+Operator-requested final look at the diff before Phase 2 (the actual `tofu apply`, separately gated on review of this
+section). **This pass is read-only — no `apply` was run.**
+
+**BLOCKING BUG found + fixed before a plan could even be produced.** `terraform/gcp/paper_determinism_workflow.tf:159`
+(`output "paper_determinism_workflow_name"`) referenced `module.paper_determinism_workflow.name`, an attribute the
+`../modules/workflow/gcp` module does not export (it exports `workflow_name`, `workflow_id`, `workflow_revision_id`,
+`scheduler_job_name`, `execution_url` — never `name`). `tofu plan` failed outright (`Error: Unsupported attribute`,
+exit 1) before evaluating any resource diff. Traced to `deployment-service@200c4791` (`feat(infra): wire paper batch
+determinism workflow`), landed ~47 min before this check and already promoted LDR→main once — never caught because no
+CI job runs `tofu plan` against live prod state/credentials. One-line, unambiguous fix (small+clear per findings
+triage): `module.paper_determinism_workflow.name` → `module.paper_determinism_workflow.workflow_name`. Verified
+`tofu fmt -check` + `ENV=prod ./tofu.sh validate` clean, full `quality-gates.sh` green, shipped separately from this
+doc update as **`deployment-service@fd35a67f14`**.
+
+### Fresh plan result: **7 to add, 63 to change, 1 to destroy** (71 total) — full visibility
+
+`ENV=prod ./tofu.sh init && ENV=prod ./tofu.sh plan` ran clean (exit 0) with **zero `PERMISSION_DENIED`/`Error:`
+lines** — the 112-resource visibility gap from 2026-07-26 stays closed (the 2026-07-27 IAM grants still hold). This is
+a completely different composition from both the 2026-07-26 (10/67) and 2026-07-27 (17/71) checks — most of what those
+passes classified has since been applied (see below), and a large new batch (the 47-bucket lifecycle-exemption change)
+has landed in code since.
+
+**The previously-classified 12 — reconciled against live state:**
+
+- **10 of the 12 are CONFIRMED ALREADY APPLIED** — `google_service_account.defi_removal_probe`,
+  `google_cloud_run_v2_job_iam_member.defi_removal_probe_run_invoker`,
+  `google_cloud_scheduler_job.defi_removal_probe_daily`, `module.defi_removal_probe_job`,
+  `google_storage_bucket_iam_member.defi_removal_probe_store_admin`,
+  `google_project_iam_member.default_compute_sa_datastore_user`, and all 4 canonical buckets (`alerting-service`,
+  `datapoint-validation`, `kill-switch-audit-log`, `unified-trading-cicd-events`) are present in `tofu state list` and
+  produce **zero diff** on this fresh refresh. No longer in the plan at all — confirmed live in prod, not just
+  state-tracked.
+- **The 2 label-only updates are STILL PENDING** — now addressed as `module.t1_recon_instruments_job["cefi"]` /
+  `["prediction"]` (the per-asset-group named modules `module.instruments_cefi_t1_recon_job` /
+  `module.instruments_prediction_t1_recon_job` were refactored into a `for_each` module since 2026-07-26; same
+  underlying resources, same `purpose=t1-batch-cefi`-style label diff, still un-applied). Classification unchanged:
+  **INTENDED**.
+- **The 2 previously-invisible scope-guard resources are ALSO now confirmed applied**:
+  `google_project_iam_member.wave_launcher_compute_admin`/`wave_launcher_sa_user` and
+  `google_storage_bucket_iam_member.lifecycle_catalogue_instruments_admin["cefi"|"defi"|"prediction"|"sports"|"tradfi"]`
+  are all present in state, zero diff. Both were blocked on the IAM-visibility gap in the 2026-07-26 pass; that gap is
+  closed and both are live.
+
+**Cosmetic client/client_version fix (`deployment-service@f57c96e`) mostly held — one gap found.** The shared-module
+fix eliminated the bulk 65-diff set as designed. But `google_cloud_run_v2_job.subgraph_health_probe`
+(`subgraph_health_probe_scheduler.tf`) is a **standalone** resource (not built via `../modules/container-job/gcp`) and
+was never given its own `ignore_changes = [client, client_version]` copy — unlike `vm_log_archival_scheduler.tf`, which
+got one in the same commit. It still shows the identical client/client_version-only cosmetic diff. New follow-up todo
+filed below (same pattern, same fix, different file).
+
+### Three-way classification — every non-cosmetic resource in the current 7/63/1 diff
+
+**Creates (7) — all INTENDED:**
+
+| Resource | Why |
+| --- | --- |
+| `module.batch_rerun_job.google_cloud_run_v2_job.job`, `module.paper_determinism_workflow.google_workflows_workflow.workflow`, `module.paper_determinism_workflow.google_cloud_scheduler_job.trigger[0]` | Paper-batch determinism orchestration bundle, `deployment-service@200c4791` (the commit this pass unblocked) |
+| `google_monitoring_alert_policy.cloud_run_service_crash_loop["central-market-data-tardis-loader"\|"market-data-query-service"\|"uts-prod-data-status-rollup-svc"]` | Generic Cloud Run liveness/OOM alert registry, `deployment-service@fa07db64` — covers 3 audit findings (9.5mo crash-loop, 19mo never-started, an OOM) |
+| `google_secret_manager_secret_iam_member.t1_batch_gh_pat_accessor` | GH_PAT accessor grant for the subgraph health probe, `deployment-service@bf96eebd` |
+
+**Destroy (1) — INTENDED:**
+
+| Resource | Why |
+| --- | --- |
+| `google_cloud_scheduler_job.blrs_daily_determinism_cron[0]` | Its resource block was deleted in the SAME commit (`200c4791`) that adds the new orchestrated `paper_determinism_workflow` — the old standalone BLRS cron is cleanly superseded, not stale/abandoned |
+
+**Updates (63) — 62 INTENDED, 1 COSMETIC:**
+
+| Resource(s) | Change | Classification | Why |
+| --- | --- | --- | --- |
+| `google_storage_bucket.canonical[...]` (42 buckets: config-store/execution-store/features-*/instruments-store-*/market-data-tick-*/ml-store/strategy-store-* prd+test pairs, alerting-service, commodity-signals-batch) + `google_storage_bucket.deployment_state` | Removes the COLDLINE@60d `lifecycle_rule` | **INTENDED** | Operator-ruled 2026-08-17 cost-optimization exemption (raw pipeline/working-data estate stays always-hot, manifest-retention-governed) — codified in `deployment-service@2995d0cf`, documented in-file at `canonical_buckets.tf`'s `canonical_strip_lifecycle_kinds` local (47-bucket set incl. this one) |
+| `module.t1_recon_instruments_job["cefi"\|"prediction"]` | Labels only | **INTENDED** | Carried over from the 2026-07-26 classification (see above) — module addressing changed, resource + reason didn't |
+| `module.manifest_consolidator_job["instruments-cefi"\|"instruments-defi"\|"instruments-prediction"\|"instruments-tradfi"]` | `timeout: 1800s → 7200s` | **INTENDED** | `manifest_consolidator_timeouts` local map, `deployment-service@38790807` ("extend hourly-bucket timeout floor") — `instruments-sports` deliberately excluded from this diff (different, already-correct 600s override elsewhere in the same map) |
+| `module.expected_universe_v2_job["cefi"\|"defi"\|"prediction"\|"sports"\|"tradfi"]` | `args: [...] → (known after apply)` | **INTENDED (expected to recur)** | `deployment-service@1d8ede92` made `--start-date` a genuinely rolling today-120d window — args is now computed at apply time by design, so this WILL show as changed on every future `tofu plan` too; that's correct behavior, not un-applied drift beyond today's catch-up |
+| `google_cloud_scheduler_job.cost_snapshot_cron` | `http_target.headers["X-API-Key"]` restored | **INTENDED (higher urgency)** | `deployment-service@13ebe526` ("restore cost snapshot API key header") — the live cron is very likely running WITHOUT the key today, i.e. probably failing silently, same urgency class as the earlier `unified-trading-cicd-events` bucket finding |
+| `google_cloud_scheduler_job.defi_collect_cron["risk-params"]` | `description` text only | **INTENDED** | `deployment-service@b5a92312` — doc-string refresh (OOM-fix narrative), zero functional change |
+| `module.dp_daily_digest_job\|dp_drilldown_reconciliation_job\|dp_manifest_hygiene_changed_job\|dp_manifest_hygiene_full_job\|dp_reprobe_empty_job.google_cloud_run_v2_job.job` | `image: @sha256:cf2eb74... → :latest` | **INTENDED, but VERIFY before applying** | `data_pipeline_audit_scheduler.tf`'s own header: `:latest` is the deliberate default runner image ("Override only to pin a specific build-id tag"); the live digest pin traces to a manual `gcloud run jobs deploy` during the 2026-08-16 OOM incident (Cloud Build `816b2532`) to get the fix live fast. Applying moves these back to the documented default — but **confirm the AR `:latest` tag currently resolves to that same build (or newer) first**, so applying can't silently roll back to a stale image |
+| `google_cloud_scheduler_job.dp_exit_code_monitor_cron` | `schedule: "0 * * * *" → "*/5 * * * *"` | **INTENDED, but SANITY-CHECK before applying** | The `*/5 * * * *` cadence has been the committed value since the file's original creation commit (`deployment-service@5866f12c`) — no commit ever changed it — so this traces cleanly to code intent, not a stale value. Flagged anyway because it's a 12x invocation-frequency jump with real cost/noise implications; worth a quick "is 5-minute polling still wanted" confirmation, not a blind apply |
+| `google_cloud_run_v2_job.subgraph_health_probe` | `client`/`client_version` only | **COSMETIC / PROVIDER-QUIRK** | Same root cause as the already-fixed 65 (out-of-band `gcloud`-stamped metadata) — `deployment-service@f57c96e`'s `ignore_changes` fix missed this standalone (non-shared-module) resource. Do not apply; fix the code gap first (new todo below) |
+
+None of the 71 resources classified as stale/abandoned/conflicting.
+
+### Ready-to-apply list, in dependency order (once Phase 2 is authorized)
+
+1. `module.batch_rerun_job.google_cloud_run_v2_job.job` (independent Cloud Run Job)
+2. `module.paper_determinism_workflow.google_workflows_workflow.workflow` (its YAML source references
+   `module.batch_rerun_job.name`, implicit dependency on step 1)
+3. `module.paper_determinism_workflow.google_cloud_scheduler_job.trigger[0]` (depends on step 2's workflow)
+4. `google_monitoring_alert_policy.cloud_run_service_crash_loop["central-market-data-tardis-loader"\|"market-data-query-service"\|"uts-prod-data-status-rollup-svc"]`
+   + `google_secret_manager_secret_iam_member.t1_batch_gh_pat_accessor` (independent of everything above and each
+   other)
+5. `google_cloud_scheduler_job.blrs_daily_determinism_cron[0]` **destroy** — after steps 1-3 are live, so BLRS daily
+   reconciliation coverage has no gap
+6. Low-risk updates, any order: `cost_snapshot_cron` (prioritize — likely-broken cron), `defi_collect_cron["risk-params"]`
+   description, `t1_recon_instruments_job["cefi"\|"prediction"]` labels, `manifest_consolidator_job[...]` timeouts (4),
+   `expected_universe_v2_job[...]` args (5)
+7. The 42 canonical-bucket + `deployment_state` lifecycle-rule removals — apply as one batch (single already-shipped
+   commit, single operator ruling)
+8. **Confirm first, then apply**: `dp_exit_code_monitor_cron` schedule bump; the 5 `dp_*_job` image reversions (verify
+   `:latest` freshness in AR first)
+9. **Do NOT apply**: `subgraph_health_probe` client/client_version — ship its own `ignore_changes` fix first (mirrors
+   `f57c96e`), confirm it clears on the next plan, then there's nothing left to apply for it
+
 ## Todos
 
 - [x] ✅ [INFRA] P1. **Reconcile the prod terraform drift backlog** (`deployment-service/terraform/gcp`, state
@@ -174,6 +279,15 @@ todo below.
       `client`/`client_version` diffs (ship the P2 `ignore_changes` fix below first if convenient, so the cosmetic set
       stops re-appearing in the same plan run). **Done when**: a `tofu plan` run shows zero remaining diff for every
       resource classified INTENDED in the refreshed pass.
+
+      **RE-CLASSIFIED 2026-08-20 (still Phase 1, still no `apply` — see full section above).** The 10/67 and 17/71 diffs
+      referenced above are both gone — 10 of the original 12 are confirmed already applied, and the live composition is
+      now a completely fresh **7 add / 63 change / 1 destroy** (a large new batch, mainly the 47-bucket lifecycle-rule
+      cost-optimization change, landed since 08-06). Full re-classification done: 70 of 71 resources are INTENDED
+      (2 flagged VERIFY-first, not blocking), 1 is cosmetic (`subgraph_health_probe`, new follow-up todo below), 0
+      stale/conflicting. A blocking bug (`paper_determinism_workflow.tf` bad output reference) had to be fixed first
+      just to get a plan to run at all — see `deployment-service@fd35a67f14`. Phase 2 (`tofu apply`) remains gated on a
+      human reviewing this section; not actioned in this pass.
 - [x] [INFRA] P1. ✅ **DONE 2026-07-27** — **downgraded from `[OPERATOR]` per
       `/codex/05-infrastructure/orchestrator-cloud-identity-self-service.md` § "The rule"**: a permission gap on
       `unified-trading-sa`'s own identity is self-fixable, not an operator escalation (the earlier gating pass predates
@@ -201,6 +315,13 @@ todo below.
           the shared module, so it needed its own copy — extended its existing `ignore_changes = [launch_stage]` rather
           than duplicating). Code-only (no `tofu apply` — that's this doc's still-open P1 item); `tofu fmt -check` clean
           on the added lines; full `quality-gates.sh` green.
+- [ ] [INFRA] P2. **Extend the `f57c96e` `ignore_changes = [client, client_version]` fix to
+      `terraform/gcp/subgraph_health_probe_scheduler.tf`'s standalone `google_cloud_run_v2_job.subgraph_health_probe`
+      resource** (found 2026-08-20 — see the fresh-plan section above). This resource is NOT built via the shared
+      `../modules/container-job/gcp` module and was missed when `f57c96e` patched the shared module +
+      `vm_log_archival`'s standalone copy; it still shows the identical client/client_version-only cosmetic diff on
+      every `tofu plan`. Same fix, same pattern, one more file. **Done when**: a fresh `tofu plan` shows 0 changes for
+      `google_cloud_run_v2_job.subgraph_health_probe`. Repo: deployment-service.
 
 ## Progress Log
 
@@ -233,3 +354,12 @@ todo below.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:07ede18badf7abdb]: KEEP-NA, valid — explicit dated operator ruling cited in-doc (RULED 2026-07-28, reaffirmed 2026-08-06) — remaining work is a fresh three-way classification of a moving-target prod-terraform diff before any operator-level apply.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).
+- **2026-08-20 (Phase-1 read-only re-classification pass, no `apply`)**: fresh `tofu plan` = 7 add/63 change/1 destroy
+  (see full section above). Fixed one blocking bug first (`paper_determinism_workflow.tf` bad output attribute
+  reference, `deployment-service@fd35a67f14`) that made `tofu plan` fail outright — landed ~47min earlier in
+  `200c4791`, never CI-caught (no CI job runs `tofu plan` against live prod). Confirmed 10 of the previously-classified
+  12 are now live in prod (state-verified, zero diff); the 2 label-only updates are still pending, re-addressed post
+  module-refactor as `module.t1_recon_instruments_job["cefi"|"prediction"]`. Full three-way re-classification: 70/71
+  resources INTENDED (2 flagged verify-before-apply, not blocking), 1 cosmetic (`subgraph_health_probe` — new P2 todo
+  filed, same `ignore_changes` gap as the already-fixed 65), 0 stale/conflicting. Phase 2 (`tofu apply`) NOT run —
+  remains gated on operator review of this section.
