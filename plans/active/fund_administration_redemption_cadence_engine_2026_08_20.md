@@ -173,16 +173,29 @@ plan is a serial chain by file-topology, not a reflexive default.
   same NAV strike" real rather than incidental. Done-when: a test with 2 pending redemptions for the same fund/share
   class in one `run_once()` call asserts both settle against the identical `snapshot_id`.
 
-- [ ] [BACKEND] P2. Implement the acked-but-unimplemented `ledger_type=treasury/client_id={cid}/` writer
+- [x] [BACKEND] P2. Implement the acked-but-unimplemented `ledger_type=treasury/client_id={cid}/` writer
   (confirmed zero code hits fleet-wide as of `strategy_master.md`'s 2026-08-18 fold-in note) — record each redemption's
   cash movement as a canonical UAC `LedgerRow` at the point `_persist_processed`/`_persist_settled`
   (`grace_period_handler.py:138-180`) already emit their fund-admin events, so accounting has a real source for
   redemption cash flows. Done-when: processing one redemption in a test produces a `ledger_type=treasury` row
-  queryable by `client_id`.
+  queryable by `client_id`. — unified-api-contracts@87802bb141 (corrected the stale TreasuryLedger-writer docstring
+  found while implementing this — it said strategy-service, contradicting the acked Phase 6 decision),
+  fund-administration-service@a1f44576f (new `fund_administration_service/ledger/` module +
+  `PersistenceStore.put_treasury_ledger_row`/`list_treasury_ledger_rows`, wired into `_persist_settled`); Evidence:
+  quality-gates.sh passed both repos; new test `test_grace_period_handler_writes_treasury_ledger_row_on_settle` in
+  `tests/unit/test_background_handlers.py` (asserts a queryable-by-client_id row with correct `delta`/
+  `counterparty_client_id=None`, and a second client's query returns empty). **Residual scope note** (not silently
+  faked): this persists via `PersistenceStore` (in-memory today, matching every other object this store holds) — the
+  actual GCS parquet partition writer has no shipped precedent anywhere in the fleet to mirror and is out of scope
+  here; a durable backend is the same documented follow-up this store's own docstring already flags.
 
-- [ ] [REVIEW] P2. Confirm no regression: run `fund-administration-service`'s full test suite
+- [x] [REVIEW] P2. Confirm no regression: run `fund-administration-service`'s full test suite
   (`bash scripts/quality-gates.sh`) after all prior todos land and cite the green run. Done-when: QG passes with the
-  new interval loops, schema fields, fee field, and ledger writer all exercised by tests (not just present).
+  new interval loops, schema fields, fee field, and ledger writer all exercised by tests (not just present). —
+  fund-administration-service@a1f44576f; Evidence: `bash scripts/quality-gates.sh --no-fix` passed clean (60s,
+  sentinel `2502d542b789a67f0a5057901b8da1d033bba6d9`) — every prior todo's tests (interval loops, hour-granularity
+  grace period, real DI wiring, units-outstanding NAV, `redemption_fee_pct`, shared-NAV-strike batching, treasury
+  ledger writer) run green in the same pass, not just present in source.
 
 ## Progress Log
 
@@ -236,3 +249,14 @@ plan is a serial chain by file-topology, not a reflexive default.
   `run_once()` now strikes ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick (a per-tick
   `snapshot_cache`) and reuses it across every redemption settled in that tick, replacing the prior per-redemption
   `latest_snapshot()` call. QG green (32s).
+
+- **2026-08-20**: [operator's interactive main session, `/autonomous`] Implemented the final 2 todos directly
+  (treasury ledger writer + final QG confirmation) — both were queued/unclaimed in the live backlog at check time, so
+  no collision risk. Along the way found + fixed a real cross-repo SSOT contradiction: UAC's `LedgerRow` docstring
+  said the treasury-partition writer was strategy-service, contradicting the archived, operator-acked (2026-05-23,
+  `unified-trading-pm@351a47b61`) Phase 6 decision assigning it to fund-administration-service — corrected in the
+  same change rather than building in the wrong place on a stale pointer. Also resolved a stash-pop conflict on
+  `state_machine.py`/`test_redemption_state_machine.py` from an earlier concurrent session's leftover dirty WIP
+  colliding with real peer commits (kept upstream's already-evidenced content, dropped the redundant duplicate).
+  **All 9 todos in this plan are now done.** Handing off to
+  `fund_administration_redemption_cadence_engine_finalize_2026_08_20.md` next.
