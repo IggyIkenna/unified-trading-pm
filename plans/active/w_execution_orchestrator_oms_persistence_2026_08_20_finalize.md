@@ -65,6 +65,8 @@ context_scope:
 - [ ] [AGENT] P1. Confirm the follow-up IMPLEMENTATION plan this design's own Close-out section calls for was
       actually authored and correctly scoped against the final decisions (not against an earlier draft of
       them) before this plan archives.
-- [ ] [AGENT] P1. Run the archival ritual once every parent-plan todo is done and unlocked: confirm zero open
-      items (or explicit `BLOCKED-*` tags on the remainder), move both this plan and the parent to
-      `plans/archive/2026_08/`, and update any doc that still points at the active path.
+- [ ] [AGENT] P1. Run the standard 6-step archival ritual once every parent-plan todo is genuinely `- [x]` and
+      `locked_by` is unset — per `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`, the
+      authoritative rule has NO `BLOCKED-*`-tag carve-out (corrected wording — see
+      `w_state_recovery_real_wiring_2026_08_20_finalize.md` for the full incident this fixed). Move both this
+      plan and the parent to `plans/archive/2026_08/`, and update any doc that still points at the active path.
