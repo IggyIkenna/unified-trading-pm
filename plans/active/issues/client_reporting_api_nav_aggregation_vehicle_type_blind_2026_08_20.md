@@ -82,3 +82,4 @@ is a latent gap, not an active bug.
 
 - **2026-08-20**: Filed by `client_archetype_vehicle_eligibility_sma_vs_fund_finalize_2026_08_20`'s own todo 2,
   during the operator's `/autonomous` session that shipped the vehicle-eligibility work this issue follows on from.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

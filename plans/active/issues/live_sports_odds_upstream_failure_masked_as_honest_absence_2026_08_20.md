@@ -136,3 +136,4 @@ correctness hard rule ("only a genuine 200+empty stays honest-absence; an error 
   live key test). Shipped the connector fix in `market-tick-data-service@40b9b624`
   (`OddsApiWSFeedConnector.upstream_failure_reason()`, QG green, landed on `live-defi-rollout`).
   Operator-gated `odds-api-key` top-up remains open (BLOCKED-CREDENTIALS).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
