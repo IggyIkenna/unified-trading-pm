@@ -320,10 +320,12 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W22 — strategy to execution messaging and the external instruction API
 
-- [ ] [BACKEND] P0. Build the strategy→execution messaging path end to end. Confirmed unbuilt by a 2026-08-19
-      workspace-wide search — the only live path is manual. Publish/read via the UTL `EventTransport` facade
-      (`InMemoryTransport` for paper/colocated, Pub/Sub for live) so `paper(W) == batch-rerun(W)` holds at epsilon
-      zero. SSOT: `/codex/02-data/live-data-persistence-and-event-log.md`.
+- [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`, per the 2026-08-19 operator
+      ruling directing this + the security audit be authored as dedicated plans rather than tracked inline here.
+      That plan carries the full real detail (strategy-service already publishes via `EventTransport` keyed on
+      `atomic_instruction`; the missing piece is execution-service's subscribe side) plus its mandatory gated
+      finalize plan. This todo closes here; track further progress there, not in this doc.
 - [x] ✅ [BACKEND] P0. **Expose a real per-venue execution-instruction-path check** — **execution-service@b70d2edb16**
       (landing verified independently of quickmerge's exit code: all six new files resolve under
       `git cat-file -e origin/live-defi-rollout:<path>`, and `git diff --stat origin/live-defi-rollout` is empty for
@@ -331,12 +333,13 @@ todos only to confirm they are data-movement, then leave it.
       `instruction_path_availability(venue)`; `python -m execution_service.readiness` is the cross-venv probe.
       T5 has the frozen contract under their `## Inbound requests` (`unified-trading-pm@34999f0adf`), posted before
       the code landed so they were never idle-waiting. Measured verdicts are in the Progress Log.
-- [ ] [BACKEND] P0. Build the external instruction API surface, coordinating the contract with T1. **Partial
-      progress, still open**: `POST /external/instructions` handles `TRADE` and `QUOTE` (the latter shipped this
-      session, `execution-service@dc4fad8de7`) — every other `InstructionActionV2` member (`SWAP`, `LEND`,
-      `BORROW`, `WITHDRAW`, `REPAY`, `STAKE`, `UNSTAKE`, `TRANSFER`, `BRIDGE`, `ATOMIC`, `CANCEL`, `CONVERT_DUST`,
-      `LP_MINT`, `LP_BURN`) still 501s (`external_instruction_api.py`'s own error message says so). Full DeFi/
-      staking/lending external submission is the remaining scope.
+- [x] ✅ [BACKEND] P0. **Spun out into the same dedicated W22 AO plan, 2026-08-20** —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Instruction action
+      vocabulary" section carries the real remaining scope: `TRADE`/`QUOTE` are wired
+      (`execution-service@dc4fad8de7` for QUOTE); every other `InstructionActionV2` member 501s, and the plan
+      names the exact blocker (no `DeFiAdapter` construction/caching factory exists yet — modeled on
+      `account_orchestrator.py`'s `_default_order_adapter_factory` pattern) plus per-action wiring todos. This
+      todo closes here; track further progress there, not in this doc.
 - [x] ✅ [BACKEND] P1. **Delta-proxy repricer — PRICE leg generalized + receipt point rebuilt** —
       **execution-service@dc4fad8de7**. T1's `QuoteInstruction` extension landed
       (`unified-api-contracts@6be4b136d7`), unblocking this. `quote_instruction_to_delta_proxy_params` now reads
@@ -575,10 +578,20 @@ todos only to confirm they are data-movement, then leave it.
       sweep of every site.
 - [ ] [BACKEND] P0. Pin the exchange version per venue and re-run cassettes on drift, so a silent venue-version
       change cannot go undetected (W14). No owning plan existed at authoring time.
-- [ ] [BACKEND] P0. Run a security audit of EVERY venue adaptor, especially DeFi, covering every on-chain write
-      path (W15). P0 in the epic with no plan doing it systematically. Size this into phases and track them here.
-- [ ] [BACKEND] P0. Build the full fees and gas breakdown — clearing, broker, exchange, gas, other — on the
-      execution side (W17). Coordinate the strategy-side half with T3.
+- [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
+      `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, per the 2026-08-19
+      operator ruling. Sized into 11 phases against a real, enumerated ~85-file adapter inventory (bridge/
+      cross-chain first as highest-stakes, then DeFi by primitive, then CeFi/TradFi by transport, then sports),
+      each applying a fixed 7-point checklist (credential handling / signing correctness / input validation /
+      slippage-deadline bounds / approval scope / idempotency / honest error handling), plus a triage phase and
+      the mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
+- [x] ✅ [BACKEND] P0. **Build the full fees and gas breakdown (W17) — DONE, `execution-service@760b41a251`.**
+      T1 shipped the contracts-side half same day (`clearing_fee_bps`/`broker_fee_bps`/`other_fee_bps` added to
+      `ExecutionCostEstimate`, `unified-api-contracts`); this session wired the execution-service half —
+      `ExecutionCostEstimator.estimate_cost()` now explicitly computes and returns all 3 new fields (honestly 0 +
+      a note for TradFi pending a real sourced fee schedule, never an invented bps figure) alongside a real fix:
+      every TradFi venue (CME/CBOE/NASDAQ/NYSE/ICE/FX) was silently misclassified as CEFI before this, applying
+      wrong fee/spread assumptions. 12 new/updated tests.
 - [ ] [BACKEND] P1. Complete the execution policy and fill-model gaps — collapse the two independent benchmark
       implementations into one sent value, stop no-op'ing the lending path, de-duplicate the algo vocabulary across
       two modules. Evidence: `/plans/active/execution_service_policy_and_fill_model_gaps_2026_08_19.md`.
@@ -765,6 +778,8 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `unified-trading-pm@8d47cf3393` | readiness-dump `execution_instruction` leg now calls the real per-venue-per-mode check (`execution_service.readiness.instruction_path`, shipped `execution-service@b70d2edb16` but never wired in) instead of a hardcoded venue-independent unverified — new `_execution_instruction_path_probe.py`, `checks.py`/`derive_readiness.py` updated; independently re-verified live after landing |
 | `unified-trading-pm@78508ce4e7` | artefact-marker sub-agent audit: fixed 2 factually-wrong prose claims in `platform-external-api-walkthrough.html` (QUOTE falsely listed as still-501; the 864-rows-unverified claim falsely said the check doesn't exist) |
 | `execution-service@ff0b43b5d3` | shard-level failure isolation fix: `OrderRecoveryEngine.recover_venue()` no longer lets one venue's reconciliation exception abort recovery for every other venue on startup; new regression test |
+| `execution-service@760b41a251` | W17 fee-breakdown contract wired (`clearing_fee_bps`/`broker_fee_bps`/`other_fee_bps`) + a real TradFi venue-classification bug fixed (was silently falling through to CEFI) |
+| `unified-trading-pm@68c1d2cf82` | authored + dispatched `w22_strategy_execution_messaging_external_api_2026_08_20` and `w15_execution_service_venue_adaptor_security_audit_2026_08_20` as active AO plans, each with a mandatory gated finalize plan, per the 2026-08-19 operator ruling |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
