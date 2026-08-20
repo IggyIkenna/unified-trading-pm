@@ -92,10 +92,28 @@ impression:
 
 ### DeFi by primitive — swap/DEX
 
-- [ ] [BACKEND] P0. Audit the swap/DEX group against the checklist: `uniswap.py`, `uniswap_encoding.py`,
+- [x] ✅ [BACKEND] P0. Audit the swap/DEX group against the checklist: `uniswap.py`, `uniswap_encoding.py`,
       `uniswap_live.py`, `orca.py`, `raydium.py`, `jupiter.py`. Pay particular attention to checklist point 4
       (slippage/deadline) — this IS the primitive class where a missing bound is directly exploitable (sandwich
-      attacks). Done-when: same evidence bar as the bridge todo above.
+      attacks). Done-when: same evidence bar as the bridge todo above. **RESOLVED 2026-08-20 (slot-7): findings
+      recorded in the Progress Log; HIGH findings are tracked below. No inline fix was made in this audit todo.**
+
+- [ ] [BACKEND] P0. Fix Uniswap live execution's ignored swap deadline, validate amount/slippage bounds, and add
+      retry/idempotency protection for the approval+swap transaction sequence (`uniswap.py:332-355`,
+      `uniswap_live.py:71-111,330-380`). Preserve the caller's minimum output rather than silently lowering it.
+      (repo: execution-service)
+
+- [ ] [BACKEND] P0. Fix Uniswap NPM partial-success reporting: an optional `burn_nft=True` request must return a
+      failed/partial result when `_maybe_burn_nft()` catches a reverted burn instead of returning `success=True` with
+      only `burn_error` (`uniswap.py:529-538,568-580`). (repo: execution-service)
+
+- [ ] [BACKEND] P0. Add Jupiter quote/input validation, caller-controlled expiry, and idempotency/retry protection
+      around `/swap` plus Solana broadcast (`jupiter.py:120-199,205-224,261-279`). A retry after an ambiguous
+      `send_transaction()` result currently obtains and signs a fresh transaction. (repo: execution-service)
+
+- [ ] [BACKEND] P0. Replace the Orca/Raydium placeholder liquidity instructions with validated protocol account
+      metas and explicit positive amount/tick/range bounds; the current live paths serialize caller values and submit
+      `Instruction(accounts=[])` (`orca.py:168-219,292-310`; `raydium.py:186-232,318-328`). (repo: execution-service)
 
 ### DeFi by primitive — lending
 
@@ -174,3 +192,13 @@ impression:
       pattern is "always" applied that a finding shows isn't); correct in place.
 - [ ] [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped.
+
+## Progress Log
+
+- **2026-08-20 (slot-7, backend_engineer) — swap/DEX security audit complete.** Reviewed `uniswap.py`, `uniswap_encoding.py`, `uniswap_live.py`, `orca.py`, `raydium.py`, and `jupiter.py` against all seven checklist points, with exact source references:
+  - **Uniswap:** credentials/signing and exact-amount approvals PASS; MEDIUM input-validation gap (`uniswap.py:332-355`, `uniswap_encoding.py:180-205`) because positive amount, fee/slippage range, and address shape are not enforced at the connector/encoding boundary. HIGH deadline/idempotency findings: the public `deadline` is accepted but dropped before `_execute_live_swap()` (`uniswap.py:332-355`), and `_Web3SwapExecutor` allocates a fresh pending nonce for each approval/swap with no retry key (`uniswap_live.py:71-111`). HIGH honest-error finding: `burn_position()` returns `success=True` after decrease+collect even when optional burn fails, storing only `burn_error` (`uniswap.py:529-538,568-580`).
+  - **Uniswap encoding:** no credential or network write path; helper encoding is structurally covered by the connector. MEDIUM boundary finding: `_encode_address()` accepts arbitrary-length/non-checksummed strings and uint encoders rely on downstream `to_bytes()` errors rather than explicit operation validation (`uniswap_encoding.py:180-205`).
+  - **Orca:** credential injection, signing delegation, and failure-result logging PASS. MEDIUM input-validation finding: amounts/ticks are serialized without positive/range/order checks (`orca.py:168-199,292-310`); the live instruction submits `accounts=[]` (`orca.py:210-219`), so protocol account correctness is not established and requires a tracked fix. Slippage/deadline/approval are N/A to these liquidity methods.
+  - **Raydium:** same PASS/N-A results as Orca; MEDIUM validation/account-meta finding at `raydium.py:186-232,318-328`, including `accounts=[]`.
+  - **Jupiter:** credential/signing delegation and failed-transaction propagation PASS. MEDIUM input-validation finding: caller mint, amount, and slippage values are forwarded to `/quote` without local positivity/address/range validation (`jupiter.py:120-163`). HIGH expiry/idempotency finding: `execute_swap()` has no caller-controlled quote age/deadline or idempotency key, and a retry rebuilds/posts a fresh transaction (`jupiter.py:205-224,261-279`). Slippage is passed to Jupiter, but no local upper-bound enforcement exists.
+  - HIGH items are not silently left as prose: four concrete P0 follow-up todos were added immediately below the completed phase item. No code was changed in this audit pass; no tests were required for the read-only audit.
