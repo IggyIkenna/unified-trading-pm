@@ -69,7 +69,7 @@
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
     "batch-live-reconciliation-service": "0.52.4",
     "deployment-api": "0.93.9",
-    "deployment-service": "0.155.13",
+    "deployment-service": "0.155.14",
     "deployment-ui": "0.1.0",
     "execution-service": "0.89.2",
     "features-service": "0.92.1",
