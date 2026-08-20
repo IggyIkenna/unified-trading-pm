@@ -178,11 +178,19 @@ zero incremental wait at all. That is a real rewire of the trigger graph across 
 poll-based fix below. Noting it here as the eventual "does this properly" option; not in scope for the initial fix.
 
 **Q2 + Q3: will the wait bill GitHub Actions minutes, and can we avoid that by using the self-hosted glue pool
-instead?** Confirmed: GitHub-hosted runner billing (`ubuntu-latest`, which is what this job currently uses — PM is a
-**private** repo, confirmed via `gh api repos/IggyIkenna/unified-trading-pm --jq .private` → `true`) is wall-clock,
-not CPU-based — a step that just polls/sleeps is billed the same as one doing real compute for the full duration the
-runner is held. So yes, widening this gate's wait window costs real (if modest, compared to the Cloud Build
-alternative) GH Actions spend, scaling with how often the race happens.
+instead?** Confirmed: GitHub-hosted runner billing (`ubuntu-latest`, which is what this job currently uses) is
+wall-clock, not CPU-based — a step that just polls/sleeps is billed the same as one doing real compute for the full
+duration the runner is held. So yes, widening this gate's wait window costs real (if modest, compared to the Cloud
+Build alternative) GH Actions spend, scaling with how often the race happens.
+
+**CORRECTED 2026-08-20 (`/plan-reconcile` finding F-G09-1)**: the original text above claimed PM is a **private**
+repo (`gh api repos/IggyIkenna/unified-trading-pm --jq .private` → `true`) as part of the billing analysis. Re-checked
+live this session: PM is **public** (`{"private":false,"visibility":"public"}`). This matters beyond billing —
+`plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md` documents that every self-hosted-routed
+workflow in this repo, including this exact job, was deliberately reverted to `runs-on: ubuntu-latest` on 2026-08-07
+specifically because self-hosted-runner-on-a-public-repo is a fork-PR security exposure. **The self-hosted-glue-runner
+half of the "Decided approach" below (todo item 4a) must NOT ship as designed while PM stays public** — it would
+reintroduce the exact exposure that revert fixed.
 
 Operator direction: the self-hosted glue-runner pool is already running 24/7 as effectively sunk capacity, and exists
 specifically to absorb this class of cheap/bounded workflow rather than paying GH-hosted per-minute rates — same
@@ -223,14 +231,17 @@ shipping is worth doing, but nothing found this session suggests a real contenti
 - [x] ✅ [CICD] P2. **Finalize the implementation design** (runner choice, auth reuse, wait-budget scope) — done this
       session, see "Finalized implementation design" above. Pending operator review of this doc before shipping.
 - [ ] [CICD] P2. **Implement** (operator review pending — do not ship until reviewed):
-      (a) `update-repo-version.yml`'s `update-manifest` job: `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]`;
+      (a) **BLOCKED-OPERATOR — do NOT ship while PM stays public** (see "CORRECTED 2026-08-20" note above):
+      `update-repo-version.yml`'s `update-manifest` job: `runs-on: ubuntu-latest` → `runs-on: [self-hosted, glue]`.
+      Either re-verify PM has been deliberately re-privatized before doing this, or drop this sub-item and keep the
+      job on `ubuntu-latest`;
       (b) add a GCP auth step (WIF-first, SA-key fallback) mirroring the existing `digest-auth-wif`/`digest-auth-key`
-      steps already in this file, placed before `resolve-gate`;
+      steps already in this file, placed before `resolve-gate` — independent of (a), ships either way;
       (c) extend `check_resolvable()` (~line 534-555) with a third check against Artifact Registry (`gcloud artifacts
       versions list --repository=unified-libraries --location=asia-northeast1 --package=$REPO
       --format="value(name)"`, compare against `$VERSION`), required alongside the existing git-tag/branch-pyproject
       checks. Test against this incident's real timeline: a floor-bump for `unified-api-contracts=0.149.0` dispatched
-      before 11:14:57Z should have been held; after, allowed through immediately.
+      before 11:14:57Z should have been held; after, allowed through immediately. Independent of (a), ships either way.
 - [ ] [CICD] P2. **Re-size the retry budget** for the combined build-time + propagation-lag wait (current: ~5 min ×
       up to 3 `fanout_retry` retries ≈ 20 min total; today's real gap was ~12-20 min of propagation lag ALONE, before
       adding producer build time on top — re-derive a real number, don't assume 20 min still covers it). Widen
