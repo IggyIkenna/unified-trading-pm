@@ -794,6 +794,21 @@ intact on origin), but mis-attribution and premature publication of WIP the owni
   `live-defi-rollout` linear instead of littering it with merge commits), but immediately after the pop, BEFORE your own
   `git add <files>`, run `git restore --staged .` unconditionally.
 
+### Multi-cycle commit loops: rebase on every reconciliation pull (confirmed 2026-08-17)
+
+The ahead-count split above governs a single ship attempt. A hand-rolled loop that commits multiple batches while
+reconciling against a shared branch is a different shape: once the first local batch has committed, a peer can land on
+the branch before the next batch, so a later `--ff-only` pull can encounter genuine history divergence and can never
+recover by retrying. **For every per-batch cycle after that point, default to `git pull --rebase --autostash`, never
+`git pull --ff-only`.** Keep the usual post-pop `git restore --staged .` and content-integrity checks.
+
+This does not override the prescribed clean-tree, `ahead=0` pre-commit gate in quickmerge: that gate must still
+fail closed on a working-tree overlap rather than autostash a foreign tree. It applies to a loop's own repeated
+reconciliation step, where local commits may already be ahead while `origin/live-defi-rollout` is moving. The rule was
+confirmed in the `grind_v3`/`grind_v4` investigation: 12 batches and 60 `--ff-only` retry attempts stalled
+categorically after history diverged; replacing the per-batch pull with `--rebase --autostash` eliminated the stall
+across two runs. See `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`.
+
 **Do NOT "fix" a sweep after the fact by reverting.** Once pushed, the foreign content is the other agent's only
 committed copy of that work — a revert or force-push to "clean up" the attribution deletes their uncommitted work,
 turning a cosmetic problem into real data loss (force-pushing a shared branch is independently banned regardless). The
