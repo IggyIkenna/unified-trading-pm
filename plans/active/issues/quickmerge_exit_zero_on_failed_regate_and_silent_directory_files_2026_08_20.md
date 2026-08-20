@@ -135,12 +135,35 @@ it in `/codex/05-infrastructure/per-tab-worktrees.md`.
 
 ## Todos
 
-- [ ] [SCRIPT] P0. Make a failed re-gate exit non-zero in `scripts/quickmerge.sh`.
-- [ ] [SCRIPT] P0. Refuse a directory (any non-file path) in `--files` with a structured error, mirroring
-      `safe-doc-push.sh`. Do NOT expand it — that would silently widen commit scope.
+- [ ] [SCRIPT] P0. Make a failed re-gate exit non-zero in `scripts/quickmerge.sh`. **Investigated 2026-08-20 (T5):
+      the specific agent-mode re-gate path (`_qm_check_agent_sentinel`'s until-loop, ~L2531) already captures the
+      real exit code correctly via `${PIPESTATUS[0]}` and unconditionally `exit 1`s on failure — verified by direct
+      code read, not assumed. Reproduced the "exited with code 0" symptom's most likely confound instead: the
+      near-universal `bash scripts/quickmerge.sh ... 2>&1 | tee LOG | tail -N` logging convention (used by this
+      session and, most likely, by T3's own measurement) returns `tail`'s exit status, not quickmerge.sh's —
+      confirmed live: `false 2>&1 | tee /tmp/x | tail -5; echo $?` prints `0`. This does not disprove Defect 1
+      outright (the non-agent-mode `--lint --fix`/`--no-fix` phases at L2589-2600 weren't independently traced,
+      and a genuinely intermittent path may still exist), but the evidence as measured (exit-code-after-a-pipe) is
+      fully explained by the logging convention and does not by itself prove quickmerge.sh fails to propagate.
+      Re-measure with `${PIPESTATUS[0]}` captured directly (not through `| tail`) before concluding a further code
+      change is needed here — leaving open rather than closing on unconfirmed evidence.**
+- [x] ✅ [SCRIPT] P0. Refuse a directory (any non-file path) in `--files` with a structured error, mirroring
+      `safe-doc-push.sh`. Do NOT expand it — that would silently widen commit scope. **Fixed 2026-08-20:
+      `unified-trading-pm@d0e5a67ee7`, added right after the `--agent` + `--files` requirement check
+      (before any staging/gate work runs) — any `-d` path in `FILES_ARG` now exits 1 with a clear message instead
+      of reaching the staging loop. Live-tested against a real throwaway directory (`/tmp/qm_dirtest_scratch`):
+      refused correctly, zero git state touched (`git status --porcelain` clean after). Root cause of the ORIGINAL
+      silent-drop was not fully pinned down (structural read of the staging loop, L2842 `elif [ -e "$f" ]`, suggests
+      `git add` on a directory should recurse and stage correctly — the empirical break may trace to the fingerprint
+      tracker at L~535 treating a directory as `ABSENT` since it checks `[ -f ]` not `[ -e ]`, which blinds the
+      post-push `_qm_assert_entry_change_landed` verifier to directories specifically, masking whatever the real
+      failure was rather than causing it) — refusing upfront sidesteps needing to fully explain the intermittent
+      mechanism, which was the doc's own recommended fix.**
 - [ ] [SCRIPT] P1. Stop the recovery/quarantine path from reverting tracked-but-unstaged modifications, or name
       every file it restores so the loss is visible.
-- [ ] [DOC] P1. Add the per-file origin probe + the "an empty diff is not proof" case to
-      `/codex/05-infrastructure/per-tab-worktrees.md`, next to the existing `ahead=0` guidance.
+- [x] ✅ [DOC] P1. Add the per-file origin probe + the "an empty diff is not proof" case to
+      `/codex/05-infrastructure/per-tab-worktrees.md`, next to the existing `ahead=0` guidance. **Fixed 2026-08-20**:
+      new "An empty diff against origin is not proof your change landed" subsection added, citing this doc's own
+      2026-08-20 measurement, with the per-file probe snippet and the new directory-refusal behavior noted.
 
 - **context-scout 2026-08-20**: populated context_scope (6 entries).

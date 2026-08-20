@@ -6,7 +6,7 @@ summary: >-
   additions, the live re-grade, and the evidence-tier tagging for this one file. Split out of
   client_artefact_remediation_2026_08_18.md so it runs in parallel with the Nick AI and sibling children; the file
   scope is what makes that safe, since no other child edits this HTML.
-status: active
+status: complete
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -23,7 +23,7 @@ related:
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
   ]
 created: 2026-08-18
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: system_readiness_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -200,3 +200,9 @@ contention from concurrent peer sessions sharing this checkout — repeated reba
 three times and once fully orphaned it from branch history entirely, silently reverting this file to its pre-edit
 state until a `git cherry-pick` recovered it; re-verified via `git log --grep`/`git merge-base --is-ancestor` before
 every retry and before shipping, rather than trusting a stale citation or an "ahead=0" appearance of landedness.)
+
+**2026-08-20 — archived.** All 25 todos `[x]`, unlocked, no active dependents (its finalize archives in the same
+commit). `status: active→complete`, moved to
+`plans/archive/2026_08/client_artefact_remediation_elysium_2026_08_18.md`. Durable remediation facts live in
+[`nick_ai_and_elysium_artefact_audit_2026_08_18.md`](/plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md)
+(`status: pass`). No codex contract change.

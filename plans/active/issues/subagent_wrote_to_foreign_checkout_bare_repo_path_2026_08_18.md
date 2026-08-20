@@ -19,7 +19,6 @@ tags: [multi-agent-safety, sub-agent, slot-discipline, worktrees, near-miss]
 related:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
-    /plans/active/client_artefact_remediation_elysium_2026_08_18.md,
     /plans/epics/system_readiness_master.md,
   ]
 context_scope:

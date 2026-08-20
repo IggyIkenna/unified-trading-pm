@@ -68,3 +68,5 @@ empty/captured rows; retain existing historical failures for separate reclassifi
 - 2026-08-20: Falsified the initial ASTER omission hypothesis against the authoritative UAC
   registry and the existing MTDS ASTER batch-filter regression test. No code fix shipped; the
   alert's candidate breakdown is required to continue safely.
+- **context-scout 2026-08-20**: reviewed context_scope (already populated at authoring time with 2 codex SSOTs +
+  2 real source paths) — no changes needed, left at 4 entries.
