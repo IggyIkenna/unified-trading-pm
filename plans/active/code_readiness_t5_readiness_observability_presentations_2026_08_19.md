@@ -154,6 +154,14 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T1] P1. **Regenerate `platform-external-api-walkthrough.html`'s API-surface enumeration from shipped
+      routes** — T1 re-triaged its own plan's "External API surface" section 2026-08-20; the artefact currently
+      leaves this "pending, to be enumerated exactly." Spans `instruments-service` + `market-tick-data-service`
+      (T2-owned) and `execution-service` (T4-owned) routers — T1 doesn't own any of them, but this is read-only
+      route enumeration + doc regeneration, not an edit to those repos, so ownership doesn't block whoever does it
+      from reading them directly, the way T5 already does for the readiness dump
+      (`cursor-configs/skills/readiness-state-dump/scripts/instruction_actions.py`). Coordinate with T2/T4 only if
+      their routers are genuinely mid-change when you walk them.
 - [ ] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
       attempts: (1) a FAILED re-gate still exits 0 — three attempts reported success and landed nothing; (2) a
       DIRECTORY path in `--files` stages nothing for it silently, which landed a PARTIAL commit that broke

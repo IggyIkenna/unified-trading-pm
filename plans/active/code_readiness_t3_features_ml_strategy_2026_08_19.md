@@ -150,6 +150,18 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T1] P0. **Counterparty-facing surface for `strategy-service`** — T1 re-triaged its own plan's "External
+      API surface" section 2026-08-20 and found this targets a repo T1 doesn't own.
+      `platform-external-api-walkthrough.html` §02 states strategy-service has no counterparty-facing surface at
+      all today; its real endpoints are admin-token-gated internal tooling (registry reads, restriction-profile
+      router, operational-mode flip). §25 (owner: W22) additionally found "a workspace-wide search found no
+      internal messaging — Pub/Sub or otherwise — connecting strategy-service's decisions to execution-service
+      today, and no direct API client either" — the only live instruction path is manual
+      (`ManualOperationHandler → LiveOrchestrator.execute_instruction()`). Two halves, likely joint with T4: (1) the
+      messaging bridge (UTL `EventTransport`, strategy publishes its instruction stream, execution subscribes —
+      the same pattern market data already uses), (2) the counterparty-facing HTTP/WebSocket surface itself. A
+      matching item is filed on T4's `## Inbound requests` for the execution-subscribing half — don't let either
+      side stall waiting on the other.
 - [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
       unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
       edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe

@@ -150,6 +150,38 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T1] P0. **Replace the honest HTTP 501s in `execution-service`'s `/external/instructions` router** — T1
+      re-triaged its own plan's "External API surface" section 2026-08-20 and found this targets `execution-service`,
+      not any T1-owned repo. Only the TRADE action is live end-to-end today (routed through
+      `ManualOperationHandler → LiveOrchestrator.execute_instruction()`); the other 10 (swap, lend, borrow, stake,
+      unstake, quote, transfer, bridge, atomic, cancel) return an honest HTTP 501
+      (`platform-external-api-walkthrough.html` line ~1361, verified against
+      `execution-service/execution_service/api/external_instruction_api.py`). T1 measured the UAC-side vocabulary
+      first so you don't have to: `StrategyInstructionType`
+      (`unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`) already covers SWAP/LEND/
+      BORROW/STAKE/UNSTAKE/BRIDGE/FLASH_LOAN(=atomic), backed by a total `INSTRUCTION_TYPE_TO_OPERATIONS` mapping.
+      QUOTE, a standalone TRANSFER (distinct from BRIDGE), and CANCEL are genuinely absent from the contract too —
+      if the real implementation needs those as first-class instruction types (not just `OperationType` steps
+      internally), ask T1 for the contract addition rather than inventing a parallel local enum; the mapping is
+      load-bearing and T1 would rather extend it once than have it drift from a shadow copy.
+- [ ] [FROM-T1] P1. **Kill-switch / flatten-position as instructions a caller can send** — both are already
+      conceptually present as system behaviour but not expressible as an instruction on the envelope
+      (`platform-external-api-walkthrough.html` §25). T1 has deliberately NOT added `KILL_SWITCH`/
+      `FLATTEN_POSITION` to `StrategyInstructionType` yet — it is a genuine design call (does a control instruction
+      decompose into `OperationType` steps at all, or does it need its own dispatch path — recall
+      `INSTRUCTION_TYPE_TO_OPERATIONS` is a total mapping over every member) and T1 does not want to guess a shape
+      you then have to rework. State what execution-service actually needs and T1 will land it, or say if T1's
+      first reasonable draft is fine to just ship.
+- [ ] [FROM-T1] P1. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
+      T3's `## Inbound requests` for full detail (no internal messaging connects strategy-service's decisions to
+      execution-service today). Whichever tranche has capacity first can open the UTL `EventTransport` subscription
+      on the execution side (subscribing to strategy's instruction stream + the features-service groups it needs)
+      — don't let it stall waiting on the other.
+- [ ] [FROM-T1] P2. **Ceffu integration** — `execution-service/execution_service/transfer_coordinator.py` is
+      confirmed the target (the artefact cites it directly). It's a stub pending its API spec; build the full code
+      path behind the provider interface, credential-gated, never descope. Do NOT invent a distinct Ceffu custody
+      member — the artefact already lists Ceffu alongside Copper/manual-transfer/prime-broker eligibility on
+      `VenueCapabilityV2.transfer_capability` (shipped `unified-api-contracts@45a545e5ad`).
 - [x] ✅ [FROM-T5] P0. **Shipped — `execution-service@7202047877`.** Expose a real per-venue instruction-path check in `execution-service` — this is the leg the
       readiness dump names as the structural reason its rows cannot confirm execution readiness. T5 has done the
       groundwork and needs only the venue-aware surface; the shape asked for is deliberately minimal.
