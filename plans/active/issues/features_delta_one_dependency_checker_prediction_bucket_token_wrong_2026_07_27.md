@@ -395,3 +395,7 @@ four now route through the one helper.
   Therefore no genuine `EXIT_STATUS=0` completion exists and the timeout registry must not be
   justified by these runs. The shared checkout also contained an uncommitted timeout-registry edit
   from another session; it was left untouched.
+- **Correction after the audit:** the concurrent `features-service@aeac9478` timeout-registry commit
+  subsequently landed on `origin/live-defi-rollout`. Slot-24 did not author or modify that commit;
+  it remains non-qualifying under the operator ruling because the required genuine `EXIT_STATUS=0`
+  completion has not been observed.
