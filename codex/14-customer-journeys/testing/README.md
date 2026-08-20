@@ -48,7 +48,13 @@ tests/e2e/playbooks/
 > spec filenames (`02a-*`, `03a-*`, etc.) and the `helpers/` subdirectory — was NOT re-verified this pass; a live
 > `ls tests/e2e/playbooks/` shows several of these spec names absent and `seed-persona.ts` sitting flat in the directory
 > rather than under `helpers/`. Needs its own dedicated closer-read/scoping pass — out of this mechanical path-fix's
-> scope.
+> scope. **Verified 2026-08-20 (docs-reconcile):** the tree above is substantially stale, not just the one file —
+> `expect-service-tile-locked.ts` and `expect-click-path.ts` (cited in the Scaffolding code blocks below) do not exist
+> anywhere in the repo either (confirmed via `find`), no `helpers/` subdirectory currently exists at all, and the real
+> `tests/e2e/playbooks/` directory holds ~30 spec files not shown here (`dart-cockpit/`, `refactor/`,
+> `signal-broadcast-*`, `strategy-evaluation-allocator.spec.ts`, etc.) — the `seed-persona.ts` code comment below is
+> corrected to match verified reality; the rest of this section's tree/scaffolding still needs the full rewrite this
+> caveat already calls for.
 
 Tests run against:
 
@@ -62,7 +68,7 @@ Tests run against:
 ### Persona seeding helper
 
 ```ts
-// tests/e2e/playbooks/helpers/seed-persona.ts
+// tests/e2e/playbooks/seed-persona.ts (verified flat, not under helpers/ — see caveat above)
 export async function seedPersona(page, personaId: string) {
   const personas = {
     admin: {

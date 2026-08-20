@@ -99,8 +99,8 @@ can tell which resolution closes which failure without manually walking a PR-num
 existing per-`{repo}:{branch}` Firestore write (`qg_last_conclusion`) carries a `streak_start_sha` field: the sha that
 began the CURRENT run of same-verdict results on that branch, preserved across consecutive same-verdict runs and
 re-seeded the instant the verdict flips. Threaded through as job outputs (`current_streak_start_sha`,
-`resolved_streak_start_sha`) and cited in both alert messages — `notify-qg-fail` as `· incident since \`<sha>\``and`notify-qg-recovered`as`(incident since \`<sha>\`)`— so both messages about one incident carry the identical,
-greppable identifier. Works uniformly for both the LDR-push and promote-PR paths (one mechanism, not two). Shipped`unified-trading-ci@7000ac0`(2026-08-16). **Not yet extended** to`ldr-to-main-promote.yml`'s drain-bot messages or
+`resolved_streak_start_sha`) and cited in both alert messages — `notify-qg-fail` as "· incident since `<sha>`" and `notify-qg-recovered` as "(incident since `<sha>`)" — so both messages about one incident carry the identical,
+greppable identifier. Works uniformly for both the LDR-push and promote-PR paths (one mechanism, not two). Shipped `unified-trading-ci@7000ac0` (2026-08-16). **Not yet extended** to `ldr-to-main-promote.yml`'s drain-bot messages or
 `ldr-ci-monitor.yml`'s RED→GREEN posts — both are tracked follow-ups, not yet done. SSOT:
 `/plans/active/issues/ci_alert_failure_resolution_linkage_2026_08_16.md`.
 
