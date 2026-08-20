@@ -59,7 +59,7 @@ short report, not a padded one. Sections, in order:
    Report"), one-sentence dek stating what the epic covers and the report's generation date.
 2. **In-scope / excluded chips** (OMIT if the epic has no meaningful exclusion set — most won't). Only include when
    the epic genuinely has an adjacent-but-explicitly-out-of-scope population worth naming, the way the AO ledger
-   named Grok/Kimi as excluded providers. Don't force this section to exist for epics with no such boundary.
+   named Kimi as an excluded provider. Don't force this section to exist for epics with no such boundary.
 3. **Headline stat strip** — 3-5 tiles: open todos (deduped, aggregator-excluded, matching `/open-task-count`'s
    methodology), done todos, count of operator-blocked/human-only items, and any epic-specific count worth
    surfacing (e.g. excluded-scope count, if section 2 applies).

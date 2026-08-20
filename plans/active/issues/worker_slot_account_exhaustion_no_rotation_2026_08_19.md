@@ -127,9 +127,11 @@ this has precedent already: `account_usage.py` special-cases Claude-only wallet 
 (excludes non-anthropic accounts, `compute_claude_wallet_reconciliation`) and Gemini already has
 its own separate `gemini_account_has_rate_headroom` gate (`autospawn.py`) — `account_is_usable()`
 itself just doesn't route the ceiling check through anything provider-specific yet.
-`AccountProvider` (`server/accounts.py:115-128`) already registers 12 providers (anthropic,
-deepseek, openrouter, gemini, groq, sambanova, omniroute, glm, codex, kimi, nvidia, grok) — the
-registry breadth is there, the per-provider usability logic isn't.
+`AccountProvider` (`server/accounts.py:115-128`) already registers 11 providers (anthropic,
+deepseek, openrouter, gemini, groq, sambanova, omniroute, glm, codex, kimi, nvidia) — the
+registry breadth is there, the per-provider usability logic isn't. (Was 12 including `grok`
+until Grok was fully removed from the codebase 2026-08-20, operator ruling — see
+grok_gemini_translation_proxy_2026_08_14.md.)
 
 **Mid-session model/account exhaustion — traced against current code**: operator proposed
 same-model-different-account → hot-swap in the same tmux; different-model-required → full respawn

@@ -392,7 +392,7 @@ _(no plans currently assigned at this priority)_
 
 ### [`grok_gemini_translation_proxy_2026_08_14`](../active/grok_gemini_translation_proxy_2026_08_14.md)
 **status**: active · **estimate**: 4 cal AI-days (class: brand-new)
-**title**: Grok + Gemini translation proxy — self-hosted Anthropic-format facade
+**title**: Gemini translation proxy — self-hosted Anthropic-format facade
 
 ### [`kimi_gemma_provider_onboarding_2026_08_16`](../active/kimi_gemma_provider_onboarding_2026_08_16.md)
 **status**: active · **estimate**: 4 cal AI-days (class: brand-new)
