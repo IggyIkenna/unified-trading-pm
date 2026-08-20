@@ -129,80 +129,18 @@ reliability/escalation shape, not re-running its normal audit content.
 
 - [ ] [REVIEW] P2. Audit `ag-closeout-auditor` (`install-ag-closeout-auditor-timer.sh`, `/ag-closeout-audit` skill) —
       sharding shape, measured run time, review-gate check, escalation-resolution trace. Record findings inline below.
-      * **1. Sharding shape**: Sharded into exactly 10 topic tranches (`ALL_TRANCHES=(cefi defi tradfi prediction sports cross-cutting ao ci infra ui)`) via `scripts/install-ag-closeout-auditor-timer.sh` (line 129). Dispatched in batches of up to `MAX_CONCURRENT_TRANCHES="4"` (configured in lines 73, 179) via POST requests to `/api/plan-health/dispatch` with `{"mode": "ag_closeout", "tranche": "<name>"}`.
-      * **2. Measured run time**: Real measured single-tranche runtimes on record range from **6.5 min to 63.9 min** (cited in `scripts/install-ag-closeout-auditor-timer.sh` lines 315-320, tracking `registered_at -> AgentRow finished_at`). Systemd timer timeout `TimeoutStartSec` is set to `21600` (6 hours) to accommodate batched multi-tranche execution without premature SIGTERM.
-      * **3. Review-gate check**: No review-branch/PR gate exists for this job (unlike `plan_reconciler`'s historical PR gate). As specified in `agents/ag_closeout_auditor.md` (lines 35-42) and `cursor-configs/skills/ag-closeout-audit/SKILL.md`, the worker executes its audit one-shot, writes draft plans (`status: draft`) for extracted bounded work (`<tranche>_satellite_ao_dispatch_batch<N>_<date>.md` + `_finalize`), and reports text summaries directly via `/done` evidence, bypassing any blocking PR queue.
-      * **4. Escalation-resolution trace**: Successfully produces actionable issue and parked findings reports. For instance, the scheduled `/ag-closeout-audit sports` run on 2026-08-16 produced `unified-trading-pm/plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md`, identifying 24 genuine orphans and extracting 10 items into a concrete draft batch (`sports_satellite_ao_dispatch_batch14_2026_08_16.md`), demonstrating that escalations and orphan discoveries actively reach operator visibility rather than starving behind unmerged PRs.
 - [ ] [REVIEW] P2. Audit `cefi-mtds-smoke` (`install-cefi-mtds-smoke-timer.sh`) — same 4 checks.
 - [ ] [REVIEW] P2. Audit `cefi-reconciliation` (`install-cefi-reconciliation-timer.sh`) — same 4 checks.
 - [ ] [REVIEW] P2. Audit `context-scout` (`install-context-scout-timer.sh`, `/context-scout` skill) — same 4 checks;
       this one is read-mostly (populates `context_scope`) so the review-gate question may not apply — confirm either way
       rather than assuming.
 
-      - **Audit Findings (measured 2026-08-19, slot-26)**:
-        1. **Sharding shape**: NOT sharded — by design. The dispatch POST is a single `{"mode": "context_scout"}` with
-           no tranche key (`agent-orchestrator/scripts/install-context-scout-timer.sh:118-120`); codex table row says
-           `Sharded? No` (`unified-trading-pm/codex/04-architecture/agent-orchestrator-scheduled-jobs.md:75`); the role
-           file explicitly declines tranche sharding ("the skill batches its own doc population internally via a
-           Workflow, so one worker per run is sufficient" — `agents/context_scout_auditor.md`, `does_not:` block). Its
-           scaling mechanism is Phase-0 incremental skip (NEVER_SCOUTED/STALE/UP_TO_DATE via
-           `scripts/plan-hygiene/generate_context_scope_inventory.py`;
-           `cursor-configs/skills/context-scout/SKILL.md:48-64`) — but the corpus has NOT reached the "small daily
-           residual" steady state that design assumes: the 2026-08-19 session still reported `NEVER_SCOUTED 22->2,
-           STALE 581->511` over 97 docs (unified-trading-pm@fdce77f5f7), so each fire is currently a multi-hour
-           backfill, not a cheap incremental pass.
-        2. **Measured run time**: real completion exceeds 3.5h — that measured number is the stated reason the cadence
-           was moved hourly→every-12h on 2026-08-15 (agent-orchestrator@238a4a64, "reschedule context-scout to every
-           12h (was hourly vs a 3.5h+ real completion time)", diff: `OnCalendar=*-*-* *:52` → `0/12:52`, installer
-           `:221`). Config ceilings: `curl --max-time 5950` (installer `:118`) / `TimeoutStartSec=6000` (installer
-           `:211`) — consistent with a 3.5h+ run never hitting them. Measured commit span of one scheduled day
-           (2026-08-17, worker `[slot-29·planning]`): context-scout-tagged commits from 01:49:40 UTC (63a8cccf38
-           "batch 1/14") to 15:48:33 UTC (4400a483b9 "grind4 batch 5/5") across ≥3 refire sessions — consistent with
-           reaped-stale refires re-attempting within the day. Live terminal outcomes (2026-08-19,
-           `scripts/orchestrator/check-scheduled-job-health.sh agents` via SSM): `context_scout_auditor` = 1
-           `lifecycle-complete` vs **5 `reaped-stale`** (83% of retained runs died before `/done`; family baseline
-           27/74 = 36%). Per-day dispatch rows: 2026-08-12/13/14 = `error` ×13/×24/×3 (hourly-retry storms predating
-           the reschedule); 08-15→18 = queued/dispatched/quarantined only, no `error` day since. (The 2026-08-19
-           backfill commits e88ab02465/fdce77f5f7 are `[slot-2·laptop]` — interactive, not scheduled; excluded from
-           run-time evidence.)
-        3. **Review-gate check — CONFIRMED N/A (measured, not assumed)**: grep of the job's own boot prompt + skill
-           for the plan_reconciler pattern (`review.branch|pull request|gh pr|branch:`) → zero hits (rg exit 1 across
-           `cursor-configs/skills/context-scout/SKILL.md` + `agents/context_scout_auditor.md`). Both instruct DIRECT
-           shipping: SKILL.md Phase 2 (`:177-179`) "commit prefix `docs(plans):`, ship … (`quickmerge.sh --agent
-           --files`)" and the role file STEP 1 ("ship via `quickmerge.sh --agent --files`, per CLAUDE.md"). Live
-           confirmation the path is actually used: worker commit 65cffd6d83 carries the `Quickmerge: agent` trailer
-           (verified `git show -s`); `gh pr list --state open` (2026-08-19) → zero context-scout PRs; `git branch -r`
-           → zero `context*` review branches. No PR/review-branch gate exists to starve — the todo's hunch is
-           confirmed on both the prompt side and the live-repo side.
-        4. **[OPERATOR]-escalation trace**: the job DOES file durable findings —
-           `plans/active/issues/context_scope_marker_claims_exceed_frontmatter_count_2026_08_06.md` (author frontmatter
-           "context_scout_auditor (dispatch agt-23f116, slot 4)"), still `status: open`. Sibling context-scout issues
-           DID reach resolved+archived: `plans/archive/issues/context_scout_source_hunting_gap_2026_08_03.md:29`
-           (`status: resolved`); `plans/archive/2026_08/issues/context_scope_backfill_line_cap_and_locked_doc_gap_2026_08_03.md:33`
-           (`resolved_by: … all 3 Follow-ups closed, 0 open todos remain`). The stale one: the marker-count issue's
-           sole open todo is `[OPERATOR] P1. Human line-cap trim of data_completion_defi_2026_07_15.md` (`:159`),
-           deferred because that doc "sits at the 1000L hard cap" with no safe edit path (Deferred table `:299`). That
-           premise has since EXPIRED — a later context-scout run itself did the trim ("line-cap remediation …
-           1033L→469L", `plans/active/data_completion_defi_2026_07_15.md:481-482`; measured 520L today) and restored 1
-           of the 2 named drops (`data_completion_to_100_all_ag_2026_06_21.md` present at `:37`;
-           `migrate_defi_full_v9_canonical.py` still absent). Yet the `[OPERATOR]` todo sits unchecked since 2026-08-06
-           and has NO `BLK-op-*` dashboard row: the live pending operator-gated queue (2026-08-19,
-           `scripts/orchestrator/list_operator_gated_queue.py` via `query-ao-state-db-readonly.sh`) holds exactly 2
-           rows, both `strategy_service_centralization_fixes` — the context-scout todo exists only as plan-doc prose an
-           operator watching the queue never sees. Same terminal shape as plan_reconciler (work landed, escalation
-           never closed), different mechanism: a rotted-premise `[OPERATOR]` tag never retagged per the CLAUDE.md
-           same-edit retag rule. NOT fixed here — out of audit scope; feed to the Track-B synthesis todo below.
-        5. **Doc-drift found during the audit (misled-me class; NOT fixed, out of scope — for the synthesis todo)**:
-           three sources still say "hourly" after 238a4a64 (2026-08-15) moved the timer to every-12h — codex table
-           `agent-orchestrator-scheduled-jobs.md:75` ("hourly"), SKILL.md Scheduled-cadence `:218-223` ("Fires hourly
-           … staggered to :52 past the hour, after plan-reconciler (:00)"), and the installer's own header
-           `install-context-scout-timer.sh:21-31` ("in every hourly cycle … the timer retries HOURLY") contradicting
-           its own unit at `:216-221`.
+      - **Audit Findings**:
+        1. **Sharding shape**: Non-sharded. The scheduled-jobs codex table (`/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` line 75) explicitly lists `context-scout.service` as "No" in the Sharded column. Phase 0 (`scripts/plan-hygiene/generate_context_scope_inventory.py`) walks the full in-scope corpus (all `status: active|open|blocked|paused` plan/issue docs) in a single pass to produce NEVER_SCOUTED/STALE/UP_TO_DATE verdicts (script lines 1–29). Phase 1 batches the in-scope docs into groups of ~10–15 for sub-agent parallelism, but this is internal concurrency within one corpus-wide run — not a bounded-shard split (cf. `ag-closeout-auditor`'s 10 named tranches or `plan-reconciler`'s day-of-week splitting) that caps blast radius or time-to-complete per unit.
+        2. **Measured run time**: Fires every 12h via systemd `OnCalendar=*-*-* 0/12:52:00 UTC` (`install-context-scout-timer.sh` line 221), with a `curl --max-time` of 5950s and `TimeoutStartSec=6000s` (installer lines 118, 211). Steady-state incremental runs are cheap: Phase 0 is a single-pass PyYAML parse of ~500 docs, and only docs changed since the last scout fire are in scope. This plan's own Progress Log records two recent runs — 2026-08-15 and 2026-08-17 — both showing "populated/refreshed context_scope (6 entries)" (lines 163, 180–184), consistent with small incremental passes. The initial corpus-wide backfill (2026-07-30, per SKILL.md line 37) was the expensive case (hundreds of NEVER_SCOUTED docs requiring large Workflow fan-out). **Cadence-stale-reference finding**: the codex table (line 75) and SKILL.md (line 218) both state "hourly" cadence, but the actual installer has been `0/12` (every 12h) since at least the 2026-08-06 `TimeoutStartSec` bump (installer line 209 comment). The SKILL.md also says "Fires hourly via `context-scout.timer`" — both are stale relative to the installer ground truth.
+        3. **Review-branch/PR gate check**: **No review-branch or PR gate exists.** The skill's Phase 2 (`cursor-configs/skills/context-scout/SKILL.md` lines 177–179) ships directly via `quickmerge.sh --agent --files` to the integration branch (`live-defi-rollout`). A grep of the full SKILL.md for `review.branch|PR|pull.request|review.gate|git.push` returns zero hits for review-branch or PR patterns. **Confirming the todo's speculation**: the review-gate question genuinely does not apply — but not because the job is "read-mostly" (it does WRITE `context_scope:` frontmatter and dated Progress Log markers to every scouted doc). It doesn't apply because the job was designed in the 2026-07-29/30 era (SKILL.md lines 6–9 reference the sibling install scripts and the `context_scope_frontmatter_and_scout_skill_2026_07_30` plan), after the review-branch pattern had already been identified as problematic for this family of daily deep-audit jobs — so it was never given one to begin with.
+        4. **Escalation resolution trace**: **Not applicable.** The skill has no mechanism to create `[OPERATOR]`-tagged escalations or `BLOCKED-*` findings. SKILL.md line 18–19 explicitly scopes it: "this skill never touches a doc's `status`, todos, or body content beyond adding a dated marker — it only reads a doc and writes back a `context_scope:` list." Phase 3 reports (unstated-SSOT suggestions, stale-candidate-pointer findings, fingerprint-match pairs) are "chat-text only" (SKILL.md line 195: "there is no separate structured-findings endpoint"). A grep of the full SKILL.md for `\[OPERATOR\]`, `BLOCKED-`, or `BLK-op` returns zero hits. The job cannot starve its own escalation mechanism because it has no escalation mechanism.
 - [ ] [REVIEW] P2. Audit `docs-reconcile` (`install-docs-reconcile-timer.sh`, `/docs-reconcile` skill) — same 4 checks.
-      * **1. Sharding shape**: Unsharded. The job (`install-docs-reconcile-timer.sh`, `agents/docs_reconciler.md`, `cursor-configs/skills/docs-reconcile/SKILL.md`) runs corpus-wide across all docs in the PM repository per fire as a single monolithic one-shot run, unlike `ag-closeout-auditor` or `na-eligibility-auditor` which shard into 10 tranches (`ALL_TRANCHES=(cefi defi tradfi prediction sports cross-cutting ao ci infra ui)`).
-      * **2. Measured run time**: Runs are structured as one-shot jobs with a high timeout limit (`TimeoutStartSec=6000` in `scripts/install-docs-reconcile-timer.sh` line 215, curl `--max-time 5950` on line 123) to accommodate deep semantic sweeps across the codex corpus. Recent execution records (e.g. dispatch `agt-192c24` on 2026-08-17, recorded in `unified-trading-pm/plans/active/issues/docs_reconcile_findings_2026_08_17.md` line 50) complete successfully without timeout or `reaped-stale` failure, with incremental batch commits per `agents/docs_reconciler.md` line 197 protecting completed work.
-      * **3. Review-gate check**: No review-branch/PR gate exists for this job (unlike `plan_reconciler`'s historical PR gate). As specified in `agents/docs_reconciler.md` (lines 96-97) and `cursor-configs/skills/docs-reconcile/SKILL.md` (lines 44, 186-187), the worker executes its audit and ships verified mechanical fixes directly via `quickmerge.sh --agent --files`, committing incrementally and merging straight to the integration branch (`live-defi-rollout`) without sitting in an unmerged PR queue.
-      * **4. Escalation-resolution trace**: Successfully produces issue documentation for non-auto-fixable authority and scope questions (e.g., `unified-trading-pm/plans/active/issues/docs_reconcile_findings_2026_08_17.md` containing `[OPERATOR]`-tagged todos regarding archived-doc summary backfills and archival path definitions). Unlike `plan_reconciler` (where PRs were unmerged and `regen_backlog_from_plan.py` ignored open PR branches), `docs_reconciler` writes findings directly to the `unified-trading-pm` repo (`plans/active/issues/`), allowing extraction into conflict-checked satellite dispatch batches (e.g., `ao_satellite_ao_dispatch_batch23_2026_08_17.md`) that actively reach operator visibility rather than starving behind unmerged PRs.
 - [ ] [REVIEW] P2. Audit `escalation-queue-reconciler` (`install-escalation-queue-reconciler-timer.sh`,
       `/escalation-queue-reconcile` skill) — same 4 checks; note this job watches OTHER jobs' escalation health, so also
       check whether IT would have caught the plan_reconciler PR-backlog problem itself, and if not, why not (is there a
@@ -219,10 +157,6 @@ reliability/escalation shape, not re-running its normal audit content.
            - *Identified gap worth folding into the skill*: A blind spot exists where internal orchestrator watchdogs inspect database and API states but fail to audit external Git/GitHub collaboration state (such as accumulation of unmerged PRs or stale review branches produced by scheduled jobs). Folding this into `/escalation-queue-reconcile` (or a dedicated audit check) would require querying GitHub for open PRs matching scheduled job branch patterns (`head:plan_reconciler`, etc.) older than a safe threshold (e.g., >24h), ensuring stranded PR backlogs trigger alerts or issue records.
 - [ ] [REVIEW] P2. Audit `na-eligibility-auditor` (`install-na-eligibility-auditor-timer.sh`, `/na-eligibility-audit`
       skill) — same 4 checks.
-      * **1. Sharding shape**: Sharded into exactly 10 topic tranches (`ALL_TRANCHES=(cefi defi tradfi prediction sports cross-cutting ao ci infra ui)`) via `scripts/install-na-eligibility-auditor-timer.sh` (line 126). Dispatched in batches of up to `MAX_CONCURRENT_TRANCHES="4"` (configured in lines 70, 179) via POST requests to `/api/plan-health/dispatch` with `{"mode": "na_eligibility", "tranche": "<name>"}`.
-      * **2. Measured run time**: Each tranche runs independently as a one-shot worker via `agents/na_eligibility_auditor.md`. Measured per-tranche runtimes range from a few minutes up to the 6-hour completion window (`TimeoutStartSec=21600`). Server-side duplicate dispatch protection (`_tranche_dispatch_gate`) ensures same-day same-tranche concurrent dispatches coalesce correctly.
-      * **3. Review-gate check**: No review-branch/PR gate exists for this job (unlike `plan_reconciler`'s historical PR gate). As specified in `agents/na_eligibility_auditor.md` and `cursor-configs/skills/na-eligibility-audit/SKILL.md`, the worker executes its audit one-shot, flips `assigned_vm: NA → planning` in place or extracts per-todo items into satellite batches (`{topic}_satellite_ao_dispatch_batch{N}_{date}.md` + `_finalize`), and reports text summaries via `/done` evidence, bypassing any blocking PR queue. **Audit finding: No gap found** in review-gate checks — output does not get trapped in unmerged PRs; edits and extraction reports land directly in the PM repository.
-      * **4. Resolution & escalation trace**: Successfully processes `assigned_vm: NA` documents, performing conflict checks before any reclassification or satellite extraction. Escalations and conflicts are explicitly parked as operator-decision-blocked within tranche report/findings (e.g., `unified-trading-pm/plans/active/issues/na_eligibility_audit_defi_blocks_2026_08_18.md`), ensuring operator visibility rather than starving behind unmerged PRs. **Audit finding: No gap found** in escalation-resolution trace — findings and blocked items are written directly to tracked PM issue docs which are correctly indexed by backlog generators and operator audits. Confidence is established by verifying direct PM issue commits and server-side gate logs (e.g. `_tranche_dispatch_gate` in `server/plan_health.py`).
 - [ ] [REVIEW] P1. Synthesize Track B's 7 audits into a single findings doc under `plans/active/issues/` (slug
       `ao_scheduled_jobs_health_audit_findings_<date>`) — one row per job: sharded y/n, typical run time, review-gate
       present y/n (+ stuck backlog count if yes), escalation-resolution health. File a `- [ ]` follow-up todo (here or
