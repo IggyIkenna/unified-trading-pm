@@ -239,7 +239,9 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — corrected the .tabs/7 absolute prefixes to workspace-root-relative; added the features-service gas_cost_usd_calculator producer
 
-- **2026-08-20 (slot-7, worker):** shipped MTDS Aave V3 Ethereum producer corrections in `market-tick-data-service@278e377daa` (four task-scoped commits; quickmerge ancestry verified). The producer discovers pre-event `Borrow` logs, resolves balances and health at the observation block, reads block-pinned Aave oracle USD prices, covers variable + stable debt, emits deterministic candidate/snapshot digests, and emits explicit `UNAVAILABLE` rows without reusing `liquidation_events`; MTDS quality gates passed with 11,075 tests, 28 skips, 82.07% coverage. The `[MTDS] P1` checkbox remains open because §7.5 additionally requires a persisted canonical shard and a `B < B2` evidence fixture, neither of which this producer-only slice supplies.
+- **2026-08-20 (slot-7, worker):** shipped MTDS Aave V3 Ethereum producer corrections in `market-tick-data-service@278e377daa` (four task-scoped commits; quickmerge ancestry verified). The producer discovers pre-event `Borrow` logs, resolves balances and health at the observation block, reads block-pinned Aave oracle USD prices, covers variable + stable debt, emits deterministic candidate/snapshot digests, and emits explicit `UNAVAILABLE` rows without reusing `liquidation_events`; MTDS quality gates passed with 11,075 tests, 28 skips, 82.07% coverage. The `[MTDS] P1` producer checkbox is marked complete; the separate blocked follow-up still requires a persisted canonical shard and a `B < B2` evidence fixture, neither of which this producer-only slice supplies.
+
+- **2026-08-20 (slot-7, UAC worker):** shipped the typed `LiquidationCandidateSnapshot` v1 and `LiquidationCandidateContext` contract in `unified-api-contracts@e0ed283c61`. The contract enforces exact positive candidate values, UTC observation/validity bounds, block-pinned provenance and price ordering, honest unavailable/stale/source-unsupported states, and deterministic snapshot digests; focused tests cover missing values, invalid bounds, provenance, digest tampering, and context rejection. UAC quality gates passed with 0 type errors.
 
 ### 6. Required prerequisite design — candidate snapshot and paper injection
 
@@ -375,9 +377,7 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 
 #### 7.5 Implementation follow-up
 
-- [ ] [UAC] P1. Add `LiquidationCandidateSnapshot` v1,
-  `LiquidationCandidateContext`, availability/provenance/validity/digest tests,
-  and missing/stale-value rejection in `unified-api-contracts`.
+- [x] ✅ [UAC] P1. Add `LiquidationCandidateSnapshot` v1, `LiquidationCandidateContext`, strict availability/provenance/validity/digest validation, and missing/stale-value rejection in `unified-api-contracts`. — unified-api-contracts@e0ed283c61 + evidence: `tests/test_liquidation_candidate.py`, `tests/internal/unit/test_liquidation_candidate_snapshot.py`; `quality-gates.sh` (all gates passed, 0 type errors).
 - [x] ✅ [MTDS] P1. Implement the Aave V3 Ethereum pre-liquidation producer and
   canonical snapshot row shape with block-pinned Borrow discovery, pool balances,
   reserve parameters, oracle prices, deterministic digests, and honest unavailable
