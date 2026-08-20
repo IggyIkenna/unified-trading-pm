@@ -121,7 +121,7 @@ Interim mitigation already applied: both codex docs now carry a ⚠️ block sta
       sites (all 12 `external/*/normalize.py` venue adapters + `normalize_utils/_helpers.py` + the
       `canonical/domain/execution/base.py:229` default) migrated from `OrderStatus.PENDING`/`.OPEN` to the canonical
       `.PENDING_NEW`/`.NEW`. Non-breaking (the aliases are unchanged, still `is`-identical) — see
-      `unified-api-contracts@<pending, see Progress Log>`. **T4 tail unchanged and still open**: the 24
+      `unified-api-contracts@702e8adcbe`. **T4 tail unchanged and still open**: the 24
       `execution-service` call sites + eventual alias deletion remain
       `/plans/active/code_readiness_t4_execution_settlement_2026_08_19.md`'s scope, not this doc's.
 - [x] [TEST] P2. **DONE — shipped at a different (correct) path**, same commit `unified-api-contracts@a3c572f8`:
