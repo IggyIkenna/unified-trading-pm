@@ -324,7 +324,17 @@ todos only to confirm they are data-movement, then leave it.
 ### W6 — wizard, config and scaffolding
 
 - [ ] [BACKEND] P0. Make strategy-service fully configurable from the wizard — rank-buffer hysteresis, no-trade
-      band, beta-hedge overlay and vol-target-at-book-layer are all unimplemented. Evidence:
+      band, beta-hedge overlay and vol-target-at-book-layer are all unimplemented. **2 of 4 shipped 2026-08-20
+      — `strategy-service@ed9ff26875`**: rank-buffer hysteresis (`rank_buffer_k` on
+      `BaseRankAllocator`, wired to `CarryFundingDispersionRankAllocator`) and the no-trade band
+      (`GuardRailConfig.no_trade_band`), both real and tested but not yet reachable from a live caller — the
+      `ClientAllocatorInstance`/`PortfolioAllocatorService` layer that would construct them with a real default
+      has no confirmed production construction site anywhere in the repo (a separate, larger gap). Beta-hedge and
+      vol-target-at-book-layer remain genuinely unbuilt — seam investigation done (`LegPortfolioState` doesn't
+      exist, `target_net_delta` is per-leg not book-level, `portfolio_risk_gate.py` is vol-options-scoped, not a
+      general fit): no existing seam to hook onto, needs a new cross-archetype aggregation layer designed first,
+      correctly not attempted given financial-correctness stakes. Also **not** "from the wizard" yet for either
+      shipped item — no UI/schema exposure, just the underlying mechanism. Evidence:
       `/plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md`.
 - [ ] [BACKEND] P0. Enforce that strategy-service reads ONLY processed data — epic definition-of-done item.
 - [ ] [BACKEND] P1. Land the service config ownership and instruction contract remainder — typed `client_configs`
