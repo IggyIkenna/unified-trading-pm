@@ -78,7 +78,7 @@ per-doc Workflow pass classified all 7:
 | Doc                                                                               | Verdict                       | AO-eligible?                                                                                                   |
 | --------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`                | orphaned_never_touched        | ✅ — todo 1 below                                                                                              |
-| `issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` | orphaned_never_touched        | ✅ — todo 2 below                                                                                              |
+| `../archive/issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` | orphaned_never_touched        | ✅ — todo 2 below                                                                                              |
 | `issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`              | orphaned_never_touched        | ✅ — todo 3 below                                                                                              |
 | `issues/ao_orphan_audit_followup_triage_2026_07_30.md`                            | archivable_after_planned_work | already covered — see Deferred                                                                                 |
 | `issues/ao_recovery_audit_layer1_deleted_2026_07_15.md`                           | archivable_after_planned_work | already covered (own banner names `ao_open_issues_consolidated_close_out_2026_07_17.md`'s `[BACKEND] P0` todo) |
@@ -149,7 +149,7 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
       zero-blockers the whole time) against the new check produces a fired page, verified via a unit/integration test
       constructing the equivalent backlog state and asserting the alert fires — not just a manual demonstration — and
       the live-backlog backfill-check result is recorded in the source doc. Source:
-      `/plans/active/issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` (both its
+      `/plans/archive/issues/ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md` (both its
       `[BACKEND] P2` and dependent `[SCRIPT] P3` items — combined into one todo since the second is a direct, sequential
       consequence of the first landing, not independent work). **Evidence (2026-08-01)**: shipped
       `agent-orchestrator@af98fcd` — new standalone `server/dispatch_priority_inversion_watchdog.py`
