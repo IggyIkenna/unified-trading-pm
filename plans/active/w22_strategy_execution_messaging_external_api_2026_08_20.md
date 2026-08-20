@@ -105,12 +105,13 @@ context_scope:
       already uses, not a parallel dispatch path). Done-when: a real (non-mock) `InMemoryTransport` round-trip
       test proves a published `AtomicInstruction` envelope reaches `ExecutionOrchestrator` and produces a
       settlement result, end to end. -- execution-service@79e951ea; Evidence: bash scripts/quality-gates.sh --no-fix
-- [ ] [BACKEND] P0. Wire the subscriber into service startup (`execution_service/api/main.py`'s lifespan, next to
+- [x] [BACKEND] P0. Wire the subscriber into service startup (`execution_service/api/main.py`'s lifespan, next to
       the existing `_lifespan` wiring for `manual_instruction_api`) so it runs as a background task under the
       real deployed entrypoint, not just `api/app.py`'s CLI-serve path (same "which entrypoint actually runs in
       the container" lesson `/manual/instruction`'s 404 taught this tranche 2026-08-20 — verify by checking
       `main.py`'s own routes, not assuming). Done-when: a live check confirms the subscriber task is running
-      under the container's actual startup path.
+      under the container's actual startup path. -- execution-service@99962afa1f; Evidence: bash
+      scripts/quality-gates.sh --no-fix (8808 passed, 22 skipped)
 - [ ] [BACKEND] P0. Features-service → execution subscription, same `EventTransport.read()` pattern, subscribed
       to ONLY the feature groups execution actually needs — start with whatever `DeltaProxyRepricer`'s
       underlying-tick loop needs (this IS the missing "underlying-tick loop" the linked delta-proxy issue doc
