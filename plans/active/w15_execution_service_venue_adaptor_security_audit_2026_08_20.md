@@ -83,7 +83,7 @@ impression:
 
 ### Highest stakes first — bridge / cross-chain
 
-- [ ] [BACKEND] P0. Audit `execution_service/defi_execution/protocols/bridge.py` and `cctp.py` against the
+- [x] ✅ [BACKEND] P0. Audited `execution_service/defi_execution/protocols/bridge.py` and `cctp.py` against the
       7-point checklist above — cross-chain transfers are the least reversible failure mode in this repo (funds
       can end up on the wrong chain with no local recovery path). Done-when: a findings record exists per file
       (PASS or a specific FINDING per checklist point), and every CRITICAL/HIGH finding either has an inline fix
@@ -185,6 +185,12 @@ impression:
       phase above resolves to either a landed fix (cite the sha) or a new tracked todo/issue-doc (cite the
       slug), zero exceptions.
 
+- [ ] [BACKEND] P0. Add strict bridge request validation and fail-closed live credential handling (bridge.py); HIGH findings: checklist points 1, 3, and 4.
+- [ ] [BACKEND] P0. Add CCTP amount/recipient validation and reject missing source wallet credentials before approve/burn (cctp.py); HIGH finding: checklist point 3.
+- [ ] [BACKEND] P0. Make CCTP transfer tracking durable and idempotent across retries; preserve source burn tx hash and prevent duplicate approve/burn submissions; HIGH finding: checklist point 6.
+- [ ] [BACKEND] P0. Define and enforce caller slippage/deadline bounds for Socket bridge routes, including validation of aggregator-produced transaction targets and calldata; HIGH findings: checklist points 2 and 4.
+- [ ] [BACKEND] P0. Correct CCTP status lookup and enforce attestation timeout/terminal failure semantics; HIGH finding: checklist point 7.
+
 ### Close-out
 
 - [ ] [AGENT] P0. Post-phase codex audit — check whether any codex doc under `/codex/04-architecture/` or
@@ -193,6 +199,17 @@ impression:
 - [ ] [AGENT] P0. Confirm the epic's own W15 section (`/plans/epics/system_readiness_master.md`) reflects this
       plan's real landed state once every todo above is done or explicitly re-scoped.
 
+## Progress Log
+
+### 2026-08-20 — slot 5 bridge/CCTP audit
+
+Findings are against the fixed seven-point checklist and cite the inspected implementation lines.
+
+- `bridge.py`: (1) FINDING MEDIUM — `connect()` logs the first eight characters of `socket_api_key` at line 215; credentials must not be logged. (2) FINDING HIGH — `_execute_bridge_tx()` signs aggregator-supplied `txTarget`/`txData` at lines 418-423 without validating target, calldata, chain, or recipient. (3) FINDING HIGH — `bridge()` accepts non-positive/fractional amounts and arbitrary recipients; `_resolve_token_address()` silently maps unknown symbols to the native-token sentinel at lines 497-507. (4) FINDING HIGH — quote/build requests at lines 450-470 provide no caller slippage bound or transaction deadline before broadcasting. (5) PASS — approval uses `minimumApprovalAmount` or exact transfer amount at lines 405-414. (6) FINDING HIGH — each call creates a new UUID at line 336 and repeats approval plus submission; no idempotency key or durable source transaction record. (7) PASS with limitation — execution failures return `FAILED`; transient status API errors remain `BRIDGING` at lines 398-429 and 476-492. Live credential fall-through is covered by the P0 validation follow-up.
+
+- `cctp.py`: (1) FINDING MEDIUM — `bridge()` uses `self._wallet_address or recipient` at lines 240-244, allowing a destination address to stand in for missing source credentials. (2) PASS — source signing delegates to `BaseConnector.sign_and_send_transaction()` and destination signing injects pending nonce, gas, chain ID, and the configured private key at lines 428-450. (3) FINDING HIGH — line 241 converts arbitrary Decimal values to integer micro-USDC without positivity, precision, or range checks; `_address_to_bytes32()` accepts malformed/short values via `zfill()` at lines 497-500. (4) PASS/N-A — CCTP burn-and-mint has no price-bearing swap leg; timeout enforcement is tracked separately. (5) PASS — approval is exactly `amount_units` at lines 357-360. (6) FINDING HIGH — `uuid4()` is generated for every call at line 240; `_pending_burns` is process-local and retries repeat approval/burn. (7) FINDING HIGH — `_pending_burns` is keyed by transfer ID at line 157, while `get_bridge_status()` supplies its bridge-tx-hash argument to a direct transfer-ID lookup at lines 268-271 and 467-469, so a valid source tx hash remains `BRIDGING` indefinitely; receive failures are reported, but timeout/terminal semantics are incomplete.
+
+No code was shipped in this audit unit; every HIGH finding is represented by an explicit P0 triage todo immediately above the Close-out section.
 ## Progress Log
 
 - **2026-08-20 (slot-7, backend_engineer) — swap/DEX security audit complete.** Reviewed `uniswap.py`, `uniswap_encoding.py`, `uniswap_live.py`, `orca.py`, `raydium.py`, and `jupiter.py` against all seven checklist points, with exact source references:
