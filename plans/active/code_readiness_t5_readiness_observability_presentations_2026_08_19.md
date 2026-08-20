@@ -579,9 +579,15 @@ todos only to confirm they are data-movement, then leave it.
       ran this session-day; the remaining findings from either are tracked work, not an un-run audit.
 - [ ] [AGENT] P1. Fix the docs-reconcile findings and the remaining broken links. Evidence:
       `/plans/active/issues/docs_reconcile_findings_2026_08_17.md`,
-      `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`. **Checked 2026-08-20**: both
-      docs `status: open` with a real remainder — 2 `[OPERATOR]` decisions, ~13 mechanical P2/P3 dead-link fixes
-      across the two docs. Not a stale/already-done claim; genuinely open, bounded doc-hygiene work.
+      `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`. **Checked 2026-08-20, corrected**:
+      first pass at this mischaracterized the remainder as "mechanical" without reading each item — on actual
+      read, most of the ~13 P2/P3 items are already well-triaged and genuinely stuck on human judgment (ambiguous
+      redirect targets, doc authorship, content-reconciliation calls), each already carrying its own "needs a
+      human" note from prior audit passes; force-fixing them would mean guessing, which the prior passes correctly
+      declined to do. One item WAS resolvable: the root `README.md` P2 finding had gone stale in the other
+      direction — the 3 claims it named were already fixed by another session since 2026-08-02 — flipped with
+      evidence, `unified-trading-pm@<pending>`. Genuinely 2 `[OPERATOR]` decisions + ~11 human-judgment items
+      remain; not a bounded mechanical pass.
 - [x] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`. — **Checked 2026-08-20**: the
       wiring itself is done — 6 of 7 todos `[x]` (dispatch handler, role wrapper, install script, cadence update,
@@ -901,7 +907,7 @@ todos only to confirm they are data-movement, then leave it.
 | Post-phase codex audit, final gate | Gated on everything above | — |
 | `unified-trading-ci` slot-3 checkout, 3 stale unpushed commits | **RESOLVED 2026-08-20** — all 3 confirmed superseded by equivalent-content commits already on origin; rebase dropped them automatically, `ahead=0 behind=0` | — |
 
-**Recommended next**: the docs-reconcile findings fix (bounded, ~13 mechanical link fixes across 2 docs) or the alert-bookend audit (larger, open-ended) — both self-contained, don't need the plan-conflict resolved first.
+**Recommended next**: the alert-bookend audit — the docs-reconcile remainder turned out to be mostly human-judgment-gated (1 stale finding closed this pass, rest genuinely need an operator call), so it's not a quick win after all. The bookend audit is real, bounded, self-contained work.
 
 ## Lessons carried forward (2026-08-20)
 

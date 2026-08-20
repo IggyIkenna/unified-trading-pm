@@ -160,7 +160,7 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
 
 ## README.md — broader staleness beyond the one claim already fixed (P2, not fixed this sweep — scope beyond a mechanical link repoint)
 
-- [ ] [DOCS] P2. Root `README.md` (the PM repo's own top-level onboarding doc) has multiple stale claims beyond the
+- [x] [DOCS] P2. Root `README.md` (the PM repo's own top-level onboarding doc) has multiple stale claims beyond the
       `cursor-rules/` sync claim already corrected (unified-trading-pm@c9dc2cfb5):
   - Cites `scripts/workspace/sync-rules-pull.sh` in its "Key Scripts" table — this file **does not exist** (confirmed
     via `find`).
@@ -169,6 +169,11 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   - The "Required Workspace Structure" diagram shows `~/repos/unified-trading-system-repos/` as the workspace root —
     doesn't match the current `/home/ubuntu/unified-trading-system-repos/` + `.tabs/<slot>/` per-slot worktree layout
     (Path-B, live since 2026-06-08).
+  - **RE-VERIFIED STALE FINDING, 2026-08-20 (T5)**: all 3 already fixed by another session since this finding was
+    filed (2026-08-02) — `sync-rules-pull.sh` is gone from the current Key Scripts table (5 different real
+    scripts now listed), `unified-trading-codex` is now correctly labeled `ARCHIVED` in the diagram, and the
+    diagram now shows BOTH the generic clone root AND `.tabs/<N>/` per-operator-slot worktrees explicitly. Nothing
+    to fix — this finding rotted in the other direction (fixed-but-not-closed, not fixed-but-still-broken).
   - This needs a real onboarding-doc pass (verify every script/path/repo reference against current reality), not a
     narrow link repoint — deliberately out of scope for this sweep to avoid an under-verified rewrite of a
     highly-visible root file under time pressure.
