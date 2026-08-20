@@ -265,7 +265,7 @@ is genuinely VM-scale work, not shared-host-scale:
       e2-standard-16, SPOT) confirmed RUNNING + `DEPLOYMENT_STARTED` reached (see Progress Log for
       the exact confirmation) — the no-fire-and-forget bar for this session. Terminal-state review
       is the next todo below, updated to point at THIS VM's name/log, not the dead 130229 run's.
-- [ ] [DATA] P2. Once `canonical-migration-cefi-itype-casing-apply-20260818-012605`'s dry-run
+- [ ] [DATA] P2. Once `canonical-migration-cefi-itype-casing-apply-20260820-173927`'s dry-run
       reaches a terminal state (check `run.log` for the final
       `Grand total instrument_type values would be normalized: N` line + VM self-delete — and if
       it goes stale/silent again, diagnose per the freeze pattern above before assuming a repeat
@@ -300,6 +300,8 @@ is genuinely VM-scale work, not shared-host-scale:
   `manifest_finalize.py:259-269` (`itype_key` in `base_row_key`).
 
 ## Progress Log
+
+- **2026-08-20 (worker follow-up, bounded retry)**: the prior workers=16 dry-run was terminally confirmed as OOM (exit 137) with no normalization count, so no apply was launched. Shipped deployment-service@45b6846450 changing the dedicated launcher default to --workers 4; quality gates passed (3,650 tests, 74.24% coverage, all gates green). A fresh pinned dry-run canonical-migration-cefi-itype-casing-apply-20260820-174218 was then created in asia-northeast1-c on e2-standard-16, with command normalize_instrument_type_casing.py --all-buckets --workers 4 --dry-run; gcloud compute instances describe confirmed RUNNING, and the read-only check_vm_cli returned exit 0. This VM remains in-flight; the terminal-count/apply-gated todo stays open.
 
 - **2026-08-20 (T2 tranche, operator-authorized VM launch)**: launched a FRESH dry-run
   (`canonical-migration-cefi-itype-casing-apply-20260820-115340`, SPOT, asia-northeast1-c) via
@@ -365,3 +367,7 @@ is genuinely VM-scale work, not shared-host-scale:
   doc's 2026-08-17 post-fix baseline** — `perpetual`=38,083, `future`=1,191, `spot_pair`=12 (sum 39,286,
   exact match) — confirming the P1 writer fix (`c07cc70e93`) is holding with **zero regrowth in the 3 days
   since it shipped**. Full census: `plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_20.md`.
+
+- **slot-18 (data_engineering) 2026-08-20**: after the 2026-08-20 dry-run was confirmed OOM-killed (exit 137) before producing a count, launched a fresh reduced-concurrency dry-run `canonical-migration-cefi-itype-casing-apply-20260820-173927` through the canonical deployment-service launcher. The emitted command is `--all-buckets --workers 4 --dry-run`; the launcher refreshed and SHA-pinned the MTDS/UAC/UTL/deployment tarballs (`mtds-code@5bdd3d22e166`, `unified-api-contracts-code@949b9b2bebb4`, `unified-trading-library-code@089d7a32b81b`, `deployment-service-code@45b68464504b`). The VM is `RUNNING` in `asia-northeast1-c` on `e2-standard-16` SPOT. Rolling-log evidence: `DEPLOYMENT_STARTED` at `2026-08-20T17:44:21Z`, the process includes `--workers 4 --dry-run`, and the PROD-bucket scan is active. The legacy bucket's 404 is pre-existing and explicitly skipped. This run is **in-flight**, so the dry-run gate remains open and no `--apply` was launched.
+
+- **Correction (slot-18, 2026-08-20)**: the earlier worker-follow-up entry above names `canonical-migration-cefi-itype-casing-apply-20260820-174218`, but a live fleet reconciliation found no such instance; it is not the VM launched by this session. The measured active VM and the open gate are `canonical-migration-cefi-itype-casing-apply-20260820-173927` (RUNNING, `--workers 4`, rolling log active). Preserve the earlier entry as historical provenance, but do not use its VM name for terminal-state review.
