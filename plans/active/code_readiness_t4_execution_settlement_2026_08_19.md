@@ -456,8 +456,24 @@ todos only to confirm they are data-movement, then leave it.
       host-wide (`--apply` sweep spans every repo on the host, not just this one) work outside a
       client-reporting-api-scoped session; sub-agent re-confirmed both standing operator rulings still hold
       against current code (`unified-trading-pm@e1e9deda70`), no code changed. **batch-live-reconciliation-service:
-      dispatched to a sub-agent, in progress** (3 docs — `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`,
-      `citadel_paper_batch_live_reconciliation_2026_06_19.md`, `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`).
+      CLOSED, sub-agent dispatch, all 3 docs worked to completion and independently ancestry-verified.**
+      `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md` (P0): shipped the M6 capability-driven
+      startup-continuity gate (`engine/startup_continuity_gate.py`, UAC `could_exist`-driven 3-way policy) and the
+      T+1 batch/live TTL eligibility decision layer (`engine/live_ttl.py`, read-only — never mutates the manifest
+      by design) — `batch-live-reconciliation-service@0aaa663b59`, 315 tests green. Both checkboxes left
+      deliberately open (PARTIAL): each ships the BLRS-side decision primitive only, and each has a real remaining
+      piece outside this repo's authority — strategy-service/MTDS consumer wiring for M6, and the UTL
+      manifest-write helper (doesn't exist yet) to actually act on a TTL-eligible cell for the TTL layer. Also
+      closed the doc's #7 coherence audit (12 per-AG docs swept, 0 stale-claim hits). **This doc sits at the
+      1000-line HARD cap** — any future edit to it must be a pure small append or single-checkbox flip, not a
+      combined edit (measured: forced 3 separate micro-commits this session). `citadel_paper_batch_live_reconciliation_2026_06_19.md`
+      (P1): all 3 open todos reviewed — the live→paper reconcile item re-confirmed correctly `BLOCKED-OPERATOR-DECISION`
+      (wallet/custody hard-stop, unchanged); the two ML-retrain sub-items are strategy-service/e2e-testing scope,
+      correctly left untouched (out of this repo's allocation). `issues/cve_affected_pinned_deps_remediation_2026_06_18.md`
+      (P2): fresh `pip-audit` against this repo's own venv — zero known vulnerabilities; checkbox intentionally
+      stays open per its own standing scope ruling (unbounded, not session-closeable). Evidence:
+      `unified-trading-pm@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6` (all ancestor-verified against
+      origin independently by the parent session, not just self-reported).
 
 ### Close-out
 
