@@ -253,7 +253,7 @@ source: >-
       `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`. Repo:
       execution-service. Done-when: `supply()`/`withdraw()` call the real API instead of hand-rolled discriminator
       bytes, existing tests still green.
-- [ ] [AGENT] P2. Fix `AAVEConnector.get_user_account_data()` to make a real `Pool.getUserAccountData()` view call
+- [x] ✅ [AGENT] P2. Fix `AAVEConnector.get_user_account_data()` to make a real `Pool.getUserAccountData()` view call — execution-service@9b78eeb020 + evidence: quality-gates.sh (8767 passed, 22 skipped, 1 xfailed; coverage 82.57%)
       instead of returning hardcoded placeholder values (`total_collateral_eth=10`, `total_debt_eth=5`). Source:
       `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`. Repo:
       execution-service. Done-when: the method returns live collateral/debt figures verified against a real Aave
