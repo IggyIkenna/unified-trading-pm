@@ -20,6 +20,7 @@ related:
     /codex/02-data/live-data-persistence-and-event-log.md,
     /codex/02-venues/unity-integration.md,
     /codex/02-data/external-data-always-available-rule.md,
+    /plans/archive/issues/wsfeedconnector_phase35_gap_2026_07_06.md,
   ]
 created: 2026-08-14
 last_updated: 2026-08-14
@@ -208,8 +209,7 @@ diverging matcher on the same problem.
       honour the single-TCP-connection constraint, and fan the feed out to Unity's 10 child-book venues — DoD: the mock
       sidecar in `execution-service/execution_service/sports_execution/adapters/unity/mock_feed_connector.py` drives the
       connector end-to-end in a test with no live credentials.
-- [ ] [DATA] P1. **CREDENTIAL APPROVAL REQUEST** — Unity subscription provisioning is required before live use. If the
-      subscription is not live, ship the connector as
+- [ ] [DATA] P1. BLOCKED-CREDENTIALS gate for Unity — if the subscription is not live, ship the connector as a
       Protocol-conforming scaffold that logs BLOCKED-CREDENTIALS and streams nothing, per the
       External-data-always-available rule — DoD: `test_stream_yields_nothing_when_blocked_credentials` passes and no
       fake tick is ever emitted.

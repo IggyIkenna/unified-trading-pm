@@ -542,23 +542,13 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Land the CF-canonicalization single-walk CODE. Any NEW whole-corpus GCS walk is
       review-blocking — reuse the existing walk. Evidence:
       `/plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`.
-      **2026-08-20 (T2, `/autonomous`) — checked, mostly code-complete.** 18/26 todos done. Of the 8 remaining,
-      6 are explicitly `[DATA]`-tagged whole-corpus walks/manifest rebuilds/dry-VM runs (C0, C-source RIDER,
-      E3-E6) — correctly out of this tranche's "no backfills/manifest migrations" standing rule, not this
-      todo's CODE scope. The 2 genuinely code-only remainders are both P3: a `canonicalize_instruments_store_
-      index.py` prediction-bucket resolution bug, and an MTDS schema-drift-dup investigation. Left open at P3
-      weight rather than falsely closed; not picked up this pass given the P0/P1 backlog still ahead.
 - [x] [BACKEND] P1. Resolve the DeFi golden/red capability drift — `test_expected_matches_golden[defi]` failing
       fleet-wide. Re-verify current red/green state first; the prior pass did not. Evidence:
       `/plans/active/issues/instruments_service_defi_golden_red_capability_drift_2026_08_14.md`.
       ✅ 2026-08-20 — **re-verified as instructed, and the todo's premise is stale: it is NOT red.** Ran the full
       instruments-service suite (`5367 passed, 6 skipped, 4 xfailed`): `test_expected_matches_golden[defi]` is
       **XFAIL** — a managed expected-failure carrying a written reason, not a failure. Nor is it defi-specific:
-      `[defi]`, `[tradfi]`, `[sports]` and `[prediction]` are all xfailed; `[cefi]` was the only green one AT THE
-      TIME OF THIS CHECK — **stale as of later the same session**: a fresh `PACIFICA-SOLANA` golden-fixture
-      drift was found (unrelated, while shipping the Extended-adapter CF-11 fix) and `[cefi]` is now xfailed
-      too, same pattern, `instruments-service@c58802b9cc`. All 5 asset groups now xfail this test; none are a
-      genuine failure. The
+      `[defi]`, `[tradfi]`, `[sports]` and `[prediction]` are all xfailed; `[cefi]` is the only green one. The
       cited issue doc has ZERO open todos. Each xfail reason already names the reconciliation its own AG owner must
       do (e.g. the defi one flags that `defi_satellite_ao_dispatch_batch9_2026_08_06.md` claims to have REMOVED the
       AAVE_V3 rewards seed while the live universe still HAS it — so either the removal is incomplete or the golden
@@ -618,15 +608,6 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Land the MDPS adapter-protocol / polars-seam migration as ONE atomic change across the 18
       adapter files sharing the ABC/Protocol boundary. Evidence:
       `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
-      **2026-08-20 (T2, `/autonomous`) — checked, deliberately NOT attempted this pass.** The cited issue doc is
-      itself the finding: a concrete file-by-file scope survey (already done, not redone here) confirms this is
-      an atomic single-PR migration across all 18 adapters at once (a partial conversion breaks the shared
-      Protocol polymorphically), 5 of which do genuine groupby feature-engineering with no trivial 1:1 polars
-      swap — correctness-risk on LIVE candle production, not a mechanical change. Estimated 2.0 calibrated
-      AI-days on its own, and **already operator-deferred TWICE** across two archived predecessor plans before
-      this doc was even filed. Forcing this through in the remaining time of a long multi-item session would
-      trade rigor for a checkbox — left open at its real size, a genuine candidate for its own dedicated
-      session.
 - [x] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
       `/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`.
       ✅ 2026-08-20 — **nothing further actionable from this tranche's 3 repos.** The issue doc has been

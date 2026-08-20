@@ -38,9 +38,9 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. Execute the canonical batch smoke contract for every current non-Databento TradFi row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status. Executed on real driver VM `pipeline-e2e-check-mtds-20260820-201322-1bf21a`; terminal report RED (`total=24`, `passed=0`, `failed=18`, `skipped=6`) because nested backfill launchers have no valid gcloud credentials. Tracked in [/plans/active/issues/tradfi_venue_smoke_nested_launcher_credentials_2026_08_20.md](/plans/active/issues/tradfi_venue_smoke_nested_launcher_credentials_2026_08_20.md).
+- [ ] [BACKEND] P0. Execute the canonical batch smoke contract for every current non-Databento TradFi row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status.
 - [ ] [BACKEND] P1. Record one testnet verdict for every TradFi venue, distinguishing non-Databento sourcing from the exempt cells; Gate: every distinct venue has a written verdict.
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no venue is silently omitted because it is TradFi.
+- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; Gate: no venue is silently omitted because it is TradFi.
 - [ ] [BACKEND] P1. Track every failed or absent TradFi row with its resolved source and data type; Gate: a declared Databento exemption is never used to hide a non-Databento failure.
 - [ ] [BACKEND] P0. Re-run the source resolver and prove the eight exemption cells are exactly CBOE/CME/NASDAQ/NYSE ohlcv_1m/ohlcv_1s; Gate: a non-exempt negative control fails.
 
@@ -48,5 +48,3 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 **2026-08-20 — forked from W5.** TradFi is deliberately split out because the exemption is source-scoped, not an
 asset-group shortcut.
-
-**2026-08-20 - execution evidence (slot-14):** driver `pipeline-e2e-check-mtds-20260820-201322-1bf21a` enumerated 8 rows and exited 1; report summary `total=24`, `passed=0`, `failed=18`, `skipped=6`. Phase-0 consolidation passed with 6 shards and 3328 rows in/out. Nested launcher credential failure is tracked in the issue above.
