@@ -178,7 +178,7 @@ todos only to confirm they are data-movement, then leave it.
       if the real implementation needs those as first-class instruction types (not just `OperationType` steps
       internally), ask T1 for the contract addition rather than inventing a parallel local enum; the mapping is
       load-bearing and T1 would rather extend it once than have it drift from a shadow copy.~~
-- [x] ✅ [FROM-T1] P1. **Shipped — `unified-api-contracts@<pending-sha>`.** The 4 BATCH-settlement-gap
+- [x] ✅ [FROM-T1] P1. **Shipped — `unified-api-contracts@f5fc118ae1`.** The 4 BATCH-settlement-gap
       dataclasses this tranche asked for below — see that item's own entry for full detail. `WithdrawInstruction`
       and `RepayInstruction` are done (rate-matched inverses of `LendInstruction`/`BorrowInstruction`, added to
       `StrategyInstructionV2`). `LpMintInstruction`/`LpBurnInstruction` are still open — genuinely need the DeFi LP

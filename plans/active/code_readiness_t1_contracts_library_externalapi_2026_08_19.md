@@ -249,7 +249,7 @@ todos only to confirm they are data-movement, then leave it.
       `resolve_settlement` dispatches on `isinstance(instruction, <Type>)` over `StrategyInstructionEnvelope`
       subclasses; `WITHDRAW`/`REPAY`/`LP_MINT`/`LP_BURN` had enum members but no dataclass anywhere in UAC
       (`CONVERT_DUST` was already fixed the same way, `execution-service@6f664e80a0`).
-      **Shipped `unified-api-contracts@<pending-sha>`**: `WithdrawInstruction` (protocol/asset/
+      **Shipped `unified-api-contracts@f5fc118ae1`**: `WithdrawInstruction` (protocol/asset/
       `target_supplied_amount`, rate-matched inverse of `LendInstruction`) and `RepayInstruction` (protocol/asset/
       `target_debt_amount`, inverse of `BorrowInstruction`), both added to the `StrategyInstructionV2` union, both
       export levels (`architecture_v2/__init__.py`, `internal/__init__.py`), 4 tests
@@ -547,7 +547,7 @@ todos only to confirm they are data-movement, then leave it.
       `QuoteInstruction`/`TransferInstructionV2`/`BridgeInstructionV2`/`AtomicInstruction`/`CancelInstruction` —
       keyed off real `InstructionActionV2` enum members. If T4's router 501s on these, the gap is
       execution-service's own dispatch, not a missing UAC type. Corrected in T4's plan too
-      (`unified-trading-pm@<pending-sha>`).
+      (`unified-trading-pm@3e7d7c14b9`).
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P0. ~~Build the counterparty-facing surface the
       artefact marks `planned — shape in`.~~ Target is `strategy-service` (T3-owned) — see `[FROM-T1]` in T3's plan.
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P1. ~~Enumerate exactly the API surface...~~ Spans
@@ -868,12 +868,12 @@ todos only to confirm they are data-movement, then leave it.
   checked `StrategyInstructionType`, a DIFFERENT, legacy vocabulary in
   `unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`, not the current v2 architecture
   `StrategyInstructionEnvelope` subclasses actually use. **Corrected in both plans** (this file and T4's) before
-  T4 could chase a phantom contract gap — `unified-trading-pm@<pending-sha>`. **Lesson**: this repo carries
+  T4 could chase a phantom contract gap — `unified-trading-pm@3e7d7c14b9`. **Lesson**: this repo carries
   parallel instruction-type vocabularies (legacy `StrategyInstructionType` vs. current `InstructionActionV2`/
   `StrategyInstructionV2`) — grep for the CONSUMING code's actual import (`execution_service/backtest_v2/
   action_handlers.py`'s `resolve_settlement` dispatches via `isinstance` over `StrategyInstructionV2`) before
   claiming a vocabulary gap, not just the first `InstructionType`-shaped name that matches.
-  **Shipped — `unified-api-contracts@<pending-sha>`.** Closed 2 of T4's 4 requested BATCH-settlement-gap
+  **Shipped — `unified-api-contracts@f5fc118ae1`.** Closed 2 of T4's 4 requested BATCH-settlement-gap
   dataclasses: `WithdrawInstruction` (protocol/asset/`target_supplied_amount`, rate-matched inverse of
   `LendInstruction`) and `RepayInstruction` (protocol/asset/`target_debt_amount`, inverse of `BorrowInstruction`),
   modelled directly on the existing Lend/Borrow field shape per T4's own explicit description ("same
