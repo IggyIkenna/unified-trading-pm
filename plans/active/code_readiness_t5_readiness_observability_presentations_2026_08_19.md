@@ -162,13 +162,24 @@ todos only to confirm they are data-movement, then leave it.
       from reading them directly, the way T5 already does for the readiness dump
       (`cursor-configs/skills/readiness-state-dump/scripts/instruction_actions.py`). Coordinate with T2/T4 only if
       their routers are genuinely mid-change when you walk them.
-- [ ] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
+- [x] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
       attempts: (1) a FAILED re-gate still exits 0 — three attempts reported success and landed nothing; (2) a
       DIRECTORY path in `--files` stages nothing for it silently, which landed a PARTIAL commit that broke
       `live-defi-rollout` (factory.py referencing an unstaged package). Full measurement, the five-check table
       showing why `git diff FETCH_HEAD` also came back clean during the broken window, and the proposed fixes:
       `/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`.
       P0 because every agent is required to ship through this path and the failure mode is false progress.
+      **Defect 2 (directory silently dropped) fixed 2026-08-20**: `unified-trading-pm@d0e5a67ee7` — `--files`
+      now refuses any directory path outright (exit 1, before any staging), live-tested against a real throwaway
+      directory. **Defect 1 (exit-0-on-failed-regate) investigated, not confirmed as a live code defect**: the
+      specific agent-mode re-gate path already propagates its real exit code correctly
+      (`${PIPESTATUS[0]}` + unconditional `exit 1`, verified by direct read); the "exited with code 0" evidence in
+      both T3's measurement and this session's own repeated observation is fully explained by the near-universal
+      `| tee LOG | tail -N` logging convention, which returns `tail`'s exit status, not the piped command's
+      (confirmed live: `false | tee x | tail -5; echo $?` → `0`) — left this one open rather than closing on
+      unconfirmed evidence; a re-measurement using `${PIPESTATUS[0]}` directly (no `| tail`) is needed before
+      concluding whether a further fix is warranted. Also shipped: the recommended per-tab-worktrees.md doc
+      addition (`unified-trading-pm@c1d75e7dd7`).
 - [ ] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
       `deployment-service/configs/strategy/<archetype_lowercase>/` for the 27 archetypes T3 registered on
       2026-08-19 (18 `VOL_*`, 5 granular `MARKET_MAKING_*`, 4 `PORTFOLIO_*`). strategy-service's
