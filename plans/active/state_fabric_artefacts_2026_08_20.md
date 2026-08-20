@@ -352,11 +352,3 @@ cell count was inflated ~2% by case-variant/nan-vs-blank duplicate keys, still p
 coverage.json (measured: 3965 raw / 3877 distinct / 88 duplicates). Flagged the conflict this plan creates with
 `/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md`'s own DOC "re-derive the
 four artefacts by hand" todos there — held pending coordination on which approach to follow, not started blind.
-
-**2026-08-20 (T5, operator decision recorded — no todo here claimed or edited):** operator ruling on the
-coordination question above — **wait for this plan's ledger-binding approach**, do not hand-edit the artefacts
-from T5's side. T5's 4 DOC re-derive todos (+ the disclosure-standard-extension and figure-measurement-
-confirmation items, same class) stay held pending this plan's progress. This plan is still `status: active` and
-unclaimed as of this note — whoever picks it up next should know 3 tools' outputs are already ready to bind
-(`readiness-state-dump`'s `row_grain`/`coverage_source_grain` split + `execution_instruction` wiring,
-`honest-coverage-dump`'s `dedup_stats`), and that T5's own artefact work is blocked waiting on this landing.

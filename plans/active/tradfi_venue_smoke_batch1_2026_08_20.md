@@ -38,9 +38,9 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 ## Todos
 
-- [x] ✅ [BACKEND] P0. Execute the canonical batch smoke contract for every current non-Databento TradFi row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status. Runtime evidence: market-tick-data-service@b89f288c06; six rows produced canonical objects, with FRED/FX/ICE manifest atoms `capture_status=captured`; KRX/NASDAQ/NYSE are genuine `empty_confirmed` zero-row exceptions tracked in the progress log.
+- [ ] [BACKEND] P0. Execute the canonical batch smoke contract for every current non-Databento TradFi row; Gate: each row proves capture, canonical path, manifest atom, and genuine capture status.
 - [ ] [BACKEND] P1. Record one testnet verdict for every TradFi venue, distinguishing non-Databento sourcing from the exempt cells; Gate: every distinct venue has a written verdict.
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; file an operator credential request when a credential gap is confirmed. Gate: no venue is silently omitted because it is TradFi.
+- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; Gate: no venue is silently omitted because it is TradFi.
 - [ ] [BACKEND] P1. Track every failed or absent TradFi row with its resolved source and data type; Gate: a declared Databento exemption is never used to hide a non-Databento failure.
 - [ ] [BACKEND] P0. Re-run the source resolver and prove the eight exemption cells are exactly CBOE/CME/NASDAQ/NYSE ohlcv_1m/ohlcv_1s; Gate: a non-exempt negative control fails.
 
@@ -48,5 +48,3 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 **2026-08-20 — forked from W5.** TradFi is deliberately split out because the exemption is source-scoped, not an
 asset-group shortcut.
-
-**2026-08-20 - execution evidence (slot-14):** Resolver output was 364 declared pairs, 8 exact Databento exemptions, and 356 in-scope rows (8 TradFi rows: CBOE/ohlcv_24h, FRED/ohlcv_1d, FRED/yield_curve, FX/ohlcv_24h, ICE/ohlcv_24h, KRX/ohlcv_24h, NASDAQ/ohlcv_1h, NYSE/ohlcv_1h). Direct real batch runs on 2026-08-19 produced 5 CBOE, 20 FRED, 11 FX, and 1 ICE canonical objects; filtered manifest evidence is `captured` for FRED/FX/ICE, while KRX/NASDAQ/NYSE are `empty_confirmed` with zero objects. CBOE objects are present but its manifest finalize emitted a malformed unrelated Databento shard warning, so it remains an explicit follow-up rather than a false pass. The source-gate fix landed as market-tick-data-service@b89f288c06; quality gates passed with 11096 tests passed, 28 skipped, and 1 xpassed.
