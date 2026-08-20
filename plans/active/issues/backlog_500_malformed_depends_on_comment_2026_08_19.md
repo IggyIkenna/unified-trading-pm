@@ -55,6 +55,13 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    agent-orchestrator/server/dispatch.py,
+    agent-orchestrator/server/routes/backlog.py,
+    /codex/11-project-management/cross-reference-path-convention.md,
+  ]
 ---
 
 # GET /api/backlog 500 — malformed depends_on comment crashed a shared route
@@ -100,14 +107,14 @@ depends_on: []
       incident to unblock the live 500 immediately, but did not commit/push it (main's role does not ship
       code/docs). Verify the fix is still in place before shipping (nothing else should have touched this file
       in the interim). Shipped 2026-08-20 via safe-doc-push. (repo: unified-trading-pm)
-- [ ] [BACKEND] P1. **Harden `gate_on_depends_unmet_upstreams_on_disk()` / `_resolve_plan_file()`** (both in
+- [x] ✅ [BACKEND] P1. **Harden `gate_on_depends_unmet_upstreams_on_disk()` / `_resolve_plan_file()`** (both in
       `agent-orchestrator/server/regen_backlog_from_plan.py`) against a malformed `dep_stem` — at minimum,
       catch `OSError`/`FileNotFoundError`-family exceptions from `candidate.is_file()` and treat that dependency
       as "cannot resolve, log a warning, do not crash the caller." A single plan's malformed `depends_on` value
       should never be able to 500 a fleet-wide-consumed route like `/api/backlog` for every task, not just the
       one with the bad dependency. Consider also validating `depends_on` entries look like bare slugs (no
       whitespace, no `/`, no `#`) at `regen_backlog_from_plan.py` regen time and refusing/warning on ingest,
-      rather than only failing downstream at explain-time. (repo: agent-orchestrator)
+      rather than only failing downstream at explain-time. (repo: agent-orchestrator@b56b3488 + 86ad0df8; Evidence: `quality-gates.sh` — 5,239 passed, 4 skipped, coverage 86.1556%; dashboard 468 passed)
 - [ ] [BACKEND] P2. **Audit other `depends_on:`/`parent_epic:`/`supersedes:`/`superseded_by:` lines across
       active plans for the same inline-comment-on-machine-parsed-line pattern** — this specific incident was
       caused by a `/plan-reconcile` run appending an explanatory comment directly onto a machine-parsed
@@ -130,3 +137,7 @@ this exact failure mode can recur from any future doc-authoring mistake of the s
   incident violated.
 - `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` / worker.md / RULES.md — the review-role
   done-rejected-family cross-check that this route outage broke.
+
+## Progress Log
+
+- **context-scout 2026-08-20**: populated context_scope (4 entries).

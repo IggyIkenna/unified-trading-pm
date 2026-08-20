@@ -161,3 +161,19 @@ lands; that is not a bug. The residual reconciler content-check gap is filed abo
   `breaking_scan_dir`-completeness audit landing first. Not attempted; no code changed this pass.
 - **na-eligibility-audit 2026-08-17** [body-hash:1c5d01a7cddc8180]: KEEP-NA, valid -- Grep-verified 2 open checkboxes (lines 97,126), matching inventory_open_todos=2. The CODE todo (97) carries an explicit, dated (2026-08-15), in-doc redirect/gate stating it is BLOCKED on the OPERATOR todo landing first and instructing 'do not implement the naive version' -- a standing redirect matching the spirit of rule (b)/(c). The OPERATOR todo (126) is explicitly [OPERATOR]-tagged and the same 2026-08-15 diagnosis pass explicitly found the obvious mechanical candidate source (workspace-manifest.json's breaking_scan_dir) is CONFIRMED INCOMPLETE for at least one repo, i.e. this was already investigated and found to be a genuine curation/judgment task, not a mechanical grep (contrast with the sibling item at line 134, already closed, which WAS a mechanical grep and was explicitly retagged SCRIPT for that reason -- showing this doc's author already applies that exact distinction carefully).
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries).
+- **T4-execution-settlement (2026-08-20)**: re-verified live, both open todos unchanged since 2026-08-17 —
+  `scripts/cicd/reconcile_release_tags.py` has had zero commits since 2026-08-17 (`git log --since=2026-08-17 --
+  scripts/cicd/reconcile_release_tags.py` empty) and its `_source_touched()` still uses the flat, repo-agnostic
+  `_NON_FUNCTIONAL_PATH_RE` allowlist — NOT made per-repo-source_dir-aware, so the `[CODE] P2` todo's own explicit gate
+  ("BLOCKED on the OPERATOR audit todo below landing first... do not implement the naive version") is still correctly
+  unmet. `workspace-manifest.json` carries `breaking_scan_dir` for only 5 repos fleet-wide (grep count), confirming the
+  `[OPERATOR] P2` audit ("for every fleet repo carrying `semver-agent.yml`, e2e-testing included") remains genuinely
+  incomplete — this is real, bounded operator-curation work across ~19+ still-unaudited repos, not a mechanical grep
+  (the doc's own 2026-08-15 diagnosis already distinguished this from the sibling mechanical-grep todo at the line
+  below, which was correctly closed `[x]` `[SCRIPT]`). Per CLAUDE.md's own instruction ("a genuinely open-ended design
+  decision... tag it BLOCKED-OPERATOR-DECISION... rather than forcing it") and the doc's own explicit "do not
+  implement the naive version" guard, neither todo was forced this pass — both remain correctly gated exactly as the
+  2026-08-15/08-17 passes left them. No code changed, nothing shipped; this is a confirmation-only pass. Tagging both
+  remaining open todos `BLOCKED-OPERATOR-DECISION` for T4 close-out purposes: the `[OPERATOR]` audit needs a human to
+  curate per-repo source dirs across the fleet, and the `[CODE]` todo is structurally gated on that audit landing
+  first.

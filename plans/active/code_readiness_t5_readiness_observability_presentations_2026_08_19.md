@@ -323,7 +323,29 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Resolve the manifest-hygiene red findings. Evidence:
       `/plans/active/issues/manifest_hygiene_red_all_2026_08_17.md`, `/plans/active/issues/manifest_hygiene_red_all_2026_08_18.md`.
 - [ ] [BACKEND] P1. Resolve the empty-reprobe disagreement finding. Evidence:
-      `/plans/active/issues/empty_reprobe_disagreement_all_2026_08_17.md`.
+      `/plans/active/issues/empty_reprobe_disagreement_all_2026_08_17.md`. — **Found already resolved 2026-08-20**:
+      the issue doc's own `status: resolved` (corrected 2026-08-19), sole todo `[x]` with hard evidence
+      (`market-tick-data-service@bf9fe5c4cc`). Nothing to do.
+- [x] [BACKEND] P0. **No orphans** (epic DoD item, `system_readiness_master.md`) — run the new
+      `/shard-utilisation-sweep` skill (consumption verdict per venue/data_type/instrument_type/chain, opposite
+      direction from the existing GCS→manifest orphan sweeps; never emits a delete suggestion). **RUN 2026-08-20**
+      against `coverage.json` date=2026-08-20, 3,965 shard cells: **venue 158 consumed / 22 not_consumed / 1
+      unverified · data_type 18/7/43 · instrument_type 21/3/103 · chain 17/0/10**. Genuinely actionable
+      `not_consumed` findings (high confidence, registry vocabulary confirmed adequate): **22 venues absent from
+      `VENUE_TO_ASSET_GROUP`** (FOOTBALL 43 cells, FOOTYSTATS 27, AAVEV3 25, BARCHART 10, ODDS_API 7, plus ~15
+      individual sportsbooks at 1-2 cells each — `AAVEV3` in particular looks like a `AAVE_V3` casing/typo
+      drift, worth checking first); **7 `not_consumed` data_types** (`tradfi/macro_result`,
+      `tradfi/yield_curve`, `tradfi/ohlcv_1d`, `tradfi/futures_chain` — T2's repo; `prediction/
+      prediction_canonical_question_group`, `prediction/market_lifecycle` + its uppercase duplicate — T2's repo);
+      **3 `not_consumed` instrument_types** (`tradfi/nan`, `tradfi/UNKNOWN`, `prediction/nan` — all look like a
+      writer emitting a missing-value sentinel into a real column, not genuine orphans; needs the writer checked
+      before assuming dead data). The large `unverified` counts are NOT orphans — DeFi's registry declares no
+      `data_type`/`instrument_type` vocabulary at all (2,742 DeFi data_type cells and thousands of instrument_type
+      cells are simply unmodeled, itself a real finding about the registry's own coverage) and sports' registry
+      covers only 1-30% of its own manifest vocabulary (disjoint naming systems, not absence). Since 5 of 7
+      not_consumed data_types and all 3 not_consumed instrument_types are in **T2's repos**
+      (instruments-service/market-tick-data-service), routing via the standard T5→T2 inbound-request protocol
+      rather than acting directly — filed below.
 
 ### W4 — observability, alerting and auto-recovery
 
@@ -336,8 +358,12 @@ todos only to confirm they are data-movement, then leave it.
       identities). Whether the fixed revision was actually serving is UNVERIFIED (gcloud auth expired; no credential
       requests in this tranche). Evidence:
       `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md`.
-- [ ] [BACKEND] P0. Fix the escalation-pool-exhaustion alert being unreachable when halted. Evidence:
-      `/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`.
+- [x] [BACKEND] P0. Fix the escalation-pool-exhaustion alert being unreachable when halted. Evidence:
+      `/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`. — **Found
+      already shipped, 2026-08-20** — `agent-orchestrator@78a9a02c` (2026-08-19), 9 regression tests confirmed
+      passing on current code. The issue doc's own `status: open` was stale for an already-fixed, already-tested
+      defect; corrected in place rather than re-implemented. Its P3 live-verify todo stays genuinely open — needs
+      a real future exhaustion window's journalctl output this pass does not have.
 - [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
       `/codex/04-architecture/agent-orchestrator-alerting.md`.
 - [ ] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
@@ -361,6 +387,23 @@ todos only to confirm they are data-movement, then leave it.
       and is now ratcheted — both counts can only go down. Owner resolution reads the tag's `title` attribute (the
       machine-readable doc path) before the visible label; label-only resolution produced 3 false violations on
       this corpus, so the checker was corrected before seeding rather than baselining the lie.
+
+      **INVARIANT NOW SATISFIED, 2026-08-20 — 37 → 0.** Every claim-bearing section in every artefact carries a
+      real `owner:` tag, each citing a doc verified to exist on disk (not invented): `platform-architecture.html`
+      (13 sections) → `system_readiness_master` (readiness matrix, data coverage, batch=live spine, funds-isolation
+      hard rule, risk/isolation, expansion breadth, definition-of-done) / `execution_master` (algorithm selection)
+      / `elysium_october_delivery_and_code_disclosure_readiness` (Phase 2 archetype scope) /
+      `code_readiness_t5_readiness_observability_presentations` (the CI/delivery section — literally T5's own
+      repos, agent-orchestrator + unified-trading-ci); `carveout-engineering.html` (9 sections) → the Elysium
+      carve-out spec plan; `strategy-service-deep-dive.html` (10 sections) → `strategy_master`;
+      `strategy-service-walkthrough.html` (1) → `strategy_master`; `platform-external-api-walkthrough.html` (1) →
+      `system_readiness_master` W21; `platform-api-reference.html` (2) → `system_readiness_master` W21 and, for
+      the Authentication section specifically (T1's `unified_trading_library/cloud_interface/api_auth.py`), →
+      `code_readiness_t1_contracts_library_externalapi` — the correct owning tranche, not force-fit into T5's own
+      epic. Baseline lowered `37→0` / markers held at `189` (no regression). Verified via
+      `check_artefact_claim_ownership.py` after every batch, not just at the end — one self-correction caught
+      mid-pass (an early edit added a spurious duplicate marker instead of only an owner tag; found by re-running
+      the checker before shipping, fixed before it ever landed).
 - [ ] [DOC] P0. Extend the same disclosure standard to the four sibling client artefacts the 2026-08-18 audit found
       violating it and which no remediation plan covers — `carveout-engineering.html` and
       `ODUM_Elysium_Phase2_Update_2026-07-24.html` alongside the two already in scope. Evidence:
@@ -378,6 +421,14 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`.
 - [ ] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`.
+- [ ] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
+      (missing `@vitest/coverage-v8`), unrelated to any specific change — blocks EVERY future ship to this repo, not
+      just one. Fix: `npm --prefix dashboard install` (or equivalent dependency sync) before the next
+      agent-orchestrator ship attempt. Found blocking the git-status ahead-nudge sustain-gate fix below; that fix and
+      its 2 regression tests are complete and tested locally (26/26 file, 103/103 broader suite) but NOT YET SHIPPED
+      — preserved both in the working tree and backed up outside git
+      (`scratchpad/agent-orchestrator-backup/_git_alerts.py` + `test_git_staleness_alerting.py`) since this session
+      already measured local uncommitted edits as fragile under quickmerge contention.
 
 ### Infrastructure defects that cost other agents time
 
@@ -389,7 +440,27 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
       `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`.
 - [ ] [BACKEND] P3. Fix the git-status red-nudge false positive from the wrong branch comparison. Evidence:
-      `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`.
+      `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`. **Both
+      original todos were already `[x]`, shipped 6 days prior. Its 2026-08-19 addendum named a third, still-open
+      mechanism (`maybe_nudge_on_red_repos`'s `ahead` branch has no sustain gate) — FIXED + TESTED, NOT YET
+      LANDED, do not tick without a sha.** `server/worker_liveness/_git_alerts.py`, gated on `not_clean_since`
+      sustained past 600s matching the function's own `behind`-branch precedent. 2 new regression tests, 26/26
+      file passing, 103/103 broader suite passing.
+
+      **BLOCKED-INFRA, 2026-08-20 — 3 ship attempts, correctly stopped rather than blind-retried a 4th time.**
+      Attempt 1 failed on stale `dashboard/node_modules` (fixed via `npm --prefix dashboard install`, confirmed
+      `@vitest/coverage-v8` present afterward). Attempts 2 and 3 both failed with the IDENTICAL generic banner
+      `❌ Re-gate FAILED against the current tree` and **no specific check name anywhere in either log** — attempt
+      3's log was captured in full (9,265 lines, no `tail` truncation this time) specifically to rule out my own
+      earlier self-inflicted truncation as the cause; the vitest suite immediately above the failure shows 20/20
+      files, 468/468 tests passing, then the banner fires with nothing in between. A **standalone**
+      `bash scripts/quality-gates.sh --no-fix` run against this exact tree produced **zero** `❌` lines. Two
+      identical consecutive failures with a clean standalone gate is the documented signal to stop retrying and
+      diagnose deeper, not flap — this looks like quickmerge's own re-gate wrapper losing or swallowing a
+      per-check result under the heavy fleet contention observed all session (5-13 concurrent quickmerge
+      processes), not a defect in this fix. The fix remains preserved in the working tree AND backed up outside
+      git (`scratchpad/agent-orchestrator-backup/`). Needs either a lower-contention retry window or someone with
+      quickmerge-internals context to diagnose why re-gate's failure path drops its own check name.
 
 ### Close-out
 
@@ -539,3 +610,37 @@ todos only to confirm they are data-movement, then leave it.
   figure silently collapsing while looking structurally fine. The shipped detector requires a non-empty venue
   block and correctly falls back, still reporting the real 2-tuple cells. Confirmed by test, not by reading.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+
+- 2026-08-20 — **Artefact ownership invariant CLOSED: 37 → 0 untagged claims, verified per-file in origin.**
+  `unified-trading-pm@840d453409` (2 new readiness axes + Pendle baseline fix), `@09938ebebf` (execution-service
+  probe root-cause fix + 28 owner tags), `@a80fa4f41b` (final 9 owner tags closing the ratchet to zero, baseline
+  lowered to match). Every claim-bearing section in every one of the 7 client artefacts now carries a real
+  `owner:` tag citing a doc verified to exist on disk. Detail already recorded against the W21 invariant todo
+  above and in the standalone entries for each ship.
+
+- 2026-08-20 — **W4: found a second already-fixed alerting defect (escalation-pool-exhaustion), corrected the
+  stale issue doc rather than re-implementing.** `agent-orchestrator@78a9a02c` (2026-08-19) already decouples
+  `_maybe_alert_pool_exhaustion` from `retry_queued_escalations` exactly as
+  `escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`'s own "Recommended fix" section
+  specifies — its docstring cites the issue slug verbatim. Confirmed via 9 passing regression tests on current
+  code (`test_drain_escalations_skips_retry_but_still_verifies_when_halted` +8 more). The issue doc's `status:
+  open` and its P2 fix-todo were stale for shipped, tested work; flipped in place. Its P3 live-verify todo stays
+  genuinely open — needs a real future exhaustion window's `journalctl` output this pass does not have; unit
+  tests confirm the code path is reachable, they do not substitute for the live confirmation that todo asks for.
+
+- 2026-08-20 — **W4/close-out: found and fixed a THIRD, genuinely new git-status-alerting defect** (distinct
+  from the two above, which were already fixed) while verifying `git_status_red_nudge_false_positive_wrong_
+  branch_comparison_2026_08_17.md`'s two ORIGINAL todos (confirmed already `[x]`, shipped 6 days prior) — its
+  2026-08-19 addendum named a THIRD, still-open mechanism this pass then fixed.
+
+  `server/worker_liveness/_git_alerts.py::maybe_nudge_on_red_repos`'s `ahead` branch fired with **no age gate at
+  all**, unlike every sibling branch in the same function (`dirty` > 3600s via `dirty_oldest_mtime`, `behind` >
+  600s via `not_clean_since`) — confirmed by direct code read matching the issue doc's own diagnosis exactly. A
+  momentary `ahead=1` reading between a commit landing and its push (the normal two-pass ship flow every T5 ship
+  this session has been running) could nudge on the very next ~5-min tick. Fixed: gate on `not_clean_since`
+  sustained past 600s, matching this function's own local `behind`-branch precedent — deliberately NOT the
+  separate 90-min `GIT_RED_SUSTAIN_S` used by the different-tier Slack-paging function
+  `maybe_alert_git_staleness`, whose own `ahead` branch was already correctly sustained and needed no change.
+  2 new regression tests added (`test_nudge_ahead_not_sustained_does_not_fire`,
+  `test_nudge_ahead_sustained_fires_with_age`); file 26/26 passing, broader worker-liveness suite 103/103.
+  **NOT YET LANDED, 2026-08-20** — ship failed on `dashboard/node_modules` missing `@vitest/coverage-v8` (environmental, unrelated to this change; exit 0 with nothing landed, caught by per-file origin verification, not by the exit code). Fix + 2 tests preserved locally AND backed up outside git (scratchpad/agent-orchestrator-backup/) since this session already measured local edits as fragile under contention. Needs `npm --prefix dashboard install` (or equivalent) before the next agent-orchestrator ship attempt — flagged as its own todo below since it will block ANY future ship to this repo, not just this fix.

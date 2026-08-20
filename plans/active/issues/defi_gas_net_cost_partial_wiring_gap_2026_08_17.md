@@ -138,18 +138,14 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       deliberately not enforced (state which, with the reasoning). Repo: strategy-service. Done when: either the
       threshold is implemented and unit-tested, or the docstring is corrected to match actual behavior with a cited
       reason. — strategy-service@fbf78dfe20 (see Progress Log for the scope note on the IL term).
-- [ ] [STRATEGY] P3. Net `BACKRUN`'s (`strategy-service/.../mev/backrun.py:73-93`) already-available
-      `block_priority_gas_p90_gwei_<chain>` feature against its `spread_bps` profitability gate (currently used only
-      for inclusion-bid sizing, never subtracted from the gated spread). Repo: strategy-service. Done when:
-      `spread_bps < min_spread_bps` (or equivalent) accounts for the priority-gas cost, with a regression test.
-- [ ] [STRATEGY] P3. Confirm whether execution-service's `ExecutionCostEstimator`
-      (`execution-service/.../services/execution_cost_estimator.py:170-190`) is genuinely unused by strategy-service
-      (0 import/call sites confirmed this session) — if so, either wire it in as originally intended (module
-      docstring says "for strategy-service signal filtering") or mark it dead code / retarget its purpose. Repo:
-      strategy-service, execution-service. Done when: either a real call site exists, or the docstring/lifecycle
-      marker is corrected to reflect it is unused.
+- [x] ✅ [STRATEGY] P3. Net `BACKRUN` profitability against priority gas. The engine now uses the UAC-cited Uniswap V3 gas budget and the bid price (`P90 x priority_gas_uplift`) converted to USD/bps, and fails closed without a positive priority-gas observation. Repo: strategy-service. Done when: `spread_bps < min_spread_bps` (or equivalent) accounts for the priority-gas cost, with a regression test. — strategy-service@696094a9b9 + evidence: full quickmerge gate green; 6406 passed, 248 skipped, 3 xfailed, 103 warnings; sentinel `696094a9b9`.
+- [x] ✅ [STRATEGY] P3. Confirmed `ExecutionCostEstimator` is unused by strategy-service; retained as an execution-service-owned utility and corrected its stale module ownership claim. — execution-service@64395d6d97 + evidence: quality-gates.sh green; 8733 passed, 22 skipped, 1 xpassed.
+      `execution-service/.../services/execution_cost_estimator.py` has no non-test strategy-service call site; its
+      module docstring now records execution-service ownership and the intentional service-boundary non-use.
 
 ## Progress Log
+
+- **2026-08-20 (slot-7, strategy worker):** Implemented and shipped BACKRUN priority-gas netting in `strategy_service/engine/strategies/v2/mev/backrun.py`. The engine now fails closed without a positive P90 feature, calculates bid gas cost from the UAC Uniswap V3 gas schedule, subtracts cost bps from the spread gate, and records net-spread/gas attestations. Added a marginal-opportunity regression in `tests/unit/engine/strategies/v2/test_mev_engines.py`; strategy-service full tests passed 6406 with 248 skipped, 3 xfailed, and 103 warnings. Quickmerge verified `strategy-service@696094a9b9` on `origin/live-defi-rollout`.
 
 - **2026-08-17 (slot-7, data_engineering, via defi_satellite_ao_dispatch_batch16_2026_08_17.md)**: filed after a
   grep-then-read verification pass (Explore sub-agent, 29 tool calls) found the wiring genuinely mixed — see §2/§3
@@ -239,6 +235,10 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       `StrategyArchetype.*` set at all (confirmed via grep, 2026-08-17). Repo: strategy-service. Done when: a real
       paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — corrected the .tabs/7 absolute prefixes to workspace-root-relative; added the features-service gas_cost_usd_calculator producer
+
+- **2026-08-20 (slot-7, worker):** shipped MTDS Aave V3 Ethereum producer corrections in `market-tick-data-service@278e377daa` (four task-scoped commits; quickmerge ancestry verified). The producer discovers pre-event `Borrow` logs, resolves balances and health at the observation block, reads block-pinned Aave oracle USD prices, covers variable + stable debt, emits deterministic candidate/snapshot digests, and emits explicit `UNAVAILABLE` rows without reusing `liquidation_events`; MTDS quality gates passed with 11,075 tests, 28 skips, 82.07% coverage. The `[MTDS] P1` producer checkbox is marked complete; the separate blocked follow-up still requires a persisted canonical shard and a `B < B2` evidence fixture, neither of which this producer-only slice supplies.
+
+- **2026-08-20 (slot-7, UAC worker):** shipped the typed `LiquidationCandidateSnapshot` v1 and `LiquidationCandidateContext` contract in `unified-api-contracts@e0ed283c61`. The contract enforces exact positive candidate values, UTC observation/validity bounds, block-pinned provenance and price ordering, honest unavailable/stale/source-unsupported states, and deterministic snapshot digests; focused tests cover missing values, invalid bounds, provenance, digest tampering, and context rejection. UAC quality gates passed with 0 type errors.
 
 ### 6. Required prerequisite design — candidate snapshot and paper injection
 
@@ -374,17 +374,39 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 
 #### 7.5 Implementation follow-up
 
-- [ ] [UAC] P1. Add `LiquidationCandidateSnapshot` v1,
-  `LiquidationCandidateContext`, availability/provenance/validity/digest tests,
-  and missing/stale-value rejection in `unified-api-contracts`.
-- [ ] [MTDS] P1. Implement the Aave V3 Ethereum pre-liquidation producer and
-  canonical shard with the `B < B2` evidence fixture and honest unavailable
-  paths; do not reuse `liquidation_events`.
-- [ ] [FEATURES] P1. Add snapshot enrichment and provenance propagation using
-  only real as-of prices, parameters, slippage/liquidity, and gas cost; test
-  stale/missing joins as unavailable.
+- [x] ✅ [UAC] P1. Add `LiquidationCandidateSnapshot` v1, `LiquidationCandidateContext`, strict availability/provenance/validity/digest validation, and missing/stale-value rejection in `unified-api-contracts`. — unified-api-contracts@e0ed283c61 + evidence: `tests/test_liquidation_candidate.py`, `tests/internal/unit/test_liquidation_candidate_snapshot.py`; `quality-gates.sh` (all gates passed, 0 type errors).
+- [x] ✅ [MTDS] P1. Implement the Aave V3 Ethereum pre-liquidation producer and
+  canonical snapshot row shape with block-pinned Borrow discovery, pool balances,
+  reserve parameters, oracle prices, deterministic digests, and honest unavailable
+  paths; do not reuse `liquidation_events`. — market-tick-data-service@e34d0afc6f
+  + evidence: `tests/unit/test_aave_candidate_producer.py`; `quality-gates.sh`
+  (11,075 passed, 28 skipped, 1 xpassed). The real historical `B < B2` fixture and
+  CLI canonical-shard wiring remain a separate gate below and do not authorize
+  archetype registration.
+- [ ] [MTDS] P1. BLOCKED-ON:uac_snapshot_contract_and_source_fixture — add the
+  canonical shard handler and prove a real Aave V3 Ethereum `B < B2` replay fixture
+  before the downstream UAC/features/strategy gates are closed.
+- [x] ✅ [FEATURES] P1. Add snapshot enrichment and provenance propagation using
+  only real as-of prices, parameters, slippage/liquidity, and gas cost; test stale/missing joins as unavailable. — features-service@b2fcc11518 + evidence: QG_SLICE=tests (18491 passed, 209 skipped); QG_SLICE=typecheck passed.
 - [ ] [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
   replay; keep the engine fail-closed and add paper↔batch parity/exact-leg tests.
 - [ ] [STRATEGY] P2. After all gates pass, register the archetype and prove one
   real Aave V3 Ethereum candidate emits an instruction; otherwise retain the
   blocked state with the measured gate failure.
+
+
+- **2026-08-20 (slot-7, worker):** shipped the MTDS Aave V3 Ethereum pre-liquidation producer in
+  `market-tick-data-service@e34d0afc6f`. It discovers borrowers from pre-event `Borrow` logs,
+  resolves account/reserve balances and liquidation parameters at the observation block, reads
+  block-pinned Aave oracle prices, emits deterministic candidate IDs/input/snapshot digests, and
+  returns explicit `UNAVAILABLE` rows for missing/stale inputs. It never consumes post-event
+  `liquidation_events`. Full MTDS quality gates passed: 11,075 passed, 28 skipped, 1 xpassed.
+  The real `B < B2` historical fixture and CLI shard integration remain tracked as the explicit
+  blocked follow-up above; archetype registration remains prohibited until that source gate passes.
+
+- **2026-08-20 (slot-10):** Confirmed there are zero non-test strategy-service imports or call sites for
+  `ExecutionCostEstimator`; execution-service retains the public export and dedicated unit/integration coverage,
+  so deletion or cross-service wiring would be incorrect. Corrected `execution_service/services/
+  execution_cost_estimator.py` to state execution-service ownership and the intentional service-boundary non-use.
+  Execution-service quality gates passed: 8,733 passed, 22 skipped, 1 xpassed; quickmerge landed
+  `execution-service@64395d6d97` on `origin/live-defi-rollout`.

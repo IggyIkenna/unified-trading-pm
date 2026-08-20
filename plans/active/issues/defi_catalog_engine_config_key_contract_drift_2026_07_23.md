@@ -48,6 +48,7 @@ context_scope:
     strategy-service/strategy_service/engine/strategies/v2/orchestrator.py,
     strategy-service/tests/unit/engine/strategies/v2/test_all_catalogued_archetypes_construct_and_fire.py,
     strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog.py,
+    /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
   ]
 ---
 
@@ -976,3 +977,4 @@ auto-generated section's own owner script, rather than hand-editing the table) �
 - **na-eligibility-audit 2026-08-16** [body-hash:c40a1852d57966c9]: KEEP-NA, valid — 976-line issue doc: systemic strategy-service catalog/engine config-key-contract-drift audit spanning DeFi + CeFi/TradFi/Sports archetypes, almost entirely resolved (the P0 design-decision todo and its 3 filed [SCRIPT] implementation todos are all checked [x] with shipped SHAs).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — unchanged, still accurate
+- **context-scout 2026-08-20 (fingerprint cross-link)**: added `mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` (7 entries total) — independently documents the identical `liq_candidate_debt_amount_<id>`/`liq_candidate_liq_bonus_pct_<id>` missing-feature finding.

@@ -77,14 +77,11 @@ locked_since:
 context_scope:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
-    agent-orchestrator/server/routes/slots_worker.py,
-    agent-orchestrator/server/config.py,
+    agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/plan_health.py,
     agent-orchestrator/server/escalation.py,
-    agent-orchestrator/server/dispatch.py,
-    agent-orchestrator/server/autospawn.py,
-    agent-orchestrator/server/death_forensics.py,
-    agent-orchestrator/server/resume_lifecycle.py,
+    agent-orchestrator/server/server.py,
+    /codex/04-architecture/agent-orchestrator-scheduled-jobs.md,
   ]
 supersedes:
 superseded_by:
@@ -431,3 +428,7 @@ halves separately — they are two unrelated facts:
 - `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` — capacity sizing / reserve
   mechanism this bug's operational impact hits.
 - **context-scout 2026-08-20**: populated context_scope (7 entries).
+- **context-scout 2026-08-20 (correction)**: COUNT_MISMATCH resolved — the prior marker claimed 7 entries but the
+  live frontmatter actually held 9, all source-only. Fully re-derived: now 6 entries, trimmed to the files each
+  still-open priority item (root-cause fix, demand-aware fallback, account_rotation_canonical trace) actually
+  edits, plus the doc's own "## Codex SSOTs" citation which had been missing from context_scope entirely.

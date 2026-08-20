@@ -543,3 +543,41 @@ clouds. If CI-runner-specific migration work is needed for the IONOS move, that 
   dashboard coverage decision, concurrent-dispatch-safety audit) plus `server.py`'s deliberately-deferred
   `lifespan()` gap; remaining Phase 3 items are the ~92-doc sampling continuation and the regen-dispatch
   recurrence-pattern investigation — continuing into these next, then Phase 4/5.
+- **2026-08-19/20 (same session, continued to completion of Phases 1-2-3-4 + Phase-5 partial, checkpointed via
+  `/pre-compact` for a fresh-session handoff)**: Finished everything committable this run. Phase 2: remaining
+  3 infra todos DONE (`agent-orchestrator@cfd1a47753` — unit/integration split via measured-runtime marking,
+  coverage ratchet with a real precision bug caught+fixed before it shipped, dashboard vitest coverage). Phase 3:
+  all 5 confirmed real gaps fixed + a 3rd false-positive corrected + a 4th recurrence of the regen-dispatch
+  pattern-matching bug caught by a property-based test on its FIRST run and fixed at the source + 34 more docs
+  sampled (30 COVERED, 1 real GAP found-and-fixed, 3 skipped) — all at `agent-orchestrator@8e0438c160`. Phase 4:
+  fully done (`agent-orchestrator@8e0438c160` for the Dockerfile, `unified-trading-pm@dd472dfa24` for the IONOS
+  plan fold-in) — surfaced a real, unrelated, EXISTING broken Cloud Run Dockerfile as its own issue,
+  `unified-trading-pm@97e3cf2038`. Phase 5: first 2 todos done (`unified-trading-pm@2d2af60b14` — codex audit
+  clean, SUPERSEDED-banner added). Hit and fixed 2 genuine tooling bugs along the way (both in code I'd just
+  shipped, caught by the workspace's OWN gates before landing): the coverage ratchet's `write_baseline()` rounded
+  to 2dp while comparing at 1e-6 tolerance (guaranteed future false-positive flapping — fixed to full-precision
+  storage + a tolerance sized to this suite's real measured noise floor, ~0.005 points across 3 identical runs);
+  and my own `[~]` "partial progress" checkbox marker isn't a supported state in this workspace
+  (`check_todo_regression.sh`'s regex is `^- \[[ xX]\]`, no tilde, no leading whitespace) — `plans/PLAN_FORMAT.md`
+  already correctly documents that "in-progress" maps to plain `- [ ]`, I just hadn't read that section; reverted
+  to standard `[ ]` with progress noted in the body text instead, matching the documented convention.
+  **Genuinely still open** (see the Deferred-work table below): `server.py`'s `lifespan()` coverage (Phase 2) and
+  the remaining ~82-doc corpus sampling (Phase 3) — both intentionally NOT rushed. Phase 5's archive-the-plan
+  todo is correctly withheld until those two land. **This entry itself was lost TWICE mid-ship under heavy repo
+  contention** (a same-operator different-slot session doing its own concurrent pre-compact checkpoint caused a
+  commit-message/attribution swap the second time — `shared_clone_concurrent_commit_message_swap_2026_07_28.md`'s
+  documented failure class; quickmerge correctly detected both, refused to let either be cited as landed, and
+  pointed at forensic recovery data rather than silently failing) — re-authored verbatim from this turn's own
+  context both times rather than risk a stash-hunt picking up a peer's mixed-in WIP; shipping this attempt via
+  `safe-doc-push.sh` instead of `quickmerge.sh` specifically because it always commits from an isolated worktree
+  (quickmerge's own `--isolated` is opt-in), per this exact contention-recovery guidance already in CLAUDE.md.
+
+## Deferred work after 2026-08-19
+
+| Item | State / why deferred | Blocked on |
+| --- | --- | --- |
+| Phase 2: `server.py`'s `lifespan()` async-context-manager body (~685 lines, the single largest remaining coverage gap in the repo) | Not done — deliberately not rushed | Needs real architectural scoping first (the todo's own text: booting a real app or hand-mocking ~30 background-loop imports is high-risk/low-ROI without dependency-injection seams added first) — a design pass, not a mechanical test-writing pass |
+| Phase 3: sample the remaining ~82 docs in the tightest corpus (`plans/archive/issues/`, single-repo `repos: [agent-orchestrator]`), plus the ~36 co-listed-repo docs and ~130 non-`issues/`-folder archived docs (entirely untouched both passes) | Not done — open-ended by nature, this session did 2 passes (63 then 34 docs) | Nobody — purely continued effort/budget. Corpus re-derivable via `grep -l "^repos: \[agent-orchestrator\]$" plans/archive/issues/*.md` minus the ~42 already named in this plan's Phase 3 section |
+| Phase 5: archive this plan | Cannot be done yet | The two rows above — every todo must be `[x]` first |
+
+**Recommended next item**: the Phase 3 doc-sampling continuation is the more mechanical, proven, immediately-parallelizable of the two (same COVERED/GAP/UNCLEAR method used twice already this session, real sub-agent-dispatchable) — start there. Treat Phase 2's `lifespan()` gap as its own separate design task (scope the DI-seam approach BEFORE attempting test coverage), not something to fold into a general coverage-sweep pass.

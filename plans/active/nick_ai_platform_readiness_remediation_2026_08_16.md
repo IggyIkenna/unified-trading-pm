@@ -443,7 +443,7 @@ tradfi sub-agent's pre-audit read conflated these; correct that reading here, do
       has no `side` field, so the real-depth fill only walks the ASK side (BUY the named outcome's shares, mirroring
       `PolymarketAdapter.place_bet`'s BACK→BUY convention) — a SELL/LAY leg needs a side signal added to
       `ExecutionInstruction` first, a separate schema change. Also cross-referencing
-      `/plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`: this
+      `/plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`: this
       Prediction wiring does NOT touch `ManualOperationHandler`/`LiveOrchestrator`/`ExecutionOrchestrator` at all —
       `PredictionBetHandler` is a fully separate dispatch path (`OperationType.PREDICTION_BET` via
       `HandlerRegistry`), so that issue's protocol-mismatch landmine was not in this task's path, confirmed by

@@ -173,6 +173,27 @@ todos only to confirm they are data-movement, then leave it.
       another. A mirrored copy does not receive the SCROLL/PLASMA fix and will drift again — these should import
       the UAC set. Not touched by T1: they are your repo.
 
+- [ ] [FROM-T5] P2. **7 `not_consumed` values from the epic's "No orphans" DoD item — 5 data_types + 3
+      instrument_types, all in your repos.** Measured 2026-08-20 via the `/shard-utilisation-sweep` skill
+      (registry-backed consumption verdict, never a delete suggestion) against `coverage.json` date=2026-08-20:
+      registry vocabulary coverage confirmed adequate for tradfi (9/13, 69%) and prediction (2/4, 50%) before
+      calling these absences meaningful — this is not disjoint-vocabulary noise like the DeFi/sports findings in
+      the same sweep (those are separately noted as `unverified`, not orphans).
+
+      **data_type**, absent from the registry's declared vocabulary for their asset_group:
+      `tradfi/macro_result` (14 cells), `tradfi/yield_curve` (9), `tradfi/ohlcv_1d` (9), `tradfi/futures_chain`
+      (2), `prediction/prediction_canonical_question_group` (4), `prediction/market_lifecycle` (4) +
+      `prediction/MARKET_LIFECYCLE` (2, its own uppercase duplicate — worth checking whether that's a casing
+      drift of the same value before treating both as separate orphans).
+
+      **instrument_type**: `tradfi/nan` (63 cells), `tradfi/UNKNOWN` (1), `prediction/nan` (1) — the `nan`/
+      `UNKNOWN` values read like a writer emitting a missing-value sentinel into a real column rather than a
+      genuine orphaned category; check the writer before assuming any of these are dead data.
+
+      T5 does not have write access to instruments-service/market-tick-data-service to investigate further. Full
+      sweep output (all axes, incl. the DeFi/sports vocabulary-coverage gaps that are NOT orphans):
+      `/plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md`'s "No orphans" todo.
+
 ## Todos
 
 ### W3 — granularity and the shard denominator
@@ -281,7 +302,17 @@ todos only to confirm they are data-movement, then leave it.
       three. The todo was mis-scoped to T2; nothing was needed in instruments-service / MTDS / MDPS.
 - [x] [BACKEND] P0. Build the orphan-shard consumption check — no shard stored that nothing consumes. Epic
       definition-of-done item. SSOT: `/codex/02-data/orphan-object-detection.md`.
-      ✅ 2026-08-20 — **built and shipped as the `shard-utilisation-sweep` skill.** The existing sweeps
+      ✅ 2026-08-20 — **built and shipped as the `shard-utilisation-sweep` skill.**
+      Evidence: `unified-trading-pm@d9a53d1d01` (`--isolated` quickmerge, ancestry-verified against
+      `origin/live-defi-rollout`, landed content re-read to confirm). Two earlier non-isolated attempts on this
+      shared checkout hit real-but-external gates: a `PendleConnector` reachability flap (confirmed transient — a
+      standalone re-run passed moments later) and an archive-safety-ratchet violation already committed to origin
+      4 days earlier inside a DIFFERENT live session's file (`kimi_gemma_provider_onboarding_2026_08_16.md`, not
+      touched by this tranche). `--isolated` mode — which builds the commit from a private index against origin
+      rather than this contended working tree — sidestepped both without needing to touch either. Also fixed a
+      real gap the first attempt surfaced: this skill's `tests/` dir was unreachable by `unified-trading-pm`'s
+      `PYTEST_UNIT_DIR`, so `cursor-configs/skills/` was added to `scripts/quality-gates.sh`'s `PYTEST_UNIT_DIR=`
+      list, verified against the fleet coverage baseline before shipping. The existing sweeps
       (`migration_orphan_sweep.py`, `candle_orphan_sweep.py`, MTDS's sports fork) all run GCS→manifest ("is this
       stored object manifested?"); nothing ran the other direction. This does: a CONSUMPTION verdict per declared
       venue / data_type / instrument_type / chain, resolved by IMPORTING the real registries

@@ -58,11 +58,12 @@ locked_by:
 locked_since:
 context_scope:
   [
-    agent-orchestrator/server/routes/slots_worker.py,
     agent-orchestrator/server/codex_bridge_server.py,
     agent-orchestrator/server/codex_mcp_proxy.py,
     agent-orchestrator/server/worker_liveness_watchdog.py,
-    agent-orchestrator/server/tmux_pruner.py,
+    /plans/active/codex_mcp_tool_use_bridge_2026_08_18.md,
+    /plans/active/issues/nvidia_codex_exhaustion_observability_gap_2026_08_19.md,
+    /codex/12-agent-workflow/async-wait-and-poll-discipline.md,
   ]
 supersedes:
 superseded_by:
@@ -225,3 +226,4 @@ an unbounded time until whatever eventually reaps the tmux session catches up.
   mechanism (two possible tool-execution paths, one sandboxed and one not, explaining the
   6-succeed/~28-fail pattern) instead of the earlier, vaguer "sandbox network policy inconsistency"
   framing.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries).

@@ -18,6 +18,16 @@ source: [deployment-api]
 tags: [qg-red, pre-existing, schema-drift]
 resolved_by: null
 locked_by: null
+context_scope:
+  [
+    deployment-api/tests/unit/test_data_status_drilldown.py,
+    unified-api-contracts/unified_api_contracts/internal/schemas/_instrument_catalogue_contract.py,
+    unified-api-contracts/tests/unit/test_instrument_catalogue_contract.py,
+    /plans/epics/security_and_cross_cutting_master.md,
+  ]
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## What I found
@@ -56,3 +66,7 @@ resolved.
       update `test_instruments_service_legacy_v4_resolves_catalogue_contract`'s
       `> 50` threshold to match the current correct count, or fix the UAC contract
       to restore the missing columns. (repo: deployment-api + unified-api-contracts)
+
+## Progress Log
+
+- **context-scout 2026-08-20**: populated context_scope (4 entries).

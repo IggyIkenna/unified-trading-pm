@@ -51,6 +51,7 @@ context_scope:
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    agent-orchestrator/server/dispatch.py,
   ]
 source: >-
   `/na-eligibility-audit ao` (2026-08-18, dispatch agt-0f2c85, slot 9). Phase 1 classified 10 in-scope docs (of 70
@@ -262,3 +263,4 @@ stated scope. Source: `multi_provider_context_billing_reconciliation_2026_08_16.
   evidence" is implemented as a commit-author + task-window scan of the slot's worktree (the real measurement), not
   an origin-reachability check per repo — the latter would add a network fetch per repo to `/done`'s telemetry path;
   the commit itself is the evidence, and the worker has already pushed by the time `/done` runs.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries).

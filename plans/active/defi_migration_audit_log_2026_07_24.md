@@ -58,8 +58,8 @@ context_scope:
   [
     /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
     /codex/02-data/pipeline-mode-partition.md,
+    /plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
-    market-tick-data-service/market_tick_data_service/cli/handlers/dex_swaps_handler.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
   ]
 ---
