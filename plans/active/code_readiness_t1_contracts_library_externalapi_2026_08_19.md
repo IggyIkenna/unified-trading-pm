@@ -494,7 +494,7 @@ todos only to confirm they are data-movement, then leave it.
       finished as its own dedicated unit under the next todo, not folded into this commit.
       Data migration stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule, per the ruling's own
       text. Evidence:
-      `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
+      `/plans/archive/2026_08/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
 - [x] ✅ [BACKEND] P0. GCS client silent write failure fixed — unified-trading-library@425ce119d.
       `GCSBlobHandle.__getattr__` now raises `UnsupportedNativeBlobMethodError` (a `RuntimeError`, deliberately
       NOT an `AttributeError`) on the four raw-SDK methods it doesn't implement
@@ -565,16 +565,19 @@ todos only to confirm they are data-movement, then leave it.
       this is doc-generation work reading routes across repos, not editing any of them — redirected to T5 (already
       builds route-surface tooling for the readiness dump) with a note that it needs T2/T4 to hold their routers
       stable while it walks them.
-- [ ] [BACKEND] P1. Build the kill-switch (scoped halt) and flatten-position external endpoints — **split in two**:
-      the contract half (adding `KILL_SWITCH`/`FLATTEN_POSITION` members + dataclasses to the CURRENT v2 vocabulary
-      — `InstructionActionV2` / `StrategyInstructionV2` in `unified_api_contracts.internal.architecture_v2`, not the
-      legacy `StrategyInstructionType` this item originally, wrongly, named — confirmed genuinely absent from both)
-      is genuinely T1's, but is an open design call, not a mechanical enum fill: does a control instruction
-      decompose the way `LendInstruction`/`TradeInstruction` etc. do (protocol/asset/target-amount shape), or does
-      it need its own dispatch path entirely (no notional, no venue in the trade sense)? Held pending T4's answer
-      on what shape execution-service actually needs (asked via `[FROM-T1]` in T4's plan) rather than guessing and
-      shipping a contract T4 has to rework. The endpoint half is T4's regardless. SSOT:
-      `/codex/04-architecture/autonomous-recovery-matrix.md`.
+- [x] ✅ [BACKEND] P1. **Closed by T4's answer, 2026-08-20 — no contract change needed.** T4 answered the
+      `[FROM-T1]` question on their own plan: do NOT add `KILL_SWITCH`/`FLATTEN_POSITION` to the strategy
+      instruction vocabulary at all. Both capabilities already exist, correctly, on the DELIBERATELY separate
+      `AccountInstruction` envelope — `kill_switch.activate()`/`.deactivate()` (durable state-file, admin-only,
+      `POST /kill-switch/activate`) and `AccountInstruction.CLOSE_ALL` (operator-driven, `authorization_id`-gated,
+      real per-venue wiring — `execution-service@96411b68c9` + `@c0839616be`). Adding these to
+      `StrategyInstructionType`/`InstructionActionV2` would expose them on `/external/instructions` — the
+      third-party-reachable surface — under the WRONG authority model (strategy-engine, not operator-only); T4
+      cited `/codex/04-architecture/account-instructions.md`'s own stated rationale for keeping the two envelopes
+      separate ("different authority model... different risk gates, some ops bypass strategy-layer checks by
+      design"). External partner-facing kill/flatten access, if ever wanted, is a product/security policy call for
+      the operator, not something to build speculatively. **Correct outcome: T1 does nothing here** — the original
+      artefact marker calling this "planned, not yet" was itself the thing that needed correcting, not the code.
 - [ ] [UI] P1. Wizard stage detail, screenshots and the generated-config example are `pending, to be expanded` in
       the artefact — build the wizard surface to the point those can be generated from the real UI. Needs `[UI]` +
       `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
