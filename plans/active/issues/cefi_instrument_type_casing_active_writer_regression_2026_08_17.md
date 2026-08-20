@@ -394,3 +394,14 @@ is genuinely VM-scale work, not shared-host-scale:
   not the pre-fix 172425 run, as the next thing to review. slot-18's `...-173927` VM (launched 17:44Z, also
   pre-fix) is very likely to OOM for the same pre-fix reason — worth a fresh post-fix relaunch on slot-18's side
   too rather than waiting out that VM's own outcome.
+
+
+- **Correction (slot-18, 2026-08-20 18:34 UTC)**: the current slot-18 retry is
+  `canonical-migration-cefi-itype-casing-apply-20260820-183425`, not the historical `...-173927` entry above.
+  It was launched from `deployment-service` with `--all-buckets --workers 4 --dry-run` after the bounded-memory
+  MTDS change reached `origin/live-defi-rollout` (`market-tick-data-service@bccf8177`; tarball manifest observed
+  at `mtds-code@63ff30b953d4`). The VM is `RUNNING` in `asia-northeast1-c` on `e2-standard-16` SPOT. Serial
+  console evidence at 18:38:49Z shows setup complete, heartbeat sidecar active, and the exact command launched;
+  a read-only SSH check at 18:40:49Z shows the Python process alive at 566,592 KiB RSS with 60 GiB available.
+  The rolling log has not yet been published, so this is **STARTED and live, not terminal**; no `--apply` has
+  been launched.
