@@ -22,7 +22,7 @@ priority: P2
 estimate_class: infra
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 1.2
-last_updated: 2026-06-27
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 supersedes:
@@ -89,39 +89,74 @@ partition walk anywhere (single-walk discipline):
 | **tradfi**      | `tradfi_manifest_canonicalisation_2026_06_01.md`            | C-pipeline_mode RIDER |
 | **sports**      | `sports_manifest_canonicalisation_2026_06_01.md`            | C0 (a) + C-partition  |
 | **prediction**  | `prediction_manifest_canonicalisation_2026_06_01.md`        | C-pipeline_mode RIDER |
-| **instruments** | (no canonicalisation plan yet — bundle into IS's next walk) | pending — see Phase 1 |
+| **instruments** | `instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (folded-in "C0" section) | cefi/tradfi/sports DONE (live-verified 2026-08-20); prediction OPEN — see Phase 1 |
 
 ## Phased execution
 
 ### Phase 1 — Bundle `pipeline_mode=` into each non-DeFi bucket's next whole-corpus walk
 
-**STALE BANNER STRUCK 2026-08-20 (/plan-reconcile F-G25-4)**: both todos below still framed the 5-AG canonicalization
-walk as "not yet run" — but `master_data_canonicalisation_migration_catalogue_2026_06_07.md`'s G4 row shows all 5 AGs'
-`--apply` complete (defi/cefi/sports/prediction since 2026-06-29, tradfi since 2026-08-04), and all 5 named L3 owner
-plans this doc cites are archived-complete. The "instruments bucket — no canonicalisation plan exists yet" claim
-below is also stale: one exists, archived-complete 2026-06-26
-(`plans/archive/2026_06/instruments_manifest_canonicalisation_2026_06_01.md`). **Not independently re-verified against
-live GCS state this pass** (object-listing is routed through UTL, not a raw CLI, in this sandbox) — a worker with GCS
-read access should run this doc's own prescribed spot-check (a `pipeline_mode=` path-segment listing across all 5
-buckets, per the Success Criteria table below) before flipping these to `[x]`.
+**LIVE-VERIFIED 2026-08-20 (F-G25-4 follow-up)** — supersedes the "not independently re-verified" note this banner
+previously carried. Ran this doc's own prescribed Success-criteria spot-check for real, via
+`unified_trading_library.cloud_interface` (`get_storage_client()` + `resolve_bucket_name()`, never raw gsutil/gcloud)
+against PROD GCS. Result: **5 of 6 targets confirmed DONE, 1 confirmed a genuine, currently-open gap** — not a stale
+assumption either way:
 
-- [ ] [INFRA] P2. **cefi / tradfi / sports / prediction** — the `pipeline_mode=` partition is the named C-pipeline_mode
-      RIDER inside each AG's L3 manifest-canonicalisation walk (table above). This plan's row for each AG is satisfied
-      when that walk completes — do NOT open a standalone partition walk (single-walk discipline). Verify post-walk:
-      selective path-listing on `pipeline_mode=batch` / `pipeline_mode=live` returns the expected file set; manifest row
-      keys unchanged. **Named L3 walks all show archived-complete as of this correction — verify live before closing.**
-- [ ] [INFRA] P2. **instruments bucket** — a canonicalisation plan DOES exist, archived-complete 2026-06-26
-      (`plans/archive/2026_06/instruments_manifest_canonicalisation_2026_06_01.md`) — verify `pipeline_mode=` landed as
-      part of that walk rather than treating this as still-unscheduled work.
+- **cefi / tradfi / sports / prediction tick-data buckets** (`market-data-tick-{cefi,tradfi,sports,pred}-prd-…`):
+  `pipeline_mode=` IS present as a hive path segment, and already in the operator-ratified SOURCE-AWARE
+  `{mode}_{source}` form (see Codex SSOTs below) — e.g.
+  `.../day=2026-08-19/pipeline_mode=batch_fred/asset_group=tradfi/…` (tradfi, sampled on the MOST RECENT day, not just
+  historical backfill), `.../pipeline_mode=batch_footystats/asset_group=sports/…`,
+  `.../pipeline_mode=batch_kalshi/asset_group=prediction/…`, `.../pipeline_mode=batch_tardis/asset_group=cefi/…`.
+- **instruments (reference-data) buckets** — cefi/tradfi/sports confirmed present too:
+  `instruments-store-{cefi,tradfi}-prd-…` carry
+  `instrument_availability/by_date/day=…/pipeline_mode=batch_instruments_service/asset_group=…/…`; sports carries both
+  `pipeline_mode=batch_api_football/` and `pipeline_mode=batch_instruments_service/` (confirmed as recently as
+  day=2026-08-27).
+- **`instruments-store-pred-prd-…` (prediction instruments-store) is the one confirmed real gap**: exhaustively
+  checked all 682 top-level `instrument_availability/by_date/canonical_question_group=*/` groups — **zero** carry a
+  `pipeline_mode=` segment anywhere in the tree. Prediction's reference-data bucket is keyed
+  `canonical_question_group=`/`day=`/`venue=` with no pipeline_mode axis at all.
+
+The "instruments bucket — archived-complete 2026-06-26" claim previously here was ALSO stale, in a different way than
+first thought: that archived plan's own banner states its apply-work (E3-E6, incl. the pipeline_mode= walk) was NEVER
+run under it — it was folded 2026-06-26 into `instruments_mtds_subset_consistency_remediation_2026_06_17`, which
+3-way-split 2026-07-24. The current live owner of the still-open rider is
+`plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md` (folded-in "C0" section), not the
+archived 2026-06-01 doc — corrected in the table above and Phase 1 below.
+
+- [x] ✅ [INFRA] P2. **cefi / tradfi / sports / prediction tick-data buckets** — DONE, live-verified 2026-08-20 (see
+      banner above): `pipeline_mode=` present as a hive path segment on all 4 buckets, in the ratified source-aware
+      `{mode}_{source}` form, confirmed on both historical AND current-day objects. Landed as a byproduct of each AG's
+      C-pipeline_mode RIDER inside its L3 manifest-canonicalisation walk, as designed — no standalone walk was run or
+      needed.
+- [x] ✅ [INFRA] P2. **instruments bucket — cefi / tradfi / sports** — DONE, live-verified 2026-08-20:
+      `instruments-store-{cefi,tradfi,sports}-prd-…` all carry `pipeline_mode=` as a real on-disk path segment under
+      `instrument_availability/by_date/day=…/` (`batch_instruments_service` for cefi/tradfi; `batch_api_football` +
+      `batch_instruments_service` for sports).
+- [ ] [DATA] P2. **instruments bucket — prediction is the one remaining real gap.** Live-verified 2026-08-20:
+      `instruments-store-pred-prd-…`'s `instrument_availability/by_date/` tree is keyed
+      `canonical_question_group=`/`day=`/`venue=` with **zero** `pipeline_mode=` segments across all 682 sampled
+      question-groups — the partition never landed here, unlike its cefi/tradfi/sports siblings (which DO carry it
+      live, even though the shared rider below still reads `[ ]` open for all four — a separate cross-plan doc-drift
+      worth flagging there, not silently resolving here). The CURRENT live owner of the open rider is
+      `plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md`'s folded-in "C0 — ONE bundled
+      single-walk per non-sports instruments bucket … `pipeline_mode=` partition (CF-3)" todo (open `[ ]` there,
+      scoped to cefi/defi/tradfi/prediction) — do NOT open a second walk here (single-walk discipline). This plan's
+      prediction-instruments row closes when THAT todo closes; cross-referenced, not duplicated.
 
 ## Success criteria
 
-| Phase   | Gate                                              | Verification                                                      |
-| ------- | ------------------------------------------------- | ----------------------------------------------------------------- |
-| Phase 1 | `pipeline_mode=` partition present in all buckets | `gcs ls` shows `pipeline_mode=` path segment across all 5 buckets |
+| Phase   | Gate                                                                      | Verification                                                                                                                                                                                                    |
+| ------- | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Phase 1 | `pipeline_mode=` partition present, in SOURCE-AWARE form, in every bucket | live GCS listing via `unified_trading_library.cloud_interface` shows `pipeline_mode={mode}_{source}` as a path segment — **5/6 confirmed DONE 2026-08-20** (cefi/tradfi/sports/prediction tick-data + cefi/tradfi/sports instruments-store); **1/6 confirmed OPEN** (prediction instruments-store) |
 
 ## Codex SSOTs
 
+- `/codex/02-data/pipeline-mode-partition.md` — the canonical-form SSOT. The `{mode}_{source}[_{transport}]`
+  source-aware form was operator-ratified 2026-06-07 — 6 days AFTER this plan was authored (2026-06-01) — so it is the
+  bar this plan's Success Criteria actually checks against, not the plain "`pipeline_mode=` segment present" this doc
+  originally wrote. Every live-verified occurrence found 2026-08-20 already uses the source-aware form (no coarse
+  `batch`/`live` stragglers in the sampled buckets) — the drift changed the bar, not (so far) the outcome.
 - `/codex/02-data/pipeline-mode-and-batch-live-reconciliation.md` — documents the deferred-partition note; flip the
   "deferred to next migration window" line to "landed per-bucket" as each bucket's walk completes.
 
@@ -151,3 +186,20 @@ buckets, per the Success Criteria table below) before flipping these to `[x]`.
   regen; worth converting to a real todo on a future pass.
 - **context-scout 2026-08-09**: populated/refreshed context_scope (5 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified all 5 still resolve; unchanged.
+- **live GCS spot-check 2026-08-20**: ran this doc's own prescribed Success-criteria check for real (via
+  `unified_trading_library.cloud_interface`, never raw gsutil/gcloud) against PROD. Result: cefi/tradfi/sports/
+  prediction tick-data buckets + cefi/tradfi/sports instruments-store buckets all confirmed DONE (source-aware
+  `pipeline_mode=` present, incl. on current-day objects, not just historical); prediction's instruments-store bucket
+  confirmed the one real open gap (0/682 `canonical_question_group=` groups carry the segment). Also checked
+  requirements drift since 2026-06-01 authoring per operator request: the canonical form itself moved to source-aware
+  `{mode}_{source}[_{transport}]` (ratified 2026-06-07, codex `/codex/02-data/pipeline-mode-partition.md`) — this
+  didn't invalidate what's landed (it's already source-aware everywhere it exists) but the plan's original "segment
+  present" success criterion never named that bar; tightened it. Also traced the "instruments" row's true current
+  owner: the archived 2026-06-01 instruments-canonicalisation plan's apply-work was folded 2026-06-26 →
+  3-way-split 2026-07-24 → now lives in `instruments_store_cf_canonicalization_single_walk_2026_07_24.md`'s open "C0"
+  rider — corrected the coverage table + Phase 1 pointer away from the archived doc. Flipped Phase 1's
+  cefi/tradfi/sports/prediction-tick-data and cefi/tradfi/sports-instruments todos to `[x]`; split prediction's
+  instruments gap out as its own open todo with the corrected current-owner pointer. Not actioned (outside this
+  plan's scope, flagged for the other plan's own maintainers): `instruments_store_cf_canonicalization_single_walk_
+  2026_07_24.md`'s "C0" checkbox still reads `[ ]` open for cefi/tradfi even though live GCS shows those two AGs
+  already carry the partition — a cross-plan doc-drift, not resolved here (collision risk).
