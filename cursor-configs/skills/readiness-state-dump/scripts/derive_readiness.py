@@ -329,7 +329,15 @@ def build_dump(
     archetype_states: dict[str, dict[str, str]] | None = None,
     instruction_path_probe: dict[str, dict] | None = None,
 ) -> tuple[list[dict], dict]:
-    grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
+    # grain (FROM-T2 P1, 2026-08-20): detect_grain() reads the grain of the COVERAGE SOURCE, not
+    # of the readiness ROWS this function builds (which are always venue x asset_group x mode,
+    # unconditionally -- see the `rows.append` below). The old code reported coverage_grain under
+    # a bare "grain" key, so a reader saw e.g. "instrument_type" and reasonably assumed the ROWS
+    # carried that finer breakdown -- they never did (measured: all 864 rows carry only
+    # venue/asset_group/mode/pipeline_stage/leg_states, no instrument_type key on any row). Two
+    # keys now, neither silently claiming the other.
+    coverage_source_grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
+    row_grain = "venue_asset_group_mode"
     # Measured once for the whole dump -- InstructionActionV2 handler coverage is
     # venue-independent, so re-deriving it per row would be waste AND would imply a
     # per-venue signal that does not exist. See instruction_actions.py.
@@ -340,7 +348,9 @@ def build_dump(
 
     cells_by_venue: dict[str, list] = defaultdict(list)
     if coverage_payload:
-        for cell in iter_shard_cells(coverage_payload, grain if grain != "unmeasured" else None):
+        for cell in iter_shard_cells(
+            coverage_payload, coverage_source_grain if coverage_source_grain != "unmeasured" else None
+        ):
             cells_by_venue[cell.venue].append(cell)
 
     layer1_by_venue: dict[str, dict] = {}
@@ -432,7 +442,8 @@ def build_dump(
             )
 
     summary = {
-        "grain": grain,
+        "row_grain": row_grain,
+        "coverage_source_grain": coverage_source_grain,
         "venue_count": len(venues),
         "mode_count": len(modes),
         "row_count": len(rows),
@@ -455,7 +466,7 @@ def build_dump(
 
 
 def _print_human(rows: list[dict], summary: dict, verbose: bool, limit: int) -> None:
-    print(f"Readiness state dump -- grain: {summary['grain']}")
+    print(f"Readiness state dump -- rows: {summary['row_grain']}, coverage source: {summary['coverage_source_grain']}")
     print(f"Venues: {summary['venue_count']}, modes: {summary['mode_count']}, rows: {summary['row_count']}")
     print()
     print("=== Per-leg verdict counts (across all venues x modes in scope) ===")

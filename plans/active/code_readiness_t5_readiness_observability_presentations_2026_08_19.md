@@ -244,7 +244,7 @@ todos only to confirm they are data-movement, then leave it.
       Also worth a look while you are in there: 9 rows carry an EMPTY `venue` string (all `asset_group: sports`) —
       they come straight through from 9 blank-venue cells in coverage.json, which T2 is tracking separately.
 
-- [ ] [FROM-T4] P0. **The per-venue execution-instruction-path check you are blocked on is BUILT — here is its
+- [x] [FROM-T4] P0. **The per-venue execution-instruction-path check you are blocked on is BUILT — here is its
       frozen contract, so you can write the probe now rather than waiting.** It is in execution-service (gating
       under quickmerge as of 2026-08-20; T4's plan Progress Log carries the landing `<repo>@<sha>`).
 
@@ -284,7 +284,7 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Derive a batch / paper / live state for EVERY venue with a code path, surfacing `unverified`
       honestly wherever a check does not exist. Epic definition-of-done item. Engine:
       `cursor-configs/skills/readiness-state-dump/`.
-- [ ] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
+- [x] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
       moves 844 `not_ready` rows off their structural blocker. Track the dependency; do not wait idle on it.
       **2026-08-20 — dependency tracked and the non-blocked half DONE, `unified-trading-pm@c3a3e870f4`.** Request
       filed on T4's `## Inbound requests` naming the exact probe shape (`unified-trading-pm@241933d56e`), with the
@@ -293,6 +293,12 @@ todos only to confirm they are data-movement, then leave it.
       denominator instead of "no check wired", and the SKILL.md pointer that named the WRONG file
       (`v2/policy_resolver.py` — an algo resolver keyed by `(client_id, slot_label)`, not an instruction registry)
       is corrected. Remaining work here is a one-line probe call once T4 lands the venue-aware surface.
+      **DONE, `unified-trading-pm@8d47cf3393`** (the cross-venv `_execution_instruction_path_probe.py` +
+      `derive_readiness.py` wiring, landed earlier this session — verified by re-running the live dump fresh
+      2026-08-20: `execution_instruction` now reports `ready=238 not_ready=600 unverified=26` (real per-venue
+      variance) instead of a uniform hardcoded `unverified` across all 864 rows. Confirms the earlier coordinator
+      correction still holds: `strategy` (`ready=24 not_ready=840`) remains the dominant structural blocker on the
+      overall rollup, not `execution_instruction` — this leg's wiring is real but was never the critical path.
 - [ ] [BACKEND] P0. Add the archetype capability axis across batch, paper and live to the dump. The artefacts mark
       it `planned — specified and not yet built`, so that axis reports `unverified` today. Consume T3's
       `/archetype-code-completeness` output rather than re-deriving it.
