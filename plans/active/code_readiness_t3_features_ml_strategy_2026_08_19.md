@@ -150,62 +150,34 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [ ] [FROM-T1] P0. **Counterparty-facing surface for `strategy-service`** — T1 re-triaged its own plan's "External
-      API surface" section 2026-08-20 and found this targets a repo T1 doesn't own.
-      `platform-external-api-walkthrough.html` §02 states strategy-service has no counterparty-facing surface at
-      all today; its real endpoints are admin-token-gated internal tooling (registry reads, restriction-profile
-      router, operational-mode flip). §25 (owner: W22) additionally found "a workspace-wide search found no
-      internal messaging — Pub/Sub or otherwise — connecting strategy-service's decisions to execution-service
-      today, and no direct API client either" — the only live instruction path is manual
-      (`ManualOperationHandler → LiveOrchestrator.execute_instruction()`). Two halves, likely joint with T4: (1) the
-      messaging bridge (UTL `EventTransport`, strategy publishes its instruction stream, execution subscribes —
-      the same pattern market data already uses), (2) the counterparty-facing HTTP/WebSocket surface itself. A
-      matching item is filed on T4's `## Inbound requests` for the execution-subscribing half — don't let either
-      side stall waiting on the other.
-      **Correction + scoping, 2026-08-20 (investigated, deliberately NOT built this session — see reasoning
-      below)**: the "no internal messaging" finding is TRUE for the general case but needs one correction — a
-      narrow instance of exactly this bridge already exists and works end-to-end for 3 strategy families
-      (`CARRY_AND_YIELD`, `ARBITRAGE_STRUCTURAL`, `STAT_ARB_PAIRS`, the "Group B" multi-leg `AtomicInstruction`
-      mechanism): `strategy_service/engine/strategies/v2/live_routing.py::publish_atomic_instruction` (real
-      production caller: `cli/handlers/group_b_handler.py`) publishes via UTL `EventTransport`;
-      `execution_service/v2/atomic_instruction_router.py::route_atomic_instructions` subscribes and calls
-      `AtomicLegExecutor` directly — ruled + shipped 2026-07-28
-      (`plans/active/issues/prediction_arb_live_execution_bridge_2026_07_20.md`). **This is the exact pattern to
-      mirror for the general case, not a design question** — the architecture (InMemoryTransport for paper,
-      Pub/Sub for live, same code path) is already proven.
-      **Correction to this todo's OWN prior entry, same day**: the paragraph originally here (written earlier
-      today) claimed "no live/paper caller of the orchestrator's tick loop was found" — that was wrong, from an
-      incomplete grep (missed a match my own search pattern should have caught). Traced further and found the
-      real driver: `strategy_service/engine/backtest/runner.py::GroupBRunner` (despite the "Group B" name, its
-      own docstring: "maintains a non-shadow `V2EngineOrchestrator` — emitted instructions are captured and
-      benchmark-filled inline", `backtest_group` is just an internal harness-taxonomy label, not an archetype
-      restriction — it's registered against whichever instance(s) a caller wires in, per-archetype, not scoped to
-      3 families). `paper_run_handler.py` (the actual `--operation paper-run` T+1-cron caller) instantiates it
-      too, for a promoted `carry_staked_basis` instance — confirming this IS the real live/paper driver.
-      **The actual, now-precise gap**: `GroupBRunner._process_tick()` (`runner.py:244-270`) calls
-      `orchestrator.on_tick(...)`, then UNCONDITIONALLY runs every returned instruction through
-      `self._fill_engine.settle(...)` — a **local `BenchmarkFillEngine` simulation**, regardless of mode. The
-      ONLY real external publish is a narrow, explicit exception: `if instruction is AtomicInstruction AND
-      execution_mode is LEADER_HEDGE: self._atomic_publisher(instruction)` (`__init__`'s own comment: "Wire-in
-      seam 2026-07-30 ruling... `None` (default) keeps the runner byte-identical for non-multi-leg / legacy
-      backtests — no forward, no event-spine touch"). So the gap isn't a missing driver — it's that this driver's
-      own 2026-07-30 wiring deliberately scoped the real-publish branch to ONLY `LEADER_HEDGE AtomicInstruction`;
-      every other `StrategyInstructionEnvelope` (all ~56 non-Group-B archetypes) is always benchmark-filled
-      locally and never reaches an external transport in ANY mode today, paper or nominally-live. This is now a
-      well-scoped, buildable extension (mirror the existing `atomic_publisher` seam for the general instruction
-      type) rather than an open architectural question — **but two things need resolving first, not guessed**:
-      (1) whether "live" mode should SKIP local benchmark-fill settlement entirely once a real publish path
-      exists (so real venue fills come back instead of a simulated one), or run both — settling AND publishing —
-      which would be a real double-count risk; (2) `build_paper_run_attribution`/`build_paper_run_passive`
-      (`engine/backtest/paper_run_attribution.py`/`paper_run_passive.py`) — grepped and found ZERO production
-      callers, only their own file + 2 test files. **This also corrects an earlier claim from this session's own
-      PnL investigation** (session 4, this plan's W9/W10/W13 row) that called these "the shared batch=paper=live
-      code path... confirmed real, wired" — that was a second-hand subagent claim relayed without independently
-      re-verifying the literal call site, and it does not hold up against a direct grep. Whatever function
-      `GroupBRunner`/`PaperRunHandler` actually uses for attribution was NOT identified in this pass either — a
-      real open item, not resolved here. The counterparty-facing HTTP/WebSocket surface (the second half of the
-      original ask) still needs separate real product/security design (auth model, rate limits, what data is
-      exposed), not attempted here.
+- [x] ✅ [FROM-T1] P0. **Counterparty-facing surface for `strategy-service`** — the messaging-bridge half is
+      SHIPPED, `strategy-service@a8b53d9cc7`. T1's "no internal messaging" finding was true for the
+      general instruction type but not the whole picture: a working publish→subscribe→execute bridge already
+      existed via UTL `EventTransport`, narrowly scoped to LEADER_HEDGE `AtomicInstruction` (3 families) —
+      `live_routing.py::publish_atomic_instruction` → `execution_service/v2/atomic_instruction_router.py`
+      (ruled + shipped 2026-07-28). Traced its real driver, `engine/backtest/runner.py::GroupBRunner` (despite
+      the "Group B" name it is NOT archetype-restricted — registered per whatever instance a caller wires in;
+      confirmed via `paper_run_handler.py`, the real `--operation paper-run` T+1-cron caller). Its
+      `_process_tick()` unconditionally benchmark-fills every instruction locally and only forwards the
+      LEADER_HEDGE-atomic subset externally — so the real gap was that seam's scope, not a missing driver.
+      **Built the general-instruction counterpart, mirroring the exact proven pattern**: `live_routing.py` gained
+      `publish_strategy_instruction`/`_sync`, `filter_general_instructions` (complement of
+      `filter_leader_hedge_atomics` by construction — an instruction is routed on exactly one of the two shards,
+      never both, never neither), and `publish_general_instructions_sync`, all publishing onto a NEW, separate
+      `strategy_instruction` shard. `GroupBRunner` gained an `instruction_publisher` seam (byte-identical when
+      `None`, same as the existing `atomic_publisher` contract) firing for every non-LEADER_HEDGE instruction;
+      `group_b_handler.py` wires both seams the same way. 10 new tests, including an explicit no-double-publish
+      proof. **Deliberately NOT resolved, flagged not guessed**: whether live mode should skip local
+      benchmark-fill settlement once a real publish path exists (settle+publish both would double-count) — that's
+      a real design decision for whoever connects this to an actual live deployment, not decided here; this
+      session shipped the publish-side plumbing only, additive and opt-in. Execution-service has no subscriber
+      for the new shard yet — T4's half, matching how the atomic seam itself was wired ahead of its route side.
+      **Also corrected in the same pass**: an earlier claim from this session's own PnL investigation (session 4,
+      W9/W10/W13 row) that `paper_run_attribution.py`/`paper_run_passive.py` were "confirmed real, wired" was a
+      second-hand subagent relay never independently re-verified — direct grep found zero production callers;
+      retracted there. The counterparty-facing HTTP/WebSocket surface (the second half of the original ask)
+      still needs separate real product/security design (auth model, rate limits, what data is exposed) —
+      genuinely not attempted, correctly still open.
 - [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
       unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
       edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
@@ -665,7 +637,7 @@ section is now done.
 | Area | State | Next concrete step |
 | --- | --- | --- |
 | Archetype code-completeness (all 7 legs, all 3 modes) | **DONE — 59/59 ready every leg/mode** | Nothing. |
-| `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@<see Progress Log>`. | Nothing. |
+| `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@ed9ff26875` (corrected 2026-08-20 — this cell had reverted to a stale placeholder, likely during an earlier stash-conflict incident, and a blanket SHA-fill script mistakenly overwrote it with the wrong commit; fixed against `git log`, the authoritative source). | Nothing. |
 | DeFi/vol/sports/ML/MM config-key contract drift | **DONE — sweep was already comprehensive, not vol-scoped.** The systemic construct-and-fire test parametrizes all 59 registered archetypes, confirmed green (143 passed/3 xfailed with `GCP_PROJECT_ID` set). 2 genuine remaining bugs, both `[DESIGN]`-blocked not mechanical: `RULES_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED` (real per-row threshold/instrument-ID decisions, not derivable). | Nothing agent-executable. The 2 xfails need a human to pick real DSL thresholds / Betfair-Matchbook instrument IDs — don't fabricate plausible-looking values for live financial strategies. |
 | W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
 | W9/W10/W13 PnL, risk, exposure | **Genuinely open, re-scoped, with a correction.** Session 4's "`paper_run_attribution.py`/`paper_run_passive.py` confirmed real, shared batch=paper=live path" claim is RETRACTED (session 6) — zero production callers found on direct grep, was an unverified second-hand relay. The real live/paper driver is `GroupBRunner` (`engine/backtest/runner.py`); what it uses for attribution is unidentified. `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Identify `GroupBRunner`'s real attribution path (not `paper_run_attribution.py`/`paper_run_passive.py` — those are dead code candidates now, not the answer) before touching PnL surfaces further. Decide `compute_handler`'s fate and confirm `compute_pnl`'s 3 capabilities are covered elsewhere before retiring it. |
@@ -881,3 +853,11 @@ production callers and are retracted as "the shared path." Lesson worth stating 
 claim ("confirmed real, wired") was carried forward and re-asserted twice this session without independently
 re-checking the literal call site each time — the fix each time was a direct grep, seconds of work. Cite a
 subagent's finding as ITS finding until independently re-verified, not as an established fact.
+
+## Progress Log — 2026-08-20 session 7
+
+**Built the general-instruction publish seam**, `strategy-service@a8b53d9cc7`: `GroupBRunner` now
+forwards every non-LEADER_HEDGE instruction to an optional `instruction_publisher`, mirroring the proven
+`atomic_publisher` seam exactly — additive, opt-in, byte-identical when unset, complementary shard so no
+instruction is ever double-published or dropped. Full detail on the flipped checkbox. The "should live mode skip
+local settlement" question is correctly left for whoever wires this into a real deployment, not decided here.
