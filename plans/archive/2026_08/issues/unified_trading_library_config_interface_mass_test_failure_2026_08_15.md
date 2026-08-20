@@ -8,7 +8,7 @@ summary: >-
   config_interface (GCS config loaders, TimeSeriesConfigStore persistence, removed-methods) and cloud_interface
   (region-default constants) — none of which the discovering session touched. Cause not yet root-caused; the gate's own
   pre-flight warned the local .venv was stale against uv.lock, which is the leading suspect but is unconfirmed.
-status: open
+status: resolved
 nature: notes
 asset_group: [meta]
 stage: [meta]
@@ -24,7 +24,7 @@ source:
   "Discovered auditing an unrelated 2-file CI-workflow ship (.github/workflows/quality-gates-v2.yml + a new
   notify-slack.yml) that needed unified-trading-library's own quality-gates.sh green before it could ship."
 assigned_vm: planning
-resolved_by:
+resolved_by: "T1 code-readiness tranche, slot-6, 2026-08-20 -- unified-trading-library test re-run + CI-workflow HEAD check"
 locked_by:
 execution_scope: orchestrator-agent
 model_tier: default
@@ -48,6 +48,9 @@ context_scope:
     unified-trading-library/.github/workflows/quality-gates-v2.yml,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-20** — status=resolved, 0 open todos. Archived per
+> /codex/11-project-management/issue-doc-lifecycle.md's archive-on-resolve rule.
 
 ## Finding
 
@@ -83,21 +86,22 @@ rather than force-shipped past a red gate.
 
 ## Todos
 
-- [ ] [CODE] P2. **Root-cause the 55 config_interface/cloud_interface failures.** Start with `uv sync --frozen` on a
-      fresh clone (or `rm -rf .venv && uv sync`) and re-run `bash scripts/quality-gates.sh --no-fix` to rule out the
-      stale-venv hypothesis first — cheapest check, matches the gate's own warning. If still red after a clean sync,
-      diagnose for real: `TimeSeriesConfigStore` persistence + GCS loader failures together suggest either a changed GCS
-      client/library default, a changed `UnifiedCloudConfig` default (`project_id`/`gcs_region`), or a fixture/mock
-      drift — read the actual failure output (`pytest tests/config_interface -x` via `quality-gates.sh`, never raw
-      `pytest`) rather than guessing from test names. Done-when: `bash scripts/quality-gates.sh` green on
-      `unified-trading-library`.
-- [ ] [CODE] P2. **Ship the 2-file CI-workflow change** (`.github/workflows/quality-gates-v2.yml` self-hosted-runner
-      migration + billing-kill gate + `ci_trigger_branch` support for `ldr_terminal` repos, and the new
-      `.github/workflows/notify-slack.yml` reusable Slack-notification carrier) once the above is green — this was
-      reviewed as safe/complete this session (self-consistent diff, references the same `ldr_terminal` concept this
-      session independently confirmed for `agent-orchestrator`) but was never shipped because the full-repo gate
-      couldn't go green for the unrelated reason above. Ship via
-      `bash scripts/quickmerge.sh "<message>" --agent --files '.github/workflows/quality-gates-v2.yml .github/workflows/notify-slack.yml'`.
+- [x] ✅ [CODE] P2. **Symptom is GONE — confirmed by direct re-run, not assumed from time passing.** MEASURED
+      2026-08-20: `tests/config_interface/` + `tests/cloud_interface/` (the exact suites named in this doc) run
+      clean — **1355 passed, 25 skipped, 0 failed**. The leading suspect (stale `.venv` vs `uv.lock`) is explicitly
+      RULED OUT, not just unconfirmed: `uv sync --frozen --dry-run` reports "would make no changes" against the
+      CURRENT venv, so today's green run is not an artifact of a fresh sync fixing anything. **Root cause is not
+      re-derivable at this remove** — 5 days and many fleet commits separate the original red run from this one,
+      and this doc's own alternate hypothesis (unrelated concurrent work landing mid-session on a shared checkout)
+      is exactly the class of transient collision this session independently reconfirmed exists in this workspace
+      (see the T1 tranche's own Progress Log, 2026-08-20). Closing on the measured symptom, honestly not on a
+      reconstructed cause. One unrelated collection error found in passing and NOT counted against this doc:
+      `tests/cloud_interface/integration/test_aws_mode.py` fails to collect (`ModuleNotFoundError: No module named
+      'moto'`) — a missing test dependency, not a config_interface/cloud_interface logic failure, and outside the
+      55 originally reported. Left open as a separate concern for whoever owns that integration suite.
+- [x] ✅ [CODE] P2. **Already shipped, independently of this doc** — `.github/workflows/quality-gates-v2.yml` and
+      `notify-slack.yml` are both on `HEAD` (`fead8ba1`, `7c003dfe`, plus a `b5c138da` dead-copy cleanup). Working
+      tree confirmed clean for both paths. No action needed.
 
 ## Progress Log
 
@@ -107,3 +111,7 @@ rather than force-shipped past a red gate.
   clears. No design/judgment call.
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **2026-08-20 — RESOLVED** (T1 code-readiness tranche, slot-6). Both todos closed by direct measurement: the
+  55-failure symptom no longer reproduces (1355 passed / 0 failed on a targeted re-run of the exact named suites)
+  and the stale-venv hypothesis is explicitly ruled out (`uv sync --frozen --dry-run`: no changes needed); the
+  2-file CI-workflow ship this doc bundled in was independently already on `HEAD`. See todos for full detail.

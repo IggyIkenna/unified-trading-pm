@@ -259,6 +259,15 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 - [ ] [INFRA] P2. Audit other repos for the SAME unscoped-tmux-fixture anti-pattern the bats suite had (any test
       touching real tmux sessions needs its OWN isolated `TMUX_TMPDIR`, never the ambient/inherited one) — this class of
       bug is not unique to `test_slot_git_status_claim_heartbeat.bats`, just the one that happened to be caught.
+    - **Workspace Audit Findings (2026-08-19)**:
+      - Checked: All test files, BATS suites, E2E test runners, Python unit tests, and TypeScript/Playwright test suites across all repositories in the workspace (`unified-trading-pm`, `agent-orchestrator`, `deployment-service`, etc.).
+      - **Safe / Isolated**:
+        - `unified-trading-pm/tests/test_slot_git_status_claim_heartbeat.bats` (isolated via per-test `TMUX_TMPDIR`).
+        - `unified-trading-pm/tests/test_session_start_collision_check.bats` (isolated via per-test `TMUX_TMPDIR`).
+        - All Python unit tests (mock `subprocess.run` / `tmux_spawn`, do not spawn real tmux servers on the host).
+        - All TypeScript/Playwright E2E tests (interact with seeded state / backend APIs, do not directly spawn raw tmux sessions).
+      - **Exposed / Unscoped**:
+        - `agent-orchestrator/dashboard/tests/e2e/run-e2e-backend-chat.sh` (E2E test fixture/backend runner script that spawns real `tmux new-session` / `tmux kill-session` without setting or isolating `TMUX_TMPDIR`, defaulting to the ambient default tmux socket `/tmp/tmux-<uid>/default`).
 - [ ] [INFRA] P3. Once confidence is high (extended clean window, no new `tmux_session_lost` bursts), tear down the
       `strace_tmux_server_supervisor.sh` + `auditctl tmux_exec_watch` diagnostic instrumentation — they were built for
       this investigation, not intended as permanent fixtures, and the strace log alone runs several MB/hour.
@@ -332,6 +341,77 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       not just `check-ao-recent-deaths.sh`'s `burst_size`) — that doc's own measurement todo should reuse this
       doc's already-proven method (the 2026-08-14 23:33 cluster below, where 3/5 counted losses were confirmed
       benign `reason="manual"` recycles) rather than re-deriving it from scratch.
+- [x] [INFRA] P1. Root-cause + fix `death_forensics.py`'s `check_external_kill` — its `ausearch -ts`/`-te` date
+      format (4-digit-year, single combined token) was silently rejected by this VM's ausearch build on EVERY call
+      since the module shipped 2026-08-15, masking every "could not check" as ausearch flakiness rather than a real
+      bug. Fixed 2026-08-20 (2-digit-year, date+time as separate argv tokens, live-verified against the actual VM) —
+      `agent-orchestrator@5d48a60b5b`. Deployed (service restarted 06:00:47Z, after the fix landed) but not yet
+      exercised by a genuine post-fix unexplained death.
+- [ ] [INFRA] P1. Get a real OOM-vs-external-kill verdict from `check_external_kill` now that it actually runs —
+      the next `death_class=unexplained` row should show `external_kill.checked=true`; if none do within a
+      reasonable window, the fix itself needs re-verifying live rather than trusted on read-back.
+- [x] [INVESTIGATE] P1. **New lead, 2026-08-20; read to a NEGATIVE result same day — no shared dangerous operation
+      found, unlike the original bats-test-tmux-fixture bug.** Fleet-wide query (last 24h) confirms this is NOT
+      slot-specific — slot 2 is 16/16 unexplained, slot 4 10/15, slot 1 9/15, slot 10 8/15, slot 11 6/7
+      (`tmux_session_lost` grouped by slot_id). A repeat-dying-task lead looked promising (several task IDs died
+      across DIFFERENT slots: `backlog_500_malformed_depends_on_comment-81a8666e249d` 4x/slots-10-1-4,
+      `instruments_schema_not_locked_versioned-0ca8f7f490f2` 3x/slots-4-10,
+      `defi_cefi_venue_chain_axis_contamination-09ac3d7aa6dc` 2x/slots-11-10,
+      `deployment_api_client_factory_positional_project_id_bug-6f193540d7f3` 2x/slots-13-4,
+      `cross_cutting_satellite_ao_dispatch_batch17-6a8c25390694` 2x/slot-10-twice) — but reading all 5 tasks' actual
+      `plan_ref` docs found no shared operation: they range from a pure Python code read/fix (deployment-api), to a
+      schema/contract edit (instruments-service, `sequential: true`), to bounded `gsutil`/live-SSH cron verification
+      (defi/cefi), to a GitHub Actions YAML edit + `gh workflow run` dispatch (cross-cutting CI), to backend
+      hardening of `agent-orchestrator`'s own `regen_backlog_from_plan.py`. None touches tmux directly, none runs an
+      unscoped test fixture, none matches the original bug's shape. The only thing genuinely common to all 5 (and to
+      virtually every AO-dispatched coding task) is running `quality-gates.sh` before shipping — not a distinguishing
+      signal. **Revises the lead**: this argues AGAINST a task-content trigger and back toward host/timing-driven —
+      the repeat-task pattern is more likely explained by "AO keeps redispatching the same still-open task, and
+      whatever kills sessions is roughly uniformly likely per session-second" than by the task's own work causing it.
+      The pane_tail captured at each death (`pane_tail_len=152`, identical across different slots/tasks) is tmux's
+      generic "Pane is dead (status N, <time>)" placeholder banner, not real scrollback — confirms (again) that no
+      forensic signal survives in the pane itself; the live `check_external_kill`/`check_oom_kill` fix (see the todo
+      above) catching the next death live is still the most promising remaining path, not further task-content
+      reading.
+
+- [x] ✅ [INFRA] P0. **ROOT-CAUSED + FIXED, 2026-08-20 — CORRECTS the "no shared trigger" negative result two todos
+      above.** That earlier read was of PLAN-DOC CONTENT only, which genuinely shows no shared mechanism — the real
+      trigger only shows up in the live Claude Code transcript, not the task's plan doc. Downloaded + read the full
+      JSONL transcripts for slot 1 (two deaths), slot 7, and slot 32's most recent teardown (operator-requested,
+      chunked via SSM — no direct scp/S3 path is available under this workspace's GCS/S3-CLI guardrail). Findings:
+      **slot 7 (06:43:12) and slot 32 (06:15:50) are NOT genuine deaths** — both transcripts end with a clean
+      `/api/slots/N/done` call and the standard `one_task_per_session` reset response; slot 32 was already correctly
+      `intentional_teardown`, but **slot 7 was misclassified `unexplained`** — its reset landed at 06:41:41 and the
+      tmux kill was detected 91s later (06:43:12), 1 second past `death_class`'s 90s lookback window for matching the
+      `worker_one_task_per_session_reset` signal — a second, concrete repro of the burst_size/death_class
+      undercounting gap already tracked above. **Slot 1's 06:23:58 SIGTERM death remains genuinely unexplained** — no
+      orphan-reap event nearby, silent for ~102s before the kill, no dangerous command in the transcript tail.
+      **Slot 1's 07:06:02 SIGKILL death — ROOT CAUSE FOUND.** Transcript shows the agent's 4th attempt at
+      `b21_distinct_values_noncanonical_live-d9a1e4c73ce4`, launching a `dex_swaps` retirement script via
+      `setsid nohup uv run python ... --apply &; disown` specifically because "2 prior harness-compact kills" had
+      already taken the same job down. `activity_log` shows `orphan_process_reaped pid=372995 age_seconds=306` at
+      07:04:56, ~1s after the pane's own death — `server/orphan_reap.py`'s `pid_shares_tmux_session` exemption (built
+      for exactly this "worker's own detached background job" case,
+      `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`) assumes plain `nohup` detachment,
+      which preserves the original session id; `setsid` creates a BRAND NEW session id by definition, permanently
+      defeating that exemption — confirmed via the exemption function's own docstring. `boot_grace_seconds=300`
+      (confirmed live config) explains the precise ~300-310s age clustering. **Confirmed NOT rare or isolated** — same
+      signature (age 300-370s) hit slots 1, 10, 32, and **slot 33 sixteen times in under an hour** in the same 3h
+      window, fleet-wide, live, right now. Fixed: `sweep_orphan_processes` now also exempts a candidate whose own OS
+      start time is at/after the slot's `SlotRow.last_spawned_at` (bumped once per respawn) — a dispatch-timeline
+      check that needs no SID/PGID/ancestry signal (impossible to recover after `setsid` by construction) and cannot
+      widen the existing stale-sibling reap (a candidate predating the slot's last respawn is unaffected, regression-
+      tested). Shipped `agent-orchestrator@67b68dac39`, 2 new tests, quality-gates.sh green (468 dashboard + full
+      pytest), landed + ancestry-verified on `live-defi-rollout`. Does NOT explain the slot-1 SIGTERM death or every
+      remaining `unexplained` row fleet-wide — this closes ONE confirmed, live, currently-firing mechanism, not the
+      whole bucket.
+- [ ] [INFRA] P2. Audit whether `reap_dead_slot_worker_tree` (the REACTIVE, always-live twin of
+      `sweep_orphan_processes`, fired the instant `TmuxPruner` confirms a slot's session is gone) needs the same
+      `setsid`-safe dispatch-timeline exemption — this session's fix only touched the periodic sweep, the path that
+      actually killed pid 372995. `reap_dead_slot_worker_tree` has no `pid_shares_tmux_session` check at all today
+      (only `boot_grace_seconds`), so a legitimately-detached `setsid` job surviving a genuine session death would
+      currently be reaped unconditionally on the very next tick — worth the same protection, scoped separately since
+      it's a different (always-live, not dry-run-gated) trust level.
 
 ## Progress Log
 
@@ -707,3 +787,30 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:90a1ddb246972541]: KEEP-NA, valid — live-incident investigation with 4 self-corrected premature-closure claims and shipped fixes across 3+ layers; converges with the 2026-08-17 na-eligibility-audit verdict. Remaining 10 open items are genuine unresolved root-cause work (death #2 at 14:30:28 still unexplained) or [OPERATOR]-tagged live-infra decisions; the 32-item condensed Todo section's count (22 closed + 10 open) verified consistent.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (interactive session, slot 1)**: operator asked to root-cause a specific slot-1 death and whether it's
+  genuinely agents dying vs. the backend reaping them mid-task. Live-queried `check-ao-recent-deaths.sh --slot 1` for
+  the 05:17:50Z death: `death_class=unexplained`, `tmux_server_alive=True` (rules out this doc's confirmed
+  kill-server signature), `burst_size=1`, no OOM (`cgroup oom_kill=0`), no core dump (rules out a self-inflicted
+  crash), pane exited status 143 (SIGTERM) 434s into a live task — genuinely mid-task, not a redispatch-counting
+  artifact, and not the fleet's own watchdog/reaper (`death_class` would show `intentional_teardown` if it were).
+  While investigating, found `death_forensics.py`'s `check_external_kill` (shipped 2026-08-15 to answer exactly
+  "OOM vs external kill" for these unexplained deaths) had been non-functional since it shipped — see the new todo
+  above for the fix, shipped `agent-orchestrator@5d48a60b5b`. Operator then asked to confirm this isn't slot-1-specific
+  — fleet-wide query (see new `[INVESTIGATE]` todo above) confirmed it isn't: 17 slots show `tmux_session_lost` in the
+  last 24h, several majority-`unexplained`, and several specific task IDs died repeatedly across DIFFERENT slots —
+  the strongest new lead this session, since a death that follows the TASK rather than the HOST points away from a
+  per-slot/per-host cause. Not yet investigated what those specific tasks do; filed as the next todo rather than
+  guessing. Separately (adjacent finding, not this doc's scope): `quality-gates.sh`'s dashboard gate only checked
+  `node_modules` existence, not sync with `package.json` — any slot pulling a commit that adds a dashboard dependency
+  without a fresh `npm install` hit a confusing vite crash instead of the intended fail-closed message; fixed in the
+  same commit as the ausearch fix (mtime-based staleness detection was tried and rejected — sub-second write-order
+  races flagged a fresh install as stale; landed on a plain per-declared-dependency filesystem check instead,
+  verified against both a healthy and a simulated-stale state).
+- **2026-08-20 (interactive session, slot 1, continued)**: operator asked to download the full transcripts for slots
+  1/7/32's mid-task deaths and diagnose properly — see the new `[INFRA] P0` todo above for the full finding
+  (slot 7/32 false-positive teardowns; slot 1 SIGKILL root-caused to `orphan_reap`'s SID exemption not covering
+  `setsid` detachment, fixed `agent-orchestrator@67b68dac39`; slot 1 SIGTERM still genuinely unexplained). This is
+  the first session-CONTENT-level (not plan-doc-level) explanation found for any of the "unexplained" deaths since
+  the original kill-server root cause — worth re-reading live transcripts for future unexplained-death
+  investigations before assuming a fresh mechanism, since plan-doc content alone already proved insufficient once
+  (the "no shared task trigger" negative result two todos above, superseded by this entry).

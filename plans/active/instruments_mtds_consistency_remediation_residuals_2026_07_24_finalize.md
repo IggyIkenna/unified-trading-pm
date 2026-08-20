@@ -141,3 +141,21 @@ last_updated: "2026-08-11"
   `--apply-prod --confirm-prod-write` + post-verify. This REVIEW todo stays `- [ ]`; no archival performed; skipping
   GATED — the blocker is VM-execution work owned by the issue doc's own SCRIPT todo (e), out of this doc-only review
   todo's scope.
+- **2026-08-20 (slot 1)**: Re-dispatched the REVIEW todo; re-verified fresh rather than trusting slot 4's same-day
+  check. Same conclusion, precondition still unmet — N5r/N6r (e) has genuinely never been executed: (1)
+  `gcloud compute instances list` — 0 matches for `defi-manifest-projection-` or `canonical-migration-defi-rebuild-`
+  in the live fleet (36 running VMs total, none matching either prefix); (2) UTL
+  `get_storage_client().list_blobs('deployment-scripts-central-element-323112', prefix='n5r-n6r-projection/')` — 0
+  objects; (3) 0 projection-related `vm-logs/` blobs; (4)
+  `defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md` todo (e) still `- [ ]` open. **Correction to slot
+  4's same-day note**: the live AO backlog does NOT show task
+  `defi_manifest_venue_itype_canon_swap_execution-4a5cafd06bcb` as freely dispatchable — `GET /api/backlog` shows it
+  `status: queued` but `priority: 999` with `blocked_reason: "prerequisite
+  auto_unpark__defi_manifest_venue_itype_canon_swap_execution-4783407decd9 not set"` (parked since `queued_at:
+  2026-08-12T19:46:06Z`, i.e. 8 days with no forward movement). This matches RULES.md § 4's "park a task" shape
+  (priority 999 + a gating condition that must be manually flipped `true`), not a transient GATED-skip cooldown
+  (those cap at `tuning.dispatch_cooldown_max_eta_minutes`, default 180min, which would long since have expired). No
+  `/api/prerequisites` listing endpoint was reachable to confirm who set it or why; flagging rather than guessing —
+  worth an operator/main look at whether this park is intentional or a stale leftover that should be unparked so the
+  dispatcher can route it again. This REVIEW todo stays `- [ ]`; no archival performed; skipping GATED — the blocker
+  is VM-execution work owned by the issue doc's own SCRIPT todo (e), out of this doc-only review todo's scope.

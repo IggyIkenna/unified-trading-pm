@@ -14,7 +14,8 @@ summary: >-
   `ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md` trigger. Not verified live
   since 2026-08-07 — this doc isolates the question so it can be picked up (or closed as moot/self-resolved) without
   carrying the rest of the parent doc's now-fully-resolved content.
-status: open
+status: archived
+superseded_by: /codex/08-workflows/ci-cd-flow.md
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -53,6 +54,9 @@ resolved_by:
 locked_by:
 ---
 
+> **🗄️ ARCHIVED 2026-08-20** — re-verified live: closed as a one-off, did not recur, no root-cause pass needed. See
+> Disposition below for the evidence; read `/codex/08-workflows/ci-cd-flow.md` for current promote-pipeline guidance.
+
 # Promote-PR non-supersession after a gate-passing greeks-service re-run
 
 ## What was observed (2026-08-07, not re-verified since)
@@ -87,11 +91,34 @@ recurred may simply be closable as a one-off, not worth a root-cause pass.
 
 ## Todos
 
-- [ ] [DEVOPS] P3. **Re-verify live whether this is still relevant** — check `gh pr list --repo IggyIkenna/greeks-service
-      --search "chore(promote)"` for any stale/superseded promote PR, and grep recent `ldr_to_main_fleet_promote.sh`
-      run logs for the same `Promoted (0)/Blocked (0)/Conflicted (0)` shape on any repo since 2026-08-07. If it never
-      recurred and no stale PR remains, close this doc as a one-off, not investigated further. If it has recurred,
-      root-cause between the two named hypotheses above.
+- [x] ✅ [DEVOPS] P3. **Re-verified live 2026-08-20 — one-off, did not recur, closed.** `gh pr list --repo
+      IggyIkenna/greeks-service --search "chore(promote)" --state all` returns 0 open matches; PR #420 itself is
+      `CLOSED` (never merged, `updatedAt=2026-08-07T08:10:33Z`), i.e. no stale PR remains. `gh pr list --state all
+      --limit 20` on the same repo shows 20 consecutive `chore(promote)` PRs #484-#503 spanning 2026-08-17→2026-08-20,
+      19 `MERGED` cleanly and 1 (`#485`) `CLOSED` as an expected same-head duplicate-supersession six seconds after its
+      twin `#484` merged (not the `Promoted(0)/Blocked(0)/Conflicted(0)` shape) — the promote pipeline has run
+      continuously and cleanly for this repo since. `gh api repos/IggyIkenna/greeks-service/compare/main...live-defi-rollout`
+      shows `ahead_by:386, behind_by:0` — a clean fast-forward relationship, no divergence/stuck state. Fleet-wide,
+      `ldr-to-main-promote-fleet.yml` and `promote-fleet-startup-failure-monitor.yml` runs sampled from 2026-08-20 are
+      all `conclusion: success`. Corpus-wide grep of `plans/active/issues/` + `plans/archive/issues/` for the same
+      failure shape ("Promoted (0)", "non-supersession", "process_repo"/"_done call", "stale promote PR") since
+      2026-08-07 turns up no other occurrence on any repo. Several unrelated-but-adjacent hardening fixes landed in
+      `ldr_to_main_fleet_promote.sh` within days of the observation (`dbaa7b463a` 2026-08-08 — sweep of orphaned
+      `promote/<repo>/*` refs left by manual PR close; `c2f499d082` — auto-recheck of a terminally-red PR instead of
+      sitting stuck; `23499c954f` — staggered per-repo fan-out) that plausibly cover this gap's symptom class even
+      though neither of the doc's two named hypotheses was directly confirmed/refuted. Per the todo's own stated
+      closing criterion ("if it never recurred and no stale PR remains, close this doc as a one-off, not investigated
+      further"): closed. No code change required or shipped — this was a pure re-verification, no repo touched.
+
+## Disposition
+
+**Closed as a one-off, 2026-08-20.** The 2026-08-07 non-supersession observed on greeks-service PR #420 never
+recurred on this repo or any other in the 13 days since, no stale ref/PR remains, and the promote pipeline has run
+cleanly and continuously for greeks-service (20 consecutive promote PRs, 19 merges + 1 expected duplicate-close) and
+fleet-wide since. Neither of the doc's two hypotheses (`ONLY_REPO`-mode-specific gap vs. a frozen-head ref-creation
+race) was root-caused — both remain unconfirmed — but per the doc's own stated bar, an 11+-day-old single occurrence
+with zero recurrence does not warrant a root-cause pass. If this shape recurs again, re-open referencing this doc's
+evidence trail rather than re-deriving it from scratch.
 
 ## Progress Log
 
@@ -110,3 +137,15 @@ recurred may simply be closable as a one-off, not worth a root-cause pass.
   judgment, no credential gap, no dependency block). No conflict-check needed (no RECLASSIFY candidate). No
   stale-checkbox correction needed (todo accurately reflects zero investigation done since extraction).
 - **context-scout 2026-08-20**: refreshed context_scope (4 entries).
+- **T4-execution-settlement (2026-08-20)**: re-verified live per the open todo's own instructions (see evidence in the
+  flipped todo above) — no stale PR, no recurrence anywhere in the corpus or fleet since 2026-08-07. Closed as a
+  one-off; todo flipped `[x]`, doc archived per the CLAUDE.md "archive the moment a plan/issue is genuinely done" hard
+  rule (0 open todos, unlocked). `superseded_by: /codex/08-workflows/ci-cd-flow.md` (no new durable contract was
+  established by this closure — nothing to add to codex beyond what that SSOT already governs). Moved
+  `plans/active/issues/` → `plans/archive/issues/` (flat, per `issue-doc-lifecycle.md`). Referrer check: 3 docs
+  mention this path in body prose (`plan_reconciler_findings_ci_2026_08_19.md:184`,
+  `plan_reconciler_findings_prediction_2026_08_18.md:297`) or in `context_scope:` (`ag_closeout_audit_ci_parked_2026_08_16.md:56`)
+  — none has it in the mechanically-ratcheted `related:` frontmatter field (`check_active_refs_archived_plans.py`'s
+  actual enforcement scope), verified directly via `sed -n '/^related:/,/^[a-z_]*:/p'` on each of the 3, so nothing
+  required fixing for the archival ratchet; the body-prose mentions are correct as dated historical audit record and
+  were left as-is.

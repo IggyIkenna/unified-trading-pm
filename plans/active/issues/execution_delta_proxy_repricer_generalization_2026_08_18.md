@@ -692,3 +692,50 @@ appears to have zero production callers in this pass. Also found: the config's `
 stale (DeFi is never SAME_CANDLE_EXIT per `hold-policy.md`); the functional `execution_mode: continuous` field is
 correct. Neither the wiring gap nor the naming mismatch was fixed here (out of this pass's owned files); both
 tracked as new todos. Nothing in either correction was built — design/finding only.
+
+### 6. UNDERLYING is a first-class axis — reference price is per underlying, not per instrument
+
+Operator ruling 2026-08-20, refining sections 1-3 above.
+
+**Reference price is NOT one per instrument.** Many instruments move off the same underlying:
+
+- A thousand option instruments all move on their sensitivity to **one** underlying.
+- A base strategy per coin underlying — BTC; or ETH versus staked ETH versus wrapped ETH — where every leg shares
+  the **same ETH underlying**.
+
+So the structure factorises:
+
+| Level | Carries |
+| ----- | ------- |
+| **Underlying** (M of them) | the **reference price** |
+| **Instrument** (N of them, N >> M) | its **delta / gamma / theta sensitivity to that underlying**, plus credit and adjustment |
+
+**Why this matters for the fast path — the point of the ruling.** One move in an underlying can be propagated to
+every instrument that references it, via each instrument's own sensitivity approximation. Execution therefore does
+**far less work per tick**: it recomputes from M underlying moves rather than maintaining N independent reference
+prices. The operator's words: *"it just means you have to put less effort in execution services to do the
+approximation on the fast path, because one move in an underlying can affect more than one instrument."*
+
+**This generalises what `DeltaProxyRepricer` already does.** Its existing arithmetic is already underlying-shaped —
+`effective_delta = delta + gamma * underlying_move`, `price_adjustment = underlying_move * effective_delta`. And
+the current wiring's known limitation is precisely the degenerate case of this model: `QuoteInstruction` defaults
+`underlying_instrument_id = instrument` and `delta = 1.0`, i.e. every instrument is its own underlying with unit
+sensitivity — correct for spot/perp self-underlying, wrong for everything else. This ruling is the general case
+that defaulting was standing in for.
+
+**Open design question worth settling before build — the matrix and the underlying factorisation overlap.**
+Instruments sharing an underlying are already near-maximally coupled through their deltas, which is the
+correlation = 1 case of § 4. So the N x N adjustment matrix and the underlying model express overlapping
+information. Decide explicitly whether: (a) the matrix subsumes the underlying axis, (b) the underlying axis
+carries the shared component and the matrix carries only the **residual / cross-underlying** correlation, or
+(c) both are maintained independently. Option (b) is the natural reading of this ruling and would shrink the
+matrix substantially — but it must be a decision, not an accident. Building both independently would duplicate the
+same concern in two places.
+
+- [ ] [DESIGN] P0. **Make underlying a first-class axis in the cache design** — reference price keyed by
+      underlying, per-instrument sensitivity (delta/gamma/theta) referencing it. Supersedes any per-instrument
+      reference-price shape.
+- [ ] [DESIGN] P0. **Rule on the matrix-vs-underlying overlap** (options a/b/c above) before either is built.
+- [ ] [BACKEND] P1. **Retire the `underlying_instrument_id = instrument`, `delta = 1.0` default** once the general
+      model lands — it is the self-underlying special case, and leaving it as a silent default will hide missing
+      sensitivity data exactly the way other silent fallbacks have this week.

@@ -158,19 +158,28 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       Source: `plans/active/issues/subagent_wrote_to_foreign_checkout_bare_repo_path_2026_08_18.md` item 3. **DONE — 0
       foreign sub-agent writes found** across 10 swept dirty files (all legit main/review/operator artifacts; see
       Progress Log 2026-08-19).
-- [ ] [BACKEND] P2. Harden the na-eligibility-audit same-tranche concurrent-dispatch case: implement a dispatch-time
+- [x] ✅ [BACKEND] P2. Harden the na-eligibility-audit same-tranche concurrent-dispatch case: implement a dispatch-time
       lock per tranche in `server/plan_health.py::dispatch()`, OR narrow every na-eligibility-audit Phase-3
       file-touching step to `Edit`-only (never `Write`) for any file that might already exist from a
       concurrent run. Cite `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4's finding (same gate-exemption
       class for `mode="reconcile"`) as related but do not duplicate its own tracked fix. Done when: a synthetic
       concurrent-dispatch test proves the chosen mitigation prevents the collision class described in
       `na_eligibility_audit_same_tranche_duplicate_concurrent_dispatch_2026_08_18.md`. Repo: agent-orchestrator.
-- [ ] [SCRIPT] P2. Query `ActivityRow` for `tmux_session_lost` events over the trailing 7 days, bucket into rolling
+      **DONE-BY-CITATION 2026-08-20 (slot 4) — agent-orchestrator@bfe8fb28a0** (per this plan's own 2026-08-19
+      Progress-Log note). Verified fresh: `_TRANCHE_GATED_MODES` = {reconcile, na_eligibility, ag_closeout}
+      (server/plan_health.py:435) and `dispatch()` gates those modes via `_tranche_dispatch_gate(session,
+      mode=mode, tranche=tranche)` at the call site; regression test
+      `test_tranche_dispatch_gate_covers_na_eligibility_and_ag_closeout` (tests/test_plan_health.py:2655) plus
+      dispatch()-level positive/negative tests (`test_dispatch_reconcile_mode_coalesces_no_spawn_when_tranche_gate_live`,
+      `test_dispatch_na_eligibility_mode_different_tranche_still_spawns`) prove the same-day same-(mode, tranche)
+      coalesce that closes the agt-72629d/agt-9095fb defi collision class; commit `bfe8fb28a0` confirmed on
+      origin/live-defi-rollout.
+- [x] ✅ [SCRIPT] P2. Query `ActivityRow` for `tmux_session_lost` events over the trailing 7 days, bucket into rolling
       10-min windows matching `_count_excluded_losses`'s own method, count how often the 3-in-10-min threshold is
       crossed outside any known incident window, and for each crossing cross-reference every member against a
       preceding `reason="manual"` `SESSION-TEARDOWN` log line within ~60s. Done when: a measured baseline exists
       (crossing frequency + benign-recycle share) to inform whether `tmux_session_loss_rate_min_count`/
-      `_window_seconds` needs raising. Repo: agent-orchestrator.
+      `_window_seconds` needs raising. Repo: agent-orchestrator. **DONE — see Progress Log 2026-08-20.**
 - [ ] [UI] P2. Exclude human-kind slots (`config.human_slot_ids()`) from the main agent-orchestrator dashboard Fleet
       table's per-slot role-badge computation (NOT the dedicated `HumanFleet.tsx` page, which already excludes them
       correctly). Done when: a live dashboard check shows slot 9001 (and any other human slot) absent from the main
@@ -238,3 +247,14 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   (`scripts/infra/resource-watchdog/resource-watchdog.sh.bak_pre_urgent_fix`, `slack-data-pipeline-alerts-24h.json`).
   The 2026-08-18 Elysium incident remains the only known occurrence; the mechanical-guard item (source doc todo 2)
   stays NA as the residual.
+- **2026-08-20 (slot 4)**: Item 2 closed **done-by-citation** — the dispatch-time tranche gate
+  (`_tranche_dispatch_gate`/`_last_tranche_dispatch`, `agent-orchestrator@bfe8fb28a0`, the 2026-08-19 shipment) already
+  implements the chosen mitigation (the `(mode, tranche, day)` coalescing gate, not the Edit-only alternative). Verified
+  fresh rather than trusting the note: `_TRANCHE_GATED_MODES` explicitly includes `na_eligibility`
+  (server/plan_health.py:435) and `dispatch()` reaches the gate for those modes; the named regression test
+  `test_tranche_dispatch_gate_covers_na_eligibility_and_ag_closeout` (tests/test_plan_health.py:2655) exercises the
+  exact same-(mode, tranche=defi) coalesce that the 2026-08-18 agt-72629d/agt-9095fb collision class describes; commit
+  `bfe8fb28a0` confirmed on origin/live-defi-rollout. Related-but-distinct from
+  `plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` todo 4 (same generalized gate, shipped in the same commit) —
+  not duplicated here per the 2026-08-19 note.
+- **2026-08-20 (slot 10)**: Item 3 measured against the live `GET /api/activity?type=tmux_session_lost&since=2026-08-13T07:00:00Z` ActivityRow slice (2,335 raw rows through 2026-08-20 07:20Z). Applying the canary's current `_count_excluded_losses` rules using the live agent/slot snapshots removed 575 rows (one-shot/scheduled lifecycle or idle-slot exclusions), leaving 1,760 qualifying losses, or **10.46/hour**. Simulating the canary's 120-second tick over a 600-second rolling window at threshold 3 produced **194 threshold-crossing episodes in seven days (27.71/day)**; removing the only explicitly documented incident window (2026-08-14 23:30–23:40Z around the 23:33:47–48Z cluster) still produced 194, so the frequency is not explained by that known incident. The 194 episodes contained 1,048 crossing-member rows; only **8 (0.8%)** had a preceding journal `SESSION-TEARDOWN ... reason=manual` line for the same slot within 60s (36 matching manual teardown lines were available in the seven-day journal query). This is strong evidence that 3-in-10-min is routinely crossed, while the journal cross-reference is a conservative benign-recycle lower bound because service journal retention exposed only 36 manual lines; the follow-up threshold/exclusion decision remains in the source issue and is not made by this measurement.

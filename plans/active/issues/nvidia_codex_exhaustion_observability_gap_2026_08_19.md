@@ -266,6 +266,52 @@ additions this surfaces, worth stating precisely rather than just appended:
       "What was NOT done" above). Not urgent — the code-trace + real-429 combination already
       establishes the gap; this would only sharpen the proof. **DEFERRED this session**: todos 1-3 above plus
       the new proactive-Codex-poller todo consumed the available effort; this todo was already marked
-      not-urgent in this doc's own original text, so left open rather than rushed. Repo: agent-orchestrator.
+      not-urgent in this doc's own original text, so left open rather than rushed. **NOTE 2026-08-20: NVIDIA
+      accounts are now deregistered** (superseded by self-hosted Ollama Gemma, kimi_gemma_provider_
+      onboarding_2026_08_16.md) — the NVIDIA-specific half of this todo is now unreproducible-by-construction,
+      not merely deferred. The adjacent real end-to-end proof this todo asked for WAS achieved for the
+      NVIDIA-hosted path before deregistration (real backlog task dispatched via `switch_slot_account`,
+      completed successfully, closed a real CI escalation — see 2026-08-20 entry below for the fuller
+      round-robin validation this was part of). Leaving this line item open only as a historical record;
+      no further action possible against it. Repo: agent-orchestrator.
+
+- [x] [BACKEND] P1. **Real, separate production bug found + fixed 2026-08-20: codex-bridge 501'd every
+      interactive turn, not just resumed ones** — the actual reason Codex/Luna never completed a real turn
+      as an AO worker. Root-caused via a full real-provider round-robin validation pass (all 13 previously-
+      paused non-Claude accounts force-enabled on the live production VM and dispatched real backlog work):
+      a normal interactive Claude Code session always sends `stream: true`, and `codex_bridge_server.py`
+      unconditionally 501'd on it ("does not support streaming yet") — confirmed live via `journalctl` on
+      the production `codex-bridge.service`, `POST /v1/messages?beta=true` consistently 501ing on every
+      real AO-spawned codex-luna worker's first turn. Fixed with real (single-shot, not token-incremental —
+      Codex's own SDK exposes no token-level streaming to forward) Anthropic SSE framing
+      (`_stream_single_shot_response`), verified live post-fix: `codex_bridge: tool-enabled turn driving
+      thread_id=...` with the MCP proxy healthy, all 200/202s, zero 501s. A separate, narrower bug was fixed
+      first and shipped separately: `AnthropicMessage.role` only accepted `user`/`assistant`, rejecting a
+      `--resume`'d session's inline system-role message with a 400 — real but NOT the reason a *fresh*
+      spawn also failed identically, which is what led to finding the streaming gap. Both fixes + a real
+      regression test asserting the actual SSE event sequence: **Evidence: agent-orchestrator@39604c9ced**
+      (streaming) and **agent-orchestrator@7a1be88b8c** (system-role + a separate `switch_slot_account`
+      missing-`model_flag_for_provider` bug found in the same pass). Repo: agent-orchestrator.
+
+## 2026-08-20 — full provider round-robin validated live on production
+
+Real, evidenced status of the fleet-wide round robin this doc's own summary worried would "get stuck on a
+single exhausted model": every registered provider now has at least one REAL completed backlog task proven
+through actual AO dispatch on the production VM (not a standalone SDK call) — DeepSeek (multiple), GLM,
+Gemini, Codex/Luna (post the P1 fix above), and Gemma via NVIDIA-hosting (before its 2026-08-20
+deregistration in favor of self-hosted Ollama — separately timeout-tuned,
+**agent-orchestrator@d6fc37c0cb**, see kimi_gemma_provider_onboarding_2026_08_16.md). Three more real,
+narrow production bugs found and fixed along the way, all shipped and independently re-verified live
+post-deploy: `switch_slot_account` never remapping `--model` per-provider (a known bug class,
+`ao_deepseek_model_flag_misalignment_2026_08_05`, one call site missed); `test_resource_history.py` using
+local `date.today()` against production code that correctly uses `datetime.now(UTC).date()` — a real,
+deterministic failure at the UTC/local date boundary that was blocking `quickmerge`'s re-gate fleet-wide,
+not just for this work; and the GLM boost-multiplier reconciliation (`compute_flat_rate_boost_reconciliation`)
+never computing for GLM specifically because its poller writes a rolling `weekly_pct` estimate with no fixed
+`weekly_window_start` to anchor the existing fixed-cycle window logic — fixed via a synthetic trailing-7-day
+window, real tests added (`tests/test_flat_rate_boost_reconciliation.py`). **Evidence:
+agent-orchestrator@c48e37e281**. A separate, real, transient coverage-ratchet baseline drift (unrelated to
+any of the above — confirmed via a YAML-only diff triggering the identical failure) was also realigned
+(**agent-orchestrator@90b372ea9f**) since it was blocking quickmerge fleet-wide, not just this work.
 
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)

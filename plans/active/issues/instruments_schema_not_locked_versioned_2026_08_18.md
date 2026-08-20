@@ -99,7 +99,7 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       (`unified-api-contracts/unified_api_contracts/internal/schemas/_instrument_catalogue_contract.py`). Depends on
       the first todo. Repo: unified-api-contracts. Done-when: `CEFI_INSTRUMENT_CATALOGUE.schema_version` (and the
       other 4 asset-group contracts) resolve to the same value as `INSTRUMENTS_SCHEMA_VERSION`.
-- [ ] [DATA] P0. **Reconcile `INSTRUMENTS_PARQUET_SCHEMA` with what the catalogue writer actually emits — this
+- [x] ✅ [DATA] P0. **Reconcile `INSTRUMENTS_PARQUET_SCHEMA` with what the catalogue writer actually emits — this
       now gates part 4.** Measured 2026-08-20: writer emits 41 columns, contract declares 85, and 4 of the 6
       required columns (`instrument_key`, `symbol`, `available_from_datetime`, `timestamp`) are emitted by NO asset
       group. Decide which side is authoritative — the schema's `instrument_key`/`*_datetime` naming, or the
@@ -107,6 +107,11 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       writer change in instruments-service if the schema wins). Done-when: a real catalogue frame from
       `build_instrument_catalogue.py` produces ZERO violations from `validate_dataframe` against its own
       asset_group's contract.
+      — unified-api-contracts@910d35da (2026-08-20): writer authoritative. `_instrument_catalogue_contract.py` now
+      declares the 41 rolled-up catalogue columns (CATALOG_COLUMNS) explicitly under
+      `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION`, keyed on `instrument_id`; new `test_instrument_catalogue_contract.py`
+      asserts a writer-shaped frame validates with zero violations. QG green (301s), quickmerge landed +
+      ancestry-verified on LDR.
 - [ ] [DATA] P2. **BLOCKED on the part-0 reconciliation above** — Wire the per-asset-group `SchemaContract`s to the instruments-service write path — today
       `CEFI_INSTRUMENT_CATALOGUE` / `DEFI_INSTRUMENT_CATALOGUE` / `TRADFI_INSTRUMENT_CATALOGUE` /
       `PREDICTION_INSTRUMENT_CATALOGUE` / `SPORTS_INSTRUMENT_CATALOGUE` are registered into `CONTRACT_REGISTRY` but
@@ -119,6 +124,13 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
 
 ## Progress Log
 
+- **2026-08-20 (slot 15, part 0)**: reconciled the instrument-catalogue contract with the writer. Decision: the
+  writer (`build_instrument_catalogue.py::promote_catalogue`, 41-col `CATALOG_COLUMNS`) is authoritative — the
+  `instrument_catalogue` SchemaContract was synthesised from the 85-col per-date `INSTRUMENTS_PARQUET_SCHEMA`, not
+  the rolled-up catalogue it actually guards. `_instrument_catalogue_contract.py` now declares the 41 columns
+  explicitly under `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION` (decoupled from `INSTRUMENTS_SCHEMA_VERSION`), keyed on
+  `instrument_id`. New `test_instrument_catalogue_contract.py` pins zero violations on a writer-shaped frame.
+  Part 4 (wiring `validate_dataframe` at `promote_catalogue`) is now unblocked.
 - **2026-08-20 (slot 10 completion)**: shipped the part-2 lock implementation as
   `unified-api-contracts@d384e840b7`. The standalone checker hashes the ordered schema list with sorted per-column
   keys, compares it to `scripts/instruments_parquet_schema.golden.json`, and reports drift only when the live

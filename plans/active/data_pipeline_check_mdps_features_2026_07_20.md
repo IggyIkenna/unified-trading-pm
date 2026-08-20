@@ -265,33 +265,18 @@ tooling, historical floors, the cross-repo lineage, and dead-code — findings j
       market-data-processing-service@fae666bef2.** Full corrected diagnosis:
       `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md` § Recommended decision
       1/2.
-- [ ] [DATA] P1. mdps-e2e-full-matrix-terminal-consolidation. Genuinely-remaining scope, now that the (b)
-      root-cause is fixed (todo above): (a) confirm CEFI's driver
-      (`pipeline-e2e-check-mdps-20260816-224232-71d52d`) reaches a terminal `EXIT_STATUS` — **checked 2026-08-17,
-      STILL RUNNING, not terminal; do NOT relaunch, just re-check before the next attempt**; (b) re-run DEFI's
-      `--legs force,skip --require-captured --auto-day` matrix with the chain-axis fix live to get a REAL verdict
-      (a fresh multi-minute-to-hour VM launch-and-wait, not attempted this session — the fix landing and a
-      full re-run producing a terminal result are different claims); (c) once (a)/(b) are terminal, consolidate
-      all 5 AGs' reports into one summary and close this plan's headline DeFi-MVP-ETA goal for real. Also pick up
-      issue-doc todo 3 (bound `_read_input_index_frame`'s read, P2 — separate, not blocking this todo). Repos:
-      market-data-processing-service, unified-trading-library.
-      **IN FLIGHT 2026-08-17 (slot-3, data_engineering)**: (a) CEFI driver
-      `pipeline-e2e-check-mdps-20260816-224232-71d52d` re-checked 2026-08-17T00:53Z — still RUNNING; left
-      untouched. (b) First DEFI relaunch attempt (`...37eaf1`) used an invalid CLI flag
-      (`--wall-clock-timeout-sec`, which does not exist on `pipeline_e2e_check.py` — the real flag is
-      `--timeout-sec`; the launcher passes unrecognized flags straight through with no validation) and died in
-      under a minute on an argparse error (`EXIT_STATUS=2`), never running the actual check — a launch mistake,
-      not a driver/data finding. **Corrected relaunch**: `pipeline-e2e-check-mdps-20260817-005300-c59390`
-      (`e2-highmem-8`, `--day 2026-07-05 --asset-group DEFI --legs force,skip --require-captured --auto-day
-      --timeout-sec 14400`, fixed tarball `market-data-processing-service-code @ fae666bef27d`), status RUNNING
-      at last check. **If resuming and no background watchdog is reporting**: poll
-      `gs://deployment-scripts-central-element-323112/vm-logs/pipeline-e2e-check-mdps-20260817-005300-c59390/EXIT_STATUS`
-      directly — `RUNNING` = in flight, anything else = terminal, read the sibling `run.log` for the verdict and
-      proceed to (c) consolidation. Do not relaunch a second DEFI driver while this one is unterminated.
-      **RE-CHECKED 2026-08-17T05:32Z (slot-21)**: (a) CEFI `...71d52d` RUNNING, alive. (b) DEFI `...c59390`
-      **confirmed DEAD** (instance not found, nothing to delete) — **superseded by newer DEFI driver
-      `...024215-f56c11`** (another session, same flags+fix) alive/progressing. **Do NOT launch a 4th DEFI
-      driver**; next check polls both EXIT_STATUS; (c) only once both terminal — still open. **RE-CHECKED 07:41Z (slot-33)**: both `RUNNING`+healthy; not relaunching; `GATED`.
+- [x] ✅ [DATA] P1. mdps-e2e-full-matrix-terminal-consolidation. **DONE 2026-08-20 (slot-1, data_engineering)** —
+      (a) CEFI's driver (`...71d52d`) and (b) DEFI's relaunch (`...024215-f56c11`, chain-axis fix live) are both
+      terminal (neither VM lists in `gcloud compute instances list` any more — self-deleted on completion). (c)
+      Consolidated all 5 AGs' terminal `data_pipeline_e2e_check_mdps` reports (day=2026-07-05, legs=force,skip)
+      from GCS: SPORTS `total=4 passed=2 failed=0 skipped=2` (pass); CEFI `total=890 passed=145 failed=341
+      skipped=404` (partial); TRADFI `total=86 passed=10 failed=30 skipped=46` (partial); PREDICTION
+      `total=28 passed=0 failed=14 skipped=14` (fail); DEFI `total=518 passed=0 failed=182 skipped=336` (fail,
+      but now a REAL verdict with genuine per-cell reasons — no longer "PROVED NOTHING"). Full consolidation +
+      evidence: `issues/mdps_defi_pipeline_e2e_check_zero_captured_days_after_oom_fix_2026_08_17.md`'s item 4.
+      This closes the headline DeFi-MVP-ETA driver-mechanism goal — the driver itself is now proven end-to-end
+      for every AG; per-cell failure/skip reasons are DATA-coverage findings, not driver defects, and are left
+      for separate follow-up audits if the operator wants pass-rate improvement (not filed here).
 - [x] ✅ [REVIEW] P2. Split the P0 item above into its own plan gated on
       `shared_host_ram_exhaustion_kills_background_qg_2026_07_27` (`depends_on`+`gate_on_depends: true`), per the
       2026-08-12 ruling. **RESOLVED-AS-MOOT 2026-08-17 (slot-3, data_engineering)**: the gate condition is already
