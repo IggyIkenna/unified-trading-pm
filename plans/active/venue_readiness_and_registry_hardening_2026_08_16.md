@@ -242,6 +242,9 @@ declaration of **which tier is actually achievable**, and enforcement that nothi
       `get_granularity(venue, instrument_type, data_type)`, 412 populated `(venue, data_type)` cells across all 5 asset
       groups (instrument_type expressed as a default + per-instrument exceptions, not a literal per-triple row) — this
       todo is now purely a rendering task, not a data-population one.
+      Landed evidence reconciled: `unified-api-contracts@2f74bd8da2` shipped
+      `scripts/generate_venue_granularity_report.py`; the batch16 plan flip is recorded in
+      `unified-trading-pm@2bfe44b0e6`.
 
 ## STRATEGY CONSUMABILITY — a venue with no consumer is not ready (operator ruling 2026-08-16)
 

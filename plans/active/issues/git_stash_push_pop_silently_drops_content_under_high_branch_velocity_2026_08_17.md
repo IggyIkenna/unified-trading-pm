@@ -263,6 +263,8 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
       `stash pop` unconditionally after a `stash push` -- compare `git stash list | wc -l` before/after the push and
       only pop if the count actually grew, otherwise the push was a no-op and popping is popping someone else's
       stash. Both should be added explicitly to that guidance once confirmed.
+      Landed evidence reconciled: `unified-trading-pm@9e5e873988` (`scripts/dev/repro-stash-pathspec-cycles.sh`),
+      with the batch16 plan flip recorded in `unified-trading-pm@6b51046231`.
 - [ ] [DATA] P3. If this branch's commit velocity recurs regularly in future windows, consider relaxing the double
       branch-drift pre-commit check to a single check for small (<20 file) commits specifically, to reduce the race
       window. Check recurrence via `git log --since=... --until=... --oneline | wc -l` against the observed baseline
@@ -273,6 +275,8 @@ concurrency-safety problem this whole investigation had to rediscover and patch 
       `/codex/12-agent-workflow/host-concurrency-and-commit-provenance.md` -- this is now a CONFIRMED fix (not a
       hypothesis, unlike todo 1 above): any multi-cycle commit loop on a shared branch should default to
       `--rebase --autostash`, never `--ff-only`, for its per-cycle reconciliation pull.
+      Landed evidence reconciled: `unified-trading-pm@e022d3f0e3` (`/codex/05-infrastructure/per-tab-worktrees.md`),
+      with the batch16 plan flip recorded in `unified-trading-pm@d504fea424`.
 - [ ] [SCRIPT] P3. If a future task promotes a grind-style bulk-doc-edit tool to `scripts/`, port over the
       `/context-scout` skill's line-cap pre-check (Fifth finding above).
       This is so it does not need to be hand-diagnosed and manually patched per-file again.
