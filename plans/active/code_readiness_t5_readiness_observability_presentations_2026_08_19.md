@@ -323,7 +323,29 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Resolve the manifest-hygiene red findings. Evidence:
       `/plans/active/issues/manifest_hygiene_red_all_2026_08_17.md`, `/plans/active/issues/manifest_hygiene_red_all_2026_08_18.md`.
 - [ ] [BACKEND] P1. Resolve the empty-reprobe disagreement finding. Evidence:
-      `/plans/active/issues/empty_reprobe_disagreement_all_2026_08_17.md`.
+      `/plans/active/issues/empty_reprobe_disagreement_all_2026_08_17.md`. — **Found already resolved 2026-08-20**:
+      the issue doc's own `status: resolved` (corrected 2026-08-19), sole todo `[x]` with hard evidence
+      (`market-tick-data-service@bf9fe5c4cc`). Nothing to do.
+- [x] [BACKEND] P0. **No orphans** (epic DoD item, `system_readiness_master.md`) — run the new
+      `/shard-utilisation-sweep` skill (consumption verdict per venue/data_type/instrument_type/chain, opposite
+      direction from the existing GCS→manifest orphan sweeps; never emits a delete suggestion). **RUN 2026-08-20**
+      against `coverage.json` date=2026-08-20, 3,965 shard cells: **venue 158 consumed / 22 not_consumed / 1
+      unverified · data_type 18/7/43 · instrument_type 21/3/103 · chain 17/0/10**. Genuinely actionable
+      `not_consumed` findings (high confidence, registry vocabulary confirmed adequate): **22 venues absent from
+      `VENUE_TO_ASSET_GROUP`** (FOOTBALL 43 cells, FOOTYSTATS 27, AAVEV3 25, BARCHART 10, ODDS_API 7, plus ~15
+      individual sportsbooks at 1-2 cells each — `AAVEV3` in particular looks like a `AAVE_V3` casing/typo
+      drift, worth checking first); **7 `not_consumed` data_types** (`tradfi/macro_result`,
+      `tradfi/yield_curve`, `tradfi/ohlcv_1d`, `tradfi/futures_chain` — T2's repo; `prediction/
+      prediction_canonical_question_group`, `prediction/market_lifecycle` + its uppercase duplicate — T2's repo);
+      **3 `not_consumed` instrument_types** (`tradfi/nan`, `tradfi/UNKNOWN`, `prediction/nan` — all look like a
+      writer emitting a missing-value sentinel into a real column, not genuine orphans; needs the writer checked
+      before assuming dead data). The large `unverified` counts are NOT orphans — DeFi's registry declares no
+      `data_type`/`instrument_type` vocabulary at all (2,742 DeFi data_type cells and thousands of instrument_type
+      cells are simply unmodeled, itself a real finding about the registry's own coverage) and sports' registry
+      covers only 1-30% of its own manifest vocabulary (disjoint naming systems, not absence). Since 5 of 7
+      not_consumed data_types and all 3 not_consumed instrument_types are in **T2's repos**
+      (instruments-service/market-tick-data-service), routing via the standard T5→T2 inbound-request protocol
+      rather than acting directly — filed below.
 
 ### W4 — observability, alerting and auto-recovery
 
