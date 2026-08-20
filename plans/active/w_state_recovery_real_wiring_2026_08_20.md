@@ -78,14 +78,27 @@ context_scope:
 
 ### Phase 1 — real OrderBook (backed by the persistent OMS)
 
-- [ ] [AGENT] P0. **Design the `OrderBook` -> persistent-OMS mapping.** `OrderRecoveryEngine` needs
+- [x] ✅ [AGENT] P0. **Design the `OrderBook` -> persistent-OMS mapping.** `OrderRecoveryEngine` needs
       `get_pending_orders(venue)`, `register(order)`, `mark_rejected(order_id)`, `apply_fill(order_id, qty)`
       against `InternalOrder` (order_id/venue/instrument/side/quantity/filled_quantity/status/created_at).
       `orders/oms.py`'s `UnifiedOrderManager` (this tranche's own transition-validation fix landed
       `execution-service@69a9a088be` the same day) already has an analogous shape (`get_order`,
-      `update_order_status`, `count_open_orders`) but a different field/method surface — decide whether
-      `OrderBook` becomes a thin adapter WRAPPING `UnifiedOrderManager` (preferred — one source of truth for
-      order state, no second persistence path) or needs its own storage. Write the decision down.
+      `update_order_status`, `count_open_orders`) but a different field/method surface. **Decision:**
+      `OrderBook` is a thin async facade over the concrete `orders.oms.UnifiedOrderManager`; it does not
+      maintain a second registry or use the duplicate `trade_execution/oms/PersistentOrderManager`.
+      The facade must be constructed with the same OMS instance used by the live orchestrator and a
+      restart-safe persistence adapter. The currently observed `create_oms()` path uses
+      `InMemoryOrderPersistence` (and `_run_live_async` does not construct it), so it is not a valid
+      production backend until the startup wiring selects a persistent adapter; recovery must fail
+      closed rather than emit a completion event against that in-memory default.
+      `InternalOrder.order_id` remains the recovery comparison key, but the adapter stores the OMS
+      `operation_id` separately and resolves the venue-facing `venue_order_id` to that operation ID.
+      `register()` therefore needs the exchange snapshot's price (or an explicit persisted recovery
+      record) before creating an OMS order; the current `ExchangeOrder` shape is insufficient and must
+      be extended before implementation. `mark_rejected()` maps to OMS `REJECTED`, while
+      `apply_fill()` maps to `PARTIAL_FILLED` or `FILLED` according to the resulting quantity and
+      always uses `UnifiedOrderManager.update_order_status()` so its existing transition guard is the
+      only status-validation path.
 - [ ] [AGENT] P0. **Implement the real `OrderBook`** per Phase 1's decision, backed by `UnifiedOrderManager` (or
       `PersistentOrderManager`, whichever this repo's live-mode wiring actually uses — confirm via
       `_run_live_async`'s construction, don't assume). Must correctly translate between `InternalOrder`'s status
@@ -157,3 +170,11 @@ context_scope:
   `OrderRecoveryEngine(` production instantiation sites, zero `fetch_open_orders`-shaped capability anywhere in
   the adapter layer, real 8-ccxt + native-REST venue counts) done via real grep across two sessions, not
   estimated.
+- **2026-08-20, slot-3 resumed design task**: measured the actual live path. `_run_live_async` loads
+  instructions and builds venue orchestrators directly; it does not construct an OMS or invoke recovery.
+  `engine/live/factory.py:create_oms()` returns `orders.oms.UnifiedOrderManager` over
+  `InMemoryOrderPersistence`, whose `initialize()` clears state. Decision recorded above: implement
+  `OrderBook` as an adapter over that concrete OMS API, but do not call it production-ready until a
+  restart-safe persistence adapter is selected and the same OMS instance is threaded through startup.
+  Recovery identity must distinguish exchange `venue_order_id` from OMS `operation_id`; `ExchangeOrder`
+  currently lacks price needed for re-registration, so Phase 1 implementation must extend that contract.
