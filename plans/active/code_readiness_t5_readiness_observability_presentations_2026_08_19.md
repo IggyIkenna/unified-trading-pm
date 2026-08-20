@@ -336,8 +336,12 @@ todos only to confirm they are data-movement, then leave it.
       identities). Whether the fixed revision was actually serving is UNVERIFIED (gcloud auth expired; no credential
       requests in this tranche). Evidence:
       `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md`.
-- [ ] [BACKEND] P0. Fix the escalation-pool-exhaustion alert being unreachable when halted. Evidence:
-      `/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`.
+- [x] [BACKEND] P0. Fix the escalation-pool-exhaustion alert being unreachable when halted. Evidence:
+      `/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`. — **Found
+      already shipped, 2026-08-20** — `agent-orchestrator@78a9a02c` (2026-08-19), 9 regression tests confirmed
+      passing on current code. The issue doc's own `status: open` was stale for an already-fixed, already-tested
+      defect; corrected in place rather than re-implemented. Its P3 live-verify todo stays genuinely open — needs
+      a real future exhaustion window's journalctl output this pass does not have.
 - [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
       `/codex/04-architecture/agent-orchestrator-alerting.md`.
 - [ ] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
@@ -395,6 +399,14 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md`.
 - [ ] [AGENT] P2. Land the AO watchdog scheduled-timer wiring. Evidence:
       `/plans/active/issues/ao_watchdog_scheduled_timer_wiring_2026_08_17.md`.
+- [ ] [BACKEND] P1. **NEW 2026-08-20** — `agent-orchestrator`'s quality gate fails on a stale `dashboard/node_modules`
+      (missing `@vitest/coverage-v8`), unrelated to any specific change — blocks EVERY future ship to this repo, not
+      just one. Fix: `npm --prefix dashboard install` (or equivalent dependency sync) before the next
+      agent-orchestrator ship attempt. Found blocking the git-status ahead-nudge sustain-gate fix below; that fix and
+      its 2 regression tests are complete and tested locally (26/26 file, 103/103 broader suite) but NOT YET SHIPPED
+      — preserved both in the working tree and backed up outside git
+      (`scratchpad/agent-orchestrator-backup/_git_alerts.py` + `test_git_staleness_alerting.py`) since this session
+      already measured local uncommitted edits as fragile under quickmerge contention.
 
 ### Infrastructure defects that cost other agents time
 
@@ -406,7 +418,13 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
       `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`.
 - [ ] [BACKEND] P3. Fix the git-status red-nudge false positive from the wrong branch comparison. Evidence:
-      `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`.
+      `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`. **Both
+      original todos were already `[x]`, shipped 6 days prior. Its 2026-08-19 addendum named a third, still-open
+      mechanism (`maybe_nudge_on_red_repos`'s `ahead` branch has no sustain gate) — FIXED + TESTED 2026-08-20,
+      NOT YET LANDED, do not tick without a sha.** `server/worker_liveness/_git_alerts.py`, gated on
+      `not_clean_since` sustained past 600s matching the function's own `behind`-branch precedent. 2 new
+      regression tests, 26/26 file passing, 103/103 broader suite passing. Building/shipping in agent-orchestrator
+      (separate repo, own queue).
 
 ### Close-out
 
@@ -556,3 +574,37 @@ todos only to confirm they are data-movement, then leave it.
   figure silently collapsing while looking structurally fine. The shipped detector requires a non-empty venue
   block and correctly falls back, still reporting the real 2-tuple cells. Confirmed by test, not by reading.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+
+- 2026-08-20 — **Artefact ownership invariant CLOSED: 37 → 0 untagged claims, verified per-file in origin.**
+  `unified-trading-pm@840d453409` (2 new readiness axes + Pendle baseline fix), `@09938ebebf` (execution-service
+  probe root-cause fix + 28 owner tags), `@a80fa4f41b` (final 9 owner tags closing the ratchet to zero, baseline
+  lowered to match). Every claim-bearing section in every one of the 7 client artefacts now carries a real
+  `owner:` tag citing a doc verified to exist on disk. Detail already recorded against the W21 invariant todo
+  above and in the standalone entries for each ship.
+
+- 2026-08-20 — **W4: found a second already-fixed alerting defect (escalation-pool-exhaustion), corrected the
+  stale issue doc rather than re-implementing.** `agent-orchestrator@78a9a02c` (2026-08-19) already decouples
+  `_maybe_alert_pool_exhaustion` from `retry_queued_escalations` exactly as
+  `escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`'s own "Recommended fix" section
+  specifies — its docstring cites the issue slug verbatim. Confirmed via 9 passing regression tests on current
+  code (`test_drain_escalations_skips_retry_but_still_verifies_when_halted` +8 more). The issue doc's `status:
+  open` and its P2 fix-todo were stale for shipped, tested work; flipped in place. Its P3 live-verify todo stays
+  genuinely open — needs a real future exhaustion window's `journalctl` output this pass does not have; unit
+  tests confirm the code path is reachable, they do not substitute for the live confirmation that todo asks for.
+
+- 2026-08-20 — **W4/close-out: found and fixed a THIRD, genuinely new git-status-alerting defect** (distinct
+  from the two above, which were already fixed) while verifying `git_status_red_nudge_false_positive_wrong_
+  branch_comparison_2026_08_17.md`'s two ORIGINAL todos (confirmed already `[x]`, shipped 6 days prior) — its
+  2026-08-19 addendum named a THIRD, still-open mechanism this pass then fixed.
+
+  `server/worker_liveness/_git_alerts.py::maybe_nudge_on_red_repos`'s `ahead` branch fired with **no age gate at
+  all**, unlike every sibling branch in the same function (`dirty` > 3600s via `dirty_oldest_mtime`, `behind` >
+  600s via `not_clean_since`) — confirmed by direct code read matching the issue doc's own diagnosis exactly. A
+  momentary `ahead=1` reading between a commit landing and its push (the normal two-pass ship flow every T5 ship
+  this session has been running) could nudge on the very next ~5-min tick. Fixed: gate on `not_clean_since`
+  sustained past 600s, matching this function's own local `behind`-branch precedent — deliberately NOT the
+  separate 90-min `GIT_RED_SUSTAIN_S` used by the different-tier Slack-paging function
+  `maybe_alert_git_staleness`, whose own `ahead` branch was already correctly sustained and needed no change.
+  2 new regression tests added (`test_nudge_ahead_not_sustained_does_not_fire`,
+  `test_nudge_ahead_sustained_fires_with_age`); file 26/26 passing, broader worker-liveness suite 103/103.
+  **NOT YET LANDED, 2026-08-20** — ship failed on `dashboard/node_modules` missing `@vitest/coverage-v8` (environmental, unrelated to this change; exit 0 with nothing landed, caught by per-file origin verification, not by the exit code). Fix + 2 tests preserved locally AND backed up outside git (scratchpad/agent-orchestrator-backup/) since this session already measured local edits as fragile under contention. Needs `npm --prefix dashboard install` (or equivalent) before the next agent-orchestrator ship attempt — flagged as its own todo below since it will block ANY future ship to this repo, not just this fix.

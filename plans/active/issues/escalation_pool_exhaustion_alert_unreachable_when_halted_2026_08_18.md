@@ -164,12 +164,25 @@ failed" vs. "no attempt was made at all" if that distinction ever becomes alert-
 
 ## Todos
 
-- [ ] [BACKEND] P2. Decouple `_maybe_alert_pool_exhaustion` from `retry_queued_escalations` so it also evaluates when
+- [x] [BACKEND] P2. Decouple `_maybe_alert_pool_exhaustion` from `retry_queued_escalations` so it also evaluates when
       `is_pool_critically_exhausted()` halts dispatch — see "Recommended fix" above. Add a regression test asserting
       the alert function is invoked (or an equivalent structural-exhaustion signal fires) even when the halt gate
-      skips `retry_queued_escalations` entirely. Ship via quickmerge with full `quality-gates.sh` green.
+      skips `retry_queued_escalations` entirely. Ship via quickmerge with full `quality-gates.sh` green. —
+      **Found already shipped, 2026-08-20 (T5 tranche, verifying rather than re-implementing).**
+      `agent-orchestrator@78a9a02c` (2026-08-19, `fix(escalation): alert on halted pool-exhaustion tick; add
+      proactive worker-slot account failover`). `server/autospawn.py:_drain_escalations`'s `halted` branch now
+      queries a fresh `total_queued` count and calls `_escalation.maybe_alert_pool_exhaustion(total_queued=...,
+      dispatched=0)` directly — exactly the recommended fix above, and its own docstring cites this issue's slug
+      verbatim. 9 regression tests confirmed passing on current code:
+      `test_drain_escalations_skips_retry_but_still_verifies_when_halted`,
+      `test_drain_escalations_does_not_alert_when_not_halted`,
+      `test_drain_escalations_retries_normally_when_not_halted` (`tests/test_autospawn.py`) plus 6 more in
+      `tests/test_escalation.py` covering the structural/transient/silent/no-headroom/sustained-ceiling cases.
 - [ ] [VERIFY] P3. Once the fix lands, live-verify by checking `journalctl` across a future genuine exhaustion window
-      for the "pool ceiling (transient)" INFO line firing even during a halted tick (not just during an unhalted one).
+      for the "pool ceiling (transient)" INFO line firing even during a halted tick (not just during an unhalted
+      one). **Still genuinely open, 2026-08-20** — this needs a real future exhaustion window's live journalctl
+      output, which this pass does not have. Unit tests confirm the code path is now reachable; they do not
+      substitute for the live confirmation this todo asks for.
 
 ## Progress log
 
