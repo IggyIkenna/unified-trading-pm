@@ -1044,6 +1044,15 @@
       <li>
         <a href="#s27"><span class="num">27</span><span class="ttl">Shard-level coverage drilldown</span></a>
       </li>
+      <li>
+        <a href="#s28"><span class="num">28</span><span class="ttl">Trade the full stack — strategy styles</span></a>
+      </li>
+      <li>
+        <a href="#s29"><span class="num">29</span><span class="ttl">The instrument universe</span></a>
+      </li>
+      <li>
+        <a href="#s30"><span class="num">30</span><span class="ttl">Execution algorithms, in depth</span></a>
+      </li>
     </ol>
   </nav>
 
@@ -18653,6 +18662,501 @@ Content-Type: application/json
         See <code>/codex/02-data/honest-coverage-model.md</code> for the two-layer, two-view model this drilldown
         sits on top of, and <code>plans/active/state_fabric_artefacts_2026_08_20.md</code> for the ledger todo this
         section is gated on.
+      </p>
+    </details>
+  </section>
+
+  <section id="s28">
+    <div class="sec-head">
+      <span class="num">28</span>
+      <h2>Trade the full stack — strategy styles</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard"
+        >owner: W6</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s9">§09</a> catalogued the archetype registry as structure. This section reads it as a pitch: what
+      you can actually build, organised by trade shape rather than by enum name.
+    </p>
+    <details class="sec-body" open>
+      <summary>Nine families, one instruction contract, one execution stack</summary>
+      <p>
+        Arbitrage, market making, rules-based, signal-driven, ML-directional and volatility/dispersion trading are
+        not separate products bolted together here — they are nine orthogonal <code>StrategyFamily</code> values
+        over the same <a href="#s8">instruction envelope</a> and the same <a href="#s12">execution stack</a>. A
+        family changes what a strategy decides; it does not change how an instruction reaches a venue.
+      </p>
+      <h3>60 archetypes, read as a pitch <b class="ev ev-verified">✓ verified</b></h3>
+      <p>
+        Re-counted directly against <code>ARCHETYPE_TO_FAMILY</code>
+        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>) this session,
+        2026-08-20 — 60 dict entries, matching <a href="#s9">§09</a>'s own count. The enum module's docstring still
+        says "59 archetypes" (stale by one against its own <code>ARCHETYPE_TO_FAMILY</code> mapping, which is the
+        literal source of truth for family membership) — a source-file correction outside this document's own
+        scope, flagged here rather than silently propagated.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Families → representative archetypes</span
+          ><span class="note"><code>ARCHETYPE_TO_FAMILY</code>, 60 archetypes</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>What it means</th>
+                <th>Representative archetypes</th>
+                <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>VOL_TRADING</code></td>
+                <td>Options and volatility relative value — RV/IV, term structure, dispersion, decay</td>
+                <td>
+                  <code>VOL_ARB_RV_IV</code>, <code>VOL_DISPERSION</code>, <code>VOL_0DTE_GAMMA_SCALPING</code>
+                </td>
+                <td>19</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING</code></td>
+                <td>Continuous and event-settled quoting, plus DeFi LP as a market-making shape</td>
+                <td>
+                  <code>MARKET_MAKING_CONTINUOUS</code>, <code>MARKET_MAKING_EVENT_SETTLED</code>,
+                  <code>DEFI_LP_CONCENTRATED</code>
+                </td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_AND_YIELD</code></td>
+                <td>Basis, funding-rate and staking-yield capture</td>
+                <td>
+                  <code>CARRY_BASIS_PERP</code>, <code>CARRY_FUNDING_DISPERSION</code>,
+                  <code>YIELD_STAKING_SIMPLE</code>
+                </td>
+                <td>11</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_STRUCTURAL</code></td>
+                <td>Structural mispricing across venues and domains, including MEV capture</td>
+                <td>
+                  <code>ARBITRAGE_PRICE_DISPERSION</code>, <code>ARBITRAGE_SPORTS_DUTCHING</code>,
+                  <code>ARBITRAGE_MEV_SANDWICH</code>
+                </td>
+                <td>8</td>
+              </tr>
+              <tr>
+                <td><code>RULES_DIRECTIONAL</code></td>
+                <td>Heuristic, non-ML directional trading</td>
+                <td><code>RULES_DIRECTIONAL_CONTINUOUS</code>, <code>TSMOM_BTC_CTA</code></td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><code>PORTFOLIO</code></td>
+                <td>Cross-category sleeves — allocates across other families rather than trading directly</td>
+                <td><code>PORTFOLIO_MULTI_STRATEGY</code>, <code>PORTFOLIO_RISK_PARITY</code></td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td><code>ML_DIRECTIONAL</code></td>
+                <td>Model-driven directional signal, one instrument at a time</td>
+                <td><code>ML_DIRECTIONAL_CONTINUOUS</code>, <code>ML_DIRECTIONAL_EVENT_SETTLED</code></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>STAT_ARB_PAIRS</code></td>
+                <td>Pairs and cross-sectional statistical arbitrage</td>
+                <td><code>STAT_ARB_PAIRS_FIXED</code>, <code>STAT_ARB_CROSS_SECTIONAL</code></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>EVENT_DRIVEN</code></td>
+                <td>Event-driven trading — its own family, one archetype</td>
+                <td><code>EVENT_DRIVEN</code></td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><b>Total</b></td>
+                <td>9 orthogonal families</td>
+                <td>—</td>
+                <td><b>60</b></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">What "60 archetypes" is not a claim of</span>
+        <p>
+          A family or archetype existing in this registry is a structural claim, not a readiness claim — the same
+          distinction <a href="#s9">§09</a> draws. None of the families above carries a <b class="st st-live">live</b>
+          mark, because none can honestly carry one yet: a capability audit deriving archetype readiness across
+          batch, paper and live is <b class="st st-plan">planned</b>, specified and not yet built
+          (<a href="#s14">§14</a>). Until it runs, archetype-level readiness reports <code>unverified</code> rather
+          than being assumed from the archetype simply existing in the enum.
+        </p>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        Every archetype in every family above is configured, sized and risk-bounded through the same
+        <a href="#s10">wizard</a>, routed through the same <a href="#s12">policy-selected execution algorithms</a>
+        detailed in <a href="#s30">§30</a>, and audited through the same record (<a href="#s15">§15</a>). The
+        family is a trading decision, not a different integration.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>'s
+        <code>StrategyFamily</code>, <code>StrategyArchetype</code> and <code>ARCHETYPE_TO_FAMILY</code>.
+      </p>
+    </details>
+  </section>
+
+  <section id="s29">
+    <div class="sec-head">
+      <span class="num">29</span>
+      <h2>The instrument universe</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="plans/epics/instruments_master.md — reference-data completeness for the canonical instrument/venue registry"
+        >owner: instruments_master</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s3">§03</a> counted venues and chains. This section cuts the same registries by instrument
+      <em>shape</em> instead — spot, perpetuals, dated futures, options, swaps, ETFs — because "what can I trade"
+      is the question a developer actually asks first.
+    </p>
+    <details class="sec-body" open>
+      <summary>Six shapes, the real <code>InstrumentType</code> tokens behind each, and one honest gap</summary>
+      <div class="callout">
+        <span class="tag">Which registry this section counts from, stated precisely</span>
+        <p>
+          <a href="#s3">§03</a> already established that there is no single settled venue count — different
+          registries answer different questions, and this document reports the precise cut for each claim rather
+          than blending them. The venue counts in the table below come from <code>INSTRUMENT_TYPES_BY_VENUE</code>
+          (<code>unified-api-contracts/unified_api_contracts/registry/venue_constants.py</code>) — the
+          <b>execution/instruction-routing</b> venue-capability map, 53 venue entries, counted directly by reading
+          the dict, 2026-08-20. It is a narrower, trading-context cut than the 192/177-venue data-capture registries
+          §03 counts from, so read the numbers below as "venues this specific routing registry declares support
+          X", not as the platform's total venue count for X.
+        </p>
+      </div>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Instrument shapes, by real <code>InstrumentType</code> token</span
+          ><span class="note"><code>unified_api_contracts/_instrument_enums.py</code></span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Shape</th>
+                <th>Token(s)</th>
+                <th>Asset groups</th>
+                <th>Venues<span class="u"> (this registry)</span></th>
+                <th>Example instrument ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Spot</td>
+                <td><code>SPOT_PAIR</code></td>
+                <td>CeFi</td>
+                <td>10</td>
+                <td><code>BINANCE-SPOT:SPOT_PAIR:BTCUSDT</code></td>
+              </tr>
+              <tr>
+                <td>Perpetuals</td>
+                <td><code>PERPETUAL</code></td>
+                <td>CeFi, DeFi, Prediction <span class="u">— see below</span></td>
+                <td>19</td>
+                <td><code>BINANCE-FUTURES:PERPETUAL:BTCUSDT</code></td>
+              </tr>
+              <tr>
+                <td>Futures <span class="u">(dated)</span></td>
+                <td><code>FUTURE</code></td>
+                <td>CeFi, TradFi</td>
+                <td>14</td>
+                <td><code>CME:FUTURE:ES-20260320</code></td>
+              </tr>
+              <tr>
+                <td>Options</td>
+                <td><code>OPTION</code></td>
+                <td>CeFi, TradFi</td>
+                <td>7</td>
+                <td><code>DERIBIT:OPTION:BTC-28JUN24-70000-C</code></td>
+              </tr>
+              <tr>
+                <td>Swaps</td>
+                <td><b class="st st-plan">planned</b></td>
+                <td><span class="u">n/a — see below</span></td>
+                <td>n/a</td>
+                <td>n/a</td>
+              </tr>
+              <tr>
+                <td>ETFs / ETPs</td>
+                <td><code>ETF</code></td>
+                <td>TradFi</td>
+                <td>5</td>
+                <td><code>NYSE:ETF:SPY</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Perpetuals span three asset groups on one token</span>
+        <p>
+          <code>PERPETUAL</code> is not CeFi-only. <code>HYPERLIQUID</code>, <code>ASTER</code>,
+          <code>PACIFICA-SOLANA</code>, <code>EXTENDED-STARKNET</code> and <code>LIGHTER-ZKSYNC</code> are on-chain
+          perpetual DEXes carrying the same token, and <code>KALSHI_PERP</code> / <code>POLYMARKET_PERP</code> —
+          CFTC-regulated crypto perpetual futures desks on prediction-market venues — carry it too. Three asset
+          groups, one instrument-type token, one canonical ID shape.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Swaps — the honest gap, not the silent one</span>
+        <p>
+          <code>SWAP</code> is a real action in the instruction vocabulary — part of the on-chain action set in
+          <a href="#s8">§08</a>'s envelope, executed against a <code>POOL</code> / <code>DEX_POOL</code> instrument,
+          not a separate product. It is not, itself, a row in <code>InstrumentType</code>
+          (<code>unified_api_contracts/_instrument_enums.py</code> — checked directly; no <code>SWAP</code> member
+          exists there). There is no standalone swap-as-a-derivative product (an interest-rate-swap-style
+          instrument) in the registry today. Marked <b class="st st-plan">planned</b> rather than omitted, so the
+          gap is visible instead of silently absent.
+        </p>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        Beyond the six shapes above, the DeFi side of the registry carries instrument types with no CeFi/TradFi
+        analogue — <code>LENDING</code>, <code>A_TOKEN</code> / <code>DEBT_TOKEN</code> (Aave-style supply/debt
+        positions), <code>LST</code> / <code>YIELD_BEARING</code> / <code>STAKING</code> / <code>RESTAKING</code>,
+        <code>SPOT_ASSET</code>, and the DEX-pool shapes <code>POOL</code> / <code>DEX_POOL</code> /
+        <code>SOLANA_AMM_POOL</code>. These are real (<code>unified_api_contracts/_instrument_enums.py</code>) and
+        already covered by <a href="#s3">§03</a>'s protocol×chain table — not re-listed here because they are
+        DeFi-native shapes, not spot/perp/future/option/swap/ETF ones.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against <code>unified_api_contracts/_instrument_enums.py</code>,
+        <code>unified_api_contracts/canonical/instrument_key.py</code> and
+        <code>unified_api_contracts/registry/venue_constants.py</code>'s <code>INSTRUMENT_TYPES_BY_VENUE</code>.
+      </p>
+    </details>
+  </section>
+
+  <section id="s30">
+    <div class="sec-head">
+      <span class="num">30</span>
+      <h2>Execution algorithms, in depth</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="plans/epics/execution_master.md — algo selection, routing and chained-sequence completeness"
+        >owner: execution_master</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s12">§12</a> named the algorithm registry. This is what each algorithm actually does, which real
+      parameter controls its aggressiveness or its time-slicing, and which of the nine below are wired into a live
+      call path today versus real and tested but not yet connected.
+    </p>
+    <details class="sec-body" open>
+      <summary>Aggressiveness and time-slicing, by real parameter — not by marketing adjective</summary>
+      <p>
+        "Manage the aggressiveness of your order" and "slice the order over time" are not slogans here — they are
+        specific constructor arguments on specific classes in
+        <code>execution-service/execution_service/algo_library/</code>. The table below names them.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The algo library, read from source</span
+          ><span class="note">10 files read directly, 2026-08-20</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>Mechanism</th>
+                <th>Aggressiveness / slicing parameter(s)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>TWAP</td>
+                <td>
+                  Splits the parent order into N equal-sized child slices spaced evenly across a fixed horizon; the
+                  final slice is the primary order itself
+                </td>
+                <td><code>horizon_secs</code>, <code>interval_secs</code></td>
+                <td><b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as <code>TWAP</code></td>
+              </tr>
+              <tr>
+                <td>Adaptive TWAP</td>
+                <td>
+                  Same TWAP skeleton, but each slice is scaled up or down by recent trend and volatility, side-aware
+                </td>
+                <td>
+                  <code>trend_cap</code>, <code>trend_sensitivity</code>, <code>vol_sensitivity</code>,
+                  <code>min_factor</code> / <code>max_factor</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>ADAPTIVE_TWAP</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Almgren-Chriss</td>
+                <td>
+                  Optimal-execution schedule — a sinh-shaped trajectory minimising market impact against timing
+                  risk, front- or back-loading size by urgency
+                </td>
+                <td>
+                  <code>risk_aversion</code> (urgency — higher trades faster), <code>volatility</code>,
+                  <code>impact_sensitivity</code>, <code>horizon_secs</code>, <code>num_intervals</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>ALMGREN_CHRISS</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Passive-Aggressive Hybrid</td>
+                <td>
+                  Passive limit orders at the best bid/ask to capture spread, then a TWAP sweep of whatever remains
+                  to guarantee completion inside the horizon
+                </td>
+                <td>
+                  <code>passive_time_pct</code>, <code>display_ratio</code>, <code>aggressive_slices</code>,
+                  <code>price_improve_bps</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>PASSIVE_AGGRESSIVE_HYBRID</code>
+                </td>
+              </tr>
+              <tr>
+                <td>POV Dynamic</td>
+                <td>
+                  Targets a percentage of live market volume, clamped 5%–30%, and raises participation (capped)
+                  when behind its own schedule
+                </td>
+                <td>
+                  <code>base_participation</code>, <code>liquidity_adaptation</code>,
+                  <code>catchup_threshold</code>, bucket count
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>POV_DYNAMIC</code>
+                </td>
+              </tr>
+              <tr>
+                <td>SOR — DEX</td>
+                <td>
+                  Quotes a swap across Uniswap V3 / Curve / Balancer with real AMM-curve math, splitting across
+                  venues once price impact crosses a threshold
+                </td>
+                <td>
+                  <code>max_slippage_bps</code> (split trigger), <code>max_split_routes</code>,
+                  <code>min_split_percentage</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> live-wired into
+                  <code>onchain_execution_service.py</code>; live-mode quoting still runs on cached/simulated pool
+                  state pending paid RPC
+                </td>
+              </tr>
+              <tr>
+                <td>SOR — cross-chain</td>
+                <td>
+                  Extends DEX routing across chains — prices bridge-in + swap + bridge-out against staying on the
+                  source chain, including a time penalty for the bridge wait, and only splits cross-chain past a
+                  savings threshold
+                </td>
+                <td>
+                  <code>max_chains</code>, <code>bridge_time_penalty_bps_per_min</code>,
+                  <code>cross_chain_savings_threshold_bps</code>, <code>prefer_single_chain</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired into
+                  <code>onchain_execution_service.py</code> with a real bridge-cost model
+                </td>
+              </tr>
+              <tr>
+                <td>Solver auction</td>
+                <td>
+                  Batch-window auction — several routing solvers (single-venue, split-route, multi-hop) price the
+                  same intent concurrently; best output-minus-gas-minus-MEV score wins
+                </td>
+                <td>
+                  <code>batch_window_seconds</code>, <code>solver_timeout_seconds</code>,
+                  <code>min_surplus_bps</code>, <code>max_solvers</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-check">? check</b> unit-tested, exported, not
+                  wired
+                </td>
+              </tr>
+              <tr>
+                <td>Multicall batcher</td>
+                <td>
+                  Groups on-chain steps (approve, swap, supply, borrow, ...) into one Multicall3 transaction per
+                  dependency group, atomic where a flash loan requires it, with a real gas-savings estimator
+                </td>
+                <td>
+                  <code>multicall_group</code> assignment per step; <code>MAX_CALLS_PER_MULTICALL</code> splits an
+                  oversized batch
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-check">? check</b> unit-tested, exported, not
+                  wired
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">The wiring gap, named rather than smoothed over</span>
+        <p>
+          The solver auction (<code>BatchAuctionEngine</code>) and the multicall batcher
+          (<code>MulticallBatcher</code>) are real, complete, unit-tested implementations
+          (<code>tests/unit/test_algo_library_full.py</code>) and are exported from <code>algo_library/__init__.py</code>.
+          Neither has a live call site: zero instantiation was found anywhere in <code>execution-service</code>
+          outside their own module. <code>intent_engine.py</code>'s own docstring describes a five-step pipeline
+          ending "<code>BatchAuctionEngine</code> finds optimal routes... <code>MulticallBatcher</code> groups steps
+          into minimal transactions" — but the code in that same file never instantiates either class. The
+          documented pipeline and the wired pipeline are not the same thing yet, stated here rather than left to be
+          discovered later.
+        </p>
+      </div>
+      <h3>Extensibility — the grounded version of "we can build it"</h3>
+      <p>
+        Every algorithm above — and the ones not detailed here (VWAP, Iceberg) — implements the same three-method
+        contract: <code>ExecutionAlgorithm.execute()</code>, <code>get_child_orders()</code>,
+        <code>validate_config()</code>
+        (<code>execution-service/execution_service/algo_library/base_algorithm.py</code>). A separate,
+        auto-discovering registry (<code>execution_service/algorithms/registry.py</code>) finds every
+        <code>*ExecAlgorithm</code> / <code>*ExecAlgorithmConfig</code> pair by introspection and maps it to its
+        declared <code>exec_algorithm_id</code> — adding a new algorithm means registering a class, not editing a
+        dispatch table.
+      </p>
+      <p>
+        That is the grounded version of "anything to improve latency, we can build": a new execution style is an
+        implementation against a known, machine-enforced interface, not a platform rewrite. It does not make every
+        future algorithm free — the wiring gap above shows two real implementations still sitting unconnected — but
+        it is an architectural fact about the shape of the extension point, not a promise about turnaround time.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against <code>execution-service/execution_service/algo_library/base_algorithm.py</code>,
+        <code>adaptive_twap.py</code>, <code>almgren_chriss.py</code>, <code>passive_aggressive.py</code>,
+        <code>pov_dynamic_calculator.py</code>, <code>twap_calculator.py</code>, <code>sor_dex.py</code>,
+        <code>sor_cross_chain.py</code>, <code>solver_auction.py</code>, <code>multicall_batcher.py</code> and
+        <code>intent_engine.py</code>; wiring confirmed against
+        <code>execution_service/algorithms/registry.py</code>, <code>algorithms/impl/*.py</code> and
+        <code>execution_service/services/onchain_execution_service.py</code>.
       </p>
     </details>
   </section>
