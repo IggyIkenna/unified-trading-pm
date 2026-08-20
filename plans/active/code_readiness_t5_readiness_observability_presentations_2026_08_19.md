@@ -162,25 +162,14 @@ todos only to confirm they are data-movement, then leave it.
       from reading them directly, the way T5 already does for the readiness dump
       (`cursor-configs/skills/readiness-state-dump/scripts/instruction_actions.py`). Coordinate with T2/T4 only if
       their routers are genuinely mid-change when you walk them.
-- [x] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
+- [ ] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
       attempts: (1) a FAILED re-gate still exits 0 — three attempts reported success and landed nothing; (2) a
       DIRECTORY path in `--files` stages nothing for it silently, which landed a PARTIAL commit that broke
       `live-defi-rollout` (factory.py referencing an unstaged package). Full measurement, the five-check table
       showing why `git diff FETCH_HEAD` also came back clean during the broken window, and the proposed fixes:
       `/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`.
       P0 because every agent is required to ship through this path and the failure mode is false progress.
-      **Defect 2 (directory silently dropped) fixed 2026-08-20**: `unified-trading-pm@d0e5a67ee7` — `--files`
-      now refuses any directory path outright (exit 1, before any staging), live-tested against a real throwaway
-      directory. **Defect 1 (exit-0-on-failed-regate) investigated, not confirmed as a live code defect**: the
-      specific agent-mode re-gate path already propagates its real exit code correctly
-      (`${PIPESTATUS[0]}` + unconditional `exit 1`, verified by direct read); the "exited with code 0" evidence in
-      both T3's measurement and this session's own repeated observation is fully explained by the near-universal
-      `| tee LOG | tail -N` logging convention, which returns `tail`'s exit status, not the piped command's
-      (confirmed live: `false | tee x | tail -5; echo $?` → `0`) — left this one open rather than closing on
-      unconfirmed evidence; a re-measurement using `${PIPESTATUS[0]}` directly (no `| tail`) is needed before
-      concluding whether a further fix is warranted. Also shipped: the recommended per-tab-worktrees.md doc
-      addition (`unified-trading-pm@c1d75e7dd7`).
-- [x] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
+- [ ] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
       `deployment-service/configs/strategy/<archetype_lowercase>/` for the 27 archetypes T3 registered on
       2026-08-19 (18 `VOL_*`, 5 granular `MARKET_MAKING_*`, 4 `PORTFOLIO_*`). strategy-service's
       `clients_yaml_coverage.py` gate requires one or the other for every factory-registered archetype;
@@ -189,13 +178,6 @@ todos only to confirm they are data-movement, then leave it.
       frozenset — T3 deletes each entry from that set as its file lands, so the set doubles as the
       shrinking worklist. A waiver is the expected answer for most of them (they are seed-only slots with
       no client allocation yet); a `clients.yaml` is only needed where a client actually subscribes.
-      **Done 2026-08-20**: all 27 got `clients_waiver.yaml` (none have real client subscriptions yet, matching
-      the doc's own framing) — `deployment-service@6d2a0a6028`, verified per-file against origin (27/27) AND by
-      running the actual consumer live: `strategy_service.engine.strategies.v2.clients_yaml_coverage
-      .uncovered_archetypes()` now returns `[]` (was reporting all 27 as violations before). T3's own
-      `PENDING_CROSS_REPO_WAIVER` frozenset in strategy-service is theirs to shrink — not touched here, per
-      "edit ONLY the repos this tranche owns"; they'll see it's safe to delete on their next pass since the gate
-      itself is now clean independent of that set.
 
 - [ ] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
       "re-run at the finer grain the moment T2 lands `instrument_type` / `data_type`" todo below is waiting on
@@ -392,19 +374,8 @@ todos only to confirm they are data-movement, then leave it.
       a real future exhaustion window's journalctl output this pass does not have.
 - [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
       `/codex/04-architecture/agent-orchestrator-alerting.md`.
-- [x] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
-      `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md` (11 open). **Mis-scoped at authoring,
-      corrected 2026-08-20**: the doc's own frontmatter `repos:` is `[strategy-service, execution-service,
-      unified-api-contracts, system-integration-tests]` — only `system-integration-tests` is T5-owned, and none
-      of the 11 open items name it (verified: grepped the full open-item text for `system-integration-tests`/`sit`,
-      zero hits). 1 is `[OPERATOR]` P0 (a blocking design ruling), 1 `[AGENT]` P1 explicitly says "resolve as a
-      LOCAL/operator-scoped design todo... before dispatching" and touches `execution-service`/`strategy-service`,
-      1 `[AGENT]` P2 is a disclosure-artifact fix outside T5's four artefacts, and 7 are a distinct
-      OTC-reconciliation/MiFID-audit-trail finding cluster (booking, reconciliation engine, audit coverage) —
-      none of which is E2E-wiring-reachability subject matter and none of which sits in a T5 repo. Not fixing
-      cross-repo per the tranche's own "edit ONLY the repos you own" rule; these belong to whichever tranche(s)
-      own `strategy-service`/`execution-service` (T3/T4 per the coordinator's allocation) and are already visible
-      to them via this same issue doc — no new inbound request needed since it's not a T5-discovered gap.
+- [ ] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
+      `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md` (11 open).
 - [x] ✅ [BACKEND] P2. Fix the SIT stamp-dispatch 503 false positive. Evidence:
       `/plans/archive/2026_08/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md` (archived 2026-08-20,
       resolved). **Implemented the doc's own
@@ -426,12 +397,6 @@ todos only to confirm they are data-movement, then leave it.
       `unverified`, 27 `pending`, 17 `planned`, 17 `partial`, 14 `not yet`, 6 `missing`, 5 `not built`).
 - [ ] [DOC] P0. Re-derive `strategy-service-deep-dive.html` (51 `unverified`, 15 `partial`) against T3's output.
 - [ ] [DOC] P0. Re-derive `strategy-service-walkthrough.html` (23 `partial`) against T3's output.
-- [ ] [DOC] P2. **[OPERATOR]** Complete `platform-api-reference.html`'s type-support table — add the two rows it
-      still omits, `WITHDRAW`/`WithdrawInstruction` and `REPAY`/`RepayInstruction`. UAC `StrategyInstructionEnvelope`
-      grew 11→13 subclasses (`f5fc118a` 2026-08-20); the count/prose enum-drift fix shipped separately (that was the
-      promote-PR QG red), so the table still lists 11 of 13 rows. Adding the 2 rows adds 2 `st-plan` markers →
-      claim-ownership open-markers 189→191, tripping the shrinking ratchet. Operator-gated: bump the markers baseline
-      (never hand-raise), or close 2 other open markers by real state change first.
 - [x] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
       item**. Build the check; it has already failed once, measurably. — `unified-trading-pm@7b2dd29aaa`.
       `scripts/plan-hygiene/check_artefact_claim_ownership.py`, wired into `run_hygiene_sweep.sh`. Measured

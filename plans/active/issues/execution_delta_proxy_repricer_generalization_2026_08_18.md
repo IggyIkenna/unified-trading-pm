@@ -950,16 +950,9 @@ remain OPEN** — carried into the codex doc's section 10.
 - [x] ✅ [DOC] P0. **Build spec written** — unified-trading-pm, codex SSOT + verbatim external reference, both linked
       above. The peer agent's document arrived and was reconciled rather than accepted wholesale; three of its framings
       were corrected by operator ruling — see the R1-R16 register in /codex/04-architecture/cross-domain-state-fabric.md section 9.
-- [ ] [BACKEND] P0. **Split the live tick timestamp and add receive order + region** (R4) — tracked in full at
-      [/plans/active/issues/market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md](/plans/active/issues/market_data_timestamp_semantics_collapsed_to_one_field_2026_08_20.md).
-      **CORRECTION 2026-08-20**: this todo previously claimed no receive-time capture existed, citing zero hits for
-      `receive_time|recv_time|rx_time|local_receive`. That was a search reported as a conclusion, and the operator
-      corrected it. `local_timestamp` exists in 44 files; `unified_api_contracts/internal/events.py:17` already
-      MANDATES `["exchange_timestamp", "local_timestamp", "sequence_number"]` for MARKET_DATA. The real defect is
-      narrower and worse: the LIVE path collapses both into one `ReceivedTick.timestamp` whose meaning varies by
-      adapter — Databento aliases exchange time in, Binance and Hyperliquid write arrival time. A missing field fails
-      loudly on first use; an ambiguous one never fails. Still the prerequisite for per-region equivalence and the
-      delay estimator.
+- [ ] [BACKEND] P0. **Capture local RX time AND region at the MTDS boundary** (R4). Measured 2026-08-20: zero files in
+      market-tick-data-service match `receive_time|recv_time|rx_time|local_receive`, so this is a prerequisite for both
+      the per-region paper/batch equivalence and the cross-region delay estimator — not a later optimisation.
 - [ ] [BACKEND] P0. **Build the cross-region delay estimator** (R9) — properties and its four consumers are in the
       codex doc section 8. It gates the multi-region build, so it belongs alongside the cloud-multicast-billing check.
 - [ ] [BACKEND] P0. **Extend the UAC venue capability registry with the manifest fields** (R10/R11) — profile defaults

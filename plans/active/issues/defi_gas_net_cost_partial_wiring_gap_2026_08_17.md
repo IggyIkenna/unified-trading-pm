@@ -389,30 +389,9 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 - [x] ✅ [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
   replay; keep the engine fail-closed and add paper↔batch parity/exact-leg tests.
   — strategy-service@ac240dbdde + evidence below.
-- [x] ✅ [STRATEGY] P2. After all gates pass, register the archetype and prove one
+- [ ] [STRATEGY] P2. After all gates pass, register the archetype and prove one
   real Aave V3 Ethereum candidate emits an instruction; otherwise retain the
-  blocked state with the measured gate failure. — strategy-service@13c60f59 +
-  evidence: **registration RETAINED-BLOCKED with a measured gate failure** (the
-  P2 todo's explicit fallback). The ONE real archive-RPC fixture candidate
-  (borrow 25649186 → observed 25789895 → LiquidationCall 25789896) is honestly
-  gated by the engine's profit floor: seized_usd ≈ $5.12, bonus_usd ≈ $0.23,
-  gross_profit ≈ $0.23 even at ZERO gas/slippage < `min_profit_usd=50` (engine
-  default; the catalog row does not override it) — it emits NO instruction, so
-  the "prove one real candidate emits" half is not satisfiable with the
-  currently-proven fixture. `LIQUIDATION_CAPTURE` stays OUT of
-  `_ENGINE_DRIVABLE_ARCHETYPES`. Regression test
-  `test_real_aave_fixture_candidate_is_honestly_gated_by_profit_floor` pins the
-  measured behavior as the re-review canary. Full numbers in the Progress Log.
-- [ ] [STRATEGY] P3. Discover/persist a real Aave V3 Ethereum candidate large
-  enough to clear the engine's profitability gate (seized collateral ×
-  `liquidation_bonus` ≥ ~$50 + gas + slippage — the proven archive-RPC range
-  25649186..25789896 may contain borrowers far larger than the $5.12 fixture
-  row; run `collect_candidate_snapshots` over that range and persist the shard),
-  OR make a cited per-row `min_profit_usd` calibration decision in the catalog,
-  then re-run the P2 registration gate and register `LIQUIDATION_CAPTURE` in
-  `_ENGINE_DRIVABLE_ARCHETYPES` if one real candidate emits. Repo:
-  strategy-service + market-tick-data-service. Blocked by:
-  no-real-actionable-candidate-discovered.
+  blocked state with the measured gate failure.
 
 - **2026-08-20 (slot-7, worker):** shipped the MTDS Aave V3 Ethereum pre-liquidation producer in
   `market-tick-data-service@e34d0afc6f`. It discovers borrowers from pre-event `Borrow` logs,
@@ -460,30 +439,3 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   already-shipped MTDS Aave V3 fixture driven end-to-end through this new seam before registration, not just a
   unit-level proof. `quality-gates.sh` full run green (6415 passed, 248 skipped, 3 xfailed, sentinel-verified
   pre-quickmerge). Shipped `strategy-service@ac240dbdde`.
-
-- **2026-08-20 (slot-9, worker):** closed §7.5's `[STRATEGY] P2` registration-gate
-  todo — outcome: **BLOCKED RETAINED with a measured gate failure** (the P2 todo's
-  explicit fallback). Measured by driving the ONE real Aave V3 Ethereum
-  pre-liquidation candidate (MTDS archive-RPC fixture
-  `aave_v3_ethereum_pre_liquidation_fixture.json`: borrow block 25649186 →
-  observed block 25789895 → LiquidationCall 25789896, the proven `B < B2` source
-  gate) through `LiquidationCaptureEngine` with the real catalog params
-  (max_health_factor=1.05, no `min_profit_usd` override): seized_usd =
-  5.123029 × 0.99989138 ≈ $5.12; bonus_usd ≈ $0.23; gross_profit ≈ $0.23 even at
-  ZERO slippage + ZERO gas — ~220× below the engine's default
-  `min_profit_usd=50`. The engine honestly gates it → emits NO instruction under
-  every real parameterization (a real per-block gas cost of $45 drives gross to
-  ≈ −$44.9). The health-factor gate passes (0.9945 < 1.05); the binding gate is
-  the profit floor. Therefore `LIQUIDATION_CAPTURE` stays OUT of
-  `_ENGINE_DRIVABLE_ARCHETYPES` (blocked retained) — the "prove one real Aave V3
-  Ethereum candidate emits an instruction" half of P2 is NOT satisfiable with the
-  currently-proven fixture. This is the engine working as intended (a $5.12
-  liquidation is genuinely non-actionable after ~$45 gas), i.e. a
-  data/availability gap (no real actionable candidate discovered/persisted yet),
-  not a code bug. Shipped a regression test
-  (`test_real_aave_fixture_candidate_is_honestly_gated_by_profit_floor`,
-  strategy-service@13c60f59) pinning the measured gate behavior as the canary
-  that forces re-review if the economics change; filed the P3 follow-up above to
-  discover a real candidate large enough to clear the floor (or make a cited
-  per-row `min_profit_usd` decision). strategy-service full quality gates green,
-  sentinel-verified pre-quickmerge.
