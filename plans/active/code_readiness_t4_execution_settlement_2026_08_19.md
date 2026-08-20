@@ -437,6 +437,31 @@ todos only to confirm they are data-movement, then leave it.
       is CLOSED.
 - [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
+
+      **Real scope MEASURED 2026-08-20 — more nuanced than "not built": the FRAMEWORK exists and is even
+      already-hardened this session, but its two core dependencies are explicit stubs, and it is never invoked at
+      startup at all.** `engine/startup/order_recovery.py`'s `OrderRecoveryEngine` (407 lines: per-venue
+      circuit-breaker-gated recovery, orphan reconciliation, partial-fill application — this session's own
+      shard-isolation fix, `execution-service@ff0b43b5d3`, already hardened its `recover_venue()`) is real,
+      tested, working machinery. But: (1) `OrderBook`'s own docstring says "Minimal in-memory order registry for
+      testing/stub purposes. Production wiring should inject the live Nautilus OMS order registry" — it is never
+      backed by `orders/oms.py`/`trade_execution/oms/persistent_oms.py` (this session's own transition-validation
+      fix, `execution-service@69a9a088be`) or any other real persistence; (2) `_VenueAdapter`'s docstring says
+      "Stub venue adapter... Production implementation should delegate to market-tick-data-service market_interface
+      (UMI) venue adapters... stub returns deterministic empty data" — `fetch_open_orders()` always returns `[]`,
+      `cancel_order()`/`confirm_cancel()` always return `True` without calling anything; (3) `grep -rln
+      "OrderRecoveryEngine("` across the whole repo (excluding tests) returns ZERO production instantiation
+      sites — it is never called from `main.py`, `_run_live_async`, or anywhere else at startup. Wiring
+      `OrderRecoveryEngine()` into startup with its DEFAULT construction would produce real-looking
+      `ORDER_RECOVERY_COMPLETED` log events while silently reconciling nothing — the same defect class as the
+      already-fixed `AccountInstructionOrchestrator` ("accepted=True while closing nothing") and CCXT-withdraw-stub
+      bugs this tranche found earlier. **Real fix is 3 pieces, not 1**: implement a real `OrderBook` backed by the
+      persistent OMS, a real `_VenueAdapter` backed by `get_order_adapter()` (`trade_execution/factory.py:461`,
+      same factory `_create_orchestrator_for_venue` already uses), then wire `OrderRecoveryEngine.run(venues)`
+      into `_run_live_async` before instructions start flowing. Not attempted this session — genuinely substantial
+      (comparable in size to today's other multi-file findings) and safety-critical (getting order reconciliation
+      wrong on a live trading system causes real financial harm); deliberately diagnosed precisely rather than
+      rushed.
 - [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
       **execution-service@9c79bfa0ef** (landing verified by an empty `git diff --stat origin/live-defi-rollout`
       over all three files plus grepping the landed `api/main.py` for `manual_router`). The defect existed only in
