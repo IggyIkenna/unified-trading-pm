@@ -29,7 +29,8 @@ related:
 created: "2026-08-09"
 last_updated: "2026-08-09"
 author: slot-2 (data_engineering)
-parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- investigates MDPS's generic
+# was: cefi_master (epic-assignment audit 2026-08-19) -- investigates MDPS's generic
+parent_epic: mtds_mdps_master
   # candle-bundle writer (candle_write_mixin.py, canonical_writer.py); same bundled-chain-shard convention TradFi
   # CME/ICE uses -- a shared-writer defect, not cefi-specific
 assigned_vm: planning

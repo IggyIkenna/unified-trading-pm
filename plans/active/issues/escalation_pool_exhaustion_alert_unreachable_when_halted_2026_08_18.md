@@ -36,7 +36,8 @@ created: 2026-08-18
 author: escalation_queue_reconciler (slot 4, dispatch agt-a4ff24)
 parent_epic: agent_operating_framework_master
 priority: P2
-assigned_vm: planning # reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
+# reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
+assigned_vm: planning
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.4

@@ -39,7 +39,8 @@ priority: P2
 source:
   "/na-eligibility-audit tranche=ao, autonomous scheduled run 2026-08-02 — found while completeness-checking each
   in-scope doc's reported verdict count against `grep -cE '^- \\[ \\]'` per the skill's Phase-1 verification rule"
-assigned_vm: planning # reclassified NA -> planning 2026-08-02 (na-eligibility-audit, infra tranche) — conflict-check CLEAR
+# reclassified NA -> planning 2026-08-02 (na-eligibility-audit, infra tranche) — conflict-check CLEAR
+assigned_vm: planning
 execution_scope: orchestrator-agent
 estimate_class: refactor
 estimate_baseline_ai_days: 0.3

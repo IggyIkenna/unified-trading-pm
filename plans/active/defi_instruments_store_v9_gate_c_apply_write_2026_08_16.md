@@ -27,7 +27,8 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-parent_epic: manifest_master # was: defi_master (epic-assignment audit 2026-08-19) -- executes the shared cross-AG
+# was: defi_master (epic-assignment audit 2026-08-19) -- executes the shared cross-AG
+parent_epic: manifest_master
   # v9 manifest-schema migration (migrate_instruments_store_v9.py, tracked in the cross-AG
   # master_data_canonicalisation_migration_catalogue), just scoped to defi's corpus -- same script/gate runs per-AG
 assigned_vm: planning
@@ -39,7 +40,8 @@ estimate_calibrated_ai_days: 0.64
 assigned_role: data_engineering
 effort: max
 drift_direction: none
-depends_on: [] # was [defi_by_date_capture_cron_stale_2026_08_16] — cleared 2026-08-18 (plan_reconciler): that
+# was [defi_by_date_capture_cron_stale_2026_08_16] — cleared 2026-08-18 (plan_reconciler): that
+depends_on: []
   # issue was archived 2026-08-16 as a false positive (see this doc's own body § "Why this is status: draft" (b)),
   # so the target no longer exists; depends_on here was always informational context per the 2026-08-17
   # plan_reconciler finding, not a machine gate

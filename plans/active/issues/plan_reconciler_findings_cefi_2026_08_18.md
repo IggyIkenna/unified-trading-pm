@@ -21,7 +21,8 @@ related: [/plans/active/cefi_consolidated_closeout_2026_07_18.md, /plans/epics/c
 created: 2026-08-18
 author: plan_reconciler
 source: agt-421c89
-parent_epic: plan_hygiene_master # was: cefi_master (epic-assignment audit 2026-08-19) -- same as its 2026-08-16 predecessor: a plan-reconciliation run report (contradictions, AO-dispatch-readiness fixes, digest corrections) over the cefi tranche, not cefi asset-group content itself
+# was: cefi_master (epic-assignment audit 2026-08-19) -- same as its 2026-08-16 predecessor: a plan-reconciliation run report (contradictions, AO-dispatch-readiness fixes, digest corrections) over the cefi tranche, not cefi asset-group content itself
+parent_epic: plan_hygiene_master
 assigned_vm: NA
 execution_scope: local-only
 priority: P2

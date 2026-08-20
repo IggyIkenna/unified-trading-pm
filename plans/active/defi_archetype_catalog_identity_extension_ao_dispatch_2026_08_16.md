@@ -24,7 +24,8 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-parent_epic: strategy_master # was: defi_master (epic-assignment audit 2026-08-19) -- stamp_instrument_identity()/is_mvp() curtailment wiring spans ALL 5 target_universe/catalog_*.py builders (549 specs incl. CeFi Deribit/Bybit + TradFi IBKR rows, not just DeFi archetypes) -- a strategy-service catalog mechanism surfaced via a DeFi curtailment issue, not DeFi-specific itself
+# was: defi_master (epic-assignment audit 2026-08-19) -- stamp_instrument_identity()/is_mvp() curtailment wiring spans ALL 5 target_universe/catalog_*.py builders (549 specs incl. CeFi Deribit/Bybit + TradFi IBKR rows, not just DeFi archetypes) -- a strategy-service catalog mechanism surfaced via a DeFi curtailment issue, not DeFi-specific itself
+parent_epic: strategy_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

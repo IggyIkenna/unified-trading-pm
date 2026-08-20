@@ -43,7 +43,8 @@ related:
 created: 2026-07-30
 author: unknown
 parent_epic: agent_operating_framework_master
-assigned_vm: planning # reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
+# reclassified NA -> planning 2026-08-03 (na-eligibility-audit, cross-cutting tranche) — conflict-check CLEAR
+assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
 estimate_class: refactor

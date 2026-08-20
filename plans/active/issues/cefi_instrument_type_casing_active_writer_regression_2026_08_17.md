@@ -23,7 +23,8 @@ related:
   ]
 created: 2026-08-17
 author: slot-14 (data_engineering)
-parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- root-cause fix patches shared
+# was: cefi_master (epic-assignment audit 2026-08-19) -- root-cause fix patches shared
+parent_epic: mtds_mdps_master
   # MTDS manifest-writer plumbing (_tradfi_manifest_shard.py::_tradfi_manifest_itype), which hardcoded a
   # tradfi-only gate causing EVERY non-tradfi asset group to skip instrument_type canonicalization -- not a
   # cefi-specific bug, cefi was just where the 13x regrowth was noticed first

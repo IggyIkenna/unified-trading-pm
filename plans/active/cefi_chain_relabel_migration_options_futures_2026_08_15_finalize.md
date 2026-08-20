@@ -23,7 +23,8 @@ related:
   ]
 created: "2026-08-17"
 last_updated: "2026-08-17"
-parent_epic: mtds_mdps_master # was: cefi_master (epic-assignment audit 2026-08-19) -- mirrors the parent plan's retag (mtds_mdps_master, shared UAC/MTDS/MDPS partition-path bug proven to hit CeFi+TradFi identically); this finalize doc gates on and reconciles that same parent
+# was: cefi_master (epic-assignment audit 2026-08-19) -- mirrors the parent plan's retag (mtds_mdps_master, shared UAC/MTDS/MDPS partition-path bug proven to hit CeFi+TradFi identically); this finalize doc gates on and reconciles that same parent
+parent_epic: mtds_mdps_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1

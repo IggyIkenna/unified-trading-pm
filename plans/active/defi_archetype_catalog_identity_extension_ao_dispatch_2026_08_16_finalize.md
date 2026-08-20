@@ -16,7 +16,8 @@ related:
   ]
 created: "2026-08-16"
 last_updated: "2026-08-16"
-parent_epic: strategy_master # was: defi_master (epic-assignment audit 2026-08-19) -- mirrors its gated parent doc: the catalog-identity fix spans the whole strategy-service archetype catalog (all 5 catalog_*.py builders across CeFi/TradFi/DeFi), not DeFi-specific
+# was: defi_master (epic-assignment audit 2026-08-19) -- mirrors its gated parent doc: the catalog-identity fix spans the whole strategy-service archetype catalog (all 5 catalog_*.py builders across CeFi/TradFi/DeFi), not DeFi-specific
+parent_epic: strategy_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2
