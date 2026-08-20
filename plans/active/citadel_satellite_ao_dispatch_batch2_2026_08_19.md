@@ -118,3 +118,4 @@ source: >-
 - **context-scout 2026-08-20**: refreshed context_scope (5 entries) — added the new
   `blrs_daily_determinism_ledger_root_wiring_scope_2026_08_20.md` issue doc, the redirect target the P2.7.5 line's
   own premise-correction note names ("work those, not this line").
+- **2026-08-20** (AO worker slot-22, dispatch `citadel_satellite_ao_dispatch_batch2-2444fa0c8907`): shipped implementation `deployment-service@200c479179` through isolated quickmerge. Added the Stage A2 batch-rerun job and option-(a) workflow root injection; removed the old root-less Stage-B cron. `tofu validate` passed and isolated quality gates passed (`3650 passed, 5 skipped`, coverage `74.24%`). The checkbox remains open because the plan's declared done condition requires a post-deploy real reconciliation verdict, which was not observed in this session.
