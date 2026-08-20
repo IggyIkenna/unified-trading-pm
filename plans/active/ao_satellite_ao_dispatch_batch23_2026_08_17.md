@@ -151,19 +151,14 @@ are bounded, already-decided, and conflict-clear:
       classes (a truncation that previously stopped before the doc's real point, and a dangling first-sentence
       lead-in), and `quality-gates.sh` is green. Source: `/plans/active/issues/docs_reconcile_findings_2026_08_17.md`
       todo "[SCRIPT] P2. Fix fix_frontmatter.py's summary-truncation logic". Repo: unified-trading-pm.
-- [x] ✅ [SCRIPT] P1. **Make an unresolvable `--only` path a hard error** in `check_reference_paths.py`'s `_run_only()`
+- [ ] [SCRIPT] P1. **Make an unresolvable `--only` path a hard error** in `check_reference_paths.py`'s `_run_only()`
       — today `if not p.is_file(): continue` silently drops an unresolvable path and the function reports "0
       violation(s)" / exit 0, a false-clean-bill-of-health that cost 7 failed `safe-doc-push` attempts and 6 wrong
       diagnoses on one real incident (2026-08-12). **Fix**: print the attempted path (including its resolved
       absolute form) and exit non-zero when a named `--only` path does not resolve. **Done when**: a regression test
       asserts non-zero exit for a non-existent `--only` path, and `quality-gates.sh` is green. Source:
       `/plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md` todo "[SCRIPT]
-      P1. Make an unresolvable --only path a hard error". Repo: unified-trading-pm. — **DONE (pre-existing, verified
-      2026-08-20, slot 4)**: already shipped in `unified-trading-pm@1a066b0125` (`_run_only()` now appends
-      unresolved paths and hard-errors, printing evidence even under `--quiet`); regression tests
-      `test_unresolvable_only_path_is_a_hard_error` + `test_unresolvable_only_path_reported_even_under_quiet` in
-      `scripts/plan-hygiene/test_check_reference_paths.py` (collected via `PYTEST_UNIT_DIR`). No code change needed
-      this session — checkbox was simply stale.
+      P1. Make an unresolvable --only path a hard error". Repo: unified-trading-pm.
 - [ ] [SCRIPT] P2. **Print offending references on failure even under `--quiet`** in `check_reference_paths.py`'s
       `_run_only()`, `_run_diff_base()`, and the corpus-wide path — `--quiet` currently suppresses the per-violation
       `FORMAT`/`DANGLING` lines but keeps the summary count, so a precommit failure says "N violation(s)" without

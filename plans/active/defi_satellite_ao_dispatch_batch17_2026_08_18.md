@@ -80,7 +80,7 @@ drift_direction: advance-code
       inline: `plans/active/issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md`. Repo:
       strategy-service, execution-service (docs only, no code shipped this pass). Source:
       `plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` todo 1 (line ~126).
-- [x] ✅ [REVIEW] P1. **Confirmed the exact default behavior at `liquidation_bundle.py:271-303` (moved from 265-269; re-verified 2026-08-20)
+- [x] ✅ [REVIEW] P1. **Confirmed the exact default behavior at `liquidation_bundle.py:265-269`
       (`_candidate_from_features`).** `.get(id_key)` — no default argument at all. On any missing key the function
       returns `None` for the whole candidate (explicit `is None` checks; own docstring: "Returns `None` when any
       required key is missing — the orchestrator should backfill the calculator before this engine emits"), and

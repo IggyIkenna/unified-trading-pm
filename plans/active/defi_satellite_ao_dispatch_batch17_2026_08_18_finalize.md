@@ -56,7 +56,7 @@ Do not start manually before then.
 
 ## Todos
 
-- [x] ✅ [REVIEW] P2. Re-verify both of batch17's todos' reported findings independently (don't trust the batch doc's own
+- [ ] [REVIEW] P2. Re-verify both of batch17's todos' reported findings independently (don't trust the batch doc's own
       checkbox alone) — for the Tenderly call-site confirmation, re-grep the 3 MEV engine files directly; for the
       `liquidation_bundle.py:265-267` default-behavior confirmation, re-read the exact lines against current code
       (they may have moved). Correct any mis-citation found in the batch doc itself. Fold whatever was actually found
@@ -64,14 +64,6 @@ Do not start manually before then.
       call is confirmed absent, that doc's todo 1 should note the confirmed gap rather than staying an open question;
       if the default is confirmed `None`/raising, note that against todos 3/5 which depend on knowing it). Done-when:
       both todos independently re-verified with cited evidence, source doc updated to reflect what was found.
-      **DONE 2026-08-20 (slot-7 review, re-verified against current code):** (1) Tenderly call-site CONFIRMED ABSENT —
-      3 MEV engines import only `unified_api_contracts.internal` + sibling `strategy_service` modules (zero
-      Tenderly/simulate/gate_or_advise refs); `gate_or_advise()` has zero production callers; `simulate_bundle()`'s only
-      production caller is `gate_or_advise` (`tenderly.py:484`); `matching_engine.py` names Tenderly only in docstrings +
-      raises `NotImplementedError` for EVM DeFi legs. (2) default behavior CONFIRMED — `_candidate_from_features` moved to
-      `liquidation_bundle.py:271-303` (was 265-269): `.get(id_key)` no-default → `None` → `on_tick()` continues. Two
-      corrections folded into the source doc: `liq_candidate_health_factor_<id>` is NOT a feature key (margin-health-cache-
-      derived), and §"Bundle-simulation" flipped "Not confirmed"→"Confirmed absent". Batch doc "265-269" line range noted stale.
 - [ ] [DOC] P2. Once every batch17 todo + the REVIEW todo above are done: run the standard 6-step
       plan-completion-and-archival-discipline ritual
       (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) on
@@ -84,6 +76,3 @@ Do not start manually before then.
 - **2026-08-18 (na-eligibility-audit, defi tranche, dispatch agt-2c8a26)**: finalize plan authored alongside batch17's
   draft, per `task_template.md`'s finalize-plan-coverage rule.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **2026-08-20 (slot-7 review)**: REVIEW todo done — both batch17 findings independently re-verified + CONFIRMED; two
-  corrections folded into `mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` (health_factor not a
-  feature key; Tenderly "confirmed absent"). Archival todo (todo 2) remains open — not this pass's scope.
