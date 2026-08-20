@@ -22,8 +22,7 @@ related:
   ]
 created: 2026-08-17
 last_updated: 2026-08-18
-# was: defi_master (epic-assignment audit 2026-08-19) -- same as its 2026-08-16
-parent_epic: plan_hygiene_master
+parent_epic: plan_hygiene_master # was: defi_master (epic-assignment audit 2026-08-19) -- same as its 2026-08-16
   # predecessor: a na-eligibility-audit Phase 1b consolidation run report over the defi tranche, not defi
   # asset-group content itself
 assigned_vm: NA

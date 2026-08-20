@@ -242,27 +242,6 @@ todos only to confirm they are data-movement, then leave it.
       test_execution_service_venue_coverage_cascade_invariant.py`,
       `tests/data/execution_service_venue_reachability_baseline.json`.
 
-- [ ] [FROM-T4] P1. **4 of the 5 BATCH-settlement-gap actions have no UAC schema class at all — need new
-      `StrategyInstructionEnvelope` subclasses, not just a handler.** MEASURED 2026-08-20 closing
-      `/plans/active/code_readiness_t4_execution_settlement_2026_08_19.md`'s "Close the BATCH settlement gap"
-      todo: `InstructionActionV2` has 16 members; `execution_service/backtest_v2/action_handlers.py`'s
-      `resolve_settlement` dispatches on `isinstance(instruction, <Type>)` over `StrategyInstructionEnvelope`
-      subclasses. `CONVERT_DUST` already had a real subclass (`ConvertDustInstruction`, defined in
-      `unified_api_contracts/internal/architecture_v2/restaking_rewards.py`, just never wired into
-      `resolve_settlement` or the `StrategyInstructionV2` union) — that one is now closed,
-      `execution-service@6f664e80a0`. **`WITHDRAW`,
-      `REPAY`, `LP_MINT`, `LP_BURN` have NO instruction dataclass anywhere in UAC** — confirmed via
-      `grep -rln "InstructionActionV2.WITHDRAW\|InstructionActionV2.REPAY\|InstructionActionV2.LP_MINT\|
-      InstructionActionV2.LP_BURN" unified_api_contracts/`, which hits only `enums.py` (the enum itself) and
-      `reference/ledger_asset_resolution.py` — no `class *Instruction(StrategyInstructionEnvelope)` for any of
-      the four. This tranche does not own `unified-api-contracts`, so it cannot add them. The ask: 4 new
-      subclasses — `WithdrawInstruction`/`RepayInstruction` are natural rate-matched inverses of the shipped
-      `LendInstruction`/`BorrowInstruction` (same `protocol`/`asset`/target-amount shape, opposite direction);
-      `LpMintInstruction`/`LpBurnInstruction` need whatever the DEFI_LP position shape actually is (not designed
-      here — that's a UAC-side call). Once they exist, T4's `resolve_settlement` gets 4 more `isinstance`
-      branches — mechanical once the schema exists, same pattern as the CONVERT_DUST fix. Tracked open on T4's
-      own plan as `BLOCKED` on this request.
-
 ## Todos
 
 ### Registry SSOT — the P0s everything else is wrong without
@@ -360,15 +339,9 @@ todos only to confirm they are data-movement, then leave it.
       that issue (line ~431, `[DATA] P3`, re-verify a HYPERLIQUID backfill VM) is data-side and explicitly out
       of this tranche's no-backfill scope. Evidence:
       `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`.
-- [x] ✅ [BACKEND] P1. **STALE — already resolved before this tranche existed; closed by measurement.** The
-      exact CME/ICE cell this todo cites is fixed — `unified-api-contracts@fa9cece5` "two-layer data-type-
-      validity combinator redesign", confirmed a real ancestor of `origin/live-defi-rollout` (not a doc claim
-      taken on faith). Every `[CODE]`/`[DESIGN]` todo in the source issue is checked done (finding 1 CME/ICE
-      fix, finding 2 the two-layer target-shape redesign, DeFi vocabulary reconciliation, dead-code deletion,
-      31-DeFi-venue capability audit). Only 2 items remain open, both `[DATA] P2` — a prod full-history backfill
-      "IN PROGRESS" and its terminal-state verification — both explicit data-movement, out of this tranche's
-      no-backfill scope. Evidence:
-      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`.
+- [ ] [BACKEND] P1. Build a genuine `(venue, instrument_type) -> data_types` combinator shared by all five asset
+      groups. TradFi currently produces a provably-wrong cell (CME == ICE despite ICE having no Databento coverage).
+      Evidence: `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`.
 
 ### Contract extensions — unblock T3 and T4 EARLY
 
@@ -434,22 +407,8 @@ todos only to confirm they are data-movement, then leave it.
       from `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`, no invented names.
       5 tests incl. a JSON round-trip. QG green (481s, full 13k+ suite). W22 transfer routing is now unblocked on
       the schema side; still needs real per-venue population before W22 can consume live values.
-- [x] ✅ [BACKEND] P1. W8 weightings SSOT declared — unified-api-contracts@e55fc5a9d. New `WeightingDimension`
-      enum (`PORTFOLIO_PER_CLIENT` / `ARCHETYPE_LEVEL`, deliberately binary) plus `ALLOCATOR_ARCHETYPE_DIMENSION`,
-      a TOTAL mapping over all 17 `AllocatorArchetype` members. Grounded in real terminology, not invented:
-      read `strategy-service/strategy_service/portfolio_allocator/archetypes_base.py` +
-      `archetypes.py`/`archetypes_simple.py`/`archetypes_rank.py` first — `AllocatorArchetype` was ALREADY a
-      UAC-owned enum (strategy-service imports it via `from unified_api_contracts.internal import
-      AllocatorArchetype`), so this is additive to the existing contracts registry, not a new one. The 8 generic
-      engines (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) weight
-      `StrategyInputSeries.strategy_instance_id` → `PORTFOLIO_PER_CLIENT`; the 9 rank allocators
-      (CARRY_FUNDING_RANK + 7 per-archetype ranks + CARRY_FUNDING_DISPERSION_RANK) weight along an axis inside
-      one archetype's own universe via `BaseRankAllocator` → `ARCHETYPE_LEVEL`. Totality is ENFORCED, not just
-      documented — a future archetype added without a matching dimension entry fails
-      `test_allocator_archetype_dimension_is_total`. 5 tests total (totality, both groups' membership, the
-      no-overlap/no-gap partition property, `WeightingDimension` staying a deliberate binary). Exported at both
-      package levels matching `AllocatorArchetype`'s own existing surface. QG green (240s). Evidence:
-      `/plans/epics/system_readiness_master.md` § W8.
+- [ ] [BACKEND] P1. Declare the W8 weightings SSOT in the contracts registry — which dimension each weighting
+      applies to. P0 in the epic with **no owning plan** at authoring time; this todo is that owner.
 
 ### unified-trading-library
 
@@ -752,28 +711,3 @@ todos only to confirm they are data-movement, then leave it.
     check the log.
   **Verdict: Safe to compact: YES.** All shipped work committed and pushed, `ahead=0` on every touched repo,
   verified against actual trunk content.
-
-- 2026-08-20 — **THIRD PRE-COMPACT CHECKPOINT — lightweight, since the second checkpoint landed only minutes
-  earlier and this session's only work since was one closure.** 19 done / 18 open on this plan as of this entry.
-  **Closed since the second checkpoint**: the `(venue, instrument_type) -> data_types` combinator P1 —
-  STALE, already resolved weeks earlier (`unified-api-contracts@fa9cece5`, confirmed a real ancestor of
-  `origin/live-defi-rollout`, not a doc claim taken on faith); every `[CODE]`/`[DESIGN]` todo in the source issue
-  was already checked, only 2 out-of-scope `[DATA]` backfill items remain open there.
-  **Audit**: `unified-api-contracts` and `unified-trading-library` clean, `ahead=0`. `unified-trading-pm` was
-  momentarily 9 commits behind (routine fleet activity — T4's own plan + manifest housekeeping, unrelated to
-  T1) and carried one stale staged artifact (matched HEAD byte-for-byte, unstaged harmlessly) — `ff-only` pulled
-  clean, now `ahead=0` / status empty. **Observed but deliberately NOT touched**: the concurrent peer session
-  sharing this slot is actively mid-edit on `execution_delta_proxy_repricer_generalization_2026_08_18.md`
-  (mtime <2 min at observation time) and had a new `/codex/04-architecture/cross-domain-state-fabric.md` doc
-  in progress — that is their own live WIP, not mine to commit, stage, or promote. If a future session finds
-  this file dirty again, check its own commit/push status before assuming loss — the same "check git log before
-  panicking" lesson from the prior checkpoint applies.
-  **In-progress, not yet started**: the W8 weightings SSOT todo (line ~416) — read-only investigation only so
-  far (`strategy-service/strategy_service/portfolio_allocator/__init__.py`'s docstring: three real weighting
-  concepts exist — generic portfolio-statistic weighting engines (axis-agnostic: FIXED/PNL_WEIGHTED/
-  SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) vs per-archetype RANK allocators that weight
-  along a named axis (coin/venue/protocol/expiry/LST) — no UAC-side code written yet. Next step: read
-  `archetypes_simple.py` + `archetypes_rank.py` + `param_schema.py` for the exact current field/param names
-  before declaring the SSOT, so the declaration uses real terminology, not invented names.
-  **Verdict: Safe to compact: YES.** Zero uncommitted work of this session's own exists anywhere; the one
-  dirty file observed belongs to a different, live session.

@@ -273,24 +273,8 @@ todos only to confirm they are data-movement, then leave it.
       of guessing (the mode-dispatch todo below); `ARBITRAGE_MEV_SANDWICH` (1/mode) is `excluded_by_policy`, not a
       gap. **Zero `not_ready` does NOT mean the matrix is fully verified** — it means nothing FAILS a real machine
       check. The unverified population is different work and must not be reported as done.
-- [x] ✅ [BACKEND] P1. Fix the DeFi catalog/engine config-key contract drift for the 5 remaining families
-      (sports, ML-directional, market-making, vol). **Re-verified 2026-08-20**: the sweep is not "start the
-      vol-family method on the other 3 families" as this plan's deferred table framed it — the systemic test
-      (`test_all_catalogued_archetypes_construct_and_fire.py`) already parametrizes over the ENTIRE
-      `ARCHETYPE_ENGINE_REGISTRY` (all 59 archetypes, not vol-scoped), so the sweep has been comprehensive and
-      automated all along. Ran it clean (`GCP_PROJECT_ID` unset locally caused 3 unrelated DeFi bucket-naming
-      failures — set it, re-ran, 143 passed / 3 xfailed). The 3 xfails are a `strict=True` allow-list, not
-      silently-passing gaps: `RULES_DIRECTIONAL_EVENT_SETTLED` (9 rows, needs a real per-row
-      `'<feat>:<op>:<val>|<outcome>|<stake_frac>|<max_odds>'` DSL string — no row emits one) and
-      `MARKET_MAKING_EVENT_SETTLED` (6 rows, needs real per-exchange `back_instrument`/`lay_instrument` Betfair/
-      Matchbook instrument IDs), both dated 2026-07-24, both explicitly "NOT fixed here... a design decision, not
-      a rename" in the test's own allow-list comment — genuine remaining work, but `[DESIGN]`/`[STRATEGY]`-tagged
-      (inventing plausible-looking threshold values or instrument IDs for live financial strategies would be
-      fabrication, not a fix). One more open cross-repo design item in the issue doc
-      (`defi_catalog_engine_config_key_contract_drift_2026_07_23.md:774`): the pollable-candidate-registry feed
-      for `LIQUIDATION_CAPTURE`/`ARBITRAGE_MEV_LIQUIDATION_BUNDLE` has its transport shape ruled (2026-08-09) but
-      needs a human design pass on features-service's per-candidate feature-naming before it can be broken into
-      AO-dispatchable todos. Evidence:
+- [ ] [BACKEND] P1. Fix the DeFi catalog/engine config-key contract drift for the 5 remaining families
+      (sports, ML-directional, market-making, vol). Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
 - [ ] [BACKEND] P1. Build the venue/currency curtailment mechanism — `allowed_venues` is dead code today, and the
       catalog and `archetype_leg_spec_seeds` describe the same domain with no cross-check. Evidence:
@@ -329,41 +313,18 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W9, W10, W13 — balances, risk, exposure, PnL
 
-- [ ] [BACKEND] P0. **Tracked in a pre-existing sibling plan, not duplicated here** — found 2026-08-20:
-      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` already owns this exact convergence
-      (dated 2026-08-16, before this plan existed) with the full reconciliation already done (A and B are not
-      independent — B's DeFi path already consumes A's `DeFiHealthAggregator.aggregate()` output; the genuinely
-      redundant piece is `positions_health.py`'s separate re-derivation) and real remaining work tracked there:
-      10 done / ~14 open todos, `sequential: true` (a real chain — route the live feed, switch archetypes onto
-      it, extend the data model). Work this from that plan, not as a fresh T3 todo — the two plans would
-      otherwise silently duplicate the same fix.
+- [ ] [BACKEND] P0. Converge the two parallel position-risk mechanisms onto ONE. `DeFiHealthAggregator` (DeFi-only,
+      not live-fed) versus the already-live cross-service `margin_event_emitter.py` / `MarginEvent` — the epic says
+      converge, explicitly.
 - [ ] [BACKEND] P0. Build stale-producer detection on the live path. If strategy-service stops publishing,
       execution-service does not detect it — the kill switch has 5 armed conditions and none is "an internal service
       went silent". Evidence: `/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (23 open),
       `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`.
 - [ ] [BACKEND] P0. Implement W9 account balances as the single strategy I/O.
-- [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. **Re-verified 2026-08-20, claim
-      mostly holds but needs correction before acting**: `compute_pnl` (`pnl/engine/orchestrator.py:426`) IS
-      confirmed dead — only test callers (`tests/pnl/unit/test_engine.py`, `test_service_startup.py`), the real
-      CLI compute path routes to `calculate_execution_alpha` instead. **But before deleting it**: it computes
-      hold-day interest + sports-settlement PnL (routes to `SportsPnLEngine`) + standard per-instrument
-      breakdown — confirm none of those three are uniquely-only-here before removing, don't just delete a
-      formula that might not be duplicated elsewhere. The "execution-alpha compute_handler is dead with zero
-      readers" half of the claim is **wrong, correct it**: `compute_handler.py` is reachable via the registered
-      `--operation pnl-attribution` CLI operation (`service_entry.py:814-822,1008`) — code-live, not dead — but
-      no cron/systemd/Terraform trigger was found anywhere in the repo, unlike `--operation paper-run` which is
-      documented as the T+1 cron's Stage A (`service_entry.py:827-834`). Real decision needed: wire
-      `pnl-attribution` into a cron trigger, or delete the orphaned CLI operation if `paper_run_attribution.py`
-      already supersedes it. `paper_run_passive.py`/`paper_run_attribution.py` (`engine/backtest/`, not
-      `pnl/engine/` — path corrected) confirmed real: both cite
-      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §1 directly, i.e. they ARE the shared
-      batch=paper=live code path per the determinism-spine architecture, not a paper-only surface as the
-      original phrasing implied — so "collapse to one path" may already be closer to done than the todo states;
-      what's left is retiring/merging the two stragglers, not building a new unified path from scratch. HWM
-      confirmed compliant in the live path (`param_schema.py:1361,1371` uses UAC's `hwm_ledger` explicitly on
-      TWR/Notional/PnL-recovery); the one raw-equity HWM implementation found (`pnl_monitor.py:70,201-202`) has
-      no confirmed production instantiation site (dead code, not a live violation) and mock_data_provider's is
-      explicitly D2-smoke/mock-only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
+- [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. `compute_pnl` is dead with the
+      right formula but wrong keying/schema/sink; the execution-alpha compute_handler is dead with zero readers;
+      only `paper_run_passive.py` / `paper_run_attribution.py` are real. HWM is never raw equity — TWR / Notional /
+      PnL-recovery only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
 - [ ] [BACKEND] P0. Build PnL attribution across every dimension the artefacts describe (W13) — currently
       "specified, not built".
 - [ ] [BACKEND] P1. Fix the interest-accrual wrong engine and banned formula. Evidence:
@@ -553,9 +514,9 @@ section is now done.
 | --- | --- | --- |
 | Archetype code-completeness (all 7 legs, all 3 modes) | **DONE — 59/59 ready every leg/mode** | Nothing. |
 | `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@<see Progress Log>`. | Nothing. |
-| DeFi/vol/sports/ML/MM config-key contract drift | **DONE — sweep was already comprehensive, not vol-scoped.** The systemic construct-and-fire test parametrizes all 59 registered archetypes, confirmed green (143 passed/3 xfailed with `GCP_PROJECT_ID` set). 2 genuine remaining bugs, both `[DESIGN]`-blocked not mechanical: `RULES_DIRECTIONAL_EVENT_SETTLED`, `MARKET_MAKING_EVENT_SETTLED` (real per-row threshold/instrument-ID decisions, not derivable). | Nothing agent-executable. The 2 xfails need a human to pick real DSL thresholds / Betfair-Matchbook instrument IDs — don't fabricate plausible-looking values for live financial strategies. |
+| DeFi/vol config-key contract drift | **Vol family DONE** (2 real drifts, 8 keys, fixed this tranche) | Same method — make the systemic construct-and-fire test exercise the archetype and see which no-op — for sports, ML-directional, market-making. A4's catalogue-vs-schema comparison structurally cannot catch this class (both can agree while the ENGINE reads a third spelling); the method that found the vol drifts is the one that generalises. |
 | W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
-| W9/W10/W13 PnL, risk, exposure | **Re-verified, not stale — genuinely open, but re-scoped smaller.** `paper_run_attribution.py`/`paper_run_passive.py` already ARE the shared batch=paper=live path (not paper-only); `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Decide compute_handler's fate (wire a cron trigger or delete the orphaned op) and confirm compute_pnl's 3 capabilities are covered elsewhere before retiring it — smaller, more bounded than the original "build a unified path" framing suggested. |
+| W9/W10/W13 PnL, risk, exposure | Untouched | Collapse the three competing PnL surfaces; HWM is never raw equity (TWR / Notional / PnL-recovery only). |
 | W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
 | Position adapters / venue coverage | **DONE — whole section found already resolved** (all 4 sub-items: CeFi dispatch, asymmetry, hot-swap, orphan-coverage), all shipped 2026-08-14 through 17 by prior sessions, predating this plan's 2026-08-19 authorship. This plan section was written stale from birth. Residue is entirely non-agent-executable: 2 `[OPERATOR]` decisions (instrument hot-swap A/B, out-of-mandate adapter disclosure) + 1 `[AGENT]` Solana-SDK item in execution-service (T4's repo). | Nothing. If picking this back up, it's an operator-decision chase (hot-swap A/B, disclosure), not new engineering. |
 | features-service | Untouched | 5 of 7 on-chain feature groups write zero-feature parquets stamped `captured=True`; `corporate_actions` still on the banned Massive/Polygon.io vendor. |
@@ -566,14 +527,9 @@ section is now done.
 the shrinking worklist) and the two `quickmerge.sh` defects
 (`/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`).
 
-**Recommended next item (superseded 2026-08-20 session 3 — see Progress Log)**: position adapters/venue coverage
-and config-key drift are both now DONE (found already-resolved or already-comprehensive). What's left with real
-agent-executable scope: **W6 wizard/config** (untouched — rank-buffer hysteresis, no-trade band, beta-hedge
-overlay, vol-target-at-book-layer; the PORTFOLIO engines' `rebalance_band` is a reusable shape) and **W16/W18
-preflight + canonical paths** (untouched, blocked on T1's `PATH_REGISTRY` `mode=` fix for the paths half, but the
-fail-closed startup readiness check has no such dependency). The PnL item is real but narrower than it reads —
-see its row above; `compute_handler`'s cron-trigger decision and `compute_pnl`'s formula-uniqueness check are the
-actual next actions there, not a from-scratch unification.
+**Recommended next item**: start on the W9/W10/W13 PnL collapse or the position-adapter venue-string fix — both are
+P0, self-contained, and don't depend on anything else in this list. The config-key drift sweep (sports/ML/MM) is
+lower-effort but lower-value; do it opportunistically alongside whichever W-item touches those families.
 
 ## Progress Log — 2026-08-20 session 2
 

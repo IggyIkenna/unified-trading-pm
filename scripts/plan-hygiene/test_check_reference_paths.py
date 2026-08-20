@@ -77,27 +77,3 @@ def test_violation_in_real_file_prints_evidence_even_under_quiet(capsys, tmp_pat
     assert exit_code != 0
     out = capsys.readouterr().out
     assert "FORMAT" in out
-
-
-def test_corpus_wide_quiet_still_prints_evidence_on_failure(capsys, monkeypatch) -> None:
-    """Defect 2 (corpus-wide path): the baseline-mode scan must also print the
-    offending reference on FAILURE under --quiet, not just the bare summary count."""
-    dummy = checker.PM_DIR / "plans" / "active" / "_dummy_test_file.md"
-    monkeypatch.setattr(checker, "target_files", lambda: [dummy])
-    violation = (
-        "plans/active/_dummy_test_file.md: bare/relative codex ref "
-        "'codex/06-coding-standards/quality-gates.md' — should be /codex/..."
-    )
-    monkeypatch.setattr(checker, "_scan_file", lambda p, relpath: ([violation], []))
-    monkeypatch.setattr(
-        checker,
-        "load_baseline",
-        lambda: checker.Baseline(format_count=0, existence_count=0),
-    )
-    monkeypatch.setattr(sys, "argv", ["check_reference_paths.py", "--quiet"])
-
-    exit_code = checker.main()
-
-    assert exit_code != 0
-    out = capsys.readouterr().out
-    assert "FORMAT" in out

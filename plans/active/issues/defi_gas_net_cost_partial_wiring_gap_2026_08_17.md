@@ -229,11 +229,11 @@ execution-service's gas-cost models and features-service's onchain calculators. 
   passed, sentinel-verified at HEAD before quickmerge — not a sentinel-hit skip). Shipped strategy-service@fbf78dfe20.
   Remaining sibling todos in this doc (STRATEGY P3 `BACKRUN`, STRATEGY P3 `ExecutionCostEstimator`, STRATEGY P2
   `LIQUIDATION_CAPTURE` paper-universe registration below) are untouched — separate scope, not part of this task.
-- **[STRATEGY] P2. CANCELLED — SUPERSEDED 2026-08-20 (slot-8, worker), duplicate of §7.5's `[STRATEGY] P2`
-  below.** Was: register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
-  `paper_run_handler.py`. This line predates the approved §7 candidate-snapshot design; §7.5's `[STRATEGY] P2`
-  now tracks the identical registration work with the real gate list + evidence chain — that item is the one
-  to dispatch/flip, not this one (still NOT done — registration remains blocked pending its own gates).
+- [ ] [STRATEGY] P2. BLOCKED-ON:liquidation_capture_paper_drivability_design — Register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
+      `paper_run_handler.py` (mirroring how `ARBITRAGE_PRICE_DISPERSION`/DEX-pool archetypes are wired) so it can
+      actually run end-to-end in a real paper run — currently NOT in `paper_universe.py`'s drivable
+      `StrategyArchetype.*` set at all (confirmed via grep, 2026-08-17). Repo: strategy-service. Done when: a real
+      paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — corrected the .tabs/7 absolute prefixes to workspace-root-relative; added the features-service gas_cost_usd_calculator producer
 
 - **2026-08-20 (slot-7, worker):** shipped MTDS Aave V3 Ethereum producer corrections in `market-tick-data-service@278e377daa` (four task-scoped commits; quickmerge ancestry verified). The producer discovers pre-event `Borrow` logs, resolves balances and health at the observation block, reads block-pinned Aave oracle USD prices, covers variable + stable debt, emits deterministic candidate/snapshot digests, and emits explicit `UNAVAILABLE` rows without reusing `liquidation_events`; MTDS quality gates passed with 11,075 tests, 28 skips, 82.07% coverage. The `[MTDS] P1` producer checkbox is marked complete; the separate blocked follow-up still requires a persisted canonical shard and a `B < B2` evidence fixture, neither of which this producer-only slice supplies.
@@ -386,9 +386,8 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 - [x] ✅ [MTDS] P1. Added the canonical Aave candidate snapshot shard handler and proved a real Aave V3 Ethereum `B < B2` replay fixture before downstream gates. — market-tick-data-service@ac2f9d14 + @f516b389 + @4a2924ce3a + evidence: canonical parquet handler, UAC validation, deterministic replay test, Alchemy archive-RPC source block 25649186 precedes LiquidationCall block 25789896; MTDS quality gates passed (11,076 passed, 28 skipped, 1 xpassed, 81.97% coverage); all commits are on origin/live-defi-rollout.
 - [x] ✅ [FEATURES] P1. Add snapshot enrichment and provenance propagation using
   only real as-of prices, parameters, slippage/liquidity, and gas cost; test stale/missing joins as unavailable. — features-service@b2fcc11518 + evidence: QG_SLICE=tests (18491 passed, 209 skipped); QG_SLICE=typecheck passed.
-- [x] ✅ [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
+- [ ] [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
   replay; keep the engine fail-closed and add paper↔batch parity/exact-leg tests.
-  — strategy-service@ac240dbdde + evidence below.
 - [ ] [STRATEGY] P2. After all gates pass, register the archetype and prove one
   real Aave V3 Ethereum candidate emits an instruction; otherwise retain the
   blocked state with the measured gate failure.
@@ -411,31 +410,3 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 
 
 - **2026-08-20 (slot-10):** Closed the MTDS candidate-snapshot gate in `market-tick-data-service`. The CLI handler persists UAC-validated `liquidation_candidate_snapshots` canonical shards and records manifest outcomes; the Alchemy archive-RPC fixture proves Borrow block 25649186 precedes the known LiquidationCall at block 25789896, uses block-pinned prices, and replays deterministically through the canonicalizer. Unavailable rows retain typed provenance and no numeric defaults.
-
-- **2026-08-20 (slot-8, worker):** closed §7.5's `[STRATEGY] P1` typed-context-seam todo (the dispatched task was
-  actually the stale duplicate line above — see the SUPERSEDED note; the real remaining work was this P1 item,
-  so did it instead of a no-op registration attempt that §7.4 explicitly forbids before P1 lands).
-  `LiquidationCaptureEngine` (`strategy-service/.../arbitrage_structural/liquidation_capture.py`) now accepts an
-  injected `unified_api_contracts.internal.LiquidationCandidateContext` via a new `set_candidate_context()` —
-  borrower address, asset symbols, and amounts travel as strings/Decimals, never float-encoded; the prior static
-  `params`/`features` path is preserved as the fallback for direct construction (no regression to the sibling
-  gas-netting engines' existing tests). The cache-writer half is a new
-  `margin_health_cache.record_margin_health_from_liquidation_candidate()`, keyed on the candidate's own
-  `(borrower_address, protocol)` — not the engine's static params — so the engine's existing fail-closed
-  `get_current_margin_health()` read finds a fresh value. `liquidation_candidate_replay.py` (new module) is the
-  paper↔batch-shared replay driver: `replay_liquidation_candidates()` sorts by `(observed_at_block, candidate_id)`
-  per §7.4 and drives one tick per `AVAILABLE` candidate; `inject_liquidation_candidate()` is the per-candidate
-  seam (writes the cache, sets the context, fails closed on an expired/non-`AVAILABLE` snapshot). Determinism:
-  UAC's `LiquidationCandidateSnapshot` self-verifies its own `snapshot_digest` at construction (any field change
-  fails to even construct), so replaying the SAME immutable snapshot rows through the SAME code is the ε=0 proof
-  by construction — proven directly by a test that runs `replay_liquidation_candidates()` twice over the same
-  fixture and asserts byte-identical instruction sequences (candidate_id + snapshot_digest + expected_profit_usd +
-  leg size_units). 8 new regression tests
-  (`tests/unit/engine/strategies/v2/test_arbitrage_structural_liquidation_capture.py`): typed-context-overrides-
-  params-and-features, context-consumed-once-never-leaks, cache-writer-populates-real-reading, stale-context-
-  fails-closed, non-AVAILABLE-snapshot-never-yields-a-context, replay-orders-by-(block,candidate_id)-not-input-
-  order, paper-equals-batch-rerun determinism, and tampered-digest-fails-to-construct. `_ENGINE_DRIVABLE_ARCHETYPES`
-  in `paper_universe.py` is untouched — per §7.4 that's `[STRATEGY] P2`'s job, and it still needs the real,
-  already-shipped MTDS Aave V3 fixture driven end-to-end through this new seam before registration, not just a
-  unit-level proof. `quality-gates.sh` full run green (6415 passed, 248 skipped, 3 xfailed, sentinel-verified
-  pre-quickmerge). Shipped `strategy-service@ac240dbdde`.

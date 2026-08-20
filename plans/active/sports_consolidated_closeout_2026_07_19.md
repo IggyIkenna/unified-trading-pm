@@ -85,8 +85,7 @@ estimate_calibrated_ai_days: 36.8 # 46 x 0.8 (infra multiplier, unchanged estima
 locked_by:
 locked_since:
 supersedes:
-# recounted 2026-07-25 (plan-reconcile + consolidated-plan split pass) — 37 open/27 done post-split
-superseded_by:
+superseded_by: # recounted 2026-07-25 (plan-reconcile + consolidated-plan split pass) — 37 open/27 done post-split
   # (was 51 open/11 done as of 2026-07-21; this doc's own Track content was substantially relocated into 3 new child
   # plans on 2026-07-25, `sports_closeout_exchange_fixed_odds_fork_2026_07_25.md`,
   # `/plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md`, `sports_closeout_track_s2_foldin_2026_07_25.md`, so the lower

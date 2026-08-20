@@ -435,28 +435,11 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Fix `git stash push/pop` silently dropping content under high branch velocity — this defect
       costs every tranche real work. Evidence:
       `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`.
-      **Re-verified 2026-08-20: the bounded/mechanical portions are already extracted to
-      `/plans/active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md` (`status: active`, AO-dispatch
-      eligible) — items 1-2 (repro + promote the confirmed `--rebase --autostash` fix into durable recovery docs)
-      still open there, not yet landed. Not duplicating that work here; this doc's own remaining items are P3
-      conditional-future ("if velocity recurs") or a P2 design-review call, neither blocking.**
 - [ ] [BACKEND] P1. Add the retry safety net for `main-backmerge-to-ldr` on non-PM repos. Evidence:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`.
-      **Re-verified 2026-08-20: extracted to
-      `/plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` (`status: active`) — item 1 (the
-      fleet-wide `branch-health.yml` drift-tick safety net, the actual P1 fix) is `[x]` LANDED,
-      `unified-trading-pm@96c163347f`. Items 2-3 there (a stale comment, a failed-backmerge detection surface) are
-      P2 polish, still open, not blocking. This doc's own remaining item is a P3 third-party-action-pinning
-      evaluation.**
-- [x] ✅ [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
-      `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`. **The core defect
-      is fixed**: `unified-trading-ci main` added to `scripts/dev/cron-branch-overrides.txt` (`[x]`), verified no
-      new spurious `wip-preserve/` branches post-fix (`[x]`), and a CI/QG check now asserts every
-      `workspace-manifest.json` repo with a non-default integration branch has a matching override entry (`[x]`).
-      Remaining open items in that doc are 2 `[OPERATOR]` P3 decisions (registry collapse, reconciling specific
-      stale local slots) and 1 `[BACKEND]` P2 monitoring enhancement (fleet-wide quarantine rollup) — none of
-      these are the gap this todo names, so not blocking this close-out.
-- [x] ✅ [BACKEND] P3. Fix the git-status red-nudge false positive from the wrong branch comparison. Evidence:
+- [ ] [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
+      `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`.
+- [ ] [BACKEND] P3. Fix the git-status red-nudge false positive from the wrong branch comparison. Evidence:
       `/plans/active/issues/git_status_red_nudge_false_positive_wrong_branch_comparison_2026_08_17.md`. **Both
       original todos were already `[x]`, shipped 6 days prior. Its 2026-08-19 addendum named a third, still-open
       mechanism (`maybe_nudge_on_red_repos`'s `ahead` branch has no sustain gate) — FIXED + TESTED, NOT YET
@@ -478,44 +461,6 @@ todos only to confirm they are data-movement, then leave it.
       processes), not a defect in this fix. The fix remains preserved in the working tree AND backed up outside
       git (`scratchpad/agent-orchestrator-backup/`). Needs either a lower-contention retry window or someone with
       quickmerge-internals context to diagnose why re-gate's failure path drops its own check name.
-
-      **ROOT CAUSE FOUND + FIXED, 2026-08-20 (4th attempt, fleet contention independently confirmed low — only 1
-      other quickmerge running, a different repo).** Attempt 4 reproduced the identical symptom, ruling out
-      contention as the sole explanation. Read `scripts/quickmerge.sh`'s re-gate diagnostic path directly
-      (~L2560-2571): the branch that decides "real failure vs. lost race" classifies on
-      `grep -E '❌|^FAILED |^ERROR |^E '`, but the very next line that PRINTS the evidence to the agent only
-      grepped literal `grep '❌'` — a failure surfacing as a bare pytest `FAILED test_x` / `E AssertionError`
-      line (no ❌ emoji) is correctly classified as real but the display step matches nothing, producing exactly
-      the observed banner-with-no-check-name. **Fixed**: broadened the display grep to the same 4-pattern set used
-      for classification, plus a fallback message (naming the regate exit code + the manual command to run) for
-      the case where even that finds nothing. Pure diagnostic-string change — no pass/fail semantics touched.
-      `scripts/quickmerge.sh` is the PM SSOT every repo's own copy symlinks to, so this fixes the diagnostic gap
-      fleet-wide, not just for this ship. `unified-trading-pm@897067dc0b`. Re-attempting the
-      agent-orchestrator ship now that the fix is in place; if it still fails, the new diagnostic should finally
-      name the real check.
-
-      **LANDED, 2026-08-20 (6th attempt) — `agent-orchestrator@0ec1f010d2`, verified per-file against origin (both
-      `not_clean_since` in `_git_alerts.py` and both new test names in `test_git_staleness_alerting.py` present).**
-      The 5th attempt reproduced the identical banner even with the quickmerge.sh fix in place — the broadened
-      grep DID work exactly as designed (confirmed by reading the raw log: it correctly found and printed the
-      generic rollup line `❌ agent-orchestrator quality gate FAILED`), which finally revealed the real defect was
-      **one layer further in**: that literal string is `agent-orchestrator/scripts/quality-gates.sh`'s own
-      unconditional final message (line 254) when its internal `FAIL` flag is set — and the `run()` helper that
-      sets that flag (line 102: `"$@" || FAIL=1`) prints **no diagnostic of its own**, only a `── section ──`
-      header before the command runs. So the true failing check was invisible to BOTH quickmerge's summary line
-      AND my own earlier manual `grep '❌'` verification of a standalone gate run — because the actual failure text
-      was `Would reformat: server/worker_liveness/_git_alerts.py` (from `ruff format --check`, under the
-      `── ruff format --check — server/ ──` header), which matches neither `❌` nor `FAILED `/`ERROR `/`E `. My
-      own fix's long inline comment block was ruff-format non-compliant (a line-wrap preference, not a lint error
-      — `ruff check` passed clean the whole time, only `ruff format --check` objected) — every prior "clean
-      standalone gate, zero ❌ lines" check I ran was true and simultaneously missed this, since I was grepping
-      the same narrow pattern. Fixed with `ruff format server/worker_liveness/_git_alerts.py` (pure re-wrap of one
-      long f-string call, no semantic change — 26/26 regression tests re-confirmed passing after), then shipped
-      clean on the first attempt. **Lesson for future sessions**: `ruff format --check` failures print
-      `Would reformat: <path>`, not `❌`/`FAILED`/`ERROR` — no diagnostic-string grep pattern will ever catch
-      every failure shape a gate can produce; when a "REAL failure" banner fires with no visible evidence, the
-      reliable move is `git diff` the exact files being shipped through each individual formatter/linter directly
-      (`ruff format --check <path>`) rather than trusting a keyword grep over the full log a second time.
 
 ### Close-out
 
@@ -546,7 +491,7 @@ todos only to confirm they are data-movement, then leave it.
   `ci-cd-flow.md` pointer); `unified-trading-codex` is listed as a live sibling repo in two places but is
   ARCHIVED (per this file's own CLAUDE.md); the workspace-structure diagram showed the pre-Path-B flat clone
   layout, missing the `.tabs/<N>/` per-slot worktree model live since 2026-06-08 (confirmed against
-  `/codex/05-infrastructure/per-tab-worktrees.md`). 7 fixes, `unified-trading-pm@2d743a57d3`. The
+  `/codex/05-infrastructure/per-tab-worktrees.md`). 7 fixes, `unified-trading-pm@<pending — see ship log>`. The
   remaining ~16 items in that issue doc and its 2026-08-17 sibling stay open — genuinely VALID_JUDGMENT per
   6+ independent na-eligibility-audit passes, not re-litigated here.
 

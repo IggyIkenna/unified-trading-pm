@@ -90,42 +90,26 @@ plan is a serial chain by file-topology, not a reflexive default.
   `grace_period_seconds` param. Done-when: a new pydantic round-trip test on `AllocatorRedemption` proves the field
   persists through `model_copy`.
 
-- [x] [BACKEND] P0. Update grace-period expiry math in `GracePeriodHandler.run_once()` — fund-administration-service@9e23ccd; Evidence: quality-gates.sh passed (46s full run incl. tests); new tests `test_grace_period_handler_prefers_seconds_over_days_when_expired` + `test_grace_period_handler_seconds_not_yet_expired_is_skipped` in `tests/unit/test_background_handlers.py`.
+- [ ] [BACKEND] P0. Update grace-period expiry math in `GracePeriodHandler.run_once()`
   (`fund_administration_service/background/grace_period_handler.py:81`) to prefer `grace_period_seconds` when set,
   falling back to `grace_period_days * 86400` otherwise — this is what turns "5 business days" into "a few hours"
   when a redemption is created with the new field. Done-when: a unit test creates a redemption with
   `grace_period_seconds=14400` (4h) and asserts `run_once()` processes it after 4h simulated elapsed time, not 5 days.
 
-- [x] [BACKEND] P0. Add `redemption_cadence_seconds: int` to `FundAdministrationServiceConfig` — fund-administration-service@2e4869b; Evidence: quality-gates.sh passed (43s full run incl. tests); new test `test_grace_period_handler_run_forever_fires_at_configured_interval` in `tests/unit/test_background_handlers.py` (deterministic sentinel-exception pattern, avoids busy-loop/task-cancellation timing games).
+- [ ] [BACKEND] P0. Add `redemption_cadence_seconds: int` to `FundAdministrationServiceConfig`
   (`fund_administration_service/config.py`), default `28800` (8h, the operator's own suggested starting cadence —
   tunable via env, not a blocking decision). Implement the real wall-clock loop `GracePeriodHandler` currently lacks:
   add a `run_forever(interval_seconds: int) -> None` async method that calls `run_once()` on an `asyncio.sleep`-driven
   interval, and start it from `create_app()`'s FastAPI startup/lifespan hook (`fund_administration_service/api/main.py`).
   Done-when: an async test with a monkeypatched sleep asserts `run_once()` fires at the configured interval, not zero
   times ever (today's state).
-  Note: the lifespan hook only starts the loop once `ctx.transfer_adapter is not None` — the default container's stub
-  (`None`) would crash the loop's first withdrawal, so it stays dormant until the next P0 todo (DI wiring) lands.
 
-- [x] [BACKEND] P0. Implement the real wall-clock loop `NAVStrikeScheduler`'s own docstring describes but never ships — fund-administration-service@8194790 (rebase-reconciled onto a concurrent peer-agent's overlapping todo-2/3 commits @9e23ccd/@2e4869b) + @a9b1af15e (post-merge dedup fixup); Evidence: quality-gates.sh passed (34s full run incl. tests, 40 passed); new test `test_nav_strike_scheduler_run_forever_fires_tick_at_configured_interval` in `tests/unit/test_background_handlers.py`; wired into `create_app()`'s lifespan via `_make_lifespan(ctx)` in `api/main.py` alongside `GracePeriodHandler.run_forever()`.
+- [ ] [BACKEND] P0. Implement the real wall-clock loop `NAVStrikeScheduler`'s own docstring describes but never ships
   (`fund_administration_service/background/nav_strike_scheduler.py:1-8`) — an `asyncio.sleep`-driven loop calling
   `tick()` every `nav_publish_cadence_seconds` (config field already exists, default 86400s), started from the same
   FastAPI startup hook as the prior todo. Done-when: equivalent interval test to the prior todo, for `tick()`.
-  Note: `run_forever(interval_seconds, fund_share_classes: Sequence[tuple[str, str]] = ())` — no fund-registry API
-  exists yet in fund-administration-service to enumerate active (fund_id, share_class) pairs (out of every todo's
-  stated scope), so the loop starts at boot with zero registered pairs by default; the mechanism is real, tested, and
-  wired, but strikes nothing until a caller supplies pairs. Flagged as a genuine scope gap, not silently papered over.
 
-- [x] [BACKEND] P0. Wire `_default_container()`'s stub dependencies to real implementations — fund-administration-service@eff3e3a2c9; Evidence: quality-gates.sh passed (32s full run incl. tests, 44 passed); new tests `test_build_default_container_wires_real_transfer_adapter_and_nav_provider`, `test_nav_snapshot_webhook_ingests_and_feeds_nav_provider`, `test_local_simulated_transfer_adapter_confirms_every_method` in `tests/unit/test_api_end_to_end.py`.
-  **Deviation from the literal instruction below, documented per the Progress Log entry above**: `transfer_adapter`
-  is NOT wired to execution-service's `CompositeTransferAdapter` — doing so would violate the T4 no-service-imports
-  HARD RULE (`/codex/04-architecture/tier-and-import-architecture.md` rule 2/5; fund-administration-service and
-  execution-service are both T4), and execution-service has no synchronous REST contract for this today (only
-  read-only `GET /transfers/active`). Shipped `LocalSimulatedTransferAdapter` instead (same-repo, instant-confirm,
-  same convention execution-service's own `MockTransferAdapter` documents) — real custody/on-chain settlement stays
-  the companion `redemption_wallet_transfer_execution_2026_08_20.md` plan's scope, per this plan's own text noting
-  that plan "injects a real adapter directly, independent of this plan's DI wiring." `nav_provider` IS wired for
-  real, as instructed: `_StoreBackedNavProvider` reads `FundNAVSnapshot`s pushed through a new `POST /nav-snapshots`
-  webhook route, matching `FundNAVSnapshot`'s own docstring ("pushed via webhook" by position-balance-monitor-service).
+- [ ] [BACKEND] P0. Wire `_default_container()`'s stub dependencies to real implementations
   (`fund_administration_service/api/main.py`, ~line 130): `nav_provider=_EmptyNavProvider()` and `transfer_adapter=None`
   both currently no-op in production. Locate the actual `FundNAVSnapshot` producer (per
   `unified_api_contracts/internal/domain/client_reporting/nav_snapshot.py`'s own docstring, "Odum's
@@ -179,39 +163,3 @@ plan is a serial chain by file-topology, not a reflexive default.
   `global_ledger_pnl_attribution_master` as parent — corrected in-session: that epic is `status: superseded`, folded
   into `strategy_master` 2026-08-18, which already carries the same acked treasury-ledger-gap finding this plan
   resolves.
-- **2026-08-20**: [slot 5] Item 2 (grace-period expiry math) shipped — `GracePeriodHandler.run_once()` now prefers
-  `grace_period_seconds` over `grace_period_days * 86400` when set. fund-administration-service@9e23ccd, verified
-  ancestor of origin/live-defi-rollout. Remaining P0 todos (cadence loop + NAV-strike loop + DI wiring) are still
-  open, all touch `grace_period_handler.py`/`api/main.py` per this plan's `sequential: true`.
-- **2026-08-20**: [slot 31] Item 3 (redemption cadence config + `GracePeriodHandler.run_forever` + lifespan wiring)
-  shipped — fund-administration-service@2e4869b, verified ancestor of origin/live-defi-rollout. Testing this required
-  discovering a real hazard: a naively-monkeypatched `asyncio.sleep` with no genuine suspension point turns
-  `run_forever`'s loop into an unbounded synchronous busy-loop (confirmed live — a standalone repro pegged one core
-  at 100% and climbed to 24%+ host RSS before being killed by exact PID) rather than hanging safely or erroring;
-  production is unaffected (real `asyncio.sleep` always truly suspends), but the test now uses a sentinel-exception
-  raised from the faked sleep after N calls instead of task-creation + cancellation, which sidesteps the hazard
-  entirely. Remaining P0 todos (NAV-strike loop + DI wiring) still open, both touch `grace_period_handler.py`/
-  `api/main.py` per this plan's `sequential: true`.
-- **2026-08-20**: [interactive session, `.tabs/5`] Item 4 (NAVStrikeScheduler wall-clock loop) shipped —
-  fund-administration-service@8194790 + @a9b1af15e. **Multi-agent collision encountered and resolved**: at least two
-  other AO-dispatched workers (`[slot-5·planning]` @9e23ccd/@2e4869b, `[slot-14·planning]` @90603d9) picked up this
-  same plan concurrently and independently shipped items 2 and 3 while this session was mid-implementation of the
-  same two items. `quickmerge.sh`'s auto-rebase surfaced two rounds of genuine same-line conflicts (grace-period
-  expiry math in `grace_period_handler.py`, then `run_forever`'s own definition + a duplicated
-  `redemption_cadence_seconds` config field + a duplicated test function name) — resolved by hand per the
-  multi-agent-safety recipe (`rebase --continue`, never `stash drop`, re-verify green QG post-reconcile before
-  re-pushing), keeping the peer commits' already-landed logic and dropping this session's now-redundant duplicate
-  implementations, with one behavioral alignment: `GracePeriodHandler.run_forever()`'s loop order was changed from
-  sleep-then-run to run-then-sleep to match the peer's already-shipped test (`90603d9`) rather than rewriting a
-  test already on `origin`. **Flagging for the operator**: this is the second consecutive plan session where AO
-  dispatched multiple concurrent workers against the same `sequential: true` plan — worth an orchestrator-side
-  dedup check (a plan already claimed/in-progress by one dispatch shouldn't be handed to a second worker), since the
-  wasted-compute + merge-friction cost compounds with plan size. Item 4 itself: `NAVStrikeScheduler.run_forever()`
-  wired into `create_app()`'s lifespan via `_make_lifespan(ctx)` alongside `GracePeriodHandler.run_forever()`
-  (closure-based, not `app.state`, to keep basedpyright clean); QG green (34s, 40 tests passed). Item 5 (DI wiring)
-  starts next — flagging now, ahead of implementing it, that its literal instruction ("wire `transfer_adapter` to
-  execution-service's `CompositeTransferAdapter`") conflicts with the T4 no-service-imports HARD RULE
-  (`/codex/04-architecture/tier-and-import-architecture.md` rule 2/5 — fund-administration-service and
-  execution-service are both T4; execution-service also has no synchronous REST endpoint for this today, only
-  read-only `GET /transfers/active`) — will implement a same-repo-scope real adapter instead and document the
-  deviation on that todo's own evidence line rather than importing across the service boundary.

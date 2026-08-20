@@ -28,8 +28,7 @@ related:
   ]
 created: "2026-08-18"
 parent_epic: agent_operating_framework_master
-# reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
-assigned_vm: planning
+assigned_vm: planning # reclassified NA -> planning 2026-08-19 (na-eligibility-audit, ao tranche) — conflict-check CLEAR
 execution_scope: orchestrator-agent
 priority: P2
 estimate_class: infra
