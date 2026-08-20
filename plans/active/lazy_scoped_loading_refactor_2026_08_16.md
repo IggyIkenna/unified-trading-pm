@@ -425,3 +425,27 @@ down" narrative.
   reduction already reported is real and already landed; only the 4th file's OWN portion remains undone.
   **Converter script** (fixed, both bugs above patched): `/private/tmp/claude-501/.../scratchpad/lazify_init.py` —
   same caveat as before, session-scoped scratchpad, re-derive or ask this session if still live.
+- **2026-08-20, later same day — correction to the entry above: the `_VENUES` hypothesis was WRONG, and (the
+  important part) the already-shipped code is confirmed NOT affected.** Bisected properly instead of assuming:
+  patched the reverted lazy top-level `__init__.py` to `_VENUES: list[str] = []` (zero external modules imported at
+  all) and re-ran the same check — **still corrupt, all 3 registries still empty.** This flatly disproves the
+  `_VENUES`-loop theory from the entry above; the real cause is somewhere among the ~1,098 OTHER now-lazy names in
+  this same file, not the 37-entry venue list. Recommended next step in the prior entry (bisect `_VENUES`) is
+  therefore WRONG — do not follow it; whoever picks this up needs to bisect across the ~122 source modules the
+  ordinary lazy exports touch instead, which is a materially bigger search.
+  **The one thing this DID settle, decisively**: re-ran the identical check against the CURRENTLY-SHIPPED tree
+  (`git status --porcelain` empty, `ahead=0 behind=0` against origin — i.e. `registry/__init__.py` +
+  `architecture_v2/__init__.py` + `internal/__init__.py` lazy, top-level `unified_api_contracts/__init__.py` still
+  the ORIGINAL eager one) — `SCENARIO_REGISTRY`=13, `SYNTHETIC_GENERATOR_REGISTRY`=13,
+  `SCENARIO_ARCHETYPE_MATRIX`=19 entries total, all correct. **The bug is confined entirely to the reverted,
+  unshipped 4th file — the three already-landed commits carry zero risk of this.** Worth stating plainly since the
+  prior entry's wording could be read as "something is currently broken" — nothing is; this was caught before
+  shipping, which is the system working as intended, not an incident.
+  **Also corrects a methodology error in the prior entry's "isolated import" tests**: those ran
+  `import unified_api_contracts.canonical.crosscutting.scenario_overlay` directly, but Python mandatorily runs the
+  PARENT package's `__init__.py` first regardless — those tests were executed AFTER the top-level file had already
+  been reverted to the eager original, so they were silently testing "reached via the eager original," not
+  "reached via nothing." There is no way to import a submodule of `unified_api_contracts` without its top-level
+  `__init__.py` running first; any future bisection needs to control for that, not assume isolation is possible.
+  Not pursued further this tick — the search space is now known to be much larger than one 37-entry list, and
+  finding the real culprit warrants its own dedicated pass, not a quick follow-up.
