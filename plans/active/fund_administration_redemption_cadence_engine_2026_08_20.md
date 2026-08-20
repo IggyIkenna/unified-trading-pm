@@ -115,7 +115,17 @@ plan is a serial chain by file-topology, not a reflexive default.
   stated scope), so the loop starts at boot with zero registered pairs by default; the mechanism is real, tested, and
   wired, but strikes nothing until a caller supplies pairs. Flagged as a genuine scope gap, not silently papered over.
 
-- [ ] [BACKEND] P0. Wire `_default_container()`'s stub dependencies to real implementations
+- [x] [BACKEND] P0. Wire `_default_container()`'s stub dependencies to real implementations — fund-administration-service@eff3e3a2c9; Evidence: quality-gates.sh passed (32s full run incl. tests, 44 passed); new tests `test_build_default_container_wires_real_transfer_adapter_and_nav_provider`, `test_nav_snapshot_webhook_ingests_and_feeds_nav_provider`, `test_local_simulated_transfer_adapter_confirms_every_method` in `tests/unit/test_api_end_to_end.py`.
+  **Deviation from the literal instruction below, documented per the Progress Log entry above**: `transfer_adapter`
+  is NOT wired to execution-service's `CompositeTransferAdapter` — doing so would violate the T4 no-service-imports
+  HARD RULE (`/codex/04-architecture/tier-and-import-architecture.md` rule 2/5; fund-administration-service and
+  execution-service are both T4), and execution-service has no synchronous REST contract for this today (only
+  read-only `GET /transfers/active`). Shipped `LocalSimulatedTransferAdapter` instead (same-repo, instant-confirm,
+  same convention execution-service's own `MockTransferAdapter` documents) — real custody/on-chain settlement stays
+  the companion `redemption_wallet_transfer_execution_2026_08_20.md` plan's scope, per this plan's own text noting
+  that plan "injects a real adapter directly, independent of this plan's DI wiring." `nav_provider` IS wired for
+  real, as instructed: `_StoreBackedNavProvider` reads `FundNAVSnapshot`s pushed through a new `POST /nav-snapshots`
+  webhook route, matching `FundNAVSnapshot`'s own docstring ("pushed via webhook" by position-balance-monitor-service).
   (`fund_administration_service/api/main.py`, ~line 130): `nav_provider=_EmptyNavProvider()` and `transfer_adapter=None`
   both currently no-op in production. Locate the actual `FundNAVSnapshot` producer (per
   `unified_api_contracts/internal/domain/client_reporting/nav_snapshot.py`'s own docstring, "Odum's
@@ -183,7 +193,7 @@ plan is a serial chain by file-topology, not a reflexive default.
   entirely. Remaining P0 todos (NAV-strike loop + DI wiring) still open, both touch `grace_period_handler.py`/
   `api/main.py` per this plan's `sequential: true`.
 - **2026-08-20**: [interactive session, `.tabs/5`] Item 4 (NAVStrikeScheduler wall-clock loop) shipped —
-  fund-administration-service@4fc12f4 + @a9b1af15e. **Multi-agent collision encountered and resolved**: at least two
+  fund-administration-service@8194790 + @a9b1af15e. **Multi-agent collision encountered and resolved**: at least two
   other AO-dispatched workers (`[slot-5·planning]` @9e23ccd/@2e4869b, `[slot-14·planning]` @90603d9) picked up this
   same plan concurrently and independently shipped items 2 and 3 while this session was mid-implementation of the
   same two items. `quickmerge.sh`'s auto-rebase surfaced two rounds of genuine same-line conflicts (grace-period
