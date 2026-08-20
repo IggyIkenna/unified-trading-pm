@@ -266,12 +266,24 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Make honest coverage measurable on EVERY axis and granularity, each figure carrying its
       denominator and date. This is the epic's own definition-of-done item. SSOT:
       `/codex/02-data/honest-coverage-model.md`.
-- [ ] [OPERATOR] P0. **Rule on whether level 5 should drop fully-retired keys like level 4 does.** MEASURED
+- [x] [OPERATOR] P0. **Rule on whether level 5 should drop fully-retired keys like level 4 does.** MEASURED
       2026-08-20: `by_venue_instrument_type` (level 4) passes through `_drop_fully_retired_nested`;
       `by_venue_instrument_type_data_type` (level 5) does not. After the 2026-08-20 naming fix the two levels
       agree on what each shard is CALLED but still disagree on which shards EXIST. Level 5 is the shard atom
       `iter_shard_cells()` reads, so aligning it changes the published denominator — which is exactly why this is
       operator-gated and was not folded into the naming fix. Blocked on the ruling, not on code.
+      ✅ 2026-08-20 — **Operator ruling (interactive session, this tranche's plan
+      `/plans/active/code_readiness_t2_refdata_marketdata_2026_08_19.md` + `/plans/epics/system_readiness_master.md`
+      § W3): yes, apply the same drop.** Shipped
+      `instruments-service@977f4b3a1a` (ancestor-verified against `origin/live-defi-rollout`, content re-read to
+      confirm `_drop_fully_retired_shard_atom` landed): level 5 (`by_venue_instrument_type_data_type`, the actual
+      shard atom `iter_shard_cells()` reads) now drops a fully-retired `(instrument_type, data_type)` leaf, then
+      cascades to drop the `instrument_type` entry if that empties it, then the `venue` entry if that empties it
+      — same policy `_drop_fully_retired_nested` already applied at level 4 since 2026-08-14. 3 new tests proving
+      the cascade at all three depths, plus that a MIXED leaf (some captured/expected_unattempted alongside some
+      attempted_failed) keeps its real counts rather than being dropped. Per W3's "any denominator change lands
+      as a dated supersession, never a silent edit", this SHRINKS the reachable denominator — dated here,
+      2026-08-20 — and reaches the live artefact on the next nightly `measure-honest-coverage` cron run.
 - [ ] [BACKEND] P1. **Report coverage grain PER asset_group, or publish the hollow fraction beside the label.**
       MEASURED 2026-08-19: 1,973 of 3,962 cells (49.8%) carry a blank or `'nan'` instrument_type while
       `detect_grain()` reports `"instrument_type"` for the whole payload — `defi` 1,871/2,804 (66.7%), `tradfi`
@@ -492,7 +504,7 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
 - [ ] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
       `/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`.
-- [ ] [BACKEND] P2. **BLOCKED-OPERATOR** — Decide and implement the MTDS WS venue-fallback removal for Polymarket.
+- [x] [BACKEND] P2. Decide and implement the MTDS WS venue-fallback removal for Polymarket.
       Evidence: `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
       **Reason 2026-08-20**: the issue's sole todo is `[OPERATOR] P3` — a binary product/architecture call the doc
       itself says it "doesn't have the authority to make" (accept polymarket's two-connector dual-casing split as
@@ -507,6 +519,19 @@ todos only to confirm they are data-movement, then leave it.
       registration changes and cannot break polymarket dispatch. Note `WS_FEED_CONNECTOR_FACTORIES` is EMPTY at
       import time (registration is lazy, on connector-module import), so a static probe of the dict proves nothing —
       the registration call sites are the evidence.
+      ✅ 2026-08-20 — **Operator ruling (interactive session, source doc
+      `mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`): remove the fallback fleet-wide.**
+      Shipped
+      `market-tick-data-service@3c142f0d4a` (ancestor-verified, content re-read to confirm). `resolve_ws_feed_venue_key`
+      is now EXACT-MATCH ONLY — the `.lower()`/`.upper()` fallback branches are gone; the function body is a
+      single ternary. Confirmed safe for the venue the decision was actually about: both Polymarket connectors
+      register under DIFFERENT canonical-cased keys (`polymarket_ws.py` registers lowercase `"polymarket"`,
+      `polymarket_clob_ws.py` registers UPPERCASE `"POLYMARKET"`) and both resolve via exact match with zero
+      registration changes. Updated the 2 pre-existing tests that asserted the OLD fallback behavior to assert
+      the new exact-match-only contract instead of silently deleting them, and added 2 new tests specific to
+      Polymarket: both connectors resolve post-removal, and a `"POLYMARKET"` lookup against only the lowercase
+      key now correctly returns `None` instead of silently resolving to the wrong connector via `.upper()` — the
+      exact class of mix-up removing the fallback closes. 39 tests passed.
 - [x] [BACKEND] P2. Confirm the MDPS `--force` subprocess fix is live and that only a data relaunch remains — that
       relaunch is out of scope. Evidence:
       `/plans/active/issues/mdps_force_flag_dropped_subprocess_per_date_2026_08_08.md`.

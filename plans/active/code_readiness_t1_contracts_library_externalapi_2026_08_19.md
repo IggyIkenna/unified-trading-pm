@@ -434,8 +434,22 @@ todos only to confirm they are data-movement, then leave it.
       from `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`, no invented names.
       5 tests incl. a JSON round-trip. QG green (481s, full 13k+ suite). W22 transfer routing is now unblocked on
       the schema side; still needs real per-venue population before W22 can consume live values.
-- [ ] [BACKEND] P1. Declare the W8 weightings SSOT in the contracts registry — which dimension each weighting
-      applies to. P0 in the epic with **no owning plan** at authoring time; this todo is that owner.
+- [x] ✅ [BACKEND] P1. W8 weightings SSOT declared — unified-api-contracts@e55fc5a9d. New `WeightingDimension`
+      enum (`PORTFOLIO_PER_CLIENT` / `ARCHETYPE_LEVEL`, deliberately binary) plus `ALLOCATOR_ARCHETYPE_DIMENSION`,
+      a TOTAL mapping over all 17 `AllocatorArchetype` members. Grounded in real terminology, not invented:
+      read `strategy-service/strategy_service/portfolio_allocator/archetypes_base.py` +
+      `archetypes.py`/`archetypes_simple.py`/`archetypes_rank.py` first — `AllocatorArchetype` was ALREADY a
+      UAC-owned enum (strategy-service imports it via `from unified_api_contracts.internal import
+      AllocatorArchetype`), so this is additive to the existing contracts registry, not a new one. The 8 generic
+      engines (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) weight
+      `StrategyInputSeries.strategy_instance_id` → `PORTFOLIO_PER_CLIENT`; the 9 rank allocators
+      (CARRY_FUNDING_RANK + 7 per-archetype ranks + CARRY_FUNDING_DISPERSION_RANK) weight along an axis inside
+      one archetype's own universe via `BaseRankAllocator` → `ARCHETYPE_LEVEL`. Totality is ENFORCED, not just
+      documented — a future archetype added without a matching dimension entry fails
+      `test_allocator_archetype_dimension_is_total`. 5 tests total (totality, both groups' membership, the
+      no-overlap/no-gap partition property, `WeightingDimension` staying a deliberate binary). Exported at both
+      package levels matching `AllocatorArchetype`'s own existing surface. QG green (240s). Evidence:
+      `/plans/epics/system_readiness_master.md` § W8.
 
 ### unified-trading-library
 
@@ -511,22 +525,49 @@ todos only to confirm they are data-movement, then leave it.
 
 ### External API surface — `platform-external-api-walkthrough.html`
 
-- [ ] [BACKEND] P0. Replace the honest HTTP 501s with real implementations — `transfer`, `bridge`, `atomic`,
-      `cancel`. The artefact currently describes these as "not a silent drop, but not yet the same".
-- [ ] [BACKEND] P0. Build the counterparty-facing surface the artefact marks `planned — shape in`. Specify then
-      build; the artefact must be able to cite a live route.
-- [ ] [BACKEND] P1. Enumerate exactly the API surface the artefact currently leaves as "pending, to be enumerated
-      exactly" — generate the reference from the shipped routes so it cannot drift.
-- [ ] [BACKEND] P1. Build the kill-switch (scoped halt) and flatten-position external endpoints, both marked
-      `planned, not yet` in the artefact. Arming is autonomous; resume stays inside the auto-recovery matrix. SSOT:
-      `/codex/04-architecture/autonomous-recovery-matrix.md`.
+> **2026-08-20 re-triage** — T1 read this section's target file directly (artefact line 1361 cites
+> `execution-service/execution_service/api/external_instruction_api.py`, verified) and found every remaining item
+> below targets a repo T1 does not own (`execution-service`=T4, `strategy-service`=T3). None of these are
+> `unified-trading-api` — that repo's own `routes/execution.py` is an unrelated mock/demo store with no `/external/*`
+> surface at all (confirmed: no `501`/`NOT_IMPLEMENTED` anywhere in the repo outside `.venv`). Redirected via
+> `[FROM-T1]` inbound flags rather than either fabricating out-of-repo edits or silently dropping the finding.
+
+- [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P0. ~~Replace the honest HTTP 501s with real
+      implementations — `transfer`, `bridge`, `atomic`, `cancel`.~~ Target is `execution-service`'s
+      `/external/instructions` router (T4-owned) — see `[FROM-T1]` in T4's plan. T1 measured the UAC-side vocabulary
+      first so T4 doesn't have to: `StrategyInstructionType`
+      (`unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`) already covers SWAP/LEND/
+      BORROW/STAKE/UNSTAKE/BRIDGE/FLASH_LOAN(=atomic); QUOTE, a standalone TRANSFER (distinct from BRIDGE), and
+      CANCEL are genuinely absent from the contract too.
+- [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P0. ~~Build the counterparty-facing surface the
+      artefact marks `planned — shape in`.~~ Target is `strategy-service` (T3-owned) — see `[FROM-T1]` in T3's plan.
+- [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P1. ~~Enumerate exactly the API surface...~~ Spans
+      `instruments-service`+`market-tick-data-service` (T2) and `execution-service` (T4) routers, none T1-owned;
+      this is doc-generation work reading routes across repos, not editing any of them — redirected to T5 (already
+      builds route-surface tooling for the readiness dump) with a note that it needs T2/T4 to hold their routers
+      stable while it walks them.
+- [ ] [BACKEND] P1. Build the kill-switch (scoped halt) and flatten-position external endpoints — **split in two**:
+      the contract half (adding `KILL_SWITCH`/`FLATTEN_POSITION` as `StrategyInstructionType` members a caller can
+      submit, not just internal system behaviour) is genuinely T1's, but is an open design call, not a mechanical
+      enum fill — `INSTRUCTION_TYPE_TO_OPERATIONS` is a total mapping and control instructions may not decompose
+      into `OperationType` steps the same way trade/DeFi ones do. Held pending T4's answer on what shape
+      execution-service actually needs (asked via `[FROM-T1]` in T4's plan) rather than guessing and shipping a
+      contract T4 has to rework. The endpoint half is T4's regardless. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - [ ] [UI] P1. Wizard stage detail, screenshots and the generated-config example are `pending, to be expanded` in
       the artefact — build the wizard surface to the point those can be generated from the real UI. Needs `[UI]` +
       `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
-- [ ] [BACKEND] P2. Ceffu integration is a stub pending its API spec — build the full code path behind the provider
-      interface and tag it credential-gated, never descope. Do NOT invent a distinct Ceffu custody member.
-- [ ] [BACKEND] P2. Fee and gas modelling cost components — the artefact says "specified, not built, and nothing
-      below is live anywhere in the pipeline today". Build the contracts side; W17's service-side split is T3/T4.
+- [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P2. ~~Ceffu integration is a stub pending its API
+      spec...~~ Target is `execution-service/execution_service/transfer_coordinator.py` (T4-owned, confirmed by the
+      artefact's own citation at line 16915) — see `[FROM-T1]` in T4's plan.
+- [x] ✅ [BACKEND] P2. **Shipped — `unified-api-contracts@<pending-sha>`.** Fee and gas modelling cost components —
+      contracts side. Added `clearing_fee_bps`, `broker_fee_bps`, `other_fee_bps` to
+      `ExecutionCostEstimate` (`unified_api_contracts/internal/domain/execution_service/cost_estimate.py`), matching
+      W17's exact "clearing, broker, exchange, gas, and other" breakdown (`exchange_fee_bps`/`gas_cost_usd` already
+      existed). All three default to `Decimal("0")` — backward-compatible, and deliberately NOT folded into
+      `total_cost_bps` (documented) so no existing producer's total silently drifts. 3 tests added
+      (`tests/internal/unit/domain/execution_service/test_cost_estimate_fee_breakdown.py`), passing standalone.
+      W17's service-side split (baking these into strategy's decision and execution's alpha PnL) is T3/T4, per the
+      plan's own framing — not redirected, since the todo already said so.
 
 ### Close-out
 

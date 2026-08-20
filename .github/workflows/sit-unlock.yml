@@ -215,6 +215,7 @@ jobs:
           LOCK_VERSION: ${{ steps.sit-issue.outputs.lock_version }}
           ISSUE_URL: ${{ steps.sit-issue.outputs.issue_url }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          FAILURE_CLASS: ${{ github.event.client_payload.failure_class }}
         run: |
           set -euo pipefail
           TARGET=$(python3 -c "
@@ -225,7 +226,18 @@ jobs:
           print(candidates[0] if candidates else 'system-integration-tests')
           ")
           export TARGET
-          export CONTEXT="full-workspace-sit failed (run: ${RUN_URL}). Lock version: ${LOCK_VERSION}. Staging is now unlocked for fixes (breaking_pending kept until a green SIT). Issue: ${ISSUE_URL:-N/A}. Identify which pending repo broke the cross-repo invariant suite (scripts/run_cross_repo_invariants.sh in system-integration-tests), push a fix to live-defi-rollout, and let sit-debounce-trigger's 60s quiet-period re-trigger SIT."
+          # failure_class=stamp_infra_only (sit_stamp_dispatch_503_false_positive_2026_08_17.md):
+          # full-workspace-sit's own Stamp step sets this when STAMP_FAILURES fired but every
+          # per-repo cross-repo invariant still PASSED — a 2026-08-17 cluster of these was
+          # misdiagnosed as "identify which repo broke the suite" because nothing distinguished a
+          # stamp-dispatch/GitHub-API failure from a real invariant break; a worker acting on that
+          # hypothesis on faith, instead of reading the job log first, could have shipped an
+          # unjustified change. Branch the context instead of guessing.
+          if [ "${FAILURE_CLASS:-}" = "stamp_infra_only" ]; then
+            export CONTEXT="full-workspace-sit failed (run: ${RUN_URL}), but every cross-repo invariant PASSED — the failure is confined to the SIT_VALIDATED stamp-dispatch step (a GitHub API error, e.g. transient 503s, dispatching ci-status-update events). Lock version: ${LOCK_VERSION}. Staging is now unlocked for fixes (breaking_pending kept until a green SIT). Issue: ${ISSUE_URL:-N/A}. No pending repo needs a code fix — check the run's Stamp step log for the specific dispatch/HTTP errors, and if they look like transient GitHub-side unavailability, wait for sit-debounce-trigger's 60s quiet-period auto-retrigger (or GitHub's status page) rather than searching for a broken invariant that does not exist."
+          else
+            export CONTEXT="full-workspace-sit failed (run: ${RUN_URL}). Lock version: ${LOCK_VERSION}. Staging is now unlocked for fixes (breaking_pending kept until a green SIT). Issue: ${ISSUE_URL:-N/A}. Identify which pending repo broke the cross-repo invariant suite (scripts/run_cross_repo_invariants.sh in system-integration-tests), push a fix to live-defi-rollout, and let sit-debounce-trigger's 60s quiet-period re-trigger SIT."
+          fi
           PAYLOAD=$(python3 -c "import json,os; print(json.dumps({'event_type':'escalate-to-orchestrator','client_payload':{'repo':os.environ['TARGET'],'pr_number':0,'wall_type':'sit_failure','context':os.environ['CONTEXT'],'authoring_slot':'ci','model':'sonnet'}}))")
           HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
             -H "Authorization: Bearer ${GH_TOKEN}" -H "Accept: application/vnd.github+json" \
@@ -297,8 +309,7 @@ jobs:
         workspace-manifest.json).' || github.event.action == 'sit-passed' && '✅ SIT PASSED — staging UNLOCKED,
         breaking_pending cleared. Promotion queue flowing.' || 'SIT Failed — staging unlocked. Staging is open for fixes
         (breaking_pending kept — the set still needs a green SIT to promote).' }}
-      severity:
-        ${{ needs.unlock-staging.result == 'success' && github.event.action == 'sit-passed' && 'INFO' || 'CRITICAL' }}
+      severity: ${{ needs.unlock-staging.result == 'success' && github.event.action == 'sit-passed' && 'INFO' || 'CRITICAL' }}
       # ci_failures cleanup (2026-07-13): the ICON must reflect what the alert REPORTS, not the
       # unlock JOB's mechanical result. When SIT fails, the unlock job SUCCEEDS (it unlocks staging
       # fine) — but passing that `success` rendered a green ✅ on a "SIT Failed" CRITICAL alert
