@@ -190,16 +190,9 @@ Coverage is the verification lens — every number flows through `compute_honest
 
 ## Phase 1 — cefi (FIRST), gated G1→G5
 
-- [x] [SCRIPT] P0. **G1 — instruments-service correct per-day** (mtds/instruments-service): code right + deterministic +
+- [ ] [SCRIPT] P0. **G1 — instruments-service correct per-day** (mtds/instruments-service): code right + deterministic +
       on LDR + QG-green; single-day re-run byte-reproducible; **junk/test symbols rejected** at capture; per-instrument
       fields (available_from, type, symbol, MVP, universe-tag) correct. DoD: a sample day audited cell-correct.
-      ✅ 2026-08-20 (T2, `/autonomous`) — **flipping the rollup: all 4 named blocking defects below (G1.1-G1.4) plus
-      the G1.3 follow-up finding were already `[x]` from prior sessions, and this session closed the last
-      remaining G1-scope item (the EXTENDED CF-11 honest-absence fix, found via this exact G1 investigation
-      chain — see below). This checkbox itself was the only thing never flipped once its children completed;
-      not new verification, a housekeeping flip.** G1.1's own "REMAINING DoD" note (an operational
-      rebuild-confirmation step gated on an in-flight `_index` remediation, dated 2026-06-27) is that prior
-      session's own scope, not re-verified fresh here.
 
   > **🔴 G1 VERIFICATION (2026-06-26/27, opus cefi agent — read-only duckdb on live `prod/catalog.parquet` 349,156
   > rows + `_index/availability_index.parquet` 83,851 rows). VERDICT: G1 is NOT done — 4 live correctness defects. The
@@ -481,23 +474,12 @@ Coverage is the verification lens — every number flows through `compute_honest
         drop-days 182→180. Catalogue (asset_group-AGNOSTIC, venue-keyed instrument defs) left intact. REMAINING (minor):
         the orphaned by_date defi snapshots for the 3 venues (~3/day, no longer enumerated after Phase 1) + stop the
         expected-universe seeder from seeding them as defi — tracked below.
-  - [x] [CEFI-TRACK] P1. **EXTENDED violates the CF-11 honest-absence contract** — on fetch failure it emits
+  - [ ] [CEFI-TRACK] P1. **EXTENDED violates the CF-11 honest-absence contract** — on fetch failure it emits
         `ADAPTER_FETCH_FAILED` but FALLS BACK to a hardcoded market list instead of raising, so a real outage records
         `captured` (stale fallback) not `attempted_failed` (the A8 false-complete pattern). Its sibling on-chain perps
         (HYPERLIQUID/ASTER/LIGHTER) raise. Decide: make EXTENDED raise-on-fetch-failure (honest) vs keep the fallback.
         Target repo: instruments-service `adapters/cefi/extended.py`. Cefi-track (behaviour change w/ manifest
         implications).
-        ✅ 2026-08-20 (T2, `/autonomous`) — **decided + shipped: raise-on-fetch-failure, matching every sibling.**
-        This wasn't a fresh business judgment call — the workspace's own honest-absence principle and the named
-        CF-11 contract already point one way, and the sibling on-chain perp adapters already implement it; the
-        fallback was the outlier, not a considered alternative. `get_instruments()`'s exception handler now
-        raises `RuntimeError` (after classify+emit, mirroring hyperliquid.py's exact pattern) instead of
-        degrading to `_EXTENDED_FALLBACK_MARKETS`; the "fetch succeeded but zero active markets" branch is
-        untouched (a different, non-error case, out of this finding's scope). 2 tests updated to assert the
-        raise (`test_get_instruments_client_error_raises`, `test_get_instruments_runtime_error_raises`), the
-        `ADAPTER_FETCH_FAILED` emit-before-raise contract still independently asserted (adapter_contract_baseline
-        count unchanged). QG-green; also fixed a stale docstring claim ("Falls back... on network error") found
-        while shipping. Evidence: `instruments-service@c58802b9cc`, `@7518db2a11` (docstring follow-up).
   - [x] ✅ [SCRIPT] P2. **Phase-2 tail: purge orphaned by_date defi snapshots for EXTENDED/PACIFICA/LIGHTER** (~3/day
         across history, un-enumerated after Phase 1) + ensure the expected-universe seeder no longer seeds these as defi
         `expected_unattempted`. DoD: 0 `venue=EXTENDED-STARKNET|PACIFICA-SOLANA|LIGHTER-ZKSYNC` by_date defi blobs. —

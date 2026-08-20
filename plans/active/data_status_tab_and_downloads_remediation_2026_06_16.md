@@ -193,11 +193,9 @@ context_scope:
       regression: `tests/unit/components/DataStatusTab.refetch_dedupe_pagination.test.tsx`
 - [x] ✅ [UI] P3. **ADDED 2026-08-16 (plan_reconciler agt-8fc5a6, zero-checkbox conversion).** **Denominator-freshness /
       coverage-% staleness trust annotation** — EXTRACTED 2026-08-17 (na-eligibility-audit, RECLASSIFY per-todo split)
-      to `ui_satellite_ao_dispatch_batch4_2026_08_17.md` item 1. **SHIPPED, citation upgraded 2026-08-20 (T1 slice,
-      via that doc's finalize twin's own todo 1)** — `deployment-ui@153eae2cf1` ("feat(ui): annotate data coverage
-      denominator freshness") + `deployment-api@3180b1c22e` ("feat(api): expose denominator rollup computation
-      time"), both verified to exist and match their claimed subjects; `[UI]` + `pw:L2 ✓` +
-      `tests/smoke/data_status_denominator_freshness.spec.ts` + `tests/unit/test_data_status_denominator_freshness.py`.
+      to `ui_satellite_ao_dispatch_batch4_2026_08_17.md` item 1 for AO dispatch (bounded: mirrors the consolidator
+      backlog monitor's existing annotation pattern). Tracked there now, not here — see that doc + its gated
+      `_finalize` twin for the real work + eventual shipped-evidence citation back to this checkbox.
 - [x] ✅ [UI] P3. **DONE, verified 2026-08-15 (/plan-reconcile).** **Rollup-difference clarity** (audit §F, by-design):
       optional small UI note/tooltip explaining IS is a per-venue/day reference bundle (no data_type axis) vs MTDS's
       5-axis market-data shards — so the structurally different drilldown reads as intentional, not broken. —

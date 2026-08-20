@@ -61,12 +61,12 @@ Implement and test the bounded fixes below before enabling these live write path
 existing W15 checklist record and resolve each high-severity item with a landed SHA or an explicitly operator-gated
 follow-up.
 
-- [x] ✅ [BACKEND] P0. Add strict bridge amount, recipient, token, chain, aggregator target/calldata, credential, and
-      caller slippage/deadline validation in `bridge.py` (repo: execution-service). — execution-service@fb50f7296; Evidence: landed on origin/live-defi-rollout; compileall passed.
+- [ ] [BACKEND] P0. Add strict bridge amount, recipient, token, chain, aggregator target/calldata, credential, and
+      caller slippage/deadline validation in `bridge.py` (repo: execution-service).
 - [x] ✅ [BACKEND] P0. Add durable idempotency and source-transaction tracking for Socket bridge retries in `bridge.py`
       (repo: execution-service). — execution-service@ef899bf5b8; Evidence: quality-gates=8816 passed, 22 skipped, 1 xpassed.
-- [x] ✅ [BACKEND] P0. Add CCTP amount/recipient validation and fail closed when source wallet credentials are absent
-      before approve/burn (repo: execution-service). — execution-service@fb50f7296a; Evidence: tests=8827 passed, 22 skipped, 1 xpassed; quality-gates=exit1 on pre-existing remote method-size/fallback-baseline debt, no CCTP test failure.
+- [ ] [BACKEND] P0. Add CCTP amount/recipient validation and fail closed when source wallet credentials are absent
+      before approve/burn (repo: execution-service).
 - [ ] [BACKEND] P0. Make CCTP burn tracking durable and idempotent, preserve the source burn transaction hash, and
       prevent duplicate approve/burn submissions on retry (repo: execution-service).
 - [ ] [BACKEND] P0. Correct CCTP status lookup to resolve source transaction hashes and enforce attestation timeout

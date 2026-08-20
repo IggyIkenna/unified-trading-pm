@@ -323,19 +323,12 @@ todos only to confirm they are data-movement, then leave it.
       attempted_failed) keeps its real counts rather than being dropped. Per W3's "any denominator change lands
       as a dated supersession, never a silent edit", this SHRINKS the reachable denominator — dated here,
       2026-08-20 — and reaches the live artefact on the next nightly `measure-honest-coverage` cron run.
-- [x] [BACKEND] P1. **Report coverage grain PER asset_group, or publish the hollow fraction beside the label.**
+- [ ] [BACKEND] P1. **Report coverage grain PER asset_group, or publish the hollow fraction beside the label.**
       MEASURED 2026-08-19: 1,973 of 3,962 cells (49.8%) carry a blank or `'nan'` instrument_type while
       `detect_grain()` reports `"instrument_type"` for the whole payload — `defi` 1,871/2,804 (66.7%), `tradfi`
       82/244 (33.6%), `prediction` 10/19 (52.6%), `sports` 10/822 (1.2%), `cefi` 0/73 (0%). A single payload-wide
       grain label overstates the breakdown available for half the corpus. Same failure mode as the mislabelled
       `grain` in the readiness dump (filed to T5, who owns that writer).
-      ✅ 2026-08-20 — **took the todo's own "or" branch**: published `hollow_instrument_type_fraction` as a new
-      additive field on every `by_asset_group[ag]` cell (fraction of level-5 cells with a blank/`"nan"`
-      instrument_type; `None` — not `0.0` — when an AG has zero level-5 cells, so "no data" and "fully
-      populated" can't be confused). 4 regression tests (half-blank, all-real, no-column, `"nan"`-string cases).
-      Also directly benefits from this same session's separate `nan`-string write-time fix
-      (`market-tick-data-service@79ce0c89`) — future runs should show the fraction trending down as that fix's
-      effect accumulates. Evidence: `instruments-service@540a3bd94d`.
 - [x] [BACKEND] P1. **Trace the 9 blank-venue `sports` cells to the writer that emits them.** MEASURED
       2026-08-19: 9 cells in coverage.json carry `venue == ""` (all `sports`, data_types `odds_movement`,
       `odds_snapshot`, `ODDS_MOVEMENT`, `ODDS_SNAPSHOT`, `ARBITRAGE_OPPORTUNITY`, each `empty_confirmed: 1`).
@@ -486,19 +479,9 @@ todos only to confirm they are data-movement, then leave it.
       something to grab mid-flight without first checking whether an AO worker already has it in progress. Not
       investigated further this session (discovered near session end) — next session: check each batch's
       current open/done state before doing any work here, to avoid racing an AO worker on the same files.
-- [x] [BACKEND] P0. Close the CeFi and TradFi G1-G5 gate execution CODE paths. Evidence:
+- [ ] [BACKEND] P0. Close the CeFi and TradFi G1-G5 gate execution CODE paths. Evidence:
       `/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
       `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
-      ✅ 2026-08-20 (T2, `/autonomous`) — **CeFi doc: fully closed, 0 open todos.** G2/G3/G3b/G4 were already
-      SIGNED OFF by prior sessions; G1's own 4 named blocking defects (G1.1-G1.4) plus a follow-up finding were
-      already done, and this session closed the last real G1-scope item — EXTENDED's CF-11 honest-absence
-      violation (raise-on-fetch-failure fix, `instruments-service@c58802b9cc`) — then flipped the G1 rollup
-      checkbox itself, which had never been flipped despite every child completing.
-      **TradFi doc: CODE paths done; 2 residual items are DATA-MOVEMENT, correctly out of this tranche's "no
-      backfills/manifest migrations" standing rule** — both already extracted into their own dedicated,
-      currently-active AO-dispatch plan (`/plans/active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16.md`,
-      2 open / 1 done), not duplicated here. Nothing further actionable in either doc from this tranche's 3
-      repos.
 - [x] [BACKEND] P1. Fix the CeFi `instrument_type` casing active-writer regression. Evidence:
       `/plans/archive/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`.
       ✅ 2026-08-20 — **the writer-side CODE fix is shipped and live; everything left is data movement.**
@@ -584,16 +567,8 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Land the MDPS adapter-protocol / polars-seam migration as ONE atomic change across the 18
       adapter files sharing the ABC/Protocol boundary. Evidence:
       `/plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md`.
-- [x] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
+- [ ] [BACKEND] P1. Resolve the B21 distinct-values non-canonical live finding. Evidence:
       `/plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md`.
-      ✅ 2026-08-20 — **nothing further actionable from this tranche's 3 repos.** The issue doc has been
-      extensively worked by other sessions: 5 of 9 sub-todos done (defi venue/data_type root-causes, sports
-      column-swap bug, sports FOOTBALL/ODDS_API/UNKNOWN venue-axis leakage — real MTDS/MDPS writer fixes,
-      several already ancestor-verified on `live-defi-rollout`). The 4 remaining sub-todos are explicitly
-      scoped to `unified-api-contracts` (registry extensions for confirmed-legitimate bookmaker/instrument_type/
-      data_type spellings — T1's repo, not mine) or are manifest-row reconciliation (`venue=UNKNOWN` residual
-      rows — data movement, operator-gated per this tranche's standing rules). Nothing in
-      instruments-service/market-tick-data-service/market-data-processing-service remains open on this issue.
 - [x] [BACKEND] P2. Decide and implement the MTDS WS venue-fallback removal for Polymarket.
       Evidence: `/plans/active/issues/mtds_ws_venue_fallback_removal_polymarket_decision_2026_08_17.md`.
       **Reason 2026-08-20**: the issue's sole todo is `[OPERATOR] P3` — a binary product/architecture call the doc

@@ -1036,6 +1036,23 @@
           ><span class="num">25</span><span class="ttl">The external execution API — two ways to run it</span></a
         >
       </li>
+      <li>
+        <a href="#s26"
+          ><span class="num">26</span><span class="ttl">External API reference — endpoints, schemas, examples</span></a
+        >
+      </li>
+      <li>
+        <a href="#s27"><span class="num">27</span><span class="ttl">Shard-level coverage drilldown</span></a>
+      </li>
+      <li>
+        <a href="#s28"><span class="num">28</span><span class="ttl">Trade the full stack — strategy styles</span></a>
+      </li>
+      <li>
+        <a href="#s29"><span class="num">29</span><span class="ttl">The instrument universe</span></a>
+      </li>
+      <li>
+        <a href="#s30"><span class="num">30</span><span class="ttl">Execution algorithms, in depth</span></a>
+      </li>
     </ol>
   </nav>
 
@@ -1371,8 +1388,10 @@
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
         <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code> and
-        <code>execution-service/execution_service/api/external_instruction_api.py</code>. Auth model and rate limits —
-        <b class="pend">pending</b>, to be stated exactly rather than sketched.
+        <code>execution-service/execution_service/api/external_instruction_api.py</code>. Full parameters, request and
+        response schemas, worked examples, the auth model and every error code are documented endpoint by endpoint in
+        <a href="#s26">§26</a>. Rate limiting itself is not implemented on any of the three surfaces today — that gap
+        is disclosed there rather than sketched here.
       </p>
     </details>
   </section>
@@ -16238,7 +16257,9 @@
         Verified directly: <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>'s
         <code>/delivery/stream</code> route is backed by the UTL
         <code>unified_trading_library.streaming.event_facade</code>
-        (<code>get_transport</code>) — the same facade the internal live-tick sink publishes through.
+        (<code>get_transport</code>) — the same facade the internal live-tick sink publishes through. Full parameter
+        tables, worked requests and responses, and error codes for the availability and delivery endpoints are in
+        <a href="#s26">§26</a>.
       </p>
     </details>
   </section>
@@ -16317,7 +16338,8 @@
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
         Verified directly against <code>unified_api_contracts/internal/architecture_v2/schemas.py</code> — the real,
         declared <code>StrategyInstructionEnvelope</code> family used by the external instruction endpoint in
-        <a href="#s2">§02</a>.
+        <a href="#s2">§02</a>. That endpoint's full parameter reference, a worked request/response and its error
+        codes are in <a href="#s26">§26</a>.
       </p>
       <details class="ref">
         <summary>The instruction envelope<span class="tag-ref">Contract</span></summary>
@@ -17772,7 +17794,7 @@
     <p class="lede">
       §02 marked the Strategy surface "no counterparty-facing surface yet." This is the shape of closing that gap — not
       a new integration pattern; the same instruction envelope and execution path already documented in
-      <a href="#s08">§08</a> and <a href="#s02">§02</a>, exposed outside our process boundary two different ways.
+      <a href="#s8">§08</a> and <a href="#s2">§02</a>, exposed outside our process boundary two different ways.
     </p>
     <details class="sec-body" open>
       <summary>Internal messaging, an external transport, and who hosts what</summary>
@@ -17782,7 +17804,7 @@
           A workspace-wide search found no internal messaging — Pub/Sub or otherwise — connecting strategy-service's
           decisions to execution-service today, and no direct API client between them either. The only live instruction
           path is the manual one: <code>ManualOperationHandler → LiveOrchestrator.execute_instruction()</code> (<a
-            href="#s02"
+            href="#s2"
             >§02</a
           >) — not an automated strategy-to-execution bridge. Closing that gap is the first part of this work, not an
           assumed foundation.
@@ -17800,7 +17822,7 @@
       <p>
         Every strategy-emitted instruction lands in GCS through the same shard-and-manifest pipeline the rest of this
         platform's data uses, queryable via BigQuery external tables — an audit and analysis surface, not only a live
-        queue. Market tick data feeding the decision is aggregated separately (<a href="#s04">§04</a>–<a href="#s07"
+        queue. Market tick data feeding the decision is aggregated separately (<a href="#s4">§04</a>–<a href="#s7"
           >§07</a
         >); this sink is instructions only.
       </p>
@@ -17851,11 +17873,1291 @@
       </div>
       <h3>What this needs from the instruction contract</h3>
       <p>
-        The action vocabulary (<a href="#s08">§08</a>) has to grow past trade / on-chain / event / movement to cover
+        The action vocabulary (<a href="#s8">§08</a>) has to grow past trade / on-chain / event / movement to cover
         control instructions — a scoped kill-switch and a flatten-position instruction, both already conceptually
         present as system behaviour (<a href="#s15">§15</a>) but not yet expressible <em>as an instruction</em> a caller
         can send. Broker and routing configuration does not need a new field: <code>venue_constraints</code> on the
-        envelope (<a href="#s08">§08</a>) is already general enough to carry it, once populated.
+        envelope (<a href="#s8">§08</a>) is already general enough to carry it, once populated.
+      </p>
+    </details>
+  </section>
+
+  <section id="s26">
+    <div class="sec-head">
+      <span class="num">26</span>
+      <h2>External API reference — endpoints, schemas, examples</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md — W1: external-facing HTTP surfaces for instruments-service, market-tick-data-service and execution-service"
+        >owner: nick_ai_platform_readiness_remediation W1</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s2">§02</a> named the six reachable endpoints and what each is missing. This is the reference an
+      integrating engineer actually needs against them: exact parameters and types, request and response shapes, a
+      worked example, every error code, and the auth, rate-limit and pagination model the three services share. Read
+      directly from the router source, not summarised from it — where a detail was not independently verified, that
+      is stated rather than filled in.
+    </p>
+    <details class="sec-body" open>
+      <summary>The six endpoints, in full</summary>
+
+      <h3>instruments-service — instrument catalogue</h3>
+      <p>
+        Both endpoints read the instrument catalogue this service already captures and already uses internally; they
+        do not re-fetch from upstream venues. <code>engine/orchestrator/catalogue_query.py</code> backs both.
+      </p>
+
+      <details class="ref">
+        <summary><code>GET /v1/instruments</code><span class="tag-ref">Endpoint</span></summary>
+        <p>Query the catalogue, capped to <code>limit</code> rows. Use <code>/bulk</code> below for a full dump.</p>
+        <div class="plate">
+          <div class="plate-head"><span class="label">Parameters</span><span class="note">Query string</span></div>
+          <div class="plate-body scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>asset_group</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>One of <code>cefi | defi | tradfi | sports | prediction</code></td>
+                </tr>
+                <tr>
+                  <td><code>venue</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>Canonical venue, e.g. <code>BINANCE-SPOT</code></td>
+                </tr>
+                <tr>
+                  <td><code>instrument_type</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>e.g. <code>SPOT_PAIR</code>, <code>PERPETUAL</code>, <code>OPTION</code></td>
+                </tr>
+                <tr>
+                  <td><code>day</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td><code>YYYY-MM-DD</code>; defaults to the latest captured day</td>
+                </tr>
+                <tr>
+                  <td><code>limit</code></td>
+                  <td>integer</td>
+                  <td>No</td>
+                  <td>Row cap, 1–20000, default 2000</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example</span><span class="note">Request &amp; response</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">GET /v1/instruments?asset_group=cefi&amp;venue=BINANCE-SPOT&amp;limit=2 HTTP/1.1
+Host: instruments-service.example
+X-Service-Token: &lt;service token&gt;
+
+200 OK
+Content-Type: application/json
+
+{
+  "asset_group": "cefi",
+  "venue": "BINANCE-SPOT",
+  "day": "2026-08-17",
+  "count": 2,
+  "instruments": [
+    { "instrument_id": "BINANCE-SPOT:BTC-USDT", "instrument_type": "SPOT_PAIR", "base": "BTC", "quote": "USDT" },
+    { "instrument_id": "BINANCE-SPOT:ETH-USDT", "instrument_type": "SPOT_PAIR", "base": "ETH", "quote": "USDT" }
+  ]
+}</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          The response envelope's exact key set beyond the shape above is <b class="pend">pending</b> — the route
+          returns whatever <code>query_instruments()</code> builds, and that return value was not field-by-field
+          enumerated for this reference. Every authenticated caller currently sees the same result; there is no
+          per-org filtering on this catalogue yet, because it is public reference data, not a client ledger.
+        </p>
+      </details>
+
+      <details class="ref">
+        <summary><code>GET /v1/instruments/bulk</code><span class="tag-ref">Endpoint</span></summary>
+        <p>
+          Streams every matched shard as one combined parquet file, chunked over HTTP in 1 MiB pieces. Assembly never
+          concatenates the matched shards into a single in-memory DataFrame — confirmed per-venue schema drift on
+          live prod data forced a two-pass, schema-unifying build instead.
+        </p>
+        <div class="plate">
+          <div class="plate-head"><span class="label">Parameters</span><span class="note">Query string</span></div>
+          <div class="plate-body scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>asset_group</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>One of <code>cefi | defi | tradfi | sports | prediction</code></td>
+                </tr>
+                <tr>
+                  <td><code>venue</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>Omit for all venues in the asset group</td>
+                </tr>
+                <tr>
+                  <td><code>day</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td><code>YYYY-MM-DD</code>; defaults to the latest captured day</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example</span><span class="note">Request &amp; response</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">GET /v1/instruments/bulk?asset_group=cefi&amp;venue=BINANCE-SPOT HTTP/1.1
+Host: instruments-service.example
+X-Service-Token: &lt;service token&gt;
+
+200 OK
+Content-Type: application/vnd.apache.parquet
+Content-Disposition: attachment; filename="instruments_cefi_BINANCE-SPOT_2026-08-17.parquet"
+
+&lt;binary parquet, streamed in 1 MiB chunks&gt;</div>
+          </div>
+        </div>
+      </details>
+
+      <h3>market-tick-data-service — availability and delivery</h3>
+      <p>
+        Ask what is captured, then take it as a daily batch file or a live stream — the same two-step model narrated
+        in <a href="#s6">§06</a>, expanded here to the exact wire contract.
+      </p>
+
+      <details class="ref">
+        <summary><code>GET /external/market-data/availability</code><span class="tag-ref">Endpoint</span></summary>
+        <p>
+          Reads the same precomputed daily <code>coverage.json</code> the honest-coverage nightly cron writes and
+          <code>deployment-api</code>'s own data-status route already serves — one bounded object read, never a
+          re-derivation from the raw manifest. An un-dated request walks back up to 14 days looking for the freshest
+          available measurement; an explicit <code>date</code> is honoured exactly or 404s.
+        </p>
+        <div class="plate">
+          <div class="plate-head"><span class="label">Parameters</span><span class="note">Query string</span></div>
+          <div class="plate-body scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>asset_group</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>One of <code>cefi | defi | tradfi | sports | prediction</code></td>
+                </tr>
+                <tr>
+                  <td><code>venue</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>e.g. <code>BINANCE-FUTURES</code> — see the disclosure below before omitting this</td>
+                </tr>
+                <tr>
+                  <td><code>data_type</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>Documented as requiring <code>venue</code> — see the disclosure below</td>
+                </tr>
+                <tr>
+                  <td><code>date</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>ISO date; defaults to the latest measurement within 14 days</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="callout">
+          <span class="tag">Known defect — disclosed, not fixed</span>
+          <p>
+            Measured directly against the router source: <code>data_type</code> is only ever read inside the branch
+            gated on <code>venue</code> being present. Supplying <code>data_type</code> without <code>venue</code>
+            does not filter and does not error — the caller gets HTTP 200 and the unfiltered
+            <code>asset_group</code> summary, with no signal that <code>data_type</code> was silently dropped. Filed
+            as <code>plans/active/issues/mtds_availability_data_type_without_venue_silently_ignored_2026_08_19.md</code>
+            (P1, open). Until it ships: always pass <code>venue</code> alongside <code>data_type</code>.
+          </p>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example</span><span class="note">Request &amp; response — shape verified, values illustrative</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">GET /external/market-data/availability?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades HTTP/1.1
+Host: market-tick-data-service.example
+Authorization: Bearer &lt;jwt&gt;
+
+200 OK
+Content-Type: application/json
+
+{
+  "asset_group": "cefi",
+  "requested_date": null,
+  "resolved_date": "2026-08-17",
+  "summary": { "captured": &lt;int&gt;, "empty_confirmed": &lt;int&gt;, "attempted_failed": &lt;int&gt;,
+               "expected_unattempted": &lt;int&gt;, "total": &lt;int&gt;, "coverage_pct": &lt;0-100&gt; },
+  "venue": "BINANCE-FUTURES",
+  "venue_summary": { "...same six fields, scoped to the venue...": null },
+  "data_type": "trades",
+  "venue_data_type_summary": { "...same six fields, scoped to the (venue, data_type) cell...": null }
+}</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          Field names (<code>captured</code>, <code>empty_confirmed</code>, <code>attempted_failed</code>,
+          <code>expected_unattempted</code>, <code>total</code>, <code>coverage_pct</code>) are the real
+          <code>coverage.json</code> v2 per-cell schema (<code>/codex/02-data/honest-coverage-model.md</code>); the
+          bracketed values above are placeholders, not a live measurement — <a href="#s5">§05</a> carries the real,
+          dated asset-group rollups, and <a href="#s27">§27</a> is where a real per-shard drilldown will render from
+          once the readiness ledger lands.
+        </p>
+      </details>
+
+      <details class="ref">
+        <summary><code>GET /external/market-data/delivery/batch</code><span class="tag-ref">Endpoint</span></summary>
+        <p>
+          Two-step "check, then download" shape for one <code>(asset_group, venue, data_type, date)</code> shard:
+          omit <code>file</code> to list what exists (a bounded, single-day prefix scan — never a corpus walk);
+          pass <code>file</code> back, verbatim from that listing, to stream its bytes.
+        </p>
+        <div class="plate">
+          <div class="plate-head"><span class="label">Parameters</span><span class="note">Query string</span></div>
+          <div class="plate-body scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>asset_group</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>One of <code>cefi | defi | tradfi | sports | prediction</code></td>
+                </tr>
+                <tr>
+                  <td><code>venue</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>Canonical venue</td>
+                </tr>
+                <tr>
+                  <td><code>data_type</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>e.g. <code>trades</code>, <code>book_snapshot</code></td>
+                </tr>
+                <tr>
+                  <td><code>date</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td><code>YYYY-MM-DD</code> — the raw-tick partition day</td>
+                </tr>
+                <tr>
+                  <td><code>file</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>Exact object path from a prior listing call — set to stream that object's bytes instead</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example — step 1</span><span class="note">List what exists for the shard</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">GET /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17 HTTP/1.1
+
+200 OK
+{
+  "asset_group": "cefi",
+  "venue": "BINANCE-FUTURES",
+  "data_type": "trades",
+  "date": "2026-08-17",
+  "bucket": "&lt;project&gt;-tick-data-cefi",
+  "objects": [
+    { "file": "raw_tick_data/by_date/day=2026-08-17/asset_group=cefi/venue=BINANCE-FUTURES/data_type=trades/part-000.parquet",
+      "size": 41823017 }
+  ],
+  "truncated": false
+}</div>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example — step 2</span><span class="note">Stream the object named in step 1</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">GET /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17&amp;file=raw_tick_data%2Fby_date%2Fday%3D2026-08-17%2F...%2Fpart-000.parquet HTTP/1.1
+
+200 OK
+Content-Type: application/octet-stream
+Content-Disposition: attachment; filename="part-000.parquet"
+Content-Length: 41823017
+
+&lt;binary bytes, streamed in 1 MiB chunks&gt;</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          <code>truncated: true</code> means the shard has more than 200 matching objects than were returned — there
+          is no continuation token today; see pagination below.
+        </p>
+      </details>
+
+      <details class="ref">
+        <summary><code>GET /external/market-data/delivery/stream</code><span class="tag-ref">Endpoint</span></summary>
+        <p>
+          NDJSON stream of <code>CanonicalPersistEnvelope</code> records for one <code>(asset_group, data_type)</code>
+          shard, read via the UTL <code>EventTransport</code> facade — the same <code>get_transport</code> /
+          <code>.read()</code> surface the internal live-tick sink publishes through. Never a bespoke transport.
+        </p>
+        <div class="plate">
+          <div class="plate-head"><span class="label">Parameters</span><span class="note">Query string</span></div>
+          <div class="plate-body scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>asset_group</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>One of <code>cefi | defi | tradfi | sports | prediction</code></td>
+                </tr>
+                <tr>
+                  <td><code>data_type</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>e.g. <code>trades</code></td>
+                </tr>
+                <tr>
+                  <td><code>after</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td>ISO-8601 timestamp watermark — only envelopes newer than this are returned</td>
+                </tr>
+                <tr>
+                  <td><code>limit</code></td>
+                  <td>integer</td>
+                  <td>No</td>
+                  <td>1–1000, default 100</td>
+                </tr>
+                <tr>
+                  <td><code>topology</code></td>
+                  <td>string</td>
+                  <td>No</td>
+                  <td><code>in_memory | redis | pubsub</code>, default <code>in_memory</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example</span><span class="note">Request &amp; one response line — real envelope fields, illustrative values</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">GET /external/market-data/delivery/stream?asset_group=cefi&amp;data_type=trades&amp;limit=1 HTTP/1.1
+
+200 OK
+Content-Type: application/x-ndjson
+
+{"schema_version":"1","asset_group":"cefi","data_type":"trades","pipeline_mode":"live_binance",
+ "period_start":"2026-08-17T12:00:00Z","period_end":"2026-08-17T12:00:01Z","source":"MTDS",
+ "available_at":"2026-08-17T12:00:01.240Z","retention_class":"REPRODUCIBLE",
+ "payload_inline":"{...bar/aggregate JSON...}","venue":"BINANCE-FUTURES","chain":null,
+ "instrument_id":"BINANCE-FUTURES:BTC-USDT-PERP","instrument_type":"PERPETUAL",
+ "correlation_id":"c-8f2a1b90","vm_name":"mtds-live-01"}
+</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          Fields are the real <code>unified_api_contracts.events.persist.CanonicalPersistEnvelope</code> — one
+          envelope shape, every producer on the event-log spine (<a href="#s14">§14</a>).
+        </p>
+      </details>
+
+      <h3>execution-service — instruction submission</h3>
+      <p>
+        A thin authenticated front door that translates a real, declared instruction envelope
+        (<a href="#s8">§08</a>) into the internal shape and routes it through the SAME handler the internal
+        manual-trade surface uses — no parallel execution logic. Only the <code>TRADE</code> action is wired; every
+        other action on the envelope returns an honest HTTP 501, disclosed in full at <a href="#s2">§02</a>.
+      </p>
+
+      <details class="ref">
+        <summary><code>POST /external/instructions</code><span class="tag-ref">Endpoint</span></summary>
+        <p>
+          Body is one <code>StrategyInstructionV2</code> envelope member (<a href="#s8">§08</a> documents the full
+          family). For <code>TRADE</code> — the only action live today — these fields are load-bearing:
+        </p>
+        <div class="plate">
+          <div class="plate-head"><span class="label">Body fields</span><span class="note">TRADE action — JSON</span></div>
+          <div class="plate-body scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Required</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>action</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>Literal <code>"TRADE"</code> — every other value 501s</td>
+                </tr>
+                <tr>
+                  <td><code>instruction_id</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>Caller-assigned idempotency key</td>
+                </tr>
+                <tr>
+                  <td><code>emitted_at_utc</code></td>
+                  <td>datetime</td>
+                  <td>Yes</td>
+                  <td>UTC</td>
+                </tr>
+                <tr>
+                  <td><code>identity</code></td>
+                  <td>object</td>
+                  <td>Yes</td>
+                  <td><code>StrategyInstanceIdentity</code> — <code>client_id</code>, <code>strategy_instance_id</code>, <code>env</code>, etc.</td>
+                </tr>
+                <tr>
+                  <td><code>target_venue</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>Missing value 400s — required to route a TRADE</td>
+                </tr>
+                <tr>
+                  <td><code>target_instrument</code></td>
+                  <td>string</td>
+                  <td>Yes</td>
+                  <td>Canonical instrument id</td>
+                </tr>
+                <tr>
+                  <td><code>target_position_units</code></td>
+                  <td>decimal</td>
+                  <td>Yes</td>
+                  <td>Size</td>
+                </tr>
+                <tr>
+                  <td><code>direction</code></td>
+                  <td>string</td>
+                  <td>Yes*</td>
+                  <td><code>LONG | SHORT</code> resolve to BUY/SELL; <code>FLAT</code>/unset 400s — position-aware sizing isn't wired on this surface</td>
+                </tr>
+                <tr>
+                  <td><code>reference_price</code> / <code>max_price</code> / <code>min_price</code></td>
+                  <td>decimal</td>
+                  <td>No</td>
+                  <td>First non-null of these three becomes the routed price</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="plate">
+          <div class="plate-head">
+            <span class="label">Example</span><span class="note">Request &amp; response — real fields, illustrative values</span>
+          </div>
+          <div class="plate-body">
+            <div class="code">POST /external/instructions HTTP/1.1
+Host: execution-service.example
+Authorization: Bearer &lt;jwt&gt;
+Content-Type: application/json
+
+{
+  "action": "TRADE",
+  "instruction_id": "instr-8f3c1a20",
+  "emitted_at_utc": "2026-08-18T14:02:11Z",
+  "identity": {
+    "family": "&lt;StrategyFamily member&gt;",
+    "archetype_id": "&lt;StrategyArchetype member&gt;",
+    "archetype_build_version": "1.4.0",
+    "strategy_instance_id": "cefi-mm-btc-001",
+    "config_hash": "a1b2c3d4",
+    "config_version": 3,
+    "client_id": "client-acme",
+    "share_class": "&lt;ShareClass member&gt;",
+    "env": "paper"
+  },
+  "target_venue": "BINANCE-SPOT",
+  "target_instrument": "BINANCE-SPOT:BTC-USDT",
+  "target_position_units": "0.25",
+  "direction": "LONG",
+  "urgency": "MEDIUM"
+}
+
+200 OK
+{
+  "instruction_id": "instr-8f3c1a20",
+  "status": "&lt;handler status, e.g. SUBMITTED&gt;",
+  "detail": { "...": "handler-specific result payload" }
+}</div>
+          </div>
+        </div>
+        <p style="font-size: 0.9rem; color: var(--ink-3)">
+          Enum member names (<code>StrategyFamily</code>, <code>StrategyArchetype</code>, <code>ShareClass</code>)
+          and the exhaustive set of <code>status</code> values <code>ManualOperationHandler.execute()</code> can
+          return were not enumerated for this reference — bracketed values above mark exactly where. Every submitted
+          instruction is logged as <code>EXTERNAL_INSTRUCTION_RECEIVED</code>/<code>_RESULT</code>/<code>_FAILED</code>
+          (<a href="#s16">§16</a>).
+        </p>
+      </details>
+
+      <h3>Error codes, across all six endpoints</h3>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Meaning</th>
+                <th>Where</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>400</code></td>
+                <td>Unknown <code>asset_group</code>; bucket-naming error; missing <code>target_venue</code>; a
+                  <code>direction</code> the handler cannot resolve; a <code>file</code> outside the requested shard</td>
+                <td>instruments-service, MTDS delivery/batch, execution-service</td>
+              </tr>
+              <tr>
+                <td><code>401</code></td>
+                <td>No/invalid auth — missing token, expired or malformed JWT, wrong legacy API key</td>
+                <td>All six</td>
+              </tr>
+              <tr>
+                <td><code>403</code></td>
+                <td>Invalid <code>X-Service-Token</code></td>
+                <td>All six</td>
+              </tr>
+              <tr>
+                <td><code>404</code></td>
+                <td>No matching shards (<code>/bulk</code>); no coverage measurement in the lookback window
+                  (availability); object named by <code>file</code> not found (delivery/batch)</td>
+                <td>instruments-service, MTDS</td>
+              </tr>
+              <tr>
+                <td><code>422</code></td>
+                <td>Invalid <code>asset_group</code> value; malformed <code>after</code> timestamp; invalid
+                  <code>topology</code></td>
+                <td>MTDS</td>
+              </tr>
+              <tr>
+                <td><code>501</code></td>
+                <td>Any instruction action other than <code>TRADE</code> — SWAP, LEND, BORROW, WITHDRAW, REPAY,
+                  STAKE, UNSTAKE, QUOTE, TRANSFER, BRIDGE, ATOMIC, CANCEL</td>
+                <td>execution-service</td>
+              </tr>
+              <tr>
+                <td><code>503</code></td>
+                <td>Kill switch active; service draining; <code>gcp_project_id</code> not configured; bucket
+                  resolution failed</td>
+                <td>execution-service, MTDS</td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td>Unhandled internal error — logged server-side with the resource identifiers, never a silent
+                  drop</td>
+                <td>All six</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3>Authentication — the same dependency, all three services</h3>
+      <p>
+        All six endpoints share one auth dependency
+        (<code>unified_trading_library.cloud_interface.api_auth.create_api_auth</code>), constructed once per
+        service. It checks, in order:
+      </p>
+      <div class="plate">
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Method</th>
+                <th>Header</th>
+                <th>Who it's for</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>S2S service token</td>
+                <td><code>X-Service-Token</code></td>
+                <td>Internal service-to-service callers</td>
+                <td>Matched against a configured shared secret; success grants an internal/admin-scoped context</td>
+              </tr>
+              <tr>
+                <td>Legacy API key</td>
+                <td><code>X-API-Key</code></td>
+                <td>Older services still on the pre-JWT convention (e.g. alerting-service)</td>
+                <td>Matched against configured cloud config; admin-scoped on match</td>
+              </tr>
+              <tr>
+                <td>Bearer JWT</td>
+                <td><code>Authorization: Bearer &lt;token&gt;</code></td>
+                <td>External org callers</td>
+                <td>HS256-signed, obtained via <code>POST /auth/login</code>; claims carry <code>org_id</code>,
+                  <code>sub</code>, <code>role</code>, <code>subscription_tier</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p style="font-size: 0.9rem; color: var(--ink-3)">
+        A <code>DISABLE_AUTH</code> dev-mode bypass exists in the same dependency but is refused outside a
+        local/dev runtime by a production-safety check — it is not reachable from a production deployment. No
+        header at all returns 401 naming <code>POST /auth/login</code> as the way in.
+      </p>
+
+      <h3>Rate limits and pagination — the honest state</h3>
+      <div class="callout">
+        <span class="tag">Neither is built yet, on any of the six endpoints</span>
+        <p>
+          <b>Rate limits.</b> No rate-limiting middleware was found on any of the three external routers.
+          <code>subscription_tier</code> is captured on the auth context from the JWT claim, but today nothing reads
+          it to gate, throttle, or filter a response — per instruments-service's own router docstring, "every
+          authenticated caller currently sees the same result." Per-tier throttling is <b class="st st-plan">planned</b>,
+          not implemented; the claim it would key off already exists.
+        </p>
+        <p>
+          <b>Pagination.</b> None of the six endpoints implement cursor-based pagination.
+          <code>GET /v1/instruments</code> bounds the response with a <code>limit</code> row cap (default 2000, max
+          20000) — use <code>/bulk</code> for the complete corpus rather than paging. <code>delivery/batch</code>'s
+          listing step caps at 200 matches and reports <code>truncated: true</code> when the shard has more, with no
+          continuation token to fetch the remainder today. <code>delivery/stream</code> accepts <code>after</code>
+          (an ISO-8601 watermark) and <code>limit</code> as a page size — the one endpoint with a real continuation
+          mechanism, because it is a stream rather than a list. A real cursor for <code>delivery/batch</code> beyond
+          200 objects is <b class="st st-plan">planned</b>, not built.
+        </p>
+      </div>
+
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against <code>instruments-service/instruments_service/api/routers/external.py</code>,
+        <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>,
+        <code>execution-service/execution_service/api/external_instruction_api.py</code> and
+        <code>unified_trading_library/cloud_interface/api_auth.py</code>.
+      </p>
+    </details>
+  </section>
+
+  <section id="s27">
+    <div class="sec-head">
+      <span class="num">27</span>
+      <h2>Shard-level coverage drilldown</h2>
+      <b class="st st-plan">planned</b><b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="plans/active/state_fabric_artefacts_2026_08_20.md — the shard-level per-day drilldown this section is a structural placeholder for"
+        >owner: state_fabric_artefacts_2026_08_20</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s5">§05</a> reports coverage rolled up to one percentage per asset group. This section is a
+      structural placeholder for the view underneath it — smallest shard granularity, day by day — left
+      deliberately unpopulated here rather than hand-transcribed.
+    </p>
+    <details class="sec-body" open>
+      <summary>What will render here, and where the numbers will come from</summary>
+      <div class="callout">
+        <span class="tag">Why this is a placeholder, not a table of numbers</span>
+        <p>
+          A shard-level, per-day view is thousands of cells —
+          <code>(asset_group, venue, instrument_type, data_type, day)</code>, at the writer's own grain. Typing
+          those numbers into this HTML by hand is exactly how this page's existing asset-group rollups went stale: a
+          number copied once, then never refreshed as coverage improved. This section is scoped and structured now
+          so the operator can review whether the shape is right; it gets populated only once it can render from a
+          source that stays current, not before.
+        </p>
+      </div>
+      <h3>What it will show</h3>
+      <div class="keypoints">
+        <div>
+          <b>Grain</b><span>(asset_group, venue, instrument_type, data_type) — the writer's own grain, not a
+            rollup</span>
+        </div>
+        <div>
+          <b>Per day</b><span><code>capture_status</code> for each day in range — <code>captured</code>,
+            <code>empty_confirmed</code>, <code>attempted_failed</code>, <code>expected_unattempted</code></span>
+        </div>
+        <div>
+          <b>No exceptions</b><span>every shard in the expected universe accounted for, not only the ones with
+            data</span>
+        </div>
+        <div>
+          <b>Dated</b><span>every figure traceable to a ledger generation id and a measurement date</span>
+        </div>
+      </div>
+      <h3>Where it will be sourced from</h3>
+      <p>
+        Not hand-derived, and not a new, sixth way of computing coverage. <code>honest-coverage-dump</code> and
+        <code>readiness-state-dump</code> already compute exactly this; the render binds to the versioned, dated
+        readiness-and-coverage ledger both are planned to publish (the "persist a versioned readiness + coverage
+        ledger" todo in <code>plans/active/state_fabric_artefacts_2026_08_20.md</code>) rather than re-deriving
+        inside this page. Until that ledger exists, this section stays a placeholder — populating it by hand would
+        repeat the exact rot this plan exists to stop.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        See <code>/codex/02-data/honest-coverage-model.md</code> for the two-layer, two-view model this drilldown
+        sits on top of, and <code>plans/active/state_fabric_artefacts_2026_08_20.md</code> for the ledger todo this
+        section is gated on.
+      </p>
+    </details>
+  </section>
+
+  <section id="s28">
+    <div class="sec-head">
+      <span class="num">28</span>
+      <h2>Trade the full stack — strategy styles</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b class="own" title="system_readiness_master.md — W6: Strategy archetype scaffolding, config and the wizard"
+        >owner: W6</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s9">§09</a> catalogued the archetype registry as structure. This section reads it as a pitch: what
+      you can actually build, organised by trade shape rather than by enum name.
+    </p>
+    <details class="sec-body" open>
+      <summary>Nine families, one instruction contract, one execution stack</summary>
+      <p>
+        Arbitrage, market making, rules-based, signal-driven, ML-directional and volatility/dispersion trading are
+        not separate products bolted together here — they are nine orthogonal <code>StrategyFamily</code> values
+        over the same <a href="#s8">instruction envelope</a> and the same <a href="#s12">execution stack</a>. A
+        family changes what a strategy decides; it does not change how an instruction reaches a venue.
+      </p>
+      <h3>60 archetypes, read as a pitch <b class="ev ev-verified">✓ verified</b></h3>
+      <p>
+        Re-counted directly against <code>ARCHETYPE_TO_FAMILY</code>
+        (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>) this session,
+        2026-08-20 — 60 dict entries, matching <a href="#s9">§09</a>'s own count. The enum module's docstring still
+        says "59 archetypes" (stale by one against its own <code>ARCHETYPE_TO_FAMILY</code> mapping, which is the
+        literal source of truth for family membership) — a source-file correction outside this document's own
+        scope, flagged here rather than silently propagated.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Families → representative archetypes</span
+          ><span class="note"><code>ARCHETYPE_TO_FAMILY</code>, 60 archetypes</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Family</th>
+                <th>What it means</th>
+                <th>Representative archetypes</th>
+                <th>Count</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>VOL_TRADING</code></td>
+                <td>Options and volatility relative value — RV/IV, term structure, dispersion, decay</td>
+                <td>
+                  <code>VOL_ARB_RV_IV</code>, <code>VOL_DISPERSION</code>, <code>VOL_0DTE_GAMMA_SCALPING</code>
+                </td>
+                <td>19</td>
+              </tr>
+              <tr>
+                <td><code>MARKET_MAKING</code></td>
+                <td>Continuous and event-settled quoting, plus DeFi LP as a market-making shape</td>
+                <td>
+                  <code>MARKET_MAKING_CONTINUOUS</code>, <code>MARKET_MAKING_EVENT_SETTLED</code>,
+                  <code>DEFI_LP_CONCENTRATED</code>
+                </td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td><code>CARRY_AND_YIELD</code></td>
+                <td>Basis, funding-rate and staking-yield capture</td>
+                <td>
+                  <code>CARRY_BASIS_PERP</code>, <code>CARRY_FUNDING_DISPERSION</code>,
+                  <code>YIELD_STAKING_SIMPLE</code>
+                </td>
+                <td>11</td>
+              </tr>
+              <tr>
+                <td><code>ARBITRAGE_STRUCTURAL</code></td>
+                <td>Structural mispricing across venues and domains, including MEV capture</td>
+                <td>
+                  <code>ARBITRAGE_PRICE_DISPERSION</code>, <code>ARBITRAGE_SPORTS_DUTCHING</code>,
+                  <code>ARBITRAGE_MEV_SANDWICH</code>
+                </td>
+                <td>8</td>
+              </tr>
+              <tr>
+                <td><code>RULES_DIRECTIONAL</code></td>
+                <td>Heuristic, non-ML directional trading</td>
+                <td><code>RULES_DIRECTIONAL_CONTINUOUS</code>, <code>TSMOM_BTC_CTA</code></td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><code>PORTFOLIO</code></td>
+                <td>Cross-category sleeves — allocates across other families rather than trading directly</td>
+                <td><code>PORTFOLIO_MULTI_STRATEGY</code>, <code>PORTFOLIO_RISK_PARITY</code></td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td><code>ML_DIRECTIONAL</code></td>
+                <td>Model-driven directional signal, one instrument at a time</td>
+                <td><code>ML_DIRECTIONAL_CONTINUOUS</code>, <code>ML_DIRECTIONAL_EVENT_SETTLED</code></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>STAT_ARB_PAIRS</code></td>
+                <td>Pairs and cross-sectional statistical arbitrage</td>
+                <td><code>STAT_ARB_PAIRS_FIXED</code>, <code>STAT_ARB_CROSS_SECTIONAL</code></td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>EVENT_DRIVEN</code></td>
+                <td>Event-driven trading — its own family, one archetype</td>
+                <td><code>EVENT_DRIVEN</code></td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><b>Total</b></td>
+                <td>9 orthogonal families</td>
+                <td>—</td>
+                <td><b>60</b></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">What "60 archetypes" is not a claim of</span>
+        <p>
+          A family or archetype existing in this registry is a structural claim, not a readiness claim — the same
+          distinction <a href="#s9">§09</a> draws. None of the families above carries a <b class="st st-live">live</b>
+          mark, because none can honestly carry one yet: a capability audit deriving archetype readiness across
+          batch, paper and live is <b class="st st-plan">planned</b>, specified and not yet built
+          (<a href="#s14">§14</a>). Until it runs, archetype-level readiness reports <code>unverified</code> rather
+          than being assumed from the archetype simply existing in the enum.
+        </p>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        Every archetype in every family above is configured, sized and risk-bounded through the same
+        <a href="#s10">wizard</a>, routed through the same <a href="#s12">policy-selected execution algorithms</a>
+        detailed in <a href="#s30">§30</a>, and audited through the same record (<a href="#s15">§15</a>). The
+        family is a trading decision, not a different integration.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against
+        <code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/enums.py</code>'s
+        <code>StrategyFamily</code>, <code>StrategyArchetype</code> and <code>ARCHETYPE_TO_FAMILY</code>.
+      </p>
+    </details>
+  </section>
+
+  <section id="s29">
+    <div class="sec-head">
+      <span class="num">29</span>
+      <h2>The instrument universe</h2>
+      <b class="st st-part">partial</b><b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="plans/epics/instruments_master.md — reference-data completeness for the canonical instrument/venue registry"
+        >owner: instruments_master</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s3">§03</a> counted venues and chains. This section cuts the same registries by instrument
+      <em>shape</em> instead — spot, perpetuals, dated futures, options, swaps, ETFs — because "what can I trade"
+      is the question a developer actually asks first.
+    </p>
+    <details class="sec-body" open>
+      <summary>Six shapes, the real <code>InstrumentType</code> tokens behind each, and one honest gap</summary>
+      <div class="callout">
+        <span class="tag">Which registry this section counts from, stated precisely</span>
+        <p>
+          <a href="#s3">§03</a> already established that there is no single settled venue count — different
+          registries answer different questions, and this document reports the precise cut for each claim rather
+          than blending them. The venue counts in the table below come from <code>INSTRUMENT_TYPES_BY_VENUE</code>
+          (<code>unified-api-contracts/unified_api_contracts/registry/venue_constants.py</code>) — the
+          <b>execution/instruction-routing</b> venue-capability map, 53 venue entries, counted directly by reading
+          the dict, 2026-08-20. It is a narrower, trading-context cut than the 192/177-venue data-capture registries
+          §03 counts from, so read the numbers below as "venues this specific routing registry declares support
+          X", not as the platform's total venue count for X.
+        </p>
+      </div>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">Instrument shapes, by real <code>InstrumentType</code> token</span
+          ><span class="note"><code>unified_api_contracts/_instrument_enums.py</code></span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Shape</th>
+                <th>Token(s)</th>
+                <th>Asset groups</th>
+                <th>Venues<span class="u"> (this registry)</span></th>
+                <th>Example instrument ID</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Spot</td>
+                <td><code>SPOT_PAIR</code></td>
+                <td>CeFi</td>
+                <td>10</td>
+                <td><code>BINANCE-SPOT:SPOT_PAIR:BTCUSDT</code></td>
+              </tr>
+              <tr>
+                <td>Perpetuals</td>
+                <td><code>PERPETUAL</code></td>
+                <td>CeFi, DeFi, Prediction <span class="u">— see below</span></td>
+                <td>19</td>
+                <td><code>BINANCE-FUTURES:PERPETUAL:BTCUSDT</code></td>
+              </tr>
+              <tr>
+                <td>Futures <span class="u">(dated)</span></td>
+                <td><code>FUTURE</code></td>
+                <td>CeFi, TradFi</td>
+                <td>14</td>
+                <td><code>CME:FUTURE:ES-20260320</code></td>
+              </tr>
+              <tr>
+                <td>Options</td>
+                <td><code>OPTION</code></td>
+                <td>CeFi, TradFi</td>
+                <td>7</td>
+                <td><code>DERIBIT:OPTION:BTC-28JUN24-70000-C</code></td>
+              </tr>
+              <tr>
+                <td>Swaps</td>
+                <td><b class="st st-plan">planned</b></td>
+                <td><span class="u">n/a — see below</span></td>
+                <td>n/a</td>
+                <td>n/a</td>
+              </tr>
+              <tr>
+                <td>ETFs / ETPs</td>
+                <td><code>ETF</code></td>
+                <td>TradFi</td>
+                <td>5</td>
+                <td><code>NYSE:ETF:SPY</code></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">Perpetuals span three asset groups on one token</span>
+        <p>
+          <code>PERPETUAL</code> is not CeFi-only. <code>HYPERLIQUID</code>, <code>ASTER</code>,
+          <code>PACIFICA-SOLANA</code>, <code>EXTENDED-STARKNET</code> and <code>LIGHTER-ZKSYNC</code> are on-chain
+          perpetual DEXes carrying the same token, and <code>KALSHI_PERP</code> / <code>POLYMARKET_PERP</code> —
+          CFTC-regulated crypto perpetual futures desks on prediction-market venues — carry it too. Three asset
+          groups, one instrument-type token, one canonical ID shape.
+        </p>
+      </div>
+      <div class="callout">
+        <span class="tag">Swaps — the honest gap, not the silent one</span>
+        <p>
+          <code>SWAP</code> is a real action in the instruction vocabulary — part of the on-chain action set in
+          <a href="#s8">§08</a>'s envelope, executed against a <code>POOL</code> / <code>DEX_POOL</code> instrument,
+          not a separate product. It is not, itself, a row in <code>InstrumentType</code>
+          (<code>unified_api_contracts/_instrument_enums.py</code> — checked directly; no <code>SWAP</code> member
+          exists there). There is no standalone swap-as-a-derivative product (an interest-rate-swap-style
+          instrument) in the registry today. Marked <b class="st st-plan">planned</b> rather than omitted, so the
+          gap is visible instead of silently absent.
+        </p>
+      </div>
+      <p style="font-size: 0.93rem; color: var(--ink-3)">
+        Beyond the six shapes above, the DeFi side of the registry carries instrument types with no CeFi/TradFi
+        analogue — <code>LENDING</code>, <code>A_TOKEN</code> / <code>DEBT_TOKEN</code> (Aave-style supply/debt
+        positions), <code>LST</code> / <code>YIELD_BEARING</code> / <code>STAKING</code> / <code>RESTAKING</code>,
+        <code>SPOT_ASSET</code>, and the DEX-pool shapes <code>POOL</code> / <code>DEX_POOL</code> /
+        <code>SOLANA_AMM_POOL</code>. These are real (<code>unified_api_contracts/_instrument_enums.py</code>) and
+        already covered by <a href="#s3">§03</a>'s protocol×chain table — not re-listed here because they are
+        DeFi-native shapes, not spot/perp/future/option/swap/ETF ones.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against <code>unified_api_contracts/_instrument_enums.py</code>,
+        <code>unified_api_contracts/canonical/instrument_key.py</code> and
+        <code>unified_api_contracts/registry/venue_constants.py</code>'s <code>INSTRUMENT_TYPES_BY_VENUE</code>.
+      </p>
+    </details>
+  </section>
+
+  <section id="s30">
+    <div class="sec-head">
+      <span class="num">30</span>
+      <h2>Execution algorithms, in depth</h2>
+      <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="plans/epics/execution_master.md — algo selection, routing and chained-sequence completeness"
+        >owner: execution_master</b
+      >
+    </div>
+    <p class="lede">
+      <a href="#s12">§12</a> named the algorithm registry. This is what each algorithm actually does, which real
+      parameter controls its aggressiveness or its time-slicing, and which of the nine below are wired into a live
+      call path today versus real and tested but not yet connected.
+    </p>
+    <details class="sec-body" open>
+      <summary>Aggressiveness and time-slicing, by real parameter — not by marketing adjective</summary>
+      <p>
+        "Manage the aggressiveness of your order" and "slice the order over time" are not slogans here — they are
+        specific constructor arguments on specific classes in
+        <code>execution-service/execution_service/algo_library/</code>. The table below names them.
+      </p>
+      <div class="plate">
+        <div class="plate-head">
+          <span class="label">The algo library, read from source</span
+          ><span class="note">10 files read directly, 2026-08-20</span>
+        </div>
+        <div class="plate-body scroll-x">
+          <table>
+            <thead>
+              <tr>
+                <th>Algorithm</th>
+                <th>Mechanism</th>
+                <th>Aggressiveness / slicing parameter(s)</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>TWAP</td>
+                <td>
+                  Splits the parent order into N equal-sized child slices spaced evenly across a fixed horizon; the
+                  final slice is the primary order itself
+                </td>
+                <td><code>horizon_secs</code>, <code>interval_secs</code></td>
+                <td><b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as <code>TWAP</code></td>
+              </tr>
+              <tr>
+                <td>Adaptive TWAP</td>
+                <td>
+                  Same TWAP skeleton, but each slice is scaled up or down by recent trend and volatility, side-aware
+                </td>
+                <td>
+                  <code>trend_cap</code>, <code>trend_sensitivity</code>, <code>vol_sensitivity</code>,
+                  <code>min_factor</code> / <code>max_factor</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>ADAPTIVE_TWAP</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Almgren-Chriss</td>
+                <td>
+                  Optimal-execution schedule — a sinh-shaped trajectory minimising market impact against timing
+                  risk, front- or back-loading size by urgency
+                </td>
+                <td>
+                  <code>risk_aversion</code> (urgency — higher trades faster), <code>volatility</code>,
+                  <code>impact_sensitivity</code>, <code>horizon_secs</code>, <code>num_intervals</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>ALMGREN_CHRISS</code>
+                </td>
+              </tr>
+              <tr>
+                <td>Passive-Aggressive Hybrid</td>
+                <td>
+                  Passive limit orders at the best bid/ask to capture spread, then a TWAP sweep of whatever remains
+                  to guarantee completion inside the horizon
+                </td>
+                <td>
+                  <code>passive_time_pct</code>, <code>display_ratio</code>, <code>aggressive_slices</code>,
+                  <code>price_improve_bps</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>PASSIVE_AGGRESSIVE_HYBRID</code>
+                </td>
+              </tr>
+              <tr>
+                <td>POV Dynamic</td>
+                <td>
+                  Targets a percentage of live market volume, clamped 5%–30%, and raises participation (capped)
+                  when behind its own schedule
+                </td>
+                <td>
+                  <code>base_participation</code>, <code>liquidity_adaptation</code>,
+                  <code>catchup_threshold</code>, bucket count
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired as
+                  <code>POV_DYNAMIC</code>
+                </td>
+              </tr>
+              <tr>
+                <td>SOR — DEX</td>
+                <td>
+                  Quotes a swap across Uniswap V3 / Curve / Balancer with real AMM-curve math, splitting across
+                  venues once price impact crosses a threshold
+                </td>
+                <td>
+                  <code>max_slippage_bps</code> (split trigger), <code>max_split_routes</code>,
+                  <code>min_split_percentage</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> live-wired into
+                  <code>onchain_execution_service.py</code>; live-mode quoting still runs on cached/simulated pool
+                  state pending paid RPC
+                </td>
+              </tr>
+              <tr>
+                <td>SOR — cross-chain</td>
+                <td>
+                  Extends DEX routing across chains — prices bridge-in + swap + bridge-out against staying on the
+                  source chain, including a time penalty for the bridge wait, and only splits cross-chain past a
+                  savings threshold
+                </td>
+                <td>
+                  <code>max_chains</code>, <code>bridge_time_penalty_bps_per_min</code>,
+                  <code>cross_chain_savings_threshold_bps</code>, <code>prefer_single_chain</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-verified">✓</b> wired into
+                  <code>onchain_execution_service.py</code> with a real bridge-cost model
+                </td>
+              </tr>
+              <tr>
+                <td>Solver auction</td>
+                <td>
+                  Batch-window auction — several routing solvers (single-venue, split-route, multi-hop) price the
+                  same intent concurrently; best output-minus-gas-minus-MEV score wins
+                </td>
+                <td>
+                  <code>batch_window_seconds</code>, <code>solver_timeout_seconds</code>,
+                  <code>min_surplus_bps</code>, <code>max_solvers</code>
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-check">? check</b> unit-tested, exported, not
+                  wired
+                </td>
+              </tr>
+              <tr>
+                <td>Multicall batcher</td>
+                <td>
+                  Groups on-chain steps (approve, swap, supply, borrow, ...) into one Multicall3 transaction per
+                  dependency group, atomic where a flash loan requires it, with a real gas-savings estimator
+                </td>
+                <td>
+                  <code>multicall_group</code> assignment per step; <code>MAX_CALLS_PER_MULTICALL</code> splits an
+                  oversized batch
+                </td>
+                <td>
+                  <b class="st st-part">partial</b><b class="ev ev-check">? check</b> unit-tested, exported, not
+                  wired
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="callout">
+        <span class="tag">The wiring gap, named rather than smoothed over</span>
+        <p>
+          The solver auction (<code>BatchAuctionEngine</code>) and the multicall batcher
+          (<code>MulticallBatcher</code>) are real, complete, unit-tested implementations
+          (<code>tests/unit/test_algo_library_full.py</code>) and are exported from <code>algo_library/__init__.py</code>.
+          Neither has a live call site: zero instantiation was found anywhere in <code>execution-service</code>
+          outside their own module. <code>intent_engine.py</code>'s own docstring describes a five-step pipeline
+          ending "<code>BatchAuctionEngine</code> finds optimal routes... <code>MulticallBatcher</code> groups steps
+          into minimal transactions" — but the code in that same file never instantiates either class. The
+          documented pipeline and the wired pipeline are not the same thing yet, stated here rather than left to be
+          discovered later.
+        </p>
+      </div>
+      <h3>Extensibility — the grounded version of "we can build it"</h3>
+      <p>
+        Every algorithm above — and the ones not detailed here (VWAP, Iceberg) — implements the same three-method
+        contract: <code>ExecutionAlgorithm.execute()</code>, <code>get_child_orders()</code>,
+        <code>validate_config()</code>
+        (<code>execution-service/execution_service/algo_library/base_algorithm.py</code>). A separate,
+        auto-discovering registry (<code>execution_service/algorithms/registry.py</code>) finds every
+        <code>*ExecAlgorithm</code> / <code>*ExecAlgorithmConfig</code> pair by introspection and maps it to its
+        declared <code>exec_algorithm_id</code> — adding a new algorithm means registering a class, not editing a
+        dispatch table.
+      </p>
+      <p>
+        That is the grounded version of "anything to improve latency, we can build": a new execution style is an
+        implementation against a known, machine-enforced interface, not a platform rewrite. It does not make every
+        future algorithm free — the wiring gap above shows two real implementations still sitting unconnected — but
+        it is an architectural fact about the shape of the extension point, not a promise about turnaround time.
+      </p>
+      <p class="mono" style="color: var(--ink-3); font-size: 12px">
+        Verified directly against <code>execution-service/execution_service/algo_library/base_algorithm.py</code>,
+        <code>adaptive_twap.py</code>, <code>almgren_chriss.py</code>, <code>passive_aggressive.py</code>,
+        <code>pov_dynamic_calculator.py</code>, <code>twap_calculator.py</code>, <code>sor_dex.py</code>,
+        <code>sor_cross_chain.py</code>, <code>solver_auction.py</code>, <code>multicall_batcher.py</code> and
+        <code>intent_engine.py</code>; wiring confirmed against
+        <code>execution_service/algorithms/registry.py</code>, <code>algorithms/impl/*.py</code> and
+        <code>execution_service/services/onchain_execution_service.py</code>.
       </p>
     </details>
   </section>

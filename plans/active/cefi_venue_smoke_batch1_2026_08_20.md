@@ -40,7 +40,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 - [ ] [BACKEND] P0. Execute the canonical batch smoke contract for every current CeFi row, proving captured rows, canonical paths, manifest reconciliation, and genuine capture status; Gate: no zero-row unit exits successfully.
 - [ ] [BACKEND] P1. Record one testnet verdict for every CeFi venue, including simulation where no venue testnet exists; Gate: every distinct venue in the live work list has a verdict.
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials are available or provisionable and record an honest unavailable result for the remainder; Gate: every attempted path has a measured terminal result.
+- [ ] [BACKEND] P1. Add or run testnet smoke coverage where credentials are available or provisionable and mark the remainder BLOCKED-CREDENTIALS; Gate: every attempted path has a measured terminal result.
 - [ ] [BACKEND] P1. Track every failed or absent CeFi row with its source and data type; Gate: no failure is hidden behind a declared-absence or expected-unattempted status.
 - [ ] [BACKEND] P0. Verify source-scoped exemptions and canonical oracle/manifest checks with a negative control; Gate: an invalid path or missing capture fails loudly.
 
