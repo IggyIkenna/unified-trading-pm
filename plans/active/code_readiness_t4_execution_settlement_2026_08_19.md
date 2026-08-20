@@ -516,22 +516,28 @@ todos only to confirm they are data-movement, then leave it.
       `paper(W) == batch-rerun(W)` cannot hold for any instruction using them — this is why every lending venue
       derives `batch=wired` instead of `deployed`. SSOT: `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §4.2.
 
-      **1/5 CLOSED 2026-08-20 — `execution-service@6f664e80a0`.** `CONVERT_DUST` is now handled: the UAC
-      `ConvertDustInstruction` schema already existed (`unified_api_contracts/internal/architecture_v2/
-      restaking_rewards.py`), it just was never wired into `resolve_settlement` or the `StrategyInstructionV2`
-      union — the isinstance branch takes the base `StrategyInstructionEnvelope` type so no UAC-side union edit
-      was needed. Priced order-matched (like `ATOMIC`), fill_size = Σ input-token amounts. 2 new tests.
-      `BATCH_UNHANDLED_ACTIONS` measured shrinking from 5 to exactly `{LP_BURN, LP_MINT, REPAY, WITHDRAW}`.
+      **3/5 CLOSED — stale text corrected 2026-08-20, this todo had drifted behind its own shipped progress.**
+      `CONVERT_DUST` — `execution-service@6f664e80a0`. The UAC `ConvertDustInstruction` schema already existed
+      (`unified_api_contracts/internal/architecture_v2/restaking_rewards.py`), it just was never wired into
+      `resolve_settlement` or the `StrategyInstructionV2` union — the isinstance branch takes the base
+      `StrategyInstructionEnvelope` type so no UAC-side union edit was needed. Priced order-matched (like
+      `ATOMIC`), fill_size = Σ input-token amounts. 2 new tests. `WITHDRAW`/`REPAY` — `execution-service@59627fa2d2`.
+      **RE-MEASURED 2026-08-20 directly against current code** (this todo's own prior text incorrectly claimed
+      these two also had no UAC schema — they do, this was fixed the same session but the todo was never
+      updated): `WithdrawInstruction`/`RepayInstruction` exist at
+      `unified_api_contracts/internal/architecture_v2/schemas.py:337,347` and are wired in
+      `action_handlers.py:215-228`, rate-matched like `LEND`/`BORROW`. `BATCH_UNHANDLED_ACTIONS` is DERIVED
+      (`frozenset(InstructionActionV2) - BATCH_SETTLEMENT_ACTIONS - BATCH_NO_FILL_ACTIONS`), MEASURED now =
+      exactly `{LP_BURN, LP_MINT}`, down from the original 5.
 
-      **The remaining 4 are NOT "cheap rate-matched inverses" as this todo originally assumed — re-measured
-      2026-08-20.** `WITHDRAW`/`REPAY`/`LP_MINT`/`LP_BURN` have **no `StrategyInstructionEnvelope` subclass
-      anywhere in UAC** (confirmed via `grep -rln "InstructionActionV2.WITHDRAW\|...REPAY\|...LP_MINT\|...LP_BURN"
-      unified_api_contracts/` — only the enum definition and `reference/ledger_asset_resolution.py` reference
-      them; no `class *Instruction` exists). This tranche does not own `unified-api-contracts`, so it cannot add
-      the schema itself. Filed as `[FROM-T4] P1` on
-      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s Inbound requests section —
-      once T1 lands 4 new subclasses, T4's side is mechanical (4 more `isinstance` branches, same pattern as the
-      CONVERT_DUST fix above). `BLOCKED-` on that request until then.
+      **`LP_MINT`/`LP_BURN` genuinely remain — no `StrategyInstructionEnvelope` subclass exists in UAC for
+      either.** This tranche does not own `unified-api-contracts`, so it cannot add the schema itself. The
+      `[FROM-T4]` inbound request on
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md` now carries the full shape
+      spec (grounded in real connector signatures — Uniswap's NFT-position `mint_position`/`burn_position` vs.
+      Orca/Raydium's pool-address `add_liquidity`/`remove_liquidity`), not just a bare ask — once T1 lands the 2
+      subclasses, T4's side is mechanical (2 more `isinstance` branches, same pattern as the 3 fixes above).
+      `BLOCKED-` on that request until then.
 
       **3/5 CLOSED 2026-08-20 — `execution-service@59627fa2d2`.** T1 landed `WithdrawInstruction`/
       `RepayInstruction` (`unified-api-contracts@f5fc118ae1`) same day, exactly as the request predicted —
@@ -612,8 +618,15 @@ todos only to confirm they are data-movement, then leave it.
       `for venue in venues` (`utils/dependency_checker.py:683`) are deliberately out of scope — both are startup
       preflight/validation, where propagating an exception to halt startup is the correct behaviour, not a
       per-shard-isolation violation of the live-trading-loop kind this SSOT targets.
-- [ ] [BACKEND] P0. Pin the exchange version per venue and re-run cassettes on drift, so a silent venue-version
-      change cannot go undetected (W14). No owning plan existed at authoring time.
+- [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
+      `/plans/active/w14_execution_service_exchange_version_pinning_and_cassette_drift_2026_08_20.md`, operator
+      directly authorized this specific spin-out (asked mid-session via AskUserQuestion, "AO plan" selected — no
+      prior blanket ruling covered W14 the way W15/W22 had one). Scoped via real measurement: 8 cassette
+      directories exist, `ccxt` is already pinned via the standard pyproject/uv.lock range but native (non-ccxt)
+      REST adapters carry zero explicit per-venue API-version markers. Sized into 4 phases (design what "version"
+      means per transport; build the pinning; build drift detection; triage + close-out), deliberately front-
+      loading the 3 real design questions as P0s since everything else depends on their outcome, plus the
+      mandatory gated finalize plan. This todo closes here; track further progress there, not in this doc.
 - [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
       `/plans/active/w15_execution_service_venue_adaptor_security_audit_2026_08_20.md`, per the 2026-08-19
       operator ruling. Sized into 11 phases against a real, enumerated ~85-file adapter inventory (bridge/
