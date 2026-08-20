@@ -340,6 +340,17 @@ four now route through the one helper.
 
 ## Follow-ups
 
+- [ ] [SCRIPT] P2. Fix the benchmark leg's `--auto-day` window propagation before the next
+      completion attempt: the 2026-08-20 driver selected the covered window `2026-01-13..2026-01-14`,
+      but `_run_benchmark_leg` launched `2026-07-18..2026-07-19` from the original CLI day instead.
+      Add a regression test proving the resolved `(start, end)` pair is the pair passed to
+      `launch-features-vm.sh`; the mismatched run failed `EXIT_STATUS=1` on the absent 2026-07-18
+      candle rather than measuring throughput.
+- [ ] [DATA] P2. Reconcile the PREDICTION candle coverage decision used by the driver: `--auto-day`
+      selected `2026-01-13..2026-01-14` in driver `pipeline-e2e-check-features-20260820-223909-18af4d`,
+      while an explicit run for that same window (`pipeline-e2e-check-features-20260820-225000-correct`)
+      fell back from a stale consolidated index to per-VM shards and reported
+      `no_captured_input_for_window`. Confirm the canonical object/index vocabulary before relaunching.
 - [ ] [DATA] P3. Complete the full PREDICTION:delta_one benchmark throughput measurement — instruments-store bucket bug
       now fixed (`features-service@09be801b`) and the 40-min-timeout root cause is understood (see Progress Log
       2026-08-16); still blocked on getting one genuine `EXIT_STATUS=0` completion. **Updated 2026-08-17
@@ -369,3 +380,18 @@ four now route through the one helper.
 
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-20 (slot-24) — fresh benchmark attempts still produced no qualifying completion.** The
+  dedicated staging driver `pipeline-e2e-check-features-20260820-223909-18af4d` ran the requested
+  one-day `PREDICTION:delta_one` benchmark with `--timeout-sec 14400`, but `--auto-day` selected
+  `2026-01-13..2026-01-14` while the benchmark leg launched `2026-07-18..2026-07-19`; both nested
+  VMs failed `EXIT_STATUS=1` because the dependency checker found no candle for 2026-07-18, with
+  zero feature objects. Mirrored report:
+  `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_features/2026-07-19/data_pipeline_e2e_check_features_2026_07_19_prediction.json`.
+  A corrected explicit-day driver `pipeline-e2e-check-features-20260820-225000-correct` did not
+  launch a compute VM: coverage fell back from the stale consolidated index to per-VM shards and
+  reported `no_captured_input_for_window` for the selected `2026-01-13..2026-01-14` window.
+  Mirrored report:
+  `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_features/2026-01-14/data_pipeline_e2e_check_features_2026_01_14_prediction.json`.
+  Therefore no genuine `EXIT_STATUS=0` completion exists and the timeout registry must not be
+  justified by these runs. The shared checkout also contained an uncommitted timeout-registry edit
+  from another session; it was left untouched.
