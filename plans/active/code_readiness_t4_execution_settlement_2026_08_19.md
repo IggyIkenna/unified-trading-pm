@@ -769,14 +769,13 @@ todos only to confirm they are data-movement, then leave it.
       `strategy-service-walkthrough.html`'s "Emergency flatten" bullet likely understates what's shipped now that
       `test_account_instruction_api.py` exists — the sub-agent was NOT confident enough to edit it itself; tracked
       as its own new todo below rather than silently dropped.
-- [ ] [AGENT] P3. **Re-check `strategy-service-walkthrough.html`'s "Emergency flatten" bullet (~line 2694,
-      "What is still open") against what's actually shipped.** Surfaced by the artefact-marker audit 2026-08-20,
-      not confirmed enough to edit inline. Current text says "remaining work is request-shape mapping plus a
-      contract test across the service boundary" — `execution-service` now has real CLOSE_ALL wiring
-      (`execution-service@96411b68c9`), an HTTP route (`execution-service@c0839616be`), and
-      `tests/unit/test_account_instruction_api.py` explicitly proving `POST /account/instruction ->
-      AccountInstructionOrchestrator` end to end. Needs someone to read the actual current bullet text (it may
-      have already been edited since 2026-08-15) and cross-check the specific claim, not just assume stale.
+- [x] ✅ [AGENT] P3. **Re-checked and fixed — `unified-trading-pm@359be094ab`.** The bullet's "re-points onto the
+      manual instruction surface rather than a new endpoint" claim was itself wrong, not just stale — confirmed
+      live via `execution_service/api/account_instruction_api.py:32` (`APIRouter(prefix="/account")`, a genuinely
+      separate router, not `manual_router`). Rewrote to state what's actually shipped: `POST /account/instruction`
+      is a dedicated endpoint driving `AccountInstructionOrchestrator`'s real per-venue CLOSE_ALL (reads live
+      positions, submits offsetting market orders), proven by `tests/unit/test_account_instruction_api.py`, with
+      the one genuinely still-open gap named honestly (DeFi/sports have no equivalent close-out primitive).
 
 ## Progress Log
 
