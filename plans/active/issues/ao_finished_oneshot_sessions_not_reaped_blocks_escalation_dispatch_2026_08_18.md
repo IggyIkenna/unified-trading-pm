@@ -213,42 +213,13 @@ corrections). Quality gate green (4118 passed) before shipping.
       (this session did not wait out `ao-self-pull.sh`'s next cron tick + a subsequent multi-hour
       observation window) — per the Honest caveat above, this fix may not be the complete
       explanation. See follow-up todo below.
-- [x] ✅ [SCRIPT] P2. Live re-verify AFTER `agent-orchestrator@89ca5609e0` has deployed to the
+- [ ] [SCRIPT] P2. Live re-verify AFTER `agent-orchestrator@89ca5609e0` has deployed to the
       `planning` VM (`ao-self-pull.sh` picks it up within ~2min of the LDR HEAD move) — confirm via
       SSM that slots sitting idle+live for >2 reclaim-ticks worth of uninterrupted uptime are
       actually being torn down, and that a queued escalation reliably claims a freshly-reaped
       reserve slot. If the multi-hour stalls recur despite the fix, add temporary DEBUG-level
       per-tick logging of `ticks` progress in `_reclaim_idle_lingering_sessions` (currently zero
       observability into sub-threshold accumulation) as the next diagnostic step. Repo:
-      agent-orchestrator. — VERIFIED 2026-08-20 (worker slot 21, live on the planning VM, not
-      SSM — colocated): fix deployed + running — orchestrator PID 2004993 at
-      `47e1b04e` (⊇ `89ca5609e0`), started 14:42:35 UTC, `ORCHESTRATOR_WORKER_WATCHDOG_ENABLED=true`
-      in process env; disk-persisted `watchdog_idle_session_ticks.dedup.json` live with
-      per-occupant `(slot_id, last_spawned_at)` keys (slots 11/4 at tick 1 at check time). Reclaim
-      post-restart PROVEN: the restarted process's first tick (14:42:51–55) tore down 10 lingering
-      idle+live sessions (`SESSION-TEARDOWN kill_session ... reason=idle_lingering_session_reclaim`)
-      incl. the CI-escalation reserve slots 31/32/33 — pre-restart tick accumulation survived the
-      14:42:35 restart via the persisted counter (old in-memory-only code would have wiped it,
-      exactly the 15h-stall mechanism). Escalation claims healthy: active rows = 2 dispatched
-      (agt-483032→slot 11, agt-500b74→slot 8) + 2 queued on repo-collision guard
-      (`execution-service already active on another slot`), NOT `no free configured slot`; reserve
-      slot 31 freshly-reaped then re-claimed (re-spawned 14:54:43, now working). Multi-hour stalls
-      did NOT recur, so the conditional DEBUG-logging was NOT added. Residual observation (not this
-      fix's domain): `_tick_once` persist mtime frozen ~14min at check point to a slow git-sweep
-      stall — already tracked in `plans/active/issues/idle_lingering_session_reclaim_not_firing_2026_08_19.md`.
+      agent-orchestrator.
 - **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. 2 of 3 todos already shipped with evidence; sole remaining todo (live re-verify + conditional DEBUG logging) is bounded/deterministic. Conflict-check clear: no active planning doc in agent_operating_framework_master claims this ground; the naming-adjacent `one_shot_complete_session_ownership_desync_2026_08_08.md` covers a DIFFERENT, opposite-direction reaper bug (idle-reap over-reclaiming vs. this doc's under-reclaiming) and is already fully shipped/gated by its own finalize plan. Companion gated finalize: `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md`.
 - **context-scout 2026-08-19**: populated context_scope (5 entries).
-
-## Progress Log
-
-- **2026-08-20 (worker slot 21, AO-dispatched P2 live re-verify)**: ALL three todos now DONE.
-  The P2 re-verify is flipped above with full evidence — fix deployed + running (PID 2004993 @
-  `47e1b04e` ⊇ `89ca5609e0`), disk-persisted tick counter live, first tick post-restart tore down
-  the lingering CI-escalation reserve slots 31/32/33 (+7 others), escalation dispatch healthy (no
-  `no free configured slot` starvation), freshly-reaped reserve slot 31 re-claimed. Multi-hour
-  stalls did not recur, so the conditional DEBUG-logging step was correctly NOT taken. Residual
-  (separate, pre-tracked): slow git-sweep stalls can delay `_tick_once` — see
-  `plans/active/issues/idle_lingering_session_reclaim_not_firing_2026_08_19.md`; not a blocker to
-  this doc closing. This issue gates
-  `ao_finished_oneshot_sessions_not_reaped_blocks_escalation_dispatch_2026_08_18_finalize_2026_08_19.md`
-  (depends_on + gate_on_depends) — that finalize can now run its reconcile + archival steps.

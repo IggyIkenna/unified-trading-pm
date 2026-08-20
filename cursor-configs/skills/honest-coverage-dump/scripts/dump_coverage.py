@@ -49,7 +49,6 @@ from shard_universe import (
     NOT_EXPECTED_LABEL,
     CoverageReadError,
     ShardCell,
-    compute_dedup_stats,
     detect_grain,
     iter_shard_cells,
     load_coverage,
@@ -123,33 +122,12 @@ def build_report(
         round(100.0 * totals["captured"] / total_reachable_denom, 2) if total_reachable_denom else None
     )
 
-    # Dedup + hollow-fraction stats (FROM-T2 P0, code_readiness_t5_..._2026_08_19.md): only
-    # meaningful at the instrument_type grain, and computed over the FULL payload (not the
-    # asset_group/venue-filtered `cells` above) -- a raw cell count restricted by a CLI filter
-    # would report the wrong denominator for the corpus-wide dedup/hollow fractions this exists
-    # to surface honestly.
-    dedup_stats = compute_dedup_stats(payload) if grain == "instrument_type" else None
-
     return {
         "grain": grain,
         "generated_at_of_source": payload.get("generated_at"),
         "date_of_source": payload.get("date"),
         "schema_version": payload.get("schema_version"),
         "shard_count": len(shard_rows),
-        "dedup_stats": (
-            {
-                "raw_cell_count": dedup_stats.raw_cell_count,
-                "distinct_cell_count": dedup_stats.distinct_cell_count,
-                "duplicate_count": dedup_stats.duplicate_count,
-                "hollow_instrument_type_count": dedup_stats.hollow_instrument_type_count,
-                "hollow_by_asset_group": {
-                    ag: {"hollow": h, "total": t, "pct": round(100.0 * h / t, 1) if t else None}
-                    for ag, (h, t) in dedup_stats.hollow_by_asset_group.items()
-                },
-            }
-            if dedup_stats is not None
-            else None
-        ),
         "totals": {
             **{DISPLAY_LABELS[f]: totals[f] for f in CAPTURE_STATE_FIELDS},
             "reachable_denominator": total_reachable_denom,
@@ -167,19 +145,6 @@ def _print_human(report: dict, gcs_path: str, resolved_date: str, verbose: bool)
     grain_label = "venue x instrument_type x data_type" if is_3tuple else "venue x data_type"
     print(f"Grain: {report['grain']} ({grain_label})")
     print(f"Shards in scope: {report['shard_count']}")
-    ds = report.get("dedup_stats")
-    if ds is not None:
-        print(
-            f"  Distinct shards after dedup: {ds['distinct_cell_count']} "
-            f"({ds['duplicate_count']} duplicate cell(s) collapsed -- case-variant instrument_type/"
-            f"data_type keys and 'nan'-vs-blank both meaning \"no instrument_type recorded\"; "
-            f"quote {ds['distinct_cell_count']}, not the raw {ds['raw_cell_count']})"
-        )
-        hollow_parts = []
-        for ag, h in sorted(ds["hollow_by_asset_group"].items()):
-            pct = f"{h['pct']}%" if h["pct"] is not None else "n/a"
-            hollow_parts.append(f"{ag} {h['hollow']}/{h['total']} ({pct})")
-        print(f"  Hollow instrument_type (blank/nan) by asset_group: {', '.join(hollow_parts)}")
     print()
     t = report["totals"]
     print("=== Totals across shards in scope ===")

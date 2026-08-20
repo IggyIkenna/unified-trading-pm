@@ -25,14 +25,30 @@ scope: [engineer]
 tags: [sports, canonical, honest-coverage, data-completion, ml-readiness, leakage, codex, close-out]
 related:
   [
+    /plans/archive/2026_07/sports_consolidated_audit_2026_07_19.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /plans/archive/2026_07/sports_legacy_bucket_cutover_2026_07_16.md,
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_07/sports_master_closeout_2026_07_21.md,
+    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
+    /plans/archive/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
+    /plans/archive/2026_07/sports_odds_exchange_fixed_fork_2026_07_18.md,
+    /plans/archive/2026_07/sports_p2_history_apifootball_2015_to_present_2026_06_27.md,
     /plans/active/sports_catalog_league_grain_only_scope_2026_07_08.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
+    /plans/archive/2026_07/sports_p2_features_history_to_ml_ready_2026_06_27.md,
     /plans/active/sports_predictions_live_mode_activation_readiness_2026_07_21.md,
+    /plans/archive/2026_08/sports_legacy_fixtures_path_migration_2026_07_24.md,
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
+    /plans/archive/2026_07/sports_consolidated_closeout_aggregated_sources_2026_07_24.md,
+    /plans/archive/2026_07/sports_consolidated_closeout_history_2026_07_24.md,
+    /plans/archive/2026_08/sports_closeout_exchange_fixed_odds_fork_2026_07_25.md,
+    /plans/archive/2026_07/sports_closeout_track_x_hygiene_2026_07_25.md,
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
+    /plans/archive/2026_08/issues/sports_api_football_live_odds_second_source_conflicts_with_wipe_ruling_2026_08_02.md,
   ]
 created: "2026-07-19"
 last_updated: "2026-07-25"

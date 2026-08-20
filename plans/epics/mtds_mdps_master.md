@@ -30,7 +30,23 @@ related:
     ../archive/2026_05/mtds_per_instrument_download_api_2026_04_24.md,
     ../archive/2026_05/scratch_codefreeze_phase4_mtds_fanout_2026_05_12.md,
     ../archive/2026_05/wave3x_track_d_implementation_2026_05_19.md,
+    /plans/archive/2026_05/strategy_repo_consolidation_2026_05_19.md,
+    /plans/archive/2026_05/ml_repo_consolidation_2026_05_19.md,
+    /plans/archive/features_repo_consolidation_2026_05_08.plan.md,
+    /plans/archive/2026_05/strategy_execution_contract_remediation_2026_05_20.md,
+    /plans/archive/2026_05/bucket_name_ssot_canonicalisation_2026_05_10.md,
+    /plans/archive/2026_05/code_freeze_migrate_backfill_sequencing_2026_05_10.md,
+    /plans/archive/2026_05/aws_migration_defi_first_2026_05_07.md,
+    /plans/archive/2026_05/gcs_migration_bundle_pipeline_mode_2026_05_08.md,
+    /plans/archive/2026_05/writegate_honest_coverage_endtoend_2026_05_06.md,
+    /plans/archive/2026_05/d3_manifest_v8_finish_2026_05_20.md,
+    /plans/archive/2026_05/manifest_cross_asset_rescan_design_2026_05_08.md,
+    /plans/archive/2026_05/manifest_schema_final_gate_2026_05_09.md,
+    /plans/archive/2026_05/hard_schema_phase1_field_flip_migration_2026_05_19.md,
+    /plans/archive/2026_05/honest_coverage_formula_consolidation_2026_05_19.md,
+    /plans/archive/data_status_drilldown_shard_atom_alignment_2026_05_07.md,
     archive/2026_05/canary_coverage_qg_enforcement_2026_05_20.md,
+    /plans/archive/2026_05/deployment_ui_lifecycle_tabs_2026_05_08.md,
     issues/deployment_api_shard_detail_gcs_locked_2026_05_17.md,
     /plans/audit/results/archive/mega_audit_phase_a_issues_human_readable_2026_05_20.md,
     /plans/audit/results/archive/manifest_v8_compliance_2026_05_20_summary.md,
@@ -73,9 +89,6 @@ last_updated:
   # folded plans from ../active/ to ../archive/2026_07/
 locked_by: live-defi-rollout
 locked_since: 2026-05-20
-execution_scope: orchestrator-agent
-drift_direction: advance-code
-depends_on: []
 ---
 
 # MTDS/MDPS Master — Market Data Pipeline Coordination

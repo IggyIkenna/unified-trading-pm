@@ -176,4 +176,3 @@ trusting that).
   lands) would break `client-reporting-api`'s import, since `AssetGroup` does not yet exist in UAC's public API for the
   domain enum. Todos 1-2 are scoped to `unified-api-contracts`, outside this session's scope. Open-todo count unchanged
   at 6; destination ruling (BLK-87fc93e4) continues to correctly govern, `assigned_vm: NA` unchanged.
-- **context-scout 2026-08-20**: re-scouted; context_scope unchanged (4 entries), all still resolve on disk.

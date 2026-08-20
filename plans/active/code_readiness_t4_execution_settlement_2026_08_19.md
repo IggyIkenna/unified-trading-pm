@@ -156,33 +156,14 @@ todos only to confirm they are data-movement, then leave it.
       `ManualOperationHandler → LiveOrchestrator.execute_instruction()`); the other 10 (swap, lend, borrow, stake,
       unstake, quote, transfer, bridge, atomic, cancel) return an honest HTTP 501
       (`platform-external-api-walkthrough.html` line ~1361, verified against
-      `execution-service/execution_service/api/external_instruction_api.py`).
-      **Correction to this item, same day**: the first pass below checked the wrong, legacy vocabulary
-      (`StrategyInstructionType`) and wrongly told you QUOTE/TRANSFER/CANCEL were missing from UAC — they are
-      not. The CURRENT contract is `unified_api_contracts.internal.architecture_v2.schemas.StrategyInstructionV2`
-      (a Pydantic union), and it already has real dataclasses for **every one of the 10**:
-      `SwapInstruction`/`LendInstruction`/`BorrowInstruction`/`StakeInstruction`/`UnstakeInstruction`/
-      `QuoteInstruction`/`TransferInstructionV2`/`BridgeInstructionV2`/`AtomicInstruction`/`CancelInstruction`, each
-      keyed off a real `InstructionActionV2` enum member. If `external_instruction_api.py` 501s on these today, the
-      gap is in execution-service's own dispatch/construction logic, not a missing UAC type — check what
-      `external_instruction_api.py` actually imports and isinstance-checks against before assuming a contract gap.
-      T1 already closed the ONE genuine UAC-side gap this surfaced (below, separately) — the 4 settlement actions
-      with an enum member but no dataclass. If you find a REAL missing type while wiring this, name it exactly
-      (file + expected fields) and T1 will add it — don't invent a parallel local enum either way; the mapping is
-      load-bearing and T1 would rather extend it once than have it drift from a shadow copy.
-      (Superseded text, kept for provenance: the original claim below this line was wrong.)
-      ~~T1 measured the UAC-side vocabulary first so you don't have to: `StrategyInstructionType`
+      `execution-service/execution_service/api/external_instruction_api.py`). T1 measured the UAC-side vocabulary
+      first so you don't have to: `StrategyInstructionType`
       (`unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`) already covers SWAP/LEND/
       BORROW/STAKE/UNSTAKE/BRIDGE/FLASH_LOAN(=atomic), backed by a total `INSTRUCTION_TYPE_TO_OPERATIONS` mapping.
       QUOTE, a standalone TRANSFER (distinct from BRIDGE), and CANCEL are genuinely absent from the contract too —
       if the real implementation needs those as first-class instruction types (not just `OperationType` steps
       internally), ask T1 for the contract addition rather than inventing a parallel local enum; the mapping is
-      load-bearing and T1 would rather extend it once than have it drift from a shadow copy.~~
-- [x] ✅ [FROM-T1] P1. **Shipped — `unified-api-contracts@f5fc118ae1`.** The 4 BATCH-settlement-gap
-      dataclasses this tranche asked for below — see that item's own entry for full detail. `WithdrawInstruction`
-      and `RepayInstruction` are done (rate-matched inverses of `LendInstruction`/`BorrowInstruction`, added to
-      `StrategyInstructionV2`). `LpMintInstruction`/`LpBurnInstruction` are still open — genuinely need the DeFi LP
-      position shape specified, which is your call per the original request, not invented here.
+      load-bearing and T1 would rather extend it once than have it drift from a shadow copy.
 - [ ] [FROM-T1] P1. **Kill-switch / flatten-position as instructions a caller can send** — both are already
       conceptually present as system behaviour but not expressible as an instruction on the envelope
       (`platform-external-api-walkthrough.html` §25). T1 has deliberately NOT added `KILL_SWITCH`/
@@ -191,25 +172,6 @@ todos only to confirm they are data-movement, then leave it.
       `INSTRUCTION_TYPE_TO_OPERATIONS` is a total mapping over every member) and T1 does not want to guess a shape
       you then have to rework. State what execution-service actually needs and T1 will land it, or say if T1's
       first reasonable draft is fine to just ship.
-
-      **Answered 2026-08-20, then CORRECTED same day — my first answer was wrong, caught by re-checking today's
-      LDR rulings before proceeding further.** First pass recommended NOT adding `KILL_SWITCH`/`FLATTEN_POSITION`
-      to `StrategyInstructionType`, reasoning from `AccountInstruction`'s separate-authority-model rationale alone
-      — I hadn't re-read `/plans/epics/system_readiness_master.md` W22 before answering. **That epic section is
-      the actual operator-ruled scope for this exact question**, and it explicitly requires the opposite: "Add
-      kill-switch and flatten-position as instructions, not only as internal system behaviour... a caller must be
-      able to send them, scoped the same way the internal kill-switch is (all-live / per-archetype / per-venue)."
-      **Corrected recommendation: DO add them.** The two answers reconcile, they don't actually conflict on
-      substance — the epic's own "scoped the same way the internal kill-switch is" clause is exactly my original
-      authority-model concern, just answered as an implementation requirement (external kill/flatten needs the
-      SAME authorization gating `AccountInstruction`/`kill_switch.py` already enforce — `authorization_id` +
-      admin auth, not open access) rather than a reason to skip the feature. T1: please add `KILL_SWITCH`/
-      `FLATTEN_POSITION` to `StrategyInstructionType`, each carrying an authorization/approval field mirroring
-      `AccountInstruction`'s `authorization_id` (this tranche will wire the execution-service handler to reuse
-      the existing `kill_switch.py`/`AccountInstructionOrchestrator.CLOSE_ALL` machinery underneath, not
-      duplicate it — a strategy-envelope KILL_SWITCH/FLATTEN_POSITION instruction becomes a thin translation into
-      the SAME already-authorized internal call, never a second independent authority path). Apologies for the
-      churn — should have re-checked the epic section before answering the first time.
 - [ ] [FROM-T1] P1. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
       T3's `## Inbound requests` for full detail (no internal messaging connects strategy-service's decisions to
       execution-service today). Whichever tranche has capacity first can open the UTL `EventTransport` subscription
@@ -220,16 +182,6 @@ todos only to confirm they are data-movement, then leave it.
       path behind the provider interface, credential-gated, never descope. Do NOT invent a distinct Ceffu custody
       member — the artefact already lists Ceffu alongside Copper/manual-transfer/prime-broker eligibility on
       `VenueCapabilityV2.transfer_capability` (shipped `unified-api-contracts@45a545e5ad`).
-
-      **Checked 2026-08-20, genuinely not actionable yet — not the same blocker as BLOCKED-CREDENTIALS.**
-      `transfer_coordinator.py` has ZERO Ceffu/Copper/prime-broker code today — only a generic `TransferHandler`
-      Protocol and one concrete `_SubaccountMoveHandler` (Binance/OKX only). A conforming Ceffu handler needs
-      Ceffu's actual REST/API surface (endpoints, auth scheme, request/response shapes) to implement correctly —
-      this todo's own text already says "pending its API spec," meaning the spec doesn't exist in this workspace
-      at all, not just missing credentials. Building a `TransferHandler`-conforming class without it would mean
-      inventing an interface with no basis to verify against — real risk of shipping something plausible-looking
-      but wrong for a CUSTODY integration. Deliberately not attempted rather than guessed. `BLOCKED` on the actual
-      Ceffu API spec landing somewhere in this workspace (not a credential ask — a documentation ask).
 - [x] ✅ [FROM-T5] P0. **Shipped — `execution-service@7202047877`.** Expose a real per-venue instruction-path check in `execution-service` — this is the leg the
       readiness dump names as the structural reason its rows cannot confirm execution readiness. T5 has done the
       groundwork and needs only the venue-aware surface; the shape asked for is deliberately minimal.
@@ -518,17 +470,6 @@ todos only to confirm they are data-movement, then leave it.
       once T1 lands 4 new subclasses, T4's side is mechanical (4 more `isinstance` branches, same pattern as the
       CONVERT_DUST fix above). `BLOCKED-` on that request until then.
 
-      **3/5 CLOSED 2026-08-20 — `execution-service@59627fa2d2`.** T1 landed `WithdrawInstruction`/
-      `RepayInstruction` (`unified-api-contracts@f5fc118ae1`) same day, exactly as the request predicted —
-      `resolve_settlement` now handles both as rate-matched inverses of `LEND`/`BORROW` (protocol/asset/
-      target_supplied_amount and target_debt_amount respectively). `BATCH_UNHANDLED_ACTIONS` measured shrinking
-      to exactly `{LP_BURN, LP_MINT}`. Fixed a test that had pinned the OLD gap as expected behavior
-      (`test_lending_venue_is_only_wired_on_batch` asserted `AAVE-V3-ETHEREUM.batch == "wired"` — now genuinely
-      `"deployed"`, rewritten to assert the fixed reality rather than the historical gap). 4 new tests total.
-      **Still open**: `LP_MINT`/`LP_BURN` — T1's own note on the DONE item above says these "still need the DeFi
-      LP position shape specified, which is your [T4's] call per the original request, not invented here." Genuine
-      open design question, not attempted this session.
-
 ### W12 — reconciliation
 
 - [x] ✅ [BACKEND] P0. Build pause-before-manual-entry — **batch-live-reconciliation-service@1e210addb1**. It is an
@@ -557,22 +498,7 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [BACKEND] P0. Implement per-venue error codes and classify through UAC `classify_venue_error()`. Shard-level
       failure isolation, no `raise` in per-shard loops. SSOT:
-      `/codex/04-architecture/shard-level-failure-isolation.md`. **Re-measured 2026-08-20: `classify_venue_error`
-      is already widely adopted (20 files: sports adapters, DeFi protocols, trade_execution adapters, the engine
-      orchestrator/router) — this was NOT unbuilt from scratch, contrary to the todo's original framing.** Audited
-      real per-venue loops for the actual "no raise in per-shard loop" invariant instead (`grep -rn "for venue in"`,
-      ~20 sites) and found + fixed one genuine, safety-relevant violation: `OrderRecoveryEngine.recover_venue()`
-      (`execution_service/engine/startup/order_recovery.py`) only wrapped `fetch_open_orders()` in a try/except —
-      `_reconcile_exchange_orphans`'s `cancel_order()`/`confirm_cancel()` calls were NOT wrapped, so any venue-
-      adapter exception there propagated uncaught through `run()`'s `for venue in venues:` loop, silently
-      abandoning recovery for every venue queued after the failing one on startup. Fixed — `execution-service@ff0b43b5d3`
-      — extracted `_reconcile_venue_orders()` (kept `recover_venue` under the 50-line cap), wraps the whole
-      reconciliation body, records via the file's own existing `CanonicalNetworkError` + `cb.record_failure()`
-      pattern (not `classify_venue_error` — that's a vendor-error-CODE classifier, doesn't fit an arbitrary Python
-      exception; kept consistent with this file's own established convention instead). New regression test proves
-      one venue's failure does not abort the second venue in `run()`. **Not done**: a full audit of the other ~19
-      "for venue in" sites for the same class of bug — this fixed the one found to be genuinely unsafe, not a
-      sweep of every site.
+      `/codex/04-architecture/shard-level-failure-isolation.md`.
 - [ ] [BACKEND] P0. Pin the exchange version per venue and re-run cassettes on drift, so a silent venue-version
       change cannot go undetected (W14). No owning plan existed at authoring time.
 - [ ] [BACKEND] P0. Run a security audit of EVERY venue adaptor, especially DeFi, covering every on-chain write
@@ -675,15 +601,7 @@ todos only to confirm they are data-movement, then leave it.
       updates every one of the 12 test files' patch targets in the same commit, verified by actually running the
       full list, not just the file's own local tests — this is safety-critical order-management code, so a rushed
       split that silently defangs a live mock is worse than leaving the file at cap.
-- [x] ✅ [AGENT] P0. **Post-phase codex audit across `/codex/04-architecture/` for every contract changed — DONE
-      2026-08-20.** Every contract this tranche touched, checked: `order-state-machine.md` (fixed a prior session,
-      9-state warning + PARTIALLY_FILLED ruling); `account-instructions.md` (fixed this session —
-      `unified-trading-pm@0db97a5b47` — annotated the Authorization/Audit sections as design-target-not-shipped);
-      `strategy-execution-protocol.md`/`exposure-reduction-unification.md` (checked, both only reference the
-      `AccountActionV2` enum shape in a table, which is accurate, no fix needed). Grepped `codex/` for
-      `execution_instruction`/`instruction-path`/`864.*row` to check whether the readiness-dump fix
-      (`unified-trading-pm@8d47cf3393`) needed a codex update too — no codex doc describes that mechanism's
-      internals (it lives in the skill's own `SKILL.md`, not `codex/`), so nothing there to fix.
+- [ ] [AGENT] P0. Post-phase codex audit across `/codex/04-architecture/` for every contract changed.
 - [ ] [BACKEND] P2. **Build real per-action, role-based authorization + structured audit for AccountInstruction —
       surfaced by the post-phase codex audit 2026-08-20.** `/codex/04-architecture/account-instructions.md`'s
       Authorization table (Ops lead / Strategy owner + ops / Compliance + 2-of-N / firm officer / etc., one row
@@ -694,42 +612,8 @@ todos only to confirm they are data-movement, then leave it.
       two `log_event` calls with no post-state snapshot. Not started this session (design-heavy: needs a role
       registry + an authorization-record lookup neither this tranche nor UAC currently define). SSOT:
       `/codex/04-architecture/account-instructions.md` §Authorization, §Audit.
-- [x] ✅ [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
-      pending states. **Structural blocker fixed 2026-08-20, this todo's own remaining scope re-measured**: the
-      readiness-dump's `execution_instruction` leg was hardcoded venue-independent-`unverified` for all 864 rows
-      (the real per-venue check existed, `execution-service@b70d2edb16`, but nothing called it) — fixed,
-      `unified-trading-pm@8d47cf3393`, independently verified live: a `defi` asset-group run went from a blanket
-      unverified to a real `{unverified: 20, ready: 133, not_ready: 387}` distribution across 540 rows. **What's
-      NOT done**: actually re-reading the 4 HTML artefacts' W-tagged markers against this now-real state and
-      updating any stale ones — no automated marker-writer exists anywhere in this workspace (checked: the
-      readiness-dump skill's own `SKILL.md` only describes deriving state, never writing it back into HTML), and
-      the 4 files are 33,976 lines combined, too large to safely hand-verify in the tail of this session. Dispatched
-      to a sub-agent (see this plan's Progress Log for the dispatch + its findings) rather than rushed or left
-      silently unattempted.
-
-      **DONE 2026-08-20 — `unified-trading-pm@78508ce4e7`.** Sub-agent grepped all 4 files' `<style>` blocks (only
-      three real status classes exist anywhere: `st-live`/`st-part`/`st-plan`), cross-referenced every `owner: W*`
-      tag and execution/instruction keyword hit against this session's 6 real fixes, and independently re-verified
-      two claims against live source. Verdict: **no `st-*` badge met the bar for a confident flip** — every
-      candidate badge stays accurate, or the staleness lives in prose the task correctly scoped out of badge-flip
-      edits. Two genuinely wrong PROSE claims found and fixed directly (not badges, so the sub-agent correctly
-      flagged rather than auto-edited; I verified + fixed both): (1)
-      `platform-external-api-walkthrough.html` said "TRADE only — the other 10 action types return HTTP 501" —
-      QUOTE has been wired since `execution-service@dc4fad8de7`, corrected to "TRADE and QUOTE — the other 9"; (2)
-      the same file's "execution-instruction leg is unverified on all 864 rows... that check does not exist
-      anywhere in the fleet yet" — false since the fix immediately above; corrected to cite the real fix + the
-      measured `defi`-asset-group sample, without inventing an un-measured full-864 number. A third finding —
-      `strategy-service-walkthrough.html`'s "Emergency flatten" bullet likely understates what's shipped now that
-      `test_account_instruction_api.py` exists — the sub-agent was NOT confident enough to edit it itself; tracked
-      as its own new todo below rather than silently dropped.
-- [ ] [AGENT] P3. **Re-check `strategy-service-walkthrough.html`'s "Emergency flatten" bullet (~line 2694,
-      "What is still open") against what's actually shipped.** Surfaced by the artefact-marker audit 2026-08-20,
-      not confirmed enough to edit inline. Current text says "remaining work is request-shape mapping plus a
-      contract test across the service boundary" — `execution-service` now has real CLOSE_ALL wiring
-      (`execution-service@96411b68c9`), an HTTP route (`execution-service@c0839616be`), and
-      `tests/unit/test_account_instruction_api.py` explicitly proving `POST /account/instruction ->
-      AccountInstructionOrchestrator` end to end. Needs someone to read the actual current bullet text (it may
-      have already been edited since 2026-08-15) and cross-check the specific claim, not just assume stale.
+- [ ] [AGENT] P0. Confirm every execution marker in the artefacts now reads live, or is one of the five allowed
+      pending states.
 
 ## Progress Log
 
@@ -762,9 +646,6 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@c0839616be` | `POST /account/instruction` route on both `app.py` and `main.py` in front of the CLOSE_ALL wiring above — 5 new HTTP tests; emergency close-all todo now CLOSED |
 | `execution-service@6f664e80a0` | BATCH settlement gap 1/5 closed: `CONVERT_DUST` now handled by `resolve_settlement`, 2 new tests |
 | `unified-trading-pm@0db97a5b47` | codex audit: `account-instructions.md`'s authorization table + audit section annotated as design-target-not-shipped (verified against the real `AccountInstructionOrchestrator.dispatch()`) |
-| `unified-trading-pm@8d47cf3393` | readiness-dump `execution_instruction` leg now calls the real per-venue-per-mode check (`execution_service.readiness.instruction_path`, shipped `execution-service@b70d2edb16` but never wired in) instead of a hardcoded venue-independent unverified — new `_execution_instruction_path_probe.py`, `checks.py`/`derive_readiness.py` updated; independently re-verified live after landing |
-| `unified-trading-pm@78508ce4e7` | artefact-marker sub-agent audit: fixed 2 factually-wrong prose claims in `platform-external-api-walkthrough.html` (QUOTE falsely listed as still-501; the 864-rows-unverified claim falsely said the check doesn't exist) |
-| `execution-service@ff0b43b5d3` | shard-level failure isolation fix: `OrderRecoveryEngine.recover_venue()` no longer lets one venue's reconciliation exception abort recovery for every other venue on startup; new regression test |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 

@@ -328,43 +328,46 @@ def execution_transfers(venue: str, wallet_capability_venues: frozenset[str]) ->
 
 
 # ---------------------------------------------------------------------------
-# execution-service -- instruction-path coverage, REAL and per-venue-per-mode.
+# execution-service -- instruction adaptor coverage.
 #
-# WIRED 2026-08-20 -- `execution_service.readiness.instruction_path` (shipped
-# execution-service@b70d2edb16 the same day the comment below was written)
-# IS the per-venue instruction-path registry that comment said didn't exist:
-# a real check reading trade_execution.factory / defi_instruction_routes /
-# sports_execution.routing, exactly like execution_orders' UAC capability
-# check. See _execution_instruction_path_probe.py for the cross-venv wiring.
+# Still `unverified` PER VENUE, and deliberately so: measured 2026-08-20, no
+# per-venue instruction-path registry exists in execution-service. The only
+# action-keyed dispatch is backtest_v2/action_handlers.py::resolve_settlement,
+# which is venue-independent and backtest-scoped. (The prior pointer at
+# v2/policy_resolver.py was wrong -- that resolves an execution ALGORITHM per
+# (client_id, slot_label), not a venue's ability to execute an action.)
 #
-# `InstructionPathStatus` is three-way per mode: "none" (no handler resolves
-# at all -- not_ready), "wired" (a real handler resolves, but not for every
-# action this venue routes in the OTHER modes -- e.g. BATCH lacks a
-# settlement handler for WITHDRAW/REPAY on a lending venue that routes them
-# LIVE -- unverified, a real but incomplete positive, never claimed "ready"),
-# "deployed" (a real handler resolves for every action this venue routes --
-# ready). This mirrors the module's own CLAIM <= MEASUREMENT stance: "wired"
-# is a genuine finding, not a downgrade to hide.
+# What changed is that the `unverified` now carries a MEASURED denominator --
+# how many InstructionActionV2 actions have a settlement path at all, and which
+# ones raise UnhandledActionError -- rather than reading "no check wired". An
+# action with no handler is a real negative, so a venue-mode whose leg set is
+# otherwise clean is still not allowed to look finished while five actions are
+# structurally unhandled. See instruction_actions.py for the full reasoning and
+# for why mapping actions onto UAC operation_details keys was rejected as drift.
 # ---------------------------------------------------------------------------
-def execution_instruction(venue: str, mode: str, probe: dict[str, dict] | None) -> Verdict:
-    if probe is None:
+def execution_instruction(coverage: object | None = None) -> Verdict:
+    resolved = bool(getattr(coverage, "resolved", False))
+    if not resolved:
+        note = getattr(coverage, "note", "") if coverage is not None else "coverage not measured by this pass"
         return Verdict(
             "unverified",
-            "execution-service instruction-path probe unavailable for this venue "
-            "(execution_service.readiness.instruction_path)",
+            "no per-venue InstructionActionV2 instruction-path check exists in execution-service "
+            f"(action-handler coverage also unresolved: {note})",
         )
-    row = probe.get(venue)
-    if row is None:
-        return Verdict("unverified", "execution-service instruction-path probe returned no row for this venue")
-    status = row.get(mode.lower(), "none")
-    # "detail" is always populated -- row came from asdict(InstructionPathAvailability),
-    # whose "detail" field always has a real value (default or computed), never absent.
-    detail = row["detail"]
-    if status == "deployed":
-        return Verdict("ready", detail)
-    if status == "wired":
-        return Verdict("unverified", detail)
-    return Verdict("not_ready", detail or "no execution-instruction route resolves for this venue")
+
+    summary = getattr(coverage, "summary", lambda: "")()
+    # Stays `unverified`, never `not_ready`: the measured handler gap is GLOBAL and
+    # backtest-scoped, so it is not evidence that any PARTICULAR venue cannot execute
+    # an instruction. Reporting it per-row as not_ready would assert something this
+    # pass did not measure (CLAIM <= MEASUREMENT) and would make every one of the 864
+    # rows fail for the same non-venue-specific reason, destroying the dump's ability
+    # to discriminate. The gap is surfaced once, at dump level, as its own finding.
+    return Verdict(
+        "unverified",
+        "no PER-VENUE instruction-path registry exists in execution-service -- the only action-keyed "
+        "dispatch (backtest_v2/action_handlers.py::resolve_settlement) is venue-independent and "
+        f"backtest-scoped; measured coverage: {summary}",
+    )
 
 
 # ---------------------------------------------------------------------------

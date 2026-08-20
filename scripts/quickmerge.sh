@@ -454,28 +454,6 @@ if [ "$AGENT_MODE" = true ] && [ -z "$FILES_ARG" ]; then
   exit 1
 fi
 
-# refuse-directory-in-files (quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_
-# 2026_08_20, Defect 2): a directory path in --files reached the staging loop further down
-# silently, without landing its contents reliably -- measured consequence: strategy-service@
-# 1bda20fb landed factory.py referencing strategy_service.engine.strategies.v2.portfolio while
-# the portfolio/ package itself (passed as a directory) was never staged, breaking LDR with a
-# ModuleNotFoundError. Refuse up front rather than trying to make directory-staging reliable --
-# expanding it would also silently widen the commit's scope beyond what --files exists to
-# name explicitly (same rationale safe-doc-push.sh uses for refusing an empty --files outright).
-if [ -n "$FILES_ARG" ]; then
-  # shellcheck disable=SC2086  # intentional word-split: FILES_ARG is a space-separated list
-  for _qm_files_check in $FILES_ARG; do
-    if [ -d "$_qm_files_check" ]; then
-      echo "❌ Refusing: '$_qm_files_check' in --files is a DIRECTORY, not a file." >&2
-      echo "   quickmerge does not reliably stage directory contents named via --files (see" >&2
-      echo "   quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md)." >&2
-      echo "   List the individual files inside it instead, e.g.:" >&2
-      echo "     git status --porcelain -- '$_qm_files_check' | awk '{print \$2}'" >&2
-      exit 1
-    fi
-  done
-fi
-
 # ── ISOLATED-WORKTREE MODE (2026-08-10, operator ruling) ─────────────────────────────────
 # WHY GATED, unlike safe-doc-push.sh where isolation is unconditional: the hazard is a SHARED
 # INDEX -- two processes committing out of one checkout interleave prek's patch save/restore

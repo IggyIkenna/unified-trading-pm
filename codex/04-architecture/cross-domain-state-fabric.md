@@ -109,48 +109,6 @@ observed -> included -> canonical -> confirmed -> finalized
 The venue manifest configures **which actions are permitted at each stage**. Acting on `observed` is a `hot`-tier
 capability; the `warm` tier acts from `included` onward.
 
-### 2b. Discrete events are a 2x2, not a list
-
-Operator ruling 2026-08-20. Two **independent** questions decide how a discrete event is handled: is its **time** known
-in advance, and is its **content** known in advance? A one-dimensional "scheduled vs unscheduled" split collapses two
-different things and gets the staking case wrong.
-
-|                  | **Content known**                                                         | **Content unknown**                                                           |
-| ---------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
-| **Time known**   | staking payment, funding settlement, LST rebase, coupon, expiry _instant_ | FOMC, CPI, earnings, option settlement fixing, prediction resolution deadline |
-| **Time unknown** | barrier / knock-out trigger, liquidation at a known level                 | goal, red card, depeg, oracle deviation, exchange halt, expiry _outcome_      |
-
-Each quadrant has a different correct response:
-
-- **Time known + content known -> STAND ASIDE and reconcile.** There is nothing to reprice — the value change is
-  already known. The exposure is **position and ledger reconciliation**, not price. Do not trade through a funding
-  settlement or a staking payment; close the window, let the ledger settle, reopen.
-- **Time known + content unknown -> PRE-ARM, then react to content.** Tighten the validity envelope, cut size or
-  withdraw _before_ the event; after it, both paths run (below).
-- **Time unknown + content known -> PRE-COMPUTE THE BRANCH.** The post-event state is derivable now, so compute it
-  ahead and switch on trigger. This is the one place a per-branch snapshot earns its cost.
-- **Time unknown + content unknown -> REACT ONLY.** A fast pull is usually the right default.
-
-**One event, two consumers, different latencies — not two events.** A news release or a goal feeds BOTH the fast path
-(defensive get-out-of-the-way, or aggressive entry where the archetype supports news/event trading) and the slow path
-(features and ML digesting the content). Modelling these as separate events reintroduces double reaction.
-
-**Venue mechanics can make the fast path moot.** Betfair freezes accounts around a goal, so the reaction budget there
-is set by the venue, not by our latency. Check the venue's own behaviour before spending on speed.
-
-### 2c. Suppression is not a kill
-
-The action mask has **three** states, not two:
-
-| State        | Meaning                                  | Release                                     |
-| ------------ | ---------------------------------------- | ------------------------------------------- |
-| `PERMITTED`  | normal, per source tier and confidence   | n/a                                         |
-| `SUPPRESSED` | a **scheduled** window; nothing is wrong | reopens on schedule, no incident, no unkill |
-| `KILLED`     | something is wrong; recovery required    | per the autonomous recovery matrix          |
-
-Conflating a scheduled suppression with a kill produces false incidents and invents an un-kill path where none is
-needed. The funding-settlement and staking-payment windows above are `SUPPRESSED`, never `KILLED`.
-
 ## 3. The common StateEnvelope
 
 Every profile publishes absolute state through one envelope. The **payload** differs by profile; the envelope and its
@@ -292,197 +250,35 @@ estimator a gate on the multi-region build.
 
 ## 9. Operator ruling register — 2026-08-20
 
-| #   | Ruling                                                                                                                                                       |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| R1  | One contract, three semantic profiles. Not one universal implementation; not CeFi-only.                                                                      |
-| R2  | Split slow/fast. features-service owns the slow generation; a single-writer component per (bucket, region) owns the fast nowcast.                            |
-| R3  | Substrate-neutral binary contract; Python/cloud first, Rust-colo-ready. Fixed-layout versioned schema from day one, no JSON on the hot lane.                 |
-| R4  | Capture local RX time **and region** at the MTDS boundary; paper/batch equivalence becomes **per-region**, not global.                                       |
-| R5  | Finality-tiered state with explicit retraction; on-chain defence moves **pre-trade** (the action mask gates submission).                                     |
-| R6  | A discrete event-state change **invalidates the snapshot** rather than being a `Dz` move. Trust region reads "no discrete state change since z_0".           |
-| R7  | **greeks-service folds into features-service** — one home for model coefficients, no cross-service generation protocol to fail open.                         |
-| R8  | `A ~= L R + D` low-rank; publish small absolute risk-factor state `r`; market-state drift governed by the trust region.                                      |
-| R9  | A cross-region delay estimator is required, with the properties in § 8.                                                                                      |
-| R10 | The venue manifest **extends the existing UAC capability registry**. No fourth parallel venue registry.                                                      |
-| R11 | Profile defaults for most manifest fields, but **mandatory explicit override on `finality_model` and `ordering_key`** — no default for those two.            |
-| R12 | Performance tier is a **declared SLO + continuous measurement + divergence alert**, not a declaration alone.                                                 |
-| R13 | DeFi: `profile=block_ledger`, `delivered_tier=warm`, `hot_capability=specified-not-implemented-not-certified`. A programme-scope call, not a limit.          |
-| R14 | Semantic profile and performance tier are **orthogonal**. Profile bounds the achievable tier; it does not determine it.                                      |
-| R15 | The Taylor factor-state form is the **continuous-quote kernel**, not universal. The universal invariant is reference-generation evaluation.                  |
-| R16 | Retraction/correction is **one envelope operation** across all profiles. `logical_position` is the ordering key and is not a timestamp.                      |
-| R17 | **Capability-gated configuration over hardcoded matrices** — the umbrella principle. See section 12.                                                         |
-| R18 | Declarations are **gate-verified and runtime-divergence-alerted**. A declared capability with no reachable implementation fails the quality gate.            |
-| R19 | The capability gate uses a **shrinking-ratchet baseline** (as DTZ / TID251 / fallback-imports do). The baseline only goes DOWN, never up.                    |
-| R20 | **Build the missing implementation; never delete the declaration to pass the gate.** Deleting passes the gate while moving away from target state.           |
-| R21 | **Each kill condition declares its detector and latency class.** Infrastructure conditions are platform-detected; economic conditions are strategy-detected. |
-| R22 | **Three position vectors, opt-in per archetype**, with `q_worst` DERIVED from a declared venue mass-quote-protection capability. See section 13.             |
-| R23 | The **fast nowcast colocates with MTDS and execution-service** — the feed already terminates there and the quote actors already live there.                  |
-| R24 | The epsilon=0 proof is wired **after** the state-fabric build. A dated, accepted gap — not an oversight.                                                     |
-| R25 | Order and position durability comes from **implementing the Postgres backend properly**; the position/fill lane is transactional by design.                  |
-| R26 | **Warm-up is declared per archetype**, not global and not absent.                                                                                            |
-| R27 | The execution and recoverability artefacts are **client-facing with roadmap framing and factually honest current status**.                                   |
+| #   | Ruling                                                                                                                                              |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1  | One contract, three semantic profiles. Not one universal implementation; not CeFi-only.                                                             |
+| R2  | Split slow/fast. features-service owns the slow generation; a single-writer component per (bucket, region) owns the fast nowcast.                   |
+| R3  | Substrate-neutral binary contract; Python/cloud first, Rust-colo-ready. Fixed-layout versioned schema from day one, no JSON on the hot lane.        |
+| R4  | Capture local RX time **and region** at the MTDS boundary; paper/batch equivalence becomes **per-region**, not global.                              |
+| R5  | Finality-tiered state with explicit retraction; on-chain defence moves **pre-trade** (the action mask gates submission).                            |
+| R6  | A discrete event-state change **invalidates the snapshot** rather than being a `Dz` move. Trust region reads "no discrete state change since z_0".  |
+| R7  | **greeks-service folds into features-service** — one home for model coefficients, no cross-service generation protocol to fail open.                |
+| R8  | `A ~= L R + D` low-rank; publish small absolute risk-factor state `r`; market-state drift governed by the trust region.                             |
+| R9  | A cross-region delay estimator is required, with the properties in § 8.                                                                             |
+| R10 | The venue manifest **extends the existing UAC capability registry**. No fourth parallel venue registry.                                             |
+| R11 | Profile defaults for most manifest fields, but **mandatory explicit override on `finality_model` and `ordering_key`** — no default for those two.   |
+| R12 | Performance tier is a **declared SLO + continuous measurement + divergence alert**, not a declaration alone.                                        |
+| R13 | DeFi: `profile=block_ledger`, `delivered_tier=warm`, `hot_capability=specified-not-implemented-not-certified`. A programme-scope call, not a limit. |
+| R14 | Semantic profile and performance tier are **orthogonal**. Profile bounds the achievable tier; it does not determine it.                             |
+| R15 | The Taylor factor-state form is the **continuous-quote kernel**, not universal. The universal invariant is reference-generation evaluation.         |
+| R16 | Retraction/correction is **one envelope operation** across all profiles. `logical_position` is the ordering key and is not a timestamp.             |
 
 **R11's rationale is a measured failure shape, not a preference.** A miss path that returns a plausible default is
 exactly `get_venue_asset_group()` returning `"cefi"` for every venue, MTDS dropping a `data_type` filter and returning
 200, and three chain registries each giving a different answer — all filed 2026-08-19. `finality_model` and
 `ordering_key` are the two fields where a wrong default is silently dangerous.
 
-## 10. The kill switch and the action mask are ONE mechanism
-
-`action_mask = {}` at instrument scope **is** a kill at instrument scope. Do not build these as two systems. The
-kill-switch SSOT — arming authority, resume authority, exit playbooks, the recovery timeline — remains
-[/codex/04-architecture/autonomous-recovery-matrix.md](/codex/04-architecture/autonomous-recovery-matrix.md); what is
-recorded here is only the slow/fast decomposition, which is the same decomposition as everything else in this doc.
-
-**Measured 2026-08-20 — the reaction path is well wired.**
-`execution-service/execution_service/engine/kill_switch_bus_bridge.py` bridges the UTL `KillSwitchBus` into
-execution-service's `engine.kill_switch`; `kill_switch.is_active()` gates every order path; `register_cancel_on_arm`
-callbacks fire on the inactive->active transition so arming **cancels** rather than merely blocking new orders. Scopes
-are typed (`GLOBAL / VENUE / CLIENT / STRATEGY / INSTRUMENT / ARCHETYPE`) with `ScopedKillSwitchSpec` /
-`ScopedKillSwitchState` and a `KillSwitchTrigger` event in UAC.
-
-**The four concerns and their cadences:**
-
-| Concern                                                                   | Owner                 | Cadence                                             |
-| ------------------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
-| **Declaration** — what counts as a kill condition, its scope, `exit_mode` | strategy / UAC config | slow, versioned generation                          |
-| **Detection** — noticing the condition holds                              | **OPEN — see below**  | must be fast for the infrastructure class           |
-| **Reaction** — cancel, gate, execute the exit playbook                    | execution-service     | fast, every order path                              |
-| **Resume** — un-kill                                                      | recovery matrix       | direction- and scope-aware; `manual_unkill` = human |
-
-**A slow strategy cadence does NOT make the kill slow.** Declaration is versioned config, not a per-tick decision, and
-the exit playbooks live in UAC so execution-service can act with strategy-service entirely down.
-
-**OPEN — detection ownership per condition.** Every kill-switch _subscriber_ found on 2026-08-20 is strategy-side
-(`archetype_kill_switch_subscriber.py`, `pnl/kill_switch_bus_subscriber.py`, `risk/circuit_breaker_registry.py`); those
-consume. Which component _detects_ each condition and publishes to the bus was **not measured**. If detection for a
-given condition sits behind a slow loop, that condition is latent at that loop's cadence however fast the reaction is —
-the same shape as `HealthFactorMonitor` having no production entry point. The conditions that cannot tolerate a slow
-detector are the infrastructure class: feed staleness, sequence gap, position divergence, venue disconnect, clock
-breach, ack timeout, model trust breach.
-
-## 11. Dust — three concerns, three owners
-
-Operator framing 2026-08-20, correct for two of the three parts:
-
-| Concern            | What it is                                                                                          | Owner / cadence                                                                  |
-| ------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| **Dust policy**    | thresholds, sweep cadence, target currency                                                          | strategy config, slow, via instructions                                          |
-| **Dust avoidance** | min-notional rounding; not leaving an unfillable stub after a partial fill or a tick-rounded resize | **execution, fast** — a property of the order-state diff, not of the instruction |
-| **Dust sweeping**  | consolidating residual balances                                                                     | slow, and it is a **transfer** — so it can never cross a `client_id`             |
-
-**Measured 2026-08-20**: the token `dust` appears in `strategy_service/pnl/engine/reward_attribution.py`,
-`reward_attribution_drain.py`, `backtest_v2/action_handlers.py`, `benchmark_fills.py` and `strategies/v2/base.py` — it
-is a PnL-attribution and backtest concern today. Whether **dust avoidance** is owned anywhere is UNVERIFIED: only the
-token `dust` was searched, and min-notional / lot-size logic may exist under other names.
-
-## 12. Capability-gated configuration — the umbrella principle (R17-R20)
-
-Operator ruling 2026-08-20. **Strategy archetypes, execution algos, risk/position/PnL, market data, batch-live
-reconciliation and disaster recovery are all choices gated by config and declared capability — never by hardcoded
-matrices of possibilities.** A hardcoded matrix over 192 venues x N data types x 60 archetypes x 3 modes is
-combinatorial, error-prone, and cannot evolve as infrastructure and data catch up with design.
-
-**The four-step shape:**
-
-| Step          | What                                                                 | Where                                |
-| ------------- | -------------------------------------------------------------------- | ------------------------------------ |
-| **Declare**   | what is POSSIBLE — per venue, channel, chain, feature, archetype     | UAC capability registries, versioned |
-| **Configure** | what is DESIRED — per strategy, per run, per deployment              | config                               |
-| **Resolve**   | eligibility = desired ∩ possible                                     | one resolver, one vocabulary         |
-| **Fail**      | desired ⊄ possible -> **closed and loud**, never a plausible default | typed error                          |
-
-Adding a venue, chain, archetype or mode becomes **adding a row, not editing a branch**.
-
-**Why this is the same problem as the recovery plane.** Every gap the 2026-08-20 audits found is a _declaration_, not
-an algorithm: per-channel recovery capability, feature bootstrap types, recovery-quality levels, readiness as a vector,
-dataset vintage, fidelity labelling, source-family covariance, per-stage finality action permissions, warm-up
-requirements. None of them is "write code" — all are "state what is true, in one place, in a typed way."
-
-**And it is the same problem as this week's defect class.** `get_venue_asset_group()` returning `"cefi"` for every
-venue; MTDS dropping a `data_type` filter and returning 200; three chain registries disagreeing; one tick timestamp
-meaning two different things depending on the adapter. Every one is **a matrix cell that was implicit instead of
-declared**, so nothing could check it.
-
-### 12a. The failure mode this creates, and how it is closed
-
-Config-driven becomes its own swamp when config declares a capability the code does not implement. That is **worse
-than an undeclared capability, because it reads as a guarantee**. As of 2026-08-20 there were four measured instances
-of the mirror failure — code that exists, is tested, and is wired to nothing (`TransferCoordinator`,
-`HealthFactorMonitor`, `OrderRecoveryEngine`, `PostgreSQLOrderPersistence`; plus `RedisStreamTransport`, which is real
-and has zero call sites).
-
-Three rules close it:
-
-- **R18 — gate-verified.** A declared capability with no reachable implementation FAILS the quality gate. On top, a
-  declared SLO that continuous measurement contradicts raises a divergence alert. This generalises R12 (performance
-  tier declared-vs-measured) to every declared property.
-- **R19 — shrinking ratchet.** The gate baselines the current violation count, blocks anything NEW, and requires the
-  number to go DOWN. Same mechanism as the DTZ / TID251 / fallback-import baselines already in this workspace.
-  **Never raise the baseline.**
-- **R20 — build, do not delete.** A violation is cleared by **building the missing implementation**, never by removing
-  the declaration. Deleting `OrderRecoveryEngine` or the Postgres backend would make the gate pass while moving the
-  platform further from where it needs to be.
-
-### 12b. Kill conditions are an instance, not an exception (R21)
-
-Each kill-condition row declares **which component detects it and at what latency class**, so the split is an
-auditable field rather than an implicit code branch. The natural division:
-
-- **Infrastructure conditions — platform-detected, inside execution** where the fast loop already runs: feed
-  staleness, sequence gap, position divergence, venue disconnect, clock breach, ack timeout, model trust breach.
-- **Economic conditions — strategy-detected**: drawdown, exposure, concentration. These need a view of strategy
-  intent that execution does not have.
-
-## 13. Position vectors (R22)
-
-Three answers to "what is my position?" while orders are resting. Naming them separately makes a specific
-double-count impossible by construction rather than by discipline.
-
-| Vector        | Contents                                         | Consumer                                       |
-| ------------- | ------------------------------------------------ | ---------------------------------------------- |
-| `q_confirmed` | what has actually filled                         | ledger, venue reconciliation — never estimated |
-| `q_worst`     | confirmed + resting under the venue's worst case | **defensive sizing and pricing**               |
-| `q_pricing`   | confirmed + resting weighted by fill probability | **fair value, through `A`**                    |
-
-**The defensive/aggressive assignment (operator, 2026-08-20).** Defensive posture sizes and prices against `q_worst`,
-because what must be survivable is every quote hitting at once — that is what makes quotes wide, and the width is the
-premium paid for quoting in many places. Aggressive risk-reduction triggers off `q_confirmed` changing, because only
-inventory actually held is worth chasing down.
-
-**The double-count being prevented.** Weighting a resting order at 100% through `A` — so fair value already prices as
-though the position is held — **and** counting it as full inventory against limits charges the same risk twice.
-Quotes go too wide and stop filling. Ignoring it in both places overfills instead.
-
-**`q_worst` is venue-derived, not a universal formula.** Where the venue offers **mass quote protection** — it pulls
-the remaining quotes when one trades — the worst case is _"one fills, the rest are cancelled"_, which is far tighter
-than _"everything fills"_. Deribit, CME and Eurex have MQP; most crypto spot does not. So MQP is a **declared venue
-capability** feeding the `q_worst` derivation — R17 again, not a new code branch.
-
-**Opt-in per archetype.** `q_confirmed` is always present. `q_worst` and `q_pricing` are declared per archetype, so a
-single-instrument strategy with hard fixed order and position limits declares `q_confirmed` plus limits and never
-touches the rest. Forcing a fill-probability model onto a strategy whose hard limits already solve the problem is
-machinery for its own sake.
-
-## 14. Not settled here
+## 10. Not settled here
 
 - The `hot`-tier `block_ledger` contract fields (mempool observation id, simulation state root, bundle sequence,
   relay/builder capability, gas-policy IO, inclusion/finality feedback) are to be **defined, not implemented** — R13.
+- Position vectors: whether to adopt `q_confirmed` / `q_pricing` (fill-probability-weighted) / `q_worst`.
 - Parts II-V of the restructured specification: the per-profile detail, archetype manifests and per-profile
   certification. Only Part I (this doc) exists.
 - The five Wave-0 rulings tracked in the delta-proxy issue doc section 15.
-- **Dust avoidance ownership** (section 11) — hypothesis only; a single-token search is not a measurement.
-- **Epoch fencing on the order path** — measured absent 2026-08-20; nothing prevents a superseded instance from
-  continuing to submit orders. Not yet ruled.
-- **Structural paper/live ledger isolation** — isolation today is operational convention (a dedicated paper
-  `client_id`) plus a `mode` field, not a code-level guard. Cross-CLIENT isolation IS structural; paper-vs-live for the
-  same client is not.
-- **Recovery-quality levels** (event-exact / state-exact / economically-reconciled / provisional / unavailable) and
-  **readiness as a capability vector** — measured 2026-08-20 as absent; the shape is agreed in principle under R17 but
-  the specific field list is not ruled.
-- **Dataset vintage pinning** — a re-run after a GCS correction currently reads whatever is on disk, with no record of
-  which version the original run consumed. Measured absent; not ruled.
-
-**Closed since first publication**: position vectors (R22), kill-switch detection ownership (R21), fast-nowcast
-colocation (R23), scheduled-vs-unscheduled discrete events (section 2b), and the recovery-plane measurement (three
-audits, 2026-08-20 — findings in the issue docs, design rulings R24-R26).

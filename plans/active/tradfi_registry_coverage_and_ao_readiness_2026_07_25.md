@@ -57,14 +57,6 @@ estimate_calibrated_ai_days: 0.96
 assigned_role: data_engineering
 effort: max
 drift_direction: none
-context_scope:
-  [
-    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25_finalize.md,
-    /codex/02-data/availability-manifest-and-data-status.md,
-    /codex/02-data/honest-coverage-model.md,
-    deployment-api/deployment_api/routes/data_status/_axis_census.py,
-    unified-api-contracts/unified_api_contracts/registry/expected_coverage.py,
-  ]
 locked_by:
 locked_since:
 supersedes:

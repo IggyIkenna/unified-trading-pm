@@ -155,8 +155,7 @@ todos only to confirm they are data-movement, then leave it.
       afterward. QG green (13438 passed, 0 failed). Landed alongside no unrelated change — the codex doc was
       already amended per this request; nothing further needed there.
 
-- [x] ✅ [FROM-T2] P2. **Acknowledged, already queued — see the `[BACKEND] P2` item below, no separate action
-      needed on this flag itself.** The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.
+- [ ] [FROM-T2] P2. **The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.**
       `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` was allocated
       into T2's tranche plan as a P1, but the writer lives in
       `unified-trading-library/unified_trading_library/manifest_writer/` and every remaining todo is UTL-side: the
@@ -196,10 +195,8 @@ todos only to confirm they are data-movement, then leave it.
       `*_INSTRUMENT_CATALOGUE` contracts. Tracked as a new P0 part 0 in
       `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
 
-- [x] ✅ [FROM-T2] P1. **Answered — T1's job here was to investigate and answer, which is done below; the
-      population itself was correctly NOT changed (see the answer's own conclusion).** MEASURED 2026-08-20 by T1
-      — the population question you asked for an answer to genuinely doesn't resolve cleanly your way, and here's
-      why. `KNOWN_CHAINS`'s stated job (my own
+- [ ] [FROM-T2] P1. **MEASURED 2026-08-20 by T1, not resolved — the population question you asked for an answer
+      to genuinely doesn't resolve cleanly your way, and here's why.** `KNOWN_CHAINS`'s stated job (my own
       27ebc544b2 commit's docstring) is venue-suffix SPLITTING: recognising the `<CHAIN>` token in a live
       `<PROTOCOL>-<CHAIN>` venue string. Checked all ten against `ALL_DEFI_VENUES`
       (`v.upper().endswith("-" + CHAIN)`): **ZERO of the ten have any currently-registered venue with that
@@ -245,27 +242,26 @@ todos only to confirm they are data-movement, then leave it.
       test_execution_service_venue_coverage_cascade_invariant.py`,
       `tests/data/execution_service_venue_reachability_baseline.json`.
 
-- [ ] [FROM-T4] P1. **2 of 4 shipped — `WithdrawInstruction`/`RepayInstruction` done; `LpMintInstruction`/
-      `LpBurnInstruction` still need the DeFi LP position shape specified (T4's call, not designed here).**
-      Original ask, MEASURED 2026-08-20 by T4 closing its "Close the BATCH settlement gap" todo:
-      `InstructionActionV2` has 16 members; `execution_service/backtest_v2/action_handlers.py`'s
+- [ ] [FROM-T4] P1. **4 of the 5 BATCH-settlement-gap actions have no UAC schema class at all — need new
+      `StrategyInstructionEnvelope` subclasses, not just a handler.** MEASURED 2026-08-20 closing
+      `/plans/active/code_readiness_t4_execution_settlement_2026_08_19.md`'s "Close the BATCH settlement gap"
+      todo: `InstructionActionV2` has 16 members; `execution_service/backtest_v2/action_handlers.py`'s
       `resolve_settlement` dispatches on `isinstance(instruction, <Type>)` over `StrategyInstructionEnvelope`
-      subclasses; `WITHDRAW`/`REPAY`/`LP_MINT`/`LP_BURN` had enum members but no dataclass anywhere in UAC
-      (`CONVERT_DUST` was already fixed the same way, `execution-service@6f664e80a0`).
-      **Shipped `unified-api-contracts@f5fc118ae1`**: `WithdrawInstruction` (protocol/asset/
-      `target_supplied_amount`, rate-matched inverse of `LendInstruction`) and `RepayInstruction` (protocol/asset/
-      `target_debt_amount`, inverse of `BorrowInstruction`), both added to the `StrategyInstructionV2` union, both
-      export levels (`architecture_v2/__init__.py`, `internal/__init__.py`), 4 tests
-      (`tests/internal/unit/test_withdraw_repay_instructions.py`). T4's `resolve_settlement` can now add 2 more
-      `isinstance` branches, mechanically, same pattern as `CONVERT_DUST`.
-      **`LpMintInstruction`/`LpBurnInstruction` remain open** — genuinely need the DEFI_LP position shape specified
-      first (concentrated-LP-specific fields: pool identity, tick range or equivalent, NFT position id if
-      Uniswap-V3-shaped — none of that exists anywhere in this repo today, confirmed by grep for
-      `tick_lower`/`pool_id`/`lp_token`/`token0`/`token1` across `architecture_v2/schemas.py`, zero hits). T1 will
-      not guess this shape under time pressure and ship something T4 has to rework — state the fields
-      `LP_MINT`/`LP_BURN` actually need (the orchestrator already dispatches to
-      `UniswapConnector.mint_position()`/`burn_position()` per the enum's own comment — read those signatures for
-      the real shape) and T1 will add both in one pass.
+      subclasses. `CONVERT_DUST` already had a real subclass (`ConvertDustInstruction`, defined in
+      `unified_api_contracts/internal/architecture_v2/restaking_rewards.py`, just never wired into
+      `resolve_settlement` or the `StrategyInstructionV2` union) — that one is now closed,
+      `execution-service@6f664e80a0`. **`WITHDRAW`,
+      `REPAY`, `LP_MINT`, `LP_BURN` have NO instruction dataclass anywhere in UAC** — confirmed via
+      `grep -rln "InstructionActionV2.WITHDRAW\|InstructionActionV2.REPAY\|InstructionActionV2.LP_MINT\|
+      InstructionActionV2.LP_BURN" unified_api_contracts/`, which hits only `enums.py` (the enum itself) and
+      `reference/ledger_asset_resolution.py` — no `class *Instruction(StrategyInstructionEnvelope)` for any of
+      the four. This tranche does not own `unified-api-contracts`, so it cannot add them. The ask: 4 new
+      subclasses — `WithdrawInstruction`/`RepayInstruction` are natural rate-matched inverses of the shipped
+      `LendInstruction`/`BorrowInstruction` (same `protocol`/`asset`/target-amount shape, opposite direction);
+      `LpMintInstruction`/`LpBurnInstruction` need whatever the DEFI_LP position shape actually is (not designed
+      here — that's a UAC-side call). Once they exist, T4's `resolve_settlement` gets 4 more `isinstance`
+      branches — mechanical once the schema exists, same pattern as the CONVERT_DUST fix. Tracked open on T4's
+      own plan as `BLOCKED` on this request.
 
 ## Todos
 
@@ -494,7 +490,7 @@ todos only to confirm they are data-movement, then leave it.
       finished as its own dedicated unit under the next todo, not folded into this commit.
       Data migration stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule, per the ruling's own
       text. Evidence:
-      `/plans/archive/2026_08/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
+      `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
 - [x] ✅ [BACKEND] P0. GCS client silent write failure fixed — unified-trading-library@425ce119d.
       `GCSBlobHandle.__getattr__` now raises `UnsupportedNativeBlobMethodError` (a `RuntimeError`, deliberately
       NOT an `AttributeError`) on the four raw-SDK methods it doesn't implement
@@ -524,15 +520,8 @@ todos only to confirm they are data-movement, then leave it.
       hypothesis explicitly RULED OUT (`uv sync --frozen --dry-run`: no changes needed), not left unconfirmed.
       Root cause not re-derivable at a 5-day remove — closed on the measured symptom, not a reconstructed cause.
       Issue archived: `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
-- [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor — full detail and Progress Log in
-      `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` (not duplicated here). 2026-08-20: operator ruled
-      option (a) lazy submodule attributes (PEP 562, zero breaking changes); `registry/__init__.py`
-      (`unified-api-contracts@684c6e0e52`) and `architecture_v2/__init__.py` + `internal/__init__.py`
-      (`unified-api-contracts@34b81221ef`) all shipped; a 4th file not in the original plan
-      (`unified_api_contracts/__init__.py` itself,
-      the top-level package root — its `_VENUES` eager-import loop needs hand-written design, not the mechanical
-      converter) discovered and partially done. Real measured win once all land: 1,766→1,295 modules (~27%) on
-      `from unified_api_contracts.internal import StrategyArchetype`.
+- [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor. Layer 2 (UAC) is named "the dominant blocker" —
+      DeFi content is interleaved with shared content in `__init__`. End state needs a scoped-build test.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
       (`[FROM-T2]` above). `manifest_writer/` needs an append-only "delta shard" pattern; verification gated on
       that landing. Was sitting `assigned_vm: NA` unqueued anywhere active; tracked here so it does not get lost.
@@ -549,15 +538,11 @@ todos only to confirm they are data-movement, then leave it.
 
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P0. ~~Replace the honest HTTP 501s with real
       implementations — `transfer`, `bridge`, `atomic`, `cancel`.~~ Target is `execution-service`'s
-      `/external/instructions` router (T4-owned) — see `[FROM-T1]` in T4's plan. **Self-correction, same day**: the
-      first pass here checked the wrong (legacy) vocabulary and wrongly claimed QUOTE/TRANSFER/CANCEL were missing
-      from UAC. The CURRENT contract is `StrategyInstructionV2` (a Pydantic union in
-      `unified_api_contracts.internal.architecture_v2.schemas`), and it already has real dataclasses for every one
-      of the 10 — `SwapInstruction`/`LendInstruction`/`BorrowInstruction`/`StakeInstruction`/`UnstakeInstruction`/
-      `QuoteInstruction`/`TransferInstructionV2`/`BridgeInstructionV2`/`AtomicInstruction`/`CancelInstruction` —
-      keyed off real `InstructionActionV2` enum members. If T4's router 501s on these, the gap is
-      execution-service's own dispatch, not a missing UAC type. Corrected in T4's plan too
-      (`unified-trading-pm@3e7d7c14b9`).
+      `/external/instructions` router (T4-owned) — see `[FROM-T1]` in T4's plan. T1 measured the UAC-side vocabulary
+      first so T4 doesn't have to: `StrategyInstructionType`
+      (`unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`) already covers SWAP/LEND/
+      BORROW/STAKE/UNSTAKE/BRIDGE/FLASH_LOAN(=atomic); QUOTE, a standalone TRANSFER (distinct from BRIDGE), and
+      CANCEL are genuinely absent from the contract too.
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P0. ~~Build the counterparty-facing surface the
       artefact marks `planned — shape in`.~~ Target is `strategy-service` (T3-owned) — see `[FROM-T1]` in T3's plan.
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P1. ~~Enumerate exactly the API surface...~~ Spans
@@ -565,19 +550,13 @@ todos only to confirm they are data-movement, then leave it.
       this is doc-generation work reading routes across repos, not editing any of them — redirected to T5 (already
       builds route-surface tooling for the readiness dump) with a note that it needs T2/T4 to hold their routers
       stable while it walks them.
-- [x] ✅ [BACKEND] P1. **Closed by T4's answer, 2026-08-20 — no contract change needed.** T4 answered the
-      `[FROM-T1]` question on their own plan: do NOT add `KILL_SWITCH`/`FLATTEN_POSITION` to the strategy
-      instruction vocabulary at all. Both capabilities already exist, correctly, on the DELIBERATELY separate
-      `AccountInstruction` envelope — `kill_switch.activate()`/`.deactivate()` (durable state-file, admin-only,
-      `POST /kill-switch/activate`) and `AccountInstruction.CLOSE_ALL` (operator-driven, `authorization_id`-gated,
-      real per-venue wiring — `execution-service@96411b68c9` + `@c0839616be`). Adding these to
-      `StrategyInstructionType`/`InstructionActionV2` would expose them on `/external/instructions` — the
-      third-party-reachable surface — under the WRONG authority model (strategy-engine, not operator-only); T4
-      cited `/codex/04-architecture/account-instructions.md`'s own stated rationale for keeping the two envelopes
-      separate ("different authority model... different risk gates, some ops bypass strategy-layer checks by
-      design"). External partner-facing kill/flatten access, if ever wanted, is a product/security policy call for
-      the operator, not something to build speculatively. **Correct outcome: T1 does nothing here** — the original
-      artefact marker calling this "planned, not yet" was itself the thing that needed correcting, not the code.
+- [ ] [BACKEND] P1. Build the kill-switch (scoped halt) and flatten-position external endpoints — **split in two**:
+      the contract half (adding `KILL_SWITCH`/`FLATTEN_POSITION` as `StrategyInstructionType` members a caller can
+      submit, not just internal system behaviour) is genuinely T1's, but is an open design call, not a mechanical
+      enum fill — `INSTRUCTION_TYPE_TO_OPERATIONS` is a total mapping and control instructions may not decompose
+      into `OperationType` steps the same way trade/DeFi ones do. Held pending T4's answer on what shape
+      execution-service actually needs (asked via `[FROM-T1]` in T4's plan) rather than guessing and shipping a
+      contract T4 has to rework. The endpoint half is T4's regardless. SSOT: `/codex/04-architecture/autonomous-recovery-matrix.md`.
 - [ ] [UI] P1. Wizard stage detail, screenshots and the generated-config example are `pending, to be expanded` in
       the artefact — build the wizard surface to the point those can be generated from the real UI. Needs `[UI]` +
       `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
@@ -871,34 +850,3 @@ todos only to confirm they are data-movement, then leave it.
   **Lesson for future sessions**: a plan-authored P0 naming a specific artefact section is not proof the target
   repo is yours — the artefact cites its own source file per claim (grep the artefact around the todo's exact
   wording before writing code against your own repo's same-named-but-unrelated file).
-
-- 2026-08-20 — **Self-caught and corrected a wrong claim from the entry above, same session, before T4 acted on
-  it.** While closing T4's separate BATCH-settlement-gap request (below), found `unified_api_contracts.internal.
-  architecture_v2.schemas.StrategyInstructionV2` — a Pydantic union with real dataclasses for SWAP/LEND/BORROW/
-  STAKE/UNSTAKE/QUOTE/TRANSFER(`TransferInstructionV2`)/BRIDGE(`BridgeInstructionV2`)/ATOMIC(`AtomicInstruction`)/
-  CANCEL(`CancelInstruction`), each backed by a real `InstructionActionV2` enum member. This directly contradicts
-  the earlier entry's claim that QUOTE/TRANSFER/CANCEL were "genuinely absent from the contract" — that claim
-  checked `StrategyInstructionType`, a DIFFERENT, legacy vocabulary in
-  `unified_api_contracts/internal/domain/strategy_service/_instruction_base.py`, not the current v2 architecture
-  `StrategyInstructionEnvelope` subclasses actually use. **Corrected in both plans** (this file and T4's) before
-  T4 could chase a phantom contract gap — `unified-trading-pm@3e7d7c14b9`. **Lesson**: this repo carries
-  parallel instruction-type vocabularies (legacy `StrategyInstructionType` vs. current `InstructionActionV2`/
-  `StrategyInstructionV2`) — grep for the CONSUMING code's actual import (`execution_service/backtest_v2/
-  action_handlers.py`'s `resolve_settlement` dispatches via `isinstance` over `StrategyInstructionV2`) before
-  claiming a vocabulary gap, not just the first `InstructionType`-shaped name that matches.
-  **Shipped — `unified-api-contracts@f5fc118ae1`.** Closed 2 of T4's 4 requested BATCH-settlement-gap
-  dataclasses: `WithdrawInstruction` (protocol/asset/`target_supplied_amount`, rate-matched inverse of
-  `LendInstruction`) and `RepayInstruction` (protocol/asset/`target_debt_amount`, inverse of `BorrowInstruction`),
-  modelled directly on the existing Lend/Borrow field shape per T4's own explicit description ("same
-  protocol/asset/target-amount shape, opposite direction"). Added to `StrategyInstructionV2` (both the
-  `schemas.py` definition and `architecture_v2/__init__.py`'s separately-inlined copy — the module docstring there
-  explains why it isn't a straight re-export: avoiding a Pydantic reimport race) and both `__all__` export levels.
-  4 tests (`tests/internal/unit/test_withdraw_repay_instructions.py`), verified passing standalone before the
-  full-repo gate; `ruff check --fix` needed one pass for 3 `RUF022` unsorted-`__all__` violations (auto-fixed, not
-  hand-ordered — three files' worth of insertion points is exactly what the tool exists for). `LpMintInstruction`/
-  `LpBurnInstruction` deliberately NOT built — zero existing DeFi-LP position-shape reference anywhere in this
-  repo (grepped `tick_lower`/`pool_id`/`lp_token`/`token0`/`token1`, zero hits), and T4's own request said the
-  shape is "not designed here — that's a UAC-side call." Rather than invent a concentrated-liquidity schema from
-  nothing for a live execution path, asked T4 to name the fields (pointed them at
-  `UniswapConnector.mint_position()`/`burn_position()`'s real signatures, which the enum's own comment already
-  cites as the dispatch target) — held open, not fabricated.

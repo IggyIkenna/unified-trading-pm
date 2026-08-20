@@ -16,14 +16,36 @@ scope: [admin, engineer]
 tags: [tracker, coordinator, honest-coverage, denominator, numerator, instruments, cefi-first, layer-1-gates-layer-2]
 related:
   [
+    /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
+    /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
+    /plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
+    /plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md,
+    /plans/archive/2026_07/instruments_catalogue_incremental_rollup_2026_06_29.md,
+    /plans/archive/issues/cefi_layer1_denominator_gaps_2026_07_03.md,
+    /plans/archive/issues/defi_expected_unattempted_backlog_1m_2026_07_03.md,
+    /plans/archive/2026_08/issues/cefi_universe_capture_rule_2026_06_23.md,
+    /plans/archive/issues/honest_coverage_uac_writer_matrix_reconciliation_2026_06_29.md,
+    /plans/archive/issues/instruments_service_plan_reconciliation_2026_06_29.md,
+    /plans/archive/issues/prediction_universe_capture_dead_since_07_01_2026_07_06.md,
+    /plans/archive/issues/instruments_service_data_status_endpoint_dead_code_2026_07_07.md,
+    /plans/archive/issues/cefi_monotonicity_guard_alerting_and_dark_venues_2026_07_07.md,
     /plans/active/issues/honest_coverage_shard_dimension_model_definitional_data_2026_07_07.md,
+    /plans/archive/issues/aster_mtds_failure_count_regression_2026_07_07.md,
+    /plans/archive/issues/manifest_reprocessing_generic_utility_2026_07_07.md,
+    /plans/archive/2026_08/issues/perp_funding_data_semantics_and_cadence_2026_06_16.md,
     /plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md,
     /plans/active/issues/defi_turbo_api_hides_real_captured_data_2026_07_07.md,
+    /plans/archive/issues/mtds_mdps_order_book_imbalance_duplicated_2026_07_07.md,
+    /plans/archive/issues/non_tardis_dexperp_venue_data_status_smoketest_2026_07_07.md,
+    /plans/archive/issues/defi_lending_atoken_debttoken_instrument_split_2026_07_07.md,
     /plans/active/issues/mtds_is_full_adapter_smoketest_findings_2026_07_07.md,
     /plans/active/issues/adapter_findings_gcs_manifest_deployment_api_reconciliation_gap_2026_07_08.md,
+    /plans/archive/issues/instrument_id_format_canonicalization_2026_07_08.md,
+    /plans/archive/2026_07/instruments_service_docs_consolidation_2026_07_08.md,
     /codex/02-data/honest-coverage-model.md,
+    /plans/archive/2026_08/instruments_completion_tracker_progress_log_history_2026_08_03.md,
   ]
 created: 2026-07-06
 last_updated: 2026-08-03 # line-cap remediation split -- extracted 07-06/07-07 Progress Log history to the archive doc above; context_scope backfilled

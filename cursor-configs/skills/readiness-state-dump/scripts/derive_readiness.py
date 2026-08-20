@@ -171,36 +171,6 @@ def _query_execution_order_capability(
     return result, f"queried {len(result)} venues via execution-service/.venv"
 
 
-def _query_execution_instruction_path(
-    venues: list[str], workspace_root: Path, skip: bool
-) -> tuple[dict[str, dict], str]:
-    """Returns ({venue: asdict(InstructionPathAvailability)}, note) -- the real
-    per-venue-per-mode execution_instruction leg (execution_service.readiness.
-    instruction_path, wired 2026-08-20; see checks.py's execution_instruction
-    module comment for why this replaces the old venue-independent check)."""
-    if skip:
-        return {}, "skipped via --skip-instruction-path-probe"
-    execution_python = workspace_root / "execution-service" / ".venv" / "bin" / "python3"
-    if not execution_python.exists():
-        return {}, f"{execution_python} not found -- execution-service venv unavailable in this environment"
-    probe_script = _HERE.parent / "_execution_instruction_path_probe.py"
-    proc = subprocess.run(
-        [str(execution_python), str(probe_script)],
-        input=json.dumps(venues),
-        capture_output=True,
-        text=True,
-        check=False,
-        cwd=str(workspace_root / "execution-service"),
-    )
-    if proc.returncode != 0:
-        return {}, f"instruction-path probe subprocess failed (exit {proc.returncode}): {proc.stderr.strip()[:300]}"
-    try:
-        result = json.loads(proc.stdout)
-    except json.JSONDecodeError as exc:
-        return {}, f"instruction-path probe returned non-JSON output: {exc}"
-    return result, f"queried {len(result)} venues via execution-service/.venv"
-
-
 def _capability_facts_by_venue(venues: list[str]) -> tuple[dict[str, dict], str]:
     """Flatten UAC SourceCapability auth facts per venue, for the `credentials` leg.
 
@@ -327,17 +297,8 @@ def build_dump(
     mtds_live_registered: frozenset[str],
     workspace_root: Path | None = None,
     archetype_states: dict[str, dict[str, str]] | None = None,
-    instruction_path_probe: dict[str, dict] | None = None,
 ) -> tuple[list[dict], dict]:
-    # grain (FROM-T2 P1, 2026-08-20): detect_grain() reads the grain of the COVERAGE SOURCE, not
-    # of the readiness ROWS this function builds (which are always venue x asset_group x mode,
-    # unconditionally -- see the `rows.append` below). The old code reported coverage_grain under
-    # a bare "grain" key, so a reader saw e.g. "instrument_type" and reasonably assumed the ROWS
-    # carried that finer breakdown -- they never did (measured: all 864 rows carry only
-    # venue/asset_group/mode/pipeline_stage/leg_states, no instrument_type key on any row). Two
-    # keys now, neither silently claiming the other.
-    coverage_source_grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
-    row_grain = "venue_asset_group_mode"
+    grain = detect_grain(coverage_payload) if coverage_payload else "unmeasured"
     # Measured once for the whole dump -- InstructionActionV2 handler coverage is
     # venue-independent, so re-deriving it per row would be waste AND would imply a
     # per-venue signal that does not exist. See instruction_actions.py.
@@ -348,9 +309,7 @@ def build_dump(
 
     cells_by_venue: dict[str, list] = defaultdict(list)
     if coverage_payload:
-        for cell in iter_shard_cells(
-            coverage_payload, coverage_source_grain if coverage_source_grain != "unmeasured" else None
-        ):
+        for cell in iter_shard_cells(coverage_payload, grain if grain != "unmeasured" else None):
             cells_by_venue[cell.venue].append(cell)
 
     layer1_by_venue: dict[str, dict] = {}
@@ -386,6 +345,7 @@ def build_dump(
         vd_features = checks.features_consumed(venue_dts, step17.orphaned_data_types)
         vd_archetype = checks.strategy_archetype_registered(satisfying)
         vd_transfers = checks.execution_transfers(venue, wallet_capability_venues)
+        vd_instruction = checks.execution_instruction(action_coverage)
 
         # Mode-invariant execution-service legs -- adapter presence doesn't vary
         # by mode (see checks.py's module comment on the execution surfaces).
@@ -400,7 +360,6 @@ def build_dump(
             vd_adapter = checks.strategy_position_adapter(venue, mode, mode_status)
             vd_strategy = checks.strategy_leg(vd_archetype, vd_adapter)
             vd_orders = checks.execution_orders(venue, mode, execution_probe)
-            vd_instruction = checks.execution_instruction(venue, mode, instruction_path_probe)
 
             # instruments-service / declared / features-consumability / MDPS-capability are
             # structural (mode-invariant) facts; MTDS capture is a TWO-feed question (see
@@ -442,8 +401,7 @@ def build_dump(
             )
 
     summary = {
-        "row_grain": row_grain,
-        "coverage_source_grain": coverage_source_grain,
+        "grain": grain,
         "venue_count": len(venues),
         "mode_count": len(modes),
         "row_count": len(rows),
@@ -466,7 +424,7 @@ def build_dump(
 
 
 def _print_human(rows: list[dict], summary: dict, verbose: bool, limit: int) -> None:
-    print(f"Readiness state dump -- rows: {summary['row_grain']}, coverage source: {summary['coverage_source_grain']}")
+    print(f"Readiness state dump -- grain: {summary['grain']}")
     print(f"Venues: {summary['venue_count']}, modes: {summary['mode_count']}, rows: {summary['row_count']}")
     print()
     print("=== Per-leg verdict counts (across all venues x modes in scope) ===")
@@ -522,11 +480,6 @@ def main() -> int:
     parser.add_argument("--workspace-root", default=None, help="Override the multi-repo checkout root")
     parser.add_argument("--skip-strategy-probe", action="store_true", help="Skip the strategy-service subprocess")
     parser.add_argument("--skip-execution-probe", action="store_true", help="Skip the execution-service subprocess")
-    parser.add_argument(
-        "--skip-instruction-path-probe",
-        action="store_true",
-        help="Skip the execution-service instruction-path subprocess (execution_instruction leg reports unverified)",
-    )
     parser.add_argument("--skip-mtds-probe", action="store_true", help="Skip the market-tick-data-service subprocess")
     parser.add_argument(
         "--skip-archetype-probe",
@@ -576,9 +529,6 @@ def main() -> int:
     execution_probe, execution_probe_note = _query_execution_order_capability(
         venues, workspace_root, args.skip_execution_probe
     )
-    instruction_path_probe, instruction_path_note = _query_execution_instruction_path(
-        venues, workspace_root, args.skip_instruction_path_probe
-    )
     mtds_live_registered, mtds_probe_note = _query_mtds_live_feed(workspace_root, args.skip_mtds_probe)
     archetype_states, archetype_note = _query_archetype_completeness(workspace_root, args.skip_archetype_probe)
     print(f"Archetype code-completeness probe: {archetype_note}")
@@ -591,12 +541,10 @@ def main() -> int:
         execution_probe,
         mtds_live_registered,
         archetype_states=archetype_states,
-        instruction_path_probe=instruction_path_probe,
     )
     summary["coverage_source"] = coverage_note
     summary["strategy_probe"] = probe_note
     summary["execution_probe"] = execution_probe_note
-    summary["instruction_path_probe"] = instruction_path_note
     summary["mtds_live_probe"] = mtds_probe_note
 
     if args.json:

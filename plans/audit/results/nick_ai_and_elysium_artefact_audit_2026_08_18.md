@@ -24,7 +24,7 @@ auditor: >-
   instruments-service, market-tick-data-service, unified-api-contracts).
 severity: P0
 parent_epic: system_readiness_master
-resulting_plan: /plans/archive/2026_08/client_artefact_remediation_2026_08_18.md
+resulting_plan: /plans/active/client_artefact_remediation_2026_08_18.md
 lib_version:
 doc_versions_checked:
 asset_group: [cross-cutting, defi]
@@ -48,6 +48,7 @@ related:
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
     /plans/epics/system_readiness_master.md,
     /plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md,
+    /plans/active/client_artefact_remediation_2026_08_18.md,
   ]
 created: 2026-08-18
 source: >-
@@ -369,11 +370,11 @@ critically the Nick AI external-API-surface claim) via direct code reads, which 
 the sub-agents' own ground truth — the pre-audit's "no external HTTP layer exists" finding had already been
 superseded by same-day remediation work by the time this audit ran. Corrected in Section 1 § Axis 2 above rather
 than left as the sub-agent's original (now-wrong) recommendation. Companion dispatch plan authored at
-[`/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_2026_08_18.md)
+[`/plans/active/client_artefact_remediation_2026_08_18.md`](/plans/active/client_artefact_remediation_2026_08_18.md)
 per operator direction to hand this off to the agent-orchestrator fleet for triage and execution.
 
 **2026-08-19 — reconciled by the finalize pass
-([`client_artefact_remediation_finalize_2026_08_18.md`](/plans/archive/2026_08/client_artefact_remediation_finalize_2026_08_18.md)).**
+([`client_artefact_remediation_finalize_2026_08_18.md`](/plans/active/client_artefact_remediation_finalize_2026_08_18.md)).**
 Every checked todo in the parent remediation plan + all three children (elysium/nickai/siblings) re-verified against
 the live HTML and cited commits — not checkbox text alone. All 13 summary-table findings below are **RESOLVED**:
 live grep of both walkthroughs confirms the fixes (eleven action types; §02's 9 real `StrategyFamily` members; §11

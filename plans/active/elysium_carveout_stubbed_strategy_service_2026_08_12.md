@@ -41,14 +41,6 @@ estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 4.8
 assigned_role:
 drift_direction: none
-context_scope:
-  [
-    /plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md,
-    /codex/09-strategy/architecture-v2/capability-wizard.md,
-    /codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md,
-    strategy-service/strategy_service/api/restriction_profile_router.py,
-    unified-api-contracts/unified_api_contracts/internal/architecture_v2/capability_manifest.py,
-  ]
 depends_on: [strategy_service_expansion_overlays_config_and_wizard_2026_08_12]
 locked_by:
 locked_since:

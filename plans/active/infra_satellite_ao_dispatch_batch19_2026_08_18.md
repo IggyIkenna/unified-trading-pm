@@ -106,27 +106,3 @@ context_scope:
   explicitly NOT extracted — it is a small forward-looking design question gated on "once the baseline reaches 0",
   not independently bounded today; stays `assigned_vm: NA` on the source doc.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
-- **slot-13 2026-08-20**: First execution batch. Re-ran the checker: live count was already 878 (down from the
-  925 seed — some prior session's edits had shrunk the corpus without updating the baseline). Confirmed the
-  priority sub-note's 5 ship-blocking active docs (`cross_ag_live_capture_parity_2026_08_14.md`,
-  `ci_reconcile_overnight_batch_2026_08_11.md`, `cve_affected_pinned_deps_remediation_2026_06_18.md`,
-  `tradfi_databento_account_billing_suspended_2026_08_09.md`,
-  `deployment_service_meta_watchers_adapter_contract_regression_blocks_mtds_quickmerge_2026_08_12.md`) no longer
-  appear in the live violation list — that ship-blocker is already resolved by another session, nothing left to do
-  there. Worked the 5 highest-count referring docs instead (each an epic/consolidated-closeout rollup whose
-  `related:` list had accumulated dozens of archived-plan citations over months): `defi_consolidated_closeout_
-  2026_07_18.md` (25), `instruments_completion_tracker_2026_07_06.md` (22), `tradfi_consolidated_closeout_
-  2026_07_18.md` (21), `plans/epics/defi_master.md` (17), `plans/epics/mtds_mdps_master.md` (16),
-  `sports_consolidated_closeout_2026_07_19.md` (16) — 117 citations total. Per-entry method: any archived-plan
-  basename cited elsewhere in the SAME referring doc's own prose (a "Sources:"/inline citation, which the checker
-  itself treats as the correct end-state once a fact is migrated) makes the frontmatter `related:` pointer
-  redundant — drop it. For the remainder, checked the archived plan's own `status:` header — every one came back
-  `complete`/`resolved`/`superseded`/`archived` (a handful of tradfi satellite-batch docs carry a stale `status:
-  active` header despite living under `plans/archive/` — confirmed via `- [ ]` grep they hold 0 open todos, i.e.
-  genuinely done, just an unrelated stale-frontmatter bug not in this task's scope) with no standalone durable
-  fact the referring rollup doc's own prose/summary doesn't already restate — dropped per rule 4 (leftover
-  clutter, not a codex-migration candidate). Did NOT touch `../archive/...`-relative or `/plans/audit/.../archive/
-  ...` entries — outside the checker's regex, not in scope. Live count: 878 → 761. `--update-baseline` run
-  (baseline now 761). YAML frontmatter re-validated clean on all 6 touched docs. 761 citations remain across the
-  rest of the corpus — todo stays open for the next batch; done-when (count reaches 0, or the residue is filed as
-  operator-gated issue docs) is not yet met.
