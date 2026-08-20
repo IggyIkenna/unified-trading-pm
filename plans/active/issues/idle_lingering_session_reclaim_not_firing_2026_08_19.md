@@ -362,15 +362,23 @@ halves separately — they are two unrelated facts:
       = "killed"` before a mocked successful respawn, asserts it flips to `"working"`. Full
       fleet quality-gates green (4901 passed, coverage 82.73%, ratchet up available) before
       shipping.
-- [ ] [BACKEND] P2. **Trace `worker_account_unusable_failover`'s resume-success** — verify
-      whether a worker killed by this mechanism (`server/autospawn.py:3844-3881`) actually gets
-      its in-flight task/WIP resumed on a fresh account afterward
-      (`resume_lifecycle.classify_dead_worker` + `server/autospawn.py:4105-4135`'s resume-respawn
-      path), or whether it's effectively lost/requeued-from-scratch. Confirmed today this
-      mechanism fires legitimately (both `sub-a`/ikennaigboaka@gmail.com on its 5-hour limit and
-      `sub-b` on its weekly limit are genuinely capacity-blocked, not a false-positive detection
-      bug) — the open question is purely whether the SAFETY NET (resume) actually works, since
-      slots 1 and 4 were failover-killed twice in 9 minutes against two different accounts today.
+- [ ] [BACKEND] P2. **Finish tracing `worker_account_unusable_failover`'s resume-success —
+      partially confirmed working, not fully proven for every case.** Live-checked 2026-08-20
+      ~00:20 UTC after the account pool churned further (a 3rd account, `sub-h-igboestates`,
+      joined `sub-a`/`sub-b` as exhausted, at 20:20:03 — confirming this is genuine multi-account
+      pool pressure, not a one-off): `classify_dead_worker` (`server/resume_lifecycle.py:47`) DID
+      fire and correctly mark `slot_resume_pending` for slot 11 (23:45:29) and slot 10
+      (00:15:49), both `trigger: "tmux_pruner"`, both carrying `dirty_repos` (WIP-aware),
+      `max_attempts: 2`. Both slots currently still show their `current_task` bound (not
+      released/lost) and slot 11 is `status: working` again — consistent with a successful
+      resume, not data loss. **Not yet fully confirmed**: slots 1 and 4 show NO
+      `slot_resume_pending` event in the same 8h window despite also being failover-killed
+      repeatedly — need to determine whether that's because they had no task in flight at kill
+      time (`classify_dead_worker`'s first check, `task_id is None -> requeue`, a benign
+      no-op case) or a genuine gap. Also worth noting: all 4 slots are currently running on
+      `codex-luna` (a non-Anthropic bridge account), not a healthy Anthropic sub-account — at
+      last check 5 of 8 Anthropic sub-accounts were `rate_limited`/`high_usage`
+      (only `sub-a`/`sub-e` healthy) — real pool-wide pressure, matching operator confirmation.
 - [ ] [BACKEND] P3. **Trace `account_rotation_canonical`** (7 kills/24h across slots
       7,14,21,32,33) — not yet investigated at all; lowest priority of the 4 mechanisms in the
       breakdown table above since its volume is smallest, but still unconfirmed.
