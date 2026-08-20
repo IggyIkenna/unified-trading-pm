@@ -60,10 +60,8 @@ collision.
 
 ## Required resolution
 
-- [ ] [UAC] P1. Prevent feature-group registration from overwriting a raw tick
-  contract when both use the same `(asset_group, instrument_type, data_type)`
-  tuple; preserve the existing raw contract and add a regression test for CeFi
-  liquidations.
+- [x] [UAC] P1. ✅ Prevented feature-group registration from overwriting a raw tick
+  contract when both use the same `(asset_group, instrument_type, data_type)` tuple; preserved the existing raw contract and added a CeFi liquidations regression test. Evidence: `unified-api-contracts@cff7a237` pushed to `origin/live-defi-rollout`; focused regression `1 passed`.
 - [ ] [MTDS] P1. Re-run the Tardis CeFi liquidations path against the corrected
   UAC contract, verify fresh failures stop decreasing capture availability, and
   record the post-fix manifest evidence.
