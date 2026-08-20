@@ -599,24 +599,23 @@ todos only to confirm they are data-movement, then leave it.
       exclusion rewrites the GCS object with the record RETAINED. `/breaks` hides actively-excluded breaks;
       `include_excluded=true` shows them as `status=excluded` so suppression is auditable. MEASURED: after revoke
       the break is re-raised, the record persists with `active=false`, and `active_only=true` filters it out.
-- [ ] [BACKEND] P1. Implement manual trade entry on EVERY venue — epic definition-of-done item, and manual execution
-      mode is first-class alongside automated per the 2026-08-19 addition to W1.
-
-      **Root-caused AND DeFi half fixed 2026-08-20 — `execution-service@8cd47073b5`.** Traced the manual API's
-      actual lazy-init path (`ManualOperationHandler.execute()` unconditionally called
-      `get_or_create_orchestrator()` — CLOB-shaped, cannot represent a `DeFiAdapter`) and confirmed by reading
+- [x] ✅ [BACKEND] P1. **CLOSED 2026-08-20 — manual trade entry now covers every venue type.** Epic
+      definition-of-done item, manual execution mode first-class alongside automated per the 2026-08-19 addition
+      to W1. Root-caused: `ManualOperationHandler.execute()` unconditionally called `get_or_create_orchestrator()`
+      — CLOB-shaped, cannot represent a `DeFiAdapter` or sports adapter. Confirmed by reading
       `_execute_instructions`'s automated path that DeFi instructions there are dispatched straight to
-      `DeFiAdapter.execute_instruction()`, never through an `ExecutionOrchestrator` at all — resolving the earlier
-      open architecture question. Fixed the same way: added `get_defi_adapter_singleton()` (mirrors
-      `create_orchestrator_for_venue`'s pattern) and a process-wide-singleton `get_or_create_defi_adapter()` cache
-      on `ManualOperationHandler`; `execute()` now branches on `DEFI_VENUES` before falling through to the
-      unchanged CLOB path. 6 new tests, including a regression guard that CLOB venues still route correctly.
-      **Sports remains open, deliberately not bundled in** — `_execute_sports_instruction` returns `None` (a
-      side-effecting void method that writes to `data_sink` internally), not the `dict[str, object]` `execute()`
-      must return, so wiring it needs a small return-contract adaptation rather than the direct reuse DeFi's
-      `execute_instruction()` allowed. Real next step: adapt `_execute_sports_instruction`'s result reporting (or
-      wrap it) so `ManualOperationHandler` can surface a status dict the same way, then add the analogous
-      `SPORTS_VENUES` branch.
+      `DeFiAdapter.execute_instruction()`, never through an `ExecutionOrchestrator`. **DeFi —
+      `execution-service@8cd47073b5`**: added `get_defi_adapter_singleton()` + a process-wide-singleton
+      `get_or_create_defi_adapter()` cache; `execute()` branches on `DEFI_VENUES` before the CLOB fallback. 6 new
+      tests. **Sports — `execution-service@053a1ee136`**: `_execute_sports_instruction`/`_execute_sports_bet`
+      previously returned `None` unconditionally despite building a real result dict internally and discarding
+      it (the automated path never needed the return value) — now both return the dict, automated caller
+      unaffected (Python allows discarding a return value). Added the analogous
+      `get_sports_adapter_singleton()`/`execute_sports_instruction()` wrappers +
+      `get_or_create_sports_adapter()` cache; `execute()` branches on `SPORTS_VENUES` between the DeFi and CLOB
+      branches. 8 new tests, including regression guards that CLOB/DeFi venues each still route correctly
+      unaffected by the other branches. Manual trade entry is now genuinely first-class across CLOB/CeFi/TradFi,
+      DeFi, and sports.
 
 ### W14, W15, W17 — fidelity, security, cost
 
