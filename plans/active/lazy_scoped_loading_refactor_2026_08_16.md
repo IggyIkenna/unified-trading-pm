@@ -103,14 +103,101 @@ in a mode that queries a runtime registry, so a lazy registry is invisible to it
       (resolving one archetype imports only its own family, none of the other 9). Same caveat as Layer 3: `v2/__init__.py`
       has its own separate, pre-existing eager-import surface unrelated to the 10 family submodules — out of this
       todo's scope, see Progress Log.
-- [ ] [OPERATOR] P0. **Ruling before layer 2: how far does UAC's `__init__` restructure go?** Splitting
-      `registry/__init__.py` and `internal/__init__.py` changes the import surface every repo in the fleet depends on.
-      Options are (a) lazy submodule attributes preserving today's public paths, (b) explicit submodule imports with a
-      deprecation for the flat ones, (c) leave UAC eager and accept that scoping stops at strategy-service. Needs an
-      operator call — it is a fleet-wide API decision, not a local refactor.
+- [x] ✅ [OPERATOR] P0. **Ruled 2026-08-20: option (a) — lazy submodule attributes.** Preserve every existing public
+      import path exactly (PEP 562 module `__getattr__`, mirroring the pattern already proven in Layers 1 and 3);
+      zero breaking changes fleet-wide. Operator explicitly rejected (b) explicit-submodule-import-plus-deprecation
+      (real fleet-wide breaking churn) and (c) leave-UAC-eager (the carve-out's scoped-build goal would not
+      actually be met).
 - [ ] [AGENT] P0. **Layer 2 (UAC) per the ruling** — the dominant blocker. DeFi content is interleaved with
       CeFi/TradFi/sports in flat enums and dicts, so this is not a directory move; it is a genuine restructure. Ship
       behind the fleet's normal gates and expect every dependent repo's gate to be the real test.
+      **In progress, 2026-08-20** — three files need this treatment, not one: `registry/__init__.py` (1,300L),
+      `internal/architecture_v2/__init__.py` (781L), `internal/__init__.py` (2,733L). `internal/__init__.py`
+      re-exports mostly FROM `architecture_v2` (not leaf modules directly), so making it lazy alone accomplishes
+      little unless `architecture_v2/__init__.py` is ALSO lazy — Python caches import cost at the MODULE level, so
+      touching even one name from an eager `architecture_v2/__init__.py` still executes its entire ~780-line import
+      block regardless of `internal/__init__.py`'s own laziness. All three need the fix for it to be real.
+      **`registry/__init__.py` — shipped `unified-api-contracts@684c6e0e52`.** Built a mechanical AST-based
+      converter (not hand-transcription — 585 re-exported names is exactly the scale a manual pass silently drops
+      one from) extending the `_LAZY_EXPORTS` pattern already hand-written in this same file for 6 names
+      (client_share_classes/schema_spec/withdrawal_approval_rules, added earlier for an import-cycle reason, not
+      this refactor). Verified byte-for-byte correct: captured every one of 585 exported values' `repr()` with
+      `PYTHONHASHSEED=0` pinned (unpinned, `frozenset`-valued exports show spurious diffs from per-process hash
+      randomization, not real content changes — a trap, not a bug, learned the hard way mid-verification), swapped
+      the file, re-captured, diffed sorted — 0 real differences (1 memory-address-in-default-repr artifact,
+      expected). basedpyright clean (0 errors), full `quality-gates.sh` green.
+      **Two genuine defects found and fixed along the way, not just transcribed faithfully**: (1) a name/submodule
+      collision — `expected_coverage` is BOTH a function name AND the leaf name of its own source file
+      (`expected_coverage.py`); importing that submodule for ANY reason (even to resolve a sibling symbol) makes
+      Python's own import machinery bind the SUBMODULE onto the package namespace under that exact name,
+      permanently shadowing the intended function and silently bypassing `__getattr__` (which only fires when
+      normal attribute lookup fails) — the ORIGINAL eager file worked by accident (whichever import ran last won);
+      the lazy version needed this name kept eager explicitly. Grepped for every other such collision in this file
+      (name == own leaf submodule name): exactly one, now fixed. **Re-run this same grep on `architecture_v2` and
+      `internal` before trusting either is collision-free** — this is a structural risk in ANY `X.py` module that
+      also defines a symbol named `X`, not specific to this one file. (2) A genuinely dead import
+      (`get_krx_index_daily_source`, eager-bound in the original but never in `__all__` and never consumed via the
+      `registry` package path — confirmed via fleet-wide grep, real consumers already import it from the leaf
+      module directly) — dropped rather than carried forward, since basedpyright correctly flags a TYPE_CHECKING
+      import with no genuine reference as unused once it can no longer hide behind eager-import silence.
+      **Honest measured result — the fix works but its OWN impact is near-zero, matching this plan's own Layer-3
+      pattern.** `import unified_api_contracts.registry` before: 1,766 modules / 2,209.9ms. After: 1,730 modules —
+      only 36 fewer (~2%). Root cause, isolated by measuring `import unified_api_contracts` ALONE: 1,730 modules,
+      identical to the `.registry` figure. **The mandatory parent-package import (`unified_api_contracts/__init__`
+      → `internal/__init__` → `architecture_v2/__init__`) is ~100% of the cost** — Python must fully execute a
+      package's `__init__.py` before any of its submodules can be reached, so `registry/__init__.py` being lazy
+      cannot help until the ancestor chain is lazy too. This is NOT a wasted fix (anyone importing
+      `unified_api_contracts.registry.<leaf>` directly still benefits, and the collision/dead-import findings are
+      real value), but do not report "Layer 2 done" off this alone — the measurable win is gated on
+      `architecture_v2/__init__.py` and `internal/__init__.py` landing.
+      **`architecture_v2/__init__.py` — converted and fully verified, QG in flight.** Same AST converter, extended
+      to handle a case `registry/__init__.py` didn't have: a live module-level statement
+      (`StrategyInstructionV2 = TradeInstruction | SwapInstruction | ...`, a manually-inlined union type "to avoid
+      Pydantic reimport races" per its own comment) that needs its ~13 constituent names as real objects at import
+      time, not lazy placeholders — the converter now detects any name referenced by a non-import top-level
+      statement and force-imports it eagerly instead, while preserving the statement (and its explanatory comment)
+      verbatim in its original form. 305 lazy exports, 41 source modules. Verified: 319/319 `__all__` values
+      hash-pinned-repr-identical to the original (0 real diffs), basedpyright 0 errors.
+      **`internal/__init__.py` — converted and fully verified, QG in flight (same batch).** 1162 lazy exports, 165
+      source modules — this is the file that re-exports mostly FROM `architecture_v2` rather than leaf modules
+      directly, confirming the earlier concern: it needed `architecture_v2/__init__.py` lazy FIRST for its own
+      laziness to mean anything (shipping in the same batch, not sequentially, so neither lands without the other).
+      Verified: 1162/1162 values hash-pinned-repr-identical (0 real diffs), basedpyright 0 errors.
+      **Measured with all three converted**: `from unified_api_contracts.internal import StrategyArchetype` —
+      baseline 1,766 modules/2,209.9ms → now **1,295 modules** (471 fewer, ~27%). Real, not noise — unlike
+      `registry/__init__.py` alone.
+      **Fourth file discovered, not in the plan's original three-layer table**: `unified_api_contracts/__init__.py`
+      itself (the TOP-level package root, 2,712 lines) is ALSO fully eager and is why 1,295 modules remain instead
+      of near-zero — confirmed by measuring `import unified_api_contracts` alone: also 1,295 modules, identical to
+      the `StrategyArchetype` figure, meaning the top-level package init IS the entire remaining cost. Converted
+      the ordinary re-export portion (1098 lazy exports, 122 source modules) but **found something the converter
+      cannot safely touch and deliberately did not**: a `for _v in _VENUES: __import__(f"{__name__}.external.{_v}",
+      ...); sys.modules[f"{__name__}.{_v}"] = _mod` loop (lines ~2701-2712) that eagerly imports ~37 venue-specific
+      `external.*` submodules (alchemy, binance, databento, ibkr, ...) at package-init time, unconditionally,
+      explicitly populating `sys.modules[f"{__name__}.{_v}"]` so each is reachable as a top-level
+      `unified_api_contracts.<venue>` attribute — a deliberate, non-standard flattening pattern this session does
+      not understand the full rationale for (some downstream code plausibly relies on eager `hasattr`/attribute
+      presence). Making THIS lazy needs a hand-written `__getattr__` branch that replays the same
+      `__import__`+`sys.modules` trick on first access, not the mechanical converter — genuine design work, held
+      open rather than guessed. The converter's generic "preserve any non-import statement verbatim" path already
+      keeps this loop working exactly as before if/when the rest of the file ships; it is just not yet made lazy.
+      **Near-miss during this file's conversion, worth recording**: `typing.cast` and `types.ModuleType` are used
+      as REAL runtime calls inside that `_VENUES` loop, not just for type hints — the converter's first version
+      blanket-skipped ALL `from typing import ...` statements (assuming typing-only names are never runtime-live),
+      which silently dropped `cast` entirely and broke the file (`ruff: F821 Undefined name 'cast'`) — caught by
+      the SAME lint-before-ship discipline that caught every other defect this session, not by luck. Fixed: only
+      the literal `TYPE_CHECKING` import is special-cased now; every other typing import (or bare `import X`, also
+      previously unhandled — `import sys` needed the same fix) flows through the normal
+      lazy-unless-referenced-by-a-live-statement path. **Also hit a real infra collision, not a code bug**: editing
+      this file WHILE `registry/__init__.py`'s quickmerge was still mid-flight (no `--isolated` flag, so it commits
+      from this shared working tree directly) caused quickmerge's own prek-hook safety net to detect the
+      concurrently-dirty top-level file and revert it — cleanly, nothing corrupted, matches the KNOWN issue class
+      `plans/archive/issues/prek_patch_cache_replays_stale_diff_onto_unrelated_files_2026_07_29.md`. **Lesson**: do
+      not edit ANY file in a repo while that repo has a non-`--isolated` quickmerge in flight, even a
+      `--files`-scoped one touching a different file — wait for it to land first.
+      **Converter script**: `/private/tmp/claude-501/.../scratchpad/lazify_init.py` (session-scoped scratchpad, not
+      committed anywhere — re-derive from this entry's description, or ask this session, if a future session needs
+      it for the top-level file's remaining re-export portion or the `_VENUES` loop's design work).
 - [ ] [AGENT] P0. **Prove the end state with a scoped-build test** — construct a deployment declaring only
       `CARRY_BASIS_PERP` + `CARRY_STAKED_BASIS` (the contracted archetypes) and assert the loaded-module set excludes
       the families it does not use. This is the test that makes the carve-out's laziness verifiable rather than claimed.
