@@ -519,8 +519,9 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@7202047877` | per-action `instruction_action_support` (T5's 2nd, action-level ask) |
 | `execution-service@35f0bfb1b` | `OrderStatus.PENDING`/`.OPEN`→`.PENDING_NEW`/`.NEW` rename, UAC sites only |
 | `execution-service@197e80116` | live-orchestrator protocol mismatch: real fix, not the diagnosed one — see below |
-| `batch-live-reconciliation-service@1e210addb1` | W12 pause / exclusion / soft-delete audit |
-| `unified-trading-pm@291da5e837` | (sub-agent) greeks-service promote-PR issue closed + archived |
+| `execution-service@96411b68c9` | real CLOSE_ALL: flattens every open position, CLOB/CeFi-scoped, 8 new tests — landing independently verified (empty `git diff --stat origin/live-defi-rollout`, clean tree, HEAD matches) |
+| `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
+| `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
 **Traps worth more than the code — all measured, none anticipated:**
 
@@ -535,6 +536,13 @@ looked like a real gate failure was actually a wrong-python artifact).
 - **TWO files sit at EXACTLY the 900-line cap**: `api/manual_instruction_api.py`,
   `cli/handlers/live_execution_handler.py`. Any addition to either must be net-zero on line count until split.
 - **Run size + ruff + basedpyright locally BEFORE gating, after EVERY edit** — cheaper than a failed gate cycle.
+  Method-size (50L cap) still bit twice more this session on genuinely new methods (not edits to existing ones) —
+  a local `grep -n "def foo" file.py` line-span check catches it before the gate does.
+  **Importing a `LiveExecutionHandler`-style class into a NEW module inside `execution_service/v2/` risks a package
+  circular import**: anything importing `execution_service.v2.<anything>` runs `v2/__init__.py` first, which
+  re-exports `AccountInstructionOrchestrator` — if that module imports something that itself imports
+  `execution_service.v2.*`, the cycle is immediate ("partially initialized module"). Fix: import the
+  cross-cutting dependency LAZILY, inside the function that needs it, not at module top level.
 
 **Corrections to my own earlier claims — kept, not deleted, because each was wrong in an instructive way:**
 
@@ -576,7 +584,7 @@ unilaterally). Left as-is for a future dedicated pass, not silently skipped.
 | Pendle `withdraw()` redemption | open P2 | widen `PENDLE_OPERATIONS` only in the SAME change that implements it |
 | Pendle SIT cascade entry | inbound on T1 | needs UAC test-dict entry + baseline removal together |
 | PARTIALLY_FILLED→CANCELLED/EXPIRED code | inbound on T1 | codex SSOT amended; one-line `ORDER_STATUS_TRANSITIONS` widen is T1's to land |
-| Emergency close-all | open P0 | wiring BEFORE route — order matters |
+| Emergency close-all — route | open P0 | wiring shipped + verified `execution-service@96411b68c9`; the HTTP route in front of it is the remaining piece |
 | Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | T1's superseded-shape ruling (Q12-Q16) |
 | Delta-proxy doc (30 todos) + policy/fill-model-gaps doc (13 todos) | open, design-heavy | genuinely open-ended judgment calls, not single-session scope |
 | Three-way OrderStatus vocabulary fragmentation | open P0 (W11) | UAC canonical / `oms.py` local / `tracker.py` bare-strings — real cross-file reconciliation, not mechanical |
@@ -584,7 +592,7 @@ unilaterally). Left as-is for a future dedicated pass, not silently skipped.
 | `api/app.py` vs `api/main.py` | open P0, operator | app.py holds startup wiring the container never runs |
 | Split the two at-cap files | open | blocks any further addition to either |
 | W22 strategy→execution messaging | untouched | no `EventTransport` subscriber in execution-service |
-| Elysium doc (88 todos) | untouched | not reached this session |
-| W14/W15/W17, Elysium, settlement tail | untouched | not reached this session |
+| W14/W15/W17 settlement tail | untouched | not reached this session |
+| fund-administration-service, trading-agent-service | N/A | zero docs allocated to T4 for either (confirmed via allocation JSON) — nothing to close |
 
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries) — swapped the generic QG codex doc for `execution-service/`, the dominant repo by far for this tranche's remaining work.
