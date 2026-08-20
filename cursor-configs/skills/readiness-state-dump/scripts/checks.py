@@ -171,6 +171,56 @@ def strategy_position_adapter(venue: str, mode: str, mode_status: str | None) ->
     return Verdict("not_ready", f"{ref} = none")
 
 
+# ---------------------------------------------------------------------------
+# strategy-service -- archetype CODE-completeness half (W1's archetype capability
+# axis across batch/paper/live). Distinct from strategy_archetype_registered above:
+# that one asks "which archetypes can this VENUE'S DATA satisfy"
+# (satisfying_archetypes); this one asks "of those, is any actually WIRED for this
+# mode" -- factory registration, param schema, target-universe catalog, allocator
+# rank and the mode-specific dispatch hook.
+#
+# Consumes the archetype-code-completeness skill's own output rather than
+# re-deriving it (the plan's explicit instruction), so the two dumps can never
+# disagree about whether an archetype is code-complete.
+#
+# The composition is a real AND with teeth: a venue whose only data-satisfiable
+# archetype is not wired for LIVE is not live-ready, however good its data is.
+# ---------------------------------------------------------------------------
+def strategy_archetype_code_complete(
+    satisfying_archetype_names: frozenset[str],
+    mode: str,
+    archetype_states: dict[str, dict[str, str]] | None,
+) -> Verdict:
+    """``archetype_states``: {MODE: {archetype_name: state}} from the archetype dump."""
+    if archetype_states is None:
+        return Verdict("unverified", "archetype code-completeness probe unavailable -- no per-mode wiring check ran")
+    by_mode = archetype_states.get(mode)
+    if not by_mode:
+        return Verdict("unverified", f"archetype code-completeness probe returned no rows for mode={mode}")
+    if not satisfying_archetype_names:
+        return Verdict(
+            "not_ready",
+            "no archetype's FEATURE_REQUIRED_INPUTS is satisfiable from this venue, so no archetype can run here "
+            "regardless of how complete its code is",
+        )
+
+    code_ready = sorted(a for a in satisfying_archetype_names if by_mode.get(a) == "ready")
+    if code_ready:
+        return Verdict("ready", f"data-satisfiable AND code-complete for mode={mode}: {code_ready}")
+
+    detail = {a: by_mode.get(a, "unknown-to-probe") for a in sorted(satisfying_archetype_names)}
+    if any(v == "unknown-to-probe" for v in detail.values()):
+        return Verdict(
+            "unverified",
+            f"no satisfying archetype is code-complete for mode={mode}, and at least one is absent from the "
+            f"archetype dump entirely: {detail}",
+        )
+    return Verdict(
+        "not_ready",
+        f"every archetype this venue's data satisfies is incomplete in code for mode={mode}: {detail}",
+    )
+
+
 def strategy_leg(archetype_verdict: Verdict, adapter_verdict: Verdict) -> Verdict:
     """AND of both halves -- 'both, not either' per the task's explicit framing."""
     states = {archetype_verdict.state, adapter_verdict.state}
@@ -320,13 +370,70 @@ def execution_instruction(coverage: object | None = None) -> Verdict:
     )
 
 
+# ---------------------------------------------------------------------------
+# credentials -- W1's 7th readiness dimension (2026-08-19 addition).
+#
+# Derived from UAC's OWN declared auth model (SourceCapability.auth_scope /
+# auth_environments / supports_testnet / supports_mainnet, plus the per-operation
+# required_credential + signing_scheme in operation_details) -- not from a
+# hand-written list of which venues "need keys".
+#
+# The honest split this leg draws:
+#   ready       -- the venue declares it needs NO credential for this env
+#                  ("none" auth_scope / required_credential). A real fact: there
+#                  is nothing to be missing.
+#   not_ready   -- the venue structurally does not support this mode's env at all
+#                  (e.g. PAPER on a source declaring supports_testnet=False).
+#                  Structurally cannot, which is hard evidence.
+#   unverified  -- a credential IS declared as required. Whether the secret is
+#                  actually present/valid is NOT checked here: that needs a live
+#                  GSM read, which this read-only pass deliberately does not do.
+#                  This is the BLOCKED-CREDENTIALS state made visible per venue
+#                  rather than hidden behind a silent pass.
+#
+# BATCH deliberately resolves against mainnet: batch capture reads production
+# history, and there is no separate "batch env" in the capability model.
+# ---------------------------------------------------------------------------
+def credentials(venue: str, mode: str, cap: dict[str, object] | None) -> Verdict:
+    """``cap``: flattened UAC capability facts for this venue, or None if unresolvable."""
+    if cap is None:
+        return Verdict(
+            "unverified",
+            f"no UAC SourceCapability resolves for {venue} -- credential requirement undeclared, not confirmed absent",
+        )
+
+    env = "testnet" if mode == "PAPER" else "mainnet"
+    supports = bool(cap.get("supports_testnet") if env == "testnet" else cap.get("supports_mainnet"))
+    if not supports:
+        return Verdict("not_ready", f"{venue} declares supports_{env}=False -- mode={mode} cannot run at all")
+
+    auth_scope = [str(a).lower() for a in (cap.get("auth_scope") or [])]
+    required = [str(r).lower() for r in (cap.get("required_credentials") or [])]
+    needs = sorted({a for a in auth_scope if a != "none"} | {r for r in required if r != "none"})
+
+    if not needs:
+        declared = "auth_scope=['none']" if auth_scope else "no auth_scope declared and no operation requires one"
+        return Verdict("ready", f"{venue} requires no credential for env={env} ({declared})")
+
+    env_key = cap.get("auth_environments") or {}
+    named = env_key.get("test") if env == "testnet" else env_key.get("prod")
+    named_note = f"; auth_environments names {named!r}" if named else "; no auth_environments entry names the secret"
+    return Verdict(
+        "unverified",
+        f"{venue} requires {needs} for env={env}{named_note} -- secret presence/validity is NOT read by this "
+        "pass (a live GSM read); declared requirement only",
+    )
+
+
 LEG_ORDER: tuple[str, ...] = (
     "declared",
+    "credentials",
     "instruments_service",
     "market_tick_data",
     "market_data_processing",
     "features",
     "strategy",
+    "strategy_archetype_code",
     "execution_orders",
     "execution_fills",
     "execution_trades",

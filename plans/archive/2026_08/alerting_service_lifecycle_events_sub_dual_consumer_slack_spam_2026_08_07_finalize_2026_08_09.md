@@ -50,7 +50,7 @@ effort: high
 drift_direction: none
 context_scope:
   [
-    /plans/active/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md,
+    /plans/archive/2026_08/issues/alerting_service_lifecycle_events_sub_dual_consumer_slack_spam_2026_08_07.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     deployment-service/terraform/gcp/audit03_cron_provisioning.tf,
   ]
@@ -77,7 +77,7 @@ context_scope:
       a live consumer), update every corpus referrer, `git mv` to `plans/archive/2026_08/issues/`. Repo:
       unified-trading-pm. Done when: the source doc is at its archived path with every referrer updated and this
       finalize plan's own todos all `[x]`. **Done**: source doc archived (status resolved, ARCHIVED banner added,
-      `git     mv`'d to `plans/archive/2026_08/issues/`); codex-alignment check clean (data-pipeline-alerts.md
+      `git mv`'d to `plans/archive/2026_08/issues/`); codex-alignment check clean (data-pipeline-alerts.md
       references `lifecycle-events-sub` only as dp-alerting-subscriber's subscription, no live reference to the deleted
       legacy Job); referrers repointed (observability_master epic, bats test, infra_health_audit, defi_consolidator);
       this finalize plan set `status: complete` and archived alongside.
@@ -91,3 +91,6 @@ context_scope:
   standard 6-step ritual — source doc `status: resolved` + ARCHIVED banner, codex-alignment check clean, all referrers
   repointed, `git mv`'d to `plans/archive/2026_08/issues/`. This finalize plan set `status: complete` + ARCHIVED banner
   and archived alongside.
+- **2026-08-20 correction (slot 27, dispatch agt-21dce5)**: live verification found the deleted/paused legacy Job and
+  scheduler had been re-provisioned. The hourly scheduler was paused again after confirming the Job was a second
+  `lifecycle-events-sub` consumer; see `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md`.

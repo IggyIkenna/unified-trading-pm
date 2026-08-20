@@ -247,35 +247,53 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
       around 30%" observation). Root cause traced to the model-window-registration gap, see the new `[INFRA] P0`
       todo below — not yet the systematic multi-turn test this todo asks for, but real, unplanned confirmation that
       Codex's `/pre-compact`→`/compact` path is NOT yet proven safe end-to-end.
-- [ ] [INFRA] P0. **New (2026-08-20, live incident — root cause of the slot-31 context-99% failure noted on the
-      `[REVIEW] P0` todo above)** — register `gpt-5.6-luna` in `model_tier._ALLOWED_MODEL_WINDOWS`, or give it
-      `is_deepseek()`-style special-casing in `context_probe.context_window_for()`. Confirmed by reading
-      `model_tier.py` directly: `_ALLOWED_MODEL_WINDOWS` is a CLOSED set — the 5 Anthropic snapshots
+- [x] ✅ [INFRA] P0. **New (2026-08-20, live incident — root cause of the slot-31 context-99% failure, `[REVIEW] P0`
+      above)** — register `gpt-5.6-luna` in `model_tier._ALLOWED_MODEL_WINDOWS`, or give it `is_deepseek()`-style
+      special-casing in `context_probe.context_window_for()`. Confirmed by reading `model_tier.py` directly:
+      `_ALLOWED_MODEL_WINDOWS` is a CLOSED set — the 5 Anthropic snapshots
       (haiku-4-5/sonnet-4-6/sonnet-5/opus-5/fable-5) plus DeepSeek matched by substring — and `gpt-5.6-luna` (the
       real `message.model` string the bridge echoes into the transcript, confirmed live) is in neither, so
       `context_window()` would raise `UnknownModelContextWindowError` for it. Because a learned-registry entry
       already exists for it, `context_window_for()` never even reaches that failure — it takes the STORED
-      `calibrated_window` instead, and that path has NO guard against the exact "poisoned calibration" bug class
-      `context_probe.py`'s own docstring documents as already having burned DeepSeek and sonnet-4.6: Claude Code
-      doesn't recognise an unregistered model string, falls back to its own ~200K internal guess, and a pane-scraped
-      pct calibrated against THAT wrong denominator gets stored as if it were real. DeepSeek is protected from this
-      by an explicit `is_deepseek()` early-return in `context_window_for()`; `gpt-5.6-luna` has no equivalent.
+      `calibrated_window` instead, with NO guard against the "poisoned calibration" bug class already documented
+      for DeepSeek/sonnet-4.6: Claude Code doesn't recognise an unregistered model string, falls back to its own
+      ~200K internal guess, and a pane-scraped pct calibrated against THAT wrong denominator gets stored as real.
+      DeepSeek is protected by an explicit `is_deepseek()` early-return; `gpt-5.6-luna` had no equivalent.
       **Live-confirmed 2026-08-20** via `data/state/learned_context_windows.json` on `i-0c9b283b31d6b5ca7`:
       `gpt-5.6-luna` → `calibrated_window: 263941`, `watermark_hits: 1` (not yet corroborated —
       `_WATERMARK_CONFIRM_HITS` is 3) — a suspiciously ~200-280K figure sitting in exactly the same band as the
-      CLI's known-wrong DeepSeek/sonnet-4.6 fallback, against GPT-5.6's own published (still unverified per the
-      `[REVIEW] P2` todo below) ~1.05M/128K claim. A too-small learned window does not by itself explain a run to
-      99% (it would make AO's own pct read HIGH, triggering compaction too early, not too late) — the live-tickle
-      leans toward the codex-bridge fake-token-estimate deploy gap (`[INFRA] P1` todo above) as the more likely
-      DIRECT cause of the 99% spike, with this registration gap as a compounding, independently-real problem — both
-      need fixing, and this todo should not be closed by fixing only the other one. Done when: `gpt-5.6-luna` has a
-      real registered prior or deepseek-style guard, AND the stale `263941` `calibrated_window` entry is purged so a
-      fresh, unpoisoned reading replaces it.
+      CLI's known-wrong DeepSeek/sonnet-4.6 fallback (see the correction below — the real figure is smaller still).
+      A too-small learned window does not by itself explain a run to 99% (it would make AO's pct read HIGH,
+      compacting too early not too late) — the codex-bridge fake-token-estimate deploy gap (`[INFRA] P1` above) is
+      the more likely DIRECT cause, with this as a compounding, independently-real problem. Done when: `gpt-5.6-luna`
+      has a real registered prior or deepseek-style guard, AND the stale `263941` entry is purged.
+      **DONE `agent-orchestrator@e307fa5897`** — widened beyond just Codex/Luna per operator ask ("wire in the real
+      actual context window numbers for all the models that AO supports... check official docs").
+      `model_tier._ALLOWED_MODEL_WINDOWS` grew from 5 Anthropic-only entries to 16 total: DeepSeek folded in as literal
+      keys (was a separate substring branch), plus `glm-5.3`/`glm-5-turbo`, `kimi-k3`/`kimi-k2.6`/`kimi-k2.7-code`,
+      `gemini-3.5-flash-lite`/`gemini-3.7-flash`, `gemma-self-hosted`, `gpt-5.6-luna` — each sourced from that
+      vendor's own docs (citations in `model_tier.py`'s per-constant comments), deliberately EXCLUDING
+      retired/superseded snapshots `model_pricing.py` keeps for historical billing only
+      (`claude-opus-4-6/4-7/4-8`, `claude-sonnet-4-5`, the 2 NVIDIA Gemma entries, `devstral-latest`) — registering
+      those would reopen the exact hole the retired-snapshot regression test exists to catch. **Correction to this
+      todo's own number above: `gpt-5.6-luna`'s real registered window is 272,000, NOT 1.05M** — Codex/Luna runs
+      through the Codex App Server/CLI, whose own real enforced metadata for GPT-5.6 Sol/Terra/Luna is 272,000;
+      `codex_bridge_server.py` never unlocks the raw spec, so registering it would have repeated the sonnet-4.6
+      mistake exactly — see the corrected `[REVIEW] P2` todo below. **Also generalized the mechanism, not just the
+      numbers**: new `model_tier.is_anthropic_native()` + narrower `is_known_proxied_model()` (registered AND
+      non-Anthropic — deliberately not "any unrecognised string", so a genuinely novel future model keeps the
+      default calibration-trusting behavior until specifically investigated) — `context_window_for()`/`observe()`'s
+      calibration gate now trust the registered prior for every known-proxied model, not just DeepSeek. Full
+      `quality-gates.sh` green (5226 backend + 463 dashboard tests, coverage ratchet matched baseline). **Still
+      open**: purging the now-inert `calibrated_window: 263941` VM entry (code ignores it going forward); the
+      `[INFRA] P1` and `[REVIEW] P0` gaps above.
 - [ ] [REVIEW] P2. **Narrowed 2026-08-18 (Grok decommissioned, its 4.3's 1M claim dropped — untested and now moot)**
       — live-test the remaining context-window claims from this session's research table (GLM's 1M/131K, Gemini's
       1,048,576/65,536 — already confirmed live for Gemini, DeepSeek's 1,048,576/384,000,
-      GPT-5.6's 1.05M/128K) the same way Grok 4.6's 500K was — a real oversized request, built on-host to avoid
-      transport payload limits, confirming the vendor enforces its documented ceiling and does not silently truncate.
+      GPT-5.6's **272,000 as actually enforced by Codex CLI for Sol/Terra/Luna — corrected 2026-08-20, see the
+      `[INFRA] P0` todo above; the raw API spec is 1.05M/128K but that is NOT what this fleet's bridge dispatches
+      against**) the same way Grok 4.6's 500K was — a real oversized request, built on-host to avoid transport
+      payload limits, confirming the vendor/CLI enforces its documented ceiling and does not silently truncate.
       Done when: each is either confirmed live or explicitly flagged as still resting on published docs only.
 - [ ] [INFRA] P1. Design + build the reset-aware rolling-window cumulative-consumption primitive: given a wall-clock
       period that may cross one or more quota resets, compute TRUE total consumption as
