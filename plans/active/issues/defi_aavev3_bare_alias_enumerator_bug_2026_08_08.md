@@ -116,11 +116,23 @@ defect (phantom-venue emission) without touching a registry other code may depen
       timed out downloading the ~3GB `_index/availability_index.parquet` (`google.api_core.exceptions.RetryError:
       Timeout of 600.0s exceeded` — a `storage.googleapis.com` read timeout, not a script bug). No delete was
       attempted (dry-run is the default; the timeout happened during the initial read, before any gate logic ran).
-      **Next step**: re-run from a host with a faster/more reliable link to GCS (or increase the storage client's
-      timeout), confirm the dry-run's row count matches the 46,300-row figure the 2026-08-09 investigation
-      confirmed (the script REFUSES to proceed on any drift via `--allow-count-drift`-gated arithmetic), review the
-      arithmetic gate output (`row-arithmetic` / `empty_confirmed-drop` / `no-non-empty-confirmed-collateral` must
-      all be `True`), then re-run with `--apply`. Twin-exists-collision precondition CONFIRMED SATISFIED 2026-08-09
+      **Retried 2026-08-20 — SECOND failure, different mode: SIGKILL (exit 137), not a timeout.** The retry got
+      past the first attempt's timeout point (logged "Reading defi manifest...") but was killed before ever
+      logging "Loaded N manifest rows" — consistent with an OOM kill while buffering/parsing the ~3GB
+      `_index/availability_index.parquet`. Two consecutive hard failures on the identical operation, in two
+      different failure modes (network timeout, then OOM), both pointing at the same underlying cause: this
+      class of I/O — a multi-GB whole-manifest read — should not run on the operator's laptop at all, per this
+      workspace's own standing rule ("heavy I/O... NEVER runs on the operator's local machine, always a VM
+      in-region", `/codex/05-infrastructure/vm-launcher-runbook.md`). **This purge script was written for local
+      execution and needs a VM path instead** — either add a new category to
+      `deployment-service/scripts/vm/launch-canonical-migration-vm.sh` (mirroring the existing
+      `cefi-itype-casing-apply` category's pattern) or run it via the generic `setup-data-pipeline-vm.sh`
+      startup script. **Not attempting a third local retry** — two failures on the identical operation is the
+      retry-discipline threshold; the fix is infra placement, not another attempt with different flags.
+      **Next step**: wire a VM-launch path for this script (or a bare `setup-data-pipeline-vm.sh` invocation),
+      run the dry-run there, confirm the row count still matches 46,300 (script REFUSES on drift via
+      `--allow-count-drift`-gated arithmetic) and the gate output (`row-arithmetic` /
+      `empty_confirmed-drop` / `no-non-empty-confirmed-collateral` all `True`), then `--apply` from the same VM. Twin-exists-collision precondition CONFIRMED SATISFIED 2026-08-09
       (see Progress Log) — full-population live-manifest check found 0 of the 46,300 bare cells lacking a
       correct-key `AAVE_V3`-ETHEREUM twin; "0 backing GCS objects" was independently established by the 2026-08-08
       root-cause session (see Finding section above) and cited rather than re-derived, since the population is
