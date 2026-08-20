@@ -363,3 +363,16 @@ None of the 71 resources classified as stale/abandoned/conflicting.
   resources INTENDED (2 flagged verify-before-apply, not blocking), 1 cosmetic (`subgraph_health_probe` — new P2 todo
   filed, same `ignore_changes` gap as the already-fixed 65), 0 stale/conflicting. Phase 2 (`tofu apply`) NOT run —
   remains gated on operator review of this section.
+- **2026-08-20 (Phase-2, item 7 applied — operator go-ahead given in-session)**: the 42 canonical-bucket +
+  `deployment_state` lifecycle-rule removal batch applied against PROD via the required `ENV=prod ./tofu.sh`
+  wrapper (never bare `tofu` — the wrapper is what prevents silently targeting the near-empty dev state).
+  Scoped with `-target='google_storage_bucket.canonical' -target='google_storage_bucket.deployment_state'`
+  (targets ALL `for_each` instances of the canonical resource, not a hand-typed 42-name list) — deliberately
+  isolated from the other 6 ready-to-apply batches, none of which have been applied yet. Pre-apply plan matched
+  expectations exactly: `Plan: 0 to add, 43 to change, 0 to destroy` — every diff was purely a `lifecycle_rule`
+  block removal (COLDLINE@60d for the 42 canonical / NEARLINE@30d for `deployment_state`), zero other attributes
+  touched. Applied; a fresh re-plan of the same two targets immediately after confirmed
+  `"found no differences, so no changes are needed"` — verified landed, not just an exit-0 claim. Items 1-6 and
+  8-9 of the ready-to-apply list remain NOT applied (creates/destroy/monitoring-alert bundle, the two
+  verify-before-applying items, and the still-blocked `subgraph_health_probe` cosmetic item — its own
+  `ignore_changes` fix shipped separately, `deployment-service@<pending>`, see that todo below).
