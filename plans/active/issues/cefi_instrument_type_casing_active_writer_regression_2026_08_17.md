@@ -265,18 +265,17 @@ is genuinely VM-scale work, not shared-host-scale:
       e2-standard-16, SPOT) confirmed RUNNING + `DEPLOYMENT_STARTED` reached (see Progress Log for
       the exact confirmation) — the no-fire-and-forget bar for this session. Terminal-state review
       is the next todo below, updated to point at THIS VM's name/log, not the dead 130229 run's.
-- [ ] [DATA] P2. Once `canonical-migration-cefi-itype-casing-apply-20260820-173927`'s dry-run
-      reaches a terminal state (check `run.log` for the final
-      `Grand total instrument_type values would be normalized: N` line + VM self-delete — and if
-      it goes stale/silent again, diagnose per the freeze pattern above before assuming a repeat
-      zombie-kill is a false positive), review the disposition — sane if `N` is in the same order
-      of magnitude as the 39,286-row baseline (some growth expected given the writer regression ran
-      until the P1 fix landed, plus ~1 more day of any residual regrowth). If sane, launch the FULL
-      `--apply` run (`bash launch-canonical-migration-vm.sh cefi-itype-casing-apply <today> <today>
-      full` from `deployment-service`) on a FRESH VM — do not reuse this dry-run VM's name/tarball.
-      If the disposition is surprising (order-of-magnitude off from 39,286, errors in the log, or
-      another unexplained freeze), diagnose before applying — do not `--apply` on an un-reviewed
-      dry-run.
+- [x] [DATA] P2. Once the dry-run reaches a terminal state, review the disposition, then `--apply` if sane.
+      ✅ 2026-08-20 — **DONE, clean result, via my own `cefi-itype-casing-apply-rw-20260820-181447`
+      (e2-highmem-16, `--workers 4`, post-fix tarball — not slot-18's pre-fix `...-173927`, which per the
+      timing correction above almost certainly OOM'd on the same pre-fix code my earlier 172425 attempt did).**
+      Terminal, clean exit: `rc=0`, `DEPLOYMENT_COMPLETED`. **`Grand total instrument_type values would be
+      normalized: 39286 (collisions_dropped=8899)`** — an EXACT match (not just same order of magnitude) to
+      the independently re-measured post-fix baseline earlier in this doc's own Progress Log
+      (`perpetual=38,083 + future=1,191 + spot_pair=12 = 39,286`). Sane disposition, confirmed by measurement,
+      not assumed. **`--apply` launched immediately after** — `cefi-itype-casing-apply-rw-20260820-185429`
+      (`--workers 4 --apply-migration`, same `MACHINE_TYPE=e2-highmem-16`, a FRESH VM, not reusing the dry-run
+      VM) — see Progress Log for the launch confirmation and terminal-state review.
 - [ ] [DATA] P2. After the `--apply` VM reaches a terminal state (0 exit, backups written, grand
       total normalized matches the reviewed dry-run count), trigger the manifest consolidator to
       rebuild the merged `_index/availability_index.parquet` (per the script's own docstring) —
