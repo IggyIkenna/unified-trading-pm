@@ -156,7 +156,7 @@ target wrote zero rows.
       implementation exists that provably FAILS on a venue with no data.
 - [x] ✅ [BACKEND] P0. **Derive the in-scope unit list** — every (venue × data type) minus the Databento-sourced
       exemptions, with the exemption set enumerated explicitly rather than described. SHIPPED —
-      `unified-api-contracts@03c79c82a` adds the permanent, re-runnable
+      `unified-api-contracts@23cf22dda6` adds the permanent, re-runnable
       `scripts/generate_venue_smoke_test_work_list.py`, which resolves the first venue-capable source per cell rather
       than applying a venue-wide exemption. Measured 2026-08-20: 361 declared pairs, 8 Databento exemptions, and 353
       in-scope rows (CEFI 70, DEFI 232, PREDICTION 4, SPORTS 39, TRADFI 8). Explicit exemptions are CBOE/ohlcv_1m,
@@ -205,8 +205,12 @@ for W4/W5" todo had already landed the DAY BEFORE this entry was written (2026-0
 `status: draft` → `active` in this correction pass, 4 days later than it should have.
 
 
-**2026-08-20 — in-scope smoke-test list shipped.** `unified-api-contracts@03c79c82a` added the source-scoped
+**2026-08-20 — in-scope smoke-test list shipped.** `unified-api-contracts@23cf22dda6` added the source-scoped
 generator and focused tests. The live registry now measures 200 declared venues / 361 pairs; the generator excludes
 only the eight explicitly listed Databento cells and reports 353 rows for batch smoke testing. It resolves source by
 `(venue, data_type)`, preserving CBOE's Yahoo Treasury-index cell and KRX's Yahoo daily cells in scope. UAC's full
-quality gates passed (1381s); the landed commit is an ancestor of `origin/live-defi-rollout`.
+quality gates passed (1155s); the landed commit is an ancestor of `origin/live-defi-rollout`.
+
+**2026-08-20 — citation correction.** The earlier entry and checkbox cited the pre-push local SHA
+`03c79c82a`, which was not the landed commit. Corrected both references to the quickmerge-verified
+`unified-api-contracts@23cf22dda6`.
