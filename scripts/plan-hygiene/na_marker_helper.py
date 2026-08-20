@@ -23,9 +23,15 @@ Usage:
   python3 na_marker_helper.py hash <pm_relative_path>
   python3 na_marker_helper.py append <pm_relative_path> <date YYYY-MM-DD> <marker_suffix_text>
   python3 na_marker_helper.py batch <path to JSON: [{"path":...,"date":...,"suffix":...}, ...]>
+  python3 na_marker_helper.py truncate <text> [--max N]   # canonical safe truncation of a long suffix
 
 "append"/"batch" insert:  - **na-eligibility-audit <date>** [body-hash:<hash>]: <marker_suffix_text>
 as the last bullet of the doc's "## Progress Log" section (creating the section if absent).
+
+"truncate" writes <text> (the remaining argv, or stdin when argv is empty) to stdout, cut to at
+most --max chars (default DEFAULT_MARKER_SUFFIX_MAX_CHARS) at a clause/delimiter boundary, with
+any unbalanced ()[]{} re-closed and a deliberate trailing " …". Use it instead of a hand-rolled
+text[:N] slice, which cuts mid-clause and silently drops load-bearing rationale.
 """
 
 import importlib.util
@@ -82,6 +88,66 @@ def append_one(mod, rel_path: str, date: str, suffix: str) -> str:
     return h
 
 
+DEFAULT_MARKER_SUFFIX_MAX_CHARS = 280
+"""Default budget for a verdict marker's narrative suffix.
+
+Tuned to keep a marker close to the skill's "<one-line why>" guidance while still accommodating
+a multi-clause rationale. Agents must not hand-slice to this (or any other) length — use
+safe_truncate_marker() / the `truncate` subcommand, which cut at a clause/delimiter boundary
+instead of mid-word.
+"""
+
+
+def _reclose_open_delimiters(text: str) -> str:
+    """Append the closing bracket for any ``()[]{}`` still open within ``text``.
+
+    A naive slice can leave a trailing ``(`` or ``[`` dangling, making the output read as
+    corrupted rather than summarized. Re-scan the retained prefix and re-close whatever never
+    closed within it.
+    """
+    pairs = {"(": ")", "[": "]", "{": "}"}
+    stack: list[str] = []
+    for ch in text:
+        if ch in "([{":
+            stack.append(ch)
+        elif ch in ")]}" and stack and pairs.get(stack[-1]) == ch:
+            stack.pop()
+    return text + "".join(pairs[ch] for ch in reversed(stack))
+
+
+def safe_truncate_marker(text: str, max_chars: int = DEFAULT_MARKER_SUFFIX_MAX_CHARS) -> str:
+    """Return ``text`` cut to ``max_chars`` at a safe clause/delimiter boundary, or ``text`` unchanged.
+
+    The bug class this prevents: a hand-rolled ``text[:max_chars]`` slice cuts mid-word / mid-clause
+    and silently drops a load-bearing rationale with a bare trailing ``...``
+    (``plans/active/issues/na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md``).
+    This helper instead (1) prefers the latest clause boundary (``. ``/``; ``/``, ``) within the
+    budget, falling back to the latest whitespace, (2) re-closes any unbalanced delimiters the cut
+    left open, and (3) appends a DELIBERATE `` …`` ellipsis so a reader can tell an intentional
+    summary from a silent content loss. Text that already fits is returned verbatim (no ellipsis).
+    """
+    stripped = text.strip()
+    if len(stripped) <= max_chars:
+        return stripped
+
+    window = stripped[:max_chars]
+    cut = -1
+    for delim in (". ", "; ", ", "):
+        idx = window.rfind(delim)
+        if idx > cut:
+            cut = idx
+    if cut < 0:
+        # No clause boundary within budget — fall back to the latest whitespace so we never split a word.
+        cut = window.rfind(" ")
+    if cut < 0:
+        # Pathological: a single >max_chars token with no whitespace — hard-cut rather than lose everything.
+        cut = max_chars
+
+    tail = window[: cut + 1].rstrip()
+    tail = _reclose_open_delimiters(tail)
+    return tail + " …"
+
+
 def main():
     mod = _load_inventory_module()
     cmd = sys.argv[1]
@@ -116,6 +182,19 @@ def main():
         print(f"--- batch done: {ok}/{len(entries)} ok, {len(failed)} failed ---")
         if failed:
             print("FAILED PATHS: " + ", ".join(failed))
+        return
+
+    if cmd == "truncate":
+        # Remaining argv is the text; if empty, read stdin. "--max N" overrides the default budget.
+        args = sys.argv[2:]
+        max_chars = DEFAULT_MARKER_SUFFIX_MAX_CHARS
+        if args and args[0] == "--max":
+            if len(args) < 2:
+                raise SystemExit("truncate --max requires a value")
+            max_chars = int(args[1])
+            args = args[2:]
+        text = " ".join(args) if args else sys.stdin.read()
+        print(safe_truncate_marker(text, max_chars))
         return
 
     raise SystemExit(f"unknown cmd {cmd}")

@@ -157,7 +157,12 @@ frontmatter claim in the second example is simply absent.
       Root cause for todo 2: add a canonical safe-truncation helper (clause/paren-boundary-aware, matching the fix
       this doc's own 2026-08-19 entry already hand-rolled once) either inside `na_marker_helper.py` or as documented
       SKILL.md guidance, so future sessions call it instead of re-inventing an unsafe one.
-- [ ] [SCRIPT] P3. Implement the fix once root-caused (recommended next step 2 above).
+- [x] ✅ [SCRIPT] P3. Implement the fix once root-caused (recommended next step 2 above). **DONE 2026-08-20 (slot-4,
+      review).** Added `safe_truncate_marker()` + `_reclose_open_delimiters()` and a `truncate` subcommand to
+      `scripts/plan-hygiene/na_marker_helper.py` (clause/delimiter-boundary cut, re-closes unbalanced `()[]{}`,
+      deliberate trailing ` …`; default budget `DEFAULT_MARKER_SUFFIX_MAX_CHARS=280`, `--max` to override), and
+      documented the "short marker + separate full-rationale paragraph / `truncate` subcommand" guidance in
+      `cursor-configs/skills/na-eligibility-audit/SKILL.md` verdict-rubric item 1.
 - [ ] [DOC] P3. Corpus-wide sweep for the same signature once the fix ships, to find + backfill every other instance
       (recommended next step 3 above).
 
@@ -206,3 +211,8 @@ frontmatter claim in the second example is simply absent.
   much larger than the 13 instances now confirmed across both runs combined (2 original + 11 here); todo 3's own
   planned sweep should treat 116 as the upper-bound candidate count to check, not a fresh unknown.
 - **context-scout 2026-08-20**: refreshed context_scope (3 entries)
+- **2026-08-20 (slot-4, review)**: implemented todo 2. Added `safe_truncate_marker()` + `_reclose_open_delimiters()` +
+  a `truncate` subcommand to `scripts/plan-hygiene/na_marker_helper.py` (clause/delimiter-boundary-aware cut with
+  deliberate ` …`, re-closes unbalanced `()[]{}`, `DEFAULT_MARKER_SUFFIX_MAX_CHARS=280`); documented the
+  safe-truncation guidance in `cursor-configs/skills/na-eligibility-audit/SKILL.md` verdict-rubric item 1. Todo 3
+  (corpus-wide sweep for the bare-trailing-ellipsis signature) remains open for a separate dispatch.

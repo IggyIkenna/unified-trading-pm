@@ -73,7 +73,13 @@ For each `assigned_vm: NA`, `status` ∈ `{active, open}` doc with ≥1 open tod
 
 1. **KEEP-NA, valid** — genuinely human/design/judgment/operator-gated work, content still accurate. Record a dated
    Progress Log line in the doc itself (`**na-eligibility-audit YYYY-MM-DD**: KEEP-NA, valid — <one-line why>`) so a
-   future incremental run can skip it (see Phase 0). No other action.
+   future incremental run can skip it (see Phase 0). No other action. **Keep `<one-line why>` genuinely short — one
+   sentence.** When the full rationale runs long, do NOT hand-slice it (`text[:N]` cuts mid-clause and silently drops a
+   load-bearing clause — the bug class in
+   `plans/active/issues/na_eligibility_audit_marker_text_silently_truncated_2026_08_19.md`): either write the short
+   marker line plus the full rationale as a separate, un-truncated `- ` bullet in the Progress Log, or pipe the suffix
+   through the canonical truncator — `python3 scripts/plan-hygiene/na_marker_helper.py truncate "<text>"` — which cuts
+   at a clause/delimiter boundary, re-closes unbalanced `()[]{}`, and appends a deliberate trailing ` …`.
 2. **KEEP-NA, stale items** — some open checkboxes are superseded/decommissioned/already-done-elsewhere. Close those
    specific items with evidence (same HARD-evidence bar as `/plan-reconcile` Phase 2); doc stays NA otherwise.
    **Distinct sub-case (2026-08-07 finding, do not conflate with ordinary staleness)**: an item can have full HARD
