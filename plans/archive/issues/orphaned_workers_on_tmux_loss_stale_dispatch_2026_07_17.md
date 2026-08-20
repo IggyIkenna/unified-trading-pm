@@ -7,7 +7,7 @@ summary:
   marked slots 2/3 `killed` but did NOT release their in-flight `current_task`, so sports_manifest_canonicalisation-002
   (slot 3) and -010 (slot 2) stayed `dispatched` on dead slots — backlog showed 3-4 dispatched with only 1-2 live
   workers. Immediate re-queue applied; root-cause code fix still needed.
-status: open
+status: resolved
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -32,6 +32,15 @@ last_updated: 2026-07-17
 > [`ao_open_issues_consolidated_close_out_2026_07_17`](../ao_open_issues_consolidated_close_out_2026_07_17.md)
 > (operator-session local plan; verified-live classification table there). Do NOT start work from this doc alone — flip
 > items in the plan and mirror them here. This doc stays the detail/evidence record.
+>
+> **🟢 RESOLVED, `status:` corrected 2026-08-20** — frontmatter still read `open` despite both defects being fixed and
+> tested (found stale during `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md`'s Phase 3 doc
+> sample; the consolidated close-out plan this doc points to is itself archived). Defect A:
+> `agent-orchestrator/server/stale_dispatch.py`'s module docstring cites this incident by name
+> ("ao_worker_lifecycle_reap todo 3, Defect A backstop") and `tests/test_stale_dispatch_reclaim.py` regression-guards
+> the auto-release; `server/tmux_pruner.py` also releases `current_task` directly on kill. Defect B:
+> `agent-orchestrator/tests/test_orphan_process_reap.py` regression-guards the orphan-process reap sweep. No further
+> code work needed here.
 
 ## What the operator saw
 
