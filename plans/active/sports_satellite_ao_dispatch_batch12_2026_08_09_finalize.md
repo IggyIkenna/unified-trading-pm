@@ -78,22 +78,16 @@ context_scope:
       `plans/archive/2026_08/issues/sports_clv_target_builder_family_route_likely_same_pit_gap_2026_07_26.md` with the
       archive banner + `status: resolved`. Corpus referrers with full paths fixed (this doc's `related:`, batch12's
       `related:` + todo 2's `Source:` citation, and batch12's Deferred-work table).
-- [x] ✅ [DATA] P3. Reconcile `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` — once batch-12 todo 3 (the
+- [ ] [DATA] P3. Reconcile `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md` — once batch-12 todo 3 (the
       23-sentinel-free-days investigation) lands, flip that doc's `## Follow-ups` `[DATA] P3` checkbox with the cited
       explanation/evidence; no other open items remain in that doc once this lands — archive it as part of this todo.
-      **DONE** — source doc already `status: resolved`/archived at
-      `plans/archive/2026_08/issues/sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`, its `## Follow-ups`
-      `[DATA] P3` item is `[x]` ("DONE 2026-08-16, slot-32... `market-tick-data-service@cfaf2ecd13`"). Source:
-      `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`. Done when: the checkbox is flipped with
+      Source: `sports_manifest_consolidator_zero_growth_stall_2026_07_29.md`. Done when: the checkbox is flipped with
       evidence and the doc sits in `plans/archive/2026_08/`.
-- [x] ✅ [DATA] P3. Reconcile `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` — once batch-12
+- [ ] [DATA] P3. Reconcile `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md` — once batch-12
       todo 4 (register `sports-drop-stale` + run the real census) lands, update that doc's item [B] E8 with the measured
       twin-coverage percentage and the launcher-category evidence; **do NOT flip the E8 checkbox itself** — the actual
       `--drop-stale`/`--apply` firing is explicitly excluded from batch-12 todo 4 and stays `[OPERATOR]`-gated, so the
-      checkbox stays open pending that separate sign-off. **DONE** — the target doc already carries a "MEASURED
-      2026-08-10 (AO batch-12 slot-7)" blockquote on item E8 with the twin-coverage census (132,519/178,291 = 74.3%,
-      VM `canonical-migration-sports-drop-stale-20260810-100832`); E8's own checkbox correctly remains open/`[OPERATOR]`-gated
-      as instructed. Do not archive this doc (it still has genuinely open work: the
+      checkbox stays open pending that separate sign-off. Do not archive this doc (it still has genuinely open work: the
       gated delete). Source: `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`. Done when:
       the census result + launcher evidence is written into the doc's E8 item and the checkbox is confirmed correctly
       left open.

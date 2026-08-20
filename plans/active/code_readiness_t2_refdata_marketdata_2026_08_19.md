@@ -302,7 +302,7 @@ todos only to confirm they are data-movement, then leave it.
       Evidence: `instruments-service@2b482a1247`, verified an ancestor of `origin/live-defi-rollout`.
       **Still unmeasured, so still unchecked**: whether the manifest WRITER, the data-status gate and the UI agree
       with the projections' atom. Checking this box now would exceed what was measured.
-- [x] ✅ [BACKEND] P0. Make honest coverage measurable on EVERY axis and granularity, each figure carrying its
+- [ ] [BACKEND] P0. Make honest coverage measurable on EVERY axis and granularity, each figure carrying its
       denominator and date. This is the epic's own definition-of-done item. SSOT:
       `/codex/02-data/honest-coverage-model.md`.
       **FINDING 2026-08-20 (T2, `/autonomous`) — today's daily rollup OOM'd, so coverage is currently

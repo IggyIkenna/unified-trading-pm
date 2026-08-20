@@ -412,18 +412,6 @@ of the mirror failure — code that exists, is tested, and is wired to nothing (
 `HealthFactorMonitor`, `OrderRecoveryEngine`, `PostgreSQLOrderPersistence`; plus `RedisStreamTransport`, which is real
 and has zero call sites).
 
-**`OrderRecoveryEngine` update (2026-08-20, later same day, `w_state_recovery_real_wiring_2026_08_20`):** its own
-two dependencies (`OrderBook`, `_VenueAdapter`) were themselves the stub layer that made wiring it in unsafe — real
-non-stub implementations shipped (`execution-service@458c70c48e`/`e856d72999`/`945d84d946`). It is STILL not wired
-into any live entry point, so it still belongs in this list, but the reason changed: it is no longer "fake
-dependencies would make wiring a false-success trap" but a real, deliberate, TRACKED prerequisite gap — nothing in
-the live order-submission path (`ExecutionOrchestrator`) durably persists order state anywhere, so
-`OrderRecoveryEngine`'s own `OrderBook` would be structurally empty at every real startup even though it is now
-genuinely correct code. See that plan's Phase 3 todo 1 + new Close-out prerequisite todo for the specifics; this is
-a `PostgreSQLOrderPersistence`-shaped gap one level up the stack, not resolved by this pass. The other three
-components in this list (`TransferCoordinator`, `HealthFactorMonitor`, `PostgreSQLOrderPersistence`) were outside
-this plan's scope and were not re-measured here.
-
 Three rules close it:
 
 - **R18 — gate-verified.** A declared capability with no reachable implementation FAILS the quality gate. On top, a

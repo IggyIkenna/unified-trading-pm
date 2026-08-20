@@ -212,10 +212,8 @@ source: >-
           follow-up rather than absorbed here:
           `plans/active/issues/manual_launcher_shard_dedup_gap_167_of_187_2026_08_15.md`.
 
-- [x] ✅ [DATA] P3. Confirm the killed duplicate DXY VMs' partial/redundant writes left no non-idempotent side-effects.
-      **DONE 2026-08-15 (slot-16)** — no corruption/non-idempotent side effect, but a real manifest-hygiene byproduct
-      (stale `attempted_failed` noise rows) DOES exist, tracked separately. Source:
-      `plans/archive/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md`
+- [ ] [DATA] P3. Confirm the killed duplicate DXY VMs' partial/redundant writes left no non-idempotent side-effects.
+      Source: `plans/active/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md`
 - [x] ✅ [CODE] P2. Confirm ccb84c57c9 promoted LDR->main cleanly (gh run/PR check) and flip doc status to resolved +
       archive — content-verified promoted (SHA not a literal `main` ancestor due to Option-B direct's bulk-squash
       promote, but both files' substance confirmed live on `main`, no blanket-header regression); doc flipped to

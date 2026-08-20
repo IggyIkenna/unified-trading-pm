@@ -45,11 +45,10 @@ skill:
   `canonical_path_violations(require_pipeline_mode=True)` (path structure + filename id-form, no re-implemented
   regex) — verified live in the current tree (`grep` of `scripts/pipeline_e2e_check.py` confirms the dispatch + the
   oracle import; 6 unit tests including 2 negative controls, per that todo's own evidence). TRADFI still uses the
-  bespoke regex leg (unaffected, out of the oracle's scope by design — no per-instrument-type axis); SPORTS uses the
-  writer-template verifier and can be run with the generator-scoped Sports mode.
+  bespoke regex leg (unaffected, out of the oracle's scope by design — no per-instrument-type axis); SPORTS stays
+  `skipped` (declared out of scope, unaffected by this fix).
 - **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: id-FORM is now checked for TRADFI (regex
-  above) AND CEFI/DEFI (oracle, per the fix above); Sports path shape is checked by its writer-template verifier,
-  while prediction filenames remain **unchecked** by this skill.
+  above) AND CEFI/DEFI (oracle, per the fix above); sports/prediction filenames remain **unchecked** by this skill.
   `instrument_type`/`data_type`/`venue`/`chain` VALUES are compared only for internal self-consistency against the
   shard's own manifest row, never against an independent canonical source — **declared unchecked** as independent
   value validation (the oracle itself is value-blind on these axes, per its own documented scope).
@@ -433,16 +432,14 @@ instrument yet, so it can never supply one, and naively probing every `Instrumen
 | DXY (US Dollar Index) — added 2026-08-09 scope ruling                                      | `ICE/ohlcv_24h`   |
 | Daily KRW/USD                                                                              | `FX/ohlcv_24h`    |
 
-**The canonical-shape regression** (`--legs …,canonical`) is a 4th leg: after the force-leg writes to the
+**The canonical-shape regression** (`--legs …,canonical`) is a 4th leg, TRADFI-only: after the force-leg writes to the
 `-test-` bucket, it reads that shard's freshly-written `instrument_id`/`instrument_type` rows and asserts every
 FUTURE/OPTION-embedded id matches `^[A-Z0-9-]+:(FUTURE|OPTION):[A-Z0-9]+-USD@LIN-\d{8}(-\d+(\.\d+)?-[CP])?$` (0 raw, 0
 whitespace, 0 non-`@LIN`) — via the **shipped** `unified_api_contracts.assert_tradfi_derivative_ids_canonical` (never a
-re-implemented regex, so it can't drift from the Phase-B migration scripts' own self-check). A Sports shard instead
-checks its actual written object path against the writer-template contract, including the league axis, and fails closed
-when no matching object exists. A shard with zero
+re-implemented regex, so it can't drift from the Phase-B migration scripts' own self-check). A shard with zero
 FUTURE/OPTION ids (a pure `EQUITY`/`INDEX` `ohlcv_24h` cell) records a vacuous `passed`, not a false failure. Every
-non-TRADFI/non-Sports shard records `skipped/canonical_shape_check_is_tradfi_only` — safe to request `canonical`
-alongside any `--asset-group`.
+non-TRADFI shard records `skipped/canonical_shape_check_is_tradfi_only` — safe to request `canonical` alongside any
+`--asset-group`.
 
 **MVP cells first, then every shard:**
 

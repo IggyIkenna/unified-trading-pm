@@ -219,8 +219,7 @@ source:
       which is why three table/tree attempts were rejected. Needs `GET /api/backlog/graph` behind it. **Gate**: design
       received → implemented → the relation a table cannot express (one prereq gating tasks in multiple plans) is
       visible in one view.
-- [ ] [INFRA] P2. BLOCKED-ON:l2_book_microstructure_capture_2026_07_13 returning to `assigned_vm: planning`
-      (currently swept into the fleet-wide dispatch pause). ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
+- [ ] [INFRA] P2. ⚠️ **RE-SCOPED 2026-07-23 — the original measurement is now VOID; do NOT close this as fixed.**
       Re-measured on the migrated live DB: only **1** `l2_book%` task row survives
       (`l2_book_microstructure_capture-001`, `done`), while the plan still shows **2 open todos**. That looks like the
       same divergence, only worse — **but it is not evidence any more**: the plan is now `assigned_vm: NA` (swept into
