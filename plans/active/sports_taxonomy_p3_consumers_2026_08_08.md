@@ -302,15 +302,18 @@ spelling variant survives, which is the entire point of the panel". It does not.
       (`ht_home_goals`/`ht_away_goals`) are NOT covered by Q6 at all (no halftime columns in `_Q6_OUTCOME_COLUMNS`) —
       whether they have an equivalent post-cutover gap is unverified, flagged in the codex section as a follow-up rather
       than silently expanding this todo's scope.
-- [ ] [CODE] P1. **REWRITE NEEDED 2026-08-20 (/plan-reconcile F-SPORTS-4)** — this todo's target state ("both
-      disappear") was the ruling operator-REVERSED 2026-08-15 (`/codex/02-data/sports-data-types-catalog.md`, commit
-      `4a0f0d6c0d`: "operator reversed the 'collapse to ONE raw type' ruling for `odds_horizon_bucket` only... survives
-      as its own **derived** type"). The PATH-PREFIX consumer-migration mechanism described below may still be real
-      work, but "both disappear" is the overturned direction — do not dispatch against this todo's literal text as
-      written until it's rewritten against the 2026-08-15 ruling. Also check whether any of the ≥4 confirmed premature
-      AO dispatches on this todo (slots 22/15/10/30, cited inline below) re-dispatched against this stale premise
-      after 2026-08-15.
-      **Original text, pending rewrite**: Move the sports feature loader off its PATH-PREFIX read of bucketed odds.
+- [x] [CODE] P1. **MOOT — closed 2026-08-20 (/plan-reconcile F-SPORTS-4), no code change needed.** This todo's
+      target state ("both disappear") was the premise for migrating the loader off its PATH-PREFIX read — but that
+      premise was operator-REVERSED 2026-08-15 (`/codex/02-data/sports-data-types-catalog.md`, commit `4a0f0d6c0d`:
+      "operator reversed the 'collapse to ONE raw type' ruling for `odds_horizon_bucket` only... survives as its own
+      **derived** type"). **Verified live 2026-08-20**: the loader was never migrated (the 4 premature AO dispatches
+      below all correctly skipped it, `reason_code: GATED`), and it still reads via the exact PATH-PREFIX described
+      below — `features-service/features_service/sports/data/gcs_reader.py:564-568` defines
+      `_BUCKETED_ODDS_CANONICAL_PREFIX` / `_BUCKETED_ODDS_LEGACY_PREFIX`, both still keyed on
+      `data_type=odds_horizon_bucket`. Under the reversed ruling this is exactly correct — `odds_horizon_bucket` did
+      not disappear, so the path it reads still exists and needs no migration. Nothing to build; the reason this
+      todo existed evaporated when the ruling reversed.
+      **Original text, for the record**: Move the sports feature loader off its PATH-PREFIX read of bucketed odds.
       `sports_feature_loader._ODDS_BUCKETED_PREFIXES` matches
       `processed/by_date/day={date}/pipeline_mode=batch_mdps_odds_horizon_bucket/` and
       `.../data_type=odds_horizon_bucket/` by string prefix — both disappear under the P1 `horizon`-axis model. This is
