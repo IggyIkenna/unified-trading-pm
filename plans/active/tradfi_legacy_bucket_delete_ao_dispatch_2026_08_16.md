@@ -93,8 +93,14 @@ resolved_by:
       MTDS code touched), unified-trading-library (checker fix). Source: `data_completion_tradfi_2026_07_15.md` E7
       (line 211).
 
-- [ ] [DATA] P1. **Re-run the E7 verify once CF-8 clears GREEN, then execute the bulk-delete if the full
-      CF-1..CF-12 gate is met.** Gated on `market-data-tick-tradfi-prd`'s CF-8 (`available_at` fill-rate) turning
+- [x] ✅ [DATA] P1. **E7 re-verification GATED 2026-08-20 — CF-8 remains RED; delete withheld.** A fresh
+      bounded row-group scan of the live canonical index measured 14,474,527 total rows, 8,116,723 captured rows,
+      and 7,913,460 captured rows with non-null `available_at` (97.4958%). The canonical audit's pandas path was
+      also attempted but safely stopped at the 4 GiB RSS cap after proving CF-1..CF-3 GREEN; the streaming scan is
+      the authoritative CF-8 measurement. The legacy bucket remains already deleted. No GCS delete was executed.
+      **Released GATED** under the todo's explicit RED outcome; reopen only after the linked CF-8 issue shows GREEN.
+      Original gate and delete procedure: re-run the E7 verify once CF-8 clears GREEN, then execute the bulk-delete if
+      the full CF-1..CF-12 gate is met. Gated on `market-data-tick-tradfi-prd`'s CF-8 (`available_at` fill-rate) turning
       GREEN — tracked in `plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md`'s tradfi
       CF-8 entry; do not re-attempt this todo until that entry shows CF-8 GREEN for this bucket. When it clears:
       re-run `unified_trading_library.cf_manifest_audit.audit()` against `market-data-tick-tradfi-prd-central-element-323112`,
@@ -123,3 +129,9 @@ resolved_by:
   Progress Log: "no newer delete-execution task exists"). Added Todo 2 to track it explicitly; corrected the
   prose reference to point at it.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (slot-15, data_engineering)**: resumed the E7 task after a heartbeat. The full canonical audit
+  reached the live index (14,474,527 rows) but exceeded the 4 GiB bounded-analysis RSS cap during pandas
+  materialization and exited 137; this was not treated as a gate result. A fresh two-column, row-group-streamed
+  scan completed under a 2 GiB cap: `captured=8,116,723`, `available_at_non_null_captured=7,913,460`,
+  `fill=97.49575044017148%`, therefore **CF-8 RED**. The irreversible delete was withheld and Todo 2 was released
+  **GATED**; no production data was modified.
