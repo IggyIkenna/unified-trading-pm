@@ -769,10 +769,10 @@
     <h1>The platform API <span class="light">— every endpoint, real parameters, real responses</span></h1>
 
     <p class="standfirst">
-      This is the OpenAPI-shaped companion to the platform integration guide: every counterparty-reachable endpoint,
-      its parameters with type and requiredness, a realistic request, a realistic response body, and the error shapes.
-      Every example on this page is built from the real Pydantic models and router code cited inline — not invented,
-      and not a live capture (nothing here executes against a running service).
+      This is the OpenAPI-shaped companion to the platform integration guide: every counterparty-reachable endpoint, its
+      parameters with type and requiredness, a realistic request, a realistic response body, and the error shapes. Every
+      example on this page is built from the real Pydantic models and router code cited inline — not invented, and not a
+      live capture (nothing here executes against a running service).
     </p>
 
     <div class="legend">
@@ -784,10 +784,11 @@
       >
     </div>
     <div class="legend">
+      <span><b class="ev ev-verified">✓ verified</b> read directly from the router or schema file cited inline</span>
       <span
-        ><b class="ev ev-verified">✓ verified</b> read directly from the router or schema file cited inline</span
+        ><b class="ev ev-check">? check</b> the envelope is verified but this specific field's shape is not — named
+        exactly, not guessed</span
       >
-      <span><b class="ev ev-check">? check</b> the envelope is verified but this specific field's shape is not — named exactly, not guessed</span>
       <span><b class="ev ev-assumed">~ assumed</b> best current understanding, not independently verified</span>
     </div>
     <div class="legend">
@@ -800,21 +801,39 @@
     <div class="stat-row">
       <div class="stat"><span class="v">3</span><span class="k">Services expose a counterparty surface</span></div>
       <div class="stat"><span class="v">6</span><span class="k">Endpoints documented below</span></div>
-      <div class="stat"><span class="v">1 / 11</span><span class="k">Instruction types that execute — the rest return HTTP 501</span></div>
-      <div class="stat"><span class="v">0</span><span class="k">Services with no counterparty surface at all (strategy-service)</span></div>
+      <div class="stat">
+        <span class="v">1 / 11</span><span class="k">Instruction types that execute — the rest return HTTP 501</span>
+      </div>
+      <div class="stat">
+        <span class="v">0</span><span class="k">Services with no counterparty surface at all (strategy-service)</span>
+      </div>
     </div>
   </header>
 
   <nav class="contents">
     <h2>Contents</h2>
     <ol>
-      <li><a href="#s0"><span class="num">00</span><span class="ttl">How to read this</span></a></li>
-      <li><a href="#s1"><span class="num">01</span><span class="ttl">Authentication</span></a></li>
-      <li><a href="#s2"><span class="num">02</span><span class="ttl">Instruments API — instruments-service</span></a></li>
-      <li><a href="#s3"><span class="num">03</span><span class="ttl">Market data API — market-tick-data-service</span></a></li>
-      <li><a href="#s4"><span class="num">04</span><span class="ttl">Instructions API — execution-service</span></a></li>
-      <li><a href="#s5"><span class="num">05</span><span class="ttl">Strategy-service — no counterparty surface</span></a></li>
-      <li><a href="#s6"><span class="num">06</span><span class="ttl">Error reference</span></a></li>
+      <li>
+        <a href="#s0"><span class="num">00</span><span class="ttl">How to read this</span></a>
+      </li>
+      <li>
+        <a href="#s1"><span class="num">01</span><span class="ttl">Authentication</span></a>
+      </li>
+      <li>
+        <a href="#s2"><span class="num">02</span><span class="ttl">Instruments API — instruments-service</span></a>
+      </li>
+      <li>
+        <a href="#s3"><span class="num">03</span><span class="ttl">Market data API — market-tick-data-service</span></a>
+      </li>
+      <li>
+        <a href="#s4"><span class="num">04</span><span class="ttl">Instructions API — execution-service</span></a>
+      </li>
+      <li>
+        <a href="#s5"><span class="num">05</span><span class="ttl">Strategy-service — no counterparty surface</span></a>
+      </li>
+      <li>
+        <a href="#s6"><span class="num">06</span><span class="ttl">Error reference</span></a>
+      </li>
     </ol>
   </nav>
 
@@ -822,27 +841,46 @@
     <div class="sec-head">
       <span class="num">00</span>
       <h2>How to read this</h2>
+      <b
+        class="own"
+        title="plans/epics/system_readiness_master.md § W21 — this section's own prose-embedded '? check' mark (describing an untyped-return convention) is what makes it claim-bearing; owned by the disclosure standard enforced by scripts/plan-hygiene/check_artefact_claim_ownership.py"
+        >owner: system_readiness_master</b
+      >
     </div>
     <p class="lede">
-      One page, one convention throughout: a method-and-path summary you can scan, that opens into the four things
-      you actually need to call it.
+      One page, one convention throughout: a method-and-path summary you can scan, that opens into the four things you
+      actually need to call it.
     </p>
     <div class="keypoints">
-      <div><b>Collapsed row</b><span>Method, path, one-line purpose, and the three grading marks — scan the whole surface in one pass</span></div>
-      <div><b>Parameters</b><span>Every query/body field, its type, and whether it is required — no undocumented fields</span></div>
-      <div><b>Example request / response</b><span>Realistic values built from the real schemas — canonical instrument IDs, real venues, real enum values</span></div>
-      <div><b>Errors</b><span>The literal HTTP status and, where the code emits one, the exact <code>detail</code> string</span></div>
+      <div>
+        <b>Collapsed row</b
+        ><span>Method, path, one-line purpose, and the three grading marks — scan the whole surface in one pass</span>
+      </div>
+      <div>
+        <b>Parameters</b
+        ><span>Every query/body field, its type, and whether it is required — no undocumented fields</span>
+      </div>
+      <div>
+        <b>Example request / response</b
+        ><span
+          >Realistic values built from the real schemas — canonical instrument IDs, real venues, real enum values</span
+        >
+      </div>
+      <div>
+        <b>Errors</b
+        ><span>The literal HTTP status and, where the code emits one, the exact <code>detail</code> string</span>
+      </div>
     </div>
     <p>
       This document does not execute anything and is not a live capture — the operator's own framing was "not
-      necessarily live, but with examples everywhere." Every field name, every default, and every error string below
-      is read directly from the router or schema file cited at the point it is used. Where the router's own return
-      type is untyped (it hands back whatever a DataFrame or an upstream JSON payload happens to contain), this page
-      says so explicitly with a <b class="ev ev-check">? check</b> mark rather than inventing a shape.
+      necessarily live, but with examples everywhere." Every field name, every default, and every error string below is
+      read directly from the router or schema file cited at the point it is used. Where the router's own return type is
+      untyped (it hands back whatever a DataFrame or an upstream JSON payload happens to contain), this page says so
+      explicitly with a <b class="ev ev-check">? check</b> mark rather than inventing a shape.
     </p>
     <p>
-      For the narrative version of this same surface — what the platform is, why it is organised this way, and how
-      the pieces compose — see <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span>
+      For the narrative version of this same surface — what the platform is, why it is organised this way, and how the
+      pieces compose — see <span class="mono" style="color: var(--ink-3)">platform-external-api-walkthrough.html</span>
       in this same directory. This page exists specifically so a counterparty can see the mechanical contract without
       reading the narrative first.
     </p>
@@ -856,8 +894,8 @@
     </div>
     <p class="lede">
       All three services gate their counterparty routers with the same shared dependency —
-      <code>unified_trading_library.cloud_interface.api_auth.create_api_auth(api_name)</code>. One mechanism, one set
-      of header names, one precedence order, everywhere.
+      <code>unified_trading_library.cloud_interface.api_auth.create_api_auth(api_name)</code>. One mechanism, one set of
+      header names, one precedence order, everywhere.
     </p>
     <details class="sec-body" open>
       <summary>Header precedence, and what each path returns</summary>
@@ -868,13 +906,21 @@
       <div class="scroll-x">
         <table>
           <thead>
-            <tr><th>Order</th><th>Header</th><th>Resolves to</th><th>Failure</th></tr>
+            <tr>
+              <th>Order</th>
+              <th>Header</th>
+              <th>Resolves to</th>
+              <th>Failure</th>
+            </tr>
           </thead>
           <tbody>
             <tr>
               <td>1</td>
               <td><code>DISABLE_AUTH</code> / mock mode</td>
-              <td>Auto admin context — local dev only, hard-blocked in staging/production by <code>_check_production_safety</code></td>
+              <td>
+                Auto admin context — local dev only, hard-blocked in staging/production by
+                <code>_check_production_safety</code>
+              </td>
               <td>—</td>
             </tr>
             <tr>
@@ -886,53 +932,60 @@
             <tr>
               <td>3</td>
               <td><code>X-API-Key</code> (legacy)</td>
-              <td>Admin <code>AuthContext</code>, <code>is_api_key=true</code>, if it matches <code>UnifiedCloudConfig().api_key</code></td>
+              <td>
+                Admin <code>AuthContext</code>, <code>is_api_key=true</code>, if it matches
+                <code>UnifiedCloudConfig().api_key</code>
+              </td>
               <td><code>401</code> <span class="mono">Invalid API key</span></td>
             </tr>
             <tr>
               <td>4</td>
               <td><code>Authorization: Bearer &lt;jwt&gt;</code></td>
               <td>HS256 JWT — claims below become the <code>AuthContext</code></td>
-              <td><code>401</code> <span class="mono">Token expired — please log in again</span> or <span class="mono">Invalid token: …</span></td>
+              <td>
+                <code>401</code> <span class="mono">Token expired — please log in again</span> or
+                <span class="mono">Invalid token: …</span>
+              </td>
             </tr>
             <tr>
               <td>5</td>
               <td>None of the above</td>
               <td>—</td>
-              <td><code>401</code> <span class="mono">Not authenticated. POST /auth/login to get a token, then send Authorization: Bearer &lt;token&gt;.</span></td>
+              <td>
+                <code>401</code>
+                <span class="mono"
+                  >Not authenticated. POST /auth/login to get a token, then send Authorization: Bearer
+                  &lt;token&gt;.</span
+                >
+              </td>
             </tr>
           </tbody>
         </table>
       </div>
       <div class="code-label">JWT claims (HS256) — api_auth.py:16-25</div>
-      <div class="code">{
-  <b>"sub"</b>: "user-id",
-  <b>"org_id"</b>: "org-123",
-  <b>"role"</b>: "admin" | "internal" | "external",
-  <b>"subscription_tier"</b>: "enterprise" | "data-pro" | "data-basic" | "free",
-  <b>"exp"</b>: &lt;unix timestamp&gt;,
-  <b>"iat"</b>: &lt;unix timestamp&gt;
-}</div>
+      <div class="code">
+        { <b>"sub"</b>: "user-id", <b>"org_id"</b>: "org-123", <b>"role"</b>: "admin" | "internal" | "external",
+        <b>"subscription_tier"</b>: "enterprise" | "data-pro" | "data-basic" | "free", <b>"exp"</b>: &lt;unix
+        timestamp&gt;, <b>"iat"</b>: &lt;unix timestamp&gt; }
+      </div>
       <div class="code-label">AuthContext — the object every route sees after auth passes (api_auth.py:109-125)</div>
-      <div class="code"><span class="k">class</span> <b>AuthContext</b>:
-  org_id: <i>str</i>
-  user_id: <i>str</i>  <i># "sub" claim</i>
-  role: <i>str</i>  <i># admin | internal | external</i>
-  subscription_tier: <i>str</i>
-  display_name: <i>str</i>
-  is_internal: <i>bool</i>  <i># true for admin or S2S</i>
-  is_api_key: <i>bool</i></div>
+      <div class="code">
+        <span class="k">class</span> <b>AuthContext</b>: org_id: <i>str</i> user_id: <i>str</i>
+        <i># "sub" claim</i> role: <i>str</i> <i># admin | internal | external</i> subscription_tier:
+        <i>str</i> display_name: <i>str</i> is_internal: <i>bool</i> <i># true for admin or S2S</i> is_api_key:
+        <i>bool</i>
+      </div>
       <div class="callout">
         <span class="tag">What auth does not do on these three routers, stated exactly</span>
         <p>
           <b class="ev ev-verified">✓ verified</b> On instruments-service, the endpoint itself discards
           <code>AuthContext</code> after the dependency runs (<code>del auth</code>,
-          <code>instruments-service/instruments_service/api/routers/external.py:86</code>) — every authenticated
-          caller sees the same catalogue, because this is public reference data, not a per-client ledger. On
+          <code>instruments-service/instruments_service/api/routers/external.py:86</code>) — every authenticated caller
+          sees the same catalogue, because this is public reference data, not a per-client ledger. On
           market-tick-data-service the auth dependency is mounted at the router level
           (<code>dependencies=[Depends(_api_auth)]</code>,
-          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>) and no
-          endpoint function receives an <code>AuthContext</code> argument at all — auth is a gate, not a scope. On
+          <code>market-tick-data-service/market_tick_data_service/api/routers/external.py:52-56</code>) and no endpoint
+          function receives an <code>AuthContext</code> argument at all — auth is a gate, not a scope. On
           execution-service, <code>auth.org_id</code> is written to the audit log alongside the instruction
           (<code>execution_service/api/external_instruction_api.py:144</code>) but is not checked against the
           instruction's own <code>identity.client_id</code> — the caller-supplied <code>client_id</code> is not
@@ -940,10 +993,9 @@
         </p>
       </div>
       <p class="mono" style="color: var(--ink-3); font-size: 12px">
-        Whether each individual service also mounts the shared <code>/auth/login</code> /
-        <code>/auth/me</code> router (<code>create_auth_router</code>, same file) is not verified on this page —
-        <b class="ev ev-check">? check</b>. Token issuance/provisioning is an operator-side integration step, out of
-        scope for this reference.
+        Whether each individual service also mounts the shared <code>/auth/login</code> / <code>/auth/me</code> router
+        (<code>create_auth_router</code>, same file) is not verified on this page — <b class="ev ev-check">? check</b>.
+        Token issuance/provisioning is an operator-side integration step, out of scope for this reference.
       </p>
     </details>
   </section>
@@ -960,8 +1012,8 @@
       >
     </div>
     <p class="lede">
-      Two endpoints over the already-written <code>instrument_availability</code> catalogue — a query and a bulk
-      parquet dump. Read-only; this router never re-fetches from a venue.
+      Two endpoints over the already-written <code>instrument_availability</code> catalogue — a query and a bulk parquet
+      dump. Read-only; this router never re-fetches from a venue.
       <code>instruments-service/instruments_service/api/routers/external.py:1-140</code>.
     </p>
 
@@ -976,58 +1028,108 @@
         <h3>Parameters</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>In</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>asset_group</code></td><td>query</td><td>string</td><td class="req">required</td><td><code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> | <code>prediction</code></td></tr>
-              <tr><td><code>venue</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>Canonical venue, e.g. <code>BINANCE-SPOT</code></td></tr>
-              <tr><td><code>instrument_type</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>e.g. <code>SPOT_PAIR</code>, <code>PERPETUAL</code>, <code>OPTION</code></td></tr>
-              <tr><td><code>day</code></td><td>query</td><td>string</td><td class="opt">optional</td><td><code>YYYY-MM-DD</code>; defaults to the latest captured day (14-day lookback)</td></tr>
-              <tr><td><code>limit</code></td><td>query</td><td>integer</td><td class="opt">optional</td><td>Row cap, default <code>2000</code>, min <code>1</code>, max <code>20000</code></td></tr>
+              <tr>
+                <td><code>asset_group</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>
+                  <code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> |
+                  <code>prediction</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>venue</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>Canonical venue, e.g. <code>BINANCE-SPOT</code></td>
+              </tr>
+              <tr>
+                <td><code>instrument_type</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>e.g. <code>SPOT_PAIR</code>, <code>PERPETUAL</code>, <code>OPTION</code></td>
+              </tr>
+              <tr>
+                <td><code>day</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td><code>YYYY-MM-DD</code>; defaults to the latest captured day (14-day lookback)</td>
+              </tr>
+              <tr>
+                <td><code>limit</code></td>
+                <td>query</td>
+                <td>integer</td>
+                <td class="opt">optional</td>
+                <td>Row cap, default <code>2000</code>, min <code>1</code>, max <code>20000</code></td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="code-label">Example request</div>
-        <div class="code"><b>GET</b> /v1/instruments?asset_group=cefi&amp;venue=BINANCE-SPOT&amp;instrument_type=SPOT_PAIR&amp;limit=5
-X-Service-Token: &lt;service-token&gt;</div>
+        <div class="code">
+          <b>GET</b> /v1/instruments?asset_group=cefi&amp;venue=BINANCE-SPOT&amp;instrument_type=SPOT_PAIR&amp;limit=5
+          X-Service-Token: &lt;service-token&gt;
+        </div>
         <div class="code-label">Example response — 200</div>
-        <div class="code">{
-  "asset_group": "cefi",
-  "day": "2026-08-18",
-  "venue": "BINANCE-SPOT",
-  "instrument_type": "SPOT_PAIR",
-  "venues_scanned": 1,
-  "row_count": 2,
-  "truncated": false,
-  "instruments": [
-    {
-      "instrument_id": "BINANCE-SPOT:SPOT_PAIR:BTCUSDT",
-      "venue": "BINANCE-SPOT",
-      "instrument_type": "SPOT_PAIR"
-    },
-    {
-      "instrument_id": "BINANCE-SPOT:SPOT_PAIR:ETHUSDT",
-      "venue": "BINANCE-SPOT",
-      "instrument_type": "SPOT_PAIR"
-    }
-  ]
-}</div>
+        <div class="code">
+          { "asset_group": "cefi", "day": "2026-08-18", "venue": "BINANCE-SPOT", "instrument_type": "SPOT_PAIR",
+          "venues_scanned": 1, "row_count": 2, "truncated": false, "instruments": [ { "instrument_id":
+          "BINANCE-SPOT:SPOT_PAIR:BTCUSDT", "venue": "BINANCE-SPOT", "instrument_type": "SPOT_PAIR" }, {
+          "instrument_id": "BINANCE-SPOT:SPOT_PAIR:ETHUSDT", "venue": "BINANCE-SPOT", "instrument_type": "SPOT_PAIR" } ]
+          }
+        </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b> The <code>instruments</code> row shape is whatever columns the
-          underlying <code>instruments.parquet</code> shard carries — <code>query_instruments</code>
+          <b class="ev ev-check">? check</b> The <code>instruments</code> row shape is whatever columns the underlying
+          <code>instruments.parquet</code> shard carries —
+          <code>query_instruments</code>
           (<code>instruments-service/instruments_service/engine/orchestrator/catalogue_query.py:112-169</code>)
-          round-trips the shard DataFrame's own columns verbatim (<code>df.to_json(orient="records")</code>,
-          line 155) rather than projecting a fixed schema. <code>instrument_id</code> / <code>venue</code> /
+          round-trips the shard DataFrame's own columns verbatim (<code>df.to_json(orient="records")</code>, line 155)
+          rather than projecting a fixed schema. <code>instrument_id</code> / <code>venue</code> /
           <code>instrument_type</code> above are confirmed canonical <code>InstrumentRecord</code> fields; the full
           per-shard column set is not typed by this endpoint and can vary by venue.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Status</th><th>Condition</th><th>Body</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Condition</th>
+                <th>Body</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>400</code></td><td>Unknown <code>asset_group</code>, or bucket resolution failed</td><td class="mono">"Unknown asset_group 'xyz' — expected one of ['cefi', 'defi', 'prediction', 'sports', 'tradfi']"</td></tr>
-              <tr><td><code>401</code> / <code>403</code></td><td>Auth — see <a href="#s1">§01</a></td><td>—</td></tr>
-              <tr><td><code>500</code></td><td>Unhandled read error</td><td class="mono">"Internal server error reading the instrument catalogue."</td></tr>
+              <tr>
+                <td><code>400</code></td>
+                <td>Unknown <code>asset_group</code>, or bucket resolution failed</td>
+                <td class="mono">
+                  "Unknown asset_group 'xyz' — expected one of ['cefi', 'defi', 'prediction', 'sports', 'tradfi']"
+                </td>
+              </tr>
+              <tr>
+                <td><code>401</code> / <code>403</code></td>
+                <td>Auth — see <a href="#s1">§01</a></td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td>Unhandled read error</td>
+                <td class="mono">"Internal server error reading the instrument catalogue."</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1046,34 +1148,88 @@ X-Service-Token: &lt;service-token&gt;</div>
         <h3>Parameters</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>In</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>asset_group</code></td><td>query</td><td>string</td><td class="req">required</td><td><code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> | <code>prediction</code></td></tr>
-              <tr><td><code>venue</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>Omit for every venue in the asset group</td></tr>
-              <tr><td><code>day</code></td><td>query</td><td>string</td><td class="opt">optional</td><td><code>YYYY-MM-DD</code>; defaults to the latest captured day</td></tr>
+              <tr>
+                <td><code>asset_group</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>
+                  <code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> |
+                  <code>prediction</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>venue</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>Omit for every venue in the asset group</td>
+              </tr>
+              <tr>
+                <td><code>day</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td><code>YYYY-MM-DD</code>; defaults to the latest captured day</td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="code-label">Example request</div>
-        <div class="code"><b>GET</b> /v1/instruments/bulk?asset_group=cefi&amp;venue=BINANCE-SPOT
-X-Service-Token: &lt;service-token&gt;</div>
+        <div class="code">
+          <b>GET</b> /v1/instruments/bulk?asset_group=cefi&amp;venue=BINANCE-SPOT X-Service-Token: &lt;service-token&gt;
+        </div>
         <div class="code-label">Example response — 200 (binary)</div>
-        <div class="code">HTTP/1.1 200 OK
-Content-Type: application/vnd.apache.parquet
-Content-Disposition: attachment; filename="instruments_cefi_BINANCE-SPOT_2026-08-18.parquet"
-Transfer-Encoding: chunked
-
-&lt;parquet bytes, streamed 1 MiB at a time — build_bulk_parquet unifies every matched
-shard's schema before writing a single combined file, catalogue_query.py:191-250&gt;</div>
+        <div class="code">
+          HTTP/1.1 200 OK Content-Type: application/vnd.apache.parquet Content-Disposition: attachment;
+          filename="instruments_cefi_BINANCE-SPOT_2026-08-18.parquet" Transfer-Encoding: chunked &lt;parquet bytes,
+          streamed 1 MiB at a time — build_bulk_parquet unifies every matched shard's schema before writing a single
+          combined file, catalogue_query.py:191-250&gt;
+        </div>
         <h3>Errors</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Status</th><th>Condition</th><th>Body</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Condition</th>
+                <th>Body</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>400</code></td><td>Unknown <code>asset_group</code></td><td class="mono">Same shape as §02.1</td></tr>
-              <tr><td><code>401</code> / <code>403</code></td><td>Auth — see <a href="#s1">§01</a></td><td>—</td></tr>
-              <tr><td><code>404</code></td><td>No matching day partition or shard</td><td class="mono">"No instrument_availability data found for asset_group='cefi'" or "No instrument shards for asset_group='cefi' day='…' venue='…'"</td></tr>
-              <tr><td><code>500</code></td><td>Unhandled assembly error</td><td class="mono">"Internal server error building the instrument bulk dump."</td></tr>
+              <tr>
+                <td><code>400</code></td>
+                <td>Unknown <code>asset_group</code></td>
+                <td class="mono">Same shape as §02.1</td>
+              </tr>
+              <tr>
+                <td><code>401</code> / <code>403</code></td>
+                <td>Auth — see <a href="#s1">§01</a></td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>404</code></td>
+                <td>No matching day partition or shard</td>
+                <td class="mono">
+                  "No instrument_availability data found for asset_group='cefi'" or "No instrument shards for
+                  asset_group='cefi' day='…' venue='…'"
+                </td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td>Unhandled assembly error</td>
+                <td class="mono">"Internal server error building the instrument bulk dump."</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1082,27 +1238,30 @@ shard's schema before writing a single combined file, catalogue_query.py:191-250
     </details>
 
     <details class="ref">
-      <summary>Canonical instrument IDs — how <code>instrument_id</code> is built<span class="tag-ref">Reference</span></summary>
+      <summary>
+        Canonical instrument IDs — how <code>instrument_id</code> is built<span class="tag-ref">Reference</span>
+      </summary>
       <div class="plate-body scroll-x">
         <p>
           Every <code>instrument_id</code> above comes from the single dispatch entry point,
           <code>build_canonical_instrument_id()</code> —
           <code>unified-api-contracts/unified_api_contracts/internal/reference/canonical_id_builder.py</code>.
-          <b>The CeFi spot-pair instrument-type token is <code>SPOT_PAIR</code>, not <code>SPOT</code></b> — it is
-          the literal <code>InstrumentType.SPOT_PAIR</code> enum value, confirmed at
+          <b>The CeFi spot-pair instrument-type token is <code>SPOT_PAIR</code>, not <code>SPOT</code></b> — it is the
+          literal <code>InstrumentType.SPOT_PAIR</code> enum value, confirmed at
           <code>canonical_id_builder.py:134</code> (membership) and <code>:268-270</code>
           (<code>_build_cefi_simple</code>, the function that renders it).
         </p>
-        <div class="code"><i># VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</i>
-build_canonical_instrument_id(<b>"cefi"</b>, "binance_spot", InstrumentType.SPOT_PAIR, "BTCUSDT")
-<i>#  →</i> "BINANCE_SPOT:SPOT_PAIR:BTCUSDT"
-
-build_canonical_instrument_id(<b>"defi"</b>, "aave_v3", InstrumentType.LENDING, "USDC", chain="arbitrum")
-<i>#  →</i> "AAVE_V3-ARBITRUM:LENDING:USDC"
-
-build_canonical_instrument_id(<b>"tradfi"</b>, "cme", InstrumentType.FUTURE, "ES", expiry_date=date(2026, 6, 20))
-<i>#  →</i> "CME:FUTURE:ES-20260620"</div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">canonical_id_builder.py:1027-1174 (dispatch), :77-92 (docstring examples)</p>
+        <div class="code">
+          <i># VENUE[-CHAIN]:INSTRUMENT_TYPE:SYMBOL</i>
+          build_canonical_instrument_id(<b>"cefi"</b>, "binance_spot", InstrumentType.SPOT_PAIR, "BTCUSDT")
+          <i># →</i> "BINANCE_SPOT:SPOT_PAIR:BTCUSDT" build_canonical_instrument_id(<b>"defi"</b>, "aave_v3",
+          InstrumentType.LENDING, "USDC", chain="arbitrum") <i># →</i> "AAVE_V3-ARBITRUM:LENDING:USDC"
+          build_canonical_instrument_id(<b>"tradfi"</b>, "cme", InstrumentType.FUTURE, "ES", expiry_date=date(2026, 6,
+          20)) <i># →</i> "CME:FUTURE:ES-20260620"
+        </div>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          canonical_id_builder.py:1027-1174 (dispatch), :77-92 (docstring examples)
+        </p>
       </div>
     </details>
   </section>
@@ -1119,8 +1278,8 @@ build_canonical_instrument_id(<b>"tradfi"</b>, "cme", InstrumentType.FUTURE, "ES
       >
     </div>
     <p class="lede">
-      Three endpoints under one router-level auth gate — what's captured, and two ways to get it out: a bounded
-      "list, then stream" daily batch, and a near-real-time NDJSON leg over the shared UTL event transport.
+      Three endpoints under one router-level auth gate — what's captured, and two ways to get it out: a bounded "list,
+      then stream" daily batch, and a near-real-time NDJSON leg over the shared UTL event transport.
       <code>market-tick-data-service/market_tick_data_service/api/routers/external.py</code>.
     </p>
 
@@ -1135,57 +1294,115 @@ build_canonical_instrument_id(<b>"tradfi"</b>, "cme", InstrumentType.FUTURE, "ES
         <h3>Parameters</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>In</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>asset_group</code></td><td>query</td><td>string</td><td class="req">required</td><td><code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> | <code>prediction</code></td></tr>
-              <tr><td><code>venue</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>e.g. <code>BINANCE-FUTURES</code></td></tr>
-              <tr><td><code>data_type</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>Documented as requiring <code>venue</code> — see the note below</td></tr>
-              <tr><td><code>date</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>ISO date; defaults to the latest within a 14-day lookback</td></tr>
+              <tr>
+                <td><code>asset_group</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>
+                  <code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> |
+                  <code>prediction</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>venue</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>e.g. <code>BINANCE-FUTURES</code></td>
+              </tr>
+              <tr>
+                <td><code>data_type</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>Documented as requiring <code>venue</code> — see the note below</td>
+              </tr>
+              <tr>
+                <td><code>date</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>ISO date; defaults to the latest within a 14-day lookback</td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="callout">
           <span class="tag">A real behavior worth knowing before you rely on it</span>
           <p>
-            <b class="ev ev-verified">✓ verified</b> Passing <code>data_type</code> <em>without</em> <code>venue</code>
-            is not rejected — it is silently ignored. The code only reads <code>data_type</code> inside the
-            <code>if venue is not None:</code> branch (<code>external.py:150-157</code>); with no <code>venue</code>,
-            the response never includes a <code>data_type</code> or <code>venue_data_type_summary</code> key at all,
-            with no error to tell you why.
+            <b class="ev ev-verified">✓ verified</b> Passing <code>data_type</code> <em>without</em>
+            <code>venue</code> is not rejected — it is silently ignored. The code only reads
+            <code>data_type</code> inside the <code>if venue is not None:</code> branch
+            (<code>external.py:150-157</code>); with no <code>venue</code>, the response never includes a
+            <code>data_type</code> or <code>venue_data_type_summary</code> key at all, with no error to tell you why.
           </p>
         </div>
         <div class="code-label">Example request</div>
-        <div class="code"><b>GET</b> /external/market-data/availability?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades
-X-Service-Token: &lt;service-token&gt;</div>
+        <div class="code">
+          <b>GET</b> /external/market-data/availability?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades
+          X-Service-Token: &lt;service-token&gt;
+        </div>
         <div class="code-label">Example response — 200</div>
-        <div class="code">{
-  "asset_group": "cefi",
-  "requested_date": null,
-  "resolved_date": "2026-08-18",
-  "summary": { "…": "…" },
-  "venue": "BINANCE-FUTURES",
-  "venue_summary": { "…": "…" },
-  "data_type": "trades",
-  "venue_data_type_summary": { "…": "…" }
-}</div>
+        <div class="code">
+          { "asset_group": "cefi", "requested_date": null, "resolved_date": "2026-08-18", "summary": { "…": "…" },
+          "venue": "BINANCE-FUTURES", "venue_summary": { "…": "…" }, "data_type": "trades", "venue_data_type_summary": {
+          "…": "…" } }
+        </div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <b class="ev ev-check">? check</b> The response envelope (the keys above) is verified directly against
-          <code>external.py:144-158</code>. The <em>contents</em> of <code>summary</code> /
-          <code>venue_summary</code> / <code>venue_data_type_summary</code> are opaque — they are passed through
-          verbatim from the daily <code>coverage.json</code> rollup written by
-          <code>instruments-service/scripts/measure_honest_coverage.py</code> and are not typed by this router, so
-          their internal shape is not documented on this page.
+          <code>external.py:144-158</code>. The <em>contents</em> of <code>summary</code> / <code>venue_summary</code> /
+          <code>venue_data_type_summary</code> are opaque — they are passed through verbatim from the daily
+          <code>coverage.json</code> rollup written by
+          <code>instruments-service/scripts/measure_honest_coverage.py</code> and are not typed by this router, so their
+          internal shape is not documented on this page.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Status</th><th>Condition</th><th>Body</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Condition</th>
+                <th>Body</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>401</code> / <code>403</code></td><td>Auth — see <a href="#s1">§01</a> (router-level gate)</td><td>—</td></tr>
-              <tr><td><code>422</code></td><td>Unknown <code>asset_group</code></td><td class="mono">"asset_group must be one of [...], got '…'"</td></tr>
-              <tr><td><code>404</code></td><td>No coverage measurement in the lookback window</td><td class="mono">"no honest-coverage measurement available for the last 14 days"</td></tr>
-              <tr><td><code>503</code></td><td>Service not configured</td><td class="mono">"gcp_project_id not configured"</td></tr>
-              <tr><td><code>500</code></td><td>Malformed <code>coverage.json</code> payload</td><td class="mono">"honest-coverage payload malformed: …" or "… is not a JSON object"</td></tr>
+              <tr>
+                <td><code>401</code> / <code>403</code></td>
+                <td>Auth — see <a href="#s1">§01</a> (router-level gate)</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>422</code></td>
+                <td>Unknown <code>asset_group</code></td>
+                <td class="mono">"asset_group must be one of [...], got '…'"</td>
+              </tr>
+              <tr>
+                <td><code>404</code></td>
+                <td>No coverage measurement in the lookback window</td>
+                <td class="mono">"no honest-coverage measurement available for the last 14 days"</td>
+              </tr>
+              <tr>
+                <td><code>503</code></td>
+                <td>Service not configured</td>
+                <td class="mono">"gcp_project_id not configured"</td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td>Malformed <code>coverage.json</code> payload</td>
+                <td class="mono">"honest-coverage payload malformed: …" or "… is not a JSON object"</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1204,53 +1421,119 @@ X-Service-Token: &lt;service-token&gt;</div>
         <h3>Parameters</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>In</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>asset_group</code></td><td>query</td><td>string</td><td class="req">required</td><td><code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> | <code>prediction</code></td></tr>
-              <tr><td><code>venue</code></td><td>query</td><td>string</td><td class="req">required</td><td>e.g. <code>BINANCE-FUTURES</code></td></tr>
-              <tr><td><code>data_type</code></td><td>query</td><td>string</td><td class="req">required</td><td>e.g. <code>trades</code> — see <a href="#s3-datatypes">the real data_type vocabulary</a> below</td></tr>
-              <tr><td><code>date</code></td><td>query</td><td>string</td><td class="req">required</td><td><code>YYYY-MM-DD</code> — the raw-tick partition day</td></tr>
-              <tr><td><code>file</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>Exact object path from a prior listing call — set to stream that object's bytes instead of listing</td></tr>
+              <tr>
+                <td><code>asset_group</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>
+                  <code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> |
+                  <code>prediction</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>venue</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>e.g. <code>BINANCE-FUTURES</code></td>
+              </tr>
+              <tr>
+                <td><code>data_type</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>e.g. <code>trades</code> — see <a href="#s3-datatypes">the real data_type vocabulary</a> below</td>
+              </tr>
+              <tr>
+                <td><code>date</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td><code>YYYY-MM-DD</code> — the raw-tick partition day</td>
+              </tr>
+              <tr>
+                <td><code>file</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>
+                  Exact object path from a prior listing call — set to stream that object's bytes instead of listing
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="code-label">Step 1 — list (omit <code>file</code>)</div>
-        <div class="code"><b>GET</b> /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17
-X-Service-Token: &lt;service-token&gt;</div>
+        <div class="code">
+          <b>GET</b>
+          /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17
+          X-Service-Token: &lt;service-token&gt;
+        </div>
         <div class="code-label">Response — 200</div>
-        <div class="code">{
-  "asset_group": "cefi",
-  "venue": "BINANCE-FUTURES",
-  "data_type": "trades",
-  "date": "2026-08-17",
-  "bucket": "&lt;resolved tick-data bucket&gt;",
-  "objects": [
-    {
-      "file": "raw_tick_data/by_date/day=2026-08-17/pipeline_mode=batch_tardis/asset_group=cefi/venue=BINANCE-FUTURES/data_type=trades/part-0000.parquet",
-      "size": 4831201
-    }
-  ],
-  "truncated": false
-}</div>
+        <div class="code">
+          { "asset_group": "cefi", "venue": "BINANCE-FUTURES", "data_type": "trades", "date": "2026-08-17", "bucket":
+          "&lt;resolved tick-data bucket&gt;", "objects": [ { "file":
+          "raw_tick_data/by_date/day=2026-08-17/pipeline_mode=batch_tardis/asset_group=cefi/venue=BINANCE-FUTURES/data_type=trades/part-0000.parquet",
+          "size": 4831201 } ], "truncated": false }
+        </div>
         <div class="code-label">Step 2 — download (pass <code>file</code> verbatim from step 1)</div>
-        <div class="code"><b>GET</b> /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17&amp;file=raw_tick_data/by_date/day=2026-08-17/…/part-0000.parquet</div>
+        <div class="code">
+          <b>GET</b>
+          /external/market-data/delivery/batch?asset_group=cefi&amp;venue=BINANCE-FUTURES&amp;data_type=trades&amp;date=2026-08-17&amp;file=raw_tick_data/by_date/day=2026-08-17/…/part-0000.parquet
+        </div>
         <div class="code-label">Response — 200 (binary)</div>
-        <div class="code">HTTP/1.1 200 OK
-Content-Type: application/octet-stream
-Content-Disposition: attachment; filename="part-0000.parquet"
-Content-Length: 4831201
-
-&lt;object bytes, streamed 1 MiB at a time — never loaded fully into memory, external.py:206-214&gt;</div>
+        <div class="code">
+          HTTP/1.1 200 OK Content-Type: application/octet-stream Content-Disposition: attachment;
+          filename="part-0000.parquet" Content-Length: 4831201 &lt;object bytes, streamed 1 MiB at a time — never loaded
+          fully into memory, external.py:206-214&gt;
+        </div>
         <h3>Errors</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Status</th><th>Condition</th><th>Body</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Condition</th>
+                <th>Body</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>401</code> / <code>403</code></td><td>Auth</td><td>—</td></tr>
-              <tr><td><code>422</code></td><td>Unknown <code>asset_group</code></td><td class="mono">Same shape as availability above</td></tr>
-              <tr><td><code>400</code></td><td><code>file</code> does not belong to the requested shard</td><td class="mono">"file does not belong to the requested asset_group/venue/data_type/date shard"</td></tr>
-              <tr><td><code>404</code></td><td><code>file</code> object not found</td><td class="mono">"object not found: …"</td></tr>
-              <tr><td><code>503</code></td><td>Bucket resolution failed</td><td class="mono">"bucket resolution failed: …"</td></tr>
+              <tr>
+                <td><code>401</code> / <code>403</code></td>
+                <td>Auth</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>422</code></td>
+                <td>Unknown <code>asset_group</code></td>
+                <td class="mono">Same shape as availability above</td>
+              </tr>
+              <tr>
+                <td><code>400</code></td>
+                <td><code>file</code> does not belong to the requested shard</td>
+                <td class="mono">"file does not belong to the requested asset_group/venue/data_type/date shard"</td>
+              </tr>
+              <tr>
+                <td><code>404</code></td>
+                <td><code>file</code> object not found</td>
+                <td class="mono">"object not found: …"</td>
+              </tr>
+              <tr>
+                <td><code>503</code></td>
+                <td>Bucket resolution failed</td>
+                <td class="mono">"bucket resolution failed: …"</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1269,36 +1552,96 @@ Content-Length: 4831201
         <h3>Parameters</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Name</th><th>In</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>In</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Description</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>asset_group</code></td><td>query</td><td>string</td><td class="req">required</td><td><code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> | <code>prediction</code></td></tr>
-              <tr><td><code>data_type</code></td><td>query</td><td>string</td><td class="req">required</td><td>e.g. <code>trades</code></td></tr>
-              <tr><td><code>after</code></td><td>query</td><td>string</td><td class="opt">optional</td><td>ISO-8601 timestamp — only newer envelopes are returned</td></tr>
-              <tr><td><code>limit</code></td><td>query</td><td>integer</td><td class="opt">optional</td><td>Default <code>100</code>, min <code>1</code>, max <code>1000</code></td></tr>
-              <tr><td><code>topology</code></td><td>query</td><td>string</td><td class="opt">optional</td><td><code>in_memory</code> (default) | <code>redis</code> | <code>pubsub</code></td></tr>
+              <tr>
+                <td><code>asset_group</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>
+                  <code>cefi</code> | <code>defi</code> | <code>tradfi</code> | <code>sports</code> |
+                  <code>prediction</code>
+                </td>
+              </tr>
+              <tr>
+                <td><code>data_type</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>e.g. <code>trades</code></td>
+              </tr>
+              <tr>
+                <td><code>after</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>ISO-8601 timestamp — only newer envelopes are returned</td>
+              </tr>
+              <tr>
+                <td><code>limit</code></td>
+                <td>query</td>
+                <td>integer</td>
+                <td class="opt">optional</td>
+                <td>Default <code>100</code>, min <code>1</code>, max <code>1000</code></td>
+              </tr>
+              <tr>
+                <td><code>topology</code></td>
+                <td>query</td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td><code>in_memory</code> (default) | <code>redis</code> | <code>pubsub</code></td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="code-label">Example request</div>
-        <div class="code"><b>GET</b> /external/market-data/delivery/stream?asset_group=cefi&amp;data_type=trades&amp;limit=50
-X-Service-Token: &lt;service-token&gt;</div>
+        <div class="code">
+          <b>GET</b> /external/market-data/delivery/stream?asset_group=cefi&amp;data_type=trades&amp;limit=50
+          X-Service-Token: &lt;service-token&gt;
+        </div>
         <div class="code-label">Example response — 200 (application/x-ndjson, one JSON object per line)</div>
-        <div class="code">{"…": "one line per CanonicalPersistEnvelope record, newline-delimited…"}
-{"…": "…"}</div>
+        <div class="code">{"…": "one line per CanonicalPersistEnvelope record, newline-delimited…"} {"…": "…"}</div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
           <b class="ev ev-check">? check</b> The transport call is verified —
-          <code>unified_trading_library.streaming.event_facade.get_transport(topology).read(...)</code>, each
-          envelope serialised via <code>.model_dump_json()</code> (<code>external.py:304-310</code>). The
-          <code>CanonicalPersistEnvelope</code> field list itself was not read this session, so no field-level
-          example is given here rather than an invented one.
+          <code>unified_trading_library.streaming.event_facade.get_transport(topology).read(...)</code>, each envelope
+          serialised via <code>.model_dump_json()</code> (<code>external.py:304-310</code>). The
+          <code>CanonicalPersistEnvelope</code> field list itself was not read this session, so no field-level example
+          is given here rather than an invented one.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Status</th><th>Condition</th><th>Body</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Condition</th>
+                <th>Body</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>401</code> / <code>403</code></td><td>Auth</td><td>—</td></tr>
-              <tr><td><code>422</code></td><td>Unknown <code>asset_group</code>, bad <code>after</code> timestamp, or bad <code>topology</code></td><td class="mono">"invalid 'after' timestamp: …" or "topology must be one of in_memory | redis | pubsub"</td></tr>
+              <tr>
+                <td><code>401</code> / <code>403</code></td>
+                <td>Auth</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>422</code></td>
+                <td>
+                  Unknown <code>asset_group</code>, bad <code>after</code> timestamp, or bad <code>topology</code>
+                </td>
+                <td class="mono">
+                  "invalid 'after' timestamp: …" or "topology must be one of in_memory | redis | pubsub"
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1307,27 +1650,63 @@ X-Service-Token: &lt;service-token&gt;</div>
     </details>
 
     <details class="ref" id="s3-datatypes">
-      <summary>The real <code>data_type</code> vocabulary, by asset group and instrument type<span class="tag-ref">Reference</span></summary>
+      <summary>
+        The real <code>data_type</code> vocabulary, by asset group and instrument type<span class="tag-ref"
+          >Reference</span
+        >
+      </summary>
       <div class="plate-body scroll-x">
         <p>
           <code>data_type</code> is not a free-text field — it is drawn from
           <code>VALID_DATA_TYPES_BY_AG_AND_INSTRUMENT_TYPE</code>
-          (<code>unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1503+</code>), keyed
-          by <code>(asset_group, instrument_type)</code>. A representative slice:
+          (<code>unified-api-contracts/unified_api_contracts/registry/market_data_categories.py:1503+</code>), keyed by
+          <code>(asset_group, instrument_type)</code>. A representative slice:
         </p>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Asset group</th><th>Instrument type</th><th>Valid data_type values</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Asset group</th>
+                <th>Instrument type</th>
+                <th>Valid data_type values</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>cefi</code></td><td><code>spot_pair</code></td><td class="mono">trades, book_snapshot_5, ohlcv_1m</td></tr>
-              <tr><td><code>cefi</code></td><td><code>perpetual</code></td><td class="mono">trades, book_snapshot_5, derivative_ticker, liquidations, ohlcv_1m, perp_funding</td></tr>
-              <tr><td><code>tradfi</code></td><td><code>future</code></td><td class="mono">trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo, mbp_10</td></tr>
-              <tr><td><code>tradfi</code></td><td><code>equity</code></td><td class="mono">trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_1h, ohlcv_24h, tbbo, mbp_10, corporate_action_confirmed, earnings_result</td></tr>
-              <tr><td><code>tradfi</code></td><td><code>spot_pair</code> (FX)</td><td class="mono">trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo</td></tr>
+              <tr>
+                <td><code>cefi</code></td>
+                <td><code>spot_pair</code></td>
+                <td class="mono">trades, book_snapshot_5, ohlcv_1m</td>
+              </tr>
+              <tr>
+                <td><code>cefi</code></td>
+                <td><code>perpetual</code></td>
+                <td class="mono">trades, book_snapshot_5, derivative_ticker, liquidations, ohlcv_1m, perp_funding</td>
+              </tr>
+              <tr>
+                <td><code>tradfi</code></td>
+                <td><code>future</code></td>
+                <td class="mono">trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo, mbp_10</td>
+              </tr>
+              <tr>
+                <td><code>tradfi</code></td>
+                <td><code>equity</code></td>
+                <td class="mono">
+                  trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_1h, ohlcv_24h, tbbo, mbp_10, corporate_action_confirmed,
+                  earnings_result
+                </td>
+              </tr>
+              <tr>
+                <td><code>tradfi</code></td>
+                <td><code>spot_pair</code> (FX)</td>
+                <td class="mono">trades, ohlcv_1s, ohlcv_1m, ohlcv_15m, ohlcv_24h, tbbo</td>
+              </tr>
             </tbody>
           </table>
         </div>
-        <p class="mono" style="color: var(--ink-3); font-size: 12px">market_data_categories.py:1503-1600 (full table is longer — every asset_group × instrument_type pair is enumerated there, not reproduced in full on this page)</p>
+        <p class="mono" style="color: var(--ink-3); font-size: 12px">
+          market_data_categories.py:1503-1600 (full table is longer — every asset_group × instrument_type pair is
+          enumerated there, not reproduced in full on this page)
+        </p>
       </div>
     </details>
   </section>
@@ -1351,8 +1730,8 @@ X-Service-Token: &lt;service-token&gt;</div>
     <div class="callout">
       <span class="tag">Read this before anything else on this page</span>
       <p>
-        <b>Only <code>TRADE</code> is wired end-to-end.</b> The request body type,
-        <code>StrategyInstructionV2</code>, is an 11-member discriminated union
+        <b>Only <code>TRADE</code> is wired end-to-end.</b> The request body type, <code>StrategyInstructionV2</code>,
+        is an 11-member discriminated union
         (<code>unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py:373-385</code>). A
         <code>TRADE</code> instruction is translated and routed through the same
         <code>ManualOperationHandler.execute()</code> → <code>LiveOrchestrator.execute_instruction()</code> path the
@@ -1366,125 +1745,318 @@ X-Service-Token: &lt;service-token&gt;</div>
     <h3>Instruction type support, named per type</h3>
     <div class="scroll-x">
       <table>
-        <thead><tr><th>Action</th><th>Schema</th><th>Status on this endpoint</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Action</th>
+            <th>Schema</th>
+            <th>Status on this endpoint</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr><td><code>TRADE</code></td><td><code>TradeInstruction</code></td><td><b class="st st-part">partial</b> — parses and executes, routed to <code>LiveOrchestrator</code></td></tr>
-          <tr><td><code>SWAP</code></td><td><code>SwapInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>LEND</code></td><td><code>LendInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>BORROW</code></td><td><code>BorrowInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>STAKE</code></td><td><code>StakeInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>UNSTAKE</code></td><td><code>UnstakeInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>QUOTE</code></td><td><code>QuoteInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>TRANSFER</code></td><td><code>TransferInstructionV2</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>BRIDGE</code></td><td><code>BridgeInstructionV2</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>ATOMIC</code></td><td><code>AtomicInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
-          <tr><td><code>CANCEL</code></td><td><code>CancelInstruction</code></td><td><b class="st st-plan">planned</b> — parses, <code>501</code></td></tr>
+          <tr>
+            <td><code>TRADE</code></td>
+            <td><code>TradeInstruction</code></td>
+            <td><b class="st st-part">partial</b> — parses and executes, routed to <code>LiveOrchestrator</code></td>
+          </tr>
+          <tr>
+            <td><code>SWAP</code></td>
+            <td><code>SwapInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>LEND</code></td>
+            <td><code>LendInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>BORROW</code></td>
+            <td><code>BorrowInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>STAKE</code></td>
+            <td><code>StakeInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>UNSTAKE</code></td>
+            <td><code>UnstakeInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>QUOTE</code></td>
+            <td><code>QuoteInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>TRANSFER</code></td>
+            <td><code>TransferInstructionV2</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>BRIDGE</code></td>
+            <td><code>BridgeInstructionV2</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>ATOMIC</code></td>
+            <td><code>AtomicInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
+          <tr>
+            <td><code>CANCEL</code></td>
+            <td><code>CancelInstruction</code></td>
+            <td><b class="st st-plan">planned</b> — parses, <code>501</code></td>
+          </tr>
         </tbody>
       </table>
     </div>
     <p class="mono" style="color: var(--ink-3); font-size: 12px">
-      <b class="ev ev-verified">✓ verified</b> schemas.py:263-385 (all 11 variants + the union); external_instruction_api.py:110-136 (the 501 branch)
+      <b class="ev ev-verified">✓ verified</b> schemas.py:263-385 (all 11 variants + the union);
+      external_instruction_api.py:110-136 (the 501 branch)
     </p>
 
     <details class="ep">
       <summary>
         <span class="method method-post">POST</span>
         <code class="ep-path">/external/instructions</code>
-        <span class="ep-purpose">Submit one StrategyInstructionV2 envelope — TRADE executes, everything else returns 501</span>
+        <span class="ep-purpose"
+          >Submit one StrategyInstructionV2 envelope — TRADE executes, everything else returns 501</span
+        >
         <b class="st st-part">partial</b><b class="ev ev-verified">✓ verified</b>
       </summary>
       <div class="ep-body">
         <h3>Request body — TradeInstruction (the only variant that executes)</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Field</th><th>Type</th><th>Required</th><th>Notes</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Required</th>
+                <th>Notes</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>instruction_id</code></td><td>string</td><td class="req">required</td><td>Caller-assigned, echoed back in the response</td></tr>
-              <tr><td><code>emitted_at_utc</code></td><td>datetime</td><td class="req">required</td><td>UTC</td></tr>
-              <tr><td><code>identity</code></td><td>StrategyInstanceIdentity</td><td class="req">required</td><td>See below</td></tr>
-              <tr><td><code>action</code></td><td>literal <code>"TRADE"</code></td><td class="req">required</td><td>Discriminates the union</td></tr>
-              <tr><td><code>target_venue</code></td><td>string</td><td class="req">required</td><td>Missing this fails with a <code>400</code> before execution — see errors</td></tr>
-              <tr><td><code>target_instrument</code></td><td>string</td><td class="req">required</td><td>e.g. <code>BTCUSDT</code></td></tr>
-              <tr><td><code>target_position_units</code></td><td>decimal</td><td class="req">required</td><td>Target position size, not a delta</td></tr>
-              <tr><td><code>direction</code></td><td><code>"LONG"</code> | <code>"SHORT"</code> | <code>"FLAT"</code> | null</td><td class="opt">optional*</td><td>*<code>LONG</code>/<code>SHORT</code> only — <code>FLAT</code>/unset 400s (position-aware sizing isn't wired here)</td></tr>
-              <tr><td><code>reference_price</code> / <code>max_price</code> / <code>min_price</code></td><td>decimal</td><td class="opt">optional</td><td>The first non-null of these three becomes the order price</td></tr>
-              <tr><td><code>urgency</code></td><td>enum</td><td class="opt">optional</td><td>Default <code>MEDIUM</code> — LOW | MEDIUM | HIGH | IMMEDIATE</td></tr>
-              <tr><td><code>venue_routing_mode</code></td><td>enum</td><td class="opt">optional</td><td>Default <code>SOR_AT_EXECUTION</code></td></tr>
+              <tr>
+                <td><code>instruction_id</code></td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>Caller-assigned, echoed back in the response</td>
+              </tr>
+              <tr>
+                <td><code>emitted_at_utc</code></td>
+                <td>datetime</td>
+                <td class="req">required</td>
+                <td>UTC</td>
+              </tr>
+              <tr>
+                <td><code>identity</code></td>
+                <td>StrategyInstanceIdentity</td>
+                <td class="req">required</td>
+                <td>See below</td>
+              </tr>
+              <tr>
+                <td><code>action</code></td>
+                <td>literal <code>"TRADE"</code></td>
+                <td class="req">required</td>
+                <td>Discriminates the union</td>
+              </tr>
+              <tr>
+                <td><code>target_venue</code></td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>Missing this fails with a <code>400</code> before execution — see errors</td>
+              </tr>
+              <tr>
+                <td><code>target_instrument</code></td>
+                <td>string</td>
+                <td class="req">required</td>
+                <td>e.g. <code>BTCUSDT</code></td>
+              </tr>
+              <tr>
+                <td><code>target_position_units</code></td>
+                <td>decimal</td>
+                <td class="req">required</td>
+                <td>Target position size, not a delta</td>
+              </tr>
+              <tr>
+                <td><code>direction</code></td>
+                <td><code>"LONG"</code> | <code>"SHORT"</code> | <code>"FLAT"</code> | null</td>
+                <td class="opt">optional*</td>
+                <td>
+                  *<code>LONG</code>/<code>SHORT</code> only — <code>FLAT</code>/unset 400s (position-aware sizing isn't
+                  wired here)
+                </td>
+              </tr>
+              <tr>
+                <td><code>reference_price</code> / <code>max_price</code> / <code>min_price</code></td>
+                <td>decimal</td>
+                <td class="opt">optional</td>
+                <td>The first non-null of these three becomes the order price</td>
+              </tr>
+              <tr>
+                <td><code>urgency</code></td>
+                <td>enum</td>
+                <td class="opt">optional</td>
+                <td>Default <code>MEDIUM</code> — LOW | MEDIUM | HIGH | IMMEDIATE</td>
+              </tr>
+              <tr>
+                <td><code>venue_routing_mode</code></td>
+                <td>enum</td>
+                <td class="opt">optional</td>
+                <td>Default <code>SOR_AT_EXECUTION</code></td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="code-label">StrategyInstanceIdentity — the nested identity every instruction carries</div>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Field</th><th>Type</th><th>Required</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Field</th>
+                <th>Type</th>
+                <th>Required</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>family</code></td><td>StrategyFamily enum</td><td class="req">required</td></tr>
-              <tr><td><code>archetype_id</code></td><td>StrategyArchetype enum</td><td class="req">required</td></tr>
-              <tr><td><code>archetype_build_version</code></td><td>string</td><td class="req">required</td></tr>
-              <tr><td><code>strategy_instance_id</code></td><td>string</td><td class="req">required</td></tr>
-              <tr><td><code>config_hash</code></td><td>string</td><td class="req">required</td></tr>
-              <tr><td><code>config_version</code></td><td>integer</td><td class="req">required</td></tr>
-              <tr><td><code>client_id</code></td><td>string</td><td class="req">required</td></tr>
-              <tr><td><code>share_class</code></td><td>ShareClass enum</td><td class="req">required</td><td>USDT | USDC | FDUSD | USD | GBP | EUR | ETH | BTC | SOL</td></tr>
-              <tr><td><code>env</code></td><td>string</td><td class="opt">optional</td><td>Default <code>"prod"</code> — prod | paper | canary | dev</td></tr>
-              <tr><td><code>slot_version</code></td><td>integer</td><td class="opt">optional</td><td>Default <code>1</code></td></tr>
+              <tr>
+                <td><code>family</code></td>
+                <td>StrategyFamily enum</td>
+                <td class="req">required</td>
+              </tr>
+              <tr>
+                <td><code>archetype_id</code></td>
+                <td>StrategyArchetype enum</td>
+                <td class="req">required</td>
+              </tr>
+              <tr>
+                <td><code>archetype_build_version</code></td>
+                <td>string</td>
+                <td class="req">required</td>
+              </tr>
+              <tr>
+                <td><code>strategy_instance_id</code></td>
+                <td>string</td>
+                <td class="req">required</td>
+              </tr>
+              <tr>
+                <td><code>config_hash</code></td>
+                <td>string</td>
+                <td class="req">required</td>
+              </tr>
+              <tr>
+                <td><code>config_version</code></td>
+                <td>integer</td>
+                <td class="req">required</td>
+              </tr>
+              <tr>
+                <td><code>client_id</code></td>
+                <td>string</td>
+                <td class="req">required</td>
+              </tr>
+              <tr>
+                <td><code>share_class</code></td>
+                <td>ShareClass enum</td>
+                <td class="req">required</td>
+                <td>USDT | USDC | FDUSD | USD | GBP | EUR | ETH | BTC | SOL</td>
+              </tr>
+              <tr>
+                <td><code>env</code></td>
+                <td>string</td>
+                <td class="opt">optional</td>
+                <td>Default <code>"prod"</code> — prod | paper | canary | dev</td>
+              </tr>
+              <tr>
+                <td><code>slot_version</code></td>
+                <td>integer</td>
+                <td class="opt">optional</td>
+                <td>Default <code>1</code></td>
+              </tr>
             </tbody>
           </table>
         </div>
         <div class="code-label">Example request</div>
-        <div class="code"><b>POST</b> /external/instructions
-X-Service-Token: &lt;service-token&gt;
-Content-Type: application/json
-
-{
-  "instruction_id": "instr-8f3a2e10",
-  "emitted_at_utc": "2026-08-19T14:32:00Z",
-  "action": "TRADE",
-  "identity": {
-    "family": "ML_DIRECTIONAL",
-    "archetype_id": "ML_DIRECTIONAL_CONTINUOUS",
-    "archetype_build_version": "v3.2.1",
-    "strategy_instance_id": "cefi-btc-ml-directional-01",
-    "config_hash": "a1b2c3d4",
-    "config_version": 7,
-    "client_id": "client-001",
-    "share_class": "USDT",
-    "env": "prod"
-  },
-  "urgency": "MEDIUM",
-  "venue_routing_mode": "SOR_AT_EXECUTION",
-  "target_venue": "BINANCE-SPOT",
-  "target_instrument": "BTCUSDT",
-  "target_position_units": "0.05",
-  "direction": "LONG",
-  "max_price": "65500.00"
-}</div>
+        <div class="code">
+          <b>POST</b> /external/instructions X-Service-Token: &lt;service-token&gt; Content-Type: application/json {
+          "instruction_id": "instr-8f3a2e10", "emitted_at_utc": "2026-08-19T14:32:00Z", "action": "TRADE", "identity": {
+          "family": "ML_DIRECTIONAL", "archetype_id": "ML_DIRECTIONAL_CONTINUOUS", "archetype_build_version": "v3.2.1",
+          "strategy_instance_id": "cefi-btc-ml-directional-01", "config_hash": "a1b2c3d4", "config_version": 7,
+          "client_id": "client-001", "share_class": "USDT", "env": "prod" }, "urgency": "MEDIUM", "venue_routing_mode":
+          "SOR_AT_EXECUTION", "target_venue": "BINANCE-SPOT", "target_instrument": "BTCUSDT", "target_position_units":
+          "0.05", "direction": "LONG", "max_price": "65500.00" }
+        </div>
         <div class="code-label">Example response — 200</div>
-        <div class="code">{
-  "instruction_id": "instr-8f3a2e10",
-  "status": "FILLED",
-  "detail": { "…": "…" }
-}</div>
+        <div class="code">{ "instruction_id": "instr-8f3a2e10", "status": "FILLED", "detail": { "…": "…" } }</div>
         <p class="mono" style="color: var(--ink-3); font-size: 12px">
-          <b class="ev ev-check">? check</b> The response envelope (<code>instruction_id</code> /
-          <code>status</code> / <code>detail</code>) is verified —
-          <code>ExternalInstructionResponse</code>, <code>external_instruction_api.py:63-68</code>. The contents of
-          <code>detail</code> are whatever <code>ManualOperationHandler.execute()</code> returns, passed through
-          verbatim (<code>result</code> dict, line 170) — not typed by this router.
+          <b class="ev ev-check">? check</b> The response envelope (<code>instruction_id</code> / <code>status</code> /
+          <code>detail</code>) is verified — <code>ExternalInstructionResponse</code>,
+          <code>external_instruction_api.py:63-68</code>. The contents of <code>detail</code> are whatever
+          <code>ManualOperationHandler.execute()</code> returns, passed through verbatim (<code>result</code> dict, line
+          170) — not typed by this router.
         </p>
         <h3>Errors</h3>
         <div class="scroll-x">
           <table>
-            <thead><tr><th>Status</th><th>Condition</th><th>Body</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Status</th>
+                <th>Condition</th>
+                <th>Body</th>
+              </tr>
+            </thead>
             <tbody>
-              <tr><td><code>401</code> / <code>403</code></td><td>Auth — see <a href="#s1">§01</a></td><td>—</td></tr>
-              <tr><td><code>422</code></td><td>Body doesn't match any of the 11 <code>StrategyInstructionV2</code> variants (e.g. an <code>action</code> value like <code>WITHDRAW</code>/<code>REPAY</code> that exists on <code>InstructionActionV2</code> but has no envelope in the union at all)</td><td>Standard FastAPI/Pydantic validation error</td></tr>
-              <tr><td><code>501</code></td><td>Parses as a valid non-TRADE variant</td><td class="mono">"action='SWAP' is not yet wired for external submission — only TRADE is supported on this surface today."</td></tr>
-              <tr><td><code>400</code></td><td><code>target_venue</code> missing</td><td class="mono">"target_venue is required to route a TRADE instruction"</td></tr>
-              <tr><td><code>400</code></td><td><code>direction</code> is <code>FLAT</code> or unset</td><td class="mono">"TradeInstruction.direction='FLAT' cannot be resolved to a BUY/SELL side — FLAT/unset direction needs position-aware sizing, not wired on this surface."</td></tr>
-              <tr><td><code>503</code></td><td>Kill switch armed</td><td class="mono">"Kill switch is active — instruction submission is blocked"</td></tr>
-              <tr><td><code>503</code></td><td>Service draining</td><td class="mono">"Service is draining — instruction submission is paused"</td></tr>
-              <tr><td><code>500</code></td><td>Execution raised</td><td class="mono">"Execution failed: {exc}"</td></tr>
+              <tr>
+                <td><code>401</code> / <code>403</code></td>
+                <td>Auth — see <a href="#s1">§01</a></td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td><code>422</code></td>
+                <td>
+                  Body doesn't match any of the 11 <code>StrategyInstructionV2</code> variants (e.g. an
+                  <code>action</code> value like <code>WITHDRAW</code>/<code>REPAY</code> that exists on
+                  <code>InstructionActionV2</code> but has no envelope in the union at all)
+                </td>
+                <td>Standard FastAPI/Pydantic validation error</td>
+              </tr>
+              <tr>
+                <td><code>501</code></td>
+                <td>Parses as a valid non-TRADE variant</td>
+                <td class="mono">
+                  "action='SWAP' is not yet wired for external submission — only TRADE is supported on this surface
+                  today."
+                </td>
+              </tr>
+              <tr>
+                <td><code>400</code></td>
+                <td><code>target_venue</code> missing</td>
+                <td class="mono">"target_venue is required to route a TRADE instruction"</td>
+              </tr>
+              <tr>
+                <td><code>400</code></td>
+                <td><code>direction</code> is <code>FLAT</code> or unset</td>
+                <td class="mono">
+                  "TradeInstruction.direction='FLAT' cannot be resolved to a BUY/SELL side — FLAT/unset direction needs
+                  position-aware sizing, not wired on this surface."
+                </td>
+              </tr>
+              <tr>
+                <td><code>503</code></td>
+                <td>Kill switch armed</td>
+                <td class="mono">"Kill switch is active — instruction submission is blocked"</td>
+              </tr>
+              <tr>
+                <td><code>503</code></td>
+                <td>Service draining</td>
+                <td class="mono">"Service is draining — instruction submission is paused"</td>
+              </tr>
+              <tr>
+                <td><code>500</code></td>
+                <td>Execution raised</td>
+                <td class="mono">"Execution failed: {exc}"</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1510,8 +2082,8 @@ Content-Type: application/json
     <p>
       Its real endpoints are admin-token-gated internal tooling — registry reads, a restriction-profile router, an
       operational-mode flip — built for our own operators, not for an external caller. There is no path from this
-      service to an outside caller comparable to the three routers documented above. If and when one is built, it
-      will appear on this page with real parameters and real examples, not before.
+      service to an outside caller comparable to the three routers documented above. If and when one is built, it will
+      appear on this page with real parameters and real examples, not before.
     </p>
   </section>
 
@@ -1523,16 +2095,59 @@ Content-Type: application/json
     <p class="lede">Every status code used anywhere on this page, consolidated.</p>
     <div class="scroll-x">
       <table>
-        <thead><tr><th>Status</th><th>Meaning</th><th>Seen on</th></tr></thead>
+        <thead>
+          <tr>
+            <th>Status</th>
+            <th>Meaning</th>
+            <th>Seen on</th>
+          </tr>
+        </thead>
         <tbody>
-          <tr><td><code>400</code></td><td>Malformed parameter, or a business-rule violation (bad asset_group, mismatched <code>file</code>, missing <code>target_venue</code>, unresolvable <code>direction</code>)</td><td>Instruments GET/bulk, instructions POST, market-data batch delivery</td></tr>
-          <tr><td><code>401</code></td><td>Not authenticated — no valid token/key on the request</td><td>All six endpoints</td></tr>
-          <tr><td><code>403</code></td><td><code>X-Service-Token</code> present but wrong</td><td>All six endpoints</td></tr>
-          <tr><td><code>404</code></td><td>Nothing matches — no shard, no object, no coverage measurement in the lookback window</td><td>Instruments bulk, market-data availability &amp; batch delivery</td></tr>
-          <tr><td><code>422</code></td><td>Request validation failed — bad enum value, or a body that matches none of the 11 instruction variants</td><td>Market-data (asset_group / topology / after), instructions POST</td></tr>
-          <tr><td><code>500</code></td><td>Unhandled server-side error</td><td>All six endpoints</td></tr>
-          <tr><td><code>501</code></td><td>Recognised but not wired for external submission — 10 of the 11 instruction types</td><td>Instructions POST</td></tr>
-          <tr><td><code>503</code></td><td>Unavailable — kill switch armed, service draining, config missing, or bucket resolution failed</td><td>Instructions POST, market-data availability &amp; batch delivery</td></tr>
+          <tr>
+            <td><code>400</code></td>
+            <td>
+              Malformed parameter, or a business-rule violation (bad asset_group, mismatched <code>file</code>, missing
+              <code>target_venue</code>, unresolvable <code>direction</code>)
+            </td>
+            <td>Instruments GET/bulk, instructions POST, market-data batch delivery</td>
+          </tr>
+          <tr>
+            <td><code>401</code></td>
+            <td>Not authenticated — no valid token/key on the request</td>
+            <td>All six endpoints</td>
+          </tr>
+          <tr>
+            <td><code>403</code></td>
+            <td><code>X-Service-Token</code> present but wrong</td>
+            <td>All six endpoints</td>
+          </tr>
+          <tr>
+            <td><code>404</code></td>
+            <td>Nothing matches — no shard, no object, no coverage measurement in the lookback window</td>
+            <td>Instruments bulk, market-data availability &amp; batch delivery</td>
+          </tr>
+          <tr>
+            <td><code>422</code></td>
+            <td>
+              Request validation failed — bad enum value, or a body that matches none of the 11 instruction variants
+            </td>
+            <td>Market-data (asset_group / topology / after), instructions POST</td>
+          </tr>
+          <tr>
+            <td><code>500</code></td>
+            <td>Unhandled server-side error</td>
+            <td>All six endpoints</td>
+          </tr>
+          <tr>
+            <td><code>501</code></td>
+            <td>Recognised but not wired for external submission — 10 of the 11 instruction types</td>
+            <td>Instructions POST</td>
+          </tr>
+          <tr>
+            <td><code>503</code></td>
+            <td>Unavailable — kill switch armed, service draining, config missing, or bucket resolution failed</td>
+            <td>Instructions POST, market-data availability &amp; batch delivery</td>
+          </tr>
         </tbody>
       </table>
     </div>
@@ -1540,8 +2155,8 @@ Content-Type: application/json
 
   <footer>
     <p>
-      <span class="who">ODUM Research</span> — platform API reference. Built directly from the router and schema
-      files cited inline, checked file-by-file rather than generated from a spec; not a live capture. See
+      <span class="who">ODUM Research</span> — platform API reference. Built directly from the router and schema files
+      cited inline, checked file-by-file rather than generated from a spec; not a live capture. See
       <span class="mono">platform-external-api-walkthrough.html</span> in this directory for the narrative version of
       this same surface.
     </p>
