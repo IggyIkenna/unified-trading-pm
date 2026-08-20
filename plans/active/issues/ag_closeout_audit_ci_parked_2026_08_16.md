@@ -212,7 +212,7 @@ chat-ephemeral, home" rule regardless.
       Done when: operator rules, or the doc is explicitly marked won't-fix.
 - [x] ✅ [DOCS] P2. **DONE 2026-08-18 (na-eligibility-audit, ci tranche).** Extracted into
       `plans/archive/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md` (content carried
-      forward verbatim, not resolved — the new doc still needs a live re-check). Source doc
+      forward verbatim; the issue was later archived after a live re-check). Source doc
       (`workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`) checkbox flipped citing the
       extraction; it now has 0 open todos. Was: **Pre-scope `workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md`'s
       surviving P2 item** (investigate why a promote-PR wasn't superseded after greeks-service@f5a63a8 landed —
