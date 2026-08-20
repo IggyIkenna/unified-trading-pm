@@ -309,9 +309,11 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   table — Project source). Sent a real 42,533-word prompt to build genuine context; confirmed via a real `/context`
   reading: **72.3k/1m tokens (7%), Messages 69k**. Ran `/pre-compact`: genuinely executed as a real skill — full
   8-step ritual output with a real session audit ("Not a git repository", scratchpad absent, verdict **"Safe to
-  compact: YES"**, Step 8b "Does not trigger") — not silently swallowed. Ran `/compact`: exit 0; the interactive
-  "Compacted" banner is suppressed in `-p` mode (only the benign `[claude-code:unrecognized_model]` capability-query
-  warning prints), but the measured context drop proves it ran. Follow-up `/context`: **6.6k/1m tokens (1%),
+  compact: YES"**, Step 8b "Does not trigger") — not silently swallowed. Ran `/compact`: exit 0 — the session
+  transcript records the exact "Compacted (ctrl+o to see full summary)" banner as a `<local-command-stdout>` entry
+  plus a "This session is being continued from a previous conversation that ran out of context. The summary below
+  covers..." continuation message; the benign `[claude-code:unrecognized_model]` capability-query warning also prints.
+  Follow-up `/context`: **6.6k/1m tokens (1%),
   Messages 3.2k** — Messages dropped 69k→3.2k (~95%), total 72.3k→6.6k. **Session continuity confirmed**: the 72k
   baseline persisted across `--continue` calls (a fresh session would read ~3.4k), and a post-compact `--continue`
   turn returned `session-ok`, proving the compacted session is healthy/resumable. The session-title/`sdk`/`compact`
