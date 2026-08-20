@@ -94,7 +94,7 @@ source: >-
 
 ## From `plan_reconciler_findings_cross_cutting_2026_08_18.md`
 
-- [ ] [DOC] P2. **`instruments_foundation_completeness_2026_06_24.md`** — repoint 2 dangling refs
+- [x] ✅ [DOC] P2. **`instruments_foundation_completeness_2026_06_24.md`** — repoint 2 dangling refs
       (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` and
       `sports_fixture_completeness_oracle_2026_06_24.md`, both moved to `plans/archive/2026_06/`, cited at 3
       separate locations in this doc) + refresh the stale Phase-0 rolling-status table (claims 11 open, actual 6 —
@@ -102,6 +102,7 @@ source: >-
       the filing plan_reconciler run). Multi-location edit in a large umbrella doc. Done when: both refs resolve to
       real paths and the rolling-status table reads 6. Source: `plan_reconciler_findings_cross_cutting_2026_08_18.md`
       "Plans not reached" item 1.
+      **DONE 2026-08-20** — repointed all target-doc occurrences to `/plans/archive/2026_06/` and verified the Phase-0 child has 6 open todos.
 - [x] ✅ [DOC] P3. ~~**`ag_closeout_audit_cross_cutting_parked_2026_08_08.md`** — its own 2026-08-16 "5 archived/6
       active" summary doesn't match its own itemized list immediately above it~~ — **SUPERSEDED 2026-08-19
       (ag-closeout-audit cross-cutting reconciliation pass)**: rather than re-counting a now-stale snapshot, this

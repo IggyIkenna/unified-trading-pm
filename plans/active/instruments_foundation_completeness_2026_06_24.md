@@ -43,8 +43,8 @@ related:
     instruments_foundation_phase0_cross_cutting_2026_07_24,
     instruments_cefi_g1_g5_gate_execution_2026_07_24,
     instruments_tradfi_g1_g5_gate_execution_2026_07_24,
-    plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md,
-    plans/active/sports_fixture_completeness_oracle_2026_06_24.md,
+    /plans/archive/2026_06/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md,
+    /plans/archive/2026_06/sports_fixture_completeness_oracle_2026_06_24.md,
     plans/archive/2026_07/instruments_mtds_subset_consistency_remediation_2026_06_17.md,
     plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md,
   ]
@@ -134,7 +134,7 @@ phantom-reconcile pipeline_mode fix (IS@c01bb1c), #2 understat per-league 404 2-
 wrong-source odds wipe (1.4M rows + 231,532 objects; MTDS `trades` now 100%/0-failed), #4 `DP_HIGH_ATTEMPTED_FAILED`
 alert (deployment-service@cb330f7). **Sports does NOT start its G1→G5 until cefi is DONE** — these are the audit + the
 pre-staged manifest-correctness fixes, tracked in `sports_golden_window_attempted_failed_remediation_2026_06_24.md` +
-`sports_fixture_completeness_oracle_2026_06_24.md`. **[⚠️ TENSION flagged 2026-07-14, doc-reconciliation vr2#116: the
+`/plans/archive/2026_06/sports_fixture_completeness_oracle_2026_06_24.md`. **[⚠️ TENSION flagged 2026-07-14, doc-reconciliation vr2#116: the
 2026-06-27 RE-HOMED banner immediately below hands ALL sports G1→G5 dispatch to a `status: active` coordinator plan that
 carries no reference to this cefi-completion gate, and cefi is still NOT DONE per this same doc (GATE G4 OPEN pending
 D2, GATE G5 only SUB-SIGNED) — yet coordinator-child G1 work (league-noise wipe) already executed 2026-06-28. Unclear
@@ -212,7 +212,7 @@ child's Phase 1 section for the full gate-by-gate detail.
       of the 2026-06-24 overlap-flat stall); per-date TVL enumeration must be COMPLETE (316-vs-1,425 under-enumeration =
       G1/G2 defect); every catalogue protocol×chain has a source wired (uncovered: TRADER_JOE_V2/UNISWAP_V4/ORCA/KAMINO/
       VELODROME_V2/RAYDIUM = G1 gap); dual-form id (canonical `0x` key + glued `glued_pair_id`). **Execution detail +
-      live work**: `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`.
+      live work**: `/plans/archive/2026_06/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md`.
   - [ ] [DESIGN] P0. **DeFi completeness ORACLE — "do we have ALL instruments?" = on-chain factory cross-check (§2.1
         Tier-B; operator 2026-06-24 "how do we KNOW").** Self-enumeration is circular (§7.4) — proof of completeness is
         EXTERNAL on-chain truth, which DeFi uniquely has: per (protocol, chain), our **enumerated pool count == the
@@ -283,7 +283,7 @@ code" detail + the tradfi historical progress log; `depends_on` the Phase-0 chil
   - [ ] [DESIGN] P1. **`depth_coverage` Tier-B = the FIXTURE-COMPLETENESS ORACLE** (n_teams→expected_fixtures, per-team
         game count, promotion/relegation, season window + expected gaps, **reschedule = final kickoff time**). The
         sports realisation of §2.1's external-truth denominator. SSOT plan:
-        `plans/active/sports_fixture_completeness_oracle_2026_06_24.md`.
+        `/plans/archive/2026_06/sports_fixture_completeness_oracle_2026_06_24.md`.
   - [ ] [SCRIPT] P1. **Reuse the Phase-0 cross-cutting machinery** — phantom-reconcile-vs-expected (the candidate-path
         #5 gap heals the 3,164 golden-window phantom false-failures, incl. 3,003 TEAMS, with ZERO fetch via
         `--unphantom-only` once #5 lands); the `DP_HIGH_ATTEMPTED_FAILED` alert (deployment-service@cb330f7,
@@ -325,10 +325,10 @@ This plan is the gated umbrella standard + rolling status index. The per-AG / cr
 - **Phase 0 (cross-cutting)** — `instruments_foundation_phase0_cross_cutting_2026_07_24.md` (NEW 2026-07-24 split).
 - **cefi** — `instruments_cefi_g1_g5_gate_execution_2026_07_24.md` (NEW 2026-07-24 split; `depends_on` Phase-0).
 - **tradfi** — `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md` (NEW 2026-07-24 split; `depends_on` Phase-0).
-- **defi** — `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` (the G4 catalogue-as-filter
+- **defi** — `/plans/archive/2026_06/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` (the G4 catalogue-as-filter
   exemplar + the live skip-cap/cursor + per-pool capture work). Already delegated pre-split — unchanged.
 - **sports** — `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md` (was: pointing to
-  `sports_fixture_completeness_oracle_2026_06_24.md` + `sports_golden_window_attempted_failed_remediation_2026_06_24.md`
+  `/plans/archive/2026_06/sports_fixture_completeness_oracle_2026_06_24.md` + `sports_golden_window_attempted_failed_remediation_2026_06_24.md`
   — corrected 2026-07-14, doc-reconciliation vr2#117: both moved (the former to `archive/2026_06/`, the latter to
   `active/issues/`) when the 2026-06-27 RE-HOMED banner above handed ALL sports G1→G5 dispatch to the coordinator plan;
   this section had not been updated to match). Already delegated pre-split — unchanged.
@@ -344,10 +344,10 @@ cefi/tradfi/Phase-0 children; see each child's own "Historical progress log" sec
 
 | AG / track              | Gate status (as of last verified pass)                                                                                                                                                                                                                                                                                        | Full detail lives in                                                        |
 | ----------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Phase 0 (cross-cutting) | GATE 0 NOT RECORDED SIGNED OFF — 11 items still `- [ ]` (observability, Honest-Coverage v2, canonical-form single-SoT migration, etc.)                                                                                                                                                                                        | `instruments_foundation_phase0_cross_cutting_2026_07_24.md`                 |
+| Phase 0 (cross-cutting) | GATE 0 NOT RECORDED SIGNED OFF — 6 items still `- [ ]` (observability, Honest-Coverage v2, canonical-form single-SoT migration, etc.)                                                                                                                                                                                        | `instruments_foundation_phase0_cross_cutting_2026_07_24.md`                 |
 | cefi                    | G1 NOT RECORDED SIGNED OFF (G1.1/G1.3/G1.4 prod-verified 2026-06-27; G1.2 partial) · G2 SIGNED OFF 2026-07-06 · G3/G3b SIGNED OFF 2026-07-06 · G4 OPEN pending D2 (contested 2026-07-13) · G5 SUB-SIGNED 2026-07-06, full sign-off held for MVP-backfill steady state                                                         | `instruments_cefi_g1_g5_gate_execution_2026_07_24.md`                       |
 | tradfi                  | G1.a-e/G1.h SHIPPED 2026-06-25/27 (billable-venue guard, calendars, XCBF/DBEQ class fixes, `available_to` venue-truth) · G1.f.2 (VIX-15m retirement) COMPLETE 2026-06-26 · G1 retirement (ICE/OPRA/CBOE purge) OPERATOR-CONFIRM pending · G4 catalogue-as-filter bug FIXED 2026-06-25 · KRX/ICE mis-sourcing FIXED 2026-06-27 | `instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`                     |
-| defi                    | G4 catalogue-as-filter is the exemplar; live capture/skip-cap work in progress                                                                                                                                                                                                                                                | `plans/active/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` |
+| defi                    | G4 catalogue-as-filter is the exemplar; live capture/skip-cap work in progress                                                                                                                                                                                                                                                | `/plans/archive/2026_06/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` |
 | sports                  | G1/G2 RE-HOMED to the golden-window-first coordinator; sports G1→G5 gated behind cefi DONE                                                                                                                                                                                                                                    | `plans/active/sports_pipeline_to_100pct_golden_window_first_2026_06_27.md`  |
 
 **All 5 catalogues were regenerated + promoted 2026-06-26** (cefi 345,920 · defi 7,416 · tradfi 814,012 · sports 1,608 ·
@@ -364,7 +364,7 @@ autonomous-run narrative and the Phase-0 child's "Autonomous run results" sectio
 - **context-scout 2026-08-03**: re-scouted; refreshed context_scope (6 entries) — added the DeFi completeness-oracle
   codex doc + its `honest_coverage.py` source target (the doc's only genuinely-open inline work; the tradfi child kept).
   Found stale dead-end pointers in this doc's own "Related execution plans"/Phase-2 prose
-  (`defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` and `sports_fixture_completeness_oracle_2026_06_24.md`
+  (`/plans/archive/2026_06/defi_instrument_catalogue_and_capture_pipeline_2026_06_23.md` and `/plans/archive/2026_06/sports_fixture_completeness_oracle_2026_06_24.md`
   are both archived, not left in context_scope) — flagged for `/plan-reconcile`, not rewritten here.
 - **na-eligibility-audit 2026-08-06**: KEEP-NA, valid — reaffirms 2026-08-02 (unchanged): gated umbrella requiring
   per-AG operator G-gate sign-off; genuine mix of redirect/partially-AO-covered/under-specified items, none clear the
