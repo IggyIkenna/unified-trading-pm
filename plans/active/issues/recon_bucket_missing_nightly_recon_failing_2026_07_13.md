@@ -199,6 +199,7 @@ Full evidence + exact commands: `plans/active/bucket_estate_consolidation_to_sub
   to the operator.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).
 
 - **data_pipeline_failure escalation 2026-08-17 (`agt-0e4c67`, DP-WATCHER-006/DP_CLOUD_RUN_JOB_FAILED)**: dispatched on a
   fresh `uts-prod-blrs-daily-determinism` Cloud Run Job failure (1 failed task, ~154m old at dispatch). Live diagnosis

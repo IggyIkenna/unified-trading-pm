@@ -49,6 +49,7 @@ depends_on: []
 context_scope:
   [
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/instruments_foundation_completeness_2026_06_24.md,
     market-tick-data-service/market_tick_data_service/adapters/umi_tick_provider.py,
     market-tick-data-service/market_tick_data_service/scripts/rebuild_tradfi_manifest.py,
@@ -206,6 +207,7 @@ column-projected row-group filter + `gcs_describe_object` cross-check, run via
 `scripts/dev/run-bounded-analysis.sh --mem-cap 4G` per the memory-bounding HARD RULE.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries).
 
 ### 2026-08-17 (blocked-question backlog re-verification, answering `BLK-op-retirement_completeness_pollutant_reverify_ice_still_live-adb53e8ea708`) — status-check only, no purge executed
 

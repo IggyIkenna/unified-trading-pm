@@ -706,3 +706,4 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   stays `status: open`.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:90a1ddb246972541]: KEEP-NA, valid — live-incident investigation with 4 self-corrected premature-closure claims and shipped fixes across 3+ layers; converges with the 2026-08-17 na-eligibility-audit verdict. Remaining 10 open items are genuine unresolved root-cause work (death #2 at 14:30:28 still unexplained) or [OPERATOR]-tagged live-infra decisions; the 32-item condensed Todo section's count (22 closed + 10 open) verified consistent.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

@@ -51,8 +51,10 @@ context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,
     /plans/active/issues/unified_trading_pm_stash_pile_accumulation_2026_07_26.md,
+    /plans/active/issues/ci_reconcile_overnight_batch_2026_08_11.md,
     market-tick-data-service/market_tick_data_service/engine/orchestrator/partitioned_writer.py,
     market-tick-data-service/market_tick_data_service/scripts/migrate_tradfi_canonical_2026_07.py,
+    unified-trading-pm/scripts/dev/slot-git-status-report.sh,
   ]
 ---
 
@@ -111,3 +113,4 @@ Recover with `git stash apply stash@{0}` if any of it is worth salvaging.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:7705874b65fa6859]: KEEP-NA, valid -- Both remaining items are genuinely non-bounded. The first is explicitly [OPERATOR]-tagged: the doc's own text says the parked stash is 'another session's work, so an agent should not drop it unilaterally' -- an explicit human-call framing. The second asks whether a fleet-wide collision-detection mechanism is worth building at all -- a workspace-tooling policy judgment call (build vs. explicitly reject with reasoning), not a determinable-by-worker-alone outcome.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

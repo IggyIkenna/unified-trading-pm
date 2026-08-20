@@ -86,6 +86,8 @@ assigned_role: data_engineering
 drift_direction: advance-code
 context_scope:
   [
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
     /plans/active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md,
     /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/betfair_adapter.py,
@@ -827,3 +829,4 @@ sports-odds/sports-registry content with zero prediction-market-specific work â€
   already been corrected to its archived location by a peer edit found on re-read immediately before this edit
   (was `plans/active/issues/...` when first read this session) -- not this pass's fix, just confirming the swap
   target was current.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

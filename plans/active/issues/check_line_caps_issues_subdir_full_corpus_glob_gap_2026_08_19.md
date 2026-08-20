@@ -123,3 +123,5 @@ cover it (the prek hook enforces it on stage).
   subdirectory gap (not specific to this doc or this epic) via direct testing. Not fixed in this pass — the script
   fix + rebaseline is genuinely new infra-tranche work, correctly scoped as its own tracked todo rather than an
   improvised inline change during a sports-scoped audit.
+- **context-scout 2026-08-20**: refreshed context_scope (2 entries) — the script (fix target) and the concrete
+  over-cap instance doc still cover the finding.

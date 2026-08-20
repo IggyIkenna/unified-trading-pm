@@ -75,3 +75,4 @@ context_scope:
   phase).
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) -- added the 3 source issue docs this finalize's
   own first todo names as reconciliation targets.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

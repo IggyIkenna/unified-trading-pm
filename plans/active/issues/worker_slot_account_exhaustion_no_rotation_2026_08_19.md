@@ -44,6 +44,7 @@ context_scope:
   [
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/state_store/account_usage.py,
+    agent-orchestrator/server/model_tier.py,
   ]
 supersedes:
 superseded_by:
@@ -430,3 +431,4 @@ uncommitted pending QG), see that todo for status. Todo 7 remains externally blo
   operator says "there's already a plan for X" and a keyword grep comes up empty or ambiguous,
   ask for the slug directly rather than burning more search cycles guessing — a same-window,
   same-provider-effort sibling plan (billing-reconciliation) was an easy false-positive lead here.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

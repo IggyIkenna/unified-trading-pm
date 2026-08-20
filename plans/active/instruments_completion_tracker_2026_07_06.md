@@ -58,7 +58,7 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 1
 assigned_role: data_engineering
 drift_direction: advance-code
-context_scope: [/codex/02-data/honest-coverage-model.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/active/data_completion_to_100_all_ag_2026_06_21.md, /plans/active/instruments_foundation_completeness_2026_06_24.md, /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md]
+context_scope: [/codex/02-data/honest-coverage-model.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /plans/active/data_completion_to_100_all_ag_2026_06_21.md, /plans/active/instruments_foundation_completeness_2026_06_24.md, /plans/archive/2026_07/honest_coverage_v2_instrument_denominator_2026_06_28.md, /plans/archive/2026_08/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md]
 depends_on:
 locked_by:
 locked_since:
@@ -751,3 +751,4 @@ content post-line-cap-split.
   numbers (prediction 0 candidates/clear; defi 837/1080=77.5% twin-coverage, gate does not clear; sports still fails,
   categorical Part-4 blocker unchanged). Archiving the parent + finalize plans next.
 - **na-eligibility-audit 2026-08-17** [body-hash:28ed5976e1185e75]: KEEP-NA, valid -- HUMAN TRACKER/coordinator doc, points at source plans rather than restating them. Of 5 remaining items: 1 real data-reconciliation investigation (ASTER trades cross-registry), 2 are accurate NA-to-NA pointer-gates on other still-open NA docs (tradfi Layer-1 cert -> tradfi_consolidated_closeout Phase C; prediction token-universe -> prediction_live_clob_depth_capture), 1 mixed operator-gated bundle (CLOB-on-chain classification already operator-confirmed 2026-07-07 but uncoded; rate-limit-probe VM status unclear pending a dangling citation to a now-archived doc, infra_capture_and_devops_leftovers_2026_07_06.md), 1 needs a UI design pass + playwright gate. Cross-cutting tranche audit.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

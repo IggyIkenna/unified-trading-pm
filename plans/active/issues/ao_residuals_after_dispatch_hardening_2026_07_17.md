@@ -49,7 +49,15 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on:
-context_scope: [/plans/epics/escalation_and_disaster_recovery_master.md, /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md, /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md, /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md, agent-orchestrator/server/dispatch.py]
+context_scope:
+  [
+    /plans/epics/escalation_and_disaster_recovery_master.md,
+    /plans/archive/2026_07/escalation_pipeline_mvp_2026_06_25.md,
+    /plans/archive/issues/backlog_task_done_status_diverges_from_plan_checkbox_2026_07_16.md,
+    /plans/archive/issues/regen_positional_task_ids_not_content_stable_2026_07_17.md,
+    agent-orchestrator/server/dispatch.py,
+    agent-orchestrator/docs/BACKLOG_RELATIONS_UX_BRIEF.md,
+  ]
 source:
   - "ao_dispatch_hardening_2026_07_16 Deferred tables (2026-07-16 + 2026-07-17), at its archival. Only the items with NO
     other home are carried here; the rest cite their existing owner and are deliberately not duplicated."
@@ -285,3 +293,4 @@ source:
   ready-to-dispatch.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:2c7f98d3f07fe05b]: KEEP-NA, valid — item 1 is live-tracked verbatim in the active epic `escalation_and_disaster_recovery_master`'s own todo list (checkbox stays open only as a pointer, per a 2026-08-07 citation-fix); item 2 is explicitly scoped as a future-plan recommendation, not this doc's own execution; item 3 is void pending a retest-gate condition.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

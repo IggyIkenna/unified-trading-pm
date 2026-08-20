@@ -51,8 +51,10 @@ depends_on: []
 context_scope:
   [
     /plans/active/issues/deployment_api_prod_disable_auth_true_2026_08_06.md,
-    /codex/05-infrastructure/bucket-isolation-model.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /codex/04-architecture/autonomous-recovery-matrix.md,
     /codex/06-coding-standards/config-reloader-pattern.md,
+    deployment-api/deployment_api/firebase_auth.py,
   ]
 source: >-
   Operator ruling 2026-08-10 (interactive session, slot 1): escalate the 4 open fix-steps in
@@ -780,3 +782,4 @@ are unaffected.
   without needing ubuntu's interactive gcloud config, or move the notification call to a small path that
   doesn't shell out to `gcloud` at all (e.g. a REST call with a locally-stored key), and separately check
   whether `deploy:trigger` is the intended scope for a fire-and-forget monitoring notification.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

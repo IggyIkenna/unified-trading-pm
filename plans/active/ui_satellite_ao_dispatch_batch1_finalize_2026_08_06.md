@@ -371,3 +371,4 @@ every category, not just conflicts) to match that.
   standalone-plan clause is moot (all 6 cleared items already shipped directly in the source doc), and the
   `ui_consolidated_closeout` Track-3/4 stale-prose trim clause is now done (fixed this same session, see that
   doc's own Progress Log). No checkbox flipped — todo 4 itself (steps 2-6 of the archival ritual) remains open.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

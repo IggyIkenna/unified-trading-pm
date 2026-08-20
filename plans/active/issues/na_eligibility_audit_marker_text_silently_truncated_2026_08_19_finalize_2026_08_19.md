@@ -56,3 +56,4 @@ source: >-
 
 - **2026-08-19**: drafted alongside the na-eligibility-audit whole-doc RECLASSIFY flip (dispatch agt-dc3dbe, slot
   30, cross-cutting tranche).
+- **context-scout 2026-08-20**: refreshed context_scope (2 entries)

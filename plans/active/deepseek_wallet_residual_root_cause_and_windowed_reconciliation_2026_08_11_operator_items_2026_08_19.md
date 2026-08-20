@@ -41,6 +41,7 @@ context_scope:
   [
     /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
     /plans/active/task_template.md,
+    /plans/active/ao_open_work_consolidated_tracker_2026_08_14.md,
   ]
 source: >-
   Forked 2026-08-19 out of deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md's own last
@@ -80,3 +81,4 @@ source: >-
   since gate_on_depends checks INGESTED backlog task completion (this item was never ingested — excluded via the
   `[OPERATOR]` marker per task_template.md §3's ingestion-gate family) — this fork is a corpus-hygiene/archival-
   discoverability fix, not a dispatch-mechanics change.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

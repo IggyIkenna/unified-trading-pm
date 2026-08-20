@@ -33,7 +33,7 @@ context_scope:
     /agents/review.md,
     agent-orchestrator/server/routes/backlog.py,
     agent-orchestrator/server/routes/slots_worker.py,
-    unified-trading-pm/scripts/dev/safe-doc-push.sh,
+    scripts/dev/safe-doc-push.sh,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
 supersedes:
@@ -204,3 +204,4 @@ local sandbox first:
   round9 (same day as authoring) already reached this verdict.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:6d60dfbea309fdbf]: KEEP-NA, valid — explicit dated operator direction ('local/human track, not AO-dispatched') on new write-capability behavior for the review role; sole remaining item is a deliberate burn-in observation gate.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

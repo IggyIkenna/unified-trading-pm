@@ -11,7 +11,7 @@ summary: >-
   items remain there after this batch's own items close; **fixed 2026-08-19, plan_reconciler**: the original "16...
   items 3/4" phrasing didn't correspond to anything in this 2-todo batch, corrected to avoid citing a stale/miscopied
   number — re-count fresh at execution time per this doc's own todo 1).
-status: active
+status: complete
 nature: process
 asset_group: [prediction]
 stage: [meta]
@@ -24,7 +24,7 @@ related:
     /plans/active/data_completion_prediction_2026_07_15.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -62,12 +62,12 @@ source: >-
 > `gate_on_depends: true`) — will not dispatch until both todos in that batch are `done`. The batch itself stays
 > `assigned_vm: planning` until then.
 
-- [ ] [REVIEW] P1. Re-verify `data_completion_prediction_2026_07_15.md` items 1-4's checkbox state against what batch
+- [x] ✅ [REVIEW] P1. Re-verify `data_completion_prediction_2026_07_15.md` items 1-4's checkbox state against what batch
       13 actually found: confirm items 1/2 are correctly closed (citing batch 13 item 1's PASS result) or, if batch 13
       item 1 FAILed, confirm items 1/2 are correctly still open with a note pointing at the filed FAIL-finding issue
       doc. Confirm item 4's original checkbox reflects whether batch 13 item 2's residual diagnosis found any
       object-backed cells needing a genuine follow-up fix (a filed issue doc, not a fix performed here).
-- [ ] [DOC] P1. If both source-doc reconciliations above land clean and no new follow-up is pending, run the standard
+- [x] ✅ [DOC] P1. If both source-doc reconciliations above land clean and no new follow-up is pending, run the standard
       6-step archival ritual on `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` itself (the batch, not the
       source doc — the source doc stays active with its remaining genuinely-gated items).
 
@@ -75,3 +75,17 @@ source: >-
 
 - **2026-08-19 (drafted)**: Finalize drafted alongside its batch by the 2026-08-19 `/na-eligibility-audit`
   prediction-tranche run (dispatch agt-0e920e).
+- **2026-08-20 (reconciliation + archival — slot-11)**: Item 1 — re-verified `data_completion_prediction_2026_07_15.md`
+  items 1-4 against batch 13's actual findings. Items 1/2/3 were already correctly `[x]` from batch13 item 1's PASS
+  (2026-08-19). Item 4 (E6 CF-7 relabel) was still open pending its residual's diagnosis; batch13 item 2 (slot-31,
+  2026-08-19) found NO-ACTION — 0 object-backed cells, all residuals phantom — so item 4 is now correctly flipped `[x]`
+  citing that result. No new follow-up pending (batch13 item 2's own instruction gated a new issue doc on finding
+  object-backed cells; none found). Item 2 — both reconciliations land clean, so the batch doc
+  `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` is archived (6-step ritual, this same commit) per the
+  single-repo mode-1 sanctioned same-commit flip+archival shape
+  (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`). This finalize doc itself now has both its
+  own todos done and no lock — archived alongside in the same turn per that doc's §1 archive-immediately rule.
+
+> **ARCHIVED 2026-08-20** — this finalize plan completed its gated closeout of
+> `prediction_satellite_ao_dispatch_batch13_2026_08_19.md`. Both todos verified done; source batch plan resides in
+> `plans/archive/2026_08/`. superseded_by: N/A (finalize plan, not superseded).

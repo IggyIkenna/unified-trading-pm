@@ -235,3 +235,4 @@ are bounded, already-decided, and conflict-clear:
     `defi_satellite_ao_dispatch_batch9` vm-zombie-daemon answer ×5, bare `A` ×16), so the population is ~145 distinct
     decisions, not 167. Audit conclusion: the delivery gap existed fleet-wide (not just on the reconciler's own runs),
     but it only ever lost the NOTIFICATION, never the answer — the 2026-08-19 fix closes it going forward.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

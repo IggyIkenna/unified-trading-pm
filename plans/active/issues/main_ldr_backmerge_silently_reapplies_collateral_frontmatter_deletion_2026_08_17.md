@@ -52,6 +52,8 @@ context_scope:
     /agents/conflict_resolver.md,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/issues/manifest_hygiene_red_all_2026_08_17.md,
+    scripts/quality-gates-base/tests/test-backmerge-silent-revert-loss-guard.sh,
+    scripts/docs/docspec.py,
   ]
 source: >-
   Found 2026-08-17 by slot 19 while executing escalation `agt-826e8f` (conflict_resolver, PR #3369). Not a hypothesis —
@@ -132,3 +134,4 @@ tree OID when the merge is clean, so exit code alone proves nothing about conten
   `ada633620e` (this silent deletion reverted). PR #3369 merged as `073acbb1c0`. No guard exists yet — the todos above
   are the actual fix.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

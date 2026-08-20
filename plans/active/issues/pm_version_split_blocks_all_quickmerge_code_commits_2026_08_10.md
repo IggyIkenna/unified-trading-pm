@@ -37,6 +37,7 @@ context_scope:
     scripts/repo-management/run-version-alignment.sh,
     workspace-manifest.json,
     /codex/08-workflows/ci-cd-flow.md,
+    /codex/06-coding-standards/semver.md,
   ]
 ---
 
@@ -111,3 +112,5 @@ version, and the real defect is upstream in minting rather than here.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:5ca4525102390afb]: RECLASSIFY_WHOLE —
   `assigned_vm: NA` → `planning`. All 3 open todos are bounded engineering tasks with stated done-when bars; no
   operator gate, banner, or `depends_on` found. Root cause of the underlying incident already fixed.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

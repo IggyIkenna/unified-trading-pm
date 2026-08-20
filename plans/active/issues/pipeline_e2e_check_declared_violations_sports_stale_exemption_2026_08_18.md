@@ -56,3 +56,4 @@ standard declared template) but not a false-failure risk (just a coarser check).
       exemption. Done when: a from-scratch `pipeline_e2e_check.py --day <D> --asset-group SPORTS` run's §3B leg
       produces a real (not vacuously-empty) declared-violations verdict, and no new false failures appear across a
       spot-checked sample of days.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (1 entry)

@@ -41,6 +41,9 @@ context_scope:
   [
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    /plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md,
+    unified-api-contracts/unified_api_contracts/canonical/_partition_path_canonicality.py,
+    agent-orchestrator/server/auth.py,
   ]
 locked_since:
 resolved_by:
@@ -187,6 +190,7 @@ resolved_by:
   succeeds post-revocation. Full evidence in the flipped checkbox above. Aside: found `unified-trading-ci` in this
   slot's worktree sitting on branch `main` (not `live-defi-rollout`) with one unpushed commit authored by a
   different slot (`slot-2·laptop`) — checked the content diff against `origin/main`'s tip and it's byte-identical
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
   (already landed upstream under a different SHA), so it's a harmless stale local artifact, not lost work; left
   untouched as out-of-scope for this task.
 **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)

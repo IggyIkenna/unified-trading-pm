@@ -52,6 +52,7 @@ context_scope:
     /codex/05-infrastructure/spot-vms-for-backfill.md,
     deployment-service/scripts/recovery/relaunch_backfill_vm.py,
     market-data-processing-service/market_data_processing_service/app/adapters/cefi/options_chain_adapter.py,
+    /plans/active/issues/manifest_consolidator_market_data_cefi_stuck_lock_2026_08_19.md,
   ]
 created: "2026-08-10"
 parent_epic: observability_master
@@ -994,3 +995,4 @@ through 2026-08-16 not cited back to this doc. Full finding detail:
       this pass, P0). **This doc's own liquidations items (line 599, line 741) stay open** — re-derive/re-drive
       cannot proceed until the consolidator outage clears; re-launch once it does (the code-level fixes are already
       correct and in place).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

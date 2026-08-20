@@ -216,3 +216,5 @@ context_scope:
   reconciles evidence back into (named explicitly in its own todos and Progress Log), and corrected the first
   entry to the archived path since the batch1 parent plan was archived by the same-day archival-ritual entry
   above.
+
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries)

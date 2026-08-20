@@ -38,7 +38,12 @@ superseded_by:
 depends_on: [tardis_options_chain_credential_and_dispatch_gap_2026_08_16]
 gate_on_depends: true
 sequential: true
-context_scope: [/plans/active/issues/tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /plans/active/cefi_consolidated_closeout_2026_07_18.md]
+context_scope:
+  [
+    /plans/active/issues/tardis_options_chain_credential_and_dispatch_gap_2026_08_16.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/cefi_consolidated_closeout_2026_07_18.md,
+  ]
 source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored
   by the cefi-tranche /na-eligibility-audit run (autonomous, dispatch agt-e26aea) in the same turn as the
@@ -65,3 +70,4 @@ source: >-
 
 ## Progress Log
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

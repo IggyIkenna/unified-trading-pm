@@ -35,7 +35,7 @@ resolved_by:
 locked_by:
 locked_since:
 depends_on: []
-context_scope: [deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py, deployment-service/deployment_service/data_pipeline_monitors/cli.py]
+context_scope: [deployment-service/deployment_service/data_pipeline_monitors/consolidator_scheduler_watcher.py, deployment-service/deployment_service/data_pipeline_monitors/cli.py, /plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md]
 ---
 
 # What
@@ -114,3 +114,4 @@ identity and not a legitimate cross-reference to a sibling key before changing i
   (`plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md` Todo 2), both currently sitting
   uncommitted in the same working tree for the same reason.
 **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

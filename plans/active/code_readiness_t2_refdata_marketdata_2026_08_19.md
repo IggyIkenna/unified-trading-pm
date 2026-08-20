@@ -461,3 +461,4 @@ todos only to confirm they are data-movement, then leave it.
   consumer in the repo uses). Verified after the change by importing the module and asserting
   `_CATALOGUE_KNOWN_CHAINS is KNOWN_CHAINS` → True, `ASTER` present, `STARKNET` absent. This is a real behaviour
   change to the catalogue read-side venue split, in the correcting direction.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

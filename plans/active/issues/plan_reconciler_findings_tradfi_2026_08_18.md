@@ -31,9 +31,12 @@ locked_by:
 depends_on: []
 context_scope:
   [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
     /plans/active/issues/plan_reconciler_findings_tradfi_2026_08_16.md,
     /cursor-configs/skills/plan-reconcile/SKILL.md,
+    unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py,
   ]
 ---
 
@@ -443,3 +446,4 @@ this skill's. `assigned_vm` unchanged.
 ## Progress Log
 
 - **2026-08-19 (plan_reconciler_dead_lock_sweep, automated)**: auto-cleared `locked_by:` — agent agt-15d58e confirmed reaped-stale, 8.0h old (>= 8.0h threshold). Dispatch `agt-15d58e` confirmed `exit_reason="reaped-stale"` via AO's own AgentRow state (ruled 2026-08-15, `/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A). Cleared at 2026-08-19T07:38:34Z.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

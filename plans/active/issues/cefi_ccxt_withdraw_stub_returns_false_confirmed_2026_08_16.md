@@ -50,6 +50,7 @@ context_scope:
     execution-service/execution_service/engine/transfers/live_ccxt_adapter.py,
     execution-service/execution_service/engine/handlers/transfer_handler.py,
     execution-service/execution_service/transfer_coordinator.py,
+    execution-service/execution_service/engine/transfers/wiring.py,
     /codex/04-architecture/transfer-architecture.md,
   ]
 ---
@@ -287,3 +288,6 @@ must-close-before-live-trading-cutover item, not something the pre-live-trading 
   missing from context_scope); dropped `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (unrelated to a
   transfer-execution bug — no GCS delete operation appears anywhere in this doc, looks like a copy/paste artifact
   from the doc's original authoring).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — added `engine/transfers/wiring.py`,
+  the new bootstrap-wiring module created by this doc's own P1 fix (`build_transfer_wiring(config)`), the file the
+  still-open wiring todo now targets.

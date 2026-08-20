@@ -55,6 +55,7 @@ context_scope:
     deployment-service/deployment_service/vm_prefix_registry.py,
     deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    market-tick-data-service/market_tick_data_service/_http_timeouts.py,
     /plans/active/issues/mtds_backfill_odds_smallchunk10_relaunch_budget_bug_and_oom_2026_08_09.md,
   ]
 ---
@@ -586,3 +587,4 @@ instance next time it's caught mid-hang, before it goes silent, rather than post
   the casing-standardization plan doesn't depend on this VM completing.
 - **na-eligibility-audit 2026-08-17** [body-hash:49e985c6b8be2428]: KEEP-NA, valid — both open items genuinely unbounded (opportunistic live-catch task with no schedulable done-when; tuning self-gated pending reconciliation of 2 newly-found failure signatures from 2026-08-15/16). Round-7/9 prior audits agree.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

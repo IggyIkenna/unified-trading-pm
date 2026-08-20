@@ -46,7 +46,13 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-09
 locked_since:
-context_scope: [/plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md, /plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, /codex/05-infrastructure/data-pipeline-alerts.md]
+context_scope:
+  [
+    /plans/archive/2026_08/issues/dp_exit_code_monitor_sweep_overlap_storm_2026_08_10.md,
+    /plans/archive/2026_08/issues/dp_meta_watchers_oom_at_32gi_2026_08_13.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 source: >-
   Operator asked whether DP_RUN_MOSTLY_EMPTY (check_high_attempted_failed) genuinely re-fires on the same stale failure
   data despite the 2026-07-15 RenagTracker cooldown fix, or represents new information each time. While pulling live
@@ -258,3 +264,4 @@ A silently-OOMing exit-code monitor never reaches its sentinel write (`_gcs.writ
   needed here, the root cause is already tracked and fixed there. No repos touched by this session (findings-only
   cross-check).
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

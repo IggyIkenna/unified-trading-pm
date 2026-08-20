@@ -39,6 +39,7 @@ resolved_by:
 context_scope:
   [
     scripts/quality-gates-base/qg-host-governor.sh,
+    /plans/active/issues/fleet_wide_qg_capacity_crisis_continues_day2_2026_07_29.md,
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
@@ -212,4 +213,5 @@ deliberate decision rather than changed mid-session.
   to add to an already-severe fleet-wide storm (21 concurrent instances at last check) rather than help it clear.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:2660ad0b240e84dc]: KEEP-NA, valid — doc's own "Deliberately NOT hot-patched" section covers both open todos — changes touch concurrency infra shared by every repo/host, needing a deliberate decision per CLAUDE.md's blast-radius rule.

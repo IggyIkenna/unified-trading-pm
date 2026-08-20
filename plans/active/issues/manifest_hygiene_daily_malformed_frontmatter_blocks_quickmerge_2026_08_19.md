@@ -37,7 +37,12 @@ estimate_baseline_ai_days: 0.3
 estimate_calibrated_ai_days: 0.25
 locked_by:
 locked_since:
-context_scope: [/plans/active/issues/manifest_hygiene_red_all_2026_08_19.md]
+context_scope:
+  [
+    /plans/active/issues/manifest_hygiene_red_all_2026_08_19.md,
+    e2e-testing/scripts/audit/manifest_hygiene_daily.py,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -120,3 +125,4 @@ currently sitting uncommitted, blocked on this.
       `plans/active/task_template.md`, `scripts/docs/docspec.py`) — verify those 4 files are
       still sitting uncommitted in whichever slot's checkout has them (or already shipped by a
       later session) before redoing the work.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

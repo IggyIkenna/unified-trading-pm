@@ -65,8 +65,10 @@ file it lives in.
 
 During the 2026-08-18/19 epic-taxonomy restructure, folding the 5 asset-group epics into pipeline-stage epics was
 considered and rejected. Unlike the epics that WERE folded (`dart_and_promote_master`,
-`escalation_and_disaster_recovery_master`, `infrastructure_master`, `trading_agent_master`,
-`global_ledger_pnl_attribution_master` — all had 0 active corpus references at fold time), the 5 asset-group epics
+`escalation_and_disaster_recovery_master`, `trading_agent_master`,
+`global_ledger_pnl_attribution_master` — all had 0 active corpus references at fold time; `infrastructure_master` was
+separately RENAMED, not folded, to `security_and_cross_cutting_master`, absorbing its 296/833 corpus references —
+see `epic-taxonomy-2026-08-18.md`), the 5 asset-group epics
 each carry a substantial, active, cross-pipeline-stage body of work: `tradfi_master` 46 active docs, `sports_master`
 68, `cefi_master` ~50, `defi_master` ~49, `predictions_master` ~20 (measured 2026-08-19, `epic_report_data.py`).
 Folding them would mean:

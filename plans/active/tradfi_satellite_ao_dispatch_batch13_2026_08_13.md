@@ -57,6 +57,8 @@ context_scope:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
   ]
 source: >-
   Drafted by the 2026-08-13 /na-eligibility-audit + /ag-closeout-audit full-corpus sweep (interactive session). status:
@@ -718,3 +720,4 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
   the issue doc's amended `[DATA] P1` todo.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

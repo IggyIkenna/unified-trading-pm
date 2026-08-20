@@ -87,3 +87,5 @@ context_scope:
   (`❌ Regression: 1 > baseline 0`) on first validation pass. Worked around in that doc (see its summary +
   warning banner) rather than fixing the checker mid-audit — out of scope for a prediction-tranche satellite
   batch, this is shared `plan_hygiene_master` tooling.
+- **context-scout 2026-08-20**: refreshed context_scope (2 entries) — the checker script (fix target) and
+  task_template.md (source of the heuristic) still cover the doc's subject.

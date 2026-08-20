@@ -224,3 +224,4 @@ cheap enough to add. Both already exist — but were both silently defeated by t
   Root-caused to a stale per-slot `.orch_token` (expired 2026-05-27) shadowing a valid `~/.orch_token`
   (2026-09-09) in the resolver's fallback order. Fixed for slot 5, verified live (401→200).
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries — dropped a `/tmp/` log path, not a durable reference).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

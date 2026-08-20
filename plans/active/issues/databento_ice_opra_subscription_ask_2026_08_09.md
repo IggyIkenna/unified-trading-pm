@@ -29,7 +29,10 @@ related:
     /codex/02-data/tradfi-databento-sourcing-ssot.md,
   ]
 context_scope:
-  - unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py
+  [
+    unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+  ]
 created: 2026-08-09
 author: agent (slot-19)
 parent_epic: security_and_cross_cutting_master
@@ -120,3 +123,4 @@ incur real metered billing the moment they're queried.
   intervening change was plan_reconciler's 2026-08-18 citation fix to todo 2 (now names
   `unified-api-contracts/unified_api_contracts/registry/databento_subscription_allowlist.py` directly). `assigned_vm`
   unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries) — added the tradfi-databento-sourcing-ssot codex SSOT this ask is gated on; normalized to bracket format

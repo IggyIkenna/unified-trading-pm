@@ -50,6 +50,7 @@ context_scope:
     /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     scripts/plan-hygiene/check_line_caps.sh,
+    /plans/active/issues/plan_reconciler_findings_sports_2026_08_19.md,
   ]
 ---
 
@@ -125,3 +126,4 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) — added `check_line_caps.sh`, the script todo 1
   directs the worker to actually run against the parent doc.
 - **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries, all resolve).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

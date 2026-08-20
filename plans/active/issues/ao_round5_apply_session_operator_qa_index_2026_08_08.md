@@ -94,3 +94,4 @@ docs, not an isolated unverifiable claim (contrast the incident that motivated t
 - **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:2b369826a00d6673]: KEEP-NA, valid — unchanged since
   2026-08-09. Sole open item (replace this grep-derived index with a primary transcript if one is ever exported)
   still has no owner/trigger driving it into existence, not worker-determinable today.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (1 entries)

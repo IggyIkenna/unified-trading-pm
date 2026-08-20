@@ -40,7 +40,14 @@ priority: P1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/terraform/gcp/defi_collection_scheduler.tf, /plans/active/defi_consolidated_closeout_2026_07_18.md]
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/active/issues/defi_oracle_prices_onchain_branch_retry_starvation_2026_08_16.md,
+    deployment-service/terraform/gcp/defi_collection_scheduler.tf,
+  ]
 ---
 
 # 3 defi MTDS collect-* Cloud Scheduler jobs silently paused since 2026-07-18
@@ -159,3 +166,4 @@ one-shot dispatch.
   FINAL via `POST /api/blocked/{id}/answer` (HTTP 200). Live-reverified all 3 schedulers still PAUSED (not stale),
   confirmed no conflicting VM, then checked the doc's own Track 8 correction's broader gate (Track-1/2 landing) —
   Track 1 still active with 2 open todos, so did NOT resume. See the `[OPERATOR]` todo above for full findings.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — added the data-pipeline-correctness-hard-rule codex SSOT (cited in the body's own Codex SSOTs section) + the oracle_prices sibling issue

@@ -1,8 +1,7 @@
 ---
 doc_type: codex-ssot
 title: ADV-Ranked Universe Resolution — Scope Ruling
-summary:
-  "ADV-ranked (liquidity-ranked) dynamic universe resolution (`rank_top_n_by_adv`, `engine/core/
+summary: "ADV-ranked (liquidity-ranked) dynamic universe resolution (`rank_top_n_by_adv`, `engine/core/
   canonical_adv_ranked_universe_provider.py`) applies to archetypes whose tradeable universe is a BROAD, evolving
   candidate-coin pool filtered by liquidity — not to every archetype. Ruling: CARRY_BASIS_PERP and
   CARRY_FUNDING_DISPERSION are in scope; CARRY_STAKED_BASIS is deliberately NOT, because its universe is a small,
@@ -62,8 +61,8 @@ The test for a future archetype: **is its candidate set large enough, and liquid
 picking the wrong N coins matters?** If yes, wire it onto `rank_top_n_by_adv` via the same pattern `catalog_carry.py`
 uses. If the universe is instead bounded by a small, enumerable capability matrix (which venues accept which collateral,
 which protocols exist), ADV-ranking adds no value — hardcoding (or a capability-matrix-driven enumeration, per
-`_resolve_start_token`'s USDC_MARGIN_BUFFERED fallback,
-`/codex/09-strategy/architecture-v2/cross-cutting/adv-ranked-universe-scope.md` § below) is the right mechanism.
+`_resolve_start_token(perp_venue, lst_asset)`'s stable-token fallback, see
+[`carry-staked-basis.md`](../archetypes/carry-staked-basis.md)) is the right mechanism.
 
 ## What this ruling does NOT do
 

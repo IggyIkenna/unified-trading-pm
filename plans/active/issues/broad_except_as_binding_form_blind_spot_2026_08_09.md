@@ -192,3 +192,4 @@ Two independent tracks:
   was discovered while shipping (`pm_qg_broad_except_ratchet_red_finops_regression_2026_08_09.md`) and the concrete
   file fixed in-session (`ci_failure_watcher.py`); dropped `scripts/quality-gates.sh` (the entry-point wrapper —
   `base-service.sh` already carries the actual STEP 5.5 regex this finding is about).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

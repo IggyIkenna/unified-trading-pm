@@ -12,7 +12,7 @@ summary: >-
   `dashboard/package.json` (`"recharts": "^3.10.1"`) but was never installed
   (`dashboard/node_modules/recharts` does not exist) — 12 vitest suites + the `tsc --noEmit`
   step fail on the missing module.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -36,7 +36,8 @@ locked_by:
 locked_since:
 supersedes:
 superseded_by:
-resolved_by:
+resolved_by: agent-orchestrator@1e65044677, agent-orchestrator@ac01c2faf2
+last_updated: 2026-08-20 # status flipped resolved -- both todos done, 0 open remain
 source: >-
   Discovered 2026-08-19 while shipping
   plans/active/slot0_self_cleaning_daemon_2026_08_18.md's todo 1 (add
@@ -53,7 +54,7 @@ context_scope: []
 
 ## What I found
 
-Running `bash scripts/quality-gates.sh` on a clean `live-defi-rollout` HEAD (agent-orchestrator@4ec54c82,
+Running `bash scripts/quality-gates.sh` on a clean `live-defi-rollout` HEAD (agent-orchestrator@ac01c2fa,
 after a pure additive one-line `Field` change to `TuningDefaults` that touches neither failure domain below):
 
 **1. `tests/test_ao_self_pull_dirty_gate.py` — all 6 tests fail.** Targeted rerun
@@ -111,12 +112,16 @@ Two independent, mechanical fixes — no judgment call:
       this file pass under `.venv/bin/python -m pytest tests/test_ao_self_pull_dirty_gate.py -q` with no other
       changes. Repo: agent-orchestrator. — agent-orchestrator@1e65044677 (all 6 tests pass; see Progress Log for
       the corrected root cause).
-- [ ] [INFRA] P1. Install the missing `recharts` npm dependency in `dashboard/` (`npm ci` from a clean
+- [x] ✅ [INFRA] P1. Install the missing `recharts` npm dependency in `dashboard/` (`npm ci` from a clean
       `package-lock.json`, verify `dashboard/node_modules/recharts` exists afterward) and confirm both
       `npm run typecheck` (`tsc --noEmit`) and `npm run test` (`vitest run`) go green with zero suite-load
       failures. Repo: agent-orchestrator. Check whether this is a single-host gap or affects other slots'
       checkouts (a stale `node_modules` predating the `recharts` dependency addition to `package.json`) —
       if fleet-wide, flag for a workspace-bootstrap/CI note so future slot provisioning doesn't reintroduce it.
+      — Done 2026-08-20 (slot 33): `npm ci` in `dashboard/` installed it; `tsc --noEmit` clean, `vitest run`
+      20/20 suites / 463/463 tests (was 12 failed suites). Single-host gap (stale `node_modules` predating the
+      dependency's addition to `package.json`), not fleet-wide code — a fresh `.tabs/<N>/agent-orchestrator`
+      clone runs its own `npm ci` as part of normal setup, so no separate bootstrap/CI note needed.
 
 ## Progress Log
 
@@ -140,3 +145,10 @@ Two independent, mechanical fixes — no judgment call:
   `tests/test_gemini_litellm_translation_smoke.py::test_tool_use_tool_result_roundtrip_through_real_proxy` (live
   integration/smoke test vs a real Gemini API; passes in isolation; passed on full re-run) — filed separately as
   `/plans/active/issues/gemini_smoke_test_flaky_under_full_suite_2026_08_20.md`.
+
+- **2026-08-20 (slot 33)**: INFRA todo done — `npm ci` in `dashboard/` installed the missing `recharts` dep.
+  Full Pass-1 `quality-gates.sh` now green end-to-end (4902 server tests + 463/463 dashboard tests, both
+  gates combining cleanly with slot 14's dirty-gate fixture fix above). This unblocked repo-blocker
+  RB-38a23126 (resolved via the RepoHealthWatcher, `watcher_green`), which had been parking
+  `slot0_self_cleaning_daemon_2026_08_18.md` todo 1 — shipped as `agent-orchestrator@ac01c2faf2`. Both todos
+  in this doc are now done and unlocked — ready to archive.

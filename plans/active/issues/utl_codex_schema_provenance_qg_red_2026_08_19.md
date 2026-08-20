@@ -28,7 +28,8 @@ related:
 context_scope:
   [
     /codex/06-coding-standards/quality-gates.md,
-    unified-trading-pm/scripts/validation/check_schema_provenance.py,
+    scripts/validation/check_schema_provenance.py,
+    scripts/quality-gates-base/base-library.sh,
   ]
 created: 2026-08-19
 author: claude-agent
@@ -96,3 +97,4 @@ resolved_by:
   does not block. The actual QG failure was my own test's hardcoded prod bucket name; fixed in `af783d92`. This doc
   demoted to P2 (schema-provenance mis-application to a library repo remains a quality-of-life finding). Repo-blocker
   RB-959c7b8d was resolved via watcher_green and is moot.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

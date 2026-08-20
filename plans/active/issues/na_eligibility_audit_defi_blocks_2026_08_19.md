@@ -124,3 +124,4 @@ paragraph) — a future run or an operator can extract it directly.
   report-only docs from cefi/cross-cutting/ao (read in full, no writes, primary-owner rule — see Operator questions
   above). Zero conflicts required operator escalation this run. Ratchet checked at run end (see this run's `/done`
   evidence).
+- **context-scout 2026-08-20**: refreshed context_scope (2 entries)

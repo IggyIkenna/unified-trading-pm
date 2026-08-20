@@ -59,3 +59,5 @@ Machine-gated: `depends_on: [ao_scheduled_dispatch_pause_reasons_2026_08_18]` + 
       for the pause-reason record, and re-check on a future finalize-plan pass.
 
 ## Progress Log
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

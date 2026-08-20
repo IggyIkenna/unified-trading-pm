@@ -51,7 +51,12 @@ source: >-
   Authored `status: active` (not draft) per the 2026-07-30 no-double-gate ruling — see batch14_finalize's identical
   rationale.
 context_scope:
-  [/plans/active/prediction_satellite_ao_dispatch_batch15_2026_08_19.md, /plans/PLAN_FORMAT.md]
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch15_2026_08_19.md,
+    /plans/PLAN_FORMAT.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+  ]
 ---
 
 # Prediction satellite AO batch 15 — finalize
@@ -89,3 +94,4 @@ context_scope:
   -> `active` MUST happen in the SAME edit as flipping `gate_on_depends: false` -> `true`, or its 3 todos become
   live-dispatchable before their real prerequisites (`prediction_phase_ab_residuals_2026_07_24.md` +
   `prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md`) actually clear.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

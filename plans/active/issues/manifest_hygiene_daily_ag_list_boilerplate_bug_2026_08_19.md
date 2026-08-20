@@ -53,6 +53,7 @@ context_scope:
   [
     e2e-testing/scripts/audit/manifest_hygiene_daily.py,
     /plans/active/issues/manifest_hygiene_red_all_2026_08_18.md,
+    /codex/02-data/data-pipeline-correctness-hard-rule.md,
   ]
 ---
 
@@ -125,3 +126,4 @@ invisible to `regen_backlog_from_plan.py`).
   filed (2026-08-19, no prior audit pass), each bounded with a stated done-when and no operator gate or
   design-judgment call found. Flipped `assigned_vm: NA -> planning`, added `assigned_role: worker` (was missing).
   Companion: `manifest_hygiene_daily_ag_list_boilerplate_bug_2026_08_19_finalize_2026_08_19.md`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

@@ -54,6 +54,7 @@ context_scope:
     /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md,
     /plans/archive/2026_08/issues/safe_doc_push_prek_patch_not_restored_on_retry_success_2026_08_09.md,
     scripts/cicd/ldr_to_main_fleet_promote.sh,
+    scripts/quality-gates-base/tests/test-ldr-promote-fanout-stagger.sh,
   ]
 ---
 
@@ -176,3 +177,4 @@ interrupted-draft signal — worth the infra-craft triage recognizing both shape
   was slot 9's clone being behind at the moment of its check, not a real force-push/reset/rebase drop. Closed the
   todo with no code change required.
 - **context-scout 2026-08-17**: refreshed context_scope (3 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

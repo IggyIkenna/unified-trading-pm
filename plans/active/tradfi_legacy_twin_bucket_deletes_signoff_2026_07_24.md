@@ -395,3 +395,4 @@ restated here.
   the intervening 2 days. Not reclassifying, per the same reasoning: this remains a real prod-bucket delete gated
   per `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md`, and the real next step lives in the already-
   AO-dispatched doc above, not a re-run of this doc's own literal dispatch shape. `assigned_vm` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

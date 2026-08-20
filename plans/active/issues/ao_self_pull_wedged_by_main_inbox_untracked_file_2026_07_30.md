@@ -287,3 +287,4 @@ follows correctly — only the webhook config is missing).
   should start by asking the operator directly for the correct secret name/project rather than re-trying the same 2
   dead-end names. (Cross-linked: `ao_creds_env_poller_disabled_no_live_token_rotation_2026_08_18.md`'s same-session
   entry records the same finding — that doc's OWN restart, for the unrelated creds-bucket var, succeeded.)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

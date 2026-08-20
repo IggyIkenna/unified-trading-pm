@@ -101,3 +101,4 @@ carries an `[OPERATOR]` tag or a design/judgment call; both are bounded, worker-
   the operator decision to apply.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) -- re-verified all 3 entries still
   resolve on disk; no change.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

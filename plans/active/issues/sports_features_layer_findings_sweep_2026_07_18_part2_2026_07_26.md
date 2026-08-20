@@ -64,7 +64,15 @@ depends_on: []
 last_updated: 2026-07-27
 locked_by:
 locked_since:
-context_scope: [/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md, /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /plans/active/data_completion_sports_2026_07_24.md, instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py, deployment-service/scripts/vm/launch-api-football-backfill-vm.sh]
+context_scope:
+  [
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md,
+    /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part3_2026_07_26.md,
+    /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/active/data_completion_sports_2026_07_24.md,
+    instruments-service/instruments_service/engine/orchestrator/sports_reference_core.py,
+    deployment-service/scripts/vm/launch-api-football-backfill-vm.sh,
+  ]
 ---
 
 # Sports features-layer findings sweep — PART 2 of 3 (2026-07-18, split 2026-07-26)
@@ -809,3 +817,4 @@ into the same fix — carried forward here so it isn't lost with the archive:
     same-turn.
 - **na-eligibility-audit 2026-08-17** [body-hash:98c13a91e4fea158]: KEEP-NA-STALE (already-duplicated) — 5 of 6 open items verified as duplicate-citations to sports_consolidated_closeout_2026_07_19.md Track V and sports_satellite_ao_dispatch_batch9_2026_08_04.md (both status:active); the 6th (§M, line ~684, runtime rate-budget re-division) is a genuine architecture/mechanism-choice judgment call, correctly stays NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

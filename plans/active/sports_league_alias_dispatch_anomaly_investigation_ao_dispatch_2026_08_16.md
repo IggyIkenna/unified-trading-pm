@@ -75,3 +75,4 @@ resolved_by:
   this doc's cited VM name (`canonical-migration-sports-drop-stale-20260810-100832`) and its measured counts
   (42,920 / 15,981) confirms both other matching docs (`sports_satellite_ao_dispatch_batch12_2026_08_09.md`,
   `sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md`) are already in this list.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

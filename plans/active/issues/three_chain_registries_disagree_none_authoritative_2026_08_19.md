@@ -20,6 +20,15 @@ related:
     /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
     /plans/epics/system_readiness_master.md,
   ]
+context_scope:
+  [
+    /plans/audit/results/registry_ground_truth_2026_08_19.md,
+    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py,
+    unified-api-contracts/tests/unit/test_chain_registry_ssot.py,
+    unified-api-contracts/unified_api_contracts/registry/chain_env.py,
+    /plans/epics/system_readiness_master.md,
+  ]
 created: 2026-08-19
 last_updated: "2026-08-19"
 parent_epic: system_readiness_master
@@ -141,3 +150,4 @@ containment properties were also executed standalone as direct probes.
 
 **Still open**: the 13-vs-14 count (see todo — partially diagnosed, blocked on the pending `ONCHAIN` pseudo-chain
 decision) and the coverage-denominator check. Neither closed on a plausible-looking number.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

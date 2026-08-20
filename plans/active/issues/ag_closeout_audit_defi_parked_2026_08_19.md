@@ -48,6 +48,8 @@ context_scope:
   [
     /plans/archive/2026_08/issues/ag_closeout_audit_defi_parked_2026_08_10.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/defi_satellite_ao_dispatch_batch18_2026_08_19.md,
+    /plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16.md,
   ]
 ---
 
@@ -153,3 +155,4 @@ without re-triaging from scratch.
 
 - **2026-08-19 (ag_closeout_auditor, defi tranche, dispatch agt-fa5ded, slot 28)**: authored alongside
   `defi_satellite_ao_dispatch_batch18_2026_08_19.md` (+ finalize) from the day's `/ag-closeout-audit defi` run.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

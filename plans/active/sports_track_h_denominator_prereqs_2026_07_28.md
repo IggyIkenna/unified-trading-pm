@@ -241,3 +241,4 @@ and verified independent of the code-ship — this is a shipping-mechanics gap o
   Todos section still read "Neither is `[OPERATOR]`-gated," but todo 1 was retagged `[CODE]`→`[OPERATOR]` on
   2026-08-12 (per its own text) after the note was written. Corrected the note to reflect todo 1's current
   `[OPERATOR]` status while leaving todo 2's non-gated justification intact. No other changes.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

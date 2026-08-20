@@ -77,3 +77,4 @@ context_scope:
   dispatcher's `_parse_open_todos` never parses. Rewrote both so the target doc, method, and hard constraint are on
   line 1. No content/scope change, no evidence flip — both todos remain correctly gated by `gate_on_depends: true`
   (parent plan still 2/5 todos done as of this pass).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

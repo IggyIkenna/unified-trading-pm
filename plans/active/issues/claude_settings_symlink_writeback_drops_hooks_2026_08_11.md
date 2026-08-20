@@ -45,6 +45,7 @@ context_scope:
     scripts/workspace/migrate-personal-settings-keys.sh,
     cursor-configs/settings.json,
     /codex/05-infrastructure/claude-code-settings-symlink.md,
+    scripts/plan-hygiene/check_settings_symlink_hygiene.sh,
   ]
 locked_by:
 locked_since:
@@ -210,6 +211,7 @@ backstop pending a future root-cause patch.
 (did not resolve from the PM repo root, since the doc lives inside that same repo -- there is no nested
 `unified-trading-pm/` directory) to the repo-relative `cursor-configs/settings.json`, matching this doc's own body
 convention for every other same-repo path.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
 
 **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:d1f41650d3b5a2cd]: KEEP-NA, valid — first audit pass
 (no prior marker). Sole open item ("decide whether `DISABLE_AUTOUPDATER` is still wanted") is a policy tradeoff

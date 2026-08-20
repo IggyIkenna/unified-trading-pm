@@ -251,3 +251,4 @@ noted here only so the two aren't conflated.
   6-step batching plan (2026-08-08 operator ruling: widen to full ~47-bucket matrix, batch the walks) with one residual
   judgment step (GCS QPS concurrency-cap selection) on a single-walk-discipline-sensitive path. 2 independent same-day
   (2026-08-08) passes already scrutinized this exact tension and landed KEEP-NA; concurring.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

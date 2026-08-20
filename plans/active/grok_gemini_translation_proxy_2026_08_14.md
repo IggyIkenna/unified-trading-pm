@@ -40,7 +40,15 @@ locked_since:
 supersedes:
 superseded_by:
 source:
-context_scope: [agent-orchestrator/server/accounts.py, agent-orchestrator/server/autospawn.py, agent-orchestrator/server/model_pricing.py, agent-orchestrator/server/deepseek_balance.py, /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md]
+context_scope:
+  [
+    agent-orchestrator/server/accounts.py,
+    agent-orchestrator/server/autospawn.py,
+    agent-orchestrator/server/model_pricing.py,
+    agent-orchestrator/server/deepseek_balance.py,
+    agent-orchestrator/server/gemini_headroom.py,
+    /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
+  ]
 ---
 
 # Gemini translation proxy — self-hosted Anthropic-format facade
@@ -723,3 +731,4 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

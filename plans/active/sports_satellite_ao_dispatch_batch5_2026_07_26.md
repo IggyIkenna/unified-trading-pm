@@ -740,3 +740,4 @@ items already extracted there 2026-07-26. One-line index of what moved (`[TAG] P
   evidence trail: `issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- 4th scout pass; re-verified all 6
   entries still resolve on disk and remain the correct minimal set; unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

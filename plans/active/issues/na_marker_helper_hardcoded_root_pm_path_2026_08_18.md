@@ -134,3 +134,4 @@ exists to prevent).
   Issue doc -- structurally exempt from the finalize-plan-coverage rule (`check_finalize_plan_coverage.py` only
   globs `plans/active/*.md`, not `plans/active/issues/`), so no companion finalize doc authored. Cross-cutting
   tranche audit.
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries)

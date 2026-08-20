@@ -53,7 +53,7 @@ execution_scope: orchestrator-agent
 drift_direction: none
 depends_on: []
 supersedes: ag_closeout_audit_ci_parked_2026_08_10
-context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md, /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md]
+context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /plans/active/ci_satellite_ao_dispatch_batch15_2026_08_16.md, /plans/archive/2026_08/issues/ag_closeout_audit_ci_parked_2026_08_10.md, /plans/active/issues/promote_pr_non_supersession_after_greeks_service_fix_2026_08_18.md]
 ---
 
 # ag-closeout-audit ci delta report — 2026-08-16
@@ -262,3 +262,4 @@ balanced.**
   workflow_template_runs_on_placeholder) executed this run — see the flipped checkbox above. The remaining items
   (2 [OPERATOR], 2 [DOC] cross-tranche retags not this tranche's to execute, 1 [DOCS] extraction still gated on
   batch15 draining) are unchanged and correctly still open.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

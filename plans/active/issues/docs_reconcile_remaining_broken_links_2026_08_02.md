@@ -537,3 +537,59 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   touched-file set per the established "skip a redundant full fan-out" precedent from 2026-08-08's 4th dispatch).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:01a5dad404998016]: KEEP-NA, valid — heterogeneous corpus of 16 dead-link/staleness findings, each individually needing human judgment (ambiguous successors, scope-mismatch calls); re-verified clean by 6+ prior audit passes with no new bounded item found on independent re-read.
+- **docs-reconcile 2026-08-20** (dispatch agt-9627d5, slot 28): full `/docs-reconcile --autonomous` run — the last
+  confirmed full Phase-1 sweep was 2026-08-14, so scope covered the full 6-day gap (~190 codex docs touched
+  2026-08-14→now, split across 4 self-consistency-hunter batches) rather than a narrow 24-72h window. Phase 0: all 5
+  deterministic checks clean before AND after this run's fixes (parity/frontmatter 2207 docs/freshness `--strict`
+  0/324 across the 4 gated dirs/`gen_doc_index` 2053 docs/body-links 2253 docs). **Broken-link residue (this doc's own
+  scope) re-verified live**: all 11 real `doc_body_link_baseline.yaml` entries checked via direct `find` + candidate-
+  successor investigation (deeper than a bare re-probe — checked `setup-standards.md`/`config-types.md`/
+  `dependency-management.md`/`quality-gates.md` as candidate repoint targets for the `06-coding-standards/README.md`
+  cluster; none matched closely enough to justify a repoint; `config-types.md` confirmed still a circular redirect
+  stub back to the same README). All 11 unchanged from the 2026-08-17 hunter-5 pass — 0 newly-moved, 0 newly-dead,
+  0 newly-resolved. Freshness-outside-gated-dirs report: 591 non-gated codex docs (up from 570 on 2026-08-09), 518
+  missing `last_reviewed` (expected — field isn't required outside the 4 gated dirs), 60 fresh, 13 stale (oldest:
+  `/codex/14-customer-journeys/dart/mode-toggle.md`, 102 days) — consistent growth trend, no action per this skill's
+  charter. **Phase 1 (7 parallel hunters: collision/summary/doctrine-consistency all clean full-corpus — 710
+  `authoritative_for` claims by `status:current` docs 0 collisions, 2052 in-scope summaries 0 inadequate, 150
+  `.cursor/rules/*.mdc` + 26 `agents/*.md` doctrine refs 0 stale; 4 self-consistency batches covering the 6-day gap)
+  found 11 genuinely NEW findings this run, all independently re-verified + fixed** (not previously tracked anywhere
+  in this or the operator-decisions doc): (1) `non-canonical-path-inventory.md` — 2 table rows split across 6
+  physical lines by an embedded raw newline (rows 7+8, "no-migrate-first" disposition table), rejoined; (2)
+  `ci-alerting.md` — a `streak_start_sha` paragraph used backslash-escaped backticks inside a single-backtick span
+  (invalid Markdown escaping) plus zero-whitespace-adjacent code spans, rendering as mashed-together text — rewritten
+  with proper quoting/spacing; (3) `config-dynamic-injection.md` — an em-dash-then-list construction that reads as
+  naming the WRONG class as "carries this fix" on first pass (arithmetic was correct, framing was misleading) —
+  reworded to name the fixed class (`StrategyDomainConfig`, confirmed via the doc's own prior paragraph) explicitly
+  before listing the remaining 8; (4) `epic-assignment-decision-rule.md` — grouped `infrastructure_master` with
+  epics that "had 0 active corpus references at fold time," but `epic-taxonomy-2026-08-18.md` (same restructure)
+  states it was RENAMED (not folded) to `security_and_cross_cutting_master`, absorbing 296/833 refs (35.5%, the
+  LARGEST epic) — corrected, cited the taxonomy doc; (5) `category-instrument-coverage.md` — the `CARRY_BASIS_PERP`
+  §6 Coverage table (header + 8 rows) was duplicated verbatim back-to-back with no separator — second copy removed;
+  (6) `adv-ranked-universe-scope.md` — a paragraph cited itself ("§ below") promising elaboration on
+  `_resolve_start_token`'s fallback that was never written in this doc — found the actual content in
+  `carry-staked-basis.md` (already in this doc's own `related:` list) and repointed there; (7)
+  `testing/README.md` — the existing 2026-08-15 caveat said `seed-persona.ts` is verified flat (not under
+  `helpers/`) but a code-block comment 20 lines below still asserted the `helpers/` path, unchanged — fixed the
+  comment to match, and (checked live against the actual `unified-trading-system-ui` checkout in this slot) expanded
+  the caveat: `expect-service-tile-locked.ts`/`expect-click-path.ts` don't exist anywhere either, no `helpers/` dir
+  exists at all, and the real directory holds ~30 spec files not shown in this doc's tree (the full tree/scaffolding
+  rewrite the existing caveat already calls for is still not done — out of a mechanical-fix pass's scope, same
+  precedent as the root README.md item above); (8) `custody-onboarding-checklist.md` — the flagged B.2.5 fence
+  (opening ` ```bash ` embedded mid-sentence, closing fence + trailing sentence at 82-space indent) turned out to be
+  1 of **10** instances of the same collapsed-fence defect in this one file (corpus-wide grep confirmed isolated to
+  this file, not systemic) — all 10 found + fixed (B.1.2/B.1.3/B.2.1/B.2.2/B.2.3/B.2.5/B.2.6/B.3.2/B.3.4 shell/python
+  blocks reconstructed with proper fences; E.1.3's stray mid-flag whitespace normalized), fence-pair-count verified
+  even (28) after the fix; (9) `sports-scheduling-and-sharding.md` — a bold span closed with literal `\*\*`
+  (backslash-escaped, doesn't close bold) instead of `**`, fixed; (10) `dependency-health-policy.md` — the escalation
+  pseudocode listed 5 conditions as if independent, but they're an ordered if/elif chain (the real
+  `alerting_service/rules/connectivity_rules.py::evaluate_dependency_health` was read to confirm) — the no-fallback
+  SEV0 floor is checked FIRST, pre-empting WARN/SEV1 in the overlap zone; pseudocode rewritten to show real order +
+  cited the source file; (11) `agent-orchestrator-worker-liveness.md` — a 2026-08-15 rewrite (`9786794390`) silently
+  dropped 3 sections; one was caught + restored 8h later (`f950580109`) but 2 were not: "Same-VM slot-to-slot
+  double-dispatch" (a full section) and the `orphan_reap.py::sweep_orphan_processes` note (a paragraph inside the
+  still-live "Kill execution" section) — both restored verbatim from `git show <pre-drop-sha>`, still cited by 2
+  other live docs. Every fix independently re-verified against either live filesystem state (UI repo, custody
+  checklist self-consistency), the actual source implementation (`connectivity_rules.py`), or git history (the
+  worker-liveness drop) before applying — not applied on hunter-report trust alone. Full Phase 0 re-run clean after
+  all 11 fixes; shipped as one batch, `unified-trading-pm@101efbe7c7`.

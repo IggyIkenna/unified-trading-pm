@@ -32,9 +32,14 @@ related:
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
   ]
 context_scope:
-  - agent-orchestrator/server/state_store/account_usage.py
-  - agent-orchestrator/server/usage_poller.py
-  - agent-orchestrator/server/model_pricing.py
+  [
+    agent-orchestrator/server/state_store/account_usage.py,
+    agent-orchestrator/server/usage_poller.py,
+    agent-orchestrator/server/model_pricing.py,
+    agent-orchestrator/server/deepseek_usage.py,
+    agent-orchestrator/server/state_store/slots.py,
+    /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
+  ]
 created: 2026-08-12
 last_updated: 2026-08-18
 parent_epic: orchestrator_master
@@ -390,6 +395,7 @@ investigation the next time an account is onboarded.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:2d53a08f692bc520]: KEEP-NA, valid — explicit operator ruling: this entire initiative is human-driven, proceed only in operator-present sessions; covers the dispatch mechanism for the whole doc, including individually-bounded-looking items.
 - **context-scout 2026-08-17**: refreshed context_scope (3 entries), unchanged -- the account-usage/poller/pricing
   modules still cover the doc's remaining investigation todos (sub-d outlier, sub-f window reset).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 - **2026-08-18 (interactive session)**: operator-reported symptom on the brand-new `sub-h-igboestates` account (weekly
   meter reading disproportionately close to the 5-hour meter) investigated and closed — see § "New-account weekly-window
   inheritance" above. Root cause: fixed, per-account-assigned weekly boundary inherited 5 days pre-dating first use,

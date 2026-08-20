@@ -646,3 +646,4 @@ Operator gave indicative Binance RFQ widths vs screen costs (BTC/ETH ~0.5-2bp, S
   (lines ~453, ~495, ~553) now state plainly it's GCS-archived research corpus, not an in-repo path (confirmed absent
   from every repo's working tree + git history), with the `RECOVERY.md` rsync restore command. Same fix mirrored onto
   `citadel_paper_batch_live_reconciliation_2026_06_19.md`'s P2.11.15 (the near-verbatim duplicate held back there).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -31,6 +31,8 @@ context_scope:
   [
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     unified-trading-library/unified_trading_library/manifest_consolidator.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_state.py,
+    /plans/active/issues/cefi_inverse_contract_size_wrong_and_missing_2026_08_12.md,
   ]
 created: 2026-08-19
 author: claude-agent
@@ -331,3 +333,4 @@ resolved_by:
   territory). **Note: the UTL guard fix (`af783d92e4`) is NOT yet deployed to the cron image** (needs MTDS
   `BASE_IMAGE_DIGEST` bump + rebuild) — but the marker-restore recovery works with the CURRENT image (after restamp the
   incremental path runs normally), and the guard becomes active on the cron once the image is rebuilt.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

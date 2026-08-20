@@ -139,3 +139,4 @@ P0 POOL-recurrence work already in flight.
   `gate_on_depends: true`, `status: active`).
 - **context-scout 2026-08-17**: populated context_scope (4 entries) — the two sibling recurrence-mechanism docs, the
   delete-safety protocol the root-cause todo's GCS sampling must follow, and the paired gating finalize plan.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries) — unchanged, still accurate

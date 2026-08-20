@@ -39,7 +39,14 @@ source:
     document the prod terraform drift first observed by slot-11 on 2026-08-06; read-only plan run, no apply.",
   ]
 depends_on: []
-context_scope: [deployment-service/terraform/gcp, deployment-service/terraform/gcp/client_reporting_scheduler.tf, deployment-service/terraform/gcp/t1_batch_scheduler.tf, /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md]
+context_scope:
+  [
+    deployment-service/terraform/gcp,
+    deployment-service/terraform/gcp/client_reporting_scheduler.tf,
+    deployment-service/terraform/gcp/t1_batch_scheduler.tf,
+    /plans/archive/2026_08/issues/defi_mtds_lst_rates_cloud_run_job_oom_2026_08_04.md,
+    /plans/active/issues/deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md,
+  ]
 ---
 
 # Prod terraform drift — 36 add / 18 change / 3 destroy pending apply
@@ -260,3 +267,4 @@ the IaC config; the third is a Cloud Run job module removal.
 - **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:06363bf213d7661e]: KEEP-NA, valid — unchanged since
   2026-08-17. Sole remaining item is still a pure forward-pointer to its own sibling doc
   (`deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md`), not independent content.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

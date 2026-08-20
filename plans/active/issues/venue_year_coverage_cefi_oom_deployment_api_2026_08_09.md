@@ -57,6 +57,7 @@ context_scope:
   [
     deployment-api/deployment_api/routes/data_status/_live_coverage_venue_year.py,
     deployment-api/deployment_api/services/manifest_source.py,
+    deployment-api/deployment_api/services/data_status_union.py,
     /plans/archive/2026_08/cross_cutting_satellite_ao_dispatch_batch8_2026_08_09.md,
   ]
 ---
@@ -668,3 +669,4 @@ history unconditionally. Re-verify against live cefi/tradfi/defi afterward (this
   code on disk already implements the exact fix this todo describes and the SHA is on `origin/live-defi-rollout`.**
   **Live-prod re-verification is a separate follow-up** — the top-level INFRA todo should be re-run once this SHA
   reaches `main` and redeploys `uts-shared-deployment-api`, per this issue's established pattern.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries)

@@ -72,7 +72,8 @@ context_scope:
   [
     deployment-service/deployment_service/data_pipeline_monitors/meta_watchers.py,
     /plans/active/issues/dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md,
-    terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
+    deployment-service/terraform/gcp/data_pipeline_fleet_monitor_scheduler.tf,
+    deployment-service/cloud-build/deployment-service-jobs-image.cloudbuild.yaml,
   ]
 source: >-
   data_pipeline_failure escalation agt-582c52 — CRITICAL DP_CRON_DID_NOT_FIRE (DP-WATCHER-002) naming
@@ -219,3 +220,4 @@ backport precedent already used for this same job), not a same-session escalatio
   same "source fix silently never reaches the runtime" failure mode does not recur on the next fix to
   this file. Did not touch the terraform-drift todo (unrelated, still open, unchanged scope). No code
   changed this session — deploy-only fix, since the source fix from the prior session was already correct.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

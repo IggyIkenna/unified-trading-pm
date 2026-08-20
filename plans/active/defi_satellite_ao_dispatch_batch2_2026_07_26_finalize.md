@@ -111,3 +111,4 @@ context_scope:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-03**: refreshed context_scope (5 entries) -- deduped a repeated batch1-finalize entry, added
   the archival-discipline codex SSOT (the 6-step ritual this doc's archive todo runs).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

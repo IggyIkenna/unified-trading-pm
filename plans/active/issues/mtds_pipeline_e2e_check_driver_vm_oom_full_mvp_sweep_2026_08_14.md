@@ -708,3 +708,4 @@ Two independent angles, not mutually exclusive:
   explain what killed THIS VM; split off a new [DATA] P3 todo above asking whoever launches the next DEFI attempt to
   stay present for a live serial-console poll through the VM's first ~20min, since that is now the only way left to
   actually catch this signature with real evidence.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

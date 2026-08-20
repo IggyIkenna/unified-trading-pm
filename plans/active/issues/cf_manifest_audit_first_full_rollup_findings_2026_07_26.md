@@ -403,3 +403,5 @@ Full per-bucket rollup (excluding the Finding-1 false positives above):
   `sports_cf8_available_at_backfill_regression_2026_07_13.md` for `sports_cf8_captured_backfill_timeframe_dropped_2026_08_15.md`,
   the doc the still-open P3 sports CF-8 backfill todo's own text now names as carrying "full evidence + fix/cleanup/
   re-attempt todos" for the current blocker (a write-path bug found mid-execution 2026-08-15).
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries) — all existing entries still resolve and remain
+  accurate for the still-open P3 CF-8 backfill and its source/rollup docs.

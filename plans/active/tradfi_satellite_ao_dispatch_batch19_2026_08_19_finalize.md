@@ -36,6 +36,7 @@ context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /plans/active/tradfi_satellite_ao_dispatch_batch19_2026_08_19.md,
   ]
 supersedes:
 superseded_by:
@@ -76,3 +77,4 @@ source: >-
 - **2026-08-19, ag_closeout_auditor (dispatch agt-8b4230, slot 29)**: authored alongside batch19. `status: active`
   from the start per the skill's no-double-gate finding — `gate_on_depends` holds every task here until batch19's
   todos are actually done.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

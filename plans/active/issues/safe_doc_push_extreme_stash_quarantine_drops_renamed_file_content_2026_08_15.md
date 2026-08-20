@@ -45,6 +45,7 @@ locked_by:
 context_scope:
   [
     scripts/dev/safe-doc-push.sh,
+    scripts/dev/tree-wip-guard.sh,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01.md,
   ]
@@ -481,3 +482,4 @@ tracked-but-missing shape.
   any future multi-agent run on a shared checkout: verify every file's content at HEAD/on-disk immediately before
   staging in the final apply phase, never trust an earlier in-session verification alone — this run applied that
   discipline throughout and caught both reverts before they could ship silently.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

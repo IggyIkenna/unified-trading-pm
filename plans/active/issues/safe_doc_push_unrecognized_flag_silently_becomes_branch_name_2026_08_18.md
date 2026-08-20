@@ -40,7 +40,11 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
-context_scope: [/scripts/dev/safe-doc-push.sh]
+context_scope:
+  [
+    scripts/dev/safe-doc-push.sh,
+    scripts/dev/test-safe-doc-push-agent-flag-parsing.sh,
+  ]
 ---
 
 # safe-doc-push.sh silently treats an unrecognized `--agent` flag as the target branch name
@@ -167,3 +171,4 @@ timed out" (genuinely transient) in the retry loop's own error classification.
   error instead of corrupting the fetch/pull/push branch. Both cases pass locally. Shipped
   `unified-trading-pm@7adc383c84`. P2 (audit every other `$BRANCH` usage) and P3 (CLAUDE.md/SUB_AGENT_MANDATORY_RULES
   doc-parity update) remain open, tracked above — out of scope for this task.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries).

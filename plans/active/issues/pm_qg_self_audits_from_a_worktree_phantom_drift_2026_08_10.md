@@ -34,6 +34,7 @@ resolved_by:
 context_scope:
   [
     scripts/quality_gates/check_repo_docs_ssot.py,
+    scripts/dev/safe-doc-push.sh,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/06-coding-standards/quality-gates.md,
   ]
@@ -120,3 +121,5 @@ the full gate.
   open todo out of the AO backlog despite the audit's own explicit, reasoned decision to dispatch it. Applied the
   frontmatter flip this pass (`assigned_vm: planning`, `execution_scope: orchestrator-agent`) — mechanical, the
   judgment call was already made and documented above, just never landed.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

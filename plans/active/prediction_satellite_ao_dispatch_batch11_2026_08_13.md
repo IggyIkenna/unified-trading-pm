@@ -42,6 +42,7 @@ gate_on_depends: true
 context_scope:
   [
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
+    /plans/active/prediction_phase_ab_residuals_2026_07_24.md,
     /plans/active/prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
@@ -105,3 +106,4 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- added
   prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md, the explicit `Source:` doc both todos cite and the gate
   they're waiting on.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

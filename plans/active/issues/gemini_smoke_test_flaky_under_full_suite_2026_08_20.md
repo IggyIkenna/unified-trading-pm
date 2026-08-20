@@ -16,7 +16,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer, admin]
 tags: [agent-orchestrator, quality-gates, flaky-test, integration, smoke]
-related: [ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19]
+related: [ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19, ao_consolidated_closeout_2026_08_12]
 created: "2026-08-20"
 author: worker (slot 14)
 assigned_vm: planning
@@ -38,7 +38,12 @@ source: >-
   Observed 2026-08-20 while shipping the dirty-gate test fix
   (ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19.md BACKEND todo, agent-orchestrator@1e65044677):
   Pass-1 quality-gates.sh run 1 failed on this single flaky test; isolated run passed (~7s); full QG run 2 passed.
-context_scope: []
+context_scope:
+  [
+    agent-orchestrator/tests/test_gemini_litellm_translation_smoke.py,
+    /plans/archive/issues/ao_qg_red_dirty_gate_tests_and_missing_recharts_2026_08_19.md,
+    /plans/archive/issues/agent_orchestrator_qg_red_test_autospawn_magicmock_datetime_2026_07_30.md,
+  ]
 ---
 
 # agent-orchestrator QG intermittently RED — gemini smoke test flaky under load
@@ -78,3 +83,4 @@ Make the live smoke test resilient to load so it cannot intermittently red QG:
 - **2026-08-20 (slot 14)**: Filed after QG run 1 failed on this single test while shipping the dirty-gate fix;
   isolated run passed (~7s); full QG run 2 passed. Flake confirmed load/order-dependent, unrelated to the shipped
   diff (which touches only `tests/test_ao_self_pull_dirty_gate.py`).
+- **context-scout 2026-08-20**: populated context_scope (3 entries).

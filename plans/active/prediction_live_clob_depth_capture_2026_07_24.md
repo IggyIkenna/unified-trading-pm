@@ -931,3 +931,4 @@ sports/prediction-track blocker.
   valid (not-applicable) — re-confirmed 0 open todos via a fresh full read + dual-mode grep (strict + broad
   indent-agnostic). `archive_exempt: true` still correctly routes the archival decision to `/archive-candidates-audit`
   (complex referrer graph), not this skill. Doc stays NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

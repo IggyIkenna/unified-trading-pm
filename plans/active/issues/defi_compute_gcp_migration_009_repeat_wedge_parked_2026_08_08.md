@@ -41,7 +41,13 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-08
 locked_since:
-context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/routes/slots_ops.py, agent-orchestrator/server/auto_park.py]
+context_scope:
+  [
+    /plans/archive/2026_08/issues/review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md,
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/routes/slots_ops.py,
+    agent-orchestrator/server/auto_park.py,
+  ]
 ---
 
 # defi_compute_gcp_migration-009 repeat-wedge — durably parked pending root cause
@@ -122,3 +128,4 @@ reaching the point where a compact would be needed.
 - **plan-reconcile ao 2026-08-18 (hunter #6)**: live AO backlog check via `/check-agent-orchestrator` (SSM, read-only) for `defi_compute_gcp_migration-009` returned 0 matching tasks in the current backlog dump (which only surfaces `queued`/`dispatched`/`done`/`blocked`/`cancelled`, not a `parked` status) — inconclusive on its own (a proxy, not proof of resolution per CLAUDE.md's measurement-claims-discipline), so no checkbox touched on this basis. Merged the duplicate `## Progress log`/`## Progress Log` headers into one section (structural cleanup only, no content change).
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:9c714222de34d580]: KEEP-NA, valid — live-incident doc durably parked pending an external fleet-wide root cause (review_slot1_tmuxpruner_unexplained_crash_loop_2026_08_08.md); reconfirmed by name across 4 prior passes (na-eligibility-audit 2026-08-09, 2026-08-17 x2, plan-reconcile 2026-08-18), operator explicitly re-confirmed parked status 2026-08-09.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries) — added the now-archived tmuxpruner root-cause doc the open todos depend on

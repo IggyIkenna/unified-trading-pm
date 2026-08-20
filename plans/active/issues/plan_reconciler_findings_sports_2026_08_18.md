@@ -42,6 +42,8 @@ drift_direction: advance-code
 depends_on: []
 context_scope:
   [
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/archive/issues/plan_reconciler_findings_sports_2026_08_16.md,
     /plans/active/issues/ag_closeout_audit_sports_parked_2026_08_16.md,
@@ -297,3 +299,4 @@ writes and used only as read-only context where cited by a hunter or this orches
   archive-verified-but-deferred docs, not 3 — matches the "3 archival checkbox-count re-checks" figure exactly: 1
   landed + 2 deferred). `locked_by` cleared. STEP 7 result POST + STEP 8 `/done` follow immediately; 0 blocked
   questions means STEP 8's loop-and-wait collapses to immediate completion per the one-shot lifecycle contract.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

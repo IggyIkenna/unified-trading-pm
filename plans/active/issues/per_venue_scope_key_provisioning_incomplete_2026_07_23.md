@@ -270,3 +270,4 @@ All three are real design/priority calls, not something determinable from code o
   remaining open todos (`[HUMAN] P1` Bybit, `[BACKEND] P2` OKX/Hyperliquid, `[HUMAN] P3` Upbit/Kraken/Bitfinex/Bitget)
   are unchanged and correctly still open — no new done-but-unchecked or contradiction found. See the epic's own
   `## Report` section for the full run's findings.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

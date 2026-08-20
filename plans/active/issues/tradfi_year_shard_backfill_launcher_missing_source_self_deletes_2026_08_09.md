@@ -57,6 +57,8 @@ context_scope:
     /plans/archive/2026_08/tradfi_satellite_ao_dispatch_batch6_2026_08_01.md,
     deployment-service/scripts/vm/launch-tradfi-backfill-vm.sh,
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
+    market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
+    deployment-service/scripts/vm/es-opt-backfill-watcher.sh,
   ]
 # 2026-08-12 (/plan-reconcile): wired a real machine gate — the sole remaining open todo's `BLOCKED-ON:` free-text
 # marker does not match `_BLOCKED_TOKEN_RE`'s alternation (verified against the regex quoted live in
@@ -503,3 +505,4 @@ tracked in that doc, not duplicated here. It was actively re-growing the singlet
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

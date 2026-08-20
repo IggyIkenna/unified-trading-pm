@@ -139,3 +139,4 @@ across the full taxonomy; v2_engine_venue_buildout's per-venue items close.
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries) -- todo #2's closure today
   doesn't invalidate any existing entry; all 6 still relate to the sole remaining item (todo #1's triage over the 8
   source docs) and still resolve.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

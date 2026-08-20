@@ -37,6 +37,7 @@ locked_by:
 context_scope:
   [
     /plans/active/solana_dex_pool_swaps_indexer_2026_08_08.md,
+    /plans/active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md,
     /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
     /plans/archive/issues/solana_defi_fake_history_snapshot_2026_06_17.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
@@ -178,3 +179,5 @@ adapter capability, not a refactor or config change. Suggested todo breakdown fo
   leftover "N." template token between a checkbox and its tag), not a substantive edit. Sole open item unchanged;
   citation to `solana_dex_pool_swaps_indexer_2026_08_08_finalize.md` todo 2 still correct and current. No action
   needed.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

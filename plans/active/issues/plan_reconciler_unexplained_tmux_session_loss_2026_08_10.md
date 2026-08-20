@@ -67,6 +67,8 @@ context_scope:
     agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/scripts/orchestrator.service,
     agent-orchestrator/server/tmux_spawn.py,
+    agent-orchestrator/server/tmux_session_loss_rate_canary.py,
+    /plans/active/issues/ao_tmux_loss_rate_canary_likely_overtuned_2026_08_18.md,
   ]
 source: >-
   Surfaced 2026-08-10 while working `ao_satellite_ao_dispatch_batch10_2026_08_09.md` todo 4 (prove ONE plan_reconciler
@@ -188,3 +190,5 @@ the evidence gap already documented above, not as a definitive resolution of thi
   a genuinely distinct statistics/observability question from why sessions die; it IS the direct follow-on to the
   canary this doc recommended and got shipped (`agent-orchestrator@cc3b5b4`), so cross-linked as lineage, not as the
   same mechanism.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

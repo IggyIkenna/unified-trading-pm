@@ -534,3 +534,4 @@ them).
 - **context-scout 2026-08-15**: refreshed context_scope (5 entries) -- narrowed from 12 to the doc's now-remaining scope
   (3 codex docs + the security_and_cross_cutting_master epic + the AWS-side cluster configs for the pending teardown/todos 13-14),
   dropping the already-deployed GCP Cloud Run yaml configs and bucket_naming.py now that all 3 services are live.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

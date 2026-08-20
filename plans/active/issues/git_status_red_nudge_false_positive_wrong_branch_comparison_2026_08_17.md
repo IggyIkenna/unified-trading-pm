@@ -37,6 +37,7 @@ context_scope:
     agent-orchestrator/server/worker_liveness/_git_alerts.py,
     /codex/08-workflows/ci-cd-flow.md,
     /plans/active/ci_consolidated_closeout_2026_07_25.md,
+    scripts/dev/slot-git-status-report.sh,
   ]
 depends_on: []
 drift_direction: advance-code
@@ -108,3 +109,4 @@ upstream branch rather than a hardcoded `live-defi-rollout` comparison.
   still-open false-positive mechanism discovered via this run's own live boot-heartbeat occurrence (slot 1,
   2026-08-19) — see todo 3. `context_scope` needs a follow-up add of `scripts/dev/slot-git-status-report.sh`
   (the actual fix site for todos 1-2) — not yet added this pass, left for the next context-scout run.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).

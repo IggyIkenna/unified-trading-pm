@@ -741,6 +741,7 @@ the existing ledger's reset-crossing windows should be reconciled, not left as d
   the original yet). No code written this session — doc-only.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:ee26e6744e46c17e]: KEEP-NA, valid — explicit dated operator ruling on record: 'human plan, not AO-dispatched' for the whole doc's live-testing/design-call content (multi-provider billing/context research).
 - **na-eligibility-audit 2026-08-18 (ao tranche)**: RECLASSIFY (per-todo split) — re-read end to end. The doc-level 'human plan' ruling correctly covers the bulk of the remaining ~19 open todos (live-testing verification, schema/methodology design work, the GLM/Codex boost-parity workstream), all KEEP-NA on that citation. But 4 telemetry-capture todos added 2026-08-17 (compaction-occurrence join, peak-context watermark, repo-touched capture, context_scope-size capture) are pure bounded backend/DB engineering with zero design or live-testing judgment component — outside the cited ruling's own stated scope. Conflict-checked clear and extracted to `ao_satellite_ao_dispatch_batch24_2026_08_18.md` items 1-4. Doc stays `assigned_vm: NA` for its remaining ~19 items.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 
 ## Gates 7-8 — post-hoc performance analysis + final model recommendation (operator's 8-gate provider-readiness framework, added 2026-08-18)
 

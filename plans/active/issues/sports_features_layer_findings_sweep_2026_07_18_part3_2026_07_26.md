@@ -935,3 +935,4 @@ overwrite.
   still `- [ ]` open there (live-read today). No new work surfaced; doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-17** [body-hash:dc68418215fe614e]: KEEP-NA-STALE (already-duplicated) — both open items (§R) cited to sports_consolidated_closeout_2026_07_19.md Track E (verified status:active); doc's own text confirms the two items are literal duplicates of each other.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

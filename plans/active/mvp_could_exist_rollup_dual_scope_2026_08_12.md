@@ -601,3 +601,4 @@ variant. Todo 1 fixes this as the first step (small, isolated, verifiable indepe
   doc's todo 7 text and the most recent na-eligibility-audit pass (2026-08-17, same day) still cite the old un-prefixed
   name as if it were an open active doc; worth a human check on whether todo 7 is now unblocked, not resolved here
   (out of this skill's scope to edit todo prose).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

@@ -52,6 +52,7 @@ context_scope:
   [
     agent-orchestrator/server/worker_liveness_watchdog.py,
     agent-orchestrator/server/worker_liveness/__init__.py,
+    agent-orchestrator/server/fleet_slot_status.py,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
     /codex/04-architecture/runtime-deployment-topology.md,
   ]
@@ -170,6 +171,7 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:24ee848d2e464ac1]: KEEP-NA — the [BACKEND] durable-fix item is claimed by `ao_satellite_ao_dispatch_batch22_2026_08_16.md` (its todo 5 cites this doc by path); leave open, do not duplicate. **CORRECTED 2026-08-19 (`/plan-reconcile agent_operating_framework_master`)**: that doc's own frontmatter is `status: draft`, not active — `rg -n '^status:' plans/active/ao_satellite_ao_dispatch_batch22_2026_08_16.md` confirms `status: draft`, meaning the durable-fix work has never actually been dispatched to a worker despite the correspondence being real. Do not treat this item as covered until `ao_satellite_ao_dispatch_batch22_2026_08_16.md` is flipped `active`. The [OPERATOR] slot-3-recurrence item stays KEEP-NA (operator-only live-infra action; a 2026-08-16 staleness note is a suspicion, not hard evidence of closure).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).
 
 ## Related phase-derivation defect found 2026-08-19 (fold-in, operator-directed)
 

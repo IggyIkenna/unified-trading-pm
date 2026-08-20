@@ -50,7 +50,14 @@ execution_scope: local-only
 priority: P1
 drift_direction: advance-code
 depends_on: []
-context_scope: [agent-orchestrator/server/routes/slots_worker.py, agent-orchestrator/server/dispatch.py, agent-orchestrator/tests/test_human_fleet_endpoints.py, /codex/04-architecture/agent-orchestrator-worker-liveness.md]
+context_scope:
+  [
+    agent-orchestrator/server/routes/slots_worker.py,
+    agent-orchestrator/server/dispatch.py,
+    agent-orchestrator/tests/test_human_fleet_endpoints.py,
+    /codex/04-architecture/agent-orchestrator-worker-liveness.md,
+    agent-orchestrator/server/autospawn.py,
+  ]
 ---
 
 # Review slot hijacked by the human-claim routes' missing `human_slot_ids()` guard
@@ -146,3 +153,4 @@ full existing `test_human_fleet_endpoints.py` (21 passed) and `test_dispatch_rev
   untouched by this session (out of scope for this doc's edit) but its "Done when" criteria are now satisfied by this
   fix. The `[OPERATOR] P2` manual-recovery-decision todo remains open (live-infra judgment call, unrelated to this
   fix) — this doc stays `active`, not archived.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

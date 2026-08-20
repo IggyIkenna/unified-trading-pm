@@ -152,3 +152,4 @@ Still genuinely open, for the next run to re-assess against the primary RECLASSI
   artifact for this run's 52-doc classification pass (40 defi-owned). See
   `defi_consolidated_closeout_2026_07_18.md` for the tranche's own AG closeout tracker.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

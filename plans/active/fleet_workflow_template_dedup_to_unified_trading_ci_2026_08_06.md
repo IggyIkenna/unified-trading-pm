@@ -497,3 +497,4 @@ flagged to the operator directly in-session, fixed immediately per the small+cle
 '^- \[ \]'` confirms exactly 1 open todo (todo 10), still explicitly self-described as "genuinely optional...
 consider whether... warrants a standing guard" — a priority/design call on whether to build it at all, not a spec a
 worker can execute. `assigned_vm: NA` correct.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

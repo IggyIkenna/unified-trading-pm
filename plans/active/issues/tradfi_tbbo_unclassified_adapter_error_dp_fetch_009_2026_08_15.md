@@ -69,7 +69,15 @@ estimate_calibrated_ai_days: 0.48
 assigned_role: data_engineering
 drift_direction: unknown
 depends_on: []
-context_scope: [/plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md, /codex/02-data/tradfi-databento-sourcing-ssot.md, market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py, market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py, unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/tradfi.py]
+context_scope:
+  [
+    /plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    market-data-processing-service/market_data_processing_service/app/adapters/base_adapter.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/errors/tradfi.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+  ]
 last_updated: 2026-08-15
 parent_epic: tradfi_master
 priority: P1
@@ -324,3 +332,4 @@ answer):**
   matching the 08-16 marker. Flagging line 292 MISCLASSIFIED_LIKELY_AO_ELIGIBLE for a future pass — worth resolving
   which of the two fix paths is intended (a scoped design note pinning one approach would likely clear it) rather
   than re-flagging indefinitely. `assigned_vm` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

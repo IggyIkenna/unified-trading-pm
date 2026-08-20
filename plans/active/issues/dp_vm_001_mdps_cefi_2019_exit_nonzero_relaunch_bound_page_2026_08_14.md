@@ -29,7 +29,14 @@ related:
     /plans/active/issues/mdps_backfill_vm_fleet_wedged_mid_shutdown_and_monitor_blind_2026_08_11.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py,
+    deployment-service/deployment_service/data_pipeline_monitors/_gcs_tail.py,
+  ]
 created: "2026-08-14"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -142,3 +149,4 @@ guidance both point the same direction: stop and page.
   stale framing suggested; a 4th attempt is actively in flight. This does not yet confirm the shard is complete
   (the running VM hasn't reached a terminal state) — the `[OPERATOR]` todo stays open pending that outcome.
 - **na-eligibility-audit 2026-08-17 (re-verify, cefi tranche)** [body-hash:771f4cdd20a5f11f]: KEEP-NA, valid — re-confirmed after the 2026-08-17 backend_engineer entry (run.log root-caused, verify-only) and the further relaunch-chain update above. Sole open item ([OPERATOR] P1, relaunch-vs-wait) OPERATOR_QUESTION/DEPENDENCY_BLOCKED — pending the terminal outcome of the currently-RUNNING 4th relaunch attempt (mdps-cefi-2019-20260816-111308), not yet reached. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

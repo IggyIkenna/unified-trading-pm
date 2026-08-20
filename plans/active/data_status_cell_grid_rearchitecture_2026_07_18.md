@@ -190,3 +190,4 @@ real fix is to never load the whole manifest per request.
   on (`sequential: true`, added by plan_reconciler 2026-08-10, functions as the machine-readable gate). 5th
   consecutive audit pass reaching this verdict; `ui_satellite_ao_dispatch_batch1_2026_08_06.md` explicitly defers this
   doc's todo 2 back here rather than extracting it.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

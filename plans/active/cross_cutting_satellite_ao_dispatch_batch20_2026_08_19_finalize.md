@@ -68,3 +68,4 @@ source: >-
 
 - **2026-08-19 (ag_closeout_auditor, dispatch agt-ae73cd, slot 27)**: drafted alongside batch20 per the mandatory
   finalize-plan rule.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

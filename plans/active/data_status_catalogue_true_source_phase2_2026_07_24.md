@@ -166,3 +166,4 @@ prior design history verbatim from the parent plan's Progress Log.)_
   `assigned_vm: planning`. That extraction doc's own 2 todos are still open (no shipped sha yet), so this doc's
   checkbox is not pre-flipped — the citation already lives in this doc's 2026-08-16 Progress Log entry. Doc correctly
   stays NA per that same entry's operator ruling.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

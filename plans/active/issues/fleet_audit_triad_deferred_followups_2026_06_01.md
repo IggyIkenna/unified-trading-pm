@@ -212,3 +212,4 @@ revisiting; this doc's only remaining live topic is the `locked_by: harsh-fleet-
   in place with the accurate confirmed status, citing this doc as the evidence trail; left Job 2 (periodic serial
   capture / `vm_serial_capture_scheduler.tf`) explicitly unconfirmed since this doc's own record never verified that
   half. `context_scope` now 5 entries.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

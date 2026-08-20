@@ -178,3 +178,4 @@ automatic fleet-wide safety net that investigation's stated intent was.
   unresolved architecture trade-off (reuse the existing 45s-TTL inventory endpoint vs. build a narrower alert-check-only
   path) citing a specific OOM-regression-risk code comment. No content change since; doc has no `last_updated` field so
   this refresh anchors the next incremental diff.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

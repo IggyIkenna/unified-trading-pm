@@ -306,3 +306,4 @@ SOCCER_SWITZERLAND_SUPERLEAGUE, SOCCER_TURKEY_SUPER_LEAGUE, SOCCER_USA_MLS, SUPE
   accept static-audit-only validation), no evidence-based tiebreaker; 3 independent prior audit passes (2026-07-30,
   round7 08-08, round11 08-09) all agree. 🔒 banner forbids archive/unlock without explicit operator ruling.
 - **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries, all resolve).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

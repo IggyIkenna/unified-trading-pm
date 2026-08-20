@@ -80,6 +80,7 @@ context_scope:
   [
     alerting-service/alerting_service/notifiers/router.py,
     alerting-service/alerting_service/core/dedup.py,
+    alerting-service/alerting_service/core/recurring_dedup_persistence.py,
     deployment-service/deployment_service/data_pipeline_monitors/renag_tracker.py,
     /plans/archive/issues/dp_cron_did_not_fire_dedup_fix_deployed_but_ineffective_2026_08_17.md,
   ]
@@ -568,3 +569,4 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   confirmed clean, 0 ahead, before and after). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id,
   so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
   covered the FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

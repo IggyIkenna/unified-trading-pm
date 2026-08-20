@@ -134,3 +134,5 @@ recovery to full-chunk replay or a page — this needs its own verification + fi
   plan (assigned_vm: planning + status: active with an open Todos-section citation) claims either remaining item.
   Overall verdict for the cefi closeout-completeness sweep: orphaned_partial_coverage, non-batchable
   (operator-gated/time-gated per the standing 2026-08-16 ruling), one item resolved this run.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries) — all existing entries still resolve (the linked
+  design plan, the archived throughput-collapse doc, the MTDS orchestrator barrier, and the UTL concurrency adapter).

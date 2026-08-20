@@ -126,3 +126,5 @@ condition that recommendation was gated on has not yet been met. Todo 3 ([BACKEN
 ldr-ci-monitor.yml... should also cite streak_start_sha") is explicitly operator-gated ("Done when: the operator
 confirms whether this is worth the added complexity"). Tagged todo 2 `MISCLASSIFIED_LIKELY_AO_ELIGIBLE` (ready,
 deferred on timing) and todo 3 `OPERATOR_QUESTION`. Doc stays NA; no extraction this pass.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries) — the two workflow files still open, the shipped
+  QG workflow, and the ci-alerting SSOT all resolve.

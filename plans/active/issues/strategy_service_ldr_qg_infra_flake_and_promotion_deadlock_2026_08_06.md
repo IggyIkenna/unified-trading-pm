@@ -74,7 +74,15 @@ source:
     wall_type ldr_qg_failure,
     failing run https://github.com/IggyIkenna/strategy-service/actions/runs/30949045415,
   ]
-context_scope: [/codex/08-workflows/ci-cd-flow.md, /codex/15-runbooks/devops-ci-walls.md, unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml, unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh, unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh, agent-orchestrator/server/routes/slots_worker.py]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/15-runbooks/devops-ci-walls.md,
+    unified-trading-pm/.github/workflows/ldr-to-main-promote-fleet.yml,
+    unified-trading-pm/scripts/cicd/ldr_to_main_fleet_promote.sh,
+    unified-trading-pm/scripts/workflow-templates/rollout-workflow-templates.sh,
+    agent-orchestrator/server/routes/slots_worker.py,
+  ]
 ---
 
 # strategy-service LDR→main: QG "red" was infra flake; promotion deadlocked by broken backmerge on main
@@ -767,3 +775,4 @@ process itself in this pass).
   `/plan-reconcile` pass to convert to tracked `- [ ]` items per the findings-closure HARD RULE — out of this skill's
   own mandate (assigned_vm classification, not corpus-wide prose-vs-checkbox reconciliation) to author them here
   without a full re-verification read.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

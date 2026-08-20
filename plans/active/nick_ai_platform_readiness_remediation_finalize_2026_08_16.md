@@ -49,6 +49,7 @@ context_scope:
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
     /codex/02-data/honest-coverage-model.md,
     unified-api-contracts/scripts/generate_venue_universe_denominator.py,
+    /plans/active/data_pipeline_completion_2026_08_21.md,
   ]
 ---
 
@@ -152,3 +153,4 @@ which this session's W6 work also satisfies (one re-run, two plans' evidence).
   `venue_readiness_and_registry_hardening_2026_08_16.md` plan (evidence was reconciled into it this same doc's run), and
   `generate_venue_universe_denominator.py` (the script this doc's own findings cite twice as still 2-tuple-only).
 - **na-eligibility-audit 2026-08-17** [body-hash:85f392c2ef02541e]: KEEP-NA, valid -- genuine content change since the 2026-08-17 marker: todos 1 (W6 codex refresh) and 2 (reconcile evidence into sibling plan) both flipped [x] done 2026-08-18/2026-08-17 respectively (self-caught + corrected a wrong prerequisite assumption in the process, per the doc's own 2026-08-18 entry). Remaining 2 open items stay correctly gated: todo 3 ([REVIEW] P1, explicitly operator-paced review of the W2 Claude.ai artifact, not a completion gate per the doc's own text) and todo 4 (archive both plans, gated on todos 1-3 completing first). Gated finalize companion (depends_on + gate_on_depends: true on the main remediation plan) -- criterion (b) applies. Cross-cutting tranche audit.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

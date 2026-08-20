@@ -238,3 +238,4 @@ just (c).
     exists and inventing one is fabrication. **(C)** wire `strategy_orders` from execution-service's real fill data
     instead of strategy-service — a different repo/flow, out of this todo's declared repos, much larger scope.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

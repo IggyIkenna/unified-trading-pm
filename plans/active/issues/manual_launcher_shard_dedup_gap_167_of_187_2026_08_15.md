@@ -41,6 +41,7 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     deployment-service/scripts/vm/_tradfi-ohlcv-launcher-lib.sh,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
   ]
 ---
 
@@ -123,3 +124,4 @@ mechanism 9 launchers use) rather than inventing a new pattern per family.
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:64f3ac4f71545856]: KEEP-NA, valid -- 1 open item (grep-verified, matches inventory_open_todos=1): triage 166 VM launchers lacking any dedup/collision check. The doc's own text is explicit that this fails the bounded-outcome bar — 166 launchers each need individual judgment on collision semantics (one-shot vs idempotent), 'not a single mechanical sweep... size as its own plan, do not attempt as a single todo.' Precisely the class of work the rubric warns is not bounded merely for reading as one clean item.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries), unchanged.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries) — added scripts/vm/lib/launcher_common.sh (home of the shared lc_singleton_check/lc_acquire_singleton_lock the doc's Recommended decision routes the other 166 launchers onto).

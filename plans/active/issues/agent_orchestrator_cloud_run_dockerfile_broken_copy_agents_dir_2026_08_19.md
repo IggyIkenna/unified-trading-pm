@@ -39,6 +39,15 @@ execution_scope: local-only
 assigned_role: infra
 drift_direction: advance-code
 depends_on: []
+
+context_scope:
+  [
+    agent-orchestrator/Dockerfile,
+    agent-orchestrator/server/prompts.py,
+    /plans/active/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md,
+    /codex/05-infrastructure/agent-orchestrator-deploy.md,
+    /plans/archive/2026_05/agent_orchestrator_cloud_run_deployment_2026_05_19.md,
+  ]
 ---
 
 # agent-orchestrator's Cloud Run Dockerfile: broken `COPY agents/` step
@@ -91,3 +100,4 @@ now.
 - **2026-08-19**: Filed. Discovered as a side-effect of unrelated containerization work (Phase 4 of
   `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md`), verified directly, scoped as its own
   issue since it's a different deployment target/plan than the work that surfaced it.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

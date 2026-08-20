@@ -136,3 +136,4 @@ Candidate directions (not evaluated in depth, listed for whoever picks this up):
   `ag_closeout_audit_cross_cutting_parked_2026_08_19.md` Part C for the full resolution trail). Recorded as a
   tracked follow-up per the workspace's "every deferral is a `- [ ]` todo, never prose" rule — this finding had
   only existed as narrative in the parked-findings doc before this entry.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

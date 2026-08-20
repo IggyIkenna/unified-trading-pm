@@ -684,3 +684,4 @@ data-status, honest-coverage) still tracked on the parent, and the full aggregat
   test addition blocked on a separate flaky-test fix) stay DEPENDENCY_BLOCKED, established reasoning unchanged. Doc
   stays NA.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

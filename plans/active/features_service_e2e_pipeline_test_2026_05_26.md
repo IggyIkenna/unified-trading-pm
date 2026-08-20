@@ -818,3 +818,4 @@ Two bare `DEFERRED` mentions, re-audited 2026-07-21:
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (6 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:28890146b802ff05]: KEEP-NA, valid -- 1 open item (grep-verified, matches inventory_open_todos=1): usdc_idle_yield_apy_bps wiring, explicitly 'gated, not yet dispatchable' pending features-onchain shipping venue_funding_yield, which per the doc's own round5-cross-cutting-audit (2026-08-08) note has not yet shipped. Three prior na-eligibility-audit passes (2026-08-01, 2026-08-07, 2026-08-08) independently reached the same KEEP-NA verdict citing this exact upstream-not-shipped gate.
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

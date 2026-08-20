@@ -48,7 +48,14 @@ estimate_calibrated_ai_days: 0.48
 assigned_role: backend_engineer
 drift_direction: unknown
 depends_on: []
-context_scope: [/plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md, /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md, unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py, unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py, unified-api-contracts/unified_api_contracts/registry/market_data_categories.py]
+context_scope:
+  [
+    /plans/active/tradfi_manifest_content_recovery_completion_2026_07_24.md,
+    /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
+    unified-trading-library/unified_trading_library/canonical/_manifest_instrument_type_canon.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
+  ]
 last_updated: 2026-08-15
 parent_epic: tradfi_master
 priority: P1
@@ -895,3 +902,4 @@ AO-eligible follow-up:
   ancestors of `origin/live-defi-rollout`. **Needs a live re-check** (current `market-data-tick-tradfi-prd` manifest
   state / re-run the residual query) before this escalation can be closed either way — not done here, flagging for
   the operator + the next session that touches this doc.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

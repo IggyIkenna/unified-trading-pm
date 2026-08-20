@@ -224,3 +224,4 @@ checked against exact revision-swap timestamps to the second).
      unchanged: § 1(b) routing/dedup bug, in-process, not a live-infra failure — both flagged live-capture-stall VMs
      are a SEPARATE, already-tracked `[OPERATOR]` item in the sibling doc
      `dp_cron_did_not_fire_dedup_volatile_field_2026_08_17.md`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -238,3 +238,5 @@ state at current preemption volume?).
 - **context-scout 2026-08-17**: refreshed context_scope (6 entries, was 5) — added
   `cefi_track2_backfill_vm_preempted_no_recovery_2026_07_30.md`, the doc this issue's own "Why I did not force it"
   section cites as the established precedent for the same decline-and-wait posture.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries) — all existing entries still resolve and remain
+  relevant (the guard-bypass fix, its runbook, the precedent plan, and the two launcher/recovery source paths).

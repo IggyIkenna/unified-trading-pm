@@ -139,3 +139,4 @@ drift_direction: advance-docs
   batch1 precedent, tarball-deployment codex) against the doc's own `related:` field and body "Codex SSOTs" section;
   unchanged, all resolve. Genuinely code-free (3 read/report/file actions, no implementation), matching this skill's
   satellite-batch-coordinator exemption.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

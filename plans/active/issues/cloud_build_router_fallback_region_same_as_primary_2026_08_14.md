@@ -42,8 +42,11 @@ tags: [ci-cd, cloud-build-router, regional-fallback, escalation, false-positive,
 related:
   [/codex/08-workflows/ci-cd-flow.md, /plans/archive/issues/cloud_build_router_concurrency_drops_dispatch_2026_07_27.md]
 context_scope:
-  - .github/workflows/cloud-build-router.yml
-  - agent-orchestrator/server/escalation.py
+  [
+    .github/workflows/cloud-build-router.yml,
+    agent-orchestrator/server/escalation.py,
+    /codex/08-workflows/ci-cd-flow.md,
+  ]
 created: 2026-08-14
 priority: P3
 parent_epic: ci_master
@@ -109,4 +112,5 @@ same-region "fallback" would just fail the same way the primary did.
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:ff32366ad3f7d910]: KEEP-NA, valid — sole open item is an [OPERATOR] decision between provisioning real 2nd-region infra vs accepting same-region retry as permanent design; doc's own text calls it not worker-determinable.

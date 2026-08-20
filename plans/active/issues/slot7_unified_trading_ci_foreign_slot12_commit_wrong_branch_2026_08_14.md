@@ -42,7 +42,11 @@ superseded_by:
 resolved_by: ""
 last_updated: 2026-08-14
 context_scope:
-  [/codex/05-infrastructure/per-tab-worktrees.md, /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md]
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
+    scripts/hooks/slot-identity-lib.sh,
+  ]
 ---
 
 # slot-7's unified-trading-ci checkout: foreign slot-12 commit on the wrong branch
@@ -126,3 +130,4 @@ this task's repo). Needs a human or a dedicated diagnostic task to:
   session's "GIT STATUS RED...AHEAD=3" nudge for this repo was already stale/false-positive by the time I read it
   (measured 1 ahead of `live-defi-rollout`, matching `git_status_red_nudge_false_positive_wrong_branch_comparison_
   2026_08_17.md`'s diagnosis) — acked as stale, not touched, per established precedent.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).

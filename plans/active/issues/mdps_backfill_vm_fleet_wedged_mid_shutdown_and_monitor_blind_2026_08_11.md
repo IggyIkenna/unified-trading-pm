@@ -35,6 +35,7 @@ context_scope:
     /plans/active/data_pipeline_alert_storm_root_cause_batch_2026_08_10.md,
     deployment-service/scripts/vm/reap_vms.py,
     deployment-service/scripts/recovery/relaunch_backfill_vm.py,
+    deployment-service/scripts/vm/probe_vm_serial_liveness.sh,
   ]
 created: "2026-08-11"
 parent_epic: security_and_cross_cutting_master
@@ -303,3 +304,4 @@ guest liveness on 2 samples) — a future check should confirm they're actually 
     reaping is already this doc's own tracked P0/P1 territory). No code shipped this session; this Progress Log entry is
     the only change. `/done` posted with `one_shot_complete: true`.
 - **na-eligibility-audit 2026-08-17** [body-hash:d726b3c7c8b4120f]: KEEP-NA, stale-items corrected -- closed 3 of 6 open items (Cloud Run concurrency/lease, deployment-service@0c38c00d image-verification, 39-VM re-probe): all already done via the active cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md (same parent_epic infrastructure_master), each ending with an explicit Source: citation to this exact doc -- deployment-service@2855b17833 (GCS CAS lease, 2026-08-15), image verification CONFIRMED YES (2026-08-15, tag 4048e78), and the 39-VM re-probe found NOT-ATTEMPTED-premise-unmet (VM names never persisted, fleet fully turned over). Doc stays assigned_vm: NA for its 3 remaining items (1 P0 unpause blocked-on-deploy, 1 P1 shutdown-path design, 1 P1 [OPERATOR] live-producer restart). Cross-cutting tranche audit conflict-check finding.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries) — added the promoted probe_vm_serial_liveness.sh (named in the P2 re-probe todo).

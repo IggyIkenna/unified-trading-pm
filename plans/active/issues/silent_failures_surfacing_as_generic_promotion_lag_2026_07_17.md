@@ -233,3 +233,4 @@ small/low-risk change despite being bundled into one todo.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Issue doc tracking 3 already-fixed root causes plus 3 remaining open items about the promotion-lag alert being a symptom detector. grep confirms 3 open checkboxes (L108 P0 redo-the-||-true-fix, L174 P2 detect_breaking_change.py TS-blind-spot, L178 P3 systemd StartLimitBurst). The P0 item is explicitly operator-gated: its own root-cause section documents that the first retry attempt BROKE PROD (crash-looped all 5 glue runners, ~34 restarts) and mandates a --selfcheck whole-script validation...
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

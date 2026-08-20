@@ -48,6 +48,7 @@ context_scope:
     /plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md,
+    /plans/active/issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md,
   ]
 source: >-
   `/na-eligibility-audit defi` (2026-08-18, dispatch agt-2c8a26, slot 31). Both items cleared the shared
@@ -118,3 +119,4 @@ drift_direction: advance-code
   `plans/active/issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md`. Every todo in this batch is
   now closed; not archiving this pass since `defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md` gates on it
   via `depends_on`/`gate_on_depends: true` — leave archival to that finalize plan's own flow.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

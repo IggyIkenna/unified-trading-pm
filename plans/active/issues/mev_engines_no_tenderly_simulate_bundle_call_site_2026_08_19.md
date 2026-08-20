@@ -21,6 +21,15 @@ resolved_by: ""
 locked_by: ""
 source: [defi_satellite_ao_dispatch_batch17_2026_08_18.md item "Confirm whether the MEV engines actually call
   TenderlyExecutionProvider.simulate-bundle"]
+context_scope:
+  [
+    strategy-service/strategy_service/engine/strategies/v2/mev/liquidation_bundle.py,
+    strategy-service/strategy_service/engine/strategies/v2/mev/jit_liquidity.py,
+    strategy-service/strategy_service/engine/strategies/v2/mev/sandwich_theoretical.py,
+    execution-service/execution_service/providers/tenderly.py,
+    execution-service/execution_service/providers/matching_engine.py,
+    /codex/05-infrastructure/chain-rpc-mev-tenderly.md,
+  ]
 ---
 
 ## What I found
@@ -111,3 +120,5 @@ architecture choice, not a bounded todo. Recommend routing through `matching_eng
   re-tagged — wiring deferred post-cutover, gated on building the bundle-submission path. B (build now) contradicts the
   standing operator 2026-05-10 stub of `FLASHBOTS_BUNDLE_RELAY`; C (wire into `matching_engine.py`) is the misread
   already corrected above.
+
+- **context-scout 2026-08-20**: populated context_scope (6 entries).

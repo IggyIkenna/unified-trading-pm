@@ -39,6 +39,13 @@ source: >-
   session independently reproduced the measurement before filing.
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    execution-service/execution_service/defi_execution/monitors/health_factor_monitor.py,
+    execution-service/execution_service/algo_library/deleverage_executor.py,
+    /codex/04-architecture/position-risk-centralization.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+  ]
 ---
 
 # The liquidation trigger path has no production caller
@@ -99,3 +106,4 @@ nothing and logs nothing, so its absence is invisible until it matters.
 **2026-08-19 — filed.** No code touched. Measurement reproduced independently by the orchestrating session before
 filing; the sub-agent that first reported it had tracked it only as a `[AGENT] P2` trace task inside an unrelated
 repricer design doc, which understates a funds-safety gap.
+- **context-scout 2026-08-20**: populated context_scope (4 entries).

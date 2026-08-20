@@ -44,6 +44,7 @@ context_scope:
     /plans/archive/2026_06/live_data_persistence_central_event_log_2026_06_25.md,
     deployment-service/deployment_service/jobs/live_event_log_compactor.py,
     deployment-service/terraform/gcp/live_event_log/compaction_job.tf,
+    market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
   ]
 execution_scope: orchestrator-agent
 drift_direction: advance-code
@@ -290,3 +291,4 @@ per-tick files). This issue doc is the problem-record; the plan is the executabl
 
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (5 entries), unchanged.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -31,7 +31,12 @@ assigned_role: backend_engineer
 effort: medium
 locked_by:
 resolved_by:
-context_scope: [/plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md, execution-service/execution_service/cli/handlers/live_execution_handler.py, execution-service/execution_service/orchestration/orchestrator.py]
+context_scope:
+  [
+    /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
+    execution-service/execution_service/cli/handlers/live_execution_handler.py,
+    execution-service/execution_service/orchestration/orchestrator.py,
+  ]
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
@@ -88,3 +93,4 @@ filing — see the todos above for that verification work. Flagged to the operat
 per the workspace's big-finding notification rule (cross-cutting to live execution correctness).
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:3655dacfb7f13e16]: RECLASSIFY (per-todo split) -- extracted 3 of 4 open items (independently verify the protocol mismatch, determine blast radius if confirmed, add a real end-to-end test) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md items 12-14. Doc stays assigned_vm: NA for its 1 remaining item ('Fix the mismatch') -- genuinely gated on the diagnosis outcome (widen the protocol vs fix the implementation), not bounded standalone. Cross-cutting tranche audit.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

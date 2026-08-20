@@ -68,7 +68,14 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope: [deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh, deployment-service/scripts/vm/vm_zombie_watchdog.py, market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py, /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md, /codex/15-runbooks/incidents/rb_infra_relaunch.md]
+context_scope:
+  [
+    deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh,
+    deployment-service/scripts/vm/vm_zombie_watchdog.py,
+    market-tick-data-service/scripts/fold_legacy_dex_pools_swaps_rate_indices_2026_08_04.py,
+    /plans/active/issues/defi_manifest_allow_stale_fallback_incomplete_for_long_pause_2026_08_07.md,
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+  ]
 ---
 
 # `backfill-defi-legacy-datatype-fold-` relaunch: consolidator fresh, but VM infra failed twice (2026-08-15)
@@ -176,3 +183,4 @@ precondition-satisfied but not yet executed to completion. Per `/codex/15-runboo
   plan's own review todo already flags this exact source-doc-not-yet-flipped gap; this run closes it from the infra
   side. Doc stays `assigned_vm: NA` (its own scope is now fully superseded by the batch14 claim, not independently
   actionable).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — unchanged, still accurate

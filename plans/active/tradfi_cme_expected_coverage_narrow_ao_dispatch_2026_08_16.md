@@ -45,6 +45,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/registry/expected_coverage.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
     deployment-api/deployment_api/services/data_status/reference_scope.py,
+    /codex/02-data/availability-manifest-and-data-status.md,
   ]
 locked_since:
 resolved_by:
@@ -69,3 +70,4 @@ resolved_by:
   `tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md` for AO dispatch, since the parent doc
   stays `assigned_vm: NA`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

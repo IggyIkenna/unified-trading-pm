@@ -49,6 +49,7 @@ context_scope:
     /plans/active/deployment_registry_firestore_migration_2026_07_14.md,
     /plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
     unified-trading-library/unified_trading_library/cloud_interface/gcs_blob_ops.py,
+    deployment-api/deployment_api/services/sync_service.py,
   ]
 ---
 
@@ -276,3 +277,4 @@ QG-green per repo.
   gates all 4 remaining sequential todos; this is live dispatch-critical-path machinery (fleet-wide VM deployment
   registry) so a premature GCS-write-drop risks blinding registry visibility. 6th consecutive audit pass (2 infra + 4
   ui) reaching this verdict.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

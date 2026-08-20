@@ -117,7 +117,7 @@ context_scope:
       2026-08-10 pass deferred — this is a bounded, read-only comparison with 4 stated pass criteria, conflict-checked
       clear). Closing this tracking copy; the actual work + its PASS/FAIL result live in the batch now.
 
-- [ ] [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
+- [x] ✅ [DATA] P1. E6 CF-7 relabel. **CF-7 NOW BAKED INTO THE MIGRATOR (mtds@4b311c93)** — `_cf7_normalise` runs in BOTH
       path transforms BEFORE dedup: `venue UNKNOWN/blank → POLYMARKET` (prediction is single-venue today; Kalshi lands
       born-canonical), `data_type prediction_trades → trades` (verified the same markets). Grounded by the
       operator-requested overlap verification (2026-06-01): clean `(POLYMARKET,trades)` overlap is **byte-identical**
@@ -127,7 +127,15 @@ context_scope:
       small):** blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the
       parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom
       (honest drop). **(MIGRATED FROM: `prediction_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS
-      consolidation ruling.)**
+      consolidation ruling.)** **CLOSED 2026-08-20 — `prediction_satellite_ao_dispatch_batch13_2026_08_19.md` item 2
+      (CF-7 relabel residual diagnosis, slot-31, 2026-08-19) resolved the residual: corrected counts 21 UNKNOWN-venue
+      (exact) + 168 sibling blank-venue cells + 18 blank-data_type rows (vs the ~21/~17 estimates here), ALL PHANTOM
+      (blank `instrument_id` → no condition_id → no backing object) and ALL absent from the live 2,814,442-row `_index`
+      and a 41-day object-layer walk (on-disk venues = {KALSHI, POLYMARKET} only, data_types = {book_snapshot_5, trades}
+      only — the legacy `prediction_trades`/`book_snapshot` aliases are fully relabeled, none remain). 0 object-backed
+      cells found → no relabel/delete/code-change needed, no new issue doc (per that item's own instruction, gated on
+      finding object-backed cells). Both halves of this item (the migrator-code relabel + its residual diagnosis) are
+      now confirmed complete.
 
 - [ ] [UAC] P3. **FINDING — new `grain_for_instrument_type('prediction','prediction_market')` returns `leaf` (slot-5
       verify 2026-06-07).** Correct for the INSTRUMENT axis (prediction markets are per-market leaves; no
@@ -522,3 +530,11 @@ range never overlaps a still-in-flight per-market-only day).
   enforcement_2026_07_24.md` for an open prediction-specific item gated solely on this comparison and
   `legacy_bucket_dual_write_decommission_2026_07_24.md`'s L6 gate (already DONE 2026-07-13 for prediction, predates
   this result) -- neither had anything left to flip. 16 open todos -> 14.
+- **2026-08-20 (batch13-finalize reconciliation — slot-11)**: `prediction_satellite_ao_dispatch_batch13_2026_08_19_
+  finalize.md` item 1 re-verified this doc's items 1-4 against what batch 13 actually found. Items 1 (C-pipeline_mode
+  RIDER), 2 (C-source RIDER), 3 (post-walk comparison) were already correctly `[x]` from the 2026-08-19/batch13-item-1
+  passes above — no correction needed. Item 4 (E6 CF-7 relabel) was still `[ ]` open pending its residual's diagnosis;
+  batch13 item 2 (2026-08-19, slot-31) ran that diagnosis and found **NO-ACTION — all residuals PHANTOM, 0
+  object-backed**, so item 4 is now flipped `[x]` citing that result (see the item's own updated text above for the
+  full corrected counts). 14 open todos -> 13.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

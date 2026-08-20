@@ -35,6 +35,12 @@ source: >-
   the endpoint's docstring.
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/api/routers/external.py,
+    /codex/14-customer-journeys/commercial-model/platform-api-reference.html,
+    /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
+  ]
 ---
 
 # `data_type` without `venue` is silently ignored
@@ -73,3 +79,5 @@ one day suggests the pattern is worth a sweep, not just two point fixes.
 
 **2026-08-19 — filed.** Not fixed; no MTDS code touched. Surfaced during client-artefact work, so it is disclosed
 in the API reference as known behaviour pending this fix rather than documented as intended.
+
+- **context-scout 2026-08-20**: populated context_scope (3 entries).

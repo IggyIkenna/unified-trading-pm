@@ -772,3 +772,5 @@ produced reports) — see the plan diff in the same commit as this issue doc.
 - **context-scout 2026-08-17**: refreshed context_scope (6 entries), unchanged -- the gating parent/finalize plans, the
   two VM-preemption codex SSOTs, the launcher script, and the escalation-cooldown module still cover the doc's subject
   matter through the 10th-relaunch dispatch churn.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries) — all existing entries still resolve (the gating
+  parent/finalize plans, the two VM-preemption codex SSOTs, the launcher, and the escalation-cooldown module).

@@ -32,7 +32,15 @@ source: ["AO dispatch of cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [market-tick-data-service/configs/venue_data_types.yaml, deployment-api/deployment_api/routes/batch_config_utils.py, deployment-api/deployment_api/routes/data_batch_processing.py, /plans/archive/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md, /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md]
+context_scope:
+  [
+    market-tick-data-service/configs/venue_data_types.yaml,
+    deployment-api/deployment_api/routes/batch_config_utils.py,
+    deployment-api/deployment_api/routes/data_batch_processing.py,
+    /plans/archive/issues/axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -113,5 +121,6 @@ progress that no single plan tracks to completion.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:6b8c25824bd0d572]: KEEP-NA, valid -- Fresh issue explicitly filed to correct a prior drafting audit's mis-scoping of a batch13 AO todo. Both remaining todos are explicitly sequenced: todo 1 behind a sibling issue doc's unresolved fix (axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md's unbounded-read performance bug in get_data_status_turbo_impl), todo 2 behind todo 1's own output (a completeness report). The doc's own text states the umbrella capture ask is an unbounded, multi-AG, many-VM-hours operation, not a worker-determinable outcome.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 2 open todos, both explicitly sequenced: todo 1 behind a sibling issue doc's unresolved unbounded-read-performance fix (axis_value_census_mdps_scope_unbounded_read_hang_2026_08_15.md), todo 2 behind todo 1's own future.

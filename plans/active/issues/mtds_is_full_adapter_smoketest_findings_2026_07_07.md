@@ -746,3 +746,4 @@ were prose-only follow-ups — converted to real todos below per "every follow-u
   verified, left open. The other 4 open items (ODDS_API ownership research, FLUID 18-month coverage gap, 273-row
   DERIBIT/COMBO mistagging root-cause, drilldown-mockup update) remain open-ended research/investigation per 6+ prior
   independent passes — reaffirmed. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -372,3 +372,4 @@ None — all 80 non-grace docs in the cefi tranche were read in full by the hunt
   still outside cefi-tranche write scope). Doc stays `status: open`, `locked_by: plan_reconciler-agt-2e82f7`
   unchanged (not archived — 2 genuine open items remain; the lock gates archival/unlock only, per
   `agents/plan_reconciler.md`, not general Progress-Log append edits already made by 2 prior sibling-skill passes).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

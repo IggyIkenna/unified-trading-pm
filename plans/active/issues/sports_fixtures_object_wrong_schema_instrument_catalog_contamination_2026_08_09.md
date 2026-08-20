@@ -789,3 +789,4 @@ transcript available in that session's Progress Log entry on
   observed, plus whatever the un-scanned 2025-05-10→2026-08-16 range surfaces) into the count and flip the todo-3
   checkbox.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

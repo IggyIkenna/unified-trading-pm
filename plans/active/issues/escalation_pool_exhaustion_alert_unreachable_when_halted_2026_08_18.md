@@ -49,7 +49,12 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-18
 locked_since:
-context_scope: [agent-orchestrator/server/escalation.py, agent-orchestrator/server/autospawn.py]
+context_scope:
+  [
+    agent-orchestrator/server/escalation.py,
+    agent-orchestrator/server/autospawn.py,
+    /codex/04-architecture/agent-orchestrator-alerting.md,
+  ]
 source: >-
   Found by escalation_queue_reconciler's routine 3-hourly `/escalation-queue-reconcile` check (slot 4, dispatch
   agt-a4ff24) — Step 1's cheap check surfaced 11 queued rows well past the 45-min deadline with `attempts=0`, which
@@ -174,3 +179,4 @@ failed" vs. "no attempt was made at all" if that distinction ever becomes alert-
   Queue had already begun self-clearing by the time of filing (2/9 remaining rows dispatched) — no immediate operator
   action needed; this doc tracks the alerting-gap code fix only.
 - **na-eligibility-audit 2026-08-19 (ao tranche)**: RECLASSIFY (whole-doc) -> `assigned_vm: planning`. Fresh (2026-08-18), root-caused, fully-scoped fix with exact call-site/mechanism citations; both todos (decouple the alert + live-verify) are bounded/deterministic, chained via `sequential: true` since todo 2 is explicitly gated on todo 1 landing. Conflict-check clear: the naming-adjacent `ao_satellite_ao_dispatch_batch21_finalize_2026_08_16.md` mention of `pool_exhaustion` refers to a DIFFERENT mechanism (DB connection pool, `orchestrator_db_pool_exhaustion_state_poll_stall_2026_07_25`), not the escalation pool-exhaustion alert this doc targets. Companion gated finalize: `escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18_finalize_2026_08_19.md`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

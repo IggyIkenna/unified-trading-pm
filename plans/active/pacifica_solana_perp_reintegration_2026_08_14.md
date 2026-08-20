@@ -56,6 +56,7 @@ context_scope:
     /codex/04-architecture/solana-defi-coverage.md,
     /codex/09-strategy/architecture-v2/archetypes/carry-funding-dispersion.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    market-tick-data-service/scripts/migrate_pacifica_quarantine_canonical_2026_08_15.py,
   ]
 source: >-
   Split out of /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md 2026-08-14. That plan's
@@ -470,3 +471,4 @@ shard-specs against), but the connector code itself doesn't hard-depend on §C �
   via raw `tail`, not a display artifact) — closed honestly without fabricating the missing detail; the "26/27"
   count was also off by one against a fresh `grep -cE` recount (27 done + 1 open = 28 total, not 27). See the
   doc's own Todos section for the actual per-item evidence citations rather than this summary line.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

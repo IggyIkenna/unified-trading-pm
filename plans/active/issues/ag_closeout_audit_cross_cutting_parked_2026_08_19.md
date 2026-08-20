@@ -86,6 +86,7 @@ context_scope:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch20_2026_08_19.md,
+    /plans/active/issues/ag_closeout_audit_fork_scope_creep_duplicate_batch_draft_2026_08_19.md,
   ]
 ---
 
@@ -225,3 +226,4 @@ retagged (22), dispatched (9), or deferred-with-taxonomy (17 + 2 partial), no do
   covering 9 of 26 genuine orphans, 17 deferred by taxonomy, 1 concurrent-dispatch naming collision caught and
   resolved without data loss (2 close calls, both recovered), 4 prior parked docs fully reconciled and archived by
   a concurrent corrective pass on the same slot.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -161,3 +161,4 @@ tier=1/priority=20 pool and got re-picked by the very next free slot).
 - **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — re-assessed the carried-forward "auto-escalate skip-current-task to durable park after N repeats" item (todo 2) per the close-the-loop rule: still needs a genuine design call (N threshold, count-vs-time window semantics, fleet-wide-vs-task-type scope) for a core dispatch-safety mechanism — not a pure copy of the cited auto_park.py precedent, since the trigger condition differs materially (repeat skips across slots vs. BLOCKED/PARKED/GATED declines). Stays KEEP-NA on that item; doc otherwise unchanged. Doc stays assigned_vm: NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).

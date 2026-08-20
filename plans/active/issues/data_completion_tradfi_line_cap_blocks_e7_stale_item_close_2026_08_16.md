@@ -37,7 +37,13 @@ priority: P2
 execution_scope: local-only
 drift_direction: advance-docs
 depends_on: []
-context_scope: [/plans/active/data_completion_tradfi_2026_07_15.md, scripts/plan-hygiene/check_line_caps.sh, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md]
+context_scope:
+  [
+    /plans/active/data_completion_tradfi_2026_07_15.md,
+    /plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md,
+    scripts/plan-hygiene/check_line_caps.sh,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+  ]
 ---
 
 # data_completion_tradfi_2026_07_15.md is AT (not over) the 1000L hard cap — blocks even a marker-only edit
@@ -140,3 +146,4 @@ this file cleanly (`git checkout --`, verified clean, 1000L).
   (split `data_completion_tradfi_2026_07_15.md`) remains real content-judgment work — how to divide 1000L+ of dense
   tradfi history — explicitly out of scope for an incidental audit-run fix per this doc's own "What was NOT done"
   section (better suited to a dedicated `/plan-reconcile` or manual split pass). `assigned_vm` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries) — added the E7 extraction target tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md

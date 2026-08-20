@@ -85,20 +85,25 @@ test_method: string # pytest mark or description
 
 ## Escalation rule
 
-Evaluated by `alerting_service.rules.evaluate_dependency_health(event_details, policy)`:
+Evaluated by `alerting_service.rules.evaluate_dependency_health(event_details, policy)` as an ORDERED if/elif chain —
+the first matching condition wins, checked top-to-bottom exactly in this order (not 5 independent conditions):
 
 ```
-outage < expected_recovery_time                                          → None (no alert)
-outage in [expected, expected + warning_buffer]                          → WARN
-outage in [warning+buffer, warning+buffer + human_inv_buffer (900s)]     → SEV1
-outage >= hard_escalation_seconds                                        → SEV0
-outage >= expected_recovery_time AND fallback_available=False            → SEV0
+if outage >= hard_escalation_seconds
+   OR (fallback_available=False AND outage >= expected_recovery_time):   → SEV0   (checked FIRST)
+elif outage >= expected_recovery_time + warning_buffer + human_inv_buffer (900s): → SEV1
+elif outage >= expected_recovery_time + warning_buffer:                 → WARN
+elif outage >= expected_recovery_time:                                  → None (sub-warn band, no alert)
+else (outage < expected_recovery_time):                                 → None (no alert)
 ```
 
 **No-fallback is a severity floor, not a duration bypass (fixed 2026-08-13)**: `fallback_available=False` alone no
 longer escalates to SEV0 on any `outage > 0` — that shipped bug would have paged on a single failed probe for the 10
 policies with `fallback_available: false`. It now requires the outage to have already reached
-`expected_recovery_time_seconds` before "no fallback" raises severity to SEV0.
+`expected_recovery_time_seconds` before "no fallback" raises severity to SEV0. Being the FIRST-checked branch is what
+makes it a floor: once the outage clears `expected_recovery_time` with no fallback, it escalates straight to SEV0
+regardless of whether it would otherwise have only matched the WARN/SEV1 bands below (verified against
+`alerting_service/rules/connectivity_rules.py::evaluate_dependency_health`, 2026-08-20).
 
 ## Status — WIRED end-to-end (2026-08-13)
 

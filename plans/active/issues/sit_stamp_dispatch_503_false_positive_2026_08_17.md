@@ -39,7 +39,12 @@ archive_exempt:
 resolved_by:
 last_updated: 2026-08-18
 locked_since:
-context_scope: [system-integration-tests/scripts/run_cross_repo_invariants.sh, /codex/08-workflows/ci-cd-flow.md]
+context_scope:
+  [
+    system-integration-tests/scripts/run_cross_repo_invariants.sh,
+    /codex/08-workflows/ci-cd-flow.md,
+    .github/workflows/sit-unlock.yml,
+  ]
 source: >-
   cicd escalation agt-0e693e (wall_type=sit_failure, dispatched from unified-trading-pm run 32040085860, itself
   triggered by system-integration-tests full-workspace-sit run 32039884966 @ 2026-08-17T14:40:56Z). Investigated by
@@ -117,3 +122,4 @@ specific class was diagnosed down to the log line rather than assumed to be a re
   went fully green (invariants + stamping) by 19:12Z the same day — self-resolved once GitHub's API recovered. No code
   fix pushed (none was needed/justified). Filed this issue for the stamp-vs-invariant failure-class disambiguation
   follow-up above; closing out the escalation as resolved-on-arrival.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).

@@ -217,3 +217,4 @@ used).
   this same corpus's own established precedent (`plan_reconciler_findings_defi_2026_08_16.md`'s identical
   1000L-cap class of finding: "splitting a plan is an operator-gated planning decision per CLAUDE.md, not a
   mechanical trim"). Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

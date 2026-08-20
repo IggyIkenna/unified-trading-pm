@@ -407,6 +407,7 @@ which value is measured-reality is needed per venue, not a mechanical merge.
   (that doc already cites this one back). The "19-VM fleet" this doc's Follow-up is watching was actually a 298-VM P0
   runaway-billing-waste incident, cleaned to 8 keepers (1/cell) the same day. Added as a 6th context_scope entry so the
   next worker on the HYPERLIQUID re-verify Follow-up sees the fleet's real current state, not the stale "19 VMs" framing.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 
 ## Follow-ups
 

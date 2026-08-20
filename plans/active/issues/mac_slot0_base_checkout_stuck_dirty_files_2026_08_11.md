@@ -28,7 +28,12 @@ related:
     /plans/archive/2026_08/ao_satellite_ao_dispatch_batch19_2026_08_10.md,
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
-context_scope: [/codex/05-infrastructure/per-tab-worktrees.md, unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh]
+context_scope:
+  [
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    unified-trading-pm/scripts/dev/slot-cron-ff-pull.sh,
+    scripts/workspace/link-claude-skills.sh,
+  ]
 created: 2026-08-11
 last_updated: 2026-08-11
 parent_epic: security_and_cross_cutting_master
@@ -93,3 +98,4 @@ fast-forward).
 - **context-scout 2026-08-14**: populated context_scope (2 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (2 entries), unchanged.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:232a39505df4eaf3]: KEEP-NA, valid — sole open todo asks the operator to decide commit-vs-discard for 3 specific uncommitted files across 3 repos — genuine judgment about human intent behind pre-existing edits.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

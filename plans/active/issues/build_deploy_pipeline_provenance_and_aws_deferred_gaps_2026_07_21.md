@@ -227,3 +227,4 @@ by ci_satellite_ao_dispatch_batch7_2026_08_09.md same-day: '0 extractable.
   dependencies).
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Carries an explicit dated operator ruling at the top ('Page-first, do NOT fix here', operator 2026-07-21) plus 10+ sequential na-eligibility-audit KEEP_NA confirmations from 2026-07-30 through 2026-08-10, each re-reading the doc end-to-end with no material change found. 3 of the 4 original todos are already [x] closed with shipped-commit evidence (#4 and #7 AWS-lane fixes shipped 2026-08-07; #1 confirmed not-a-bug by the operator 2026-07-24, semver-agent dead deliberately). The sole...
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

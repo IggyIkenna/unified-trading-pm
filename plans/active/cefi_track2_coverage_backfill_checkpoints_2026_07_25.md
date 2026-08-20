@@ -339,6 +339,7 @@ context_scope:
   cadence dropped off after 2026-08-10, which is how a 4-day VM death went unnoticed until this check. Declining
   `/data-pipeline-check-mtds` — running it now would misrepresent a ~26%-complete backfill as the POST-BACKFILL FINAL
   GATE verdict. Skipping `-005` via `reason_code: "GATED"` per the established mechanism.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 
 ## Reconciliation
 

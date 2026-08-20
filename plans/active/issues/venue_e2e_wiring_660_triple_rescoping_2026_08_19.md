@@ -88,3 +88,4 @@ independently rather than reopening the 4 already-archived batches.
 - **2026-08-19T18:47Z**: filed by `plan_reconciler` (dispatch `agt-b2fcb2`, cross-cutting tranche) applying the
   operator's `BLK-f87a4927` answer (B). No re-derivation attempted here — that is real engineering work (estimate
   class `research`), out of this run's own remit (detect/verify/route, not execute multi-AG re-scoping).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

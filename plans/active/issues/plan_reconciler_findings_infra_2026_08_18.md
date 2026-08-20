@@ -388,3 +388,4 @@ applied under this checkpoint's time budget (see Filed) — that is a distinct, 
   edit correctly NOT made (would have been a regression), 1 new minor byproduct finding filed
   (`batch12_finalize_2026_08_09.md` archive_exempt-on-mode-1 compliance check). All 3 blocked questions now closed
   (`answered_at` set — confirmed via `/api/state`'s unanswered-only `blocked_queue` + `/api/activity` cross-check).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

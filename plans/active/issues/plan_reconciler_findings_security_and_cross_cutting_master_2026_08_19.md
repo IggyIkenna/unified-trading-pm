@@ -409,3 +409,4 @@ current/correctly-open). ~120 raw candidate findings from the hunter sweep; 20 a
   tracked follow-up) → Phase 5.9 ledger (routed==parked at 4, balanced) → Phase 5.95 HTML report (see epic doc's
   own `## Report` section for the published link). DO-NOT-SHIP in force throughout — lead session ships this doc
   + every target-doc edit listed above.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

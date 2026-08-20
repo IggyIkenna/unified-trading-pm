@@ -210,3 +210,4 @@ dangling inside a closed plan todo.
 - **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged — the 2026-08-17 revisit-trigger-item-1
   ship (`deployment-api@3e33fac`) moved the live logic into `instrument_coverage.py`, but `venue_resolution.py` (still
   listed) remains the correct entry point since it dispatches to the new builder; not swapped.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

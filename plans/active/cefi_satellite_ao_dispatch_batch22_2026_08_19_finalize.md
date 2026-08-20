@@ -82,3 +82,4 @@ source: >-
 
 - **ag-closeout-audit 2026-08-19 (cefi tranche, dispatch agt-5a343c)**: authored alongside the batch, gated from
   the start.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

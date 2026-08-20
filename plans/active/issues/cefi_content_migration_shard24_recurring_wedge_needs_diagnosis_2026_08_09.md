@@ -53,6 +53,7 @@ context_scope:
     /plans/archive/2026_08/issues/cefi_content_migration_shard24_early_preemption_false_page_2026_07_31.md,
     /codex/05-infrastructure/vm-launcher-runbook.md,
     deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
+    market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py,
   ]
 resolved_by:
 source: >-
@@ -438,3 +439,7 @@ not `2026-01-07`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) — first scout pass on this doc; the 3
   pre-existing entries (the shard-24 early-preemption sibling finding, the vm-launcher-runbook codex SSOT, and the
   migration-VM launcher script) were already well-chosen and all verified to resolve on disk, so kept unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries) — added
+  `market-tick-data-service/scripts/migrate_cefi_content_instrument_id_catalogue_2026_07_17.py`, the migration
+  script whose stall-detection logic (`_STALL_TIMEOUT_SEC`, `_MAX_CLAIMED_UNCOMPRESSED_BYTES`) the 2026-08-10
+  diagnosis read to reach this doc's root cause.

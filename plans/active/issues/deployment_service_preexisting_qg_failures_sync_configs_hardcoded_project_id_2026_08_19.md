@@ -115,3 +115,4 @@ shared constant) outside the migration-canonicalization plan's scope. Needs its 
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 0 open checkboxes (grep-verified, matches Phase-0=0) — the doc uses pure prose, no checkbox syntax at all. Item 1 (fallback-import baseline overage) is fully resolved and shipped.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

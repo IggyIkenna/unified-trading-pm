@@ -127,3 +127,4 @@ source: >-
   + archive_exempt + still-active) rather than `infra_satellite_ao_dispatch_batch17_finalize_2026_08_16.md`'s stated
   intent to self-archive too — this batch's own hunter (batch 2) flagged that convention as possibly-undocumented and
   inconsistent; not resolved here, filed as a Doc-drift/process finding for the operator (see the run findings doc).
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

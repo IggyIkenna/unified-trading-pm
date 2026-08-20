@@ -51,6 +51,7 @@ context_scope:
     /codex/04-architecture/tier-and-import-architecture.md,
     /plans/active/data_pipeline_completion_2026_08_21.md,
     /plans/active/strategy_service_centralization_fixes_2026_08_16.md,
+    instruments-service/scripts/migrate_instrument_availability_hive_2026_08_03.py,
   ]
 ---
 
@@ -283,3 +284,4 @@ this is a pure design proposal awaiting operator ratification, not yet executed.
 - **na-eligibility-audit 2026-08-17** [body-hash:5d2dc6fec1021b31]: KEEP-NA, valid -- re-verified, no content change since the 2026-08-17 RECLASSIFY (per-todo split) marker; still 9 open items (1 [OPERATOR] ratification + 4 direct dependents + 3 lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE + 1 explicit non-scope note, grep-confirmed against inventory's open_todos=9). Flagged in-scope this run by the body-hash-drift bug this same tranche's na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md tracks, not a real edit. Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-18** [body-hash:14c3c0a2c25bede4]: KEEP-NA, valid -- re-verified, ZERO commits to this file since the 2026-08-17 marker (confirmed via git log -- last touch was the marker-append commit itself), confirming the body-hash-drift bug (na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md) re-triggered a third time, not a real edit. Closed the loop on the 3 MISCLASSIFIED_LIKELY_AO_ELIGIBLE items flagged 2026-08-17 (add-definitions-to-catalogue, query-don't-derive gate, provide-queryable-field): re-assessed, all 3 stay NA -- each is transitively gated on the pending [OPERATOR] design ratification (the catalogue schema/grain those items would build against isn't decided yet), downgrading from MISCLASSIFIED to ordinary DEPENDENCY_BLOCKED. Remaining 9 items unchanged: 1 OPERATOR ratification + 4 direct dependents + 3 now-confirmed dependents (ex-MISCLASSIFIED) + 1 explicit non-scope note. Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 9 open todos, all already triaged across 3 prior na-eligibility-audit passes (2026-08-17 x2, 08-18): 1 [OPERATOR] design-ratification question + 7 dependents gated on it + 1 explicit non-scope deferred note; the only 2.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -811,3 +811,4 @@ drain window, or an operator decision. They are ordered, not abandoned — each 
   cited source; CQG residual §5 confirmed NOT resolved by the archived `prediction_cqg_residual_2026_07_24.md`'s
   decision-338, which answered a different question). Still the live index for its 4 Phase A-E children (all still
   open). Doc stays NA, not archive-eligible.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

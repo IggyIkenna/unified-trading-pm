@@ -212,3 +212,4 @@ this exact VM-launch action) and `dp_vm_001_mdps_sports_2026_staleness_guard_and
   fingerprint match: both this doc's todo 5 and that issue doc's Part-3 pass independently cite the identical live-VM
   literal `mtds-live-sports-odds-api-odds-20260816-145019` as verification the odds_api writer-flip cutover is clean
   -- same underlying incident, different investigations. Also added `context_scope` (this pair) to that doc.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

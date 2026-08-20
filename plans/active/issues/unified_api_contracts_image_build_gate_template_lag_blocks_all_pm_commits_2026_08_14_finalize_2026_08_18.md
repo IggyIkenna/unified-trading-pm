@@ -70,3 +70,4 @@ source: >-
 ## Progress Log
 
 - **2026-08-18 (na-eligibility-audit, ci tranche)**: authored alongside the source doc's RECLASSIFY_WHOLE flip.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

@@ -39,7 +39,14 @@ drift_direction: advance-code
 depends_on: []
 last_updated: 2026-08-16
 locked_by:
-context_scope: [/plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md, /codex/02-data/availability-manifest-and-data-status.md, /codex/05-infrastructure/manifest-consolidator-ssot.md, market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py, unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py]
+context_scope:
+  [
+    /plans/archive/2026_07/sports_manifest_canonicalisation_2026_06_01.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer_io.py,
+  ]
 resolved_by:
 ---
 
@@ -983,3 +990,4 @@ at `unified-trading-library@f5f15e3a`/`@9c9cdc50`) is long since resolved and co
 - **na-eligibility-audit 2026-08-17** [body-hash:ce1db7f1fd9089f4]: KEEP-NA, stale-items — the todo at line ~357 is a live duplicate of the todo at line ~417 (doc's own text says superseded/consolidated); todo@417 execution gated by a STANDING operator STOP (BLK-d9137d48) + a live machine-enforced backlog prerequisite gate (sports-cf8-maintenance-window-scheduled, confirmed false as of last read). Extremely well-established (RE-TRIAGE 2026-07-23 + 4 prior na-eligibility-audit rounds all agree). NOTE: doc is ~987/1000 lines, near the hard line-cap — a future consolidation edit (removing the redundant line-357 duplicate) needs care to stay under cap.
 - **na-eligibility-audit 2026-08-17** [body-hash:2ec47739a45bc9c3] (dispatch agt-1c51ee, second same-day pass, 5th round overall): reconfirmed independently — same verdict, no change. Hash refreshed (prior marker's stored hash had drifted with no substantive content change since; not investigated further here). Doc remains near its 1000-line hard cap — do not add further verbose markers here without pruning first.
 - **na-eligibility-audit 2026-08-17** [body-hash:2ec47739a45bc9c3] (agt-6574d2, 6th round): reconfirmed, no change. Root cause of the repeated same-day drift: a marker tie-break bug, fixed this run — should stop recurring. Doc near 1000-line cap; needs consolidation before further markers.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

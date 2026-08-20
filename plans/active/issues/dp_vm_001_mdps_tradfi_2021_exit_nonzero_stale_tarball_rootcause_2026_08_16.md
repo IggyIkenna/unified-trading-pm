@@ -38,7 +38,15 @@ related:
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/issues/mdps_fleet_duplicate_relaunch_explosion_2026_08_15.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /codex/05-infrastructure/vm-tarball-deployment.md, market-data-processing-service/market_data_processing_service/app/adapters/__init__.py, market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py, deployment-service/scripts/vm/create-code-tarballs.sh]
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/05-infrastructure/vm-tarball-deployment.md,
+    market-data-processing-service/market_data_processing_service/app/adapters/__init__.py,
+    market-data-processing-service/market_data_processing_service/app/adapters/tradfi/ohlcv_passthrough.py,
+    deployment-service/scripts/vm/create-code-tarballs.sh,
+  ]
 created: "2026-08-16"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -224,3 +232,4 @@ did **not** cause the `rc=1` (the fatal failure is the adapter-registry gap abov
   intervening change was plan_reconciler's 2026-08-18 retag of todo 3 from `[SCRIPT]` to `[DESIGN]` (it's an open
   "consider whether..." question, not a bounded script task) — doesn't change the gated disposition. Both remaining
   todos stay operator/design-gated. `assigned_vm` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

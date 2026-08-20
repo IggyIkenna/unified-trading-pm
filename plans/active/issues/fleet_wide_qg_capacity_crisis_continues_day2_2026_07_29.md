@@ -622,5 +622,6 @@ live AO-dispatch-critical-path retry mechanism (the exact 'multi-file rewrite of
 caution class), so a wrong partition choice risks a new starvation failure mode. Confirmed genuine and unchanged.
 
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 624-line continuation of a fleet-wide QG capacity incident with 2 genuinely open todos and a dense evidentiary Progress Log (host-load readings, per-repo CI corroborations) through 2026-08-14. Item 1 (AWS Cost Explorer $ quantification) has been self-assessed 'bounded, worker-determinable, conflict-check clear' by 3 separate prior audits since 2026-08-01 but deliberately deferred to a future ci satellite-batch rather than extracted, and that batch pull has not happened across 7+ subsequent...

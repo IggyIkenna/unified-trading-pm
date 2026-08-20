@@ -237,3 +237,4 @@ stabilize. Left untracked, this manifest residual would silently persist forever
 > has that one open todo — not an archive candidate.
 
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).

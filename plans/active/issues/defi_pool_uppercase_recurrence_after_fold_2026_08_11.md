@@ -57,7 +57,15 @@ source: >-
   block) — this doc documents a second, independent blocking gap found while researching how to safely resolve the first
   one.
 execution_scope: orchestrator-agent
-context_scope: [/codex/02-data/gcs-and-manifest-delete-safety-protocol.md, /codex/02-data/canonical-cutover-register.md, market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py, market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py, market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py, market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py]
+context_scope:
+  [
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/canonical-cutover-register.md,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_dex_swaps_queries.py,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer.py,
+    market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -755,3 +763,4 @@ delete, but the same evidentiary bar applies given real financial data is at sta
   state makes it a poor candidate for a rushed mechanical fork under today's shared-checkout contention. Routing this
   doc as a candidate for that sweep's "Group: defi-related epics" todo (not yet added there — out of this run's scope
   to edit a different epic's doc; flagging for the lead session / next sweep pass instead).
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

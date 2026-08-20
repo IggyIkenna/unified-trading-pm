@@ -86,3 +86,4 @@ source: >-
 
 - **na-eligibility-audit 2026-08-17** (infra tranche): authored alongside batch 18 per task_template.md §4's
   every-AO-dispatched-plan-needs-a-gated-finalize rule.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

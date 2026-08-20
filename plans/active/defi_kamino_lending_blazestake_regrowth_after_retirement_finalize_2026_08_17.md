@@ -60,3 +60,4 @@ locked_since:
   flip, archive) are on line 1; mechanism-comparison detail moved to a continuation line. Also added this doc's own
   entry to the epic hub's "Assigned active plans" P3 section (it was missing entirely — the hub instead still listed a
   different, already-archived Kamino finalize doc). Working-tree-only, not shipped.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

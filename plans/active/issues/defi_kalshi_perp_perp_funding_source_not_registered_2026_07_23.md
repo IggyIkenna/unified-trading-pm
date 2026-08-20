@@ -35,7 +35,15 @@ depends_on: []
 resolved_by:
 locked_by:
 source: ["discovered live during defi_consolidated_closeout_2026_07_18.md's manifest rebuild work, 2026-07-23"]
-context_scope: [/codex/02-data/defi-canonical-naming-ssot.md, unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py, /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md, /plans/active/defi_consolidated_closeout_2026_07_18.md, market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py, /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md]
+context_scope:
+  [
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    unified-api-contracts/unified_api_contracts/canonical/crosscutting/source_priority.py,
+    /plans/archive/2026_07/distinct_values_noncanonical_audit_2026_07_20.md,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_perp_funding_kalshi_polymarket.py,
+    /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
+  ]
 ---
 
 # KALSHI_PERP perp_funding manifest emits fail — source not registered
@@ -202,3 +210,4 @@ concrete, currently-failing symptom; the classification question is the census a
 > decision is genuine NA judgment work).
 - **na-eligibility-audit 2026-08-16** [body-hash:0faa56d9ca7a1d04]: KEEP-NA-STALE (already-duplicated), re-confirmed -- sole open todo (re-emit 567 GCS-present/manifest-absent KALSHI_PERP/POLYMARKET_PERP rows) is an exact duplicate of an already-dispatched, still-open todo in defi_satellite_ao_dispatch_batch2_2026_07_26.md:307 (live-verified today still unchecked, correct Source: citation back to this doc). This docs own in-place 2026-08-07 Duplicate-claim note already warns against reclassifying. No action needed.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — unchanged, still accurate

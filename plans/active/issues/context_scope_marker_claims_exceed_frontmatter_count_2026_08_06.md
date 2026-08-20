@@ -356,3 +356,4 @@ harness task #4 → ✅ CLOSE the `BLK-bea57103` and the new BLK bookends.
   added `scripts/plan-hygiene/generate_context_scope_marker_sweep.py` (the standing corpus-sweep tool this issue's todo
   2 shipped, previously missing from the list) — refreshed context_scope (5 entries). This fresh marker is now the
   latest, which self-heals the false positive for future Phase 0 runs.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

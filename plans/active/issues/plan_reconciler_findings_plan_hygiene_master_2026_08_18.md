@@ -199,3 +199,4 @@ established precedent, not this skill's remit.
   parent_epic-repoint question routed unresolved (checker evidence undercuts rather than confirms the repoint
   hypothesis — not force-applied). Everything else in scope re-verified correct, no drift found. DO-NOT-SHIP in
   force — lead session ships this doc + the 2 target-doc edits.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

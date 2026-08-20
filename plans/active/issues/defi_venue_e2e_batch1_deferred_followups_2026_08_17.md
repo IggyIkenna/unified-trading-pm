@@ -102,3 +102,4 @@ NA` is correct; not auto-dispatchable as-is.
   open items remain cleanly `[OPERATOR]`-tagged with rationale in this doc's own "Recommended decision" section
   (external on-chain address sourcing under the registry's provenance rule; AAVE-PLASMA archetype-catalogue
   strategic decision). `grep -cE '^[[:space:]]*[-*] \[ \]'` = 2, matching Phase-0's open_todos=2.
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries)

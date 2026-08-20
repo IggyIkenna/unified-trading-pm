@@ -40,6 +40,7 @@ context_scope:
   [
     unified-trading-library/unified_trading_library/config_interface/paths/registry.py,
     strategy-service/strategy_service/pnl/adapters/domain_adapter.py,
+    strategy-service/strategy_service/adapters/domain_adapter.py,
     execution-service/execution_service/results/save_operations.py,
     /plans/active/daily_trading_analyst_llm_job_design_2026_07_29.md,
   ]
@@ -150,3 +151,4 @@ data from multiple modes), not a bounded mechanical fix:
       `test_build_path_mode_kwarg_carve_out_for_pending_migration_datasets`) in
       `tests/config_interface/unit/test_paths_registry_smoke.py`. QG green (316s), sentinel verified on origin.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

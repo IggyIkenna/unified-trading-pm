@@ -42,7 +42,14 @@ drift_direction: advance-code
 depends_on:
 locked_by:
 locked_since:
-context_scope: []
+context_scope:
+  [
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    /plans/archive/issues/backlog_regen_drops_handtuned_prereqs_2026_07_12.md,
+    /plans/active/issues/sports_batch_odds_api_capture_outage_recurrence_check_2026_07_26.md,
+    /plans/active/issues/sports_all_vendor_honest_coverage_convergence_2026_08_07.md,
+    market-tick-data-service/scripts/sports/census_odds_api_gap_verify_2026_08_02.py,
+  ]
 supersedes:
 superseded_by:
 resolved_by:
@@ -122,3 +129,4 @@ from the 2026-08-19T05:57Z reading (slot 31), confirming zero new information wa
 Filed this issue doc rather than hand-editing the root-clone `backlog.yaml` myself (out of scope for a worker session
 per RULES.md §4, which scopes backlog-yaml tuning to main agent + operator). Skipping the sports todo's task with
 `reason_code: GATED` per worker.md §4c.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

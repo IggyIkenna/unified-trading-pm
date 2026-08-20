@@ -49,7 +49,12 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md]
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    instruments-service/instruments_service/reference_data/adapters/tradfi/databento/adapter.py,
+    market-tick-data-service/market_tick_data_service/live/connectors/databento_tradfi_ws.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -174,7 +179,7 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       trigger of whatever launched this wave (looks scheduled/automated, not this session's doing) or whether it
       already has its own stop condition — flagging for the operator rather than guessing.
 
-- [ ] [CODE] P2. **Databento live WS auth/billing failure is recorded as `empty_confirmed[SOURCE_RETURNED_ZERO]` (false honest-absence) instead of `record_failed` — surface the gateway auth failure into the runner's empty-window classification.** Verified live 2026-08-20 (slot 31, agt-db01a4): `mtds-live-tradfi-cme-trades-20260809-163443` recorded 40 `empty_confirmed[SOURCE_RETURNED_ZERO]` rows across 08-12..08-20 for a stream whose Databento key was deactivated 2026-08-12T00:03:56Z (unpaid invoice), because `market_tick_data_service/live/websocket_runner.py::_record_empty_window` routes to `record_failed` only on `_in_connectivity_gap()` (watchdog GAP) — a state `market_tick_data_service/live/connectors/databento_tradfi_ws.py` never sets for an auth failure, so every window is stamped honest-absence. Mirror the batch path (`databento_adapter.py` classifies `402/DATABENTO_PAYMENT_REQUIRED` as a venue error): surface credential-failure state from the connector so the runner writes `attempted_failed[CLASSIFIED_VENUE_ERROR]` per `/codex/02-data/honest-absence-downstream-handling.md` §401-rule. Distinct from the retry/backoff + feed-alive-watchdog todo above.
+- [x] ✅ [CODE] P2. **Databento live WS auth/billing failure is recorded as `empty_confirmed[SOURCE_RETURNED_ZERO]` (false honest-absence) instead of `record_failed` — surface the gateway auth failure into the runner's empty-window classification.** Verified live 2026-08-20 (slot 31, agt-db01a4): `mtds-live-tradfi-cme-trades-20260809-163443` recorded 40 `empty_confirmed[SOURCE_RETURNED_ZERO]` rows across 08-12..08-20 for a stream whose Databento key was deactivated 2026-08-12T00:03:56Z (unpaid invoice), because `market_tick_data_service/live/websocket_runner.py::_record_empty_window` routes to `record_failed` only on `_in_connectivity_gap()` (watchdog GAP) — a state `market_tick_data_service/live/connectors/databento_tradfi_ws.py` never sets for an auth failure, so every window is stamped honest-absence. Mirror the batch path (`databento_adapter.py` classifies `402/DATABENTO_PAYMENT_REQUIRED` as a venue error): surface credential-failure state from the connector so the runner writes `attempted_failed[CLASSIFIED_VENUE_ERROR]` per `/codex/02-data/honest-absence-downstream-handling.md` §401-rule. Distinct from the retry/backoff + feed-alive-watchdog todo above. Evidence: market-tick-data-service@6836a68eb5484e7d424405d557921cda30de47a4; quality-gates=PASS (11,071 passed, 82.07% coverage).
 
 ## Plans/issues gated by this doc (sweep log)
 
@@ -456,3 +461,5 @@ archival — no live Databento dependency).
   a venue error — tracked as a new `[CODE] P2` todo above. Posted a bounded `/blocked` pointing at this doc's existing
   P0 (no duplicate page). `$AUTHORING_SLOT`=`dp-fleet-monitor` (non-numeric) — skipped the authoring-slot ping per the
   role contract carve-out. No code changed; doc-only.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
+- **2026-08-20 (slot 1, data_pipeline_failure escalation agt-f6fbb5)**: Shipped `market-tick-data-service@6836a68eb5484e7d424405d557921cda30de47a4`. Databento auth/payment failures now surface from the live connector and route empty windows to `record_failed` with the classified reason instead of `empty_confirmed[SOURCE_RETURNED_ZERO]`; the billing P0 remains operator-gated.

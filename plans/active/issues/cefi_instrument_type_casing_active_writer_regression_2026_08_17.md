@@ -301,6 +301,7 @@ is genuinely VM-scale work, not shared-host-scale:
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
 - **slot-14 (data_engineering) 2026-08-18**: `canonical-migration-cefi-itype-casing-apply-20260817-130229`
   dry-run never reached a terminal state — diagnosed as an ~85-minute total VM freeze (kernel/systemd
   level, not just app/heartbeat) followed by a real (not false-positive) zombie-watchdog kill. See the

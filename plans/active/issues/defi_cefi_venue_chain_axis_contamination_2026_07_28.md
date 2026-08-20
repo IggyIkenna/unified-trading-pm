@@ -74,7 +74,15 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope: [/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md, /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md, features-service/scripts/run_cefi_perp_funding_corpus.py, strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py, instruments-service/scripts/migration_orphan_sweep.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
+context_scope:
+  [
+    /plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
+    features-service/scripts/run_cefi_perp_funding_corpus.py,
+    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
+    instruments-service/scripts/migration_orphan_sweep.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # DeFi/CeFi venue+chain axis cross-contamination (2026-07-28)
@@ -320,7 +328,7 @@ in this read-only audit pass (time-bounded scope).
       `purge_gas_fees_legacy_venue_prefixes_2026_08_04.py --apply` run (same bucket, same manifest index, same
       consolidator cron paused for that run's duration) — sequence AFTER it completes and the cron is resumed +
       verified, to avoid CAS contention / cron-pause confusion between two concurrent prod-mutating operations.
-- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — gated on step 1 landing AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE the first time — must genuinely re-verify clean this run) before any delete. UPDATE 2026-08-19 (slot-15): FRESH proof executed this run — verdict FAILED, DELETE FORBIDDEN (Part 2: 0/98 content-equal, every cefi "twin" diverges by data-key rows — these are NOT duplicates; Part 4: `CanonicalPerpFundingProvider` still live-reads this bucket+prefix). Now blocked on the [OPERATOR] decision todo below, NOT on step 1.** Follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04 ruling above) — line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master` (hard constraint moved up from line 2). The 98 (not ~35 — that figure is ruling item 2's corrupted-MANIFEST-rows count; census slot-8 2026-08-10 + slot-15 2026-08-19: 7 venues × 7 days × 2 data_types) real CeFi-Tardis
+- [x] ✅ [DATA] P1. **RESOLVED 2026-08-20 (operator Option A) — the physical cleanup is closed as a no-op-by-design.** The fresh proof found 0/98 content-equal pairs, and the DeFi-bucket objects are the live writer's regenerated corpus and the live reader's only source; retain all 98 objects. The only remaining cleanup is the separate 35 corrupted manifest rows. **Original gate and evidence retained below for audit history.** Original wording: **NEW 2026-08-10 (slot-2) — gated on step 1 landing AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE the first time — must genuinely re-verify clean this run) before any delete. UPDATE 2026-08-19 (slot-15): FRESH proof executed this run — verdict FAILED, DELETE FORBIDDEN (Part 2: 0/98 content-equal, every cefi "twin" diverges by data-key rows — these are NOT duplicates; Part 4: `CanonicalPerpFundingProvider` still live-reads this bucket+prefix). Now blocked on the [OPERATOR] decision todo below, NOT on step 1.** Follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04 ruling above) — line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master` (hard constraint moved up from line 2). The 98 (not ~35 — that figure is ruling item 2's corrupted-MANIFEST-rows count; census slot-8 2026-08-10 + slot-15 2026-08-19: 7 venues × 7 days × 2 data_types) real CeFi-Tardis
       `perp_funding`/`perp_daily_ctx` objects physically mis-filed in the DeFi bucket
       (`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-16..22/ pipeline_mode=batch_tardis/asset_group=cefi/venue={BINANCE,BITFINEX,BITGET,BYBIT,KRAKEN,OKX}-FUTURES|DERIBIT/…`,
       verified present 2026-08-10, correct cefi-bucket twins verified at the matching prefix) are still there. Gated on
@@ -330,7 +338,7 @@ in this read-only audit pass (time-bounded scope).
       time — must genuinely re-verify clean this run) before any delete. Do NOT run concurrently with an in-flight
       defi-bucket rebuild/consolidator-CAS rewrite. **Repo: unified-trading-library / market-tick-data-service** (UTL
       `gcs_delete_object`, never subprocess).
-- [ ] [OPERATOR] P1. **NEW 2026-08-19 (slot-15) — decision required: step 3 of the 2026-08-04 ruling is structurally
+- [x] ✅ [OPERATOR] P1. **RESOLVED 2026-08-20 — operator chose Option A: accept the resolved P2 design and close step 3 as a no-op-by-design.** **Original decision request and evidence retained below for audit history.** Original wording: **NEW 2026-08-19 (slot-15) — decision required: step 3 of the 2026-08-04 ruling is structurally
       unachievable as written; pick a direction (this is an architecture call the RESOLVED P2 ruling already touched —
       not AO-decidable).** Fresh-proof findings (slot-15 Progress Log): (a) the 98 defi-bucket objects are NOT
       duplicates of their cefi twins (0/98 content-equal — both sides carry rows the other lacks, so a delete loses
@@ -938,8 +946,11 @@ reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caugh
   (unrelated `canonical-migration-prediction-shape4-merge-20260810-201105` + backfill/cefi-queue VMs still RUNNING); AWS
   clean. Task re-skipped `reason_code=GATED` — re-dispatch when step-1 corpus-freshness gate clears.
 
+- **slot-15 2026-08-20 (operator decision + plan disposition):** Operator selected Option A. The fresh five-part proof remains decisive: 0/98 content-equal pairs, the DeFi-side objects are regenerated by the live writer, and `CanonicalPerpFundingProvider` reads only the DeFi bucket. The 98 objects are retained as the by-design corpus; step 3 physical deletion is closed as a no-op. The separate 35 corrupted manifest-row cleanup remains the only cleanup item from this branch. No production data was deleted.
+
 ## Deferred after 2026-08-09
 
 - **P1 corpus recompute**: historical window landed (confirmed 08-09); blocked on the NEW 08-06+ forward-poll cron gap
   (`[INFRA] P1`), filed in `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — unchanged, still accurate

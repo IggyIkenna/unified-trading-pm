@@ -56,7 +56,7 @@ context_scope:
     instruments-service/scripts/regenerate_expected_universe_golden.py,
     instruments-service/tests/unit/scripts/test_expected_universe_golden.py,
     instruments-service/tests/unit/scripts/goldens/expected_universe/defi.json,
-    unified-api-contracts/unified_api_contracts/registry/(capability registries),
+    unified-api-contracts/unified_api_contracts/registry/,
   ]
 ---
 
@@ -162,3 +162,4 @@ full unscoped output.
 - **na-eligibility-audit 2026-08-16** [body-hash:39615222d716b35a]: KEEP-NA-STALE (already-duplicated), applied — both open todos (audit+regen the golden; scope the regen tool per-asset-group) are covered verbatim by ONE todo in defi_satellite_ao_dispatch_batch14_2026_08_16.md (status: draft). Original Phase-1 classifier proposed a per-todo RECLASSIFY-split on todo 2 alone, but the batch14 conflict supersedes that — converted both checkboxes to citation markers rather than reclassifying/extracting (would open a second dispatch path once batch14 activates). Doc stays NA, 0 open checkboxes remaining.
 - **na-eligibility-audit 2026-08-17**: KEEP-NA-STALE (already-duplicated), reconfirmed — citation to defi_satellite_ao_dispatch_batch14_2026_08_16.md:112 (status: draft) independently re-verified real. Doc stays NA, 0 open checkboxes.
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).

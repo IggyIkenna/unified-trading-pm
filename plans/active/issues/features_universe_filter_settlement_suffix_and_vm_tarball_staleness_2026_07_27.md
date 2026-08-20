@@ -379,3 +379,4 @@ gap; no new action taken on the default itself (existing P2 todos below already 
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -33,7 +33,14 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-context_scope: [ml-service/ml_service/training/app/training/sports_ensemble_trainer.py, ml-service/ml_service/training/app/training/sports_ensemble_training_runner.py, /plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md, /codex/05-infrastructure/vm-launcher-runbook.md]
+context_scope:
+  [
+    ml-service/ml_service/training/app/training/sports_ensemble_trainer.py,
+    ml-service/ml_service/training/app/training/sports_ensemble_training_runner.py,
+    /plans/archive/2026_08/issues/sports_odds_targets_export_never_backfilled_for_2019_2025_range_2026_08_10.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    ml-service/ml_service/training/cli/handlers/sports_ensemble_train_handler.py,
+  ]
 sequential: true # todo 2 (VM launch) explicitly requires todo 1's driver ("once the driver lands and is
 # unit-tested") — added 2026-08-09 (slot-11) after this doc's todo 2 was dispatched with no driver yet built
 # (grep confirmed zero SportsEnsembleTrainingRunner references in ml-service); without sequential ordering
@@ -327,6 +334,7 @@ the VM-scale run:
   with park; todo 2 stays open (genuinely not done — no delta measured).
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
 
 
 ## Deferred work after 2026-08-10

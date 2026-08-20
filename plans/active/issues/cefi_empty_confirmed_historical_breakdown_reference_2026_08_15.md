@@ -107,3 +107,4 @@ benign baseline, not part of it.
 - **na-eligibility-audit 2026-08-16** [body-hash:3385dde6f650c3f9]: KEEP-NA, valid — Read the full 102-line doc end-to-end. It is a pure-prose "reference" issue doc (doc_type: issue, nature: issue, tags include "reference") preserving a single session's investigation of cefi's 6.4M empty_confirmed rows -- grain de…
 - **context-scout 2026-08-17**: refreshed context_scope (3 entries, was 2) — added `manifest_recorder.py`, the
   row-key resolver named in the doc's own "Grain" section.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).

@@ -439,3 +439,4 @@ flagged as a to-verify in Phase 3's UI todo below, not assumed either way.
   resolve a corrected-shape bundle. Caught this by writing the regression tests FIRST against the real
   `build_tradfi_partition_path` segment order (confirmed via UAC docstring, not assumed) and watching them fail
   after only the branch-order fix — the fallthrough alone was insufficient. `quality-gates.sh` green.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

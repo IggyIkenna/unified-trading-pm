@@ -177,3 +177,4 @@ independently-startable item any session can pick up without waiting on the phas
   Hygiene fixes #1): `strategy-service` is now the first entry in `repos:` above. This note was stale for a day
   before being caught (plan_reconciler 2026-08-18).
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

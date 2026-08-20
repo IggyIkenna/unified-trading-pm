@@ -478,3 +478,4 @@ logic and that no second archetype could ever want. That must be stated, not ass
     alongside the new `defi_wallets` domain reloader this session added.
   - **Not done this session**: the DefiAlert-construction bridge (todo above, OPERATOR-ruled 2026-08-18 to wire
     `liquidation_proximity_circuit.py` in) — still open, genuinely deferred for time, not silently dropped.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (7 entries)

@@ -73,3 +73,4 @@ source: >-
 ## Progress Log
 
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

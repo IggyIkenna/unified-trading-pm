@@ -311,3 +311,4 @@ scope on every run. Fix belongs with Finding 3's script todo.
   and `task_template.md` that were previously named in prose but not cited.
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

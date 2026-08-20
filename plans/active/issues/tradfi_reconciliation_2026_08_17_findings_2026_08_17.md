@@ -42,6 +42,7 @@ context_scope:
     /plans/active/tradfi_phase_d_terminal_gate_2026_07_24.md,
     /plans/archive/issues/tradfi_fx_provenance_and_manifest_id_defects_2026_07_24.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch16_2026_08_17.md,
+    /codex/02-data/non-canonical-path-inventory.md,
   ]
 ---
 
@@ -160,3 +161,4 @@ engineering-latitude choice, not an authority-level call. Item 7 is a one-line "
   self-framing" guidance. Doc stays `assigned_vm: NA` for this remaining item (per-todo split — the doc itself is
   never whole-doc-reclassified when a mix like this exists).
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

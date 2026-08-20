@@ -196,3 +196,4 @@ already-implemented, already-held null-`instrument_type` stamp (disposition 1) â
 not a canonicalization-decision todo, so it is out of THIS todo's own scope rather than a loose end.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

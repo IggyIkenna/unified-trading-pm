@@ -71,6 +71,7 @@ context_scope:
     scripts/dev/slot-cron-ff-pull.sh,
     scripts/dev/cron-branch-overrides.txt,
     scripts/quality_gates/check_cron_branch_override_parity.py,
+    agent-orchestrator/server/autospawn.py,
   ]
 ---
 
@@ -268,3 +269,4 @@ the local pointer, then `git fetch origin main && git checkout -B main origin/ma
   just confirming the residual state persists and the `[OPERATOR]` collapse-registries todo is still the real
   fix. Not touched (slot 0 is `main`, status `working` — live, per this skill's own § 3g rule 1, its own worker
   reconciles in due course, not an outside session).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

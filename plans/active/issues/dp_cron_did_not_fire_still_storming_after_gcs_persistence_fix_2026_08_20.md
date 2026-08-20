@@ -63,6 +63,7 @@ context_scope:
     /codex/05-infrastructure/data-pipeline-alerts.md,
     /codex/04-architecture/agent-orchestrator-alerting.md,
     /plans/active/issues/dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md,
+    alerting-service/alerting_service/core/recurring_dedup_persistence.py,
   ]
 ---
 
@@ -165,3 +166,4 @@ so they are recorded here and tagged for the owning tranche rather than acted on
 
 - 2026-08-20 — Issue opened from the T5 tranche. Measurement above is the whole of the evidence; the serving
   revision is explicitly unverified and the "fix ineffective" conclusion is deliberately NOT drawn.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

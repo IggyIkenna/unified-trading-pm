@@ -86,3 +86,4 @@ None new — this is a small UI/backend feature addition mirroring an existing p
   `plans/active/` for "denominator" (no other active plan claims this work) and confirmed the only 2 active
   `assigned_vm: planning` docs under `parent_epic: deployment_and_user_management_master`
   (`ui_satellite_ao_dispatch_batch1_2026_08_06.md`/`_finalize`) don't touch it either.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

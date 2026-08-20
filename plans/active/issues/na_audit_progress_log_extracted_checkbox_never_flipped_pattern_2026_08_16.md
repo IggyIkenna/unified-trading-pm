@@ -41,6 +41,7 @@ context_scope:
   [
     unified-trading-pm/scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    unified-trading-pm/cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 ---
 
@@ -105,3 +106,4 @@ full per-doc agentic classification pass to notice them incidentally, the way th
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:092494416dea3b5d]: KEEP-NA, valid -- Self-referential meta doc (about this same audit's own extraction-citation bug). Confirmed it does NOT exhibit its own documented bug: its checker-prototype todo is correctly closed citing cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 2. The 1 remaining item (route any further instances the checker finds to their owning tranche) is dependency-blocked on that checker actually running, which hasn't happened yet. Cross-cutting tranche audit.
 - **plan_reconciler 2026-08-19** (cross-cutting tranche): **correction — the checker DID run, same day.** This entry's "hasn't happened yet" was stale relative to `cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md` item 2, which ran the checker for real that same 2026-08-17 and found 3 live instances (see the todo above, now updated with the full list). The remaining item is actionable now, not dependency-blocked.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

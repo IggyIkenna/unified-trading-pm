@@ -447,3 +447,4 @@ serve keeps re-diagnosing "is this a stall or real progress" against a moving, u
   fleet at 7 `cefi-hyperliquid-*`/`cefi-aster-*` VMs with no duplicates. Presented to operator with this evidence;
   operator confirmed close-out. Checkbox flipped above. Corresponding AO blocked question answered `final`. Two
   todos remain open (row-count re-verify, resource-rightsizing) — this doc is NOT ready for archival yet.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries).

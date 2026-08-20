@@ -83,3 +83,4 @@ context_scope:
 - **2026-08-19 (na-eligibility-audit, tradfi tranche, dispatch agt-5d34f9)**: authored as the mandatory finalize
   twin for the source doc's whole-doc RECLASSIFY this same pass. Not yet executed — gated on the source doc's own
   todos landing.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

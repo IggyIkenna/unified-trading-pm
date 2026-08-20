@@ -652,3 +652,4 @@ tracking doc with real checkboxes — not duplicated here.)_
   2026-08-10 Progress Log), flagged there for root-cause triage, unresolved. A depends-on-a-still-open-prerequisite
   citation is KEEP-NA per this audit's own rule — since not every todo is bounded, the whole doc stays NA (todos 2/3 are
   individually small and plausibly bounded, but the whole-doc bar requires all three).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

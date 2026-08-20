@@ -40,6 +40,7 @@ context_scope:
   [
     /plans/active/defi_satellite_ao_dispatch_batch18_2026_08_19.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
   ]
 source: >-
   ag_closeout_auditor 2026-08-19 (dispatch agt-fa5ded, slot 28) — every AO-dispatched satellite batch needs a gated
@@ -74,3 +75,4 @@ Do not start manually before then.
 
 - **2026-08-19 (ag_closeout_auditor, defi tranche, dispatch agt-fa5ded, slot 28)**: finalize plan authored alongside
   batch18's draft, per `task_template.md`'s finalize-plan-coverage rule.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

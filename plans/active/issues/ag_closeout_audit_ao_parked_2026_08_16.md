@@ -219,3 +219,4 @@ deliberate observation/burn-in gate with no worker-executable done-state.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:21df501b3422cfc6]: KEEP-NA, valid — standing parking register for /ag-closeout-audit ao's non-batchable orphaned findings; zero checkbox todos by design (its content IS the tracking mechanism).
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:e4c6db9037c0bd45]: KEEP-NA, valid — standing parking register for /ag-closeout-audit ao's 36 non-batchable orphaned findings; zero checkboxes by design (the doc's content IS the tracking mechanism). Reconfirms the 2026-08-17 na-eligibility-audit verdict; the 2 'needs direct operator attention' items are correctly marked resolved-since-filing within the doc's own text.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

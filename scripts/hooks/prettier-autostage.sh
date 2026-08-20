@@ -112,6 +112,23 @@ STAGED_BEFORE="$(git diff --cached --name-only)"
 # shellcheck disable=SC2086
 $PRETTIER --write --log-level warn "$@"
 
+# Prettier's markdown proseWrap printer is non-idempotent for continuation
+# paragraphs nested in list items. Repair that whitespace-only corruption after
+# each markdown format pass so the staged blob is the same shape the ratchet
+# checker validates. The repair is deliberately limited to the hook's named
+# markdown inputs and uses the canonical fixer from plan-hygiene.
+_PA_WORKSPACE_ROOT="${WORKSPACE_ROOT:-$(cd "$(git rev-parse --show-toplevel)/.." && pwd)}"
+_PA_PROSEWRAP_FIXER="${_PA_WORKSPACE_ROOT}/unified-trading-pm/scripts/plan-hygiene/fix_prosewrap_padding.py"
+for f in "$@"; do
+  case "$f" in
+    *.md)
+      if command -v python3 >/dev/null 2>&1 && [ -f "$f" ] && [ -f "$_PA_PROSEWRAP_FIXER" ]; then
+        python3 "$_PA_PROSEWRAP_FIXER" "$f" >/dev/null
+      fi
+      ;;
+  esac
+done
+
 # Re-stage any input file that prettier modified AND was already in the index.
 # `git diff --name-only` shows unstaged changes; intersect with $STAGED_BEFORE.
 RESTAGED=0

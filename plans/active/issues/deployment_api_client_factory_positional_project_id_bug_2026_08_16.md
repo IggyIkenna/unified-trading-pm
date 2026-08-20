@@ -76,7 +76,14 @@ source: >-
   calling unified_trading_library.get_secret_client correctly and revealed the sibling venue_credentials.py file
   already had this exact bug).
 drift_direction: advance-code
-context_scope: [unified-trading-library/unified_trading_library/core/client_factory.py, unified-trading-library/unified_trading_library/cloud_interface/factory.py, deployment-api/deployment_api/routes/infra_health.py, deployment-api/deployment_api/routes/repo_coverage.py, deployment-api/deployment_api/routes/repo_readiness.py]
+context_scope:
+  [
+    unified-trading-library/unified_trading_library/core/client_factory.py,
+    unified-trading-library/unified_trading_library/cloud_interface/factory.py,
+    deployment-api/deployment_api/routes/infra_health.py,
+    deployment-api/deployment_api/routes/repo_coverage.py,
+    deployment-api/deployment_api/routes/repo_readiness.py,
+  ]
 ---
 
 # deployment-api: positional `project_id` misread as `provider` in `get_secret_client`/`get_storage_client`
@@ -120,3 +127,4 @@ blast radius deserves its own look rather than an ad-hoc bundled fix. Ruled out
 buggy UTL function.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:db39fdd68dc008ad]: RECLASSIFY (whole-doc) -- assigned_vm flipped NA -> planning; execution_scope -> orchestrator-agent; assigned_role: backend_engineer (was unset). Both open items are bounded/mechanical (confirm-then-fix, one-line project_id= keyword changes mirroring an already-applied fix), conflict-check CLEAR. doc_type: issue, structurally exempt from a finalize-plan companion per task_template.md's finalize-plan-coverage rule. Cross-cutting tranche audit.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

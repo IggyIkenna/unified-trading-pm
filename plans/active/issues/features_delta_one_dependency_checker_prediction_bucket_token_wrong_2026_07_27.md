@@ -45,6 +45,7 @@ context_scope:
     features-service/features_service/volatility/core/dependency_checker.py,
     execution-service/execution_service/utils/dependency_checker.py,
     /codex/02-data/per-asset-group-bucket-layouts.md,
+    features-service/features_service/delta_one/config.py,
   ]
 ---
 
@@ -365,3 +366,4 @@ four now route through the one helper.
 ## Progress Log addendum
 
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

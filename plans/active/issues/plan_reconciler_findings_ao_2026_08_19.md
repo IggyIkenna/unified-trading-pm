@@ -243,3 +243,4 @@ None — no doc in this tranche's non-grace working set reached 0 open todos dur
 ## Plans not reached
 
 None — all 54 non-grace docs in the `ao` tranche's working set were read in full by a hunter this run.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

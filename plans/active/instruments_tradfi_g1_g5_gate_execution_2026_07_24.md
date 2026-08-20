@@ -756,3 +756,4 @@ status index across all 4 children (this one, Phase-0, cefi, and the defi/sports
   doc's own citation exactly. Todo 4 (residual catalogue-leg purge) stays OPERATOR_QUESTION, not bundled into the
   already-granted 4-leg go-ahead. `assigned_vm` unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

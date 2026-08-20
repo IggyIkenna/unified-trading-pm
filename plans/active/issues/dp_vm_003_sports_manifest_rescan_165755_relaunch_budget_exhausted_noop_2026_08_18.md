@@ -131,3 +131,4 @@ this one.
   by dispatch + registry-non-relaunchable + a healthy successor already covers it). Filed this issue (no pre-existing
   doc named this vm_name) and posted a `/blocked` informational page to main/operator per the dispatch instruction.
   `/done` posted with `one_shot_complete: true`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

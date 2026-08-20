@@ -498,3 +498,4 @@ Note: `client.upload_bytes` returns a value — this repo's convention is `_ = c
   now establish a pause first; the refusal itself stays asserted in `test_resolution_state.py`, so the behaviour
   they used to cover is not silently lost. Size + basedpyright were run BEFORE gating this time (the lesson from
   execution-service's four-attempt unit) and were clean.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

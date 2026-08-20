@@ -30,6 +30,7 @@ context_scope:
     agent-orchestrator/server/creds_env_poller.py,
     agent-orchestrator/scripts/bootstrap_vm.sh,
     agent-orchestrator/server/usage_poller.py,
+    /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
   ]
 created: 2026-08-18
 last_updated: 2026-08-19 # was 2026-08-18 -- stale vs the 2026-08-19 na-eligibility-audit + live SSM-applied-fix entries; corrected (plan_reconciler ao)
@@ -133,3 +134,4 @@ this will recur on each one's own expiry unless fixed.
   the secret under either documented name or a name-pattern search, not a transient failure. This is orthogonal to
   the creds-poller fix (unrelated env var, tracked in the sibling doc) — not chased further this pass; flagging so
   the next attempt doesn't repeat the same 2 dead-end secret names.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

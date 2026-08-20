@@ -46,6 +46,7 @@ context_scope:
     strategy-service/strategy_service/cli/handlers/paper_universe.py,
     unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_mvp_scope_predicate.py,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
   ]
 locked_since:
 resolved_by:
@@ -309,3 +310,4 @@ resolved_by:
   between the catalog and `CeFiMvpRule.venues` (todo 3b-ii) — a naive direct `is_mvp()` call on the catalog's
   literal venue string would have produced a false-positive curtailment for 13+ real Bybit rows had it been
   wired without noticing this.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

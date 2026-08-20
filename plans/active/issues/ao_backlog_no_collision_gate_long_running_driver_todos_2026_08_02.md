@@ -157,3 +157,4 @@ even if nobody revisits it.
   round11. Both open items remain genuine build-vs-extend dispatcher-design forks (matching heuristic, state-storage
   choice) per the 2026-08-03 marker's original analysis, still not mechanically specified.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

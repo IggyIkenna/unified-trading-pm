@@ -43,6 +43,7 @@ context_scope:
     /plans/archive/2026_08/no_active_paper_run_blocks_p1_2_determinism_recheck_2026_07_31.md,
     /plans/active/issues/live_pipeline_persistence_hot_path_decoupling_2026_06_24.md,
     deployment-service/terraform/gcp/live_event_log/warm_sink.tf,
+    /plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md,
   ]
 supersedes:
 superseded_by:
@@ -339,3 +340,4 @@ determinism needs.
   reached these 3 venues' full chronological range). Refusing to fabricate an ε=0 result against a nonexistent ledger,
   per this todo's own standing instruction. No code changes; re-arming the park via `skip-current-task`
   (`reason_code: PARKED`, `park_now: true`) rather than leaving this to bounce to the next worker.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

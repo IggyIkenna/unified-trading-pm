@@ -223,3 +223,4 @@ tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only par
   green (258s) + quickmerge landed. **Residual for todo 4**: `cloud_run_job_failure_watcher.py`'s exclusion is now
   CORRECT (both kinds are genuinely covered by 005, so excluding the whole `manifest-consolidator-*` family is right);
   no change needed there. Shipped: deployment-service@3d5db7dcfd.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

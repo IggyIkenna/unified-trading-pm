@@ -67,7 +67,15 @@ locked_since:
 assigned_vm: NA
 resolved_by:
 last_reviewed:
-context_scope: [/codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md, /plans/archive/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/live/governance_params_event_poller.py, instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py, instruments-service/instruments_service/reference_data/factory.py, market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/helius_solana.py]
+context_scope:
+  [
+    /codex/06-coding-standards/adapter-dead-code-and-fallback-ban.md,
+    /plans/archive/issues/defi_base_adapter_success_key_ignored_by_failure_accounting_2026_07_27.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/live/governance_params_event_poller.py,
+    instruments-service/instruments_service/reference_data/adapters/defi/jupiter.py,
+    instruments-service/instruments_service/reference_data/factory.py,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/helius_solana.py,
+  ]
 ---
 
 # DeFi adapter dead-code / runtime-fallback / duplicate-implementation audit (2026-07-24)
@@ -593,3 +601,4 @@ files.
   `spot_trades` → `dex_pool_swaps`).
 - **na-eligibility-audit 2026-08-16** [body-hash:5dbf499cc875fe22]: KEEP-NA, valid — DeFi adapter dead-code/runtime-fallback/duplicate-implementation audit across instruments-service, MTDS, and execution-service, carrying a top-of-doc OPERATOR-NOTIFY banner (cross-repo, data-correctness-adjacent: the governance-parameters-refresh feature's Phase-1 poller has zero production callers, so downstream Phase 3/4 silently run on hardcoded fallback constants).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — unchanged, still accurate

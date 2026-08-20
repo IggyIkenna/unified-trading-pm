@@ -308,3 +308,4 @@ context_scope:
   valid — `depends_on: [prediction_phase_ab_residuals_2026_07_24]` + `gate_on_depends: true` re-confirmed live still
   open (that doc independently re-verified this same run: 4 open todos, P0 migration item still unchecked). All 5
   items here reduce to that same unfinished gate. Doc stays NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

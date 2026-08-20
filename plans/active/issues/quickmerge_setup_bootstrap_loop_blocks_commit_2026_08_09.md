@@ -146,6 +146,7 @@ material share of that session's budget — hence this doc, so the next session 
 ## Progress Log
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:bb54de155acb8854]: RECLASSIFY_WHOLE —
   `assigned_vm: NA` → `planning`. Root cause already fixed (`unified-trading-pm@c389fe9dc`); both remaining open
   todos (fail-loudly on silent no-commit exit; check AO-VM host-specificity) are bounded and deterministic, no gate

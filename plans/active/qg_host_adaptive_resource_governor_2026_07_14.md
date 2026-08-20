@@ -927,3 +927,4 @@ no retry12 per retry discipline.
   option-1-vs-option-2 operator decision; prior 4 entries unchanged.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 928-line QG host-adaptive resource governor plan; the whole governor engine (ledger, dual-gate admission, cgroup caps, 80% valve, wait-timeout, cross-host verification) is shipped and live-validated (93-min soak, 42 runs, 0 OOM). grep confirms 13 open checkboxes spanning deferred/conditional refinements (baseline schema, cpu_weight, FIFO/aging — all explicitly 'DEFERRED, revisit only if X is observed'), a Slack-alerting design gap, and several NEW-FINDING investigation items including a...
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

@@ -52,7 +52,13 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope: [unified-trading-library/unified_trading_library/manifest_writer/_read_index.py, unified-trading-library/unified_trading_library/manifest_consolidator.py, deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh, /plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md]
+context_scope:
+  [
+    unified-trading-library/unified_trading_library/manifest_writer/_read_index.py,
+    unified-trading-library/unified_trading_library/manifest_consolidator.py,
+    deployment-service/scripts/vm/launch-backfill-defi-legacy-datatype-fold-vm.sh,
+    /plans/active/issues/defi_legacy_fold_relaunch_vm_infra_flakiness_and_oom_2026_08_15.md,
+  ]
 ---
 
 # `MANIFEST_ALLOW_STALE_FALLBACK` incomplete-for-long-pause gap (2026-08-07)
@@ -167,3 +173,4 @@ Two independently-shippable angles:
   own relaunch todo (this doc's own text already forward-points there) — that doc is in turn now tracked via
   `defi_satellite_ao_dispatch_batch14_2026_08_16.md` (see this run's marker on that doc). Not independently
   extracted — would duplicate an already-dispatched claim.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries)

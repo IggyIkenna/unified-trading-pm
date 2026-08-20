@@ -35,6 +35,7 @@ context_scope:
   [
     /plans/epics/system_readiness_master.md,
     /plans/audit/results/code_completion_scope_2026_08_19.md,
+    /plans/audit/results/code_readiness_allocation_2026_08_19.json,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
   ]
@@ -216,3 +217,4 @@ Substitute per agent:
 
 - 2026-08-19 — Coordinator and five tranche plans authored. Allocation derived over the 892-doc active corpus
   (2,604 open todos, 94 spine). No agent launched yet, no code work started.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

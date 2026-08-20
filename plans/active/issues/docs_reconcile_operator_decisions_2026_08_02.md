@@ -45,7 +45,15 @@ estimate_calibrated_ai_days:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/codex/05-infrastructure/credentials-matrix.md, /codex/15-runbooks/credential-rotation-runbook.md, /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md, /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md, /plans/archive/2026_08/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md, scripts/workspace/setup-cursor-rules-symlink.sh]
+context_scope:
+  [
+    /codex/05-infrastructure/credentials-matrix.md,
+    /codex/15-runbooks/credential-rotation-runbook.md,
+    /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+    /plans/active/issues/docs_reconcile_remaining_broken_links_2026_08_02.md,
+    /plans/archive/2026_08/issues/doc_body_link_checker_blind_to_backtick_citations_2026_08_02.md,
+    scripts/workspace/setup-cursor-rules-symlink.sh,
+  ]
 supersedes:
 superseded_by:
 depends_on:
@@ -438,3 +446,4 @@ just tracked here so they aren't lost:
   MOVED this run — no baseline changes made. Full Phase-5 report in this run's chat transcript / `/done` evidence.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:0aec3afabab2e46a]: KEEP-NA, valid — all 4 remaining items are explicit BLOCKED-OPERATOR-DECISION authority calls (doctrine/authoritative_for collisions) per docs-reconcile's own contract; item 1 correctly REOPENED 2026-08-12 with new evidence (a live CI consumer), not stale.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

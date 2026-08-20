@@ -223,3 +223,4 @@ is causing `admin@odum.internal` to hit the UAT-redirect branch under mock mode.
   (`plans/archive/2026_08/e2e_login_persona_handoff_helper_stale_2026_07_22_finalize_2026_08_10.md`) is archived with
   the decision recorded.
 **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

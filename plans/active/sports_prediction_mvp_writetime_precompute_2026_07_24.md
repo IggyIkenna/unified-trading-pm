@@ -57,6 +57,8 @@ superseded_by:
 context_scope:
   [
     /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/02-data/honest-coverage-model.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     unified-trading-library/unified_trading_library/manifest_writer/_rows.py,
     unified-trading-library/unified_trading_library/manifest_writer/_writer_captured.py,
     deployment-api/deployment_api/routes/data_status/_catalogue.py,
@@ -181,3 +183,4 @@ of 2026-07-22, the last tick that touched it.
   redeploy plus unverified manifest-consolidator schema-evolution behaviour), not bounded single-service work.
 - **na-eligibility-audit 2026-08-17** [body-hash:7de3005e9d576ce8]: KEEP-NA, valid -- Sole open todo is an explicit, well-reasoned 'scope-risk STOP, not an oversight': the write-time mvp:bool precompute requires a schema bump (MANIFEST_SCHEMA_VERSION 9→10) on UTL's ONE shared AvailabilityRecord dataclass written by every asset_group and every producer service (cefi/defi/tradfi/sports/prediction plus features/ml/strategy/execution services) — a full-fleet redeploy plus unverified manifest-consolidator schema-evolution behavior, explicitly not a bounded single-service change. This is exactly the rubric's warning example of a clean-sounding item that is not actually bounded because it touches live-dispatch-critical-path machinery fleet-wide. Two prior na-eligibility-audit passes (2026-08-02, 08-07) confirmed KEEP-NA with matching reasoning.
 - **context-scout 2026-08-17**: re-verified; context_scope unchanged (4 entries, all resolve).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -61,6 +61,7 @@ context_scope:
     deployment-service/scripts/vm/setup-data-pipeline-vm.sh,
     deployment-service/scripts/vm/vm-exec-with-gcs-tee.sh,
     unified-trading-library/unified_trading_library/pipeline_e2e_check/launcher.py,
+    features-service/scripts/pipeline_e2e_check.py,
   ]
 ---
 
@@ -534,3 +535,4 @@ Exactly the observed symptom: the VM can read its startup script but can never w
   launches already spent on this doc with zero real throughput; a relaunch is a separate, already-tracked next step, not
   mine to absorb per `/boot-per-shippable-unit`'s "don't fan out to multiple tasks in one session").
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

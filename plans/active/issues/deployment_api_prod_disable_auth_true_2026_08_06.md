@@ -65,7 +65,13 @@ source:
     "sub-agent session, 2026-08-06 — service-deployed dispatch listener task, `gcloud run services describe
     uts-shared-deployment-api`",
   ]
-context_scope: [deployment-api/deployment_api/auth.py, deployment-api/deployment_api/firebase_auth.py, unified-trading-library/unified_trading_library/config_interface/cloud_config.py, /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md]
+context_scope:
+  [
+    deployment-api/deployment_api/auth.py,
+    deployment-api/deployment_api/firebase_auth.py,
+    unified-trading-library/unified_trading_library/config_interface/cloud_config.py,
+    /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md,
+  ]
 ---
 
 ## What was found
@@ -217,3 +223,4 @@ populate `DEPLOYMENT_API_KEY` with the real key and the listener will start send
   `deployment_api_unauthenticated_prod_p0_2026_08_10_finalize.md`'s own still-open todos 1-3 (independently
   re-verified: that finalize doc's todo 3 still names this doc for archival and remains unchecked). Not archived here
   per that explicit redirect.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
