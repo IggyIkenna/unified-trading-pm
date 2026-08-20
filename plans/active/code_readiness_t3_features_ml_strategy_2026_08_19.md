@@ -185,6 +185,28 @@ todos only to confirm they are data-movement, then leave it.
       paths/registry.py` (`strategy_instructions` row + its own comment on this writer being the "unwired stub"
       case), `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_
       pnl_attribution_2026_08_15.md`.
+- [ ] [FROM-T1] P2. **Migrate `staked_basis.py`'s `_STAKING_PROTOCOL_CHAIN` off its own hardcoded dict onto UAC's
+      new `get_chain_for_protocol()`.** Registry SSOT hardening 2026-08-16 todo 6 measured that your 8-entry
+      lowercase protocol→chain map (`strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:186`)
+      genuinely duplicates data UAC already has: 7 of your 8 entries resolve exactly via UAC's existing
+      `PROTOCOL-CHAIN` venue-suffix convention every `ALL_DEFI_VENUES` entry already follows — the data was
+      never missing, only queried through the wrong mechanism. `unified_api_contracts.registry.venue_constants
+      .get_chain_for_protocol(protocol: str) -> str | None` is that mechanism, shipped
+      `unified-api-contracts@0d7afa29e`, tested against all 8 of your exact values (verbatim-copied into
+      `tests/unit/test_get_chain_for_protocol.py` as the cross-repo parity check — if you ever change one of
+      your 8 values, that test will fail and tell you the two sides drifted).
+      **Not a blind swap**: `coinbase_staking` is the one entry that does NOT resolve via a real DeFi venue —
+      measured zero matches in `ALL_DEFI_VENUES`, because it's Coinbase's custodial retail staking product, not
+      an on-chain protocol. `get_chain_for_protocol()` handles it via a documented, explicit exception
+      (`_NON_DEFI_STAKING_PROTOCOL_CHAIN`), so the function's return value for it is unchanged (`"ethereum"`) —
+      you can swap the call site without special-casing anything on your end.
+      **What to do**: replace `_STAKING_PROTOCOL_CHAIN.get(config.staking_protocol.lower(), "")` with
+      `get_chain_for_protocol(config.staking_protocol) or ""` (same fallback-to-empty-string behavior on a
+      genuine miss), then delete `_STAKING_PROTOCOL_CHAIN` itself — `_ALLOWED_CHAINS`/`ALLOWED_CHAINS` stay,
+      they're a separate concern (which chains this strategy permits, not protocol→chain resolution). This is
+      T3's own repo so T1 cannot make this edit. Evidence:
+      `/plans/active/registry_ssot_hardening_2026_08_16.md` todo 6, `unified-api-contracts/unified_api_contracts
+      /registry/venue_constants.py::get_chain_for_protocol`.
 
 ## Todos
 

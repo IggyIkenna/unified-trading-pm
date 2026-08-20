@@ -308,8 +308,24 @@ todos only to confirm they are data-movement, then leave it.
       a STRUCTURAL finding). 8 tests. QG green — real exit code captured directly (538s), never through a pipe.
       Evidence: `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (parent issue;
       the VALUE todo was its own sibling P0 in this plan, not filed as a separate issue doc).
-- [ ] [BACKEND] P1. Resolve the venue→chain SSOT overlap and the `VenueFeature` / `VenueCapability` vocabulary
-      overlap. Land it in the SAME change as the chain-registry P0 — same blast radius. Evidence:
+- [x] ✅ [BACKEND] P1. Both resolved — unified-api-contracts@0d7afa29e.
+      **Venue→chain**: NOT a merge — measured this was never a duplicate needing one. `get_chain_for_protocol()`
+      derives the chain via the SAME `split_glued_venue_chain()` primitive the chain-registry SSOT already uses,
+      resolving 7 of strategy-service's 8 hardcoded `_STAKING_PROTOCOL_CHAIN` entries with zero new data — the
+      information was never missing from UAC, only queried through the wrong mechanism. `coinbase_staking` is
+      the sole genuine exception (zero `ALL_DEFI_VENUES` matches — it's Coinbase's custodial retail product, not
+      an on-chain protocol), handled via one documented exception entry. 12 tests verbatim-copy strategy-
+      service's own 8 expected values as the ongoing cross-repo parity check. Migration filed as a `[FROM-T1]`
+      inbound request on T3's plan (out of tranche scope — strategy-service is theirs).
+      **VenueFeature/VenueCapability**: retyping VenueCapabilityV2 to reuse VenueCapability directly would have
+      LOST the 6 genuinely-unique account-structure members (`CROSS_MARGIN`/`PORTFOLIO_MARGIN`/`SUBACCOUNT`/
+      `ATOMIC_MULTI_LEG`/`DARK_POOL`/`BACK_LAY_EXCHANGE`), so full retyping was wrong. Instead removed the 6
+      REDUNDANT members that duplicated `VenueCapability` under different spelling (`FLASH_LOAN`/
+      `NATIVE_STAKING`/`LP_PROVISION`/`OPTIONS_TRADING`/`PERPS_TRADING`/`SPOT_TRADING`) — measured zero
+      fleet-wide call sites constructed any of them first, so removal changed no live behaviour;
+      `VenueCapabilityV2.supported_operations: list[str]` already existed as the free-form home for
+      action-level data, so `.features` was never actually the right place for these. 3 tests pin the surviving
+      vocabulary and assert zero remaining name collisions between the two enums. QG green (214s). Evidence:
       `/plans/active/registry_ssot_hardening_2026_08_16.md`.
 - [ ] [BACKEND] P1. Coverage-floor registries cross-propagate. Three parallel registries exist; sports registries 1
       and 3 are structurally one SSOT. Evidence:
