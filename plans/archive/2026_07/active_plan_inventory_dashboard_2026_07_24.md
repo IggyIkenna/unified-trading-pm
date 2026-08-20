@@ -172,11 +172,11 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`cefi_satellite_ao_dispatch_batch20_2026_08_16`](./cefi_satellite_ao_dispatch_batch20_2026_08_16.md) | master | refactor | 5/16 | 31% | 1.0 | — |
 | [`deployment_registry_firestore_p5_verify_2026_07_14`](./deployment_registry_firestore_p5_verify_2026_07_14.md) | master | infra | 2/5 | 40% | 1.0 | — |
 | [`prediction_phase_e_football_arb_live_2026_07_24`](./prediction_phase_e_football_arb_live_2026_07_24.md) | master | infra | 3/5 | 60% | 1.0 | — |
-| [`slot0_self_cleaning_daemon_2026_08_18`](./slot0_self_cleaning_daemon_2026_08_18.md) | master | infra | 2/10 | 20% | 1.0 | — |
 | [`prediction_phase_d_formal_smoke_and_backfill_2026_07_24`](./prediction_phase_d_formal_smoke_and_backfill_2026_07_24.md) | master | infra | 6/11 | 55% | 0.9 | — |
 | [`prediction_satellite_ao_dispatch_batch15_2026_08_19`](./prediction_satellite_ao_dispatch_batch15_2026_08_19.md) | master | design | 0/3 | 0% | 0.9 | — |
 | [`sports_prediction_mvp_writetime_precompute_2026_07_24`](./sports_prediction_mvp_writetime_precompute_2026_07_24.md) | master | design | 0/1 | 0% | 0.9 | — |
 | [`bucket_fold_portfolio_state_2026_07_17`](./bucket_fold_portfolio_state_2026_07_17.md) | master | infra | 5/8 | 62% | 0.9 | — |
+| [`slot0_self_cleaning_daemon_2026_08_18`](./slot0_self_cleaning_daemon_2026_08_18.md) | master | infra | 3/10 | 30% | 0.8 | — |
 | [`ao_satellite_ao_dispatch_batch22_2026_08_16`](./ao_satellite_ao_dispatch_batch22_2026_08_16.md) | master | infra | 1/6 | 17% | 0.8 | — |
 | [`cross_cutting_satellite_ao_dispatch_batch19_2026_08_19`](./cross_cutting_satellite_ao_dispatch_batch19_2026_08_19.md) | master | infra | 0/6 | 0% | 0.8 | — |
 | [`deployment_service_api_integration_cleanup_finalize_2026_08_18`](./deployment_service_api_integration_cleanup_finalize_2026_08_18.md) | master | infra | 0/3 | 0% | 0.8 | — |
@@ -278,7 +278,6 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`mvp_could_exist_rollup_dual_scope_2026_08_12`](./mvp_could_exist_rollup_dual_scope_2026_08_12.md) | master | design | 8/9 | 89% | 0.3 | — |
 | [`stash_pile_workspace_cleanup_2026_06_03`](./stash_pile_workspace_cleanup_2026_06_03.md) | master | infra | 13/18 | 72% | 0.3 | — |
 | [`bucket_fold_ml_2026_07_17`](./bucket_fold_ml_2026_07_17.md) | master | infra | 8/10 | 80% | 0.3 | — |
-| [`data_pipeline_check_mdps_features_2026_07_20`](./data_pipeline_check_mdps_features_2026_07_20.md) | master | infra | 38/40 | 95% | 0.3 | — |
 | [`defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16`](./defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md) | master | refactor | 4/5 | 80% | 0.3 | — |
 | [`prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize`](./prediction_satellite_ao_dispatch_batch6_2026_07_29_finalize.md) | master | infra | 0/3 | 0% | 0.3 | — |
 | [`quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08`](./quality_gates_quickmerge_timing_baseline_2026_07_31_finalize_2026_08_08.md) | master | infra | 0/2 | 0% | 0.3 | — |
@@ -354,6 +353,7 @@ _Auto-generated via `scripts/plans/regenerate_active_plan_inventory.py`. Sorted 
 | [`cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08`](./cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08_finalize_2026_08_08.md) | master | infra | 0/2 | 0% | 0.2 | — |
 | [`ci_tranche_zero_checkbox_archive_sweep_2026_08_18_finalize`](./ci_tranche_zero_checkbox_archive_sweep_2026_08_18_finalize.md) | master | infra | 0/1 | 0% | 0.2 | — |
 | [`codex_violations_ratchet_to_five_2026_06_10`](./codex_violations_ratchet_to_five_2026_06_10.md) | master | refactor | 44/45 | 98% | 0.2 | — |
+| [`data_pipeline_check_mdps_features_2026_07_20`](./data_pipeline_check_mdps_features_2026_07_20.md) | master | infra | 39/40 | 98% | 0.2 | — |
 | [`defi_satellite_ao_dispatch_batch18_2026_08_19_finalize`](./defi_satellite_ao_dispatch_batch18_2026_08_19_finalize.md) | master | refactor | 0/2 | 0% | 0.2 | — |
 | [`live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize`](./live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md) | master | infra | 0/2 | 0% | 0.2 | — |
 | [`slot0_self_cleaning_daemon_2026_08_18_finalize_2026_08_18`](./slot0_self_cleaning_daemon_2026_08_18_finalize_2026_08_18.md) | master | infra | 0/3 | 0% | 0.2 | — |
