@@ -524,8 +524,14 @@ todos only to confirm they are data-movement, then leave it.
       hypothesis explicitly RULED OUT (`uv sync --frozen --dry-run`: no changes needed), not left unconfirmed.
       Root cause not re-derivable at a 5-day remove — closed on the measured symptom, not a reconstructed cause.
       Issue archived: `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
-- [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor. Layer 2 (UAC) is named "the dominant blocker" —
-      DeFi content is interleaved with shared content in `__init__`. End state needs a scoped-build test.
+- [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor — full detail and Progress Log in
+      `/plans/active/lazy_scoped_loading_refactor_2026_08_16.md` (not duplicated here). 2026-08-20: operator ruled
+      option (a) lazy submodule attributes (PEP 562, zero breaking changes); `registry/__init__.py` shipped
+      (`unified-api-contracts@684c6e0e52`); `architecture_v2/__init__.py` + `internal/__init__.py` converted and
+      verified, shipping next; a 4th file not in the original plan (`unified_api_contracts/__init__.py` itself,
+      the top-level package root — its `_VENUES` eager-import loop needs hand-written design, not the mechanical
+      converter) discovered and partially done. Real measured win once all land: 1,766→1,295 modules (~27%) on
+      `from unified_api_contracts.internal import StrategyArchetype`.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
       (`[FROM-T2]` above). `manifest_writer/` needs an append-only "delta shard" pattern; verification gated on
       that landing. Was sitting `assigned_vm: NA` unqueued anywhere active; tracked here so it does not get lost.
