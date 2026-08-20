@@ -118,6 +118,18 @@ both read — declare once, consume many.
       is universal (it is the continuous-quote kernel), or that continuous-quote implies the fast path (profile and
       tier are orthogonal).
 
+### The artefact-to-epic coverage map
+
+- [ ] [BACKEND] P1. **Declare which epic owns which artefact section** (R17, one level up). Measured 2026-08-20: the
+      mapping from artefact section to owning epic exists only as reasoning over epic titles — there is no
+      machine-readable relation, so nobody can check it and nobody will notice when it drifts. Each artefact section
+      names its owning epic; each epic knows which artefact surfaces it feeds. This also gives T7a a real denominator
+      for the artefact half of its coverage proof instead of a derived one.
+- [ ] [REVIEW] P1. **Resolve the two orphaned artefact sections** — tracked at
+      [/plans/active/issues/artefact_sections_with_superseded_owning_epics_2026_08_20.md](/plans/active/issues/artefact_sections_with_superseded_owning_epics_2026_08_20.md).
+      The walkthrough's PnL-attribution section and the strategy docs' promote-workflow coverage both map to epics
+      that are `status: superseded` with zero active child plans.
+
 ### Verification
 
 - [ ] [REVIEW] P1. **Re-run the measurement that found this gap** after the drilldown lands — count distinct
