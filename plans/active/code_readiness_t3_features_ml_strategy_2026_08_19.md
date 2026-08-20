@@ -195,7 +195,8 @@ todos only to confirm they are data-movement, then leave it.
       OPTIONAL (a "flavor", never a mandatory field — pure-passive, fire-immediately and patient-then-escalate are
       all valid consumers), and it is strategy-COMPUTED and strategy-OWNED, with execution merely consuming it.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [FROM-T1] P1. `strategy_instructions` writer/registry DIVERGENCE — your repo's own
+- [x] ✅ [FROM-T1] P1. **SHIPPED `strategy-service@8a7f80e8` (2026-08-20 session 6) — checkbox missed at ship
+      time, flipped now.** `strategy_instructions` writer/registry DIVERGENCE — your repo's own
       `strategy_service/engine/core/gcs_storage_service.py::write_instructions` hardcodes its own blob-path
       string (`f"strategy_instructions/client_id={client_id}/strategy_id={strategy_id}/day={date_str}/
       instructions.parquet"`) and bypasses UTL's `PATH_REGISTRY`/`build_path()` entirely. T1 just added a
@@ -213,7 +214,8 @@ todos only to confirm they are data-movement, then leave it.
       paths/registry.py` (`strategy_instructions` row + its own comment on this writer being the "unwired stub"
       case), `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_
       pnl_attribution_2026_08_15.md`.
-- [ ] [FROM-T1] P2. **Migrate `staked_basis.py`'s `_STAKING_PROTOCOL_CHAIN` off its own hardcoded dict onto UAC's
+- [x] ✅ [FROM-T1] P2. **SHIPPED `strategy-service@8a7f80e8` (2026-08-20 session 6) — checkbox missed at ship
+      time, flipped now.** Migrate `staked_basis.py`'s `_STAKING_PROTOCOL_CHAIN` off its own hardcoded dict onto UAC's
       new `get_chain_for_protocol()`.** Registry SSOT hardening 2026-08-16 todo 6 measured that your 8-entry
       lowercase protocol→chain map (`strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:186`)
       genuinely duplicates data UAC already has: 7 of your 8 entries resolve exactly via UAC's existing
@@ -330,11 +332,12 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Delete entries from `clients_yaml_coverage.PENDING_CROSS_REPO_WAIVER` as T5 lands each
       archetype's `clients.yaml`/`clients_waiver.yaml` in `deployment-service`. Filed as an inbound request on T5's
       plan (`unified-trading-pm@96d5d2e1f1`); the frozenset is the shrinking worklist. 27 entries at authoring.
-- [ ] [BACKEND] P2. Audit the other 3 engine families named in the config-key contract-drift issue (sports,
-      ML-directional, market-making) the same way the vol family was audited on 2026-08-19 — by making the systemic
-      construct-and-fire test exercise them and seeing which no-op. That method found 2 real drifts (8 keys) the
-      A4 gate structurally cannot catch, because A4 compares the CATALOGUE against the schema and both sides can
-      agree while the ENGINE reads a third spelling. Evidence:
+- [x] ✅ [BACKEND] P2. **Duplicate of the already-flipped todo above (line 306) — same finding, same resolution,
+      tracked twice in this plan.** Audit the other 3 engine families named in the config-key contract-drift
+      issue (sports, ML-directional, market-making) the same way the vol family was audited on 2026-08-19. Done
+      2026-08-20 (session 3): the systemic construct-and-fire test already parametrizes all 59 registered
+      archetypes, not vol-scoped — confirmed green except 2 genuine `[DESIGN]`-blocked xfails. See the flipped
+      checkbox above and the deferred table for full detail; not re-done here. Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
 
 ### W6 — wizard, config and scaffolding
