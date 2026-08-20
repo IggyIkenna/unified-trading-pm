@@ -74,12 +74,12 @@ production DI wiring has landed yet.
 
 ## Todos
 
-- [ ] [BACKEND] P0. Prove per-client isolation holds under a multi-client cadence batch: add a test driving
+- [x] [BACKEND] P0. Prove per-client isolation holds under a multi-client cadence batch: add a test driving
   `GracePeriodHandler.run_once()` (`fund_administration_service/background/grace_period_handler.py`) over 2+ pending
   redemptions belonging to DIFFERENT `allocator_id`s in the SAME tick, and assert each produces its own
   `execute_withdrawal` call with a non-overlapping `FundTransferContext`/`destination` — never netted, batched, or
   reordered across allocators. Done-when: the test fails if `_withdraw_to_allocator` is ever refactored to share state
-  across redemptions in the same `run_once()` call.
+  across redemptions in the same `run_once()` call. — fund-administration-service@90603d94a7; Evidence: test-only quality gate 38 passed, 83.96% coverage; full quickmerge quality gate passed.
 
 - [ ] [BACKEND] P0. Confirm `FundTransferContext` actually trips execution-service's own per-client isolation
   enforcement when called via the structural `TransferAdapter` Protocol
@@ -112,3 +112,5 @@ production DI wiring has landed yet.
 - **2026-08-20**: Plan authored following `/plan-brainstorm`, as the client-isolation-focused companion to
   `fund_administration_redemption_cadence_engine_2026_08_20.md`. Split confirmed with the operator: this plan owns the
   wallet-transfer-execution + per-client-isolation leg under `client_isolation_and_governance_master`.
+
+- **2026-08-20**: Shipped the multi-client cadence isolation regression test in `fund-administration-service@90603d94a7`; the test records destination, amount, and context fund per withdrawal and proves two allocator-specific approvals produce two non-overlapping calls in one `run_once()` tick. Test-only quality gate: 38 passed, 83.96% coverage; quickmerge full gate passed.
