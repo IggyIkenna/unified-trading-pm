@@ -339,9 +339,15 @@ todos only to confirm they are data-movement, then leave it.
       that issue (line ~431, `[DATA] P3`, re-verify a HYPERLIQUID backfill VM) is data-side and explicitly out
       of this tranche's no-backfill scope. Evidence:
       `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`.
-- [ ] [BACKEND] P1. Build a genuine `(venue, instrument_type) -> data_types` combinator shared by all five asset
-      groups. TradFi currently produces a provably-wrong cell (CME == ICE despite ICE having no Databento coverage).
-      Evidence: `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`.
+- [x] ✅ [BACKEND] P1. **STALE — already resolved before this tranche existed; closed by measurement.** The
+      exact CME/ICE cell this todo cites is fixed — `unified-api-contracts@fa9cece5` "two-layer data-type-
+      validity combinator redesign", confirmed a real ancestor of `origin/live-defi-rollout` (not a doc claim
+      taken on faith). Every `[CODE]`/`[DESIGN]` todo in the source issue is checked done (finding 1 CME/ICE
+      fix, finding 2 the two-layer target-shape redesign, DeFi vocabulary reconciliation, dead-code deletion,
+      31-DeFi-venue capability audit). Only 2 items remain open, both `[DATA] P2` — a prod full-history backfill
+      "IN PROGRESS" and its terminal-state verification — both explicit data-movement, out of this tranche's
+      no-backfill scope. Evidence:
+      `/plans/active/issues/uac_data_type_validity_combinator_fragmentation_2026_07_07.md`.
 
 ### Contract extensions — unblock T3 and T4 EARLY
 
