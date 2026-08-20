@@ -308,36 +308,11 @@ todos only to confirm they are data-movement, then leave it.
       a STRUCTURAL finding). 8 tests. QG green — real exit code captured directly (538s), never through a pipe.
       Evidence: `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` (parent issue;
       the VALUE todo was its own sibling P0 in this plan, not filed as a separate issue doc).
-- [x] ✅ [BACKEND] P1. Both resolved — unified-api-contracts@0d7afa29e.
-      **Venue→chain**: NOT a merge — measured this was never a duplicate needing one. `get_chain_for_protocol()`
-      derives the chain via the SAME `split_glued_venue_chain()` primitive the chain-registry SSOT already uses,
-      resolving 7 of strategy-service's 8 hardcoded `_STAKING_PROTOCOL_CHAIN` entries with zero new data — the
-      information was never missing from UAC, only queried through the wrong mechanism. `coinbase_staking` is
-      the sole genuine exception (zero `ALL_DEFI_VENUES` matches — it's Coinbase's custodial retail product, not
-      an on-chain protocol), handled via one documented exception entry. 12 tests verbatim-copy strategy-
-      service's own 8 expected values as the ongoing cross-repo parity check. Migration filed as a `[FROM-T1]`
-      inbound request on T3's plan (out of tranche scope — strategy-service is theirs).
-      **VenueFeature/VenueCapability**: retyping VenueCapabilityV2 to reuse VenueCapability directly would have
-      LOST the 6 genuinely-unique account-structure members (`CROSS_MARGIN`/`PORTFOLIO_MARGIN`/`SUBACCOUNT`/
-      `ATOMIC_MULTI_LEG`/`DARK_POOL`/`BACK_LAY_EXCHANGE`), so full retyping was wrong. Instead removed the 6
-      REDUNDANT members that duplicated `VenueCapability` under different spelling (`FLASH_LOAN`/
-      `NATIVE_STAKING`/`LP_PROVISION`/`OPTIONS_TRADING`/`PERPS_TRADING`/`SPOT_TRADING`) — measured zero
-      fleet-wide call sites constructed any of them first, so removal changed no live behaviour;
-      `VenueCapabilityV2.supported_operations: list[str]` already existed as the free-form home for
-      action-level data, so `.features` was never actually the right place for these. 3 tests pin the surviving
-      vocabulary and assert zero remaining name collisions between the two enums. QG green (214s). Evidence:
+- [ ] [BACKEND] P1. Resolve the venue→chain SSOT overlap and the `VenueFeature` / `VenueCapability` vocabulary
+      overlap. Land it in the SAME change as the chain-registry P0 — same blast radius. Evidence:
       `/plans/active/registry_ssot_hardening_2026_08_16.md`.
-- [x] ✅ [BACKEND] P1. **STALE — already resolved weeks before this tranche existed; closed by measurement, not
-      new code.** Every code-level todo in the source issue is checked done: sports registries 1+3 confirmed
-      structurally one SSOT (registry 1 imports `league_data.SOURCE_COVERAGE_START` directly — not a duplicate
-      needing a merge); registry 2's disconnect from registry 1 closed via a permanent CI falsifier
-      (`unified-api-contracts@09169cfe`, `scripts/check_coverage_floor_registry_drift.py` +
-      `tests/unit/test_coverage_floor_registry_drift.py`, wired into `quality-gates.sh`) with a
-      shrinking-ratchet `KNOWN_DIVERGENCES` baseline (a stale entry whose pair no longer disagrees is itself a
-      failure); all 8 confirmed CeFi value mismatches fixed and verified against live manifest data
-      (`unified-api-contracts@3d24f147c`), baseline shrunk 16→10 tracked divergences. The one item still open in
-      that issue (line ~431, `[DATA] P3`, re-verify a HYPERLIQUID backfill VM) is data-side and explicitly out
-      of this tranche's no-backfill scope. Evidence:
+- [ ] [BACKEND] P1. Coverage-floor registries cross-propagate. Three parallel registries exist; sports registries 1
+      and 3 are structurally one SSOT. Evidence:
       `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`.
 - [ ] [BACKEND] P1. Build a genuine `(venue, instrument_type) -> data_types` combinator shared by all five asset
       groups. TradFi currently produces a provably-wrong cell (CME == ICE despite ICE having no Databento coverage).
@@ -673,41 +648,3 @@ todos only to confirm they are data-movement, then leave it.
   "launch T1 first — four blocking edges terminate here". If another agent is also on T1, that agent should
   re-read this log before editing UAC/UTL.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- 2026-08-20 — **SECOND PRE-COMPACT CHECKPOINT — merges an audit run by a concurrent peer session sharing this
-  slot with this session's own subsequent work.** 18 done / 19 open on this plan as of this entry (peer's own
-  snapshot read 16/21 — three items it listed "actionable now" were closed by this session AFTER that snapshot:
-  venue→chain SSOT + VenueFeature/VenueCapability overlap (`unified-api-contracts@0d7afa29e`) and the
-  coverage-floor-registries P1 (`unified-trading-pm@26b8b3ed64`, closed by measurement — already resolved weeks
-  earlier). **Do not re-open or re-work those three** — the peer's "actionable now" list is stale on exactly
-  those items; everything else in it still stands.
-  **Audit (Step 1)**: all three touched repos (`unified-api-contracts`, `unified-trading-library`,
-  `unified-trading-pm`) confirmed clean, `ahead=0`, verified against `origin` content directly (not exit codes).
-  53 scratchpad files, all disposable probe scripts/QG-log captures — every finding already landed in a commit
-  message or this Progress Log; none referenced by path from any committed doc. No secrets, no chat-only findings.
-  **Lessons carried forward from the peer session's audit (verified still accurate, not re-derived)**:
-  - The plan's own citations of "Q12-Q16" for `reference_position`/`credit` are STALE. The actual current
-    blocker is `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md` §15 ("OPEN —
-    needs an operator ruling next session"), which supersedes Q12-Q16 with a full FACTOR-STATE MODEL (§11-14,
-    shipped this session) and its own 4 named open questions plus 5 outstanding Wave-0 rulings. Read §11-14
-    before touching that todo again — it is a real design, not a stub. Worth checking (not yet done): whether
-    the `delta`/`gamma`/`underlying_instrument_id` fields already shipped on `QuoteInstruction`
-    (`unified-api-contracts@6be4b136d7`) are a valid special case of the §11 model or need revisiting once it's
-    formally adopted.
-  - `unified-api-contracts` quality-gates.sh runs 180-1076s (contention-dependent) — ALWAYS background it, never
-    foreground (this session independently hit the same 120s-foreground-cap lesson via a SIGTERM'd first attempt
-    early on).
-  - **This slot has a genuinely concurrent peer session actively working the SAME T1 plan.** `git pull --ff-only`
-    immediately before every plan edit; expect conflicts; resolve ADDITIVELY (never blind-overwrite) — this
-    session hit and cleanly recovered from exactly this twice (a `check_todo_regression` catch on its own
-    provenance-preservation edits, and a `SELF-INFLICTED CONFLICT MARKER` auto-recovery on the FACTOR-STATE MODEL
-    ship). `VenueType = {SINGLE_VENUE, META_BROKER, DATA_AGGREGATOR}` vs `VenueCategoryV2 = {CEFI, DEFI, ...}` are
-    easy to confuse in test fixtures — cost the peer session one failed run.
-  - **This session's own lesson, not yet in the peer's list**: before treating a locally-missing change as a
-    revert/data-loss event, run `git log HEAD..origin/<branch>` FIRST. This session spent real effort
-    reconstructing `TransferCapabilityV2` from a diff already in context after it "disappeared" locally — it had
-    actually already landed via this SAME slot's earlier (compacted-out) work (`unified-api-contracts@45a545e5ad`)
-    minutes before this checkpoint's predecessor was written; the "revert" was just the working tree resetting to
-    post-commit-clean state. A same-slot earlier-session commit reads identically to a hostile revert until you
-    check the log.
-  **Verdict: Safe to compact: YES.** All shipped work committed and pushed, `ahead=0` on every touched repo,
-  verified against actual trunk content.

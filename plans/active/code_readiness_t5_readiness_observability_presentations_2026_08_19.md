@@ -479,22 +479,6 @@ todos only to confirm they are data-movement, then leave it.
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
 
-- 2026-08-20 — **Root `README.md` staleness fixed** (the concrete, mechanically-verifiable subset of the
-  `docs_reconcile_remaining_broken_links_2026_08_02.md` P2 finding — the doc's own prior audits deliberately
-  scoped this out as "needs a real onboarding-doc pass," which is why it survived 6+ na-eligibility passes;
-  narrowed here to only claims verified against the live filesystem/git history, not guessed):
-  `scripts/workspace/sync-rules-pull.sh` and `sync-workspace.sh` do not exist (confirmed via `find` + `git log
-  --diff-filter=D`: removed in `8c18241537` when the workspace moved from a rules-sync model to a
-  `.cursor/rules/` symlink — `setup-cursor-rules-symlink.sh`); the "Quickmerge... creates a branch, and opens a
-  PR" claim contradicted the actual default flow (direct commit to `live-defi-rollout`, no branch/PR — confirmed
-  `grep` on `quickmerge.sh` for rule-sync/PR-create logic, cross-checked against this same CLAUDE.md's own
-  `ci-cd-flow.md` pointer); `unified-trading-codex` is listed as a live sibling repo in two places but is
-  ARCHIVED (per this file's own CLAUDE.md); the workspace-structure diagram showed the pre-Path-B flat clone
-  layout, missing the `.tabs/<N>/` per-slot worktree model live since 2026-06-08 (confirmed against
-  `/codex/05-infrastructure/per-tab-worktrees.md`). 7 fixes, `unified-trading-pm@<pending — see ship log>`. The
-  remaining ~16 items in that issue doc and its 2026-08-17 sibling stay open — genuinely VALID_JUDGMENT per
-  6+ independent na-eligibility-audit passes, not re-litigated here.
-
 - 2026-08-20 — **The acceptance test now exists and is machine-enforced** — `unified-trading-pm@7b2dd29aaa`.
   `scripts/plan-hygiene/check_artefact_claim_ownership.py` + `artefact_claim_ownership_baseline.yaml`, wired into
   `run_hygiene_sweep.sh` next to the disclosure and enum-drift checks.

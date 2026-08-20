@@ -15,9 +15,8 @@ git clone git@github.com:IggyIkenna/unified-trading-pm.git
 # 2. Set up workspace paths and IDE config
 bash unified-trading-pm/scripts/workspace/setup-workspace-root.sh
 
-# 3. Symlink .cursor/rules/ to this repo's git-tracked rules — no separate sync step;
-#    edits under .cursor/rules/ directly modify tracked files, committed via quickmerge like any other change
-bash unified-trading-pm/scripts/workspace/setup-cursor-rules-symlink.sh
+# 3. Pull the team's Cursor rules into your local .cursor/rules/
+bash unified-trading-pm/scripts/workspace/sync-rules-pull.sh
 
 # 4. (Optional) Full workspace bootstrap — clones all repos, installs deps
 bash unified-trading-pm/scripts/workspace/workspace-bootstrap.sh
@@ -79,29 +78,33 @@ cd unified-trading-pm
 bash scripts/quickmerge.sh "feat: describe your change"
 ```
 
-Quickmerge validates the manifest and commits directly to the shared `live-defi-rollout` branch (no branch/PR for
-the default flow; `--hotfix` opens a PR against `main` instead — see `/codex/08-workflows/ci-cd-flow.md`).
+Quickmerge automatically syncs Cursor rules, validates the manifest, creates a branch, and opens a PR.
 
 ### Pull the team's latest
 
 ```bash
 cd unified-trading-pm && git pull
+bash scripts/workspace/sync-rules-pull.sh
 ```
 
-`.cursor/rules/` is a symlink into this repo's tracked rules (`setup-cursor-rules-symlink.sh`), so a `git pull` alone
-picks up rule changes — there is no separate sync step.
+### Check rule drift
+
+```bash
+bash scripts/workspace/sync-workspace.sh
+```
 
 ---
 
 ## Key Scripts
 
-| Script                                            | Purpose                                                                    |
-| ------------------------------------------------- | -------------------------------------------------------------------------- |
-| `scripts/quickmerge.sh "msg"`                     | Main command — validates manifest, commits directly to `live-defi-rollout` |
-| `scripts/workspace/setup-cursor-rules-symlink.sh` | Symlink `.cursor/rules/` into this repo's tracked rules                    |
-| `scripts/workspace/workspace-bootstrap.sh`        | Full workspace setup from scratch                                          |
-| `scripts/manifest/generate_workspace_dag.py`      | Regenerate DAG SVG from manifest                                           |
-| `scripts/quality-gates.sh`                        | Run full lint + type-check + test pipeline                                 |
+| Script                                       | Purpose                                     |
+| -------------------------------------------- | ------------------------------------------- |
+| `scripts/quickmerge.sh "msg"`                | Main command — syncs rules + commits + PR   |
+| `scripts/workspace/sync-rules-pull.sh`       | Pull team rules into local `.cursor/rules/` |
+| `scripts/workspace/sync-workspace.sh`        | Show diff between local and repo rules      |
+| `scripts/workspace/workspace-bootstrap.sh`   | Full workspace setup from scratch           |
+| `scripts/manifest/generate_workspace_dag.py` | Regenerate DAG SVG from manifest            |
+| `scripts/quality-gates.sh`                   | Run full lint + type-check + test pipeline  |
 
 ---
 
@@ -111,10 +114,10 @@ This repo **must** be a sibling directory alongside all other system repos:
 
 ```
 ~/repos/unified-trading-system-repos/     <- workspace root (open in Cursor)
-├── .cursor/rules/                        <- symlink into unified-trading-pm/.cursor/rules/
-├── unified-trading-pm/                   <- THIS repo (codex/ here is the standards SSOT; unified-trading-codex is ARCHIVED)
+├── .cursor/rules/                        <- local Cursor rules (IDE reads here)
+├── unified-trading-pm/                   <- THIS repo
+├── unified-trading-codex/                <- standards and specifications
 ├── instruments-service/                  <- service repo
-├── .tabs/<N>/                            <- per-operator-slot worktrees (one clone of every active repo each, on live-defi-rollout)
 └── ...60+ other repos
 ```
 
@@ -124,5 +127,4 @@ This repo **must** be a sibling directory alongside all other system repos:
 
 - [docs/workspace-setup.md](docs/workspace-setup.md) — full workspace setup guide
 - [docs/both-ides-setup.md](docs/both-ides-setup.md) — Cursor + Claude Code IDE setup
-- `codex/05-infrastructure/` — infrastructure docs, versioning, CI/CD diagrams (this repo — `unified-trading-codex` is
-  ARCHIVED)
+- `unified-trading-codex/05-infrastructure/` — infrastructure docs, versioning, CI/CD diagrams
