@@ -830,7 +830,7 @@ work.
       `model`/`account_id` on `TaskUsageView` but never rendering them — added both next to the existing
       provider text (App.tsx), closing the operator's "details tab should show the model" ask for every
       provider, not just Ollama. **Evidence: agent-orchestrator@c48e37e281**.
-- [x] ✅ [INFRA] P1. **New, found live 2026-08-20 — the REAL reason gemma-self-hosted never completes a real
+- [ ] [INFRA] P1. **New, found live 2026-08-20 — the REAL reason gemma-self-hosted never completes a real
       turn (the timeout fix above was real and worth keeping, but not the actual blocker)**: every
       interactive Claude Code turn sends Anthropic's `thinking` request field unconditionally (confirmed
       live via the real `POST /v1/messages?beta=true` bodies this proxy receives — not something AO's own
@@ -854,32 +854,11 @@ work.
       passthrough handler (`litellm/llms/anthropic/experimental_pass_through/...`), which appears to bypass
       the standard callback pipeline entirely. All three attempts were live-tested then cleanly reverted
       (confirmed via `git status` showing empty) — nothing broken, nothing left half-applied.
-      **RESOLVED 2026-08-20 — real fix found, shipped, and live-verified, without touching the vendored
-      package.** The fourth lever (not attempted in the session above): monkeypatch
-      `OllamaChatConfig.map_openai_params` itself — the exact method identified above — rather than either
-      config (ignored by this method) or a `CustomLogger` hook (bypassed by the Anthropic-passthrough
-      handler). Confirmed by direct source read on the deployed litellm-proxy venv that
-      `map_openai_params` receives `drop_params: bool` but never reads it anywhere in its body — a real,
-      narrow litellm gap, not a config-misuse. New file
-      `config/litellm/ollama_thinking_monkeypatch.py`: wired into `litellm_settings.callbacks` purely so
-      litellm IMPORTS it at proxy startup (the CustomLogger class inside is a documented no-op, kept only
-      to satisfy the callback-loader interface) — the real fix is module-level code that runs once at
-      import time, replacing `OllamaChatConfig.map_openai_params` with a wrapper that strips
-      `reasoning_effort` from `non_default_params` before delegating to the original, scoped to
-      `gemma-self-hosted`/`gemma3*` model names only. This operates one layer BELOW the passthrough
-      handler — whichever code path builds the outbound Ollama request still has to call this exact method
-      to translate `reasoning_effort` into Ollama's `think` param, so it can't be bypassed the way the hook
-      was. **Real live verification, both before and after a clean git pull on the VM** (the second pass
-      needed because the first pull hit dirty local state left over from this same investigation's earlier
-      live tests — discarded after confirming byte-identical to the incoming commit): a real
-      `POST /v1/messages` with a real `thinking: {"type":"enabled","budget_tokens":1024}` field against
-      `gemma-self-hosted` returns `HTTP 200` with real generated content
-      (`{"content":[{"type":"text","text":"verified\n"}],...}`) — the exact request shape that reproducibly
-      failed before. Gemini (`gemini-3.5-flash-lite-proj1`) and Kimi (`kimi-k2.6`, still showing its own
-      real `thinking` block — confirms the patch is correctly SCOPED, not a blanket strip) both
-      regression-checked unaffected. 4 new unit tests
-      (`tests/test_ollama_thinking_monkeypatch.py`) cover the patch/strip logic, scope-restriction, dict
-      non-mutation, idempotency, and the graceful-degradation branch if litellm's internal layout ever
-      changes (via a fake `sys.modules` injection — litellm itself isn't a dependency of this repo's own
-      `.venv`, only the separate litellm-proxy venv on the VM). **Evidence: agent-orchestrator@25589117c3.**
-      Repo: agent-orchestrator.
+      **What's left, not yet attempted**: a genuine patch to the vendored litellm package on the VM
+      (`.venvs/litellm-proxy/lib/python3.13/site-packages/litellm/llms/ollama/chat/transformation.py`) —
+      the exact line is known, but this is a real third-party-dependency patch outside version control,
+      fragile against any future `pip install`/litellm upgrade, and wasn't done live without it being a
+      deliberate, reviewed decision rather than a late-session hack. Alternative not yet explored: whether
+      a DIFFERENT self-hosted model (a real reasoning-capable variant, or one where `think` is simply
+      accepted-and-ignored rather than rejected) would sidestep this without touching litellm at all. Repo:
+      agent-orchestrator.

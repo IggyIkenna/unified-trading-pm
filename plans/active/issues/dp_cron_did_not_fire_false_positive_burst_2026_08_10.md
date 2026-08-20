@@ -76,7 +76,6 @@ summary: >-
      `RUNNING` — that prefix is NOT among the 10 alerted here, confirming DP-LIVE-003 is not just uniformly
      false-firing).
 status: open
-archive_exempt: true
 nature: issue
 asset_group: [cross-cutting, tradfi, sports, prediction, defi]
 stage: [meta]
@@ -234,13 +233,12 @@ is exactly the kind of judgment call this doc should surface, not resolve.
       when absent; the remaining ambiguous producer below still MUST page). — deployment-service@16b45256
       (`quality-gates.sh --no-fix` ALL PASSED, 3647 tests; shipped via quickmerge, landed on `live-defi-rollout`,
       ancestry-verified against origin).
-- [x] ✅ [OPERATOR] P1. **RESOLVED (2026-08-20, escalation `agt-66493f`, `/blocked` `BLK-adfa52fd`)** —
-      `prediction-arb-detector-` half of this todo. Operator chose **A**: reclassify `NOT_YET_ACTIVE` in
-      `producer_lifecycle.NOT_YET_ACTIVE_PREFIXES` — deliberate pause, not a regression. DP-LIVE-003 no longer pages on
-      its absence. Regression test flipped (`test_prediction_arb_detector_reclassified_not_yet_active`,
-      `test_prediction_arb_detector_absent_never_pages`) to assert the new NOT_YET_ACTIVE behavior. —
-      deployment-service@27e9f53cd4 (`quality-gates.sh --no-fix` ALL PASSED; shipped via quickmerge, landed on
-      `live-defi-rollout`, ancestry-verified against origin).
+- [ ] [OPERATOR] P1. For the remaining unresolved producer, `prediction-arb-detector-` (ran continuously until deleted
+      2026-06-29, ~6 weeks absent at time of finding — NOT part of the escalation this session answered), confirm
+      operational intent: real regression needing relaunch, or a deliberate pause the lifecycle-state framework should
+      also mark `not_yet_active`/`superseded`. Currently stays `ACTIVE` and WILL page again on the next DP-LIVE-003
+      sweep cycle (by design — fail toward alerting on ambiguous evidence). Do not relaunch blind — the producer's
+      current config/entrypoint needs a fresh look before restart. Repo: deployment-service.
 - [x] ✅ [SCRIPT] P1. **RESOLVED (2026-08-10 follow-up session)** — finding 1's `agent-orch-planning-vm-` exclusion was
       a same-day stopgap (blanket `_GCP_CENSUS_UNOBSERVABLE_PREFIXES` exclusion); it now has a REAL, dedicated AWS EC2
       liveness check (`missing_live_producer_watcher._agent_orch_planning_vm_present`, via a new
@@ -355,21 +353,3 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   full diagnosis cycle re-confirming the same already-known fact. Recommend the operator either answer the open
   `[OPERATOR]` todo directly in this doc (bypassing the blocked-question mechanism entirely) or explicitly accept
   option A (reclassify `NOT_YET_ACTIVE`) to stop the alert until a deliberate relaunch decision is made.
-- **2026-08-20 (slot-9, data_pipeline_failure, escalation `agt-66493f`, `DP_CRON_DID_NOT_FIRE`/DP-LIVE-003 re-page)**:
-  DP-LIVE-003 paged again for `prediction-arb-detector-` — same open `[OPERATOR]` todo. Live-verified: `gcloud compute
-  instances list --filter="name~prediction-arb-detector"` zero rows across all zones; census not blind (other live
-  producers list fine). Escalated via `/blocked` (`BLK-adfa52fd`); operator answered **A — reclassify
-  `NOT_YET_ACTIVE`**, and explicitly asked this worker to actually land the code (noting 3 prior sessions reached the
-  same answer without landing it). Added `"prediction-arb-detector-"` to
-  `producer_lifecycle.NOT_YET_ACTIVE_PREFIXES`, updated its docstring, and flipped the two regression tests that
-  previously asserted the opposite (`test_producer_lifecycle.py::test_ambiguous_burst_producer_stays_active_not_silenced`
-  → `test_prediction_arb_detector_reclassified_not_yet_active`;
-  `test_missing_live_producer_watcher.py::test_ambiguous_burst_producer_absent_still_pages` →
-  `test_prediction_arb_detector_absent_never_pages`). `quality-gates.sh --no-fix` ALL PASSED (271s); shipped via
-  quickmerge, landed on `live-defi-rollout`, ancestry-verified — `deployment-service@27e9f53cd4`. This resolves the
-  last open half of the `[OPERATOR]` todo above (the `mdps-features-live-tradfi-` half was already resolved
-  2026-08-19). **`archive_exempt: true` added**: all todos are now done, but this doc is cited as the DP-LIVE-003
-  false-positive/ambiguous-producer reference from 8 other active docs (`tradfi_satellite_ao_dispatch_batch12`,
-  `dp_cron_did_not_fire_dedup_volatile_field_2026_08_17`, `dp_live_003_agent_orch_aws_credentials_gap_2026_08_10`, and
-  5 more) — archiving now would require a referrer-path sweep out of scope for this one-shot escalation; standing
-  reference value + the referrer fan-out justify exemption over immediate archival.
