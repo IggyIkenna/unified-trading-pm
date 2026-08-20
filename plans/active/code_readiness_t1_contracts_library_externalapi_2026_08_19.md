@@ -267,6 +267,49 @@ todos only to confirm they are data-movement, then leave it.
       `UniswapConnector.mint_position()`/`burn_position()` per the enum's own comment — read those signatures for
       the real shape) and T1 will add both in one pass.
 
+      **Shape specified 2026-08-20, T4's call as asked.** Read BOTH real connector families before proposing — they
+      genuinely differ, not just in naming: `UniswapConnector.mint_position(token0, token1, fee_tier,
+      sqrt_price_lower, sqrt_price_upper, amount0_desired, amount1_desired, amount0_min=None, amount1_min=None,
+      deadline_offset_seconds=1800)` / `burn_position(token_id, liquidity, amount0_min=0, amount1_min=0,
+      deadline_offset_seconds=1800, burn_nft=False)` (`execution_service/defi_execution/protocols/uniswap.py:450,
+      500`) is NFT-position-based with sqrt-price bounds; `OrcaConnector.add_liquidity(whirlpool, amount_a,
+      amount_b, lower_tick, upper_tick)` / `remove_liquidity(whirlpool, liquidity_amount)` and Raydium's identical
+      shape (`orca.py:168,292`, `raydium.py:181,304`) are pool-address + raw-tick, no NFT. Proposed generalized
+      schema (superset, protocol-specific fields nullable):
+
+      ```python
+      class LpMintInstruction(StrategyInstructionEnvelope):
+          action: Literal[InstructionActionV2.LP_MINT] = InstructionActionV2.LP_MINT
+          protocol: str  # "uniswap_v3" | "orca" | "raydium" | ...
+          pool_id: str  # pool/whirlpool address (Uniswap: derivable from asset_a/asset_b/fee_tier, still populated for logging)
+          asset_a: str
+          asset_b: str
+          amount_a_desired: Decimal
+          amount_b_desired: Decimal
+          amount_a_min: Decimal | None = None  # slippage floor -- Uniswap's connector already enforces this;
+          amount_b_min: Decimal | None = None  # Orca/Raydium's connectors do NOT yet -- a real gap the W15 security
+                                                # audit's checklist point 4 (slippage/deadline bounds) will surface
+          lower_tick: int
+          upper_tick: int  # universal range representation -- Orca/Raydium's native input; execution-service's own
+                            # wiring converts to sqrt_price_lower/upper before calling Uniswap's mint_position (a
+                            # T4-side wiring detail, not a UAC schema concern)
+          fee_tier: int | None = None  # Uniswap-specific tiered-pool selector; None for single-pool-per-pair protocols
+
+      class LpBurnInstruction(StrategyInstructionEnvelope):
+          action: Literal[InstructionActionV2.LP_BURN] = InstructionActionV2.LP_BURN
+          protocol: str
+          pool_id: str
+          position_token_id: str | None = None  # Uniswap V3's NFT position id; None for Orca/Raydium (no NFT)
+          liquidity_amount: Decimal  # universal across all 3 -- Uniswap's `liquidity` param, Orca/Raydium's
+                                     # `liquidity_amount` param, identical concept
+          amount_a_min: Decimal | None = None
+          amount_b_min: Decimal | None = None
+      ```
+
+      `deadline_utc` reuses the base envelope's existing field rather than a redundant offset-seconds param.
+      Once these land, T4's `resolve_settlement` gets 2 more `isinstance` branches, closing the BATCH settlement
+      gap todo 5/5, matching the pattern `CONVERT_DUST`/`WITHDRAW`/`REPAY` already established.
+
 ## Todos
 
 ### Registry SSOT — the P0s everything else is wrong without
