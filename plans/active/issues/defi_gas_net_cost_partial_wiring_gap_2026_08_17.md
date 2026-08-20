@@ -138,10 +138,7 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       deliberately not enforced (state which, with the reasoning). Repo: strategy-service. Done when: either the
       threshold is implemented and unit-tested, or the docstring is corrected to match actual behavior with a cited
       reason. — strategy-service@fbf78dfe20 (see Progress Log for the scope note on the IL term).
-- [ ] [STRATEGY] P3. Net `BACKRUN`'s (`strategy-service/.../mev/backrun.py:73-93`) already-available
-      `block_priority_gas_p90_gwei_<chain>` feature against its `spread_bps` profitability gate (currently used only
-      for inclusion-bid sizing, never subtracted from the gated spread). Repo: strategy-service. Done when:
-      `spread_bps < min_spread_bps` (or equivalent) accounts for the priority-gas cost, with a regression test.
+- [x] ✅ [STRATEGY] P3. Net `BACKRUN` profitability against priority gas. The engine now uses the UAC-cited Uniswap V3 gas budget and the bid price (`P90 x priority_gas_uplift`) converted to USD/bps, and fails closed without a positive priority-gas observation. Repo: strategy-service. Done when: `spread_bps < min_spread_bps` (or equivalent) accounts for the priority-gas cost, with a regression test. — strategy-service@696094a9b9 + evidence: full quickmerge gate green; 6406 passed, 248 skipped, 3 xfailed, 103 warnings; sentinel `696094a9b9`.
 - [ ] [STRATEGY] P3. Confirm whether execution-service's `ExecutionCostEstimator`
       (`execution-service/.../services/execution_cost_estimator.py:170-190`) is genuinely unused by strategy-service
       (0 import/call sites confirmed this session) — if so, either wire it in as originally intended (module
@@ -150,6 +147,8 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       marker is corrected to reflect it is unused.
 
 ## Progress Log
+
+- **2026-08-20 (slot-7, strategy worker):** Implemented and shipped BACKRUN priority-gas netting in `strategy_service/engine/strategies/v2/mev/backrun.py`. The engine now fails closed without a positive P90 feature, calculates bid gas cost from the UAC Uniswap V3 gas schedule, subtracts cost bps from the spread gate, and records net-spread/gas attestations. Added a marginal-opportunity regression in `tests/unit/engine/strategies/v2/test_mev_engines.py`; strategy-service full tests passed 6406 with 248 skipped, 3 xfailed, and 103 warnings. Quickmerge verified `strategy-service@696094a9b9` on `origin/live-defi-rollout`.
 
 - **2026-08-17 (slot-7, data_engineering, via defi_satellite_ao_dispatch_batch16_2026_08_17.md)**: filed after a
   grep-then-read verification pass (Explore sub-agent, 29 tool calls) found the wiring genuinely mixed — see §2/§3
@@ -239,6 +238,8 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       `StrategyArchetype.*` set at all (confirmed via grep, 2026-08-17). Repo: strategy-service. Done when: a real
       paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — corrected the .tabs/7 absolute prefixes to workspace-root-relative; added the features-service gas_cost_usd_calculator producer
+
+- **2026-08-20 (slot-7, worker):** shipped MTDS Aave V3 Ethereum producer corrections in `market-tick-data-service@278e377daa` (four task-scoped commits; quickmerge ancestry verified). The producer discovers pre-event `Borrow` logs, resolves balances and health at the observation block, reads block-pinned Aave oracle USD prices, covers variable + stable debt, emits deterministic candidate/snapshot digests, and emits explicit `UNAVAILABLE` rows without reusing `liquidation_events`; MTDS quality gates passed with 11,075 tests, 28 skips, 82.07% coverage. The `[MTDS] P1` checkbox remains open because §7.5 additionally requires a persisted canonical shard and a `B < B2` evidence fixture, neither of which this producer-only slice supplies.
 
 ### 6. Required prerequisite design — candidate snapshot and paper injection
 
