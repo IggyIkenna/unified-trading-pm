@@ -8,7 +8,7 @@ summary: >-
   printed. PARTIALLY EXPLAINED 2026-08-09 — the commit being attempted carried invalid YAML frontmatter, which fails the
   plan-hygiene gate; that accounts for the rejection but NOT for the silent exit or the setup.sh re-entry, which remain
   real and are the actual bug.
-status: open
+status: resolved
 nature: issue
 asset_group: [meta]
 stage: [meta]
@@ -29,7 +29,6 @@ context_scope:
     scripts/quality-gates-base/base-library.sh,
     /codex/08-workflows/ci-cd-flow.md,
   ]
-archive_exempt: true
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P1
@@ -39,6 +38,9 @@ effort: low
 drift_direction: unknown
 depends_on: []
 ---
+
+> **🟢 ARCHIVED 2026-08-20** — `status: resolved`, zero open todos, and no deferred work remain. Archived after the
+> required separate checkbox-flip commit.
 
 # quickmerge re-enters setup.sh after the quality audit and exits without committing
 
