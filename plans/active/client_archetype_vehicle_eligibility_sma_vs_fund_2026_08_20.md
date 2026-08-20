@@ -126,8 +126,12 @@ cross-plan same-file collision rather than relying on `sequential: true` alone (
   `test_full_lifecycle_loop_emits_all_events_in_order` (unregistered `allocator_id="client-IT"`) stays green
   unmodified, confirming the done-when's "fund-typed client_id's request is unaffected" bar.
 
-- [ ] [REVIEW] P1. Confirm no regression: run `bash scripts/quality-gates.sh` in both the UAC/strategy-service config
-  repo and fund-administration-service after the above land, and cite the green runs.
+- [x] [REVIEW] P1. Confirm no regression: run `bash scripts/quality-gates.sh` in both the UAC/strategy-service config
+  repo and fund-administration-service after the above land, and cite the green runs. — Both re-run fresh after all
+  3 prior todos landed: unified-api-contracts `bash scripts/quality-gates.sh --no-fix` passed; fund-administration-
+  service passed (94s, sentinel `a1b0e3f9ed50d25c861fceef3f47e7836a3a1c3c`), exercising the new `vehicle_type` field,
+  the `CLIENT_REGISTRY` backfill, and the `sma`-rejection routing gate together, not just individually. **All 4
+  todos in this plan are now done.**
 
 ## Progress Log
 
@@ -146,3 +150,6 @@ cross-plan same-file collision rather than relying on `sequential: true` alone (
   fund-administration-service@fb7dc9d7b1, verified ancestor of origin/live-defi-rollout. See item 3's own evidence
   line for the full detail. QG green (34s). Only item 4 ([REVIEW] confirm-no-regression) remains open.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-20**: [operator's interactive main session, `/autonomous`] Item 4 (final QG confirmation) shipped —
+  re-ran `quality-gates.sh` fresh in both repos after all 3 prior items landed together. **All 4 todos in this plan
+  are now done.** Handing off to `client_archetype_vehicle_eligibility_sma_vs_fund_finalize_2026_08_20.md` next.
