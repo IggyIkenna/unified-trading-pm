@@ -723,6 +723,22 @@ todos only to confirm they are data-movement, then leave it.
       none are execution-service-scoped or T4-allocated. Full detail: this plan's Progress Log, 2026-08-20.
 - [ ] [BACKEND] P1. Wire transfer netting and custody routing end to end in production — the artefacts mark these
       target-state, not wired.
+
+      **Scoped 2026-08-20, not built — two independent blockers, not one.** Grepped execution-service repo-wide
+      for any "netting" concept relevant to fund transfers: zero hits — every existing "netting" reference
+      (`config/grid_builder.py` etc.) is NautilusTrader's `oms_type: "NETTING"` position-netting-vs-hedging
+      setting, an unrelated concept. **Netting** (deciding which pending transfer intents can be combined before
+      any custody call happens) is explicitly documented as STRATEGY-service-owned in the related
+      `execution_service_policy_and_fill_model_gaps_2026_08_19.md`'s Progress Log ("§ A/C/D/H strategy-owned:
+      ... transfer-emit netting") — so the "emit" decision is out of this repo's scope entirely, not merely
+      unbuilt here. **Custody routing** is genuinely execution-service's to build, but is the SAME blocker the
+      `[FROM-T1]` Ceffu-integration todo above already tracks: `transfer_coordinator.py` has a real
+      `TransferHandler` protocol + one concrete `_SubaccountMoveHandler` (Binance/OKX only), but building a
+      real Ceffu/Copper custody-routing handler needs the actual Ceffu API spec, which does not exist in this
+      workspace (not a credentials gap — a documentation gap). Real next step once unblocked: build the custody
+      routing half against whichever real transfer-provider spec lands first, wire it into
+      `TransferCoordinator.register_handler()`; the netting half needs a strategy-service-side design session
+      this tranche cannot self-serve (cross-repo, cross-team boundary).
 - [x] ✅ [BACKEND] P2. **Closed — all 4 sub-items resolved.** Close the batch-live-reconciliation-service, fund-administration-service, greeks-service and
       client-reporting-api items in this tranche's allocation. **fund-administration-service: zero docs allocated**
       (confirmed via `plans/audit/results/code_readiness_allocation_2026_08_19.json`, key
