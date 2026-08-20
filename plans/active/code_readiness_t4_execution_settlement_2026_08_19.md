@@ -191,6 +191,21 @@ todos only to confirm they are data-movement, then leave it.
       `INSTRUCTION_TYPE_TO_OPERATIONS` is a total mapping over every member) and T1 does not want to guess a shape
       you then have to rework. State what execution-service actually needs and T1 will land it, or say if T1's
       first reasonable draft is fine to just ship.
+
+      **Answered 2026-08-20 — recommendation is DON'T add these to `StrategyInstructionType`, not "ship a
+      draft shape."** Both capabilities already exist, on the DELIBERATELY separate `AccountInstruction`
+      envelope: `kill_switch.activate()`/`.deactivate()` (durable state-file, admin-authenticated via
+      `POST /kill-switch/activate` in `api/app.py`) and `AccountInstruction.CLOSE_ALL` (operator-driven,
+      `authorization_id`-gated, real per-venue wiring `execution-service@96411b68c9` + HTTP route
+      `execution-service@c0839616be`, `POST /account/instruction`). Adding `KILL_SWITCH`/`FLATTEN_POSITION` to
+      `StrategyInstructionType` would expose them on `/external/instructions` — the surface EXTERNAL/third-party
+      callers reach — a materially different authority model than the current operator-only paths. `codex/
+      04-architecture/account-instructions.md`'s own stated rationale for keeping two separate envelopes is exactly
+      this: "Different authority model (operator role, not strategy engine)... Different risk gates (some ops
+      bypass strategy-layer checks by design)." Bolting kill/flatten onto the strategy envelope would quietly erode
+      that boundary. If external partner-facing kill/flatten access is genuinely wanted, that's a product/security
+      policy call for the operator, not something to build speculatively into a Pydantic union today — don't add
+      the enum members, and don't build a matching execution-service handler, until that call is made.
 - [ ] [FROM-T1] P1. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
       T3's `## Inbound requests` for full detail (no internal messaging connects strategy-service's decisions to
       execution-service today). Whichever tranche has capacity first can open the UTL `EventTransport` subscription
@@ -201,6 +216,16 @@ todos only to confirm they are data-movement, then leave it.
       path behind the provider interface, credential-gated, never descope. Do NOT invent a distinct Ceffu custody
       member — the artefact already lists Ceffu alongside Copper/manual-transfer/prime-broker eligibility on
       `VenueCapabilityV2.transfer_capability` (shipped `unified-api-contracts@45a545e5ad`).
+
+      **Checked 2026-08-20, genuinely not actionable yet — not the same blocker as BLOCKED-CREDENTIALS.**
+      `transfer_coordinator.py` has ZERO Ceffu/Copper/prime-broker code today — only a generic `TransferHandler`
+      Protocol and one concrete `_SubaccountMoveHandler` (Binance/OKX only). A conforming Ceffu handler needs
+      Ceffu's actual REST/API surface (endpoints, auth scheme, request/response shapes) to implement correctly —
+      this todo's own text already says "pending its API spec," meaning the spec doesn't exist in this workspace
+      at all, not just missing credentials. Building a `TransferHandler`-conforming class without it would mean
+      inventing an interface with no basis to verify against — real risk of shipping something plausible-looking
+      but wrong for a CUSTODY integration. Deliberately not attempted rather than guessed. `BLOCKED` on the actual
+      Ceffu API spec landing somewhere in this workspace (not a credential ask — a documentation ask).
 - [x] ✅ [FROM-T5] P0. **Shipped — `execution-service@7202047877`.** Expose a real per-venue instruction-path check in `execution-service` — this is the leg the
       readiness dump names as the structural reason its rows cannot confirm execution readiness. T5 has done the
       groundwork and needs only the venue-aware surface; the shape asked for is deliberately minimal.
@@ -488,6 +513,17 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s Inbound requests section —
       once T1 lands 4 new subclasses, T4's side is mechanical (4 more `isinstance` branches, same pattern as the
       CONVERT_DUST fix above). `BLOCKED-` on that request until then.
+
+      **3/5 CLOSED 2026-08-20 — `execution-service@59627fa2d2`.** T1 landed `WithdrawInstruction`/
+      `RepayInstruction` (`unified-api-contracts@f5fc118ae1`) same day, exactly as the request predicted —
+      `resolve_settlement` now handles both as rate-matched inverses of `LEND`/`BORROW` (protocol/asset/
+      target_supplied_amount and target_debt_amount respectively). `BATCH_UNHANDLED_ACTIONS` measured shrinking
+      to exactly `{LP_BURN, LP_MINT}`. Fixed a test that had pinned the OLD gap as expected behavior
+      (`test_lending_venue_is_only_wired_on_batch` asserted `AAVE-V3-ETHEREUM.batch == "wired"` — now genuinely
+      `"deployed"`, rewritten to assert the fixed reality rather than the historical gap). 4 new tests total.
+      **Still open**: `LP_MINT`/`LP_BURN` — T1's own note on the DONE item above says these "still need the DeFi
+      LP position shape specified, which is your [T4's] call per the original request, not invented here." Genuine
+      open design question, not attempted this session.
 
 ### W12 — reconciliation
 
