@@ -577,6 +577,22 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P1. Implement manual trade entry on EVERY venue — epic definition-of-done item, and manual execution
       mode is first-class alongside automated per the 2026-08-19 addition to W1.
 
+      **Root-caused AND DeFi half fixed 2026-08-20 — `execution-service@8cd47073b5`.** Traced the manual API's
+      actual lazy-init path (`ManualOperationHandler.execute()` unconditionally called
+      `get_or_create_orchestrator()` — CLOB-shaped, cannot represent a `DeFiAdapter`) and confirmed by reading
+      `_execute_instructions`'s automated path that DeFi instructions there are dispatched straight to
+      `DeFiAdapter.execute_instruction()`, never through an `ExecutionOrchestrator` at all — resolving the earlier
+      open architecture question. Fixed the same way: added `get_defi_adapter_singleton()` (mirrors
+      `create_orchestrator_for_venue`'s pattern) and a process-wide-singleton `get_or_create_defi_adapter()` cache
+      on `ManualOperationHandler`; `execute()` now branches on `DEFI_VENUES` before falling through to the
+      unchanged CLOB path. 6 new tests, including a regression guard that CLOB venues still route correctly.
+      **Sports remains open, deliberately not bundled in** — `_execute_sports_instruction` returns `None` (a
+      side-effecting void method that writes to `data_sink` internally), not the `dict[str, object]` `execute()`
+      must return, so wiring it needs a small return-contract adaptation rather than the direct reuse DeFi's
+      `execute_instruction()` allowed. Real next step: adapt `_execute_sports_instruction`'s result reporting (or
+      wrap it) so `ManualOperationHandler` can surface a status dict the same way, then add the analogous
+      `SPORTS_VENUES` branch.
+
 ### W14, W15, W17 — fidelity, security, cost
 
 - [x] ✅ [BACKEND] P0. **Implement per-venue error codes and classify through UAC `classify_venue_error()` — CLOSED,
