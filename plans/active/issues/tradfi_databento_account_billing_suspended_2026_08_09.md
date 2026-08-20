@@ -174,6 +174,8 @@ bulk backfill, then flip each gated todo's marker back to dispatchable in the sa
       trigger of whatever launched this wave (looks scheduled/automated, not this session's doing) or whether it
       already has its own stop condition — flagging for the operator rather than guessing.
 
+- [ ] [CODE] P2. **Databento live WS auth/billing failure is recorded as `empty_confirmed[SOURCE_RETURNED_ZERO]` (false honest-absence) instead of `record_failed` — surface the gateway auth failure into the runner's empty-window classification.** Verified live 2026-08-20 (slot 31, agt-db01a4): `mtds-live-tradfi-cme-trades-20260809-163443` recorded 40 `empty_confirmed[SOURCE_RETURNED_ZERO]` rows across 08-12..08-20 for a stream whose Databento key was deactivated 2026-08-12T00:03:56Z (unpaid invoice), because `market_tick_data_service/live/websocket_runner.py::_record_empty_window` routes to `record_failed` only on `_in_connectivity_gap()` (watchdog GAP) — a state `market_tick_data_service/live/connectors/databento_tradfi_ws.py` never sets for an auth failure, so every window is stamped honest-absence. Mirror the batch path (`databento_adapter.py` classifies `402/DATABENTO_PAYMENT_REQUIRED` as a venue error): surface credential-failure state from the connector so the runner writes `attempted_failed[CLASSIFIED_VENUE_ERROR]` per `/codex/02-data/honest-absence-downstream-handling.md` §401-rule. Distinct from the retry/backoff + feed-alive-watchdog todo above.
+
 ## Plans/issues gated by this doc (sweep log)
 
 **RESOLVED 2026-08-10 — all 4 docs re-swept, all 7 todos unblocked.** See the Progress Log entry below for what changed
@@ -438,3 +440,19 @@ archival — no live Databento dependency).
   bounded `/blocked` pointing at this doc's existing P0 todo rather than duplicating the page. `$AUTHORING_SLOT` was
   `dp-fleet-monitor` (non-numeric) — per the role contract's own carve-out, skipped the authoring-slot ping (the
   dispatch-time Slack alert already covers that FYI). No code changed.
+- **2026-08-20 (slot 31, data_pipeline_failure escalation agt-db01a4, DP-LIVE-004 on
+  `mtds-live-tradfi-cme-trades-20260809-163443`) — STILL `blocked`, same root cause, 8.0d-aged reconfirmation with fresh
+  ground truth.** `live_stream_watcher.check_live_capture_productivity` paged again: VM `RUNNING`, actively attempting
+  (`last attempt 0.0h ago`), CME trades last `captured` **8.0d ago** (staleness budget 3d) — gap widened to 8 days, zero
+  recovery. Re-verified independently this session via UTL SDK reads (never subprocess gcloud/gsutil): (1) per-VM shard
+  `market-data-tick-tradfi-prd-central-element-323112/_index/per_vm/<vm>.parquet` — 52 rows, 12 `captured` (08-09..08-11)
+  + 40 `empty_confirmed[SOURCE_RETURNED_ZERO]` (08-12..08-20, `attempted_at` re-stamped every ~60s); (2) `run.log` — same
+  `ERROR gateway error code=api_key_deactivated` → reconnect → `CRAM authentication error: ... unpaid invoice` at
+  2026-08-12T00:03:56Z, process idle (0.2% CPU / ~739MiB) ever since, feeding zero ticks. Same `BLOCKED-OPERATOR-DECISION`
+  — the open `[OPERATOR]` P0 "pay the invoice again" todo above covers the fix. NEW this session (honest-absence gap,
+  previously untracked): `websocket_runner.py::_record_empty_window` records a dead-auth stream as
+  `empty_confirmed[SOURCE_RETURNED_ZERO]` (false honest-absence) because the connector never surfaces the gateway auth
+  failure into the watchdog GAP state the runner gates on; the batch path classifies `402/DATABENTO_PAYMENT_REQUIRED` as
+  a venue error — tracked as a new `[CODE] P2` todo above. Posted a bounded `/blocked` pointing at this doc's existing
+  P0 (no duplicate page). `$AUTHORING_SLOT`=`dp-fleet-monitor` (non-numeric) — skipped the authoring-slot ping per the
+  role contract carve-out. No code changed; doc-only.
