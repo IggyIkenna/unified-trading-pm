@@ -83,13 +83,16 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
       `_instruments_parquet_schema.py` + exported via its `__all__` and the `internal.domain.instruments` package
       re-export; unit test `tests/unit/test_instruments_parquet_schema_version.py` asserts the value. QG green
       (294s), quickmerge landed + ancestry-verified on LDR.
-- [ ] [DATA] P1. Extend `unified-api-contracts/scripts/check_schema_versions.py` (or add a sibling script) to also
+- [x] ✅ [DATA] P1. Extend `unified-api-contracts/scripts/check_schema_versions.py` (or add a sibling script) to also
       cover `internal/domain/instruments/` — its current `_get_files()` only walks `canonical/domain/` +
       `canonical/execution.py`. Pair with a checked-in golden file (column name+type+order, or a content hash of
       `INSTRUMENTS_PARQUET_SCHEMA`) compared on every test run; a mismatch fails UNLESS `INSTRUMENTS_SCHEMA_VERSION`
       was also bumped in the same change. Depends on the todo above (needs the version constant to exist). Repo:
       unified-api-contracts. Done-when: a deliberate schema-list edit without a version bump fails CI locally
       (`quality-gates.sh`), and the same edit WITH a version bump passes.
+      — unified-api-contracts@9c7e4807: added `check_instruments_schema_lock.py`, a checked-in SHA-256 golden
+      snapshot, and falsifier tests covering both unchanged-version failure and bumped-version success; commit is
+      ancestry-verified on `origin/live-defi-rollout`.
 - [ ] [DATA] P2. Add a `schema_version: str` field to `SchemaContract`
       (`unified-api-contracts/unified_api_contracts/internal/schemas/contracts.py`, currently has none) and populate
       it from `INSTRUMENTS_SCHEMA_VERSION` in `_make_catalogue_contract()`
