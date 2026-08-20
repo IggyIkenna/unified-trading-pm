@@ -15,7 +15,7 @@ scope: [engineer]
 tags: [fund-administration, redemption, client-isolation, wallet-transfer, execution]
 related:
   [
-    /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
+    /plans/archive/2026_08/fund_administration_redemption_cadence_engine_2026_08_20.md,
     /plans/epics/client_isolation_and_governance_master.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
@@ -45,7 +45,7 @@ context_scope:
     fund-administration-service/fund_administration_service/background/grace_period_handler.py,
     fund-administration-service/fund_administration_service/allocation/transfer_protocol.py,
     execution-service/execution_service/engine/transfers/,
-    /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
+    /plans/archive/2026_08/fund_administration_redemption_cadence_engine_2026_08_20.md,
     /plans/epics/client_isolation_and_governance_master.md,
   ]
 ---

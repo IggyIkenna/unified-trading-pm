@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [strategy-agnostic, vehicle-eligibility, sma, fund-administration, client-config]
 related:
   [
-    /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
+    /plans/archive/2026_08/fund_administration_redemption_cadence_engine_2026_08_20.md,
     /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
     /plans/epics/strategy_master.md,
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
@@ -50,7 +50,7 @@ context_scope:
     unified-api-contracts/unified_api_contracts/internal/domain/strategy_service/client_config.py,
     fund-administration-service/fund_administration_service/api/main.py,
     fund-administration-service/fund_administration_service/redemption/state_machine.py,
-    /plans/active/fund_administration_redemption_cadence_engine_2026_08_20.md,
+    /plans/archive/2026_08/fund_administration_redemption_cadence_engine_2026_08_20.md,
   ]
 ---
 

@@ -7,7 +7,8 @@ summary:
   fund-level total_equity used as a per-unit-NAV stand-in. Adds hour-granularity grace periods, a real units-outstanding
   NAV-per-share, a redemption-processing fee charged against the redeemed amount only, and the acked-but-unimplemented
   treasury ledger writer.
-status: active
+status: archived
+superseded_by: fund_administration_redemption_cadence_engine_finalize_2026_08_20
 nature: process
 asset_group: [cross-cutting]
 stage: [strategy]
@@ -52,6 +53,9 @@ context_scope:
     /plans/active/redemption_wallet_transfer_execution_2026_08_20.md,
   ]
 ---
+
+> **🟢 ARCHIVED 2026-08-20** — all 9 todos done, evidence-reconciled by
+> `fund_administration_redemption_cadence_engine_finalize_2026_08_20.md`. See that doc for the finalize verdict.
 
 # Fund Administration — Redemption/NAV Cadence Engine Made Real
 
