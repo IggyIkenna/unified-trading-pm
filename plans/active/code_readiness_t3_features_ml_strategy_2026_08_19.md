@@ -313,18 +313,41 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W9, W10, W13 — balances, risk, exposure, PnL
 
-- [ ] [BACKEND] P0. Converge the two parallel position-risk mechanisms onto ONE. `DeFiHealthAggregator` (DeFi-only,
-      not live-fed) versus the already-live cross-service `margin_event_emitter.py` / `MarginEvent` — the epic says
-      converge, explicitly.
+- [ ] [BACKEND] P0. **Tracked in a pre-existing sibling plan, not duplicated here** — found 2026-08-20:
+      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` already owns this exact convergence
+      (dated 2026-08-16, before this plan existed) with the full reconciliation already done (A and B are not
+      independent — B's DeFi path already consumes A's `DeFiHealthAggregator.aggregate()` output; the genuinely
+      redundant piece is `positions_health.py`'s separate re-derivation) and real remaining work tracked there:
+      10 done / ~14 open todos, `sequential: true` (a real chain — route the live feed, switch archetypes onto
+      it, extend the data model). Work this from that plan, not as a fresh T3 todo — the two plans would
+      otherwise silently duplicate the same fix.
 - [ ] [BACKEND] P0. Build stale-producer detection on the live path. If strategy-service stops publishing,
       execution-service does not detect it — the kill switch has 5 armed conditions and none is "an internal service
       went silent". Evidence: `/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (23 open),
       `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`.
 - [ ] [BACKEND] P0. Implement W9 account balances as the single strategy I/O.
-- [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. `compute_pnl` is dead with the
-      right formula but wrong keying/schema/sink; the execution-alpha compute_handler is dead with zero readers;
-      only `paper_run_passive.py` / `paper_run_attribution.py` are real. HWM is never raw equity — TWR / Notional /
-      PnL-recovery only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
+- [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. **Re-verified 2026-08-20, claim
+      mostly holds but needs correction before acting**: `compute_pnl` (`pnl/engine/orchestrator.py:426`) IS
+      confirmed dead — only test callers (`tests/pnl/unit/test_engine.py`, `test_service_startup.py`), the real
+      CLI compute path routes to `calculate_execution_alpha` instead. **But before deleting it**: it computes
+      hold-day interest + sports-settlement PnL (routes to `SportsPnLEngine`) + standard per-instrument
+      breakdown — confirm none of those three are uniquely-only-here before removing, don't just delete a
+      formula that might not be duplicated elsewhere. The "execution-alpha compute_handler is dead with zero
+      readers" half of the claim is **wrong, correct it**: `compute_handler.py` is reachable via the registered
+      `--operation pnl-attribution` CLI operation (`service_entry.py:814-822,1008`) — code-live, not dead — but
+      no cron/systemd/Terraform trigger was found anywhere in the repo, unlike `--operation paper-run` which is
+      documented as the T+1 cron's Stage A (`service_entry.py:827-834`). Real decision needed: wire
+      `pnl-attribution` into a cron trigger, or delete the orphaned CLI operation if `paper_run_attribution.py`
+      already supersedes it. `paper_run_passive.py`/`paper_run_attribution.py` (`engine/backtest/`, not
+      `pnl/engine/` — path corrected) confirmed real: both cite
+      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §1 directly, i.e. they ARE the shared
+      batch=paper=live code path per the determinism-spine architecture, not a paper-only surface as the
+      original phrasing implied — so "collapse to one path" may already be closer to done than the todo states;
+      what's left is retiring/merging the two stragglers, not building a new unified path from scratch. HWM
+      confirmed compliant in the live path (`param_schema.py:1361,1371` uses UAC's `hwm_ledger` explicitly on
+      TWR/Notional/PnL-recovery); the one raw-equity HWM implementation found (`pnl_monitor.py:70,201-202`) has
+      no confirmed production instantiation site (dead code, not a live violation) and mock_data_provider's is
+      explicitly D2-smoke/mock-only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
 - [ ] [BACKEND] P0. Build PnL attribution across every dimension the artefacts describe (W13) — currently
       "specified, not built".
 - [ ] [BACKEND] P1. Fix the interest-accrual wrong engine and banned formula. Evidence:
@@ -516,7 +539,7 @@ section is now done.
 | `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@<see Progress Log>`. | Nothing. |
 | DeFi/vol config-key contract drift | **Vol family DONE** (2 real drifts, 8 keys, fixed this tranche) | Same method — make the systemic construct-and-fire test exercise the archetype and see which no-op — for sports, ML-directional, market-making. A4's catalogue-vs-schema comparison structurally cannot catch this class (both can agree while the ENGINE reads a third spelling); the method that found the vol drifts is the one that generalises. |
 | W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
-| W9/W10/W13 PnL, risk, exposure | Untouched | Collapse the three competing PnL surfaces; HWM is never raw equity (TWR / Notional / PnL-recovery only). |
+| W9/W10/W13 PnL, risk, exposure | **Re-verified, not stale — genuinely open, but re-scoped smaller.** `paper_run_attribution.py`/`paper_run_passive.py` already ARE the shared batch=paper=live path (not paper-only); `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Decide compute_handler's fate (wire a cron trigger or delete the orphaned op) and confirm compute_pnl's 3 capabilities are covered elsewhere before retiring it — smaller, more bounded than the original "build a unified path" framing suggested. |
 | W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
 | Position adapters / venue coverage | **DONE — whole section found already resolved** (all 4 sub-items: CeFi dispatch, asymmetry, hot-swap, orphan-coverage), all shipped 2026-08-14 through 17 by prior sessions, predating this plan's 2026-08-19 authorship. This plan section was written stale from birth. Residue is entirely non-agent-executable: 2 `[OPERATOR]` decisions (instrument hot-swap A/B, out-of-mandate adapter disclosure) + 1 `[AGENT]` Solana-SDK item in execution-service (T4's repo). | Nothing. If picking this back up, it's an operator-decision chase (hot-swap A/B, disclosure), not new engineering. |
 | features-service | Untouched | 5 of 7 on-chain feature groups write zero-feature parquets stamped `captured=True`; `corporate_actions` still on the banned Massive/Polygon.io vendor. |
