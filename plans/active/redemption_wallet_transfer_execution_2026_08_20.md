@@ -105,10 +105,40 @@ production DI wiring has landed yet.
   redemption whose AML status flips to rejected between request and expiry is NOT paid out.
   — fund-administration-service@a1b8934; Evidence: QG green; new `test_rejected_aml_at_expiry_does_not_pay_out` asserts zero withdrawals when the gate rejects at grace-expiry.
 
-- [ ] [REVIEW] P2. Audit whether the single flat `treasury_wallet_id` default (`fund_administration_service/config.py`)
+- [x] ✅ [REVIEW] P2. Audit whether the single flat `treasury_wallet_id` default (`fund_administration_service/config.py`)
   is safe across multiple funds/share-classes settling in the same cadence tick, or whether it needs a per-fund/
   share-class override to avoid two funds' redemptions resolving to the same custody wallet. Done-when: a stated
   fact — either "confirmed safe because <reason>" with the reasoning cited, or a scoped follow-up todo naming the fix.
+  — **STATED FACT: safe today, but VACUOUSLY — `treasury_wallet_id` has zero read sites, and the redemption path
+  resolves no custody wallet at all.** Not "confirmed safe because a safeguard holds"; safe only because the settlement
+  leg is unwired, so the follow-up todo below is the real answer. Measured, three links: (1) `treasury_wallet_id`
+  (`config.py:58`, default `"treasury-default"`) is never READ anywhere — grepped the field name AND its env alias
+  `TREASURY_WALLET_ID` across every slot repo (`.py/.yaml/.yml/.env/.sh/.tf/.json`); the only matches are the
+  definition itself, and fund-admin has no `model_dump()`/`getattr(settings, …)` indirection that could resolve it
+  dynamically (checked, since a 0-hit grep alone is not evidence of absence for a runtime-resolved field).
+  (2) `GracePeriodHandler._withdraw_to_allocator` (`background/grace_period_handler.py`) names its source ONLY as the
+  literal `venue="TREASURY"` and carries separation on the DESTINATION side via per-redemption
+  `FundTransferContext(client_id=redemption.allocator_id, fund_id=…, share_class=…)` — the field this plan's todo 2
+  hardened with `assert_fund_context_client_allowed()`. (3) The wired production adapter is
+  `LocalSimulatedTransferAdapter` (`api/main.py:157`), whose `execute_withdrawal` ignores `venue` entirely and returns
+  `self._confirmed(amount, fund_context)`; no adapter under `execution-service/execution_service/engine/transfers/`
+  maps a venue to a wallet (zero matches for `venue ==` / `TREASURY`). So two funds settling in the same tick cannot
+  collide on a custody wallet, because no custody wallet is selected on the source side by any code path today.
+
+- [ ] [BACKEND] P1. **Resolve the redemption treasury SOURCE wallet per `(fund_id, share_class)` before any real custody
+  adapter is wired** — the deferred half of the audit directly above, filed per its own "or a scoped follow-up todo
+  naming the fix" branch. The hazard that audit looked for is real but not yet reachable: the only two source
+  identifiers that exist today are `config.treasury_wallet_id` (a flat process-wide `"treasury-default"`) and the flat
+  `venue="TREASURY"` literal in `_withdraw_to_allocator`, and NEITHER carries a fund or share-class dimension — so
+  wiring either one straight into a real custody adapter would settle every fund's redemptions out of one wallet, which
+  is the commingling shape `/codex/04-architecture/client-funds-isolation.md` exists to prevent. Note the seam already
+  exists: `TransferAdapter.execute_onchain_transfer` takes `from_wallet_id`, and the redemption path does not call it.
+  Done-when: the redemption withdrawal derives its source wallet from the redemption's own `fund_id`/`share_class`
+  (not a process-wide default), AND a test proves two redemptions of DIFFERENT funds in ONE `run_once()` tick resolve
+  to different source wallets — the source-side mirror of todo 1's existing destination-side isolation test.
+  Sequencing: this is a precondition of replacing `LocalSimulatedTransferAdapter` with a real custody/on-chain
+  adapter, not a follow-on to it (that adapter's own docstring names this plan as the owner of the real settlement
+  leg). Repo: fund-administration-service.
 
 ## Progress Log
 
@@ -121,5 +151,20 @@ production DI wiring has landed yet.
 - **2026-08-20**: Shipped todo 2 (adapter-path per-client isolation enforcement). **Finding**: `FundTransferContext` did NOT previously trip execution-service's isolation via the `TransferAdapter` Protocol — the `CrossClientTransferForbiddenError` raise site is `TransferCoordinator.validate_intent` (`execution-service/execution_service/transfer_coordinator.py:261`), keyed on `TransferIntent.client_id`, a path fund-admin's `execute_withdrawal` never takes; all four adapters (Mock/CCXT/Custody/Composite) threaded `fund_context` through as pure metadata, so a mismatched context was silently executed. Closed the gap: added `FundTransferContext.client_id` (unified-api-contracts@040c871c), an `assert_fund_context_client_allowed()` guard wired into the fund-moving `execute_*` methods (execution-service@6d43020e), and populated `client_id=redemption.allocator_id` in `GracePeriodHandler._withdraw_to_allocator` (fund-administration-service@ccc751c). Tests: `tests/unit/engine/test_transfer_adapter_client_isolation.py` (execution-service) asserts `CrossClientTransferForbiddenError` fires before any venue/chain RPC on a mismatched `fund_context`; `test_withdraw_to_allocator_carries_allocator_client_id` (fund-admin) proves each redemption's withdrawal carries its own allocator client_id. QG green in all three repos.
 
 - **2026-08-20**: Shipped todo 3 (idempotency safety for the cadence retry path). **Finding**: the redemption path previously had NO idempotency — a `run_once()` tick that crashed after the withdrawal succeeded but before `_persist_processed` committed would re-issue the withdrawal on the next tick. Fixed: `_withdraw_to_allocator` now passes `idempotency_key=redemption.redemption_id` (fund-administration-service@af9d292), and execution-service's `execute_withdrawal` adapters dedupe on the key (Mock/LiveCcxt memoize the issued `TransferResult`; Composite passes through; execution-service@d8bae52a). `LocalSimulatedTransferAdapter` (fund-admin's default production adapter) gained the same in-process dedupe. Tests: execution-service `TestWithdrawalIdempotency` (same key → one real withdrawal + same transfer_id; different keys → both execute; LiveCcxt exchange hit once) + fund-admin `test_crashed_tick_does_not_double_withdraw_on_retry` (persist-crash on tick 1, retry tick 2 → only ONE real withdrawal for that redemption_id). QG green both repos.
+
+- **2026-08-20 (review, slot 7)**: Completed todo 5 (`treasury_wallet_id` flat-default audit) — doc-only, no code
+  shipped, which is the correct outcome for this one. **Finding**: the question "is the flat default safe across funds
+  settling in one tick" has no live answer yet, because `treasury_wallet_id` is DEAD CONFIG — zero read sites in the
+  entire workspace (field name and `TREASURY_WALLET_ID` env alias both grepped across all slot repos; no dynamic
+  settings indirection in fund-admin that could resolve it by name). The redemption withdrawal identifies its source
+  only as the literal `venue="TREASURY"`, and the wired production adapter `LocalSimulatedTransferAdapter`
+  (`api/main.py:157`) ignores `venue` outright — so no custody wallet is selected on the source side at all. Real
+  per-redemption separation today is entirely destination-side, via `FundTransferContext` (todo 2's
+  `assert_fund_context_client_allowed()` guard). Recorded as "safe VACUOUSLY" rather than "confirmed safe": the
+  distinction matters, because the safety comes from the leg being unwired, not from a safeguard that will survive
+  wiring it. Filed the deferred half as a new `[BACKEND] P1` todo above — both candidate source identifiers
+  (`treasury_wallet_id`, `venue="TREASURY"`) are flat and fund-agnostic, so resolving the source wallet per
+  `(fund_id, share_class)` is a PRECONDITION of swapping in a real custody adapter, not a follow-on to it. This plan
+  therefore stays `active` (one open todo) rather than becoming archivable on this checkbox.
 
 - **2026-08-20**: Shipped todo 4 (AML/KYC re-evaluation audit). **Finding (fact)**: `AmlKycGate` is evaluated at ONLY ONE site — subscription-approval time, `api/main.py:297` (`ctx.aml_gate.evaluate(sub.allocator_id, ...)`); neither the redemption-request handler (`post_redemption`) nor `GracePeriodHandler._drive_unchecked` (grace-expiry) evaluated it, so a client's AML status flipping to rejected during the grace window would still be paid out. Fixed: `GracePeriodHandler` now takes an `aml_gate` (wired `aml_gate=ctx.aml_gate` in `create_app`) and `_drive_unchecked` calls `_assert_aml_clear()` before `_withdraw_to_allocator` — a rejection raises `GracePeriodProcessingError` (shard-isolated) so the redemption is NOT paid and is re-checked each tick while still APPROVED. Test `test_rejected_aml_at_expiry_does_not_pay_out` proves zero withdrawals when the gate rejects at expiry. QG green (fund-administration-service@a1b8934).
