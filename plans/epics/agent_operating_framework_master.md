@@ -33,7 +33,7 @@ related_plans:
   - ../active/ao_satellite_ao_dispatch_batch25_2026_08_19.md
   - ../active/ao_satellite_ao_dispatch_batch25_finalize_2026_08_19.md
   - ../active/asset_class_to_asset_group_rename_2026_07_21.md
-  - ../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md
+  - /codex/11-project-management/doc-frontmatter-schema.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md
   - ../active/cross_cutting_satellite_ao_dispatch_batch16_2026_08_17_finalize.md
   - ../active/data_pipeline_e2e_milestones_gate_2026_07_24.md
@@ -446,7 +446,7 @@ _(no plans currently assigned at this priority)_
 **status**: active · **estimate**: 1.2 cal AI-days (class: refactor)
 **title**: AssetClass → AssetGroup rename — domain enum only, cross-repo coordinated landing
 
-### [`context_scout_completion_and_plan_brainstorm_skill_2026_07_30`](../active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+### Context-scout frontmatter and plan-brainstorm plumbing
 **status**: active · **estimate**: 0.8 cal AI-days (class: infra)
 **title**: Complete context_scout plumbing + close a frontmatter-schema drift + add a plan-brainstorm skill
 

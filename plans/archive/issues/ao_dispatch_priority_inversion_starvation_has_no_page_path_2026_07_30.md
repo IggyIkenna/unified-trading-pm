@@ -29,7 +29,7 @@ summary: >-
   `wall_type` escalation system (`escalation.py::escalate()`, `EscalateRequest` requires `repo`+ `pr_number`,
   structurally can't represent "task A vs task B priority ordering within a plan"). Without operator visibility, this
   class of deadlock persists until a human happens to read the plan/backlog directly.
-status: open
+status: archived
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -70,10 +70,15 @@ estimate_class: design
 drift_direction: advance-code
 depends_on: []
 resolved_by:
+  agent-orchestrator@af98fcd
 archive_exempt: true # archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
 locked_by:
 context_scope: [/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md, agent-orchestrator/server/dispatch_priority_inversion_watchdog.py, /codex/04-architecture/agent-orchestrator-alerting.md, /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md]
 ---
+
+> **🗄️ ARCHIVED 2026-08-20** — both recommended-decision todos shipped in `agent-orchestrator@af98fcd`; the
+> dispatcher watchdog and actionable Slack page are now part of the alerting contract in
+> `/codex/04-architecture/agent-orchestrator-alerting.md`. Zero open todos, unlocked.
 
 # AO dispatch priority-inversion / plan-slot starvation has no page path
 

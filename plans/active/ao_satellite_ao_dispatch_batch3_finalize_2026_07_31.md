@@ -146,7 +146,8 @@ source: >-
       2026-08-01 (per that doc's own Progress Log and the parked-findings doc's own `resolved_by` field) and now states
       the accurate `Req.E`/majority-`NEVER_SCOUTED` facts; the parked doc itself carries `status: resolved`. No
       re-escalation needed.
-- [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
+- [x] ✅ [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
+      Archived the final active source issue to `plans/archive/issues/` and migrated its watchdog contract to `/codex/04-architecture/agent-orchestrator-alerting.md`; the other three named sources were already archived and stale active-path referrers were repointed. Source verified zero open todos and unlocked; no active-path structural referrer remains — `agent-orchestrator@af98fcd` + evidence: hygiene sweep (11 pre-existing non-canonical todo warnings), frontmatter schema (2227 docs, 0 violations), active-plan inventory (381 plans, 2 orphans), and `git diff --check`.
       re-check `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`,
       `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md`,
       `orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md` (likely still has open non-batched items — check
