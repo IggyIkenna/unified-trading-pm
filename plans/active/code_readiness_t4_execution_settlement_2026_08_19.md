@@ -294,26 +294,23 @@ todos only to confirm they are data-movement, then leave it.
       `OrderStatus\.PENDING\b`/`OrderStatus\.OPEN\b` against UAC's import returns zero. **Safe to delete the two
       transitional aliases from execution-service's side** — T1 still needs to confirm no other fleet consumer (UI
       aside, which T1 already owns) before actually deleting them.
-- [ ] [FROM-T1] P1. Write `execution-service/tests/unit/orders/test_state_machine.py` — the codex doc's own
-      declared `verifier:`, which has never existed in the repo's history and is why the 9-state-vs-7-state
-      divergence went unnoticed from 2026-05-12 to 2026-07-31. T1 already pins the ENUM against the codex table
-      (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
-      SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
-      **BLOCKED on the W11 finding below, MEASURED 2026-08-20**: `is_legal_order_transition`/
-      `ORDER_STATUS_TRANSITIONS` are imported NOWHERE in execution-service (repo-wide grep, zero hits) — there is
-      no code path that takes a previous status + a new one and validates the transition, so there is nothing
-      real to assert against yet. A test written today would either be synthetic (assert the imported function
-      directly, testing UAC not execution-service) or expose that THREE separate, unreconciled status
-      vocabularies coexist: UAC's canonical 9-state `OrderStatus` (used only when adapters map a fresh venue
-      response, never mutated in place), `execution_service/orders/oms.py` +
-      `trade_execution/oms/persistent_oms.py`'s own local `OrderStatus(StrEnum)` (7 states:
-      PENDING/VALIDATED/SUBMITTED/PARTIAL_FILLED/FILLED/REJECTED/CANCELLED — confirmed a DIFFERENT type, not an
-      alias, by the `AttributeError` hit and reverted while doing the sibling `.PENDING`/`.OPEN` rename todo
-      above), and `execution_service/orders/tracker.py`'s bare string literals (`"SUBMITTED"`/`"FILLED"`/
-      `"CANCELLED"`/`"AMENDED"` — no enum at all, and `"AMENDED"` exists in neither of the other two). Real fix
-      order: reconcile the three vocabularies (or pick ONE as the live-order source of truth and have the others
-      read through it) BEFORE this test can assert anything meaningful — that reconciliation is the W11 P0 below,
-      not a sub-step of this todo.
+- [x] ✅ [FROM-T1] P1. **Written and shipped — `execution-service@69a9a088be`.** Real validation now exists to
+      assert against: `orders/oms.py` and `trade_execution/oms/persistent_oms.py`'s `update_order_status()` were
+      MEASURED 2026-08-20 to accept any status string with ZERO transition enforcement (real production callers
+      confirmed via `handle_nautilus_order_event`/`reconcile_with_nautilus`) — a late fill racing a cancel could
+      silently overwrite a terminal CANCELLED record back to FILLED. Fixed via a local-status -> UAC-canonical
+      mapping + `is_terminal_order_status()`. **Deliberately narrower than the full `ORDER_STATUS_TRANSITIONS`
+      edge set** — the pre-existing `tests/unit/live/test_oms.py::test_oms_handle_nautilus_order_canceled` (et
+      al.) correctly cover a real fast-path where a venue-confirmed terminal event arrives while the local record
+      is still PENDING (no separate `OrderSubmitted` ack processed first); strict edge-by-edge enforcement broke
+      those 4 real tests on first attempt, so the invariant actually shipped is narrower but still real: **once
+      terminal (CANCELLED/FILLED/REJECTED/EXPIRED/FAIL_OUTBOUND), the only legal further move is RECONCILED** —
+      catches state resurrection, tolerates the legitimate skip-ahead path. `tests/unit/orders/test_state_machine.py`
+      pins both the mapping function and the `update_order_status()` integration on both files.
+      `execution_service/orders/tracker.py`'s bare-string vocabulary (`"AMENDED"` etc.) was investigated
+      separately and found to be **dead code — zero production instantiation sites of `OrderTracker` anywhere in
+      the repo** (only test/re-export references), so it was correctly left untouched rather than reconciled —
+      not a gap, a confirmed non-issue.
 - [x] ✅ [FROM-T1] P2. **Decided: `PARTIALLY_FILLED -> CANCELLED / EXPIRED` IS a legal transition** —
       `unified-trading-pm@c74d869b36` (codex `order-state-machine.md` amended: diagram + events table widened,
       ruling + evidence recorded 2026-08-20). Real CLOB venues let an operator cancel the still-working remainder
@@ -391,15 +388,20 @@ todos only to confirm they are data-movement, then leave it.
       issue's remaining open item is a P3 (`instruction_to_order_ids` staleness), not this P0. Evidence:
       `/plans/active/issues/execution_order_tracker_missing_cancelled_amended_status_2026_08_17.md`.
 - [ ] [BACKEND] P0. Implement the full 9-state order lifecycle — T1's `OrderState`/`OrderStatus` contract is now
-      landed (see the FROM-T1 unblock notice above), so this is UNBLOCKED. **Scope MEASURED 2026-08-20, real work
-      is reconciliation, not new-build**: three separate, unreconciled order-status vocabularies coexist in
-      execution-service today (full evidence on the `test_state_machine.py` todo above) — UAC's canonical 9-state
-      `OrderStatus` (mapping-only, never mutated in place), `orders/oms.py` + `trade_execution/oms/
-      persistent_oms.py`'s own local 7-state `OrderStatus(StrEnum)`, and `orders/tracker.py`'s bare 4-string
-      vocabulary with no enum. None of the three enforces `is_legal_order_transition`. This is a genuine
-      cross-file design call (which becomes the source of truth; how the other two read through it without
-      breaking `ManualOperationHandler`'s existing `/cancel`/`/amend` callers) — not a mechanical rename like the
-      `.PENDING`/`.OPEN` migration above turned out to be for the 5 files that really did import UAC's enum.
+      landed (see the FROM-T1 unblock notice above), so this is UNBLOCKED. **PARTIAL PROGRESS 2026-08-20,
+      `execution-service@69a9a088be`** (full detail on the `test_state_machine.py` todo above — not duplicated
+      here): the real safety gap this todo exists to close — nothing enforced `is_legal_order_transition` — is now
+      closed for the two LIVE vocabularies (`orders/oms.py` + `trade_execution/oms/persistent_oms.py`'s duplicate
+      local 7-state enum), via terminal-state-never-overwritten validation. **What remains genuinely open, not
+      done**: the full single-source-of-truth vocabulary UNIFICATION this todo originally scoped — the two local
+      files still duplicate their own `OrderStatus(StrEnum)` rather than reading through UAC's canonical enum, and
+      `orders/tracker.py`'s bare-string vocabulary was investigated and confirmed **dead** (zero production
+      `OrderTracker()` instantiation sites — grepped repo-wide) rather than reconciled, since reconciling
+      genuinely-dead code would be motion without safety value. Collapsing `orders/oms.py` and
+      `trade_execution/oms/persistent_oms.py`'s literal file-level duplication into one shared module is a real,
+      separate, still-open follow-up (not attempted — touching either file safely requires re-verifying it against
+      `ManualOperationHandler`'s existing `/cancel`/`/amend` callers, the exact cross-file risk this todo always
+      named). Left open rather than closed on a technicality.
 - [x] ✅ [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
       said.** Two independent defects, both measured: (a) no `/api/orders` route exists anywhere under
       `execution_service/api/`, so the strategy-side POST reaches nothing; (b) even the in-process path is a
@@ -695,33 +697,32 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag on every remainder.
-- [ ] [AGENT] P2. **Split the two files sitting at EXACTLY the 900-line file cap** —
-      `execution_service/api/manual_instruction_api.py` and `execution_service/cli/handlers/live_execution_handler.py`.
-      Both were hit twice this session (once each) by unrelated changes that pushed them 1-10 lines over; both fixes
-      had to be made net-zero on line count to land. Any future addition to either needs the same net-zero dance
-      until this is done. Confirm the split doesn't change import-time behavior (see this session's
-      lifespan lesson above — `api/main.py` imports at module load).
-
-      **Investigated 2026-08-20, deliberately NOT executed this session — a real hazard found, not scope-avoidance.**
-      Read the full 900 lines of `manual_instruction_api.py`. Natural seams exist (submit/precheck path; cancel+
-      amend+status path; record-only-fill path; venues/algos+pending-queue path), but EVERY endpoint reads the
-      module-level `_orchestrator`/`_manual_handler`/`_limiter` globals, and `set_manual_handler()`/
-      `set_orchestrator()` are the ONLY sanctioned mutation path — a naive `from .manual_instruction_api import X`
-      in a new submodule captures a snapshot at import time, not a live reference, silently breaking that
-      contract. Worse: **12 test files patch names inside this module's namespace**
-      (`patch("execution_service.api.manual_instruction_api.persist_audit_log", ...)` etc. —
-      `test_manual_record_only.py`, `test_manual_cancel_real_wiring.py`, `test_manual_amend_real_wiring.py`,
-      `test_manual_instruction_close_all_contract.py`, `test_manual_instruction_live_orchestrator_protocol.py`,
-      `test_dynamic_venues.py`, `test_api_app_health.py`, `test_api_main.py`, `engine/test_kill_switch.py`,
-      `engine/test_venue_cascade_kill_switch_chain.py`, `engine/test_pretrade_wiring.py`,
-      `engine/test_wallet_preflight_wire_in.py`). Moving a function to a new module without updating its test's
-      patch target doesn't fail loud — the mock silently stops applying and the test exercises the REAL
-      `persist_audit_log`/`log_event`/etc. instead, in a suite covering live order cancel/amend/manual-submit. The
-      correct pattern (module-qualified access — `import ... as _core; _core._orchestrator`, never
-      `from ... import _orchestrator`) is known and stated here; execute it in one pass that also greps and
-      updates every one of the 12 test files' patch targets in the same commit, verified by actually running the
-      full list, not just the file's own local tests — this is safety-critical order-management code, so a rushed
-      split that silently defangs a live mock is worse than leaving the file at cap.
+- [x] ✅ [AGENT] P2. **Split, shipped — `execution-service@1e243e975e`.** `manual_instruction_api.py`
+      (900 -> 162 lines, split into `manual_instruction_submit.py`/`cancel_amend.py`/`record.py`/`pending.py`,
+      sharing one `router`) and `live_execution_handler.py` (900 -> 447 lines, split into a pure-constants
+      `live_execution_venues.py` plus three mixins — `_CredentialsMixin`/`_DefiAdapterMixin`/
+      `_SportsExecutionMixin` — `LiveExecutionHandler` inherits, required because production code in
+      `v2/account_orchestrator.py`/`engine/transfers/wiring.py` calls
+      `LiveExecutionHandler._load_venue_trade_credentials(...)` as an explicit class-level static method, so
+      standalone functions wouldn't have preserved that call surface). Full test suite green (8806 passed).
+      **The dispatched sub-agent's own investigation superseded this todo's pre-analysis in two real ways**:
+      (1) the "12 test files patch `persist_audit_log`/`log_event`/etc. via `patch("...")` string literals" claim
+      was only PARTLY right — several of those files actually use `patch.object(manual_instruction_api,
+      "_orchestrator", ...)` / `monkeypatch.setattr` instead, a wider patch surface than a literal-string grep
+      would find, caught only by reading the actual test bodies; (2) trimming `manual_instruction_api.py` broke
+      `test_pretrade_wiring.py::test_kill_switch_blocks_all_submissions` (imports `ManualInstructionRequest`
+      directly from that module) — fixed by re-exporting the original schema surface, a real regression the full
+      test-suite run caught before shipping, not assumed away. Also removed a backward-compat re-export shim this
+      tranche itself introduced mid-split (`DEFI_VENUES`/`SPORTS_EXCHANGE_VENUES`/`SPORTS_VENUES` etc. kept alive
+      in `live_execution_handler.py` "for compat") — the repo's own `quality-gates.sh` "no-backward-compat-shims"
+      check caught it; fixed by migrating every real consumer (`test_sports_execution.py`, `test_routing_matrix.py`,
+      `test_live_execution_handler.py`) to import from `live_execution_venues`, the constants' actual owner,
+      instead of re-exporting. **Process note for future dispatches**: this sub-agent's background quickmerge kept
+      running after multiple "completed" task notifications had already fired, causing a real, if harmless,
+      duplicate-quickmerge race against this session's own redundant ship attempt for the same split — no data
+      was lost (working tree already matched HEAD by the time the second attempt resolved), but a `run_in_background`
+      agent's own nested backgrounded shell commands can outlive what its "completed" status implies; verify via
+      `git log`/`ps`, not the notification text alone, before assuming a dispatched agent is truly done.
 - [x] ✅ [AGENT] P0. **Post-phase codex audit across `/codex/04-architecture/` for every contract changed — DONE
       2026-08-20.** Every contract this tranche touched, checked: `order-state-machine.md` (fixed a prior session,
       9-state warning + PARTIALLY_FILLED ruling); `account-instructions.md` (fixed this session —
