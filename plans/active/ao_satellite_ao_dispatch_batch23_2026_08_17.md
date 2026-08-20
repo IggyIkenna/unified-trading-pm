@@ -177,14 +177,18 @@ are bounded, already-decided, and conflict-clear:
       `test_unresolvable_only_path_is_a_hard_error` + `test_unresolvable_only_path_reported_even_under_quiet` in
       `scripts/plan-hygiene/test_check_reference_paths.py` (collected via `PYTEST_UNIT_DIR`). No code change needed
       this session — checkbox was simply stale.
-- [ ] [SCRIPT] P2. **Print offending references on failure even under `--quiet`** in `check_reference_paths.py`'s
+- [x] ✅ [SCRIPT] P2. **Print offending references on failure even under `--quiet`** in `check_reference_paths.py`'s
       `_run_only()`, `_run_diff_base()`, and the corpus-wide path — `--quiet` currently suppresses the per-violation
       `FORMAT`/`DANGLING` lines but keeps the summary count, so a precommit failure says "N violation(s)" without
       ever naming the offending reference. **Fix**: print offending references on FAILURE regardless of `--quiet`;
       quiet should suppress noise on success, never evidence on failure. **Done when**: a regression test confirms
       `--quiet` + a real violation still prints the offending reference(s), and `quality-gates.sh` is green. Source:
       `/plans/active/issues/check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12.md` todo "[SCRIPT]
-      P2. Print offending references on failure even under --quiet". Repo: unified-trading-pm.
+      P2. Print offending references on failure even under --quiet". Repo: unified-trading-pm. — **DONE 2026-08-20
+      (slot 10)**: `main()`'s corpus-wide (baseline) path now prints FORMAT/DANGLING evidence on failure regardless
+      of `--quiet` (`_run_only()`/`_run_diff_base()` were already fixed by `1a066b0125`); added regression test
+      `test_corpus_wide_quiet_still_prints_evidence_on_failure`. `quality-gates.sh` green. Evidence:
+      unified-trading-pm@cc7fc08e54 (ancestor-verified on origin/live-defi-rollout).
 - [ ] [SCRIPT] P3. **Retire the `--quiet`-workaround rationale in `find_moved_doc_referrers.sh`'s header** once todo
       4 ships, and re-check whether that script still has a reason to exist. Its header currently documents its own
       existence as a workaround specifically for `run_hygiene_sweep.sh` calling `check_reference_paths.py` with
