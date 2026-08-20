@@ -29,7 +29,7 @@ summary: >-
   `wall_type` escalation system (`escalation.py::escalate()`, `EscalateRequest` requires `repo`+ `pr_number`,
   structurally can't represent "task A vs task B priority ordering within a plan"). Without operator visibility, this
   class of deadlock persists until a human happens to read the plan/backlog directly.
-status: open
+status: resolved
 nature: issue
 asset_group: [ao]
 stage: [meta]
@@ -69,13 +69,17 @@ execution_scope: local-only
 estimate_class: design
 drift_direction: advance-code
 depends_on: []
-resolved_by:
-archive_exempt: true # archival routed through ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md's [REVIEW] P0 todo, not standalone (see na-eligibility-audit 2026-08-01 entry)
+resolved_by: agent-orchestrator@af98fcd (watchdog + test), backfill-check 2026-08-01 (no other live instance)
 locked_by:
 context_scope: [/plans/active/ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md, agent-orchestrator/server/dispatch_priority_inversion_watchdog.py, /codex/04-architecture/agent-orchestrator-alerting.md, /plans/active/issues/cefi_content_migration_fleet_half_incomplete_2026_07_26.md]
 ---
 
 # AO dispatch priority-inversion / plan-slot starvation has no page path
+
+> **✅ RESOLVED 2026-08-20** — both Recommended-decision todos shipped `agent-orchestrator@af98fcd` (dedicated
+> `DispatchPriorityInversionWatchdog`, replaying the recorded incident and asserting the page fires exactly once) and a
+> clean 2026-08-01 backfill-check found no other live instance of the shape. Archived by
+> `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` archival todo.
 
 ## What I found
 

@@ -357,14 +357,12 @@ not a declined recovery.
   "prevention todos" the old `status: open` comment referred to (verifier, liveness triangulation, wip-preserve triage,
   logged in the entry below) are now all `[x]`. Not archived in this same edit — 6 files reference this doc's path and a
   full repoint sweep is out of scope for this batch.
-  - [ ] [DOC] P3. **Archive this doc** (6-step ritual: banner, `git mv` to `plans/archive/2026_07/`, repoint all 6
-        referrers — `branch_reset_to_origin_orphans_unpushed_worker_commits_2026_07_27.md` (already archived, its own
-        copy's reference is historical, may not need a fix), `ao_open_issues_consolidated_close_out_2026_07_17.md`,
-        `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`,
-        `plan_reconcile_parked_operator_decisions_2026_08_02.md` (this run's own citation — will self-resolve once
-        archived), `ao_satellite_ao_dispatch_batch3_2026_07_31.md`,
-        `wip_preserve_refs_silently_unrecovered_2026_07_29.md`). Zero open todos, not locked — archival-eligible per
-        `/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`.
+  - [x] ✅ [DOC] P3. **Archive this doc** (6-step ritual: banner, `git mv`, repoint referrers). **DONE (verified
+        2026-08-20 by `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` archival todo)** — this
+        doc was already `git mv`'d to `plans/archive/issues/` (flat, per `issue-doc-lifecycle.md`'s issue-doc path
+        convention, not the dated `plans/archive/2026_07/` this checkbox originally named) in an earlier session; this
+        checkbox itself was simply left unflipped. All 6 named referrers already point at the correct archived path
+        (re-verified live via corpus grep this session) — nothing further to fix.
 - **2026-07-30 (bounded recovery sweep, infra role, operator-authorized route (a))**: Executed the full 10-row inventory
   against `ip-172-31-5-118` read-only over AWS SSM. **Terminal verdicts: 8 SUPERSEDED, 1 PROTECTED-LIVE (slot-3 WIP's
   slot; the WIP itself GONE), 1 RESOLVED. Zero recoveries shipped, zero needed.** GC-clock items handled first and

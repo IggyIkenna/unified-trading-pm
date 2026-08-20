@@ -234,7 +234,7 @@ route-collision + backlog-relations-view, are DEFERRED per operator instruction 
 (9 open/32 done — added 2026-07-26, resolved `autonomous_session_operator_decisions_2026_07_25.md` entry #25, option A/C
 combined: this doc was the single most-important covering plan actually tracking real AO-tranche work and had been
 missing from Sources entirely) ·
-[context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md](/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
+[context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md](/plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md)
 (retagged `[ao]` 2026-08-09 from a `[ao, cross-cutting]` mistag — `context_scout`/`plan-brainstorm` skill-authoring
 plumbing, 1 of 11 items still open).
 

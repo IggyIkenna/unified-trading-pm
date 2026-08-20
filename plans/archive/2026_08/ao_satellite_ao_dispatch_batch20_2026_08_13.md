@@ -21,7 +21,7 @@ related:
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/active/ao_consolidated_closeout_2026_08_12.md,
     /plans/archive/2026_08/ao_open_issues_consolidated_close_out_2026_07_17.md,
-    /plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
+    /plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
     /plans/active/deepseek_claude_blended_provider_routing_2026_07_28.md,
     /plans/active/deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11.md,
     /plans/archive/2026_08/issues/ag_closeout_audit_ao_parked_2026_08_10.md,

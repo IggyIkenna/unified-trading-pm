@@ -64,6 +64,10 @@ context_scope:
 
 # Complete context_scout plumbing + close a frontmatter-schema drift + add a plan-brainstorm skill
 
+> **ARCHIVED 2026-08-20** — all 11 todos completed (sole remaining `[SCRIPT] P0` item done-by-citation via
+> `ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s own todo 1, the live tracking home this doc's own text names).
+> Archived by `ao_satellite_ao_dispatch_batch3_finalize_2026_07_31.md`'s `[REVIEW] P0` archival todo.
+
 ## Why this doc exists
 
 Operator pointed me at four other coding-agent ecosystem ideas (OpenCode's `Scout`/`ContextScout` subagent, Paperclip's

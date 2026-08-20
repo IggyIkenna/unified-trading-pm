@@ -20,7 +20,7 @@ related:
   [
     /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /plans/active/issues/context_scope_consumption_enforcement_2026_07_30.md,
-    /plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
+    /plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
     /plans/active/issues/orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md,
     /plans/active/omniroute_llm_gateway_pilot_design_2026_07_30.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
