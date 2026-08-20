@@ -1,7 +1,7 @@
 ---
 doc_type: issue
 title: CeFi smoke batch blocked by missing staging catalogue and driver teardown
-summary: The 2026-08-20 CeFi pipeline smoke attempt cannot satisfy the row-level contract because the staging CeFi catalogue is absent, Tardis serialization prevented the diagnostic force/skip legs, and the full driver was deleted before producing a terminal report.
+summary: The 2026-08-20 CeFi pipeline smoke attempt cannot satisfy the row-level contract because the driver was deleted before producing a terminal report and its invocation did not explicitly select the staging environment. The staging CeFi catalogue is present at the environment-qualified path, while Tardis serialization prevented the diagnostic force/skip legs.
 status: open
 nature: issue
 asset_group: [cefi]
@@ -41,19 +41,20 @@ context_scope: [/codex/05-infrastructure/vm-launcher-runbook.md, /codex/02-data/
   `gs://deployment-scripts-central-element-323112/pipeline-e2e-check-reports/data_pipeline_e2e_check_mtds/2026-08-20/data_pipeline_e2e_check_mtds_2026_08_20_cefi.md`
   recorded 0 passed, 1 failed, and 2 skipped. Force and skip were `tardis_guard_busy`; canonical was
   `canonical_no_matching_objects_in_test_bucket`.
-- The BYBIT-SPOT diagnostic VM log recorded no staging `catalog.parquet`, `0 records`, `SHARD_INCOMPLETE`, and a
+- The BYBIT-SPOT diagnostic VM log recorded no catalogue at the path it resolved, `0 records`, `SHARD_INCOMPLETE`, and a
   sentinel catalogue-unavailable exception. The VM's wrapper still emitted `DEPLOYMENT_COMPLETED ... exit_code=0`.
 
 ## Impact
 
-The P0 contract is not proven. A zero-row unit can currently exit through the VM wrapper with code 0, and the missing
-staging catalogue prevents honest CeFi expected-universe/sentinel reconciliation. Tardis serialization also means a
+The P0 contract is not proven. A zero-row unit can currently exit through the VM wrapper with code 0, and the prior
+driver invocation did not select the staging environment explicitly. Tardis serialization also means a
 rerun must wait for the shared lease and proceed serially; launching parallel CeFi cells would violate the Tardis cap.
 
 ## Required resolution
 
-1. Restore or provision the staging CeFi catalogue with the required `venue` and `instrument_type` columns, then verify
-   the object-level read from `instruments-store-cefi-stg-central-element-323112`.
+1. Run the driver with explicit `--env staging` and verify the environment-qualified object
+   `gs://instruments-store-cefi-stg-central-element-323112/staging/catalog.parquet` before the run. Measured 2026-08-20:
+   object exists, 434,024 rows, and includes `venue` and `instrument_type` columns.
 2. Wait for the Tardis lease to be free and rerun the current 73 generator rows through bounded, serial service cells;
    retain each terminal report rather than relying on the clobber-prone aggregate attempt.
 3. Make the smoke gate reject zero-row successful VM exits (or add an explicit post-run assertion) before marking the P0
@@ -62,3 +63,9 @@ rerun must wait for the shared lease and proceed serially; launching parallel Ce
 ## Progress Log
 
 **2026-08-20 — slot 18.** Captured the failed full-driver and bounded diagnostic evidence above. P0 remains open.
+
+**2026-08-20 — slot 14 correction.** The earlier "missing staging catalogue" claim was a path-resolution error: an
+object-level probe confirms `staging/catalog.parquet` exists in
+`instruments-store-cefi-stg-central-element-323112` (434,024 rows; `venue` and `instrument_type` columns present).
+The prior driver invocation did not show an explicit `--env staging`; the rerun must pass it per the VM launcher
+runbook. The full-driver teardown and Tardis serialization findings remain open.
