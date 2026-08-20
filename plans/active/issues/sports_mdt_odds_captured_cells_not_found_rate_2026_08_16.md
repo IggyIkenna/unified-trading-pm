@@ -389,14 +389,46 @@ below (stop the writer, relabel the existing population, investigate the coincid
       `origin/live-defi-rollout`. **Live-production confirmation is a separate, genuinely time-gated step — see the
       new `[DIAG]` follow-up todo below** (cannot be done in this session: needs the fix to actually reach the
       deployed image and at least one real ~5-min capture cycle to elapse afterward).
-- [ ] [DIAG] P2. Once `market-tick-data-service@03cf5a20f4` (or later) is live in the deployed image, re-run a fresh
-      bounded manifest read for `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` rows and
-      confirm new rows are landing with `date` past the deploy timestamp (the pre-fix max was stuck at 2026-07-26 per
-      this doc's DIAG P2 finding above). Also spot-check that `fixture_id`-scoped rows now persist (pre-fix max was
-      stuck at 2026-06-09). Source: this doc's now-fixed `[CODE] P1` todo above — this is its own stated done-when
-      condition, deliberately split out since it cannot be verified same-session as the code fix. Done when: a fresh
-      manifest read shows `captured` rows for this shard with dates after the fix's production deploy time, or (if
-      still 0) a new root cause is identified for a still-open gap.
+- [x] ✅ [DIAG] P2. **DONE 2026-08-20 (slot-4).** Confirmed `market-tick-data-service@03cf5a20f4` IS live in the
+      deployed image (`git merge-base --is-ancestor` true against `origin/live-defi-rollout`; current
+      `market-tick-data-service:latest` = `40b9b62`/`0.146.3`, built 2026-08-20T13:33:16Z — days after the fix
+      commit). Ran a fresh bounded manifest read
+      (`market-tick-data-service/scripts/verify_odds_manifest_recording_fix_live_2026_08_20.py`, read-only, single
+      `read_availability_index_safe` call, no new GCS walk) for
+      `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)`. **Result: STILL STALE — the fix has
+      NOT resolved the gap.** `total_captured_rows=527541`, `max_date=2026-07-26` — byte-identical to the pre-fix
+      baseline this doc's DIAG P2 finding recorded on 2026-08-17, unchanged after 3+ days with the fix live.
+      `fixture_id`-scoped row count for this exact `(pipeline_mode, data_type)` combination is **0** (not just
+      stuck at the 2026-06-09 baseline — genuinely zero), though a broader unfiltered check confirms the
+      `fixture_id` column itself is populated fleet-wide (4,185,222/4,352,449 non-null `batch_odds_api` rows) — so
+      this is not a column-availability artifact. **New observation**: the SIBLING `odds_horizon_bucket` data_type
+      (the one the separate `[CODE] P0` writer-fix targeted) also kept growing post-fix-deploy — 3,700,051 rows
+      (2026-08-16) → 3,771,272 rows (2026-08-20, this session), max date now 2026-08-15 — i.e. that fix (MDPS
+      `resolve_output_pipeline_mode`, `market-data-processing-service@3ae762e725`) also does not appear to have
+      stopped new phantom-mode writes either, though that todo's own closure only claimed the code fix landed, not
+      a post-deploy manifest confirmation (mirrors this DIAG P2's own gap). **Root cause NOT identified this
+      session** — did not confirm whether the `uts-prod-market-tick-data-service-fast-t1-recon` Cloud Run Job has
+      actually executed a single real capture cycle against the fixed image yet (`gcloud run jobs executions list`
+      returned only stale entries clustered at `2026-08-20T01:40Z`, well before the 13:33Z image build, and did not
+      surface any execution after the deploy in this session's query — inconclusive, not confirmed either way).
+      Filed a new `[CODE] P1` follow-up below to root-cause why the sentinel-collapse fix isn't showing up in fresh
+      manifest data, starting with confirming an actual fixed-image execution has run. Evidence:
+      `market-tick-data-service/scripts/verify_odds_manifest_recording_fix_live_2026_08_20.py` (read-only, safe to
+      re-run).
+- [ ] [CODE] P1. Root-cause why `market-tick-data-service@03cf5a20f4`'s sentinel dedup-collapse fix (live in
+      production since 2026-08-17, confirmed still live 2026-08-20) has produced ZERO new
+      `(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` manifest rows in 3+ days —
+      `max_date` is still stuck at 2026-07-26, identical to the pre-fix baseline. First confirm via
+      `gcloud run jobs executions list --job=uts-prod-market-tick-data-service-fast-t1-recon` (or the
+      cefi/tradfi-databento siblings if this job doesn't cover sports odds) whether ANY execution has actually run
+      against the fixed image since its 2026-08-20T13:33:16Z build — if not, this todo is really "wait for a real
+      cycle, then re-measure," not a code defect. If an execution HAS run against the fixed image and rows are
+      still not landing, re-examine whether the fix's skip-check (`captured_sports_league_pairs`) is itself
+      correct, or whether a DIFFERENT, still-unidentified mechanism (e.g. the write path never reaching
+      `_emit_sports_v2_sentinels` at all for this shard, or a separate consolidator-side collapse unrelated to the
+      sentinel emission this fix targeted) is the real cause. Source: this doc's just-closed DIAG P2 todo above.
+      Done when: either a confirmed post-deploy execution + fresh manifest evidence shows new `data_type=odds`
+      rows landing, or a new, different root cause is identified and a fix proposed/shipped.
 
 ## Progress Log
 
@@ -510,3 +542,17 @@ One new regression test. Full `quality-gates.sh` green before commit; quickmerge
 `[DIAG] P2` todo for the live-production confirmation step (needs the fix live in the deployed image + one real
 capture cycle — could not be done in this session). This closes the doc's original `[CODE] P1` todo but the doc
 itself stays `open` pending that DIAG P2 follow-up.
+
+**2026-08-20 (slot-4)** — closed the `[DIAG] P2` live-production-confirmation todo, but with a negative result.
+Confirmed `market-tick-data-service@03cf5a20f4` has been live in the deployed image since 2026-08-17 (current
+`:latest`/`0.146.3`/`40b9b62`, built 2026-08-20T13:33:16Z). A fresh bounded manifest read
+(`market-tick-data-service/scripts/verify_odds_manifest_recording_fix_live_2026_08_20.py`) found
+`(pipeline_mode=batch_odds_api, data_type=odds, capture_status=captured)` STILL stuck at 527,541 rows /
+`max_date=2026-07-26` — byte-identical to the pre-fix baseline, unchanged after 3+ days live. `fixture_id`-scoped
+rows for this exact combination: 0. Also noticed the sibling `odds_horizon_bucket` data_type (targeted by the
+separate `[CODE] P0` MDPS writer fix) kept growing post-deploy too (3.70M → 3.77M rows, max date now
+2026-08-15) — that fix also hasn't visibly stopped new phantom writes, though its own closure never claimed a
+post-deploy manifest check either. Did not root-cause this session — could not confirm from `gcloud run jobs
+executions list` whether the fast-t1-recon job has even executed once against the fixed image yet (query returned
+only stale pre-deploy entries). Filed a new `[CODE] P1` follow-up to root-cause, starting with confirming a genuine
+post-deploy execution occurred before assuming the fix itself is defective. Doc stays `open`.
