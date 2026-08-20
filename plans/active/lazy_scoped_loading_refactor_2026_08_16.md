@@ -377,3 +377,51 @@ down" narrative.
 - **na-eligibility-audit 2026-08-17** [body-hash:113cba0b6fa4629e]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (regression guard for eager imports) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 1. Doc stays assigned_vm: NA for its other genuinely operator-gated/design items (the layer-2 UAC restructure needs an operator ruling on scope first). Cross-cutting tranche audit.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — added the 3 source paths named in the doc's own three-layer summary (UAC registry/__init__.py, strategy-service's archetype factory, execution-service's algorithms.py); was codex+plan-only before.
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)
+- **2026-08-20 — the 4th file (top-level `unified_api_contracts/__init__.py`) attempted, then DELIBERATELY REVERTED — a
+  real silent-corruption bug found, not shipped.** Converted the file's ~1,098 ordinary re-exports mechanically (same
+  proven approach as the other three), kept its `_VENUES` eager-import loop (lines ~2701-2712, see the earlier entry)
+  untouched/preserved verbatim since it needs hand-written design, not the mechanical converter. Passed lint,
+  basedpyright (0 errors after two real fixes — see below), and looked ready. **The exhaustive hash-pinned-repr
+  correctness sweep (the same method that verified all three shipped files clean) caught a genuine data-corruption
+  bug the type checker and linter both missed**: three registries — `SCENARIO_REGISTRY`
+  (`canonical/crosscutting/scenario_overlay/`, 13 entries), `SYNTHETIC_GENERATOR_REGISTRY`
+  (`canonical/crosscutting/synthetic_generator.py`, 13 entries), `SCENARIO_ARCHETYPE_MATRIX`
+  (`registry/scenario_archetype_matrix.py`'s `MATRIX`, aliased) — all come back **EMPTY** through the lazy top-level
+  `__init__.py`, populated correctly through the original eager one. Diffed against the FULL 1,099-name `__all__` set,
+  hash-pinned; these were the only 3 names affected — not a sample, the complete list.
+  **Root cause narrowed to the `_VENUES` loop specifically, not the mechanical conversion itself**: all three
+  registries populate CORRECTLY when their own defining module is imported in complete isolation (verified directly —
+  `import unified_api_contracts.canonical.crosscutting.scenario_overlay as m; len(m.SCENARIO_REGISTRY)` → 13, fresh
+  process, no other `unified_api_contracts` state loaded first). But once the LAZY top-level `__init__.py` runs first
+  (which now includes the same `_VENUES` loop, unchanged, importing ~37 `external.*` venue submodules) and you THEN
+  import the SAME registry submodule DIRECTLY (bypassing `__getattr__`/`_LAZY_EXPORTS` entirely — same `sys.modules`
+  cache, same object) — it comes back empty. Confirmed the returned object is the identical (`is`) instance
+  `unified_api_contracts.__getattr__` would hand back, ruling out a dispatch-table bug in the converter itself. **The
+  `_VENUES` loop's eager import of ~37 external venue modules — at a point in package-init where the rest of the
+  eager graph is no longer present to backstop it — silently leaves at least these 3 registries mid-populated or
+  reset**, most plausibly because one or more of those 37 external modules transitively imports one of these three
+  registry modules EARLY (before some other prerequisite it depends on is available in the now-mostly-lazy world),
+  and Python's `sys.modules` caching means that first, incomplete run sticks for the rest of the process — this part
+  is a strong hypothesis, not confirmed to the exact external module; not chased further given time already spent.
+  **Two real, independent bugs also found and fixed in the converter itself while getting this far** (both now fixed
+  in `lazify_init.py` for future files, even though this file's ship was reverted): (1) a bare `import sys` statement
+  got emitted TWICE — once via the general bare-import handling, once again because the `other_statements` collector
+  didn't exclude `ast.Import` nodes (only `ast.ImportFrom`) from its "preserve any other top-level statement" sweep;
+  (2) `other_statements` (which can contain LIVE, import-triggering code like the `_VENUES` loop) was originally
+  emitted BEFORE `__getattr__`/`_LAZY_EXPORTS` were defined in the generated file — meaning a re-entrant circular
+  import triggered by that live code (confirmed: `external/databento/databento_classifier.py` does
+  `from unified_api_contracts import UNDERLYING_NORMALIZATION` at its own module level) had no lazy fallback to catch
+  it and failed outright with `ImportError`. Fixed by moving `other_statements` to emit AFTER `__getattr__` exists.
+  **Verdict: reverted `unified_api_contracts/__init__.py` to the clean original — confirmed via `git status
+  --porcelain` (empty) and a direct diff against the pre-session backup (byte-identical).** This file needs someone
+  to trace the EXACT external module responsible before it can ship safely — silently returning an empty registry in
+  production (rather than crashing loudly) is a genuinely dangerous failure mode for whatever consumes these three,
+  and this session will not guess which of the 37 external modules it is under time pressure. **Recommended next
+  step**: bisect the `_VENUES` list (comment out half, re-run the same hash-pinned diff, repeat) rather than reading
+  all 37 external modules' import graphs by hand.
+  **What DID ship and stands independently of this**: `registry/__init__.py` (`unified-api-contracts@684c6e0e52`),
+  `architecture_v2/__init__.py` + `internal/__init__.py` (`unified-api-contracts@34b81221ef`) — none of the three
+  touch the `_VENUES` loop or its 37 external modules, so none carry this risk. The measured 27% import-cost
+  reduction already reported is real and already landed; only the 4th file's OWN portion remains undone.
+  **Converter script** (fixed, both bugs above patched): `/private/tmp/claude-501/.../scratchpad/lazify_init.py` —
+  same caveat as before, session-scoped scratchpad, re-derive or ask this session if still live.
