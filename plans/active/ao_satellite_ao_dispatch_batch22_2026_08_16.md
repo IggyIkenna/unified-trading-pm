@@ -168,7 +168,7 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       further instance was found + fixed in the "Overnight autonomous operation" loop's steps 1/2/5 (same redundant
       `/api/state` re-fetch pattern). Do NOT redispatch this item. Source (now archived):
       `/plans/archive/issues/ao_main_agent_heartbeat_loop_teaches_non_batching_2026_08_14.md`. Repo: unified-trading-pm.
-- [ ] [BACKEND] P2. **Escalate a wedged `tmux_alive=true` + `worker_alive=false` + `phase=pre_boot` slot from indefinite resume-kicks to a kill+respawn.** Confirmed live incident (slot 2, 2026-08-04): the
+- [x] [BACKEND] ✅ P2. **Escalate a wedged `tmux_alive=true` + `worker_alive=false` + `phase=pre_boot` slot from indefinite resume-kicks to a kill+respawn.** Confirmed live incident (slot 2, 2026-08-04): the
       WorkerLivenessWatchdog kept sending `watchdog_heartbeat_resumed` kicks every ~17-18min for 1.5h+ without ever
       escalating, and a concrete task-oriented nudge via `/api/slots/{id}/message` could NOT clear it (dispatch will
       not route a task to a slot it marks `pre_boot`/`worker_alive=false` — a worker-facing nudge is structurally the
@@ -180,7 +180,7 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
       when**: a slot reproducing this exact state (mocked) escalates to kill+respawn within the bounded threshold,
       with a regression test; a currently-healthy slot's normal resume-kick cadence is unaffected (a negative test).
       Source: `/plans/active/issues/slot2_wedged_pre_boot_watchdog_resume_loop_no_respawn_2026_08_04.md`. Repo:
-      agent-orchestrator.
+      agent-orchestrator@609d044b8f + evidence: isolated quickmerge QG passed (5284 passed, 4 skipped; coverage 86.1203% > 85.8559% baseline).
 - [ ] [BACKEND] P3. **Harden `ensure_review_agents`/the AgentKeeper reap path to positively verify a review slot's live session is actually running the `review` prompt, not just any live session.** The 2026-08-16
       `human_claim`/`human_claim_check` guard fix (already shipped, `agent-orchestrator@d13788ec2f`) closes the ENTRY
       point — nothing should bind an ordinary task onto a reserved review slot again — but does not add a
@@ -199,6 +199,8 @@ per-doc reasoning is this run's own report/parked-findings doc, not duplicated h
 `/codex/04-architecture/agent-orchestrator-worker-liveness.md`.
 
 ## Progress Log
+
+- **2026-08-20 (slot 18)**: Implemented and shipped the bounded pre-boot resume-budget escalation and regression coverage in `agent-orchestrator@609d044b8f`; isolated quickmerge passed 5284 tests with coverage 86.1203% above the 85.8559% baseline.
 
 - **2026-08-16 (ag_closeout_auditor, dispatch agt-1628ee, autonomous)**: Drafted per `/ag-closeout-audit ao`'s Phase 3
   — 6 conflict-clear, file-disjoint, bounded todos extracted from the run's 42 orphaned-doc population after Phase

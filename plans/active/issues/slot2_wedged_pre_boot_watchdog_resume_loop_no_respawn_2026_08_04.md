@@ -96,7 +96,7 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
       action needed. (`worker_alive: false` still shows in the raw state alongside `tmux_alive: true`, but `phase`
       moving off `pre_boot` to a sensible `idle` + coherent message is the actual signal this todo was gating on; if
       that field itself still reads oddly, it's now cosmetic, not blocking dispatch.)
-- [ ] [BACKEND] P2. **Durable fix**: make the WorkerLivenessWatchdog ESCALATE a `tmux_alive=true` +
+- [x] [BACKEND] P2. **Durable fix** ✅ — agent-orchestrator@609d044b8f + evidence: isolated quickmerge QG passed (5284 passed, 4 skipped; coverage 86.1203% > 85.8559% baseline): make the WorkerLivenessWatchdog ESCALATE a `tmux_alive=true` +
       `worker_alive=false` + `phase=pre_boot` slot from repeated `watchdog_heartbeat_resumed` kicks to a kill+respawn
       after a bounded number of kicks or a wall-clock threshold, so a wedged-but-pane-alive slot self-heals instead of
       looping resume-kicks for 1.5h+. Also reconcile the `phase=pre_boot`/`worker_alive=false`-vs-alive-pane bookkeeping
@@ -129,6 +129,8 @@ seen here) should escalate from resume → respawn, not resume indefinitely.
       rescue/apply ce7d7d1e2; let drift-quarantine discard it. (repo: agent-orchestrator — operator action)
 
 ## Progress Log
+
+- **2026-08-20 (slot 18)**: Implemented and shipped bounded pre-boot resume-budget escalation plus healthy negative coverage in `agent-orchestrator@609d044b8f`; isolated quickmerge passed 5284 tests with coverage 86.1203% above the 85.8559% baseline.
 
 - **2026-08-08 ~12:59Z (main agt-30eb02)** — slot 3 RECURRED (3rd occurrence of this exact class), only ~4h after the
   2026-08-08 08:55-08:57Z resolution. Flagged by review (msg 4113); main independently confirmed via `/api/state`:
