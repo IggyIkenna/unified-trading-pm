@@ -67,13 +67,13 @@
   },
   "versions": {
     "_note": "All versions reset to 0.x.x (2026-02-28). Nothing was stable under the old CI/CD — versions >=1.0.0 were aspirational. 1.0.0 will be set by GitHub Action on first successful main merge per repo. 0.x.y preserves relative evolution (e.g. UTL 0.2.2 reflects more history than AC 0.1.0).",
-    "batch-live-reconciliation-service": "0.51.0",
+    "batch-live-reconciliation-service": "0.51.1",
     "deployment-api": "0.93.3",
     "deployment-service": "0.155.4",
     "deployment-ui": "0.1.0",
     "execution-service": "0.85.0",
     "features-service": "0.90.15",
-    "fund-administration-service": "0.9.83",
+    "fund-administration-service": "0.9.87",
     "ibkr-gateway-infra": "0.5.3",
     "instruments-service": "0.103.32",
     "market-tick-data-service": "0.144.25",
@@ -81,11 +81,11 @@
     "unified-api-contracts": "0.146.0",
     "unified-trading-library": "0.90.9",
     "unified-trading-pm": "1.2.741",
-    "market-data-processing-service": "0.30.30",
+    "market-data-processing-service": "0.30.31",
     "e2e-testing": "0.41.33",
     "agent-orchestrator": "0.100.24",
     "greeks-service": "0.18.70",
-    "trading-agent-service": "0.13.13",
+    "trading-agent-service": "0.13.16",
     "strategy-service": "0.78.0",
     "ml-service": "0.58.48",
     "alerting-service": "0.66.6",
@@ -2249,8 +2249,8 @@
   ],
   "published_packages": {
     "unified-trading-library": {
-      "version": "0.90.9.dev1+g08d4c66d5",
-      "published_at": "2026-08-20T07:26:49Z",
+      "version": "0.90.10.dev1+gff89d6fa2",
+      "published_at": "2026-08-20T07:53:57Z",
       "registry": "artifact-registry"
     },
     "unified-api-contracts": {
@@ -2259,8 +2259,8 @@
       "registry": "artifact-registry"
     },
     "instruments-service": {
-      "version": "0.103.32.dev1+g661f91a49",
-      "published_at": "2026-08-20T06:14:25Z",
+      "version": "0.103.33.dev1+gcf29f02a7",
+      "published_at": "2026-08-20T07:54:19Z",
       "registry": "artifact-registry"
     }
   }
