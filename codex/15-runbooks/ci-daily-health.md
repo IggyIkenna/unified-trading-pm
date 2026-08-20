@@ -33,11 +33,11 @@ cadence: daily
 verifier:
   "a new dated ## section exists for today with all four subsections populated (persistent alerts / ci-reconcile ran /
   spend / VM health) and a delta line against the prior entry"
-last_executed: "2026-08-19"
+last_executed: "2026-08-20"
 code_refs:
   [cursor-configs/skills/ci-reconcile/SKILL.md, scripts/generate-workflow-catalog.py, scripts/dev/slack-read-channel.py]
 audience: operator / dev
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 execution:
   {
     owner: "operator (daily, human-run)",
@@ -45,7 +45,7 @@ execution:
     verifier:
       "a new dated ## section exists for today with all four subsections populated (persistent alerts / ci-reconcile
       ran / spend / VM health) and a delta line against the prior entry",
-    last_executed: "2026-08-19",
+    last_executed: "2026-08-20",
   }
 ---
 
@@ -54,6 +54,75 @@ execution:
 Append-only. One `## <date>` section per day `/ci-reconcile` runs in daily-report mode. Read the PREVIOUS entry before
 running, diff key figures into a **Delta since last run** line at the top of the new one. Never edit a past entry — if
 something reported that day turns out wrong, correct it in the NEXT entry, not retroactively.
+
+## 2026-08-20 (first pass, ad-hoc interactive session)
+
+**Delta since last run**: no persistent alert carried over — the prior entry's zero-standing-alert state held. One
+self-healing standing-monitor trip observed and confirmed clear (`codex-freshness-sweep`, known calendar-ratchet
+pattern per the archived `codex_freshness_ratchet_trips_on_calendar…` issue — 0 violations on a fresh local run).
+SSM access to both the glue-runner host (`i-042a6332509482556`) and the orchestrator VM (`i-0c9b283b31d6b5ca7`)
+worked cleanly under this session's identity (`harsh-worker`), closing the coverage gap the last several passes hit
+under `ikenna-worker` — **this does not resolve the tracked `ikenna-worker` gap itself**
+(`ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md` is untouched; a different IAM identity happening to
+work is not evidence the original one now does). GH Actions billing-API access (§8's Plan-scoped route) was
+**not** reachable this pass — see coverage gap below.
+
+**Persistent alerts (non-auto-resolving)**: none.
+
+- **ci-reconcile ran**: yes (ad-hoc interactive session, not the scheduled hourly `ci_reconciler` dispatch).
+- **GH Actions spend**: dollar figures NOT re-pulled — `deployment-api`'s Plan-scoped billing route needs a GSM
+  secret fetch, and both `gcloud` paths failed on this host (ambient account `harshkantariya@odum-research.com` hit
+  an org reauth wall; no pinned `unified-trading-sa` key present at `~/.config/gcloud/keys/`). Explicit coverage
+  gap, not "spend is fine" — self-heal path (activate the pinned key) doesn't apply since the key doesn't exist on
+  this host; escalate key provisioning only if this recurs. Visibility mix re-confirmed instead (cheap, no billing
+  API needed): 12 public / 14 private of 26 fleet repos. `unified-trading-pm` remains public (unchanged since
+  2026-08-06, per finding (l)). No visibility flips detected since the last entry that reported a mix.
+- **CI VM resource health**: no full CloudWatch-lookback rightsizing check run against `i-042a6332509482556` in
+  > 24h — same gap the last several passes deferred. A live snapshot was pulled instead (not a substitute for the
+  > real rightsizing check, but cheap corroboration): load average 0.00/0.02/0.16, CPU ~100% idle, 31.5GB RAM with
+  > 29GB available, swap in use 267MB/16GB. Consistent with the previously-established "burst pattern, idle at
+  > baseline" read — this session's snapshot lands during a quiet window, so it neither confirms nor overturns that
+  > verdict on its own. `/vm-resource-rightsizing-check` still needs an actual run to close this out properly.
+
+**Sweep 1 (26 repos)**: all 26 confirmed clean — 25/26 `quality-gates-v2` `success` on `live-defi-rollout`;
+`unified-trading-ci` confirmed by design (its push gate is `lint.yml`, green, no `quality-gates-v2.yml` run
+history).
+
+**Sweep 2 (24 Slack-mutating `schedule(...)` workflows, freshly regenerated catalog)**: 22/24 `success` at last
+run; 2 legitimately `in_progress` at check time (`ldr-to-main-promote`, `sit-gate-stuck-detector` — both normal
+live cadence, not stalls); 1 `failure` (`codex-freshness-sweep`, 2026-08-19 run) root-caused as the known
+calendar-ratchet self-heal pattern and confirmed clear via a fresh local run (0 violations, 324 docs scanned) —
+no fix needed, already tracked.
+
+**Sweep 3 (host-dispatched watchdogs, live SSM — not deferred this pass)**: `glue-runner-crash-loop-watchdog.timer`
+active since 2026-08-08, journal shows continuous `OK — 0/16 crash-looping, 0/16 wedged` through the current tick;
+`ci-vm-resource-watchdog.timer` active/waiting, next trigger in ~31min, on its normal hourly cadence. Both clean.
+
+**Sweep 4 (open promote PRs, fleet-wide)**: only `unified-trading-pm` had one open (#3553, "LDR → main (Option-B
+auto-drain)", created 2 min before check — checks legitimately still `IN_PROGRESS`, not a failure). Every other
+repo: zero open promote PRs, consistent with `promotion_lag_monitor.py`'s own `✅ all branches in sync` verdict
+(raw `git compare .../ahead_by` counts of 30-1800+ across repos are NOT promotion lag — confirmed red herring,
+the monitor's own reconciled view is authoritative per §4's own guidance).
+
+**Provenance gate**: `check_strict_quickmerge.py --range origin/main..origin/live-defi-rollout --block` clean on
+`unified-trading-pm` (the only fleet repo carrying this script locally) — 0 bypassed code commits.
+
+**AO escalation-queue cross-check (§5)**: healthy. 2 active escalations, both dispatched with live tmux worker
+sessions behind them (26 `orch-slot-*` sessions confirmed live via SSM, zero worker-liveness gap): `agt-9ad8cf`
+(`sit_failure`, `system-integration-tests`, slot 31) and `agt-910641` (`data_pipeline_failure`,
+`market-tick-data-service`, slot 29) — both outside this skill's CI/CD-fleet-gate domain (SIT and data-pipeline
+failures respectively) and already being worked, not chased further here. `/api/healthz` also green
+(`mode: live`, `uptime_seconds: 1785`).
+
+**Coverage gap (Slack)**: `#ci-failures` was NOT re-read this pass — `scripts/dev/slack-read-channel.py` failed to
+resolve `SLACK_ALERTS_READER_BOT_TOKEN` via both the pinned `unified-trading-sa` identity (no local key on this
+host) and the ambient default account. Per §6 this makes the "nothing more in Slack" claim unavailable rather than
+confirmed — the ground-truth `gh`/`gcloud`/SSM sweeps above stand on their own and found nothing red, but a
+Slack-only alert with no matching CI-state symptom would have been invisible this pass.
+
+**Bar for "unblocked" met, with two stated coverage gaps**: sweeps 1-5 all done and clean, host-dispatched monitors
+verified live (not deferred), zero persistent alerts, zero fixes needed this pass. The two explicit gaps (Slack
+channel read; GH Actions billing-API dollar figures) are named above rather than silently dropped.
 
 ## 2026-08-18
 
