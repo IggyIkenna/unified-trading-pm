@@ -329,11 +329,27 @@ todos only to confirm they are data-movement, then leave it.
       82/244 (33.6%), `prediction` 10/19 (52.6%), `sports` 10/822 (1.2%), `cefi` 0/73 (0%). A single payload-wide
       grain label overstates the breakdown available for half the corpus. Same failure mode as the mislabelled
       `grain` in the readiness dump (filed to T5, who owns that writer).
-- [ ] [BACKEND] P1. **Trace the 9 blank-venue `sports` cells to the writer that emits them.** MEASURED
+- [x] [BACKEND] P1. **Trace the 9 blank-venue `sports` cells to the writer that emits them.** MEASURED
       2026-08-19: 9 cells in coverage.json carry `venue == ""` (all `sports`, data_types `odds_movement`,
       `odds_snapshot`, `ODDS_MOVEMENT`, `ODDS_SNAPSHOT`, `ARBITRAGE_OPPORTUNITY`, each `empty_confirmed: 1`).
       They propagate into T5's readiness dump as 9 rows with an empty `venue`. Read-only diagnosis of the manifest
       writer path first — any manifest row repair is data movement and stays operator-gated.
+      ✅ 2026-08-20 — **traced via a dedicated investigation, not guessed, then the WRITER bug fixed (code only,
+      the 9 existing rows are unrepaired data movement, correctly left alone).** Root cause:
+      `market-data-processing-service/market_data_processing_service/app/core/canonical_writer_shaping.py`'s
+      `_venue_token_from_canonical_id` returned `""` (not `"UNKNOWN"`, its own sibling fallback's convention) when
+      a sports instrument_id's bookmaker token (position 1) was missing/blank — `_resolve_empty_failed_shard_tuple`
+      falls through to this helper whenever `input_venue` is falsy, so a genuinely-unresolvable venue got stamped
+      as a blank string onto `empty_confirmed` manifest rows rather than the documented "UNKNOWN" sentinel. The
+      four venue-restamp/migration scripts checked (`manifest_swap_venue_restamp_2026_07_27.py`,
+      `manifest_swap_venue_restamp_candles_2026_08_03.py`, `league_id_relocation/manifest_swap_2026_07_22.py`,
+      `migrate_sports_canonical_v9.py`) all filter on a SPECIFIC old venue string, so `venue==""` was categorically
+      out of scope for every sweep — not "left behind," never targeted. `ARBITRAGE_OPPORTUNITY`'s cell is
+      additionally a pre-2026-08-09-retirement leftover (`SportsArbitrageAdapter` retired, arb detection moved to
+      features-service) that can no longer be produced going forward regardless. Fixed
+      `_venue_token_from_canonical_id` to return `"UNKNOWN"` on the blank-bookmaker fallback, matching the sibling
+      no-colon-at-all convention already used elsewhere in the same function; 2 regression tests updated/added.
+      Evidence: `market-data-processing-service@857085e316`.
 
 ### W2 — data pipeline integrity (code only, no runs)
 
