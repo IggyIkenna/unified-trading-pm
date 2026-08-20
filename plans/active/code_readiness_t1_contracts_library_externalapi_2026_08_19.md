@@ -434,8 +434,22 @@ todos only to confirm they are data-movement, then leave it.
       from `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`, no invented names.
       5 tests incl. a JSON round-trip. QG green (481s, full 13k+ suite). W22 transfer routing is now unblocked on
       the schema side; still needs real per-venue population before W22 can consume live values.
-- [ ] [BACKEND] P1. Declare the W8 weightings SSOT in the contracts registry — which dimension each weighting
-      applies to. P0 in the epic with **no owning plan** at authoring time; this todo is that owner.
+- [x] ✅ [BACKEND] P1. W8 weightings SSOT declared — unified-api-contracts@e55fc5a9d. New `WeightingDimension`
+      enum (`PORTFOLIO_PER_CLIENT` / `ARCHETYPE_LEVEL`, deliberately binary) plus `ALLOCATOR_ARCHETYPE_DIMENSION`,
+      a TOTAL mapping over all 17 `AllocatorArchetype` members. Grounded in real terminology, not invented:
+      read `strategy-service/strategy_service/portfolio_allocator/archetypes_base.py` +
+      `archetypes.py`/`archetypes_simple.py`/`archetypes_rank.py` first — `AllocatorArchetype` was ALREADY a
+      UAC-owned enum (strategy-service imports it via `from unified_api_contracts.internal import
+      AllocatorArchetype`), so this is additive to the existing contracts registry, not a new one. The 8 generic
+      engines (FIXED/PNL_WEIGHTED/SHARPE_WEIGHTED/RISK_PARITY/KELLY/MIN_CVAR/REGIME_AWARE/MANUAL) weight
+      `StrategyInputSeries.strategy_instance_id` → `PORTFOLIO_PER_CLIENT`; the 9 rank allocators
+      (CARRY_FUNDING_RANK + 7 per-archetype ranks + CARRY_FUNDING_DISPERSION_RANK) weight along an axis inside
+      one archetype's own universe via `BaseRankAllocator` → `ARCHETYPE_LEVEL`. Totality is ENFORCED, not just
+      documented — a future archetype added without a matching dimension entry fails
+      `test_allocator_archetype_dimension_is_total`. 5 tests total (totality, both groups' membership, the
+      no-overlap/no-gap partition property, `WeightingDimension` staying a deliberate binary). Exported at both
+      package levels matching `AllocatorArchetype`'s own existing surface. QG green (240s). Evidence:
+      `/plans/epics/system_readiness_master.md` § W8.
 
 ### unified-trading-library
 
