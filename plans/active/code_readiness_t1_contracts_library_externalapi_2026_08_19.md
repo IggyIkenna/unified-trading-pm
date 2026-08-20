@@ -534,9 +534,16 @@ todos only to confirm they are data-movement, then leave it.
       converter) discovered and partially done. Real measured win once all land: 1,766→1,295 modules (~27%) on
       `from unified_api_contracts.internal import StrategyArchetype`.
 - [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
-      (`[FROM-T2]` above). `manifest_writer/` needs an append-only "delta shard" pattern; verification gated on
-      that landing. Was sitting `assigned_vm: NA` unqueued anywhere active; tracked here so it does not get lost.
-      Evidence: `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
+      (`[FROM-T2]` above). **2026-08-20: investigated and designed, not yet implemented.** Read the real
+      implementation (`_writer_io.py`'s `_flush_per_vm_pending`/`_read_per_vm_shard`,
+      `manifest_consolidator.py`'s `consolidate()`) and validated the load-bearing fact the design depends on: the
+      consolidator already dedups by content key across every `_index/per_vm/*.parquet` glob match, not by source
+      filename — so a delta-shard file needs ZERO consolidator-side changes, only writer-side ones. Full 5-step
+      proposal (delta upload on non-final flush, glob+concat on the writer's own read-back, compact-and-delete on
+      `process_final=True`, the crash-safety argument, explicitly-not-designed collision/orphan-cleanup edges) is
+      in the issue doc's Progress Log. Real code changes to a durability-critical, fleet-wide hot path deserve
+      their own review + a SIGKILL-mid-delta test written first — not a same-session implementation. Evidence:
+      `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
 
 ### External API surface — `platform-external-api-walkthrough.html`
 

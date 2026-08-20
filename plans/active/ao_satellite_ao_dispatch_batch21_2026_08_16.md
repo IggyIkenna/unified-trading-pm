@@ -81,7 +81,7 @@ file/mechanism (safe for full intra-plan concurrency, no `sequential: true` need
 
 1. **Track 3/6 `context_scope` corpus backfill** (tracker Track 3 `[SCRIPT] P0` + Track 6 `[SCRIPT] P2`) — large,
    ongoing, multi-session work already tracked live via
-   `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` + its gated `batch3_finalize`. Not duplicated here.
+   `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md` + its gated `batch3_finalize`. Not duplicated here.
 2. **Track 4 DB-pool right-sizing** (`[BACKEND] P3`) — the tracker's own text already rules this "correctly NA — a real
    judgment call between two designs" (lower `pool_timeout` vs. batch/serialise per-slot git-status writes). Stays NA.
 3. **Track 4 content-derived-task-id migration dry-run + live-apply** (`[OPERATOR] P2`) — already `[OPERATOR]`-tagged in

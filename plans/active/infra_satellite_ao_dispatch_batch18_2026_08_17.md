@@ -124,7 +124,7 @@ rather than split into two same-priority concurrent items on the same file.
       `/plans/active/issues/cloud_run_crash_loop_alert_policy_invalid_metric_2026_08_20.md`. No code change needed
       for this todo (config fix tracked in the issue doc).
 
-- [ ] [INFRA] P2. **Re-add `cost_snapshot_cron`'s X-API-Key header via Secret Manager.** `cost_snapshot_scheduler.tf`
+- [x] ✅ [INFRA] P2. **Re-add `cost_snapshot_cron`'s X-API-Key header via Secret Manager.** — deployment-service@13ebe52635; Evidence: quality-gates.sh PASS (3650 passed, 5 skipped), tofu fmt -check PASS. `cost_snapshot_scheduler.tf`
       dropped the `X-API-Key` header when it migrated off a hardcoded literal; re-add it sourced from a proper Secret
       Manager reference (never a literal). This is now load-bearing since `DISABLE_AUTH=false` went live — the cron
       currently 401s silently every 12h without it. **Done when**: the cron's next scheduled fire succeeds

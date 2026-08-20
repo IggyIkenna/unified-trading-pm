@@ -22,11 +22,11 @@ scope: [engineer]
 tags: [ao, agent-orchestrator, ao-dispatch, close-out, batch-4, satellite-docs]
 related:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
     /plans/archive/2026_07/ao_satellite_ao_dispatch_batch1_finalize_2026_07_26.md,
-    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     /plans/archive/issues/idle_slot_dirty_wip_never_auto_resolves_2026_07_20.md,
-    /plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-01"
@@ -52,8 +52,8 @@ source: >-
   moot — see summary).
 context_scope:
   [
-    /plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
-    /plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
+    /plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md,
+    /plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md,
     agent-orchestrator/server/worker_liveness_watchdog.py,
   ]
 ---
@@ -65,7 +65,7 @@ context_scope:
 > `status:` flip (`active` → `complete`) and this banner — steps 2 and 6 of the 6-step ritual
 > (`/codex/12-agent-workflow/plan-completion-and-archival-discipline.md`) — were never applied, leaving a
 > physically-archived doc still declaring itself active. Its gated successor is
-> `/plans/active/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`.
+> `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch4_finalize_2026_08_01.md`.
 
 > **Renamed from "batch 2" 2026-08-01** — this doc was originally authored as
 > `ao_satellite_ao_dispatch_batch2_2026_08_01.md`, colliding with the pre-existing, already-active
@@ -116,7 +116,7 @@ batch — nothing to dispatch for it. Full disposition for all 9 original Deferr
       the same "slot has gone quiet" notion). **Done when**: a worker that goes silent for a full QG run (>~4min) but is
       provably alive (PID up, forward progress in its pane/log) does NOT have its in-flight task re-dispatched, with a
       test simulating a silent-but-alive owner. Source:
-      `/plans/active/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (BACKEND P2 — its P3
+      `/plans/archive/issues/orchestrator_failover_double_dispatch_duplicate_work_2026_07_25.md` (BACKEND P2 — its P3
       sibling, the `/done` idempotency item, is NOT in scope here; still file-collision-held, see this batch's source
       finalize plan). — **Shipped `agent-orchestrator@7911083`.** Confirmed root cause by direct code read (not the
       dispatch.py R5 path alone — that's the SECOND stage): `WorkerLivenessWatchdog._reconcile_unacked_dispatches`
