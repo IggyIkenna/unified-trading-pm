@@ -47,7 +47,6 @@ context_scope:
     strategy-service/Dockerfile,
     strategy-service/pyproject.toml,
     strategy-service/cloudbuild.yaml,
-    /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
   ]
 ---
 
@@ -115,4 +114,3 @@ race recurs on the fleet's routine floor-bump cadence.
   `strategy-service-build` on the same main HEAD → `10283751` SUCCESS (11:30:26→11:38:13Z), log shows
   `+ unified-api-contracts==0.149.0` installed from AR and `strategy-service:latest` re-pushed. No code change shipped —
   the pipeline was never structurally broken. Sibling failures noted for their own walls. Escalation closed.
-- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

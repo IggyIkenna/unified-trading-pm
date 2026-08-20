@@ -499,29 +499,8 @@ because a fail-safe halt left waiting 8 h on a human is worse than the halt itse
 DR/auto-recovery scope_ — never on the protective direction, and never on in-scope reversible resume. SSOT mirror:
 CLAUDE.md § "Plans Run To Actual Completion → Hard-stop list".
 
-## Slow/fast decomposition of a kill (2026-08-20)
-
-This matrix owns **arming authority, resume authority, exit playbooks and the recovery timeline**. It does NOT own the
-declaration/detection/reaction decomposition — that is in
-[/codex/04-architecture/cross-domain-state-fabric.md](/codex/04-architecture/cross-domain-state-fabric.md) section 10,
-which also records the unification worth knowing here: **`action_mask = {}` at instrument scope IS a kill at instrument
-scope** — one mechanism at different scopes, not two systems.
-
-Two things from that section that change how this matrix is read:
-
-- **A slow strategy cadence does not make the kill slow.** Declaration is versioned config; detection and reaction are
-  not on strategy's clock. This is why the "What If Strategy-Service Is Down?" answer above works.
-- **`SUPPRESSED` is not `KILLED`.** A scheduled stand-aside window — funding settlement, staking payment — closes and
-  reopens on schedule with no incident and no un-kill path. Routing it through this matrix would manufacture false
-  incidents and demand an operator release that nothing requires.
-
-**OPEN**: which component _detects_ each kill condition. The reaction path was measured 2026-08-20 and is wired; the
-detection path was not measured. A slow detector makes a fast reaction irrelevant.
-
 ## Related
 
-- `/codex/04-architecture/cross-domain-state-fabric.md` — kill/action-mask unification; declaration vs detection vs
-  reaction cadences; the `PERMITTED` / `SUPPRESSED` / `KILLED` three-state action mask
 - `03-observability/data-feed-sla-registry.md` — `DataFreshnessContract` / `ALL_FRESHNESS_CONTRACTS` registry SSOT;
   criticality tiers; `refetch_action` binding
 - `kill-switch-circuit-breaker.md` — detailed kill switch and circuit breaker mechanics

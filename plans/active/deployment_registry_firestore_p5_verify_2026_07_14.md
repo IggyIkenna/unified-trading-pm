@@ -30,12 +30,6 @@ estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: review
 drift_direction: advance-code
-context_scope:
-  [
-    /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
-    /plans/archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md,
-    /codex/05-infrastructure/deployment-observability.md,
-  ]
 depends_on:
   - deployment_registry_firestore_p3_cutover_2026_07_14.md
   - deployment_registry_firestore_p4_dynamodb_2026_07_14.md

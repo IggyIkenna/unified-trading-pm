@@ -29,12 +29,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-context_scope:
-  [
-    deployment-service/terraform/gcp/t1_batch_scheduler.tf,
-    /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/05-infrastructure/deployment-observability.md,
-  ]
+context_scope: []
 ---
 
 # Enabled Scheduler targets with no matching Cloud Run Job - 2026-08-20
@@ -80,4 +75,3 @@ No Scheduler job was paused, deleted, or repointed by this pass.
 
 - 2026-08-20T08:04Z (data_pipeline_alerts_reconciler, slot 29, dispatch agt-88ddd3): issue filed from live
   cross-check; direct NOT_FOUND evidence captured above. Operator/owner decision is required for cleanup or repointing.
-- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

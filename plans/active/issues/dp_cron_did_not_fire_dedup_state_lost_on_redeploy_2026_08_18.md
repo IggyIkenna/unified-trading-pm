@@ -627,23 +627,3 @@ repeat-firing is downstream-only and depends entirely on this doc's root cause g
   confirmed clean, 0 ahead, before and after). `AUTHORING_SLOT` (`dp-fleet-monitor`) is not a numeric slot id,
   so skipped the authoring-slot ping per the boot-prompt's skip rule — the dispatch-time Slack alert already
   covered the FYI. Shipped via `safe-doc-push.sh` (pure doc edit). Completing via `/done`.
-- **data_pipeline_alerts_reconciler 2026-08-20 (slot 27, dispatch agt-41775d), 6-hourly sweep**: fresh
-  `slack-read-channel.py data-pipeline-alerts 24` (2,531 msgs/24h: 2,122 `DP_CRON_DID_NOT_FIRE`, 229
-  `DP_RUN_MOSTLY_EMPTY`, 122 `DP_VM_EXIT_NONZERO`, single digits of 6 other event types) — an improvement over the
-  3,008-msg/24h sample the sibling `..._still_storming_after_gcs_persistence_fix_2026_08_20.md` doc measured
-  pre-06:55Z-fix, and `DP_RUN_MOSTLY_EMPTY` dropped sharply (369→229 across the two windows, and only 23 of the
-  229 in this sweep's window post-date the 06:55Z fix). Confirmed the `uts-prod-alerting-paging-cron`
-  duplicate-consumer fix that doc's 06:55Z entry applied is still holding (`gcloud scheduler jobs describe` →
-  `PAUSED`, no regression); `dp-alerting-subscriber` is on a fresh revision (`-00138-lzr`, 100% traffic).
-  Per-identity gap analysis on the dominant contributor (`mtds-live-sports-odds-api-odds-20260816-145019`, ~1,797
-  of the 2,122 `DP_CRON_DID_NOT_FIRE` msgs across ~33 venues) shows average repeat gaps of ~25-26min against the
-  1800s(30min) cooldown, with occasional dips to ~13-14min — consistent with the residual read-then-write race
-  `RecurringCooldownState.record()`'s merge-fix (`ac21303714`) is documented to only partially close (two
-  simultaneous writers can still race), not a fresh regression. This volume is overwhelmingly the genuine,
-  already-tracked live-capture gap (odds never captured on ~33 sports-odds venues, unrelated to the dedup
-  mechanism) rather than a cooldown-defeat storm — classification unchanged from this doc's own established root
-  cause. No new code shipped this sweep (no new mechanism found beyond what `ac21303714` already addresses); no
-  new registry entry needed. The genuinely new finding this sweep (CME-OHLCV backfill-relaunch-wave
-  reconfirmation, unrelated to the dedup mechanism) was recorded on
-  `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md` instead, where its own P1 todo
-  already tracks it. Completing via `/done`.

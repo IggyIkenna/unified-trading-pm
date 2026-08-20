@@ -247,7 +247,7 @@ additions this surfaces, worth stating precisely rather than just appended:
       whether this exact JSON shape is even representative of what a LiteLLM-backed provider renders into a pane
       was also never independently confirmed. **Evidence: agent-orchestrator@16be42cc14**. Repo:
       agent-orchestrator.
-- [x] ✅ [BACKEND] P2. **NEW (found this session — coordinator cross-check against the installed SDK, folded into
+- [ ] [BACKEND] P2. **NEW (found this session — coordinator cross-check against the installed SDK, folded into
       todo 2's evidence above): trace and, if confirmed live, build a real proactive Codex rate-limit poller.**
       Map `RateLimitSnapshot.primary`/`.secondary.used_percent` (see todo 2's corrected evidence for the exact
       SDK types/line citations) straight onto the SAME generic `AccountUsageRow.five_hour_pct`/`weekly_pct`
@@ -259,55 +259,7 @@ additions this surfaces, worth stating precisely rather than just appended:
       — NOT yet traced, only the type surface was confirmed to exist. Done when: a real (or realistically
       simulated, if live Codex access is as constrained as NVIDIA's paused accounts were) call returns a
       populated `RateLimitSnapshot`, and a poller mirroring `glm_quota_poller.py`'s shape writes it onto
-      `AccountUsageRow`.
-
-      **RESOLVED 2026-08-20 — traced and built, real vendor read (not GLM's count-based estimate).** Direct
-      source read of the installed `openai_codex` SDK (`.venv/lib/python3.13/site-packages/openai_codex/`)
-      confirmed `AccountRateLimitsReadRequest` carries a literal `method: Literal["account/rateLimits/read"]`
-      field, and `CodexClient.request(method, params, *, response_model)` — the same generic typed-request
-      mechanism `run_codex_turn`/`codex_mcp_proxy.py` already use elsewhere in this bridge — is the real
-      transport; the response (`GetAccountRateLimitsResponse.rate_limits`, a real `RateLimitSnapshot`) carries
-      `.primary`/`.secondary` `RateLimitWindow` objects each with a real `used_percent` + real
-      `window_duration_mins`. `Codex` (the high-level wrapper) has no dedicated method for this call — confirmed
-      by reading every method on it — so the new poller reaches into its underlying `CodexClient` via `_client`,
-      same private-access pattern this repo's own `glm_quota_poller.py` already uses for a same-package
-      sibling. New file `server/codex_rate_limit_poller.py`: classifies `primary`/`secondary` by their REAL
-      reported `window_duration_mins` (not positionally — the SDK's own field docs make no ordering guarantee),
-      writes onto `AccountUsageRow.five_hour_pct`/`weekly_pct` exactly like GLM/Claude. Runs inside
-      `codex_bridge_server.py`'s OWN process (a new `lifespan` context manager) because that's the only process
-      with a real authenticated `openai_codex.Codex()` session — wired via a new
-      `config.codex_rate_limit_poll_interval_minutes` field (default 5min, mirrors GLM's cadence). 7 new unit
-      tests (`tests/test_codex_rate_limit_poller.py`) cover window classification (including the
-      reversed-primary/secondary case), a real `GetAccountRateLimitsResponse`/`RateLimitSnapshot`/
-      `RateLimitWindow` round-trip through the actual DB write path, and graceful SDK-call-failure handling.
-      **Real live verification post-deploy**: `journalctl -u codex-bridge` shows `CodexRateLimitPoller started
-      (interval=300s)` — the poller is genuinely running in production. **Evidence:
-      agent-orchestrator@25589117c3.** Repo: agent-orchestrator.
-
-- [x] ✅ [OPERATOR] P1. **NEW, found live 2026-08-20 during the rate-limit-poller deploy — self-corrected within
-      the same session, not currently blocking.** `journalctl -u codex-bridge` initially showed a real
-      `TransportClosedError: Codex process closed stdout` with a captured `stderr_tail` reading
-      `codex_models_manager::manager: failed to refresh available models: unexpected status 401 Unauthorized:
-      Provided authentication token is expired.` (timestamps ~08:50-09:35 UTC 2026-08-20) — read at first as a
-      currently-expired token needing an operator re-login. **Corrected by direct re-check, not assumed**:
-      inspecting `~/.codex/auth.json`'s structure (key names/types only, never the token values) showed
-      `auth_mode: "chatgpt"` with a standard `access_token`/`refresh_token` pair (the same short-lived-access
-      + rotating-refresh-token shape Claude's OWN interactive `/login` path uses —
-      `/codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md`'s comparison table — NOT a
-      long-lived install-once credential) plus `last_refresh: 2026-08-20T09:21:34Z`, only ~4h before this
-      check — meaning the refresh_token silently self-healed shortly after the observed crash. A real live
-      probe (`Codex().thread_start(...).run(...)` — the exact construction `run_codex_turn`/the new poller
-      use) confirmed a genuine turn succeeding right now (`"alive"`), not a stale/cached success. **Net: the
-      401 was a real, transient failure (not yet root-caused — network blip vs. a race between concurrent
-      codex subprocess launches are both plausible, neither confirmed), auto-recovered via the CLI's own
-      refresh logic, and is NOT currently blocking anything.** Left open as a real, unresolved question for a
-      future session: whether `auth_mode: "chatgpt"` (session-based, needs periodic silent refresh, apparently
-      not always reliable) should be swapped for an API-key-based login (`auth.json`'s own `OPENAI_API_KEY`
-      field, currently `null`; the SDK exposes `Codex().login_api_key()` / `ApiKeyLoginAccountParams` for
-      exactly this) — that would remove the refresh dependency entirely, mirroring Claude's own
-      `setup-token`/`ANTHROPIC_API_KEY` split, but shifts billing from whatever ChatGPT plan is behind the
-      current login to metered OpenAI API credits. An operator decision (cost tradeoff), not something to
-      switch unilaterally. Repo: agent-orchestrator.
+      `AccountUsageRow`. Repo: agent-orchestrator.
 - [ ] [BACKEND] P3. **Stronger proof, if wanted**: reproduce the NVIDIA 429 through a real (isolated,
       non-fleet) AO dispatch path end-to-end and confirm via the instance's own `activity_log`/
       `AccountUsageRow` whether anything gets recorded — the piece explicitly not done in this doc (see
@@ -362,7 +314,7 @@ agent-orchestrator@c48e37e281**. A separate, real, transient coverage-ratchet ba
 any of the above — confirmed via a YAML-only diff triggering the identical failure) was also realigned
 (**agent-orchestrator@90b372ea9f**) since it was blocking quickmerge fleet-wide, not just this work.
 
-- [x] ✅ [BACKEND] P2. **New, found live 2026-08-20**: `switch_slot_account`'s
+- [ ] [BACKEND] P2. **New, found live 2026-08-20, not yet fixed**: `switch_slot_account`'s
       `--resume`-onto-a-different-provider path breaks a large existing Claude session on GLM specifically —
       slot 7's forced Claude→GLM switch hit a real context-compaction failure immediately on resume ("Prompt
       is too long · automatic compaction failed"), while the SAME switch onto Gemini/Gemma completed a real
@@ -373,28 +325,6 @@ any of the above — confirmed via a YAML-only diff triggering the identical fai
       that don't transfer cleanly to GLM's real context window, independent of anything AO's own spawn code
       controls. Operator-flagged non-urgent relative to the codex-bridge/ollama-thinking findings above and
       below. Organic (fresh-spawn, no resume) dispatch onto GLM is confirmed unaffected — this is
-      resume-path-specific.
-
-      **ROOT-CAUSED and FIXED 2026-08-20, real precision this time.** `--resume`'ing a saturated
-      transcript triggers Claude Code's OWN client-side automatic-compaction-on-resume — that compaction
-      call has to read the ENTIRE saturated history first (same as any `/compact`), so if the resumed
-      session was already near its context ceiling, the compaction call itself fails, surfacing as the
-      observed "Prompt is too long · automatic compaction failed" immediately on reconnect, independent of
-      which provider it lands on. The REAL bug: this codebase already has an established, tested gate for
-      exactly this — `resume_fresh_context_pct` (`worker_liveness_watchdog._resume_or_fresh_respawn`,
-      `resume_lifecycle.classify_dead_worker`, `autospawn`'s own resume path, even
-      `main_agent_keeper.switch_main_account`) all refuse to `--resume` a session at/above this threshold —
-      but `switch_slot_account`/`switch_slot_model` (the two OPERATOR-emergency levers, `slots_ops.py`) were
-      the ONE pair of call sites that `--resume`'d unconditionally, bypassing it. Fixed by extracting a
-      shared `_refuse_resume_if_saturated()` guard (both endpoints are structural twins) that raises a 409
-      BEFORE killing the current session when `context_used_pct >= resume_fresh_context_pct` — the old
-      behavior killed the live, still-working session FIRST and only then discovered the resume was doomed,
-      leaving the slot with no live session at all instead of the operator's original one; the fix leaves
-      the original session completely untouched and tells the operator to use `/spawn` for a fresh start
-      instead. Found and fixed the SAME gap in `switch_slot_model` in the same pass (adjacent, same file,
-      same root cause — an operator switching just the model on a saturated slot was equally exposed).
-      2 new unit tests (`tests/test_switch_account.py`, `tests/test_switch_model.py`) confirm the 409 fires
-      and the live session/account/model are left genuinely untouched. **Evidence:
-      agent-orchestrator@25589117c3.** Repo: agent-orchestrator.
+      resume-path-specific. Repo: agent-orchestrator.
 
 - **context-scout 2026-08-20**: refreshed context_scope (6 entries)

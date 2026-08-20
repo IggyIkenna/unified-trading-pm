@@ -48,7 +48,7 @@ superseded_by:
 depends_on: []
 context_scope:
   [
-    /plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
+    /plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md,
     /cursor-configs/skills/context-scout/SKILL.md,
     scripts/docs/docspec.py,
     scripts/plan-hygiene/generate_context_scope_inventory.py,
@@ -107,32 +107,23 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
 
 ## Todos
 
-- [x] ✅ [SCRIPT] P1. **DONE 2026-08-20.** Backfill `context_scope` frontmatter across the full active plans/issues
-      corpus, then harden the field to required. **Final push**: at session start, prior daily context-scout cron runs
-      had already brought the corpus from the 2026-08-19 snapshot (511 STALE + 2 NEVER_SCOUTED) down to 29 STALE + 3
-      NEVER_SCOUTED — the residual was finally small enough to finish in one session. Dispatched 4 parallel `Agent`
-      calls (daily-incremental mode) over the 32 remaining docs; verified via `git status`/diff (not just the agents'
-      own reports, per this corpus's own "an agent's report is not sufficient evidence" lesson) — all 32 landed
-      correctly (one dispatch mis-delegated to its own nested sub-agents instead of doing the work directly, but its
-      nested chain still completed all 8 of its assigned docs correctly, confirmed via diff). Fresh
-      `generate_context_scope_inventory.py --json` post-backfill: **888/888 UP_TO_DATE**. Flipped
-      `scripts/docs/docspec.py`'s `context_scope` `FieldSpec` from `Req.E` to `Req.R` for both `plan` and `issue`
-      doc_types (lines 152, 181). Re-ran `check_frontmatter_schema.py` corpus-wide: found 12 docs missing the now
-      -required field that the inventory script's scope had excluded (8 `status: draft`/unlocked — scouted directly
-      this session; 4 `locked_by: live-defi-rollout` — left untouched, see follow-up below) — after fixing the 8,
-      **only the 4 genuinely-locked docs remain** as a known, deliberate exception (never bypass a lock per this
-      corpus's own rule). 3 already-over-cap docs (`data_completion_tradfi_2026_07_15.md` 1021→1022,
-      `defi_migration_audit_log_2026_07_24.md` 1000→1001, `pipeline_mode_source_batch_live_replay_standardisation_2026_06_05.md`
-      1008→1009) were already over the 1000L hard cap BEFORE this session's +1-line marker edit — qualifies for the
-      pre-existing "already over cap before this commit" exception per this corpus's own established precedent
-      (`lst_rate_honest_coverage_2026_07_21.md`, batch3 Progress Log 2026-08-03 entry). Follow-up filed:
-      `context_scope_backfill_locked_docs_residual_2026_08_20.md` (the 4 locked docs). Source:
-      `/plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`'s `[SCRIPT] P0` todo (its only
-      remaining item) — flip its checkbox too. **See this batch's own Deferred section below for a separately-flagged
-      data-correctness finding this todo's live measurement surfaced** (a different doc,
-      `context_scope_consumption_enforcement_2026_07_30.md`, currently asserts the backfill is already done and the
-      field is already required — true as of NOW, but was false when that doc made the claim; still worth a
-      `/plan-reconcile` pass on that doc's own claim-vs-timing).
+- [ ] [SCRIPT] P1. **Backfill `context_scope` frontmatter across the full active plans/issues corpus, then harden the
+      field to required.** Run the `/context-scout` skill's Phase 0-5 procedure (already fully built — batched sub-agent
+      fan-outs, write `context_scope: [...]`, verify every path resolves, dated Progress Log marker) over every doc
+      `generate_context_scope_inventory.py` reports as `NEVER_SCOUTED` or `STALE` — **measured live at drafting time:
+      626 in-scope docs, 616 NEVER_SCOUTED, 10 STALE, 0 UP_TO_DATE** (re-run the inventory script first; this count will
+      have moved by the time the todo is picked up). This is corpus-scale work — expect multiple incremental sessions,
+      not one sitting; the skill's incremental mode (skip docs already scouted and unchanged) makes repeated re-entry
+      cheap. Once `generate_context_scope_inventory.py` reports 0 NEVER_SCOUTED/STALE, flip `scripts/docs/docspec.py`'s
+      `context_scope` `FieldSpec` from `Req.E` to `Req.R` for both `plan` and `issue` doc_types (currently confirmed
+      still `Req.E` at both call sites, `scripts/docs/docspec.py:136,160`) as the final hardening commit. **Done when**:
+      `generate_context_scope_inventory.py --json` reports `NEVER_SCOUTED=0, STALE=0`, the `docspec.py` FieldSpec change
+      is shipped, and `check_frontmatter_schema.py` passes corpus-wide with the field now required. Source:
+      `/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`'s `[SCRIPT] P0` todo (its only
+      remaining item). **See this batch's own Deferred section below for a separately-flagged data-correctness finding
+      this todo's live measurement surfaced** (a different doc, `context_scope_consumption_enforcement_2026_07_30.md`,
+      currently asserts the backfill is already done and the field is already required — both false as of this
+      measurement).
 
 - [x] [BACKEND] P2. **Add a dispatcher-side watchdog that pages on same-plan priority-inversion/starvation, then
       backfill-check the live backlog for other instances.** In `agent-orchestrator/server/` (natural home alongside

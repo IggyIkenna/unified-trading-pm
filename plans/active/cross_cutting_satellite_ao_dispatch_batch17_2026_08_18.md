@@ -66,21 +66,19 @@ source: >-
       repo (not just PM) and a live dispatch test confirms a non-PM repo receives the trigger. Source:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md` todo 1.
       Repo: unified-trading-pm.
-- [x] ✅ [CI] P2. **Fix the misleading safety-net comment in the `main-backmerge-to-ldr.yml` caller stub, once P1
-      lands.** — comment corrected in **25 per-repo caller stubs** (23 shipped + verified on origin; 3 parked on
-      pre-existing QG reds, see Progress Log 2026-08-20)
-      It currently states the drift-tick is "now handled by PM's branch-health.yml (every 30 min) which
+- [ ] [CI] P2. **Fix the misleading safety-net comment in the `main-backmerge-to-ldr.yml` caller stub, once P1
+      lands.** It currently states the drift-tick is "now handled by PM's branch-health.yml (every 30 min) which
       dispatches this workflow" and that "for non-PM repos the push trigger covers the common case" — both
       mislead: the cadence is hourly, not 30 min, and (pre-P1) the dispatch never reached non-PM repos at all.
       **Correction to the source doc's own fix-location text (found during this extraction's conflict-check)**:
-      the misleading text physically lives in **each repo's thin caller stub** (`.github/workflows/main-backmerge-to-ldr.yml`,
-      the `uses:` stub pointing at the `unified-trading-ci`-hosted reusable workflow) — NOT in the reusable
-      workflow itself, which carries no such comment, and NOT `unified-trading-pm/scripts/workflow-templates/`
-      (deleted during the 2026-08-07/08 template-hosting migration, `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md`
-      todos 4/7). Depends on the P1 todo above landing first — the corrected wording depends on what the net actually
+      edit the reusable workflow hosted in `unified-trading-ci` — NOT `unified-trading-pm/scripts/workflow-templates/`,
+      which no longer hosts `main-backmerge-to-ldr.yml` at all (deleted during the 2026-08-07/08 template-hosting
+      migration, `fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md` todos 4/7 — every fleet
+      repo's own copy, including PM's, is now a thin `uses:` stub pointing at the `unified-trading-ci`-hosted
+      file). Depends on the P1 todo above landing first — the corrected wording depends on what the net actually
       becomes. Done-when: the comment accurately describes the post-P1 fleet-wide, hourly safety-net. Source:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md` todo 2.
-      Repo: 25 fleet caller stubs.
+      Repo: unified-trading-ci.
 - [ ] [CI] P2. **Add a detection surface for a FAILED backmerge run**, distinct from the already-shipped
       `backmerge_sync_failure` escalation wall_type (which polls for RESOLUTION of an already-open escalation on
       `DECISION=error` — a different mechanism, not proactive detection; see
@@ -121,15 +119,3 @@ source: >-
   32303502126 (`workflow_dispatch`, completed success — backmerge ran clean/noop). Shipped unified-trading-pm@96c163347f
   (Pass-1 QG green → quickmerge `--agent` landed → post-push ancestry verified). Items 2 (comment fix, unified-trading-ci)
   and 3 (failed-backmerge detection surface) remain open; item 2 depends on this landing per its own note.
-- **2026-08-20 (worker, slot 6, dispatch cross_cutting_satellite_ao_dispatch_batch17-640def3b3205)**: item 2 DONE —
-  corrected the misleading caller-stub comment in all 25 per-repo caller stubs (the plan's "edit the reusable
-  workflow in unified-trading-ci" pointer was wrong about the physical location — that file is the `workflow_call`
-  reusable workflow and carries no such comment; the misleading text is the per-repo stub comment). Shipped 23/25
-  via Pass-1 QG + quickmerge `--agent` and verified the corrected comment on `origin/live-defi-rollout` per repo
-  (`git show origin/live-defi-rollout:<file>` old-comment-count=0). **3 repos parked on pre-existing QG reds** —
-  features-service (RB-5e5dbb39), unified-trading-library (RB-09ca4f33), execution-service (RB-70f96454) — each
-  with an unrelated Python test failure (comment-only YAML change cannot cause it); the fix commit is ready
-  locally and ships once the blocker clears. **Finding filed**: on 5 repos the promote→`main-backmerge-to-ldr`
-  cycle silently reverted the shipped comment-only change (commit became a non-ancestor of
-  origin/live-defi-rollout) — the "ahead=0 ≠ landed" trap; 2 re-shipped + converged (fix now on main), root-cause
-  reproduction tracked in `plans/active/issues/main_backmerge_backmerge_cycle_reverts_caller_stub_comment_fix_2026_08_20.md`.

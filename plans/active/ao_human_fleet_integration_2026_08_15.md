@@ -652,11 +652,7 @@ investigation confirmed are both achievable with existing primitives:
 - [ ] [SCRIPT] P2. **Harsh — run one real, low-stakes task end-to-end (unchanged from the 2026-08-15 ruling).** Same
       steps as Ikenna's task todo above, `AO_SLOT_ID=9002`. Done when: the task shows up correctly in the "Human
       Fleet" dashboard page and a `TaskUsageRow` with `role_group="human"` exists for it
-      (`GET /api/backlog/usage/windows?role_group=human`). **Re-checked 2026-08-20 (interactive session, Harsh)**:
-      still genuinely blocked, same wall as Ikenna's identical todo — fetched the full live queued backlog
-      (706 tasks, same count as the 2026-08-18 check) via `GET /api/backlog?status=queued&limit=2000`: 0 without a
-      `blocked_reason`. Correctly left un-forced; re-check anytime the backlog shifts, or claim a task the operator
-      names directly.
+      (`GET /api/backlog/usage/windows?role_group=human`).
 - **[OPERATOR] P1. CANCELLED — SUPERSEDED 2026-08-18 (Ikenna, interactive session), duplicate of the "Harsh —
   hand to Harsh, pure verification" register todo above, accumulated from a repeated autonomous-loop tick and
   flagged (not actioned) by the 2026-08-17 na-eligibility-audit; deduped this session.**
@@ -784,19 +780,16 @@ investigation confirmed are both achievable with existing primitives:
       (`server/config.py:316-331` pattern), so a human slot renders nowhere in the generic table at all (not
       mislabeled, not present). Done when: a live dashboard check shows slot 9001 absent from the main Fleet
       table's rows entirely, still correctly present on the Human Fleet page. Repo: agent-orchestrator. Extracted to `plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md` item 4 (na-eligibility-audit 2026-08-19, ao tranche, RECLASSIFY per-todo split).
-- [x] ✅ [SCRIPT] P2. **Re-verify live whether `GET /api/agents?kind=human` still returns Ikenna's registered row** —
+- [ ] [SCRIPT] P2. **Re-verify live whether `GET /api/agents?kind=human` still returns Ikenna's registered row** —
       this plan's own 2026-08-16 Progress Log confirmed `agent_id=agt-f6b475`, `slot_id=9001`, `agent_kind=human`
       live in production. A same-day sibling issue doc (`plans/active/issues/ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`)
       reported a live check on 2026-08-18 finding ZERO human rows from that same endpoint — a direct contradiction
-      neither doc has reconciled. **RESOLVED 2026-08-20 (interactive session, Harsh)**: pulled `GET
-      /api/agents?kind=human` live via the registered bearer token (not SSM — the token path already works and is
-      simpler) — returns multiple live human rows right now: `harsh` (`agt-45655b`, `status:active`,
-      `online:true`, `last_ping:2026-08-20T14:30:10Z`, fresh) plus `ikenna-tab5`/`ikenna-tab6` (`active`) and
-      `ikenna-tab2` (`stale`). The 2026-08-18 "zero rows" report was a **transient snapshot, not a persisting
-      regression** — no crash/restart evidence found in this check, and the row is unambiguously live now under
-      the same registration from 2026-08-16 (no re-registration was needed to produce this result). Not
-      independently root-caused further since the state today is simply correct — no reproducible bug remains to
-      chase. Done when: met, live state confirmed with fresh evidence. Repo: agent-orchestrator.
+      neither doc has reconciled. Pull `GET /api/agents?kind=human` live (SSM read-only against the orchestrator
+      VM, `i-0c9b283b31d6b5ca7`) and determine which claim is currently true — if the row is genuinely gone,
+      root-cause why (a restart clearing state? a TTL/expiry? a bug regression?) rather than just re-registering
+      over it. Done when: the live state is confirmed one way or the other with fresh evidence, and if a real
+      regression is found, it's root-caused (not just patched by re-running `ao-register.sh`). Repo:
+      agent-orchestrator.
 
 ## Progress Log
 
@@ -922,14 +915,3 @@ investigation confirmed are both achievable with existing primitives:
   `uv pip install -e . --python .venv/bin/python3` resynced it (plain `uv pip install -e .` without an explicit
   `--python` silently targeted the pyenv global environment instead of `.venv` from this shell — worth remembering
   for any future manual dependency sync in a per-slot checkout). Evidence: `agent-orchestrator@24a249b42f`.
-- **2026-08-20 (interactive session, Harsh)**: Worked the plan's remaining Harsh-scoped/general open items directly
-  (this plan is `assigned_vm: NA`/`execution_scope: local-only`, so interactive work here is correct, unlike the
-  AO-dispatched plans this session was otherwise steering clear of). Resolved the `/api/agents?kind=human`
-  contradiction todo — live now, transient not regressive (see flipped checkbox above). Re-checked Harsh's own
-  task-cycle todo — still genuinely blocked, same 0-unblocked-of-706 wall as Ikenna's identical todo, correctly left
-  un-forced. Harsh's per-tab-visibility todo not actionable from this exact session — its cwd is the bare
-  `/active/unified-trading-system-repos` root, not a `.tabs/N` folder, so it structurally cannot produce a
-  `harsh-tabN` row regardless of anything done here; unchanged, waits on Harsh working from `.tabs/N` windows.
-  **Remaining open work, confirmed accurate**: Harsh's task-cycle (blocked on live backlog state) and Harsh's
-  per-tab visibility (waits on tab-scoped sessions) — both self-resolve once their real-world precondition clears,
-  neither is a code or doc gap.
