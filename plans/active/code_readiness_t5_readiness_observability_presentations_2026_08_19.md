@@ -475,8 +475,23 @@ todos only to confirm they are data-movement, then leave it.
       passing on current code. The issue doc's own `status: open` was stale for an already-fixed, already-tested
       defect; corrected in place rather than re-implemented. Its P3 live-verify todo stays genuinely open — needs
       a real future exhaustion window's journalctl output this pass does not have.
-- [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
-      `/codex/04-architecture/agent-orchestrator-alerting.md`.
+- [x] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
+      `/codex/04-architecture/agent-orchestrator-alerting.md`. **Verified 2026-08-20** via two independent layers:
+      (1) code — `agent-orchestrator/tests/test_alert_quality_overhaul.py`, 29/29 passing, including the two
+      SSOT-cited test-locks (`test_escalation_resolved_pages_only_when_it_previously_paged`,
+      `test_account_auth_recovered_still_pages`); the git-staleness close path
+      (`_maybe_fire_staleness_resolved`, `server/worker_liveness/_git_alerts.py:631`) is structurally guarded —
+      `if kicker._last_staleness_alert.pop(key, None) is None: return` — so the close notifier can never fire for
+      a condition that never paged OPEN. (2) live traffic — read `#agent-orchestrator-alerts` for the trailing 24h
+      (504 msgs). Every BLOCKED-question-answered message carries "closes the BLOCKED question opened `<ts>`
+      (`BLK-xxx`)"; every git-RED-recovered message either carries "closes the RED alert opened `<ts>`" or falls
+      back to a bare "RECOVERED" line — traced the bare form to `notify_git_staleness_resolved`'s own documented
+      fallback (`opened_at` lives in an in-memory, non-persisted dict; a server restart mid-episode loses it while
+      the persisted "was alerted" flag survives — an acknowledged degradation, not a silent-close bug: the
+      bookend still fires, only the timestamp-correlation detail is sometimes missing). Found no instance of an
+      alert paging OPEN with no matching close in the observable window. Not exhaustive over multi-day history
+      (several `[OPERATOR]` questions open before the 24h window couldn't be traced to a close from this sample
+      alone) — scoped to what the window could actually show, not claimed beyond it.
 - [x] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
       `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md` (11 open). **Mis-scoped at authoring,
       corrected 2026-08-20**: the doc's own frontmatter `repos:` is `[strategy-service, execution-service,
@@ -901,13 +916,13 @@ todos only to confirm they are data-movement, then leave it.
 | Manifest-hygiene 4 residual P2 items | Cannot be done yet — 2 need a VM launch (`detect_manifest_divergence.py` OOMs locally on 14M+-row manifests) | A deliberate VM-launch decision |
 | `dp_cron_did_not_fire` serving-revision verification | Cannot be done yet — needs gcloud auth this session doesn't have; already being tracked by dedicated 6-hourly sweeps | GCP credentials |
 | AO watchdog scheduled-timer wiring | Operator-owned — needs VM SSH | Operator |
-| Alert-bookend audit (every actionable alert gets a ✅ close) | Not done — large, open-ended, needs real audit time across Slack history | Nobody — real work, pick up next |
+| Alert-bookend audit | **DONE 2026-08-20** — code-verified (29 tests) + live-traffic-verified (24h/504-msg sample), no violations found; not exhaustive over multi-day history | — |
 | W19 corpus audit | **RESOLVED 2026-08-20** — both `/plan-reconcile` (892 docs, 301 findings, `unified-trading-pm@2af2763f9b`) and `/docs-reconcile` confirmed run today | — |
 | 433-doc non-spine tail | Not scoped this session — large | Nobody — needs a dedicated pass |
 | Post-phase codex audit, final gate | Gated on everything above | — |
 | `unified-trading-ci` slot-3 checkout, 3 stale unpushed commits | **RESOLVED 2026-08-20** — all 3 confirmed superseded by equivalent-content commits already on origin; rebase dropped them automatically, `ahead=0 behind=0` | — |
 
-**Recommended next**: the alert-bookend audit — the docs-reconcile remainder turned out to be mostly human-judgment-gated (1 stale finding closed this pass, rest genuinely need an operator call), so it's not a quick win after all. The bookend audit is real, bounded, self-contained work.
+**Recommended next**: the non-spine 433-doc tail (large, needs a dedicated pass) or the manifest-hygiene VM-launch decision — both remaining open items now need either real time or an operator call; the two self-contained quick wins (W19, alert-bookend audit) are both closed.
 
 ## Lessons carried forward (2026-08-20)
 
