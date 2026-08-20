@@ -100,3 +100,21 @@ just that this doc's numbers should not be read as evidence for the other doc's 
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:92319e5e5f802a59]: KEEP-NA, valid (conflict-parked) — both open todos (per-job reaped-stale-rate measurement + root-cause) read as bounded in isolation, but Track B of `ao_scheduled_jobs_review_gate_and_health_audit_2026_08_09.md` already claims this exact ground (per-job reaped-stale/timeout/error measurement across all 7 non-review-gate scheduled jobs) under an explicit 2026-08-17 operator ruling that Track B 'requires real judgment'. Conflict-check: NOT cleared — parked rather than reclassified or extracted, per the shared conflict-check protocol's verbatim-overlap rule (do not draft a competing todo, do not silently prefer either side). Flagging for an explicit operator ruling on whether this doc's narrower, already-partially-measured claim (3 jobs done this session) is exempt from Track B's broader NA ruling, or should simply feed its results into Track B when that audit runs.
 - **context-scout 2026-08-19**: populated context_scope (4 entries).
+- **ao-watchdog 2026-08-20**: re-pulled `check-scheduled-job-health.sh agents` (cumulative "retained" agents, same
+  un-day-scoped query as the 2026-08-18 baseline — NOT a clean day-over-day diff, a bigger sample of the same
+  ever-growing retained set). Fleet-wide: 89 retained, 28 reaped-stale (31%, down slightly from 36%/75 on 08-18 —
+  within noise, not a real change). Per-job, now with a much bigger sample than the original 3-job/48h pull:
+  `ag_closeout_auditor` 7/18 (39%), `cefi_reconciliation_auditor` 1/6 (17%), `context_scout_auditor` 5/7 (71%, up
+  from the small 2/4-sample 50% on 08-18 — same job, consistently high), `docs_reconciler` 8/18 (44%, vs the 0/5
+  sample on 08-18 — **the earlier 0% was small-sample noise, not a real baseline**; the true rate was always
+  closer to this), `na_eligibility_auditor` 1/20 (5%, consistent with 08-18's ~1%), `plan_reconciler` 6/20 (30%,
+  not measured individually on 08-18). Read as CLAIM-vs-MEASUREMENT correction, not a fresh regression: with more
+  data, `context_scout_auditor` and `docs_reconciler` are the two real above-fleet-average drivers (this doc's
+  original "not evenly distributed" hypothesis holds, just with `docs_reconciler` added to the suspect list
+  instead of being the healthy control it looked like on a 5-run sample). Feeds directly into the still-open
+  Track B claim above — not investigated further here (still parked pending the operator ruling on ownership).
+  Also worth noting live during this same run: `scheduled-dispatch/status` still shows exactly the 6 modes paused
+  that `ao_scheduled_dispatch_pause_reasons_2026_08_18.md`'s 2026-08-19 MEASURED UPDATE recorded (`ag_closeout`,
+  `cefi_mtds_smoke`, `ci_reconcile`, `na_eligibility`, `reconcile`, `report`) — unchanged since that doc's last
+  edit, so its open `[OPERATOR] P1` (record reasons for the 3 still-unexplained pauses) remains accurate and live,
+  not stale.
