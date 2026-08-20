@@ -431,6 +431,21 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W21 — the presentation artefacts (the acceptance test)
 
+> **⚠️ PLAN-CONFLICT FOUND, 2026-08-20 (T5)** — before hand-editing ANY of the four DOC todos below, read
+> `/plans/active/state_fabric_artefacts_2026_08_20.md` (authored 2026-08-20 15:04, different session, `status:
+> active`, unclaimed, `parent_epic: system_readiness_master` — same epic as this plan). It measured
+> `platform-external-api-walkthrough.html` as "a rollup, not a drilldown" (8 percentage values, zero shard-level or
+> per-day vocabulary) and diagnosed the root cause as exactly this tranche's own standing failure mode: numbers
+> hand-transcribed into HTML with no persisted source, so they rot. Its fix is architecturally different from "edit
+> the HTML directly against a skill's output" — it wants a **persisted, versioned readiness+coverage ledger** that
+> the artefacts RENDER FROM, explicitly naming `readiness-state-dump` and `honest-coverage-dump` (the two tools
+> this tranche owns and extended today — grain fix `065067f345`, dedup stats `bb81afbcaa`, execution-instruction
+> wiring `8d47cf3393`) as the ledger's authoritative source. Hand-editing the four HTMLs below right now risks being
+> reworked/wasted once ledger-binding lands. **Also corrects scope**: seven artefacts need updating against the
+> 27 R17-R27 rulings, not four — `platform-api-reference`, `carveout-engineering`, `ODUM_Elysium_Phase2_Update`
+> were missing from earlier accounting (the last two are outside this plan's originally-scoped four). Holding these
+> four todos pending coordination on which approach to follow — not starting a manual re-derivation that the ledger
+> plan would then have to undo.
 - [ ] [DOC] P0. Re-derive `platform-architecture.html` from measured state. Every remaining marker must be live or
       one of the five allowed pending states.
 - [ ] [DOC] P0. Re-derive `platform-external-api-walkthrough.html` — the heaviest artefact by gap count (28
