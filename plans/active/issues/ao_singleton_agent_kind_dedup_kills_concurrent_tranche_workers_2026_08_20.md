@@ -144,26 +144,41 @@ self-heals NEVER, silently defeating the whole point of the automated sweep for 
 - The automated dead-lock sweep cannot recover from this failure mode at all (narrow `reaped-stale`-only check),
   so every occurrence requires a manual investigation + clear, same as this session did.
 
-## Proposed fix direction (not implemented here — scoping only)
+## Proposed fix direction
 
-- [ ] [BACKEND] P1. In `server/state_store/agents.py::_sessionless_singleton_duplicates`, make the dedup grouping
+- [x] [BACKEND] P1. In `server/state_store/agents.py::_sessionless_singleton_duplicates`, make the dedup grouping
       tranche-aware for the modes that support concurrent tranche-sharded dispatch (`plan_reconciler`,
       `docs_reconciler` if it shares the same risk, `ag_closeout_auditor`/`na_eligibility_auditor` if they were ever
       added to a similar set) — e.g. group by `(agent_kind, tranche)` parsed from `label`/`current_task`/a new
       column, or exclude tranche-sharded kinds from `_SINGLETON_AGENT_KINDS` entirely and rely on the existing
       `_tranche_dispatch_gate` (`plan_health.py`) same-day same-tranche collision guard instead, which IS
       tranche-aware. Needs a regression test proving 2 concurrent different-tranche `plan_reconciler` registrations
-      both survive a `reap_orphan_agents()` tick.
+      both survive a `reap_orphan_agents()` tick. — **Done: `agent-orchestrator@e8d83540`.** Went with the
+      exclude-from-`_SINGLETON_AGENT_KINDS` option (checked `docs_reconciler`'s own mode `"docs_reconcile"` against
+      `plan_health.py`'s `_TRANCHE_GATED_MODES = frozenset({"reconcile", "na_eligibility", "ag_closeout"})` first —
+      it is NOT tranche-gated, so it correctly stays a singleton; only `plan_reconciler`'s `"reconcile"` mode both is
+      tranche-gated AND was in `_SINGLETON_AGENT_KINDS`, confirming this was the one live collision, not a class of
+      several). Added `test_concurrent_tranche_plan_reconciler_not_deduped_as_singleton` (mirrors the existing
+      `test_multi_instance_cicd_not_deduped_as_singleton`); all 87 tests in the two affected test files pass.
 - [ ] [BACKEND] P2. Investigate why `agt-d46d9a`/`agt-c82f06` did not register as "owning a live session"
       (`_owns_live`/`tmux_session`) while a concurrent sibling did, at the same tick — if tranche-sharded scheduled
       workers structurally don't reliably populate `tmux_session` the same way persistent workers do, that is a
-      second, independent contributor worth understanding before the fix above ships.
-- [ ] [BACKEND] P2. Extend `plan_reconciler_dead_lock_sweep.py::assess_lock()` to also recognize
+      second, independent contributor worth understanding before the fix above ships. Note (2026-08-20): the P1 fix
+      above ships without this — removing `plan_reconciler` from `_SINGLETON_AGENT_KINDS` means the singleton-dedup
+      path this question was diagnosing no longer runs for it at all, so this is no longer a blocker for the P1 fix;
+      still worth understanding separately for dashboard "who owns this session" display accuracy.
+- [x] [BACKEND] P2. Extend `plan_reconciler_dead_lock_sweep.py::assess_lock()` to also recognize
       `exit_reason in ("superseded-plan_reconciler", "lifecycle-complete")` as confirmed-dead for the specific
       `plan_reconciler_findings_*.md` lock class (a worker's own self-stamped progress-lock correlated to a
       dispatch id AO's own state confirms is over, regardless of which specific termination path ended it) — closes
       the gap that made TWO manual investigations necessary today for exactly the failure class the sweep exists to
-      auto-heal. Cite this doc + the 2026-08-15 ruling in the follow-up commit.
+      auto-heal. Cite this doc + the 2026-08-15 ruling in the follow-up commit. — **Done, partially:
+      `agent-orchestrator@e8d83540`** added `superseded-plan_reconciler` (unambiguous once the P1 fix ships — that
+      exit_reason can no longer be produced for any NEW dispatch, so any row carrying it is confirmed evidence of the
+      historical bug, not a live worker). Deliberately did **not** add `lifecycle-complete` — that's a genuine
+      self-reported `/done`, and the P3 finding below raises a real open question about whether it always implies
+      the worker reached its own unlock step; auto-clearing on it would risk papering over that exact failure mode
+      rather than confirming it. Left as an explicit open policy question rather than silently deciding it.
 - [ ] [BACKEND] P3. Separately: `agt-07473e` reached `lifecycle-complete` (a genuine `/done` call) while its own
       findings doc's `locked_by:` was never cleared and its Progress Log's last entry describes ongoing work, not a
       wrap-up — worth checking whether `agents/plan_reconciler.md`'s STEP 7 (unlock) is reliably reached before a
@@ -177,3 +192,11 @@ self-heals NEVER, silently defeating the whole point of the automated sweep for 
   independently reproduced/tested — this is a root-cause writeup from live evidence, not a shipped fix. `assigned_vm`
   left `NA` pending an operator/dispatch decision on scope (touches `agent-orchestrator` core reaper logic used by
   every scheduled-job kind in `_SINGLETON_AGENT_KINDS`).
+- **2026-08-20 (same day)**: P1 + one of the two P2 follow-ups shipped — `agent-orchestrator@e8d83540`. Removed
+  `plan_reconciler` from `_SINGLETON_AGENT_KINDS`; confirmed via `plan_health.py`'s own `_TRANCHE_GATED_MODES` that
+  `docs_reconciler` is NOT tranche-sharded (so correctly stays a singleton) and this was the only live collision.
+  Extended `plan_reconciler_dead_lock_sweep.assess_lock()` to recognize `superseded-plan_reconciler` as
+  confirmed-dead (not `lifecycle-complete` — left open, see the P3 todo). Added 2 regression tests; 87/87 pass in
+  the two affected test files. `tofu validate`/quickmerge full quality-gates all green. The remaining P2
+  (`_owns_live`/`tmux_session` investigation) and P3 (STEP 7 unlock reliability) items stay open as genuine
+  investigative follow-ups, not blocking.
