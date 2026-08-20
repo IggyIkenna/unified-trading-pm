@@ -131,11 +131,11 @@ single-concurrency slot, ad-hoc dispatches starve it. Read
 
 > #1 source of false-progress. Half-1 without Half-2 in the SAME turn is a violation.
 
-**Half 1 — commit per unit, SHIP once the instruction is done** (2026-08-20, exceptions in SSOT): pre-commit
-MANDATORY `git status && git diff --cached --stat` (NO path arg); `git restore --staged` anything not yours; stage by
-name, never `git add .`/`-A`. **Half 2 — flip the plan checkbox in the SAME turn**: `N. ✅ [item] — <repo>@<sha> +
-evidence`, commit with the MANDATORY `docs(plans):` prefix. **Half 3 — session-end**: non-final multi-item sessions
-get a `## Deferred work after <date>` table. SSOT: `/codex/12-agent-workflow/commit-push-flip-rule.md`.
+**Half 1 — commit + push at every shippable unit**: pre-commit MANDATORY `git status && git diff --cached --stat` (NO
+path arg); `git restore --staged` anything not yours; stage by name, never `git add .`/`-A`. **Half 2 — flip the plan
+checkbox in the SAME turn**: `N. ✅ [item] — <repo>@<sha> + evidence`, commit with the MANDATORY `docs(plans):` prefix.
+**Half 3 — session-end**: non-final multi-item sessions get a `## Deferred work after <date>` table. SSOT:
+`/codex/12-agent-workflow/commit-push-flip-rule.md`.
 
 ## Multi-agent safety (per-slot worktrees)
 
@@ -403,10 +403,11 @@ domain index below is the shortcut for known domains; L0/L1 grep covers everythi
 ## System map + workspace configs
 
 Repo map: events→UTL · schemas→UAC · cloud→unified-cloud-interface · market data→MTDS · execution→execution-service ·
-reference data→instruments-service (URDI = live internal module, not "phantom") · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui` (devops + launch consoles;
+reference data→instruments-service (URDI is a live internal module — "phantom" label retired 2026-07-12; no NEW URDI
+refs in docs) · UI→`unified-trading-system-ui` (incl. DART) + `deployment-ui` (devops + launch consoles;
 `user-management-ui` ARCHIVED) · orchestration→`agent-orchestrator` (uvicorn :8765). **deployment-api** = single
 deploy/launch+subscriptions backend for both UIs. **Architecture**: Central orchestrator VM (id `planning`, EIP
-13.113.200.22) with N slot workers, role-based dispatch (single-VM since 2026-06-27).
+13.113.200.22) with N slot workers, role-based dispatch (no per-epic VMs; single-VM architecture 2026-06-27).
 **`planning` is the ONLY VM** (human-planning TERMINATED 2026-08-03). Workspace configs canonical in
 `unified-trading-pm/cursor-configs/` (setup `scripts/workspace/setup-workspace-config-symlink.sh`; strict basedpyright).
 Claude Code TEAM settings = git-TRACKED `cursor-configs/settings.json`, inherited via the per-slot
@@ -421,7 +422,7 @@ proxy ES256 / accounts via GSM, never `.credentials.json`; backlog plan-driven (
 hand-edit `backlog.yaml`); role-dispatch routes tasks to spawned workers by skill (central + role registry); runtime
 self-heals (AutoSpawn/failover/watchdog ON — never manually kill tmux). **Orchestrator `tuning.*` knobs are env-free**
 (`TuningDefaults`) — change the code default + redeploy; `.env.local` silently no-ops. **Checking live backlog/dispatch
-status from a dev checkout** (no JWT; `:8765` IS public, auth-gated): `/check-agent-orchestrator` skill or
+status from a dev checkout** (no JWT, VM:8765 has no inbound rule): `/check-agent-orchestrator` skill or
 `agent-orchestrator/scripts/orchestrator/check-ao-backlog-status.sh` — read-only via AWS SSM, never a manual
 API-guessing session. SSOTs: `/codex/04-architecture/runtime-deployment-topology.md`,
 `/codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md`.

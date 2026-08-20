@@ -21,7 +21,9 @@ scope: [engineer]
 tags: [sports, migration, canonicalisation, gcs, manifest, re-stamp, delete-safety, reversibility-qualified]
 related:
   [
+    /plans/archive/2026_08/sports_taxonomy_p1_capture_and_contracts_2026_08_08.md,
     /plans/active/sports_taxonomy_p4_backfill_2026_08_08.md,
+    /plans/archive/2026_08/issues/sports_af_full_entity_completion_2026_08_03.md,
     /plans/active/sports_taxonomy_p2_consumer_inventory_2026_08_12.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/02-data/four-surface-reconciliation-procedure.md,
@@ -46,8 +48,12 @@ depends_on: [sports_taxonomy_p1_capture_and_contracts_2026_08_08, sports_af_full
 gate_on_depends: true
 context_scope:
   [
-    /codex/02-data/sports-data-types-catalog.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/02-data/four-surface-reconciliation-procedure.md,
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /codex/05-infrastructure/gcs-object-operations.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+    market-tick-data-service/scripts/sports/restamp_sports_bookmaker_venue_2026_07_27.py,
   ]
 source: ["sports venue/data-type audit, 2026-08-08 interactive session — 27 operator rulings"]
 locked_by:
@@ -992,6 +998,3 @@ returns < 604800, the delete falls back to approve-executes and the todo must st
   VERIFY PASSED 0 remaining. `market-tick-data-service@7b1e6e87` + `deployment-service@b4aef3e1`, VM
   `canonical-migration-sport-residue-blank-venue-purge`, exit rc=0, self-deleted. **CORRECTED (plan_reconciler,
   2026-08-19)**: old claim path-dup sweep was `[ ]` was stale — `## Todos` line ~576 shows `[x]` DONE 2026-08-15.
-- **context-scout 2026-08-20**: rebuilt context_scope (2 entries) — 25/26 todos now done; the sole remaining item
-  (P0 BLOCKED-OPERATOR-DECISION) points only to `sports-data-types-catalog.md`'s correction banner and the
-  eventual phantom-row cleanup's delete-safety protocol. Dropped 4 entries mapped to now-completed re-stamp/purge work.

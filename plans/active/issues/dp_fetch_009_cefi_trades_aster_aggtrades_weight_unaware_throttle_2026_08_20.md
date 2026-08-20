@@ -54,7 +54,6 @@ context_scope:
   [
     /plans/active/issues/dp_fetch_009_cefi_depth_of_book_10_corrective_migration_overreach_2026_08_16.md,
     /codex/05-infrastructure/data-pipeline-alerts.md,
-    /codex/05-infrastructure/vm-tarball-deployment.md,
     market-tick-data-service/market_tick_data_service/market_interface/clients/aster_base_client.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain_perps/aster_adapter.py,
   ]
@@ -216,6 +215,3 @@ a re-fire of the SAME already-root-caused condition, NOT a new regression.
   `captured` only when a future ASTER batch run passes over them (todo 2's retry-failed path) —
   the restart alone re-captures the cells the running VMs had already failed; the older failed
   cells need a resumed run, unchanged by this action.
-
-- **context-scout 2026-08-20**: refreshed context_scope (5 entries) — added the VM-deployment codex doc backing
-  the "Re-fire resolution" section's root cause (manual tarball deploy vs. LDR self-pull).

@@ -23,7 +23,7 @@ related:
     /plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md,
     /plans/active/issues/local_host_concurrent_qg_serial_rule_violated_2026_08_15.md,
     /plans/active/issues/na_audit_progress_log_extracted_checkbox_never_flipped_pattern_2026_08_16.md,
-    /plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md,
+    /plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md,
     /plans/active/manifest_v9_residual_2026_08_15.md,
   ]
 created: "2026-08-17"
@@ -139,7 +139,7 @@ source: >-
       `ExecutionOrchestrator`'s actual method signature against the `LiveOrchestrator` protocol definition directly
       (do not trust the source doc's relay alone), confirm the instruction-type and return-type mismatch claims with a
       direct citation of both sides. Repo: execution-service. Source:
-      `plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
       — **CONFIRMED, both mismatch claims hold, both sides read directly (no line trusted from the issue doc's own
       relay).** Protocol side: `execution_service/orchestration/orchestrator.py:44-46`, `LiveOrchestrator(Protocol)`
       declares `async def execute_instruction(self, instruction: StrategyInstruction) -> dict[str, object]: ...`
@@ -162,7 +162,7 @@ source: >-
       `LiveOrchestrator` and would receive an `ExecutionOrchestrator` instance in production, and check whether a
       `None` return where a `dict` is expected would raise, silently no-op, or corrupt downstream state. Depends on the
       prior todo landing first. Repo: execution-service. Source:
-      `plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
       — **Blast radius: exactly ONE production cast site, two production call chains, both RAISE (not silent
       no-op/corruption) — but as a caught-and-masked HTTP 500 while the underlying broker order may already have
       executed.** Cast site: `execution_service/operations/manual/__init__.py:61`
@@ -189,21 +189,11 @@ source: >-
       `None`. No other `cast(LiveOrchestrator, ...)` site exists in the repo (grepped `execution_service/` +
       `tests/`) — this is the full blast radius. Next todo (real end-to-end test) should assert on this exact
       false-negative-on-success behavior, not just the type mismatch.
-
-      **CORRECTION 2026-08-20 (T4, fixing the actual bug)**: the "already submitted, then masked by the
-      None-return" claim above was never verified against the real `ExecutionOrchestrator`, only against a
-      hand-built fake (the next todo's own test). Direct measurement: the real class crashes on its FIRST line
-      (`instruction.algorithm`) when given a `StrategyInstruction`, which has `.algo` not `.algorithm` — before
-      market data, risk preflight, or ANY venue interaction. No order was ever at risk of a
-      false-negative-on-success; the real defect was simpler (wrong type passed; a converter built for exactly
-      this had zero callers) but still a real P0 — the manual live-execution path was unconditionally broken.
-      Fixed `execution-service@197e80116`; full detail
-      `/plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
 - [x] ✅ [TEST] P1. Add a real (non-mock) end-to-end test of the production live-execution path, matching the pattern the
       W1 sub-agent's own test used (`tests/unit/test_external_instruction_api.py` in execution-service) — a real
       `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
       contract itself. Repo: execution-service. Source:
-      `plans/archive/2026_08/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
+      `plans/active/issues/execution_service_live_orchestrator_protocol_mismatch_untested_2026_08_16.md`.
       — execution-service@d6e9ad19f9.
 
 ## Progress Log

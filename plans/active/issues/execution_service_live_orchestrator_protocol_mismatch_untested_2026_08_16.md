@@ -7,7 +7,7 @@ summary: >-
   doesn't fit the protocol it's cast to). Not independently re-derived in full here — the cited function location was
   spot-checked and exists; the protocol-mismatch and return-type claims are relayed from the sub-agent's
   investigation, not re-verified line-by-line.
-status: archived
+status: open
 nature: notes
 asset_group: [cross-cutting]
 stage: [execution]
@@ -30,7 +30,7 @@ assigned_vm: NA
 assigned_role: backend_engineer
 effort: medium
 locked_by:
-resolved_by: execution-service@197e80116
+resolved_by:
 context_scope:
   [
     /plans/active/nick_ai_platform_readiness_remediation_2026_08_16.md,
@@ -80,19 +80,7 @@ full verification.
       `execution-service`, per `nick_ai_platform_readiness_remediation_2026_08_16.md`'s W1 evidence) — a real
       `LiveOrchestrator`-conformant implementation exercised end-to-end, not a mock standing in for the interface
       contract itself.
-- [x] ✅ [AGENT] P2. **Fixed — `execution-service@197e80116` (T4, 2026-08-20).** **Correction to this issue's own
-      blast-radius diagnosis first**: the batch14 sub-agent's "already submitted to venue, then masked by the
-      None-return" narrative was never verified against the real `ExecutionOrchestrator` — only against a
-      hand-built fake. Direct measurement: the real class crashes on its FIRST line
-      (`instruction.algorithm`, `engine/orchestrator.py:240` at diagnosis time) when given a `StrategyInstruction`
-      (which has `.algo`, not `.algorithm`) — before market data, risk preflight, or ANY venue interaction. The
-      real fix widened `LiveOrchestrator.execute_instruction`'s protocol parameter type to `Instruction` (matching
-      the one real implementation) and wired `ManualOperationHandler.execute()` to convert via
-      `manual_request_to_instruction` (built for exactly this, zero callers until now) before calling. Separately,
-      `execute_instruction` now genuinely returns `dict[str, object]` on both non-exceptional paths that used to
-      fall through to `None`. Both fixed test files corrected to describe reality rather than left encoding the
-      wrong narrative. Full detail:
-      `/plans/active/code_readiness_t4_execution_settlement_2026_08_19.md` Progress Log, 2026-08-20.
+- [ ] [AGENT] P2. **Fix the mismatch** (either widen the protocol to match the real return/instruction shape, or fix
       `ExecutionOrchestrator` to genuinely conform) once the above confirms the real shape of the problem — do not
       guess the fix before the trace above is done.
 

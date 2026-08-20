@@ -127,17 +127,6 @@ invisible to `regen_backlog_from_plan.py`).
   design-judgment call found. Flipped `assigned_vm: NA -> planning`, added `assigned_role: worker` (was missing).
   Companion: `manifest_hygiene_daily_ag_list_boilerplate_bug_2026_08_19_finalize_2026_08_19.md`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
-- **2026-08-20 (slot-33, escalation agt-56f0d4)**: todo 1's AG-list bug recurred live in today's
-  daily run (`plans/active/issues/manifest_hygiene_red_changed_all_2026_08_20.md` — defi named
-  in prose again with no CSV) and was fixed at the root in the same session, alongside a second,
-  independently-found half of the same pattern (the Finding-classes sentence was ALSO hardcoded
-  regardless of `--mode`, naming `phantom_captured_no_parquet`/`shard_4pillar_fail` on
-  `--mode changed` runs even though those checks are scoped out entirely in that mode). Both
-  fixed in one commit, `e2e-testing@0a43d0ec70`, with regression test
-  `test_run_what_i_found_names_only_actual_findings`. **Not checking todo 1 done yet** — its own
-  "Done when" requires live verification against a re-run/the next real daily-cron output, which
-  hasn't happened; the next reconcile pass or tomorrow's 08:00 UTC cron run should confirm the
-  fresh issue-doc prose names only real findings, then flip this checkbox.
 - **2026-08-20 (slot-32, P1 [DATA] verdict + fix)**: defi's manifest-hygiene leg IS running and genuinely clean —
   NOT broken. Verdict evidence: (1) `deployment-service/terraform/gcp/data_pipeline_audit_scheduler.tf` runs
   `manifest_hygiene_daily.py --mode changed` daily 08:00 UTC with NO `--asset-group` filter → all 5 AGs (incl.

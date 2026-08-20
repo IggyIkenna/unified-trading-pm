@@ -10,7 +10,7 @@ status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
-repos: [deployment-service, execution-service, fund-administration-service, strategy-service, unified-api-contracts]
+repos: [deployment-service, execution-service, strategy-service, unified-api-contracts]
 scope: [engineer, admin]
 tags: [client-isolation, governance, uac, execution, strategy, data-correctness]
 related:
@@ -27,8 +27,7 @@ parent: master_to_live_defi_2026_05_23
 co_operators:
 codex_ssots:
 related_plans: []
-last_updated: 2026-08-20 # was 2026-07-08 -- added fund-administration-service to repos:, the wallet-transfer +
-  # per-client-isolation redemption-cadence work in redemption_wallet_transfer_execution_2026_08_20.md lands here.
+last_updated: 2026-07-08
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
 ---

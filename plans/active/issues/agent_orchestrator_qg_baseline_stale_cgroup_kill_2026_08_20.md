@@ -42,11 +42,9 @@ resolved_by:
 related: [infra_consolidated_closeout_2026_07_25]
 context_scope:
   [
-    /plans/active/issues/agent_orchestrator_quickmerge_orphan_reap_kills_interactive_background_2026_08_20.md,
     unified-trading-pm/scripts/quality-gates-base/qg-host-governor.sh,
     unified-trading-pm/scripts/dev/measure-qg-baseline.sh,
     unified-trading-pm/scripts/dev/qg_resource_baseline.json,
-    /plans/active/qg_host_adaptive_resource_governor_2026_07_14.md,
   ]
 ---
 
@@ -143,7 +141,3 @@ Escalation `agt-ddcd59` (slot 32, `local_ratchet_gate_breach`, repo=agent-orches
 deaths at ~98% pytest completion before root-causing via `qg-host-governor.sh` source read +
 `/sys/fs/cgroup/.../memory.events` + `qg_resource_baseline.json` cross-check. Superseded as the shipping blocker's
 root cause per the CORRECTION above, same session, ~90 minutes later.
-
-## Progress Log
-
-- **context-scout 2026-08-20**: populated context_scope (5 entries).

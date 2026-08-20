@@ -34,7 +34,12 @@ stage: [meta]
 repos: [unified-trading-pm]
 scope: [engineer, admin]
 tags: [cloud-scheduler, cloud-run, zombie, dead-target, infra-health-audit, gcp, bulk-triage]
-related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]
+related:
+  [
+    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
+    /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md,
+    /plans/active/infra_consolidated_closeout_2026_07_25.md,
+  ]
 created: 2026-08-07
 last_updated: 2026-08-20
 parent_epic: observability_master
@@ -54,12 +59,7 @@ resolved_by:
 depends_on: []
 source:
   "infra_health_audit_findings_fix_2026_08_07.md todo 1 (Dedicated zombie sweep) — Cloud-Scheduler-dead-target class"
-context_scope:
-  [
-    /plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md,
-    deployment-service/terraform/gcp/t1_batch_scheduler.tf,
-    /plans/active/issues/deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md,
-  ]
+context_scope: [/plans/archive/2026_08/infra_health_audit_findings_fix_2026_08_07.md, /plans/archive/issues/infra_health_audit_alert_coverage_gaps_2026_08_07.md]
 ---
 
 # 38 asia-northeast1 (+1 europe-west1) Cloud Scheduler jobs with dead Cloud Run Job targets
@@ -423,4 +423,3 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
 - **2026-08-20 (slot 27, dispatch agt-21dce5)**: Corrected the stale candidate-(2) execution record above after
   direct GCP verification. The dead asia target is now `PAUSED`; the real europe-west1 twin is `ENABLED` on the same
   `15 0 * * *` schedule. This was a reversible scheduler-state correction; no Cloud Run Job was deleted.
-- **context-scout 2026-08-20**: refreshed context_scope (3 entries).

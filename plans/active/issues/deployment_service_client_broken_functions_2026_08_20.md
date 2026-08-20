@@ -40,11 +40,14 @@ source: >-
 context_scope:
   [
     deployment-api/deployment_api/clients/deployment_service_client.py,
-    /plans/active/deployment_service_api_integration_cleanup_2026_08_18.md,
     deployment-api/deployment_api/services/deployment_manager.py,
-    deployment-api/deployment_api/routes/deployments/_lifecycle.py,
-    deployment-api/deployment_api/routes/deployment_state.py,
     deployment-api/deployment_api/routes/data_status_helpers.py,
+    deployment-api/deployment_api/workers/_deployment_processor_helpers.py,
+    deployment-api/deployment_api/workers/_deployment_processor_cloud_run.py,
+    deployment-api/deployment_api/services/event_processor.py,
+    deployment-api/deployment_api/routes/deployment_state.py,
+    deployment-api/deployment_api/routes/deployments/_lifecycle.py,
+    deployment-ui/src/api/client.ts,
   ]
 ---
 
@@ -87,5 +90,3 @@ same unreachable-HTTP defect (`deployment_service_client.py:29-31`).
 
 - **2026-08-20 (slot-15):** Audit completed and all nine live call chains plus both uncalled quota helpers were
   independently traced. No code was changed. Follow-up issue filed from the parent plan's required findings triage.
-- **context-scout 2026-08-20**: trimmed context_scope to 6 entries (from 9, all source-only) — added the parent
-  cleanup plan as the pattern-precedent citation.

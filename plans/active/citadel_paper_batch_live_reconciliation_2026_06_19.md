@@ -275,9 +275,7 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       (validated for the paper↔batch-rerun path; full live-boundary parity pends Phase 2 trade-keying).
 - [ ] [INFRA] P2.7.3. **Live → reconcile to paper → (∴ to batch)** — same machinery with real venue fills; report
       live↔paper execution alpha + confirm `live↔batch = determinism(≈0) + execution(measured)`. Repo: (gated on live
-      custody readiness — `BLOCKED-OPERATOR-DECISION` until a live wallet is approved). **Re-confirmed still correctly
-      blocked, 2026-08-20 (T4 execution-settlement tranche)** — wallet keys/custody remain a human-only hard-stop per
-      workspace rules; no live wallet has been approved since this was last tagged. Left as-is.
+      custody readiness — `BLOCKED-OPERATOR-DECISION` until a live wallet is approved).
 - [x] ✅ [INFRA] P2.7.4. **`blrs-daily-determinism` Cloud Run Job wired to the wrong CLI operation, paging daily** —
       DONE (2026-08-18, `deployment-service@e3826a7f7c`). DP-WATCHER-006 CRITICAL page every scheduled run since
       `paper_determinism_enabled` flipped to `true` by default: Stage B invoked `--operation reconcile` (the
@@ -670,9 +668,6 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       `citadel_satellite_ao_dispatch_batch1_2026_08_08.md`; sub-part (b) the cs retrain stays HERE (not extracted)
       because it composes with P2.11.15 below, which the satellite batch's conflict-check found duplicates
       `crypto_alpha_research_2026_07_24.md`'s own open `[RESEARCH] P2` todo — see register § A for the full citation.
-      **Reviewed 2026-08-20 (T4 execution-settlement tranche), left untouched**: this sub-part (b) is a strategy-service
-      ML-retrain task, out of the batch-live-reconciliation-service-only repo allocation this session was scoped to;
-      not attempted.
 - [x] ✅ [CODE] P2.11.19. **Reversion execution-timing model — SHIPPED 2026-06-22: execution-service@4b8dc545.** New
       `backtest_v2/reversion_timing.py` (`time_reversion_fill`): the research z-score `-(p−mean_W)/std_W` times the fill
       to the first over-extension bar in the trade's favour (BUY at z>thr / SELL at z<−thr) within the window, **CLAMPED
@@ -740,9 +735,6 @@ audit) — 3 genuinely orphaned BLRS gaps, no successor plan previously tracked 
       working tree and git history); restore it via `e2e-testing/scripts/paper_trading/RECOVERY.md`'s documented
       `gcloud storage rsync -r gs://backtest-results-central-element-323112/paper_engine/research_archive/code
       ./research_code`, then apply the retrain against the maintained engine in `e2e-testing/scripts/paper_trading/`.
-      **Reviewed 2026-08-20 (T4 execution-settlement tranche), left untouched**: needs a GCS corpus restore + an
-      ML retrain against e2e-testing's maintained engine, neither of which is batch-live-reconciliation-service code —
-      out of this session's repo-scoped allocation; not attempted.
 
 - **[UI] P2.14.** Prod UI selector resolves the 14-strategy run, not the 145-run (found 2026-06-21). The CRA API
   correctly resolves + serves the newest run `paper-20260621225959-e86237f7` (145 strategies / 7 archetypes — verified

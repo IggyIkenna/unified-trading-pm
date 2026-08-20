@@ -46,7 +46,9 @@ context_scope:
   [
     /plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md,
     /plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md,
+    /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
     unified-trading-pm/scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    unified-api-contracts/unified_api_contracts/registry/venue_granularity.py,
   ]
 source: >-
   /na-eligibility-audit cross-cutting tranche, dispatch agt-7e78e2, slot 28, 2026-08-17. Each item's own Source:
@@ -143,5 +145,3 @@ source: >-
 - **context-scout 2026-08-19**: re-verified context_scope (5 entries, unchanged) — all 5 open todos still map 1:1 to
   the 3 already-cited source docs plus the 2 already-cited code targets (`generate_na_doc_tranche_inventory.py` for
   the hash-fix items, `venue_granularity.py` for the granularity-view item); all paths confirmed resolving on disk.
-- **context-scout 2026-08-20**: trimmed context_scope to 3 entries — the venue-granularity todo is now done, so
-  dropped its 2 tied entries; the 4 remaining open todos are still fully covered by the 3 kept entries.

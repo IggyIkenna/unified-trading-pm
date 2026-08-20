@@ -148,13 +148,6 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [x] ✅ [FROM-T4] P2. **DONE — unified-api-contracts@43033d1152.**
-      `ORDER_STATUS_TRANSITIONS[OrderStatus.PARTIALLY_FILLED]` now includes `CANCELLED` and `EXPIRED` alongside
-      `FILLED`. Paired test `test_partially_filled_can_be_cancelled_or_expired` in `test_order_state_machine.py`
-      asserts both new edges plus the existing `FILLED` edge and that both new terminals still reconcile
-      afterward. QG green (13438 passed, 0 failed). Landed alongside no unrelated change — the codex doc was
-      already amended per this request; nothing further needed there.
-
 - [ ] [FROM-T2] P2. **The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.**
       `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` was allocated
       into T2's tranche plan as a P1, but the writer lives in
@@ -163,21 +156,8 @@ todos only to confirm they are data-movement, then leave it.
       fix above ships". Flagging so it does not sit unworked in a tranche that cannot action it. Its own doc
       priority is P2. No response needed if it is already queued.
 
-- [x] ✅ [FROM-T2] P0. **ALREADY RESOLVED before this got picked up — unified-api-contracts@910d35da (slot-15,
-      2026-08-20 05:20).** Verified independently rather than trusting the request's framing: the decision
-      landed is "writer authoritative" — `_instrument_catalogue_contract.py` now declares the 41 rolled-up
-      `CATALOG_COLUMNS` explicitly under `INSTRUMENTS_CATALOGUE_SCHEMA_VERSION`, keyed on `instrument_id`, and
-      `test_instrument_catalogue_contract.py` pins zero violations on a writer-shaped frame. The 85-column
-      `INSTRUMENTS_PARQUET_SCHEMA` mismatch this request describes was a CATEGORY ERROR, not a genuine drift —
-      that schema documents the per-date raw `InstrumentRecord` parquet shape, not the aggregated catalogue
-      roll-up `build_instrument_catalogue.py` actually produces; the two were never meant to be gated 1:1. Every
-      UAC-side todo in `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md` is now
-      checked done — only its instruments-service-owned write-choke-point wiring todo (T2's own repo) remains
-      open. No further UAC action needed on this.
-- [x] ✅ [FROM-T2] P0. **SUPERSEDED by the resolution immediately above — kept, not deleted, per the todo-count
-      conservation rule (a checkbox flip never shrinks the total).** Original text follows verbatim.
-      `INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
-      before B23's schema lock can be enforced anywhere. MEASURED 2026-08-20 by building B23 part 4's write-time
+- [ ] [FROM-T2] P0. **`INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
+      before B23's schema lock can be enforced anywhere.** MEASURED 2026-08-20 by building B23 part 4's write-time
       gate in `instruments-service` and running it before shipping (then reverting it — shipping would have blocked
       production catalogue promotion for all five asset groups):
 
@@ -191,56 +171,83 @@ todos only to confirm they are data-movement, then leave it.
         `available_from_datetime`/`available_to_datetime`.
       - Wiring the gate turned 3 existing `promote_catalogue` tests red with 80 violations on a cefi frame.
 
-      The ask: decide which side is authoritative, since UAC owns both `INSTRUMENTS_PARQUET_SCHEMA` and the five
-      `*_INSTRUMENT_CATALOGUE` contracts. Tracked as a new P0 part 0 in
-      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`.
+      **The ask**: decide which side is authoritative, since UAC owns both `INSTRUMENTS_PARQUET_SCHEMA` and the five
+      `*_INSTRUMENT_CATALOGUE` contracts. Either the schema is wrong about the catalogue's shape (rename toward
+      `instrument_id`/`available_from`), or the writer is (instruments-service changes its emitted columns — T2 can
+      take that half once you rule). This is not a naming nit: it blocks B23 part 4's done-when ("a catalogue write
+      with a column outside the locked+versioned contract is rejected at write time"), and it explains why the
+      contracts sat registered-but-unconsulted without anyone noticing — the first real consumer fails instantly.
 
-- [ ] [FROM-T2] P1. **MEASURED 2026-08-20 by T1, not resolved — the population question you asked for an answer
-      to genuinely doesn't resolve cleanly your way, and here's why.** `KNOWN_CHAINS`'s stated job (my own
-      27ebc544b2 commit's docstring) is venue-suffix SPLITTING: recognising the `<CHAIN>` token in a live
-      `<PROTOCOL>-<CHAIN>` venue string. Checked all ten against `ALL_DEFI_VENUES`
-      (`v.upper().endswith("-" + CHAIN)`): **ZERO of the ten have any currently-registered venue with that
-      suffix.** So by KNOWN_CHAINS's own stated purpose, none of the ten are a parsing gap the way
-      SCROLL/PLASMA genuinely were (those had 4 live venues silently failing the split; these have none).
-      **But that doesn't make this nothing** — your own table shows `AURORA` (2,725 captured) and `MANTLE`
-      (1,537 captured) have REAL captured rows, meaning something DID write real data tagged with those chain
-      values despite no venue-suffix path producing them. That points at a chain value coming from somewhere
-      OTHER than venue-suffix parsing (a direct per-adapter chain declaration, a venue since renamed/retired
-      from `ALL_DEFI_VENUES` post-capture, etc.) — which is a write-path question in MTDS/your repo, not a UAC
-      registry-membership one. I can't safely trace that without reading your capture code, which is out of
-      this tranche's scope. **My answer to your actual ask**: `KNOWN_CHAINS` is correctly scoped to its stated
-      population (venue-suffix tokens) and should NOT have all ten added on the strength of manifest presence
-      alone — that would conflate "a chain the manifest carries" with "a chain a live venue string encodes",
-      exactly the distinction your own request asked me not to erase. If you trace AURORA/MANTLE's actual
-      write path and it turns out a CURRENTLY-LIVE venue does need the suffix split (a venue naming pattern I
-      didn't find, or a stale `ALL_DEFI_VENUES` entry), re-file with that specific venue name and I'll fix it
-      the same way as SCROLL/PLASMA. `STARKNET`'s 0-captured rows are consistent with your own note that it's a
-      deliberate CeFi exclusion, not evidence either way.
+      Tracked as a new P0 part 0 in
+      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`. Note parts 2 and 3 of that
+      issue's 4-part fix are also yours (UAC) and still open.
 
-      Context: T2 removed three hand-rolled copies of this set in `instruments-service` so they now import
-      UAC's — `instruments-service@2b482a1247`.
-- [x] ✅ [FROM-T2] P1. **SUPERSEDED by the resolution immediately above — kept, not deleted, per the todo-count
-      conservation rule.** Original text follows verbatim. The `KNOWN_CHAINS` gap fixed for SCROLL/PLASMA is
-      still open for TEN more chains carrying 46,698 live manifest rows (STARKNET/AURORA/MANTLE/BLAST/MODE/
-      METIS/MOONBEAM/CELO/FANTOM/GNOSIS). MEASURED 2026-08-20 against the live
-      `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`by_chain.defi`): the DeFi
-      manifest carries 23 distinct chains; `KNOWN_CHAINS` has 14; 10 manifest chains are outside it. Every
-      `if chain in KNOWN_CHAINS:` consumer takes the ELSE branch for all ten. `ASTER` is in `KNOWN_CHAINS` but
-      has ZERO DeFi manifest rows — over- and under-inclusive at once. Deliberately not assumed that all ten
-      belong in `KNOWN_CHAINS`; the ask was to state which population it represents and reconcile against that.
+- [ ] [FROM-T2] P1. **The `KNOWN_CHAINS` gap you fixed for SCROLL/PLASMA is still open for TEN more chains
+      carrying 46,698 live manifest rows.** Your SCROLL/PLASMA fix (unified-api-contracts@27ebc544b2) was correct
+      but scoped to the two chains that had been reported. MEASURED 2026-08-20 against the live
+      `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`by_chain.defi`, derived from the
+      manifest — no new GCS walk): the DeFi manifest carries **23 distinct chains; UAC's `KNOWN_CHAINS` has 14; 10
+      manifest chains are outside it**:
 
-- [x] ✅ [FROM-T4] P2. Pendle wired into the SIT cascade invariant — unified-api-contracts@b9f63f883.
-      `DEFI_VENUE_TO_CONNECTOR_CLASS["pendle"] = "PendleConnector"` and `DEFI_VENUE_TO_GATE_MARKER["pendle"] =
-      "PENDLE"` added; `pendle` removed from `tests/data/execution_service_venue_reachability_baseline.json`
-      (`karak` deliberately kept — separately tracked for decommission, not part of this request). MEASURED
-      before/after rather than assumed: the invariant genuinely FAILED with a stale-baseline-entry assertion
-      before the baseline edit, then 11/11 passed after — confirming pendle is now really reachable, not just
-      that the dict has an entry. LEND-only caveat encoded as an inline comment on the dict entry (not silently
-      widened): `PendleConnector.withdraw()` stays simulation-only per its own docstring, so a future full-family
-      assertion needs an explicit carve-out for this venue. QG green (1076s — slow, shared-slot contention, but
-      real exit 0 captured directly). Evidence: `unified-api-contracts/tests/
-      test_execution_service_venue_coverage_cascade_invariant.py`,
-      `tests/data/execution_service_venue_reachability_baseline.json`.
+      | chain | total rows | captured |
+      | --- | ---: | ---: |
+      | STARKNET | 28,830 | 0 |
+      | AURORA | 4,082 | 2,725 |
+      | MANTLE | 3,687 | 1,537 |
+      | BLAST | 2,380 | 0 |
+      | MODE | 2,332 | 0 |
+      | METIS | 1,548 | 0 |
+      | MOONBEAM | 1,601 | 0 |
+      | CELO | 972 | 0 |
+      | FANTOM | 856 | 0 |
+      | GNOSIS | 410 | 0 |
+      | **total** | **46,698** | **4,262** |
+
+      Every `if chain in KNOWN_CHAINS:` consumer takes the ELSE branch for all ten — the exact failure mode your
+      issue `three_chain_registries_disagree_none_authoritative_2026_08_19.md` describes, unfixed at 10x the scope.
+      Also worth your attention in the other direction: **`ASTER` is in `KNOWN_CHAINS` but has ZERO DeFi manifest
+      rows**, so the set is simultaneously over- and under-inclusive versus live data.
+
+      **Deliberately NOT assumed**: that all ten belong in `KNOWN_CHAINS`. That set is derived from `SUBGRAPH_IDS` +
+      `_STATIC_VENUE_CHAINS` + `_EXTRA_VENUE_PARTITION_CHAINS` and governs VENUE-SUFFIX SPLITTING, which is not
+      necessarily the same population as "chains the manifest may legitimately carry". `STARKNET` in particular is a
+      known deliberate exclusion (`EXTENDED-STARKNET` is a CeFi on-chain perp CLOB that must NOT be DeFi-split), so
+      at least one of the ten is arguably correct as-is. The ask is that UAC state which population `KNOWN_CHAINS`
+      is meant to be and reconcile the ten against that — not that you add them all.
+
+      Context: T2 removed three hand-rolled copies of this set in `instruments-service` (they had drifted in both
+      directions — missing `ASTER`, carrying a phantom `STARKNET`) so they now import yours; see
+      `instruments-service@2b482a1247`. That makes UAC the single point where this is fixable.
+
+_None at authoring time._
+
+- [ ] [FROM-T4] P2. **Pendle's dispatcher is wired now — the SIT cascade invariant still calls it unreachable, and
+      only you can fix that.** Wired in `execution-service@0c0b6a1a40`: `DeFiAdapter` gained a `pendle_connector`
+      and an `_execute_pendle_lending` handler, `PENDLE-ETHEREUM` routes LEND to it, and production
+      (`live_execution_handler._build_defi_adapter`) constructs it.
+
+      The blocker is in YOUR repo:
+      `unified-api-contracts/tests/test_execution_service_venue_coverage_cascade_invariant.py` maintains
+      `DEFI_VENUE_TO_CONNECTOR_CLASS` (`:165`) and `DEFI_VENUE_TO_GATE_MARKER` (`:179`) by hand, and neither has a
+      `pendle` entry. That file's own reachability baseline
+      (`tests/data/execution_service_venue_reachability_baseline.json`) records why this matters — with no entry,
+      `class_name is None` makes the venue "unconditionally unreachable regardless of any execution-service
+      wiring — a false signal from a stale checker dict, not (only) a dispatcher gap". Symbiotic hit exactly this
+      and flapped for most of 2026-08-16 before anyone noticed the dict was the cause.
+
+      Needed, and per the ratchet convention these must land in the SAME change:
+      1. `DEFI_VENUE_TO_CONNECTOR_CLASS["pendle"] = "PendleConnector"`, plus the matching
+         `DEFI_VENUE_TO_GATE_MARKER` entry (the marker `DeFiAdapter` actually gates on is the venue substring
+         `"PENDLE"`, resolved via `adapters/defi_instruction_routes.DEFI_INSTRUCTION_ROUTES`).
+      2. Remove `pendle` from the reachability baseline, after re-running the measurement — the baseline's header
+         says "remove a venue from this list in the SAME change that wires its dispatcher path".
+
+      **One caveat to encode, not paper over**: Pendle is wired for **LEND only**. `PendleConnector.withdraw()` is
+      simulation-only by its own docstring (real `YT.redeemPY()` needs maturity-date branching that is not
+      implemented), so routing a live WITHDRAW there would fabricate a success. If the invariant asserts a full
+      lending family per venue, Pendle should assert LEND only rather than being widened to pass.
+
+      `karak` is separately tracked for decommission and is NOT part of this request.
 
 ## Todos
 
@@ -373,15 +380,9 @@ todos only to confirm they are data-movement, then leave it.
       and strategy-service risk-v2 already consumes it, but zero venues are populated, so every risk-v2 read
       degrades silently to "no data". Evidence: epic W5 +
       `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`.
-- [x] ✅ [BACKEND] P1. `TransferCapabilityV2` added to `VenueCapabilityV2` — unified-api-contracts@45a545e5ad.
-      New fields, schema only (population is separate, tracked work, per this todo's own text):
-      `copper_eligible`/`ceffu_eligible` (kept independent — CEFFU is a specific custody-provider identity Copper
-      routes on behalf of, not a synonym), `manual_transfer_eligible`, `prime_broker_eligible: list[str]` (an
-      open-set of broker names, e.g. `["IBKR", "Alpaca"]`, not a closed enum — a new prime-broker integration
-      never needs a schema edit). Every field defaults to the eligible-nowhere state. Field set sourced directly
-      from `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`, no invented names.
-      5 tests incl. a JSON round-trip. QG green (481s, full 13k+ suite). W22 transfer routing is now unblocked on
-      the schema side; still needs real per-venue population before W22 can consume live values.
+- [ ] [BACKEND] P1. Add transfer-capability eligibility fields to `VenueCapabilityV2` (Copper / Ceffu /
+      manual-transfer / prime-broker per venue). These are NEW fields, not just population. Blocks W22 transfer
+      routing.
 - [ ] [BACKEND] P1. Declare the W8 weightings SSOT in the contracts registry — which dimension each weighting
       applies to. P0 in the epic with **no owning plan** at authoring time; this todo is that owner.
 
@@ -421,41 +422,14 @@ todos only to confirm they are data-movement, then leave it.
       Data migration stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule, per the ruling's own
       text. Evidence:
       `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
-- [x] ✅ [BACKEND] P0. GCS client silent write failure fixed — unified-trading-library@425ce119d.
-      `GCSBlobHandle.__getattr__` now raises `UnsupportedNativeBlobMethodError` (a `RuntimeError`, deliberately
-      NOT an `AttributeError`) on the four raw-SDK methods it doesn't implement
-      (`upload_from_string`/`upload_from_file`/`upload_from_filename`/`download_as_string`), naming the
-      supported replacement. A `RuntimeError` propagates straight through the defensive
-      `getattr(blob, "upload_from_string", None)` pattern that caused the original incident
-      (`deployment_service/deployment/state.py` returning a success-shaped result while persisting nothing) —
-      that exact guard shape now fails loud at the call site instead of silently degrading.
-      **Provenance**: this began as another session's uncommitted, 8-hours-stale WIP sitting in this shared UTL
-      checkout (confirmed dead — no live process — before touching it). Reviewed in full rather than shipped
-      blind, and a real bug was found in it: `download_as_text` was listed as unsupported, but `StorageBlob`
-      (the base class) already implements it as a working default (`download_as_bytes().decode(encoding)`), so
-      normal attribute lookup finds it before `__getattr__` ever fires — it could never actually have raised.
-      Caught by a parametrized test over every mapped method (`DID NOT RAISE`), not assumed correct. Removed
-      from the map; two dedicated tests now pin both directions (stays out of the trap map, genuinely still
-      works).
-      Split into a new `_gcp_blob_guard.py` sibling module (matching the existing `_gcp_credentials.py`/
-      `_gcp_sdk_protocols.py` convention) rather than landing inline — `gcp.py` was already at 866 lines and
-      this tranche's own 900-line hard cap would have failed on the addition otherwise; lands at 883.
-      QG green (281s, real exit captured directly). This is scoped narrower than the source issue's full
-      651-line multi-session history (deployment-service remediation across many callers, largely already
-      shipped in earlier sessions per that doc's own "Fixed" section) — this closes the SHARED-WRAPPER root
-      cause in UTL itself, the piece that was this tranche's own todo. Evidence:
-      `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
-- [x] ✅ [BACKEND] P1. 55 failing `config_interface`/`cloud_interface` tests — symptom GONE on direct re-run,
-      2026-08-20: 1355 passed, 25 skipped, 0 failed across the exact suites named in the issue. Stale-venv
-      hypothesis explicitly RULED OUT (`uv sync --frozen --dry-run`: no changes needed), not left unconfirmed.
-      Root cause not re-derivable at a 5-day remove — closed on the measured symptom, not a reconstructed cause.
-      Issue archived: `/plans/archive/2026_08/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
+- [ ] [BACKEND] P0. Fix the GCS client silent write failure — wrong method names swallowed by a broad exception
+      handler. Evidence: `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
+- [ ] [BACKEND] P1. Root-cause and fix the 55 failing tests in `config_interface` / `cloud_interface`. Leading
+      suspect (stale `.venv` vs `uv.lock`) is unconfirmed — confirm or refute before fixing. This suite is red in a
+      library every service depends on. Evidence:
+      `/plans/active/issues/unified_trading_library_config_interface_mass_test_failure_2026_08_15.md`.
 - [ ] [BACKEND] P2. Complete the UAC lazy / scoped-loading refactor. Layer 2 (UAC) is named "the dominant blocker" —
       DeFi content is interleaved with shared content in `__init__`. End state needs a scoped-build test.
-- [ ] [BACKEND] P2. Manifest-writer per-VM shard flush scales with shard size — UTL-owned, per T2's inbound flag
-      (`[FROM-T2]` above). `manifest_writer/` needs an append-only "delta shard" pattern; verification gated on
-      that landing. Was sitting `assigned_vm: NA` unqueued anywhere active; tracked here so it does not get lost.
-      Evidence: `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
 
 ### External API surface — `platform-external-api-walkthrough.html`
 
@@ -492,36 +466,6 @@ todos only to confirm they are data-movement, then leave it.
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
-- 2026-08-20 — **PRE-COMPACT CHECKPOINT.** Context hit 67%; ran `/pre-compact` per the harness hook. Two significant
-  finds during the audit, both from earlier (compacted-out) work in this same session:
-  1. **Shipped**: 180 lines of FACTOR-STATE MODEL design work on the delta-proxy repricer issue doc
-     (`execution_delta_proxy_repricer_generalization_2026_08_18.md` §11-15) were sitting uncommitted —
-     unified-trading-pm@(latest, verified via `grep FACTOR-STATE` on origin post-push). Covers the unified
-     fair-value function, canonical factors vs per-venue prices, snapshot watermarks, currency/numeraire ruling,
-     rebase-without-jaggedness, and a placement ruling (anchor estimator lives in features-service, not
-     strategy-service). Carries its own 3 tracked todos (`[DOC]`/`[REVIEW]`/`[BACKEND]`) plus 5 open items for
-     the next operator session (§15) — READ THAT SECTION before touching `reference_position`/`credit` again;
-     it may supersede the Q12-Q16 framing this plan cites elsewhere. The ship hit a self-healing collision
-     (safe-doc-push detected its own corruption attempt from a concurrent peer edit, restored my content from a
-     snapshot, verified zero conflict markers before proceeding) — landed clean, verified on origin.
-  2. **IN FLIGHT, not yet shipped**: `unified-api-contracts` has complete, tested, uncommitted work for the
-     `VenueCapabilityV2` transfer-capability todo below (P1, line ~376) — a new `TransferCapabilityV2` schema
-     (`copper_eligible`/`ceffu_eligible`/`manual_transfer_eligible`/`prime_broker_eligible`), wired into
-     `VenueCapabilityV2.transfer_capability`, exported at both `internal/__init__.py` and
-     `internal/architecture_v2/__init__.py`, with 5 passing unit tests
-     (`tests/internal/unit/test_venue_capability_transfer_eligibility.py`) confirmed via direct pytest run.
-     Files: `unified_api_contracts/internal/architecture_v2/schemas.py`,
-     `unified_api_contracts/internal/__init__.py`, `unified_api_contracts/internal/architecture_v2/__init__.py`,
-     `tests/internal/unit/test_venue_capability_transfer_eligibility.py`. **A `quality-gates.sh` run was
-     launched in the background (task id referenced in this session's scratchpad, not durable — re-run it) and
-     had not finished when this checkpoint was written.** NEXT SESSION: `cd unified-api-contracts`, `git status`
-     to confirm these 4 files are still present uncommitted, re-run `bash scripts/quality-gates.sh`, then ship
-     via `quickmerge.sh --agent --files` with those 4 paths, then flip the P1 checkbox at line ~376 with the
-     landed sha.
-  **Standing state, unaffected by either item above**: 22 of T1's remaining todos need no gate finished, no
-  outstanding uncommitted work exists in `unified-trading-library` (clean, 0 ahead) or `unified-trading-pm`
-  (clean, 0 ahead, 0 behind after the restore above). All prior Progress Log entries in this file remain the
-  authoritative record of what shipped before this checkpoint — do not re-derive.
 - 2026-08-20 — **PATH_REGISTRY mode= fix landed — unified-trading-library@783d98ec73.** batch/paper/live rows
   for 5 datasets no longer collide on one GCS object path. Full details in the todo flip; noted here because it
   had TWO recoveries worth remembering: (1) a `check_todo_regression` gate catch of my own doing — a perl splice

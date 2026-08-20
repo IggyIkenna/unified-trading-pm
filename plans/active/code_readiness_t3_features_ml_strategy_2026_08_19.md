@@ -214,33 +214,15 @@ todos only to confirm they are data-movement, then leave it.
       `catalog_expansion.py` seeds all 27 newly-registered archetypes (table-driven; 3 rows each, +81 rows, 549 ->
       630). Measured: `specs_for_archetype()` non-empty for all 59 registered archetypes; the
       `target_universe_catalog` leg of `/archetype-code-completeness` is 177/177 ready, 0 not_ready.
-- [x] [BACKEND] P0. Give every archetype an allocator-rank entry — **done**,
-      `strategy-service@583a2a79` + `unified-trading-pm@a4609ff2be`. Promoted the archetype -> allocator table out of
-      a private dict in `cli/handlers/paper_universe.py` into a shared SSOT
-      (`engine/strategies/v2/archetype_allocator.py`), and in doing so found + fixed a real bug: 5 purpose-built
-      `AllocatorArchetype.<VALUE>_RANK` engines were REGISTERED but UNREACHABLE — nothing selected them, so their
-      archetypes silently got equal-weight `FIXED` instead of the metric each ranker was built for. Wired 4:
-      `YIELD_STAKING_SIMPLE`, `YIELD_ROTATION_LENDING`, `CARRY_RECURSIVE_STAKED`, `CARRY_BASIS_DATED`. Deliberately
-      left `CARRY_FUNDING_DISPERSION_RANK` unreachable (its archetype already maps to `CARRY_FUNDING_RANK` and both
-      plausibly apply — a real ranking decision needing an operator DECISION, not a wiring oversight) and did NOT give
-      the `*_INV`/`*_DATED` engine siblings their sibling's ranker (opposite-sign basis — the long-side metric would
-      rank them backwards). Both boundaries pinned by `test_archetype_allocator.py` so they stay deliberate.
-      Resolution is TOTAL (`resolve_allocator` never raises); the skill's `allocator_rank` leg is rewritten from
-      ready-or-unverified to always-ready, naming the resolved allocator — absence of a dedicated ranker is a
-      documented policy (equal weight), not an unknown.
-- [x] [BACKEND] P0. Wire mode-specific dispatch for every archetype across **batch, paper AND live** — **done**,
-      `strategy-service@9c11ab8b` (paper) + `strategy-service@583a2a79`/`unified-trading-pm@a4609ff2be` (batch verdict
-      correction). **Found a real, long-standing production bug measuring this**: `paper_run_handler.py`'s
-      subscription fallthrough read `config["perp_venue"]`/`config["perp_instrument"]` directly — most archetypes
-      have no perp leg, so paper mode raised `KeyError` for **46 of the 59** factory-registered archetypes (~19
-      predated the 2026-08-19 registration wave; registering 27 more widened it from 19 to 46). Built
-      `paper_subscription.py`, a declarative per-archetype registry: all 59 declare a `(venue, instrument)`
-      subscription identity, all **276/276 catalogue rows resolve** (proven, not just declared), with fallback key
-      chains for genuine within-archetype heterogeneity (cross-venue rows name `leader_venue`; DeFi-LP rows `pool`;
-      Deribit options-MM rows only `underlying`) and book-shaped archetypes (`PORTFOLIO_*`) subscribing at their
-      `slot_label` since they trade a set, not one instrument. Separately, `batch_dispatch`'s `unverified` verdict
-      was WRONG about the system: `batch_rerun.py` resolves via `archetype_for_slot_label()` over the immutable
-      `TARGET_UNIVERSE`, and all 630 catalogue rows round-trip through it — measured, not assumed.
+- [ ] [BACKEND] P0. Give every archetype an allocator-rank entry. UNCHANGED by the 2026-08-19 wave: still 8 dedicated
+      `AllocatorArchetype.<VALUE>_RANK` members (24/180 rows ready, 156 `unverified`). The skill deliberately reports
+      absence here as `unverified` not `not_ready`, because 8 GENERIC allocators (FIXED / PNL_WEIGHTED /
+      SHARPE_WEIGHTED / RISK_PARITY / KELLY / MIN_CVAR / REGIME_AWARE / MANUAL) may legitimately serve an archetype —
+      so the real task is to RULE, per archetype, whether a generic allocator suffices or a dedicated rank engine is
+      required, and make that verdict machine-readable rather than inferred from absence.
+- [ ] [BACKEND] P0. Wire mode-specific dispatch for every archetype across **batch, paper AND live**. Paper's
+      per-family tick-loader dispatch and live's dispatch below the shared orchestrator have no clean registry
+      lookup today — build one rather than leaving the check unverifiable.
 - [x] [BACKEND] P0. Re-run `/archetype-code-completeness` and drive it to zero `not_ready` — **done**,
       `strategy-service@37989f99`. **`not_ready` = 0 in all three modes** (was 47). All three mode-invariant legs
       are 177/177 ready: `engine_factory`, `param_schema`, `target_universe_catalog`. Remaining rows are
@@ -458,89 +440,32 @@ todos only to confirm they are data-movement, then leave it.
   built before they can be checked at all. Neither is closed by this commit.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 
-## Deferred work after 2026-08-20 (session 2)
+## Deferred work after 2026-08-20
 
-**Archetype code-completeness is now FULLY CLOSED** — every leg, every mode: 59/59 ready (or `excluded_by_policy`
-for `ARBITRAGE_MEV_SANDWICH`). Zero `not_ready`, zero `unverified`. Started this tranche at ~6 ready / ~47 not_ready
-/ ~7 unverified per mode. This was the plan's headline metric and its entire "Archetype code completeness" todo
-section is now done.
+Session ended with context exhausted, not with the tranche complete. Everything below is UNSTARTED unless noted;
+nothing is blocked on an answer, so the next agent can pick any row up cold. The Progress Log above is the handoff —
+read the two 2026-08-20 entries first, especially the shipping-incident notes.
 
 | Area | State | Next concrete step |
 | --- | --- | --- |
-| Archetype code-completeness (all 7 legs, all 3 modes) | **DONE — 59/59 ready every leg/mode** | Nothing. Watch `test_only_the_ambiguous_rank_engine_remains_unreachable` — it fails the moment `CARRY_FUNDING_DISPERSION_RANK` becomes reachable, which is the signal the operator decision below landed. |
-| `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | Needs an operator DECISION (not blocked on anything else; no ruling doc filed — this row IS the ask) | Read `archetype_allocator.py`'s comment on the mapping; decide which of the two rankers is intended; flip the map entry + delete the pinning assertion in the same change. |
-| DeFi/vol config-key contract drift | **Vol family DONE** (2 real drifts, 8 keys, fixed this tranche) | Same method — make the systemic construct-and-fire test exercise the archetype and see which no-op — for sports, ML-directional, market-making. A4's catalogue-vs-schema comparison structurally cannot catch this class (both can agree while the ENGINE reads a third spelling); the method that found the vol drifts is the one that generalises. |
-| W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
+| Archetype code-completeness | **DONE — `not_ready` 47 -> 0/mode**, 3 mode-invariant legs 177/177 | Nothing. The residual `unverified` rows are the two below — different work. |
+| `allocator_rank` (153 unverified) | Untouched, correctly reported | Per archetype, RULE whether a generic allocator suffices or a dedicated `<VALUE>_RANK` engine is needed; make the verdict machine-readable so absence stops being ambiguous. |
+| Mode dispatch — batch (42) / paper (47) | Untouched | Build the registry lookup the skill says does not exist (paper's per-family tick-loader dispatch; live below the shared orchestrator), then re-run the dump. |
+| Config-key contract drift | **Vol family DONE** (2 real drifts, 8 keys) | Same method — make the systemic construct-and-fire test exercise them and see which no-op — for sports, ML-directional, market-making. A4 structurally cannot catch this class. |
+| W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. NOTE: the PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape, do not invent a second one. |
 | W9/W10/W13 PnL, risk, exposure | Untouched | Collapse the three competing PnL surfaces; HWM is never raw equity (TWR / Notional / PnL-recovery only). |
 | W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
 | Position adapters / venue coverage | Untouched | CeFi live venue-string dispatch broken for 9 of 12 venues is the highest-value single fix. |
-| features-service | Untouched | 5 of 7 on-chain feature groups write zero-feature parquets stamped `captured=True`; `corporate_actions` still on the banned Massive/Polygon.io vendor. |
+| features-service | Untouched | 5 of 7 on-chain feature groups write zero-feature parquets stamped `captured=True`; `corporate_actions` still on the banned Massive/Polygon.io vendor (build the replacement adapter, tag `BLOCKED-CREDENTIALS`, never descope). |
 | ml-service | Untouched | MEV opportunity-detection producers — 3 registered engines can never fire because `features.get(key, 0.0)` silently defaults. |
 | Both strategy-service artefacts | Not re-derived | Re-derive markers only AFTER the W-items close; never hand-edit the HTML. |
 
-**Cross-tranche**: T5 still owes 27 `clients.yaml`/waiver files (`PENDING_CROSS_REPO_WAIVER` in strategy-service is
-the shrinking worklist) and the two `quickmerge.sh` defects
-(`/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`).
+**Cross-tranche, both filed and both shrinking-worklist-shaped:**
 
-**Recommended next item**: start on the W9/W10/W13 PnL collapse or the position-adapter venue-string fix — both are
-P0, self-contained, and don't depend on anything else in this list. The config-key drift sweep (sports/ML/MM) is
-lower-effort but lower-value; do it opportunistically alongside whichever W-item touches those families.
-
-## Progress Log — 2026-08-20 session 2
-
-- **Wired 5 orphaned rank allocators + corrected 2 wrong skill verdicts. `strategy-service@583a2a79`,
-  `strategy-service@9c11ab8b` (already landed pre-checkpoint), `unified-trading-pm@a4609ff2be`.**
-
-  MEASURED, final state, every leg of `/archetype-code-completeness`, all 3 modes:
-
-  | leg | before this entry | now |
-  | --- | --- | --- |
-  | `allocator_rank` | 24 ready / 153 unverified | **177 ready / 0 unverified** |
-  | `paper_dispatch` | 12 ready / 47 unverified | **59 ready / 0 unverified** (from session start of this checkpoint) |
-  | `batch_dispatch` | 17 ready / 42 unverified | **59 ready / 0 unverified** |
-  | **overall, every mode** | ready=6-8 / unverified=42-53 | **59/59 ready, 0 unverified, 0 not_ready** |
-
-  Two skill verdicts were **wrong about the system**, not just cautious — measuring settled both:
-  1. `allocator_rank`'s `unverified` reasoning ("which generic allocator is configured is not statically derivable")
-     was true of the old private-dict lookup, not of the system: resolution is total
-     (`archetype_allocator.resolve_allocator` never raises) and `FIXED` is a documented equal-weight policy.
-  2. `batch_dispatch`'s `unverified` reasoning ("batch_rerun's replay path may still cover it; not independently
-     confirmable") was provably false: `archetype_for_slot_label()` round-trips all 630 catalogue rows. Measured,
-     not assumed.
-
-  **Real bug found wiring the first one**: `ALLOCATOR_ARCHETYPE_REGISTRY` implements 9 dedicated `*_RANK` engines;
-  the private dict selecting one mapped only 4. Five purpose-built rankers were dead code — their archetypes
-  silently earned equal-weight `FIXED` instead of the metric built for them. Wired 4; left the 5th
-  (`CARRY_FUNDING_DISPERSION_RANK`) deliberately unreachable pending an operator decision (see deferred table).
-
-  **Shipping this required real incident handling — read before your first ship of a session on a busy checkout:**
-
-  1. **Host-wide QG contention (7-18 concurrent `quality-gates.sh` processes measured)** caused a resource-timing
-     gate to fail ("`Quality gates must complete in <300s`") on content that was independently verified clean
-     (ruff, full pytest run, separately). Diagnosed as environmental, not content — retried, landed clean next
-     attempt. **The absolute 300s wall-clock budget doesn't account for host-wide load** — worth its own issue if it
-     recurs.
-  2. **A DIFFERENT live session is sharing this exact slot's checkout right now** (the SessionStart hook warned
-     about this at the very start of the session — it was real, not a false positive). Their in-progress
-     agent-orchestrator plan edit showed up as unfamiliar dirty content under MY git identity (`slot-4·laptop` — the
-     identity is derived from the slot path, not the process, so two sessions in one slot commit as the same
-     "person"). **Never touched their file.** Confirmed via `git log -1 --format=%an` that the file's last real
-     author was consistent with a peer session, and left it exactly as found.
-  3. **My own unstaged edits got swept into `git stash` TWICE** by concurrent sessions' "pre-reconcile quarantine"
-     autostashes — quickmerge's own forensic tooling caught the second instance itself ("Do NOT cite `<sha>` as
-     evidence for these paths — it does not carry them... recover from the stash BEFORE re-running") and named the
-     exact stash + recovery commands. **Recovery method**: `git stash show --stat stash@{N}` to confirm the stash
-     is EITHER cleanly mine OR bundles a peer's file alongside mine (both happened, once each), then
-     `git checkout stash@{N} -- <my-paths-only>` — never a blanket `pop`/`apply`, which would have also restored
-     the peer's file into my working tree.
-  4. **`--isolated` is the documented fix for exactly this symptom** ("pass it once edits keep reverting under
-     contention, that IS the fix") — used it for the final successful ship after two content losses on the same
-     two files. Content-verified in origin afterward (grepped for a distinctive string in `origin`'s blob, not just
-     checked the SHA matched — a matching SHA after a contended reconcile is not proof of content, only of Git
-     state).
-
-  **The general lesson, stated once so it isn't re-learned**: on a heavily contended shared checkout, `local HEAD
-  == origin HEAD` and `git status` clean are NOT proof your change landed — a peer's autostash can quarantine your
-  unstaged edits while a `git pull --ff-only` cleanly fast-forwards past them, leaving both checks green while your
-  content is sitting in an unnamed stash. The only real proof is grepping ORIGIN's blob content for something
-  distinctively yours, every time, on a contended checkout.
+- T5 owes 27 `clients.yaml`/waiver files (`PENDING_CROSS_REPO_WAIVER` in strategy-service is the worklist).
+- T5 owes the two `quickmerge.sh` fixes —
+  `/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`.
+  **Read that issue before your first ship of the session**: it cost this one four failed attempts and a briefly
+  broken LDR.
+- T1's `reference_position` / `credit` extension to `StrategyInstructionEnvelope` was never reached this session, so
+  that edge is still open and unblocked.

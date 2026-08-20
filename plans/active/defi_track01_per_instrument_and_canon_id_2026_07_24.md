@@ -14,7 +14,11 @@ stage: [data]
 repos: [instruments-service, market-tick-data-service, unified-api-contracts, unified-trading-library]
 scope: [engineer, admin]
 tags: [defi, canonicalisation, instrument-id, per-instrument, migration, close-out]
-related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
+related:
+  [
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_07/defi_consolidated_closeout_history_2026_07_18.md,
+  ]
 created: "2026-07-24"
 last_updated: "2026-08-02"
 parent_epic: defi_master
@@ -31,10 +35,10 @@ locked_since:
 context_scope:
   [
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
-    /plans/active/data_completion_defi_2026_07_15.md,
-    /plans/active/issues/defi_collect_schedulers_paused_since_2026_07_18_2026_08_16.md,
     /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/canonical-cutover-register.md,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+    /plans/archive/issues/defi_catalog_dp_catalog_001_shrink_blocked_2026_08_02.md,
     market-tick-data-service/market_tick_data_service/scripts/migrate_defi_batch_to_per_instrument.py,
   ]
 supersedes:

@@ -1,7 +1,8 @@
 ---
 doc_type: codex-ssot
 title: Order state machine
-summary: "The per-order lifecycle state machine execution-service emits — a 9-state closed set (PENDING_NEW → NEW →
+summary:
+  "The per-order lifecycle state machine execution-service emits — a 9-state closed set (PENDING_NEW → NEW →
   PARTIALLY_FILLED / FILLED → RECONCILED, plus CANCELLED / REJECTED / EXPIRED / FAIL_OUTBOUND), its transitions, and one
   UAC event per transition. The protocol-level contract lives in strategy-execution-protocol.md."
 status: current
@@ -52,15 +53,18 @@ created_per: plans/archive/issues/codex_audit_execution_2026_05_12.md EX-24
 | `FAIL_OUTBOUND`    | Failed to reach venue (network / auth / signing); pre-NEW failure  | YES       |
 | `RECONCILED`       | Terminal state matched by position-balance-monitor reconciler      | YES       |
 
-> **✅ The 9-state set above IS the shipped enum (verified 2026-08-20, T4).** The prior warning here (2026-07-31) said
-> only a 7-member `PENDING`/`OPEN` set had shipped; T1 has since landed the full 9-state
-> `unified_api_contracts.canonical.domain.execution.base.OrderStatus` with `PENDING_NEW`, `NEW`, `FAIL_OUTBOUND` and
-> `RECONCILED` all present, plus the `ORDER_STATUS_TRANSITIONS` mapping and `is_legal_order_transition()` guard —
-> confirmed by reading `base.py` directly and by runtime introspection (`sorted(m.name for m in OrderStatus)` returns
-> all 9 names). `PENDING`/`OPEN` survive only as transitional aliases (`OrderStatus.PENDING is OrderStatus.PENDING_NEW`
-> is `True`) pending consumer migration — see
-> `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`. `OrderState` as a standalone symbol
-> still does not exist anywhere; keep writing code against `OrderStatus`.
+> **⚠️ The 9-state set above is the DESIGN TARGET, not the shipped enum (verified 2026-07-31).** There is no
+> `OrderState` symbol anywhere in UAC. What ships is
+> `unified_api_contracts.canonical.domain.execution.base.OrderStatus` — a **7**-member StrEnum:
+>
+> ```python
+> PENDING · OPEN · PARTIALLY_FILLED · FILLED · CANCELLED · REJECTED · EXPIRED
+> ```
+>
+> Deltas vs this doc: `PENDING_NEW`→ships as `PENDING`; `NEW`→ships as `OPEN`; **`FAIL_OUTBOUND` and `RECONCILED` do
+> not exist in UAC at all**. The previously-cited fallback location `internal/execution.py` `OrderState` also does not
+> exist. Until the enum is reconciled, do NOT write code against `OrderState`, `FAIL_OUTBOUND` or `RECONCILED` — they
+> will not import. Tracked in `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
 
 UAC SSOT (shipped): `unified_api_contracts.canonical.domain.execution.base.OrderStatus`.
 
@@ -79,15 +83,14 @@ UAC SSOT (shipped): `unified_api_contracts.canonical.domain.execution.base.Order
                            │               │           │
                   ┌────────▼────────┐  ┌───▼────┐  ┌───▼─────────────────┐
                   │PARTIALLY_FILLED │  │ FILLED │  │ CANCELLED / EXPIRED  │
-                  └──┬───────────┬──┘  └────┬───┘  │ / REJECTED           │
-                full │      cancel/          │       └─────────────────────┘
-                fill │      expire            │                │
-                     ▼           │            │                │
-                 ┌───────┐       └────────────┼────────────────┘
-                 │FILLED │                    │
-                 └───┬───┘                    │
-                     │                        │
-                     └──────────┬─────────────┘
+                  └────────┬────────┘  └────┬───┘  │ / REJECTED           │
+                  full fill│                 │       └─────────────────────┘
+                           ▼                 │
+                       ┌───▼───┐               │
+                       │FILLED │               │
+                       └───┬───┘               │
+                           │                   │
+                           └─────┬─────────────┘
                                  │ reconciler matches venue + manifest position
                                  ▼
                             ┌──────────┐
@@ -97,30 +100,18 @@ UAC SSOT (shipped): `unified_api_contracts.canonical.domain.execution.base.Order
 
 Pre-submission failure path: `PENDING_NEW → FAIL_OUTBOUND` (no venue interaction occurred).
 
-> **Ruling 2026-08-20 (T4, owns the venue-behaviour evidence per this doc's own open question)**:
-> `PARTIALLY_FILLED → CANCELLED` and `PARTIALLY_FILLED → EXPIRED` ARE legal transitions — real CLOB venues let an
-> operator cancel the still-working remainder of a partially-filled order, reporting the final status as cancelled
-> with a nonzero filled quantity (not forced to `FILLED` first). Corroborated in execution-service's own code:
-> `trade_execution/oms/tracker.py` already treats `PARTIALLY_FILLED` as an open/cancellable state alongside
-> `NEW`/`PENDING`. **The shipped `ORDER_STATUS_TRANSITIONS` dict in UAC does NOT yet encode this** — as of 2026-08-20 it
-> still draws only the one `PARTIALLY_FILLED → FILLED` edge this doc previously showed. Widening it is filed as a
-> `[FROM-T4]` inbound request on T1's plan (T4 does not edit UAC directly); this diagram is the target it should widen
-> to.
-
 ## Events emitted per transition
 
-| Transition                            | UAC event (closed set)                                           |
-| ------------------------------------- | ---------------------------------------------------------------- |
-| → `PENDING_NEW`                       | `ORDER_INSTRUCTION_RECEIVED`                                     |
-| `PENDING_NEW` → `NEW`                 | `ORDER_SUBMITTED`                                                |
-| `NEW` → `PARTIALLY_FILLED` / `FILLED` | `ORDER_FILLED` (with fill payload)                               |
-| `NEW` → `CANCELLED`                   | `ORDER_CANCELLED`                                                |
-| `NEW` → `REJECTED`                    | `ORDER_REJECTED` (+ AlertCode)                                   |
-| `NEW` → `EXPIRED`                     | `ORDER_EXPIRED`                                                  |
-| `PARTIALLY_FILLED` → `CANCELLED`      | `ORDER_CANCELLED` (ruling 2026-08-20, not yet coded — see above) |
-| `PARTIALLY_FILLED` → `EXPIRED`        | `ORDER_EXPIRED` (ruling 2026-08-20, not yet coded — see above)   |
-| `PENDING_NEW` → `FAIL_OUTBOUND`       | `ORDER_OUTBOUND_FAILED` (+ AlertCode)                            |
-| terminal → `RECONCILED`               | `ORDER_RECONCILED`                                               |
+| Transition                            | UAC event (closed set)                |
+| ------------------------------------- | ------------------------------------- |
+| → `PENDING_NEW`                       | `ORDER_INSTRUCTION_RECEIVED`          |
+| `PENDING_NEW` → `NEW`                 | `ORDER_SUBMITTED`                     |
+| `NEW` → `PARTIALLY_FILLED` / `FILLED` | `ORDER_FILLED` (with fill payload)    |
+| `NEW` → `CANCELLED`                   | `ORDER_CANCELLED`                     |
+| `NEW` → `REJECTED`                    | `ORDER_REJECTED` (+ AlertCode)        |
+| `NEW` → `EXPIRED`                     | `ORDER_EXPIRED`                       |
+| `PENDING_NEW` → `FAIL_OUTBOUND`       | `ORDER_OUTBOUND_FAILED` (+ AlertCode) |
+| terminal → `RECONCILED`               | `ORDER_RECONCILED`                    |
 
 `AlertCode` taxonomy: see [`/codex/04-architecture/alerting-batch-live.md`](./alerting-batch-live.md). Terminal-bad
 states (`REJECTED` / `FAIL_OUTBOUND`) fire P0 / P1 alerts depending on `AlertSeverity` mapping.

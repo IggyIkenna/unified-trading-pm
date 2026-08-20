@@ -430,10 +430,6 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
 - [ ] [CODE] P0. **M6 — capability-driven startup gate** — per shard, from M2×M3: replay-capable → autostart replay over
       `[batch-cutoff → now]`; else live-required → assert live already running; else wait/refuse/configured-gap. Repos:
       batch-live-reconciliation-service + strategy (live-flip gate) + MTDS (startup).
-      **BLRS decision primitive SHIPPED 2026-08-20 (T4)**: `batch-live-reconciliation-service@0aaa663b59` adds
-      `engine/startup_continuity_gate.py` (`could_exist`-driven AUTOSTART_REPLAY/LIVE_MUST_BE_RUNNING/WAIT_FOR_BATCH,
-      13 tests, QG green). Checkbox stays open — strategy/MTDS consumer wiring is real cross-repo remaining scope, not
-      attempted this session (T4 = BLRS-only).
 - [ ] [CODE] P0. **M7 — autonomous recovery triggers replay** — alerting/auto-recovery detects (batch-stopped +
       no-live + replay-capable) → fires `replay_<source>` autonomously; per-shard "gaps-OK" DR config. Repos:
       alerting-service + MTDS/execution recovery + autonomous-recovery-matrix.
@@ -466,10 +462,6 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       writers). The batch-live-reconciliation-service confirms batch≈live within a tolerance, then a TTL clears the
       now-redundant `live` cells (long-lived `replay` stays where batch never existed). Config knobs (sensible defaults,
       non-blocking): reconciliation tolerance + TTL horizon. Repo: batch-live-reconciliation-service (+ UTL TTL helper).
-      **BLRS decision layer PARTIAL 2026-08-20 (T4)**: same sha `batch-live-reconciliation-service@0aaa663b59` adds
-      `engine/live_ttl.py` (`LiveTtlConfig`, `is_reconciled`, read-only `ttl_eligible_cells`) + the 2 `ReconConfig`
-      knobs, 10 tests, QG green. Checkbox stays open — never mutates the manifest by design; the UTL write-helper to
-      actually clear a TTL-eligible `live` row still doesn't exist, cross-repo, not attempted this session.
 - [ ] [DESIGN] P0. **M8 — cadence axis. PARTIAL — Phase 0.1 shipped the `Cadence` enum
       (`one_off_backfill`/`t1_daily`/`scheduled_recurring`/`continuous_live`/`recovery_replay`) in UAC@a2eab633.**
       REMAINING: wire **cadence** as a manifest COLUMN (UTL) + deployment-registry `run_class` (deployment-service) +
@@ -482,7 +474,7 @@ verify: all drilldown columns populated, 0 `live_websocket`, source non-empty wh
       Success-criteria log (lines ~600-608): I6a UTL manifest COLUMN (`unified-trading-library@dfe3385f`),
       deployment-api cadence dim/slice (`deployment-api@66e8562d`), and deployment-ui + unified-trading-system-ui
       cadence drilldown (`deployment-ui@687d4ce`). Only the writer-stamp sub-item (MTDS/IS) remains genuinely open.
-- [x] ✅ [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
+- [ ] [DOCS] P0. **FULL doc-coherence audit (BEFORE + AFTER), not just a sweep** (#7) — audit EVERY layer for logic that
       CONTRADICTS M1–M8 and reconcile: CLAUDE.md (the `source=` provenance rule, the `pipeline_mode=` partition rule,
       the "Live = batch" rule, the VIX/sports source notes) · codex (`02-data/pipeline-mode-partition.md`,
       `availability-manifest-and-data-status.md`, `honest-absence-downstream-handling.md`,

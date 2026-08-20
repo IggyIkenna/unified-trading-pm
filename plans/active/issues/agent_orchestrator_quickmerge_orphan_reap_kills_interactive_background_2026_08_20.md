@@ -47,10 +47,7 @@ related: [infra_consolidated_closeout_2026_07_25, agent_orchestrator_qg_baseline
 context_scope:
   [
     agent-orchestrator/server/orphan_reap.py,
-    agent-orchestrator/server/tmux_spawn.py,
     agent-orchestrator/scripts/quickmerge.sh,
-    /plans/active/issues/agent_orchestrator_qg_baseline_stale_cgroup_kill_2026_08_20.md,
-    unified-trading-pm/agents/cicd.md,
   ]
 ---
 
@@ -138,7 +135,3 @@ silent deaths (qm5-qm12) across ~58 minutes before root-causing via `journalctl 
 cross-reference against each failed attempt's own launched PID, then confirming the mechanism by reading
 `server/orphan_reap.py`. Fix (env-stripping) verified: attempt qm13 completed the full run and landed
 `agent-orchestrator@cd5d605be9` on `live-defi-rollout`.
-
-## Progress Log
-
-- **context-scout 2026-08-20**: populated context_scope (5 entries).

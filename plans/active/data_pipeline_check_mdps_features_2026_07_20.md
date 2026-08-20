@@ -47,7 +47,10 @@ tags:
   ]
 related:
   [
+    /plans/archive/2026_07/data_pipeline_e2e_check_2026_07_10.md,
     /plans/active/features_service_e2e_pipeline_test_2026_05_26.md,
+    /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
+    /plans/archive/2026_07/data_pipeline_check_mdps_features_history_2026_07_24.md,
     ../epics/security_and_cross_cutting_master.md,
     ../../cursor-configs/skills/data-pipeline-check-mtds/SKILL.md,
     ../../cursor-configs/skills/data-pipeline-check-is/SKILL.md,
@@ -967,7 +970,6 @@ overlap (structural from `ThreadPoolExecutor`, no measured figure). Follow-up in
 - **context-scout 2026-08-15**: line-cap remediation (extracted 3 closed 2026-07-27 entries to
   `/plans/archive/2026_08/data_pipeline_check_mdps_features_progress_log_history_2026_08_15.md`, 1002L→880L);
   re-verified context_scope (5 entries), unchanged.
-- **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.
 
 ## Extracted items index (2026-08-15)
 

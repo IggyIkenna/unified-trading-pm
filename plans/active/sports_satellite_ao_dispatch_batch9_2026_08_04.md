@@ -36,12 +36,26 @@ tags: [sports, ao-dispatch, close-out, batch-9, satellite-docs, ag-closeout-audi
 related:
   [
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30.md,
+    /plans/archive/2026_07/sports_satellite_ao_dispatch_batch8_2026_07_30_finalize.md,
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/data_completion_sports_2026_07_24.md,
+    /plans/archive/2026_08/issues/instrument_availability_league_and_question_group_partition_shapes_2026_08_03.md,
+    /plans/archive/issues/manifest_consolidator_frozen_canonical_rows_out_sports_2026_08_04.md,
     /plans/active/issues/mdps_odds_horizon_bucket_shard4_residual_failures_2026_07_25.md,
+    /plans/archive/2026_08/issues/mdps_sports_honest_absence_writes_fail_fetchevidence_gate_2026_08_01.md,
+    /plans/archive/issues/mdt_canonical_odds_poll_key_duplicate_rows_2026_07_25.md,
+    /plans/archive/issues/ml_service_pipeline_handler_clv_target_bypasses_odds_targets_merge_2026_08_03.md,
+    /plans/archive/2026_08/issues/mtds_sports_odds_api_force_fetch_no_parquet_2026_08_01.md,
+    /plans/archive/2026_08/sports_clv_target_pit_gated_out_of_odds_features_export_2026_07_26.md,
+    /plans/archive/issues/sports_curated_universe_domestic_selection_remaining_2026_07_25.md,
+    /plans/archive/issues/sports_distinct_values_prod_freeze_and_venue_writer_bugs_2026_08_04.md,
+    /plans/archive/issues/sports_enrichment_closer_holiday_and_today_false_gaps_2026_08_03.md,
     /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md,
     /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md,
+    /plans/archive/2026_08/issues/sports_manifest_2026_h1_vs_2025_h1_enumeration_grain_persists_2026_07_27.md,
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
+    /plans/archive/2026_08/sports_odds_feature_naming_canonicalization_2026_07_21.md,
   ]
 created: "2026-08-04"
 last_updated: "2026-08-06"
@@ -66,10 +80,11 @@ sequential: false
 drift_direction: advance-code
 context_scope:
   [
-    /plans/active/sports_satellite_ao_dispatch_batch9_2026_08_04_finalize.md,
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
-    /plans/active/data_completion_sports_2026_07_24.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
   ]
 ---
 
@@ -983,4 +998,3 @@ shipped 2026-08-05) against two independent samples — the named `2022-04-15/PR
 pass. Filed `/plans/active/issues/sports_mdt_odds_captured_cells_not_found_rate_2026_08_16.md` (P1) for a separate,
 significant finding (93.15% of the sampled "captured" cells resolve to no real object) surfaced along the way, and
 added supporting evidence to this plan's own league_id-growth todo rather than duplicating that investigation.
-- **context-scout 2026-08-20**: trimmed context_scope to 4 entries (dropped 2 done-item codex docs, added the finalize doc + P2 source).

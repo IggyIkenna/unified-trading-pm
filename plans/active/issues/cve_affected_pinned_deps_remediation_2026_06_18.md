@@ -414,16 +414,6 @@ that ratification lands.
           `ao_dispatch_cooldown_and_park_2026_07_20` — checkbox intentionally left unflipped (closing it would be
           dishonest; the audit scope is inherently ongoing, not complete).
 
-          **2026-08-20 (T4 execution-settlement tranche) — fresh per-repo confirmation for
-          batch-live-reconciliation-service, same conclusion, checkbox intentionally still not flipped.**
-          `.venv/bin/python -m pip_audit --format json` against batch-live-reconciliation-service's own venv: **"No
-          known vulnerabilities found"** across all ~190 audited third-party packages (`cryptography` at `50.0.0`,
-          well past the CVE-2026-69247 floor from the section below; `fastapi 0.140.7`/`starlette 1.3.1`, both past
-          the breaking-cap-lift floors). Consistent with every prior pass — nothing new to act on for this repo. Not
-          re-verifying the other 20 repos this session (out of the batch-live-reconciliation-service-only repo
-          allocation); leaving the checkbox open per the standing PARKED reasoning above — this todo's scope
-          ("one-by-one for the rest," no mass updates) is inherently unbounded and not session-closeable.
-
 - [x] ✅ [SCRIPT] P2. **DONE 2026-07-30.** Dropped all 9 now-resolvable `QG_PIP_AUDIT_COMMON_IGNORES` entries
       (`CVE-2026-4539`/pygments, `PYSEC-2026-215`/idna, `CVE-2026-3219`/`CVE-2026-6357`/`PYSEC-2026-196`/pip,
       `GHSA-6v7p-g79w-8964`/msgpack, `GHSA-4xgf-cpjx-pc3j`/pydantic-settings, `CVE-2026-54911`/ujson,

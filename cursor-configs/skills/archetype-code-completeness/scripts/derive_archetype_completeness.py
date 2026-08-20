@@ -121,63 +121,15 @@ def _target_universe_verdict(archetype: StrategyArchetype) -> checks.Verdict:
 
 
 def _allocator_rank_verdict(archetype: StrategyArchetype, rank_values: frozenset[str]) -> checks.Verdict:
-    """Read the archetype -> allocator SSOT, which is TOTAL.
-
-    Until 2026-08-20 this looked only for a dedicated ``<VALUE>_RANK`` member and
-    called absence `unverified`, on the grounds that "which generic allocator is
-    actually configured is not statically derivable". It is: resolution lives in
-    ``engine/strategies/v2/archetype_allocator.resolve_allocator`` and always
-    returns a real allocator. The old verdict described where the table lived (a
-    private dict inside the paper CLI), not a genuine unknown.
-    """
-    del rank_values  # superseded by the resolver, which covers generic allocators too
-
-    from strategy_service.engine.strategies.v2.archetype_allocator import (
-        resolve_allocator,
-    )
-
-    return checks.allocator_rank(archetype.value, resolved_allocator=resolve_allocator(archetype).value)
+    candidate = f"{archetype.value}_RANK"
+    dedicated = candidate if candidate in rank_values else None
+    return checks.allocator_rank(archetype.value, dedicated_rank_member=dedicated)
 
 
 def _batch_dispatch_verdict(
     archetype: StrategyArchetype, slot_archetypes: frozenset[StrategyArchetype]
 ) -> checks.Verdict:
-    """BOTH batch entry paths, not just the legacy one.
-
-    Until 2026-08-20 this checked only ``STRATEGY_TYPE_TO_SLOT`` (the legacy
-    strategy-type-STRING CLI path) and called absence `unverified` -- "batch_rerun.py's
-    separate paper-manifest-replay path may still cover it; not independently
-    confirmable". It is confirmable: ``batch_rerun.py`` resolves which archetype to
-    re-run via ``archetype_for_slot_label()``, a reverse-lookup over the immutable
-    TARGET_UNIVERSE, so any archetype with catalogue rows is batch-rerun dispatchable.
-    Measured 2026-08-20: all 630 catalogue rows round-trip.
-    """
-    if archetype in slot_archetypes:
-        return checks.batch_dispatch(archetype.value, in_slot_resolver=True, rerun_dispatchable=True)
-
-    from strategy_service.engine.strategies.v2.target_universe.catalog import (
-        archetype_for_slot_label,
-        specs_for_archetype,
-    )
-
-    try:
-        specs = specs_for_archetype(archetype)
-    except KeyError:
-        # No catalogue builder at all. Today this is only ARBITRAGE_MEV_SANDWICH,
-        # whose every leg is overridden to excluded_by_policy downstream — but this
-        # branch must not itself raise, or one policy exclusion takes the whole dump
-        # down.
-        specs = ()
-    rerun_ok = bool(specs)
-    for spec in specs:
-        try:
-            if archetype_for_slot_label(spec.slot_label) is not archetype:
-                rerun_ok = False
-                break
-        except KeyError:
-            rerun_ok = False
-            break
-    return checks.batch_dispatch(archetype.value, in_slot_resolver=False, rerun_dispatchable=rerun_ok)
+    return checks.batch_dispatch(archetype.value, in_slot_resolver=archetype in slot_archetypes)
 
 
 def _paper_dispatch_verdict(
@@ -186,25 +138,6 @@ def _paper_dispatch_verdict(
     for name, members in paper_frozensets.items():
         if archetype in members:
             return checks.paper_dispatch(archetype.value, in_named_frozenset=True, frozenset_name=name)
-
-    # Until 2026-08-20 this fell through to a dated agent-audit record, because the
-    # only signal was "absent from the 9 frozensets" and the generic fallthrough's
-    # behaviour could not be confirmed by static reading. A real registry now exists
-    # (engine/strategies/v2/paper_subscription.py), so this is a clean lookup.
-    from strategy_service.engine.strategies.v2.paper_subscription import (
-        PAPER_SUBSCRIPTION_REGISTRY,
-    )
-
-    spec = PAPER_SUBSCRIPTION_REGISTRY.get(archetype)
-    if spec is not None:
-        return checks.paper_dispatch(
-            archetype.value,
-            in_named_frozenset=True,
-            frozenset_name=(
-                f"PAPER_SUBSCRIPTION_REGISTRY -> subscribes at "
-                f"({spec.venue_key}, {spec.instrument_key or 'slot_label'})"
-            ),
-        )
     return checks.paper_dispatch(archetype.value, in_named_frozenset=False, frozenset_name=None)
 
 
