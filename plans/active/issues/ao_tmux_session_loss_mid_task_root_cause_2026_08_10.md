@@ -341,6 +341,26 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       not just `check-ao-recent-deaths.sh`'s `burst_size`) — that doc's own measurement todo should reuse this
       doc's already-proven method (the 2026-08-14 23:33 cluster below, where 3/5 counted losses were confirmed
       benign `reason="manual"` recycles) rather than re-deriving it from scratch.
+- [x] [INFRA] P1. Root-cause + fix `death_forensics.py`'s `check_external_kill` — its `ausearch -ts`/`-te` date
+      format (4-digit-year, single combined token) was silently rejected by this VM's ausearch build on EVERY call
+      since the module shipped 2026-08-15, masking every "could not check" as ausearch flakiness rather than a real
+      bug. Fixed 2026-08-20 (2-digit-year, date+time as separate argv tokens, live-verified against the actual VM) —
+      `agent-orchestrator@5d48a60b5b`. Deployed (service restarted 06:00:47Z, after the fix landed) but not yet
+      exercised by a genuine post-fix unexplained death.
+- [ ] [INFRA] P1. Get a real OOM-vs-external-kill verdict from `check_external_kill` now that it actually runs —
+      the next `death_class=unexplained` row should show `external_kill.checked=true`; if none do within a
+      reasonable window, the fix itself needs re-verifying live rather than trusted on read-back.
+- [ ] [INVESTIGATE] P1. **New lead, 2026-08-20**: fleet-wide query (last 24h) confirms this is NOT slot-specific —
+      slot 2 is 16/16 unexplained, slot 4 10/15, slot 1 9/15, slot 10 8/15, slot 11 6/7 (`tmux_session_lost` grouped
+      by slot_id). More notably, several specific TASK IDs died repeatedly across DIFFERENT slots in the last 48h:
+      `backlog_500_malformed_depends_on_comment-81a8666e249d` (4 deaths, slots 10/1/4),
+      `instruments_schema_not_locked_versioned-0ca8f7f490f2` (3 deaths, slots 4/10),
+      `defi_cefi_venue_chain_axis_contamination-09ac3d7aa6dc` (2 deaths, slots 11/10),
+      `deployment_api_client_factory_positional_project_id_bug-6f193540d7f3` (2 deaths, slots 13/4),
+      `cross_cutting_satellite_ao_dispatch_batch17-6a8c25390694` (2 deaths, slot 10 x2). A death following the SAME
+      task across different slot hosts points toward something the task itself does (not the host) — worth reading
+      what these specific tasks' work involves for a common trigger (e.g. another unscoped-tmux-touching subprocess
+      call, the same class of bug this doc's confirmed root cause already found once in a bats test fixture).
 
 ## Progress Log
 
@@ -716,3 +736,22 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:90a1ddb246972541]: KEEP-NA, valid — live-incident investigation with 4 self-corrected premature-closure claims and shipped fixes across 3+ layers; converges with the 2026-08-17 na-eligibility-audit verdict. Remaining 10 open items are genuine unresolved root-cause work (death #2 at 14:30:28 still unexplained) or [OPERATOR]-tagged live-infra decisions; the 32-item condensed Todo section's count (22 closed + 10 open) verified consistent.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (interactive session, slot 1)**: operator asked to root-cause a specific slot-1 death and whether it's
+  genuinely agents dying vs. the backend reaping them mid-task. Live-queried `check-ao-recent-deaths.sh --slot 1` for
+  the 05:17:50Z death: `death_class=unexplained`, `tmux_server_alive=True` (rules out this doc's confirmed
+  kill-server signature), `burst_size=1`, no OOM (`cgroup oom_kill=0`), no core dump (rules out a self-inflicted
+  crash), pane exited status 143 (SIGTERM) 434s into a live task — genuinely mid-task, not a redispatch-counting
+  artifact, and not the fleet's own watchdog/reaper (`death_class` would show `intentional_teardown` if it were).
+  While investigating, found `death_forensics.py`'s `check_external_kill` (shipped 2026-08-15 to answer exactly
+  "OOM vs external kill" for these unexplained deaths) had been non-functional since it shipped — see the new todo
+  above for the fix, shipped `agent-orchestrator@5d48a60b5b`. Operator then asked to confirm this isn't slot-1-specific
+  — fleet-wide query (see new `[INVESTIGATE]` todo above) confirmed it isn't: 17 slots show `tmux_session_lost` in the
+  last 24h, several majority-`unexplained`, and several specific task IDs died repeatedly across DIFFERENT slots —
+  the strongest new lead this session, since a death that follows the TASK rather than the HOST points away from a
+  per-slot/per-host cause. Not yet investigated what those specific tasks do; filed as the next todo rather than
+  guessing. Separately (adjacent finding, not this doc's scope): `quality-gates.sh`'s dashboard gate only checked
+  `node_modules` existence, not sync with `package.json` — any slot pulling a commit that adds a dashboard dependency
+  without a fresh `npm install` hit a confusing vite crash instead of the intended fail-closed message; fixed in the
+  same commit as the ausearch fix (mtime-based staleness detection was tried and rejected — sub-second write-order
+  races flagged a fresh install as stale; landed on a plain per-declared-dependency filesystem check instead,
+  verified against both a healthy and a simulated-stale state).
