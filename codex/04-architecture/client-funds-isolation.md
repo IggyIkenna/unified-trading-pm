@@ -172,6 +172,18 @@ Every plan that adds transfer / rebalancing / fund-movement code MUST include:
    isolated call with non-overlapping `fund_context`/`destination` — never netted or reordered across clients.
    Idempotency matters here too: the withdrawal call carries `idempotency_key=redemption_id` so a crashed-and-retried
    tick never double-withdraws (`execution-service@d8bae52a`, `fund-administration-service@af9d292`).
+6. **Vehicle-type routing** (added 2026-08-20): `unified_api_contracts.internal.domain.strategy_service.client_registry.CLIENT_REGISTRY`
+   (`ClientDefinition.vehicle_type: Literal["fund", "sma"]`, required — no default, `unified-api-contracts@60237ba19d`)
+   is the SSOT for whether a client_id is a pooled-fund investor or a direct SMA client — resolved 1:1 per client_id
+   (a client needing both vehicles gets two distinct client_ids, e.g. `acme-fund`/`acme-sma`, reusing this same
+   isolation model rather than adding a new dimension). Fund-administration-service's redemption-creation endpoint
+   (`post_redemption()`) rejects `sma`-typed client_ids with `403` before creating an `AllocatorRedemption` —
+   `fund-administration-service@fb7dc9d7b1` — since the whole grace-period/NAV-per-share/redemption-fee machinery is
+   pooled-fund-only by construction. **Known gap** (filed
+   `plans/active/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md`): client-reporting-api's
+   NAV aggregation reads a SEPARATE client registry (`credentials-registry.yaml` via
+   `unified_api_contracts.internal.reporting.client_config.ClientConfig`) with no `vehicle_type` awareness — latent
+   today (no SMA client exists yet), real once one is onboarded.
 
 ## Related SSOTs
 
