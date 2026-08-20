@@ -236,10 +236,10 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
       table. Tests: 3 new cases in `tests/test_auth_failed_rotation.py::TestAccountIsUsable` (rejected+out_of_credits
       fires regardless of weekly_pct=90; rejected+org_level_disabled fires; overage_status="allowed" stays usable).
       Full QG green (5275 passed, coverage 86.14%, dashboard vitest 469/469, tsc clean).
-- [ ] [BACKEND] P2. Investigate whether account rotation's selection-pool logic already excludes (or should exclude)
+- [x] ✅ [BACKEND] P2. Investigate whether account rotation's selection-pool logic already excludes (or should exclude)
       overage-rejected accounts from being assigned to a slot in the first place, separate from the trigger fix
       above. Done when: the rotation-pool selection code path is read directly and the answer (excludes / does not
-      exclude) is confirmed with a citation, with a follow-up fix if it does not. Repo: agent-orchestrator.
+      exclude) is confirmed with a citation, with a follow-up fix if it does not. Repo: agent-orchestrator. **DONE 2026-08-20 (slot 1) — agent-orchestrator@acf72243d5.**
 - [ ] [BACKEND] P3. Classify the overage-rejected-at-kill-time failure shape (e.g. `account_overage_exhausted`)
       instead of leaving it `death_class: unexplained` when a killed slot's `account_snapshot.overage_status ==
       "rejected"` at kill time. Done when: a fresh occurrence of this failure shows the new, diagnosable
@@ -333,3 +333,12 @@ was itself a KEEP-NA-STALE-ITEMS case with one additional clean item):
   path doesn't recognize `kimi-k2.6` at the proxy) — non-blocking, the chat/compact/continue all work. No code
   changes required. This closes the Moonshot/Kimi half; both halves of the item are now verified (Gemma 2026-08-18,
   Kimi today).
+- **2026-08-20 (slot 1)**: Item 8 DONE — direct code read confirms the rotation pool already excludes rejected-
+  overage accounts. `server/state_store/account_usage.py::account_is_usable()` returns `False` when
+  `AccountUsageRow.overage_status == "rejected"` (covering both observed rejection reasons), and both
+  `server/state_store/account_usage.py::pick_next_account()` and `server/autospawn.py::_pick_headroom_account()`
+  call that predicate before returning a candidate. `server/server.py::pick_next_account()` has the same guard in
+  its compatibility path, while `rotate_all_slots_off_account()` additionally rejects a target whose ID equals the
+  account being rotated off. Therefore the item-7 shared-gate fix (`agent-orchestrator@acf72243d5`) closes the
+  selection-pool path as well; no additional code change is required. The separate item-9 death-classifier follow-up
+  remains open.
