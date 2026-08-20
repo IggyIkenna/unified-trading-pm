@@ -2,13 +2,11 @@
 doc_type: plan
 title: Sports taxonomy P4 — backfill the derived layer to the 2020-06 floor and dispose of the pre-floor corpus
 summary: >-
-  Phase 4 of the sports canonicalisation chain — closing the coverage gap the 2026-08-08 audit measured. The sports
-  derived layer covers 13 of ~2,250 days: `odds_snapshot` (16,521), `odds_movement` (16,470) and `arbitrage_opportunity`
-  (16,441) all exist ONLY for 2026-07-25 to 2026-08-06, against six years of raw odds from the 2020-06-06 floor. It was
-  never backfilled. This phase runs that backfill on SPOT VMs in-region against the FINAL post-migration contracts
-  (which is why it is gated rather than run now — backfilling 2,250 days pre-migration and re-doing it after would be
-  pure waste), and disposes of the 10,345-object pre-launch C3 corpus per the already- standing 2020-06 floor ruling
-  rather than re-opening it as a fresh decision.
+  Phase 4 follow-up for the sports derived layer. The original 2026-08-08 gap census is superseded: P2 found zero real
+  captured snapshot/movement rows (the old counts were phantom manifest rows), while odds_horizon_bucket is the surviving
+  derived type. The 2026-08-20 operator decision is to wire the snapshot/movement adapters into the live MDPS driver
+  first; no standalone historical shard-day, runtime, or SPOT-cost projection is valid until that output contract is
+  implemented. The 10,345-object pre-launch C3 corpus remains governed by the 2020-06 floor ruling.
 status: active
 nature: process
 asset_group: [sports]
@@ -58,6 +56,10 @@ locked_since:
 
 # Sports taxonomy P4 — derived-layer backfill
 
+> **🟡 BLOCKED 2026-08-20:** The original standalone derived-type census was disproven by P2. Do not launch a
+> historical backfill from this plan until /plans/active/issues/sports_odds_movement_snapshot_candle_wireup_2026_08_20.md
+> lands the operator-approved MDPS wire-up and confirms the consolidated odds_horizon_bucket output contract.
+
 > Gated on P2's migration (`gate_on_depends: true`). Operator ruling 2026-08-08: backfill is a FOLLOW-UP plan gated on
 > contracts, not in-scope-now — so the campaign runs once, against final contracts.
 
@@ -88,13 +90,14 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Todos
 
-- [ ] [SCRIPT] P0. **Size the backfill before launching it.** Compute shard-days needed per derived type across
-      2020-06-06 → present against the FINAL post-migration axes, and project runtime + SPOT cost + parallelisation
-      headroom. A backfill launched without a projected terminal state cannot be told apart from a stalled one.
-- [ ] [SCRIPT] P0. **Backfill `odds_snapshot` to the 2020-06-06 floor** on SPOT VMs, in-region, per the VM-launcher
+- [x] ✅ [SCRIPT] P0. **Closed 2026-08-20 — no valid standalone sizing exists yet.** P2 corrected the old
+      16,521/16,470 figures to zero real captures; the operator-approved wire-up issue must settle the consolidated
+      odds_horizon_bucket output grain before shard-days, runtime, SPOT cost, or parallelisation can be measured.
+      No VM was launched. Evidence: /plans/active/issues/sports_odds_movement_snapshot_candle_wireup_2026_08_20.md.
+- [ ] [SCRIPT] P0. **BLOCKED-DEPENDENCY: wire the snapshot/movement computations first, then backfill consolidated odds_horizon_bucket to the 2020-06-06 floor** on SPOT VMs, in-region, per the VM-launcher
       runbook. Never run this locally. Register the launcher in the `VM_PREFIX_TO_BUCKET` registry rather than
       hand-rolling. Preemption recovery MUST resume from measured PROGRESS, never replay `START_DATE`.
-- [ ] [SCRIPT] P0. **Backfill `odds_movement` to the floor**, same discipline. May run concurrently with `odds_snapshot`
+- [ ] [SCRIPT] P0. **BLOCKED-DEPENDENCY: do not launch a standalone odds_movement backfill; it is part of the consolidated wire-up**, same discipline. May run concurrently with `odds_snapshot`
       — different output shards, so no same-file overlap.
 - [ ] [SCRIPT] P1. **Backfill the relocated arbitrage series to the floor**, against its P3 signals/features home and
       its multi-venue key — NOT the retired single-venue market-data shape. Must consume the corrected operator-group
@@ -129,6 +132,7 @@ backfill**. Confirmed by the operator 2026-08-08. The todo is stale, not open.
 
 ## Progress Log
 
+- **2026-08-20** — Sizing todo closed without launch: P2 live census disproved the standalone snapshot/movement counts (zero real captures), and the operator-approved wire-up issue now gates any consolidated derived-layer sizing.
 - **2026-08-08** — Authored. Coverage gap measured against the live prod manifest. C3 disposition recorded as an
   ALREADY-RULED item (2026-07-21 floor ruling) rather than a fresh operator decision — the source todo is stale.
 - **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- added
