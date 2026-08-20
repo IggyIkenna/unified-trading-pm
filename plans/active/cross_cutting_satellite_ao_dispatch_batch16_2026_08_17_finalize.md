@@ -65,9 +65,9 @@ source: >-
       not resolve it. Done-when: the operator question is re-surfaced with current status. Evidence: issue marker
       records `unified-trading-pm@fc45e105a9` (root-cause), `unified-trading-pm@70fc5408f1` (fix + importer audit),
       and the remaining operator decision.
-- [ ] [DOC] P2. Check each of batch16's 3 source docs — if reconciliation (todo 1 above) left any of them with
+- [x] ✅ [DOC] P2. Check each of batch16's 3 source docs — if reconciliation (todo 1 above) left any of them with
       zero open todos, run the standard 6-step archival ritual on that source doc too. Done-when: each source
-      doc's open-todo count is confirmed, and any genuinely-zero doc is archived.
+      doc's open-todo count is confirmed, and any genuinely-zero doc is archived. Evidence: git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md has 3 open todos; na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md has 1; venue_readiness_and_registry_hardening_2026_08_16.md has 6; none is zero-open or locked, so no source doc qualified for archival.
 - [ ] [DOC] P3. Run the standard 6-step archival ritual on `cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md`
       itself once every todo above is done and all 5 of its own items are `[x]`. Done-when: batch16 is archived
       with corpus-wide referrer-path fixup complete.
@@ -76,6 +76,7 @@ source: >-
 
 - **2026-08-17 (na_eligibility_auditor, dispatch agt-7e78e2, slot 28)**: drafted alongside batch16 per the
   mandatory finalize-plan rule.
+- **2026-08-20 (review, slot 13)**: re-counted the three source docs after batch16 reconciliation: 3, 1, and 6 open todos respectively; all remain active and unlocked, so none entered the archival ritual.
 - **context-scout 2026-08-19**: populated context_scope (4 entries) — the gated parent batch plus
   `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`, this finalize plan's own todo 2 explicitly
   re-checks (its remaining `[OPERATOR]` todo 3 for a since-cleared gate once items 3-4 land), plus the
