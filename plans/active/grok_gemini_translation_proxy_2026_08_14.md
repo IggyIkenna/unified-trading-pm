@@ -23,7 +23,7 @@ related:
     /codex/06-coding-standards/model-tier-selection.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-16
+last_updated: 2026-08-20
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -183,13 +183,18 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       deliberately NOT a dependency of this repo's `pyproject.toml` (see that file's own comment).
       `agent-orchestrator@2dafd5a14c` (dependency, later reverted) → `@31687b54dc` (isolated-venv fix + Gemini headroom
       wiring, see below).
-- [ ] [REVIEW] P0. **CORRECTED 2026-08-20 (/plan-reconcile F-G33-2)** — reverted from a false `[x]` DONE claim. This
-      doc's own Done-when requires BOTH Grok and Gemini proven; three later spots in the SAME doc (2026-08-19 entry,
-      plus lines ~522 and ~260) explicitly say "the checkbox stays open" because Grok hit a real `400 Invalid model
-      name` error and is confirmed broken, while only the Gemini half passed. The 2026-08-18 Grok-decommission banner
-      does NOT retroactively satisfy the two-provider bar per the doc's own later (2026-08-19) text. If Grok's
-      decommission is meant to moot the Grok half of the done-when, that needs an explicit dated ruling here, not a
-      silently-flipped box. Gemini's half genuinely is done — `server/gemini_translation_smoke.py` starts the real litellm proxy subprocess
+- [x] [REVIEW] P0. ✅ **RESOLVED 2026-08-20 — explicit dated ruling supplied (this is exactly what this todo's own
+      text below said was missing).** Was: **CORRECTED 2026-08-20 (/plan-reconcile F-G33-2)** — reverted from a false
+      `[x]` DONE claim. This doc's own Done-when requires BOTH Grok and Gemini proven; three later spots in the SAME
+      doc (2026-08-19 entry, plus lines ~522 and ~260) explicitly say "the checkbox stays open" because Grok hit a
+      real `400 Invalid model name` error and is confirmed broken, while only the Gemini half passed. The 2026-08-18
+      Grok-decommission banner does NOT retroactively satisfy the two-provider bar per the doc's own later
+      (2026-08-19) text. **The explicit ruling**: operator directive 2026-08-20 (a repeat/insisting instruction) —
+      Grok is fully REMOVED from the system, not merely decommissioned/paused; it no longer exists as a code path
+      this fleet could dispatch to at all (see this session's Progress Log entry below for the full removal record).
+      A "prove BOTH providers" bar is structurally unsatisfiable for a provider that has been deliberately deleted —
+      the bar is retroactively MOOT for the Grok half, not satisfied by it, and this entry is that explicit dated
+      ruling, not a silently-flipped box. Gemini's half genuinely is done — `server/gemini_translation_smoke.py` starts the real litellm proxy subprocess
       against the real deployed `config/litellm/grok_gemini_proxy.yaml` and drives a real 2-turn tool_use→tool_result
       exchange through `/v1/messages` against a real Gemini backend (project `gen-lang-client-0008266149`). Verified
       live 3 separate times: tool name/id/input args survive translation exactly, `stop_reason` correctly becomes
@@ -260,6 +265,31 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
       with real Gemini quality and consumption-rate numbers lands.
 
 ## Progress Log
+
+- **2026-08-20 — Grok fully removed from the codebase (operator repeat/insisting directive: "Grok should be
+  removed from our entire system... shouldn't even exist... shouldn't even be visible anywhere in the agent
+  orchestrator or anywhere else"), closing the residual gap the 2026-08-18 decommission cleanup left behind.**
+  The 2026-08-18 entry below removed the Grok-SPECIFIC modules/routes/UI panels; this pass removed the
+  remaining scattered mentions that survived that cleanup: `"grok"` deleted from `AccountProvider`
+  (`server/accounts.py`) — it is no longer a valid provider value at all, not just an unregistered one;
+  `model_flag_for_provider`'s docstring and `model_pricing.py`'s "not yet categorized providers" comment both
+  updated to stop listing it; the dashboard's `TaskUsageWindows.tsx` provider-filter button removed (it had 0
+  registered accounts to filter for); `test_model_pricing.py`'s `billing_shape_for_provider("grok")` assertion
+  removed (grok is no longer a real provider name to assert about). Also closed the open `[REVIEW] P0` todo
+  above with the explicit dated ruling it said it needed. **Deliberately left unchanged, as a scoped decision,
+  not an oversight**: the live-deployed LiteLLM proxy config/systemd-unit file names
+  (`config/litellm/grok_gemini_proxy.yaml`, `scripts/litellm-grok-gemini-proxy.service`,
+  `scripts/install-litellm-grok-gemini-proxy-service.sh`) still carry "grok" in their FILENAME even though
+  their CONTENT has been Grok-free since 2026-08-18 — these are live, VM-deployed artifacts (Gemini/Kimi/Gemma
+  traffic still routes through them); renaming risks a code/VM drift (the running systemd unit's `ExecStart`
+  would point at a path the next `git pull` deletes) that a code-only change can't safely resolve without a
+  coordinated VM-side re-provision. Flagged as an open follow-up, not resolved unilaterally — same posture this
+  doc's own 2026-08-18 entry already took on the live GSM secrets/accounts.json rows (also still open). Also
+  scrubbed two stale doc mentions elsewhere in the corpus that described Grok as still current:
+  `plans/epics/orchestrator_master.md`'s epic rollup had a stale pre-retitle epic entry
+  ("Grok + Gemini translation proxy"), and `plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md`
+  listed `grok` as one of 12 live `AccountProvider` values. Repo: agent-orchestrator +
+  unified-trading-pm.
 
 - **2026-08-18 (later, dispatched sub-agent session) — `[REVIEW] P0` tool_use/tool_result translation smoke-test gate:
   BUILT + LIVE-VERIFIED against a real Gemini backend. Translation was ALREADY CORRECT — no bug found, no fix needed.

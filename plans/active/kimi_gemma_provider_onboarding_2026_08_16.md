@@ -25,7 +25,7 @@ related:
     /codex/06-coding-standards/model-tier-selection.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-18
+last_updated: 2026-08-20
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only
@@ -883,3 +883,63 @@ work.
       changes (via a fake `sys.modules` injection — litellm itself isn't a dependency of this repo's own
       `.venv`, only the separate litellm-proxy venv on the VM). **Evidence: agent-orchestrator@25589117c3.**
       Repo: agent-orchestrator.
+
+- **2026-08-20 — Kimi BLOCKED from dispatch routing, code-level, per explicit (repeat/insisting) operator
+  ruling: "Kimi is there, but it's not something that we're going to use... it should be in the UI marked as
+  'not used for now' and blocked. The code shouldn't try and route to it."** Distinct from, and stronger than,
+  this plan's existing account-level pause (`account_status: disabled`, 2026-08-16): that pause is a per-account
+  operational flag an operator could flip back at any time without anyone noticing the routing intent had
+  changed; this adds an explicit, provider-level code gate that holds regardless of account status.
+  **HARD SAFETY RAIL upheld**: nothing about Kimi's financial/wallet infrastructure was touched or deleted —
+  `server/kimi_balance.py`, `server/kimi_balance_poller.py`, the wallet-reconciliation code/routes,
+  `tests/test_kimi_balance.py`, `tests/test_kimi_balance_poller.py`, `tests/test_kimi_wallet_reconciliation.py`,
+  `dashboard/tests/e2e/kimi-wallet-reconciliation.spec.ts`, and every real historical balance/spend number this
+  plan's own Progress Log recorded (the $15 credited / $14.99978 available / $0.00022 consumed baseline, etc.)
+  all remain fully intact, running, and auditable — this is a ROUTING block, not a deletion.
+
+  **Code shipped** (`agent-orchestrator`): new `_ROUTING_BLOCKED_PROVIDERS: frozenset[str] =
+  frozenset({"kimi"})` module-level constant in `server/autospawn.py`, checked at BOTH real account-selection
+  choke points that can hand back an account (confirmed by reading both, not assumed to be one):
+  `_pick_headroom_account` (the fresh-spawn/resume/preferred-provider walk — the same "one hook point every
+  dispatch path funnels through" this plan's own Gemini-headroom-gate precedent used) returns `None`
+  immediately for a blocked provider, before `accounts.json` is even loaded; and separately
+  `_live_free_combo_ids` (the Phase-4 stratified-rotation pool, `deepseek_claude_blended_provider_routing_2026_07_28`
+  Phase 4) — this one does NOT call `_pick_headroom_account` at all, it returns an `AccountDef` straight from
+  `load_accounts(...).get(...)`, so a single-point block would have left the rotation mechanism able to hand out
+  a Kimi account if one were ever accidentally re-enabled. Also excluded from `registered_free_providers`/the
+  `preferred_provider` degrade-chain's fallback set in `select_account_for_spawn`, so a Kimi provider slot is
+  never even attempted, not merely attempted-and-rejected. New regression tests proving the block holds even
+  when `account_is_usable()` is stubbed to always return true (i.e. the block does NOT depend on the current
+  pause state, unlike before):
+  `tests/test_deepseek_provider_routing.py::test_pick_headroom_account_kimi_blocked_from_routing_even_when_usable`
+  (+ a sibling proof a co-registered non-blocked provider, e.g. GLM, is unaffected) and
+  `tests/test_stratified_rotation.py::test_live_free_combo_ids_excludes_kimi_even_when_usable`.
+
+  **UI updated** (`dashboard/src/KimiWalletPanel.tsx`, `dashboard/src/layout.tsx`): `KIMI_PAUSED_REASON` (the
+  shared string behind both the wallet-panel banner and the Accounts-panel "Kimi Blocked" badge next to the
+  Resume button) rewritten to lead with "Not used for now" and explain the new code-level block explicitly,
+  while keeping the literal substring "Kimi Blocked" so the existing e2e assertions
+  (`kimi-wallet-reconciliation.spec.ts`, "shows the Kimi Blocked banner" / "Kimi Blocked badge" tests) keep
+  passing unchanged — visible text on both surfaces now reads "Kimi Blocked — Not Used For Now". Deliberately
+  did NOT change `allKimiAccountsPaused()`'s own account-status-derived logic (still true today — every Kimi
+  account remains disabled) but flagged in its docstring that the account-status signal is no longer the
+  SOURCE of the block, only a signal correlated with it — a future one-off account re-enable for an unrelated
+  reason would silently make this banner disappear even though dispatch would still refuse to route there;
+  noted as a known residual coupling, not fixed here (would need a new backend-exposed "provider blocked" flag,
+  out of scope for this pass).
+
+  **Open item, NOT resolved unilaterally**: whether the Kimi balance-polling background job (if it runs on a
+  schedule the way `DeepSeekBalancePoller` does — this plan's own 2026-08-16 entry flagged the cadence as "not
+  yet confirmed") should be paused now that Kimi is a settled "not used for now" rather than a temporary
+  pending-waitlist pause. Continuing to poll a real external API on a schedule for a provider the fleet has
+  decided not to route to is a real, distinct judgment call (cost of the poll itself vs. keeping the wallet
+  balance current for whenever it's re-evaluated) — left running, unpaused, pending an explicit operator
+  decision on that specific question; not something this ruling's "block routing, keep financial data"
+  instruction settles either way.
+
+  Todo 1 above (the Kimi re-add economic reconciliation, `[OPERATOR] P0`) is left OPEN and unedited — it asks a
+  substantively different question (was re-adding Kimi worth it on the merits, including the Moonshot max-plan
+  terms) than this entry answers (route to it or not, right now) — the operator's "not used for now" framing
+  reads as the practical answer to that question too, but the todo's own literal bar (record the max-plan's
+  real terms) technically remains unconfirmed, so it stays open rather than being silently closed on an
+  inference.
