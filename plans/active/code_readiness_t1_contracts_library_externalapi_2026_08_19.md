@@ -504,20 +504,22 @@ todos only to confirm they are data-movement, then leave it.
      it may supersede the Q12-Q16 framing this plan cites elsewhere. The ship hit a self-healing collision
      (safe-doc-push detected its own corruption attempt from a concurrent peer edit, restored my content from a
      snapshot, verified zero conflict markers before proceeding) — landed clean, verified on origin.
-  2. **IN FLIGHT, not yet shipped**: `unified-api-contracts` has complete, tested, uncommitted work for the
-     `VenueCapabilityV2` transfer-capability todo below (P1, line ~376) — a new `TransferCapabilityV2` schema
-     (`copper_eligible`/`ceffu_eligible`/`manual_transfer_eligible`/`prime_broker_eligible`), wired into
-     `VenueCapabilityV2.transfer_capability`, exported at both `internal/__init__.py` and
-     `internal/architecture_v2/__init__.py`, with 5 passing unit tests
-     (`tests/internal/unit/test_venue_capability_transfer_eligibility.py`) confirmed via direct pytest run.
-     Files: `unified_api_contracts/internal/architecture_v2/schemas.py`,
-     `unified_api_contracts/internal/__init__.py`, `unified_api_contracts/internal/architecture_v2/__init__.py`,
-     `tests/internal/unit/test_venue_capability_transfer_eligibility.py`. **A `quality-gates.sh` run was
-     launched in the background (task id referenced in this session's scratchpad, not durable — re-run it) and
-     had not finished when this checkpoint was written.** NEXT SESSION: `cd unified-api-contracts`, `git status`
-     to confirm these 4 files are still present uncommitted, re-run `bash scripts/quality-gates.sh`, then ship
-     via `quickmerge.sh --agent --files` with those 4 paths, then flip the P1 checkbox at line ~376 with the
-     landed sha.
+  2. **UPDATE, same session, post-checkpoint: item 2 below was a FALSE ALARM, not real loss — recorded because
+     the diagnostic trail is worth keeping.** After writing this checkpoint, the local working-tree copy of
+     `TransferCapabilityV2` genuinely disappeared from `schemas.py` (confirmed: 0 matches, clean `git status`),
+     and the gate run launched against it failed with `ImportError: cannot import name 'TransferCapabilityV2'`
+     — indistinguishable from real data loss at the time. Reconstructed the change from the diff already
+     captured in-session, re-verified 5/5 tests, re-gated (green, 377s), and went to ship it — at which point
+     quickmerge's own Not-Behind Gate reported `unified-api-contracts@45a545e5ad` (this SAME slot, an EARLIER
+     part of this compacted-out session) had **already landed the identical change** minutes before the
+     checkpoint was written. The "revert" was never a revert: the working tree had simply reset to
+     post-commit-clean state after that earlier successful ship, and re-reading it without re-checking `git log`
+     first made it look like loss. Diffed the reconstruction against origin's landed version — byte-identical —
+     then discarded the local duplicate and `pull --ff-only`'d clean (0 ahead/behind). **Lesson for next time**:
+     before treating a missing local change as reverted, check `git log HEAD..origin/<branch>` FIRST — a
+     same-slot earlier-session commit reads identically to a hostile revert until you do.
+  (The original item-2 text this replaced described the pre-resolution "in flight, not yet shipped" state — moot
+  now; the todo at line 376 already carries the correct landed sha.)
   **Standing state, unaffected by either item above**: 22 of T1's remaining todos need no gate finished, no
   outstanding uncommitted work exists in `unified-trading-library` (clean, 0 ahead) or `unified-trading-pm`
   (clean, 0 ahead, 0 behind after the restore above). All prior Progress Log entries in this file remain the
