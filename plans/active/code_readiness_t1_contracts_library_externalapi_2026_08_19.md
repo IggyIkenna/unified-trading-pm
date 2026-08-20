@@ -977,3 +977,9 @@ todos only to confirm they are data-movement, then leave it.
   nothing for a live execution path, asked T4 to name the fields (pointed them at
   `UniswapConnector.mint_position()`/`burn_position()`'s real signatures, which the enum's own comment already
   cites as the dispatch target) — held open, not fabricated.
+
+- [ ] [FROM-T2] P3. **Flip `InstrumentRecord.model_config = ConfigDict(extra="forbid")`** in
+      `unified-api-contracts/unified_api_contracts/internal/reference/instrument.py`. Every REMOVE-verdict caller
+      is now clean fleet-wide — T2 finished the last one (`min_order_size`, zero consumers, removed from all 5
+      call sites, `instruments-service@588f35aeb0`). Full disposition history + evidence:
+      `/plans/active/instrument_record_schema_completeness_extra_forbid_2026_07_18.md`. P3, not blocking.

@@ -377,3 +377,20 @@ is genuinely VM-scale work, not shared-host-scale:
       streams without materializing 170k+ blob metadata and retains at most two worker windows
       of futures; full `quality-gates.sh --no-fix` passed (11,093 passed, 28 skipped, 1 xpassed,
       82.01% coverage, exit 0). The reduced-concurrency retry remains gated by the next todo.
+- **T2 tranche, `/autonomous`, 2026-08-20 (PARALLEL SESSION NOTICE + a self-correction)**: a **different
+  concurrent VM**, `cefi-itype-casing-apply-rw-20260820-172425` (my own new
+  `launch-cefi-itype-casing-apply-reduced-workers-vm.sh`, launched ~17:24Z — separate from slot-18's `...-173927`
+  above, launched ~17:44Z, same underlying script, same `--workers 4`, different launcher/naming), reached a
+  TERMINAL state first: OOM-killed (SIGKILL, rc=137) at 18:13:58Z, after ~28min of steady heartbeats with zero
+  script output. **Checked the timing before drawing a conclusion, not after**: `market-tick-data-service`'s
+  memory-bound streaming fix (`bccf8177ff`, the todo directly above) landed at **18:07:45Z** — AFTER my 172425 VM
+  had already launched (~17:24Z) and pulled its tarball, so that VM ran entirely on the PRE-FIX
+  materialize-170k+-blobs code the whole time. Its OOM does **NOT** show `--workers 4` is insufficient in
+  general — it most likely reproduces the exact bug slot-18 had already root-caused and fixed, just on a
+  tarball that predated the fix. Correcting my own earlier draft of this entry, which claimed the OOM "falsifies
+  worker-count as the sole lever" before checking this timing — that claim is unsupported and withdrawn.
+  **My own next attempt, `MACHINE_TYPE=e2-highmem-16` (128GB RAM) + `--workers 4`, launched after 18:07:45Z and so
+  DOES include the streaming fix** — its result is the first real post-fix data point on this issue; treat it,
+  not the pre-fix 172425 run, as the next thing to review. slot-18's `...-173927` VM (launched 17:44Z, also
+  pre-fix) is very likely to OOM for the same pre-fix reason — worth a fresh post-fix relaunch on slot-18's side
+  too rather than waiting out that VM's own outcome.
