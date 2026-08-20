@@ -187,7 +187,13 @@ plan is a serial chain by file-topology, not a reflexive default.
   `counterparty_client_id=None`, and a second client's query returns empty). **Residual scope note** (not silently
   faked): this persists via `PersistenceStore` (in-memory today, matching every other object this store holds) — the
   actual GCS parquet partition writer has no shipped precedent anywhere in the fleet to mirror and is out of scope
-  here; a durable backend is the same documented follow-up this store's own docstring already flags.
+  here; a durable backend is the same documented follow-up this store's own docstring already flags. **Parity
+  follow-up** (found + closed by a separate concurrent `.tabs/5` interactive session after the above landed):
+  fund-administration-service@80407f9 wires the same `build_treasury_ledger_row` into the manual API settle path
+  (`api/main.py`'s `settle_red()`) too — the commit above wired only the automatic `GracePeriodHandler._persist_settled`
+  cadence path, so an operator-triggered `POST /redemptions/{id}/settle` silently produced no treasury ledger row
+  until this follow-up. Verified ancestor of origin/live-defi-rollout; QG green (33s);
+  `test_settle_redemption_via_api_writes_treasury_ledger_row` green.
 
 - [x] [REVIEW] P2. Confirm no regression: run `fund-administration-service`'s full test suite
   (`bash scripts/quality-gates.sh`) after all prior todos land and cite the green run. Done-when: QG passes with the
@@ -249,7 +255,6 @@ plan is a serial chain by file-topology, not a reflexive default.
   `run_once()` now strikes ONE `FundNAVSnapshot` per `(fund_id, share_class)` per cadence tick (a per-tick
   `snapshot_cache`) and reuses it across every redemption settled in that tick, replacing the prior per-redemption
   `latest_snapshot()` call. QG green (32s).
-
 - **2026-08-20**: [operator's interactive main session, `/autonomous`] Implemented the final 2 todos directly
   (treasury ledger writer + final QG confirmation) — both were queued/unclaimed in the live backlog at check time, so
   no collision risk. Along the way found + fixed a real cross-repo SSOT contradiction: UAC's `LedgerRow` docstring
@@ -260,3 +265,22 @@ plan is a serial chain by file-topology, not a reflexive default.
   colliding with real peer commits (kept upstream's already-evidenced content, dropped the redundant duplicate).
   **All 9 todos in this plan are now done.** Handing off to
   `fund_administration_redemption_cadence_engine_finalize_2026_08_20.md` next.
+- **2026-08-20**: [interactive session, `.tabs/5`] Independently began implementing item 9 (treasury ledger writer) in
+  parallel with the session above — **a fourth collision on this same `sequential: true` plan** (see item 4's entry
+  for the first two; this is the third). Mid-implementation, `git push` surfaced a rebase conflict against
+  `fund-administration-service@a1f4457` — the same commit the session above shipped, landing between this session's
+  local commit and its push. Resolved per the established multi-agent-safety recipe: took the peer's already-landed
+  `fund_administration_service/ledger/` module + `PersistenceStore.put_treasury_ledger_row`/`list_treasury_ledger_rows`
+  wholesale (`git show <peer-sha>:<path>` per conflicted file — `in_memory_store.py`, `grace_period_handler.py`,
+  `test_background_handlers.py`), and dropped this session's own now-redundant
+  `redemption/state_machine.py::build_treasury_ledger_row` + `PersistenceStore.put_ledger_row`/
+  `list_ledger_rows_for_client` + their tests entirely — the rebase completed with an empty diff (zero net functional
+  change from this session's own attempt). While resolving, found one genuine residual gap in the shipped
+  implementation: it wired the ledger write only into `GracePeriodHandler._persist_settled` (the automatic cadence
+  path) — the manual API settle endpoint (`POST /redemptions/{id}/settle`, `settle_red()` in `api/main.py`) drove the
+  identical PROCESSED→SETTLED transition without writing the ledger row. Closed that gap as a small, additive
+  follow-up reusing the already-landed `fund_administration_service.ledger` module rather than re-implementing —
+  fund-administration-service@80407f9, verified ancestor of origin/live-defi-rollout, QG green (33s),
+  `test_settle_redemption_via_api_writes_treasury_ledger_row` green. **Flagging again for the operator** (per item 4's
+  same flag, now a recurring pattern across 4 sessions on one plan): AO's plan-claim/dispatch model does not appear to
+  prevent two workers from picking up the same in-progress `sequential: true` plan.
