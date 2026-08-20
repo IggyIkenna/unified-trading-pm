@@ -431,13 +431,7 @@ in this read-only audit pass (time-bounded scope).
       `perp_funding`/`perp_daily_ctx`, DeFi bucket) for a day AFTER both crons have had a chance to fire on fresh raw
       input — do not re-check same-day as the raw fire. **Repo: deployment-service** (verification only, no code
       change expected unless a cron fire genuinely fails).
-- [x] ✅ [DATA] P1. **DONE 2026-08-20 (slot-14) — day=2026-08-18 raw `derivative_ticker` re-captured: 6/6
-      catalog_carry venues landed (bounded UTL `list_blobs` probe — BINANCE-FUTURES 734 · BYBIT 784 · OKX-SWAP 437 ·
-      KRAKEN-FUTURES 300 · BITGET-FUTURES 776 · BITFINEX-FUTURES 76 = 3107 objects, matching the 08-17 baseline).
-      Backfill VM `cefi-fwd-20260820-053520` (`--force 2026-08-18 2026-08-18`, launched 2026-08-20T05:35Z) passed the
-      now-fresh OOM preflight and re-captured the missing day; VM still finishing the remaining data_types
-      (trades/book_snapshot_5/…). Original slot-4 wording:
-      **NEW 2026-08-20 (slot-4) — day=2026-08-18 raw `derivative_ticker` capture MISSED (fwd worker exited
+- [ ] [DATA] P1. **NEW 2026-08-20 (slot-4) — day=2026-08-18 raw `derivative_ticker` capture MISSED (fwd worker exited
       78 at OOM preflight on a stale cefi index).** The 08-19 09:00Z fwd fire launched `cefi-fwd-20260819-090020`
       targeting `day=2026-08-18`, but setup failed (vm-setup.log + EXIT_STATUS=78): "OOM preflight FAIL:
       ...availability_index.parquet is 111000s stale (budget 86400s)" — the cefi manifest-consolidator was degraded

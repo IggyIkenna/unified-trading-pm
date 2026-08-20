@@ -224,8 +224,3 @@ tracked work, invisible to the AO backlog (`regen_backlog_from_plan.py` only par
   CORRECT (both kinds are genuinely covered by 005, so excluding the whole `manifest-consolidator-*` family is right);
   no change needed there. Shipped: deployment-service@3d5db7dcfd.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
-- **2026-08-20 (slot 27, dispatch agt-21dce5)**: live logs still show `STALLED` manifest consolidation for the
-  market-data-tradfi bucket (streak 10/11) and `Consolidator DOWN` with no heartbeat for an unknown bucket. Recent
-  `uts-prod-manifest-consolidator-market-data-tradfi` executions include both successful and failed runs. This
-  condition remains open; no code change or registry append was made in this reconciliation, and the existing P2
-  wrong-name coverage todo remains the owner of follow-up.
