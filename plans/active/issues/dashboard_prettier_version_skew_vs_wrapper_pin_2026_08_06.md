@@ -48,7 +48,14 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
-context_scope: [/plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md, /codex/06-coding-standards/quality-gates.md, scripts/hooks/prettier-autostage.sh, agent-orchestrator/dashboard/package.json, agent-orchestrator/scripts/quality-gates.sh]
+context_scope:
+  [
+    /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
+    /codex/06-coding-standards/quality-gates.md,
+    scripts/hooks/prettier-autostage.sh,
+    agent-orchestrator/dashboard/package.json,
+    agent-orchestrator/scripts/quality-gates.sh,
+  ]
 ---
 
 # Dashboard prettier version skew vs the autostage wrapper's pin
@@ -131,3 +138,4 @@ and the gate passed, so nothing was blocked.
   reasoning — agrees, no new facts found.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:88a164971a98eb0d]: KEEP-NA, valid — the mechanical version-bump work already shipped; sole remaining item is a genuine undecided design/policy call (whether the dashboard should gate on formatting at all), reaffirmed across 3 prior audit passes.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — entries unchanged, still accurate

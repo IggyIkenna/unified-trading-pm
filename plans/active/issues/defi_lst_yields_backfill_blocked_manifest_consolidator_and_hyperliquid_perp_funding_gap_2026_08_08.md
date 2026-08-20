@@ -46,6 +46,7 @@ source: >-
 context_scope:
   [
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
     features-service/features_service/onchain/cli/handlers/batch_handler.py,
     features-service/scripts/backfill_lst_yields_30day.sh,
     /plans/active/defi_satellite_ao_dispatch_batch14_2026_08_16.md,
@@ -191,3 +192,4 @@ Missing: market-tick-data-service-perp
 - **na-eligibility-audit 2026-08-17**: KEEP-NA-STALE (already-duplicated), reconfirmed — citation to defi_satellite_ao_dispatch_batch14_2026_08_16.md:171 (status: draft) independently re-verified real. Doc stays NA, 0 open checkboxes.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) — added the active satellite batch now owning the
   30-day backfill re-run as its extracted todo.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

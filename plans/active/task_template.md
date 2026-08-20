@@ -667,3 +667,4 @@ start.**
   direction — the sweep itself is human-judgment classification work, not bounded AO-dispatch work).
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:21ef6ad252ed5d77]: KEEP-NA, valid — this IS the plan-authoring template/guide itself; 0 tracked todos ever, structurally never AO-dispatchable or archivable while it remains the live authoring SSOT.
 - **context-scout 2026-08-17**: re-verified context_scope (6 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

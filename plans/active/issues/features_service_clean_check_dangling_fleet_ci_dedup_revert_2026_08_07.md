@@ -48,6 +48,7 @@ context_scope:
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
     /plans/archive/2026_08/issues/features_service_clean_check_dangling_revert_of_hyperliquid_cefi_bucket_fix_2026_08_03.md,
     features-service/.github/workflows,
+    agent-orchestrator/scripts/hooks/block_destructive_commands.py,
   ]
 ---
 
@@ -146,3 +147,4 @@ with a real message + a Progress Log entry in the dedup plan), or (c) already su
   needed): split into a `[x]` `[DIAG]` disposition-ruling todo (done) + an open `[OPERATOR]` drop-the-stash todo, so
   this stops re-dispatching to INFRA workers who cannot execute the drop and instead surfaces to the operator queue.
   Todo intentionally left open — the stash itself is still present, unresolved pending human action.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

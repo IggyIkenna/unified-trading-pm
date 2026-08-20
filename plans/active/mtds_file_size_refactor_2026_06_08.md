@@ -46,6 +46,7 @@ context_scope:
     /codex/06-coding-standards/quality-gates.md,
     market-tick-data-service/market_tick_data_service/cli/handlers,
     market-data-processing-service/market_data_processing_service/app/adapters,
+    /plans/active/issues/mdps_adapter_protocol_polars_seam_mis_scoped_ao_dispatch_2026_08_15.md,
   ]
 ---
 
@@ -239,3 +240,4 @@ elsewhere — it stays captured here so nothing is lost. This plan itself remain
   future non-read-only pass to refresh the description, not acted on here (read-only classification scope).
 - **context-scout 2026-08-09**: populated/refreshed context_scope (4 entries).
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (4 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

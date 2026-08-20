@@ -208,3 +208,4 @@ question's blast radius has shrunk since `fleet_workflow_template_dedup_to_unifi
 `ag_closeout_audit_ci_parked_2026_08_16.md` already filed the operator-ruling ask for this doc as its own Todos item 2
 rather than let it be reconfirmed a 7th time with no decision. Not duplicating that escalation here -- see that doc
 for the standing ask.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries)

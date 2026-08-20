@@ -48,6 +48,7 @@ context_scope:
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     deployment-service/terraform/gcp/manifest_consolidator_scheduler.tf,
     deployment-service/deployment_service/cloud_run_job_registry.py,
+    /codex/05-infrastructure/billing-cost-observability.md,
   ]
 ---
 
@@ -838,3 +839,4 @@ context_scope:
   investigation, periodic instruments-sports OOM re-check, the operator-rejected 18→5 consolidation already
   CANCELLED) re-confirmed genuine judgment/time-gated/research work on independent re-read — doc stays
   `assigned_vm: NA` for those.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

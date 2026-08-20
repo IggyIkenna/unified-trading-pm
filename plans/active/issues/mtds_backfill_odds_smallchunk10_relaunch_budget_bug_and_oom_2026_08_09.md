@@ -41,6 +41,7 @@ context_scope:
     deployment-service/deployment_service/vm_prefix_registry.py,
     deployment-service/scripts/recovery/relaunch_stalled_vm.py,
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+    deployment-service/scripts/vm/launch-mtds-sports-odds-backfill-vm.sh,
   ]
 created: "2026-08-09"
 author: data_pipeline_failure-worker-slot5
@@ -170,3 +171,4 @@ Two independent paths, not mutually exclusive:
   raw-name is fallback-only for non-canonical requests -- `market-tick-data-service@719e4d0dd1` (10 new regression
   tests, full quality-gates.sh green). Does not close this todo -- the general OOM root cause is still open, only this
   additive amplifier is fixed.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries) — added scripts/vm/launch-mtds-sports-odds-backfill-vm.sh (the launcher whose MACHINE_TYPE/CHUNK_SIZE defaults the unresolved OOM path A would change).

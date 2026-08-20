@@ -289,3 +289,4 @@ against a `.venv` without this pending lock change, not silently smoothed into a
 down" narrative.
 - **na-eligibility-audit 2026-08-17** [body-hash:113cba0b6fa4629e]: RECLASSIFY (per-todo split) -- extracted the 1 bounded item (regression guard for eager imports) to cross_cutting_satellite_ao_dispatch_batch14_2026_08_17.md item 1. Doc stays assigned_vm: NA for its other genuinely operator-gated/design items (the layer-2 UAC restructure needs an operator ruling on scope first). Cross-cutting tranche audit.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) — added the 3 source paths named in the doc's own three-layer summary (UAC registry/__init__.py, strategy-service's archetype factory, execution-service's algorithms.py); was codex+plan-only before.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

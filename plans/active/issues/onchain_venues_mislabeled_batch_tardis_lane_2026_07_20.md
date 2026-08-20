@@ -227,3 +227,4 @@ fail-hard is a separate gate** and is NOT blocked by this issue (see the resolve
 - **na-eligibility-audit 2026-08-09** (tranche=cefi, autonomous): KEEP-NA, valid — 2 of 4 original closure actions now
   done (PACIFICA-SOLANA quarantine closed today 2026-08-09; writer-fix closed 2026-08-07). 2 remain: both prod-GCS
   split-brain MERGE operations, single-walk-discipline-sensitive.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

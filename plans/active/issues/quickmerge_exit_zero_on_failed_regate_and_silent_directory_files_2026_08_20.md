@@ -43,6 +43,15 @@ source: >-
   that broke live-defi-rollout.
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+    /codex/12-agent-workflow/measurement-claims-discipline.md,
+    /codex/05-infrastructure/per-tab-worktrees.md,
+    /plans/active/code_readiness_t3_features_ml_strategy_2026_08_19.md,
+    scripts/quickmerge.sh,
+    scripts/dev/safe-doc-push.sh,
+  ]
 ---
 
 # quickmerge.sh: exit 0 on failed re-gate + silent directory drop in `--files`
@@ -133,3 +142,5 @@ it in `/codex/05-infrastructure/per-tab-worktrees.md`.
       every file it restores so the loss is visible.
 - [ ] [DOC] P1. Add the per-file origin probe + the "an empty diff is not proof" case to
       `/codex/05-infrastructure/per-tab-worktrees.md`, next to the existing `ahead=0` guidance.
+
+- **context-scout 2026-08-20**: populated context_scope (6 entries).

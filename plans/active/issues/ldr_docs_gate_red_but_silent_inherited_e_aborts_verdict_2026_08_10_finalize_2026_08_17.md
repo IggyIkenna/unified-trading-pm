@@ -41,6 +41,7 @@ context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/issues/ldr_docs_gate_red_but_silent_inherited_e_aborts_verdict_2026_08_10.md,
   ]
 ---
 
@@ -58,3 +59,4 @@ context_scope:
 
 - **2026-08-17 (na_eligibility_auditor, dispatch agt-775398, slot 23)**: drafted alongside the RECLASSIFY(whole-doc)
   flip per the mandatory finalize-plan rule.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

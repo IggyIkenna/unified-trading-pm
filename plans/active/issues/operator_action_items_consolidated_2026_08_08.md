@@ -277,3 +277,4 @@ outcome, so they belong on this list rather than in an audit report nobody owns.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
 
 - **na-eligibility-audit 2026-08-19 (ao tranche)** [body-hash:e8072075a33c3ee4]: KEEP-NA, valid — all 27 open items are vendor/wallet credential blocks, GH UI-only settings, categorically-banned git-stash-drops, or explicit judgment/design-fork calls with no evidence-based tiebreaker; converges with 2 prior na-eligibility-audit rounds (2026-08-09, 2026-08-10) and today's plan_reconciler infra-tranche pass. Note for a future pass: L75/L188 redirect to sibling issue docs not yet checked for assigned_vm status — may become KEEP-NA-STALE-DUPLICATED pointers.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -34,7 +34,15 @@ resolved_by:
 locked_by:
 drift_direction: advance-code
 depends_on: []
-context_scope: [/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md, /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md, strategy-service/strategy_service/close_all/carry_staked_basis.py, execution-service/execution_service/api/app.py, unified-api-contracts/unified_api_contracts/internal/modes.py]
+context_scope:
+  [
+    /plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md,
+    /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    strategy-service/strategy_service/close_all/carry_staked_basis.py,
+    execution-service/execution_service/api/app.py,
+    execution-service/execution_service/api/main.py,
+    unified-api-contracts/unified_api_contracts/internal/modes.py,
+  ]
 ---
 
 # E2E wiring — built vs REACHABLE
@@ -883,3 +891,4 @@ rendered as a broken grid, because that component expects `div > b + span`.
   `venue_readiness_ao_dispatch_batch1_finalize_2026_08_16`'s reconciliation todo.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17** [body-hash:265f9cd3225b808a]: KEEP-NA, valid -- Heterogeneous P0 issue spanning caller-graph reachability + 2 operator-ruling sections on live-capital reconciliation/audit machinery. Of 11 open items: 2 explicit [OPERATOR] tags, 1 redirects to a LOCAL/operator-scoped design todo per 2026-08-09 ruling BLK-7f4d33db, 1 blocked on Chunk A's number (doc's own note: "has moved three times"), 3 new safety mechanisms on live-capital reconciliation (doc's own text: a typo here "compounds into a real trade"), 3 depend on an undecided OrderStatus-extension-vs-parallel-audit-event design fork, 1 (audit-coverage extension, line 598) is a lower-confidence MISCLASSIFIED_LIKELY_AO_ELIGIBLE flag for a future pass, not acted on this run. A prior same-day pass already closed 2 stale items; none of the current 11 are stale. Cross-cutting tranche audit.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

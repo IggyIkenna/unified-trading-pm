@@ -430,3 +430,4 @@ uncommitted across a checkpoint boundary, even mid-task.
   (`data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`) and `live_workers_chain.py`, the file most of this
   doc's later root-cause work (SchemaContractNotFoundError routing, the 2-segment instrument_id bug) actually
   touched.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

@@ -383,6 +383,7 @@ existing codex SSOT names this 4-line architecture itself — once lines 2-4 are
   and a genuine unresolved 3-option design fork with no tiebreaker (item 1, line-1-completeness vs. proseWrap). No new
   evidence since the 2026-08-08 operator-Q&A investigation entry changes either disposition.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 
 ## Progress Log
 

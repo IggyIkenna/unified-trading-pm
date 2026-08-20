@@ -60,7 +60,13 @@ source: >-
   prompted checking whether the target resource address was correct; comparing it against the plan's OTHER pending entry
   for the same physical job under a different Terraform address (`module.instruments_cefi_t1_recon_job`) surfaced the
   duplication.
-context_scope: [deployment-service/terraform/gcp/audit03_cron_provisioning.tf, deployment-service/terraform/gcp/t1_recon_instruments_jobs.tf, deployment-service/terraform/gcp/_imports_reconcile.tf, deployment-service/terraform/gcp/t1_batch_scheduler.tf]
+context_scope:
+  [
+    deployment-service/terraform/gcp/audit03_cron_provisioning.tf,
+    deployment-service/terraform/gcp/t1_recon_instruments_jobs.tf,
+    deployment-service/terraform/gcp/_imports_reconcile.tf,
+    deployment-service/terraform/gcp/t1_batch_scheduler.tf,
+  ]
 ---
 
 # Two Terraform module definitions manage the same live cefi/prediction T+1-recon Cloud Run jobs
@@ -200,3 +206,4 @@ because:
 - **na-eligibility-audit 2026-08-18** (infra tranche) [body-hash:79d74c0358834746]: KEEP-NA, valid — unchanged since
   2026-08-17. 2 remaining items both explicitly `[OPERATOR]`-tagged (canonical-module choice; the ~20-import
   env-gating structural risk) — not worker-determinable.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

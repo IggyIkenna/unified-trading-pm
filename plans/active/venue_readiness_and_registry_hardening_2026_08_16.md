@@ -868,6 +868,8 @@ actionable P0.
 - **na-eligibility-audit 2026-08-17** [body-hash:123ebd72ee10e83c]: RECLASSIFY (per-todo split) -- of 7 open todos, 1 is bounded/worker-determinable and extracted to cross_cutting_satellite_ao_dispatch_batch16_2026_08_17.md item 5: 'Publish the granularity view' -- the doc's own text confirms this is now purely a rendering task (the underlying VENUE_GRANULARITY_CAPABILITIES registry + get_granularity() already shipped 2026-08-16 with 412 populated cells), not a data-population one. Doc stays assigned_vm: NA for its remaining 6 items: 'Consolidate venue_universe into a clean UAC SSOT' (explicitly deferred pending W4's fork), 'Sign off each proposed merge' ([OPERATOR] P0), 'Declare capability for the 8 undeclared DeFi venues' (already PARKED as a conflict by this same tranche's earlier 2026-08-17 pass -- BLOCKED-OPERATOR-DECISION, not re-litigated here), and the 3 'Definition of done for the umbrella' items (cross-cutting completion bars spanning the whole umbrella's mechanical sweep across ~7 repos, not single-outcome work -- matches the 'multi-file, multi-day' bar even where individually phrased as one todo). Conflict-check clear for the extracted item: no other active plan claims building this render/report. Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 6 open checkboxes (grep matches Phase-0's 6); every item is either explicitly [OPERATOR]-tagged, already PARKED by two same-day 2026-08-17 na-eligibility-audit passes on THIS exact doc.
 
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)
+
 ## Deferred work after 2026-08-16
 
 **2026-08-16 correction**: this table previously listed W3/W4/W5 and both `[OPERATOR]` design rulings as unresolved.

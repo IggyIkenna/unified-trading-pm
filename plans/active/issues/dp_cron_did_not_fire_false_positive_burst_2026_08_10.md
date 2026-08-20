@@ -112,7 +112,13 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-10
 locked_since:
-context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md, deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py]
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /plans/active/issues/dp_live_003_agent_orch_aws_credentials_gap_2026_08_10.md,
+    deployment-service/deployment_service/data_pipeline_monitors/missing_live_producer_watcher.py,
+    deployment-service/deployment_service/data_pipeline_monitors/producer_lifecycle.py,
+  ]
 source: >-
   Operator-reported: 10 DP_CRON_DID_NOT_FIRE alerts fired within ~90 seconds of each other at 2026-08-10T00:09-00:10Z,
   one already confirmed false-positive (agent-orch-planning-vm-, the real AWS orchestrator VM verified running
@@ -335,3 +341,4 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   `agt-7f6044`] vs B relaunch now), the same mechanism the sibling todo used. No answer within the 2-min bounded wait —
   slot freed, question persists for the operator, a later answer re-dispatches a fresh worker. No code changed this
   session.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

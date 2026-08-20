@@ -43,6 +43,8 @@ context_scope:
   [
     /codex/05-infrastructure/dual-cloud-image-builds.md,
     /codex/05-infrastructure/orchestrator-cloud-identity-self-service.md,
+    .github/workflows/cloud-build-router.yml,
+    scripts/workflow-templates/rollout-workflow-templates.sh,
   ]
 ---
 
@@ -166,3 +168,4 @@ access from this worktree).
 - **context-scout 2026-08-17**: refreshed context_scope (2 entries) — added `orchestrator-cloud-identity-self-service.md`
   alongside the existing `dual-cloud-image-builds.md`, since the sole remaining open item (the AWS IAM grant) is exactly
   the self-service-boundary question that doc explains.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -80,3 +80,4 @@ source: >-
 - **2026-08-19 (Track-A/B classification pass, ao_open_work_consolidated_tracker_2026_08_14.md Track 7)**: Forked
   verbatim out of the source plan's line ~354. Source plan's checkbox replaced with a bold pointer digest line
   (task_template.md §3 finding H convention) + `related:` cross-link added both directions.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

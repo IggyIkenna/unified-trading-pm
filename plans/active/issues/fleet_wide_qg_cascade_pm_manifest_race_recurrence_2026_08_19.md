@@ -210,9 +210,10 @@ more forensic depth, not a new third occurrence, so that threshold is not yet me
 
 ## Progress Log
 
-- **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-19**: populated/refreshed context_scope (5 entries).
 - **2026-08-19 (self-correction)**: found `pm_corpus_dangling_link_cascade_during_active_reconcile_sweep_2026_08_18`
   (archived, same-day, identical 9 shas) only after Findings 1-2 and the initial fix were already written — should
   have grepped `plans/active/` + `issues/` before starting per the workspace's pre-task plan-conflict-check rule.
   Added the Correction section reconciling both docs' evidence; the shipped retry-hardening + reorder stand as safe
   improvements but neither claims to have prevented the actual ~20-40min incident.
+- **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.

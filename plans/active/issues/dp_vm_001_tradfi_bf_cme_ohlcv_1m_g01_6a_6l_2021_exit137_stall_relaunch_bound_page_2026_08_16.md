@@ -39,7 +39,7 @@ related:
     /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_es_2020_exit137_stall_relaunch_bound_page_2026_08_15.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/tradfi_satellite_ao_dispatch_batch15_2026_08_17.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py]
 created: "2026-08-16"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -166,3 +166,4 @@ same-shard VM noted above.
   case, not verified this session. Per RB-INFRA-RELAUNCH, did not relaunch. Filed this issue doc and paging the
   operator via `/blocked` per the escalation's explicit instruction. No code changed this session.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

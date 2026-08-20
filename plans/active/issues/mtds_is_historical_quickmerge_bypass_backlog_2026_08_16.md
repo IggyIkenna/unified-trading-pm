@@ -76,3 +76,4 @@ live promotion the same way `unified-trading-pm`'s `e560378a2d` did earlier in t
 
 - **na-eligibility-audit 2026-08-16** [body-hash:34c3d23d3f97c424]: KEEP-NA, valid — Doc created today (2026-08-16) by a /ci-reconcile sweep — no staleness window exists. All 3 open todos are genuinely operator-gated judgment work, not deterministic/bounded work.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

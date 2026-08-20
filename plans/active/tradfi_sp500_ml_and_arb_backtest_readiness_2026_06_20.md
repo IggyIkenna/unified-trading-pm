@@ -381,3 +381,4 @@ here.
   machinery, not mis-defaulted NA — the sibling archived tracker's own history (landing even one single-day smoke
   required finding+fixing 9 distinct bugs across 2 repos) is the standing basis, not re-derived this pass.
   `assigned_vm` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

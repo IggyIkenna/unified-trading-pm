@@ -43,7 +43,14 @@ superseded_by:
 source: >-
   Found 2026-08-16 during defi_venue_e2e_batch1_2026_08_16.md's step-9 (transfers) contract sweep, then confirmed
   via a dedicated reachability research pass (same rigor as the sibling cefi CCXT-withdraw-stub finding).
-context_scope: [execution-service/execution_service/custody/cloud_kms.py, execution-service/execution_service/custody/local_key.py, unified-api-contracts/unified_api_contracts/registry/chain_env.py, /codex/04-architecture/execution-modes-and-chain-resolution.md]
+context_scope:
+  [
+    execution-service/execution_service/custody/cloud_kms.py,
+    execution-service/execution_service/custody/local_key.py,
+    execution-service/execution_service/defi_execution/protocols/uniswap.py,
+    unified-api-contracts/unified_api_contracts/registry/chain_env.py,
+    /codex/04-architecture/execution-modes-and-chain-resolution.md,
+  ]
 ---
 
 # CloudKmsCustodyProvider silently resolves an unmapped chain to chain_id=1 instead of failing loud
@@ -202,3 +209,4 @@ reachability todo `[OPERATOR]` accordingly.
   given a real, wired, provisioned custody path and a chain (LINEA) already marked live for this exact venue
   family.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries) — added execution_service/defi_execution/protocols/uniswap.py (the shipped chain-id-fallback fix, execution-service@c3d63e4411)

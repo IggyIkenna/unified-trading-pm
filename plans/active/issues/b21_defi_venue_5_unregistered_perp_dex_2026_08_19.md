@@ -34,6 +34,14 @@ source: >-
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/02-data/availability-manifest-and-data-status.md,
+    /plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md,
+    /plans/active/data_pipeline_completion_2026_08_21.md,
+    unified-api-contracts/unified_api_contracts/registry/defi_venues.py,
+    unified-api-contracts/unified_api_contracts/registry/perp_funding_cadence.py,
+  ]
 ---
 
 # B21 defi venues — 5 genuinely unregistered perp-DEX / product venues
@@ -129,3 +137,4 @@ Per-value, in priority order:
   item 1 after fixing the other 29/34 values mechanically this same session (comparison-logic fix + 2 accepted-
   exception registries). These 5 need real registry-phase/writer-trace judgment calls, out of the parent item's
   read-only-audit-safe scope.
+- **context-scout 2026-08-20**: populated context_scope (5 entries)

@@ -570,3 +570,4 @@ in this same run.
   non-dispatchable: grace-window placeholders, cross-tranche routing pointers (tradfi ×2, cross-cutting ×1), an
   NA-ratchet self-reference, 2 pointers at OTHER docs' possibly-bounded items (not extractable from this doc), and 1
   genuine OPERATOR_QUESTION (batch11/phase_d double-execution risk). Doc stays NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

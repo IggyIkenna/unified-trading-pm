@@ -38,6 +38,7 @@ context_scope:
   [
     /plans/active/tradfi_satellite_ao_dispatch_batch18_2026_08_19.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/issues/tradfi_deprecated_etf_manifest_rows_forward_scope_drift_2026_08_18.md,
   ]
 supersedes:
 superseded_by:
@@ -72,3 +73,4 @@ source: >-
 - **2026-08-19 (na-eligibility-audit, tradfi tranche, dispatch agt-5d34f9)**: authored alongside batch18 itself,
   per `task_template.md` §4's mandatory finalize-plan-coverage rule. Not yet executed — gated on batch18's own
   todos landing.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

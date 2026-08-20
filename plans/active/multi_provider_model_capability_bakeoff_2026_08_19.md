@@ -657,3 +657,4 @@ where it writes.
   trivial single-turn probe right now, consistent with the earlier finding that it fails specifically on full-size
   real requests, not universally. GLM — still inside its 5-hour lockout, **11h38m remaining** at check time,
   resets 2026-08-20T00:22:34Z.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

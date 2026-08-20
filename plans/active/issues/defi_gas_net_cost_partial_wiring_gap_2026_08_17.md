@@ -39,11 +39,12 @@ locked_since:
 assigned_vm: planning
 context_scope:
   [
-    /home/ubuntu/unified-trading-system-repos/.tabs/7/strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/liquidation_capture.py,
-    /home/ubuntu/unified-trading-system-repos/.tabs/7/strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
-    /home/ubuntu/unified-trading-system-repos/.tabs/7/strategy-service/strategy_service/engine/strategies/v2/mev/jit_liquidity.py,
-    /home/ubuntu/unified-trading-system-repos/.tabs/7/strategy-service/strategy_service/engine/strategies/v2/mev/backrun.py,
-    /home/ubuntu/unified-trading-system-repos/.tabs/7/strategy-service/strategy_service/cli/handlers/paper_run_handler.py,
+    strategy-service/strategy_service/engine/strategies/v2/arbitrage_structural/liquidation_capture.py,
+    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
+    strategy-service/strategy_service/engine/strategies/v2/mev/jit_liquidity.py,
+    strategy-service/strategy_service/engine/strategies/v2/mev/backrun.py,
+    strategy-service/strategy_service/cli/handlers/paper_run_handler.py,
+    features-service/features_service/onchain/app/calculators/gas_cost_usd_calculator.py,
   ]
 resolved_by:
 ---
@@ -237,3 +238,4 @@ execution-service's gas-cost models and features-service's onchain calculators. 
       actually run end-to-end in a real paper run — currently NOT in `paper_universe.py`'s drivable
       `StrategyArchetype.*` set at all (confirmed via grep, 2026-08-17). Repo: strategy-service. Done when: a real
       paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — corrected the .tabs/7 absolute prefixes to workspace-root-relative; added the features-service gas_cost_usd_calculator producer

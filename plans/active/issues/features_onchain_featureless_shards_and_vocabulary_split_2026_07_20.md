@@ -336,3 +336,4 @@ build-MTDS-collectors → recompute), not a new one.
   stays `assigned_vm: NA` (KEEP-NA valid, round11).
 - **na-eligibility-audit 2026-08-16** [body-hash:eb6c098a1e58cc26]: KEEP-NA, valid — Single open [DATA] P0 todo's title implies a broad consolidator/re-derive-index/build-MTDS-collectors/recompute chain, but the todo's own updated text narrows it: the consolidator/re-derive-index portion is now moot (already shipped 2026-07-30, features-service@d8a643a0, per a sibling doc's root-cause correction) — only 'build-MTDS-collectors → recompute' remains, i.e.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

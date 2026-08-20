@@ -47,7 +47,6 @@ context_scope:
     agent-orchestrator/server/deepseek_native_proxy_server.py,
     agent-orchestrator/server/deepseek_balance_poller.py,
     agent-orchestrator/server/deepseek_usage_poller.py,
-    agent-orchestrator/server/state_store/slots.py,
     agent-orchestrator/server/orm.py,
     /codex/12-agent-workflow/measurement-claims-discipline.md,
     /codex/04-architecture/runtime-deployment-topology.md,
@@ -557,3 +556,4 @@ Progress Log).
   now has **zero open todos**; its gated finalize plan
   (`deepseek_wallet_residual_root_cause_and_windowed_reconciliation_2026_08_11_finalize.md`) owns the archival ritual
   from here, not this pass — see that finalize plan for the actual `git mv` + corpus referrer sweep.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

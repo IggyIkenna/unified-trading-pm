@@ -996,3 +996,4 @@ those commits landed). The escalation's own repo-blocker list (`GET /api/repo-bl
 > split with headroom) instead of here, per this doc-chain's established split practice.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries).

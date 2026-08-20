@@ -148,3 +148,4 @@ or an equivalent is promoted); this run's job was classification + duplicate-avo
   read of `data_completion_defi_2026_07_15.md`, which the second worker's own conflict-check grep had surfaced as a
   hit but not followed up by reading. No corpus content lost: this doc had been blind-`Write`-overwritten by the
   second worker's own duplicate draft and is restored here to its original, correct 2026-08-18 content verbatim.
+- **context-scout 2026-08-20**: refreshed context_scope (2 entries)

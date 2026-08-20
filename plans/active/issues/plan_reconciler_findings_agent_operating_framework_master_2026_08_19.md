@@ -137,3 +137,4 @@ Two low-confidence items hunters flagged but did NOT recommend fixing (left as-i
   repoint, 2 ordering-not-machine-enforced notes, 2 contradiction/misleading-content corrections, 2 structural
   fixes, 1 zero-checkbox-doc conversion, 1 epic-roster mechanical regen, 1 Phase -1 stale-prior-finding
   resolution). This doc parks what that pass could not settle from evidence alone.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

@@ -96,3 +96,4 @@ the dispatcher will not release these until batch11 is fully done.**
   `status: active`, gated on batch11's 12 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting on
   batch11's dispatch + completion.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

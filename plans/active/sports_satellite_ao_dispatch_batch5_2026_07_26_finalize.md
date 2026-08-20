@@ -279,3 +279,4 @@ context_scope:
 - **context-scout 2026-08-06**: re-scouted; context_scope re-verified (6 entries), unchanged.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries) -- 4th scout pass; re-verified all 6
   entries still resolve on disk and remain the correct minimal set; unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

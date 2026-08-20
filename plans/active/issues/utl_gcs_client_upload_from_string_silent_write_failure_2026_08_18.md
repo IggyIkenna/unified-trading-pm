@@ -48,8 +48,9 @@ context_scope:
   [
     /plans/active/deployment_service_api_integration_cleanup_2026_08_18.md,
     /codex/05-infrastructure/gcs-object-operations.md,
-    deployment_service/deployment/state.py,
-    deployment_service/scripts/wave_launcher.py,
+    deployment-service/deployment_service/deployment/state.py,
+    deployment-service/scripts/wave_launcher.py,
+    deployment-service/deployment_service/monitor.py,
   ]
 supersedes:
 superseded_by:
@@ -647,3 +648,4 @@ already prioritized toward these 6 docs now).
   (`InstrumentDomainConfig`/`ClientDomainConfig`/`VenueDomainConfig`/`TickerUniverseConfig`/`RiskDomainConfig`/
   `AlertRuleDomainConfig`/`RateLimitDomainConfig`/`FeatureFlagDomainConfig`) carry the same latent
   crash-on-real-`.env` risk, unfixed — flagged for a follow-up decision, not scoped as a todo here.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

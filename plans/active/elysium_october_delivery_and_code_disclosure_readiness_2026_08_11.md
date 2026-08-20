@@ -52,6 +52,9 @@ context_scope:
     /codex/04-architecture/client-funds-isolation.md,
     /codex/04-architecture/defi-execution-overview.md,
     /codex/04-architecture/transfer-architecture.md,
+    /codex/09-strategy/operational/paper-batch-live-reconciliation.md,
+    /plans/active/solana_lst_carry_jupiter_perps_and_kamino_borrow_2026_08_12.md,
+    execution-service/execution_service/transfer_coordinator.py,
   ]
 source: >-
   Interactive session 2026-08-11. Operator decisions: defer the code carve-out past the October delivery; send the
@@ -975,3 +978,4 @@ a corrected claim. Current: deep dive `778c86ca-b08a-465b-af70-557bb84b25df` · 
   worked example) all present. Evidence-tier `.ev-*` marks + rule-13 owner marks applied to all 16 eligible sections.
   Landing commits `unified-trading-pm@{171dc40739, 6a5598e736, 8fb70b119b}` (per-todo evidence in the elysium child
   plan). The disclosure-review gate in § E remains the standing pre-send check.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

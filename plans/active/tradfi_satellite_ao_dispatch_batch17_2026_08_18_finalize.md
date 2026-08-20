@@ -35,7 +35,12 @@ supersedes:
 superseded_by:
 depends_on: [tradfi_satellite_ao_dispatch_batch17_2026_08_18]
 gate_on_depends: true # documentation-only while the target is mid-dispatch, per the standard idiom
-context_scope: [/plans/active/tradfi_satellite_ao_dispatch_batch17_2026_08_18.md]
+context_scope:
+  [
+    /plans/active/tradfi_satellite_ao_dispatch_batch17_2026_08_18.md,
+    /plans/active/issues/features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md,
+    /plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md,
+  ]
 source: "na-eligibility-audit, tradfi tranche, dispatch agt-31bfcb, 2026-08-18"
 resolved_by:
 ---
@@ -56,3 +61,4 @@ Gated on `tradfi_satellite_ao_dispatch_batch17_2026_08_18.md`'s own 2 todos bein
 
 - **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): drafted alongside batch17, gated per
   the standard `depends_on` + `gate_on_depends: true` convention.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

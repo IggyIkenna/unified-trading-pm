@@ -140,3 +140,5 @@ needed" assumption and fix this for every future hourly run, not just this one).
   (grant `ikenna-worker` scoped SSM access, vs. fix why this dispatch shape isn't inheriting the orchestrator VM's
   own `uts-orchestrator-epic-role` instance-profile credentials) — not worker-determinable alone per the
   self-service SSOT's own explicit carve-out for a genuinely different, non-assumable identity.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries) — the self-service SSOT, both watchdog scripts,
+  and the sibling access-denied issue all resolve and remain the doc's coverage.

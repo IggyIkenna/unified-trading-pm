@@ -147,3 +147,4 @@ was **not** recoverable from those stashes, nor from 89 dangling blobs.
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: re-verified context_scope (4 entries), unchanged.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:cb1d8f4bb18dad16]: KEEP-NA, valid — both remaining open todos are explicit [OPERATOR] decisions (widen uv.lock auto-clean scope; bulk-clean vs leave 43 archived repos' stale dirt) — genuine preference calls.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

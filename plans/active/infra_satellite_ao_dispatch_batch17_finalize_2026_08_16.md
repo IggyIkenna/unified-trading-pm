@@ -39,7 +39,7 @@ superseded_by:
 depends_on: [infra_satellite_ao_dispatch_batch17_2026_08_16]
 gate_on_depends: true
 sequential: true
-context_scope: [/plans/active/infra_satellite_ao_dispatch_batch17_2026_08_16.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /codex/12-agent-workflow/commit-push-flip-rule.md]
+context_scope: [/plans/active/infra_satellite_ao_dispatch_batch17_2026_08_16.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /codex/12-agent-workflow/commit-push-flip-rule.md, /codex/05-infrastructure/vm-launcher-runbook.md]
 source: >-
   Operator ruling 2026-07-24 (task_template.md §4) — every AO-dispatched plan needs a gated finalize plan. Authored in
   the same turn as batch 17, 2026-08-16 (slot 9, infra).
@@ -76,3 +76,4 @@ source: >-
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

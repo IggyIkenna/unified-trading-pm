@@ -47,6 +47,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/live/websocket_runner.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/websocket_streaming_handler.py,
     market-tick-data-service/market_tick_data_service/live/_instrument_cache_consumer.py,
+    /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
   ]
 depends_on: []
 locked_by:
@@ -158,3 +159,4 @@ and is flagged, not diagnosed further, here.
   this session lacks. A redirect banner means the dispatch mechanism would be wrong even though the todo text itself
   reads boundable — flipping `assigned_vm` here would misroute the work. Consistent with 3 prior passes. Doc stays
   NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

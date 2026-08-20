@@ -27,6 +27,7 @@ context_scope:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
     unified-trading-pm/scripts/plans/fix_epic_frontmatter_2026_05_21.py,
+    scripts/plans/clear_locked_by_placeholder_2026_08_12.py,
   ]
 created: "2026-08-10"
 last_updated: "2026-08-10"
@@ -156,3 +157,4 @@ mis-treating a doc that coincidentally has a real reason to be locked under that
   docs, a precisely-scoped, worker-determinable bug-hunt-and-fix with 2 live repro cases and a ready repro command.
   Flipped `assigned_vm: NA -> planning`, filled `assigned_role: worker` (was missing). Companion:
   `locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10_finalize_2026_08_19.md`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -71,7 +71,14 @@ related:
     /plans/active/issues/defi_morpho_lending_indices_never_wired_2026_07_12.md,
     /plans/active/cefi_consolidated_closeout_aggregated_sources_2026_07_24.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/scripts/vm/launch-mdps-backfill-vm.sh, deployment-service/scripts/vm/lib/launcher_common.sh, unified-trading-library/unified_trading_library/pipeline_mode_resolver.py]
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/scripts/vm/launch-mdps-backfill-vm.sh,
+    deployment-service/scripts/vm/lib/launcher_common.sh,
+    unified-trading-library/unified_trading_library/pipeline_mode_resolver.py,
+  ]
 created: "2026-08-15"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -257,3 +264,4 @@ Per `rb_infra_relaunch.md`'s bounds + the OOM-relaunch actuator's own design:
   `quality-gates.sh` green (280s), shipped via quickmerge. Only the P3 `[OPERATOR]` todo remains open on this doc.
 - **na-eligibility-audit 2026-08-16** [body-hash:5e1df6c0e9a5d4cc]: KEEP-NA, valid — Doc read end-to-end (frontmatter, root-cause narrative, todos, 4 Progress Log entries 2026-08-15→2026-08-16).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

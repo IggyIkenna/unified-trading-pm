@@ -833,3 +833,4 @@ code.
   independently; no substantive content change since the 2026-08-16 verdict (context-scout metadata touch only).
   Still under the standing `## OPERATOR GATE` (3-lens money-path review required before any accrual/NAV change
   ships) — not re-litigated. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

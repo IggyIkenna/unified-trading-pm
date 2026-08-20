@@ -71,6 +71,8 @@ context_scope:
     /plans/active/sports_satellite_ao_dispatch_batch5_2026_07_26.md,
     market-tick-data-service/market_tick_data_service/cli/handlers/tick_data_handler.py,
     /codex/02-data/data-pipeline-correctness-hard-rule.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/odds_api_adapter.py,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/sentinels.py,
   ]
 supersedes:
 superseded_by:
@@ -559,3 +561,5 @@ information this dispatch. VM `mtds-backfill-odds-20260817-062648` confirmed sti
 instances list` (same instance as the last 2 checks, no relaunch needed). `GET /api/backlog` confirms the current task
 id `...-bbab759cd4a7` still carries no `prereqs.prerequisites` — the orphaned gate remains unfixed. Checkbox correctly
 left unchecked. Skipping with `reason_code: GATED`.
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

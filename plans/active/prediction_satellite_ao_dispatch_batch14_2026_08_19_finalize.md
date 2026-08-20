@@ -51,7 +51,12 @@ source: >-
   status — a finalize plan carries no independent judgment call, so a second `status: draft` safety rail is
   redundant.
 context_scope:
-  [/plans/active/prediction_satellite_ao_dispatch_batch14_2026_08_19.md, /plans/PLAN_FORMAT.md]
+  [
+    /plans/active/prediction_satellite_ao_dispatch_batch14_2026_08_19.md,
+    /plans/PLAN_FORMAT.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/12-agent-workflow/commit-push-flip-rule.md,
+  ]
 ---
 
 # Prediction satellite AO batch 14 — finalize
@@ -86,3 +91,4 @@ context_scope:
 - **2026-08-19 (ag_closeout_auditor, prediction tranche, dispatch agt-6a0a6b)**: drafted alongside
   `prediction_satellite_ao_dispatch_batch14_2026_08_19.md`, `status: active` from creation per the no-double-gate
   ruling.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

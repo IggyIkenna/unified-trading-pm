@@ -39,7 +39,7 @@ context_scope:
   [
     /plans/active/data_source_provenance_enforcement_2026_07_24.md,
     scripts/quality_gates/audit_source_column_distribution.py,
-    market-tick-data-service/scripts/backfill_cefi_source_column.py,
+    deployment-service/scripts/migrations/market-tick-data-service/backfill_cefi_source_column.py,
     market-tick-data-service/scripts/restamp_tradfi_cme_ohlcv15m_blank_source_2026_08_15.py,
     /plans/archive/issues/hyperliquid_trades_blank_pipeline_mode_write_path_gap_2026_08_15.md,
   ]
@@ -226,3 +226,4 @@ leaving it as an unscoped "run a corpus backfill" todo.
   1-row patch, not on the (now-complete) P1 backfills.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

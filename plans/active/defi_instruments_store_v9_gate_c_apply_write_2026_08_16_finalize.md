@@ -38,6 +38,7 @@ context_scope:
   [
     /plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md,
     /plans/active/defi_migration_audit_log_2026_07_24.md,
+    /plans/active/master_data_canonicalisation_migration_catalogue_2026_06_07.md,
   ]
 locked_since:
 resolved_by:
@@ -54,3 +55,4 @@ resolved_by:
 ## Progress Log
 
 **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

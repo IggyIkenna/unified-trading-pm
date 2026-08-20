@@ -56,6 +56,7 @@ context_scope:
   [
     /plans/active/issues/na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md,
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
+    scripts/plan-hygiene/na_marker_helper.py,
   ]
 ---
 
@@ -185,3 +186,4 @@ frontmatter claim in the second example is simply absent.
   docs** carry a `"na-eligibility-audit 2026-08-18"` entry — the true blast radius of this bug is almost certainly
   much larger than the 13 instances now confirmed across both runs combined (2 original + 11 here); todo 3's own
   planned sweep should treat 116 as the upper-bound candidate count to check, not a fresh unknown.
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries)

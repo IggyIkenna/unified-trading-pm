@@ -30,6 +30,7 @@ context_scope:
     /plans/active/defi_migration_audit_log_2026_07_24.md,
     /plans/active/is_catalogue_g1_root_audit_log_2026_07_24.md,
     instruments-service/scripts/enumerate_expected_universe.py,
+    /plans/active/defi_instruments_store_v9_gate_c_apply_write_2026_08_16.md,
   ]
 created: 2026-06-07
 parent_epic: manifest_master
@@ -926,6 +927,7 @@ sequenced and nothing is unblocked-out-of-order or orphaned.
 
 - **na-eligibility-audit 2026-08-17** [body-hash:4cd66b45279168a4]: KEEP-NA, valid -- Grep-verified exactly 2 open checkboxes (lines 286,349) across the full 944-line file, matching inventory_open_todos=2. Caught the corpus's confirmed 'dated RE-TRIAGE overriding an earlier checkmark' trap on item 1: an earlier passage implied the DeFi IS-store v9 migration was done ('no write needed — current=new'), but a 2026-08-12 /plan-reconcile entry explicitly re-opened it ('the "IS v9 migration done" claim above was WRONG ... NOT ✅ COMPLETE'), and a further 2026-08-16 re-verification confirmed it is STILL not complete (organic convergence to 100% v9 happened, but the explicit --apply-write with its residual 12% data-quality delta has never run, and the follow-on plan is a draft, operator-gated). Item 2 (WAVE 5 live-side) is an explicitly future-gated bookkeeping placeholder ('assign to slots when reached'), confirmed by three independent na-eligibility-audit passes (08-06/08-07/08-08). Doc's own text states its role is pure coordination -- it executes nothing itself; both open items are dependency edges onto other (also-gated) work, not judgment calls this doc itself needs to resolve.
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 ## Deferred work — migrated to:
 
 **Corrected by plan_reconciler 2026-08-10 — both entries below were stale.** This section predates the 2026-07-24

@@ -45,7 +45,7 @@ related:
     /plans/active/issues/tradfi_bf_cme_ohlcv_1m_relaunch_dispatch_budget_hit_2026_08_16.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope: [/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md, /codex/15-runbooks/incidents/rb_infra_relaunch.md, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
+context_scope: [/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md, /codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/02-data/tradfi-databento-sourcing-ssot.md, /plans/active/tradfi_satellite_ao_dispatch_batch15_2026_08_17.md, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
 created: "2026-08-17"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -196,3 +196,4 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
   `2026-08-17T12:11Z`. No new information beyond the existing wave-scale finding already paged in that P0 doc's
   Progress Log (2026-08-17, slot 16) — did not re-page the operator (would be a duplicate ask); did not relaunch
   per RB-INFRA-RELAUNCH. No code changed this session.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

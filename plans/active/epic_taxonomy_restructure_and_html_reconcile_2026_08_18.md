@@ -769,3 +769,4 @@ into any of the 9.
      output — the only 2 `❌` lines found (`VERSION_SPLIT`, `VESTIGIAL_SCALAR_DRIFT`) are fleet-wide release-tag
      manifest drift checks unrelated to any file this session touched, confirmed pre-existing corpus-wide, not a
      regression this pass introduced.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

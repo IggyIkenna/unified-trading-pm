@@ -43,6 +43,7 @@ context_scope:
   [
     /plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md,
     /plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md,
+    /plans/active/issues/b21_distinct_values_noncanonical_live_2026_08_18.md,
     unified-api-contracts/unified_api_contracts/internal/schemas,
     instruments-service/instruments_service/reference_data/adapters/prediction,
   ]
@@ -98,3 +99,4 @@ todos, so those are not duplicated here).
   non-duplication against the rest of the corpus. Flipped `assigned_vm: NA -> planning` +
   `execution_scope: local-only -> orchestrator-agent` in place (frontmatter above); companion finalize plan:
   `nick_ai_audit_data_quality_findings_2026_08_16_finalize_2026_08_17.md`.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

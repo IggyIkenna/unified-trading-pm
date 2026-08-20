@@ -54,6 +54,7 @@ context_scope:
     scripts/quality_gates/workflow_template_drift_baseline.json,
     scripts/workflow-templates/rollout-workflow-templates.sh,
     /codex/08-workflows/ci-cd-flow.md,
+    scripts/workflow-templates/image-build-gate.yml.tmpl,
   ]
 source: >-
   Hit live 2026-08-14 in slot 26 (infra), gating an unrelated rollout-cloudbuild.py substitutions fix. Same-day
@@ -151,3 +152,4 @@ for `detect_template_drift.*--workflows.*--repo`/`STEP 5.108`/this exact wiring 
 and no ci-tranche `status: draft` satellite batch exists to check against. `execution_scope` corrected to
 `orchestrator-agent`; `assigned_role: infra` already valid, unchanged. Finalize plan authored:
 `unified_api_contracts_image_build_gate_template_lag_blocks_all_pm_commits_2026_08_14_finalize_2026_08_18.md`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

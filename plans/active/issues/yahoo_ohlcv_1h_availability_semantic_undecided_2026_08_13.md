@@ -189,3 +189,4 @@ So the lookahead risk the original text worried about is modelled by an existing
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) — swapped the already-shipped UAC registry files
   for the remaining-work targets: the ready-to-run latency-measurement script (P3) and the codex doc to update (P2),
   plus the billing-suspension doc explaining why Yahoo is the interim source.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries)

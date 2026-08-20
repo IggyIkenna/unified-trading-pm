@@ -347,3 +347,4 @@ Corroborating only — already tracked elsewhere, no new todo (would duplicate e
   same gap is already tracked with more detail in `plan_reconciler_findings_defi_master_epic_2026_08_18.md`'s
   Parked item 4, so this journal's own copy was pure duplication, not additional information. This doc's own
   remaining open work is now 0 items. Doc stays `assigned_vm: NA` (a run-journal, not archived per prior precedent).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

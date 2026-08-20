@@ -50,7 +50,14 @@ superseded_by:
 resolved_by:
 source: operator request 2026-07-21 — "Orphans not assessed for any AG — lets assess then"
 depends_on: []
-context_scope: [/codex/02-data/orphan-object-detection.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md, instruments-service/scripts/migration_orphan_sweep.py, instruments-service/scripts/backfill_orphan_class_e.py, deployment-service/scripts/vm/launch-orphan-sweep-vm.sh]
+context_scope:
+  [
+    /codex/02-data/orphan-object-detection.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    instruments-service/scripts/migration_orphan_sweep.py,
+    instruments-service/scripts/backfill_orphan_class_e.py,
+    deployment-service/scripts/vm/launch-orphan-sweep-vm.sh,
+  ]
 ---
 
 # Estate orphan assessment 2026-07-21 (partial)
@@ -591,3 +598,4 @@ landed before re-starting the investigation from scratch.
 - **na-eligibility-audit 2026-08-16** [body-hash:eb106d5b4ba9ecad]: KEEP-NA, valid — Read the doc in full (588 lines). 9 of 10 todos are [x] with hard evidence (VM run names, GCS report paths, commit SHAs — e.g.
 - **na-eligibility-audit 2026-08-17** [body-hash:2a1a59f43ef68bc2]: KEEP-NA, valid — Reaffirmed. Sole open item (todo 6, batched-incremental record_cells() refactor) carries a standing CONTESTED-then-reverted history (2026-07-30 defi RECLASSIFY reverted to NA after a 2-1 tally) — citation-hold class (b), a standing ruling. Doc stays assigned_vm: NA.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

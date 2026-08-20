@@ -366,3 +366,4 @@ fixing 11 other tranches' concurrent NA growth would defeat the sharded-run desi
   `plan_reconciler_findings_predictions_master_2026_08_19.md:200-216` — same non-action reasoning as that sibling
   doc's marker. Item 1 (systemic `last_updated` staleness routing note) and item 3 (mdps_fleet mistag pointer) remain
   correctly non-dispatchable. Doc stays NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

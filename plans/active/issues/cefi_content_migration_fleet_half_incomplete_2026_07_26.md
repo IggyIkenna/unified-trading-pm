@@ -697,3 +697,4 @@ accordingly.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — re-verified all 5 entries resolve on
   disk and remain accurate; the 2026-08-15 shard-24-status pointer references a sibling doc that is independently
   context-scouted in its own right, not a new dependency here.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

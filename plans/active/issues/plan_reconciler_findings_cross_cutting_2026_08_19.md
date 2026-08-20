@@ -451,3 +451,4 @@ genuinely-unresolved data-pipeline items (Filed, "real work" bucket) first.
   the agent's actual final result directly once that task completes, with no invented busywork. Used successfully
   for the remaining 4 hunters afterward. Worth remembering for any future run that fans out Agent-tool sub-agents
   and needs to wait on them individually rather than relying only on background task-notifications.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

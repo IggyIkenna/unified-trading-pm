@@ -332,3 +332,4 @@ Operator reported agents "keep respawning without finishing their tasks and burn
   avoid. Re-check trigger (unchanged from the todo's own framing): once every `sub-*` account shows
   `overage_status` other than `rejected` for a sustained period, this is safe to revert — not yet met. Todo stays
   open (this is a status check-in against a still-unmet condition, not a final answer).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries), unchanged.

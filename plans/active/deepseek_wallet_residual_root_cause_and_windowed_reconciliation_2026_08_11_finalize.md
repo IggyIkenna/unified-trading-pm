@@ -88,3 +88,4 @@ source: >-
   them to tracked todos per plan-completion-and-archival-discipline.md step 1.
 - **context-scout 2026-08-15**: refreshed context_scope (3 entries), no change needed -- this is a gated
   finalize/archival doc, genuinely code-free.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

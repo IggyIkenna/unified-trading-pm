@@ -65,3 +65,5 @@ Machine-gated: `depends_on: [ao_finished_oneshot_sessions_not_reaped_blocks_esca
       `ao_stuck_escalation_mtds_no_free_slot_2026_08_18.md`'s `related:` link.
 
 ## Progress Log
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

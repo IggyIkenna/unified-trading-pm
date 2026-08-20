@@ -246,3 +246,4 @@ original audit and this measurement, not a discrepancy in method; both counts de
   `defi_track01...md` copy was itself extracted 2026-08-09 into `defi_satellite_ao_dispatch_batch11_2026_08_09.md`
   (`[SCRIPT] P1`, active). Updated the todo's pointer to cite batch11 directly as the live dispatch path. Doc stays
   `assigned_vm: NA`.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

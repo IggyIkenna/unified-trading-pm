@@ -63,3 +63,5 @@ completes.
       `escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md`'s `related:` links).
 
 ## Progress Log
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

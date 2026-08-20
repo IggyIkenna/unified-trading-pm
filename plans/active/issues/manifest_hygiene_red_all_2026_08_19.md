@@ -22,6 +22,13 @@ locked_by: live-defi-rollout
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    e2e-testing/scripts/audit/manifest_hygiene_daily.py,
+    unified-trading-library/scripts/detect_manifest_divergence.py,
+    /plans/active/issues/manifest_hygiene_red_all_2026_08_17.md,
+  ]
 ---
 
 # Manifest hygiene RED — 4 AG(s) with findings (2026_08_19)
@@ -101,3 +108,4 @@ the day's raw `divergence_<date>.csv` is written to the Cloud Run Job's own ephe
 committed anywhere this worker can inspect post-hoc — reproducing that specific failure would need live GCS
 credentials + re-running the job, out of scope for a P1 given the fallback-path bug itself is fully root-caused,
 fixed, and test-covered independent of why the CSV read missed.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

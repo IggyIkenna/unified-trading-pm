@@ -55,7 +55,15 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope: [/plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md, /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md, /plans/archive/issues/dex_pool_fees_inverted_flip_write_race_2026_08_12.md, /codex/02-data/defi-canonical-naming-ssot.md, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
+context_scope:
+  [
+    /plans/archive/2026_08/defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md,
+    /plans/archive/issues/defi_dex_pool_fees_retirement_recommendation_2026_08_04.md,
+    /plans/archive/issues/dex_pool_fees_inverted_flip_write_race_2026_08_12.md,
+    /codex/02-data/defi-canonical-naming-ssot.md,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    market-tick-data-service/scripts/one_offs/retire_dex_pool_fees_legacy_captured_rows_2026_08_12.py,
+  ]
 ---
 
 # `dex_pool_fees` retirement premise is FALSE — 21 real objects exist (2026-08-12 finding)
@@ -217,3 +225,4 @@ Operator confirmed **A** on BLK-9aed224f (2026-08-12): retire all 14 CURVE rows 
   DuckDB verify confirms the terminal state is **21 `attempted_failed`** (7 BALANCER + 14 CURVE) — the full
   operator-confirmed disposition. Consolidator resumed (ENABLED). Ship: `market-tick-data-service@ad0db52396`.
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

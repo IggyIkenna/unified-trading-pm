@@ -803,3 +803,4 @@ source issue doc directly as the successor reference.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (5 entries), still accurate.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

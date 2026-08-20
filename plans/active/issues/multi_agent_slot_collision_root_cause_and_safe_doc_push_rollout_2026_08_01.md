@@ -416,3 +416,4 @@ have told "claimed and alive" apart from "claimed and abandoned weeks ago."
   `/plans/active/multi_agent_slot_collision_root_cause_and_safe_doc_push_rollout_2026_08_01_finalize_2026_08_08.md`, not
   by `batch5_finalize`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

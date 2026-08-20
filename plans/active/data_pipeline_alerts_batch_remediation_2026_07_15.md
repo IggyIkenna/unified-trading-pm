@@ -57,6 +57,7 @@ context_scope:
     /plans/archive/2026_08/issues/tradfi_unreachable_databento_data_types_mbp10_ohlcv_coarse_calendar_2026_07_15.md,
     /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
     /plans/archive/2026_07/data_pipeline_alerts_batch_remediation_closeout_2026_07_24.md,
+    deployment-service/deployment_service/data_pipeline_monitors/known_dead_cells_registry.py,
   ]
 ---
 
@@ -141,3 +142,4 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries) -- the intervening
   `data_pipeline_hardening_self_monitoring` archival commit already resolves correctly via this doc's existing
   archive-path entry; no new reference target since the 2026-08-07 scout pass.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -538,3 +538,4 @@ todos only to confirm they are data-movement, then leave it.
   keyed on mere key-presence would flip to the fine grain and enumerate **zero** shard cells — every coverage
   figure silently collapsing while looking structurally fine. The shipped detector requires a non-empty venue
   block and correctly falls back, still reporting the real 2-tuple cells. Confirmed by test, not by reading.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -37,6 +37,8 @@ context_scope:
   [
     /plans/active/issues/plan_reconciler_findings_defi_2026_08_17.md,
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    /codex/05-infrastructure/spot-vms-for-backfill.md,
   ]
 ---
 
@@ -335,3 +337,4 @@ fixed, routed, refuted, or deferred-for-grace above. Nothing was dropped for tim
   commits (`5da9ab838b`, `5c94de1d37`, `dc0038eb2e`) across 3 branch-drift retries total (this branch is under
   heavy concurrent-commit load, consistent with 08-17's own "Lessons for the next reconciler run" note — 2-4
   retries per push is expected, not a bug). Zero blocked-questions filed this run (trust mode applied throughout).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

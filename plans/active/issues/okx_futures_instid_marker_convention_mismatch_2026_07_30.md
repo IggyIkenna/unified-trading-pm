@@ -91,6 +91,7 @@ context_scope:
     /plans/active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md,
     market-tick-data-service/market_tick_data_service/live/connectors/okx_futures_ws.py,
     market-tick-data-service/market_tick_data_service/live/connectors/okx_ws.py,
+    market-tick-data-service/tests/unit/test_okx_futures_live_batch_id_parity.py,
     instruments-service/instruments_service/reference_data/adapters/cefi/tardis/parsing.py,
   ]
 ---
@@ -285,3 +286,4 @@ reasoning above.
   "nominal-only, do not re-litigate" ruling; the new [OPERATOR] P2 is a genuine operator design-decision
   (instFamily-lookup vs expiry-heuristic vs accept-gap), consistent with this doc's established pattern. Doc stays
   assigned_vm: NA.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

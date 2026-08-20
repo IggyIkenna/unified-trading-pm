@@ -169,3 +169,4 @@ context_scope:
   `ClientDomainConfig` subscription, transfer-emit netting), § J's dual-path-documentation todo, and its full
   Progress Log all stay in the source doc untouched — this extraction moves only currently-open,
   execution-service-production-code todos, not the doc's audit narrative or evidence trail.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

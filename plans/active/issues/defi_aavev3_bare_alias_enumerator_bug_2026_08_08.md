@@ -204,3 +204,4 @@ defect (phantom-venue emission) without touching a registry other code may depen
   Sanctioned mechanics only: `gcs_describe_object`, `gcs_read_object_with_generation`,
   `gcs_bucket_soft_delete_retention_seconds` (all from `unified_trading_library.cloud_interface`); no
   `gcs_delete_object`/`gcs_conditional_delete` call made; no `gsutil`/`gcloud storage` subprocess.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries) — unchanged, still accurate

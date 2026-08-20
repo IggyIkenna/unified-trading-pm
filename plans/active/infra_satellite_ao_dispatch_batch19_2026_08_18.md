@@ -105,3 +105,4 @@ context_scope:
   2026-08-17, never previously dispatched). Todo 2 on the source doc (P3, "consider `--diff-base` mode later") is
   explicitly NOT extracted — it is a small forward-looking design question gated on "once the baseline reaches 0",
   not independently bounded today; stays `assigned_vm: NA` on the source doc.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

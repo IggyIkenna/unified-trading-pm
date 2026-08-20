@@ -271,3 +271,4 @@ and the generator/UI structural-skew investigation — see "Recommended next ste
   live-verified 2026-08-17: zero drift-venue-residue matches remain) and has been struck from the todo text. Doc stays
   NA: 2 genuinely open sub-parts remain (the e2e-fixture fix, live-confirmed still-present; the generator/UI
   structural-skew investigation, unverified either way).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

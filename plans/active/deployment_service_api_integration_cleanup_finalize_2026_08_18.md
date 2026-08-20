@@ -88,3 +88,4 @@ depends on the prior one's findings.
 
 - **2026-08-18 (authoring)**: Drafted alongside the main plan per task_template.md §4's mandatory-finalize-plan rule.
   `status: draft` pending operator review.
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries)

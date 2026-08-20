@@ -160,3 +160,4 @@ depends_on: []
   could drift. Backward-compatible: behaviour is unchanged when no profiler is wired or it hasn't sampled yet.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries, was 3) — added the `unified-trading-library`
   `parallel_per_symbol_runner.py` module the 2026-08-16 memory-pressure follow-up shipped against.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

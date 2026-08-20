@@ -96,3 +96,4 @@ release these until batch14 is fully done.**
   `status: active`, gated on batch14's 8 todos via `depends_on` + `gate_on_depends: true`. No work started — waiting
   on batch14's operator approval (flip `draft` → `active`) + dispatch + completion.
 **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

@@ -188,3 +188,4 @@ DEFI specifically, masking whether MDPS candle derivation genuinely works for De
   the 2026-08-17 02:42 UTC relaunch (`pipeline-e2e-check-mdps-20260817-024215-f56c11`) reached a terminal verdict
   before assuming it's still pending.
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries).

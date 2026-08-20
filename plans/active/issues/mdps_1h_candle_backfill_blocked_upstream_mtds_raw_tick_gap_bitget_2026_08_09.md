@@ -246,3 +246,4 @@ the raw-tick manifest before re-running, rather than assuming a fixed completion
   re-deriving from a possibly-noisy short sample. Skipped `reason_code: GATED` again; `estimated_unblock_minutes`
   capped at the fleet max (180) since the true ETA (~4 days) still vastly exceeds it — re-check no sooner than
   ~1-2 days out, not immediately.
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries).

@@ -51,6 +51,7 @@ context_scope:
   [
     market-tick-data-service/market_tick_data_service/market_interface/adapters/sports/sportradar_adapter.py,
     /codex/02-data/external-data-always-available-rule.md,
+    /plans/archive/issues/sports_adapter_dead_code_fallback_duplicate_audit_2026_08_01.md,
   ]
 source:
   [
@@ -131,3 +132,4 @@ already-credentialed Odds-API/footystats path). Once provisioned:
 - **na-eligibility-audit 2026-08-17** [body-hash:f377561cd8c8ae60] (dispatch agt-6574d2, fourth same-day pass, sports tranche): reconfirmed independently — same verdict, KEEP-NA valid. The repeated same-day re-audit here was caused by a `_latest_verdict_marker` tie-break bug (kept the first same-date marker, not the latest) — fixed this run (`generate_na_doc_tranche_inventory.py`); should stop recurring.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

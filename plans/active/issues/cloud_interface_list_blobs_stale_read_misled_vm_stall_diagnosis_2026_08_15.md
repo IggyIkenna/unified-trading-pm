@@ -103,3 +103,4 @@ Three plausible mechanisms, none confirmed or ruled out:
 - **context-scout 2026-08-17**: populated context_scope (4 entries) -- expanded from the sole codex SSOT to add the
   UTL `cloud_interface` module and the `vm-exec-with-gcs-tee.sh` wrapper (both named in the doc's own root-cause
   hypotheses), plus the sibling shard-24 wedge-diagnosis issue doc cited under "Why it matters".
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -43,7 +43,15 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope: [/plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md, market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py, market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py, unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py]
+context_scope:
+  [
+    /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
+    market-tick-data-service/scripts/sports_captured_available_at_targeted_backfill_2026_07_14.py,
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py,
+    unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py,
+    market-tick-data-service/scripts/audit_sports_captured_phantom_timeframe_2026_08_16.py,
+    market-data-processing-service/scripts/reprocess_sports_odds.py,
+  ]
 ---
 
 # CF-8 captured-row backfill drops `timeframe` — phantom duplicate rows, not a supersession
@@ -880,3 +888,4 @@ issue's scope); flagged as a follow-up todo below.
   re-attempt the CF-8 captured-row backfill) is explicitly operator-gated: both prerequisites are confirmed done, but
   the doc's own text holds execution "for a dedicated, reviewed maintenance window" given 3 documented production
   incidents on this exact surface. Not duplicated in any active `assigned_vm: planning` doc.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

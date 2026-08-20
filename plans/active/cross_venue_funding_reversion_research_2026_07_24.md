@@ -521,3 +521,4 @@ overlays), `_multivenue_capital.py` (capital/leverage/treasury), `_paper_trade.p
   prime-broker research, productionisation calls gated on research conclusions) — one item (the day-mean→per-settlement
   funding switch) is explicitly blocked-by a separate issue doc, tagged DEPENDENCY_BLOCKED; the rest are GENUINE_WORK.
 - **context-scout 2026-08-09**: re-scouted; context_scope unchanged (5 entries), still accurate.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

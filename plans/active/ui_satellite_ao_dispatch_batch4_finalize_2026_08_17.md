@@ -70,3 +70,5 @@ context_scope:
       resolves to the new path, and this finalize doc archives alongside it in the same commit.
 
 ## Progress Log
+
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

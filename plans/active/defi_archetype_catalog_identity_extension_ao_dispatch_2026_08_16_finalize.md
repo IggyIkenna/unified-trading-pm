@@ -32,7 +32,11 @@ supersedes:
 superseded_by:
 source: "na-eligibility-audit follow-up Q&A round 7, 2026-08-16"
 locked_by:
-context_scope: [/plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md]
+context_scope:
+  [
+    /plans/active/defi_archetype_catalog_identity_extension_ao_dispatch_2026_08_16.md,
+    /plans/active/issues/defi_archetype_universe_no_curtailment_mechanism_2026_07_23.md,
+  ]
 locked_since:
 resolved_by:
 ---
@@ -46,3 +50,4 @@ resolved_by:
 ## Progress Log
 
 **context-scout 2026-08-17**: populated/refreshed context_scope (1 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

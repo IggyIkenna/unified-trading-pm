@@ -113,3 +113,4 @@ assumed.
   (the doc's own text explicitly says this session did not read it and the bug is not there) for
   `engine/feature_group_service.py`, confirmed via grep to be the actual `record_empty(...)` call site that
   dispatches to `_calculate_options_iv`/`_calculate_options_term_structure`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

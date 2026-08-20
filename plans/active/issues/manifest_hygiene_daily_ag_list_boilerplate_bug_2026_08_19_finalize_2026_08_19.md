@@ -37,6 +37,7 @@ context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/issues/manifest_hygiene_daily_ag_list_boilerplate_bug_2026_08_19.md,
   ]
 supersedes:
 superseded_by:
@@ -57,3 +58,4 @@ source: >-
 
 - **2026-08-19**: drafted alongside the na-eligibility-audit whole-doc RECLASSIFY flip (dispatch agt-dc3dbe, slot
   30, cross-cutting tranche).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

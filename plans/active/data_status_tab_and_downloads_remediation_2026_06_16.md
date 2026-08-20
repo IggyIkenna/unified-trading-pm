@@ -485,3 +485,4 @@ owner; the item stays blocked until this plan's own APPLY-GATE + TIER-2 v9 migra
   it); its checkbox here is flipped `[x]` citing the extraction. The other 2 (DeFi sub-bucket phantom-row audit;
   defi/sports APPLY-GATE sign-off) stay NA — both explicitly self-gated on the same still-open, named 2026-08-07
   operator HOLD. Doc stays `assigned_vm: NA` overall (2 open items remain).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

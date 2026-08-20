@@ -44,8 +44,8 @@ context_scope:
     instruments-service/scripts/measure_honest_coverage.py,
     unified-api-contracts/unified_api_contracts/canonical/crosscutting/_honest_coverage_empty_reasons.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
-    plans/active/cross_ag_live_capture_parity_2026_08_14.md,
-    plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md,
+    /plans/active/cross_ag_live_capture_parity_2026_08_14.md,
+    /plans/active/issues/tradfi_cme_future_typed_blank_instrument_id_2026_08_09.md,
   ]
 supersedes:
 superseded_by:
@@ -519,3 +519,4 @@ data that's actually needed. This plan gets the evidence first.
   own todo entry above. The 2 remaining open items (undetected defi catalogue-gap on-chain walk; BYBIT/KRAKEN-FUTURES
   futures_chain migration, hard-gated on a per-row expiry verification) stay genuine investigation/production-data-
   migration work, not worker-determinable alone.
+- **context-scout 2026-08-20**: refreshed context_scope (7 entries)

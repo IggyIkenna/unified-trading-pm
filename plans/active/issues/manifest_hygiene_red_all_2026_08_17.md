@@ -41,6 +41,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/engine/orchestrator/manifest_finalize.py,
     unified-trading-library/unified_trading_library/manifest_writer/_writer_validation.py,
     /plans/archive/2026_08/data_pipeline_hardening_self_monitoring_2026_06_22.md,
+    market-tick-data-service/market_tick_data_service/engine/orchestrator/prediction_tier3_lifecycle.py,
   ]
 ---
 
@@ -636,3 +637,4 @@ is not, for either candidate CQG-bundle writer that exists today.
   against `manifest_hygiene_red_all_2026_08_18.md`'s duplicate daily-audit refile — closed that
   doc's todo as a cross-reference rather than re-diagnosing; the two P2 and one P1 todos above
   remain the tracked fix work for cefi/tradfi/prediction.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

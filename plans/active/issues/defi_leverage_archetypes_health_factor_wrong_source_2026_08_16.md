@@ -55,6 +55,7 @@ context_scope:
   [
     /codex/04-architecture/defi-execution-overview.md,
     /codex/04-architecture/position-risk-centralization.md,
+    /plans/active/strategy_service_centralization_fixes_2026_08_16.md,
     strategy-service/strategy_service/position/core/defi_health_aggregator.py,
     strategy-service/strategy_service/position/core/margin_event_emitter.py,
     strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py,
@@ -316,3 +317,4 @@ more general, already-cross-service-wired mechanism exists alongside it. Full de
   Doc stays `assigned_vm: NA` (it remains the evidence/investigation record the plan's own text defers to — "Full
   findings, root cause, and evidence... live in the three source issue docs"), not archived, since the underlying
   work is still in progress. `grep -cE '^[[:space:]]*[-*] \[ \]'` = 0 post-edit, matching.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

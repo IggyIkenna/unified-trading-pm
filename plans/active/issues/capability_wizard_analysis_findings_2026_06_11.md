@@ -886,3 +886,4 @@ F49–F53 are FIXED as of 2026-06-14); trust this table. Status taxonomy: **FIXE
   checkbox sweep: F46 (execution-service adapters, BLOCKED-CREDENTIALS) remains the sole genuinely open `- [ ]` todo
   in this doc (F54's `scripts/openapi/*` path-drift fix landed today but was already tracked/closed, not a new
   dependency for the doc's remaining open work); all 5 entries still accurate, unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

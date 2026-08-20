@@ -50,7 +50,15 @@ locked_since:
 supersedes:
 superseded_by:
 depends_on: []
-context_scope: [/codex/08-workflows/ci-cd-flow.md, /codex/07-security/self-hosted-runner-security-posture.md, /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md, /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md, scripts/cicd/measure-billed-notify-cost.sh, /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md]
+context_scope:
+  [
+    /codex/08-workflows/ci-cd-flow.md,
+    /codex/07-security/self-hosted-runner-security-posture.md,
+    /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md,
+    /plans/active/issues/post_cutover_silent_assumption_sweep_2026_07_23.md,
+    scripts/cicd/measure-billed-notify-cost.sh,
+    /plans/archive/issues/cassette_drift_check_calls_deleted_script_and_swallows_it_2026_07_17.md,
+  ]
 source:
   - "Split from /plans/archive/2026_07/github_actions_ci_cost_reduction_2026_07_15.md per the line-cap remediation
     triage (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 13, proposed action 2 of 3): the
@@ -731,3 +739,4 @@ genuine host rebuild.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- 4 open items confirmed by direct grep, matching the doc's own most recent full audit (2026-08-10: 'Full read (1001 lines, both pages) + grep confirm 4 open todos, matching phase0=4'). Item 1 (STEP 2d) is dependency-blocked on the still-open digest-drift-sweep investigation per the D3 table's 2026-08-12 correction. Item 2 (bare-host bootstrap) is structurally blocked — the doc itself flags the GCP-ADC leg as 'interactive', i.e. needs a human auth step a worker cannot perform, plus...
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

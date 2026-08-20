@@ -34,6 +34,7 @@ locked_since:
 context_scope:
   [
     scripts/quickmerge.sh,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /codex/12-agent-workflow/host-concurrency-and-commit-provenance.md,
   ]
@@ -141,3 +142,4 @@ broken since rollout with everyone either not hitting it or working around it vi
   pending — isolation is opt-in (default-off) and no non-PM `--isolated` ship has been attempted since the fix. The
   issue stays open as a standing reference until the first real non-PM isolated ship confirms the fix works end-to-end.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).

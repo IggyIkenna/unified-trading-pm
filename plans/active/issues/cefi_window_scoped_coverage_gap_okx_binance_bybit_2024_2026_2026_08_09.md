@@ -417,3 +417,5 @@ can re-prioritize P0 vs P1 if the live-capture investigation (item 1) surfaces s
   Track-2 coverage backfill) is not yet confirmed either way — that doc should be checked against this fix rather
   than treated as an independent blocker.
 - **context-scout 2026-08-14**: populated context_scope (3 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries) — all existing entries still resolve (the manifest
+  finalize path, the measurement script, and the honest-coverage-model SSOT).

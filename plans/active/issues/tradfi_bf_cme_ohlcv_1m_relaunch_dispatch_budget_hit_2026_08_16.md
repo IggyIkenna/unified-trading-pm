@@ -64,7 +64,15 @@ drift_direction: none
 depends_on: []
 resolved_by:
 locked_by:
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/escalation.py, deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py, deployment-service/deployment_service/vm_prefix_registry.py]
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/escalation.py,
+    deployment-service/deployment_service/data_pipeline_monitors/escalation_dedup.py,
+    deployment-service/deployment_service/vm_prefix_registry.py,
+    deployment-service/scripts/vm/launch-tradfi-bf-cme-ohlcv-1m.sh,
+  ]
 ---
 
 # tradfi-bf-cme-ohlcv-1m- launcher family hit its 2/day RB-INFRA-RELAUNCH dispatch budget — VM left un-relaunched by design
@@ -228,3 +236,4 @@ a repeat of the `cefi-aster-` pollution issue.
   time. Per RB-INFRA-RELAUNCH, did not relaunch. Paged the operator via `/blocked` with this update (FYI +
   recurrence-pattern flag naming the now-7th occurrence; no new decision blocking beyond the two open todos
   below). No code changed this session.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

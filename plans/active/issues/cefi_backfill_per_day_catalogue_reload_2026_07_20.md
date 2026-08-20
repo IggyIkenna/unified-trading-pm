@@ -194,3 +194,4 @@ This profiling run was strictly read-only: zero code changes, zero GCS/manifest 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) — re-verified all 5 entries resolve on
   disk and remain accurate; content since the last marker was `na-eligibility-audit` re-confirmations only (no new
   dependencies).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

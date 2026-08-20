@@ -118,3 +118,4 @@ skill's no-double-gate mechanism).
   `plans/archive/2026_08/`. All three batch7 todos were already `[x]` done (since 2026-08-08). Updated 7 corpus
   referrers with new archive paths; `regenerate_active_plan_inventory.py` confirmed clean (0 orphans).
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (2 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

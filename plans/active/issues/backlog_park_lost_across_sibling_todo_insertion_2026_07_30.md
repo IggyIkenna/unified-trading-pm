@@ -174,3 +174,4 @@ not the dispatch-tooling gap). Suggested next steps:
   round11. Sole open item ([BACKEND] P3, whether to build a park-id-change alerting surface at all) remains an
   undecided open question with no stated done-when.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

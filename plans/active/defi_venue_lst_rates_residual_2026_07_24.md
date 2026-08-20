@@ -57,6 +57,7 @@ context_scope:
     /plans/archive/migration_verification_orphan_safety_2026_06_10.md,
     /plans/active/defi_satellite_ao_dispatch_batch2_2026_07_26.md,
     unified-api-contracts/unified_api_contracts/registry/defi_venue_capabilities.py,
+    /plans/active/issues/defi_sushiswap_uniswap_bare_version_factory_gap_2026_07_21.md,
   ]
 ---
 
@@ -236,3 +237,4 @@ read-only scoping finding.
   but that referrer sweep deserves its own dedicated plan-hygiene pass, not a rushed side-step of an already-large
   gate-unblocking session.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (3 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

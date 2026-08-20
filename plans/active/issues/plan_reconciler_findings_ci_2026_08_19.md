@@ -513,3 +513,4 @@ _(populated after run, if applicable)_
   branch-drift retries on nearly every commit — 8-10 sibling tranche/epic reconciler dispatches active
   same-day); every commit eventually landed clean via the standard pull-rebase-autostash recovery, no data lost,
   confirmed via `git merge-base --is-ancestor` after each. Moving to STEP 7/8.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

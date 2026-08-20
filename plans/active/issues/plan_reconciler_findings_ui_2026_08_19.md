@@ -39,11 +39,12 @@ source: "plan_reconciler dispatch agt-c82f06 — sharded ui tranche run 2026-08-
 depends_on: []
 context_scope:
   [
-    /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/03-deployment/data-status-ui-surface.md,
     /codex/06-coding-standards/ui-testing-layers.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+    /plans/active/issues/plan_reconciler_findings_ui_2026_08_18.md,
   ]
 ---
 
@@ -115,3 +116,4 @@ _Filled in at STEP 7._
   (see section above) — no live lock collision found (`grep locked_by: plan_reconciler` across the corpus shows
   concurrent sibling runs on cefi/ao/cross-cutting/sports/tradfi today/recently, none on `ui`). Fan-out hunters
   dispatched next for the 18 docs not yet directly read this run.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

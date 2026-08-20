@@ -681,3 +681,4 @@ scope, out of this data_engineering session's remit per `agents/data_engineering
   `backfill_bare_underlying_future_manifest_ids_2026_08_17.py`, the script driving all three of today's active
   discovery/apply sessions directly above (currently blocked on the shared host's memory watchdog). Other 5 entries
   re-verified, unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

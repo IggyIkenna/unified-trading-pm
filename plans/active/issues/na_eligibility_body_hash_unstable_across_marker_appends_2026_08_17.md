@@ -46,7 +46,12 @@ source: >-
   as `incremental_skip: false` despite each already carrying a same-day (2026-08-17) verdict marker with a
   `[body-hash:...]` tag. Investigated by directly invoking `body_content_hash()` and `_latest_verdict_marker()`
   against live file content and specific git commits (see Progress Log for the exact repro).
-context_scope: [scripts/plan-hygiene/generate_na_doc_tranche_inventory.py]
+context_scope:
+  [
+    scripts/plan-hygiene/generate_na_doc_tranche_inventory.py,
+    scripts/plan-hygiene/na_marker_helper.py,
+    scripts/plan-hygiene/check_na_corpus_ratchet.py,
+  ]
 depends_on: []
 locked_by:
 locked_since:
@@ -166,6 +171,7 @@ today: one dispatch's worth of redundant investigation time, not an incorrect co
       dispatches -- the fix invalidates every existing `[body-hash:...]` corpus-wide in one commit, so the NEXT run
       of every one of the 10 tranches will see 100% of its own population as "in scope" once, a full-corpus
       re-audit cost concentrated into whichever runs land first after the fix ships.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)
 
 ## Progress Log
 

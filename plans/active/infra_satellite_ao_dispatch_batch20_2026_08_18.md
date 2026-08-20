@@ -109,3 +109,4 @@ context_scope:
   duplicated-`lc_verify_tarball_freshness`-block/stale-dry-run-string bug in the same script file — different claim,
   no overlap with this todo's actual scope. No `status: draft` legacy satellite doc references it either. First
   dispatch of this item.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

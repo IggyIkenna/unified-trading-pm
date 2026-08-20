@@ -249,3 +249,4 @@ reverse.
 
 - `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` — capacity sizing / reserve
   mechanism this bug's operational impact hits.
+- **context-scout 2026-08-20**: populated context_scope (7 entries).

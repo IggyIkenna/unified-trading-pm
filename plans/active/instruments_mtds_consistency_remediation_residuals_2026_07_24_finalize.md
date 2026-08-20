@@ -40,7 +40,7 @@ source: >-
   (operator ruling 2026-07-24) — the source doc was reclassified assigned_vm: NA -> planning this same session once the
   operator ruled on its two remaining operator-gated items (N5r/N6r, N1b), and the finalize-plan-coverage QG gate
   correctly caught the missing companion before commit.
-context_scope: [/plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /plans/active/task_template.md]
+context_scope: [/plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /plans/active/task_template.md, /plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md]
 last_updated: "2026-08-11"
 ---
 
@@ -126,3 +126,4 @@ last_updated: "2026-08-11"
   to produce the projection, run the drain-gate + snapshot, then `--apply-prod --confirm-prod-write` + post-verify.
   This REVIEW todo stays `- [ ]`; no archival performed; skipping GATED — the blocker is VM-execution work owned by the
   issue doc's own SCRIPT todo (e), out of this doc-only review todo's scope.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

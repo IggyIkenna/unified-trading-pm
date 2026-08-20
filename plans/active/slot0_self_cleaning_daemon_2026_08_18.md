@@ -36,8 +36,6 @@ context_scope:
     agent-orchestrator/server/worktree_clean_check/,
     agent-orchestrator/server/autospawn.py,
     agent-orchestrator/server/tmux_pruner.py,
-    agent-orchestrator/server/resource_history.py,
-    agent-orchestrator/server/worker_liveness/__init__.py,
     agent-orchestrator/server/server.py,
     agent-orchestrator/server/config.py,
     /codex/05-infrastructure/per-tab-worktrees.md,
@@ -278,3 +276,4 @@ liveness check so it never fights a live occupant (including slot 0's own live s
   is still open should keep implementing todos 2-10 and let the shippable-unit commits queue
   up locally (or coordinate with whichever worker/escalation is fixing the QG-red issue) rather
   than treating the whole plan as blocked.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

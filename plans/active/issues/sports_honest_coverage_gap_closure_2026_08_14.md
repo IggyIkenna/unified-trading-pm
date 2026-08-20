@@ -30,6 +30,8 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     deployment-service/scripts/vm/launch-sports-manifest-rescan-vm.sh,
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
+    unified-trading-library/unified_trading_library/manifest_writer/_queries.py,
+    market-tick-data-service/tests/unit/test_freshness_source_scope.py,
   ]
 ---
 
@@ -808,3 +810,4 @@ complete, self-sustaining (odds VM keeps running/relaunching on its own pattern)
   `safe-doc-push`'s exit code), and at pre-compact time three more foreign, live-mtime (`<1 min` old) dirty files
   sit in this same checkout from another active session — left untouched per the liveness-gating rule; only
   `ahead=0` + a clean-of-MY-changes tree was verified, not a fully clean `git status`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

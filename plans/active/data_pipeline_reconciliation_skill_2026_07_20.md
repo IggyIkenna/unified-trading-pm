@@ -995,3 +995,4 @@ orphan VM for the 4 blocked AGs.
   COINBASE-SPOT 7/994/114,249 - OKX-SPOT 1,089/917/324,359 - UPBIT 1,046/1,379/348,092 - BITFINEX-SPOT 12/455/145,060 -
   BITGET-SPOT 6/784/222,701 - BYBIT-SPOT 1/0/185,979 - KRAKEN-SPOT 0/56/225,701. No repair executed -- measurement only,
   per todo scope.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

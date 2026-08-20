@@ -75,3 +75,4 @@ Do not start manually before then.
 
 - **2026-08-18 (na-eligibility-audit, defi tranche, dispatch agt-2c8a26)**: finalize plan authored alongside batch17's
   draft, per `task_template.md`'s finalize-plan-coverage rule.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

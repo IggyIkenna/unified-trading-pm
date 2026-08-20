@@ -53,6 +53,7 @@ context_scope:
     market-tick-data-service/market_tick_data_service/cli/handlers/dex_pools_handler.py,
     /plans/archive/issues/defi_mvp_backfill_optimization_ready_2026_07_20.md,
     /plans/active/defi_pipeline_e2e_and_coverage_validation_2026_06_20.md,
+    /plans/active/issues/mtds_pipeline_e2e_check_driver_vm_oom_full_mvp_sweep_2026_08_14.md,
   ]
 ---
 
@@ -228,3 +229,4 @@ the parent plan's Track 7 culled-venue ruling.
 - **na-eligibility-audit 2026-08-16** [body-hash:ccfb9f96b88be407]: KEEP-NA, valid — Forked from defi_consolidated_closeout_2026_07_18.md's Track 5, machine-gated via depends_on:[defi_consolidated_closeout_2026_07_18] + gate_on_depends:true (doc's own banner: this holds every task in THIS plan until the parent's ENTIRE remaining scope is done).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
 - **na-eligibility-audit 2026-08-17**: KEEP-NA, valid — reverified live: parent defi_consolidated_closeout_2026_07_18.md's depends_on+gate_on_depends:true still holds (10 open todos today), genuine prerequisite not stale. 3 open todos, all DEPENDENCY_BLOCKED on the same parent gate. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

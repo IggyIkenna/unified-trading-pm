@@ -39,7 +39,7 @@ related:
     /plans/active/tradfi_satellite_ao_dispatch_batch15_2026_08_17.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py]
 created: "2026-08-16"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -318,4 +318,5 @@ DP-VM-001 incidents are now confirmed billing-caused; only `es-2020` remains gen
   converted to a tracked `[OPERATOR]` todo (was untracked prose). Doc stays `assigned_vm: NA`.
 - **na-eligibility-audit 2026-08-18** (tradfi tranche, dispatch agt-31bfcb): **KEEP-NA, valid — reaffirmed.** Sole
   remaining open todo (the `≤2/(vm-prefix,day)` relaunch-bound tightening policy question) is unchanged, genuinely
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
   operator-gated. `assigned_vm` unchanged.

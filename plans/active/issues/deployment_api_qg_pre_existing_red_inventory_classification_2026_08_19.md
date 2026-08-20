@@ -132,3 +132,4 @@ unable to pass the FULL-suite gate to reach `origin/live-defi-rollout`).
   parallel work: `deployment-service@a0005a55` (real `{kind}-{ag}` stems) + `deployment-api@29c4e47` (fixtures →
   `prd-manifest-consolidator-market-data-cefi`). Verified: both P1 tests + the full 113-test file pass (113 passed in
   7.63s). No code change needed; checkbox flipped.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

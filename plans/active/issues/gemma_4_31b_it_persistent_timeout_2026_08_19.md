@@ -201,3 +201,5 @@ not already done. That key is not reproduced here.
   marker), plus the exact queue-status polling endpoint URL/headers — this would confirm or refute the submit+poll
   theory directly and point at a concrete, buildable fix (switch the proxy/client to the real async flow) rather
   than an NVIDIA-side wait.
+
+- **context-scout 2026-08-20**: re-verified context_scope (4 entries), unchanged.

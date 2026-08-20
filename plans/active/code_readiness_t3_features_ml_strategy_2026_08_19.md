@@ -420,6 +420,7 @@ todos only to confirm they are data-movement, then leave it.
   machine check. 51-53 rows/mode remain `unverified` and are genuinely different work: `allocator_rank` is a
   per-archetype RULING (generic allocator vs dedicated rank engine), and batch/paper dispatch need a registry lookup
   built before they can be checked at all. Neither is closed by this commit.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
 
 ## Deferred work after 2026-08-20
 

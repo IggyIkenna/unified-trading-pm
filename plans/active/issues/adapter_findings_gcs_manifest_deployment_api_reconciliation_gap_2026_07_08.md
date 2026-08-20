@@ -363,3 +363,4 @@ to pursue actual ID canonicalization — not something to fix inside this doc.
   ([DECISION] P2, reconciliation cadence across the smoke-test findings) remains a portfolio-cost tradeoff, not a
   determinable fact; a same-day plan_reconciler correction to the todo's own stale "58 findings" count doesn't change
   that. No reclassification.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

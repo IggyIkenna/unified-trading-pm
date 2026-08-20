@@ -40,7 +40,14 @@ assigned_role: infra
 drift_direction: none
 locked_by:
 locked_since:
-context_scope: [/cursor-configs/skills/ag-closeout-audit/SKILL.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /codex/06-coding-standards/quality-gates.md, /codex/11-project-management/, /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md]
+context_scope:
+  [
+    /cursor-configs/skills/ag-closeout-audit/SKILL.md,
+    /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /codex/06-coding-standards/quality-gates.md,
+    /codex/11-project-management/,
+    /plans/archive/2026_08/issues/ag_closeout_audit_infra_parked_2026_08_07.md,
+  ]
 supersedes:
 superseded_by:
 depends_on: []
@@ -558,3 +565,4 @@ not data-pipeline).
   2026-08-07. Read end-to-end; `grep -cE '^- \[ \]'` = 3, matching. All 3 remain the same unchanged all-of-N Track
   close-out gates created by the resolved operator decision (`issues/autonomous_session_operator_decisions_2026_07_25.md`
   entry #38) — not worker-determinable until their source docs finish.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

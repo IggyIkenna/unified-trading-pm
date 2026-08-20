@@ -35,6 +35,7 @@ context_scope:
     /plans/active/issues/defi_orphan_bucket_delete_list_includes_canonical_bucket_2026_08_15.md,
     /plans/active/issues/defi_pool_uppercase_recurrence_after_fold_2026_08_11.md,
     deployment-service/configs/cloud-providers.yaml,
+    /codex/04-architecture/solana-defi-coverage.md,
   ]
 ---
 
@@ -298,3 +299,4 @@ once this doc is split.
   `parent_epic: defi_master` corpus (defi-tranche-only docs) — not independently re-verified here, left to the
   tranche-scoped cadence. This doc still carries genuine open work outside this epic-scoped pass's corpus — stays
   in `plans/active/issues/`, unlocked.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

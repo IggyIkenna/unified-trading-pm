@@ -226,6 +226,7 @@ Run service and alerting on drift beyond some threshold — that's the real rema
   output is unparseable so it fails before it can alert (this one) are the same class.
 - **context-scout 2026-08-17**: refreshed context_scope (5 entries) — re-verified all 5 still resolve and accurately
   target the sole remaining open item (the `[OPERATOR]` webhook-population + e2e Slack-delivery follow-up).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
 
 ## Follow-ups
 

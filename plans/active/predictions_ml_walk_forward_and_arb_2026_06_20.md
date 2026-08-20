@@ -265,3 +265,4 @@ ELECTION_PRESIDENT_2028 path. OSCARS_BEST_PICTURE is net-new — filed as a foll
   re-verified live, still unchecked) — a genuine cross-asset-group prerequisite not resolvable by an isolated prediction-
   tranche worker. Once that gate clears, item 1 (the walk-forward run itself) may become bounded/RECLASSIFY-eligible —
   not re-derived further while the gate stays open, per the never-relitigate rule. Doc stays NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -378,3 +378,4 @@ run's 174-doc snapshot is still current.
   prior reconciliation pass on the same sibling docs, needs a closer read before extracting. 4 (routes to a
   disjoint skill's remit, needs external artifact access, or carry explicitly-flagged genuine ambiguity) stay
   KEEP-NA. This doc's own `assigned_vm: NA` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

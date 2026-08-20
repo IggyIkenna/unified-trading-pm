@@ -189,3 +189,4 @@ reliability/escalation shape, not re-running its normal audit content.
   (each already named inline in its own Track B todo) plus the plan-reconcile skill doc, `operator_gated_options.py`,
   and the single-vm-architecture codex ref.
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:152b32e9fcb7971e]: KEEP-NA, valid — Track A (25 PRs) fully closed; Track B's 7 remaining todos are a genuine per-job reliability/escalation-health audit requiring real judgment, under an explicit dated operator 'human plan' ruling on this exact scope.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

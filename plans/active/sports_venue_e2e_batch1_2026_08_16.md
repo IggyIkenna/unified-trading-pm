@@ -229,3 +229,4 @@ regression test covering all 3 tokens. `quality-gates.sh` green on the shipped H
 **context-scout 2026-08-17**: refreshed context_scope (6 entries) -- dropped `integration-testing-layers.md`/
 `shard-level-failure-isolation.md` (never named anywhere in this doc's own body, generic parent-scope carryover),
 added `odds_api_adapter.py` (the actual gap-fix file, named 4x in body) and `factory.py` (the BETFAIR dispatch fix).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

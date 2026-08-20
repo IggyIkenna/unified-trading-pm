@@ -74,7 +74,15 @@ supersedes:
 superseded_by:
 resolved_by:
 depends_on: []
-context_scope: [/plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md, /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md, features-service/scripts/run_cefi_perp_funding_corpus.py, strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py, instruments-service/scripts/migration_orphan_sweep.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
+context_scope:
+  [
+    /plans/archive/issues/cefi_tardis_derivative_ticker_historical_gap_2026_08_04.md,
+    /plans/archive/2026_08/issues/defi_hyperliquid_residual_manifest_rows_2026_08_04.md,
+    features-service/scripts/run_cefi_perp_funding_corpus.py,
+    strategy-service/strategy_service/engine/core/canonical_perp_funding_provider.py,
+    instruments-service/scripts/migration_orphan_sweep.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+  ]
 ---
 
 # DeFi/CeFi venue+chain axis cross-contamination (2026-07-28)
@@ -945,3 +953,4 @@ reality (GMX purge banner; the P2(b) "safe to delete" assumption) — both caugh
 - **P1 corpus recompute**: historical window landed (confirmed 08-09); blocked on the NEW 08-06+ forward-poll cron gap
   (`[INFRA] P1`), filed in `/plans/active/issues/cefi_fwd_backfill_vm_deleted_by_sa_within_10min_2026_08_08.md`).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — unchanged, still accurate

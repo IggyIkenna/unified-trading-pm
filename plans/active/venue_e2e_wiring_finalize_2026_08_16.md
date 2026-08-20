@@ -86,3 +86,5 @@ context_scope:
 - **context-scout 2026-08-17**: refreshed context_scope (3 entries) — added the umbrella parent (todo 1 reconciles
   into its contract-step evidence) and the read-vs-execute-asymmetry issue doc (todo 4 names it explicitly);
   code-free finalize gate, no source path applicable.
+
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries)

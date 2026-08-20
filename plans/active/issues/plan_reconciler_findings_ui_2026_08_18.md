@@ -38,11 +38,12 @@ source: "plan_reconciler dispatch agt-2a424e — sharded ui tranche run 2026-08-
 depends_on: []
 context_scope:
   [
-    /plans/active/ui_consolidated_closeout_2026_07_30.md,
     /codex/05-infrastructure/deployment-observability.md,
     /codex/03-deployment/data-status-ui-surface.md,
     /codex/06-coding-standards/ui-testing-layers.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
+    /plans/active/ui_consolidated_closeout_2026_07_30.md,
+    /plans/active/issues/plan_reconciler_findings_ui_2026_08_10.md,
   ]
 ---
 
@@ -266,3 +267,4 @@ where warranted, 9 grace-protected as context only.
   the na-eligibility-audit entry above landed as a genuine same-file concurrent-edit collision during push —
   git's autostash-reapply raised a textual conflict since both are independent Progress Log appends anchored at the
   same point; resolved by keeping both, na-eligibility-audit's first since it read the doc before this entry existed.)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

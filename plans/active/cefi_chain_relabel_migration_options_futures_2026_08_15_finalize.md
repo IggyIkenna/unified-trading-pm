@@ -36,7 +36,7 @@ context_scope:
   [
     /plans/active/cefi_chain_relabel_migration_options_futures_2026_08_15.md,
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
-    plans/active/task_template.md,
+    /plans/active/task_template.md,
   ]
 supersedes:
 superseded_by:
@@ -92,3 +92,4 @@ drift_direction: advance-code
   the mandatory finalize-plan hard rule (`task_template.md` § 4). No parent-plan phases have landed yet — this plan
   is gated and will not dispatch until they do.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

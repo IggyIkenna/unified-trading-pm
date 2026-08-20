@@ -41,6 +41,7 @@ context_scope:
     /plans/archive/2026_07/infra_satellite_ao_dispatch_batch1_2026_07_26.md,
     /plans/archive/issues/infra_plan_reconcile_parked_decisions_2026_07_26.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
+    /plans/archive/issues/shared_stash_pile_archive_cleanup_2026_06_01.md,
   ]
 ---
 
@@ -286,3 +287,4 @@ purge here.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:ffa32dd49b65e191]: KEEP-NA, valid — 2 of 5 items are personal-laptop-only tasks, physically inaccessible to any agent/VM; 2 more are downstream-gated on the Phase-2 sweep's own output; the Phase-2 --apply sweep itself stays a lower-confidence candidate pending explicit reversibility sign-off, not overriding the prior reasoned KEEP-NA judgment.
 - **na-eligibility-audit 2026-08-17** (infra tranche) [body-hash:ffa32dd49b65e191]: KEEP-NA, valid — 2 of 5 items are personal-laptop-only tasks, physically inaccessible to any agent/VM; 2 more are downstream-gated on the Phase-2 sweep's own output; the Phase-2 --apply sweep itself stays a lower-confidence candidate pending explicit reversibility sign-off, not overriding the prior reasoned KEEP-NA judgment.
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

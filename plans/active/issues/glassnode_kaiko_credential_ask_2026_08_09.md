@@ -48,6 +48,7 @@ context_scope:
   [
     market-tick-data-service/market_tick_data_service/market_interface/adapters/onchain/glassnode.py,
     /codex/02-data/external-data-always-available-rule.md,
+    /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
   ]
 source:
   [
@@ -132,6 +133,7 @@ each depending on plan). Once provisioned:
 - **context-scout 2026-08-17**: refreshed context_scope (2 entries), unchanged.
 
 - **na-eligibility-audit 2026-08-17** [body-hash:0fe03a20f44d1cd2]: KEEP-NA, valid -- re-verified, no content change since the 2026-08-17 marker. Sole remaining open item (promote GlassnodeAdapter into VENUE_REGISTRY/get_adapter()) is genuinely CREDENTIAL_BLOCKED per the external-data-always-available HARD RULE: glassnode-api-key still unprovisioned in Secret Manager, adapter code+tests already built and ready. Cross-cutting tranche audit.
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries).
 ## Kaiko removal COMPLETE (2026-08-10)
 
 The Kaiko scaffold this ask was filed for no longer exists anywhere: `unified-api-contracts@c48238266b` (capability +

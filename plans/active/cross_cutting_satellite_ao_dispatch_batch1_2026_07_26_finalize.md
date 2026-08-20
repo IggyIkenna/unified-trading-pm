@@ -167,3 +167,4 @@ context_scope:
 - **context-scout 2026-08-03**: re-verified context_scope, no change needed (5 entries) -- finalize gate doc, code-free
   by rule, existing links (both gated source docs + parent closeout + skill + recurring wiring-gap issue) still resolve
   and are the minimal correct set.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

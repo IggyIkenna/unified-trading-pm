@@ -187,3 +187,4 @@ shipping):
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

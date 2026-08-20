@@ -105,3 +105,4 @@ source: >-
   by me (this plan carries no `sequential: true`, so it could in principle be picked up by another slot independently —
   that is a plan-authoring gap outside this task's scope, not touched here).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified all 5 still resolve; unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

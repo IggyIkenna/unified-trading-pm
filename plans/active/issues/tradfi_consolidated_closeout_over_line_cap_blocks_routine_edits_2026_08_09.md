@@ -52,7 +52,13 @@ assigned_role: backend_engineer
 resolved_by:
 locked_by:
 depends_on: []
-context_scope: [/plans/active/tradfi_consolidated_closeout_2026_07_18.md, /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md, /plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md, unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh]
+context_scope:
+  [
+    /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
+    /plans/archive/2026_08/issues/plan_hygiene_broken_link_gate_vs_line_cap_gate_deadlock_2026_08_08.md,
+    /plans/active/issues/tradfi_year_shard_backfill_launcher_missing_source_self_deletes_2026_08_09.md,
+    unified-trading-pm/scripts/plan-hygiene/check_line_caps.sh,
+  ]
 ---
 
 # tradfi_consolidated_closeout_2026_07_18.md is over the 1000-line hard cap
@@ -104,3 +110,4 @@ context_scope: [/plans/active/tradfi_consolidated_closeout_2026_07_18.md, /plans
 
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

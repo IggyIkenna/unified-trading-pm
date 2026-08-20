@@ -151,3 +151,5 @@ whole point of a mechanical gate is not needing a human/agent to re-derive the c
   by direct code read (line 196) plus independent verification against the actual diff (not just distrust — measured
   and confirmed the false-positive). Not fixed inline — root-causing correctly requires care around the sibling
   exemptions in the same SCOPED-mode block; genuinely new scoped work, per this doc's own Scope note.
+- **context-scout 2026-08-20**: refreshed context_scope (2 entries) — the script (fix target) and the over-cap doc
+  the false-positive edit was confirmed against still cover the finding.

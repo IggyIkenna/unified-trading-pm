@@ -40,6 +40,8 @@ supersedes:
 context_scope:
   [
     /plans/archive/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md,
+    /plans/archive/issues/ldr_to_main_promote_fleet_silently_skips_repo_after_promote_pr_close_2026_07_28.md,
+    /plans/active/ci_consolidated_closeout_2026_07_25.md,
     scripts/cicd/ldr_to_main_fleet_promote.sh,
   ]
 source: >-
@@ -107,3 +109,4 @@ recurred may simply be closable as a one-off, not worth a root-cause pass.
   rather than trusted blind. Tagged `GENUINE_WORK` (unblocked investigation; not an operator business/value
   judgment, no credential gap, no dependency block). No conflict-check needed (no RECLASSIFY candidate). No
   stale-checkbox correction needed (todo accurately reflects zero investigation done since extraction).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries).

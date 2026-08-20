@@ -45,7 +45,13 @@ depends_on: []
 resolved_by:
 locked_by:
 last_updated: 2026-08-13
-context_scope: [/plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md, /plans/archive/issues/fred_backfill_early_date_indefinite_stall_2026_07_30.md, /codex/02-data/tradfi-databento-sourcing-ssot.md]
+context_scope:
+  [
+    /plans/archive/2026_08/issues/macro_micro_econ_data_capture_audit_2026_06_05.md,
+    /plans/archive/issues/fred_backfill_early_date_indefinite_stall_2026_07_30.md,
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
+  ]
 ---
 
 # Two live-prod FRED contradictions
@@ -98,3 +104,4 @@ completion" in any live sense.
   identifying the source of Finding 2's "self-sufficient to completion" claim
   (`macro_micro_econ_data_capture_audit_2026_06_05.md:515`) — a citation improvement, not new work. `assigned_vm`
   unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

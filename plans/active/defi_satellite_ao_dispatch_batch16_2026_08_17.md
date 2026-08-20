@@ -59,6 +59,7 @@ context_scope:
     /plans/active/lst_rate_honest_coverage_2026_07_21.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
     /plans/active/defi_satellite_ao_dispatch_batch16_2026_08_17_finalize.md,
+    /plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md,
   ]
 source: >-
   `/na-eligibility-audit defi` (2026-08-17). Every item below cleared the shared conflict-check
@@ -312,3 +313,4 @@ confirmed netting real gas cost); the newly-discovered partial-wiring gap is tra
   canonical-naming SSOT, and the na-eligibility-audit skill doc (none needed to execute a specific remaining todo)
   for the 3 actual per-todo source docs every still-open item cites by name+line-number; kept the naming/
   conflict-check codex (cited in this doc's own `source:` field) and added the gated finalize sibling.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

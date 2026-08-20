@@ -35,7 +35,7 @@ related:
     /plans/active/issues/dp_vm_001_mdps_cefi_2019_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/tradfi_satellite_ao_dispatch_batch15_2026_08_17.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py]
 created: "2026-08-15"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -154,3 +154,4 @@ retry, not genuinely new information.
 - **na-eligibility-audit 2026-08-17** (tradfi tranche, dispatch agt-d99b5c): **RECLASSIFY, per-todo split.** Todo 2
   consolidated into `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 2 alongside the `btc-2020` sibling —
   see checkbox above. Todo 1 (operator relaunch decision) stays genuinely gated. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

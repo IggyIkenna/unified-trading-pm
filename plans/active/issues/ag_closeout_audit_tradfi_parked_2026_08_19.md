@@ -50,6 +50,7 @@ context_scope:
   [
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
     /scripts/plan-hygiene/generate_ag_closeout_audit_candidates.py,
+    /plans/active/tradfi_satellite_ao_dispatch_batch19_2026_08_19.md,
   ]
 source: >-
   `/ag-closeout-audit tradfi` Phase 0-2, dispatch agt-8b4230, slot 29, 2026-08-19. Prior parked docs
@@ -160,3 +161,4 @@ rather than tradfi silently keeping only the inconsistent one.
   `tradfi_satellite_ao_dispatch_batch19_2026_08_19.md`, 22 non-batchable-taxonomy-gated — tracked in that batch's
   own Deferred section). Parked-findings count reconciliation: 3 todos filed above = 3 findings that don't fit
   batch19's Deferred taxonomy (process/meta, not tradfi content work) — balanced.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

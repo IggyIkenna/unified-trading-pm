@@ -397,3 +397,4 @@ specs; mock/live contract parity restored on all 12 drifted endpoints; the SIGAB
   writer-side half is WONT-DO'd-by-decision, not still-open); Track 4's close-out criterion corrected to match its
   own already-`[x]` Todo (was stale open-tense prose). Also added `architecture_v2_drift_leg_specs_and_manifest_
   residue_2026_07_16.md` to Track 4 Sources — a genuine live ui-tranche orphan with zero prior Track citation.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

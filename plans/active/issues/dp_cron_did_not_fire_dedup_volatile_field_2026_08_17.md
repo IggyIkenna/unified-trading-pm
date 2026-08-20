@@ -48,7 +48,13 @@ locked_by:
 resolved_by:
 last_updated: 2026-08-17
 locked_since:
-context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, alerting-service/alerting_service/core/dedup.py, deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py, /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md]
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    alerting-service/alerting_service/core/dedup.py,
+    deployment-service/deployment_service/data_pipeline_monitors/live_stream_watcher.py,
+    /plans/active/issues/dp_cron_did_not_fire_false_positive_burst_2026_08_10.md,
+  ]
 source: >-
   6-hourly data_pipeline_alerts_reconciler dispatch (agt-112bed, 2026-08-17), running the
   /data-pipeline-alerts-reconcile skill's mandatory ground-truth Slack read + registry cross-check.
@@ -192,3 +198,4 @@ on the live capture process itself) is out of scope for this reconciliation swee
   (dedup-state-lost-on-redeploy, filed separately as its own doc). Sole open item (line 116, [OPERATOR] P1, investigate
   the 2 genuine live-capture stalls on BYBIT-FUTURES/CME) is unaffected by the regression finding — still open-ended
   production debugging with unknown root cause (auth/API/schema), explicit [OPERATOR] tag. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -928,3 +928,4 @@ operator activation.
   content-only, doesn't shift disposition. NOT an ARCHIVE candidate: `archive_exempt: true`, tranche
   aggregated-reference umbrella / `check_ag_closeout_linkage.py` linkage anchor, with still-open dependent children
   gating archival per PLAN_FORMAT.md regardless. `assigned_vm` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

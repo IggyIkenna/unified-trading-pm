@@ -46,6 +46,7 @@ context_scope:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/issues/cf_manifest_audit_first_full_rollup_findings_2026_07_26.md,
     unified-trading-library/unified_trading_library/cf_manifest_audit.py,
+    /plans/archive/2026_08/mtds_available_at_cross_asset_backfill_2026_07_13.md,
   ]
 locked_since:
 resolved_by:
@@ -121,3 +122,4 @@ resolved_by:
   clears) described only in prose, no actual todo tracked it anywhere (confirmed via the finalize plan's own
   Progress Log: "no newer delete-execution task exists"). Added Todo 2 to track it explicitly; corrected the
   prose reference to point at it.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

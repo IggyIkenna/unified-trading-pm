@@ -22,6 +22,14 @@ related:
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
     /plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md,
   ]
+context_scope:
+  [
+    /codex/09-strategy/architecture-v2/axes/hold-policy.md,
+    /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
+    strategy-service/strategy_service/close_all/carry_staked_basis.py,
+    strategy-service/strategy_service/configs/carry_staked_basis.yaml,
+    strategy-service/scripts/dump_legacy_mapping_to_yaml.py,
+  ]
 created: 2026-08-19
 last_updated: "2026-08-19"
 parent_epic: system_readiness_master
@@ -97,3 +105,4 @@ corrected. Liquidation response is event-triggered and tracked separately in
 ## Progress Log
 
 **2026-08-19 — filed.** No code touched. Behaviour verified correct; only the identity string is wrong.
+- **context-scout 2026-08-20**: populated context_scope (5 entries)

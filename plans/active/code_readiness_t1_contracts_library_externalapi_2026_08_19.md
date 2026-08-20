@@ -496,3 +496,4 @@ _None at authoring time._
   unrelated work; no tranche plan referenced in any other slot's session). Taking T1 per the coordinator's
   "launch T1 first — four blocking edges terminate here". If another agent is also on T1, that agent should
   re-read this log before editing UAC/UTL.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

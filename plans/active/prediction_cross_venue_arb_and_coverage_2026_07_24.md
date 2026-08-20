@@ -463,3 +463,4 @@ Confirmed feasible — Kalshi GAME-series EVENT tickers encode the fixture clean
   planning-doc duplicate found. Doc stays NA.
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries) -- re-verified, unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

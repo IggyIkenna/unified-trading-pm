@@ -65,6 +65,7 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer/_state.py,
     unified-trading-library/unified_trading_library/manifest_writer/_writer.py,
     market-tick-data-service/scripts/migrate_legacy_gas_fees_venue_2026_07_30.py,
+    agent-orchestrator/server/tmux_spawn.py,
   ]
 ---
 
@@ -268,3 +269,4 @@ process is worth keeping so a future similar incident doesn't re-walk the same d
   the investigative half is now answered with certainty (not armed; would architecturally cover the subprocess
   class if armed), but the remaining decision (arm it, and at what cap) is a live production-safety sizing call,
   genuinely operator-gated, not worker-determinable alone. Doc stays `assigned_vm: NA`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

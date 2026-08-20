@@ -50,7 +50,14 @@ priority: P1
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/02-data/honest-absence-downstream-handling.md, market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_freshness.py, market-tick-data-service/tests/unit/test_oracle_prices_handler_skip.py, unified-trading-library/unified_trading_library/manifest_freshness.py]
+context_scope:
+  [
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    /codex/02-data/honest-absence-downstream-handling.md,
+    market-tick-data-service/market_tick_data_service/cli/handlers/_oracle_prices_freshness.py,
+    market-tick-data-service/tests/unit/test_oracle_prices_handler_skip.py,
+    unified-trading-library/unified_trading_library/manifest_freshness.py,
+  ]
 ---
 
 # defi oracle_prices on-chain branch retry-starvation — fix shipped
@@ -407,3 +414,4 @@ staged).
   `resolved_by: slot-10` frontmatter edits made before I saw slot-1's concurrent update, and
   merged both sessions' work into one doc without dropping either side's content.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

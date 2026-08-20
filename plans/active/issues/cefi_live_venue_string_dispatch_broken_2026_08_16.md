@@ -320,3 +320,5 @@ and is worth surfacing to that doc's owner. No other plan or issue doc tracks th
 - **context-scout 2026-08-17**: refreshed context_scope (5 entries) — swapped `reconciliation_engine.py`/
   `live_execution_handler.py` (both P0s they anchor are now shipped) for `routing.py`/`capabilities.py`, the exact
   two files the doc's remaining open P3 todos target.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries) — all existing entries still resolve; the factory,
+  routing, capabilities, execution, and venue-adapter-key paths remain the doc's open-todo targets.

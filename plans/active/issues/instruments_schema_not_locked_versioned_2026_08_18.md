@@ -142,3 +142,4 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
   The 4-part fix is new discovered scope beyond that item's own done-when (determination + proposal only) — filed
   here per findings-triage rather than absorbed into the determination task.
 - **context-scout 2026-08-19**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries).

@@ -29,7 +29,7 @@ context_scope:
   [
     /codex/05-infrastructure/manifest-consolidator-ssot.md,
     unified-trading-library/unified_trading_library/manifest_consolidator.py,
-    instruments-service/scripts/dedupe_manifest_schema_drift.py,
+    deployment-service/scripts/migrations/instruments-service/dedupe_manifest_schema_drift.py,
     /plans/active/instruments_store_cf_canonicalization_single_walk_2026_07_24.md,
   ]
 ---
@@ -88,3 +88,4 @@ incremental-merge enhancement is an operator/design call, not a worker-determina
 
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
 - **na-eligibility-audit 2026-08-17** [body-hash:34db568726207d9c]: KEEP-NA, valid -- Sole open todo is explicitly [OPERATOR]-tagged and the doc's own 'Recommended decision' section states in plain text that the choice between a scheduled periodic full-rebuild sweep vs. a narrower incremental-merge enhancement 'is an operator/design call, not a worker-determinable outcome, per CLAUDE.md's AO-eligible = outcome determinable by the worker alone rule' — citing the exact governing rule against itself. The doc explicitly declined to attempt a code change to the 3625-line, heavily production-incident-scarred manifest_consolidator.py.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries) — repointed the schema-drift dedupe script entry to its actual location (deployment-service/scripts/migrations/instruments-service/, not instruments-service/scripts/).

@@ -747,3 +747,4 @@ context_scope:
   `deployment-api/.../breakdowns_core.py` (the concrete `_build_feature_group_breakdown_uac` caller-chain target for the
   remaining `[CODE] P3` scope-threading todo) and `repo_scripts_governance_audit_2026_06_18.md` (the human-judgment gate
   blocking the remaining classify/delete/relocate sub-item of the `[SCRIPT] P2` todo).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

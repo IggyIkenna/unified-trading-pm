@@ -89,3 +89,4 @@ context_scope:
 - **context-scout 2026-08-03**: refreshed context_scope (4 entries) — added `sports_satellite_ao_dispatch_batch2` (todo
   2's INJURIES-enrichment re-check target) and the archival-ritual codex SSOT in place of the parent epic; code-free
   finalize gate, no source path applicable.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

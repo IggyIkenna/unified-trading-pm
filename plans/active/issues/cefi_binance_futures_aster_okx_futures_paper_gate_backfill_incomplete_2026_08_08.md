@@ -593,3 +593,4 @@ resolve unilaterally — flagging per the "big finding" triage rule (data-correc
 - **context-scout 2026-08-17**: populated/refreshed context_scope (3 entries) — re-verified all 3 entries resolve on
   disk and remain accurate; the operator ruling + subsequent gating checks since the last marker reference only the
   already-scoped sibling backfill plan, no new dependency.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries).

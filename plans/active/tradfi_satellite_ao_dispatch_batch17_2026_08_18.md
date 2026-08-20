@@ -90,3 +90,4 @@ rationale).
   batches). The remaining todos on both source docs (operator vendor-resourcing decision, contingent registry
   declaration, Layer-1-EXPECTED-universe design question, contingent `record_captured` wiring) stay genuinely
   gated — see each source doc's own Progress Log.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

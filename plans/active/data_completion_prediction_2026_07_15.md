@@ -537,3 +537,4 @@ range never overlaps a still-in-flight per-market-only day).
   batch13 item 2 (2026-08-19, slot-31) ran that diagnosis and found **NO-ACTION — all residuals PHANTOM, 0
   object-backed**, so item 4 is now flipped `[x]` citing that result (see the item's own updated text above for the
   full corrected counts). 14 open todos -> 13.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

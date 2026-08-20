@@ -35,6 +35,7 @@ locked_by:
 context_scope:
   [
     agent-orchestrator/scripts/hooks/block_destructive_commands.py,
+    agent-orchestrator/server/disk_space_canary.py,
     /codex/05-infrastructure/per-tab-worktrees.md,
     /plans/archive/issues/heavy_resource_vm_spin_up_rule_gap_2026_07_27.md,
   ]
@@ -505,3 +506,4 @@ this needs automation rather than an agent noticing.
   `assigned_vm: NA` → `planning`. Direct read confirms exactly 1 open todo remains (investigate `/home/ubuntu/tmp/`
   413M) — same bounded shape as its 2 now-DONE sibling investigations in this doc, explicitly deferred (not yet
   covered) by `ao_satellite_ao_dispatch_batch21_2026_08_16.md`'s own text. No conflict found.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

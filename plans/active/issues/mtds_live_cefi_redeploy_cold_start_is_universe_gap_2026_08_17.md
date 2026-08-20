@@ -113,3 +113,4 @@ since either closes the gap.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated context_scope (5 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

@@ -58,7 +58,7 @@ drift_direction: advance-code
 resolved_by:
 locked_by:
 depends_on: []
-context_scope: [agent-orchestrator/server/deepseek_usage_poller.py, agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts, agent-orchestrator/dashboard/tests/e2e/run-e2e-backend.sh, /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md]
+context_scope: [agent-orchestrator/server/deepseek_usage_poller.py, agent-orchestrator/server/server.py, agent-orchestrator/dashboard/tests/e2e/deepseek-per-turn-metrics.spec.ts, agent-orchestrator/dashboard/tests/e2e/run-e2e-backend.sh, /plans/archive/2026_08/deepseek_flash_ab_routing_test_2026_08_05.md]
 ---
 
 # e2e DeepSeekUsagePoller overwrites hand-seeded Accounts-panel fixture
@@ -156,3 +156,4 @@ context_scope: [agent-orchestrator/server/deepseek_usage_poller.py, agent-orches
   (`ao_satellite_ao_dispatch_batch8_finalize_2026_08_08.md`) still carries its own open `[REVIEW] P0` archival todo
   naming this doc — routing still valid, not stale.
 **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

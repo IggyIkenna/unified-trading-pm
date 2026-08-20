@@ -193,3 +193,4 @@ for this exact multi-instrument-per-group shape.
 - **context-scout 2026-08-17**: refreshed context_scope (4 entries) — swapped in the pending migration script
   (`rename_vault_venue_canonical.py`) and the delete-safety codex doc it must follow, dropped `_lst_rates_write.py`
   (its pattern-reference is now stale — the instrument_id fix it modeled is already shipped and verified).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries)

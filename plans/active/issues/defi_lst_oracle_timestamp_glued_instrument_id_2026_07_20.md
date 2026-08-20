@@ -33,7 +33,14 @@ archive_exempt: true # BRIDGE 2026-08-12: clearing the stale locked_by:live-defi
 locked_by:
 locked_since:
 assigned_role: data_engineering
-context_scope: [market-tick-data-service/market_tick_data_service/scripts/_rebuild_defi_n5.py, market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py, market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py, /plans/active/defi_consolidated_closeout_2026_07_18.md, market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py]
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_defi_n5.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/liquidations_handler.py,
+    market-tick-data-service/market_tick_data_service/scripts/rebuild_defi_manifest.py,
+    /plans/active/defi_consolidated_closeout_2026_07_18.md,
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/defi/canonical_write.py,
+  ]
 ---
 
 # lst_rates + oracle_prices write timestamp-glued instrument_ids
@@ -399,3 +406,4 @@ not a new whole-corpus walk) once this fix ships, to reclassify them via the now
   `scripts/plan-hygiene/check_archive_candidates.sh`) so this commit doesn't trip the archive-candidates pre-commit
   gate. The follow-on pass should drop `archive_exempt` and `git mv` this doc to `plans/archive/[issues/]`.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries)

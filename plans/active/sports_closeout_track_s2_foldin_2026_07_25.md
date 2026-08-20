@@ -606,3 +606,4 @@ context_scope:
     unmet. Did NOT flip checkbox, did NOT launch a duplicate. Declining via `/skip-current-task` `reason_code=GATED` —
     ETA ~5.5 days.
 - **context-scout 2026-08-17**: re-verified; context_scope unchanged (5 entries) — all 5 citations still resolve.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

@@ -214,3 +214,4 @@ correctly scoped per-day (see the Track-7 doc's Relaunch todo), once fully done.
   `asia-northeast1-c`, created 2026-08-08T08:57Z). Terminal state NOT reached — todo 2 remains gated on it. Releasing
   back to the queue with `reason_code: GATED` per worker.md § 4c; not busy-waiting on a week-scale external condition.
 - **context-scout 2026-08-17**: populated context_scope (3 entries).
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries).

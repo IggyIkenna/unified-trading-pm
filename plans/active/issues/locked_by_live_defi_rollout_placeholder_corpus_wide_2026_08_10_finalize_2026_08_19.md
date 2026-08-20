@@ -38,6 +38,7 @@ context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/active/issues/locked_by_live_defi_rollout_placeholder_corpus_wide_2026_08_10.md,
   ]
 supersedes:
 superseded_by:
@@ -60,3 +61,4 @@ source: >-
 
 - **2026-08-19**: drafted alongside the na-eligibility-audit whole-doc RECLASSIFY flip (dispatch agt-dc3dbe, slot
   30, cross-cutting tranche).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

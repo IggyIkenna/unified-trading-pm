@@ -106,3 +106,4 @@ rather than force-shipped past a red gate.
   diagnose-and-fix task with a stated methodology and a crisp done-when; todo 2 is a mechanical ship once todo 1
   clears. No design/judgment call.
 - **context-scout 2026-08-17**: populated context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

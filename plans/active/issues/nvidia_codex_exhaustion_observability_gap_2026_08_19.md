@@ -267,3 +267,5 @@ additions this surfaces, worth stating precisely rather than just appended:
       establishes the gap; this would only sharpen the proof. **DEFERRED this session**: todos 1-3 above plus
       the new proactive-Codex-poller todo consumed the available effort; this todo was already marked
       not-urgent in this doc's own original text, so left open rather than rushed. Repo: agent-orchestrator.
+
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

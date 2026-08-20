@@ -39,7 +39,14 @@ related:
     /plans/active/issues/dp_vm_001_mdps_tradfi_2026_exit_nonzero_relaunch_bound_page_2026_08_14.md,
     /plans/active/issues/dp_exit_code_monitor_sweep_times_out_every_run_2026_08_14.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py, deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py]
+context_scope:
+  [
+    /codex/15-runbooks/incidents/rb_infra_relaunch.md,
+    /codex/05-infrastructure/data-pipeline-alerts.md,
+    deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py,
+    deployment-service/deployment_service/data_pipeline_monitors/_gcs.py,
+    deployment-service/deployment_service/data_pipeline_monitors/heartbeat_stall_watcher.py,
+  ]
 created: "2026-08-15"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -151,3 +158,4 @@ date (`2022-12-13`) that actually needs it.
   two 2026-08-14 precedent docs, which explicitly deferred `run.log` reading) and paged the operator via `/blocked`.
 - **na-eligibility-audit 2026-08-16** [body-hash:f2354324a1a4ef7f]: KEEP-NA, valid — Live operational escalation doc (filed 2026-08-15), no prior na-eligibility-audit marker present, correctly in scope for a fresh read. Both todos verified via grep (count=2, matches Phase-0).
 **context-scout 2026-08-17**: populated/refreshed context_scope (5 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

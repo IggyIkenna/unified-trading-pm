@@ -33,6 +33,13 @@ source: >-
   Surfaced by a sub-agent expanding strategy-service-deep-dive.html (it reported DeFi venues falling back to cefi),
   then independently reproduced by the orchestrating session, which found the failure is broader than reported —
   CeFi slugs miss too.
+context_scope:
+  [
+    /codex/02-data/honest-coverage-model.md,
+    /plans/audit/results/registry_ground_truth_2026_08_19.md,
+    unified-api-contracts/unified_api_contracts/execution.py,
+    unified-api-contracts/unified_api_contracts/registry/venue_asset_group.py,
+  ]
 ---
 
 # `get_venue_asset_group()` returns "cefi" for everything
@@ -134,3 +141,4 @@ than closed on a plausible-looking number.
 
 **2026-08-19 — filed.** Reported by a sub-agent as DeFi-only; the orchestrating session reproduced it and found
 CeFi slugs miss as well, so the scope in the original report understated it. Not yet fixed — no code touched.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

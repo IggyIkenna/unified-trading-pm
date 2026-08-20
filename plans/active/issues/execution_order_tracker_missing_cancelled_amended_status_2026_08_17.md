@@ -114,3 +114,4 @@ report a stale open-order count based on this, believing an order is still live 
   of that doc's own scope per this workspace's findings-triage rule (audits report evidence + tracked
   follow-ups, they don't silently absorb the fix).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

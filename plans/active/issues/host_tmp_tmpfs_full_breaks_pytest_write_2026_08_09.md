@@ -124,3 +124,4 @@ process long-dead) vs a live session's genuine in-flight scratch — only then i
   (`infra_satellite_ao_dispatch_batch15_2026_08_10.md`) reaching a terminal status — a standing, documented bridge,
   not overridden here (out of this skill's mandate; route to `/archive-candidates-audit` if that parent plan has
   since archived).
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries).

@@ -231,3 +231,4 @@ choice (human-executed, not AO-dispatched).
   `Workflow` fan-out (22 `NEVER_SCOUTED` + a 77-doc `STALE` slice), shipped `unified-trading-pm@e88ab02465`, corpus
   moved 22/581 `NEVER_SCOUTED`/`STALE` -> 2/511. Sole open todo here (`[SCRIPT] P0`) remains the same duplicate item,
   not reclassified.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

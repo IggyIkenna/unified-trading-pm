@@ -570,3 +570,4 @@ batch1/batch2 applied, per the candidate-generator script's own stated rationale
   `/plan-reconcile` pass. **Remaining work for the next session**: 2 `NEVER_SCOUTED` (both exempted, need
   lock-lift/line-cap-trim first, not more scouting) + 511 `STALE` (re-measure before trusting — this corpus's churn
   rate has consistently outpaced single-session scouting throughput per every prior entry above).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

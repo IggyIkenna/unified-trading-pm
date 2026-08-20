@@ -143,3 +143,4 @@ source: >-
   workspace HARD RULE ("delete the number that rotted rather than updating it — a count re-rots"), removed the specific
   "4" from both locations rather than updating it to "8." No checkbox state changed; this doc's own single open todo
   (the 6-step archival) correctly stays gated on the parent's still-open bounded-age-prune todo.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

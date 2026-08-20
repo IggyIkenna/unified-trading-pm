@@ -1090,3 +1090,4 @@ time-gated, or too-large-for-a-batch-todo) were left in their source docs and ar
     without this specific phase0 todo ever being cross-referenced/flipped. Source doc's own §2.2 line is NOT touched by
     this commit (checkbox reconciliation back into source docs happens in the paired finalize plan per this batch's own
     header convention).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

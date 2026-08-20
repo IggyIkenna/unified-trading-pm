@@ -426,3 +426,4 @@ adjacent axis the same script happens to also report). **Both findings investiga
   script and the long-resolved batch5 plan for today's actually-shipped migration script
   (`migrate_cefi_bybit_coinbase_bitget_margin_marker_2026_08_17.py`) and the `tardis_margin_marker.py` module it
   extends.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

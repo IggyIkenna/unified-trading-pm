@@ -53,6 +53,7 @@ context_scope:
     /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md,
     /plans/archive/2026_08/issues/deployment_registry_dualwrite_flag_not_propagated_to_vm_launchers_2026_07_30.md,
     deployment-api/deployment_api/routes/deployments_inventory/_registry_io.py,
+    unified-trading-library/unified_trading_library/deployment_registry.py,
   ]
 ---
 
@@ -241,3 +242,4 @@ heartbeat
   `deployment_api_qg_size_gate_debt_2026_07_30.md`, pure code motion); swapped in the resolving `_registry_io.py` (the
   actual GCS-census read logic this doc's Problem section describes) in place of the archived ci_status precedent link.
 - **context-scout 2026-08-15**: re-verified context_scope, no change needed (5 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -132,3 +132,5 @@ running. Check `gcloud compute instances list` for the current cap-relevant flee
   `cefi_queue_mode_tier3_sentinel_false_empty_confirmed_2026_08_16.md`, named in the doc's own "Recommended relaunch
   shape" section as the bug class the per-venue solo-launch recommendation avoids.
 - **na-eligibility-audit 2026-08-19** [body-hash:b4afd78e12a0dc71]: KEEP-NA, valid — Full re-read (129 lines). All 3 open todos remain DEPENDENCY_BLOCKED on the same Tardis N=1 concurrent-VM slot occupied by the BINANCE-FUTURES backfill (sibling `cefi_tardis_date_concurrency_2026_08_16.md`). Content changed since the 2026-08-17 marker only via a 2026-08-18 plan_reconciler SHA-citation correction (`bd07cfc3`→`f134d165...`) — doesn't change the verdict. Doc stays assigned_vm: NA.
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries) — all existing entries still resolve (the
+  concurrency plan, the checkpoint-resume precedent, the bug-class issue, and the launcher).

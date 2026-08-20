@@ -75,7 +75,15 @@ source: >-
   fix that" mid-session under `/autonomous`; investigated, implemented, tested, and shipped autonomously per operator
   authorization (SUB_AGENT_MANDATORY_RULES.md + AUTONOMOUS_AGENT_RULES.md applied for the duration).
 drift_direction: advance-code
-context_scope: [market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_options_adapter.py, market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_base_client.py, market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_stream_client.py, market-tick-data-service/market_tick_data_service/cli/handlers/tardis_options_chain_backfill_handler.py, market-tick-data-service/market_tick_data_service/cli/handlers/deribit_options_chain_handler.py, market-tick-data-service/market_tick_data_service/cli/main.py]
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/market_interface/adapters/cefi/tardis_options_adapter.py,
+    market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_base_client.py,
+    market-tick-data-service/market_tick_data_service/market_interface/clients/tardis_stream_client.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/tardis_options_chain_backfill_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/handlers/deribit_options_chain_handler.py,
+    market-tick-data-service/market_tick_data_service/cli/main.py,
+  ]
 ---
 
 # Tardis options_chain adapter — credential unblock, real implementation, dispatch wiring
@@ -216,3 +224,4 @@ adapter fix.
 ## Progress Log
 
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

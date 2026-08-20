@@ -121,3 +121,4 @@ Machine-held (`gate_on_depends: true`) until every todo in
   issue doc. No mis-citation found — nothing needed correcting in the source doc. `[DOC] P2` (the archival ritual) is
   the plan's remaining todo — not in this task's scope.
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

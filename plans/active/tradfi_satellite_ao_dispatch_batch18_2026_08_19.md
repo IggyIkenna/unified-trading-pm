@@ -37,6 +37,7 @@ context_scope:
     /plans/active/issues/tradfi_deprecated_etf_manifest_rows_forward_scope_drift_2026_08_18.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /codex/11-project-management/ao-dispatch-batch-naming-and-conflict-check.md,
+    /plans/archive/issues/dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md,
   ]
 supersedes:
 superseded_by:
@@ -86,3 +87,4 @@ source: >-
   doc tracking the ETF re-measure). Todo 2's source doc (`dxy_duplicate_vm_billing_waste_ao_outage_2026_08_12.md`)
   reached 0 open todos as a direct result of this same pass's fixes and was archived to
   `plans/archive/issues/` in the same commit — its own Progress Log carries the full incident history.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

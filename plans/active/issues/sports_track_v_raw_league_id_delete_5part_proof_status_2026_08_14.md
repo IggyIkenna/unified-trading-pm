@@ -69,6 +69,7 @@ context_scope:
     /plans/archive/issues/sports_k1k2_delete_bundled_with_twin_less_data_2026_07_27.md,
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
     /plans/active/sports_satellite_ao_dispatch_batch15_2026_08_17.md,
+    deployment-service/scripts/vm/launch-canonical-migration-vm.sh,
   ]
 ---
 
@@ -588,3 +589,4 @@ already caught once.
 ## Context scout
 
 - **context-scout 2026-08-15**: populated context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

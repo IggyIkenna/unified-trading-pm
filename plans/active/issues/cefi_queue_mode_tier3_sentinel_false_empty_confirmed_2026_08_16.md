@@ -174,3 +174,5 @@ lines despite genuine fetch activity, which is what let this run silently for 17
   contingent April-2026 gap watch-item) is unaffected — still not currently actionable, no action needed unless the
   re-verification pass itself surfaces a new distinct problem. Doc stays `open`/`assigned_vm: NA` (1 item remains,
   contingent and not itself extractable).
+- **context-scout 2026-08-20**: refreshed context_scope (4 entries) — all existing entries still resolve (the sibling
+  audit plan, the delete-safety SSOT, and the two MTDS sentinel/handler source paths).

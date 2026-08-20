@@ -823,5 +823,6 @@ pool dead):
     `self_hosted_runner_public_repo_revert_2026_08_05.md`'s own todo 20 checkbox happens in that plan directly (same
     turn).
 - **context-scout 2026-08-17**: re-verified context_scope (5 entries), unchanged.
+- **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- grep finds 0 open `- [ ]` checkboxes — both 'Recommended fix path' and 'Follow-up' sections are fully `[x]`. But the doc explicitly carries `archive_exempt: true` (set 2026-08-09) because real open work survives in PROSE only, per its own Progress Log: (1) 'redeploy the fixed wrapper script to the live VM' not yet done, (2) 'operator decision on throughput-provisioning vs. concurrency-reduction' still operator-gated, and (3) a 2026-08-14 follow-up shows the VM load-average re-measurement...

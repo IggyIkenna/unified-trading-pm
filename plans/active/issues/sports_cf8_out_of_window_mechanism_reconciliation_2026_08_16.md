@@ -42,7 +42,14 @@ execution_scope: orchestrator-agent
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-context_scope: [market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py, market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py, market-tick-data-service/market_tick_data_service/live/manifest_recorder.py, market-data-processing-service/scripts/reprocess_sports_odds.py]
+context_scope:
+  [
+    market-tick-data-service/market_tick_data_service/scripts/_rebuild_sports_write.py,
+    market-tick-data-service/market_tick_data_service/live/connectors/odds_api_ws.py,
+    market-tick-data-service/market_tick_data_service/live/manifest_recorder.py,
+    market-data-processing-service/scripts/reprocess_sports_odds.py,
+    market-tick-data-service/scripts/sports/delete_cf8_phantom_timeframe_sibling_confirmed_2026_08_15.py,
+  ]
 ---
 
 # CF-8 out-of-window population — mechanism reconciliation
@@ -304,3 +311,4 @@ todos, 6 are now done; the sole remaining item is the `[OPERATOR] P2` remediatio
 - **na-eligibility-audit 2026-08-17** (dispatch agt-952948, third same-day pass): reconfirmed independently — same verdict, KEEP-NA valid (sole item is the [OPERATOR] P2 remediation-policy decision, unchanged). Not re-adding a hash marker given two fresh same-day anchors already exist above.
 - **na-eligibility-audit 2026-08-17** [body-hash:5aa4787c63fca68d] (dispatch agt-6574d2, fourth same-day pass, sports tranche): reconfirmed independently — same verdict, KEEP-NA valid, sole item still the [OPERATOR] P2 remediation-policy decision. Root cause of the repeated same-day re-audit (a `_latest_verdict_marker` tie-break bug) fixed this run (`generate_na_doc_tranche_inventory.py`) — should stop recurring.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

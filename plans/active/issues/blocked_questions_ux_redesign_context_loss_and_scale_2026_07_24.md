@@ -271,3 +271,4 @@ exists" section together before scoping the workstream.
   slot-27, both 2026-08-08), each declined it as GATED on the backend dependency, and neither caught that the repo was
   wrong.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (6 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

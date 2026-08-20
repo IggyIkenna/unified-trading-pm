@@ -185,3 +185,4 @@ stash/rebuild/restore dance by hand every time, as this session did twice.
   `test_auto_mode_stale_after_dirty_skip_returns_nonzero` added to `TestTarballFreshnessGuard`. QG green. Shipped via
   `infra_satellite_ao_dispatch_batch8_2026_08_07.md` (now archived).
 - **context-scout 2026-08-17**: re-verified context_scope (3 entries), unchanged.
+- **context-scout 2026-08-20**: refreshed context_scope (3 entries).

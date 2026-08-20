@@ -49,6 +49,9 @@ context_scope:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25_finalize.md,
     /plans/active/issues/plan_reconciler_findings_sports_2026_08_18.md,
+    /plans/active/issues/check_line_caps_sh_whitespace_only_exemption_false_positive_2026_08_19.md,
+    instruments-service/scripts/build_instrument_catalogue.py,
+    scripts/plan-hygiene/check_line_caps.sh,
   ]
 ---
 
@@ -449,3 +452,4 @@ adversarially verified (Phase 3) or applied (Phase 5) yet as of this write-up.
   the BLK-7d1f4a2d todo `[x]` on the target plan with the full answer, and alerted `BLK-336884f2` (options A/B/C,
   recommendation A: dispatch investigation now — outside this role's plans/\*\*-only write scope to fix directly).
   Resuming into Phase 3 adversarial verification of the fan-out backlog next; no other P0 currently outranks it.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

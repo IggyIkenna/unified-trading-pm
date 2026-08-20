@@ -764,3 +764,4 @@ or full) should triage these; most are cosmetic/stale-ref/index-drift class, not
   path is `plans/active/issues/...`, never archived). Item 14 closed; the other 23 items unchanged from the marker
   above, doc otherwise KEEP-NA valid. Cross-cutting tranche audit.
 - **na-eligibility-audit 2026-08-19** (cross-cutting tranche): KEEP-NA, valid — 22 open items (grep-verified, matches Phase-0=22) in a P2/P3 review-tracking backlog from the 2026-08-12 full-corpus /plan-reconcile run; already audited twice by this same skill (2026-08-17 x2) reaching KEEP-NA both. (4/22 items tagged MISCLASSIFIED_LIKELY_AO_ELIGIBLE for next-run reassessment.)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (2 entries)

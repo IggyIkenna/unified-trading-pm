@@ -796,3 +796,4 @@ proper (LiteLLM `ollama_chat` proxy entry, an honest new `AccountProvider` value
 provider-mislabeling bug), then deregister both existing NVIDIA-hosted Gemma accounts and register this one in
 their place, live-verified. Not done in this entry — this entry is the infra record, the todos are the remaining
 work.
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries)

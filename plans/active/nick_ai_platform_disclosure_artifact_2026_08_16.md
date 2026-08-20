@@ -56,6 +56,7 @@ context_scope:
     /codex/02-data/honest-coverage-model.md,
     /codex/02-data/availability-manifest-and-data-status.md,
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
+    /plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md,
   ]
 ---
 
@@ -437,3 +438,4 @@ sections added (§18-§24 + §1 MDPS/features-service intermediary), and the evi
 `class="own"` owner marks applied. Landing commits `unified-trading-pm@{ec08cccad1, 2b0c327e44, 19724f5e69}`
 (per-todo evidence in the nickai child plan). The "Operator review before send" P0 gate below remains the standing
 pre-send check — this remediation pass does not authorise sending the document anywhere.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)

@@ -338,3 +338,4 @@ below don't need todo 5's code to have landed first): a new module
   post-change executions verified SUCCEEDED live in prod (`uts-prod-dp-exit-code-monitor-zzqq6`,
   `uts-prod-dp-heartbeat-watcher-kfzvt`, `uts-prod-dp-meta-watchers-rsq6v`, `uts-prod-monitoring-deadman-4swb7`).
   Shipped: `deployment-service@873d88a0a1`, `deployment-api@8bdec86e9d`, `deployment-service@9a60be47a7`.
+- **context-scout 2026-08-20**: refreshed context_scope (9 entries)

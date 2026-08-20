@@ -126,3 +126,4 @@ root). That alternative is operator-gated if ever wanted.
   `scripts/quality_gates/test_check_finalize_plan_coverage.py`); archiving it now would break those references and force
   a code change, so it is intentionally kept active for fleet-wide bulk archival later).
 - **context-scout 2026-08-14**: populated context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

@@ -49,7 +49,12 @@ source:
 resolved_by:
 locked_by:
 locked_since:
-context_scope: [/codex/02-data/tradfi-databento-sourcing-ssot.md]
+context_scope:
+  [
+    /codex/02-data/tradfi-databento-sourcing-ssot.md,
+    instruments-service/instruments_service/reference_data/adapters/tradfi/databento/adapter.py,
+    market-tick-data-service/market_tick_data_service/live/connectors/databento_tradfi_ws.py,
+  ]
 drift_direction: advance-code
 depends_on: []
 ---
@@ -456,3 +461,4 @@ archival — no live Databento dependency).
   a venue error — tracked as a new `[CODE] P2` todo above. Posted a bounded `/blocked` pointing at this doc's existing
   P0 (no duplicate page). `$AUTHORING_SLOT`=`dp-fleet-monitor` (non-numeric) — skipped the authoring-slot ping per the
   role contract carve-out. No code changed; doc-only.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

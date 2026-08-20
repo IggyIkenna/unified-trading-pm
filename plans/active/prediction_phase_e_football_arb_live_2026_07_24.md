@@ -223,3 +223,4 @@ context_scope:
   independently re-verified this same run: 4 and 5 open todos respectively). Both remaining items (E3 fixture-wiring,
   3-way arb correctness guards) independently confirmed as genuine multi-file design/build work on live
   dispatch-critical arb-matching machinery — not RECLASSIFY-eligible even setting the gate aside. Doc stays NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries).

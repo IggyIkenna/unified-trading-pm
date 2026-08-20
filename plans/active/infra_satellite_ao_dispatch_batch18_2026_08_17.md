@@ -197,3 +197,4 @@ rather than split into two same-priority concurrent items on the same file.
   investigation — the source doc's todos 4 and 5 (both `[x]` RESOLVED, same-day 2026-08-15 completion after this
   batch's extraction snapshot was taken) already fully cover this exact scope. No new investigation, code, or manifest
   mutation was needed; only a citation correction on both docs. Read-only doc-only change, no code repo touched.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (7 entries)

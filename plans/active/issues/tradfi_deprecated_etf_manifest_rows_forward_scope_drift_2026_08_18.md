@@ -41,7 +41,8 @@ depends_on:
 context_scope:
   [
     /plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md,
-    instruments-service/scripts/purge_deprecated_etf_manifest_rows_2026_05_16.py,
+    deployment-service/scripts/migrations/instruments-service/purge_deprecated_etf_manifest_rows_2026_05_16.py,
+    /plans/active/tradfi_satellite_ao_dispatch_batch18_2026_08_19.md,
   ]
 supersedes:
 superseded_by:
@@ -127,3 +128,4 @@ recaptured on every subsequent run.
   `tradfi_satellite_ao_dispatch_batch18_2026_08_19.md` todo 1. Todos 1 (root-cause which capture path, open-ended,
   multiple unresolved hypotheses) and 3 (fix + re-purge, gated on todo 1's unknown outcome) stay genuinely
   investigation/judgment work. Doc stays `assigned_vm: NA` — 2 of 3 todos remain genuinely NA.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

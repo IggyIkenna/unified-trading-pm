@@ -44,6 +44,7 @@ source: >-
 context_scope:
   [
     /plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
+    /codex/05-infrastructure/vm-launcher-runbook.md,
     market-tick-data-service/market_tick_data_service/scripts/_sig_index_walker.py,
     market-tick-data-service/market_tick_data_service/scripts/_orca_swap_decoder.py,
     market-tick-data-service/market_tick_data_service/cli/handlers/solana_defi_handler.py,
@@ -149,3 +150,4 @@ context_scope:
   `_sig_index_walker.py` and added `_orca_swap_decoder.py` (the shipped ORCA decoder the sole open Raydium-decoder
   todo is explicitly modeled on). Both handler files kept — todo 4 (manifest-write wiring) names
   `SolanaDefiHandler` as a candidate integration point alongside a new CLI operation.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

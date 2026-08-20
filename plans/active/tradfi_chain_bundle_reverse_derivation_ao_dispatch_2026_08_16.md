@@ -75,3 +75,4 @@ resolved_by:
   `tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md`'s P2-OPERATOR-DECISION todo, since the parent doc
   stays `assigned_vm: NA` (other todos in that doc remain genuinely dependency/operator-blocked).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)

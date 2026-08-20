@@ -79,3 +79,5 @@ context_scope:
 
 - **context-scout 2026-08-17**: refreshed context_scope (2 entries) — added the umbrella parent (todo 2 reconciles
   into its contract step 3); code-free finalize gate, no source path applicable.
+
+- **context-scout 2026-08-20**: refreshed context_scope (2 entries)

@@ -41,15 +41,9 @@ context_scope:
     /codex/05-infrastructure/deployment-observability.md,
     /codex/05-infrastructure/billing-cost-observability.md,
     unified-trading-library/unified_trading_library/lifecycle/host_metrics.py,
-    deployment-service/scripts/bootstrap_operational_data_bq.py,
+    deployment-service/scripts/migrations/self/bootstrap_operational_data_bq.py,
     deployment-api/deployment_api/routes/vm_resource_history.py,
-    deployment-api/deployment_api/services/operational_data_queries.py,
-    deployment-service/deployment_service/deployment/state.py,
-    deployment-service/deployment_service/deployment/orchestrator.py,
     deployment-service/deployment_service/deployment_config.py,
-    deployment-ui/src/pages/VmResourceComparison.tsx,
-    unified-api-contracts/unified_api_contracts/internal/deployment.py,
-    unified-api-contracts/unified_api_contracts/internal/domain/deployment_service/deployment.py,
   ]
 supersedes:
 superseded_by:
@@ -328,3 +322,4 @@ session alone within a reasonable time — left parked per the table above rathe
 inspect one real row's `jsonPayload` shape, write the aggregation query/worker against the confirmed real schema,
 verify Track 2's 2 remaining VPC-Flow-Logs todos, then the 3 closing-the-loop todos in the stated order, then archive
 this plan per the standard 6-step ritual.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

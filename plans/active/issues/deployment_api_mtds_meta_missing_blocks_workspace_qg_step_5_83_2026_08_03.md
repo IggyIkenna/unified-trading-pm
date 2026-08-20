@@ -58,7 +58,13 @@ source: >-
   deployment-api (non-destructive, read-first via `git fetch`) was attempted and refused cleanly by git itself (would
   overwrite another agent's uncommitted, ~94h-old change to `deployment_api/routes/data_status/_distinct_values.py`) —
   no further action taken there, per HARD RULE against touching another agent's WIP.
-context_scope: [scripts/qg/no_adapter_contract_regression.sh, scripts/quality_gates/adapter_contract_baseline.yaml, deployment-api/deployment_api/services/data_status/mtds_meta.py, /plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md]
+context_scope:
+  [
+    scripts/qg/no_adapter_contract_regression.sh,
+    scripts/quality_gates/adapter_contract_baseline.yaml,
+    deployment-api/deployment_api/services/data_status/mtds_meta.py,
+    /plans/archive/2026_07/adapter_contract_regression_ratchet_60s_timeout_flaky_under_contention_2026_07_27.md,
+  ]
 ---
 
 # deployment-api local checkout missing mtds_meta.py blocks workspace-wide QG STEP 5.83 for every repo shipped from this host
@@ -209,5 +215,6 @@ whether STEP 5.83 should validate against a canonical/fresh state... rather than
 possibly-stale sibling checkouts' -- an undecided architecture tradeoff (per-run network/git-show cost vs. accepting
 host-checkout staleness) with no decision made and no stated done-when.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (4 entries)
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
 
 **na-eligibility-audit 2026-08-18** (ci tranche): KEEP-NA, valid -- Carries 5 sequential na-eligibility-audit KEEP_NA confirmations (2026-08-03, 08-06, round-11 08-09, 08-10) all citing the same reasoning: the sole open todo ('Consider whether STEP 5.83 should validate against a canonical/fresh state... rather than each shipping repo's local, possibly-stale sibling checkouts') is an explicit undecided architecture tradeoff with no stated decision or done-when. The doc's actual blocking scope (todo 1, the deployment-api checkout staleness that broke...

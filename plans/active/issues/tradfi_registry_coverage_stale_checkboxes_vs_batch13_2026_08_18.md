@@ -47,6 +47,7 @@ context_scope:
   [
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
     /plans/active/tradfi_satellite_ao_dispatch_batch13_2026_08_13.md,
+    /plans/active/issues/tradfi_autonomous_session_operator_decisions_2026_07_25.md,
   ]
 ---
 
@@ -142,3 +143,4 @@ leaving the operator's 2026-08-07 "flip all 8" ruling permanently unexecuted for
   to todo 2's text. `assigned_vm: NA → planning`, `execution_scope: local-only → orchestrator-agent`. Companion
   finalize plan authored:
   `tradfi_registry_coverage_stale_checkboxes_vs_batch13_2026_08_18_finalize_2026_08_19.md`.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

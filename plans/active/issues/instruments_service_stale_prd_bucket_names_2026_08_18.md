@@ -117,3 +117,4 @@ material caveat on top of the GCS-method-call fix that already shipped.
   the citing parent doc's own DONE checkbox. Converted prose to 2 tracked todos above and flipped
   `assigned_vm: NA -> planning`. Companion:
   `instruments_service_stale_prd_bucket_names_2026_08_18_finalize_2026_08_19.md`.
+- **context-scout 2026-08-20**: populated context_scope (2 entries).

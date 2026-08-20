@@ -392,3 +392,4 @@ source: >-
   `deployment_profile_derivation.py`, `deployment_profile_sizing.py`, `archetype_slot_resolver.py` -- the last
   confirmed "the ACTUAL registered archetype set" in the 2026-08-15 verification entry) plus the decision-artifact
   doc this whole plan implements.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

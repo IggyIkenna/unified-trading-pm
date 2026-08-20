@@ -40,7 +40,12 @@ priority: P1
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-context_scope: [instruments-service/scripts/cleanup_legacy_twins.py, /codex/02-data/gcs-and-manifest-delete-safety-protocol.md]
+context_scope:
+  [
+    instruments-service/scripts/cleanup_legacy_twins.py,
+    /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
+    /plans/active/tradfi_legacy_twin_bucket_deletes_signoff_2026_07_24.md,
+  ]
 ---
 
 # tradfi legacy-twin delete candidates: 0/900 already absent, unexplained
@@ -151,3 +156,4 @@ protocol asks to be investigated before being waved off.
   whether `/plans/archive/2026_08/legacy_twin_deletes_defi_prediction_and_sports_reverify_ao_dispatch_2026_08_15.md`'s
   existing dry-run already answers this specific question is still an open operator call, not guessed at.
   `assigned_vm` unchanged; stays PARKED BLOCKED-OPERATOR-DECISION.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

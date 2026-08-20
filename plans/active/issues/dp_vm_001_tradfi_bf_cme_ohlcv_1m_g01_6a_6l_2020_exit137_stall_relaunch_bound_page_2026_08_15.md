@@ -34,7 +34,7 @@ related:
     /plans/archive/issues/tradfi_scope_ruling_possible_violation_legacy_fleet_relaunched_2026_08_09.md,
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
-context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py]
+context_scope: [/codex/15-runbooks/incidents/rb_infra_relaunch.md, /codex/05-infrastructure/data-pipeline-alerts.md, /plans/active/issues/dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md, deployment-service/deployment_service/data_pipeline_monitors/exit_code_fleet_monitor.py, deployment-service/deployment_service/data_pipeline_monitors/launcher_registry.py, deployment-service/deployment_service/data_pipeline_monitors/_gcs.py]
 created: "2026-08-15"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
@@ -154,3 +154,4 @@ this could be a systemic issue in the launcher/capture path rather than two unre
   `dp_vm_001_tradfi_bf_cme_ohlcv_1m_g01_6a_6l_2020_20260816_220209_databento_cme_billing_rootcause_2026_08_17.md`) —
   correctly left unflipped pending the family's normal relaunch sweep once billing clears (not a fresh RECLASSIFY
   candidate; nothing dispatchable right now). `assigned_vm` unchanged.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)

@@ -48,6 +48,7 @@ context_scope:
     unified-trading-pm/scripts/plan-hygiene/run_hygiene_sweep.sh,
     unified-trading-pm/scripts/plan-hygiene/check_na_corpus_ratchet.py,
     unified-trading-pm/scripts/plan-hygiene/na_corpus_baseline.yaml,
+    unified-trading-pm/scripts/dev/safe-doc-push.sh,
   ]
 ---
 
@@ -276,3 +277,4 @@ a normal ratchet into a self-reinforcing wall.
   natural fix (have the script set `GITHUB_REF_NAME`/`GITHUB_REF` itself when it detects it's operating on
   `live-defi-rollout`, mirroring what a real LDR-push CI run would set) would close this permanently for every
   future local session, but that's a `scripts/**` change outside this run's write scope. Filed as todo below.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
