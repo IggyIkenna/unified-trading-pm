@@ -373,9 +373,15 @@ todos only to confirm they are data-movement, then leave it.
       and strategy-service risk-v2 already consumes it, but zero venues are populated, so every risk-v2 read
       degrades silently to "no data". Evidence: epic W5 +
       `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`.
-- [ ] [BACKEND] P1. Add transfer-capability eligibility fields to `VenueCapabilityV2` (Copper / Ceffu /
-      manual-transfer / prime-broker per venue). These are NEW fields, not just population. Blocks W22 transfer
-      routing.
+- [x] ✅ [BACKEND] P1. `TransferCapabilityV2` added to `VenueCapabilityV2` — unified-api-contracts@45a545e5ad.
+      New fields, schema only (population is separate, tracked work, per this todo's own text):
+      `copper_eligible`/`ceffu_eligible` (kept independent — CEFFU is a specific custody-provider identity Copper
+      routes on behalf of, not a synonym), `manual_transfer_eligible`, `prime_broker_eligible: list[str]` (an
+      open-set of broker names, e.g. `["IBKR", "Alpaca"]`, not a closed enum — a new prime-broker integration
+      never needs a schema edit). Every field defaults to the eligible-nowhere state. Field set sourced directly
+      from `/plans/audit/results/venue_transfer_custody_collateral_research_2026_08_18.md`, no invented names.
+      5 tests incl. a JSON round-trip. QG green (481s, full 13k+ suite). W22 transfer routing is now unblocked on
+      the schema side; still needs real per-venue population before W22 can consume live values.
 - [ ] [BACKEND] P1. Declare the W8 weightings SSOT in the contracts registry — which dimension each weighting
       applies to. P0 in the epic with **no owning plan** at authoring time; this todo is that owner.
 
