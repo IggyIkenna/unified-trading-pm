@@ -65,4 +65,8 @@ Update the productivity oracle in `deployment-service` to model source-to-output
 ## Todos
 
 - [x] [CODE] P1. Fix DP-LIVE-004 productivity accounting for sports ODDS_API source-to-bookmaker fan-out in deployment-service; preserve non-fan-out detection and add focused regression tests. — deployment-service@c4f2b1d048 + Evidence: quality-gates.sh --no-fix ALL QUALITY GATES PASSED; 3652 passed, 5 skipped
-- [ ] [DATA] P1. Re-run the live productivity audit against the exact VM and verify the false page clears while bookmaker-level capture remains fresh.
+- [x] [DATA] P1. Re-run the live productivity audit against the exact VM and verify the false page clears while bookmaker-level capture remains fresh. — deployment-service monitor read-only exact-VM check at 2026-08-20T23:43Z; running=true, bookmaker groups had fresh last-captured timestamps through 23:43Z, and the ODDS_API/odds source group was credited with fan-out capture at 23:43Z. Evidence: bounded direct invocation of cli._list_running_vms(), build_running_live_shards(), and _read_vm_shard_group_activity(); no productivity finding for the target.
+
+## Progress Log
+
+- 2026-08-20T23:43Z — Verified the exact VM is RUNNING and productive. The per-VM shard contained fresh captured odds rows for 30 bookmaker venues; the patched ODDS_API/odds source group reported last_captured_at=2026-08-20 23:43:03Z, so the false positive is cleared. The check ran read-only under a 2 GiB cap and 120-second timeout.
