@@ -18,7 +18,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

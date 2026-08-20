@@ -19,7 +19,7 @@ related:
     /plans/audit/results/cefi_todo19_149_residual_objects_2026_07_23.csv,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-17"
 author: slot-11 (data_engineering)
 parent_epic: cefi_master
 assigned_vm: planning

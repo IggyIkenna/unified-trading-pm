@@ -46,7 +46,7 @@ related:
     /plans/archive/2026_08/issues/agent_orchestrator_stale_pm_workflow_ref_blocks_promotion_2026_08_06.md,
   ]
 created: 2026-08-07
-last_updated: "2026-08-07"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only

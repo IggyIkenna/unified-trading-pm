@@ -48,7 +48,7 @@ related_plans:
   - ../active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md
   - ../active/cryptovenue_equity_perps_and_tokenized_stocks_2026_06_20.md
   - ../archive/2026_08/tardis_impossible_combinations_recorded_as_attempted_failed_2026_07_17_finalize_2026_08_08.md
-last_updated: 2026-07-14
+last_updated: 2026-08-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 execution_scope: orchestrator-agent

@@ -34,7 +34,7 @@ related:
     /codex/02-data/availability-manifest-and-data-status.md,
   ]
 created: 2026-07-29
-last_updated: 2026-07-29
+last_updated: 2026-08-20
 parent_epic: batch_live_symmetry_master
 assigned_vm: NA
 execution_scope: local-only

@@ -29,7 +29,7 @@ related:
     /plans/archive/2026_08/alert_driven_dependency_revocation_2026_08_12.md,
   ]
 created: 2026-08-13
-last_updated: "2026-08-13"
+last_updated: "2026-08-20"
 parent_epic: uac_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

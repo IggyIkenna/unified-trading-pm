@@ -27,7 +27,7 @@ related:
     /codex/02-data/four-surface-reconciliation-procedure.md,
   ]
 created: 2026-08-08
-last_updated: 2026-08-08
+last_updated: 2026-08-20
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

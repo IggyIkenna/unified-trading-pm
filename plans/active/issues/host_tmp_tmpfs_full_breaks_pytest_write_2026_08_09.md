@@ -30,7 +30,7 @@ related:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 created: 2026-08-09
-last_updated: 2026-08-09
+last_updated: 2026-08-20
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

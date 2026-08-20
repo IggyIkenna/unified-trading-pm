@@ -35,7 +35,7 @@ context_scope:
     scripts/workspace/link-claude-skills.sh,
   ]
 created: 2026-08-11
-last_updated: 2026-08-11
+last_updated: 2026-08-20
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

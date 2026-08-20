@@ -25,7 +25,7 @@ related:
     /plans/active/issues/sports_dependency_check_manifest_vs_gcs_path_2026_07_08.md,
   ]
 created: 2026-08-08
-last_updated: 2026-08-08
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -39,7 +39,7 @@ related:
     /plans/active/issues/sports_odds_horizon_bucket_reader_writer_path_mismatch_defeats_zombie_purge_2026_08_09.md,
   ]
 created: 2026-08-08
-last_updated: 2026-08-08
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

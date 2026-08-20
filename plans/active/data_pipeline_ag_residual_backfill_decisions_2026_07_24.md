@@ -26,7 +26,7 @@ related:
     /plans/active/data_completion_to_100_all_ag_2026_06_21.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-08-17" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
+last_updated: "2026-08-20" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only # was: orchestrator-agent — corrected 2026-08-19 (plan_reconciler, cross-cutting) — only valid NA-paired value

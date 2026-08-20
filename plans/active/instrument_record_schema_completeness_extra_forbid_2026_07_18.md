@@ -21,7 +21,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-07-18
-last_updated: 2026-07-18
+last_updated: 2026-08-15
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only

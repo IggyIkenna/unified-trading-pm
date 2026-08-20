@@ -32,7 +32,7 @@ execution_scope: local-only
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-12
+last_updated: 2026-08-20
 locked_by:
 context_scope:
   [

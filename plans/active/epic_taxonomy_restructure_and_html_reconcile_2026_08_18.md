@@ -34,7 +34,7 @@ related:
     scripts/plans/regenerate_active_plan_inventory.py,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: 2026-08-20
 parent_epic: plan_hygiene_master
 assigned_vm: NA
 execution_scope: local-only

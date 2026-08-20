@@ -38,7 +38,7 @@ related:
     /plans/active/ui_satellite_ao_dispatch_batch3_finalize_2026_08_09.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

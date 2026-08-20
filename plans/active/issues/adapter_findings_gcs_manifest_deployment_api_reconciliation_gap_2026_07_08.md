@@ -60,7 +60,7 @@ thinking_tier: medium
 estimate_class: research
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 3.6
-last_updated: 2026-08-01
+last_updated: 2026-08-20
 supersedes:
 superseded_by:
 depends_on:

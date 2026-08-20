@@ -21,7 +21,7 @@ related:
     /codex/04-architecture/agent-orchestrator-worker-liveness.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-15"
+last_updated: "2026-08-19"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

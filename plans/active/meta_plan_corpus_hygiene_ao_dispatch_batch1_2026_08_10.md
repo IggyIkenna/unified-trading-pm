@@ -41,7 +41,7 @@ related:
     /plans/active/task_template.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-20"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

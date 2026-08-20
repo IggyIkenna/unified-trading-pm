@@ -20,7 +20,7 @@ related:
     /plans/archive/issues/defi_perp_daily_ctx_manifest_gap_reader_risk_2026_07_22.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-20"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -33,7 +33,7 @@ related:
     /plans/archive/issues/onchain_manifest_dishonest_and_recompute_blocked_2026_07_21.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-21"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

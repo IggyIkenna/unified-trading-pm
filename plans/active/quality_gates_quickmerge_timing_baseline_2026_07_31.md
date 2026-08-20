@@ -15,7 +15,7 @@ scope: [engineer, admin]
 tags: [quality-gates, quickmerge, timing, performance, ci-cd, orchestrator, benchmarking]
 related: [/codex/08-workflows/ci-cd-flow.md, /codex/06-coding-standards/quality-gates.md]
 created: "2026-07-31"
-last_updated: 2026-07-31
+last_updated: 2026-08-17
 parent_epic: orchestrator_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

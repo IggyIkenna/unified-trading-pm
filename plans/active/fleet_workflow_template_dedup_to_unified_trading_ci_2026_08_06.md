@@ -54,7 +54,7 @@ related:
     /codex/05-infrastructure/per-tab-worktrees.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-14"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only

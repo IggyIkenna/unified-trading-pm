@@ -21,7 +21,7 @@ related:
     /plans/active/code_readiness_t5_readiness_observability_presentations_2026_08_19.md,
   ]
 created: 2026-08-19
-last_updated: 2026-08-19
+last_updated: 2026-08-20
 parent_epic: system_readiness_master
 assigned_vm: NA
 execution_scope: local-only

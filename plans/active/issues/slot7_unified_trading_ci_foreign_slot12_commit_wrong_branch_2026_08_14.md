@@ -40,7 +40,7 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
-last_updated: 2026-08-14
+last_updated: 2026-08-20
 context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,

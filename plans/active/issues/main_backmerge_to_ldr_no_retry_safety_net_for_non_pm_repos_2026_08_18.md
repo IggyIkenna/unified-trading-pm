@@ -37,7 +37,7 @@ context_scope:
     unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: 2026-08-19
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only

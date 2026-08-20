@@ -95,13 +95,7 @@ source:
   "CRITICAL DP_RUN_MOSTLY_EMPTY (DP-FETCH-009) escalation agt-ff6e10, dp-fleet-monitor -> agent-orchestrator
   data_pipeline_failure worker (slot-16), fired 2026-07-28, asset_group=cefi data_type=book_snapshot_5, 299,467
   attempted_failed of 1,037,001 attempted (28.9%), flagged Fresh (0d old)."
-last_updated:
-  2026-08-03 (21st+ dispatch, agt-52c156, slot 13 -- numerator 300,674/1,123,966 (26.8%), STATIC BACKLOG (210 rows/24h,
-  below the 500-row floor); numerator DECREASED vs the 19th-dispatch reading (300,744->300,674) while attempted grew --
-  strongest evidence yet of no regression. Confirmed all 5 fix commits still hold; relied on the 19th dispatch's
-  minutes-earlier live read (zero new schema-contract-violation rows past the 2026-07-31T04:18:05Z checkpoint, trickle
-  is 100% the OTHER already-tracked Tardis rate-limit mechanism, 98.2% capture success) rather than repeating it -- see
-  Progress Log for detail.)
+last_updated: 2026-08-20 # was 2026-08-03; latest provenance remains in the body Progress Log (21st+ dispatch, static backlog, no regression).
 context_scope:
   [
     /codex/05-infrastructure/data-pipeline-alerts.md,

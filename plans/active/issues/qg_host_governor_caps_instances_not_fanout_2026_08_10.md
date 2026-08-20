@@ -32,7 +32,7 @@ assigned_role: infra
 drift_direction: none
 source: Measured while diagnosing repeated MAX_DURATION failures on a substantively-green PM tree, 2026-08-10.
 depends_on: []
-last_updated: 2026-08-10
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 resolved_by:

@@ -23,7 +23,7 @@ related:
     /plans/active/tradfi_backfill_throughput_followups_2026_07_24.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 # was: cefi_master (epic-assignment audit 2026-08-19) -- Phase 1/2's correctness fixes
 parent_epic: mtds_mdps_master
   # (KnownDeadShardGate lost-update race, checkpoint watermark, catalog re-registration race, UTL runner semaphore

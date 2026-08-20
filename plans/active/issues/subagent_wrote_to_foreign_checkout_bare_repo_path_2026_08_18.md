@@ -28,7 +28,7 @@ context_scope:
     /plans/active/ao_satellite_ao_dispatch_batch25_2026_08_19.md,
   ]
 created: 2026-08-18
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 locked_by:

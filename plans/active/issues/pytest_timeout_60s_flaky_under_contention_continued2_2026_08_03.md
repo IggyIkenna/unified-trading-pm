@@ -57,7 +57,7 @@ related:
   ]
 created: 2026-08-03
 author: unknown
-last_updated: 2026-08-16 # line-cap remediation split (Trust Mode) -- extracted the bulk 2026-08-03 Progress Log to the archive doc above; was 1013L, flagged unresolved since 2026-08-15
+last_updated: 2026-08-20 # line-cap remediation split (Trust Mode) -- extracted the bulk 2026-08-03 Progress Log to the archive doc above; was 1013L, flagged unresolved since 2026-08-15
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

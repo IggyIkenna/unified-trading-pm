@@ -35,7 +35,7 @@ related:
     /plans/active/tradfi_registry_coverage_and_ao_readiness_2026_07_25.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-20"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

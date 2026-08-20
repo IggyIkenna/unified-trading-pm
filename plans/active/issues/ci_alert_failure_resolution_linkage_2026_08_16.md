@@ -42,7 +42,7 @@ related:
     /cursor-configs/skills/ci-reconcile/SKILL.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only

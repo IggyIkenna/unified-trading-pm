@@ -29,7 +29,7 @@ related:
   - /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md
   - /codex/05-infrastructure/deployment-observability.md
 created: "2026-07-14"
-last_updated: "2026-08-18" # (was: 2026-07-14 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, doc last substantively touched 2026-08-15)
+last_updated: "2026-08-20" # (was: 2026-07-14 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, doc last substantively touched 2026-08-15)
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

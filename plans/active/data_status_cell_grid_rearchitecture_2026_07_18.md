@@ -22,7 +22,7 @@ related:
     /plans/archive/2026_08/data_status_page_ux_and_canonicalisation_2026_07_16.md,
   ]
 created: 2026-07-18
-last_updated: 2026-08-18 # (was: 2026-08-08 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, now through 2026-08-17)
+last_updated: 2026-08-20 # (was: 2026-08-08 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, now through 2026-08-17)
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

@@ -21,7 +21,7 @@ related:
     /plans/active/deployment_api_unauthenticated_prod_p0_2026_08_10.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

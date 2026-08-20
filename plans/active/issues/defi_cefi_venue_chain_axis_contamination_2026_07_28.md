@@ -55,7 +55,7 @@ related:
   ]
 created: "2026-07-28"
 author: unknown
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

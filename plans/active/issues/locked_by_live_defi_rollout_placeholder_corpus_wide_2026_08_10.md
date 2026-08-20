@@ -30,7 +30,7 @@ context_scope:
     scripts/plans/clear_locked_by_placeholder_2026_08_12.py,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

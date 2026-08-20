@@ -56,7 +56,7 @@ context_scope:
     unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py,
     unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
   ]
-last_updated: 2026-08-15
+last_updated: 2026-08-20
 parent_epic: tradfi_master
 priority: P1
 ---

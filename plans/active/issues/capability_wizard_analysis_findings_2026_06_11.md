@@ -28,7 +28,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-16
+last_updated: 2026-08-20
 context_scope:
   [
     /plans/archive/2026_08/issues/capability_wizard_gap_discovery_2026_06_11.md,

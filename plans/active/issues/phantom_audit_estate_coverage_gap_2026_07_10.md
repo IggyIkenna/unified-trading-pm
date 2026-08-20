@@ -45,7 +45,7 @@ execution_scope: local-only
 estimate_class: design
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.9
-last_updated: 2026-08-09
+last_updated: 2026-08-20
 supersedes:
 superseded_by:
 depends_on:

@@ -40,7 +40,7 @@ related:
     /plans/archive/artifact_pipeline_observability_history_2026_07_27.md,
   ]
 created: "2026-07-17"
-last_updated: "2026-08-17" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
+last_updated: "2026-08-19" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only

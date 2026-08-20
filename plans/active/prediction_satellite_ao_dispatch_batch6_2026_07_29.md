@@ -62,7 +62,7 @@ related:
 # bearing pointers (e.g. the Betfair item's Source doc) already live in this file's own prose,
 # which the ratchet explicitly exempts. Archived files remain readable at their original paths.
 created: "2026-07-29"
-last_updated: "2026-07-30"
+last_updated: "2026-08-20"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

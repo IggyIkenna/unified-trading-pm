@@ -18,7 +18,7 @@ related:
     /plans/active/issues/ag_closeout_audit_defi_parked_2026_08_19.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

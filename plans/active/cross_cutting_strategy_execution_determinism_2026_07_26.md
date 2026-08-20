@@ -30,7 +30,7 @@ related:
     /plans/active/v2_engine_venue_buildout_2026_06_15.md,
   ]
 created: "2026-07-26"
-last_updated: "2026-07-26"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

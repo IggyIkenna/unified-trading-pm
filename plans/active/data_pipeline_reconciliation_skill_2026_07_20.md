@@ -35,7 +35,7 @@ related:
     issues/tradfi_canonical_path_migration_design_2026_07_19.md,
   ]
 created: 2026-07-20
-last_updated: 2026-07-30
+last_updated: 2026-08-20
 parent_epic: manifest_master
 assigned_vm: NA
 archive_exempt: true # standing reference surface, operator ruling entry #10 option A — 0 open todos expected here

@@ -18,7 +18,7 @@ scope: [engineer]
 tags: [plan-hygiene, prosewrap, baseline, ratchet]
 related: []
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: agent_operating_framework_master
 priority: P2
 source: "agt-4d722f AO backlog finding, re-scoped by operator ruling 2026-08-16"

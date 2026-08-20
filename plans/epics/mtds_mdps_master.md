@@ -66,7 +66,7 @@ related_plans:
   - ../active/solana_dex_pool_swaps_indexer_2026_08_08.md
   - ../active/solana_dex_pool_swaps_indexer_2026_08_08_finalize.md
 last_updated:
-  2026-08-19 # was 2026-07-15 — added priority-venue live-feed + candle-derivation audit section for the
+  2026-08-20 # was 2026-07-15 — added priority-venue live-feed + candle-derivation audit section for the
   # CeFi/Ethereum-DeFi/Betfair/prediction/Morpho/Uniswap/CoW-Swap set, see body. Prior entry: was 2026-06-26 —
   # corrected 2026-07-14, doc-reconciliation finding 174: body carried dated 2026-07-12/2026-07-13 banners weeks
   # after this field was last bumped; corrected 2026-07-15, plan-reconcile: related:/related_plans: repointed 4

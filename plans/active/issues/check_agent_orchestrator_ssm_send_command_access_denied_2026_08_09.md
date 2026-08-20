@@ -21,7 +21,7 @@ scope: [engineer, admin]
 tags: [agent-orchestrator, iam, ssm, aws, access-denied, infra]
 related: [/plans/active/issues/ci_reconciler_ikenna_worker_ssm_permission_gap_2026_08_16.md]
 created: "2026-08-09"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 author: slot-5 (data_engineering)
 parent_epic: agent_operating_framework_master
 assigned_vm: NA

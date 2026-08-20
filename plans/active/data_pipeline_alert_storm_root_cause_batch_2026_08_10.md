@@ -74,7 +74,7 @@ source: >-
   Interactive session 2026-08-10, operator-pasted #data-pipeline-alerts dump, traced to root cause across 6 repos.
   Operator decisions recorded inline: chain fix = "both, sequenced"; packaging = one batch plan + existing-doc
   enhancements; dispatch = all human/local.
-last_updated: 2026-08-17 # (was: 2026-08-15, then 2026-06-27 before that -- plan-reconcile 2026-08-19: bumped again to match latest Progress Log entry, na-eligibility-audit 2026-08-17)
+last_updated: 2026-08-20 # (was: 2026-08-15, then 2026-06-27 before that -- plan-reconcile 2026-08-19: bumped again to match latest Progress Log entry, na-eligibility-audit 2026-08-17)
 ---
 
 # Data-pipeline alert-storm root-cause batch (2026-08-10)

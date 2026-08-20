@@ -55,9 +55,13 @@ related_plans:
   - ../archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08.md
   - ../archive/2026_08/tradfi_satellite_ao_dispatch_batch8_2026_08_08_finalize.md
   - ../active/tradfi_sp500_ml_and_arb_backtest_readiness_2026_06_20.md
-last_updated: 2026-08-12
+last_updated: 2026-08-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+parent_epic: tradfi_master
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Report

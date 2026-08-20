@@ -44,7 +44,7 @@ related:
     /plans/active/sports_odds_bookmaker_coverage_enumeration_2026_06_20.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-06"
+last_updated: "2026-08-20"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

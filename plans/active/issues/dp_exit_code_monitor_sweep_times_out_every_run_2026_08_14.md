@@ -33,7 +33,7 @@ related:
     /plans/active/issues/deployment_service_basedpyright_ratchet_broken_by_dep_backmerge_2026_08_15.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only

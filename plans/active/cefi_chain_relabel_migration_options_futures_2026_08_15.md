@@ -27,7 +27,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 # was: cefi_master (epic-assignment audit 2026-08-19) -- root cause + fix are a shared UAC canonical-path-oracle + MTDS-writer/MDPS-reader partition-path bug (options_chain/futures_chain landing in the wrong path segment), proven in this doc's own Phase 1/2 commits to hit CeFi and TradFi identically (build_cefi_partition_path AND build_tradfi_partition_path, CEFI_CHAIN_INSTRUMENT_TYPES AND TRADFI_CHAIN_INSTRUMENT_TYPES both widened in the same commits) -- would look identical for any asset group sharing this bundle-shard shape
 parent_epic: mtds_mdps_master
 assigned_vm: planning

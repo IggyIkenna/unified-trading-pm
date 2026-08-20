@@ -30,7 +30,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-17"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

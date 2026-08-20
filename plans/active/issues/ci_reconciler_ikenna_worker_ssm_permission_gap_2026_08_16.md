@@ -37,7 +37,7 @@ context_scope:
   - /plans/active/issues/check_agent_orchestrator_ssm_send_command_access_denied_2026_08_09.md
 created: 2026-08-16
 author: claude-agent
-last_updated: 2026-08-16
+last_updated: 2026-08-20
 parent_epic: ci_master
 priority: P2
 source: ci-reconcile skill, scheduled hourly ci_reconciler dispatch agt-17f258 (slot 20)

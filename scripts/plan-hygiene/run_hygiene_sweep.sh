@@ -425,6 +425,10 @@ run_check "Todo format (priority + canonical)" hard "$SCRIPT_DIR/check_todo_form
 run_check "Runbook governance fields"        hard python3 "$SCRIPT_DIR/check_runbook_fields.py"
 run_check "No conflict markers (mid-line + mangled)" hard "$SCRIPT_DIR/check_conflict_markers.sh"
 run_check "No prettier emphasis-mangling"    hard "$SCRIPT_DIR/check_prettier_mangling.sh"
+# last_updated is a maintenance signal derived from the newest git commit. Keep this
+# advisory in the full sweep: a staged edit cannot know its eventual commit date, so making
+# it a pre-commit hard gate would create a false failure before the commit exists.
+run_check "Fresh live-doc last_updated dates" soft python3 "$SCRIPT_DIR/check_last_updated.py"
 # Prettier proseWrap continuation-padding gate — a DISTINCT prettier corruption class from the
 # emphasis-mangling check above (non-idempotent reflow of a 2nd+ paragraph nested inside a list
 # item; each reformat pass ADDS leading-space padding instead of converging). Corpus already

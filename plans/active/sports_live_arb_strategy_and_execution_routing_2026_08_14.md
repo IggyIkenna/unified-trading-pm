@@ -23,7 +23,7 @@ related:
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

@@ -25,7 +25,7 @@ related:
     agent-orchestrator/scripts/install-resource-history-sampler.sh,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-15" # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale 9 days behind the doc's
+last_updated: "2026-08-19" # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale 9 days behind the doc's
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only

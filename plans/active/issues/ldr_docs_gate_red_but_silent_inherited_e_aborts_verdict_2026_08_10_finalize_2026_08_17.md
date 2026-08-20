@@ -36,7 +36,7 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 context_scope:
   [
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,

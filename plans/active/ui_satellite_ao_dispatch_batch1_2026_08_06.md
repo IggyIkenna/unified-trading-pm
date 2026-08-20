@@ -35,7 +35,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-06"
-last_updated: "2026-08-07"
+last_updated: "2026-08-17"
 parent_epic: deployment_and_user_management_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

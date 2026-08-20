@@ -33,7 +33,7 @@ related:
     /plans/archive/2026_08/self_hosted_runner_public_repo_revert_2026_08_05.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-19"
 parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

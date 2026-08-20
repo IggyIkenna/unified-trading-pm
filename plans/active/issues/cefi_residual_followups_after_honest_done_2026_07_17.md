@@ -48,7 +48,7 @@ related:
   # cefi_mtds_writer_raw_symbol.../phantom_captures_cefi in the "Residuals" section's own item detail lines).
 created: 2026-07-17
 author: unknown
-last_updated: 2026-07-30
+last_updated: 2026-08-20
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

@@ -31,7 +31,7 @@ related:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

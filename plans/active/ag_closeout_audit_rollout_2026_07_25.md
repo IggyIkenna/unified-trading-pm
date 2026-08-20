@@ -30,7 +30,7 @@ related:
   - /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_finalize_2026_07_24.md
   - /plans/active/issues/autonomous_session_operator_decisions_2026_07_25.md
 created: "2026-07-25"
-last_updated: "2026-08-17"
+last_updated: "2026-08-19"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

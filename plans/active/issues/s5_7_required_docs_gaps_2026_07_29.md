@@ -41,7 +41,7 @@ thinking_tier: medium
 estimate_class: design
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.3
-last_updated: "2026-08-10"
+last_updated: "2026-08-17"
 supersedes:
 superseded_by:
 drift_direction: advance-code

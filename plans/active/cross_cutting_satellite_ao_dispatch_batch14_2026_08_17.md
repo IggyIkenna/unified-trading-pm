@@ -27,7 +27,7 @@ related:
     /plans/active/manifest_v9_residual_2026_08_15.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

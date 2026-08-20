@@ -35,7 +35,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-19"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

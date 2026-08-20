@@ -24,7 +24,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-17"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

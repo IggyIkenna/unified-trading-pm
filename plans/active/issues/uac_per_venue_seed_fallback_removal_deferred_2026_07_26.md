@@ -33,7 +33,7 @@ related:
   # — both remain preserved in the `source:` field below, which cites each by name.
 created: 2026-07-26
 author: unknown
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 # was: cefi_master (epic-assignment audit 2026-08-19) -- explicitly a shared UAC registry
 parent_epic: uac_master
   # fallback decision spanning asset_group: [cefi, defi, tradfi, prediction]; fix wires

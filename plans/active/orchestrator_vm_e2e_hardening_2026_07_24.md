@@ -38,7 +38,7 @@ source: >-
   (/plans/archive/issues/plan_line_cap_remediation_2026_07_23.md, row #19; operator-approved unlock+split 2026-07-23).
   This content was a scope-creep section covering agent-orchestrator bootstrap/watchdog/memory-guardrail hardening,
   file-disjoint from the parent's CI-dashboard/fleet-git-health mission — moved verbatim, nothing summarized or dropped.
-last_updated: 2026-08-17 # was 2026-06-27 -- stale vs the 2026-08-17 context-scout entry (the doc's true tail); corrected (plan_reconciler ao)
+last_updated: 2026-08-20 # was 2026-06-27 -- stale vs the 2026-08-17 context-scout entry (the doc's true tail); corrected (plan_reconciler ao)
 context_scope:
   [
     /codex/03-observability/monitoring-control-plane.md,

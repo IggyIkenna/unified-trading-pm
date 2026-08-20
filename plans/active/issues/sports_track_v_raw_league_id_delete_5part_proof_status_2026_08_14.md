@@ -55,7 +55,7 @@ thinking_tier: medium
 estimate_class: infra
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
-last_updated: 2026-08-15
+last_updated: 2026-08-20
 supersedes:
 superseded_by:
 depends_on: []

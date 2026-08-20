@@ -26,7 +26,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: 2026-07-28
-last_updated: 2026-08-03 # Phase B executed for real, see its todo for evidence — the summary/banner above describes
+last_updated: 2026-08-19 # Phase B executed for real, see its todo for evidence — the summary/banner above describes
 # the ORIGINAL 2026-07-28 human-only ruling, since superseded by the 2026-08-03 operator ruling; kept as historical
 # record rather than rewritten, per Phase B's own todo.
 parent_epic: manifest_master

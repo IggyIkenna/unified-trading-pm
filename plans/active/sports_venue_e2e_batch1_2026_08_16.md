@@ -29,7 +29,7 @@ related:
     /plans/active/venue_readiness_and_registry_hardening_2026_08_16.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

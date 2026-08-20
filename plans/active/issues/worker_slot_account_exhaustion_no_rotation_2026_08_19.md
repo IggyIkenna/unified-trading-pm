@@ -30,7 +30,7 @@ related:
     /plans/active/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

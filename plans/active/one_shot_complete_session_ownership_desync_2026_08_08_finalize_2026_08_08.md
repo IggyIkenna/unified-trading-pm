@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_07/ao_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-20"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

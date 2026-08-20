@@ -25,7 +25,7 @@ related:
     /plans/active/issues/deployment_service_t1_recon_duplicate_module_definitions_2026_08_09.md,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: 2026-08-20
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

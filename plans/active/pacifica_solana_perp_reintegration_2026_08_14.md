@@ -31,7 +31,7 @@ related:
     /codex/04-architecture/shard-level-failure-isolation.md,
   ]
 created: 2026-08-14
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 # was: defi_master (epic-assignment audit 2026-08-19) -- doc's own asset_group: [cefi];
 parent_epic: cefi_master
   # body states Pacifica is "cleanly cefi-classified" (real off-chain CLOB, cefi schema/bucket/partition path),

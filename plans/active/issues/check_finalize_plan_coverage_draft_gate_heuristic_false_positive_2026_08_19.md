@@ -32,7 +32,7 @@ related:
     /plans/PLAN_FORMAT.md,
   ]
 created: "2026-08-19"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -30,7 +30,7 @@ related:
     /plans/active/issues/ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md,
   ]
 created: 2026-08-11
-last_updated: 2026-08-19 # was 2026-08-11 -- stale vs the 2026-08-19 na-eligibility-audit + live capacity-check entries; corrected (plan_reconciler ao)
+last_updated: 2026-08-20 # was 2026-08-11 -- stale vs the 2026-08-19 na-eligibility-audit + live capacity-check entries; corrected (plan_reconciler ao)
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

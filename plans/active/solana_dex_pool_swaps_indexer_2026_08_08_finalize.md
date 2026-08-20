@@ -17,7 +17,7 @@ related:
     /plans/active/issues/solana_dex_pool_swaps_indexer_scope_2026_07_12.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-20"
 parent_epic: mtds_mdps_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

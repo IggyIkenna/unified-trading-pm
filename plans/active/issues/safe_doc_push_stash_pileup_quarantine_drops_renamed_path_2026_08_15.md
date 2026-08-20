@@ -28,7 +28,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-08-15"
-last_updated: 2026-08-15
+last_updated: 2026-08-20
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

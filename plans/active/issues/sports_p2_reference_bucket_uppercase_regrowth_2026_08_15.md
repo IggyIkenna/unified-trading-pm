@@ -25,7 +25,7 @@ related:
     /plans/active/sports_consolidated_closeout_2026_07_19.md,
   ]
 created: "2026-08-15"
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

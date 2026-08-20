@@ -26,7 +26,7 @@ related:
     /codex/05-infrastructure/human-fleet-operator-setup.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

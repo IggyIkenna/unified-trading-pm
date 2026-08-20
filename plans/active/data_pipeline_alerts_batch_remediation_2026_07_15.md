@@ -34,7 +34,7 @@ related:
     plans/active/issues/tradfi_expected_reason_attempted_failed_misclassification_2026_07_15.md,
   ]
 created: 2026-07-15
-last_updated: 2026-08-15 # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
+last_updated: 2026-08-20 # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only

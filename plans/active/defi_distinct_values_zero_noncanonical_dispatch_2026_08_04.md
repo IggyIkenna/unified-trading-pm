@@ -44,7 +44,7 @@ related:
     /codex/02-data/gcs-and-manifest-delete-safety-protocol.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-15" # CORRECTED 2026-08-19 (/plan-reconcile manifest_master): was "2026-08-10", matched to the latest dated Progress Log entry (context-scout 2026-08-15). Prior correction 2026-08-12 (/plan-reconcile): was stale "2026-08-07" — git log shows the doc was
+last_updated: "2026-08-20" # CORRECTED 2026-08-19 (/plan-reconcile manifest_master): was "2026-08-10", matched to the latest dated Progress Log entry (context-scout 2026-08-15). Prior correction 2026-08-12 (/plan-reconcile): was stale "2026-08-07" — git log shows the doc was
 # substantively edited 2026-08-10 (b3241ef496, OOM root-cause + relaunch + retirement-plan extraction)
 parent_epic: manifest_master
 assigned_vm: planning

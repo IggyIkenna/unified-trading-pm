@@ -23,7 +23,7 @@ priority: P1
 estimate_class: refactor
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 2
-last_updated: 2026-07-28
+last_updated: 2026-08-17
 supersedes: []
 superseded_by:
 locked_by:

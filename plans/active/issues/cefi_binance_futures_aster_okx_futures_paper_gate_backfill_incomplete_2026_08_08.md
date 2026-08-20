@@ -43,7 +43,7 @@ estimate_calibrated_ai_days: 0.3
 drift_direction: none
 parent_epic: batch_live_symmetry_master
 depends_on: []
-last_updated: 2026-08-16
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 supersedes:

@@ -55,7 +55,7 @@ context_scope:
   - scripts/self-hosted-runners/setup-glue-runners.sh
 created: 2026-08-11
 author: claude-agent
-last_updated: 2026-08-11
+last_updated: 2026-08-20
 parent_epic: ci_master
 priority: P1
 source: ci-reconcile skill, Slack #ci-failures 2026-08-10T23:14Z-2026-08-11T04:00Z

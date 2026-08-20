@@ -39,7 +39,7 @@ related:
   ]
 created: "2026-08-05"
 author: unknown
-last_updated: "2026-08-05"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -30,7 +30,7 @@ context_scope:
     /plans/epics/system_readiness_master.md,
   ]
 created: 2026-08-19
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: system_readiness_master
 assigned_vm: NA
 locked_by:
@@ -42,6 +42,8 @@ severity: P0
 source: >-
   Surfaced across three independent sub-agents expanding the client artefacts on 2026-08-19, each of which had to
   pick a chain source and found the candidates disagreed. Consolidated by the orchestrating session.
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Three chain registries, three answers, none complete

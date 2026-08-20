@@ -15,7 +15,7 @@ related:
     /plans/archive/issues/tradfi_cme_expected_coverage_venue_capabilities_drift_2026_08_15.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

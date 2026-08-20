@@ -30,7 +30,7 @@ related:
   ]
 created: 2026-08-08
 author: interactive-session (slot 2)
-last_updated: "2026-08-14" # CORRECTED 2026-08-16 (/plan-reconcile Section-3 triage): was 2026-08-09, stale against the 2026-08-14 Progress Log entry
+last_updated: "2026-08-17" # CORRECTED 2026-08-16 (/plan-reconcile Section-3 triage): was 2026-08-09, stale against the 2026-08-14 Progress Log entry
 parent_epic: client_isolation_and_governance_master
 priority: P1
 estimate_class: design

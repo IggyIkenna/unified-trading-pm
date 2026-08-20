@@ -31,7 +31,7 @@ parent_epic: instruments_master
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: "2026-08-10"
+last_updated: "2026-08-17"
 locked_by:
 locked_since:
 resolved_by:

@@ -320,11 +320,14 @@ auto-fix (apply directly, evidence already cited), or an operator ruling (judgme
 
 ## P3 — cosmetic / hygiene (low priority, batch when convenient)
 
-- [ ] [DOCS] P3. Stale `last_updated` frontmatter, systemic across dozens of docs corpus-wide (body content weeks ahead
+- [x] ✅ [DOCS] P3. Stale `last_updated` frontmatter, systemic across dozens of docs corpus-wide (body content weeks ahead
       of frontmatter date) — worth a corpus-wide script fix rather than per-doc edits. Named instances:
       `prediction_capture_incident_remediation_2026_07_06.md`, `consolidator_throughput_backlog_monitor_2026_07_09.md`,
       `data_status_catalogue_true_source_phase2_2026_07_24.md`, `data_status_cell_grid_rearchitecture_2026_07_18.md`, 8
       named docs from tradfi batch1, `data_pipeline_alert_storm_root_cause_batch_2026_08_10.md`.
+      **DONE 2026-08-20**: added `scripts/plan-hygiene/check_last_updated.py`, which derives each live plan/epic's
+      date from its newest Git commit and preserves quote/comment formatting when applying corrections. Applied the
+      mechanical fix across the corpus; a fresh read-only scan reports no stale live dates (0 paths skipped).
 - [x] ✅ [DOCS] P3. 3 cross-cutting docs mistagged with `prediction` in `asset_group` with zero real prediction-market
       content: `sports_odds_feature_naming_four_way_mismatch_2026_07_21.md`,
       `sports_odds_feature_naming_canonicalization_2026_07_21.md`,
@@ -393,6 +396,8 @@ top of that.
   session's repeated autostash cycles (confirmed at least the infra doc's edits did NOT survive and had to be redone —
   verify each remaining batch's target files before assuming the content is still there).
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+- **plan-reconcile 2026-08-20**: implemented and applied the corpus-wide `last_updated` synchronizer; verification
+  reports `✅ check_last_updated: no stale live dates (0 path(s) skipped)`.
 
 ## Progress Log
 

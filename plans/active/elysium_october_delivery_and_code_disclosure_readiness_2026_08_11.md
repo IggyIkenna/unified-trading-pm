@@ -17,7 +17,7 @@ stage: [meta]
 repos: [execution-service, strategy-service, unified-api-contracts, unified-trading-pm]
 scope: [admin, engineer]
 tags: [elysium, custody, transfers, production-readiness, audit, commercial-model]
-last_updated: "2026-08-15"
+last_updated: "2026-08-20"
 related:
   [
     /codex/14-customer-journeys/commercial-model/elysium-carveout-deferral-message-2026-08-11.md,

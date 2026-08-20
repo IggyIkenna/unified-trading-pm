@@ -34,7 +34,7 @@ context_scope:
   - scripts/plan-hygiene/find_moved_doc_referrers.sh
   - /plans/active/ao_satellite_ao_dispatch_batch23_2026_08_17.md
 created: 2026-08-12
-last_updated: 2026-08-12
+last_updated: 2026-08-17
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

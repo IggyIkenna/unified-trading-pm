@@ -51,7 +51,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 3.2
-last_updated: 2026-07-30 # (was: 2026-07-14 -- plan-reconcile 2026-08-15: body Progress Log entries through 2026-07-30 postdated the recorded last_updated, same staleness class as the 2026-07-14 correction)
+last_updated: 2026-08-20 # (was: 2026-07-14 -- plan-reconcile 2026-08-15: body Progress Log entries through 2026-07-30 postdated the recorded last_updated, same staleness class as the 2026-07-14 correction)
 locked_by:
 locked_since:
 depends_on: []

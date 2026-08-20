@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-08-19 # was 2026-08-18 -- bumped 2026-08-19 (batch13 item 1 PASS closed the pipeline_mode/source rider items), matched to the latest dated Progress Log entry
+last_updated: 2026-08-20 # was 2026-08-18 -- bumped 2026-08-19 (batch13 item 1 PASS closed the pipeline_mode/source rider items), matched to the latest dated Progress Log entry
 locked_by:
 locked_since:
 supersedes:

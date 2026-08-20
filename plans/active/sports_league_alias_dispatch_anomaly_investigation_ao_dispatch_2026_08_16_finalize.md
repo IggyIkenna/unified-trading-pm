@@ -15,7 +15,7 @@ related:
     /plans/active/sports_canonical_universe_and_apifootball_reference_expansion_2026_06_24.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

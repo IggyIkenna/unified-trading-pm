@@ -57,7 +57,7 @@ locked_by:
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-30
+last_updated: 2026-08-20
 context_scope:
   [
     scripts/quality-gates-base/qg-common.sh,

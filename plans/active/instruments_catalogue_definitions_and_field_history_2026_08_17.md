@@ -38,7 +38,7 @@ estimate_baseline_ai_days: 6.0
 estimate_calibrated_ai_days: 3.6
 assigned_role: infra
 effort: high
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 locked_by:
 locked_since:
 resolved_by:

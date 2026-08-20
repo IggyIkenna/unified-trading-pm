@@ -26,7 +26,7 @@ related:
     /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-18
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 # was: infrastructure_master (renamed 2026-08-18, epic-taxonomy restructure; corrected cross-epic sweep 2026-08-19)
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning

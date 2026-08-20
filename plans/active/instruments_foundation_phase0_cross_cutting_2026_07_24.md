@@ -33,7 +33,7 @@ related:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-28"
+last_updated: "2026-08-17"
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only

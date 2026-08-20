@@ -19,7 +19,7 @@ related:
     /plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-19"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

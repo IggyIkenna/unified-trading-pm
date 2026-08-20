@@ -37,7 +37,7 @@ estimate_class: design
 estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.6
 assigned_role: data_engineering
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 locked_by:
 locked_since:
 supersedes:

@@ -41,7 +41,7 @@ source: >-
   operator ruled on its two remaining operator-gated items (N5r/N6r, N1b), and the finalize-plan-coverage QG gate
   correctly caught the missing companion before commit.
 context_scope: [/plans/active/instruments_mtds_consistency_remediation_residuals_2026_07_24.md, /codex/12-agent-workflow/plan-completion-and-archival-discipline.md, /plans/active/task_template.md, /plans/active/issues/defi_manifest_venue_itype_canon_swap_execution_2026_08_10.md]
-last_updated: "2026-08-11"
+last_updated: "2026-08-20"
 ---
 
 # Instruments <-> MTDS F1-N9 consistency remediation residuals — finalize

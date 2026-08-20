@@ -27,7 +27,7 @@ effort: medium
 drift_direction: none
 source: Hit while shipping the tool-call batching hook; quickmerge STAGE 1 refused the commit, 2026-08-10.
 depends_on: []
-last_updated: 2026-08-10
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 resolved_by:

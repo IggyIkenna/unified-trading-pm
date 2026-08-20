@@ -50,7 +50,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 locked_since:
 context_scope: [/plans/active/defi_migration_audit_log_2026_07_24.md, /codex/05-infrastructure/bucket-isolation-model.md, deployment-service/configs/cloud-providers.yaml, unified-trading-library/unified_trading_library/cloud_interface/bucket_naming.py]
 source: >-

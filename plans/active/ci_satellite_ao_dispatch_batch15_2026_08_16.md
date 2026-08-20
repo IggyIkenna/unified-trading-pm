@@ -38,7 +38,7 @@ related:
     /plans/active/issues/sit_gate_treadmill_recurs_under_high_ldr_velocity_2026_08_08.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -24,7 +24,7 @@ related:
     /plans/archive/2026_08/revocation_arming_2026_08_14.md,
   ]
 created: "2026-08-14"
-last_updated: 2026-08-14
+last_updated: 2026-08-17
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only

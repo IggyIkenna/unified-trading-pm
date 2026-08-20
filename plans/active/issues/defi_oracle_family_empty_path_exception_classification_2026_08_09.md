@@ -28,7 +28,7 @@ related:
   ]
 created: "2026-08-09"
 author: slot-6
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 source:
   defi_clean_path_fetch_evidence_fidelity_scope-003 dispatch (slot-6), migrated during that doc's archival per
   /codex/12-agent-workflow/plan-completion-and-archival-discipline.md step 1

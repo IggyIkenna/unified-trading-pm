@@ -36,7 +36,7 @@ estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 0.8
 assigned_role: data_engineering
 effort: medium
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 locked_by:
 locked_since:
 resolved_by:

@@ -23,7 +23,7 @@ related:
     /plans/active/sports_consolidated_native_ao_extract_2026_07_25.md,
   ]
 created: "2026-07-28"
-last_updated: "2026-07-28"
+last_updated: "2026-08-20"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

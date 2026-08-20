@@ -31,7 +31,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 12
-last_updated: 2026-06-27
+last_updated: 2026-08-15
 locked_by:
 locked_since:
 supersedes:

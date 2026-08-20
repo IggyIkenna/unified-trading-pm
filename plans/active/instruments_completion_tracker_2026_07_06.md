@@ -26,7 +26,7 @@ related:
     /codex/02-data/honest-coverage-model.md,
   ]
 created: 2026-07-06
-last_updated: 2026-08-03 # line-cap remediation split -- extracted 07-06/07-07 Progress Log history to the archive doc above; context_scope backfilled
+last_updated: 2026-08-20 # line-cap remediation split -- extracted 07-06/07-07 Progress Log history to the archive doc above; context_scope backfilled
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only

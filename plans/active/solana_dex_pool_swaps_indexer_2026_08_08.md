@@ -19,7 +19,7 @@ related:
     /plans/archive/2026_08/mvp_backfill_defi_onchain_v10_2026_06_27.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-20"
 parent_epic: mtds_mdps_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -37,7 +37,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 8
 estimate_calibrated_ai_days: 8
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 locked_by:
 locked_since:
 supersedes: [prediction_venue_perps_and_live_clob_depth_2026_06_20]

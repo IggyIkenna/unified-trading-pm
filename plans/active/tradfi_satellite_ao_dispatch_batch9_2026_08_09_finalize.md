@@ -21,7 +21,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-17"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

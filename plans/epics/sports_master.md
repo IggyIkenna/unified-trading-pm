@@ -74,9 +74,12 @@ related_plans:
   - ../active/sports_taxonomy_p4_backfill_2026_08_08_finalize.md
   - ../active/sports_track_h_denominator_gated_2026_07_28.md
   - ../active/sports_track_h_denominator_prereqs_2026_07_28.md
-last_updated: 2026-07-12 # was: 2026-06-24, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
+last_updated: 2026-08-19 # was: 2026-06-24, stale vs 2026-06-27/2026-07-08 body edits — corrected per finding id 279
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 > **🟢 NEW 2026-06-27 — golden-window-first "pipeline to 100%" plan set (vm-sports).** The sports data-pipeline drive to

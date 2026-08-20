@@ -40,7 +40,7 @@ related:
     /plans/archive/issues/vm_relaunch_under_new_name_cannot_resume_prior_progress_checkpoint_2026_08_12.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-19"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

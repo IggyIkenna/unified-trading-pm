@@ -35,7 +35,7 @@ assigned_role: data_engineering
 effort: high
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-08
+last_updated: 2026-08-15
 locked_by:
 locked_since:
 supersedes:

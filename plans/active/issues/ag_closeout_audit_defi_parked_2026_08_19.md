@@ -36,7 +36,7 @@ created: 2026-08-19
 parent_epic: defi_master
 assigned_vm: NA
 priority: P3
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 source: >-
   ag_closeout_auditor scheduled run 2026-08-19 (tranche=defi, slot 28, DISPATCH_ID=agt-fa5ded)
 resolved_by:

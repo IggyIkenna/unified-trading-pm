@@ -18,7 +18,7 @@ tags: [data-pipeline, self-healing, actuators, monitoring, plan-split, residual]
 related:
   [/plans/active/data_pipeline_ag_residual_backfill_decisions_2026_07_24.md]
 created: "2026-07-24"
-last_updated: "2026-08-17" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log (incl. a live 08-16
+last_updated: "2026-08-20" # corrected 2026-08-19 plan-reconcile, was stale vs own Progress Log (incl. a live 08-16
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only # corrected 2026-08-18 (plan_reconciler cross-cutting) -- was orchestrator-agent, an

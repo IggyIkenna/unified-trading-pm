@@ -28,7 +28,7 @@ priority: P0
 estimate_class: brand-new
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 6
-last_updated: 2026-08-10 # CORRECTED 2026-08-12 (/plan-reconcile): was 2026-08-09, stale against the 2026-08-10 Phase-B checkbox flip commit (`27bc008065`/`a2044b27ae`)
+last_updated: 2026-08-20 # CORRECTED 2026-08-12 (/plan-reconcile): was 2026-08-09, stale against the 2026-08-10 Phase-B checkbox flip commit (`27bc008065`/`a2044b27ae`)
 locked_by:
 locked_since:
 supersedes:

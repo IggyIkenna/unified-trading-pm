@@ -20,7 +20,7 @@ related:
     /plans/active/issues/uac_get_venue_asset_group_silently_returns_cefi_for_all_venues_2026_08_19.md,
   ]
 created: 2026-08-19
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: system_readiness_master
 assigned_vm: NA
 locked_by:

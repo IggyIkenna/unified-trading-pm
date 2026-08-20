@@ -15,7 +15,7 @@ related:
     /plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: instruments_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

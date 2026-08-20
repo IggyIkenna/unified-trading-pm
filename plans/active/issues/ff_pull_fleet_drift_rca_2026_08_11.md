@@ -24,7 +24,7 @@ tags: [ff-pull, fleet-drift, slot-worktrees, starvation, observability, ci-cd, a
 related:
   [/codex/05-infrastructure/per-tab-worktrees.md, /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md]
 created: 2026-08-11
-last_updated: "2026-08-11"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 priority: P1
 estimate_class: infra

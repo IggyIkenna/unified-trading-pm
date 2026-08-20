@@ -42,9 +42,7 @@ thinking_tier: high
 estimate_class: design
 estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
-last_updated:
-  '2026-07-13 (was: 2026-07-07 — verify-rerun-2 finding 140, corrected 2026-07-14 — body''s debt_token finding (finding
-  2) marked "SUPERSEDED 2026-07-13"; frontmatter never bumped)'
+last_updated: 2026-08-20 # was 2026-07-13; prior correction/provenance remains documented in the body Progress Log.
 supersedes:
 superseded_by:
 depends_on:

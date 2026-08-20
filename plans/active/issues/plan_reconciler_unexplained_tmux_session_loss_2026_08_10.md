@@ -47,7 +47,7 @@ related:
   ]
 created: 2026-08-10
 author: agent
-last_updated: 2026-08-10
+last_updated: 2026-08-20
 assigned_vm: planning
 execution_scope: orchestrator-agent
 priority: P2

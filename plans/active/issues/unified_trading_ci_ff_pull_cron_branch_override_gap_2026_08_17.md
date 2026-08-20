@@ -63,7 +63,7 @@ drift_direction: advance-code
 depends_on: []
 resolved_by: slot-5 (interactive), unified-trading-pm (cron-branch-overrides.txt data fix)
 locked_by:
-last_updated: 2026-08-19 # was 2026-08-17 -- stale vs the 2026-08-19 /ao-watchdog entry (the doc's true tail); corrected (plan_reconciler ao)
+last_updated: 2026-08-20 # was 2026-08-17 -- stale vs the 2026-08-19 /ao-watchdog entry (the doc's true tail); corrected (plan_reconciler ao)
 context_scope:
   [
     /codex/05-infrastructure/per-tab-worktrees.md,

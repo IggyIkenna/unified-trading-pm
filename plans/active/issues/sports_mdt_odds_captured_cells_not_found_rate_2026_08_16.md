@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-08-16
 author: unknown
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 priority: P1
 parent_epic: sports_master
 source: >-

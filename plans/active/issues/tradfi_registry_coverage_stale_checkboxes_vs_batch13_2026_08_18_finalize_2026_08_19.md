@@ -22,7 +22,7 @@ related:
     /plans/active/tradfi_consolidated_closeout_2026_07_18.md,
   ]
 created: 2026-08-19
-last_updated: 2026-08-19
+last_updated: 2026-08-20
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

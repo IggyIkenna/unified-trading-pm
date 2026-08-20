@@ -35,7 +35,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-25" # was 2026-07-24 — consolidated-closeout split pass added 3 todos relocated from the parent's "Queued audits + reviews" section (-is/-mtds 3x-cadence top-ups + the adversarial AO-dispatch-readiness pass); open-todo count 3 -> 6
+last_updated: "2026-08-20" # was 2026-07-24 — consolidated-closeout split pass added 3 todos relocated from the parent's "Queued audits + reviews" section (-is/-mtds 3x-cadence top-ups + the adversarial AO-dispatch-readiness pass); open-todo count 3 -> 6
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only

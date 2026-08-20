@@ -20,7 +20,7 @@ related:
     /plans/archive/2026_08/cefi_satellite_ao_dispatch_batch10_2026_08_08.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-20"
 author: slot-26 (data_engineering)
 # was: cefi_master (epic-assignment audit 2026-08-19) -- fix is in MDPS's generic
 parent_epic: mtds_mdps_master

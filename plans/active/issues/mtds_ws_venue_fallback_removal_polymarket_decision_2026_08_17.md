@@ -32,7 +32,7 @@ parent_epic: observability_master
 depends_on: []
 resolved_by:
 locked_by:
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 context_scope:
   [
     market-tick-data-service/market_tick_data_service/live/connectors/polymarket_ws.py,

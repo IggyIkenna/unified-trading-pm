@@ -41,7 +41,7 @@ related:
     /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
   ]
 created: 2026-08-16
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

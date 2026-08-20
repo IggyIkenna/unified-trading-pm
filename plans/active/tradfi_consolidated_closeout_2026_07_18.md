@@ -63,7 +63,7 @@ related:
     /plans/active/data_pipeline_e2e_milestones_gate_2026_07_24.md,
   ]
 created: 2026-07-18
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only

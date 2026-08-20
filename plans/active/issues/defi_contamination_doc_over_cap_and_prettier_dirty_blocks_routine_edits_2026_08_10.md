@@ -29,7 +29,7 @@ related:
   ]
 created: "2026-08-10"
 author: slot-6
-last_updated: "2026-08-10"
+last_updated: "2026-08-15"
 parent_epic: manifest_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

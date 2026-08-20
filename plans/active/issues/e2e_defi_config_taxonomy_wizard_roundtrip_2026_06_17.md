@@ -37,7 +37,7 @@ context_scope: [/plans/active/defi_consolidated_closeout_2026_07_18.md, /plans/a
 execution_scope: orchestrator-agent
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-28
+last_updated: 2026-08-18
 ---
 
 ## What I found

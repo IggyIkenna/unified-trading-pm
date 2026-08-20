@@ -34,7 +34,7 @@ related:
     /codex/02-data/instruments-foundation-and-catalogue-completeness.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-30" # ES manifest-count check executed: ZERO capture found (not "proven"), filed as tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md; ES_OPT launch attempted, deferred (singleton lock genuinely held by a live concurrent backfill, not stale)
+last_updated: "2026-08-20" # ES manifest-count check executed: ZERO capture found (not "proven"), filed as tradfi_es_cme_ohlcv_zero_capture_2026_07_30.md; ES_OPT launch attempted, deferred (singleton lock genuinely held by a live concurrent backfill, not stale)
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only

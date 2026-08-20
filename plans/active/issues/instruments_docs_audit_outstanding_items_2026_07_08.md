@@ -51,7 +51,7 @@ related:
   ]
 created: 2026-07-08
 author: unknown
-last_updated: 2026-07-29
+last_updated: 2026-08-17
 parent_epic: instruments_master
 priority: P1
 source:

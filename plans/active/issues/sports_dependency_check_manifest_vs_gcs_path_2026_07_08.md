@@ -46,7 +46,7 @@ thinking_tier: medium
 estimate_class: refactor
 estimate_baseline_ai_days: 1.5
 estimate_calibrated_ai_days: 0.6
-last_updated: 2026-07-08
+last_updated: 2026-08-17
 archive_exempt: true
 # 0 open todos as of 2026-08-09 but archival is deliberately deferred to
 # /plans/active/sports_taxonomy_p3_consumers_2026_08_08_finalize.md todo 1, which names this doc as one of the

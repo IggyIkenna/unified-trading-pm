@@ -21,7 +21,7 @@ tags: [gcp, iam, service-account, least-privilege, security, registry-drift]
 related: [/plans/active/infra_consolidated_closeout_2026_07_25.md]
 created: 2026-07-31
 author: unknown
-last_updated: 2026-07-31
+last_updated: 2026-08-20
 priority: P2
 parent_epic: security_and_cross_cutting_master
 source:

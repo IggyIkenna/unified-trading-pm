@@ -20,7 +20,7 @@ related:
     /codex/06-coding-standards/quality-gates.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-17
 parent_epic: batch_live_symmetry_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

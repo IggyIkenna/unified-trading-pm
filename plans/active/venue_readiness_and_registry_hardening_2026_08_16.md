@@ -46,7 +46,7 @@ depends_on: []
 estimate_class: infra
 estimate_baseline_ai_days: 12.0
 estimate_calibrated_ai_days: 9.6
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 locked_since:
 supersedes:
 superseded_by:

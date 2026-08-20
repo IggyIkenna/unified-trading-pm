@@ -38,7 +38,7 @@ related:
     /codex/02-data/honest-absence-downstream-handling.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-10"
+last_updated: "2026-08-17"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: local-only

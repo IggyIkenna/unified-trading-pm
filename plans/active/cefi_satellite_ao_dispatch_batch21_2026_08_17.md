@@ -30,7 +30,7 @@ related:
     /plans/active/issues/okx_futures_instid_marker_convention_mismatch_2026_07_30.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-19"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

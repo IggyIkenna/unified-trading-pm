@@ -26,7 +26,7 @@ related:
     /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

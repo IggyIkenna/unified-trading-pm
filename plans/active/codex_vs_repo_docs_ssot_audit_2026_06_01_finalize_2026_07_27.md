@@ -24,7 +24,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-30"
+last_updated: "2026-08-19"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

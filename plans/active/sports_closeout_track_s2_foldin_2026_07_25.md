@@ -45,7 +45,7 @@ related:
     /plans/active/issues/sports_cf8_available_at_backfill_regression_2026_07_13.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-08-05"
+last_updated: "2026-08-20"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

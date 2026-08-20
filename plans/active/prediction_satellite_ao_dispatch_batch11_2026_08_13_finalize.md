@@ -20,7 +20,7 @@ related:
     /plans/active/prediction_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-19" # was 2026-08-13 -- stale vs the 2026-08-17 context-scout body edit; corrected 2026-08-19 (/plan-reconcile predictions_master)
+last_updated: "2026-08-20" # was 2026-08-13 -- stale vs the 2026-08-17 context-scout body edit; corrected 2026-08-19 (/plan-reconcile predictions_master)
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

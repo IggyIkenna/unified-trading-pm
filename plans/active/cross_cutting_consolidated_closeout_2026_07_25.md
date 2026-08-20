@@ -81,7 +81,7 @@ related:
     /plans/archive/2026_08/citadel_satellite_ao_dispatch_batch1_2026_08_08_finalize.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

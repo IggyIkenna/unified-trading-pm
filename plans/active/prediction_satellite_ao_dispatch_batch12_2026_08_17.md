@@ -24,7 +24,7 @@ related:
     /plans/active/issues/prediction_batch4_deferred_residuals_2026_08_16.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

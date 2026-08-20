@@ -38,7 +38,7 @@ related:
     /plans/archive/issues/vm_fleet_preemption_autorecovery_gap_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only

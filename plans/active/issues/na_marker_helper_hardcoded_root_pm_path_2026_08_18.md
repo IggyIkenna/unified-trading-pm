@@ -30,7 +30,7 @@ related:
   ]
 parent_epic: plan_hygiene_master
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 author: claude-code (na_eligibility_auditor, slot 28, DISPATCH_ID=agt-7e78e2, tranche=cross-cutting) -- found during
   /pre-compact's Step-1 loss audit
 assigned_vm: planning

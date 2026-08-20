@@ -20,7 +20,7 @@ related:
     /cursor-configs/skills/na-eligibility-audit/SKILL.md,
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-17"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

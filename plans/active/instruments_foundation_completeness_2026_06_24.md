@@ -57,7 +57,7 @@ estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3
 assigned_role: monitor
-last_updated: "2026-07-24" # was: 2026-07-13 — updated 2026-07-24, plan-line-cap remediation 4-way split (plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14): Phase-0/cefi/tradfi gate-execution content + the 945-line historical Progress Log extracted to 3 new child plans; this file slimmed to a process SSOT + rolling-status index; locked_by/locked_since cleared per operator-approved unlock.
+last_updated: "2026-08-07" # was: 2026-07-13 — updated 2026-07-24, plan-line-cap remediation 4-way split (plans/active/issues/plan_line_cap_remediation_2026_07_23.md row #14): Phase-0/cefi/tradfi gate-execution content + the 945-line historical Progress Log extracted to 3 new child plans; this file slimmed to a process SSOT + rolling-status index; locked_by/locked_since cleared per operator-approved unlock.
 locked_by:
 locked_since:
 context_scope:

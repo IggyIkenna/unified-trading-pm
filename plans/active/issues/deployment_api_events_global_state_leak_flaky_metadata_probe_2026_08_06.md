@@ -45,7 +45,7 @@ tags: [ci, flaky-test, pytest-socket, gce-metadata, events, global-state, unifie
 related: [/plans/active/ci_consolidated_closeout_2026_07_25.md]
 created: 2026-08-06
 author: interactive session (operator-triggered CI audit)
-last_updated: 2026-08-06
+last_updated: 2026-08-20
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only

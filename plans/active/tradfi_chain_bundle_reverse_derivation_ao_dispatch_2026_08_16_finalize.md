@@ -15,7 +15,7 @@ related:
     /plans/active/issues/tradfi_chain_bundle_sampler_root_mismatch_2026_07_23.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -35,7 +35,7 @@ related:
     /plans/active/sports_closeout_track_s2_foldin_2026_07_25.md,
   ]
 created: "2026-07-19"
-last_updated: "2026-07-25"
+last_updated: "2026-08-20"
 parent_epic: sports_master
 assigned_vm:
   NA # ⛔ DO NOT flip to `planning` directly (operator ruling 2026-07-23). This plan spreads its open todos

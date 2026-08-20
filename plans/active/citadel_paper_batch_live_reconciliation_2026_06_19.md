@@ -36,7 +36,7 @@ priority: P1
 estimate_class: infra
 estimate_baseline_ai_days: 48
 estimate_calibrated_ai_days: 38
-last_updated: "2026-07-24"
+last_updated: "2026-08-20"
 locked_by:
 locked_since:
 supersedes:

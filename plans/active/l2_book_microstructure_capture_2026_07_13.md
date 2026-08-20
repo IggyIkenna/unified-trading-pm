@@ -26,7 +26,7 @@ estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
 assigned_role: backend_engineer
 drift_direction: advance-code
-last_updated: 2026-07-13
+last_updated: 2026-08-17
 locked_by:
 locked_since:
 depends_on:

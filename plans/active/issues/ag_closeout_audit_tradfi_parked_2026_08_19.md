@@ -30,7 +30,7 @@ related:
   ]
 created: "2026-08-19"
 author: "ag_closeout_auditor (dispatch agt-8b4230, slot 29, sharded $TRANCHE=tradfi)"
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only

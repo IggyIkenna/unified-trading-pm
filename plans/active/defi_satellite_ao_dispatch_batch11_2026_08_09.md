@@ -37,7 +37,7 @@ related:
     /plans/active/issues/defi_pyth_oracle_prices_seeded_feeds_unfetchable_2026_08_03.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

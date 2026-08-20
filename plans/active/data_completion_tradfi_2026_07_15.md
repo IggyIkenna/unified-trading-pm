@@ -23,7 +23,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-08-09 # (was: 2026-07-29 -- na-eligibility-audit 2026-08-09 fixed 3 citation gaps, see Progress Log)
+last_updated: 2026-08-20 # (was: 2026-07-29 -- na-eligibility-audit 2026-08-09 fixed 3 citation gaps, see Progress Log)
 locked_by:
 locked_since:
 supersedes:

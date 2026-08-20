@@ -51,7 +51,7 @@ drift_direction: advance-code
 parent_epic: security_and_cross_cutting_master
 execution_scope: local-only
 depends_on: []
-last_updated: 2026-07-26
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 context_scope: [/plans/active/issues/sports_features_layer_findings_sweep_2026_07_18.md, /plans/active/issues/sports_features_layer_findings_sweep_2026_07_18_part2_2026_07_26.md, /plans/active/sports_consolidated_closeout_2026_07_19.md, /codex/12-agent-workflow/async-wait-and-poll-discipline.md, instruments-service/scripts/derive_sports_fixture_round_2026_07_18.py, features-service/features_service/sports/exporters/derived_features_helpers.py]

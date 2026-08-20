@@ -19,7 +19,7 @@ related:
     /plans/audit/results/nick_ai_platform_disclosure_pre_audit_2026_08_16.md,
   ]
 created: 2026-08-16
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -31,7 +31,7 @@ related:
   ]
 created: "2026-08-16"
 author: slot-19 (data_engineering, dispatched on batch10 todo 3, adopted infra craft)
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

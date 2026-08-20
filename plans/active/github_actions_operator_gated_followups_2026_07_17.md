@@ -36,7 +36,7 @@ related:
     /plans/archive/2026_08/operator_ruling_record_ci_line_cap_splits_2026_08_16.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-08-16 # 2nd line-cap remediation split (Trust Mode) -- extracted "Hard-won context" + "Cost ruling 2026-07-23" to the archive doc above; regrew past 1000L since the 08-03 split
+last_updated: 2026-08-20 # 2nd line-cap remediation split (Trust Mode) -- extracted "Hard-won context" + "Cost ruling 2026-07-23" to the archive doc above; regrew past 1000L since the 08-03 split
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

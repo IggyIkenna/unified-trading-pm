@@ -24,7 +24,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-08"
+last_updated: "2026-08-19"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

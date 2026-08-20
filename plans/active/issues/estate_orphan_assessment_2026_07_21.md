@@ -33,7 +33,7 @@ related:
   ]
 created: 2026-07-21
 author: unknown
-last_updated: 2026-08-19
+last_updated: 2026-08-20
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only

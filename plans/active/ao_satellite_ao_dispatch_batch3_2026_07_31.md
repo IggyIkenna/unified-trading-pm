@@ -31,7 +31,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-31"
-last_updated: "2026-08-01"
+last_updated: "2026-08-20"
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

@@ -38,7 +38,7 @@ estimate_baseline_ai_days: 3
 estimate_calibrated_ai_days: 1.8
 assigned_role: infra
 drift_direction: advance-code
-last_updated: "2026-08-01"
+last_updated: "2026-08-20"
 locked_by:
 locked_since:
 context_scope:

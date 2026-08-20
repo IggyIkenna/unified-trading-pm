@@ -90,7 +90,7 @@ estimate_calibrated_ai_days: 0.7
 assigned_role: data_engineering
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-07-15
+last_updated: 2026-08-20
 context_scope:
   [
     /plans/active/data_pipeline_alerts_batch_remediation_2026_07_15.md,

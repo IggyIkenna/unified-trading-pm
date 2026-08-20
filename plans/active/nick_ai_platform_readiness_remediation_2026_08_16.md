@@ -43,7 +43,7 @@ estimate_baseline_ai_days: 5.0
 estimate_calibrated_ai_days: 5.0
 assigned_role: backend_engineer
 effort: high
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 locked_by:
 locked_since:
 resolved_by:

@@ -40,7 +40,7 @@ priority: P0
 estimate_class: design
 estimate_baseline_ai_days: 6
 estimate_calibrated_ai_days: 3.6
-last_updated: "2026-08-17" # was "2026-08-05" -- corrected 2026-08-19 (/plan-reconcile manifest_master), matched to the latest dated Progress Log entry (context-scout 2026-08-17)
+last_updated: "2026-08-20" # was "2026-08-05" -- corrected 2026-08-19 (/plan-reconcile manifest_master), matched to the latest dated Progress Log entry (context-scout 2026-08-17)
 locked_by:
 locked_since:
 supersedes:

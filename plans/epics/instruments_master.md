@@ -56,9 +56,12 @@ related_plans:
   - ../active/tradfi_purge_extension_and_twin_delete_fix_ao_dispatch_2026_08_16_finalize.md
   - ../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09.md
   - ../active/tradfi_satellite_ao_dispatch_batch9_2026_08_09_finalize.md
-last_updated: 2026-07-14 # bumped 2026-07-14 (was: 2026-07-08, unchanged despite the 2026-07-12 body edits below; finding 125 verify-rerun-2, doc-reconciliation sync)
+last_updated: 2026-08-19 # bumped 2026-07-14 (was: 2026-07-08, unchanged despite the 2026-07-12 body edits below; finding 125 verify-rerun-2, doc-reconciliation sync)
 locked_by: live-defi-rollout
 locked_since: 2026-05-08
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 <!-- 2026-07-12 doc-reconciliation sync (findings 96/101/106/111/117/123/125, §A2 B-queue ruling): epic-body staleness

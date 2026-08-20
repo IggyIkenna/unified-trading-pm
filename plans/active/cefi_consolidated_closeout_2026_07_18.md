@@ -48,7 +48,7 @@ related:
     /plans/archive/2026_07/cefi_consolidated_native_ao_extract_2026_07_25_finalize.md,
   ]
 created: 2026-07-18
-last_updated: "2026-07-25" # 2026-07-25: 4-child split (migration-cutover, coverage-backfill, candle-namespace, misc-hygiene) + Track 0 cryptovenue-phases embed (cefi.1) + 11 AO-readiness fixes; was 2026-07-24
+last_updated: "2026-08-19" # 2026-07-25: 4-child split (migration-cutover, coverage-backfill, candle-namespace, misc-hygiene) + Track 0 cryptovenue-phases embed (cefi.1) + 11 AO-readiness fixes; was 2026-07-24
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

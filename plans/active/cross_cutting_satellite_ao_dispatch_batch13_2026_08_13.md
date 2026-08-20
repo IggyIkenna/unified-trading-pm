@@ -36,7 +36,7 @@ related: [
     # + 24 more source docs cited per-todo below
   ]
 created: "2026-08-13"
-last_updated: "2026-08-13"
+last_updated: "2026-08-20"
 parent_epic: infrastructure_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

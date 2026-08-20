@@ -47,7 +47,7 @@ context_scope:
   ]
 created: 2026-08-11
 author: claude-agent
-last_updated: 2026-08-11
+last_updated: 2026-08-20
 parent_epic: ci_master
 priority: P2
 source: ci-reconcile skill, Slack #ci-failures 2026-08-10T21:44Z-2026-08-11T06:16Z (reconcile-release-tags STALL, recurred 00:08Z + 06:15Z)

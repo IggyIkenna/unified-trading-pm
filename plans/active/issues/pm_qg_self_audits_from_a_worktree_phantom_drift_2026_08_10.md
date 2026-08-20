@@ -27,7 +27,7 @@ assigned_role: infra
 drift_direction: none
 source: Hit live while gating the tool-call-batching hook from an isolated worktree, 2026-08-10.
 depends_on: []
-last_updated: 2026-08-10
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 resolved_by:

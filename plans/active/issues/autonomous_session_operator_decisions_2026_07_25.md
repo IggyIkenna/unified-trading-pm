@@ -19,7 +19,7 @@ related:
   - /plans/active/ag_closeout_audit_rollout_2026_07_25.md
 created: "2026-07-25"
 author: unknown
-last_updated: "2026-07-31"
+last_updated: "2026-08-17"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 priority: P1

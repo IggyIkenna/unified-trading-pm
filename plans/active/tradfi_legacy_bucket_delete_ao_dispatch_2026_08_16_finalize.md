@@ -15,7 +15,7 @@ related:
     /plans/active/data_completion_tradfi_2026_07_15.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -40,7 +40,7 @@ locked_by:
 supersedes:
 superseded_by:
 resolved_by: ""
-last_updated: 2026-08-10
+last_updated: 2026-08-20
 context_scope:
   [
     unified-trading-pm/.github/workflows/ldr-docs-gate.yml,

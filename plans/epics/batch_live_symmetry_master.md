@@ -35,9 +35,13 @@ related_plans:
   - ../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31.md
   - ../active/live_event_log_warm_sink_recovery_and_cold_compaction_2026_07_31_finalize.md
   - ../active/pipeline_mode_partition_migration_2026_06_01.md
-last_updated: 2026-07-12 # was: 2026-07-08 -- corrected 2026-07-14, verify-rerun-2 finding 14: body carries a dated "Count corrected 2026-07-12" entry (finding id 311, §A2 B-queue ruling) that postdated the recorded last_updated
+last_updated: 2026-08-19 # was: 2026-07-08 -- corrected 2026-07-14, verify-rerun-2 finding 14: body carries a dated "Count corrected 2026-07-12" entry (finding id 311, §A2 B-queue ruling) that postdated the recorded last_updated
 locked_by: live-defi-rollout
 locked_since: 2026-05-21
+parent_epic: batch_live_symmetry_master
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Batch Live Symmetry Master

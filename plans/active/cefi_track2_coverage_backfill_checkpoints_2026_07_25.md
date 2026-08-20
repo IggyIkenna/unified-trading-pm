@@ -25,7 +25,7 @@ related:
     /plans/active/cefi_track2_coverage_backfill_checkpoints_finalize_2026_07_25.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-25"
+last_updated: "2026-08-20"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

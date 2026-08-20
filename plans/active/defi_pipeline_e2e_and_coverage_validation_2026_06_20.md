@@ -30,7 +30,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 5
 estimate_calibrated_ai_days: 4
-last_updated: 2026-07-27 # (was: 2026-07-14 -- slot-10 Phase-D re-verify: found+fixed strategy-store bucket-name bug, real data still Success-Criteria-NOT-MET)
+last_updated: 2026-08-15 # (was: 2026-07-14 -- slot-10 Phase-D re-verify: found+fixed strategy-store bucket-name bug, real data still Success-Criteria-NOT-MET)
 locked_by:
 locked_since:
 supersedes:

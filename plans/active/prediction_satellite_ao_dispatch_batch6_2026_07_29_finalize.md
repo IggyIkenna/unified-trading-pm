@@ -23,7 +23,7 @@ related:
     /plans/archive/2026_08/prediction_satellite_ao_dispatch_batch4_2026_07_26_finalize.md,
   ]
 created: "2026-07-29"
-last_updated: "2026-07-30"
+last_updated: "2026-08-17"
 parent_epic: predictions_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

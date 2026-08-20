@@ -71,7 +71,7 @@ related:
     /plans/archive/2026_07/prediction_cross_cutting_debt_index_2026_07_25.md,
   ]
 created: 2026-07-18
-last_updated: 2026-08-19 # was 2026-07-31 — /plan-reconcile predictions_master (epic-scoped): corrected 2 stale "6 open" phase_ab_residuals citations (snapshot table + aggregated index) to the live count of 4. Prior: was 2026-07-26 — /ag-closeout-audit prediction (scheduled) Finding-3 fix: added 6 previously-unindexed docs (2 kalshi issues, features_delta_one, prediction_trades_migration_concurrent_dispatch, 2 fresh 2026-07-31 adapter dead-code findings) to the Aggregated source docs index, and corrected the stale kalshi_live_capture_regression_and_drift entry (was "3 prose follow-ups", live-verified now 1 checkbox)
+last_updated: 2026-08-20 # was 2026-07-31 — /plan-reconcile predictions_master (epic-scoped): corrected 2 stale "6 open" phase_ab_residuals citations (snapshot table + aggregated index) to the live count of 4. Prior: was 2026-07-26 — /ag-closeout-audit prediction (scheduled) Finding-3 fix: added 6 previously-unindexed docs (2 kalshi issues, features_delta_one, prediction_trades_migration_concurrent_dispatch, 2 fresh 2026-07-31 adapter dead-code findings) to the Aggregated source docs index, and corrected the stale kalshi_live_capture_regression_and_drift entry (was "3 prose follow-ups", live-verified now 1 checkbox)
 parent_epic: predictions_master
 assigned_vm: NA
 execution_scope: local-only

@@ -23,7 +23,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-07-27"
-last_updated: "2026-07-31"
+last_updated: "2026-08-03"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

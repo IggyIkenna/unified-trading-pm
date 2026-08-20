@@ -31,7 +31,7 @@ priority: P1
 estimate_class: brand-new
 estimate_baseline_ai_days: 1.0
 estimate_calibrated_ai_days: 1.0
-last_updated: "2026-08-09"
+last_updated: "2026-08-19"
 assigned_role: backend_engineer
 drift_direction: advance-code
 locked_by:

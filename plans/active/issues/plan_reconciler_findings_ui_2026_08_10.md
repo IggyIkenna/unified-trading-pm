@@ -22,7 +22,7 @@ related:
     /plans/active/ui_satellite_ao_dispatch_batch3_2026_08_09.md,
   ]
 created: "2026-08-10"
-last_updated: "2026-08-15"
+last_updated: "2026-08-17"
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

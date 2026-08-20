@@ -28,7 +28,7 @@ related:
   ]
 created: 2026-07-24
 author: unknown
-last_updated: 2026-08-17 # was 2026-08-10 -- stale vs the 2026-08-17 context-scout entry (the doc's true tail); corrected (plan_reconciler ao)
+last_updated: 2026-08-20 # was 2026-08-10 -- stale vs the 2026-08-17 context-scout entry (the doc's true tail); corrected (plan_reconciler ao)
 priority: P2
 parent_epic: observability_master
 source: "Operator design context, relayed 2026-07-24 after the /api/escalation/{id} scope question"

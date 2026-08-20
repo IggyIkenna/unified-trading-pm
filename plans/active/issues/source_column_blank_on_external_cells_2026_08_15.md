@@ -34,7 +34,7 @@ summary: >-
   a residual blank-source tail (<9K rows out of ~213M audited) — narrows the still-open
   data_source_provenance_enforcement_2026_07_24.md backfill scope to these named cells.
 drift_direction: advance-code
-last_updated: "2026-08-15"
+last_updated: "2026-08-20"
 context_scope:
   [
     /plans/active/data_source_provenance_enforcement_2026_07_24.md,

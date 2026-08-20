@@ -41,7 +41,7 @@ thinking_tier: high
 estimate_class: research
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 2.4
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 supersedes:
 superseded_by:
 depends_on:

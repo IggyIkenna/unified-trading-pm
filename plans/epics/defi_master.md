@@ -61,7 +61,7 @@ related_plans:
   - ../active/defi_track01_per_instrument_and_canon_id_2026_07_24.md
   - ../active/defi_track5_coverage_mvp_backfill_2026_07_24.md
   - ../active/pacifica_solana_perp_reintegration_2026_08_14.md
-last_updated: 2026-06-20
+last_updated: 2026-08-20
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
 execution_scope: orchestrator-agent

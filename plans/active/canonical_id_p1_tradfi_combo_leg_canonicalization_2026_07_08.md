@@ -26,7 +26,7 @@ related:
     /plans/archive/2026_08/canonical_id_builder_retrofit_checklist_2026_07_08.md,
   ]
 created: 2026-07-08
-last_updated: 2026-07-08
+last_updated: 2026-08-17
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: local-only

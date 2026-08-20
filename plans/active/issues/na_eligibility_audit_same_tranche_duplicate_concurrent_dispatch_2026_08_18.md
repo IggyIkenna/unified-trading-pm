@@ -38,7 +38,7 @@ related:
   ]
 parent_epic: plan_hygiene_master
 created: 2026-08-18
-last_updated: 2026-08-19 # was 2026-08-18 -- stale vs the 2026-08-19 na-eligibility-audit + RECLASSIFY-split entries (the doc's true tail); corrected (plan_reconciler ao)
+last_updated: 2026-08-20 # was 2026-08-18 -- stale vs the 2026-08-19 na-eligibility-audit + RECLASSIFY-split entries (the doc's true tail); corrected (plan_reconciler ao)
 author: claude-code (na_eligibility_auditor, slot 18, DISPATCH_ID=agt-72629d, tranche=defi)
 assigned_vm: NA
 execution_scope: local-only

@@ -22,7 +22,7 @@ related:
     /plans/active/sports_odds_writer_flip_and_trades_path_retirement_2026_08_15.md,
   ]
 created: "2026-08-15"
-last_updated: 2026-08-15
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

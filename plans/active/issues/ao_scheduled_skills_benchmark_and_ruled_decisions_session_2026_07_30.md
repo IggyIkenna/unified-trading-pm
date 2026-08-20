@@ -39,7 +39,7 @@ estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.5
 assigned_role: NA
 drift_direction: flat
-last_updated: 2026-08-16
+last_updated: 2026-08-20
 source: ["2026-07-30 AO scheduled-skills benchmark + ruled-decisions execution session"]
 resolved_by:
 locked_by:

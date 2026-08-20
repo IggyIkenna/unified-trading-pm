@@ -31,7 +31,7 @@ related:
     /codex/02-data/honest-coverage-model.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-17"
 author: slot-12 (data_engineering)
 parent_epic: cefi_master
 assigned_vm: planning

@@ -20,7 +20,7 @@ related:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: "2026-08-04"
-last_updated: "2026-08-04"
+last_updated: "2026-08-06"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

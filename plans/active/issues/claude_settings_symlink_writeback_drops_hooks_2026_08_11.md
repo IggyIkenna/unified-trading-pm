@@ -38,7 +38,7 @@ resolved_by:
 execution_scope: local-only
 drift_direction: advance-code
 depends_on: []
-last_updated: 2026-08-11
+last_updated: 2026-08-20
 context_scope:
   [
     scripts/workspace/link-claude-skills.sh,

@@ -20,7 +20,7 @@ priority: P2
 estimate_class: design
 estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 7.2
-last_updated: 2026-07-24
+last_updated: 2026-08-17
 locked_by:
 locked_since:
 supersedes:

@@ -24,7 +24,7 @@ related:
     /plans/active/sports_taxonomy_p2_consumer_inventory_2026_08_12.md,
   ]
 created: 2026-08-14
-last_updated: 2026-08-14
+last_updated: 2026-08-20
 parent_epic: batch_live_symmetry_master
 assigned_vm: NA
 execution_scope: local-only

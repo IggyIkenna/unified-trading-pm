@@ -34,7 +34,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-12"
-last_updated: "2026-08-12"
+last_updated: "2026-08-20"
 source: >-
   Live finding by AO slot 20 (data_engineering) during todo 7 of
   defi_pool_rate_indices_dex_pool_fees_retirement_2026_08_10.md — the retirement script's dry-run census + GCS object

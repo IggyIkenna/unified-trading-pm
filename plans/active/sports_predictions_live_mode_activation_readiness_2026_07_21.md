@@ -46,7 +46,7 @@ related:
     /plans/archive/2026_08/mdps_features_live_launcher_exec_dispatch_never_wired_2026_07_27.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-29"
+last_updated: "2026-08-17"
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

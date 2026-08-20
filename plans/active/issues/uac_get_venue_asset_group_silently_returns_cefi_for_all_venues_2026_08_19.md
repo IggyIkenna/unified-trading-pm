@@ -20,7 +20,7 @@ related:
     /plans/epics/system_readiness_master.md,
   ]
 created: 2026-08-19
-last_updated: "2026-08-19"
+last_updated: "2026-08-20"
 parent_epic: system_readiness_master
 assigned_vm: NA
 locked_by:
@@ -40,6 +40,8 @@ context_scope:
     unified-api-contracts/unified_api_contracts/execution.py,
     unified-api-contracts/unified_api_contracts/registry/venue_asset_group.py,
   ]
+drift_direction: advance-code
+depends_on: []
 ---
 
 # `get_venue_asset_group()` returns "cefi" for everything

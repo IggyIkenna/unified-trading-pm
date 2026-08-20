@@ -17,7 +17,7 @@ scope: [engineer, admin]
 tags: [role, review, write-capability, evidence-gated, plan-flip, backlog]
 related: [/agents/review.md, /agents/worker.md, /agents/RULES.md, /plans/active/ao_consolidated_closeout_2026_08_12.md]
 created: "2026-08-09"
-last_updated: "2026-08-17" # was 2026-08-09 -- stale vs the 2026-08-17 na-eligibility-audit + context-scout entries; corrected (plan_reconciler ao)
+last_updated: "2026-08-20" # was 2026-08-09 -- stale vs the 2026-08-17 na-eligibility-audit + context-scout entries; corrected (plan_reconciler ao)
 parent_epic: orchestrator_master
 assigned_vm: NA
 execution_scope: local-only

@@ -38,7 +38,7 @@ priority: P3
 estimate_class: infra
 estimate_baseline_ai_days: 0.5
 estimate_calibrated_ai_days: 0.4
-last_updated: "2026-08-18" # 2026-08-18: plan_reconciler cefi_master epic-scoped reconcile — added a consolidated
+last_updated: "2026-08-19" # 2026-08-18: plan_reconciler cefi_master epic-scoped reconcile — added a consolidated
 locked_by:
 locked_since:
 supersedes:

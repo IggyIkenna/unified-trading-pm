@@ -21,7 +21,7 @@ related:
     /plans/active/defi_consolidated_closeout_2026_07_18.md,
   ]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

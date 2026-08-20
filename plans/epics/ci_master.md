@@ -92,9 +92,12 @@ related_plans:
   - ../active/issues/uv_version_pin_live_ci_reusable_workflow_still_hardcoded_2026_08_09.md
   - ../active/issues/workflow_template_drift_repeated_during_phase7_rollout_2026_07_27.md
   - ../active/issues/workflow_template_runs_on_placeholder_prettier_mangled_fleetwide_2026_08_07.md
-last_updated: 2026-08-18
+last_updated: 2026-08-20
 locked_by:
 locked_since:
+execution_scope: local-only
+drift_direction: advance-code
+depends_on: []
 ---
 
 # CI Master — GitHub Actions delivery pipeline, quickmerge/ship scripts, LDR→main promotion gate set

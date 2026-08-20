@@ -40,7 +40,7 @@ related:
   ]
 created: 2026-08-06
 author: agent
-last_updated: 2026-08-17 # was 2026-08-08 -- stale vs the 2026-08-17 context-scout entry; corrected (plan_reconciler ao)
+last_updated: 2026-08-20 # was 2026-08-08 -- stale vs the 2026-08-17 context-scout entry; corrected (plan_reconciler ao)
 priority: P3
 parent_epic: orchestrator_master
 source:

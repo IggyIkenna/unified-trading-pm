@@ -16,7 +16,7 @@ scope: [engineer, admin]
 tags: [defi, canonicalisation, instrument-id, per-instrument, migration, close-out]
 related: [/plans/active/defi_consolidated_closeout_2026_07_18.md]
 created: "2026-07-24"
-last_updated: "2026-08-02"
+last_updated: "2026-08-20"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only

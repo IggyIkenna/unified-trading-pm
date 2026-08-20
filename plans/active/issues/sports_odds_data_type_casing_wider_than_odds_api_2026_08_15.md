@@ -22,7 +22,7 @@ related: [sports_odds_api_data_type_casing_standardization_2026_08_15, sports_co
 parent_epic: sports_master
 source: interactive-session
 created: 2026-08-15
-last_updated: 2026-08-16
+last_updated: 2026-08-17
 drift_direction: advance-code
 depends_on: []
 locked_by:

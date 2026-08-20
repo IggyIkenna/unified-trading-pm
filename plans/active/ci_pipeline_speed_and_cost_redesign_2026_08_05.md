@@ -46,7 +46,7 @@ source:
     "operator, 2026-08-05, live session — 'a simple CI flow LDR to main should take max 3-5 mins regardless of the
     repo... currently we spend 1k monthly on gh plus... 5k gh ci spend alone'",
   ]
-last_updated: "2026-08-15" # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale 10 days behind the doc's
+last_updated: "2026-08-19" # corrected 2026-08-16 (plan_reconciler Phase -1) -- was stale 10 days behind the doc's
 locked_by:
 locked_since:
 supersedes:

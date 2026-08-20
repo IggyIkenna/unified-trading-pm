@@ -27,7 +27,7 @@ related:
   ]
 created: "2026-08-17"
 author: slot-9 (data_engineering)
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 parent_epic: agent_operating_framework_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

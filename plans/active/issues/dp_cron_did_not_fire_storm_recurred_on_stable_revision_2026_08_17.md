@@ -65,7 +65,7 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-18
+last_updated: 2026-08-20
 locked_since:
 context_scope:
   [

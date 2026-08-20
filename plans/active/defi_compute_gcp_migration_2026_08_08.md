@@ -41,7 +41,7 @@ related:
     /plans/active/issues/ci_vm_io_starvation_audit_findings_and_optimization_2026_08_05.md,
   ]
 created: "2026-08-08"
-last_updated: "2026-08-14"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

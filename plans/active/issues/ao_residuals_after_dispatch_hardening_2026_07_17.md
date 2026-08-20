@@ -32,7 +32,7 @@ related:
   ]
 created: 2026-07-17
 author: unknown
-last_updated: 2026-07-23 # re-verified against the live VM (main): DB_PATH todo CLOSED (gate passes), l2_book todo
+last_updated: 2026-08-20 # re-verified against the live VM (main): DB_PATH todo CLOSED (gate passes), l2_book todo
 # re-scoped (measurement void under the dispatch pause), backlog-relations still blocked-upstream after 6 days
 parent_epic: orchestrator_master
 assigned_vm: NA

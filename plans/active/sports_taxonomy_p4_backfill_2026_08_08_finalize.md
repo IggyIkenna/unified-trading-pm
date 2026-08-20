@@ -22,7 +22,7 @@ related:
     /codex/02-data/sports-2020-06-data-floor.md,
   ]
 created: 2026-08-08
-last_updated: 2026-08-08
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

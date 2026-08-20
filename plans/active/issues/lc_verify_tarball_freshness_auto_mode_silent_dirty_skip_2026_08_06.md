@@ -32,7 +32,7 @@ related:
   ]
 created: "2026-08-06"
 author: unknown
-last_updated: "2026-08-07"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

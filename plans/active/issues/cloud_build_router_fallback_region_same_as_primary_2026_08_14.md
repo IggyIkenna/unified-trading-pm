@@ -63,7 +63,7 @@ locked_by:
 locked_since:
 assigned_vm: NA
 resolved_by:
-last_updated: 2026-08-14
+last_updated: 2026-08-20
 ---
 
 # cloud-build-router regional-fallback: stale escalation + a real but non-urgent mislabeling gap

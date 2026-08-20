@@ -33,7 +33,7 @@ context_scope:
     /codex/12-agent-workflow/claude-cli-multi-account-headless-auth.md,
   ]
 created: 2026-08-18
-last_updated: 2026-08-19 # was 2026-08-18 -- stale vs the 2026-08-19 na-eligibility-audit + live SSM-applied-fix entries; corrected (plan_reconciler ao)
+last_updated: 2026-08-20 # was 2026-08-18 -- stale vs the 2026-08-19 na-eligibility-audit + live SSM-applied-fix entries; corrected (plan_reconciler ao)
 parent_epic: orchestrator_master
 priority: P2
 assigned_vm: NA

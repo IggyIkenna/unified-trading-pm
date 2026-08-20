@@ -53,7 +53,7 @@ estimate_class: infra
 estimate_baseline_ai_days: 2
 estimate_calibrated_ai_days: 1.6
 assigned_role: data_engineering
-last_updated: "2026-08-09"
+last_updated: "2026-08-17"
 locked_by:
 locked_since:
 supersedes:

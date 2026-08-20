@@ -31,7 +31,7 @@ related:
     /codex/02-data/entity-rename-and-split-consumer-migration-rule.md,
   ]
 created: 2026-08-12
-last_updated: 2026-08-12
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

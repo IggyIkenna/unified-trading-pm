@@ -25,7 +25,7 @@ related:
     /plans/active/consolidator_throughput_backlog_monitor_2026_07_09.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-07-24"
+last_updated: "2026-08-17"
 parent_epic: tradfi_master
 assigned_vm: NA
 execution_scope: local-only

@@ -39,7 +39,7 @@ related:
   ]
 created: 2026-08-01
 author: unknown
-last_updated: 2026-08-14
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

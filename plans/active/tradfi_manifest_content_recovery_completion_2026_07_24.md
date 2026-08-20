@@ -43,7 +43,7 @@ related:
     /plans/archive/2026_07/tradfi_manifest_content_recovery_completion_history_2026_07_24.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-08-16" # bumped by plan_reconciler Phase -1 (real last-touch per git log; field was 3+ weeks stale)
+last_updated: "2026-08-20" # bumped by plan_reconciler Phase -1 (real last-touch per git log; field was 3+ weeks stale)
 parent_epic: tradfi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

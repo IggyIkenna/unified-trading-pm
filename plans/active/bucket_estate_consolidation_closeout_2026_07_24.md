@@ -53,7 +53,7 @@ source:
   (plans/active/issues/plan_line_cap_remediation_2026_07_23.md, row 1) — parent hit 2129 lines against the 1000L
   hard-fail cap with only 6/21 todos still open; this plan carries those 6 forward verbatim while the parent archives
   with its Progress Log intact as history."
-last_updated: 2026-07-25
+last_updated: 2026-08-19
 context_scope:
   [
     /plans/active/issues/recon_bucket_missing_nightly_recon_failing_2026_07_13.md,

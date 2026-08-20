@@ -26,7 +26,7 @@ related:
     /plans/archive/2026_07/candle_canonical_path_migration_execution_2026_07_24.md,
   ]
 created: "2026-07-24"
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 parent_epic: defi_master
 assigned_vm: NA
 execution_scope: local-only

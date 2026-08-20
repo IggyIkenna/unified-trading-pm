@@ -26,7 +26,7 @@ priority: P2
 estimate_class: brand-new
 estimate_baseline_ai_days: 4
 estimate_calibrated_ai_days: 4
-last_updated: 2026-08-17
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 supersedes:

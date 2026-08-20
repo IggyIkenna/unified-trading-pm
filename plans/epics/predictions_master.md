@@ -53,9 +53,12 @@ related_plans:
   - ../active/predictions_ml_walk_forward_and_arb_2026_06_20.md
   - ../active/issues/mtds_prediction_adapters_dead_rest_polling_interface_2026_07_31.md
   - ../active/issues/prediction_betfair_lay_price_adapter_scaffold_deleted_2026_08_09.md
-last_updated: 2026-08-15
+last_updated: 2026-08-19
 locked_by: live-defi-rollout
 locked_since: 2026-05-07
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 ## Report

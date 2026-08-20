@@ -24,7 +24,7 @@ related:
     /plans/archive/2026_07/deployment_observability_expansion_2026_07_08.md,
   ]
 created: 2026-08-18
-last_updated: 2026-08-18
+last_updated: 2026-08-20
 parent_epic: infrastructure_master
 assigned_vm: NA
 execution_scope: local-only

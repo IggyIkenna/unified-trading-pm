@@ -39,7 +39,7 @@ related:
   ]
 created: "2026-08-16"
 author: slot-5
-last_updated: "2026-08-16"
+last_updated: "2026-08-20"
 source: data_pipeline_failure escalation agt-95ede4 (DP-FETCH-009, wall_type=data_pipeline_failure)
 resolved_by:
 locked_by:

@@ -37,7 +37,7 @@ related:
     /codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md,
   ]
 created: 2026-07-21
-last_updated: 2026-07-21
+last_updated: 2026-08-19
 parent_epic: security_and_cross_cutting_master
 assigned_vm: NA
 execution_scope: local-only

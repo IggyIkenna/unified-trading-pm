@@ -28,7 +28,7 @@ related:
   ]
 created: "2026-08-16"
 author: slot-1
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 source: data_pipeline_failure escalation agt-95ede4 (DP-FETCH-009, side-finding, not the
   escalation's own asset_group/data_type)
 resolved_by:

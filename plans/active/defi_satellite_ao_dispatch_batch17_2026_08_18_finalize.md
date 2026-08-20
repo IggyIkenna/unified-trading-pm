@@ -19,7 +19,7 @@ related:
     /plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: defi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

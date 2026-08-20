@@ -31,7 +31,7 @@ related:
     /cursor-configs/skills/plan-reconcile/SKILL.md,
   ]
 created: "2026-07-30"
-last_updated: "2026-08-19" # (was: 2026-08-09 -- plan_reconciler epic-scoped run 2026-08-19: applied 3 grace-cleared
+last_updated: "2026-08-20" # (was: 2026-08-09 -- plan_reconciler epic-scoped run 2026-08-19: applied 3 grace-cleared
 parent_epic: deployment_and_user_management_master
 assigned_vm: NA
 execution_scope: local-only

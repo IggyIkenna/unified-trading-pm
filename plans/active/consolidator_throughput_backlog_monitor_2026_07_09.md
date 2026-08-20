@@ -26,7 +26,7 @@ related:
     /plans/archive/2026_07/deployment_full_estate_cost_provenance_2026_07_09.md,
   ]
 created: "2026-07-09"
-last_updated: "2026-08-18" # (was: 2026-08-07 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, now through na-eligibility-audit 2026-08-17; corrects a 2026-08-15 bump that recorded 2026-08-07 instead of that pass's own date)
+last_updated: "2026-08-19" # (was: 2026-08-07 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, now through na-eligibility-audit 2026-08-17; corrects a 2026-08-15 bump that recorded 2026-08-07 instead of that pass's own date)
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only

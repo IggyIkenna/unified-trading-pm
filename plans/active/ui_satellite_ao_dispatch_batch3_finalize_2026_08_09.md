@@ -18,7 +18,7 @@ related:
     /plans/active/artifact_pipeline_observability_2026_07_17.md,
   ]
 created: "2026-08-09"
-last_updated: "2026-08-09"
+last_updated: "2026-08-17"
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

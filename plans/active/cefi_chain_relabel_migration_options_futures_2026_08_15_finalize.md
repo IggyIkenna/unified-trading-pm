@@ -22,7 +22,7 @@ related:
     /codex/12-agent-workflow/plan-completion-and-archival-discipline.md,
   ]
 created: "2026-08-17"
-last_updated: "2026-08-17"
+last_updated: "2026-08-20"
 # was: cefi_master (epic-assignment audit 2026-08-19) -- mirrors the parent plan's retag (mtds_mdps_master, shared UAC/MTDS/MDPS partition-path bug proven to hit CeFi+TradFi identically); this finalize doc gates on and reconciles that same parent
 parent_epic: mtds_mdps_master
 assigned_vm: planning

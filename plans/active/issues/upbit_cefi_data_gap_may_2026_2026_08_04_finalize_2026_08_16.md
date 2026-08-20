@@ -17,7 +17,7 @@ tags: [cefi, ao-dispatch, close-out, reclassification, na-audit, finalize, data-
 related:
   [/plans/active/issues/upbit_cefi_data_gap_may_2026_2026_08_04.md]
 created: "2026-08-16"
-last_updated: "2026-08-16"
+last_updated: "2026-08-17"
 parent_epic: cefi_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

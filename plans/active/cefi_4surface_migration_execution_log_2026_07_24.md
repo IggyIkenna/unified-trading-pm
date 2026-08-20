@@ -38,7 +38,7 @@ related:
   # links (the history-part1/part2 pointers appear verbatim in the header blockquote; the line-cap-remediation
   # source is cited in the `source:` field below), so no discoverability is lost.
 created: "2026-07-24"
-last_updated: "2026-07-25" # 2026-07-25: appended the parent's 4 remaining DELTA sections (01:30Z/01:20Z/05:55Z/13:35Z) + Deferred-work table + Step 8 verdict, completing the migration this file's header always intended
+last_updated: "2026-08-19" # 2026-07-25: appended the parent's 4 remaining DELTA sections (01:30Z/01:20Z/05:55Z/13:35Z) + Deferred-work table + Step 8 verdict, completing the migration this file's header always intended
 parent_epic: cefi_master
 assigned_vm: NA
 execution_scope: local-only

@@ -23,7 +23,7 @@ related:
     /plans/archive/defi_transfers_and_gas_fees_2026_03_27.plan.md,
   ]
 created: "2026-08-15"
-last_updated: "2026-08-15"
+last_updated: "2026-08-17"
 parent_epic: plan_hygiene_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

@@ -37,7 +37,7 @@ context_scope:
     /cursor-configs/skills/ag-closeout-audit/SKILL.md,
   ]
 created: 2026-07-25
-last_updated: "2026-08-10"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 assigned_vm: NA
 execution_scope: local-only

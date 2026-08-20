@@ -22,7 +22,7 @@ related:
     /plans/archive/2026_07/sports_satellite_ao_dispatch_batch2_2026_07_24.md,
   ]
 created: "2026-07-25"
-last_updated: "2026-07-30"
+last_updated: "2026-08-20"
 parent_epic: sports_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

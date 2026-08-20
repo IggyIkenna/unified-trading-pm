@@ -69,7 +69,7 @@ related:
   ]
 created: 2026-07-16
 author: unknown
-last_updated: 2026-07-25
+last_updated: 2026-08-17
 parent_epic: sports_master
 assigned_vm: NA
 execution_scope: local-only

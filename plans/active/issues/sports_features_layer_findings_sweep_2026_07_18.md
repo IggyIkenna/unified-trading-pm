@@ -71,7 +71,7 @@ drift_direction: advance-code
 parent_epic: security_and_cross_cutting_master
 execution_scope: local-only
 depends_on: []
-last_updated: 2026-07-18
+last_updated: 2026-08-20
 locked_by:
 locked_since:
 context_scope:

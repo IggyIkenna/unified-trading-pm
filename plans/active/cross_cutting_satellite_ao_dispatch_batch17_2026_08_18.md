@@ -25,7 +25,7 @@ related:
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-18"
+last_updated: "2026-08-20"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent

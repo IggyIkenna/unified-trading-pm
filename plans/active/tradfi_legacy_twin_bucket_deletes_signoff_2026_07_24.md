@@ -26,7 +26,7 @@ related:
     /plans/archive/issues/plan_line_cap_remediation_2026_07_23.md,
   ]
 created: "2026-07-24"
-last_updated: 2026-08-09
+last_updated: 2026-08-20
 parent_epic: instruments_master
 assigned_vm: NA
 execution_scope: orchestrator-agent

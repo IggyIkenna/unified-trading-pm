@@ -24,7 +24,7 @@ priority: P0
 estimate_class: infra
 estimate_baseline_ai_days: 2.5
 estimate_calibrated_ai_days: 2
-last_updated: 2026-08-16 # was 2026-08-15 -- corrected 2026-08-19 (/plan-reconcile manifest_master), matched to the latest dated Progress Log entry (na-eligibility-audit 2026-08-16). (prior: was 2026-07-24 -- folded in the DeFi-lane Progress Log entries from M-1 per plan line-cap remediation)
+last_updated: 2026-08-20 # was 2026-08-15 -- corrected 2026-08-19 (/plan-reconcile manifest_master), matched to the latest dated Progress Log entry (na-eligibility-audit 2026-08-16). (prior: was 2026-07-24 -- folded in the DeFi-lane Progress Log entries from M-1 per plan line-cap remediation)
 locked_by:
 locked_since:
 supersedes:

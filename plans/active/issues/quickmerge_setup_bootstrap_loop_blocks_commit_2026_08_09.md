@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [quickmerge, ci, tooling, blocked, commit-flow]
 related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-08-09
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 source: interactive-session
 resolved_by: unified-trading-pm@c389fe9dc (loop); frontmatter fixed in-session

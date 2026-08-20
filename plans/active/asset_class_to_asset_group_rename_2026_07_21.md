@@ -30,7 +30,7 @@ related:
     /plans/archive/issues/dart_ui_capability_manifest_and_catalogue_formatting_gaps_2026_07_21.md,
   ]
 created: "2026-07-21"
-last_updated: "2026-07-21"
+last_updated: "2026-08-20"
 parent_epic: agent_operating_framework_master
 assigned_vm: NA
 execution_scope: local-only

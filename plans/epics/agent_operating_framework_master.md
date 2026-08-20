@@ -44,9 +44,12 @@ related_plans:
   - ../active/na_docs_validity_and_ao_eligibility_audit_2026_07_26.md
   - ../active/one_shot_complete_session_ownership_desync_2026_08_08_finalize_2026_08_08.md
   - ../active/task_template.md
-last_updated: 2026-07-23
+last_updated: 2026-08-20
 locked_by: live-defi-rollout
 locked_since: 2026-06-24
+execution_scope: orchestrator-agent
+drift_direction: advance-code
+depends_on: []
 ---
 
 # Agent Operating Framework Master (L5)

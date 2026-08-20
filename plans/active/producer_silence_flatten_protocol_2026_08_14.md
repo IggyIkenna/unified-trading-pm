@@ -28,7 +28,7 @@ related:
     /plans/active/cross_cutting_closeout_observability_and_monitoring_2026_08_09.md,
   ]
 created: "2026-08-14"
-last_updated: 2026-08-14
+last_updated: 2026-08-20
 parent_epic: observability_master
 assigned_vm: NA
 execution_scope: local-only
