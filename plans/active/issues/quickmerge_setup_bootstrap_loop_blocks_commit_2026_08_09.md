@@ -17,7 +17,7 @@ scope: [engineer]
 tags: [quickmerge, ci, tooling, blocked, commit-flow]
 related: [/codex/08-workflows/ci-cd-flow.md]
 created: 2026-08-09
-last_updated: "2026-08-09"
+last_updated: "2026-08-20"
 parent_epic: ci_master
 source: interactive-session
 resolved_by: unified-trading-pm@c389fe9dc (loop); frontmatter fixed in-session
@@ -121,8 +121,9 @@ quickmerge attempts had produced no diagnostic at all. Do that FIRST next time.
       text: **Diagnose why quickmerge re-enters setup.sh after Stage 2 and exits silently** — instrument with `bash -x`,
       or bisect the stage that returns control to env-prep. The silent exit with no error is the worst part: an agent
       cannot distinguish "blocked" from "succeeded" without checking `git ls-files` afterwards.
-- [ ] [DEVOPS] P2. **Make quickmerge fail loudly when it exits without committing** — a non-zero exit and a printed
-      reason. A silent no-op that leaves files untracked is how work gets lost.
+- [x] [DEVOPS] P2. ✅ **Make quickmerge fail loudly when it exits without committing** — `quickmerge` now exits 12
+      with a printed recovery reason when named `--files` have no change to commit (unified-trading-pm@9d6a104247).
+      Verified 2026-08-20 with a bounded no-op invocation: `rc=12` and `NOTHING TO COMMIT` were printed; no files changed.
 - [x] [DEVOPS] P2. ✅ **Done — stale on re-check 2026-08-09.** All three `scripts/finops/` tools
       (`measure_agent_fleet_tokens.py`, `cloud_spend_forecast_2026_08.py`, `llm_and_research_unit_economics.py`) are now
       tracked and committed — confirmed via `git ls-files` (all three present) and `git log` (landed together in
@@ -134,8 +135,9 @@ quickmerge attempts had produced no diagnostic at all. Do that FIRST next time.
 
 ## Workaround used
 
-Pure-doc content was landed via `scripts/dev/safe-doc-push.sh` (the sanctioned docs fast path). That does not cover
-`scripts/**`, so the Python tooling remains uncommitted pending the fix above.
+Pure-doc content was landed via `scripts/dev/safe-doc-push.sh` (the sanctioned docs fast path) during the incident.
+The fail-loudly guard now covers the `scripts/**` quickmerge path as well; the unrelated finops tooling was later
+tracked and shipped separately as recorded above.
 
 ## Provenance
 
@@ -151,3 +153,6 @@ material share of that session's budget — hence this doc, so the next session 
   `assigned_vm: NA` → `planning`. Root cause already fixed (`unified-trading-pm@c389fe9dc`); both remaining open
   todos (fail-loudly on silent no-commit exit; check AO-VM host-specificity) are bounded and deterministic, no gate
   found.
+- **worker 2026-08-20**: verified implementation `unified-trading-pm@9d6a104247` is reachable from
+  `origin/live-defi-rollout`; bounded no-op invocation returned `rc=12` with the recovery diagnostic. P3 host-specificity
+  check remains open.
