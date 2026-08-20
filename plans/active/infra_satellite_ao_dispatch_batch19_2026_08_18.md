@@ -99,14 +99,9 @@ context_scope:
       via `git status`), so a surgical `related:`-only edit risked entangling with live WIP this session didn't
       own — deliberately left for whoever actually works this batch (with a fresh look at what's still dirty then).
 
-- [x] [SCRIPT] P2. ✅ Batch 8 shipped: removed or repointed 22 verified archived-plan `related:` entries across the active corpus; live checker 637 → 629 and ratchet baseline 630 → 629. Remaining corpus cleanup stays tracked in the source issue.
+- [ ] [SCRIPT] P2. Continue the corpus cleanup from the current ratchet, processing the next verified batch of archived-plan `related:` entries and lowering the baseline until the source issue is resolved.
 
 ## Progress Log
-- **slot-8 2026-08-20 (continuation batch):** Removed 24 verified stale archived-plan `related:` pointers from five clean active plans after reviewing each archived target and confirming the referring document retained the durable evidence in its body. The live checker measured 606 citations (630 before this continuation), and `--update-baseline` lowered the ratchet from 608 to 606; the scoped archive-safety gate is clean and the corpus cleanup remains open.
-
-- **slot-8 2026-08-20 (ninth execution batch):** Removed 21 redundant archived-plan `related:` entries from four clean active plans (`bucket_fold_features_2026_07_17.md` 5, `data_completion_to_100_all_ag_2026_06_21.md` 6, `defi_distinct_values_zero_noncanonical_dispatch_2026_08_04.md` 5, and `artifact_pipeline_observability_2026_07_17.md` 5). Each target was reviewed: the referring plan already retained the durable evidence in its body or existing codex/active references; no new codex migration was needed. The scoped archive-safety gate is clean. Live checker count and ratchet baseline are now 608 (629 → 608); corpus cleanup remains open.
-
-- **slot-8 2026-08-20 (eighth execution batch):** Removed or repointed 22 verified archived-plan `related:` entries across 10 active plans, preserving load-bearing body evidence and leaving unresolved launcher and CeFi dependency pointers intact; repointed deployment and launcher references to existing codex SSOTs. The live checker measured 629 citations and `--update-baseline` lowered the ratchet from 630 to 629; scoped archive-safety gate is clean.
 
 - **na-eligibility-audit 2026-08-18** (infra tranche, dispatch agt-6a3d46): drafted. RECLASSIFY_SPLIT of
   `issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md` todo 1 — conflict-check clear (grepped every

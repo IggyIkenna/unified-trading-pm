@@ -392,12 +392,10 @@ had already run. Treat every todo below as net-new work, not a resume.
       simultaneously) is already covered by the measurement above, with headroom to spare. Revisit only if (a) the
       global cap is ever raised above 8, or (b) a real 429/concurrency-specific failure is actually observed in
       production — not before.
-- [x] ✅ [DATA] P3. **DONE** — sibling doc's schema shipped with concrete field mappings for both providers (kimi →
-      `metered_dollar`, nvidia/Gemma → `rate_limited_free`, both with `requested_model`/`served_model` columns),
-      `agent-orchestrator@4e2d3797fb`, see `multi_provider_context_billing_reconciliation_2026_08_16.md`'s 2026-08-19
-      Progress Log field-mapping table. Once `multi_provider_context_billing_reconciliation_2026_08_16.md`'s unified per-task billing
+- [ ] [DATA] P3. Once `multi_provider_context_billing_reconciliation_2026_08_16.md`'s unified per-task billing
       schema is designed, extend it to cover Kimi and NVIDIA/Gemma rather than building a second parallel schema —
-      cross-link, don't duplicate.
+      cross-link, don't duplicate. Done when: both providers have a concrete field mapping in that schema (tracked
+      as this todo, not a new design doc).
 - [x] [REVIEW] P3. ✅ Document the DeepSeek-price-rise-insurance rationale concretely: at what real DeepSeek $/1M rate
       would each of Kimi/NVIDIA-Gemma actually become the cheaper choice, given the real published rates gathered
       above — a one-time comparison table, not a routing implementation (routing itself stays out of scope per this

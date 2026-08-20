@@ -20,8 +20,13 @@ repos: [deployment-api, unified-trading-library, deployment-ui, deployment-servi
 scope: [engineer]
 tags: [firestore, dynamodb, deployment-registry, observability, migration, scale, cloud-interface]
 related:
+  - /plans/archive/2026_07/deployment_registry_firestore_p0_unblock_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p1_dualwrite_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p2_readers_2026_07_14.md
   - /plans/active/deployment_registry_firestore_p3_cutover_2026_07_14.md
+  - /plans/archive/2026_07/deployment_registry_firestore_p4_dynamodb_2026_07_14.md
   - /plans/active/deployment_registry_firestore_p5_verify_2026_07_14.md
+  - /plans/archive/2026_06/ci_status_firestore_side_store_2026_06_10.md
   - /codex/05-infrastructure/deployment-observability.md
 created: "2026-07-14"
 last_updated: "2026-08-18" # (was: 2026-07-14 -- plan-reconcile 2026-08-18: bumped to match latest Progress Log entry, doc last substantively touched 2026-08-15)

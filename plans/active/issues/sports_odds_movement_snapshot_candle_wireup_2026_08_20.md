@@ -88,17 +88,16 @@ under that model.
       existing bucket-assignment cadence, or give them their own scheduled entry point if their natural cadence
       differs from bucket assignment's. Confirm the `DependencyChecker.check_sports_raw_source_captured` staleness
       guard (already shared by all three per the catalog doc) applies correctly to whichever path is chosen. —
-      market-data-processing-service@e4b1f71aca (supersedes the c2de48b3b8 first cut — see the 2026-08-20
-      remediation Progress Log entry below; that commit's own text describing "a fully independent second pass" is
-      now WRONG and superseded, not just superficially outdated). Extended `reprocess_sports_odds.py` (own Cloud
-      Run job, same schedule) rather than a separate entry point: movement/snapshot's calendar-interval cadence
-      (fixed hourly buckets within the raw day, anchored to the actual `date_str`, see
-      `odds_movement_snapshot_driver.py`) is architecturally distinct from bucket assignment's kickoff-relative
-      horizons but shares the identical upstream dependency + shard key. A 10-angle review of the first cut found
-      that running them as a genuinely INDEPENDENT second pass (as originally shipped) created real correctness
-      bugs — see the remediation entry — so the final design MERGES all three computations into ONE per-date
-      worker (`_process_sports_odds_one_date`) sharing a single raw-odds read + a single `prepare_tick_data()`
-      call, not two sequential passes.
+      market-data-processing-service@c2de48b3b8. Extended `reprocess_sports_odds.py` (own Cloud Run job, same
+      schedule) rather than a separate entry point: verified live that movement/snapshot's calendar-interval cadence
+      (fixed hourly buckets within the raw day, see `odds_movement_snapshot_driver.py`) is architecturally distinct
+      from bucket assignment's kickoff-relative horizons but shares the identical upstream dependency + shard key,
+      so one driver is the natural fit. Implemented as a FULLY INDEPENDENT second per-date `ThreadPoolExecutor` pass
+      (own raw-odds read, own loss guard, own manifest rows) — zero changes to the existing bucket-assignment
+      control flow, so this cannot regress its loss-guard/shard-isolation behaviour. The staleness guard itself
+      lives in `process_handler.py`'s generic CLI path (`_sports_derived` frozenset already covers all three types)
+      but this reprocessor doesn't route through that handler; movement/snapshot inherit the SAME upstream-freshness
+      protection indirectly by reading the SAME `_read_raw_odds()` the bucket-assignment path already gates on.
 - [x] [DATA] P2. Confirm the output write path matches the catalog's target model — one row per
       (fixture, market, outcome, venue, snapshot-time/interval) written under `data_type=odds_horizon_bucket` with
       `computation_type` set to `snapshot`/`movement` (not the old standalone `odds_snapshot`/`odds_movement`
@@ -106,7 +105,7 @@ under that model.
       `canonical_writer_shaping.mdps_data_type_key(source_data_type, timeframe)`'s generic-fallback branch
       (`odds_snapshot_{tf}`/`odds_movement_{tf}`), already registered as real per-timeframe UAC contracts — confirm
       this still matches once real rows are produced, not just asserted from the doc. —
-      market-data-processing-service@e4b1f71aca. Confirmed live against the real function body: neither
+      market-data-processing-service@c2de48b3b8. Confirmed live against the real function body: neither
       `"odds_movement"` nor `"odds_snapshot"` is a key in `_DATA_TYPE_TO_MDPS_PREFIX`, so both fall through the
       generic-fallback branch exactly as the catalog claims, producing `odds_movement_1h`/`odds_snapshot_1h`
       (`MOVEMENT_SNAPSHOT_TIMEFRAME = "1h"`). **One correction to the catalog's claim**: `computation_type` is NOT a
@@ -114,33 +113,38 @@ under that model.
       `unified-trading-library/unified_trading_library/manifest_writer/_writer_ingest.py` — no such parameter
       exists in the v9 schema surface) — the catalog's "Schema fields" table describing it as a manifest column
       does not match the manifest writer's real kwarg surface. `computation_type` DOES land as a genuine column in
-      the physical parquet output; the manifest instead discriminates the three computations via `venue`
-      (movement/snapshot's coarse row uses a genuinely distinct sentinel, `ODDS_API_DERIVED`, from bucket
-      assignment's `ODDS_API` — see the remediation entry's finding 1 for why `timeframe` alone was NOT a safe
-      discriminator) plus `timeframe` carrying the minted `mdps_key` (`T-24h`.. for bucket assignment vs
-      `odds_movement_1h`/`odds_snapshot_1h` for the other two).
-- [x] [SCRIPT] P3. Once live, verify manifest rows land correctly (cluster validation, honest-coverage status rules
+      the physical parquet output; the manifest instead discriminates the three computations via the `timeframe`
+      column carrying the minted `mdps_key` (`T-24h`.. for bucket assignment vs `odds_movement_1h`/`odds_snapshot_1h`
+      for the other two) — a deliberate, documented substitute, not an oversight.
+- [~] [SCRIPT] P3. Once live, verify manifest rows land correctly (cluster validation, honest-coverage status rules
       per the catalog's Manifest Status Rules table) and that features-service/ml-service consumers (which read the
       `_ODDS_BUCKETED_PREFIXES` path prefix per the catalog's "Consumer inventory" section) pick up the new
       `computation_type=movement`/`snapshot` rows without needing a separate migration. (repo: features-service,
-      ml-service) — **Consumer-code half DONE, live-verification half still open (split below).** Confirmed live
-      2026-08-20 that the answer was NO (both existing readers hardcode a `bucketed.parquet` filename filter that
-      excludes the new files) and shipped dedicated readers to close the gap:
-      `features-service@c158b0845f` (new `gcs_reader_movement_snapshot.py::read_movement_snapshot_odds` — a
-      SEPARATE module, not an addition to `gcs_reader.py`, which was already at the 900-line file-size cap) and
-      `ml-service@8a909a3be4` (new `SportsFeatureLoaderMixin.read_movement_snapshot_odds` classmethod). Both are
-      deliberately separate readers rather than a widened filter on the existing `bucketed.parquet` readers — the
-      schemas are incompatible (bucketed.parquet = wide pivot of raw ticks with `horizon_name`/
-      `bm_minutes_to_kickoff`/`home_odds`; movement/snapshot = a `CandleOutput`-shaped aggregate with
-      `timestamp`/`open`/`high`/`low`/`close`/`computation_type`) — concatenating them would silently NaN-pad every
-      existing consumer of `read_bucketed_odds`. Live end-to-end verification (real GCS write + manifest read-back
-      for a real date) was NOT performed — genuinely open, tracked as its own todo below.
+      ml-service) — **PARTIAL, 2026-08-20**. Consumer-code half is DONE and the answer is NO, contrary to this
+      todo's framing: read both readers' real code
+      (`features-service/features_service/sports/data/gcs_reader.py::read_bucketed_odds` line ~632,
+      `ml-service/ml_service/training/app/core/sports_feature_loader.py::_load_odds_event_teams` line ~267) — BOTH
+      filter their `list_blobs` prefix match to `b.name.endswith("bucketed.parquet")` explicitly, not just a
+      `data_type=odds_horizon_bucket/` prefix. The new writer deliberately names its output
+      `movement.parquet`/`snapshot.parquet` (never `bucketed.parquet` — a DIFFERENT filename was required so
+      `_delete_stale_shards`' filename-suffix-scoped reconcile could never cross-delete between the three
+      computations sharing one prefix), so neither existing reader will pick up the new rows — **a real, separate
+      consumer-side follow-up is needed**, tracked below. Live end-to-end verification (real GCS write + manifest
+      read-back for a real date) was NOT performed this session — no live write against production GCS/manifest was
+      exercised; a `--dry-run` invocation was not run either. This remains open.
+- [ ] [DATA] P2. features-service `gcs_reader.py::read_bucketed_odds` and ml-service
+      `sports_feature_loader.py::_load_odds_event_teams`'s blob-listing filter both hardcode
+      `b.name.endswith("bucketed.parquet")` — confirmed live 2026-08-20 (see the PARTIAL todo above) that this
+      EXCLUDES the new `movement.parquet`/`snapshot.parquet` files the 2026-08-20 wire-up writes under the same
+      `data_type=odds_horizon_bucket/league_id={league_id}/` prefix. Widen both suffix checks (or generalize to a
+      shared `{"bucketed.parquet", "movement.parquet", "snapshot.parquet"}` set / a `computation_type`-aware read
+      path) so movement/snapshot rows actually reach features-service/ml-service consumers. (repo: features-service,
+      ml-service)
 - [ ] [SCRIPT] P3. Run `reprocess_sports_odds.py --dry-run` against a real recent date range to sanity-check the
-      merged bucket-assignment/movement/snapshot worker end-to-end against live raw odds (no writes); if that looks
-      correct, a small real `--force` range for one date, verified via manifest read-back, to confirm real rows
-      land and the loss guard / stale-shard reconcile behave correctly against production data. Not run as of the
-      2026-08-20 remediation session either — flagged explicitly rather than claimed done. (repo:
-      market-data-processing-service)
+      movement/snapshot pass end-to-end against live raw odds (no writes); if that looks correct, a small real
+      `--force` range for one date, verified via manifest read-back, to confirm real rows land and the loss guard /
+      stale-shard reconcile behave correctly against production data. Not run in the 2026-08-20 session — flagged
+      explicitly rather than claimed done. (repo: market-data-processing-service)
 
 ## Progress Log
 
@@ -156,53 +160,3 @@ under that model.
   and 2 done with evidence above; todo 3 split — the features-service/ml-service consumer-compatibility check is
   DONE and found a real gap (new follow-up todo below); live end-to-end GCS verification was not attempted this
   session and stays open.
-- **2026-08-20 (remediation, same day)**: `c2de48b3b8` went through a 10-angle independent code review before it
-  had ever run in production (no live state to migrate) and the review found real, serious bugs — the operator
-  authorized a full remediation pass. Rewrote the movement/snapshot integration rather than patching it:
-  - **finding 1 (highest priority — could have corrupted the ALREADY-CORRECTLY-RUNNING bucket-assignment
-    pipeline)**: the movement/snapshot coarse manifest row shared bucket assignment's own `venue=ODDS_API`
-    identity, differing only by `timeframe` — a dimension bucket assignment's own pre-flight
-    `ManifestWriter.lookup()` never specifies (verified live against `unified-trading-library`: an OMITTED
-    `row_key` column is a WILDCARD match, not "must be empty"). Under "last-written row wins" this could have made
-    bucket assignment's resume-skip read a movement/snapshot row's `capture_status` and silently skip a date it
-    never actually captured. Fixed with a genuinely distinct venue sentinel
-    (`_MANIFEST_VENUE_MOVEMENT_SNAPSHOT_AGGREGATE = "ODDS_API_DERIVED"`) that both sides' lookups always specify.
-  - **findings 6/9 (architecture)**: merged bucket assignment + odds_movement + odds_snapshot into ONE per-date
-    worker (`_process_sports_odds_one_date`) sharing a single raw-odds read + a single `prepare_tick_data()` call,
-    replacing the prior two-SEQUENTIAL-pass design (was ~doubling GCS reads/CPU across a full historical
-    backfill). Movement/snapshot candle-day boundaries are now anchored to the actual `date_str` being processed
-    (`process_to_candles(..., anchor_date=...)`, a new keyword-only param on both adapters) instead of a
-    per-instrument majority-vote over tick timestamps, which could tag a sparse instrument's candles onto the
-    wrong calendar day near a UTC-midnight boundary.
-  - **findings 2/3 (phantom captured with zero rows)**: a derive that produces candles but writes zero shards
-    (every group dropped by a blank/NaN `league_id`) is no longer reported `captured`; the `league_id` guard moved
-    upstream to `odds_movement_snapshot_driver.py::_instrument_groups` (matching the existing
-    `fixture_id`/`bookmaker_key` guard pattern) with a warning log, instead of silently coercing to the literal
-    string `"nan"` three layers downstream of where it was first seen.
-  - **findings 4/7 (missing loss guards)**: both the `raw_df.empty` AND zero-candle paths now run
-    loss-guard-then-stale-shard-reconcile, matching bucket assignment's own zero-row path, instead of an
-    unconditional absence claim with no stale-shard cleanup.
-  - **finding 5 (loss-guard zombie exemption)**: movement/snapshot's own candle-level loss guard can never carry
-    `bm_time`/`fetch_utc` (a candle is an aggregate, not a raw tick), so it can never correctly apply the
-    zombie-tick exemption bucket assignment's own guard has. It is now overridden by bucket assignment's
-    raw-level, zombie-aware verdict for the SAME date (computed from the SAME raw/prepared frame in the merged
-    worker) when that verdict found no unjustified loss — see `_movement_snapshot_write_allowed`'s docstring.
-  - **finding 8 (reader gap)**: shipped dedicated readers in the two consuming repos (see the todo above) instead
-    of leaving it as a documented gap.
-  - **finding 10 (reuse)**: `_write_grouped_shard_files`/`_read_existing_shards` are now shared, parametrized
-    primitives both bucket assignment and movement/snapshot call, instead of near-verbatim copies.
-  - **findings 11-13 (cleanup)**: removed the now-redundant `prepare_odds_tick_data` wrapper (the method it wrapped
-    was made public in the SAME original commit), defined the movement/snapshot computation-type pair once
-    (`MOVEMENT_SNAPSHOT_COMPUTATION_TYPES`) instead of 5 hand-typed literal tuples, fixed a stale docstring
-    reference.
-  - New tests cover every finding directly, including a simulation of `ManifestWriter.lookup()`'s real matching
-    semantics proving the two coarse row keys can never cross-match (finding 1), the phantom-captured/zero-shards
-    case (finding 2), the blank-league_id case (finding 3), and the loss-guard override logic (finding 5). Full
-    `quality-gates.sh` green in all three repos (market-data-processing-service: 2399 passed, 87.88% coverage, 9
-    pre-existing basedpyright errors unchanged, 0 new; features-service and ml-service: full suites green, 0 new
-    basedpyright errors). Shipped via quickmerge:
-    `market-data-processing-service@e4b1f71aca`, `features-service@c158b0845f`, `ml-service@8a909a3be4`. All
-    landed on `live-defi-rollout`.
-  - **Still open, honestly**: live end-to-end verification against real production GCS/manifest (no `--dry-run` or
-    real write was exercised in this remediation session either) — tracked as its own todo above, not claimed
-    done.

@@ -180,12 +180,14 @@ template, minus the third-party dependency).
       owner double-checking exactly what system-prompt payload that smoke test actually sent). Until this is fixed,
       Codex/Luna is NOT usable for any real dispatch from a CLAUDE.md-carrying workspace, only for a stripped/bare
       session — this bake-off's Codex/Luna lane is blocked pending a real fix here, not a config issue.
-- [x] ✅ [INFRA] P0. Translate `tool_use`/`tool_result` round-tripping correctly. **DONE 2026-08-19** — shipped in
-      the sibling plan `/plans/active/codex_mcp_tool_use_bridge_2026_08_18.md` (agent-orchestrator@ea9ecd2b4e, new
-      `server/codex_mcp_proxy.py`): real MCP-based `tool_use`/`tool_result` round-tripping, proven via a live
-      Claude CLI Edit-tool call through the bridge (file genuinely edited, re-read to confirm) plus
-      concurrency/timeout tests against real Codex/ChatGPT credentials. Done when: a real multi-step tool-calling
-      exchange (not a single-turn text response) completes correctly through the bridge.
+- [ ] [INFRA] P0. Translate `tool_use`/`tool_result` round-tripping correctly. **Still open 2026-08-16, confirmed a
+      real structural gap, not just untested** — the module's own code still renders `tool_use`/`tool_result` content
+      blocks as a labelled text placeholder, not a real translation to Codex's own tool-execution model (unchanged
+      from the 2026-08-15 blind-build). This is the single biggest remaining gap before this bridge is genuinely
+      production-ready for anything beyond plain text completion — a real live Codex session now exists to build and
+      test this against (it didn't before today), but building a full tool-use translation layer is real engineering
+      work, deliberately not attempted in this same session alongside the deployment work. Done when: a real
+      multi-step tool-calling exchange (not a single-turn text response) completes correctly through the bridge.
 - [x] [REVIEW] P0. ✅ **Smoke-test gate before any real fleet traffic** — **DONE 2026-08-19**, satisfied by
       `/plans/active/codex_mcp_tool_use_bridge_2026_08_18.md`'s own [REVIEW] P0 todos (full evidence there, not
       duplicated here): a real `claude -p --dangerously-skip-permissions` CLI process, pointed at the bridge via

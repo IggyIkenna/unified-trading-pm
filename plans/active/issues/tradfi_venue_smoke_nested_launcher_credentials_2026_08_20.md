@@ -1,9 +1,10 @@
 ---
 doc_type: issue
-title: TradFi venue smoke nested launcher credential issue — historical driver run
+title: TradFi venue smoke nested launcher has no valid gcloud credentials
 summary: >-
-  Historical driver-run issue: nested backfill launches failed before VM creation because the active gcloud service account
-  had no valid credentials. A direct real batch run later bypassed the nested launcher and produced measured per-row evidence.
+  The TradFi venue smoke driver reached all eight non-Databento rows, but every nested backfill launch failed before VM
+  creation because the active gcloud service account had no valid credentials. The terminal report is RED and requires
+  launcher identity remediation before the canonical capture contract can be re-run.
 status: open
 nature: issue
 asset_group: [tradfi]
@@ -30,17 +31,13 @@ context_scope:
   - /plans/active/venue_smoke_test_bar_2026_08_16.md
 ---
 
-# TradFi venue smoke nested launcher credential issue — historical driver run
-
-## Update — 2026-08-20 direct-run evidence
-
-The direct MTDS batch run bypassed the nested launcher and measured the eight current rows: CBOE produced 5 objects but manifest finalization emitted a malformed unrelated Databento shard warning; FRED produced 20 `ohlcv_1d`/`yield_curve` objects with `capture_status=captured`; FX produced 11 and ICE 1 canonical object with `captured`; KRX, NASDAQ, and NYSE produced no objects with `capture_status=empty_confirmed`. The source-gate fix for NASDAQ/NYSE ohlcv_1h landed in market-tick-data-service@b89f288c06 and passed repository quality gates.
+# TradFi venue smoke nested launcher has no valid gcloud credentials
 
 ## What I found
 
 The real driver VM `pipeline-e2e-check-mtds-20260820-201322-1bf21a` enumerated the eight current non-Databento TradFi cells and reached the force/skip/canonical legs. Every nested `launch-mtds-backfill-vm.sh` attempt failed before VM creation with `Your current active account [unified-trading-sa@central-element-323112.iam.gserviceaccount.com] does not have any valid credentials`. The driver exited `1` and wrote `data_pipeline_e2e_check_mtds_2026_08_19_tradfi.md` with `total=24`, `passed=0`, `failed=18`, `skipped=6`.
 
-The historical driver report recorded six cells as having captured/manifest evidence before its nested launcher legs failed; that report is superseded by the direct-run evidence above, which measured KRX/NASDAQ/NYSE as `empty_confirmed`. Phase-0 consolidation itself succeeded (`shards=6`, `rows_in=3328`, `rows_out=3328`).
+The six cells with captured/manifest evidence were CBOE/ohlcv_24h, ICE/ohlcv_24h, KRX/ohlcv_24h, FX/ohlcv_24h, FRED/ohlcv_1d, and FRED/yield_curve; their force and canonical legs could not complete because of the credential failure. NASDAQ/ohlcv_1h and NYSE/ohlcv_1h were honestly skipped as `no_captured_data_for_cell`. Phase-0 consolidation itself succeeded (`shards=6`, `rows_in=3328`, `rows_out=3328`).
 
 ## Why it matters
 
@@ -48,6 +45,6 @@ The smoke contract cannot prove capture, canonical path, manifest atom, or genui
 
 ## Recommended decision
 
-- [x] ✅ [INFRA] P0. Fix `deployment-service/scripts/vm/lib/launcher_common.sh` service-account selection so nested launches use the VM metadata/tier identity with valid credentials rather than the stale `unified-trading-sa` active-account default; add a regression check that a driver VM can create one test-run backfill VM (repo: deployment-service) — deployment-service@39dc8ddf+959c92bb4a; `bash tests/test_launcher_common_identity.sh` PASS with the real driver invoking a mocked `gcloud compute instances create` and asserting `uts-test-sa`; `bash scripts/quality-gates.sh --no-fix` PASS.
+- [ ] [INFRA] P0. Fix `deployment-service/scripts/vm/lib/launcher_common.sh` service-account selection so nested launches use the VM metadata/tier identity with valid credentials rather than the stale `unified-trading-sa` active-account default; add a regression check that a driver VM can create one test-run backfill VM (repo: deployment-service).
 - [ ] [BACKEND] P0. Re-run the eight-row MTDS force/skip/canonical contract after the launcher credential fix and require a terminal report with per-row capture, canonical, manifest, and capture-status evidence (repo: market-tick-data-service).
 - [ ] [BACKEND] P1. Resolve and record the absent-capture verdicts for NASDAQ/ohlcv_1h and NYSE/ohlcv_1h, including whether the source resolver should retain them in the smoke denominator (repo: unified-api-contracts).

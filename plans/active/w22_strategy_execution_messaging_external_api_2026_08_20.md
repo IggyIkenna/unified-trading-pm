@@ -139,30 +139,12 @@ context_scope:
       (mirrors `_build_strategy_instruction_from_trade()`'s existing TRADE-conversion pattern in
       `external_instruction_api.py`). Done-when: each of the 5 actions produces a real (non-mock) settlement
       result over HTTP in paper mode, not a 501.
-- [x] [BACKEND] P0. Wire `TRANSFER`/`CANCEL` on the same surface — **shipped execution-service@3af76e1a01**
-      (2026-08-20, `instruction_router.py`/`external_instruction_api.py`/`transfer_handler.py`/`deribit.py`/
-      `run_phase3c.py`/`tests/unit/test_external_instruction_api.py`, verified ancestor of
-      `origin/live-defi-rollout`, full `quality-gates.sh` green: 8841 passed). The unrelated pre-existing
-      bridge.py/cctp.py function-size QG gate that blocked the first several ship attempts was independently
-      resolved by the domain owner (`execution-service@8b87a17a5`/`3f54ca206`) mid-session — reconciled via two
-      `git pull --ff-only` + conflict-resolution rounds (always deferring to the domain owner's landed version
-      over this session's own stopgap fixes in bridge.py/cctp.py/capture_golden_swaps.py/validate_uniswap_fills.py/
-      test_order_recovery.py, per the "defer to the real owner's context" pattern this session applied
-      throughout). `CANCEL`
-      reuses the existing `order_tracker`-based cancel path `/manual/cancel` already established — done, tested
-      (`TestCancelInstructionPath`). `TRANSFER` routes through the real `build_transfer_wiring()` ->
-      `HandlerRegistry`/`InstructionRouter` -> `TransferHandler` chain (NOT `TransferCoordinator` as originally
-      assumed here — see
-      /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md) — done, tested
-      (`TestTransferInstructionPath`), including a same-day fix closing a pre-existing `InstructionRouter`
-      structural gate rejecting every CeFi venue (see
-      /plans/archive/issues/external_instruction_transfer_cefi_venue_category_registry_gap_2026_08_20.md
-      `resolved_by`). Both produce a real result or an honest structured rejection, never a silent drop.
-- [ ] [BACKEND] P2. Wire `BRIDGE` on the same surface. SPLIT OUT from the original combined
-      TRANSFER/BRIDGE/CANCEL todo above (2026-08-20) — BRIDGE genuinely needs new execution engineering, not a
-      translation-shim wiring task like TRANSFER/CANCEL. Full evidence + done-when:
-      /plans/active/issues/external_instruction_bridge_atomic_not_wired_2026_08_20.md. Blocked on:
-      bridge-protocol selection.
+- [ ] [BACKEND] P0. Wire `TRANSFER`/`BRIDGE`/`CANCEL` on the same surface. `CANCEL` reuses the existing
+      `order_tracker`-based cancel path `/manual/cancel` already established (same real per-venue
+      `cancel_order()`, not a new implementation); `TRANSFER`/`BRIDGE` route through `TransferCoordinator`
+      (`execution_service/transfer_coordinator.py`) the same way an internal transfer intent does today.
+      Done-when: each of the 3 actions produces a real result or an honest structured rejection (never a silent
+      drop), not a 501.
 - [ ] [BACKEND] P0. Wire `ATOMIC` on the same surface, routing through the existing multi-leg dispatch
       (`AtomicInstruction`'s handling already exists in `backtest_v2/action_handlers.py::resolve_settlement` for
       BATCH — reuse the same leg-iteration logic for the live path, do not reimplement). Done-when: a 2-leg

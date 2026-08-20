@@ -535,12 +535,6 @@ todos only to confirm they are data-movement, then leave it.
 > were missing from earlier accounting (the last two are outside this plan's originally-scoped four). Holding these
 > four todos pending coordination on which approach to follow — not starting a manual re-derivation that the ledger
 > plan would then have to undo.
->
-> **OPERATOR DECISION, 2026-08-20**: wait for the ledger plan. Do not hand-edit the artefacts. These todos (and the
-> disclosure-standard-extension + figure-measurement-confirmation items below that are the same class of work)
-> stay held until `/plans/active/state_fabric_artefacts_2026_08_20.md` lands its ledger-binding, or until that
-> plan is explicitly reprioritized. Next session: check that plan's status before resuming any of these — do not
-> re-litigate this decision without a changed premise.
 - [ ] [DOC] P0. Re-derive `platform-architecture.html` from measured state. Every remaining marker must be live or
       one of the five allowed pending states.
 - [ ] [DOC] P0. Re-derive `platform-external-api-walkthrough.html` — the heaviest artefact by gap count (28
@@ -714,25 +708,8 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Close-out
 
-- [x] ✅ [AGENT] P1. Work the non-spine tail of this tranche's 433-doc allocation to zero open todos or an explicit
-      `BLOCKED-*` tag. This is the largest tail of the five — expect AO, CI and plan-hygiene work. **DONE 2026-08-20**
-      — all 352 tail docs carrying an open todo (135 P0/P1 + 217 P2/P3; the other 62 of 414 non-spine docs already
-      sat at 0 open todos) triaged in full via 15 parallel read-only sub-agents (~22-25 docs each, 3 waves of ≤5),
-      each doc read completely (not just its todos section) and cross-checked against live code/`git log`/sibling
-      docs, not re-read on trust. Applied 24 docs' worth of real, evidence-backed fixes (~37 checkbox flips + inline
-      `BLOCKED-ON:`/`BLOCKED-OPERATOR-DECISION` tags) across two ships
-      (`unified-trading-pm@395e27e8d4`, `@cd639cec06`), plus archived 2 fully-resolved docs
-      (`manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`,
-      `prosewrap_padding_baseline_climbing_recheck_2026_08_16.md`). Low yield by design, not failure — this corpus
-      already runs `na-eligibility-audit`/`plan_reconciler`/`context-scout` on a recurring cadence, so most open
-      todos were already correctly classified; the value here was the ~24 genuine misses those passes don't check
-      for (a todo's own stated done-when condition silently met elsewhere, an evidence-embedded-but-unflipped
-      checkbox, a blocked item never machine-tagged as such). One doc's 2 fixes couldn't ship
-      (`cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` — already over the 1000-line hard cap before this
-      pass touched it, a pre-existing structural blocker `epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md`
-      already documented; reverted rather than force through the gate). Remaining open todos across the tail are
-      genuinely open — operator-gated decisions, machine-`gate_on_depends`-blocked finalize plans awaiting a parent
-      that isn't done, or real unstarted engineering/ops work — not a bookkeeping gap.
+- [ ] [AGENT] P1. Work the non-spine tail of this tranche's 433-doc allocation to zero open todos or an explicit
+      `BLOCKED-*` tag. This is the largest tail of the five — expect AO, CI and plan-hygiene work.
 - [ ] [AGENT] P0. Post-phase codex audit for every contract changed.
 - [ ] [AGENT] P0. **Final gate for the whole effort** — confirm all four artefacts carry no `pending`, `planned`,
       `partial`, `not built` or `unverified` marker outside the five allowed states, and that every number carries
@@ -941,7 +918,7 @@ todos only to confirm they are data-movement, then leave it.
 | AO watchdog scheduled-timer wiring | Operator-owned — needs VM SSH | Operator |
 | Alert-bookend audit | **DONE 2026-08-20** — code-verified (29 tests) + live-traffic-verified (24h/504-msg sample), no violations found; not exhaustive over multi-day history | — |
 | W19 corpus audit | **RESOLVED 2026-08-20** — both `/plan-reconcile` (892 docs, 301 findings, `unified-trading-pm@2af2763f9b`) and `/docs-reconcile` confirmed run today | — |
-| 433-doc non-spine tail | **DONE 2026-08-20** — all 352 docs with open todos triaged, 24 docs' worth of real fixes applied + shipped, 2 archived | — |
+| 433-doc non-spine tail | Not scoped this session — large | Nobody — needs a dedicated pass |
 | Post-phase codex audit, final gate | Gated on everything above | — |
 | `unified-trading-ci` slot-3 checkout, 3 stale unpushed commits | **RESOLVED 2026-08-20** — all 3 confirmed superseded by equivalent-content commits already on origin; rebase dropped them automatically, `ahead=0 behind=0` | — |
 

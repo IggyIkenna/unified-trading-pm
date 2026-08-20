@@ -27,7 +27,7 @@ related:
     /plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md,
     /plans/active/multi_provider_context_billing_reconciliation_2026_08_16.md,
     /codex/12-agent-workflow/agent-orchestrator-single-vm-architecture.md,
-    /plans/archive/2026_08/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
+    /plans/active/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md,
   ]
 created: "2026-08-19"
 last_updated: "2026-08-19"
@@ -337,11 +337,11 @@ carrying real open work. Don't re-litigate "shouldn't this be a real plan?" with
       the original (opus/fable) model string — now spawns at the tier actually confirmed. Tests:
       `tests/test_autospawn.py` (2 new + 10 fixed for the `_spawn_param_plan` tuple-arity change),
       `tests/test_account_failover_resume.py` (2 new). Repo: agent-orchestrator.
-- [ ] [DATA] P3. BLOCKED-ON:multi_provider_model_capability_bakeoff_2026_08_19 — **once that doc's
-      synthesis todo lands** (its per-(model, complexity-tier) summary table), replace this doc's
-      flat "all-but-haiku" equivalence-class placeholder with the real tiering data it produces —
-      update the equivalence-class registry built above, not a fresh benchmark. Repo:
-      agent-orchestrator.
+- [ ] [DATA] P3. **Once `multi_provider_model_capability_bakeoff_2026_08_19.md`'s synthesis todo
+      lands** (its per-(model, complexity-tier) summary table), replace this doc's flat
+      "all-but-haiku" equivalence-class placeholder with the real tiering data it produces — update
+      the equivalence-class registry built above, not a fresh benchmark. Repo: agent-orchestrator.
+      Still blocked externally, unchanged.
 - [x] [OPERATOR] P3. **Future eval-benchmark plan — found 2026-08-19, already exists and is
       active**: `/plans/active/multi_provider_model_capability_bakeoff_2026_08_19.md` (slot-1).
       Superseded this todo's original "not yet scoped" framing — see the todo directly above for
@@ -355,7 +355,7 @@ While shipping todo 3's doc half, `quickmerge.sh`/`quality-gates.sh` repeatedly 
 whose frontmatter was observed in 3 different, progressively-more-broken states across ~10
 minutes without this session touching it — already on origin, so it blocked EVERY quickmerge in
 this repo, not just this one. Full write-up, evidence, and its own follow-up todos (still open,
-independent of this doc): `/plans/archive/2026_08/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`.
+independent of this doc): `/plans/active/issues/manifest_hygiene_daily_malformed_frontmatter_blocks_quickmerge_2026_08_19.md`.
 **Consequence for THIS issue, resolved**: the blocking file's frontmatter had stabilized enough by
 the next session to pass `check_frontmatter_schema` standalone; todo 3's `unified-trading-pm` half
 shipped cleanly at `cc38229b57` on the first retry. The generator issue itself is unrelated to this

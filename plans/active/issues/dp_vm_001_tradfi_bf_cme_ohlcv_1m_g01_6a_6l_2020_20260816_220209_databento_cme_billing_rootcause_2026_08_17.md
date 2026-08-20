@@ -149,8 +149,8 @@ covers will hit the identical wall; `g01-6a-6l-2020` is not special.
 
 ## Todos
 
-- [ ] [OPERATOR] P1. BLOCKED-ON:tradfi_databento_account_billing_suspended_2026_08_09.md — same underlying ask as
-      that doc's existing P0 `[OPERATOR]` todo (pay the Databento invoice) — no new action needed beyond that doc; this doc exists to
+- [ ] [OPERATOR] P1. Same underlying ask as `tradfi_databento_account_billing_suspended_2026_08_09.md`'s existing
+      P0 `[OPERATOR]` todo (pay the Databento invoice) — no new action needed beyond that doc; this doc exists to
       correct the sibling docs' hypothesis and record a fresh confirmation. Once billing is restored, the
       `g01-6a-6l-2020` shard (and its 2020-06-10-onward remainder) needs a fresh relaunch — not urgent to track
       separately, the family's normal backfill-completion sweep will pick it up once the AG billing gate lifts.

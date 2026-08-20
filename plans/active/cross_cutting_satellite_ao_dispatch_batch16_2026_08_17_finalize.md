@@ -59,12 +59,10 @@ source: >-
       trusting the citation text alone. Done-when: all 5 citations verified against actual landed SHAs.
       Evidence: verified landed SHAs `unified-trading-pm@9e5e873988`, `e022d3f0e3`, `fc45e105a9`,
       `70fc5408f1`, and `unified-api-contracts@2f74bd8da2` against their respective live-defi-rollout refs.
-- [x] ✅ [REVIEW] P2. Re-check `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`'s remaining
+- [ ] [REVIEW] P2. Re-check `na_eligibility_body_hash_unstable_across_marker_appends_2026_08_17.md`'s remaining
       todo 3 ([OPERATOR] P3, whether/how to stagger the fix's corpus-wide re-audit cost) once items 3-4 land —
       the fix is by then live, so the operator decision is now actionable rather than hypothetical. Flag it, do
-      not resolve it. Done-when: the operator question is re-surfaced with current status. Evidence: issue marker
-      records `unified-trading-pm@fc45e105a9` (root-cause), `unified-trading-pm@70fc5408f1` (fix + importer audit),
-      and the remaining operator decision.
+      not resolve it. Done-when: the operator question is re-surfaced with current status.
 - [ ] [DOC] P2. Check each of batch16's 3 source docs — if reconciliation (todo 1 above) left any of them with
       zero open todos, run the standard 6-step archival ritual on that source doc too. Done-when: each source
       doc's open-todo count is confirmed, and any genuinely-zero doc is archived.
