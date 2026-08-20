@@ -35,8 +35,8 @@ estimate_calibrated_ai_days: 0.6
 assigned_role: review
 assigned_vm: NA
 execution_scope: local-only
-locked_by: plan_reconciler (agt-07473e) since 2026-08-19T18:40:03Z
-locked_since: "2026-08-19T18:40:03Z"
+locked_by:
+locked_since:
 supersedes:
 superseded_by:
 resolved_by:
@@ -453,3 +453,20 @@ adversarially verified (Phase 3) or applied (Phase 5) yet as of this write-up.
   recommendation A: dispatch investigation now — outside this role's plans/\*\*-only write scope to fix directly).
   Resuming into Phase 3 adversarial verification of the fan-out backlog next; no other P0 currently outranks it.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries)
+- **2026-08-20 (manual dead-lock clear, ikennaigboaka interactive session, slot 6)**: cleared `locked_by:`/
+  `locked_since:` — dispatch `agt-07473e` confirmed terminated via a read-only SQLite query against AO's live
+  orchestrator VM `state.db` `agents` table (AWS SSM `send-command`, no HTTP API — see the sibling ui-tranche doc's
+  entry today for why `/api/agents` and `/api/scheduled-jobs/recent` weren't usable here). Result:
+  `status=archived`, `exit_reason=lifecycle-complete`, `registered_at=2026-08-19 18:14:02.126459`,
+  `finished_at=2026-08-19 20:20:41.116390` (~22.2h old at clear time). **Not `reaped-stale`** — this dispatch
+  reached a genuine `/done` call; the automated `PlanReconcilerDeadLockSweep` only auto-clears
+  `exit_reason=reaped-stale` and would not have cleared this lock on its own. The worker evidently called `/done`
+  without completing its own STEP 7 unlock — this doc's last pre-clear Progress Log entry ("Resuming into Phase 3
+  adversarial verification...") describes ongoing work, not a wrap-up, so the clean exit was not a deliberate
+  finish of THIS doc's task. Since the dispatch is confirmed over and will never resume to unlock this doc itself,
+  clearing now matches the 2026-08-15 operator ruling's intent
+  (`/plans/archive/issues/plan_reconciler_dead_run_no_lock_ttl_2026_08_12.md` Option A) even though the literal
+  `exit_reason` differs from the precedent. This dispatch's early-termination-without-unlock is distinct from the
+  sibling ui-tranche lock's cause (that one was a singleton-dedup false-kill, root-caused + filed as
+  `ao_singleton_agent_kind_dedup_kills_concurrent_tranche_workers_2026_08_20.md`, todo 4 of which covers this
+  STEP-7-vs-/done gap as a separate follow-up).
