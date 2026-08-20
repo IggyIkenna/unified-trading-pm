@@ -499,6 +499,16 @@ def test_body_content_hash_stable_across_own_multiline_marker():
     assert h1 == h0, f"marker continuation lines leaked into the hash: h0={h0} h1={h1}"
 
 
+def test_body_content_hash_stable_across_repeated_marker_appends_with_separators():
+    """Repeated Progress Log markers must not accumulate separator blank lines."""
+    body0 = "# doc\n\nSome real content.\n\n## Progress Log\n\n"
+    h0 = MOD.body_content_hash(body0)
+    marker1 = f"- **na-eligibility-audit 2026-08-09** [body-hash:{h0}]: first pass\n"
+    marker2 = f"- **na-eligibility-audit 2026-08-09** [body-hash:{h0}]: second pass\n"
+    body2 = body0 + marker1 + "\n" + marker2
+    assert MOD.body_content_hash(body2) == h0
+
+
 def test_body_content_hash_multiline_marker_stops_at_next_bullet():
     """The multi-line strip must not over-strip into an unrelated NEXT bullet/paragraph that
     happens to follow the marker without an intervening blank line -- a shape observed live in
