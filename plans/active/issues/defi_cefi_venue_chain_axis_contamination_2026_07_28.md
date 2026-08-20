@@ -320,7 +320,7 @@ in this read-only audit pass (time-bounded scope).
       `purge_gas_fees_legacy_venue_prefixes_2026_08_04.py --apply` run (same bucket, same manifest index, same
       consolidator cron paused for that run's duration) — sequence AFTER it completes and the cron is resumed +
       verified, to avoid CAS contention / cron-pause confusion between two concurrent prod-mutating operations.
-- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — gated on step 1 landing AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE the first time — must genuinely re-verify clean this run) before any delete.** Follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04 ruling above) — line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master` (hard constraint moved up from line 2). The ~35 real CeFi-Tardis
+- [ ] [DATA] P1. **NEW 2026-08-10 (slot-2) — gated on step 1 landing AND a FRESH 5-part delete-safety proof (Part 4 "no live reader" was FALSE the first time — must genuinely re-verify clean this run) before any delete. UPDATE 2026-08-19 (slot-15): FRESH proof executed this run — verdict FAILED, DELETE FORBIDDEN (Part 2: 0/98 content-equal, every cefi "twin" diverges by data-key rows — these are NOT duplicates; Part 4: `CanonicalPerpFundingProvider` still live-reads this bucket+prefix). Now blocked on the [OPERATOR] decision todo below, NOT on step 1.** Follow-up: physical GCS duplicate cleanup (step 3 of the 2026-08-04 ruling above) — line-1-completeness fix 2026-08-19, `/plan-reconcile manifest_master` (hard constraint moved up from line 2). The 98 (not ~35 — that figure is ruling item 2's corrupted-MANIFEST-rows count; census slot-8 2026-08-10 + slot-15 2026-08-19: 7 venues × 7 days × 2 data_types) real CeFi-Tardis
       `perp_funding`/`perp_daily_ctx` objects physically mis-filed in the DeFi bucket
       (`gs://market-data-tick-defi-prd-central-element-323112/raw_tick_data/by_date/day=2026-05-16..22/ pipeline_mode=batch_tardis/asset_group=cefi/venue={BINANCE,BITFINEX,BITGET,BYBIT,KRAKEN,OKX}-FUTURES|DERIBIT/…`,
       verified present 2026-08-10, correct cefi-bucket twins verified at the matching prefix) are still there. Gated on
@@ -330,6 +330,17 @@ in this read-only audit pass (time-bounded scope).
       time — must genuinely re-verify clean this run) before any delete. Do NOT run concurrently with an in-flight
       defi-bucket rebuild/consolidator-CAS rewrite. **Repo: unified-trading-library / market-tick-data-service** (UTL
       `gcs_delete_object`, never subprocess).
+- [ ] [OPERATOR] P1. **NEW 2026-08-19 (slot-15) — decision required: step 3 of the 2026-08-04 ruling is structurally
+      unachievable as written; pick a direction (this is an architecture call the RESOLVED P2 ruling already touched —
+      not AO-decidable).** Fresh-proof findings (slot-15 Progress Log): (a) the 98 defi-bucket objects are NOT
+      duplicates of their cefi twins (0/98 content-equal — both sides carry rows the other lacks, so a delete loses
+      data no twin contains); (b) the RESOLVED P2 ruling keeps this exact defi-bucket prefix as the by-design corpus
+      home — the live writer regenerates it (the 2026-08-19 recompute wrote `cefi_BYBIT-FUTURES_2026-08-16.parquet`
+      there) and `CanonicalPerpFundingProvider` reads ONLY this bucket. Options: **(A)** accept P2 → close step 3 as
+      no-op-by-design (keep the objects; the only remaining cleanup is ruling item 2's 35 corrupted manifest rows);
+      **(B)** reverse P2's read path → migrate the reader to the cefi twins + reconcile the divergent content
+      (which side is authoritative per day?) FIRST, then re-run the 5-part proof before any delete. Protocol ref:
+      `/codex/02-data/gcs-and-manifest-delete-safety-protocol.md` (disposition: `no-migrate-first`).
 - [x] ✅ [DATA] P1. **DONE 2026-08-15 (slot-4) — both cron hosts launched + verified RUNNING; fire verification is the
       new follow-up todo below (both cadences are 9-11h out from launch time, can't be verified same-session).** Root
       cause was: (1) the corpus-compute cron host was never actually launched — no `cefi-perp-funding-daily-cron-*`
@@ -504,6 +515,36 @@ in this read-only audit pass (time-bounded scope).
           todo's "no further action needed" claim without reading that doc first.
 
 ## Progress Log
+
+- **slot-15 2026-08-19 (task -6d8648d7fd76 — fresh 5-part proof executed + slot-4's named unblock)**: (1) The FRESH
+  5-part delete-safety proof the step-3 todo requires was run this session (read-only, UTL helpers only, bounded).
+  **Verdict: FAILED → NO delete by anyone; disposition `no-migrate-first`.** Part 1 PASS — 98/98 cefi-bucket twins at
+  identical relative paths. Part 2 **FAIL** — 0/98 content-equal: every twin pair diverges by data-key row-sets
+  (coin/venue/funding_rate/funding_rate_raw_per_cycle/mark_price; write-time cols excluded by design; floats rounded
+  15dp; e.g. BINANCE-FUTURES 2026-05-16 perp_funding `defi_only=1 cefi_only=9`). This settles slot-13's open
+  "sizes differ → Part 2 unverified": the defi objects are **divergent artifacts, NOT duplicates** — deleting them
+  loses rows no twin contains. Part 3 PASS for the targeted days (writer
+  `features_service/cefi/calculators/perp_funding_corpus.py` is day-parameterized; no scheduled job targets
+  2026-05-16..22 — the only May-date references are the driver docstring's usage example). Part 4 **FAIL** —
+  `CanonicalPerpFundingProvider` (strategy-service) day-globs the DeFi bucket filtering only `data_type=`; consumers
+  `paper_universe_metrics.py:240` + `paper_run_handler.py:2036` (`funding_window`). Checked and CLEARED as a
+  non-reader: `features_service/onchain/calculators/perp_funding_rates_defi.py:107` needles `asset_group=cefi/` but
+  resolves the CEFI bucket (line 79) — never reads these defi objects. Part 5 moot (100% twin coverage, but the
+  copied-not-moved redundancy premise died with Part 2). (2) **Structural finding → new [OPERATOR] todo above**:
+  step 3 ("delete mis-filed duplicates") contradicts the RESOLVED P2 ruling (this defi-bucket prefix is the by-design
+  corpus home — the live writer regenerates it, the live reader reads only it). (3) **Named unblock executed** (the
+  manual recompute option the 2026-08-19 slot-4 INFRA todo names): bounded
+  `run_cefi_perp_funding_corpus.py --start 2026-08-16 --end 2026-08-17` → `DONE venue-days=9 total_funding_rows=9`,
+  exit 0 (08-17: all 6 carry venues; 08-16: 3 of 6 — binance/kraken/bitfinex raw absent that day). Gate-1 letter
+  now PASSES for the first time since ~2026-05-20, measured through the real reader:
+  `CanonicalPerpFundingProvider.funding_for_day(2026-08-17)` → non-empty for 6/6 `catalog_carry.py` venues
+  (`funding_for_day(2026-08-16)` → 3/6, partial raw). (4) Side-findings: (a) the recompute's best-effort per-day
+  manifest row was REFUSED (legacy ManifestWriter guard: the DeFi bucket's `_index/availability_index.parquet` is
+  7.4GB > the 200MB legacy-read budget) — parquets landed; manifest registration needs per-VM shard mode or the
+  consolidator; (b) raw `derivative_ticker` day=2026-08-18 is EMPTY (today's 09:00Z fwd fire launched a worker but
+  landed 0 objects) — cron-driven freshness still blocked on the INFRA skew todo above; (c) corrected the step-3
+  todo's "~35 objects" → 98 (35 = ruling item 2's corrupted-MANIFEST-rows count). Scratch probes stay uncommitted
+  (disposable). No code shipped — the protocol-correct outcome of a failed proof is NO delete.
 
 - **slot-17 2026-08-17 (task -1b75e9a1f3d4 fix)**: fixed + shipped both root causes named in the todo above —
   `deployment-service@fb87cb2e1c` (+ `10edddb2` in the same push). cefi-fwd: staged the missing
