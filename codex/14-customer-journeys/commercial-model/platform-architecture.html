@@ -5135,13 +5135,13 @@
 
       <details class="ref">
         <summary>
-          The instruction contract in full — envelope, thirteen actions, lifecycle and idempotency<span class="tag-ref"
+          The instruction contract in full — envelope, eleven actions, lifecycle and idempotency<span class="tag-ref"
             >integration spec</span
           >
         </summary>
         <div class="body-pad">
           <p>
-            This is the seam your other strategies would write against. The envelope is common to all thirteen actions;
+            This is the seam your other strategies would write against. The envelope is common to all eleven actions;
             only the action-specific fields change.
           </p>
 
@@ -5156,8 +5156,8 @@
             <b># model version, feature hashes</b> correlation_id <b># ties multi-leg / paired instructions together</b>
             eligible_venues venue_constraints
 
-            <b>Thirteen actions</b> TRADE · SWAP · LEND · BORROW · WITHDRAW · REPAY · STAKE · UNSTAKE QUOTE · TRANSFER ·
-            BRIDGE · ATOMIC · CANCEL
+            <b>Eleven actions</b> TRADE · SWAP · LEND · BORROW · STAKE · UNSTAKE QUOTE · TRANSFER · BRIDGE · ATOMIC ·
+            CANCEL
 
             <b>TRADE</b> target_position_units · target_instrument · max_price · min_price <b>SWAP</b> in_asset ·
             out_asset · in_amount · min_out_amount · route_hint <b>ATOMIC</b> legs · execution_mode · leader_leg ·

@@ -177,20 +177,3 @@ so they are recorded here and tagged for the owning tranche rather than acted on
   with the latest DP-CRON batch at 06:37Z and no later batch observed. Classification is **(b) duplicate-consumer
   routing/dedup regression** (reversible scheduler fix applied) plus genuine underlying DP-LIVE-004/003 capture gaps
   (not resolved by this action). No registry append was warranted.
-- **2026-08-20T12:37Z, 6-hourly sweep (slot 27, dispatch agt-41775d)**: fresh 24h sample (2,531 msgs, 2,122
-  `DP_CRON_DID_NOT_FIRE`) confirms the 06:55Z dual-consumer-scheduler fix above is still holding
-  (`uts-prod-alerting-paging-cron` re-verified `PAUSED`; `dp-alerting-subscriber` on `-00138-lzr`, 100% traffic) —
-  no regression. Volume is down from the 3,008-msg pre-fix sample but still dominated (~85% of `DP_CRON_DID_NOT_FIRE`)
-  by the same `mtds-live-sports-odds-api-odds-20260816-145019` never-captured-odds identity this doc already names
-  as one of "the actual production problem[s]" underneath the storm. Per-identity cadence for that VM is now
-  averaging ~25-26min against the 1800s cooldown (occasional ~13-14min dips) — closer to compliant than the
-  ~15min-flat pattern earlier docs chased, consistent with `ac21303714`'s merge-fix plus this doc's own residual
-  simultaneous-writer-race caveat, not a fresh bug. Todo 1 (confirm serving revision) and todo 3 (check
-  `should_suppress`'s fail-open log) are now effectively answered by the 06:55Z entry + this one — revision
-  confirmed serving with dedup fixes present, and the remaining volume traces to genuine capture gaps, not a
-  silent GCS-read failure. Full write-up (event counts, per-identity gap analysis) recorded on the sibling
-  `dp_cron_did_not_fire_dedup_state_lost_on_redeploy_2026_08_18.md` doc rather than duplicated here. Todo 5 (route
-  the CME-trades/sports-odds capture gaps to the owning data tranche) — reconfirmed both gaps are still live and
-  ageing; the CME-OHLCV-backfill-relaunch-wave angle (114 VMs/day hitting the same billing block) is tracked
-  separately on `/plans/active/issues/tradfi_databento_account_billing_suspended_2026_08_09.md`'s own open P1
-  todo, not duplicated here.

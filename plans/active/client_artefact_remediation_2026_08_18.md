@@ -48,9 +48,8 @@ context_scope:
     /plans/audit/results/nick_ai_and_elysium_artefact_audit_2026_08_18.md,
     /plans/active/nick_ai_platform_disclosure_artifact_2026_08_16.md,
     /plans/active/elysium_october_delivery_and_code_disclosure_readiness_2026_08_11.md,
+    /plans/active/elysium_carveout_stubbed_strategy_service_2026_08_12.md,
     /plans/epics/system_readiness_master.md,
-    scripts/plan-hygiene/check_artefact_disclosure.py,
-    scripts/plan-hygiene/check_artefact_enum_drift.py,
   ]
 ---
 
@@ -82,7 +81,7 @@ each child owns a disjoint file set and the three run **concurrently**.
 | Child                                                                                                                   | Owns                                                                        | Gated?                     |
 | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- | -------------------------- |
 | [siblings](/plans/active/client_artefact_remediation_siblings_2026_08_18.md)                                             | deep-dive · platform-architecture · carveout-engineering · ODUM Phase2        | **No — P0 stop-ship**      |
-| [elysium — archived](/plans/archive/2026_08/client_artefact_remediation_elysium_2026_08_18.md)                              | `strategy-service-walkthrough.html`                                          | on this plan's spec        |
+| [elysium](/plans/active/client_artefact_remediation_elysium_2026_08_18.md)                                                | `strategy-service-walkthrough.html`                                          | on this plan's spec        |
 | [nickai](/plans/active/client_artefact_remediation_nickai_2026_08_18.md)                                                  | `platform-external-api-walkthrough.html`                                     | on this plan's spec        |
 
 Todos were **moved, not copied** — nothing below duplicates a child. This plan deliberately holds no per-file edit:
@@ -263,11 +262,3 @@ started here.
 - **context-scout 2026-08-19**: reviewed; context_scope unchanged (5 entries) — plan is fully done (0 open todos),
   the existing audit-report + two-owning-plan + epic list still covers what a reader needs before touching the
   "Real system gaps" cross-references or the pending finalize.
-- **context-scout 2026-08-20**: refreshed context_scope (6 entries) — dropped
-  `elysium_carveout_stubbed_strategy_service_2026_08_12.md` (not cited anywhere in this doc's own body text, only
-  in frontmatter `related`); added this doc's two actually-shipped source-code deliverables,
-  `scripts/plan-hygiene/check_artefact_disclosure.py` and `scripts/plan-hygiene/check_artefact_enum_drift.py` (the
-  P0/P1 SCRIPT todos' real code targets, both wired into `run_hygiene_sweep.sh`), so the list isn't codex/plan-only
-  despite this being a spec+tooling gate doc. Unconfirmed suggestion not added: `_ssot-rules/13-artefact-claim-
-  marks.md` (the owner-mark spec this doc defines) is a real, cited codex path but was left out to stay within the
-  2-6 target once the two script paths were added.

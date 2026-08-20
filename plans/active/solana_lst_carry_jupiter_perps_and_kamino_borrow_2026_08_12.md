@@ -51,13 +51,6 @@ estimate_baseline_ai_days: 12
 estimate_calibrated_ai_days: 9.6
 assigned_role:
 drift_direction: none
-context_scope:
-  [
-    /codex/04-architecture/solana-defi-coverage.md,
-    /codex/04-architecture/defi-execution-overview.md,
-    /codex/09-strategy/architecture-v2/archetypes/carry-recursive-staked.md,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py,
-  ]
 depends_on: []
 locked_by:
 locked_since:

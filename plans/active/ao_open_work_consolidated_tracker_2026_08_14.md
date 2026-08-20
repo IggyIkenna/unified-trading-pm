@@ -329,7 +329,7 @@ context_scope:
       `scripts/docs/docspec.py`.** Confirmed still `Req.E` (elective) as of this session; backfill itself is large,
       ongoing, multi-session work — re-run the inventory script for a current NEVER_SCOUTED count before scoping
       further. Source: `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md` (also tracked, do not duplicate, in
-      `/plans/archive/2026_07/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`, now archived).
+      `/plans/active/context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`).
 - [x] [REVIEW] P1. **DONE.** `server/prompts.py:296` now has a literal curl body for the `/boot` STEP 2 call. Verified
       2026-08-15 (manual grep, this session). Source:
       `/plans/archive/issues/ao_boot_stub_session_vars_field_name_mismatch_2026_08_02.md`.

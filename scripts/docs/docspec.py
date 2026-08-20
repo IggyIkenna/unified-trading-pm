@@ -149,9 +149,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("depends_on", Req.O, "free_list"),
         FieldSpec("source", Req.O, "scalar"),
         FieldSpec("assigned_role", Req.E, "registry", registry="role"),
-        # Hardened Req.E -> Req.R 2026-08-20 (ao_satellite_ao_dispatch_batch3_2026_07_31.md todo 1):
-        # corpus-wide backfill reached 0 NEVER_SCOUTED / 0 STALE via generate_context_scope_inventory.py.
-        FieldSpec("context_scope", Req.R, "free_list"),
+        FieldSpec("context_scope", Req.E, "free_list"),
         # Reasoning-effort override (elective — most plans rely on assigned_role's
         # derived tier, or the todo-count fallback, and declare neither of these).
         # See PLAN_FORMAT.md's frontmatter block for the full derivation order.
@@ -180,9 +178,7 @@ PER_TYPE: dict[str, list[FieldSpec]] = {
         FieldSpec("assigned_vm", Req.R, "registry_or_na", registry="vm"),
         FieldSpec("resolved_by", Req.C, "scalar", conditional_on=("status", "resolved")),
         FieldSpec("locked_by", Req.O, "scalar"),
-        # Hardened Req.E -> Req.R 2026-08-20 (ao_satellite_ao_dispatch_batch3_2026_07_31.md todo 1):
-        # corpus-wide backfill reached 0 NEVER_SCOUTED / 0 STALE via generate_context_scope_inventory.py.
-        FieldSpec("context_scope", Req.R, "free_list"),
+        FieldSpec("context_scope", Req.E, "free_list"),
         # worker.md §4.5 (FINDINGS CLOSURE, HARD RULE 2026-06-10) mandates author on issue docs.
         # Elective (not Required): only 6 of 444 existing issue docs carry author today
         # (2026-08-04); Required would red the tree. Backfill tracked in the reconciling plan.
