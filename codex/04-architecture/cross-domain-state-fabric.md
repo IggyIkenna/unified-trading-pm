@@ -109,6 +109,48 @@ observed -> included -> canonical -> confirmed -> finalized
 The venue manifest configures **which actions are permitted at each stage**. Acting on `observed` is a `hot`-tier
 capability; the `warm` tier acts from `included` onward.
 
+### 2b. Discrete events are a 2x2, not a list
+
+Operator ruling 2026-08-20. Two **independent** questions decide how a discrete event is handled: is its **time** known
+in advance, and is its **content** known in advance? A one-dimensional "scheduled vs unscheduled" split collapses two
+different things and gets the staking case wrong.
+
+|                  | **Content known**                                                         | **Content unknown**                                                           |
+| ---------------- | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------- |
+| **Time known**   | staking payment, funding settlement, LST rebase, coupon, expiry _instant_ | FOMC, CPI, earnings, option settlement fixing, prediction resolution deadline |
+| **Time unknown** | barrier / knock-out trigger, liquidation at a known level                 | goal, red card, depeg, oracle deviation, exchange halt, expiry _outcome_      |
+
+Each quadrant has a different correct response:
+
+- **Time known + content known -> STAND ASIDE and reconcile.** There is nothing to reprice — the value change is
+  already known. The exposure is **position and ledger reconciliation**, not price. Do not trade through a funding
+  settlement or a staking payment; close the window, let the ledger settle, reopen.
+- **Time known + content unknown -> PRE-ARM, then react to content.** Tighten the validity envelope, cut size or
+  withdraw _before_ the event; after it, both paths run (below).
+- **Time unknown + content known -> PRE-COMPUTE THE BRANCH.** The post-event state is derivable now, so compute it
+  ahead and switch on trigger. This is the one place a per-branch snapshot earns its cost.
+- **Time unknown + content unknown -> REACT ONLY.** A fast pull is usually the right default.
+
+**One event, two consumers, different latencies — not two events.** A news release or a goal feeds BOTH the fast path
+(defensive get-out-of-the-way, or aggressive entry where the archetype supports news/event trading) and the slow path
+(features and ML digesting the content). Modelling these as separate events reintroduces double reaction.
+
+**Venue mechanics can make the fast path moot.** Betfair freezes accounts around a goal, so the reaction budget there
+is set by the venue, not by our latency. Check the venue's own behaviour before spending on speed.
+
+### 2c. Suppression is not a kill
+
+The action mask has **three** states, not two:
+
+| State        | Meaning                                  | Release                                     |
+| ------------ | ---------------------------------------- | ------------------------------------------- |
+| `PERMITTED`  | normal, per source tier and confidence   | n/a                                         |
+| `SUPPRESSED` | a **scheduled** window; nothing is wrong | reopens on schedule, no incident, no unkill |
+| `KILLED`     | something is wrong; recovery required    | per the autonomous recovery matrix          |
+
+Conflating a scheduled suppression with a kill produces false incidents and invents an un-kill path where none is
+needed. The funding-settlement and staking-payment windows above are `SUPPRESSED`, never `KILLED`.
+
 ## 3. The common StateEnvelope
 
 Every profile publishes absolute state through one envelope. The **payload** differs by profile; the envelope and its
@@ -274,7 +316,56 @@ exactly `get_venue_asset_group()` returning `"cefi"` for every venue, MTDS dropp
 200, and three chain registries each giving a different answer — all filed 2026-08-19. `finality_model` and
 `ordering_key` are the two fields where a wrong default is silently dangerous.
 
-## 10. Not settled here
+## 10. The kill switch and the action mask are ONE mechanism
+
+`action_mask = {}` at instrument scope **is** a kill at instrument scope. Do not build these as two systems. The
+kill-switch SSOT — arming authority, resume authority, exit playbooks, the recovery timeline — remains
+[/codex/04-architecture/autonomous-recovery-matrix.md](/codex/04-architecture/autonomous-recovery-matrix.md); what is
+recorded here is only the slow/fast decomposition, which is the same decomposition as everything else in this doc.
+
+**Measured 2026-08-20 — the reaction path is well wired.**
+`execution-service/execution_service/engine/kill_switch_bus_bridge.py` bridges the UTL `KillSwitchBus` into
+execution-service's `engine.kill_switch`; `kill_switch.is_active()` gates every order path; `register_cancel_on_arm`
+callbacks fire on the inactive->active transition so arming **cancels** rather than merely blocking new orders. Scopes
+are typed (`GLOBAL / VENUE / CLIENT / STRATEGY / INSTRUMENT / ARCHETYPE`) with `ScopedKillSwitchSpec` /
+`ScopedKillSwitchState` and a `KillSwitchTrigger` event in UAC.
+
+**The four concerns and their cadences:**
+
+| Concern                                                                   | Owner                 | Cadence                                             |
+| ------------------------------------------------------------------------- | --------------------- | --------------------------------------------------- |
+| **Declaration** — what counts as a kill condition, its scope, `exit_mode` | strategy / UAC config | slow, versioned generation                          |
+| **Detection** — noticing the condition holds                              | **OPEN — see below**  | must be fast for the infrastructure class           |
+| **Reaction** — cancel, gate, execute the exit playbook                    | execution-service     | fast, every order path                              |
+| **Resume** — un-kill                                                      | recovery matrix       | direction- and scope-aware; `manual_unkill` = human |
+
+**A slow strategy cadence does NOT make the kill slow.** Declaration is versioned config, not a per-tick decision, and
+the exit playbooks live in UAC so execution-service can act with strategy-service entirely down.
+
+**OPEN — detection ownership per condition.** Every kill-switch _subscriber_ found on 2026-08-20 is strategy-side
+(`archetype_kill_switch_subscriber.py`, `pnl/kill_switch_bus_subscriber.py`, `risk/circuit_breaker_registry.py`); those
+consume. Which component _detects_ each condition and publishes to the bus was **not measured**. If detection for a
+given condition sits behind a slow loop, that condition is latent at that loop's cadence however fast the reaction is —
+the same shape as `HealthFactorMonitor` having no production entry point. The conditions that cannot tolerate a slow
+detector are the infrastructure class: feed staleness, sequence gap, position divergence, venue disconnect, clock
+breach, ack timeout, model trust breach.
+
+## 11. Dust — three concerns, three owners
+
+Operator framing 2026-08-20, correct for two of the three parts:
+
+| Concern            | What it is                                                                                          | Owner / cadence                                                                  |
+| ------------------ | --------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| **Dust policy**    | thresholds, sweep cadence, target currency                                                          | strategy config, slow, via instructions                                          |
+| **Dust avoidance** | min-notional rounding; not leaving an unfillable stub after a partial fill or a tick-rounded resize | **execution, fast** — a property of the order-state diff, not of the instruction |
+| **Dust sweeping**  | consolidating residual balances                                                                     | slow, and it is a **transfer** — so it can never cross a `client_id`             |
+
+**Measured 2026-08-20**: the token `dust` appears in `strategy_service/pnl/engine/reward_attribution.py`,
+`reward_attribution_drain.py`, `backtest_v2/action_handlers.py`, `benchmark_fills.py` and `strategies/v2/base.py` — it
+is a PnL-attribution and backtest concern today. Whether **dust avoidance** is owned anywhere is UNVERIFIED: only the
+token `dust` was searched, and min-notional / lot-size logic may exist under other names.
+
+## 12. Not settled here
 
 - The `hot`-tier `block_ledger` contract fields (mempool observation id, simulation state root, bundle sequence,
   relay/builder capability, gas-policy IO, inclusion/finality feedback) are to be **defined, not implemented** — R13.
@@ -282,3 +373,10 @@ exactly `get_venue_asset_group()` returning `"cefi"` for every venue, MTDS dropp
 - Parts II-V of the restructured specification: the per-profile detail, archetype manifests and per-profile
   certification. Only Part I (this doc) exists.
 - The five Wave-0 rulings tracked in the delta-proxy issue doc section 15.
+- **Kill-switch detection ownership per condition** (section 10) — the reaction path is measured and wired; the
+  detection path is not. This is the highest-value open item, because a slow detector makes a fast reaction irrelevant.
+- **Dust avoidance ownership** (section 11) — hypothesis only; a single-token search is not a measurement.
+- **Whether the fast nowcast component deploys colocated with MTDS and execution-service**, which is where the market
+  feed already terminates.
+- **The recovery plane** — checkpointing, per-channel recovery capability, scoped readiness as a capability vector,
+  and batch/paper/live activation. Under measurement 2026-08-20; not yet ruled.
