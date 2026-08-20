@@ -373,7 +373,14 @@ def main() -> int:
 
     baseline = load_baseline()
 
-    if not quiet:
+    fmt_n, exist_n = len(format_violations), len(existence_violations)
+    fmt_ok = fmt_n <= baseline.format_count
+    exist_ok = exist_n <= baseline.existence_count
+
+    # Evidence prints on FAILURE regardless of --quiet (defect 2 of
+    # check_reference_paths_silent_skip_and_quiet_hides_violation_2026_08_12):
+    # quiet suppresses noise on success, never the reason for a failure.
+    if not quiet or not (fmt_ok and exist_ok):
         print(f"Reference path check ({len(files)} files scanned):")
         print()
         for v in format_violations:
@@ -381,10 +388,6 @@ def main() -> int:
         for v in existence_violations:
             print(f"  DANGLING  {v}")
         print()
-
-    fmt_n, exist_n = len(format_violations), len(existence_violations)
-    fmt_ok = fmt_n <= baseline.format_count
-    exist_ok = exist_n <= baseline.existence_count
 
     print(
         f"{'✅' if fmt_ok else '❌'} check_reference_paths (format): {fmt_n} violation(s) "
