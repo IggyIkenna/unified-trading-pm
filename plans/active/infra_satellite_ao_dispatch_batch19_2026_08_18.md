@@ -1,6 +1,6 @@
 ---
 doc_type: plan
-title: Infra satellite — na-eligibility-audit RECLASSIFY_SPLIT extraction batch (batch 19, single-todo)
+title: Infra satellite — na-eligibility-audit RECLASSIFY_SPLIT extraction batch (batch 19)
 summary: >-
   Single-todo extraction from the infra tranche's 2026-08-18 `/na-eligibility-audit` run — the bounded, mechanical
   half of `issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md`'s todo 1 (work the
@@ -9,8 +9,9 @@ summary: >-
   --diff-base mode later" forward-looking design question) is NOT extracted — stays `assigned_vm: NA` on the source
   doc. Conflict-checked: grepped every active plan for `check_active_refs_archived_plans` — only the source doc
   itself references the mechanism (it was only created 2026-08-17, ratchet baseline seeded same day); this is its
-  first dispatch. No finalize twin, per the established single-todo carve-out precedent
-  (`infra_satellite_ao_dispatch_batch4_2026_07_31.md` / `batch5_2026_08_01.md`).
+  first dispatch. A gated finalize companion is tracked at
+  `/plans/active/infra_satellite_ao_dispatch_batch19_2026_08_18_finalize_2026_08_20.md` because this extracted tracker has
+  two todos (the single-todo carve-out does not apply).
 status: active
 nature: process
 asset_group: [infrastructure]
@@ -58,9 +59,9 @@ context_scope:
   ]
 ---
 
-# Infra satellite — archived-plan referrer cleanup (batch 19, single-todo)
+# Infra satellite — archived-plan referrer cleanup (batch 19)
 
-> **Fresh carve-out, single-todo, no finalize twin** (same pattern as batch4/batch5). Extracted from
+> **Fresh extraction batch with a gated finalize twin.** Extracted from
 > `issues/archival_referrer_codex_redirect_bulk_cleanup_2026_08_17.md` todo 1 — that doc's own body already carries
 > a complete, self-sufficient dispatch prompt (§ "Dispatch prompt"). The todo below is a pointer to it plus
 > extraction provenance, not a re-derivation — read the source doc's "Dispatch prompt" section in full before
