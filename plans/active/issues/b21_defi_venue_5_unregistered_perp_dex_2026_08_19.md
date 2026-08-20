@@ -135,11 +135,18 @@ Per-value, in priority order:
       failures the registration surfaced: `test_chain_registry_ssot.py` needed STARKNET added to
       `_EXTRA_VENUE_PARTITION_CHAINS`, `test_protocol_launch_dates.py` needed `(STARKNET, EXTENDED)` added to
       `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION_BASE`)
-- [ ] [DATA] P2. **LIGHTER — confirm true canonical venue form + register** (repo: unified-api-contracts +
+- [x] ✅ [DATA] P2. **LIGHTER — confirm true canonical venue form + register** (repo: unified-api-contracts +
       whichever writer produces LIGHTER rows). Determine whether the real writer stamps bare `LIGHTER` or the
       documented parallel form `LIGHTER-ZKSYNC`; register `ALL_DEFI_VENUES`/`DEFI_PERP_VENUES` accordingly (mirrors
       the EXTENDED-STARKNET precedent — chain suffix, not instrument-type suffix). Done-when: registered with the
-      confirmed correct form + phase.
+      confirmed correct form + phase. — CONFIRMED canonical form is `LIGHTER-ZKSYNC` (compound; `-ZKSYNC` is a CHAIN
+      suffix, already used repo-wide in venue_constants/venue_mapping/data_type_capability/venue_adapter_keys; the bare
+      `LIGHTER` is only ever the split-column `venue` value alongside `chain="ZKSYNC"`). Registered in `ALL_DEFI_VENUES`
+      + `DEFI_PERP_VENUES` with phase=`pipeline` (0 captured perp-funding rows; live WS connector is a
+      BLOCKED-CREDENTIALS stub → not IS-producible), mirroring EXTENDED-STARKNET. — unified-api-contracts@1fb854f3
+      (+cd4168cf) + Evidence: quality-gates.sh ✅ (13489 passed; the registration surfaced 1 test gap —
+      `test_every_defi_venue_declared_or_pending` — fixed by adding `(ZKSYNC, LIGHTER)` to
+      `_PROTOCOL_LAUNCH_PENDING_INVESTIGATION_BASE` in chain_env.py).
 - [ ] [DATA] P3. **KAMINO_LENDING — confirm product identity + register or fold** (repo: unified-api-contracts).
       Trace which adapter/data_type stamps `venue="KAMINO_LENDING"` and confirm whether it is a genuinely distinct
       Kamino product (needs its own `KAMINO_LENDING-SOLANA` registration) or a writer-side naming variant of the

@@ -118,7 +118,7 @@ source: >-
       `[SCRIPT] P3` → `agent-orchestrator@af98fcd` + live-backlog backfill-check; orphaned_commit_recovery `[SCRIPT] P2`
       (verifier) + `[SCRIPT] P2` (liveness) + `[DATA] P3` → `agent-orchestrator@623009e3`; wip_preserve_refs `[DATA] P3` →
       same `@623009e3` 29-ref triage.
-- [ ] [INFRA] P0. **Re-check both Deferred-bucket items' gates and spin any newly-cleared ones into batch 4** — for
+- [x] ✅ [INFRA] P0. **Re-check both Deferred-bucket items' gates and spin any newly-cleared ones into batch 4** — for
       `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md`'s `[REVIEW] P3` item, re-check whether it has
       since been scoped into its own dedicated plan (e.g. via `/plan-brainstorm`) — if so, mark this batch's Deferred
       entry resolved-elsewhere; if not, leave it deferred with the same reasoning. For
@@ -129,7 +129,23 @@ source: >-
       `context_scope_consumption_enforcement_2026_07_30.md`) — confirm whether it has been corrected; if not, escalate
       again rather than letting it go stale a second time. **Done when**: each of the 3 items is marked
       cleared-and-moved (naming the new batch-4 plan/todo or the resolving plan) or still-gated with the current reason
-      — no entry left unstated.
+      — no entry left unstated. — **DONE 2026-08-20** (slot 3, infra craft): all 3 re-checked directly against the
+      archived docs' live status, no batch-4 material produced by any of the three. (1)
+      `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md` — resolved DIRECTLY, not via a new dedicated
+      plan: the doc itself is `status: resolved` (`resolved_by: /ag-closeout-audit ao (2026-08-16)`), its sole open
+      `[REVIEW] P3` item flipped `[x]` 2026-08-16 — `agent-orchestrator@ca6603af` shipped `cgroup_memory_snapshot()`
+      surfaced over `/ws/vm-resources`, satisfying the done-when (a dedicated dashboard UI tile was explicitly out of
+      scope, not required). Nothing left to move into batch 4. (2) `omniroute_llm_gateway_pilot_design_2026_07_30.md` —
+      the NA/human-only ruling was NOT lifted; instead the whole pilot is now `status: superseded`
+      (`superseded_by: omniroute_multi_provider_routing_evaluation_2026_08_03`), archived 2026-08-06 under an explicit
+      operator **no-go-for-now** ruling recorded in that evaluation plan's "Phase 3 — decision" — all 6 remaining open
+      todos presupposed adopting OmniRoute and none survive the no-go; the doc's own banner confirms "nothing was
+      migrated out." Same gated-on-operator reasoning class, just resolved via supersession rather than left open — no
+      batch-4 material. (3) `ag_closeout_audit_ao_parked_2026_07_31.md`'s data-correctness finding — confirmed already
+      corrected: `context_scope_consumption_enforcement_2026_07_30.md`'s "What's true today" section was fixed
+      2026-08-01 (per that doc's own Progress Log and the parked-findings doc's own `resolved_by` field) and now states
+      the accurate `Req.E`/majority-`NEVER_SCOUTED` facts; the parked doc itself carries `status: resolved`. No
+      re-escalation needed.
 - [ ] [REVIEW] P0. **Archive every source doc that has reached zero open todos, and repoint any referrer.** At minimum
       re-check `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md`,
       `ao_dispatch_priority_inversion_starvation_has_no_page_path_2026_07_30.md`,
@@ -180,3 +196,14 @@ source: >-
   **AccessDenied** for this session's identity (`ikenna-worker`, no `ssm:DescribeInstanceInformation`) — the original
   batch-3 session's SSM path is not reproducible from here; verifier code+tests + recorded-table consistency stand as
   the evidence. Drift re-opened as todo 2 (5 docs to re-scout).
+- **2026-08-20 (todo 4 — DONE, both Deferred-bucket items re-checked, zero batch-4 material)**: read all 3 target docs
+  directly rather than trusting this batch's own now-stale Deferred-section summary.
+  `orchestrator_api_full_outage_stale_cgroup_memory_cap_2026_07_30.md` is now `status: resolved` — its `[REVIEW] P3`
+  item shipped 2026-08-16 via `/ag-closeout-audit ao` (`agent-orchestrator@ca6603af`), resolved directly rather than via
+  a new dedicated plan. `omniroute_llm_gateway_pilot_design_2026_07_30.md` is now `status: superseded` — the operator
+  issued an explicit no-go-for-now ruling 2026-08-06 (`omniroute_multi_provider_routing_evaluation_2026_08_03.md` §
+  "Phase 3 — decision"), so the NA/human-only gate was never lifted, it was mooted; all 6 remaining todos presupposed
+  adopting OmniRoute and the doc's own banner confirms nothing was migrated out. The data-correctness finding in
+  `ag_closeout_audit_ao_parked_2026_07_31.md` was corrected 2026-08-01 (that doc's own `resolved_by` field plus the
+  target doc's own Progress Log both confirm the fix); the parked doc carries `status: resolved`. No new batch-4 plan
+  needed — all 3 items resolved without producing AO-eligible bounded work.

@@ -304,11 +304,19 @@ todos only to confirm they are data-movement, then leave it.
       variance) instead of a uniform hardcoded `unverified` across all 864 rows. Confirms the earlier coordinator
       correction still holds: `strategy` (`ready=24 not_ready=840`) remains the dominant structural blocker on the
       overall rollup, not `execution_instruction` — this leg's wiring is real but was never the critical path.
-- [ ] [BACKEND] P0. Add the archetype capability axis across batch, paper and live to the dump. The artefacts mark
+- [x] [BACKEND] P0. Add the archetype capability axis across batch, paper and live to the dump. The artefacts mark
       it `planned — specified and not yet built`, so that axis reports `unverified` today. Consume T3's
-      `/archetype-code-completeness` output rather than re-deriving it.
-- [ ] [BACKEND] P0. Make credentials a first-class readiness dimension (W1 addition 2026-08-19).
-- [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19).
+      `/archetype-code-completeness` output rather than re-deriving it. **Done** (earlier this session):
+      `checks.strategy_archetype_code_complete()` wired as the `strategy_archetype_code` leg in
+      `derive_readiness.py:420`, consuming `/archetype-code-completeness`'s output. Re-confirmed live 2026-08-20:
+      present with real counts (`ready=360 not_ready=504`) in a fresh dump run, not a stub.
+- [x] [BACKEND] P0. Make credentials a first-class readiness dimension (W1 addition 2026-08-19). **Done** (earlier
+      this session): `checks.credentials()` wired as the `credentials` leg in `derive_readiness.py:414`, derived
+      from UAC's own declared `auth_scope`/`auth_environments`/`supports_testnet`/`supports_mainnet`. Re-confirmed
+      live 2026-08-20: present with real counts (`ready=8 not_ready=10 unverified=846`) in a fresh dump run.
+- [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19). **Checked
+      2026-08-20: genuinely not yet implemented** — no `manual`/`MANUAL` mode reference anywhere in
+      `derive_readiness.py` or `checks.py`. Real remaining work, not a stale todo.
 - [x] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
       unverified 20`) against §17's own table — the artefacts flag it as not reconciled. — **RECONCILED
       2026-08-20**, live full-fleet run against `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`
