@@ -146,12 +146,19 @@ operator call, not a worker's.
 
 ## Todos
 
-- [ ] [INFRA] P1. Replace `vm-disk-guard.sh`'s tmux-only idle test with a signal that reflects real slot liveness —
+- [x] ✅ [INFRA] P1. Replace `vm-disk-guard.sh`'s tmux-only idle test with a signal that reflects real slot liveness —
       e.g. query the orchestrator's own `SlotRow.status`/`last_ping` (the watchdog's existing definition), and/or skip
       any slot with a live process under its absolute worktree path (`pgrep -f ".tabs/<N>/"`, the slot-scoped form
       `/codex/05-infrastructure/per-tab-worktrees.md` already sanctions). Must fail SAFE — an unanswerable liveness
       query should now mean "leave the venv alone", the opposite of today's fallback, since the measured cost of a
       wrong sweep is a fleet-wide QG outage. (repo: agent-orchestrator)
+      **DONE `agent-orchestrator@616e15a4ca`** — a slot is now LIVE when (a) an `orch-slot-<N>` tmux session exists
+      (kept for hosts that run tmux-hosted workers) OR (b) ANY live process has its CWD inside the slot's absolute
+      worktree path, read via `/proc/<pid>/cwd` (`pgrep -f` cannot see a claude worker whose cmdline is just
+      `claude --session-id <uuid>`). FAIL-SAFE inverted: an unreadable process table now means LEAVE every venv, not
+      sweep. Verified: functional test against the live `/proc` (slots 1/7/14/21/29 all judged LIVE, a nonexistent
+      slot judged IDLE) + `bash -n`; full QG green (5272 passed/2 skipped backend + 469 dashboard vitest, coverage
+      86.13%), sentinel==HEAD `616e15a4`, landed + ancestry-verified on `origin/live-defi-rollout`.
 - [ ] [INFRA] P1. Make the guard refuse to sweep a venv that is in use REGARDLESS of the slot's idle verdict — a
       belt-to-the-suspenders check for the mid-run deletion that produced the `NoSuchModuleError` +
       false-coverage-failure signature above (e.g. honour the QG ledger lock `quality-gates.sh` already takes).
@@ -174,3 +181,10 @@ operator call, not a worker's.
 ## Progress Log
 
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **2026-08-20 (infra, slot 21)**: Fixed the P1 liveness signal — `vm-disk-guard.sh` no longer sweeps a slot whose
+  worktree hosts any live process (tmux-session check retained as a secondary signal + `/proc/<pid>/cwd` read as the
+  primary, with the process table treated as authoritative), and fails safe (unreadable `/proc` ⇒ leave ALL venvs).
+  Shipped `agent-orchestrator@616e15a4ca`. Env note: this slot's first QG run failed only on a stale
+  `dashboard/node_modules` (missing declared `@vitest/coverage-v8`) — a pre-existing env staleness (a bash-script
+  change cannot influence dashboard deps), fixed via `npm --prefix dashboard install`, then full QG green. Same
+  env-fix class the sibling items in `/plans/active/ao_satellite_ao_dispatch_batch24_2026_08_18.md` recorded.

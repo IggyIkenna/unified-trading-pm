@@ -123,14 +123,21 @@ P2.7.5 leaves genuinely open — whether the roots reach Stage B via (a) a wrapp
 empty — is called out in todo 3 and should be settled by the operator/main before that todo is worked, because (b)
 changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op contract untouched.
 
-- [ ] [BACKEND] P2. **Add a `batch-rerun` CLI operation to strategy-service.** New `BatchRerunHandler` in
+- [x] ✅ [BACKEND] P2. **Add a `batch-rerun` CLI operation to strategy-service.** New `BatchRerunHandler` in
       `strategy_service/cli/service_entry.py` registered as `"batch-rerun"` in `_OPERATIONS`, wrapping the existing
       `rerun_from_manifest(...)`. Reuse `paper_run_handler._git_sha()` for `rerun_code_shas` so the sha assertion matches
       what the paper run pinned (same image ⇒ same sha). Needs a `--paper-run-id` arg (explicit) plus a resolver for the
       default case. Unit tests must cover the resolver and the handler wiring using the injectable `replay_fn` /
       `storage_client` seams `batch_rerun.py` already exposes. Repo: strategy-service. Done when: `--operation
       batch-rerun` runs end-to-end against an injected fake storage client in a unit test and returns a `BatchRerunResult`
-      with a populated `recon` verdict.
+      with a populated `recon` verdict. — strategy-service@21296786. Added `resolve_newest_paper_run_id()` +
+      `add_batch_rerun_args()` to `cli/handlers/batch_rerun.py` (the `--paper-run-id` default-case resolver, listing
+      `client_runs_prefix(client_id)` for the lexicographically-newest `run_id=` child — no public UTL helper existed yet,
+      see item 2 below) and `BatchRerunHandler` to `cli/service_entry.py`, registered as `"batch-rerun"`.
+      `tests/unit/cli/handlers/test_batch_rerun_cli.py` covers the resolver (3 tests) and an end-to-end handler-wiring test
+      that injects a fake storage client + deterministic replay through the real `rerun_from_manifest()` and asserts a
+      populated `recon` verdict (`deterministic=True`, `fills_reproduced=4`). Full `quality-gates.sh` green, no new
+      baseline violations.
 - [ ] [BACKEND] P2. **Add a public "resolve the newest run for a client" helper.** Paper run ids carry a uuid4 suffix, so
       the batch stage cannot derive yesterday's root — it must list `client_runs_prefix(client_id)` and pick the newest
       `run_id=` child (ids are timestamp-prefixed, so lexicographic order is chronological within the
@@ -172,5 +179,10 @@ changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op
   `_gen_run_id()` uuid4 suffix, and both live Cloud Run execution logs cited above. Corrected the misleading Stage-B
   comment in `paper_week_determinism_scheduler.tf` in the same session (it asserted the CLI op exists). No code for the
   wiring itself was written — the four todos above carry it.
+- **2026-08-20** (AO worker slot-19, backend_engineer): shipped item 1 — strategy-service@21296786. Items 2-4 remain
+  open: item 2 (unified-trading-library public "resolve newest run" helper) is still needed for a shared writer/reader
+  convention even though item 1's own resolver already unblocks the CLI op standalone; item 3 is operator-gated
+  (`BLK-op-blrs_daily_determinism_ledger_root_wiring_scope-29413eccdd3a`); item 4 (terraform Stage A2 job + cron)
+  depends on item 3's decision.
 - **context-scout 2026-08-20**: reviewed context_scope (already populated at authoring time with 4 real source
   paths across the 3 involved repos) — no changes needed, left at 4 entries.

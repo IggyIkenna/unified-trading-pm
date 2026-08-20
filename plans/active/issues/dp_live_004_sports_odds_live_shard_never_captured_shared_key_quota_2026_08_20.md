@@ -47,6 +47,7 @@ related:
     /codex/05-infrastructure/data-pipeline-alerts.md,
   ]
 created: 2026-08-20
+context_scope: [/codex/05-infrastructure/data-pipeline-alerts.md, /codex/02-data/honest-absence-downstream-handling.md, /codex/02-data/availability-manifest-and-data-status.md]
 parent_epic: observability_master
 assigned_vm: vm-cross-cutting
 priority: P1
