@@ -324,7 +324,17 @@ todos only to confirm they are data-movement, then leave it.
 ### W6 — wizard, config and scaffolding
 
 - [ ] [BACKEND] P0. Make strategy-service fully configurable from the wizard — rank-buffer hysteresis, no-trade
-      band, beta-hedge overlay and vol-target-at-book-layer are all unimplemented. Evidence:
+      band, beta-hedge overlay and vol-target-at-book-layer are all unimplemented. **2 of 4 shipped 2026-08-20
+      — `strategy-service@ed9ff26875`**: rank-buffer hysteresis (`rank_buffer_k` on
+      `BaseRankAllocator`, wired to `CarryFundingDispersionRankAllocator`) and the no-trade band
+      (`GuardRailConfig.no_trade_band`), both real and tested but not yet reachable from a live caller — the
+      `ClientAllocatorInstance`/`PortfolioAllocatorService` layer that would construct them with a real default
+      has no confirmed production construction site anywhere in the repo (a separate, larger gap). Beta-hedge and
+      vol-target-at-book-layer remain genuinely unbuilt — seam investigation done (`LegPortfolioState` doesn't
+      exist, `target_net_delta` is per-leg not book-level, `portfolio_risk_gate.py` is vol-options-scoped, not a
+      general fit): no existing seam to hook onto, needs a new cross-archetype aggregation layer designed first,
+      correctly not attempted given financial-correctness stakes. Also **not** "from the wizard" yet for either
+      shipped item — no UI/schema exposure, just the underlying mechanism. Evidence:
       `/plans/active/strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md`.
 - [ ] [BACKEND] P0. Enforce that strategy-service reads ONLY processed data — epic definition-of-done item.
 - [ ] [BACKEND] P1. Land the service config ownership and instruction contract remainder — typed `client_configs`
@@ -435,25 +445,62 @@ todos only to confirm they are data-movement, then leave it.
 
 - [ ] [BACKEND] P0. Fix the 5 of 7 on-chain feature groups writing byte-identical zero-feature-column parquets
       stamped `captured=True`, plus the 6 false-`captured` rows with zero GCS objects, plus the 4-repo
-      `feature_group` vocabulary split. Evidence:
+      `feature_group` vocabulary split. **Re-verified 2026-08-20 — narrower than titled, correctly NOT
+      agent-attempted**: the false-`captured`-rows + consolidator portions already shipped 2026-07-30
+      (`features-service@d8a643a0`). The one remaining piece (build 5 new protocol-specific MTDS chain-field
+      collectors — ltv/liquidation_threshold/reward_rate/flash_loan_liquidity/health-factor per on-chain protocol)
+      has been independently re-confirmed FIVE separate times (na-eligibility-audits 07-30, 08-03, 08-06, 08-16,
+      round11-sweep 08-09) as needing a human sizing/scoping decision — which on-chain data source per
+      protocol/field — not a bare mechanical build. Not attempted here for the same reason; a sixth re-derivation
+      of this conclusion would waste the exact effort those audits exist to prevent. The vocabulary-split half
+      also explicitly needs an operator ruling per the doc's own summary. Evidence:
       `/plans/active/issues/features_onchain_featureless_shards_and_vocabulary_split_2026_07_20.md`.
 - [ ] [BACKEND] P0. Remove the banned-vendor dependency — `corporate_actions` is sourced exclusively from
       `polygon_corporate_actions_adapter.py` and Massive-fka-Polygon.io is a FLEET-WIDE banned vendor. Build the
-      replacement adapter; tag it credential-gated if the new source needs a key. Evidence:
+      replacement adapter; tag it credential-gated if the new source needs a key. **Re-verified 2026-08-20,
+      correctly NOT agent-attempted**: this is a data-quality/vendor decision, not a credentials gap — the issue
+      doc's own todo 2 is `[OPERATOR] P1`: confirm whether yfinance's `Ticker.dividends`/`Ticker.splits` (same
+      library already live in this file for `earnings_results`, a real, well-reasoned candidate) has acceptable
+      coverage/reliability for the tickers this needs, before building a replacement on an unvetted source. Not
+      unilaterally decided here. **Lowers urgency**: blast-radius confirmation (issue doc, 2026-08-19) found ZERO
+      live production dispatch today — no scheduler, no Cloud Run job, no orchestrator dispatch calls this
+      Polygon.io calculator at all; it is built-but-never-run, not an active compliance exposure. Evidence:
       `/plans/active/issues/features_service_corporate_actions_polygon_io_banned_vendor_2026_08_18.md`.
 - [ ] [BACKEND] P0. Build opportunity-detection feature producers for the 3 code-shipped MEV engines (BACKRUN,
       JIT_LIQUIDITY, LIQUIDATION_BUNDLE). `features.get(key, 0.0)` silently defaults, so these engines are
-      registered and "shipped" but can never fire. Evidence:
+      registered and "shipped" but can never fire. **Re-verified 2026-08-20, correctly NOT agent-attempted**: the
+      issue doc's own author already scoped the 3 remaining `[FEATURES]` calculator-build todos as needing "a
+      design decision on exact derivation, not a blind guess" (BACKRUN's spread/swap-size derivation from
+      `dex_pool_swap_flow`+`cross_venue_spreads`, JIT_LIQUIDITY's pending-swap-size producer, LIQUIDATION_BUNDLE's
+      two upstream gaps including an unbuilt live margin-health scanner). Inventing plausible-looking MEV
+      opportunity-detection formulas for live trading strategies would be fabrication, not a fix — matches this
+      session's beta-hedge/vol-target caution. 2 of the doc's todos were already extracted to a dispatched satellite
+      batch (archived 2026-08-20). Evidence:
       `/plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md`.
 - [ ] [BACKEND] P1. Give the calendar domain manifest visibility — `economic_events` / `forexfactory` /
       `corporate_actions` / `earnings_results` never call `record_captured`. Evidence:
       `/plans/active/issues/features_service_calendar_domain_manifest_tracking_gap_2026_08_18.md`.
-- [ ] [BACKEND] P1. Fix the `delta_one` dependency checker resolving the wrong PREDICTION bucket token —
+- [x] ✅ [BACKEND] P1. Fix the `delta_one` dependency checker resolving the wrong PREDICTION bucket token —
       `_format_template_vars` does a naive `asset_group.lower()` with no abbreviation map, but PREDICTION's real
-      bucket uses `pred`. Evidence:
+      bucket uses `pred`. **Already resolved before this todo was written — traced 2026-08-20**: the naive
+      `_format_template_vars` lives in `unified_trading_library/core/dependency_checker.py:258` (UTL, T1's repo —
+      confirmed still naive there, unfixed and correctly not mine to touch) but features-service's
+      `DependencyChecker` subclass (`features_service/delta_one/app/core/dependency_checker.py:151-166`) overrides
+      `_resolve_gcs_path` to special-case `market-data-processing-service` — the one real upstream bucket
+      dependency this checker has — through `_resolve_mdps_bucket()`, which correctly routes
+      `asset_group_lower == "prediction"` to `kind="market-data-tick-prediction"` (the real `-pred-prd-` bucket)
+      instead of the naive UTL template. `features-service@09be801b` (cited in the issue doc's own remaining P3
+      item). **One caveat found, not blocking**: the override only fires when `not self.test_mode` — a
+      `test_mode=True` checker falls through to the base (naive) path, so PREDICTION test-mode bucket resolution
+      may still be wrong; not chased further since it's a lower-severity test-only path, not live/prod. All 3
+      remaining open items in the issue doc are VM-launch/benchmark-measurement work (relaunch a benchmark,
+      investigate an OOM), explicitly out of scope for this tranche's "no VM launches / backfills" rule. Evidence:
       `/plans/active/issues/features_delta_one_dependency_checker_prediction_bucket_token_wrong_2026_07_27.md`.
-- [ ] [BACKEND] P2. Verify and fix the MVP universe filter settlement-suffix claim ("dropped every CeFi perpetual")
-      — MEASURE it first, it was not independently verified. Evidence:
+- [x] ✅ [BACKEND] P2. Verify and fix the MVP universe filter settlement-suffix claim ("dropped every CeFi perpetual")
+      — MEASURE it first, it was not independently verified. **Already resolved before this todo was written**:
+      all 5 items in the issue doc are `[x]`, dated 2026-07-27 through 2026-08-06 (`features-service@a9429cba`
+      confirmed + fixed the residual; `deployment-service@c1e0481` shipped the tarball-freshness default flip).
+      Found 2026-08-20 already at this state, predating this plan. Evidence:
       `/plans/active/issues/features_universe_filter_settlement_suffix_and_vm_tarball_staleness_2026_07_27.md`.
 - [ ] [BACKEND] P2. Complete feature-formula versioning. SSOT: `/codex/02-data/feature-formula-versioning.md`.
 
@@ -570,8 +617,8 @@ section is now done.
 | W9/W10/W13 PnL, risk, exposure | **Re-verified, not stale — genuinely open, but re-scoped smaller.** `paper_run_attribution.py`/`paper_run_passive.py` already ARE the shared batch=paper=live path (not paper-only); `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Decide compute_handler's fate (wire a cron trigger or delete the orphaned op) and confirm compute_pnl's 3 capabilities are covered elsewhere before retiring it — smaller, more bounded than the original "build a unified path" framing suggested. |
 | W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
 | Position adapters / venue coverage | **DONE — whole section found already resolved** (all 4 sub-items: CeFi dispatch, asymmetry, hot-swap, orphan-coverage), all shipped 2026-08-14 through 17 by prior sessions, predating this plan's 2026-08-19 authorship. This plan section was written stale from birth. Residue is entirely non-agent-executable: 2 `[OPERATOR]` decisions (instrument hot-swap A/B, out-of-mandate adapter disclosure) + 1 `[AGENT]` Solana-SDK item in execution-service (T4's repo). | Nothing. If picking this back up, it's an operator-decision chase (hot-swap A/B, disclosure), not new engineering. |
-| features-service | Untouched | 5 of 7 on-chain feature groups write zero-feature parquets stamped `captured=True`; `corporate_actions` still on the banned Massive/Polygon.io vendor. |
-| ml-service | Untouched | MEV opportunity-detection producers — 3 registered engines can never fire because `features.get(key, 0.0)` silently defaults. |
+| features-service | **Swept 2026-08-20 — every item already correctly gated, not "untouched-and-actionable" as this row implied.** Onchain featureless shards: mechanical part shipped 2026-07-30, remaining scope independently reconfirmed 5x as needing human data-source scoping (not a build task). `corporate_actions`: zero live blast radius (built-but-never-run) + genuinely `[OPERATOR]`-gated vendor decision. Calendar manifest gap: gated on a `[REVIEW]` shard-atom design decision. `delta_one` PREDICTION-bucket bug: already fixed (`features-service@09be801b`); one test-mode-only caveat noted. Settlement-suffix (P2): already fully resolved. | Nothing agent-executable remains in this section. If revisited: chase the operator decisions (corporate_actions re-sourcing, calendar shard-atom question), or scope the on-chain MTDS collectors as their own dedicated human-sized work. |
+| ml-service | Confirmed 2026-08-20: the MEV opportunity-detection gap is strategy-service + features-service scoped (3 calculators reading `features.get(key, 0.0)`), not a separate ml-service item — no distinct ml-service-only gap found in this tranche's allocated corpus. Correctly not agent-attempted: the issue doc's own author scoped all 3 calculator-builds as needing "a design decision on exact derivation, not a blind guess." | Nothing agent-executable found. ml-service itself was not otherwise touched this session — its allocated corpus may still have unswept non-spine docs (see the Close-out section's non-spine-tail todo). |
 | Both strategy-service artefacts | Not re-derived | Re-derive markers only AFTER the W-items close; never hand-edit the HTML. |
 
 **Cross-tranche**: T5 still owes 27 `clients.yaml`/waiver files (`PENDING_CROSS_REPO_WAIVER` in strategy-service is
@@ -676,3 +723,53 @@ and its fix can already be shipped, and only the plan text is what's stale. All 
 to `[x]` with the discovery evidence, not silently deleted) rather than left to mislead the next session into
 redoing already-done work. Zero net-new code was needed for this entire plan section; what shipped this session
 (2 commits) is the checkbox-currency-correction, plus the one genuine ranker decision above.
+
+## Progress Log — 2026-08-20 session 4
+
+**Real code shipped**: W6 overlays — `strategy-service@ed9ff26875` (rank-buffer hysteresis + no-trade band, both
+new tested guard-rail mechanisms; `funding_dispersion.py`'s misleading overlay-status docstring corrected). Full
+detail in the sibling plan (`strategy_service_expansion_overlays_config_and_wizard_2026_08_12.md`), summarized in
+this plan's own W6 todo.
+
+**Second major stale-plan sweep, this time the features-service/ml-service section.** Same method as session 3's
+position-adapter sweep (read the cited issue doc's own todos/Progress-Log before treating a plan headline as
+current), applied to all 6 items in "features-service and ml-service". Result: **every single item was either
+already resolved or correctly gated on a human decision that predates this plan** — none were genuinely
+agent-actionable "just go build it" work:
+
+- Delta_one PREDICTION-bucket bug: already fixed (`features-service@09be801b`) via a features-service-side
+  override (`_resolve_mdps_bucket`) that special-cases the one real upstream dependency — the underlying naive
+  method it works around (`_format_template_vars`) lives in `unified_trading_library` (T1's repo), confirmed still
+  naive there but correctly not touched (cross-repo, and already effectively mitigated at the real call site).
+- Universe-filter settlement-suffix claim (P2): fully resolved, 5/5 todos done, dated back to 2026-08-06.
+- Onchain featureless shards: mechanical piece shipped 2026-07-30; the remaining scope (building 5 new
+  protocol-specific MTDS chain-field collectors) has been independently re-confirmed FIVE times by different
+  na-eligibility-audit passes as needing a human data-source-per-protocol scoping decision, not a mechanical build.
+  A sixth re-derivation of that same conclusion would have wasted exactly the effort those audits exist to save.
+- MEV opportunity-detection producers (BACKRUN/JIT_LIQUIDITY/LIQUIDATION_BUNDLE): the issue doc's own author
+  already scoped all 3 calculator-builds as needing "a design decision on exact derivation, not a blind guess" —
+  inventing plausible MEV-opportunity formulas for a live strategy would be fabrication. Also confirmed this is
+  NOT a distinct ml-service item as this plan's deferred table previously implied — it's strategy-service +
+  features-service scoped, no separate ml-service gap found.
+- Calendar domain manifest-tracking gap: gated on an unresolved `[REVIEW]` design question (do calendar
+  data_types even belong in the Layer-1 EXPECTED universe) that must land before the mechanical `record_captured`
+  wiring makes sense.
+- `corporate_actions` banned-vendor removal: confirmed ZERO live production blast radius (built-but-never-run, no
+  scheduler/Cloud-Run-job/orchestrator dispatch anywhere) and genuinely `[OPERATOR]`-gated on a vendor
+  data-quality decision (yfinance vs. a paid contract), not a credentials gap — did not unilaterally pick a
+  vendor for live financial data without that sign-off.
+
+**The pattern holds across two independent sweeps now (session 3: position adapters/venue coverage; session 4:
+features-service/ml-service)**: this plan's per-item descriptions were written from issue-doc HEADLINES without
+reading those docs' own todo-completion state or their own author's design-decision gating. All corrections are
+now in place with evidence rather than left to mislead. **Practical implication for whoever resumes this plan**:
+before starting ANY remaining unchecked todo in this file, grep the cited issue doc's own `## Todos` and
+`## Progress Log` sections first — the plan text alone is not reliable evidence of current state.
+
+**What's left with genuinely new agent-executable scope in this plan, after two full sweeps**: none found this
+session. Everything remaining is either `[OPERATOR]`-gated (corporate_actions re-sourcing, calendar shard-atom
+question, `CARRY_FUNDING_DISPERSION_RANK`-class rulings), needs real design work before any code can be written
+(beta-hedge/vol-target book-layer overlays, MEV calculators, onchain MTDS collectors), or depends on another
+tranche (T1's `PATH_REGISTRY` `mode=` fix for W16/W18's canonical-paths half). The Close-out section's non-spine-tail
+sweep and the two-artefact re-derivation remain legitimate next steps, but are sweep/verification work, not new
+builds.

@@ -3,6 +3,7 @@ doc_type: issue
 title: "Manifest hygiene RED — 1 AG(s) with findings (2026_08_16)"
 created: 2026-08-16
 author: "manifest_hygiene_daily.py (data-pipeline daily audit)"
+context_scope: [/codex/02-data/availability-manifest-and-data-status.md, /codex/05-infrastructure/data-pipeline-alerts.md, /codex/02-data/four-surface-reconciliation-procedure.md]
 parent_epic: observability_master
 assigned_vm: planning
 source:

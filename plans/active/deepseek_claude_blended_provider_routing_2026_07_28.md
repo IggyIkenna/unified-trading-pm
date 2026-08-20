@@ -997,3 +997,4 @@ plan's `select_account_for_spawn()`/stratified-rotation mechanism as their integ
   `claude` CLI task through GLM (isolated pilot, not production): 5 turns, real file edit completed, CLI-reported
   `total_cost_usd: $0.0491` (a computed equivalent, not a real Zhipu bill — Lite is subscription/credit-based, not
   $-metered).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).

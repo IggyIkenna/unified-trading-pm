@@ -36,6 +36,8 @@ context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
     /codex/06-coding-standards/dockerfile-standards.md,
+    fund-administration-service/Dockerfile,
+    /plans/archive/issues/cloud_build_unified_api_contracts_publish_ordering_race_2026_07_29.md,
   ]
 created: 2026-08-20
 author: claude-agent
@@ -115,3 +117,4 @@ ordering) vs. accept-and-re-alert — is a fleet-level judgment call, tracked as
   GAR now serves uac `0.149.0`; re-run of `fund-administration-service-build` on `main` (build `080f7c69`) SUCCESS;
   fresh `:latest` digest `sha256:039c738098...`. No code change shipped. Recurrence of the 07-29 race class with a
   gap exceeding the retry budget for the 2nd time.
+- **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries).

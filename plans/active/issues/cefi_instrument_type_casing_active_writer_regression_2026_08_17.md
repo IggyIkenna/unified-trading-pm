@@ -310,12 +310,29 @@ is genuinely VM-scale work, not shared-host-scale:
   for it via safe (non-`gsutil`) tooling in the time available. The fresh VM was confirmed RUNNING at launch
   time. **As of this checkpoint the VM is GONE** (`gcloud compute instances describe` returns "resource ...
   was not found") — consistent with either a completed dry-run self-deleting normally, or a failure that also
-  self-deleted. **NOT YET DETERMINED WHICH.** Its disposition (the `Grand total instrument_type values would be
-  normalized: N` line) has not been retrieved. Needs a fresh session to locate the persisted log (the launcher
-  script pipes VM output through `vm-exec-with-gcs-tee.sh`, which per its name tees to GCS — check
-  `gs://deployment-scripts-central-element-323112/` run-log conventions via `get_storage_client().list_blobs()`,
-  never `gsutil`) before deciding whether to launch the real `--apply` run. Do NOT assume this dry-run
-  succeeded — verify its actual disposition first.
+  self-deleted. **DETERMINED, same-day follow-up**: read the persisted final log via
+  `unified_trading_library.deployment_registry.vm_run_log_final_uri(vm_name)` +
+  `get_storage_client().download_bytes(...)` (never `gsutil`) —
+  `gs://deployment-scripts-central-element-323112/log-archive/final/canonical-migration-cefi-itype-casing-apply-20260820-115340/run.log`.
+  **The dry-run FAILED — OOM-killed, not a silent success and not still-running.** Heartbeats run
+  2026-08-20T11:10:48Z through 11:28:48Z (~19 min), then: `bash: line 1: 5335 Killed
+  /home/ikennaigboaka/venv/bin/python -u scripts/normalize_instrument_type_casing.py --all-buckets --workers 16
+  --dry-run` → `[vm-exec] command exited rc=137` → deployment archived
+  `status=failed, exit_code=137` (`gs://deployment-scripts-central-element-323112/deployments/archive/2026-08-20/e8335159-5f5f-4539-97c3-1ce7f53d0177.json`).
+  **No `Grand total instrument_type values would be normalized: N` line exists — the script never reached that
+  point.** The dedicated `e2-standard-16` VM (the machine type already bumped once, 2026-08-17, per this
+  script's own launcher comment) still ran out of memory processing BOTH cefi buckets at `--workers 16`. This is
+  a resourcing problem, not a data-safety problem — nothing was written (this was `--dry-run`), and it says
+  nothing about whether the underlying casing fix or purge is safe, only that the current worker/memory ratio
+  is too aggressive for this corpus scale. **Next step**: relaunch with materially fewer workers (e.g.
+  `--workers 4`) and/or a larger machine type (this instance already got one size bump and still OOM'd — a
+  second bump, or reducing per-worker memory footprint, or processing the two cefi buckets sequentially instead
+  of `--all-buckets` in one process, are the candidate fixes; diagnose before just doubling machine size again).
+  A near-identical OOM (SIGKILL, exit 137) also hit an UNRELATED laptop-side operation this same session (the
+  AAVEV3 purge script's manifest read, see `defi_aavev3_bare_alias_enumerator_bug_2026_08_08.md`) — noted as a
+  pattern, NOT asserted as a shared root cause without further evidence; the two operations use different code
+  paths (this uses per-VM-shard listing + threaded rewrite, that uses a single `pd.read_parquet` of the full
+  consolidated index) and different hosts (VM vs laptop).
 
 
 - **context-scout 2026-08-17**: populated context_scope (6 entries).

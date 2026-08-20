@@ -40,7 +40,6 @@ related:
     /plans/audit/results/planning_corpus_assumption_delta_audit_2026_08_18_recheck.md,
     /plans/active/client_artefact_remediation_2026_08_18.md,
     /plans/active/client_artefact_remediation_nickai_2026_08_18.md,
-    /plans/active/client_artefact_remediation_elysium_2026_08_18.md,
   ]
 created: 2026-08-19
 source: >-

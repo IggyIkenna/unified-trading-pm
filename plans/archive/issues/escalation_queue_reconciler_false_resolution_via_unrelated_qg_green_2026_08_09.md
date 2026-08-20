@@ -22,7 +22,7 @@ summary: >-
   required alongside that fix, not a substitute for it. **Corrected 2026-08-16 (/plan-reconcile)**: DP-FETCH-009 was
   investigated and re-verified stale/resolved (see body below); DP-VM-003 remains genuinely untouched by that
   re-verification and stays open.
-status: open
+status: resolved
 nature: issue
 asset_group:
   [ao] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is 100% an
@@ -46,10 +46,9 @@ drift_direction: advance-code
 depends_on: []
 locked_by:
 resolved_by:
-last_updated: 2026-08-09
+last_updated: 2026-08-20
 locked_since:
 context_scope: [agent-orchestrator/server/escalation.py, /plans/archive/2026_08/issues/escalation_queue_sit_failure_no_pr_closed_resolution_2026_08_10.md]
-archive_exempt: true # 2026-08-10 — all 4 todos resolved, but doc serves as operator-visible historical-blast-radius record per its own stated scope (§Disposition item 1)
 source: >-
   escalation_queue_reconciler's routine 3-hourly check (slot 11, task agt-21fadd) was triaging an unrelated wall when it
   found this bug in the reconciliation mechanism itself, filed BLK-2a812311 asking whether to (A) apply a scoped fix now
@@ -191,3 +190,19 @@ ratios suggest this has been the STEADY-STATE behavior, not a recent regression)
 
 - **na-eligibility-audit 2026-08-17 (ao tranche)** [body-hash:dc0bb2e0143e9767]: KEEP-NA, valid — 0 open todos, all 4 resolved+verified; frontmatter carries `archive_exempt: true` with a stated rationale (operator-visible historical-blast-radius record) — a deliberate keep-open-as-record, not an oversight, so not archived.
 - **na-eligibility-audit 2026-08-17 (ao tranche, re-verified)** [body-hash:d890e6336d5fe5bb]: KEEP-NA, valid — re-affirms the marker above, no change in substance.
+- **2026-08-20 (archival)**: operator asked to flip this to resolved and archive it. Independently re-verified the
+  fix genuinely matches this doc's ask before touching anything: `agent-orchestrator/server/escalation.py:296`
+  defines `_QG_SIGNAL_WALLS: frozenset[str] = frozenset({"ldr_qg_failure", "main_ci_red"})`, and line 2545 gates the
+  fallthrough with `if wall_type not in _QG_SIGNAL_WALLS: return None`, matching the exact scoped-allowlist fix this
+  doc's Disposition section describes. `git blame` on both lines attributes them to commit
+  `884a9bfe1c00ffcf395fd96c6191fefa405811e3` ("fix(escalation): stop false-resolving non-QG walls..."), authored
+  2026-08-09 11:16:42+0100, matching this doc's own citation exactly. Confirmed `884a9bfe1` is an ancestor of the
+  current `live-defi-rollout` HEAD (`git merge-base --is-ancestor` — real, shipped, not stale/uncommitted), and both
+  cited regression tests (`test_poll_wall_resolution_non_qg_signal_walls_never_auto_resolve`,
+  `test_poll_wall_resolution_main_ci_red_unaffected_still_resolves_via_qg_green`) exist in `tests/test_escalation.py`.
+  Migrated the durable fact to codex per the archival ritual's step 5 — new section "`_QG_SIGNAL_WALLS` scoping — the
+  false-resolution fix (2026-08-09)" in `/codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md` — and
+  repointed the one active-corpus `related:` frontmatter referrer
+  (`/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`) at that codex doc
+  instead of this now-archived path. Flipped `status: resolved`, dropped the now-moot `archive_exempt` marker, `git
+  mv`d to `plans/archive/issues/`.

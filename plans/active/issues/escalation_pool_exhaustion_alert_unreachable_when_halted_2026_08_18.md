@@ -31,7 +31,7 @@ stage: [meta]
 repos: [agent-orchestrator]
 scope: [engineer]
 tags: [escalation, escalation-watchdog, pool-exhaustion, observability, alerting-gap, ci-cd]
-related: [/plans/archive/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md, /plans/active/issues/escalation_queue_reconciler_false_resolution_via_unrelated_qg_green_2026_08_09.md]
+related: [/plans/archive/issues/escalation_watchdog_retune_and_reconcile_2026_08_07.md, /codex/04-architecture/agent-orchestrator-ci-escalation-wall-types.md]
 created: 2026-08-18
 author: escalation_queue_reconciler (slot 4, dispatch agt-a4ff24)
 parent_epic: agent_operating_framework_master

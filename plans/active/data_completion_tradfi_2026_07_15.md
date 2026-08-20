@@ -1019,3 +1019,4 @@ ohlcv_15m/24h (MDPS-DERIVED not MTDS-fetched), ICE (off-allowlist). Two real man
   `tradfi_satellite_ao_dispatch_batch15_2026_08_17.md` Todo 1 (checkbox above). Items 1/3-14 re-read, unchanged
   standing verdicts (operator/credential/design/dependency-gated). Doc stays `assigned_vm: NA`.
 - **context-scout 2026-08-17**: re-verified context_scope, no change needed (6 entries).
+- **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries).
