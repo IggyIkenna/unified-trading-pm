@@ -28,6 +28,7 @@ related:
   [
     /plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md,
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/cross_cutting_consolidated_closeout_2026_07_25.md,
   ]
 context_scope:
   [
