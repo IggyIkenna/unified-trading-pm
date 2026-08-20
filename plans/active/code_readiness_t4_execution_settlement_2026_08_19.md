@@ -202,12 +202,14 @@ todos only to confirm they are data-movement, then leave it.
       divergence went unnoticed from 2026-05-12 to 2026-07-31. T1 already pins the ENUM against the codex table
       (`unified-api-contracts/tests/unit/test_order_state_machine.py`, 9 tests); what is missing is the
       SERVICE-side assertion that execution-service's own emitted transitions obey `ORDER_STATUS_TRANSITIONS`.
-- [ ] [FROM-T1] P2. Decide whether `PARTIALLY_FILLED -> CANCELLED / EXPIRED` is a legal transition. T1 transcribed
-      `ORDER_STATUS_TRANSITIONS` edge-for-edge from the codex diagram, which draws exactly ONE edge out of
-      `PARTIALLY_FILLED` (full fill) — deliberately NOT widened on intuition, because a too-permissive machine
-      silently accepts an illegal transition whereas a too-strict one fails loudly. Real venues do cancel
-      partially-filled orders, so this likely needs the codex diagram amended first (the doc is the SSOT; the UAC
-      map is its projection). You own the venue behaviour evidence, so this is your call to make and T1's to land.
+- [x] ✅ [FROM-T1] P2. **Decided: `PARTIALLY_FILLED -> CANCELLED / EXPIRED` IS a legal transition** —
+      `unified-trading-pm@c74d869b36` (codex `order-state-machine.md` amended: diagram + events table widened,
+      ruling + evidence recorded 2026-08-20). Real CLOB venues let an operator cancel the still-working remainder
+      of a partially-filled order (final status reports cancelled with nonzero filled quantity, never forced to
+      `FILLED` first); corroborated in execution-service's own code, which already treats `PARTIALLY_FILLED` as an
+      open/cancellable state (`trade_execution/oms/tracker.py`). The codex doc — the SSOT — is now amended; the
+      code (`ORDER_STATUS_TRANSITIONS` in UAC) is NOT yet widened to match, filed as a `[FROM-T4]` inbound request
+      on T1's plan since T4 does not edit UAC directly.
 
 ## Todos
 
@@ -249,8 +251,17 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W11 — order lifecycle and execution state
 
-- [ ] [BACKEND] P0. Fix CeFi live venue-string dispatch in the order-adapter factory, broken for 9 of 12 major
-      venues — same legacy bare-token table defect as strategy-service's. Coordinate the canonical form with T3.
+- [x] ✅ [BACKEND] P0. **Fix CeFi live venue-string dispatch — ALREADY SHIPPED; this todo was stale at
+      authoring.** MEASURED 2026-08-20 in code, not from the issue's checkboxes:
+      `execution_service/trade_execution/factory.py` imports and delegates to UAC's shared
+      `split_venue_base_and_suffix` helper (`:14`, `_split_venue_suffix` at `:166` calling it at `:179`,
+      `_resolve_venue_str` at `:193`) — the fix landed `execution-service@fcc6bbcc2c` (P0) +
+      `execution-service@cba9ff511d` (P1 shared-helper migration) on 2026-08-17, before this session started.
+      Strategy-service's mirror-image position-factory defect was independently fixed the same day
+      (`strategy-service@9027c2f5a9`). Full detail, including the deeper COINBASE-FUTURES/CDE misroute risk that
+      was closed alongside the ValueError fix: `/plans/active/issues/cefi_live_venue_string_dispatch_broken_2026_08_16.md`
+      (both P0s + the P1 + the P2 non-CEFI audit are `[x]`; two low-priority P3s remain open there, dormant/
+      non-blocking, not this tranche's to chase).
 - [x] ✅ [BACKEND] P0. Add CANCELLED and AMENDED to `OrderTracker` — **ALREADY SHIPPED; this plan's todo was
       stale at authoring.** MEASURED 2026-08-20 in code, not from the issue's checkboxes:
       `execution_service/orders/tracker.py:51` `mark_cancelled()` sets status `"CANCELLED"`, `:61`

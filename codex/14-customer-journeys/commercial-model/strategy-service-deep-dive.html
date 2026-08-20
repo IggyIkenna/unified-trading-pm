@@ -927,6 +927,11 @@
       <h2>What this repository is, and what it isn't</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="plans/epics/strategy_master.md -- strategy-service's boundary -- features/MDPS in, typed instructions out, no venue connection"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       This service decides. It consumes features and market state, evaluates archetypes on each tick, sizes and hedges,
@@ -968,14 +973,22 @@
         <li><b>position/</b><span>position monitor, treasury monitor, reconciliation, NAV, margin health</span></li>
         <li><b>risk/</b><span>pre-trade risk gates and limit evaluation</span></li>
         <li><b>pnl/</b><span>attribution — decision vs execution vs funding</span></li>
-        <li><b>circuit_breakers/</b><span>automatic protective actions (see <a href="#s4">§04</a>)</span></li>
+        <li>
+          <b>circuit_breakers/</b><span>automatic protective actions (see <a href="#s4">§04</a>)</span>
+        </li>
         <li><b>portfolio_allocator/</b><span>capital allocation across instances</span></li>
         <li><b>compliance/</b><span>attestation and evidence trail</span></li>
         <li><b>allocation_sizer.py</b><span>position sizing against capital budget</span></li>
-        <li><b>transfer_coordinator.py</b><span>intra-client rebalance netting (see <a href="#s5">§05</a>)</span></li>
-        <li><b>archetype_kill_switch_subscriber.py</b><span>halt semantics (see <a href="#s4">§04</a>)</span></li>
+        <li>
+          <b>transfer_coordinator.py</b><span>intra-client rebalance netting (see <a href="#s5">§05</a>)</span>
+        </li>
+        <li>
+          <b>archetype_kill_switch_subscriber.py</b><span>halt semantics (see <a href="#s4">§04</a>)</span>
+        </li>
         <li><b>config_reloaders.py</b><span>typed hot-reload of configuration</span></li>
-        <li><b>api/</b><span>read + control surfaces (see <a href="#s6">§06</a>)</span></li>
+        <li>
+          <b>api/</b><span>read + control surfaces (see <a href="#s6">§06</a>)</span>
+        </li>
       </ul>
       <p>
         <strong>The governing rule is the tier model:</strong> imports only ever point downward, and no service imports
@@ -993,65 +1006,211 @@
           <text
             x="20"
             y="22"
-            style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px; font-weight: 700; letter-spacing: 0.13em"
+            style="
+              fill: var(--ink-3);
+              font-family: var(--sans);
+              font-size: 10px;
+              font-weight: 700;
+              letter-spacing: 0.13em;
+            "
           >
             IMPORT DIRECTION — TOP TO BOTTOM ONLY, NEVER SIDEWAYS
           </text>
 
-          <rect x="20" y="40" width="204" height="58" rx="4" style="fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5" />
-          <text x="32" y="64" style="fill: var(--ink); font-family: var(--sans); font-size: 11.5px; font-weight: 600">instruments-service</text>
-          <text x="32" y="80" style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px">reference data</text>
+          <rect
+            x="20"
+            y="40"
+            width="204"
+            height="58"
+            rx="4"
+            style="fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5"
+          />
+          <text x="32" y="64" style="fill: var(--ink); font-family: var(--sans); font-size: 11.5px; font-weight: 600">
+            instruments-service
+          </text>
+          <text x="32" y="80" style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px">
+            reference data
+          </text>
 
-          <rect x="244" y="40" width="204" height="58" rx="4" style="fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5" />
-          <text x="256" y="64" style="fill: var(--ink); font-family: var(--sans); font-size: 11.5px; font-weight: 600">market-tick-data-service</text>
+          <rect
+            x="244"
+            y="40"
+            width="204"
+            height="58"
+            rx="4"
+            style="fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5"
+          />
+          <text x="256" y="64" style="fill: var(--ink); font-family: var(--sans); font-size: 11.5px; font-weight: 600">
+            market-tick-data-service
+          </text>
           <text x="256" y="80" style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px">market data</text>
 
-          <rect x="468" y="40" width="204" height="58" rx="4" style="fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5" />
-          <text x="480" y="64" style="fill: var(--ink); font-family: var(--sans); font-size: 11.5px; font-weight: 600">execution-service</text>
-          <text x="480" y="80" style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px">orders, custody</text>
+          <rect
+            x="468"
+            y="40"
+            width="204"
+            height="58"
+            rx="4"
+            style="fill: var(--surface); stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5"
+          />
+          <text x="480" y="64" style="fill: var(--ink); font-family: var(--sans); font-size: 11.5px; font-weight: 600">
+            execution-service
+          </text>
+          <text x="480" y="80" style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px">
+            orders, custody
+          </text>
 
-          <rect x="692" y="40" width="204" height="58" rx="4" style="fill: var(--g-exec-wash); stroke: var(--g-exec); stroke-width: 2.2" />
-          <text x="704" y="62" style="fill: var(--g-exec); font-family: var(--sans); font-size: 12.5px; font-weight: 700">strategy-service</text>
-          <text x="704" y="80" style="fill: var(--ink-2); font-family: var(--sans); font-size: 10px">this repository</text>
+          <rect
+            x="692"
+            y="40"
+            width="204"
+            height="58"
+            rx="4"
+            style="fill: var(--g-exec-wash); stroke: var(--g-exec); stroke-width: 2.2"
+          />
+          <text
+            x="704"
+            y="62"
+            style="fill: var(--g-exec); font-family: var(--sans); font-size: 12.5px; font-weight: 700"
+          >
+            strategy-service
+          </text>
+          <text x="704" y="80" style="fill: var(--ink-2); font-family: var(--sans); font-size: 10px">
+            this repository
+          </text>
 
-          <rect x="916" y="40" width="224" height="58" rx="4" style="fill: none; stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5; stroke-dasharray: 4 3" />
-          <text x="928" y="64" style="fill: var(--ink-3); font-family: var(--sans); font-size: 11.5px; font-weight: 600">…and every other</text>
-          <text x="928" y="80" style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px">T4 service, same rule</text>
+          <rect
+            x="916"
+            y="40"
+            width="224"
+            height="58"
+            rx="4"
+            style="fill: none; stroke: var(--ink-3); stroke-width: 1.2; stroke-opacity: 0.5; stroke-dasharray: 4 3"
+          />
+          <text
+            x="928"
+            y="64"
+            style="fill: var(--ink-3); font-family: var(--sans); font-size: 11.5px; font-weight: 600"
+          >
+            …and every other
+          </text>
+          <text x="928" y="80" style="fill: var(--ink-3); font-family: var(--sans); font-size: 10px">
+            T4 service, same rule
+          </text>
 
-          <path d="M20 116 L1140 116" style="fill: none; stroke: var(--crit); stroke-width: 1; stroke-opacity: 0.45; stroke-dasharray: 2 4" />
-          <text x="1140" y="111" text-anchor="end" style="fill: var(--crit); font-family: var(--mono); font-size: 9.5px; font-weight: 600">✕ no service imports another service — ever</text>
+          <path
+            d="M20 116 L1140 116"
+            style="fill: none; stroke: var(--crit); stroke-width: 1; stroke-opacity: 0.45; stroke-dasharray: 2 4"
+          />
+          <text
+            x="1140"
+            y="111"
+            text-anchor="end"
+            style="fill: var(--crit); font-family: var(--mono); font-size: 9.5px; font-weight: 600"
+          >
+            ✕ no service imports another service — ever
+          </text>
 
-          <path d="M122 98 L122 258" style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3" marker-end="url(#tierArrowMuted)" />
-          <path d="M346 98 L346 258" style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3" marker-end="url(#tierArrowMuted)" />
-          <path d="M570 98 L570 258" style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3" marker-end="url(#tierArrowMuted)" />
-          <path d="M1028 98 L1028 258" style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3" marker-end="url(#tierArrowMuted)" />
+          <path
+            d="M122 98 L122 258"
+            style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3"
+            marker-end="url(#tierArrowMuted)"
+          />
+          <path
+            d="M346 98 L346 258"
+            style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3"
+            marker-end="url(#tierArrowMuted)"
+          />
+          <path
+            d="M570 98 L570 258"
+            style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3"
+            marker-end="url(#tierArrowMuted)"
+          />
+          <path
+            d="M1028 98 L1028 258"
+            style="fill: none; stroke: var(--ink-3); stroke-width: 1; stroke-opacity: 0.35; stroke-dasharray: 3 3"
+            marker-end="url(#tierArrowMuted)"
+          />
 
-          <path d="M760 98 C 760 170, 500 190, 420 258" style="fill: none; stroke: var(--g-exec); stroke-width: 1.6" marker-end="url(#tierArrow)" />
-          <path d="M828 98 C 828 170, 780 190, 740 258" style="fill: none; stroke: var(--g-exec); stroke-width: 1.6" marker-end="url(#tierArrow)" />
-          <text x="794" y="185" text-anchor="middle" style="fill: var(--g-exec); font-family: var(--mono); font-size: 10px; font-weight: 600">imports — only these two</text>
+          <path
+            d="M760 98 C 760 170, 500 190, 420 258"
+            style="fill: none; stroke: var(--g-exec); stroke-width: 1.6"
+            marker-end="url(#tierArrow)"
+          />
+          <path
+            d="M828 98 C 828 170, 780 190, 740 258"
+            style="fill: none; stroke: var(--g-exec); stroke-width: 1.6"
+            marker-end="url(#tierArrow)"
+          />
+          <text
+            x="794"
+            y="185"
+            text-anchor="middle"
+            style="fill: var(--g-exec); font-family: var(--mono); font-size: 10px; font-weight: 600"
+          >
+            imports — only these two
+          </text>
 
-          <rect x="280" y="260" width="280" height="62" rx="4" style="fill: var(--g-data-wash); stroke: var(--g-data); stroke-width: 1.8" />
-          <text x="296" y="284" style="fill: var(--ink); font-family: var(--sans); font-size: 12.5px; font-weight: 700">unified-trading-library</text>
-          <text x="296" y="300" style="fill: var(--ink-3); font-family: var(--mono); font-size: 10px">UTL — events, streaming, shared code</text>
+          <rect
+            x="280"
+            y="260"
+            width="280"
+            height="62"
+            rx="4"
+            style="fill: var(--g-data-wash); stroke: var(--g-data); stroke-width: 1.8"
+          />
+          <text x="296" y="284" style="fill: var(--ink); font-family: var(--sans); font-size: 12.5px; font-weight: 700">
+            unified-trading-library
+          </text>
+          <text x="296" y="300" style="fill: var(--ink-3); font-family: var(--mono); font-size: 10px">
+            UTL — events, streaming, shared code
+          </text>
 
-          <rect x="600" y="260" width="280" height="62" rx="4" style="fill: var(--g-data-wash); stroke: var(--g-data); stroke-width: 1.8" />
-          <text x="616" y="284" style="fill: var(--ink); font-family: var(--sans); font-size: 12.5px; font-weight: 700">unified-api-contracts</text>
-          <text x="616" y="300" style="fill: var(--ink-3); font-family: var(--mono); font-size: 10px">UAC — schemas, types, registries</text>
+          <rect
+            x="600"
+            y="260"
+            width="280"
+            height="62"
+            rx="4"
+            style="fill: var(--g-data-wash); stroke: var(--g-data); stroke-width: 1.8"
+          />
+          <text x="616" y="284" style="fill: var(--ink); font-family: var(--sans); font-size: 12.5px; font-weight: 700">
+            unified-api-contracts
+          </text>
+          <text x="616" y="300" style="fill: var(--ink-3); font-family: var(--mono); font-size: 10px">
+            UAC — schemas, types, registries
+          </text>
 
           <defs>
-            <marker id="tierArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <marker
+              id="tierArrow"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="7"
+              markerHeight="7"
+              orient="auto-start-reverse"
+            >
               <path d="M 0 0 L 10 5 L 0 10 z" style="fill: var(--g-exec)" />
             </marker>
-            <marker id="tierArrowMuted" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+            <marker
+              id="tierArrowMuted"
+              viewBox="0 0 10 10"
+              refX="9"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
               <path d="M 0 0 L 10 5 L 0 10 z" style="fill: var(--ink-3); fill-opacity: 0.5" />
             </marker>
           </defs>
         </svg>
         <figcaption>
           Every T4 service follows the identical downward-only pattern into the two shared foundations — only
-          <code>strategy-service</code>'s own two edges are drawn in full here; the muted dashed stubs under the
-          other services stand in for the same two arrows, omitted so the diagram stays readable. No arrow ever
-          runs sideways between service boxes, which is the rule the paragraph above states in words.
+          <code>strategy-service</code>'s own two edges are drawn in full here; the muted dashed stubs under the other
+          services stand in for the same two arrows, omitted so the diagram stays readable. No arrow ever runs sideways
+          between service boxes, which is the rule the paragraph above states in words.
         </figcaption>
       </figure>
 
@@ -1060,7 +1219,8 @@
         <p>
           Execution algorithms and order routing, venue adapters and connectivity, custody signing, market-data capture,
           and feature computation all live in other services. Where this repository needs one of them it holds an
-          interface, not an implementation. Those seams are the subject of <a href="#s2">§02</a> and <a href="#s5">§05</a>.
+          interface, not an implementation. Those seams are the subject of <a href="#s2">§02</a> and
+          <a href="#s5">§05</a>.
         </p>
       </div>
     </details>
@@ -1073,11 +1233,16 @@
       <h2>The strategy → execution contract</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="plans/epics/strategy_master.md -- the StrategyInstructionEnvelope / eleven instruction types this section documents"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
-      This likely is most important part because it is the boundary Strategy would integrate against. Every
-      strategy in every family emits one of eleven instruction types, all sharing a common envelope. The envelope is
-      where the interesting design sits.
+      This likely is most important part because it is the boundary Strategy would integrate against. Every strategy in
+      every family emits one of eleven instruction types, all sharing a common envelope. The envelope is where the
+      interesting design sits.
     </p>
     <div class="keypoints">
       <div>
@@ -1098,30 +1263,20 @@
 
       <h3>The envelope — every instruction carries this</h3>
       <div class="code">
-        <span class="k">class</span> <b>StrategyInstructionEnvelope</b>(BaseModel):
-            instruction_id: str
-            emitted_at_utc: datetime
-            identity: StrategyInstanceIdentity
-            urgency: Urgency = Urgency.MEDIUM
-            deadline_utc: datetime | None = None
-            execution_policy_ref: str | None = None  <i># names a policy; does not contain it</i>
-            attestations: dict[str, str] = {}  <i># compliance trail</i>
-            correlation_id: str | None = None
-            eligible_venues: list[str] = []  <i># where it MAY go</i>
-            venue_constraints: dict[str, VenueConstraints] = {}
-            venue_routing_mode: VenueRoutingMode = VenueRoutingMode.SOR_AT_EXECUTION
-            target_venue: str | None = None
-            chain: str | None = None
-            reference_price: Decimal | None = None  <i># strategy-set benchmark price execution marks fills against</i>
-            reference_price_mark_mode: ReferencePriceMarkMode = ReferencePriceMarkMode.STATIC_AT_SEND
-            received_at_utc: datetime | None = None  <i># stamped by execution-service on receipt</i>
-            sent_at_utc: datetime | None = None  <i># stamped by execution-service when the order reaches the venue</i>
+        <span class="k">class</span> <b>StrategyInstructionEnvelope</b>(BaseModel): instruction_id: str emitted_at_utc:
+        datetime identity: StrategyInstanceIdentity urgency: Urgency = Urgency.MEDIUM deadline_utc: datetime | None =
+        None execution_policy_ref: str | None = None <i># names a policy; does not contain it</i> attestations:
+        dict[str, str] = {} <i># compliance trail</i> correlation_id: str | None = None eligible_venues: list[str] = []
+        <i># where it MAY go</i> venue_constraints: dict[str, VenueConstraints] = {} venue_routing_mode:
+        VenueRoutingMode = VenueRoutingMode.SOR_AT_EXECUTION target_venue: str | None = None chain: str | None = None
+        reference_price: Decimal | None = None
+        <i># strategy-set benchmark price execution marks fills against</i> reference_price_mark_mode:
+        ReferencePriceMarkMode = ReferencePriceMarkMode.STATIC_AT_SEND received_at_utc: datetime | None = None
+        <i># stamped by execution-service on receipt</i> sent_at_utc: datetime | None = None
+        <i># stamped by execution-service when the order reaches the venue</i>
 
-        <span class="k">class</span> <b>VenueConstraints</b>(BaseModel):
-            max_notional_usd: Decimal | None = None
-            min_liquidity_usd: Decimal | None = None
-            fee_tier: str | None = None
-            max_slippage_bps: int | None = None
+        <span class="k">class</span> <b>VenueConstraints</b>(BaseModel): max_notional_usd: Decimal | None = None
+        min_liquidity_usd: Decimal | None = None fee_tier: str | None = None max_slippage_bps: int | None = None
       </div>
 
       <p>
@@ -1133,110 +1288,101 @@
         expresses method. That separation is enforced by the type, not by convention.
       </p>
       <p>
-        <code>reference_price</code> carries a different kind of meaning, and it is shipped on the envelope today —
-        it lives there rather than on any one instruction type so any instruction can carry a benchmark price, and
-        <code>reference_price_mark_mode</code> says whether execution marks fills against it as sent, or re-derives
-        it as the underlying moves. But price alone is one leg of a three-leg design, not the whole reference
-        mechanism: strategy is meant to state its per-instrument <strong>position</strong> and
-        <strong>credit</strong> at the same reference point too, so execution can approximate how to adjust on a
-        tick basis as new position/price information arrives without re-consulting slow-path strategy — that
-        triple, not price on its own, is the entire reason the fast-path/slow-path split works. Strategy sets the
-        governing boundary; execution decides the mechanics within it. Only the price leg and the mark-mode flag
-        exist in code today — the position and credit legs are designed, not built (see the callout below).
-        Execution additionally stamps <code>received_at_utc</code> and <code>sent_at_utc</code> on every instruction
-        it touches, so the strategy-side-to-order-placed latency is a field, not a log-mining exercise.
+        <code>reference_price</code> carries a different kind of meaning, and it is shipped on the envelope today — it
+        lives there rather than on any one instruction type so any instruction can carry a benchmark price, and
+        <code>reference_price_mark_mode</code> says whether execution marks fills against it as sent, or re-derives it
+        as the underlying moves. But price alone is one leg of a three-leg design, not the whole reference mechanism:
+        strategy is meant to state its per-instrument <strong>position</strong> and <strong>credit</strong> at the same
+        reference point too, so execution can approximate how to adjust on a tick basis as new position/price
+        information arrives without re-consulting slow-path strategy — that triple, not price on its own, is the entire
+        reason the fast-path/slow-path split works. Strategy sets the governing boundary; execution decides the
+        mechanics within it. Only the price leg and the mark-mode flag exist in code today — the position and credit
+        legs are designed, not built (see the callout below). Execution additionally stamps
+        <code>received_at_utc</code> and <code>sent_at_utc</code> on every instruction it touches, so the
+        strategy-side-to-order-placed latency is a field, not a log-mining exercise.
       </p>
 
       <div class="callout">
-        <span class="tag">Target-state: a reference price, position and credit — per instrument, not per instruction</span>
+        <span class="tag"
+          >Target-state: a reference price, position and credit — per instrument, not per instruction</span
+        >
         <b class="st st-plan">planned</b>
         <b class="ev ev-assumed">~ assumed</b>
         <p>
-          A price can legitimately differ from the reference — the underlying moved. A <strong>position</strong>
-          mismatch is a different kind of problem: it means execution's view of what strategy holds disagrees with
-          strategy's own view, which is an integrity check, not a market observation. Price, position and credit at
-          the same reference point are the whole mechanism, not price alone — and because a strategy instance can
-          hold a universe of many instruments at once, that triple has to be a <strong>vector, one entry per
-          instrument</strong>, not a single flat value on the instruction. An earlier draft of this design put a
-          single per-venue <code>reference_position</code> straight on the envelope — that solves the venue axis
-          (which venue, when <code>venue_routing_mode</code> is <code>SOR_AT_EXECUTION</code> and the venue isn't
-          picked until execution time) but not the instrument axis, and was corrected for exactly that reason.
+          A price can legitimately differ from the reference — the underlying moved. A
+          <strong>position</strong> mismatch is a different kind of problem: it means execution's view of what strategy
+          holds disagrees with strategy's own view, which is an integrity check, not a market observation. Price,
+          position and credit at the same reference point are the whole mechanism, not price alone — and because a
+          strategy instance can hold a universe of many instruments at once, that triple has to be a
+          <strong>vector, one entry per instrument</strong>, not a single flat value on the instruction. An earlier
+          draft of this design put a single per-venue <code>reference_position</code> straight on the envelope — that
+          solves the venue axis (which venue, when <code>venue_routing_mode</code> is <code>SOR_AT_EXECUTION</code> and
+          the venue isn't picked until execution time) but not the instrument axis, and was corrected for exactly that
+          reason.
         </p>
         <div class="code">
-          <span class="k">class</span> <b>InstrumentReferenceEntry</b>:
-              instrument_id: str
-              reference_price: Decimal
-              reference_position: dict[str, Decimal]  <i># per-venue — same shape as before, now nested per instrument</i>
-              credit: CreditBand | None = None  <i># band (market-making) or hard threshold (arbitrage)</i>
-              position_adjustment_bps_per_unit_risk: Decimal | None = None  <i># symmetric coefficient, against RAW position</i>
+          <span class="k">class</span> <b>InstrumentReferenceEntry</b>: instrument_id: str reference_price: Decimal
+          reference_position: dict[str, Decimal]
+          <i># per-venue — same shape as before, now nested per instrument</i> credit: CreditBand | None = None
+          <i># band (market-making) or hard threshold (arbitrage)</i> position_adjustment_bps_per_unit_risk: Decimal |
+          None = None <i># symmetric coefficient, against RAW position</i>
 
-          <span class="k">class</span> <b>CreditBand</b>:
-              entry_threshold: Decimal | None = None  <i># minimum edge to act</i>
-              abandon_threshold: Decimal | None = None  <i># max adverse move tolerated once committed — optional even when entry_threshold is set</i>
+          <span class="k">class</span> <b>CreditBand</b>: entry_threshold: Decimal | None = None
+          <i># minimum edge to act</i> abandon_threshold: Decimal | None = None
+          <i># max adverse move tolerated once committed — optional even when entry_threshold is set</i>
 
           <i># proposed addition to StrategyInstructionEnvelope — one entry per instrument in the universe</i>
           references: list[InstrumentReferenceEntry] = []
         </div>
         <p>
           <code>credit</code> is strategy-owned and strategy-computed — the same intent-vs-mechanism split
-          <code>execution_policy_ref</code> already draws elsewhere; <code>position_adjustment_bps_per_unit_risk</code>
-          generalizes <code>QuoteInstruction.skew_on_inventory</code> (§02) off market-making specifically. Both are
-          governing boundaries the strategy sets; which algo runs and how it stays inside them remains execution's
-          call, the same relationship <code>hedge_deadline_ms</code> (§02, <code>AtomicInstruction</code>) already
-          has with the algo layer. On mismatch, execution would reuse the risk engine's existing four-way
-          consequence (<code>BLOCK</code> / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>)
-          rather than invent a second decision model — but the trigger type itself doesn't exist yet: none of the
-          risk engine's 13 typed trigger conditions covers a position mismatch today, so wiring this needs a new
-          trigger type added to that closed set, not just consumption of an existing one.
+          <code>execution_policy_ref</code> already draws elsewhere;
+          <code>position_adjustment_bps_per_unit_risk</code> generalizes
+          <code>QuoteInstruction.skew_on_inventory</code> (§02) off market-making specifically. Both are governing
+          boundaries the strategy sets; which algo runs and how it stays inside them remains execution's call, the same
+          relationship <code>hedge_deadline_ms</code> (§02, <code>AtomicInstruction</code>) already has with the algo
+          layer. On mismatch, execution would reuse the risk engine's existing four-way consequence (<code>BLOCK</code>
+          / <code>SCALE_DOWN</code> / <code>MONITOR</code> / <code>TEST_ONLY</code>) rather than invent a second
+          decision model — but the trigger type itself doesn't exist yet: none of the risk engine's 13 typed trigger
+          conditions covers a position mismatch today, so wiring this needs a new trigger type added to that closed set,
+          not just consumption of an existing one.
         </p>
         <p>
-          Exactly how the vector is keyed is still open, not decided: nesting per-instrument-then-per-venue (as
-          sketched above) assumes one strategy instance never wants two different believed positions for the same
-          instrument across venues within one instruction — true today, not re-confirmed for a multi-instrument
-          vector. Whether <code>credit</code> and the adjustment coefficient vary per entry or apply once across the
-          whole vector is also open. A cross-instrument version of this — how a fill in instrument B should move the
-          acceptable adjustment on instrument A — is real but deliberately out of scope here: it would live as a
-          fast-path approximation module inside execution-service, relevant only where A and B are non-fungible (a
-          cross-chain staked-basis leg, or options across different terms or strikes), and is stubbed rather than
-          built.
+          Exactly how the vector is keyed is still open, not decided: nesting per-instrument-then-per-venue (as sketched
+          above) assumes one strategy instance never wants two different believed positions for the same instrument
+          across venues within one instruction — true today, not re-confirmed for a multi-instrument vector. Whether
+          <code>credit</code> and the adjustment coefficient vary per entry or apply once across the whole vector is
+          also open. A cross-instrument version of this — how a fill in instrument B should move the acceptable
+          adjustment on instrument A — is real but deliberately out of scope here: it would live as a fast-path
+          approximation module inside execution-service, relevant only where A and B are non-fungible (a cross-chain
+          staked-basis leg, or options across different terms or strikes), and is stubbed rather than built.
         </p>
         <p>
           <b class="ev ev-assumed">~ assumed</b> — design only, not yet implemented; the shape above is illustrative,
           not final. Full record, including every open question:
-          <a href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md">execution_delta_proxy_repricer_generalization_2026_08_18.md</a>
+          <a href="/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md"
+            >execution_delta_proxy_repricer_generalization_2026_08_18.md</a
+          >
           § "The reference triple is a vector per instrument, not a scalar per instruction."
         </p>
       </div>
 
       <h3>Position and target instructions</h3>
       <div class="code">
-        <span class="k">class</span> <b>TradeInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[TRADE]
-            target_position_units: Decimal  <i># a TARGET, not a delta — idempotent by design</i>
-            target_instrument: str
-            direction: Literal["LONG", "SHORT", "FLAT"] | None = None
-            max_price: Decimal | None = None
-            min_price: Decimal | None = None
-            stop_loss_price: Decimal | None = None
-            take_profit_price: Decimal | None = None
+        <span class="k">class</span> <b>TradeInstruction</b>(StrategyInstructionEnvelope): action: Literal[TRADE]
+        target_position_units: Decimal <i># a TARGET, not a delta — idempotent by design</i>
+        target_instrument: str direction: Literal["LONG", "SHORT", "FLAT"] | None = None max_price: Decimal | None =
+        None min_price: Decimal | None = None stop_loss_price: Decimal | None = None take_profit_price: Decimal | None =
+        None
 
-        <span class="k">class</span> <b>SwapInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[SWAP]
-            in_asset: str
-            out_asset: str
-            in_amount: Decimal
-            min_out_amount: Decimal  <i># slippage bound expressed as an outcome</i>
-            route_hint: str | None = None
-            mev_policy_ref: str | None = None
+        <span class="k">class</span> <b>SwapInstruction</b>(StrategyInstructionEnvelope): action: Literal[SWAP]
+        in_asset: str out_asset: str in_amount: Decimal min_out_amount: Decimal
+        <i># slippage bound expressed as an outcome</i>
+        route_hint: str | None = None mev_policy_ref: str | None = None
 
-        <span class="k">class</span> <b>QuoteInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[QUOTE]
-            instrument: str
-            reference_price: Decimal
-            half_spread_bps: int
-            max_inventory_abs: Decimal
-            skew_on_inventory: bool = True
-            refresh_cadence_ms: int = 1000
+        <span class="k">class</span> <b>QuoteInstruction</b>(StrategyInstructionEnvelope): action: Literal[QUOTE]
+        instrument: str reference_price: Decimal half_spread_bps: int max_inventory_abs: Decimal skew_on_inventory: bool
+        = True refresh_cadence_ms: int = 1000
       </div>
 
       <p>
@@ -1247,87 +1393,53 @@
 
       <h3>DeFi leg instructions</h3>
       <div class="code">
-        <span class="k">class</span> <b>LendInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[LEND]
-            protocol: str
-            asset: str
-            target_supplied_amount: Decimal
-            min_apy_bps: int | None = None
+        <span class="k">class</span> <b>LendInstruction</b>(StrategyInstructionEnvelope): action: Literal[LEND]
+        protocol: str asset: str target_supplied_amount: Decimal min_apy_bps: int | None = None
 
-        <span class="k">class</span> <b>BorrowInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[BORROW]
-            protocol: str
-            asset: str
-            target_debt_amount: Decimal
-            max_borrow_apy_bps: int | None = None
-            collateral_health_min: Decimal | None = None
+        <span class="k">class</span> <b>BorrowInstruction</b>(StrategyInstructionEnvelope): action: Literal[BORROW]
+        protocol: str asset: str target_debt_amount: Decimal max_borrow_apy_bps: int | None = None
+        collateral_health_min: Decimal | None = None
 
-        <span class="k">class</span> <b>StakeInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[STAKE]
-            protocol: str
-            asset: str
-            target_staked_amount: Decimal
-            lst_asset: str | None = None
+        <span class="k">class</span> <b>StakeInstruction</b>(StrategyInstructionEnvelope): action: Literal[STAKE]
+        protocol: str asset: str target_staked_amount: Decimal lst_asset: str | None = None
 
-        <span class="k">class</span> <b>UnstakeInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[UNSTAKE]
-            protocol: str
-            asset: str
-            amount: Decimal
-            exit_queue_ok: bool = True  <i># whether an exit queue is acceptable</i>
+        <span class="k">class</span> <b>UnstakeInstruction</b>(StrategyInstructionEnvelope): action: Literal[UNSTAKE]
+        protocol: str asset: str amount: Decimal exit_queue_ok: bool = True <i># whether an exit queue is acceptable</i>
       </div>
 
       <h3>Capital movement instructions</h3>
       <div class="code">
-        <span class="k">class</span> <b>TransferInstructionV2</b>(StrategyInstructionEnvelope):
-            action: Literal[TRANSFER]
-            asset: str
-            venue_from: str
-            venue_to: str
-            target_balance_at_destination: Decimal  <i># an OUTCOME, not a route</i>
-            max_cost_bps: int | None = None
+        <span class="k">class</span> <b>TransferInstructionV2</b>(StrategyInstructionEnvelope): action:
+        Literal[TRANSFER] asset: str venue_from: str venue_to: str target_balance_at_destination: Decimal
+        <i># an OUTCOME, not a route</i>
+        max_cost_bps: int | None = None
 
-        <span class="k">class</span> <b>BridgeInstructionV2</b>(StrategyInstructionEnvelope):
-            action: Literal[BRIDGE]
-            asset: str
-            chain_from: str
-            chain_to: str
-            target_balance_at_destination: Decimal
-            bridge_hint: str | None = None
+        <span class="k">class</span> <b>BridgeInstructionV2</b>(StrategyInstructionEnvelope): action: Literal[BRIDGE]
+        asset: str chain_from: str chain_to: str target_balance_at_destination: Decimal bridge_hint: str | None = None
       </div>
 
       <p>
         Note what is absent: neither carries a rail, a custodian or a mechanism. The strategy asks for a balance to
         exist at a destination within a cost bound; how that is achieved — an internal venue transfer, an exchange
-        withdrawal, an on-chain send through custody — is resolved downstream. <a href="#s5">§05</a> covers what actually happens.
+        withdrawal, an on-chain send through custody — is resolved downstream. <a href="#s5">§05</a> covers what
+        actually happens.
       </p>
 
       <h3>Multi-leg and cancellation</h3>
       <div class="code">
-        <span class="k">class</span> <b>AtomicLeg</b>(BaseModel):
-            leg_index: int
-            action: InstructionActionV2
-            instrument: str
-            side: Literal["BUY", "SELL"] | None = None
-            size_units: Decimal | None = None
-            venue: str | None = None
-            weight: Decimal | None = None
-            params: dict[str, str] = {}
+        <span class="k">class</span> <b>AtomicLeg</b>(BaseModel): leg_index: int action: InstructionActionV2 instrument:
+        str side: Literal["BUY", "SELL"] | None = None size_units: Decimal | None = None venue: str | None = None
+        weight: Decimal | None = None params: dict[str, str] = {}
 
-        <span class="k">class</span> <b>AtomicInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[ATOMIC]
-            legs: list[AtomicLeg]
-            execution_mode: AtomicExecutionMode
-            leader_leg: int | None = None  <i># which leg goes first</i>
-            hedge_deadline_ms: int | None = None  <i># how long the book may sit unhedged</i>
-            compensation_policy: CompensationPolicy | None = None  <i># what happens if a leg fails</i>
-            balance_mode: str | None = None
-            max_total_slippage_bps: int | None = None
+        <span class="k">class</span> <b>AtomicInstruction</b>(StrategyInstructionEnvelope): action: Literal[ATOMIC]
+        legs: list[AtomicLeg] execution_mode: AtomicExecutionMode leader_leg: int | None = None
+        <i># which leg goes first</i> hedge_deadline_ms: int | None = None
+        <i># how long the book may sit unhedged</i> compensation_policy: CompensationPolicy | None = None
+        <i># what happens if a leg fails</i>
+        balance_mode: str | None = None max_total_slippage_bps: int | None = None
 
-        <span class="k">class</span> <b>CancelInstruction</b>(StrategyInstructionEnvelope):
-            action: Literal[CANCEL]
-            cancel_instruction_id: str
-            cancel_scope: Literal["SINGLE", "ALL_FOR_STRATEGY_INSTANCE"] = "SINGLE"
+        <span class="k">class</span> <b>CancelInstruction</b>(StrategyInstructionEnvelope): action: Literal[CANCEL]
+        cancel_instruction_id: str cancel_scope: Literal["SINGLE", "ALL_FOR_STRATEGY_INSTANCE"] = "SINGLE"
       </div>
 
       <p>
@@ -1342,36 +1454,18 @@
           Strategy instance identity — what every instruction is stamped with<span class="tag-ref">Reference</span>
         </summary>
         <div class="code">
-          <span class="k">class</span> <b>StrategyInstanceIdentity</b>(BaseModel):
-              family: StrategyFamily
-              archetype_id: StrategyArchetype
-              archetype_build_version: str
-              strategy_instance_id: str
-              slot_version: int = 1
-              config_hash: str  <i># the exact config that produced this decision</i>
-              config_version: int
-              client_id: str
-              share_class: ShareClass
-              env: Literal["prod", "paper", "canary", "dev"] = "prod"
-              holding_wallet: str | None = None
-              wallet_id: str = ""
+          <span class="k">class</span> <b>StrategyInstanceIdentity</b>(BaseModel): family: StrategyFamily archetype_id:
+          StrategyArchetype archetype_build_version: str strategy_instance_id: str slot_version: int = 1 config_hash:
+          str <i># the exact config that produced this decision</i>
+          config_version: int client_id: str share_class: ShareClass env: Literal["prod", "paper", "canary", "dev"] =
+          "prod" holding_wallet: str | None = None wallet_id: str = ""
 
-          <span class="k">class</span> <b>StrategyInstanceDefinition</b>(BaseModel):
-              strategy_instance_id: str
-              archetype_id: StrategyArchetype
-              family: StrategyFamily
-              client_id: str
-              capital_budget_amount: Decimal  <i># the instance cannot exceed this</i>
-              capital_budget_share_class: ShareClass
-              share_class: ShareClass
-              env: Literal["prod", "paper", "canary", "dev"] = "prod"
-              created_at_utc: datetime
-              created_by: str
-              retired_at_utc: datetime | None = None
-              retired_reason: str | None = None
-              slot_version: int = 1
-              holding_wallet: str | None = None
-              wallet_id: str = ""
+          <span class="k">class</span> <b>StrategyInstanceDefinition</b>(BaseModel): strategy_instance_id: str
+          archetype_id: StrategyArchetype family: StrategyFamily client_id: str capital_budget_amount: Decimal
+          <i># the instance cannot exceed this</i>
+          capital_budget_share_class: ShareClass share_class: ShareClass env: Literal["prod", "paper", "canary", "dev"]
+          = "prod" created_at_utc: datetime created_by: str retired_at_utc: datetime | None = None retired_reason: str |
+          None = None slot_version: int = 1 holding_wallet: str | None = None wallet_id: str = ""
         </div>
         <div class="plate">
           <div class="plate-body">
@@ -1394,6 +1488,9 @@
       <h2>Configuration surface, in full</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-check">? check</b>
+      <b class="own" title="plans/epics/strategy_master.md -- the YAML config + typed-schema + hot-reload surface"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       Configuration is a YAML file per strategy instance, validated against typed schemas, with family-level defaults
@@ -1418,34 +1515,20 @@
 
       <h3>The actual config — <code>configs/carry_staked_basis.yaml</code></h3>
       <div class="code">
-        mode: carry_staked_basis
-        strategy_config:
-          strategy_id: DEFI_CARRY_STAKED_BASIS_ETH_LIDO_BINANCE_SCE_1H
-          category: DEFI
-          domain: defi
-          archetype: carry_staked_basis
-          timeframe: 1h
-          execution_mode: continuous
+        mode: carry_staked_basis strategy_config: strategy_id: DEFI_CARRY_STAKED_BASIS_ETH_LIDO_BINANCE_SCE_1H category:
+        DEFI domain: defi archetype: carry_staked_basis timeframe: 1h execution_mode: continuous
 
-          <i># ── Legs ──</i>
-          staking_protocol: LIDO_STETH
-          staking_chain: ETHEREUM
-          staking_instrument: LIDO-ETHEREUM:STAKED:stETH
-          borrowing_protocol: AAVE_V3
-          borrowing_chain: ETHEREUM
-          hedge_venue: BINANCE
-          hedge_instrument: BINANCE:PERP:ETHUSDT-PERP
+        <i># ── Legs ──</i>
+        staking_protocol: LIDO_STETH staking_chain: ETHEREUM staking_instrument: LIDO-ETHEREUM:STAKED:stETH
+        borrowing_protocol: AAVE_V3 borrowing_chain: ETHEREUM hedge_venue: BINANCE hedge_instrument:
+        BINANCE:PERP:ETHUSDT-PERP
 
-          <i># ── Capital allocation ──</i>
-          capital_usd: 50000
-          max_leverage: 1.5
-          staking_apr_threshold: 0.025  <i># min 2.5% APR to deploy</i>
-          perp_funding_threshold_bps: 8  <i># require positive funding for hedge</i>
+        <i># ── Capital allocation ──</i>
+        capital_usd: 50000 max_leverage: 1.5 staking_apr_threshold: 0.025
+        <i># min 2.5% APR to deploy</i> perp_funding_threshold_bps: 8 <i># require positive funding for hedge</i>
 
-          <i># ── Health monitoring ──</i>
-          health_factor_target: 2.0
-          health_factor_emergency_reduce_at: 1.2
-          health_factor_emergency_close_at: 1.0
+        <i># ── Health monitoring ──</i>
+        health_factor_target: 2.0 health_factor_emergency_reduce_at: 1.2 health_factor_emergency_close_at: 1.0
       </div>
 
       <p>
@@ -1470,44 +1553,46 @@
         <b class="ev ev-check">? check</b>
         <p>
           The <code>strategy_id</code> above carries a <code>_SCE_1H</code> suffix. Read against this codebase's own
-          hold-policy rule (<code>SCE</code> = <code>SAME_CANDLE_EXIT</code>, and — verbatim —
-          "DeFi strategies are NEVER SCE (gas + confirmation latency); SCE is only for CeFi/TradFi ML strategies with
-          explicit TP/SL"), that suffix is stale: a staked-basis carry position is entered and held, not
-          round-tripped every candle. The field that actually governs behavior, two lines above it,
-          <code>execution_mode: continuous</code>, is correct — this is <code>HOLD_UNTIL_FLIP</code>-style behavior
-          (exit when the carry stops being profitable), not same-candle exit. <b class="ev ev-verified">✓ verified</b>
-          against the strategy's own held, multi-leg close-all logic below — the id string itself is an unfixed
-          naming leftover, tracked as a todo, not this artefact's to fix.
+          hold-policy rule (<code>SCE</code> = <code>SAME_CANDLE_EXIT</code>, and — verbatim — "DeFi strategies are
+          NEVER SCE (gas + confirmation latency); SCE is only for CeFi/TradFi ML strategies with explicit TP/SL"), that
+          suffix is stale: a staked-basis carry position is entered and held, not round-tripped every candle. The field
+          that actually governs behavior, two lines above it, <code>execution_mode: continuous</code>, is correct — this
+          is <code>HOLD_UNTIL_FLIP</code>-style behavior (exit when the carry stops being profitable), not same-candle
+          exit. <b class="ev ev-verified">✓ verified</b>
+          against the strategy's own held, multi-leg close-all logic below — the id string itself is an unfixed naming
+          leftover, tracked as a todo, not this artefact's to fix.
         </p>
         <p>
-          <code>timeframe: 1h</code> sets the candle/feature-bar resolution the engine's tick loop advances on — it
-          is a <strong>feature and re-evaluation</strong> cadence, not a risk-monitoring one. That distinction
-          matters directly for the health-factor ladder just above it.
+          <code>timeframe: 1h</code> sets the candle/feature-bar resolution the engine's tick loop advances on — it is a
+          <strong>feature and re-evaluation</strong> cadence, not a risk-monitoring one. That distinction matters
+          directly for the health-factor ladder just above it.
         </p>
         <div class="callout">
           <span class="tag">Liquidation risk does not wait for the next candle</span>
           <b class="ev ev-verified">✓ verified</b>
           <p>
             The ladder above (<code>health_factor_target</code> / <code>_emergency_reduce_at</code> /
-            <code>_emergency_close_at</code>) is read synchronously on every tick via a fail-closed cache
-            (<code>position/core/margin_health_cache.py</code> — a miss or a stale read both block the trade, never
-            "no check, proceed"), but that read is bounded by the strategy's own cadence, and an hourly
-            re-evaluation is far too slow for a health factor that can move meaningfully in seconds. The real
-            liquidation trigger does not run on this strategy's <code>timeframe</code> at all:
+            <code>_emergency_close_at</code>) is read synchronously on every tick via a fail-closed cache (<code
+              >position/core/margin_health_cache.py</code
+            >
+            — a miss or a stale read both block the trade, never "no check, proceed"), but that read is bounded by the
+            strategy's own cadence, and an hourly re-evaluation is far too slow for a health factor that can move
+            meaningfully in seconds. The real liquidation trigger does not run on this strategy's
+            <code>timeframe</code> at all:
             <code>execution_service/defi_execution/monitors/health_factor_monitor.py</code>'s
             <code>HealthFactorMonitor</code> is a near-block-time loop per chain (Ethereum ~12s via WS
             <code>eth_subscribe newHeads</code> with poll fallback, Base 2s, Arbitrum ~1s debounced), firing
             <code>DEFI_HEALTH_FACTOR_CRITICAL</code> (HF &lt; 1.10) and <code>DEFI_LIQUIDATION_IMMINENT</code>
             (HF &lt; 1.05) independently of any strategy poll. A separate, portfolio-wide
-            <code>LIQUIDATION_CASCADE_RISK</code> circuit breaker fires <code>KILL_ALL</code> at Aave HF ≤ 1.10
-            across ≥ 2 positions — a cross-position check, differently scoped from this one strategy's own
-            <code>health_factor_emergency_close_at: 1.0</code> floor, not a duplicate of it. These are three
-            separate mechanisms at three different scopes, not one hourly poll.
+            <code>LIQUIDATION_CASCADE_RISK</code> circuit breaker fires <code>KILL_ALL</code> at Aave HF ≤ 1.10 across ≥
+            2 positions — a cross-position check, differently scoped from this one strategy's own
+            <code>health_factor_emergency_close_at: 1.0</code> floor, not a duplicate of it. These are three separate
+            mechanisms at three different scopes, not one hourly poll.
           </p>
           <p>
-            <b class="ev ev-check">? check</b> — <code>HealthFactorMonitor</code> is real, written code, but this
-            pass found zero call sites constructing it anywhere in execution-service outside its own module: whether
-            anything actually runs it in production was not confirmed.
+            <b class="ev ev-check">? check</b> — <code>HealthFactorMonitor</code> is real, written code, but this pass
+            found zero call sites constructing it anywhere in execution-service outside its own module: whether anything
+            actually runs it in production was not confirmed.
           </p>
         </div>
         <p>
@@ -1515,66 +1600,45 @@
           <code>execution_service/algo_library/deleverage_executor.py</code>'s <code>DeleverageExecutor</code> is a
           <code>MarginEvent</code>-driven Pub/Sub subscriber — event-triggered, not scheduled — dispatching an
           asset-group-aware action on <code>CRITICAL</code>/<code>LIQUIDATION</code> severity: for DeFi,
-          <code>top_up_collateral</code> on CRITICAL, <code>repay_debt</code> ("repay borrow + withdraw collateral")
-          on LIQUIDATION. For a full unwind rather than a partial deleverage, the strategy's close-all script —
-          <code>CarryStakedBasisCloseAll</code> — runs a real, ordered sequence: cancel resting perp orders on the
-          hedge venue, close the perp hedge (reduce-only), repay the Aave borrow, unstake/redeem the LST, settle
-          on-chain transfers, then a post-close recon check. <b class="ev ev-verified">✓ verified</b> — read in
-          full; the actual <code>_order_unwind_sequence()</code> implementation only enforces a coarser two-tier
-          grouping (every hedge-leg position closes before every DeFi-leg position), not the finer six-step total
-          order its own docstring states — repay-before-unstake within the DeFi tier is stated intent, not
-          independently enforced by that function today.
-          <b class="ev ev-check">? check</b> — the dispatch logic above is real and unit-testable; whether a live
-          subscription actually calls <code>DeleverageExecutor</code> in production execution-service was not
-          traced in this pass.
+          <code>top_up_collateral</code> on CRITICAL, <code>repay_debt</code> ("repay borrow + withdraw collateral") on
+          LIQUIDATION. For a full unwind rather than a partial deleverage, the strategy's close-all script —
+          <code>CarryStakedBasisCloseAll</code> — runs a real, ordered sequence: cancel resting perp orders on the hedge
+          venue, close the perp hedge (reduce-only), repay the Aave borrow, unstake/redeem the LST, settle on-chain
+          transfers, then a post-close recon check. <b class="ev ev-verified">✓ verified</b> — read in full; the actual
+          <code>_order_unwind_sequence()</code> implementation only enforces a coarser two-tier grouping (every
+          hedge-leg position closes before every DeFi-leg position), not the finer six-step total order its own
+          docstring states — repay-before-unstake within the DeFi tier is stated intent, not independently enforced by
+          that function today. <b class="ev ev-check">? check</b> — the dispatch logic above is real and unit-testable;
+          whether a live subscription actually calls <code>DeleverageExecutor</code> in production execution-service was
+          not traced in this pass.
         </p>
       </div>
 
       <h3>Family defaults</h3>
       <p>An instance config sits on top of a family default, so only the deviations are stated per instance:</p>
       <div class="code">
-        configs/defaults/default_basis_trade.yaml
-        configs/defaults/default_momentum.yaml
-        configs/defaults/default_arbitrage.yaml
-        configs/defaults/default_mean_reversion.yaml
-        configs/defaults/default_options_ml.yaml
-        configs/defaults/default_halftime_ml.yaml
-        configs/defaults/default_value_betting.yaml
-        configs/defaults/default_tradfi_ml_directional.yaml
+        configs/defaults/default_basis_trade.yaml configs/defaults/default_momentum.yaml
+        configs/defaults/default_arbitrage.yaml configs/defaults/default_mean_reversion.yaml
+        configs/defaults/default_options_ml.yaml configs/defaults/default_halftime_ml.yaml
+        configs/defaults/default_value_betting.yaml configs/defaults/default_tradfi_ml_directional.yaml
       </div>
 
       <details class="ref">
         <summary>The typed configuration schemas — all of them<span class="tag-ref">Reference</span></summary>
         <div class="code">
           <i># Risk</i>
-          RiskLimitsConfig
-          RiskInstrumentSubscriptions
-          RiskMetricsConfig
-          DefiRiskConfig
-          MlRiskConfig
-          CexRiskConfig
+          RiskLimitsConfig RiskInstrumentSubscriptions RiskMetricsConfig DefiRiskConfig MlRiskConfig CexRiskConfig
           SportsRiskConfig
 
           <i># Monitors</i>
-          PositionMonitorConfig
-          ExposureMonitorConfig
-          RiskMonitorConfig
-          PnlMonitorConfig
+          PositionMonitorConfig ExposureMonitorConfig RiskMonitorConfig PnlMonitorConfig
 
           <i># Attribution</i>
-          PnLInstrumentSubscriptions
-          DefiAttributionConfig
-          MlAttributionConfig
+          PnLInstrumentSubscriptions DefiAttributionConfig MlAttributionConfig
 
           <i># Managers and modes</i>
-          StrategyManagerConfig
-          UtilityManagerConfig
-          ComponentConfig
-          SportsStrategyManagerConfig
-          StrategySpecificConfig
-          RelVolConfig
-          DefiModeConfig
-          MlModeConfig
+          StrategyManagerConfig UtilityManagerConfig ComponentConfig SportsStrategyManagerConfig StrategySpecificConfig
+          RelVolConfig DefiModeConfig MlModeConfig
         </div>
         <div class="plate">
           <div class="plate-body">
@@ -1597,6 +1661,11 @@
       <h2>Halting it: breakers and kill switch</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="plans/epics/strategy_master.md -- the automatic circuit-breaker and operator kill-switch mechanisms"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       There are two independent mechanisms: an automatic circuit that reacts to position health, and an operator kill
@@ -1621,18 +1690,17 @@
 
       <h3>The automatic circuit</h3>
       <div class="code">
-        <span class="k">class</span> <b>LiquidationProximityCircuit</b>:
-            <span class="k">def</span> evaluate(self, alert: DefiAlert) -> ProximityDecision: ...
+        <span class="k">class</span> <b>LiquidationProximityCircuit</b>: <span class="k">def</span> evaluate(self,
+        alert: DefiAlert) -> ProximityDecision: ...
 
-            <i># graded responses, selected by how close the position is to liquidation</i>
-            _oracle_buffer()  <i># widen tolerance for oracle lag; take no position action</i>
-            _position_pause()  <i># stop opening; hold what is held</i>
-            _partial_unwind()  <i># reduce exposure toward the health target</i>
-            _hedge_failover()  <i># re-establish the hedge via an alternate venue</i>
-            _flash_close()  <i># exit now, accept slippage</i>
-            _mid_loop_recovery()  <i># resume safely after an interrupted action</i>
+        <i># graded responses, selected by how close the position is to liquidation</i>
+        _oracle_buffer() <i># widen tolerance for oracle lag; take no position action</i> _position_pause()
+        <i># stop opening; hold what is held</i> _partial_unwind()
+        <i># reduce exposure toward the health target</i> _hedge_failover()
+        <i># re-establish the hedge via an alternate venue</i> _flash_close()
+        <i># exit now, accept slippage</i> _mid_loop_recovery() <i># resume safely after an interrupted action</i>
 
-        <span class="k">class</span> <b>ProximityDecision</b>: ...  <i># the chosen action + its rationale</i>
+        <span class="k">class</span> <b>ProximityDecision</b>: ... <i># the chosen action + its rationale</i>
         <span class="k">class</span> <b>ProximityAction</b>(StrEnum): ...
       </div>
       <p>
@@ -1646,12 +1714,13 @@
       <h3>The operator kill switch</h3>
       <div class="code">
         <span class="k">class</span> <b>ArchetypeKillSwitchSubscriber</b>(KillSwitchSubscriber):
-            <span class="k">def</span> on_armed(self, event: KillSwitchArmedEvent) -> None: ...
-            <span class="k">def</span> on_disarmed(self, event: KillSwitchDisarmEvent) -> None: ...
-            <span class="k">def</span> is_archetype_halted(self, archetype: str) -> bool: ...
-            <span class="k">def</span> halt_behaviour(self, archetype: str) -> ArchetypeHaltBehaviour | None: ...
+        <span class="k">def</span> on_armed(self, event: KillSwitchArmedEvent) -> None: ...
+        <span class="k">def</span> on_disarmed(self, event: KillSwitchDisarmEvent) -> None: ...
+        <span class="k">def</span> is_archetype_halted(self, archetype: str) -> bool: ...
+        <span class="k">def</span> halt_behaviour(self, archetype: str) -> ArchetypeHaltBehaviour | None: ...
 
-        <span class="k">class</span> <b>ArchetypeHaltBehaviour</b>(StrEnum): ...  <i># what "halted" means for this archetype</i>
+        <span class="k">class</span> <b>ArchetypeHaltBehaviour</b>(StrEnum): ...
+        <i># what "halted" means for this archetype</i>
       </div>
       <p>
         Arming is an event on the bus, so it reaches every running instance without a deploy and without the strategy
@@ -1680,6 +1749,11 @@
       <h2>Capital, collateral and custody</h2>
       <b class="st st-plan">planned</b>
       <b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="plans/epics/strategy_master.md -- the capital/collateral/custody coordinator layer strategies call through"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       The strategy never names a rail. It asks for a balance to exist somewhere, and a layered set of coordinators and
@@ -1915,33 +1989,29 @@
 
       <h3>Wallet and transfer vocabulary</h3>
       <div class="code">
-        <span class="k">class</span> <b>WalletType</b>(StrEnum):
-            FUNDING  <i># where deposits land; not directly tradeable</i>
-            TRADING  <i># where orders are placed from</i>
-            SPOT  <i># separate spot wallet, on venues that have one</i>
-            UNIFIED  <i># single-account venues</i>
+        <span class="k">class</span> <b>WalletType</b>(StrEnum): FUNDING
+        <i># where deposits land; not directly tradeable</i> TRADING <i># where orders are placed from</i> SPOT
+        <i># separate spot wallet, on venues that have one</i> UNIFIED <i># single-account venues</i>
 
-        <span class="k">class</span> <b>TransferType</b>(StrEnum):
-            ON_CHAIN
-            <i
-              ># blockchain transfer, signed via custody or local key. DeFi→DeFi same chain, DeFi→CeFi deposit, CeFi→DeFi
-              withdrawal. Minutes; gas applies.</i
-            >
-            CEX_WITHDRAWAL
-            <i
-              ># exchange withdrawal to an external address, via CCXT. CeFi→CeFi cross-exchange, or CeFi→DeFi. Minutes to
-              hours; withdrawal fees apply.</i
-            >
+        <span class="k">class</span> <b>TransferType</b>(StrEnum): ON_CHAIN
+        <i
+          ># blockchain transfer, signed via custody or local key. DeFi→DeFi same chain, DeFi→CeFi deposit, CeFi→DeFi
+          withdrawal. Minutes; gas applies.</i
+        >
+        CEX_WITHDRAWAL
+        <i
+          ># exchange withdrawal to an external address, via CCXT. CeFi→CeFi cross-exchange, or CeFi→DeFi. Minutes to
+          hours; withdrawal fees apply.</i
+        >
       </div>
 
       <h3>Custody is an interface, not a vendor</h3>
       <div class="code">
         <span class="k">class</span> <b>CustodyProvider</b>(Protocol):
-            <span class="k">async def</span> sign_transaction(wallet_id, chain, raw_tx) -> SignedTransaction
-            <span class="k">async def</span> get_balance(...)
-            <span class="k">async def</span> create_transfer(...)
-            <span class="k">async def</span> list_wallets(chain=None) -> list[dict[str, str]]
-            <span class="k">async def</span> health_check() -> CustodyHealth
+        <span class="k">async def</span> sign_transaction(wallet_id, chain, raw_tx) -> SignedTransaction
+        <span class="k">async def</span> get_balance(...) <span class="k">async def</span> create_transfer(...)
+        <span class="k">async def</span> list_wallets(chain=None) -> list[dict[str, str]]
+        <span class="k">async def</span> health_check() -> CustodyHealth
 
         <i># get_custody_provider(config) resolves by name:</i>
         mock · local_key · cloud_kms · <b>copper</b> · ceffu
@@ -1965,11 +2035,14 @@
           execution service and no vendor-specific mirroring code path, and that is by design.
         </p>
         <p>
-          <strong>Verified against source</strong> — this document's custody roster (<code>mock · local_key · cloud_kms ·
-          copper · ceffu</code>, above) is the working <code>get_custody_provider()</code> set. A separate code artefact
-          (<code>SigningSurface</code> in <code>unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>)
-          lists <code>FIREBLOCKS_MPC</code> and omits a distinct Ceffu member — that is not a contradiction: Ceffu's
-          signing routes through Copper (<code>CEFFU_ROUTES_VIA_COPPER_NOTE</code>), and the Fireblocks entry carries
+          <strong>Verified against source</strong> — this document's custody roster (<code
+            >mock · local_key · cloud_kms · copper · ceffu</code
+          >, above) is the working <code>get_custody_provider()</code> set. A separate code artefact (<code
+            >SigningSurface</code
+          >
+          in <code>unified_api_contracts/internal/architecture_v2/custody_surfaces.py</code>) lists
+          <code>FIREBLOCKS_MPC</code> and omits a distinct Ceffu member — that is not a contradiction: Ceffu's signing
+          routes through Copper (<code>CEFFU_ROUTES_VIA_COPPER_NOTE</code>), and the Fireblocks entry carries
           <code>SigningSurfaceStatus.OUT_OF_SCOPE</code> — retained for future flexibility, not wired today.
         </p>
         <p>
@@ -1987,10 +2060,10 @@
         </summary>
         <div class="code">
           <span class="k">class</span> <b>TransferCoordinator</b>:
-              <i>"""Single entry point for all TransferIntent events."""</i>
-              <span class="k">def</span> execute(self, intent: TransferIntent) -> TransferResult
-              <span class="k">def</span> validate_intent(self, intent: TransferIntent) -> None
-              <span class="k">def</span> register_handler(self, transfer_type, handler) -> None
+          <i>"""Single entry point for all TransferIntent events."""</i>
+          <span class="k">def</span> execute(self, intent: TransferIntent) -> TransferResult
+          <span class="k">def</span> validate_intent(self, intent: TransferIntent) -> None
+          <span class="k">def</span> register_handler(self, transfer_type, handler) -> None
 
           <span class="k">class</span> <b>CrossClientTransferForbiddenError</b>(RuntimeError): ...
         </div>
@@ -2016,6 +2089,9 @@
       <h2>Positions, risk and P&amp;L — the read surface</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-check">? check</b>
+      <b class="own" title="plans/epics/strategy_master.md -- the nineteen positions/risk/P&L read routes"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       Nineteen route modules expose what the service knows. This is what you would query — directly if you self-operate,
@@ -2109,6 +2185,11 @@
       <h2>Feeding an external strategy in</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-assumed">~ assumed</b>
+      <b
+        class="own"
+        title="plans/epics/strategy_master.md -- the external-strategy integration surface (tick in, instruction out)"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       If you wanted to run your own strategy on this infrastructure, the integration surface is small and precisely
@@ -2137,26 +2218,20 @@
       </p>
       <div class="code">
         <i># What you provide</i>
-        1. An archetype module that evaluates on each tick and returns zero or more StrategyInstructionV2
-           (the union of the 11 types)
-        2. A config YAML declaring instruments, thresholds and capital budget, validated against the typed
-           schemas in <a href="#s3">§03</a>
+        1. An archetype module that evaluates on each tick and returns zero or more StrategyInstructionV2 (the union of
+        the 11 types) 2. A config YAML declaring instruments, thresholds and capital budget, validated against the typed
+        schemas in <a href="#s3">§03</a>
         3. A registry entry naming the archetype and its family
 
         <i># What applies without you writing it</i>
-        · Pre-trade risk gates and limit checks
-        · Position monitoring and venue reconciliation
-        · Capital budget enforcement per instance
-        · P&amp;L attribution by decision/execution/funding
-        · Circuit breakers and kill-switch semantics
-        · The attestation field on every instruction
-        · Execution algorithms and venue routing
-        · Transfer netting and custody routing
-        · The promotion ladder: candidate → paper → live
+        · Pre-trade risk gates and limit checks · Position monitoring and venue reconciliation · Capital budget
+        enforcement per instance · P&amp;L attribution by decision/execution/funding · Circuit breakers and kill-switch
+        semantics · The attestation field on every instruction · Execution algorithms and venue routing · Transfer
+        netting and custody routing · The promotion ladder: candidate → paper → live
       </div>
       <p style="font-size: 0.95rem; color: var(--ink-3)">
-        Transfer netting and custody routing, listed above, are not yet wired end-to-end in production — see the
-        caveat in <a href="#s5">§05</a>.
+        Transfer netting and custody routing, listed above, are not yet wired end-to-end in production — see the caveat
+        in <a href="#s5">§05</a>.
       </p>
       <p>
         Because the envelope carries <code>eligible_venues</code> and <code>execution_policy_ref</code>, your strategy
@@ -2182,6 +2257,9 @@
       <h2>Asset-group agnosticism and expansion</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-verified">✓ verified</b>
+      <b class="own" title="plans/epics/strategy_master.md -- the asset-group-agnostic engine/contract/ledger property"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       The same engine, contract and ledger serve every asset group. This is the property that makes expansion a
@@ -2279,6 +2357,11 @@
       <h2>Contributing research and backtests</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-check">? check</b>
+      <b
+        class="own"
+        title="plans/epics/strategy_master.md -- the backtest-equals-live contract that makes research results meaningful"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
       Under the ongoing arrangement you can bring ideas rather than only receive results. Backtests launch through the
@@ -2309,19 +2392,17 @@
       </p>
       <div class="code">
         <i># What a research contribution looks like in practice</i>
-        1. You describe the idea — a parameter variation on an existing archetype, or a new decision rule
-        2. It becomes a config (a variation) or a module (a new rule), per <a href="#s7">§07</a>
-        3. It launches as a backtest through the deployment API, against the same history and feature
-           versions our own research uses
-        4. Results come back as the standard ledgers and attribution — so they are directly comparable
-           with live performance, not a separate report format
-        5. If it earns promotion it climbs the ladder: candidate, paper, early live, live — with
-           pre-flight gates at each step
+        1. You describe the idea — a parameter variation on an existing archetype, or a new decision rule 2. It becomes
+        a config (a variation) or a module (a new rule), per <a href="#s7">§07</a>
+        3. It launches as a backtest through the deployment API, against the same history and feature versions our own
+        research uses 4. Results come back as the standard ledgers and attribution — so they are directly comparable
+        with live performance, not a separate report format 5. If it earns promotion it climbs the ladder: candidate,
+        paper, early live, live — with pre-flight gates at each step
       </div>
       <p>
-        What you would see is the attribution surface from <a href="#s6">§06</a> applied to your idea: P&amp;L split across decision,
-        execution and funding, per venue and per leg. That split is usually the interesting part, because it separates
-        "the idea was right" from "the idea was implementable".
+        What you would see is the attribution surface from <a href="#s6">§06</a> applied to your idea: P&amp;L split
+        across decision, execution and funding, per venue and per leg. That split is usually the interesting part,
+        because it separates "the idea was right" from "the idea was implementable".
       </p>
 
       <h3>How strategy alpha is separated from execution alpha</h3>
@@ -2336,12 +2417,12 @@
         <i># The same benchmark reference, used two ways</i>
 
         <b>Strategy isolation</b>
-        benchmark fills ARE the fills. Zero execution alpha by construction, so what remains is the
-        strategy's own edge. Runs against pipeline history with no execution stack at all.
+        benchmark fills ARE the fills. Zero execution alpha by construction, so what remains is the strategy's own edge.
+        Runs against pipeline history with no execution stack at all.
 
         <b>Execution isolation</b>
-        a matching engine fills against real historical book state, and the benchmark is the reference
-        it is measured against. What remains is execution alpha: slippage, fees, timing.
+        a matching engine fills against real historical book state, and the benchmark is the reference it is measured
+        against. What remains is execution alpha: slippage, fees, timing.
       </div>
       <p>
         The consequence is that a strategy's measured edge does not silently inherit an execution choice it did not
@@ -2373,12 +2454,17 @@
       <h2>Strategy families and archetypes, in full</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="cursor-configs/skills/archetype-code-completeness/ -- the engine measuring per-(archetype,mode) code-completeness this section grades against; consumed by the readiness dump's strategy_archetype_code leg"
+        >owner: system_readiness_master</b
+      >
     </div>
     <p class="lede">
       Every archetype the engine can run belongs to exactly one of nine orthogonal families. This section names all of
-      them — not the abbreviated cut that has appeared in this document before — and grades each one on whether its
-      code paths are actually complete, not just declared. Naming and completeness are different claims; this section
-      keeps them separate on purpose.
+      them — not the abbreviated cut that has appeared in this document before — and grades each one on whether its code
+      paths are actually complete, not just declared. Naming and completeness are different claims; this section keeps
+      them separate on purpose.
     </p>
     <div class="keypoints">
       <div>
@@ -2391,8 +2477,8 @@
       <div>
         <b>Completeness is derived, not asserted</b
         ><span
-          >Per archetype × mode, five machine-checked hooks (engine registration, param schema, target-universe
-          catalog, allocator rank, mode-specific dispatch) roll up to ready / unverified / gap</span
+          >Per archetype × mode, five machine-checked hooks (engine registration, param schema, target-universe catalog,
+          allocator rank, mode-specific dispatch) roll up to ready / unverified / gap</span
         >
       </div>
       <div>
@@ -2419,24 +2505,23 @@
         enumerated, not transcribed. Per-mode completeness is the live output of the
         <code>archetype-code-completeness</code> skill (<code>derive_archetype_completeness.py</code>), run against
         strategy-service on 2026-08-19: 60 archetypes × 3 modes = 180 rows, cross-validated against a direct read of
-        every source registry it checks. Feature-group consumption is
-        <code>ARCHETYPE_FEATURE_GROUPS</code> / <code>UNDECLARED_ARCHETYPES</code> in
-        <code>archetype_feature_groups.py</code>, whose own docstring is explicit that an entry is only added once
-        traced to real dispatch code — an absent entry means "not yet reviewed," never "consumes nothing."
+        every source registry it checks. Feature-group consumption is <code>ARCHETYPE_FEATURE_GROUPS</code> /
+        <code>UNDECLARED_ARCHETYPES</code> in <code>archetype_feature_groups.py</code>, whose own docstring is explicit
+        that an entry is only added once traced to real dispatch code — an absent entry means "not yet reviewed," never
+        "consumes nothing."
       </p>
       <p>
         <strong>Reading the completeness columns.</strong>
         <b class="cc cc-ready">ready</b> — engine factory, param schema, target-universe catalog and the mode-specific
-        dispatch hook all resolve.
-        <b class="cc cc-unverified">unverified</b> — no hook fails outright, but at least one has no clean
-        machine-checkable registry (paper's per-family tick-loader dispatch and the allocator-rank leg are the two
-        recurring causes; never asserted ready or broken on a guess).
-        <b class="cc cc-gap">gap</b> — at least one hook fails: most commonly no factory-registered v2 engine class,
-        or no <code>PARAM_SCHEMA_REGISTRY</code> entry. The skill records two dated agent-audit notes rather than
-        guessing where no registry lookup exists: paper's tick-loader dispatch covers only the DeFi carry/yield
-        family (~48/60 archetypes fall through to a generic perp-basis loader, untested for the rest), and live
-        dispatch below the shared orchestrator was confirmed absent-of-evidence by grepping
-        <code>cascade_subscriber.py</code> / <code>service_entry.py</code>, not by assumption.
+        dispatch hook all resolve. <b class="cc cc-unverified">unverified</b> — no hook fails outright, but at least one
+        has no clean machine-checkable registry (paper's per-family tick-loader dispatch and the allocator-rank leg are
+        the two recurring causes; never asserted ready or broken on a guess). <b class="cc cc-gap">gap</b> — at least
+        one hook fails: most commonly no factory-registered v2 engine class, or no
+        <code>PARAM_SCHEMA_REGISTRY</code> entry. The skill records two dated agent-audit notes rather than guessing
+        where no registry lookup exists: paper's tick-loader dispatch covers only the DeFi carry/yield family (~48/60
+        archetypes fall through to a generic perp-basis loader, untested for the rest), and live dispatch below the
+        shared orchestrator was confirmed absent-of-evidence by grepping <code>cascade_subscriber.py</code> /
+        <code>service_entry.py</code>, not by assumption.
       </p>
       <div class="plate">
         <div class="plate-head">
@@ -2488,8 +2573,8 @@
                 <td class="grp grp-exec"><strong>MARKET_MAKING</strong></td>
                 <td>10</td>
                 <td>
-                  Continuous and event-settled quoting plus three DeFi LP variants (concentrated, pool, vault) under
-                  one family.
+                  Continuous and event-settled quoting plus three DeFi LP variants (concentrated, pool, vault) under one
+                  family.
                 </td>
               </tr>
               <tr>
@@ -2505,9 +2590,9 @@
                 <td>19</td>
                 <td>
                   The largest family by a wide margin — expanded from 1 to 19 archetypes 2026-04-25: RV/IV arb, spread
-                  structures, carry, covered calls, protective put, straddle, synthetic delta, MM, ML-lean, two
-                  0DTE variants, term-structure arb and slope, dispersion, variance swap, LEAPS convexity, cross-asset
-                  spread and ratio spread, plus the legacy <code>VOL_TRADING_OPTIONS</code>.
+                  structures, carry, covered calls, protective put, straddle, synthetic delta, MM, ML-lean, two 0DTE
+                  variants, term-structure arb and slope, dispersion, variance swap, LEAPS convexity, cross-asset spread
+                  and ratio spread, plus the legacy <code>VOL_TRADING_OPTIONS</code>.
                 </td>
               </tr>
               <tr>
@@ -2519,8 +2604,8 @@
                 <td class="grp grp-post"><strong>PORTFOLIO</strong></td>
                 <td>4</td>
                 <td>
-                  Cross-category sleeves, added as the ninth orthogonal family 2026-04-25: multi-strategy, risk
-                  parity, factor allocation, tactical overlay.
+                  Cross-category sleeves, added as the ninth orthogonal family 2026-04-25: multi-strategy, risk parity,
+                  factor allocation, tactical overlay.
                 </td>
               </tr>
             </tbody>
@@ -2544,7 +2629,9 @@
             <tbody>
               <tr>
                 <td><code>ML_DIRECTIONAL_CONTINUOUS</code></td>
-                <td class="fg-list">momentum, moving_averages, oscillators, technical_indicators, volatility_realized</td>
+                <td class="fg-list">
+                  momentum, moving_averages, oscillators, technical_indicators, volatility_realized
+                </td>
                 <td class="cc cc-gap">gap</td>
                 <td class="cc cc-gap">gap</td>
                 <td class="cc cc-gap">gap</td>
@@ -3120,17 +3207,16 @@
       </div>
 
       <p>
-        <strong>Reading this honestly.</strong> 6 of 60 archetypes are batch-ready and 6 are live-ready by this
-        measure (5 paper-ready — <code>CARRY_STAKED_BASIS</code>'s paper leg is unverified rather than confirmed);
-        7 are unverified rather than broken; the remaining 47 have at least one failing hook, most often no
-        factory-registered engine at all. That is not a defect in this table — it is what a code-completeness
-        measure independent of any venue's data looks like today, and it matches what
-        <code>param_schema.py</code>'s and <code>factory.py</code>'s own module docstrings already say in prose. The
-        <code>VOL_TRADING</code> family (19 archetypes) and the four MEV archetypes account for most of the gap.
-        Deployment profile is a separate, orthogonal axis: 34 of the 60 archetypes run co-located-VM for latency
-        (<code>ARCHETYPE_TO_DEPLOYMENT_PROFILE</code>) — mostly CARRY_AND_YIELD, ARBITRAGE_STRUCTURAL,
-        MARKET_MAKING and STAT_ARB_PAIRS — while VOL_TRADING, EVENT_DRIVEN and PORTFOLIO (26 archetypes) run
-        distributed.
+        <strong>Reading this honestly.</strong> 6 of 60 archetypes are batch-ready and 6 are live-ready by this measure
+        (5 paper-ready — <code>CARRY_STAKED_BASIS</code>'s paper leg is unverified rather than confirmed); 7 are
+        unverified rather than broken; the remaining 47 have at least one failing hook, most often no factory-registered
+        engine at all. That is not a defect in this table — it is what a code-completeness measure independent of any
+        venue's data looks like today, and it matches what <code>param_schema.py</code>'s and <code>factory.py</code>'s
+        own module docstrings already say in prose. The <code>VOL_TRADING</code> family (19 archetypes) and the four MEV
+        archetypes account for most of the gap. Deployment profile is a separate, orthogonal axis: 34 of the 60
+        archetypes run co-located-VM for latency (<code>ARCHETYPE_TO_DEPLOYMENT_PROFILE</code>) — mostly
+        CARRY_AND_YIELD, ARBITRAGE_STRUCTURAL, MARKET_MAKING and STAT_ARB_PAIRS — while VOL_TRADING, EVENT_DRIVEN and
+        PORTFOLIO (26 archetypes) run distributed.
       </p>
     </details>
   </section>
@@ -3142,32 +3228,37 @@
       <h2>Venue and chain breadth</h2>
       <b class="st st-part">partial</b>
       <b class="ev ev-verified">✓ verified</b>
+      <b
+        class="own"
+        title="plans/epics/strategy_master.md -- the venue/chain inventory wired to the engine described in section 01-09"
+        >owner: strategy_master</b
+      >
     </div>
     <p class="lede">
-      The engine described in §01–§09 is venue- and chain-agnostic by construction (§08); this section is the
-      concrete inventory of what it is actually wired to today, measured from the same registries the engine reads
-      at runtime rather than counted by hand.
+      The engine described in §01–§09 is venue- and chain-agnostic by construction (§08); this section is the concrete
+      inventory of what it is actually wired to today, measured from the same registries the engine reads at runtime
+      rather than counted by hand.
     </p>
     <div class="keypoints">
       <div>
         <b>192 venues declared</b
         ><span
-          >Every entry in <code>VENUE_DATA_TYPE_CAPABILITIES</code>, across DeFi, CeFi, TradFi, sports and
-          prediction markets</span
+          >Every entry in <code>VENUE_DATA_TYPE_CAPABILITIES</code>, across DeFi, CeFi, TradFi, sports and prediction
+          markets</span
         >
       </div>
       <div>
         <b>23 chains, not 2</b
         ><span
-          >Every member of <code>ChainKind</code> — the authoritative chain enum, not a string-literal grep. 14 of
-          the 23 already have a live DeFi venue key; 9 are onboarded ahead of venue coverage</span
+          >Every member of <code>ChainKind</code> — the authoritative chain enum, not a string-literal grep. 14 of the
+          23 already have a live DeFi venue key; 9 are onboarded ahead of venue coverage</span
         >
       </div>
       <div>
         <b>DeFi venue count: unresolved, honestly</b
         ><span
-          >No single registry answers "how many DeFi venues" cleanly — this section cites the specific, named
-          registry behind every number rather than asserting one total</span
+          >No single registry answers "how many DeFi venues" cleanly — this section cites the specific, named registry
+          behind every number rather than asserting one total</span
         >
       </div>
     </div>
@@ -3186,36 +3277,38 @@
           produced "19 chain tokens" — a filter artefact, not a registry read: it missed
           <code>gnosis</code>, <code>mode</code>, <code>celo</code>, <code>aurora</code>, <code>fantom</code>,
           <code>metis</code>, <code>moonbeam</code> and <code>bitcoin</code> entirely, and wrongly counted three
-          <code>hyperliquid_api</code>/<code>_rest</code>/<code>_testnet</code> naming variants as separate chains.
-          The same pass estimated "51 DeFi venues" from a name-prefix filter; a peer re-measurement of the same
-          question got 130, ~59–70, or 103 depending on which filter was applied, and correctly declined to pick
-          one. Both are corrected below by importing the actual enums rather than pattern-matching for them.
+          <code>hyperliquid_api</code>/<code>_rest</code>/<code>_testnet</code> naming variants as separate chains. The
+          same pass estimated "51 DeFi venues" from a name-prefix filter; a peer re-measurement of the same question got
+          130, ~59–70, or 103 depending on which filter was applied, and correctly declined to pick one. Both are
+          corrected below by importing the actual enums rather than pattern-matching for them.
         </p>
       </div>
       <p>
         <strong>Source.</strong> The chain count is a direct import and enumeration of <code>ChainKind</code> in
-        <code>unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py</code> — the canonical
-        chain identifier used by strategy archetype configs' <code>allowed_chains</code> field, execution-service
-        connector routing, and MTDS per-chain adapter dispatch. 23 members, enumerated directly, not grepped. Venue
-        counts are <code>VENUE_DATA_TYPE_CAPABILITIES</code> (192 keys) and
-        <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> (121 keys, the DeFi-specific portion merged into the main
-        dict), both from <code>unified-api-contracts/unified_api_contracts/registry/</code>, measured live
-        2026-08-19. The 192, 60 archetypes and 9 families are independently reproduced by this section and by the
-        registry ground-truth audit (<code>plans/audit/results/registry_ground_truth_2026_08_19.md</code>, itself
-        corrected in the same session) — those three counts are solid. The DeFi venue total is deliberately not
-        asserted as one number below: the 67-protocol / 121-entry breakdown is a real, precisely-scoped measurement
-        of one named registry, not a claim that it is "the" DeFi venue count.
+        <code>unified-api-contracts/unified_api_contracts/canonical/crosscutting/defi.py</code> — the canonical chain
+        identifier used by strategy archetype configs' <code>allowed_chains</code> field, execution-service connector
+        routing, and MTDS per-chain adapter dispatch. 23 members, enumerated directly, not grepped. Venue counts are
+        <code>VENUE_DATA_TYPE_CAPABILITIES</code> (192 keys) and <code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code> (121
+        keys, the DeFi-specific portion merged into the main dict), both from
+        <code>unified-api-contracts/unified_api_contracts/registry/</code>, measured live 2026-08-19. The 192, 60
+        archetypes and 9 families are independently reproduced by this section and by the registry ground-truth audit
+        (<code>plans/audit/results/registry_ground_truth_2026_08_19.md</code>, itself corrected in the same session) —
+        those three counts are solid. The DeFi venue total is deliberately not asserted as one number below: the
+        67-protocol / 121-entry breakdown is a real, precisely-scoped measurement of one named registry, not a claim
+        that it is "the" DeFi venue count.
       </p>
       <p>
         <strong>Do not use <code>VENUE_CHAIN_MAP</code> for chain coverage.</strong> That registry declares only 4
         chains across 15 venues and under-reports by construction — already flagged as a P0 backend finding in the
-        registry ground-truth audit above. Every count in this section comes from <code>ChainKind</code> and the
-        venue capability registries directly, never from that map.
+        registry ground-truth audit above. Every count in this section comes from <code>ChainKind</code> and the venue
+        capability registries directly, never from that map.
       </p>
       <div class="plate">
         <div class="plate-head">
           <span class="label">Every ChainKind member</span
-          ><span class="note">23 chains from ChainKind, cross-referenced against live venue keys in VENUE_DATA_TYPE_CAPABILITIES</span>
+          ><span class="note"
+            >23 chains from ChainKind, cross-referenced against live venue keys in VENUE_DATA_TYPE_CAPABILITIES</span
+          >
         </div>
         <div class="plate-body scroll-x">
           <table>
@@ -3312,8 +3405,8 @@
                 <td>0</td>
                 <td>
                   Registered in <code>ChainKind</code> and in chain infrastructure (<code>chain_env.py</code>'s
-                  <code>MAINNET_CHAIN_IDS</code>/<code>CHAIN_GENESIS_DATES</code>) but has no live venue key yet —
-                  chain support exists ahead of venue coverage here
+                  <code>MAINNET_CHAIN_IDS</code>/<code>CHAIN_GENESIS_DATES</code>) but has no live venue key yet — chain
+                  support exists ahead of venue coverage here
                 </td>
               </tr>
               <tr>
@@ -3354,24 +3447,22 @@
         <strong>The reverse gap: a live chain missing from <code>ChainKind</code>.</strong> <code>plasma</code>
         (2025 Tether-backed L1) has two live venue keys today — AAVE-PLASMA and FLUID-PLASMA, reached via
         <code>DEFI_VENUE_TO_PROTOCOL</code> — but is <strong>not</strong> a <code>ChainKind</code> member, so it is
-        absent from the table above despite having real venue coverage. Aave launched on Plasma the same day as
-        mainnet with over $6.5B deposited in week one, so this is not an edge case. This is the mirror image of
+        absent from the table above despite having real venue coverage. Aave launched on Plasma the same day as mainnet
+        with over $6.5B deposited in week one, so this is not an edge case. This is the mirror image of
         <code>VENUE_CHAIN_MAP</code>'s under-declaration and <code>blast</code>/<code>aurora</code>/etc.'s
         chain-ahead-of-venue gap above — three different registries drifting out of sync with each other in three
-        different directions, worth reconciling in the same pass as the <code>VENUE_CHAIN_MAP</code> P0 already
-        tracked in the ground-truth audit,
-        <b class="ev ev-check">? check</b>.
+        different directions, worth reconciling in the same pass as the <code>VENUE_CHAIN_MAP</code> P0 already tracked
+        in the ground-truth audit, <b class="ev ev-check">? check</b>.
       </p>
       <p>
         <strong>Per-asset-group split.</strong> Of the 192 declared venues, 121 are DeFi protocol×chain entries
         (<code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code>) and 71 are CeFi, TradFi, sports and prediction combined. A
         finer split by those four groups is not reported here: the registry's own
         <code>get_venue_asset_group()</code> classifier keys its DeFi lookup on lowercase adapter names
-        (<code>"uniswap_v3"</code>) rather than the uppercase <code>PROTOCOL-CHAIN</code> venue keys this section
-        uses, so every DeFi venue silently falls back to its <code>"cefi"</code> default — a real classifier gap
-        found while measuring this section,
-        <b class="ev ev-check">? check</b>, distinct from the already-flagged <code>VENUE_CHAIN_MAP</code> issue
-        above and not fixed here (out of this document's scope).
+        (<code>"uniswap_v3"</code>) rather than the uppercase <code>PROTOCOL-CHAIN</code> venue keys this section uses,
+        so every DeFi venue silently falls back to its <code>"cefi"</code> default — a real classifier gap found while
+        measuring this section, <b class="ev ev-check">? check</b>, distinct from the already-flagged
+        <code>VENUE_CHAIN_MAP</code> issue above and not fixed here (out of this document's scope).
       </p>
       <div class="plate">
         <div class="plate-head">
@@ -3388,73 +3479,343 @@
               </tr>
             </thead>
             <tbody>
-              <tr><td><code>AAVE_V3</code></td><td class="fg-list">arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon, scroll, zksync</td><td>10</td></tr>
-              <tr><td><code>BALANCER</code></td><td class="fg-list">arbitrum, avalanche, base, ethereum, optimism, polygon</td><td>6</td></tr>
-              <tr><td><code>BEEFY</code></td><td class="fg-list">arbitrum, avalanche, base, bsc, ethereum, polygon</td><td>6</td></tr>
-              <tr><td><code>COMPOUND_V3</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon, scroll</td><td>6</td></tr>
-              <tr><td><code>CHAINLINK</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td><td>5</td></tr>
-              <tr><td><code>MORPHO</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td><td>5</td></tr>
-              <tr><td><code>UNISWAP_V3</code></td><td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td><td>5</td></tr>
-              <tr><td><code>PANCAKESWAP_V3</code></td><td class="fg-list">arbitrum, base, bsc, ethereum</td><td>4</td></tr>
-              <tr><td><code>CURVE</code></td><td class="fg-list">avalanche, ethereum, optimism</td><td>3</td></tr>
-              <tr><td><code>IDLE</code></td><td class="fg-list">arbitrum, ethereum, polygon</td><td>3</td></tr>
-              <tr><td><code>RADIANT</code></td><td class="fg-list">arbitrum, bsc, ethereum</td><td>3</td></tr>
-              <tr><td><code>SUSHISWAP_V3</code></td><td class="fg-list">avalanche, base, ethereum</td><td>3</td></tr>
-              <tr><td><code>YEARN_V3</code></td><td class="fg-list">arbitrum, ethereum, optimism</td><td>3</td></tr>
-              <tr><td><code>EULER_V2</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
-              <tr><td><code>KARAK</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
-              <tr><td><code>PENDLE</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
-              <tr><td><code>RENZO</code></td><td class="fg-list">arbitrum, ethereum</td><td>2</td></tr>
-              <tr><td><code>VENUS</code></td><td class="fg-list">bsc, ethereum</td><td>2</td></tr>
-              <tr><td><code>AAVE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>ACROSS</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>AERODROME_V3</code></td><td class="fg-list">base</td><td>1</td></tr>
-              <tr><td><code>ALCHEMY-ONCHAIN</code></td><td class="fg-list">(chain-agnostic RPC infra)</td><td>1</td></tr>
-              <tr><td><code>ANKR</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>BENQI</code></td><td class="fg-list">avalanche</td><td>1</td></tr>
-              <tr><td><code>CAMELOT_V3</code></td><td class="fg-list">arbitrum</td><td>1</td></tr>
-              <tr><td><code>COINBASE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>COMPOUND</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>CONVEX</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>EIGENLAYER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>ETHENA</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>ETHERFI</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>FLASHBOTS</code></td><td class="fg-list">ethereum (MEV infra, not a trading protocol)</td><td>1</td></tr>
-              <tr><td><code>FLUID</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>FRAX</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>JITO</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>JITORESTAKING</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>JUPITER</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>KAMINO</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>KELPDAO</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>LIDO</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>LIFINITY</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>MAKER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>MANTLE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>MARGINFI</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>MARINADE</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>METEORA</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>MORPHOVAULTS</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>ORCA</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>PHOENIX</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>PUFFER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>PYTH</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>RAYDIUM</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>ROCKETPOOL</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>SOLBLAZE</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>SOLEND</code></td><td class="fg-list">solana</td><td>1</td></tr>
-              <tr><td><code>SPARK</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>STADER</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>STAKEWISE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>STARGATE</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>SUSHISWAP</code></td><td class="fg-list">arbitrum</td><td>1</td></tr>
-              <tr><td><code>SWELL</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>SYMBIOTIC</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>TRADER_JOE_V2</code></td><td class="fg-list">avalanche</td><td>1</td></tr>
-              <tr><td><code>UNISWAP</code></td><td class="fg-list">ethereum (v1-era pool)</td><td>1</td></tr>
-              <tr><td><code>UNISWAP_V2</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>UNISWAP_V4</code></td><td class="fg-list">ethereum</td><td>1</td></tr>
-              <tr><td><code>VELODROME_V2</code></td><td class="fg-list">optimism</td><td>1</td></tr>
+              <tr>
+                <td><code>AAVE_V3</code></td>
+                <td class="fg-list">
+                  arbitrum, avalanche, base, bsc, ethereum, linea, optimism, polygon, scroll, zksync
+                </td>
+                <td>10</td>
+              </tr>
+              <tr>
+                <td><code>BALANCER</code></td>
+                <td class="fg-list">arbitrum, avalanche, base, ethereum, optimism, polygon</td>
+                <td>6</td>
+              </tr>
+              <tr>
+                <td><code>BEEFY</code></td>
+                <td class="fg-list">arbitrum, avalanche, base, bsc, ethereum, polygon</td>
+                <td>6</td>
+              </tr>
+              <tr>
+                <td><code>COMPOUND_V3</code></td>
+                <td class="fg-list">arbitrum, base, ethereum, optimism, polygon, scroll</td>
+                <td>6</td>
+              </tr>
+              <tr>
+                <td><code>CHAINLINK</code></td>
+                <td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td><code>MORPHO</code></td>
+                <td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td><code>UNISWAP_V3</code></td>
+                <td class="fg-list">arbitrum, base, ethereum, optimism, polygon</td>
+                <td>5</td>
+              </tr>
+              <tr>
+                <td><code>PANCAKESWAP_V3</code></td>
+                <td class="fg-list">arbitrum, base, bsc, ethereum</td>
+                <td>4</td>
+              </tr>
+              <tr>
+                <td><code>CURVE</code></td>
+                <td class="fg-list">avalanche, ethereum, optimism</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><code>IDLE</code></td>
+                <td class="fg-list">arbitrum, ethereum, polygon</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><code>RADIANT</code></td>
+                <td class="fg-list">arbitrum, bsc, ethereum</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><code>SUSHISWAP_V3</code></td>
+                <td class="fg-list">avalanche, base, ethereum</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><code>YEARN_V3</code></td>
+                <td class="fg-list">arbitrum, ethereum, optimism</td>
+                <td>3</td>
+              </tr>
+              <tr>
+                <td><code>EULER_V2</code></td>
+                <td class="fg-list">arbitrum, ethereum</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>KARAK</code></td>
+                <td class="fg-list">arbitrum, ethereum</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>PENDLE</code></td>
+                <td class="fg-list">arbitrum, ethereum</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>RENZO</code></td>
+                <td class="fg-list">arbitrum, ethereum</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>VENUS</code></td>
+                <td class="fg-list">bsc, ethereum</td>
+                <td>2</td>
+              </tr>
+              <tr>
+                <td><code>AAVE</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>ACROSS</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>AERODROME_V3</code></td>
+                <td class="fg-list">base</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>ALCHEMY-ONCHAIN</code></td>
+                <td class="fg-list">(chain-agnostic RPC infra)</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>ANKR</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>BENQI</code></td>
+                <td class="fg-list">avalanche</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>CAMELOT_V3</code></td>
+                <td class="fg-list">arbitrum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>COINBASE</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>COMPOUND</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>CONVEX</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>EIGENLAYER</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>ETHENA</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>ETHERFI</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>FLASHBOTS</code></td>
+                <td class="fg-list">ethereum (MEV infra, not a trading protocol)</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>FLUID</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>FRAX</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>JITO</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>JITORESTAKING</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>JUPITER</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>KAMINO</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>KELPDAO</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>LIDO</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>LIFINITY</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>MAKER</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>MANTLE</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>MARGINFI</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>MARINADE</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>METEORA</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>MORPHOVAULTS</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>ORCA</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>PHOENIX</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>PUFFER</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>PYTH</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>RAYDIUM</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>ROCKETPOOL</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>SOLBLAZE</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>SOLEND</code></td>
+                <td class="fg-list">solana</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>SPARK</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>STADER</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>STAKEWISE</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>STARGATE</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>SUSHISWAP</code></td>
+                <td class="fg-list">arbitrum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>SWELL</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>SYMBIOTIC</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>TRADER_JOE_V2</code></td>
+                <td class="fg-list">avalanche</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>UNISWAP</code></td>
+                <td class="fg-list">ethereum (v1-era pool)</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>UNISWAP_V2</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>UNISWAP_V4</code></td>
+                <td class="fg-list">ethereum</td>
+                <td>1</td>
+              </tr>
+              <tr>
+                <td><code>VELODROME_V2</code></td>
+                <td class="fg-list">optimism</td>
+                <td>1</td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -3462,11 +3823,11 @@
       <p>
         Protocol-version variants are listed as distinct registry keys (<code>AAVE</code> vs. <code>AAVE_V3</code>,
         <code>UNISWAP</code>/<code>UNISWAP_V2</code>/<code>UNISWAP_V3</code>/<code>UNISWAP_V4</code>,
-        <code>SUSHISWAP</code> vs. <code>SUSHISWAP_V3</code>) because that is how the venue capability registry
-        declares them — each carries its own per-data-type start dates. This table is 67 rows / 121 protocol×chain
-        entries from one specific, named registry (<code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code>); it is not offered
-        as "the" DeFi venue count — see the correction and source notes above for why that single number does not
-        currently exist as a clean, reproducible measurement.
+        <code>SUSHISWAP</code> vs. <code>SUSHISWAP_V3</code>) because that is how the venue capability registry declares
+        them — each carries its own per-data-type start dates. This table is 67 rows / 121 protocol×chain entries from
+        one specific, named registry (<code>DEFI_VENUE_DATA_TYPE_CAPABILITIES</code>); it is not offered as "the" DeFi
+        venue count — see the correction and source notes above for why that single number does not currently exist as a
+        clean, reproducible measurement.
       </p>
     </details>
   </section>
