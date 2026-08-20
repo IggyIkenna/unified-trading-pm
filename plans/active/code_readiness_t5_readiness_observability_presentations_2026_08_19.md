@@ -374,8 +374,19 @@ todos only to confirm they are data-movement, then leave it.
       a real future exhaustion window's journalctl output this pass does not have.
 - [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
       `/codex/04-architecture/agent-orchestrator-alerting.md`.
-- [ ] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
-      `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md` (11 open).
+- [x] [BACKEND] P1. Complete the E2E wiring reachability audit. Evidence:
+      `/plans/active/issues/e2e_wiring_reachability_audit_2026_08_15.md` (11 open). **Mis-scoped at authoring,
+      corrected 2026-08-20**: the doc's own frontmatter `repos:` is `[strategy-service, execution-service,
+      unified-api-contracts, system-integration-tests]` — only `system-integration-tests` is T5-owned, and none
+      of the 11 open items name it (verified: grepped the full open-item text for `system-integration-tests`/`sit`,
+      zero hits). 1 is `[OPERATOR]` P0 (a blocking design ruling), 1 `[AGENT]` P1 explicitly says "resolve as a
+      LOCAL/operator-scoped design todo... before dispatching" and touches `execution-service`/`strategy-service`,
+      1 `[AGENT]` P2 is a disclosure-artifact fix outside T5's four artefacts, and 7 are a distinct
+      OTC-reconciliation/MiFID-audit-trail finding cluster (booking, reconciliation engine, audit coverage) —
+      none of which is E2E-wiring-reachability subject matter and none of which sits in a T5 repo. Not fixing
+      cross-repo per the tranche's own "edit ONLY the repos you own" rule; these belong to whichever tranche(s)
+      own `strategy-service`/`execution-service` (T3/T4 per the coordinator's allocation) and are already visible
+      to them via this same issue doc — no new inbound request needed since it's not a T5-discovered gap.
 - [x] ✅ [BACKEND] P2. Fix the SIT stamp-dispatch 503 false positive. Evidence:
       `/plans/archive/2026_08/issues/sit_stamp_dispatch_503_false_positive_2026_08_17.md` (archived 2026-08-20,
       resolved). **Implemented the doc's own

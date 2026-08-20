@@ -81,19 +81,21 @@ production DI wiring has landed yet.
   reordered across allocators. Done-when: the test fails if `_withdraw_to_allocator` is ever refactored to share state
   across redemptions in the same `run_once()` call. — fund-administration-service@90603d94a7; Evidence: test-only quality gate 38 passed, 83.96% coverage; full quickmerge quality gate passed.
 
-- [ ] [BACKEND] P0. Confirm `FundTransferContext` actually trips execution-service's own per-client isolation
+- [x] ✅ [BACKEND] P0. Confirm `FundTransferContext` actually trips execution-service's own per-client isolation
   enforcement when called via the structural `TransferAdapter` Protocol
   (`fund_administration_service/allocation/transfer_protocol.py:63`) — locate the `CrossClientTransferForbiddenError`
   raise site in `execution-service/execution_service/engine/transfers/` and add/confirm a test proving a redemption
   batch with a deliberately mismatched `fund_context` (wrong client's wallet as `destination`) is rejected, not
   silently executed. Done-when: that test asserts `CrossClientTransferForbiddenError` fires.
+  — unified-api-contracts@040c871c, execution-service@6d43020e, fund-administration-service@ccc751c; Evidence: QG green in all three repos; new execution-service test `test_transfer_adapter_client_isolation.py` asserts `CrossClientTransferForbiddenError` fires on a mismatched `fund_context.client_id`, and fund-admin's `_withdraw_to_allocator` now carries `client_id=allocator_id` per redemption.
 
-- [ ] [BACKEND] P1. Add idempotency safety for the cadence loop's retry path: a `run_once()` tick that crashes after
+- [x] ✅ [BACKEND] P1. Add idempotency safety for the cadence loop's retry path: a `run_once()` tick that crashes after
   `execute_withdrawal` succeeds but before `_persist_processed` commits would, on the NEXT tick, find the same
   redemption still `APPROVED` and past its expiry — confirm `redemption_id` is used as (or maps to) the transfer's
   idempotency key so a retried tick never double-withdraws. Done-when: a test simulating exactly that crash sequence
   (transfer succeeds, persist fails, `run_once()` called again) asserts only ONE real withdrawal is issued for that
   redemption_id.
+  — fund-administration-service@af9d292, execution-service@d8bae52a; Evidence: QG green in both repos; `_withdraw_to_allocator` passes `idempotency_key=redemption_id` and the adapters dedupe on it (execution-service `TestWithdrawalIdempotency` + fund-admin `test_crashed_tick_does_not_double_withdraw_on_retry`).
 
 - [ ] [BACKEND] P1. Audit whether `AmlKycGate` clearance is re-evaluated at grace-period-EXPIRY time or only at
   redemption-REQUEST time — a grace period spanning hours-to-days means a client's AML/KYC status could change in
@@ -114,3 +116,7 @@ production DI wiring has landed yet.
   wallet-transfer-execution + per-client-isolation leg under `client_isolation_and_governance_master`.
 
 - **2026-08-20**: Shipped the multi-client cadence isolation regression test in `fund-administration-service@90603d94a7`; the test records destination, amount, and context fund per withdrawal and proves two allocator-specific approvals produce two non-overlapping calls in one `run_once()` tick. Test-only quality gate: 38 passed, 83.96% coverage; quickmerge full gate passed.
+
+- **2026-08-20**: Shipped todo 2 (adapter-path per-client isolation enforcement). **Finding**: `FundTransferContext` did NOT previously trip execution-service's isolation via the `TransferAdapter` Protocol — the `CrossClientTransferForbiddenError` raise site is `TransferCoordinator.validate_intent` (`execution-service/execution_service/transfer_coordinator.py:261`), keyed on `TransferIntent.client_id`, a path fund-admin's `execute_withdrawal` never takes; all four adapters (Mock/CCXT/Custody/Composite) threaded `fund_context` through as pure metadata, so a mismatched context was silently executed. Closed the gap: added `FundTransferContext.client_id` (unified-api-contracts@040c871c), an `assert_fund_context_client_allowed()` guard wired into the fund-moving `execute_*` methods (execution-service@6d43020e), and populated `client_id=redemption.allocator_id` in `GracePeriodHandler._withdraw_to_allocator` (fund-administration-service@ccc751c). Tests: `tests/unit/engine/test_transfer_adapter_client_isolation.py` (execution-service) asserts `CrossClientTransferForbiddenError` fires before any venue/chain RPC on a mismatched `fund_context`; `test_withdraw_to_allocator_carries_allocator_client_id` (fund-admin) proves each redemption's withdrawal carries its own allocator client_id. QG green in all three repos.
+
+- **2026-08-20**: Shipped todo 3 (idempotency safety for the cadence retry path). **Finding**: the redemption path previously had NO idempotency — a `run_once()` tick that crashed after the withdrawal succeeded but before `_persist_processed` committed would re-issue the withdrawal on the next tick. Fixed: `_withdraw_to_allocator` now passes `idempotency_key=redemption.redemption_id` (fund-administration-service@af9d292), and execution-service's `execute_withdrawal` adapters dedupe on the key (Mock/LiveCcxt memoize the issued `TransferResult`; Composite passes through; execution-service@d8bae52a). `LocalSimulatedTransferAdapter` (fund-admin's default production adapter) gained the same in-process dedupe. Tests: execution-service `TestWithdrawalIdempotency` (same key → one real withdrawal + same transfer_id; different keys → both execute; LiveCcxt exchange hit once) + fund-admin `test_crashed_tick_does_not_double_withdraw_on_retry` (persist-crash on tick 1, retry tick 2 → only ONE real withdrawal for that redemption_id). QG green both repos.
