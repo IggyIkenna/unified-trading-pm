@@ -733,6 +733,21 @@ todos only to confirm they are data-movement, then leave it.
       already documented; reverted rather than force through the gate). Remaining open todos across the tail are
       genuinely open — operator-gated decisions, machine-`gate_on_depends`-blocked finalize plans awaiting a parent
       that isn't done, or real unstarted engineering/ops work — not a bookkeeping gap.
+- [ ] [AGENT] P3. Apply the 2 verified-but-unshipped fixes in
+      `cross_cutting_satellite_ao_dispatch_batch13_2026_08_13.md` once its pre-existing line-cap block clears (see
+      that doc's own item 1 / `epic_taxonomy_restructure_and_html_reconcile_2026_08_18.md` line 290 for the
+      blocker — needs either a real split or a 5th operator-ruled `check_line_caps.sh` carve-out). Both verified
+      2026-08-20, evidence still valid:
+      1. The "Bisect test_dp_recovery_actuators.py's full-suite contamination" todo (`[CODE] P2`) — flip `[x]`,
+         already resolved: source doc `plans/archive/2026_08/issues/deployment_service_qg_red_11_actuator_tests_suite_order_regression_2026_08_10.md`
+         is `status: resolved`, fixed by `deployment-service@0c38c00d` (an autouse conftest fixture isolating
+         LocalStorageProvider's shared tempdir), full QG re-verified green (3332 passed, all 11 actuator tests).
+      2. The "Step 3 cross-data_type completeness capture per venue_data_types.yaml" todo (`[CODE] P2`) — flip
+         `[x]`, already resolved: the block's own inline note ("NOT ACTIONABLE 2026-08-15, mis-scoped for a single
+         AO dispatch, re-scoping filed separately") confirms investigation is complete and the work was correctly
+         re-filed to `plans/active/issues/cross_cutting_data_type_completeness_capture_mis_scoped_ao_dispatch_2026_08_15.md`
+         (confirmed exists) — matches this doc's own established "diagnosed → re-routed → flip [x]" pattern used on
+         neighboring items.
 - [ ] [AGENT] P0. Post-phase codex audit for every contract changed.
 - [ ] [AGENT] P0. **Final gate for the whole effort** — confirm all four artefacts carry no `pending`, `planned`,
       `partial`, `not built` or `unverified` marker outside the five allowed states, and that every number carries
