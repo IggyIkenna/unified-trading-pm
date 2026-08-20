@@ -383,7 +383,7 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   (11,075 passed, 28 skipped, 1 xpassed). The real historical `B < B2` fixture and
   CLI canonical-shard wiring remain a separate gate below and do not authorize
   archetype registration.
-- [x] ✅ [MTDS] P1. Added the canonical Aave candidate snapshot shard handler and proved a real Aave V3 Ethereum `B < B2` replay fixture before downstream gates. — market-tick-data-service@ac2f9d14 + @f516b389 + evidence: canonical parquet handler, UAC validation, deterministic replay test, source block 24486447 precedes LiquidationCall block 25253912; MTDS quality gates passed (11,076 passed, 28 skipped, 1 xpassed, 81.97% coverage); both commits are on origin/live-defi-rollout.
+- [x] ✅ [MTDS] P1. Added the canonical Aave candidate snapshot shard handler and proved a real Aave V3 Ethereum `B < B2` replay fixture before downstream gates. — market-tick-data-service@ac2f9d14 + @f516b389 + @4a2924ce3a + evidence: canonical parquet handler, UAC validation, deterministic replay test, Alchemy archive-RPC source block 25649186 precedes LiquidationCall block 25789896; MTDS quality gates passed (11,076 passed, 28 skipped, 1 xpassed, 81.97% coverage); all commits are on origin/live-defi-rollout.
 - [x] ✅ [FEATURES] P1. Add snapshot enrichment and provenance propagation using
   only real as-of prices, parameters, slippage/liquidity, and gas cost; test stale/missing joins as unavailable. — features-service@b2fcc11518 + evidence: QG_SLICE=tests (18491 passed, 209 skipped); QG_SLICE=typecheck passed.
 - [ ] [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
@@ -409,4 +409,4 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   `execution-service@64395d6d97` on `origin/live-defi-rollout`.
 
 
-- **2026-08-20 (slot-10):** Closed the MTDS candidate-snapshot gate in `market-tick-data-service`. The CLI handler persists UAC-validated `liquidation_candidate_snapshots` canonical shards and records manifest outcomes; the Blockscout-backed fixture proves Borrow block 24486447 precedes the known LiquidationCall at block 25253912, uses block-pinned prices, and replays deterministically through the canonicalizer. Unavailable rows retain typed provenance and no numeric defaults.
+- **2026-08-20 (slot-10):** Closed the MTDS candidate-snapshot gate in `market-tick-data-service`. The CLI handler persists UAC-validated `liquidation_candidate_snapshots` canonical shards and records manifest outcomes; the Alchemy archive-RPC fixture proves Borrow block 25649186 precedes the known LiquidationCall at block 25789896, uses block-pinned prices, and replays deterministically through the canonicalizer. Unavailable rows retain typed provenance and no numeric defaults.
