@@ -183,17 +183,15 @@ todos only to confirm they are data-movement, then leave it.
       tracer, not an engine), asserted by `test_sandwich_theoretical.py` +
       `test_phase8_archetype_factory_smoke.py`. Evidence: `get_archetype_engine_class()` resolves all 59;
       `tests/unit` 3757 passed on the landed tree.
-- [ ] [BACKEND] P0. Give every archetype a `PARAM_SCHEMA_REGISTRY` entry. **19 remain** (registry 35 -> 40 on
-      2026-08-19: added `VOL_0DTE_PIN_RISK` + the 4 `PORTFOLIO_*`). The 19 are now EXACTLY the whole remaining
-      `not_ready` population of the code-completeness matrix — every other mode-invariant leg is clean — and they are
-      the same set `param_schema.py`'s `_SCHEMA_COVERAGE_BASELINE_MISSING_SCHEMA` shrinking ratchet already tracks:
-      `ARBITRAGE_CROSS_DOMAIN_EVENT`, `ARBITRAGE_MEV_{BACKRUN,JIT_LIQUIDITY,LIQUIDATION_BUNDLE}`,
-      `ARBITRAGE_SPORTS_DUTCHING`, `CARRY_BASIS_DATED`, `CARRY_BASIS_DATED_INV`, `CARRY_BASIS_PERP_INV`,
-      `CARRY_FUNDING_DISPERSION`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, `EVENT_DRIVEN`, `LIQUIDATION_CAPTURE`,
-      `ML_DIRECTIONAL_{CONTINUOUS,EVENT_SETTLED}`, `RULES_DIRECTIONAL_{CONTINUOUS,EVENT_SETTLED}`,
-      `STAT_ARB_{CROSS_SECTIONAL,PAIRS_FIXED}`, `TSMOM_BTC_CTA`. Every declared default must cite the engine's real
-      `*_param(...)` read at `file:line` — `test_param_schema.py` asserts defaults match the engine, so a guessed
-      default fails. Param reads for all 19 already extracted.
+- [x] [BACKEND] P0. Give every archetype a `PARAM_SCHEMA_REGISTRY` entry — **done**, `strategy-service@37989f99`.
+      Registry 40 -> 59; `check_archetype_schema_coverage().missing_schema` is empty and
+      `_SCHEMA_COVERAGE_BASELINE_MISSING_SCHEMA` shrank to `frozenset()`. Every default is the ENGINE default cited
+      to its real `*_param(...)` read at `file:line` (`test_param_schema.py` asserts the two agree, so a guessed
+      default fails). `CARRY_FUNDING_DISPERSION` — the one this todo named as confirmed missing — is included. Two
+      pairs share a param surface by construction: `CARRY_BASIS_DATED`/`_INV` (`CarryBasisDatedEngine`) and
+      `CARRY_BASIS_PERP_INV`/`CARRY_RECURSIVE_BORROW_LENDING_ONLY` (`CarryRecursiveStakedEngine`). The baseline
+      constant is KEPT, not deleted: empty is what makes the gate fail immediately on the next archetype registered
+      without a schema.
 - [x] [BACKEND] P0. Give every archetype a `target_universe` catalog entry — **done**, `strategy-service@1bda20fb`.
       `catalog_expansion.py` seeds all 27 newly-registered archetypes (table-driven; 3 rows each, +81 rows, 549 ->
       630). Measured: `specs_for_archetype()` non-empty for all 59 registered archetypes; the
@@ -207,8 +205,16 @@ todos only to confirm they are data-movement, then leave it.
 - [ ] [BACKEND] P0. Wire mode-specific dispatch for every archetype across **batch, paper AND live**. Paper's
       per-family tick-loader dispatch and live's dispatch below the shared orchestrator have no clean registry
       lookup today — build one rather than leaving the check unverifiable.
-- [ ] [BACKEND] P0. Re-run `/archetype-code-completeness` after the above and drive it to zero `not_ready`. Every
-      remaining `unverified` must name the missing check, never be a silent pass.
+- [x] [BACKEND] P0. Re-run `/archetype-code-completeness` and drive it to zero `not_ready` — **done**,
+      `strategy-service@37989f99`. **`not_ready` = 0 in all three modes** (was 47). All three mode-invariant legs
+      are 177/177 ready: `engine_factory`, `param_schema`, `target_universe_catalog`. Remaining rows are
+      `unverified`, not failing, and each NAMES its missing check rather than passing silently — which is what this
+      todo required: `allocator_rank` (153 rows) is deliberately `unverified` because 8 GENERIC allocators may
+      legitimately serve an archetype (a ruling, not wiring — its own todo above); `batch_dispatch` (42) /
+      `paper_dispatch` (47) have no clean registry lookup yet so the skill emits a dated agent-audit record instead
+      of guessing (the mode-dispatch todo below); `ARBITRAGE_MEV_SANDWICH` (1/mode) is `excluded_by_policy`, not a
+      gap. **Zero `not_ready` does NOT mean the matrix is fully verified** — it means nothing FAILS a real machine
+      check. The unverified population is different work and must not be reported as done.
 - [ ] [BACKEND] P1. Fix the DeFi catalog/engine config-key contract drift for the 5 remaining families
       (sports, ML-directional, market-making, vol). Evidence:
       `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
@@ -389,3 +395,28 @@ todos only to confirm they are data-movement, then leave it.
 
   Cross-tranche: 27 `clients.yaml`/waiver files filed to T5 (`unified-trading-pm@96d5d2e1f1`);
   `PENDING_CROSS_REPO_WAIVER` in strategy-service is the shrinking worklist.
+
+- 2026-08-20 — **Param schemas for the last 19 archetypes. `strategy-service@37989f99`.**
+
+  MEASURED on the landed tree (content-verified in origin, not just file presence — the file pre-existed):
+
+  | leg (of 180 rows) | after registration wave | now |
+  | --- | --- | --- |
+  | `engine_factory` | 177 ready / 0 not_ready | 177 ready / 0 not_ready |
+  | `param_schema` | 120 ready / **57 not_ready** | **177 ready / 0 not_ready** |
+  | `target_universe_catalog` | 177 ready / 0 not_ready | 177 ready / 0 not_ready |
+  | overall, per mode | 19 not_ready | **0 not_ready** |
+
+  `PARAM_SCHEMA_REGISTRY` 40 -> 59. `_SCHEMA_COVERAGE_BASELINE_MISSING_SCHEMA` -> `frozenset()`, kept not deleted:
+  an empty baseline is what makes the A1 gate fire on the NEXT archetype registered without a schema, and keeps its
+  message saying "a NEW archetype has no schema". Full `quality-gates.sh` green before the push; 1755 v2 tests.
+
+  Method worth reusing: every default was extracted from the engine's real
+  `*_param(self.params, "<name>", <default>)` call with its `file:line`, then written table-driven.
+  `test_param_schema.py` asserts the declared default equals the engine's, so this is not a place where a
+  plausible-looking guess survives — it fails the gate.
+
+  **Headline: 0 not_ready per mode, from 47 at plan authoring.** State it precisely — it means no archetype FAILS a
+  machine check. 51-53 rows/mode remain `unverified` and are genuinely different work: `allocator_rank` is a
+  per-archetype RULING (generic allocator vs dedicated rank engine), and batch/paper dispatch need a registry lookup
+  built before they can be checked at all. Neither is closed by this commit.

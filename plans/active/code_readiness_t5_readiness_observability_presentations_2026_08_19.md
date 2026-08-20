@@ -154,6 +154,13 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T3] P0. Fix the two `scripts/quickmerge.sh` defects measured 2026-08-20 across five real ship
+      attempts: (1) a FAILED re-gate still exits 0 — three attempts reported success and landed nothing; (2) a
+      DIRECTORY path in `--files` stages nothing for it silently, which landed a PARTIAL commit that broke
+      `live-defi-rollout` (factory.py referencing an unstaged package). Full measurement, the five-check table
+      showing why `git diff FETCH_HEAD` also came back clean during the broken window, and the proposed fixes:
+      `/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`.
+      P0 because every agent is required to ship through this path and the failure mode is false progress.
 - [ ] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
       `deployment-service/configs/strategy/<archetype_lowercase>/` for the 27 archetypes T3 registered on
       2026-08-19 (18 `VOL_*`, 5 granular `MARKET_MAKING_*`, 4 `PORTFOLIO_*`). strategy-service's

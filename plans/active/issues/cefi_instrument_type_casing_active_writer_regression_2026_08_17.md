@@ -310,3 +310,22 @@ is genuinely VM-scale work, not shared-host-scale:
   then `Scanning 170038 per-VM shards in gs://market-data-tick-cefi-prd-central-element-323112/_index/
   per_vm/ (workers=16)` at 01:28:49Z with the connection pool boosted to 16 and no repeat of the prior
   run's "Connection pool is full" churn — genuine progress confirmed, not fire-and-forget.
+- **cefi_reconciliation_auditor 2026-08-20** (Tier-1 daily audit, evidence found incidentally while
+  cross-referencing today's census against this doc — NOT a full re-diagnosis, VM-ops relaunch/forensics
+  stay out of this role's scope): the 2026-08-18 dry-run also never reached a terminal state — **the SAME
+  freeze pattern as the 130229 run, undocumented until now**. `gcloud compute instances describe
+  canonical-migration-cefi-itype-casing-apply-20260818-012605 --zone=asia-northeast1-c
+  --project=central-element-323112` → 404 (VM gone, presumably zombie-reaped like its predecessor — not
+  independently re-confirmed via Cloud Logging this pass). Its `run.log`
+  (`gs://deployment-scripts-central-element-323112/vm-logs/canonical-migration-cefi-itype-casing-apply-20260818-012605/run.log`,
+  read via UTL `download_bytes`) is a flat 8,242-byte file of `PIPELINE_HEARTBEAT` lines ending abruptly at
+  `ts=2026-08-18T01:59:32Z`/last_modified `2026-08-18T02:01:40.949Z` — no `Grand total` line, no error, no
+  exception, no shutdown marker — **frozen ~46h as of this check (2026-08-20T00:2xZ)**. The open todo below
+  ("review the disposition... if it goes stale/silent again, diagnose per the freeze pattern") already
+  anticipated this exact scenario; it needs a fresh dedicated dispatch to do the serial-console +
+  zombie-watchdog-log forensics (per the 130229 precedent) and relaunch — genuinely VM-scale work, not a
+  narrowly-scoped fix this Tier-1 read-only role can absorb. Separately, and more positively: today's cefi
+  distinct-value census independently re-measured the casing residual at **byte-identical counts to this
+  doc's 2026-08-17 post-fix baseline** — `perpetual`=38,083, `future`=1,191, `spot_pair`=12 (sum 39,286,
+  exact match) — confirming the P1 writer fix (`c07cc70e93`) is holding with **zero regrowth in the 3 days
+  since it shipped**. Full census: `plans/audit/results/data_pipeline_reconciliation_cefi_2026_08_20.md`.

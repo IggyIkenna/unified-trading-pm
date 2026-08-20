@@ -360,7 +360,13 @@ census** closes that vocabulary blind spot, cheaply and **in-session** (no VM, n
   case** (cefi/tradfi `instrument_type`) routes to a `migration_pending — C2a casing` line, **never** a
   `non_canonical_axis_value` finding (defi is case-folded, so no defi casing noise); never flag `lending` /
   `solana_lending` on defi market/event data_types (decision-D); `batch_massive` (source axis) is not non-canonical;
-  sports blank `pipeline_mode` / `source` stay dropped as blank sentinels.
+  sports blank `pipeline_mode` / `source` stay dropped as blank sentinels; check deployment-api `_distinct_values.py`'s
+  `_ACCEPTED_EXCEPTIONS` dict (per `(axis, asset_group)`, e.g. `CEFI_VENUE_ACCEPTED_NONCANONICAL_ALIASES`,
+  `CHAIN_BUNDLE_ACCEPTED_NONCANONICAL_INSTRUMENT_TYPES`) before flagging any drift value — a hit is a known, permanent,
+  operator-accepted alias/bundle-grain stamp, not a fresh finding (found live 2026-08-20: this suppression was
+  previously missing from this list, causing several prior cefi runs to carry already-accepted values as open
+  "candidate for the accepted-exception list" findings; full detail in
+  `/codex/02-data/reconciliation-census-and-compute-tiers.md` § 1.5).
 
 The census prints the writer's ACTUAL token (`solana_amm_pool`) as a present, canonical value and shows `pool`
 conspicuously **absent** — so you read the real vocabulary off the census instead of guessing, and the 2026-07-20 slip
