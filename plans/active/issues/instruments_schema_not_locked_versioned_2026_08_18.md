@@ -123,7 +123,7 @@ landing in the same repo so they are NOT concurrent-dispatchable against each ot
   `unified-api-contracts@d384e840b7`. The standalone checker hashes the ordered schema list with sorted per-column
   keys, compares it to `scripts/instruments_parquet_schema.golden.json`, and reports drift only when the live
   `INSTRUMENTS_SCHEMA_VERSION` remains unchanged. Falsifier tests cover both no-bump failure and version-bump
-  allowance. Quickmerge's re-gate passed all quality gates (732s); ancestry was verified on LDR.
+  allowance. Quickmerge's re-gate passed all quality gates (284s); ancestry was verified on LDR.
 
 - **2026-08-20 (T2 code-readiness tranche)**: **Part 4 is NOT implementable as written — the contract has never
   matched the writer.** Built the part-4 gate (`validate_dataframe` against
