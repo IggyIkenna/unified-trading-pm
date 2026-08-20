@@ -327,8 +327,17 @@ todos only to confirm they are data-movement, then leave it.
       action-level data, so `.features` was never actually the right place for these. 3 tests pin the surviving
       vocabulary and assert zero remaining name collisions between the two enums. QG green (214s). Evidence:
       `/plans/active/registry_ssot_hardening_2026_08_16.md`.
-- [ ] [BACKEND] P1. Coverage-floor registries cross-propagate. Three parallel registries exist; sports registries 1
-      and 3 are structurally one SSOT. Evidence:
+- [x] ✅ [BACKEND] P1. **STALE — already resolved weeks before this tranche existed; closed by measurement, not
+      new code.** Every code-level todo in the source issue is checked done: sports registries 1+3 confirmed
+      structurally one SSOT (registry 1 imports `league_data.SOURCE_COVERAGE_START` directly — not a duplicate
+      needing a merge); registry 2's disconnect from registry 1 closed via a permanent CI falsifier
+      (`unified-api-contracts@09169cfe`, `scripts/check_coverage_floor_registry_drift.py` +
+      `tests/unit/test_coverage_floor_registry_drift.py`, wired into `quality-gates.sh`) with a
+      shrinking-ratchet `KNOWN_DIVERGENCES` baseline (a stale entry whose pair no longer disagrees is itself a
+      failure); all 8 confirmed CeFi value mismatches fixed and verified against live manifest data
+      (`unified-api-contracts@3d24f147c`), baseline shrunk 16→10 tracked divergences. The one item still open in
+      that issue (line ~431, `[DATA] P3`, re-verify a HYPERLIQUID backfill VM) is data-side and explicitly out
+      of this tranche's no-backfill scope. Evidence:
       `/plans/active/issues/coverage_floor_registries_no_cross_propagation_2026_07_17.md`.
 - [ ] [BACKEND] P1. Build a genuine `(venue, instrument_type) -> data_types` combinator shared by all five asset
       groups. TradFi currently produces a provably-wrong cell (CME == ICE despite ICE having no Databento coverage).
