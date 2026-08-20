@@ -36,6 +36,7 @@ context_scope:
     /plans/active/issues/b21_defi_venue_5_unregistered_perp_dex_2026_08_19.md,
     /plans/active/data_pipeline_completion_2026_08_21.md,
     /plans/active/cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md,
+    unified-api-contracts/unified_api_contracts/registry/market_data_categories.py,
   ]
 ---
 
@@ -234,3 +235,4 @@ sports instrument_type finding above.
 - **2026-08-20 (slot 1, data_engineering) — item 2 closeout:** re-read the shipped UAC registry and MTDS writers and
   confirmed neither legacy label is current vocabulary. The shipped retirement tool is the fix; its bounded live apply
   safety pass measured 3,446,390 legacy keys and excluded 180,643 without canonical twins for separate follow-up.
+- **context-scout 2026-08-20**: refreshed context_scope (5 entries).

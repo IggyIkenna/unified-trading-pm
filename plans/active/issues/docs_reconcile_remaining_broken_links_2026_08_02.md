@@ -593,3 +593,4 @@ that COULD be confidently fixed already shipped in the sweep's 4 commits (unifie
   checklist self-consistency), the actual source implementation (`connectivity_rules.py`), or git history (the
   worker-liveness drop) before applying — not applied on hunter-report trust alone. Full Phase 0 re-run clean after
   all 11 fixes; shipped as one batch, `unified-trading-pm@101efbe7c7`.
+- **context-scout 2026-08-20**: re-verified context_scope (5 entries), unchanged.

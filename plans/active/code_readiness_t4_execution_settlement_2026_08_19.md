@@ -35,8 +35,8 @@ context_scope:
     /plans/audit/results/code_completion_scope_2026_08_19.md,
     /codex/12-agent-workflow/commit-push-flip-rule.md,
     /codex/12-agent-workflow/measurement-claims-discipline.md,
-    /codex/06-coding-standards/quality-gates.md,
     /codex/05-infrastructure/per-tab-worktrees.md,
+    execution-service/,
   ]
 supersedes:
 superseded_by:
@@ -586,3 +586,5 @@ unilaterally). Left as-is for a future dedicated pass, not silently skipped.
 | W22 strategy→execution messaging | untouched | no `EventTransport` subscriber in execution-service |
 | Elysium doc (88 todos) | untouched | not reached this session |
 | W14/W15/W17, Elysium, settlement tail | untouched | not reached this session |
+
+- **context-scout 2026-08-20**: refreshed context_scope (6 entries) — swapped the generic QG codex doc for `execution-service/`, the dominant repo by far for this tranche's remaining work.

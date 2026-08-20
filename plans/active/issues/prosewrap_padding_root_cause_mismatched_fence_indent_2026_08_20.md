@@ -55,6 +55,14 @@ source: >-
   fix (unified-trading-pm@ec98ae0d8a, agt-910a14) regress within the same CI cycle. Fixed for this one file at
   unified-trading-pm@4d87f3a42d by dedenting each closing fence + trailing prose to the 6sp continuation indent;
   verified content-preserving (`git diff -w` empty) and held across a real pre-commit prettier pass.
+context_scope:
+  [
+    /codex/15-runbooks/custody-onboarding-checklist.md,
+    scripts/plan-hygiene/check_prosewrap_padding.sh,
+    /plans/active/issues/prosewrap_padding_corpus_wide_1290_space_2026_08_03.md,
+    scripts/plan-hygiene/fix_prosewrap_padding.py,
+    scripts/hooks/prettier-autostage.sh,
+  ]
 ---
 
 # check_prosewrap_padding root cause #2: mismatched code-fence indent (distinct from the proseWrap:always bug)
@@ -136,3 +144,7 @@ continuation indent, 6sp in this doc's convention.~~ This did not hold. See UPDA
 - [ ] [SCRIPT] P3. Consider extending `check_prosewrap_padding.sh` (or a small companion check) to detect
       list-continuation-nested fences directly (not just indent mismatches) — this would let a worker fix the ROOT
       CAUSE the first time instead of a downstream symptom that silently regrows across every subsequent prettier pass.
+
+## Progress Log
+
+- **context-scout 2026-08-20**: populated context_scope (5 entries).

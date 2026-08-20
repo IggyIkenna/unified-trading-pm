@@ -43,8 +43,8 @@ context_scope:
     strategy-service/strategy_service/engine/strategies/v2/mev/jit_liquidity.py,
     strategy-service/strategy_service/engine/strategies/v2/mev/liquidation_bundle.py,
     /codex/09-strategy/architecture-v2/archetypes/arbitrage-mev-jit-liquidity.md,
-    /plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md,
-    features-service/features_service/onchain/app/calculators/dex_pool_swap_flow_calculator.py,
+    strategy-service/strategy_service/position/core/margin_health_cache.py,
+    /plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md,
   ]
 locked_by:
 locked_since:
@@ -210,3 +210,6 @@ specific feature key, not a corpus-wide sweep.
   265-269) uses `.get(id_key)` no-default → `None` → `on_tick()` continues. Folded two corrections into this doc's own
   text (item 3 + todo 5 + §"Bundle-simulation"): `liq_candidate_health_factor_<id>` is NOT a feature key, and the
   "Not confirmed" is now "Confirmed absent".
+- **context-scout 2026-08-20**: rebuilt context_scope (6 entries) — fingerprint-matched to
+  `defi_catalog_engine_config_key_contract_drift_2026_07_23.md` (same `liq_candidate_debt_amount_<id>`/
+  `liq_candidate_liq_bonus_pct_<id>` finding, independently documented in both docs).

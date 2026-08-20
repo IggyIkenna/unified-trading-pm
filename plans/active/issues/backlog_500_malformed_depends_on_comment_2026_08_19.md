@@ -55,6 +55,13 @@ source: >-
 resolved_by:
 locked_by:
 depends_on: []
+context_scope:
+  [
+    agent-orchestrator/server/regen_backlog_from_plan.py,
+    agent-orchestrator/server/dispatch.py,
+    agent-orchestrator/server/routes/backlog.py,
+    /codex/11-project-management/cross-reference-path-convention.md,
+  ]
 ---
 
 # GET /api/backlog 500 — malformed depends_on comment crashed a shared route
@@ -130,3 +137,7 @@ this exact failure mode can recur from any future doc-authoring mistake of the s
   incident violated.
 - `/codex/04-architecture/agent-orchestrator-scheduled-jobs.md` / worker.md / RULES.md — the review-role
   done-rejected-family cross-check that this route outage broke.
+
+## Progress Log
+
+- **context-scout 2026-08-20**: populated context_scope (4 entries).

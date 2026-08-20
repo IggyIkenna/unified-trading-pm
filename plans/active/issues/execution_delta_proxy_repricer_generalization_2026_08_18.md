@@ -74,9 +74,10 @@ context_scope:
     execution-service/execution_service/engine/delta_proxy_repricer.py,
     execution-service/execution_service/engine/quote_maintenance.py,
     unified-api-contracts/unified_api_contracts/internal/architecture_v2/order_semantics.py,
+    unified-api-contracts/unified_api_contracts/internal/architecture_v2/schemas.py,
     execution-service/execution_service/v2/atomic_leg_executor.py,
     execution-service/execution_service/algorithms/selector.py,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch18_2026_08_19.md,
+    /codex/04-architecture/risk-rule-taxonomy.md,
   ]
 ---
 
@@ -915,3 +916,6 @@ underlying. Consistent with the standing "strategy reads only processed data, ne
       and the quoted venue feed latencies. Decision-changing and inherited from a summary, not measured.
 - [ ] [BACKEND] P1. **Instrument `Dz`-at-rebase** as a distribution per strategy slot — the empirical input to the
       sync-cadence decision.
+
+- **context-scout 2026-08-20**: refreshed context_scope (7 entries — slightly above the usual 2-6 target, justified
+  by this doc's size and ongoing 3-layer design scope).
