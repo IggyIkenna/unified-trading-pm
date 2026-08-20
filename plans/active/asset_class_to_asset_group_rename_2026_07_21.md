@@ -165,3 +165,14 @@ trusting that).
   unilaterally") still governs; open-todo count unchanged at 6.
 - **context-scout 2026-08-05**: re-scouted; context_scope unchanged (4 entries), still accurate.
 - **context-scout 2026-08-15**: re-scouted; context_scope unchanged (4 entries), still accurate.
+- **T4-execution-settlement client-reporting-api close-out 2026-08-20** [session scope: `client-reporting-api` +
+  unified-trading-pm docs only]: verified current code state — the domain `AssetClass`
+  (`unified-api-contracts/unified_api_contracts/_instrument_enums.py:122`) is still NOT renamed (no `AssetGroup` class
+  exists there; the `AssetGroup` names elsewhere in UAC — `canonical/gcs_paths.py`, `canonical/asset_group_registry.py`,
+  `registry/archetype_capability_matrix.py` — are pre-existing, unrelated types, not this rename's target).
+  `client-reporting-api` still has 5 files referencing the domain `AssetClass`
+  (`client_reporting_api/core/ledger_views.py` + 4 test files). **No code changes made**: todo 3's `client-reporting-api`
+  consumer update explicitly must "land together with todo 2, not independently" — doing it now (before UAC's rename
+  lands) would break `client-reporting-api`'s import, since `AssetGroup` does not yet exist in UAC's public API for the
+  domain enum. Todos 1-2 are scoped to `unified-api-contracts`, outside this session's scope. Open-todo count unchanged
+  at 6; destination ruling (BLK-87fc93e4) continues to correctly govern, `assigned_vm: NA` unchanged.
