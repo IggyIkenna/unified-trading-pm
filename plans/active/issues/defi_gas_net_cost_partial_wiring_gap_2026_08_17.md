@@ -383,9 +383,7 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   (11,075 passed, 28 skipped, 1 xpassed). The real historical `B < B2` fixture and
   CLI canonical-shard wiring remain a separate gate below and do not authorize
   archetype registration.
-- [ ] [MTDS] P1. BLOCKED-ON:uac_snapshot_contract_and_source_fixture — add the
-  canonical shard handler and prove a real Aave V3 Ethereum `B < B2` replay fixture
-  before the downstream UAC/features/strategy gates are closed.
+- [x] ✅ [MTDS] P1. Added the canonical Aave candidate snapshot shard handler and proved a real Aave V3 Ethereum `B < B2` replay fixture before downstream gates. — market-tick-data-service@f516b389 + evidence: canonical parquet handler, UAC validation, deterministic replay test, source block 24486447 precedes LiquidationCall block 25253912; quickmerge ancestry verified: f516b389 is on origin/live-defi-rollout.
 - [x] ✅ [FEATURES] P1. Add snapshot enrichment and provenance propagation using
   only real as-of prices, parameters, slippage/liquidity, and gas cost; test stale/missing joins as unavailable. — features-service@b2fcc11518 + evidence: QG_SLICE=tests (18491 passed, 209 skipped); QG_SLICE=typecheck passed.
 - [ ] [STRATEGY] P1. Add the typed context seam, cache writer, and manifest
@@ -393,7 +391,6 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 - [ ] [STRATEGY] P2. After all gates pass, register the archetype and prove one
   real Aave V3 Ethereum candidate emits an instruction; otherwise retain the
   blocked state with the measured gate failure.
-
 
 - **2026-08-20 (slot-7, worker):** shipped the MTDS Aave V3 Ethereum pre-liquidation producer in
   `market-tick-data-service@e34d0afc6f`. It discovers borrowers from pre-event `Borrow` logs,
@@ -410,3 +407,6 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
   execution_cost_estimator.py` to state execution-service ownership and the intentional service-boundary non-use.
   Execution-service quality gates passed: 8,733 passed, 22 skipped, 1 xpassed; quickmerge landed
   `execution-service@64395d6d97` on `origin/live-defi-rollout`.
+
+
+- **2026-08-20 (slot-10):** Closed the MTDS candidate-snapshot gate in `market-tick-data-service`. The CLI handler persists UAC-validated `liquidation_candidate_snapshots` canonical shards and records manifest outcomes; the Blockscout-backed fixture proves Borrow block 24486447 precedes the known LiquidationCall at block 25253912, uses block-pinned prices, and replays deterministically through the canonicalizer. Unavailable rows retain typed provenance and no numeric defaults.
