@@ -176,6 +176,15 @@ def build_dump(archetypes: list[StrategyArchetype], modes: list[str]) -> tuple[l
                 mode_leg = _live_topology_verdict(archetype)
 
             legs = {**mode_invariant_legs, checks.MODE_SPECIFIC_LEG[mode]: mode_leg}
+            if archetype.value in checks.POLICY_EXCLUDED_ARCHETYPES:
+                # Every leg of a policy-excluded archetype reports the exclusion.
+                # Its missing schema / catalog rows are CONSEQUENCES of the decision
+                # not to build it, not independent findings, and listing them as
+                # not_ready would inflate the gap count with work nobody will do.
+                legs = {
+                    name: checks.Verdict("excluded_by_policy", checks.POLICY_EXCLUDED_ARCHETYPES[archetype.value])
+                    for name in legs
+                }
             overall = checks.rollup(legs)
 
             for leg_name, verdict in legs.items():
@@ -212,13 +221,17 @@ def _print_human(rows: list[dict], summary: dict, verbose: bool, limit: int) -> 
     for leg, counts in summary["leg_state_counts"].items():
         ready = counts.get("ready", 0)
         not_ready = counts.get("not_ready", 0)
+        excluded = counts.get("excluded_by_policy", 0)
         unverified = counts.get("unverified", 0)
-        print(f"  {leg:<28} ready={ready:<6} not_ready={not_ready:<6} unverified={unverified:<6}")
+        print(
+            f"  {leg:<28} ready={ready:<6} not_ready={not_ready:<6} unverified={unverified:<6} excluded={excluded:<6}"
+        )
     print()
     print("=== Overall (rollup) verdict counts, per mode ===")
     for mode, counts in summary["overall_state_counts_by_mode"].items():
         print(
             f"  {mode:<8} ready={counts.get('ready', 0):<6} not_ready={counts.get('not_ready', 0):<6} "
+            f"excluded={counts.get('excluded_by_policy', 0):<6} "
             f"unverified={counts.get('unverified', 0):<6}"
         )
     print()

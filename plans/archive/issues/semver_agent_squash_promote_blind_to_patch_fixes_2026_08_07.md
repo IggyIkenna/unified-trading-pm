@@ -11,7 +11,8 @@ summary: >-
   BREAKING surface changes and NET-NEW public exports — a `fix:`-shaped internal change that nets zero new exports is
   invisible to both signals. Root-cause-fixed via a content-based patch-level fallback in the SSOT template, restored a
   dropped `concurrency:` group, and shipped to 21 fleet repos.
-status: open
+status: archived
+superseded_by: /codex/08-workflows/ci-cd-flow.md
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -65,7 +66,6 @@ drift_direction: advance-code
 depends_on: []
 source: "reconcile-release-tags stall alert (13 repos), investigated 2026-08-07"
 resolved_by:
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 context_scope:
@@ -77,6 +77,13 @@ context_scope:
     scripts/cicd/promote_provenance_range.py,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-19** — 0 open todos across the full doc, independently re-confirmed by two audit passes
+> (`plan_reconciler_findings_ci_2026_08_16.md`, `na-eligibility-audit` ci tranche). The durable content-based
+> patch-level fallback + `SOURCE_DIR/` fallback contract this incident established is recorded in
+> `/codex/08-workflows/ci-cd-flow.md`; read that doc for current guidance, this one for incident history only. The
+> one loose end (e2e-testing `source_dir` misconfig) is tracked in
+> `/plans/active/issues/ibkr_gateway_infra_release_tag_stall_2026_08_11.md`, not duplicated here.
 
 # semver-agent silently no-ops on squash-only promote cycles — 13 repos stalled up to 41 days
 

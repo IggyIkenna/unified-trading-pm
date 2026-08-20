@@ -61,18 +61,24 @@ drift_direction: advance-code
 
 ## Todos
 
-- [ ] [REVIEW] P2. **Confirm whether the MEV engines actually call `TenderlyExecutionProvider.simulate-bundle` before
-      submission.** A real `TenderlyExecutionProvider` exists (`execution-service/execution_service/providers/tenderly.py`
-      — Tenderly Virtual TestNet fork + `simulate-bundle` support, `TenderlyTx`/`BundleSimResult`) and is wired into the
-      core `matching_engine.py` (not governance-only — `governance/proposal_simulator.py` is a separate consumer of the
-      same generic provider), but no MEV-engine (`liquidation_bundle.py`/`jit_liquidity.py`/`sandwich_theoretical.py`)
-      call site was confirmed in the source doc's own pass. If unused, this is a real pre-submission safety gap for
-      `LIQUIDATION_BUNDLE`'s atomic flash-loan bundle specifically (a revert there costs gas only, but an unsimulated
-      bundle is still a worse bet than a simulated one). Repo: strategy-service, execution-service. Source:
-      `plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` todo 1 (line ~126). Done
-      when: each of the 3 MEV engines' call (or non-call) to `simulate-bundle` is confirmed with cited file:line
-      evidence, and any genuine gap found is filed as its own follow-up rather than fixed inline if it needs a design
-      call.
+- [x] ✅ [REVIEW] P2. **Confirmed: NONE of the 3 MEV engines call `TenderlyExecutionProvider.simulate-bundle` (or its
+      `gate_or_advise()` pre-flight wrapper) before submission — and `gate_or_advise()` has zero callers anywhere in
+      the repo tree, so nothing is wired to it at all.** Direct code read, not a grep proxy:
+      `strategy-service/strategy_service/engine/strategies/v2/mev/{liquidation_bundle,jit_liquidity,sandwich_theoretical}.py`
+      import only `unified_api_contracts.internal` + sibling `strategy_service` modules — zero references to
+      `execution_service`/Tenderly/`simulate`. `execution_service/providers/tenderly.py:331` defines
+      `TenderlyExecutionProvider.simulate_bundle()`; its only production caller is `gate_or_advise()`
+      (same file, lines 458-484); `gate_or_advise()` itself has no callers outside its own module family
+      (`tenderly.py`/`tenderly_budget.py`/`_tenderly_errors.py`). **Correction to this todo's own premise**:
+      `matching_engine.py` does NOT call `TenderlyExecutionProvider` either — it only mentions it in
+      docstrings/comments ("Route EVM DeFi legs through TenderlyExecutionProvider",
+      `execution_service/providers/matching_engine.py:15,18,261`) and raises `NotImplementedError` for EVM DeFi legs
+      instead of actually routing to it. This IS a genuine pre-submission safety gap (worst for `LIQUIDATION_BUNDLE`'s
+      atomic flash-loan bundle) but needs a design call (single call site in `matching_engine.py`'s EVM DeFi dispatch
+      vs. 3 per-engine call sites) — filed as its own follow-up per this todo's own "Done when" bar rather than fixed
+      inline: `plans/active/issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md`. Repo:
+      strategy-service, execution-service (docs only, no code shipped this pass). Source:
+      `plans/active/issues/mev_engines_opportunity_detection_signals_unproduced_2026_08_18.md` todo 1 (line ~126).
 - [x] ✅ [REVIEW] P1. **Confirmed the exact default behavior at `liquidation_bundle.py:265-269`
       (`_candidate_from_features`).** `.get(id_key)` — no default argument at all. On any missing key the function
       returns `None` for the whole candidate (explicit `is None` checks; own docstring: "Returns `None` when any
@@ -105,3 +111,10 @@ drift_direction: advance-code
   direct code read of `_candidate_from_features` (lines 255-287), no design call needed. Finding reported back into
   the source doc per the todo's own "Done when" bar. Remaining item in this batch (`[REVIEW] P2` Tenderly
   `simulate-bundle` call-site confirmation) untouched — separate scope, not part of this pass.
+- **2026-08-19 (slot-10, review)**: closed the `[REVIEW] P2` Tenderly `simulate-bundle` call-site todo — confirmed
+  via direct code read that none of the 3 MEV engines (nor `matching_engine.py`) call `simulate_bundle`/
+  `gate_or_advise`; `gate_or_advise` has zero callers anywhere in the repo. Filed the genuine gap as its own
+  follow-up (needs a design call on call-site placement, not a mechanical fix) rather than fixing inline:
+  `plans/active/issues/mev_engines_no_tenderly_simulate_bundle_call_site_2026_08_19.md`. Every todo in this batch is
+  now closed; not archiving this pass since `defi_satellite_ao_dispatch_batch17_2026_08_18_finalize.md` gates on it
+  via `depends_on`/`gate_on_depends: true` — leave archival to that finalize plan's own flow.

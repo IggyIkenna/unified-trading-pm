@@ -11,7 +11,8 @@ summary: >-
   code commit (no sentinel written → `quickmerge` Pass 2 refuses), for every agent on every host, until the
   `last_reviewed` dates are honestly refreshed. Confirmed general, not specific to any pending change. NOT re-baselined:
   `--baseline-write` would hand-raise a ratchet, which CLAUDE.md bans outright.
-status: open
+status: archived
+superseded_by: /codex/15-runbooks/ci-daily-health.md
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -38,7 +39,6 @@ source:
     docs directly via scripts/quality_gates/check_codex_doc_freshness.py",
   ]
 resolved_by:
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 locked_since:
 context_scope:
@@ -48,6 +48,11 @@ context_scope:
     /codex/12-agent-workflow/measurement-claims-discipline.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-19** — all todos done, independently re-confirmed by two audit passes
+> (`plan_reconciler_findings_ci_2026_08_16.md`, `na-eligibility-audit` ci tranche). The durable fix (moving the
+> checker off the blocking Pass-1 path onto a daily-cron escalation) is recorded in
+> `/codex/15-runbooks/ci-daily-health.md`; read that doc for the current guidance, this one for incident history only.
 
 # A time-triggered ratchet turns every agent's next commit red
 

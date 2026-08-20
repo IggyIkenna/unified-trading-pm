@@ -150,20 +150,60 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-_None at authoring time._
+- [ ] [FROM-T1] P0. **Do NOT wait on `StrategyInstructionEnvelope.reference_position` / `credit` — they are gated on an
+      unresolved operator ruling, not in progress.** T1 investigated them and deliberately did not implement them, so this
+      edge will NOT clear on its own; plan around it rather than blocking. The shape both tranche plans describe
+      (flat `reference_position: dict[venue, Decimal]` plus a flat `credit`, "same shape as the existing price
+      leg") was SUPERSEDED the same day it was written: the source issue carries a later operator revision ruling
+      it incomplete — it resolves the venue axis but not the INSTRUMENT axis, since one strategy instance holds a
+      universe of instruments, so a single envelope-level triple can only ever describe ONE instrument's reference
+      state. The replacement (`references: list[InstrumentReferenceEntry]`, nesting the per-venue dict one level
+      deeper) is published in that issue under the heading **"Proposed shape (illustrative — not finalized; this
+      is what needs resolving, not what's decided)"**, immediately followed by **"Open questions for the operator
+      — do not resolve unilaterally"** (Q12-Q16). Implementing the todo's literal text would re-commit the exact
+      scalar-shape regression the operator caught; implementing the vector would answer five questions explicitly
+      reserved for the operator.
+      **Two points ARE settled whichever way Q12-Q16 land, so you can design against them today**: `credit` is
+      OPTIONAL (a "flavor", never a mandatory field — pure-passive, fire-immediately and patient-then-escalate are
+      all valid consumers), and it is strategy-COMPUTED and strategy-OWNED, with execution merely consuming it.
+      Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
 
 ## Todos
 
 ### Archetype code completeness — the headline number
 
-- [ ] [BACKEND] P0. Register a v2 engine for all 60 `StrategyArchetype` members. `ARCHETYPE_ENGINE_REGISTRY` holds
-      exactly 32 — verified directly against `strategy-service/strategy_service/engine/strategies/v2/factory.py`.
-      `VOL_TRADING` is 18/19, `PORTFOLIO` 4/4 and `CARRY_AND_YIELD` 0/11 with no registered engine. Engines for most
-      `VOL_*` and `MARKET_MAKING_*` variants are shipped as code with unit tests but deliberately withheld from
-      registration — per the goalpost, code-ready registration is REQUIRED; only real-data testing may remain pending.
-- [ ] [BACKEND] P0. Give every archetype a `PARAM_SCHEMA_REGISTRY` entry. `CARRY_FUNDING_DISPERSION` is confirmed
-      missing.
-- [ ] [BACKEND] P0. Give every archetype an allocator-rank entry and a `target_universe` catalog entry.
+- [x] [BACKEND] P0. Register a v2 engine for all 60 `StrategyArchetype` members — **59/60 done**;
+      `ARCHETYPE_ENGINE_REGISTRY` 32 -> 59. `strategy-service@1bda20fb` (source) + `strategy-service@3eb96f35`
+      (portfolio package + tests). Registered the 22 shipped-but-withheld engines (17 `VOL_*`, 5 granular
+      `MARKET_MAKING_*`) and BUILT the 5 that had no engine at all (`Vol0dtePinRiskEngine` + the whole `PORTFOLIO`
+      family over a shared no-trade-band sleeve-rebalance spine reusing `portfolio_allocator.normalise_weights`).
+      Each also got a Kelly tier, `target_universe` seeds (3 rows/archetype, +81) and — for the 5 new ones — a param
+      schema. **The 60th, `ARBITRAGE_MEV_SANDWICH`, is deliberately NOT registered**: a POLICY exclusion (the firm
+      does not extract value from other users' pending swaps; `sandwich_theoretical.py` is a post-hoc adverse-selection
+      tracer, not an engine), asserted by `test_sandwich_theoretical.py` +
+      `test_phase8_archetype_factory_smoke.py`. Evidence: `get_archetype_engine_class()` resolves all 59;
+      `tests/unit` 3757 passed on the landed tree.
+- [ ] [BACKEND] P0. Give every archetype a `PARAM_SCHEMA_REGISTRY` entry. **19 remain** (registry 35 -> 40 on
+      2026-08-19: added `VOL_0DTE_PIN_RISK` + the 4 `PORTFOLIO_*`). The 19 are now EXACTLY the whole remaining
+      `not_ready` population of the code-completeness matrix — every other mode-invariant leg is clean — and they are
+      the same set `param_schema.py`'s `_SCHEMA_COVERAGE_BASELINE_MISSING_SCHEMA` shrinking ratchet already tracks:
+      `ARBITRAGE_CROSS_DOMAIN_EVENT`, `ARBITRAGE_MEV_{BACKRUN,JIT_LIQUIDITY,LIQUIDATION_BUNDLE}`,
+      `ARBITRAGE_SPORTS_DUTCHING`, `CARRY_BASIS_DATED`, `CARRY_BASIS_DATED_INV`, `CARRY_BASIS_PERP_INV`,
+      `CARRY_FUNDING_DISPERSION`, `CARRY_RECURSIVE_BORROW_LENDING_ONLY`, `EVENT_DRIVEN`, `LIQUIDATION_CAPTURE`,
+      `ML_DIRECTIONAL_{CONTINUOUS,EVENT_SETTLED}`, `RULES_DIRECTIONAL_{CONTINUOUS,EVENT_SETTLED}`,
+      `STAT_ARB_{CROSS_SECTIONAL,PAIRS_FIXED}`, `TSMOM_BTC_CTA`. Every declared default must cite the engine's real
+      `*_param(...)` read at `file:line` — `test_param_schema.py` asserts defaults match the engine, so a guessed
+      default fails. Param reads for all 19 already extracted.
+- [x] [BACKEND] P0. Give every archetype a `target_universe` catalog entry — **done**, `strategy-service@1bda20fb`.
+      `catalog_expansion.py` seeds all 27 newly-registered archetypes (table-driven; 3 rows each, +81 rows, 549 ->
+      630). Measured: `specs_for_archetype()` non-empty for all 59 registered archetypes; the
+      `target_universe_catalog` leg of `/archetype-code-completeness` is 177/177 ready, 0 not_ready.
+- [ ] [BACKEND] P0. Give every archetype an allocator-rank entry. UNCHANGED by the 2026-08-19 wave: still 8 dedicated
+      `AllocatorArchetype.<VALUE>_RANK` members (24/180 rows ready, 156 `unverified`). The skill deliberately reports
+      absence here as `unverified` not `not_ready`, because 8 GENERIC allocators (FIXED / PNL_WEIGHTED /
+      SHARPE_WEIGHTED / RISK_PARITY / KELLY / MIN_CVAR / REGIME_AWARE / MANUAL) may legitimately serve an archetype —
+      so the real task is to RULE, per archetype, whether a generic allocator suffices or a dedicated rank engine is
+      required, and make that verdict machine-readable rather than inferred from absence.
 - [ ] [BACKEND] P0. Wire mode-specific dispatch for every archetype across **batch, paper AND live**. Paper's
       per-family tick-loader dispatch and live's dispatch below the shared orchestrator have no clean registry
       lookup today — build one rather than leaving the check unverifiable.
@@ -178,6 +218,16 @@ _None at authoring time._
 - [ ] [BACKEND] P1. Generalize the venue-eligibility gate beyond `carry_and_yield`'s perp-hedge leg — the other 8
       in-scope families get `frozenset()` today. Evidence:
       `/plans/active/issues/venue_eligibility_hardcoded_outside_carry_and_yield_2026_08_16.md`.
+
+- [ ] [BACKEND] P1. Delete entries from `clients_yaml_coverage.PENDING_CROSS_REPO_WAIVER` as T5 lands each
+      archetype's `clients.yaml`/`clients_waiver.yaml` in `deployment-service`. Filed as an inbound request on T5's
+      plan (`unified-trading-pm@96d5d2e1f1`); the frozenset is the shrinking worklist. 27 entries at authoring.
+- [ ] [BACKEND] P2. Audit the other 3 engine families named in the config-key contract-drift issue (sports,
+      ML-directional, market-making) the same way the vol family was audited on 2026-08-19 — by making the systemic
+      construct-and-fire test exercise them and seeing which no-op. That method found 2 real drifts (8 keys) the
+      A4 gate structurally cannot catch, because A4 compares the CATALOGUE against the schema and both sides can
+      agree while the ENGINE reads a third spelling. Evidence:
+      `/plans/active/issues/defi_catalog_engine_config_key_contract_drift_2026_07_23.md`.
 
 ### W6 — wizard, config and scaffolding
 
@@ -284,3 +334,58 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+
+- 2026-08-20 — **Archetype registration wave. `strategy-service@1bda20fb` + `strategy-service@3eb96f35`.**
+
+  MEASURED, `/archetype-code-completeness` on the landed tree (`3eb96f35`, clean, == origin):
+
+  | leg (of 180 rows) | before | after |
+  | --- | --- | --- |
+  | `engine_factory` | 96 ready / 84 not_ready | **177 ready / 0 not_ready** / 3 excluded |
+  | `target_universe_catalog` | 96 ready / 84 not_ready | **177 ready / 0 not_ready** / 3 excluded |
+  | `param_schema` | 105 ready / 75 not_ready | 120 ready / 57 not_ready / 3 excluded |
+  | overall BATCH | 6 ready / **47 not_ready** / 7 unverified | 6 ready / **19 not_ready** / 1 excluded / 34 unverified |
+
+  `ARCHETYPE_ENGINE_REGISTRY` 32 -> 59; `TARGET_UNIVERSE` 549 -> 630 rows; `PARAM_SCHEMA_REGISTRY` 35 -> 40.
+  `tests/unit` 3757 passed. The remaining 19 `not_ready` are EXACTLY the schema-less-but-registered set — every
+  other mode-invariant leg is clean, so the next unit is a single well-defined job.
+
+  What was actually wrong, and is worth not re-learning:
+
+  * **22 of the 28 "missing" engines were never missing.** They were code-written AND unit-tested, deliberately
+    withheld from the registry by a policy requiring a passing backtest first. The matrix read that absence as
+    "no engine exists". Three tests asserted the withholding as an invariant; all three are now
+    `_assert_code_complete` (registration + schema + catalog + Kelly together, so a partial wiring cannot pass).
+    **Never infer "is it backtested" from registry absence again.**
+  * **Two real engine<->schema key drifts**, found by making the systemic construct-and-fire test exercise the newly
+    registered engines: `VOL_SPREAD_STRUCTURES` read `atm_call`/`otm_put`/... (6 keys) and `VOL_VARIANCE_SWAP` read
+    `atm_straddle_call`/`_put` (2) — spellings their own `PARAM_SCHEMA_REGISTRY` entries never declared. Sibling
+    `VOL_RATIO_SPREAD` already used the schema names, so the schema was right and the engines had drifted. Any slot
+    configured through the wizard surface would have silently no-op'd forever. **A4 cannot catch this class**: it
+    compares CATALOGUE keys against the schema, and both can agree while the engine reads a third spelling. The
+    method that found it — make the engine actually fire on a plausible tick — is the one that generalises.
+  * **`ARBITRAGE_MEV_SANDWICH` is a policy exclusion, not a gap.** Added an `excluded_by_policy` verdict state to
+    the skill so it reports on every leg rather than sitting permanently red. Honest denominator: 59 in scope, 1
+    out of scope by decision. Adding an entry to `POLICY_EXCLUDED_ARCHETYPES` is a policy claim needing a cited
+    decision + an enforcing test — never a way to silence a red cell.
+  * **A4 gate improved, baseline shrunk 166 -> 106** (-60): taught it `key_template` hierarchy prefixes and exempted
+    `venue`/`instrument_type`/`asset_group` (structural keys stamped on every row by the shared constructors, never
+    read by a named engine `_param` call). Every retired entry was a false positive the module docstring had already
+    predicted. Its "119 pairs" comment was itself stale — it measured 166.
+
+  **Shipping incidents — read before trusting a quickmerge result:**
+
+  * `quickmerge.sh` **exits 0 when the re-gate FAILS**. Three consecutive attempts reported exit 0 and landed
+    NOTHING (lint; codex-compliance; the empty-string-fallback ratchet). Only checking origin's tree caught it.
+  * Worse, `--files` given a DIRECTORY path stages nothing for it, silently. `1bda20fb` therefore landed the source
+    registration WITHOUT the `portfolio/` package or the test updates, and quickmerge's recovery pass then reverted
+    the unstaged test edits in the working tree. LDR was briefly inconsistent: `factory.py` referenced an absent
+    module and the old tests asserted the opposite of the new code. Repaired by `3eb96f35` with every path named
+    individually. Note `safe-doc-push.sh` REFUSES a wildcard outright; quickmerge accepting a directory and
+    dropping it is the more dangerous behaviour because it produces a PARTIAL commit.
+  * **`git diff FETCH_HEAD` reported no differences during the broken window** — because the local test edits had
+    been reverted to match origin, so both sides agreed on the wrong content. Exit code, "✅ Landed", clean
+    `git status` and an empty diff ALL passed. Only a per-file `git cat-file -e FETCH_HEAD:<path>` found it.
+
+  Cross-tranche: 27 `clients.yaml`/waiver files filed to T5 (`unified-trading-pm@96d5d2e1f1`);
+  `PENDING_CROSS_REPO_WAIVER` in strategy-service is the shrinking worklist.

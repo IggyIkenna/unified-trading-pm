@@ -154,7 +154,95 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-_None at authoring time._
+- [ ] [FROM-T3] P1. Create `clients.yaml` **or** `clients_waiver.yaml` under
+      `deployment-service/configs/strategy/<archetype_lowercase>/` for the 27 archetypes T3 registered on
+      2026-08-19 (18 `VOL_*`, 5 granular `MARKET_MAKING_*`, 4 `PORTFOLIO_*`). strategy-service's
+      `clients_yaml_coverage.py` gate requires one or the other for every factory-registered archetype;
+      T3 cannot create them because `deployment-service` is a T5 repo. The exact 27 values are listed in
+      `strategy_service/engine/strategies/v2/clients_yaml_coverage.py`'s `PENDING_CROSS_REPO_WAIVER`
+      frozenset — T3 deletes each entry from that set as its file lands, so the set doubles as the
+      shrinking worklist. A waiver is the expected answer for most of them (they are seed-only slots with
+      no client allocation yet); a `clients.yaml` is only needed where a client actually subscribes.
+
+- [ ] [FROM-T2] P0. **You are NOT blocked on the coverage grain — it already landed. Re-run the dump.** Your
+      "re-run at the finer grain the moment T2 lands `instrument_type` / `data_type`" todo below is waiting on
+      something that is already true in production, so the wait is the only thing left to remove. MEASURED
+      2026-08-19 by reading the live artefact through your own engine
+      (`cursor-configs/skills/honest-coverage-dump/scripts/shard_universe.py`), not by inspecting the writer:
+
+      - `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`schema_version: 2`) carries BOTH
+        `by_venue_instrument_type` (172 `(ag, venue)` pairs) and `by_venue_instrument_type_data_type` (184 pairs),
+        populated for all 5 asset_groups.
+      - `detect_grain(payload)` returns **`"instrument_type"`**, and `iter_shard_cells()` yields **3,962** cells at
+        `(asset_group, venue, instrument_type, data_type)` grain.
+      - Your auto-detect works as documented — you asked to verify rather than assume, so: verified, by executing
+        it. No code change was needed on either side for the axes themselves.
+
+      **Two caveats you must carry into the re-run, or the finer grain will report inflated numbers.** Both are
+      defects in T2's writer measured the same day, both now fixed in `instruments-service`
+      `scripts/measure_honest_coverage.py` (see this tranche's T2 plan Progress Log for the `<repo>@<sha>`) — but
+      the fix only reaches the artefact on the NEXT nightly `measure-honest-coverage` cron run, so any dump taken
+      against a coverage.json dated on or before 2026-08-19 still contains them:
+
+      1. **The 3,962 cell count is inflated by 86 duplicate cells (2.2%).** 24 `(ag, venue, instrument_type)`
+         groups carried two case-variant keys at level 5 (e.g. `sports/LADBROKES` holding both `'ODDS'` with
+         `data_types=['trades']` and `'odds'` with `data_types=['odds']` — one shard, two keys); 26 literal
+         `'nan'` instrument_type keys sat beside 85 blank ones; and 6 `data_type` groups differed only by case.
+         Collapsing all three artifacts gives **3,876** true distinct shards. Quote 3,876, not 3,962 — and state
+         the date and denominator beside it either way.
+      2. **The `instrument_type` axis is ~50% hollow and the grain label does not say so.** 1,973 of 3,962 cells
+         (49.8%) carry a blank or `'nan'` instrument_type, yet `detect_grain()` reports the finer grain for the
+         whole payload. Per asset_group: `defi` 1,871/2,804 (66.7%), `tradfi` 82/244 (33.6%), `prediction`
+         10/19 (52.6%), `sports` 10/822 (1.2%), `cefi` 0/73 (0%). A reader trusting the label alone believes it
+         has a finer breakdown than exists for half the corpus — the same failure mode as the mislabelled `grain`
+         field in `readiness_pipeline_stage_per_shard_2026_08_18.json` (next item). Report grain per asset_group,
+         or report the hollow fraction beside the label.
+
+- [ ] [FROM-T2] P1. **Your readiness dump's `grain` field is mislabelled — the writer, not the file.** This is the
+      `/plans/epics/system_readiness_master.md` § W3 `[DOC] P1` item, and it lands in a file this tranche owns, so
+      T2 has not touched it. MEASURED: `plans/audit/results/readiness_pipeline_stage_per_shard_2026_08_18.json`
+      declares top-level `grain: "instrument_type"` while all 864 rows carry only
+      `['venue', 'asset_group', 'mode', 'pipeline_stage', 'leg_states']` — no `instrument_type` key on any row.
+      Root cause is in `cursor-configs/skills/readiness-state-dump/scripts/derive_readiness.py:208`:
+      `grain = detect_grain(coverage_payload)` reads the grain of the **coverage source** and then reports it as
+      the grain of the **readiness rows**, which are built at `venue x asset_group x mode`. The two are different
+      things. Suggested shape: emit `row_grain: "venue_asset_group_mode"` for what the rows actually are, and keep
+      the source's grain under its own key (`coverage_source_grain`), so neither is silently claiming the other.
+      Also worth a look while you are in there: 9 rows carry an EMPTY `venue` string (all `asset_group: sports`) —
+      they come straight through from 9 blank-venue cells in coverage.json, which T2 is tracking separately.
+
+- [ ] [FROM-T4] P0. **The per-venue execution-instruction-path check you are blocked on is BUILT — here is its
+      frozen contract, so you can write the probe now rather than waiting.** It is in execution-service (gating
+      under quickmerge as of 2026-08-20; T4's plan Progress Log carries the landing `<repo>@<sha>`).
+
+      Call it exactly like the strategy-position probe — a subprocess into execution-service's own venv, never an
+      import (tier rule). The entry point already exists, so you do not need to write a probe script body:
+
+      ```bash
+      echo '["OKX-FUTURES","AAVE-V3-ETHEREUM"]' | execution-service/.venv/bin/python -m execution_service.readiness
+      ```
+
+      stdin: JSON list of canonical dash-form venue names. stdout: `{venue: record}` where record is
+
+      ```json
+      {"batch": "none|wired|deployed", "paper": "...", "live": "...",
+       "actions": ["TRADE", "CANCEL"], "handlers": ["ManualOperationHandler.execute -> ..."],
+       "batch_unhandled_actions": [], "detail": "..."}
+      ```
+
+      Importable equivalents if you prefer: `execution_service.readiness.instruction_path_availability(venue)`
+      (returns a frozen dataclass) and `...instruction_path_availability_map(venues)`. It performs NO I/O and
+      never constructs a live adapter, so it is safe to batch over all 288 venues in one subprocess call.
+
+      Suggested mapping for `checks.py::execution_instruction()`, which today returns a hard-coded `unverified`:
+      `"none"` → `not_ready` (no instruction naming this venue reaches any handler — a real negative, not an
+      unknown); `"deployed"` → `ready`; `"wired"` → `unverified`, quoting `batch_unhandled_actions` in the reason.
+      Note the check is deliberately about ROUTING only — credentials and real venue reachability stay on the
+      `execution_orders` leg, so wiring this in does not double-count them.
+
+      Also worth surfacing in the dump: the check measured that `resolve_settlement` has NO batch settlement
+      handler for `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW`, which is why every lending venue derives
+      `batch=wired` rather than `deployed`.
 
 ## Todos
 
@@ -165,13 +253,43 @@ _None at authoring time._
       `cursor-configs/skills/readiness-state-dump/`.
 - [ ] [BACKEND] P0. Wire T4's per-venue execution-instruction check into the dump the moment it lands — this is what
       moves 844 `not_ready` rows off their structural blocker. Track the dependency; do not wait idle on it.
+      **2026-08-20 — dependency tracked and the non-blocked half DONE, `unified-trading-pm@c3a3e870f4`.** Request
+      filed on T4's `## Inbound requests` naming the exact probe shape (`unified-trading-pm@241933d56e`), with the
+      groundwork pre-done so T4 need not re-derive it. Our side: `instruction_actions.py` measures handler coverage
+      by AST (11/16 actions have a settlement path; 5 raise `UnhandledActionError`), the leg now carries a measured
+      denominator instead of "no check wired", and the SKILL.md pointer that named the WRONG file
+      (`v2/policy_resolver.py` — an algo resolver keyed by `(client_id, slot_label)`, not an instruction registry)
+      is corrected. Remaining work here is a one-line probe call once T4 lands the venue-aware surface.
 - [ ] [BACKEND] P0. Add the archetype capability axis across batch, paper and live to the dump. The artefacts mark
       it `planned — specified and not yet built`, so that axis reports `unverified` today. Consume T3's
       `/archetype-code-completeness` output rather than re-deriving it.
 - [ ] [BACKEND] P0. Make credentials a first-class readiness dimension (W1 addition 2026-08-19).
 - [ ] [BACKEND] P0. Make manual execution mode first-class alongside automated (W1 addition 2026-08-19).
-- [ ] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
-      unverified 20`) against §17's own table — the artefacts flag it as not reconciled.
+- [x] [BACKEND] P0. Reconcile the 864-row all-group total quoted in the artefacts (`ready 0 / not_ready 844 /
+      unverified 20`) against §17's own table — the artefacts flag it as not reconciled. — **RECONCILED
+      2026-08-20**, live full-fleet run against `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`
+      (date=2026-08-19), grain=`instrument_type`, 288 venues × 3 modes = 864 rows. Dump reproduces the artefact
+      total **exactly: ready 0 / not_ready 844 / unverified 20**. The figure stands, with denominator (864) and
+      date (2026-08-19). Two caveats recorded as their own todos below: the execution-service probe failed in this
+      run, and the plan's stated cause for the number is wrong.
+
+- [ ] [BACKEND] P0. **The stated critical path is WRONG and should be re-pointed** (measured 2026-08-20). This plan
+      and the coordinator both say T4's execution-instruction check is "the structural reason all 864 rows read
+      `unverified`". Measured per-leg counts say otherwise: the rows read **`not_ready` (844), not `unverified`**,
+      and the dominant failing leg is **`strategy` = 840 `not_ready`** — specifically
+      `position_read_mode_availability(venue).<mode> = none`. `execution_instruction` is `unverified` on all 864,
+      but rollup lets any `not_ready` dominate, so closing the instruction leg alone moves **zero** rows off
+      `not_ready`. The headline number is gated by **strategy position-adapter coverage (strategy-service, T3)**,
+      not by T4. Raise with the coordinator before more effort is spent on the assumed critical path.
+
+- [ ] [BACKEND] P1. Fix the execution-service capability probe failing on the full-fleet run. In the 288-venue run
+      `_execution_order_capability_probe.py` exited 1 with `No bucket configured for market_data/defi and no
+      project ID available`, so `execution_orders` / `execution_fills` / `execution_trades` /
+      `execution_account_balance` all reported `unverified=864`. The same probe SUCCEEDS on a single-venue run
+      (`--venue OKX-FUTURES` derives `execution_orders=ready` at PAPER and LIVE via
+      `validate_operation(place_order, env=testnet|mainnet)`), so this is environmental, not a missing capability.
+      The dump degrades honestly, but the published execution-leg counts are a FLOOR, not a measurement — do not
+      quote them as capability until this is fixed.
 - [ ] [BACKEND] P1. Resolve the per-venue and per-data-type cells that remain pending at the finer grain inside each
       readiness tree.
 - [ ] [BACKEND] P1. Fix the tree gaps the artefacts name explicitly — Scroll and zkSync read `unverified — declared,
@@ -184,6 +302,13 @@ _None at authoring time._
       `coverage.json` — never re-derive the expected universe and never re-walk GCS.
 - [ ] [BACKEND] P0. Re-run the dump at the finer grain the moment T2 lands `instrument_type` / `data_type` in
       `coverage.json`. The skill auto-detects grain from the payload — verify that, do not assume it.
+      **2026-08-20 — the "verify that, do not assume it" half is DONE, `unified-trading-pm@c3a3e870f4`.**
+      `tests/test_shard_universe_grain_detection.py`, 7 tests green. The case that matters for this exact handoff:
+      when T2 lands the `by_venue_instrument_type_data_type` KEY before landing data under it, a presence-keyed
+      detector would flip to the fine grain and enumerate **zero** shard cells — every coverage figure silently
+      collapsing while looking structurally fine. The shipped detector requires a non-empty venue block and falls
+      back correctly, still reporting the real 2-tuple cells. Confirmed by test, not by reading. The re-run itself
+      still waits on T2.
 - [ ] [BACKEND] P0. Report the 4-state capture ledger per shard (captured / expected-absent / attempted_failed /
       expected_unattempted) plus a not-expected section for tuples outside the Layer-1 expected universe.
 - [ ] [BACKEND] P1. Close the remaining data types the artefacts mark pending — on-chain, sports odds, prediction
@@ -197,7 +322,13 @@ _None at authoring time._
 
 - [ ] [BACKEND] P0. Close the `dp_cron_did_not_fire` alert defects — the storm recurring on a stable revision, dedup
       state lost on redeploy, and the volatile dedup field. Evidence: the three
-      `/plans/active/issues/dp_cron_did_not_fire_*` docs.
+      `/plans/active/issues/dp_cron_did_not_fire_*` docs. **2026-08-20 status: all three fixes ARE shipped and
+      tested (`alerting-service` `core/recurring_dedup_persistence.py`, `f48a611` + `ac21303`, 14 tests green, on
+      `main` since 2026-08-19T21:41:59Z) — do NOT re-implement them.** What is open is verification: measured live,
+      the storm was still breaching the 30-min cooldown one hour after the fix reached `main` (41/46 repeating
+      identities). Whether the fixed revision was actually serving is UNVERIFIED (gcloud auth expired; no credential
+      requests in this tranche). Evidence:
+      `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md`.
 - [ ] [BACKEND] P0. Fix the escalation-pool-exhaustion alert being unreachable when halted. Evidence:
       `/plans/active/issues/escalation_pool_exhaustion_alert_unreachable_when_halted_2026_08_18.md`.
 - [ ] [BACKEND] P1. Verify every actionable alert that pages an OPEN gets a ✅ CLOSE bookend in-channel. SSOT:
@@ -215,8 +346,14 @@ _None at authoring time._
       `unverified`, 27 `pending`, 17 `planned`, 17 `partial`, 14 `not yet`, 6 `missing`, 5 `not built`).
 - [ ] [DOC] P0. Re-derive `strategy-service-deep-dive.html` (51 `unverified`, 15 `partial`) against T3's output.
 - [ ] [DOC] P0. Re-derive `strategy-service-walkthrough.html` (23 `partial`) against T3's output.
-- [ ] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
-      item**. Build the check; it has already failed once, measurably.
+- [x] [DOC] P0. Verify the invariant the epic sets — **every claim-bearing artefact section maps to a tracked
+      item**. Build the check; it has already failed once, measurably. — `unified-trading-pm@7b2dd29aaa`.
+      `scripts/plan-hygiene/check_artefact_claim_ownership.py`, wired into `run_hygiene_sweep.sh`. Measured
+      2026-08-20 over the 7 artefacts: 84 top-level sections, 83 claim-bearing, **37 carrying no `owner:` tag**,
+      189 open markers (st-part + st-plan + ev-check + ev-assumed), 55 closed. The invariant is confirmed FAILING
+      and is now ratcheted — both counts can only go down. Owner resolution reads the tag's `title` attribute (the
+      machine-readable doc path) before the visible label; label-only resolution produced 3 false violations on
+      this corpus, so the checker was corrected before seeding rather than baselining the lie.
 - [ ] [DOC] P0. Extend the same disclosure standard to the four sibling client artefacts the 2026-08-18 audit found
       violating it and which no remediation plan covers — `carveout-engineering.html` and
       `ODUM_Elysium_Phase2_Update_2026-07-24.html` alongside the two already in scope. Evidence:
@@ -263,3 +400,134 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+
+- 2026-08-20 — **The acceptance test now exists and is machine-enforced** — `unified-trading-pm@7b2dd29aaa`.
+  `scripts/plan-hygiene/check_artefact_claim_ownership.py` + `artefact_claim_ownership_baseline.yaml`, wired into
+  `run_hygiene_sweep.sh` next to the disclosure and enum-drift checks.
+
+  **Measured, 7 artefacts under `codex/14-customer-journeys/commercial-model/`, 2026-08-20**: 84 top-level
+  sections · 83 claim-bearing · **37 with no `owner:` tag** · **189 open markers** · 55 closed. Both counts are
+  seeded as shrinking ratchets, so the effort's progress is now a number that can only fall. Per-artefact open
+  markers: walkthrough 53 · walkthrough(strategy) 36 · architecture 29 · api-reference 28 · deep-dive 26 ·
+  carveout 17 · ODUM 0.
+
+  Marker vocabulary is read from the artefacts' own markup (`st-part`/`st-plan`/`ev-check`/`ev-assumed`), not a
+  hand-copied list, and legend blocks are stripped first — the legend defines the vocabulary and contains a
+  literal `owner: W5` example that would otherwise hand every artefact a free ownership tag.
+
+  **Two corrections made before shipping, both cases of a claim outrunning its measurement:**
+  1. First cut resolved owner tags from the visible label only and reported 3 dangling references
+     (`elysium-disclosure §C`, `elysium-disclosure §H.8`, `registry ground-truth P0`). Reading the markup showed
+     all three carry a real repo-relative doc path in their `title` attribute. That was the checker's blind spot,
+     not an artefact defect — fixed, and the checker now also verifies the cited doc exists on disk.
+  2. `quickmerge` exited 0 while the gate FAILED on two E501 violations and nothing landed. Caught only by
+     checking `origin` directly. Re-shipped after fixing. Exit 0 from a piped ship script is not evidence.
+
+- 2026-08-20 — **`execution_instruction` leg: the SKILL.md pointer was wrong, and the real blocker is now named.**
+  Shipped — `unified-trading-pm@c3a3e870f4` (all 5 files verified individually in origin, not by exit code).
+
+  `readiness-state-dump/SKILL.md` pointed this leg at `execution-service/execution_service/v2/policy_resolver.py`,
+  calling it "the real `InstructionActionV2`-adaptor registry". **It is not.** Measured 2026-08-20: that module
+  resolves an execution *algorithm* keyed by `(client_id, slot_label)`, with venue appearing only as one
+  `applies_to` gate dimension (`venue_category`). It never answers "can this venue execute this action". Corrected
+  in place — a pointer that cost one agent a wrong-file read will cost every future agent the same.
+
+  The only action-keyed dispatch that exists is `backtest_v2/action_handlers.py::resolve_settlement`, which is
+  **venue-independent and backtest-scoped**. Measured via AST: **11/16 `InstructionActionV2` actions have a
+  settlement path** (10 handled + `CANCEL` control-plane no-fill by design); **5 raise `UnhandledActionError`:
+  `CONVERT_DUST`, `LP_BURN`, `LP_MINT`, `REPAY`, `WITHDRAW`** — `REPAY`/`WITHDRAW` are core lending actions and
+  `LP_MINT`/`LP_BURN` are what the enum's own comment says the DEFI_LP_CONCENTRATED engine emits.
+
+  **The leg still prints `unverified` per venue, deliberately.** The measured gap is global and backtest-scoped,
+  so folding it into the 864 rows as `not_ready` would assert something this pass did not measure and would make
+  every row fail for the same non-venue-specific reason. It is surfaced once, as a dump-level finding.
+
+  **Rejected as drift**: mapping `InstructionActionV2` onto UAC `operation_details` keys. That vocabulary is
+  per-venue idiosyncratic — measured `place_order` / `create_order` / `new_order` / `post_order` / `add_order` /
+  `submit_order` / `buy`+`sell`, mixed with feed endpoints (`l2_book`, `all_mids`, `ws_trades`) across 47 of 67
+  registered sources. Any hand-built map would silently misread venues spelling their order verb differently.
+
+- 2026-08-20 — **W4 alerting: the fixes are shipped; what is missing is verification. Live measurement taken.**
+
+  Went to re-implement the `dp_cron_did_not_fire` dedup fix and found it **already shipped with tests** —
+  `alerting-service/alerting_service/core/recurring_dedup_persistence.py` (`f48a611` GCS-persisted cooldown,
+  `ac21303` merge-before-write closing a lost-update race), 14 tests green, wired into
+  `router._is_duplicate_alert` for `_RECURRING_ALERT_COOLDOWNS`-eligible events only. All three predecessor issue
+  docs still read `status: open`. Re-implementing would have been pure waste.
+
+  **Live ground truth** (`scripts/dev/slack-read-channel.py data-pipeline-alerts 24`, read-only): **3,008 alert
+  messages** over 2026-08-18T23:20Z → 2026-08-19T23:02Z, **2,509 of them `DP_CRON_DID_NOT_FIRE`**. Prior sweeps on
+  08-17 and 08-18 both recorded 150/24h — a **20× increase**, not a residual tail.
+
+  The fix reached `main` at 2026-08-19T21:41:59Z. Split there: PRE-fix 2,826 msgs / 22.5h (126/h), 47 of 61
+  repeating identities breaching the 1800s cooldown; POST-fix 182 msgs / 1.0h (182/h), **41 of 46 still
+  breaching**, typical identity firing every **13.0 min** — one per detector sweep, as if no cooldown engaged.
+
+  **What this does NOT establish, deliberately**: that the fix is ineffective. `gcloud run services describe
+  dp-alerting-subscriber` failed with `Reauthentication failed`, so the serving revision during that hour is
+  **unverified**, and landing on `main` is not deployment. A 1h window spans only ~2 cooldown periods. Recorded as
+  `BLOCKED-CREDENTIALS` rather than guessed at.
+
+  **A correction made mid-investigation**: I first read `origin/main` locally, concluded the fix was NOT on main,
+  and nearly filed a "promotion stalled, 296 commits unpromoted since 2026-08-01" finding. Checking the remote
+  directly (`gh api .../contents/...?ref=main`) showed the file IS on main. The local check was wrong twice over: a
+  stale cached ref, and `merge-base --is-ancestor` cannot see through the squash-style Option-B promote, so it
+  reports NO for a commit whose content did land. Cached `origin/` is a proxy, exactly as CLAUDE.md says.
+
+  Also separated the alert bug from the real conditions underneath: much of the volume is **many distinct
+  identities**, which dedup is correct not to collapse (the 22:51Z burst is 13 different sports books on one VM).
+  Those are real capture gaps — sports odds **never captured**, CME trades **8.0d stale** (5.0d on 08-17, so
+  ageing untouched). Data-movement, out of this tranche by the standing rule; routed, not acted on.
+
+- 2026-08-20 — **Measured instance of the `git stash` drop defect this plan already tracks.** A `safe-doc-push.sh`
+  run naming three doc files reported `✅ Pushed 241933d56e` and landed only TWO. The run began with
+  `🛑 127 entries is extreme — quarantining current dirty tree into a named stash BEFORE the pull`; that quarantine
+  swept this plan's then-uncommitted edits, and the isolated commit went ahead from the pre-edit version. Both the
+  W4 todo annotation and the W4 Progress Log entry above were silently dropped — local and origin both sat at 402
+  lines with zero `W4 alerting` hits. Caught only by grepping origin for the specific text after the ✅.
+  **The push's own success message is not evidence that every `--files` entry landed** — verify per file. Re-applied
+  from source rather than excavating 127 stashes. Direct evidence for
+  `/plans/active/issues/git_stash_push_pop_silently_drops_content_under_high_branch_velocity_2026_08_17.md`, which
+  this plan carries as a P1.
+
+- 2026-08-20 — **Grain auto-detection VERIFIED, not assumed** (the P0 says so explicitly) —
+  `unified-trading-pm@c3a3e870f4`.
+
+- 2026-08-20 — **Full-fleet dump RUN (runtime verification, not just unit tests) — and it re-points the effort's
+  critical path.**
+
+  Ran `derive_readiness.py` end-to-end under `instruments-service/.venv` against
+  `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json`, grain `instrument_type`, 288 venues × 3
+  modes = **864 rows**. This is the runtime verification the shipped code owed — the new `execution_instruction`
+  leg renders its measured denominator on every row, and the dump-level coverage finding prints once as designed.
+
+  **864-row total RECONCILED**: the dump reproduces the artefacts' quoted headline **exactly — ready 0 /
+  not_ready 844 / unverified 20**, denominator 864, date 2026-08-19.
+
+  **FINDING 1 — the stated critical path is wrong.** This plan and the coordinator both assert that T4's
+  execution-instruction check is "the structural reason all 864 rows read `unverified`". Measured per-leg:
+
+  | leg | ready | not_ready | unverified |
+  | --- | ---: | ---: | ---: |
+  | `strategy` | 24 | **840** | 0 |
+  | `execution_transfers` | 0 | 768 | 96 |
+  | `market_tick_data` | 109 | 470 | 285 |
+  | `execution_instruction` | 0 | 0 | 864 |
+
+  The rows are **`not_ready`, not `unverified`**, and rollup lets any `not_ready` dominate. With `strategy`
+  failing on 840 of 844, closing the instruction leg entirely would move **zero** rows. The headline is gated by
+  **strategy position-adapter coverage** (`position_read_mode_availability(venue).<mode> = none`, strategy-service
+  — T3's repo), not by T4. Tracked as a P0 above; the coordinator should re-point before more effort is spent on
+  the assumed edge.
+
+  **FINDING 2 — the execution legs in this run are a floor, not a measurement.** The execution-service probe
+  subprocess exited 1 (`No bucket configured for market_data/defi and no project ID available`), so all four
+  execution-service legs reported `unverified=864`. The same probe SUCCEEDS single-venue — `--venue OKX-FUTURES`
+  derives `execution_orders=ready` at PAPER and LIVE. Environmental, not absent capability. The dump degraded
+  honestly (probe unavailable → `unverified`, never a silent pass), which is the design working, but the
+  execution-leg counts must not be quoted as capability until fixed. Tracked as a P1 above.
+  `tests/test_shard_universe_grain_detection.py`, 7 tests passing. The case that matters for the T2 handoff is
+  the third: when T2 lands the `by_venue_instrument_type_data_type` KEY before landing data under it, a detector
+  keyed on mere key-presence would flip to the fine grain and enumerate **zero** shard cells — every coverage
+  figure silently collapsing while looking structurally fine. The shipped detector requires a non-empty venue
+  block and correctly falls back, still reporting the real 2-tuple cells. Confirmed by test, not by reading.

@@ -321,3 +321,17 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   operator-gated relaunch), did not file a duplicate issue doc (findings-triage: "fits another plan → annotate it,
   don't fix") and did not relaunch — escalated the stale `[OPERATOR]` todo below via `/blocked` instead. No code
   changed this session.
+- **2026-08-19 (slot-7, data_pipeline_failure, escalation `agt-90f371`, `DP_CRON_DID_NOT_FIRE`/DP-LIVE-003 re-page)**:
+  DP-LIVE-003 paged again for `prediction-arb-detector-` — the other still-open `[OPERATOR]` todo in this doc (ran
+  continuously until deleted 2026-06-29, ~7 weeks absent at this page). Live-verified 2026-08-19: `gcloud compute
+  instances list --filter="name~prediction-arb-detector"` returns zero rows across all zones (project-wide; the same
+  census correctly lists the other live producers — `prediction-live-*`, `mtds-live-tradfi-cme-trades-`, etc. — so it
+  is not blind). No new root cause — same producer, same open decision, now ~7 weeks stale. The launcher
+  (`launch-prediction-arb-detector.sh`) and the features-service `--operation arb-detect` entrypoint are verified
+  intact, so a relaunch would be mechanical. Per this session's role contract (data_pipeline_failure: diagnose or ask,
+  never guess an operator-gated relaunch/reclassify), did not file a duplicate issue doc (findings-triage: "fits
+  another plan → annotate it, don't fix") and did not relaunch — escalated the decision via `/blocked`
+  (`BLK-ad065277`: A reclassify `NOT_YET_ACTIVE` [worker rec, consistent with the 2026-08-19 tradfi ruling in
+  `agt-7f6044`] vs B relaunch now), the same mechanism the sibling todo used. No answer within the 2-min bounded wait —
+  slot freed, question persists for the operator, a later answer re-dispatches a fresh worker. No code changed this
+  session.

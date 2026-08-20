@@ -102,12 +102,46 @@ source: >-
   already `✅ DONE 2026-07-13` (buckets deleted, predates this result) — nothing left to flip. Evidence:
   `unified-trading-pm@<see commit>`.
 
-- [ ] [DATA] P1. **CF-7 relabel residual diagnosis for prediction.** Source: `data_completion_prediction_2026_07_15.md` item 4's residual (verbatim: "blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom (honest drop)"). Read-only diagnosis/classification only — no relabel, no delete, no code change.
+- [x] ✅ [DATA] P1. **CF-7 relabel residual diagnosis for prediction.** Source: `data_completion_prediction_2026_07_15.md` item 4's residual (verbatim: "blank `data_type` (17 rows, both buckets) is skip+logged by the migrator → diagnose at rebuild from the parquet's own `data_type` column; confirm the ~21 UNKNOWN-venue cells are object-backed (relabel) vs phantom (honest drop)"). Read-only diagnosis/classification only — no relabel, no delete, no code change.
   **Scope**:
   1. For the ~17 blank-`data_type` rows (both legacy+canonical buckets, per the CF-7 migrator's skip-log) — read each row's own parquet object and determine its true `data_type` from the object's own column data; report the resolved value per row.
   2. For the ~21 UNKNOWN-venue cells — for each, determine whether the underlying GCS object exists (object-backed — would need a relabel) or has no backing object (phantom — an honest drop, no action needed).
   **Done-when**: a report listing every one of the ~17+~21 rows/cells with its resolved classification, plus corrected counts if the real numbers differ from the ~17/~21 estimates in the source doc.
   **If the report finds object-backed cells needing an actual relabel**: file that as a new, separately-scoped `plans/active/issues/<slug>_2026_08_19.md` finding — do not perform the relabel in this todo.
+
+  **RESULT: NO-ACTION — all residuals PHANTOM, 0 object-backed, 0 remaining in the live estate (2026-08-19, slot-31).**
+  Read-only diagnosis against (a) the live canonical `_index` (`market-data-tick-pred-prd-central-element-323112`,
+  **2,814,442 rows**, via `read_availability_index_safe` column-pruned under `run-bounded-analysis.sh`), (b) the pre-CF7
+  `_index` snapshot `_index/snapshots/pre_cf7_v4_cleanup_2026_07_11.parquet` (**757,476 rows** — the historical state carrying
+  the residual cells), and (c) a 41-day GCS delimiter-walk of the canonical object layer (venue + data_type spellings, same
+  strategy as `audit_index_vs_gcs_spellings.py`). No GCS write, no relabel, no delete, no code change.
+
+  1. **~21 UNKNOWN-venue cells — corrected count = 21 (exact), ALL PHANTOM.** The pre-CF7 snapshot carries exactly **21**
+     `venue=UNKNOWN` rows (all `data_type=trades`, `capture_status=captured`, dates 2025-03-14..2026-04-06) — every one with a
+     **blank `instrument_id`**. A blank-iid `trades` cell has no condition_id → no object filename → structurally **cannot be
+     object-backed** (the CF-11 re-emit in `_rebuild_prediction_cf11.py` explicitly skips this malformed legacy-phantom class).
+     A further **168 `venue=''` (blank) cells** of the same shape sit alongside (corrected total unk+blank = **189**; the source
+     doc's ~21 counted only the `UNKNOWN` spelling). Live `_index` today: **0** UNKNOWN/blank-venue cells of ANY status. Object
+     layer: **0** `venue=UNKNOWN`/blank-venue dirs (41-day walk) — corroborated by the E5-rebuild census argument (the live
+     `_index` was rebuilt from a full object walk and emits a row per on-disk venue, so 0 UNKNOWN rows ⟹ 0 UNKNOWN-venue
+     objects). **Classification: phantom → honest drop; no relabel needed; no object-backed residual exists.**
+  2. **~17 blank-`data_type` rows — corrected count = 18, ALL PHANTOM.** The pre-CF7 snapshot carries **18** `data_type=''`
+     rows (**17 `attempted_failed` + 1 `empty_confirmed`**, all `venue=POLYMARKET`, **blank `instrument_id`**) — i.e. **0
+     captured**, no object identity. The "diagnose at rebuild from the parquet's own `data_type` column" remedy is **moot**:
+     there is no parquet behind a blank-iid cell (no condition_id → no object path). Live `_index` today: **0** blank-data_type
+     rows. Object layer: **0** blank `data_type=` dirs (41-day walk). **Classification: phantom → honest drop; no action. No
+     captured data was lost (these cells were never captured).**
+  3. **CF-7 relabel confirmed complete at the object layer.** On-disk venues = **{KALSHI, POLYMARKET}** only; on-disk object
+     data_types = **{book_snapshot_5, trades}** only. The legacy aliases (`prediction_trades` 3,385 rows and `book_snapshot`
+     5 rows in the pre-CF7 snapshot) are **absent from the live `_index`** — fully relabeled to `trades`/`book_snapshot_5` by
+     the CF-7 `_cf7_normalise` (`migrate_prediction_to_pred_prd_v9.py`) at copy time. The `market_lifecycle` (4,560) /
+     `MARKET_LIFECYCLE` (2,280) casing split in the live `_index` is the **documented intentional dual-casing**
+     (`/codex/02-data/prediction-data-types-catalog.md` §"MARKET_LIFECYCLE dual-casing": UAC-canonical `market_lifecycle` for
+     MTDS/MDPS, `MARKET_LIFECYCLE` for instruments-service) and is 100% `empty_confirmed` — **not a CF-7 residual, no action.**
+
+  **No object-backed cells needing a relabel were found → per this item's own instruction, no new issue doc filed.** The ~21
+  UNKNOWN-venue resolution was independently recorded in `instruments_mtds_consistency_remediation_residuals_2026_07_24.md`
+  (slot-14, 2026-08-04: "0 UNKNOWN-venue cells … cleaned up by a prior pass with no new action needed").
 
 ## Progress Log
 
@@ -125,3 +159,12 @@ source: >-
   L6 gate per the item's step (c) — neither had a prediction-specific item still gated on this result (the L6 gate for
   prediction was already `✅ DONE 2026-07-13`), so no flip made in either. Item 2 (CF-7 relabel residual diagnosis)
   untouched — separate, not in this task's scope.
+- **2026-08-19 (item 2 shipped — slot-31)**: CF-7 relabel residual diagnosis ran **NO-ACTION** — see the item's RESULT
+  block above for the full report. Corrected counts vs the source doc's estimates: **21 UNKNOWN-venue cells (exact)** + **168
+  blank-venue cells** (sibling phantom class, extra beyond the ~21) + **18 blank-data_type rows (vs ~17)** — ALL phantom
+  (blank `instrument_id` → no condition_id → no backing object; the CF-11 re-emit's malformed-class skip) and ALL absent from
+  the live 2,814,442-row `_index` and the on-disk object layer (41-day delimiter walk: venues {KALSHI, POLYMARKET}, data_types
+  {book_snapshot_5, trades}). No object-backed cells found → no relabel, no delete, no code change (per the brief); no new
+  issue doc filed (the item's own instruction gates issue-filing on object-backed cells, none found). The prior
+  `instruments_mtds_consistency_remediation_residuals_2026_07_24.md` `[x]` resolution (slot-14 2026-08-04) is confirmed.
+  Item 2 flipped `[x]`.

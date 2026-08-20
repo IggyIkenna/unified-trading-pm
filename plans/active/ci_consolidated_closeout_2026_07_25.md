@@ -87,7 +87,7 @@ source: >-
 ## Track 1 — Quickmerge mechanics · P0/P1
 
 **Sources**:
-[issues/qg_sentinel_environment_blind_2026_07_23.md](/plans/active/issues/qg_sentinel_environment_blind_2026_07_23.md)
+[issues/qg_sentinel_environment_blind_2026_07_23.md](/plans/archive/issues/qg_sentinel_environment_blind_2026_07_23.md)
 (QG sentinel blind to the `ENVIRONMENT` dimension, dev-vs-prod gate laundering) ·
 [issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md](/plans/archive/issues/quickmerge_untracked_new_files_silent_noop_2026_06_23.md)
 (quickmerge silently no-ops on new-file-only ships) ·

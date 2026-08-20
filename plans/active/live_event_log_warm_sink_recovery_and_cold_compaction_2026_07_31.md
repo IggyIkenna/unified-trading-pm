@@ -323,3 +323,19 @@ determinism needs.
   true yet.
 - **context-scout 2026-08-03**: populated context_scope (5 entries).
 - **context-scout 2026-08-17**: re-scouted; context_scope re-verified (5 entries), unchanged.
+- **2026-08-19 (slot 33)**: Dispatched on `[DATA] P1.2` — this task had fallen out of its 2026-07-31 park (not present
+  in the current `GET /api/backlog/parked` listing despite the todo text above still reading "⏸ PARKED"), matching the
+  already-tracked park-bypass bug class documented in `/plans/active/issues/backlog_regen_reverted_p1_2_park_2026_08_01.md`
+  (18+ corroborating touches on the sibling issue doc's own task). Re-verified both real preconditions live before doing
+  any work, rather than trusting the park's staleness: (a) the 24h elapsed-time gate cleared long ago (>2.5 weeks past
+  the 2026-07-31T21:14Z P1.1 redeploy); (b) an active paper run trading these 3 venues still does NOT exist —
+  `gcloud compute instances list` (unfiltered, all 23 RUNNING instances on `central-element-323112` enumerated by name)
+  shows zero paper/colocated/strategy deployments (every instance is a backfill/live-capture/mdps/watchdog VM);
+  `gcloud run jobs describe paper-trading-engine` now returns `NotFound` (the job existed but was inactive as of the
+  2026-08-07 sibling finding — it has since been deleted entirely, not merely idle); zero Cloud Run services match
+  "paper". The upstream blocker is also still open: `/plans/active/issues/cefi_binance_futures_aster_okx_futures_paper_gate_backfill_incomplete_2026_08_08.md`
+  confirms BINANCE-FUTURES/ASTER/OKX-FUTURES backfill completeness has not been re-measured clean (its own `[DATA] P2`
+  re-check todo is still open as of the 2026-08-17 context-scout entry — the in-flight aggregate backfill has not yet
+  reached these 3 venues' full chronological range). Refusing to fabricate an ε=0 result against a nonexistent ledger,
+  per this todo's own standing instruction. No code changes; re-arming the park via `skip-current-task`
+  (`reason_code: PARKED`, `park_now: true`) rather than leaving this to bounce to the next worker.

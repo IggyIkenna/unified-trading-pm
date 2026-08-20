@@ -264,6 +264,14 @@ same-named field on both sides with no verified single source of truth between t
 `gross_exposure_usd`/`net_exposure_usd` in execution-service's `RuleEvalContext` today is either a separate,
 possibly-diverging computation, or unpopulated — not yet traced to its source in this pass.
 
+**Trace completed 2026-08-19 (cross_cutting_satellite_ao_dispatch_batch18 item 2, slot 7, independent code read)**:
+the sole production call-site is `execution_service/engine/orchestrator.py:246` `execute_instruction`, which calls
+`run_risk_preflight(instruction, reference_price=...)` with NO `account_state` — so `_copy_account_state_into_ctx`
+never runs on the live path, `gross_exposure_usd`/`net_exposure_usd` are unpopulated, and `_can_evaluate` drops
+`MaxGrossExposureTrigger`/`MaxNetExposureTrigger` rules for lack of the context key (silently skipped, not an
+independent computation). Definite yes/no for this item: preflight_gate does NOT consume strategy-service's
+`ExposureAggregator` (0 `ExposureAggregator`/`exposure_aggregator` hits repo-wide in execution-service).
+
 ## Reference position, credit ownership, and the generic per-position adjustment — resolved 2026-08-19
 
 Operator-driven design session extending Layer 1/2 above. Core idea: **`reference_price` alone only tells
@@ -623,6 +631,17 @@ POST_ONLY as two independently composable fields.
       `RuleEvalContext` fields**, given the confirmed-2026-08-19 finding that `preflight_gate.py` has zero
       `ExposureAggregator` imports — either wire it to the real aggregator, or document the independent
       computation explicitly so the two same-named fields stop reading as one source of truth.
+- [ ] [INFRA] P2. **Provision the EventTransport seam's `-reader` pull subscriptions** (`persist-{ag}-{dt}-reader`)
+      — confirmed absent 2026-08-19 (measurement run, slot 14): production `persist-*` topics carry only
+      `warm-sink-*` GCS push subscriptions, so `PubSubTransport.read()` fails against them today. Includes
+      provisioning the missing `persist-all-atomic-instruction` topic (already a known codex gap) so the
+      strategy→execution seam is actually readable in live.
+- [ ] [REVIEW] P2. **Re-evaluate the BACKRUN / LIQUIDATION_BUNDLE "12s block budget is generous enough" reasoning
+      with the measured transport cost** — measured 2026-08-19 (slot 14, `unified-trading-library@418ce99c`):
+      EventTransport `PubSubTransport` publish→receive round-trip ~2.2–2.7s median / ~4.7–5.0s p95 / ~4.9–5.0s max
+      (n=20 × 2 runs, ephemeral topic on `central-element-323112`) = ~18% median / ~39–42% p95–max of the 12s window
+      before strategy detection / execution / relay are counted. The per-archetype MEV-applicability §'s "very likely
+      adequate" claim needs updating or a fast-path latency budget.
 
 ## Progress Log
 

@@ -148,6 +148,69 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T2] P0. **`INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
+      before B23's schema lock can be enforced anywhere.** MEASURED 2026-08-20 by building B23 part 4's write-time
+      gate in `instruments-service` and running it before shipping (then reverting it — shipping would have blocked
+      production catalogue promotion for all five asset groups):
+
+      - `build_instrument_catalogue.py`'s `CATALOG_COLUMNS` emits **41** columns; the contract declares **85**.
+      - **4 of the 6 `required=True` columns are emitted by NO asset group**: `instrument_key`, `symbol`,
+        `available_from_datetime`, `timestamp` (identical result for cefi, defi, tradfi, prediction, sports).
+      - The writer's canonical identifier is **`instrument_id`** — `build_instrument_catalogue.py:279` states
+        outright that "`instrument_id` is written as the canonical column (the helper also accepts
+        `instrument_key`)". The contract requires `instrument_key`.
+      - Same split on the date columns: writer emits `available_from`/`available_to`, contract declares
+        `available_from_datetime`/`available_to_datetime`.
+      - Wiring the gate turned 3 existing `promote_catalogue` tests red with 80 violations on a cefi frame.
+
+      **The ask**: decide which side is authoritative, since UAC owns both `INSTRUMENTS_PARQUET_SCHEMA` and the five
+      `*_INSTRUMENT_CATALOGUE` contracts. Either the schema is wrong about the catalogue's shape (rename toward
+      `instrument_id`/`available_from`), or the writer is (instruments-service changes its emitted columns — T2 can
+      take that half once you rule). This is not a naming nit: it blocks B23 part 4's done-when ("a catalogue write
+      with a column outside the locked+versioned contract is rejected at write time"), and it explains why the
+      contracts sat registered-but-unconsulted without anyone noticing — the first real consumer fails instantly.
+
+      Tracked as a new P0 part 0 in
+      `/plans/active/issues/instruments_schema_not_locked_versioned_2026_08_18.md`. Note parts 2 and 3 of that
+      issue's 4-part fix are also yours (UAC) and still open.
+
+- [ ] [FROM-T2] P1. **The `KNOWN_CHAINS` gap you fixed for SCROLL/PLASMA is still open for TEN more chains
+      carrying 46,698 live manifest rows.** Your SCROLL/PLASMA fix (unified-api-contracts@27ebc544b2) was correct
+      but scoped to the two chains that had been reported. MEASURED 2026-08-20 against the live
+      `gs://central-element-323112-honest-coverage/2026-08-19/coverage.json` (`by_chain.defi`, derived from the
+      manifest — no new GCS walk): the DeFi manifest carries **23 distinct chains; UAC's `KNOWN_CHAINS` has 14; 10
+      manifest chains are outside it**:
+
+      | chain | total rows | captured |
+      | --- | ---: | ---: |
+      | STARKNET | 28,830 | 0 |
+      | AURORA | 4,082 | 2,725 |
+      | MANTLE | 3,687 | 1,537 |
+      | BLAST | 2,380 | 0 |
+      | MODE | 2,332 | 0 |
+      | METIS | 1,548 | 0 |
+      | MOONBEAM | 1,601 | 0 |
+      | CELO | 972 | 0 |
+      | FANTOM | 856 | 0 |
+      | GNOSIS | 410 | 0 |
+      | **total** | **46,698** | **4,262** |
+
+      Every `if chain in KNOWN_CHAINS:` consumer takes the ELSE branch for all ten — the exact failure mode your
+      issue `three_chain_registries_disagree_none_authoritative_2026_08_19.md` describes, unfixed at 10x the scope.
+      Also worth your attention in the other direction: **`ASTER` is in `KNOWN_CHAINS` but has ZERO DeFi manifest
+      rows**, so the set is simultaneously over- and under-inclusive versus live data.
+
+      **Deliberately NOT assumed**: that all ten belong in `KNOWN_CHAINS`. That set is derived from `SUBGRAPH_IDS` +
+      `_STATIC_VENUE_CHAINS` + `_EXTRA_VENUE_PARTITION_CHAINS` and governs VENUE-SUFFIX SPLITTING, which is not
+      necessarily the same population as "chains the manifest may legitimately carry". `STARKNET` in particular is a
+      known deliberate exclusion (`EXTENDED-STARKNET` is a CeFi on-chain perp CLOB that must NOT be DeFi-split), so
+      at least one of the ten is arguably correct as-is. The ask is that UAC state which population `KNOWN_CHAINS`
+      is meant to be and reconcile the ten against that — not that you add them all.
+
+      Context: T2 removed three hand-rolled copies of this set in `instruments-service` (they had drifted in both
+      directions — missing `ASTER`, carrying a phantom `STARKNET`) so they now import yours; see
+      `instruments-service@2b482a1247`. That makes UAC the single point where this is fixable.
+
 _None at authoring time._
 
 ## Todos
@@ -187,10 +250,18 @@ _None at authoring time._
       working and now gets a MORE complete answer. The re-check of whether any already-written chain-scoped output
       was affected by the SCROLL/PLASMA non-recognition is data verification in T2-owned repos — filed as an
       inbound request on T2's plan, not silently assumed clean.
-- [ ] [BACKEND] P0. `canonical_path_violations()` validates the filename stem. The oracle drops the last path
-      segment before validating, so raw venue wire stems and double-wrapped catalogue-miss ids return 0 violations
-      == CANONICAL when they are not. Evidence:
-      `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md`.
+- [x] ✅ [BACKEND] P0. `canonical_path_violations()` validates the filename stem — **already shipped before this
+      tranche existed; this todo was STALE, not outstanding.** Landed `unified-api-contracts@d40c5d7d` +
+      `@502ef57e` (+ `market-tick-data-service@953679de` for the writer side). VERIFIED BY MEASUREMENT rather than
+      by trusting the issue doc's own "how it shipped" section: `CanonicalViolationClass` exists as a StrEnum whose
+      `ID_FORM` member is documented as "The FILENAME STEM: whether the per-instrument shard is named for a …"; the
+      `id_form` violation list is populated at 4 distinct sites in
+      `unified_api_contracts/canonical/_partition_path_canonicality.py`; and the default
+      `violation_classes=None` reports BOTH classes, so the pre-2026-07-20 structure-only behaviour is now the
+      explicit opt-in (`frozenset({CanonicalViolationClass.STRUCTURAL})`) rather than the silent default. The
+      source issue is still `status: open`, but its 2 remaining open todos are unrelated `[DATA]` P2/P3 findings
+      from 2026-08-17, not this oracle fix. Evidence:
+      `/plans/active/issues/canonical_path_oracle_blind_to_filename_stem_2026_07_20.md` § 9.
 - [ ] [BACKEND] P0. `canonical_path_violations()` validates VALUES, not just path structure — today it is blind to
       `instrument_type` / `data_type` / `venue` / `chain` values. Either extend it or make the blindness explicit in
       its return type so a caller cannot mistake it for a full check.
@@ -206,17 +277,53 @@ _None at authoring time._
 
 ### Contract extensions — unblock T3 and T4 EARLY
 
-- [ ] [BACKEND] P0. Extend UAC `QuoteInstruction` with `delta`, `gamma` and `underlying_instrument_id`. **T4's
-      delta-proxy repricer generalization is blocked on this** — land it first and tell T4.
-- [ ] [BACKEND] P0. Add `reference_position` to `StrategyInstructionEnvelope`, per-venue, same shape as the existing
-      price leg. **T3 and T4 both block on this.** Design resolved 2026-08-19, not implemented.
-- [ ] [BACKEND] P0. Add the `credit` leg to `StrategyInstructionEnvelope`, completing the price + position + credit
-      reference triple the artefacts describe. Evidence:
-      `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [BACKEND] P1. Advance `OrderStatus` to the full 9-state `OrderState` machine the 23-doc SSOT describes. Ruled
-      2026-08-06 (Option A — advance the contract), reconfirmed 2026-08-12; the CODE and TEST todos are both still
-      open. Evidence: `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
-
+- [x] ✅ [BACKEND] P0. UAC `QuoteInstruction` extended with `delta`, `gamma`, `underlying_instrument_id` —
+      unified-api-contracts@6be4b136d7. **T4 IS UNBLOCKED on this edge.** All three are optional; `None` reproduces
+      exactly the previously-hardcoded `delta=1.0` / `underlying_instrument_id=instrument` self-underlying case, so
+      no existing construction changes meaning. Semantics match `DeltaProxyRepricer._reprice()` as already
+      implemented (`effective_delta = delta + gamma * underlying_move`), verified by a test that computes that
+      formula from schema-carried values. Also documented `refresh_cadence_ms` as the STRATEGY-side cadence
+      specifically — the issue is explicit that conflating it with execution's faster tick-driven loop is a design
+      error. 5 tests incl. a JSON round-trip (the instruction crosses the EventTransport seam).
+- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add `reference_position` to `StrategyInstructionEnvelope`. **The shape this
+      todo names (`dict[venue, Decimal]`, "same shape as the existing price leg") is SUPERSEDED** — the source issue
+      carries a dated correction banner from a later same-day operator revision ruling that shape incomplete: it
+      solves the venue axis but not the INSTRUMENT axis, since a strategy instance holds a universe of instruments.
+      The replacement (`references: list[InstrumentReferenceEntry]`) is published in that issue under the heading
+      **"Proposed shape (illustrative — not finalized; this is what needs resolving, not what's decided)"** followed
+      by **"Open questions for the operator — do not resolve unilaterally"** (Q12-Q16). Implementing the todo's
+      literal text would ship the rejected shape; implementing the vector would answer five questions explicitly
+      reserved for the operator. **Needs: a ruling on Q12-Q16**, then this becomes a bounded code task.
+      Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
+- [ ] [BACKEND] **BLOCKED-OPERATOR** P0. Add the `credit` leg to `StrategyInstructionEnvelope`. Same gate as
+      `reference_position` above — Q14 asks whether `credit` varies per-entry or is one policy shared across the
+      vector, which cannot be answered without first resolving Q12 (where the vector lives). Landing `credit` as a
+      flat envelope field now would re-commit the exact scalar-shape regression the operator caught. Note the
+      design IS settled on two points that survive whichever way Q12-Q16 land: `credit` is OPTIONAL (a "flavor",
+      not mandatory — pure-passive, fire-immediately and patient-then-escalate are all valid consumers) and
+      strategy-OWNED/strategy-COMPUTED with execution merely consuming it.
+      Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
+- [x] ✅ [BACKEND] P1. `OrderStatus` advanced to the full 9-state machine — unified-api-contracts@a3c572f8.
+      **T4 is unblocked on this edge.** `FAIL_OUTBOUND` and `RECONCILED` now exist, and the machine ships with
+      them — `ORDER_STATUS_TRANSITIONS` (transcribed edge-for-edge from the codex diagram),
+      `TERMINAL_ORDER_STATUSES`, `is_terminal_order_status()`, `is_legal_order_transition()` — exported at all
+      four package levels so consumers reach them through the top-level `unified_api_contracts` facade.
+      **The rename shipped WITHOUT breaking anything, by design**: `PENDING`/`OPEN` became `PENDING_NEW`/`NEW`
+      with the old names retained as enum ALIASES (`OrderStatus.PENDING is OrderStatus.PENDING_NEW` is True,
+      wire values byte-identical), so nothing already persisted or published is re-encoded and none of the 24
+      execution-service call sites break. That aliasing is a deliberate, tracked exception to the no-shims rule,
+      taken because the entity-rename SSOT demands consumers migrate in the SAME change while this tranche is
+      forbidden from editing execution-service — resolution is filed as a `[FROM-T1]` request on T4's plan, not
+      left open-ended. MEASURED basis for calling aliasing safe: fleet-wide there is NO `.name`-based,
+      `OrderStatus[...]`, `len(OrderStatus)` or iteration coupling, so no consumer can observe the rename.
+      9 tests pin the enum against the codex state table (incl. that the original seven wire values are
+      unchanged, and that aliases resolve by IDENTITY rather than merely comparing equal). QG green — real exit
+      0 captured without a pipe, 273s; landing verified by `merge-base --is-ancestor`, not by exit code.
+      **Deliberately NOT widened**: the codex diagram draws exactly one edge out of `PARTIALLY_FILLED` (full
+      fill), so that is what the map encodes — real venues do cancel partially-filled orders, but the doc is the
+      SSOT and the map is its projection, so amending it is a codex change first. Filed as a `[FROM-T1]` P2
+      question on T4's plan rather than guessed at. Evidence:
+      `/plans/active/issues/order_state_machine_ssot_vs_uac_orderstatus_2026_07_31.md`.
 ### W5 — venue registry completeness
 
 - [ ] [BACKEND] P0. Populate `VenueCapabilityV2.collateral_rules` / `MarginSpec` for EVERY venue. The schema exists
@@ -237,6 +344,22 @@ _None at authoring time._
       IDENTICAL GCS path today and overwrite each other.** This directly threatens the paper(W) == batch-rerun(W)
       determinism spine. Land the CODE; the data migration strategy stays operator-gated. Evidence:
       `/plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_pnl_attribution_2026_08_15.md`.
+      **UNBLOCKED 2026-08-19 — the design gate this was waiting on is ANSWERED.** Operator Ruling 3
+      (`/plans/audit/results/code_completion_scope_2026_08_19.md` § rulings): _"Add `{mode}` to all four templates
+      AND migrate existing data"_ / _"migrate, do not quarantine … Writer-only fixes are explicitly NOT what was
+      chosen."_ The issue's own `[OPERATOR]` todo is stale against that ruling and has been retagged.
+      **Scoping MEASURED 2026-08-19 by T1 (this is the expensive part — do not re-derive it):** the change is 5
+      templates, not 4 (`strategy_orders` too), plus `partition_keys`, plus deleting the
+      `_MODE_KWARG_PENDING_MIGRATION` carve-out in `build_path()`. **The trap: six LIVE UTL callers do NOT pass
+      `mode=` and will raise `KeyError: 'mode'` the moment the placeholder lands** —
+      `domain_client/clients/pnl.py:40`, `positions.py:41`, `strategy.py:39`, `strategy.py:50`,
+      `execution.py:59`, `execution.py:72`. These are UTL-owned, so migrating them IS the "same change" the
+      entity-rename rule demands — but it changes those getters' public signatures, so confirm first which are
+      dead: `registry.py`'s own comment claims `StrategyDomainClient.get_instructions` /
+      `get_gcs_instructions_path` have ZERO call sites. Writers live in T3/T4 repos (`save_operations.py`,
+      both `domain_adapter.py`s) and already pass `mode=`, so they need no edit — but writer↔reader byte-parity
+      must be re-checked read-only, and any mismatch filed as an inbound request rather than fixed across tranches.
+      The DATA migration the ruling also mandates stays `BLOCKED-OPERATOR` under this tranche's no-data-movement rule.
 - [ ] [BACKEND] P0. Fix the GCS client silent write failure — wrong method names swallowed by a broad exception
       handler. Evidence: `/plans/active/issues/utl_gcs_client_upload_from_string_silent_write_failure_2026_08_18.md`.
 - [ ] [BACKEND] P1. Root-cause and fix the 55 failing tests in `config_interface` / `cloud_interface`. Leading
@@ -281,6 +404,71 @@ _None at authoring time._
 
 - 2026-08-19 — Plan authored. Allocation derived by `scripts/plan-hygiene/allocate_code_readiness_tranches.py`
   against the 892-doc active corpus. No code work started yet.
+- 2026-08-20 — **Oracle filename-stem todo was STALE — closed by measurement, not by new code.** The plan listed
+  `canonical_path_violations()` filename-stem validation as an open P0; it shipped weeks earlier
+  (`unified-api-contracts@d40c5d7d`/`@502ef57e`). Confirmed against the CODE, not the issue doc's self-report:
+  `CanonicalViolationClass.ID_FORM` is documented as "The FILENAME STEM", `id_form` is populated at 4 sites, and
+  structure-only is now an explicit opt-in rather than the silent default. The source issue reads `status: open`
+  only because 2 unrelated `[DATA]` findings from 2026-08-17 remain on it — a reminder that an issue's status
+  field is not a verdict on any single todo inside it. **Still genuinely open**: the sibling VALUES todo — the
+  oracle remains blind to `instrument_type`/`data_type`/`venue`/`chain` VALUES, which CLAUDE.md itself warns
+  agents about, so "0 violations" still does not mean "canonical" on that third axis.
+- 2026-08-20 — **Contract edge #3 landed: `OrderStatus` is now the 9-state machine — unified-api-contracts@a3c572f8.
+  T4 unblocked.** Verified on origin, not by exit code: 9 canonical members + 2 aliases present in the landed blob,
+  transition map + test file present, top-level export present, and `a3c572f8` confirmed via
+  `merge-base --is-ancestor`. QG real exit 0 (273s), captured WITHOUT a pipe.
+  **Design call worth re-reading before anyone "cleans up" the aliases**: option A (rename in place) was ruled and
+  twice reconfirmed, but a literal rename breaks 24 execution-service call sites, and the entity-rename SSOT
+  requires consumers to migrate in the SAME change — impossible from a tranche forbidden to edit that repo. The
+  aliases resolve that conflict without shipping the rejected alternative: they are enum aliases (identity, not
+  copies), so the state space cannot split in two. Removal is a filed `[FROM-T1]` todo on T4's plan, not a
+  someday-note. MEASURED before choosing this: zero `.name`-based / `OrderStatus[...]` / `len()` / iteration
+  coupling fleet-wide — that measurement is the whole basis for calling it behaviour-preserving, so if it is ever
+  refuted the alias decision must be revisited.
+  **What I deliberately did NOT do**: widen `PARTIALLY_FILLED` beyond the single edge the codex diagram draws.
+  Real venues cancel partially-filled orders, so the map is probably incomplete — but the doc is the SSOT and this
+  map is its projection, so the fix is a codex amendment first. Filed as a P2 question on T4's plan.
+- 2026-08-20 — **Cross-tranche handoffs shipped — unified-trading-pm@617670c965.** T4 got three `[FROM-T1]` items
+  (alias migration, the never-written `test_state_machine.py` verifier the codex doc has declared since 2026-05-12,
+  and the `PARTIALLY_FILLED` edge question). T3 got a warning NOT to wait on `reference_position`/`credit`, since
+  that edge is operator-gated on Q12-Q16 and will not clear on its own — with the two points that ARE settled
+  (`credit` optional; strategy-owned/strategy-computed) called out so T3 can design against them today.
+  **Also rescued 3 issue docs that existed ONLY in this slot's local clone** (defi SCE-suffix strategy_ids,
+  health-factor monitor with no production entrypoint, MTDS availability data_type-without-venue) — they were
+  sitting in an unpushed local commit the outgoing agent never landed, one `git` accident from gone.
+  **Process findings, recorded because they cost real time tonight**: (1) `exit 0` lied THREE times — a
+  safe-doc-push refusal, a failed lint, and a plan-hygiene block all surfaced as exit 0 through a pipe. Capture
+  `$?` directly and grep the log for the verdict; never `| tail` a ship command, which is also how the first
+  hygiene failure's own detail got truncated out of view. (2) The PM checkout carries **67 autostash entries** and
+  safe-doc-push now calls that "extreme" — it is what produced tonight's merge conflict. (3) Writing
+  `BLOCKED-OPERATOR` mid-sentence in a todo silently HOLDS that todo; the hygiene gate is right to fail it. Say
+  "gated on an operator ruling" in prose and keep the marker in the leading tag cluster.- 2026-08-20 — **T1 SESSION HANDOVER — second agent took over the tranche under an explicit operator ruling.**
+  Not a normal resume: two Claude sessions were live in slot 6 at once. MEASURED at takeover — the incumbent T1
+  agent (PID 19387, started 23:13:08) was mid-`quickmerge` (children 26702/26708/27231) shipping the
+  QuoteInstruction edge, with `--isolated` holding `schemas.py` evacuated into `stash qm-iso-evac-26708`. The
+  incoming agent did NOT edit anything while that was true — it armed a watchdog on the ship's real terminal
+  state, confirmed `6be4b136` landed on `origin/live-defi-rollout` and the evac stash cleared, and only then
+  retired PID 19387 (SIGTERM, confirmed gone, no orphaned ship children). Operator answered "take over T1, retire
+  the peer" when asked; the takeover was not autonomous.
+  **Nothing was lost, and that is measured, not assumed**: every tracked file in the UAC tree was byte-identical
+  to `origin/live-defi-rollout`, 2 of 3 untracked test files identical, the third differing only by a
+  one-character docstring-formatting artifact (`""" "coinbase"` vs `""""coinbase"`). The tree was synced
+  `--ff-only` to `6be4b136` (0 ahead / 0 behind) behind a retained safety stash
+  `t1-takeover-safety-20260819T230423Z` — deliberately NOT dropped. The older `qm-iso-evac-56777` residue from the
+  documented SIGTERM recovery was left alone (never drop foreign WIP).
+  **Standing warning for whoever reads this next**: slot 6 still hosts 3 other live `claude` sessions
+  (PIDs 2749, 32709, 97270 — two of them ~1d14h old). They share this checkout's `.git/index` and `.git/config`.
+  Re-check for a live peer before assuming this tranche is yours.
+- 2026-08-19 — **Contract edge #1 landed: `QuoteInstruction` carries the sensitivity triple —
+  unified-api-contracts@6be4b136d7. T4 IS UNBLOCKED on this edge.** Shipped by the outgoing agent; VERIFIED
+  independently by the incoming one before adopting the claim: `6be4b136` is on `origin/live-defi-rollout`, and
+  the landed `schemas.py` blob carries `underlying_instrument_id` (line 328), `delta` (335) and `gamma` (344), all
+  three optional. The suite claim was re-measured too — 5 test functions, and the JSON round-trip is real
+  (`QuoteInstruction.model_validate_json(original.model_dump_json())` at line 97), which matters because the
+  instruction crosses the `EventTransport` seam. NOT re-measured by the incoming agent: the assertion that all 5
+  pass (running `pytest` directly is banned, and the outgoing agent's own note records that UAC's gate suppresses
+  pytest output on success) — they are on origin and inside the standing suite, so the next `quality-gates.sh` run
+  in this repo covers them.
 - 2026-08-19 — **Registry P0 #2 landed: chain registries reconciled — unified-api-contracts@27ebc544b2.** Verified
   landed (`27ebc544b2` an ancestor of `origin/live-defi-rollout`; landed blobs re-read). The issue's "three
   registries, three answers" framing is partly a CATEGORY ERROR — measured, they own three different concerns, so

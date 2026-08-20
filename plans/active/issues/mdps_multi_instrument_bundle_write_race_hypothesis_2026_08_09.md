@@ -215,6 +215,18 @@ read-merge-write instead of overwrite) as a new P1 todo here.
     yet run); re-check once the relaunch's post-completion audit posts. No code change to market-data-processing-service
     (gate not met; implementing a fix now would be speculative).
 
+- **2026-08-19 (slot-4, data_engineering, dispatched on the sole todo above)**: Gate still unmet, but the state has
+  MOVED: pre-fix VM `mdps-backfill-cefi-20260808-095136` is now TERMINAL (`gcloud compute instances describe` → 404
+  gone; `gcloud compute instances list` shows zero `mdps-backfill-cefi` VMs), so the relaunch's own
+  "once-VM-terminal" gate is now met. But the per-day relaunch has NOT been executed/audited: both relaunch todos still
+  `queued` live (`cefi_track7_candle_bundle_regeneration_vm-7eb3b7e1186c` parked@999,
+  `mdps_force_flag_dropped_subprocess_per_date-882d30df6cd2` queued@50). GCS ground truth (UTL `list_blobs`): all 6
+  target days' BYBIT futures_chain `venue=BYBIT/ticks.parquet` bundles still mtime `2026-08-03T01:59:07Z` (DERIBIT
+  `underlying=BTC/ETH` still `2026-07-22`) — nothing regenerated, so the BYBIT bundle is byte-identical to the pre-fix
+  PARTIAL (1-symbol) state. Declined via `reason_code: GATED` + `park_now: true` (auto_parked condition
+  `auto_unpark__mdps_multi_instrument_bundle_write_race_hypothesis-c9b6c9d0d21e`); unpark once the per-day relaunch runs
+  + its post-completion audit posts.
+
 ## Progress Log addendum
 
 - **context-scout 2026-08-17**: refreshed context_scope (7 entries).

@@ -14,7 +14,8 @@ summary: >-
   NO environment dimension, so it cannot distinguish "verified in dev" from "verified in prod". Same class as the
   2026-07-18 deployment-ui incident already documented at quickmerge.sh:1288-1300 (sentinel satisfied → Pass 2 skipped →
   tsc-red tree landed on LDR); that fix closed the tree-drift dimension but not the environment dimension.
-status: open
+status: archived
+superseded_by: /codex/06-coding-standards/quality-gates.md
 nature: issue
 asset_group: [ci]
 stage: [meta]
@@ -38,7 +39,6 @@ estimate_baseline_ai_days: 1
 estimate_calibrated_ai_days: 0.4
 locked_by:
 resolved_by: market-tick-data-service@1dbdbb90
-archive_exempt: true # 2026-08-18 (na-eligibility-audit) -- 0 open todos as of this run's flip of the MTDS item; NOT archived here -- tracked as a todo in plans/active/ci_tranche_zero_checkbox_archive_sweep_2026_08_18.md instead of rushed in this audit pass.
 depends_on: []
 source:
   - "observed twice during the 25-unit staging-shutdown rollout 2026-07-23 (unified-trading-library,
@@ -53,6 +53,12 @@ context_scope:
     unified-trading-pm/scripts/quality-gates-base/base-service.sh,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-19** — 0 open todos (the MTDS half, this doc's last open item, closed 2026-08-18 via
+> `market-tick-data-service@1dbdbb90`). The durable fix (sentinel binds `ENVIRONMENT`/`DEPLOYMENT_ENV` into its hash;
+> quickmerge and standalone `quality-gates.sh` resolve the same environment) is recorded in
+> `/codex/06-coding-standards/quality-gates.md`; read that doc for current guidance, this one for incident history
+> only.
 
 # The QG sentinel cannot tell which environment verified the tree
 

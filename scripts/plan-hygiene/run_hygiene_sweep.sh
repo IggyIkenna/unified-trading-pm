@@ -504,6 +504,13 @@ run_check "AG-closeout linkage (single-AG docs -> consolidated closeout, ratchet
 # client_artefact_remediation_siblings_2026_08_18.md, not a regression from this wiring.
 run_check "Artefact disclosure (banned terms, ratchet)" hard python3 "$SCRIPT_DIR/check_artefact_disclosure.py"
 run_check "Artefact enum drift (vs UAC, ratchet)" hard python3 "$SCRIPT_DIR/check_artefact_enum_drift.py"
+# Claim ownership + marker counts — the acceptance test for the five-agent code-readiness
+# effort (code_readiness_five_agent_coordinator_2026_08_19.md). Two shrinking ratchets
+# (untagged claim-bearing sections; open st-part/st-plan/ev-check/ev-assumed markers) plus
+# a HARD, un-baselined owner-resolution check. Seeded 2026-08-20 at the measured state
+# (37 untagged / 189 open markers) — those numbers only ever go DOWN, and only by changing
+# real state, never by editing an artefact's markup.
+run_check "Artefact claim ownership + marker counts (ratchet)" hard python3 "$SCRIPT_DIR/check_artefact_claim_ownership.py"
 # Terminal-status-archived (operator finding 2026-07-25) — no plan/issue doc with a TERMINAL
 # status (issue: resolved/false-positive/superseded; plan: complete/superseded/cancelled) may
 # sit in plans/active/ or plans/active/issues/ instead of plans/archive/ — this is

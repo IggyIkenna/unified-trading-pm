@@ -43,42 +43,76 @@ from generate_capability_verdict_matrix import (
 # _live_engine_registry`` guards it against drift from the real ARCHETYPE_ENGINE_REGISTRY.
 _FIXTURE_ENGINE_BACKED: frozenset[str] = frozenset(
     {
-        "ML_DIRECTIONAL_CONTINUOUS",
-        "ML_DIRECTIONAL_EVENT_SETTLED",
-        "RULES_DIRECTIONAL_CONTINUOUS",
-        "RULES_DIRECTIONAL_EVENT_SETTLED",
-        "TSMOM_BTC_CTA",
+        # Regenerated 2026-08-20 from the live ARCHETYPE_ENGINE_REGISTRY (32 -> 59)
+        # after strategy-service's VOL / MARKET_MAKING / PORTFOLIO registration wave
+        # (strategy-service@1bda20fb + @3eb96f35, operator code-readiness ruling).
+        # Derived by probing the registry, never hand-typed --
+        # test_fixture_matches_live_engine_registry below is what caught the drift.
+        #
+        # This is all 60 StrategyArchetype members EXCEPT ARBITRAGE_MEV_SANDWICH,
+        # which is deliberately and permanently unregistered on POLICY grounds (not
+        # an unfinished item) -- see factory.py's closing comment and
+        # test_sandwich_theoretical.py. test_f48_engineless_archetypes_are_not_registered
+        # below is therefore now a single-archetype assertion, by design.
+        "ARBITRAGE_CROSS_DOMAIN_EVENT",
+        "ARBITRAGE_MEV_BACKRUN",
+        "ARBITRAGE_MEV_JIT_LIQUIDITY",
+        "ARBITRAGE_MEV_LIQUIDATION_BUNDLE",
+        "ARBITRAGE_PRICE_DISPERSION",
+        "ARBITRAGE_SPORTS_DUTCHING",
         "CARRY_BASIS_DATED",
         "CARRY_BASIS_DATED_INV",
         "CARRY_BASIS_PERP",
+        "CARRY_BASIS_PERP_INV",
+        "CARRY_FUNDING_DISPERSION",
+        "CARRY_RECURSIVE_BORROW_LENDING_ONLY",
+        "CARRY_RECURSIVE_STAKED",
         "CARRY_STAKED_BASIS",
         "CARRY_STAKED_BASIS_DATED",
-        "CARRY_RECURSIVE_STAKED",
-        "CARRY_RECURSIVE_BORROW_LENDING_ONLY",
-        "CARRY_BASIS_PERP_INV",
-        "YIELD_ROTATION_LENDING",
-        "YIELD_STAKING_SIMPLE",
-        "ARBITRAGE_PRICE_DISPERSION",
-        "ARBITRAGE_CROSS_DOMAIN_EVENT",
-        "LIQUIDATION_CAPTURE",
         "DEFI_LP_CONCENTRATED",
         "DEFI_LP_POOL",
         "DEFI_LP_VAULT",
-        "ARBITRAGE_MEV_LIQUIDATION_BUNDLE",
-        "ARBITRAGE_MEV_JIT_LIQUIDITY",
-        "ARBITRAGE_MEV_BACKRUN",
+        "EVENT_DRIVEN",
+        "LIQUIDATION_CAPTURE",
         "MARKET_MAKING_CONTINUOUS",
         "MARKET_MAKING_EVENT_SETTLED",
-        "EVENT_DRIVEN",
-        "VOL_TRADING_OPTIONS",
-        "STAT_ARB_PAIRS_FIXED",
+        "MARKET_MAKING_INVENTORY_SKEW",
+        "MARKET_MAKING_ML_LEAN",
+        "MARKET_MAKING_PASSIVE_SPREAD",
+        "MARKET_MAKING_PREDICTION",
+        "MARKET_MAKING_QUEUE_MICROSTRUCTURE",
+        "ML_DIRECTIONAL_CONTINUOUS",
+        "ML_DIRECTIONAL_EVENT_SETTLED",
+        "PORTFOLIO_FACTOR_ALLOCATION",
+        "PORTFOLIO_MULTI_STRATEGY",
+        "PORTFOLIO_RISK_PARITY",
+        "PORTFOLIO_TACTICAL_OVERLAY",
+        "RULES_DIRECTIONAL_CONTINUOUS",
+        "RULES_DIRECTIONAL_EVENT_SETTLED",
         "STAT_ARB_CROSS_SECTIONAL",
-        "CARRY_FUNDING_DISPERSION",
-        # ARBITRAGE_SPORTS_DUTCHING: added 2026-07-21 alongside SportsArbDutchingEngine,
-        # confirmed registered in strategy-service's live ARCHETYPE_ENGINE_REGISTRY
-        # (strategy_service/engine/strategies/v2/factory.py:77) — see
-        # plans/active/issues/capability_verdict_matrix_archetype_count_60_vs_59_regression_2026_07_21.md.
-        "ARBITRAGE_SPORTS_DUTCHING",
+        "STAT_ARB_PAIRS_FIXED",
+        "TSMOM_BTC_CTA",
+        "VOL_0DTE_GAMMA_SCALPING",
+        "VOL_0DTE_PIN_RISK",
+        "VOL_ARB_RV_IV",
+        "VOL_CARRY",
+        "VOL_CROSS_ASSET_SPREAD",
+        "VOL_DISPERSION",
+        "VOL_LEAPS_CONVEXITY",
+        "VOL_MARKET_MAKING",
+        "VOL_ML_LEAN",
+        "VOL_OVERLAY_COVERED_CALLS",
+        "VOL_OVERLAY_PROTECTIVE_PUT",
+        "VOL_RATIO_SPREAD",
+        "VOL_SPREAD_STRUCTURES",
+        "VOL_STRADDLE",
+        "VOL_SYNTHETIC_DELTA",
+        "VOL_TERM_STRUCTURE_ARB",
+        "VOL_TERM_STRUCTURE_SLOPE",
+        "VOL_TRADING_OPTIONS",
+        "VOL_VARIANCE_SWAP",
+        "YIELD_ROTATION_LENDING",
+        "YIELD_STAKING_SIMPLE",
     }
 )
 
@@ -117,24 +151,45 @@ def test_not_registered_archetypes_are_explicit_blocks() -> None:
 
 
 def test_f48_engineless_archetypes_are_not_registered() -> None:
-    """F48 — VOL_*/MARKET_MAKING_* archetypes that HAVE legs but no registered v2
-    engine are demoted from AVAILABLE to not_registered(no_v2_engine), while the
-    three engined ones (VOL_TRADING_OPTIONS / MARKET_MAKING_CONTINUOUS /
-    MARKET_MAKING_EVENT_SETTLED) stay real (engined) blocks.
+    """F48 — an archetype with legs but NO registered v2 engine is demoted from
+    AVAILABLE to not_registered(no_v2_engine).
+
+    **This category is now EMPTY, and that is the goal state** (2026-08-20). F48
+    was written when the VOL_* / MARKET_MAKING_* family had leg structures but no
+    registered engines; strategy-service's code-readiness wave
+    (``strategy-service@1bda20fb`` + ``@3eb96f35``) registered all of them, so no
+    archetype has legs-but-no-engine any more.
+
+    The remaining not_registered blocks are all ``missing_registry`` (leg-LESS by
+    design), not ``no_v2_engine``: ARBITRAGE_MEV_SANDWICH is a theoretical-only
+    tracer excluded on policy grounds, and the four PORTFOLIO_* archetypes are pure
+    meta-allocation overlays with ``venue_universe=[]`` — they allocate equity
+    across child strategies rather than carrying direct instrument legs. Both are
+    covered by ``test_not_registered_archetypes_are_explicit_blocks``.
+
+    The assertion is inverted rather than deleted, so the F48 demotion mechanism
+    still binds: if a no_v2_engine block ever reappears it must genuinely name an
+    archetype absent from the engine set, which is the regression this guards.
     """
 
     matrix, _ = build_matrix(_FIXTURE_ENGINE_BACKED)
     by_arch = {b["archetype"]: b for b in matrix["archetypes"]}  # type: ignore[union-attr]
     engineless = {a for a, b in by_arch.items() if b.get("gap_type") == "no_v2_engine"}
-    # Every demoted block names VOL_* / MARKET_MAKING_* (the F48 family).
-    assert engineless, "no F48 no_v2_engine blocks emitted"
-    assert all(a.startswith(("VOL_", "MARKET_MAKING")) for a in engineless)
-    # Representative engineless archetypes are demoted.
-    assert "VOL_STRADDLE" in engineless
-    assert "MARKET_MAKING_INVENTORY_SKEW" in engineless
-    # The engined VOL_/MM_ archetypes are NOT demoted (still real blocks).
-    for engined in ("VOL_TRADING_OPTIONS", "MARKET_MAKING_CONTINUOUS", "MARKET_MAKING_EVENT_SETTLED"):
-        assert by_arch[engined]["not_registered"] is False
+    assert not engineless, (
+        f"F48 no_v2_engine block(s) reappeared for {sorted(engineless)} — an archetype "
+        "regained legs without an engine, or an engine was un-registered."
+    )
+    # Every archetype the matrix does demote must genuinely be outside the engine set.
+    assert engineless.isdisjoint(_FIXTURE_ENGINE_BACKED)
+    # The formerly-representative F48 members are now engined, real blocks.
+    for engined in (
+        "VOL_TRADING_OPTIONS",
+        "MARKET_MAKING_CONTINUOUS",
+        "MARKET_MAKING_EVENT_SETTLED",
+        "VOL_STRADDLE",
+        "MARKET_MAKING_INVENTORY_SKEW",
+    ):
+        assert by_arch[engined]["not_registered"] is False, f"{engined} should be a real block now"
         assert engined not in engineless
 
 

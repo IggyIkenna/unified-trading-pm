@@ -8,7 +8,8 @@ summary: >
   that surfaced this. Independently reproduced standalone (not a transient collision): the errors are on committed HEAD,
   not from a dirty working tree. This blocks EVERY future code quickmerge to this repo until the ratchet clears, not
   just the one that found it.
-status: open
+status: archived
+superseded_by: /codex/06-coding-standards/quality-gates.md
 nature: issue
 asset_group:
   [ci] # corrected 2026-08-10 (/ag-closeout-audit cross-cutting) -- was [cross-cutting]. Content is a
@@ -30,11 +31,16 @@ source: >-
   Surfaced while shipping an unrelated operator-approved fix (DP-FETCH-009 detector, interactive session, 2026-08-08) —
   quickmerge's re-gate step failed on a pre-existing basedpyright ratchet violation in files the fix never touched.
 resolved_by:
-archive_exempt: true # 2026-08-16 (plan_reconciler Phase -1) -- 0 open todos, confirmed HARD-evidence-done this pass, but NOT archived: this pass deliberately deferred archival (referrer-web risk on a hot shared branch, out of a Phase -1 pass's scope) -- ready for the next full ci-tranche archival sweep. See plan_reconciler_findings_ci_2026_08_16.md.
 locked_by:
 depends_on: []
 context_scope: [deployment-service/deployment_service/sports_trigger_evaluation.py, deployment-service/deployment_service/sports_trigger_periodic.py, /codex/06-coding-standards/quality-gates.md, /plans/active/issues/sports_fast_t1_recon_oom_live_capture_outage_2026_08_01.md]
 ---
+
+> **🗄️ ARCHIVED 2026-08-19** — sole todo done, independently re-confirmed by two audit passes
+> (`plan_reconciler_findings_ci_2026_08_16.md`, `na-eligibility-audit` ci tranche). Pure incident closure (a
+> repo-local basedpyright ratchet fix) — no new durable contract beyond the existing "ratchet only goes down" rule
+> already in `/codex/06-coding-standards/quality-gates.md`; read that doc for current guidance, this one for
+> incident history only.
 
 ## Finding
 

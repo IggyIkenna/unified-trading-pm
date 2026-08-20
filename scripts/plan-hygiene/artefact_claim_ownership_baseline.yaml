@@ -1,0 +1,17 @@
+# Baseline for check_artefact_claim_ownership.py -- the acceptance test for the
+# five-agent code-readiness effort. Two SHRINKING ratchets; a live count above
+# either one fails (a new untracked claim, or a marker regression).
+#
+# untagged_sections: claim-bearing sections carrying no `owner:` tag. The epic's
+#   invariant is that this reaches 0 -- every claim maps to a tracked item.
+# open_markers: st-part + st-plan + ev-check + ev-assumed across all artefacts.
+#   The coordinator names this the only honest progress signal for the effort;
+#   todo checkboxes are a proxy. Lower it as claims are closed by real state
+#   change -- NEVER by editing an artefact's markup.
+#
+# Owner resolution is a HARD check with no baseline: every `owner:` tag must
+# resolve to a doc path that exists, an epic workstream heading, or a plan slug.
+#
+note: Seeded 2026-08-20 alongside the checker.
+untagged_sections: 37
+open_markers: 189
