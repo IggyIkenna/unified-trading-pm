@@ -6,7 +6,7 @@ title: >-
   origin/live-defi-rollout
 summary: >-
   While shipping the fleet-wide caller-stub safety-net comment fix
-  (cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md item 2), the comment-only
+  the batch17 caller-stub comment fix, the comment-only
   `.github/workflows/main-backmerge-to-ldr.yml` change was pushed to LDR and verified on
   origin, then silently dropped: within ~1h a `main-backmerge-to-ldr` run (P1's new
   fleet-wide drift-tick dispatch, often workflow_dispatch-triggered) made the shipped
@@ -28,7 +28,6 @@ related:
   [
     /plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md,
     /codex/08-workflows/ci-cd-flow.md,
-    /plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md,
   ]
 context_scope:
   [

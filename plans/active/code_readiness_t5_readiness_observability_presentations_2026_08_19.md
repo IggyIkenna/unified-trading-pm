@@ -592,12 +592,10 @@ todos only to confirm they are data-movement, then leave it.
       conditional-future ("if velocity recurs") or a P2 design-review call, neither blocking.**
 - [x] [BACKEND] P1. Add the retry safety net for `main-backmerge-to-ldr` on non-PM repos. Evidence:
       `/plans/active/issues/main_backmerge_to_ldr_no_retry_safety_net_for_non_pm_repos_2026_08_18.md`.
-      **Re-verified 2026-08-20: extracted to
-      `/plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` (`status: active`) — item 1 (the
-      fleet-wide `branch-health.yml` drift-tick safety net, the actual P1 fix) is `[x]` LANDED,
-      `unified-trading-pm@96c163347f`. Items 2-3 there (a stale comment, a failed-backmerge detection surface) are
-      P2 polish, still open, not blocking. This doc's own remaining item is a P3 third-party-action-pinning
-      evaluation.**
+      **Re-verified 2026-08-20: all three extracted fixes are landed and cited in the source issue —
+      `unified-trading-pm@96c163347f` (fleet-wide drift-tick), 25 caller-stub commits (comment correction), and
+      `unified-trading-pm@2ead733819` (failed-backmerge detection). This doc's own remaining item is a P3
+      third-party-action-pinning evaluation.**
 - [x] ✅ [BACKEND] P1. Fix the `unified_trading_ci` FF-pull cron branch-override gap. Evidence:
       `/plans/active/issues/unified_trading_ci_ff_pull_cron_branch_override_gap_2026_08_17.md`. **The core defect
       is fixed**: `unified-trading-ci main` added to `scripts/dev/cron-branch-overrides.txt` (`[x]`), verified no
