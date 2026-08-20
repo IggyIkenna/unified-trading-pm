@@ -125,6 +125,14 @@ preserved, verdict undecided** (by design, `_axis_census.py` docstring).
 A manifest index read is **single-walk-exempt** (it reads the manifest, not the corpus). The census reuses this endpoint
 verbatim and applies the canonical badging below; it does **not** modify the endpoint.
 
+> **Measured memory footprint (2026-08-20, cefi in-session Tier-1 run).** `columns=` slimming to 5 low-cardinality axes
+> (no date filter — a full-history census) over cefi's ~30.7M-row consolidated index still peaked at **~5.6GB RSS**
+> (measured via `resource.getrusage`) — over `scripts/dev/run-bounded-analysis.sh`'s **default 4G cap**, which killed
+> the first attempt (exit via its RSS-poll SIGKILL, not a clean failure). Re-ran with `ANALYSIS_MEM_CAP=10G` and it
+> completed cleanly. When running this census in-session on the shared host, pre-set a ≥8G cap rather than trusting
+> the wrapper's default — the "columns= alone does NOT bound memory on a large UNFILTERED index" warning above is not
+> hypothetical at cefi's current row count.
+
 ### 1.2 GCS side — delimiter descent, no whole-corpus walk
 
 The GCS-path distinct set is gathered by **delimiter child-prefix listing** (no-walk route #2 in the four-surface
