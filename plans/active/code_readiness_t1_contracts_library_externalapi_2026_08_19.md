@@ -628,9 +628,26 @@ todos only to confirm they are data-movement, then leave it.
       design"). External partner-facing kill/flatten access, if ever wanted, is a product/security policy call for
       the operator, not something to build speculatively. **Correct outcome: T1 does nothing here** — the original
       artefact marker calling this "planned, not yet" was itself the thing that needed correcting, not the code.
-- [ ] [UI] P1. Wizard stage detail, screenshots and the generated-config example are `pending, to be expanded` in
-      the artefact — build the wizard surface to the point those can be generated from the real UI. Needs `[UI]` +
-      `pw:L2 ✓` + a cited regression spec. SSOT: `/codex/06-coding-standards/ui-testing-layers.md`.
+- [x] ✅ [UI] P1. **Closed by measurement, 2026-08-20 — the wizard already exists and is functional; there was
+      nothing to build.** The artefact's "build the wizard surface" framing was stale: `unified-trading-system-ui`
+      already has a full 6-stage wizard implementation (`app/(wizard)/wizard/`, `components/wizard/` — 13
+      components mapping directly onto the artefact's Archetype/Universe/Sizing/Risk/Execution/Identity stages,
+      plus `ConfigOutput.tsx` for the generated-config example the artefact asks for) and 11 spec files / 34 tests
+      under `tests/smoke/wizard*.spec.ts` (portfolio mode, screener mode, custody stage, data coverage, jurisdiction
+      filter, save-session, readiness badges, isolation mode, param forms — every feature area the artefact
+      describes and more). **`pw:L2 ✓`**: ran the full suite fresh — 33/34 passed on first run; the one failure was
+      a hardcoded venue count (`"225"`) drifted stale against the live registry (now 230) — the exact same drift
+      class the test's own comment already documents happening once before (was "195"→"225", now "225"→"230"), not
+      a functional regression. Fixed and re-verified green —
+      `unified-trading-system-ui@109a488a78` (`tests/smoke/wizard.spec.ts`). **Regression spec**:
+      `tests/smoke/wizard.spec.ts` + the 10 sibling `wizard-*.spec.ts` files, all passing.
+      **What's still genuinely missing is artefact-side, not UI-side** — real screenshots and a real
+      generated-config example IN the HTML artefact — and per the close-out rule ("never hand-edit the HTML"),
+      that's a regeneration task, not something to hand-write here. Not filing a fresh redirect for it: the exact
+      artefact file (`platform-external-api-walkthrough.html`) already shows large, active, in-flight edits from a
+      concurrent session this same day (5 related `codex/14-customer-journeys/commercial-model/*.html` files, 2000+
+      line diffs observed) — flagging here so whoever lands that regeneration knows the wizard itself is real,
+      tested, and ready to be captured, not still pending a build.
 - [x] ✅ SUPERSEDED — redirected, not built by T1. [BACKEND] P2. ~~Ceffu integration is a stub pending its API
       spec...~~ Target is `execution-service/execution_service/transfer_coordinator.py` (T4-owned, confirmed by the
       artefact's own citation at line 16915) — see `[FROM-T1]` in T4's plan.
