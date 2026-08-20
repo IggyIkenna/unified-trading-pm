@@ -342,3 +342,14 @@ is exactly the kind of judgment call this doc should surface, not resolve.
   slot freed, question persists for the operator, a later answer re-dispatches a fresh worker. No code changed this
   session.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (4 entries)
+- **2026-08-20 (slot-32, data_pipeline_failure, escalation `agt-f989d9`, `DP_CRON_DID_NOT_FIRE`/DP-LIVE-003 re-page)**:
+  DP-LIVE-003 paged again for `prediction-arb-detector-` — same open `[OPERATOR]` todo above, now ~8 weeks absent
+  (deleted 2026-06-29). No new root cause; same known decision point as `agt-90f371` (2026-08-19). Per role contract,
+  did not guess a relaunch/reclassify decision and did not file a duplicate issue doc. Escalated via `/blocked`
+  (`BLK-3b05bf55`: A reclassify `NOT_YET_ACTIVE` [worker rec] vs B relaunch now). No answer within the 2-min bounded
+  wait — slot freed, question persists for the operator, a later answer re-dispatches a fresh worker. No code changed
+  this session. **Pattern note for the operator**: this is now the THIRD consecutive re-page (2026-08-19 `agt-90f371`,
+  2026-08-19 `BLK-ad065277`, 2026-08-20 `BLK-3b05bf55`) with zero answers — each spawns a fresh worker that burns a
+  full diagnosis cycle re-confirming the same already-known fact. Recommend the operator either answer the open
+  `[OPERATOR]` todo directly in this doc (bypassing the blocked-question mechanism entirely) or explicitly accept
+  option A (reclassify `NOT_YET_ACTIVE`) to stop the alert until a deliberate relaunch decision is made.

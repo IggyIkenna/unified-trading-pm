@@ -2,10 +2,12 @@
 doc_type: codex-ssot
 title: Commit + Push + Flip Plan Checkboxes As You Ship Each Item — HARD RULE
 summary:
-  SSOT for the Commit + Push + Flip HARD RULE — every shippable unit is committed + pushed (pre-commit git diff --cached
-  --stat with no path arg, stage by name) AND its plan checkbox flipped in the SAME agent turn via a docs(plans) commit;
-  an unflipped item is invisible to the orchestrator and gets re-dispatched. Covers the halves model (3 universal halves
-  + a conditional Half-4 for human-fleet-registered operators), the violations list, and the backfill recovery protocol.
+  SSOT for the Commit + Push + Flip HARD RULE — every shippable unit is committed locally (pre-commit git diff --cached
+  --stat with no path arg, stage by name) AND its plan checkbox flipped in the SAME agent turn; SHIP (quickmerge/push)
+  defaults to instruction-completion, not per-subtask (2026-08-20 ruling), except a shared AO plan's actively-dispatched
+  items which still ship+flip per-item since other slots rely on the pushed flip as the done-signal. Covers the halves
+  model (3 universal halves + a conditional Half-4 for human-fleet-registered operators), the ship-cadence ruling + why
+  it's safe (AO never discards ahead-of-origin commits), the violations list, and the backfill recovery protocol.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -23,7 +25,7 @@ created: 2026-05-23
 authoritative_for: [commit-push-flip plan-checkbox same-turn discipline]
 referenced_by: [/codex/12-agent-workflow/local-slot-host-symmetric-worker-model.md]
 owner:
-last_reviewed:
+last_reviewed: 2026-08-20
 code_refs:
 ---
 
@@ -35,11 +37,44 @@ code_refs:
 > 5+7 each shipped 15+ items without flipping work-split checkboxes; daily analysis reported ~14% progress when actual
 > was ~70%. **Half-1 without Half-2 in the same agent turn is a rule violation — NOT "I'll do it later".**
 
+## Ship Cadence — Instruction-Level, Not Per-Subtask (2026-08-20 ruling)
+
+**Default**: when a given instruction decomposes into N related sub-tasks, do all N before running `quickmerge.sh` —
+ONE ship at the end, not N separate quickmerges. Assume every instruction runs to its actual end unless told
+otherwise; finishing sub-task 3 of 20 is not a stopping point, and it is not a shipping point either.
+
+**Commit still happens per shippable unit, constantly — that part is unchanged.** Local commits are the safety net:
+cheap, frequent, and lossless to hold unshipped, because `WorkerLivenessWatchdog._sweep_unpushed_slots()`
+(`agent-orchestrator/server/worker_liveness_watchdog.py:947,1952`) sweeps every VM-side worktree BEFORE any kill or
+respawn decision and either pushes ahead-of-origin commits once a `.qg_last_passed_sha` sentinel proves they passed
+QG, or preserves the tip on a `refs/heads/wip-preserve/orchestrator-slot-<N>-<sha>` ref
+(`_ahead_push.py:push_or_preserve_ahead_commits`, called from the same sweep) — it never `git reset --hard`s local
+history out from under a respawned worker. Full mechanism: [`orchestrator-safety-mechanisms.md`
+§F](orchestrator-safety-mechanisms.md#f-ahead-of-origin-committed-work-preservation-shipped-2026-08-16). On a laptop
+`.tabs/N` session a human operator is present and decides when to close a tab, so the unattended-loss risk this
+mechanism guards against is mainly the VM-side case — but "commit often, ship once" applies everywhere, because the
+motivating complaint here is churn (20 quickmerges cluttering history for 20 sub-tasks of one instruction), not loss.
+
+**Why this changes "ship at every shippable unit"**: the old per-item ship cadence existed to solve ORCHESTRATOR
+VISIBILITY, not loss-prevention — an unshipped, unflipped plan item is invisible to other slots' reallocation logic
+and risks silent re-dispatch + duplicated work (see the 2026-05-14/15 incident below, the reason Half-2 exists at
+all). That risk is real only when other dispatched slots are actively reading the same work-split table. It does not
+apply to an operator's direct instruction handled end-to-end by one session with no other slot watching its
+intermediate state, and it is not a data-loss argument — data loss is independently covered by the AO sweep above.
+
+**Exception — a shared AO plan's actively-dispatched items still ship + flip per-item**: if the work is drawn from a
+plan's work-split table that other dispatched slots are currently reading, each item still ships and flips its
+checkbox immediately — the pushed flip IS the done-signal other slots rely on to avoid re-dispatching it. This
+exception does NOT apply to a single given instruction worked end-to-end by one session/slot with nothing else
+depending on its intermediate state — that case uses the instruction-level default above.
+
 ## The Halves
 
-### Half 1 — Commit + Push at Every Shippable Unit
+### Half 1 — Commit Per Unit, Ship at Instruction-Completion
 
-**Pushed = real.** Per-shippable-unit cadence, NOT per-hour, NOT per-session.
+**Commit = the safety net, ship = the done-signal.** Commit at every shippable unit (constant cadence — see "Ship
+Cadence" above); push/quickmerge once the whole given instruction is done, NOT per-hour, NOT per-subtask — unless the
+AO shared-plan-item exception above applies, in which case ship+flip stays per-item.
 
 Pre-commit check (MANDATORY — catches accidental bundling):
 
@@ -117,6 +152,10 @@ never auto-fires it. Token/spend counts are NOT part of Half-4 — those flow th
 `ao-usage-push.py` path regardless of Half-4, on a completely separate cadence.
 
 ## Rule Violations (review-blocking; agent should self-correct)
+
+**Scope**: these violations are about the AO shared-plan-item exception (other slots actively reading the work-split
+table) — that is the scenario "flip late" actually damages. They are not an argument against the instruction-level
+ship-cadence default above; shipping once at instruction-completion with no other slot watching is not a violation.
 
 - ❌ "I'll flip at end of session" — other slots are reading the work-split RIGHT NOW for reallocation.
 - ❌ "One batch flip commit at the end" — the next reallocation sweep may re-dispatch items 3+4 during the gap.

@@ -162,3 +162,32 @@ def test_exactly_200_chars_unchanged() -> None:
     assert result is not None
     assert len(result) == 200
     assert "..." not in result
+
+
+def test_early_sentence_boundary_does_not_win_over_unused_budget() -> None:
+    """docs_reconcile_findings_2026_08_17.md defect (b): the FIRST sentence-ending
+    punctuation in the paragraph must not win just because rfind() finds no LATER
+    match for it -- an early boundary that leaves most of the 197-char budget unused
+    must be rejected in favor of a later clause/word boundary that uses more of it."""
+    tail = "and this long clause keeps going with plenty more descriptive words " * 3
+    body = "# Heading\n\n" + f"Short one. {tail.strip()}, before the true end of everything here.\n\nMore."
+    result = FF.get_first_paragraph_after_heading(body)
+    assert result is not None
+    # Must NOT collapse to just the ten-char first sentence + ellipsis.
+    assert not result.startswith("Short one. ..."), f"Wasted most of the budget: {result!r}"
+    assert len(result) > 100
+
+
+def test_late_clause_boundary_used_when_no_late_sentence_boundary() -> None:
+    """A comma/semicolon/dash boundary that uses most of the budget is preferred over
+    the hard word-boundary fallback when there is no budget-using sentence boundary."""
+    sentence = (
+        "A" * 90
+        + " reaches quite far into the budget, before this trailing clause runs well out of room for today"
+        + " and keeps going a fair bit further still to be safe"
+    )
+    body = f"# Heading\n\n{sentence}\n\nMore."
+    result = FF.get_first_paragraph_after_heading(body)
+    assert result is not None
+    assert result.endswith(" ...")
+    assert len(result) > 100

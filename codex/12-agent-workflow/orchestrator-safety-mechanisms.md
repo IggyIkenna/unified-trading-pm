@@ -4,8 +4,10 @@ title: Orchestrator Safety Mechanisms (SSOT)
 summary:
   SSOT for the orchestrator's per-slot safety mechanisms — stuck-agent detection (3 signals) plus auto-respawn with
   exemptions, per-spawn account auth-failover (_pick_next_account, no mid-session token swap), the Telegram/Slack alert
-  inventory, git-staleness ping, and liveness-gated fresh-spawn dirty-state resolution (inherit dead-predecessor WIP /
-  protect live peer / quarantine wiped index).
+  inventory, git-staleness ping, liveness-gated fresh-spawn dirty-state resolution (inherit dead-predecessor WIP /
+  protect live peer / quarantine wiped index) for UNCOMMITTED WIP, and (§F) the separate ahead-of-origin
+  ALREADY-COMMITTED-work preservation sweep that runs before every kill/respawn decision and never `reset --hard`s
+  local history.
 status: current
 nature: ssot
 asset_group: [meta]
@@ -25,6 +27,7 @@ authoritative_for:
     orchestrator stuck-agent detection and respawn,
     orchestrator per-spawn account auth-failover,
     fresh-spawn dirty-state resolution,
+    ahead-of-origin committed-work preservation on kill/respawn,
   ]
 referenced_by:
   [
@@ -35,15 +38,20 @@ referenced_by:
     plans/epics/orchestrator_master.md,
   ]
 owner:
-last_reviewed: 2026-05-28
+last_reviewed: 2026-08-20
 code_refs:
+  [
+    agent-orchestrator/server/worktree_clean_check/_ahead_push.py,
+    agent-orchestrator/server/worktree_clean_check/_branch_state.py,
+    agent-orchestrator/server/worker_liveness_watchdog.py,
+  ]
 ---
 
 # Orchestrator Safety Mechanisms (SSOT)
 
 > **Permanent SSOT** for the safety mechanisms the orchestrator runs on every VM: stuck-agent detection + auto-respawn,
 > auth failover (non-blocking), Telegram alerts, git staleness ping, fresh-spawn dirty-commit (overrides CLAUDE.md
-> foreign-files rule for that specific case).
+> foreign-files rule for that specific case), and (§F) ahead-of-origin committed-work preservation on kill/respawn.
 >
 > Codified 2026-05-21 from the `orchestrator_v07_multi_vm_topology` plan (promoted to
 > [`../../plans/epics/orchestrator_master.md`](../../plans/epics/orchestrator_master.md)). Implementation phases live in
@@ -193,6 +201,48 @@ coordinator contract).
 case is different: the predecessor is gone, WIP belongs to that slot's branch by definition. The live-peer gate
 preserves the invariant for concurrent active slots.
 
+## F) Ahead-of-origin committed-work preservation (shipped 2026-08-16)
+
+**Distinct from § E.** § E resolves UNCOMMITTED dirty WIP a predecessor left behind. This section covers a different
+case: a slot whose worktree is CLEAN but has local commits AHEAD of `origin/<base>` — i.e. work that was already
+`git commit`-ed but not yet pushed/quickmerged — at the moment it goes idle/stuck and is respawned or killed.
+
+**Answer: these commits are never silently discarded.** `WorkerLivenessWatchdog._sweep_unpushed_slots()`
+(`server/worker_liveness_watchdog.py:1952`, invoked unconditionally every tick at line 947, deliberately BEFORE the
+kill-cap gate / any new kill decision that tick) calls `push_or_preserve_ahead_commits()`
+(`server/worktree_clean_check/_ahead_push.py:149`) for every repo that is ahead-only (not diverged) of origin:
+
+- **If a `.qg_last_passed_sha` sentinel proves the commit already passed QG**: push straight to `origin/<base>`,
+  stamping a `Quickmerge:` trailer first if the commit is missing one (`_ahead_push.py:74`,
+  `_stamp_quickmerge_trailer_if_missing`).
+- **Otherwise (no sentinel, or the push fails)**: preserve the tip on a content-addressed
+  `refs/heads/wip-preserve/orchestrator-slot-<N>-<sha>` ref (`_ahead_push.py:98-116`, `_preserve`) WITHOUT touching
+  local HEAD — the commit is not lost, just not on the shared branch yet.
+
+**Diverged repos** (ahead AND behind origin) go through a separate path, `heal_dead_slot_branch_quarantine`
+(`server/worktree_clean_check/_branch_state.py:405`), which also preserves-then-checks-out and explicitly avoids
+`git reset --hard` (see the corrected-2026-07-13 comment at `_orphan.py:429` and the reachability note at
+`_orphan.py:565` — a prior version used `reset --hard`, which was found to make the predecessor's commits
+unreachable/dangling and eligible for GC; the fix keeps them reachable via a ref instead).
+
+**Ordering guarantee**: `_kill_slot` (`server/worker_liveness_watchdog.py:2903`) calls `_preserve_wip_before_kill`
+(line 2844) before tearing anything down (line 2934). No path in `autospawn.py`, `orphan_reap.py`, `tmux_pruner.py`,
+`resume_lifecycle.py`, or `failover.py` deletes or resets a worktree; a respawn launches a fresh session onto the
+SAME clone, so even inside the brief window before the next sweep tick, ahead commits remain intact in git history.
+
+**History**: this was a real gap before 2026-08-16 — slot 16 once sat ~3h with 4 stranded committed-but-unpushed
+commits before a hard-kill with no push path
+(`plans/archive/issues/killed_slot_orphans_committed_unpushed_work_no_push_path_2026_07_21.md`, `status: resolved`).
+The fix landed in
+`worker_liveness_watchdog.py`'s unconditional sweep; this section promotes that fix into the standing SSOT (it was
+previously documented only in code comments and the now-archived issue doc).
+
+**Applies to VM-side slots only** — the sweep is orchestrator infrastructure that runs against AO-dispatched slot
+worktrees. A laptop `.tabs/N` interactive session isn't swept by this watchdog (a human is present and decides when
+to close it); see CLAUDE.md's "Multi-agent safety" section and
+[`commit-push-flip-rule.md`](commit-push-flip-rule.md)'s "Ship Cadence" section for how this mechanism is what makes
+it safe to hold local commits unshipped until a whole given instruction is done, rather than shipping per sub-task.
+
 ## Composes with
 
 - [`agent-orchestrator-single-vm-architecture.md`](agent-orchestrator-single-vm-architecture.md) — the topology these
@@ -202,3 +252,5 @@ preserves the invariant for concurrent active slots.
 - [`../../plans/epics/orchestrator_master.md`](../../plans/epics/orchestrator_master.md) — the L5 epic; this file is
   pointed at from the epic body
 - CLAUDE.md "Two teammates × multiple parallel agents (CRITICAL)" — the foreign-files HARD RULE that § E scopes-override
+- [`commit-push-flip-rule.md`](commit-push-flip-rule.md) § "Ship Cadence" — relies on § F to justify holding local
+  commits unshipped until a whole given instruction is done
