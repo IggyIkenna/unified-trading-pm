@@ -86,9 +86,10 @@ after those gates fail closed on the `No active venues`/zero-row case.
       runner) that runs exactly the 39 rows emitted by
       `unified-api-contracts/scripts/generate_venue_smoke_test_work_list.py` and reports observed out-of-registry cells
       separately (repo: market-tick-data-service; supporting contract: unified-api-contracts).
-- [ ] [BACKEND] P0. Implement and run a Sports canonical-path verification leg that checks the actual test-bucket
+- [x] [BACKEND] P0. Implement and run a Sports canonical-path verification leg that checks the actual test-bucket
       object against the applicable UAC machine oracle or Sports writer template, and fails closed when no object/row is
-      produced (repo: market-tick-data-service).
+      produced (repo: market-tick-data-service) — market-tick-data-service@70d0c7ed + runtime report
+      `data_pipeline_e2e_check_mtds_2025_12_20.md` (`canonical_no_matching_objects_in_test_bucket`, fail-closed).
 - [ ] [DATA] P1. Reconcile the 96 observed Sports `(venue, data_type)` cells absent from the UAC registry against the
       canonical venue/data-type declarations; either register them with source-scoped capabilities or classify them as
       legacy/non-canonical observations (repo: unified-api-contracts).
@@ -103,3 +104,9 @@ after those gates fail closed on the `No active venues`/zero-row case.
   `pipeline-e2e-check-mtds-20260820-195837-4dd553` with test-bucket writes only. Measured 252 driver shards versus the
   39-row generator denominator; first child exited 0 while logging `No active venues`, and the MTDS canonical leg is
   explicitly skipped for Sports. Declared blocker `BLK-b463fb0b`; operator ruling requested before further launches.
+
+- **2026-08-20 — slot-18:** Shipped `market-tick-data-service@70d0c7ed`, adding the Sports writer-template canonical
+  verifier and regression tests. Ran the canonical-only verifier against the actual test bucket for
+  `SPORTS:PINNACLE:odds` on `2025-12-20`; test-bucket consolidation succeeded (`shards=1 rows_in=1200 rows_out=1200`),
+  but no matching `data_type=odds` object existed, so the report returned
+  `canonical_no_matching_objects_in_test_bucket` with `status=failed`, proving the zero-object fail-closed gate.
