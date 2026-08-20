@@ -45,10 +45,13 @@ skill:
   `canonical_path_violations(require_pipeline_mode=True)` (path structure + filename id-form, no re-implemented
   regex) — verified live in the current tree (`grep` of `scripts/pipeline_e2e_check.py` confirms the dispatch + the
   oracle import; 6 unit tests including 2 negative controls, per that todo's own evidence). TRADFI still uses the
-  bespoke regex leg (unaffected, out of the oracle's scope by design — no per-instrument-type axis); SPORTS stays
-  `skipped` (declared out of scope, unaffected by this fix).
+  bespoke regex leg (unaffected, out of the oracle's scope by design — no per-instrument-type axis); SPORTS now uses
+  the writer-owned `sports_shard_path_violations` template validator and fails closed when no matching test-bucket
+  object exists. Use `--generator-scoped-sports` with `--asset-group SPORTS` to run exactly the UAC work-list rows;
+  observed PROD cells outside that registry are reported separately and never widen the smoke denominator.
 - **Filename instrument_id / instrument_type/data_type/venue/chain VALUES**: id-FORM is now checked for TRADFI (regex
-  above) AND CEFI/DEFI (oracle, per the fix above); sports/prediction filenames remain **unchecked** by this skill.
+  above) AND CEFI/DEFI (oracle, per the fix above); Sports paths are checked against the writer-owned template, while
+  prediction filenames remain **unchecked** by this skill.
   `instrument_type`/`data_type`/`venue`/`chain` VALUES are compared only for internal self-consistency against the
   shard's own manifest row, never against an independent canonical source — **declared unchecked** as independent
   value validation (the oracle itself is value-blind on these axes, per its own documented scope).
@@ -244,6 +247,9 @@ cd market-tick-data-service && python3 scripts/pipeline_e2e_check.py \
   --asset-group <AG> --venue <VENUE> --data-types <DT> --day <DAY> --legs force,skip \
   --require-captured --auto-day
 ```
+
+For the Sports venue smoke batch, add `--generator-scoped-sports` alongside `--asset-group SPORTS`; this preserves
+the generator's exact `(venue, data_type)` denominator instead of augmenting it with observed out-of-registry cells.
 
 > **Doc-fix (2026-07-18): the checker's own flag is `--venue` (singular), never `--venues`.** `--venues`/plural
 > `--data-types` are the LAUNCHER's flags (`launch-mtds-backfill-vm.sh`, invoked internally by this checker) — passing
