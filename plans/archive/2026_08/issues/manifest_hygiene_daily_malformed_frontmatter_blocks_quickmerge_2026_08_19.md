@@ -12,8 +12,8 @@ summary: >-
   this repo, not just the one that found it. Observed 3 distinct frontmatter states across
   ~10 minutes without editing the file, strongly suggesting an active process (most plausibly
   the generator script itself) is still writing to it.
-status: open
-resolved_by:
+status: resolved
+resolved_by: unified-trading-pm@94e9bf8f4c
 nature: issue
 asset_group: [infrastructure]
 stage: [meta]
@@ -53,6 +53,11 @@ source: >-
 assigned_role: infra
 drift_direction: correct-codex
 ---
+
+> **🟢 ARCHIVED 2026-08-20 — RESOLVED** (status: resolved, 6/6 todos `[x]`, unlocked). Root cause (a
+> `fix_frontmatter.py` auto-fixer seeding plan-shaped defaults onto issue docs) fixed at
+> `unified-trading-pm@94e9bf8f4c`; the blocked doc-schema work and downstream dependent shipped at
+> `unified-trading-pm@314abf445b` / `cc38229b57`.
 
 # manifest_hygiene_daily.py's auto-filed doc blocks quickmerge repo-wide
 
@@ -115,30 +120,26 @@ currently sitting uncommitted, blocked on this.
       `nature=process`, `asset_group=cross-asset`) onto issue docs regardless of path. Fixed at
       `unified-trading-pm@94e9bf8f4c` ("stop auto-fixer seeding plan-shaped defaults onto issue docs") — corpus-wide
       `check_frontmatter_schema` now reports 2167 docs, zero violations; full `quality-gates.sh` passes.
-- [ ] [INFRA] P1. **Diagnose why `manifest_hygiene_daily.py` (or whatever last wrote this file)
-      produces/produced invalid frontmatter**, and whether it's still actively running — check
-      for a live cron/systemd-timer process, recent log output, or another session's claim on
-      this file before touching it. Fix the GENERATOR (so this doesn't recur on the next daily
-      run), not just this one instance.
+- [x] ✅ [INFRA] P1. **DONE — answered by the correction immediately above (same doc).** The
+      generator was `fix_frontmatter.py`'s auto-fixer, not `manifest_hygiene_daily.py` —
+      root-caused and fixed at `unified-trading-pm@94e9bf8f4c` ("stop auto-fixer seeding
+      plan-shaped defaults onto issue docs"). Diagnose-the-generator premise is moot.
 - [x] [INFRA] P1. **DONE — confirmed stable.** `manifest_hygiene_red_all_2026_08_19.md`'s current frontmatter read
       directly: `doc_type: issue` ✓, `status: open` (valid) ✓, `asset_group: [cross-cutting]` (valid enum) ✓,
       non-empty `tags:` ✓, `resolved_by: slot-7 (e2e-testing@e8c41f618c)` present ✓ — satisfies this todo's
       done-condition verbatim. Fixed at `unified-trading-pm@94e9bf8f4c` + `314abf445b` ("correct issue-doc frontmatter
       schema... unblocks ldr-docs-gate + promote-PR checks slice"), both verified ancestors of
       `origin/live-defi-rollout`.
-- [ ] [INFRA] P1. **Once the file is confirmed stable** (not actively changing —
-      `check_frontmatter_schema.py` clean twice in a row a few minutes apart), fix its
-      frontmatter to satisfy `check_frontmatter_schema` (`doc_type: issue`, a valid `status`
-      from the issue enum, a valid `asset_group`, non-empty `tags`, `resolved_by:` present) —
-      metadata-only, do not alter the audit's actual findings/content.
+- [x] ✅ [INFRA] P1. **DONE — satisfied by the sibling todo directly above (same doc).** Fixed
+      at `unified-trading-pm@94e9bf8f4c` + `314abf445b`; current frontmatter confirmed valid
+      (`doc_type: issue`, `status: open`, valid `asset_group`, non-empty `tags`, `resolved_by:`
+      present).
 - [x] [SCRIPT] P2. **DONE — shipped.** `worker_slot_account_exhaustion_no_rotation_2026_08_19.md`'s own Progress Log
       states "todo 3's `unified-trading-pm` half shipped cleanly at `cc38229b57` on the first retry" and "the
       generator issue itself is unrelated to this doc and remains tracked only in its own issue doc above."
       `unified-trading-pm@cc38229b57` verified ancestor of `origin/live-defi-rollout`.
-- [ ] [SCRIPT] P2. **Once clear, ship the blocked doc-schema work**:
-      `/plans/active/issues/worker_slot_account_exhaustion_no_rotation_2026_08_19.md` todo 3's
-      unified-trading-pm half (`agents/main.md`, `plans/PLAN_FORMAT.md`,
-      `plans/active/task_template.md`, `scripts/docs/docspec.py`) — verify those 4 files are
-      still sitting uncommitted in whichever slot's checkout has them (or already shipped by a
-      later session) before redoing the work.
+- [x] ✅ [SCRIPT] P2. **DONE — already shipped, per the sibling todo directly above (same
+      doc).** `worker_slot_account_exhaustion_no_rotation_2026_08_19.md`'s own Progress Log
+      confirms the unified-trading-pm half shipped at `unified-trading-pm@cc38229b57`, verified
+      ancestor of `origin/live-defi-rollout`.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries)

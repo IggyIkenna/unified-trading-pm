@@ -94,7 +94,7 @@ stopping to ask. `/autonomous` was explicitly invoked. This is a LOCAL plan (`as
 
 ## Todos
 
-- [ ] [REVIEW] P0. PARTIALLY DONE, time-bound limit. A full observation cycle (up to 24h for cefi's cadence) cannot
+- [ ] [REVIEW] P0. BLOCKED-ON:24h-observation-window. PARTIALLY DONE, time-bound limit. A full observation cycle (up to 24h for cefi's cadence) cannot
       complete inside this session — genuinely requires real wall-clock time to pass, not more agent effort. What COULD
       be verified now: the alerting-service + deployment-service dedup fixes are unit-tested to the exact claimed
       behavior (900s-apart collapses, 1801s-apart re-delivers) and both were independently re-derived by the adversarial

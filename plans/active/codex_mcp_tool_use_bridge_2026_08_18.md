@@ -186,7 +186,7 @@ scope per the prototype: 3-5 focused engineering days for a correct first versio
       `HTTP 200, stop_reason: "tool_use"`, `tool_use_id=toolu_codex_a06d75bf223b4d0e8220da4e`; turn 2
       (`tool_result="PROD-SMOKE-8821"`) → `HTTP 200`, final answer `"PROD-SMOKE-8821"` — genuinely reflecting the
       injected content, not a hallucination. `codex-bridge.service` confirmed `active` post-restart both times.
-- [ ] [REVIEW] P1. **Production smoke test RE-CONFIRMED 2026-08-19 (fresh evidence, same day, later run)** — see
+- [ ] [REVIEW] P1. BLOCKED-OPERATOR-DECISION. **Production smoke test RE-CONFIRMED 2026-08-19 (fresh evidence, same day, later run)** — see
       Progress Log entry below: a real tool_use/tool_result round trip against the live `codex-bridge.service`
       (marker `RESMOKE-DD6149CC32` injected via `tool_result`, echoed back verbatim, `MARKER_MATCH=True`).
       **READY FOR OPERATOR REVIEW to unpause** `codex-luna` (`POST /api/accounts/codex-luna/enable`, the real

@@ -348,7 +348,8 @@ autonomous workers — relocate via `git mv`, ask the operator for true deletion
       item, 2 operator-gated `tofu apply` infra items, the `## BLOCKED clusters` section). Correctly left open — this
       doc's own "Archive-readiness verdict" section (written 2026-07-27) already reached this exact conclusion;
       confirmed still true.
-- [ ] [PLAN] P2. `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` →
+- [x] ✅ [PLAN] P2. **DONE — source doc archived** (`plans/archive/2026_08/mvp_scope_catalogue_tagging_2026_06_08.md`,
+      `status: complete`, unified-trading-pm@541496e597 ag-closeout-audit sweep). `plans/active/mvp_scope_catalogue_tagging_2026_06_08.md` →
       `cross_cutting_satellite_ao_dispatch_batch1b_2026_07_26.md` (draft), dispatches both AO-eligible residuals
       (FeaturesMvpRule/StrategiesMvpRule+consumer; real-data MVP-toggle verify) verbatim. Not yet archivable (batch1b
       hasn't run). ~~Models-MVP-taxonomy item should be re-parked as its own `BLOCKED-OPERATOR-DECISION` issue doc.~~

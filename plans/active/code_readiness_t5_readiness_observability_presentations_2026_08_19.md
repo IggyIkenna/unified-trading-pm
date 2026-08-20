@@ -535,6 +535,12 @@ todos only to confirm they are data-movement, then leave it.
 > were missing from earlier accounting (the last two are outside this plan's originally-scoped four). Holding these
 > four todos pending coordination on which approach to follow — not starting a manual re-derivation that the ledger
 > plan would then have to undo.
+>
+> **OPERATOR DECISION, 2026-08-20**: wait for the ledger plan. Do not hand-edit the artefacts. These todos (and the
+> disclosure-standard-extension + figure-measurement-confirmation items below that are the same class of work)
+> stay held until `/plans/active/state_fabric_artefacts_2026_08_20.md` lands its ledger-binding, or until that
+> plan is explicitly reprioritized. Next session: check that plan's status before resuming any of these — do not
+> re-litigate this decision without a changed premise.
 - [ ] [DOC] P0. Re-derive `platform-architecture.html` from measured state. Every remaining marker must be live or
       one of the five allowed pending states.
 - [ ] [DOC] P0. Re-derive `platform-external-api-walkthrough.html` — the heaviest artefact by gap count (28

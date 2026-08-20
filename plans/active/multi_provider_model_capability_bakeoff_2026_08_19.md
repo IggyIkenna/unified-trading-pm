@@ -208,28 +208,39 @@ where it writes.
       operator's explicit answer supersedes the 2026-08-16 pause instruction for the scope of this bake-off.
       `account_status` itself needs no change (confirmed AO-internal-only, doesn't gate direct dispatch). Dispatch
       is unblocked.
-- [ ] [INFRA] P1. Stand up the isolated-branch-per-attempt dispatch mechanism described in Mechanics above (36
+- [x] ✅ [INFRA] P1. Stand up the isolated-branch-per-attempt dispatch mechanism described in Mechanics above (36
       branches off `live-defi-rollout`, one `claude` subprocess per attempt, env pointed at the right
-      proxy/endpoint). Done when: one real end-to-end attempt (any model, any task) produces an isolated branch
+      proxy/endpoint). **DONE 2026-08-19** — proven end-to-end on a real attempt (Gemini 3.5-flash-lite, slot 24,
+      `ag-closeout-auditor` audit task). Done when: one real end-to-end attempt (any model, any task) produces an isolated branch
       with a real diff and no collision with the base branch.
-- [ ] [INFRA] P1. Build a per-attempt usage-stats poller, cadence ≤60s (operator requirement, 2026-08-19), capturing:
-      (a) the running `claude -p` session's own transcript jsonl (`~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`)
-      — cumulative input/output/cache tokens, turn count, tool-call count, approx context-fill%; (b) each provider
-      account's own usage/quota surface where one exists (litellm proxy spend log for Gemini/Gemma, GLM/z.ai account
-      usage, Codex/Luna account usage) — message count and/or % of plan/quota consumed, stated as "not available" per
-      account if the provider exposes none. Snapshots appended to a per-attempt poll-log file referenced from the
+- [x] ✅ [INFRA] P1. Build a per-attempt usage-stats poller, cadence ≤60s (operator requirement, 2026-08-19),
+      capturing: (a) the running `claude -p` session's own transcript jsonl
+      (`~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`) — cumulative input/output/cache tokens, turn count,
+      tool-call count, approx context-fill%; (b) each provider account's own usage/quota surface where one exists
+      (litellm proxy spend log for Gemini/Gemma, GLM/z.ai account usage, Codex/Luna account usage) — message count
+      and/or % of plan/quota consumed, stated as "not available" per account if the provider exposes none.
+      **DONE 2026-08-19** — both this and the dispatch-mechanism todo above closed by the same Progress Log entry;
+      poll-log proven on the same real attempt. Snapshots appended to a per-attempt poll-log file referenced from the
       Results table. Done when: one real attempt (paired with the INFRA todo above) has a complete poll-log from
       launch to exit at ≤60s cadence, covering both the jsonl-transcript stats and whatever account-usage surface
       exists for that provider.
-- [ ] [BACKEND] P2. Run Gemini 3.5 Flash-Lite against all 6 Gemini-lane tasks; record Gate 1/2 scores + tokens/
-      context-fill/turns/time per attempt. Done when: 6 rows exist in the Results table below (or a stated
+- [x] ✅ [BACKEND] P2. Run Gemini 3.5 Flash-Lite against all 6 Gemini-lane tasks; record Gate 1/2 scores + tokens/
+      context-fill/turns/time per attempt. **DONE** — all 6 rows in Results table; final tally: 4 clean PASS,
+      2 INFRA-INTERRUPTED with real partial work. Done when: 6 rows exist in the Results table below (or a stated
       pass/fail/blocked reason per attempt).
-- [ ] [BACKEND] P2. Run Gemini 3.7 Flash against the same 6 Gemini-lane tasks; record the same metrics.
-- [ ] [BACKEND] P2. Run GLM 5.2 against all 6 GLM-lane tasks; record the same metrics (note the 5.2→5.3
-      server-aliasing when interpreting which model actually answered).
-- [ ] [BACKEND] P2. Run GLM 5-Turbo against the same 6 GLM-lane tasks; record the same metrics.
-- [ ] [BACKEND] P2. Run DiffusionGemma 26B against all 6 Gemma-lane tasks; record the same metrics.
-- [ ] [BACKEND] P2. Run Codex/Luna against all 6 Codex-lane tasks; record the same metrics.
+- [x] ✅ [BACKEND] P2. Run Gemini 3.7 Flash against the same 6 Gemini-lane tasks; record the same metrics. **DONE**
+      — all 6 attempted; slot 25 (Gemini 3.7-flash) is a complete quota washout: 6/6 tasks failed, blocked reason
+      recorded per the Done-when's alternative clause.
+- [x] ✅ [BACKEND] P2. Run GLM 5.2 against all 6 GLM-lane tasks; record the same metrics (note the 5.2→5.3
+      server-aliasing when interpreting which model actually answered). **DONE** — GLM lane fully complete: 5.2 got
+      1 PASS + 1 interrupted + 4 blocked.
+- [x] ✅ [BACKEND] P2. Run GLM 5-Turbo against the same 6 GLM-lane tasks; record the same metrics. **DONE** —
+      5-Turbo got 2 PASS + 1 interrupted + 3 blocked.
+- [x] ✅ [BACKEND] P2. Run DiffusionGemma 26B against all 6 Gemma-lane tasks; record the same metrics. **DONE** —
+      Gemma lane confirmed 6/6 complete washout (same pattern, now proven not a one-off).
+- [x] ✅ [BACKEND] P2. Run Codex/Luna against all 6 Codex-lane tasks; record the same metrics. **DONE** — all 6
+      tasks in slot 29's queue ran and exited within seconds each; Codex/Luna lane is INFRA-BLOCKED, root cause
+      found.
 - [ ] [REVIEW] P1. Direct diff-vs-diff comparison on the 2 shared Hard tasks (repo-touched-capture: Gemini vs.
       Codex/Luna; sequential-ordering root-cause: GLM vs. Codex/Luna) — this is the single strongest signal in the
       trial, weight it accordingly in the final synthesis. Done when: a written verdict exists for both pairs.

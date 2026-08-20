@@ -262,10 +262,10 @@ into any of the 9.
       the dead `/plans/epics/infrastructure_master.md` path; after fixing them, only the 1 unrelated SOFT item
       remains. Done-when criterion met. `unified-trading-pm@cf7489d077` (epic file) / `unified-trading-pm@13cd3e5a82..2e733b3303` (the 419-doc
       parent_epic rewrite, see final Progress Log entry for the full commit list).
-- [ ] [DOCS] P2. Update `plans/epics/README.md`'s registry table for the Phase 3 changes (2 new epics, 1 renamed,
-      folding in Phase 2's changes too if not already done). **NOT done this pass** — deliberately deferred, same
-      reasoning as Phase 1's todo #4 (avoid redundant edits; Phase 6's own P2 todo already collects this exact
-      registry-refresh work after every epic's HTML artifact exists) — left `[ ]` rather than force-flipped.
+- [x] ✅ [DOCS] P2. Update `plans/epics/README.md`'s registry table for the Phase 3 changes (2 new epics, 1 renamed,
+      folding in Phase 2's changes too if not already done). **DONE 2026-08-19** — completed in Phase 6's "final
+      cross-epic sweep" (Progress Log: "README registry refreshed (23→22, dropped the stale 'Assigned VM' column)").
+      Verified live: `plans/epics/README.md` rows 10/14/18 carry `uac_master`/`ci_master`/`security_and_cross_cutting_master`.
 - [ ] [SCRIPT] P1. **NEW — follow-up finding, not in original Phase 3 scope.** Sweep the ~694 `# Epic:
       infrastructure_master` script-lifecycle-marker header comments across `scripts/` (per
       `/codex/06-coding-standards/script-homes.md`'s convention) + `tests/` and reclassify each to `ci_master` /
@@ -299,14 +299,13 @@ into any of the 9.
          anywhere in the corpus under any name) unrelated to this session's content; `check_reference_paths.py`
          blocks the whole staged commit on it. Needs the dangling ref repointed or removed (historical-narrative
          text left untouched, just the broken link) before the parent_epic fix can land.
-      3. `plans/active/deployment_network_egress_ingress_observability_2026_08_18.md` — deliberately excluded all
-         session: an unrelated concurrent session's brand-new, actively-edited doc (confirmed live via repeated
-         `git status` checks across this ship's full duration); touching a live peer's WIP file is against this
-         workspace's multi-agent-safety rules. Its `parent_epic:` value needs the same 1-line fix once that
-         session's own work settles.
+      3. `plans/active/deployment_network_egress_ingress_observability_2026_08_18.md` — **RESOLVED, verified live
+         2026-08-20**: `parent_epic:` now reads `security_and_cross_cutting_master` (fixed as part of Phase 6's
+         "final cross-epic sweep" per the Progress Log). Items 1-2 below remain blocked, unchanged.
       Done-when: `rg -c "^parent_epic: infrastructure_master$" plans/active/ plans/audit/results/
-      plans/audit/instructions/ plans/epics/ codex/` → 0 (currently 1 — item 3 above; items 1-2 already carry the
-      corrected LOCAL value, just can't ship until their own blocker resolves).
+      plans/audit/instructions/ plans/epics/ codex/` → 0 (currently 2 — items 1-2 above; item 3 cleared 2026-08-20.
+      A live re-run also surfaces 5 more recently-created docs carrying `parent_epic: infrastructure_master` that
+      postdate this plan's sweep — natural corpus drift, not this todo's original 3-item scope).
 
 ### Phase 4 — `/plan-reconcile` extension: epic scope + HTML artifact generation
 
