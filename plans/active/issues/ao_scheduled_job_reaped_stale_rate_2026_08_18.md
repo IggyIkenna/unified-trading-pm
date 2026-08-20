@@ -89,6 +89,31 @@ down") describes the opposite shape — sessions that are NOT being reaped at al
 dispatch. Distinct mechanisms per this code read; not asserting they share no common cause (unconfirmed either way),
 just that this doc's numbers should not be read as evidence for the other doc's claim or vice versa.
 
+## Runtime-exposure correlation (2026-08-20, interactive /ao-watchdog-style session)
+
+Confirmed via `tmux_pruner.py` (~line 719-752): `exit_reason="reaped-stale"` for a scheduled/one-shot agent fires on
+the exact same `has_session()`-returns-False signal as the general `tmux_session_lost` mechanism tracked in
+`ao_tmux_session_loss_mid_task_root_cause_2026_08_10.md` — this is NOT a separate scheduled-job-specific bug, it's
+that root cause landing on scheduled jobs. That doc's own finding ("whatever kills sessions is roughly uniformly
+likely per session-second") predicts the per-job rate ordering seen in the 2026-08-20 measurement almost exactly:
+the one long-running UNSHARDED job (`context_scout_auditor`, 3.5h+ single session) has the highest rate (71%), while
+the sharded jobs whose individual tranches mostly finish in minutes (`na_eligibility_auditor`) have the lowest (5%).
+`ag_closeout_auditor`/`plan_reconciler` (sharded but with longer/wider per-tranche runtime, 6.5-64 min) sit in
+between (39%/30%). `docs_reconciler`'s 44% is inconsistent with an earlier stale small-sample read that called it
+"short-running" — its real per-run duration should be re-checked, since the correlation predicts it's longer than
+assumed if the rate holds. Runtime exposure, not job identity, is the leading explanatory variable — continued
+progress on the general tmux-death investigation (most recently the 2026-08-20 `setsid`/orphan-reap fix) should
+reduce this across every job, not just the worst offenders.
+
+- [ ] [INFRA] P2. Consider sharding `context_scout_auditor` (the one long-running, never-sharded scheduled job) into
+      tranches the way `ag_closeout_auditor`/`na_eligibility_auditor`/`plan_reconciler` already are, mirroring the
+      "Phase-0 incremental skip instead" note in `ao_scheduled_jobs_health_audit_findings_2026_08_20.md` — reducing
+      its per-session runtime should directly cut its reaped-stale exposure window, consistent with the correlation
+      above. (repo: agent-orchestrator)
+- [ ] [SCRIPT] P2. Re-measure `docs_reconciler`'s actual typical per-run duration (not the stale small-sample
+      "completes without timeout" read) — the correlation above predicts it should be longer-running than assumed
+      given its 44% reaped-stale rate. (repo: agent-orchestrator)
+
 ## Follow-up
 
 - [ ] [SCRIPT] P2. Pull per-job reaped-stale rates for every scheduled-job type (not just the 3
