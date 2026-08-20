@@ -378,9 +378,17 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 - [ ] [UAC] P1. Add `LiquidationCandidateSnapshot` v1,
   `LiquidationCandidateContext`, availability/provenance/validity/digest tests,
   and missing/stale-value rejection in `unified-api-contracts`.
-- [ ] [MTDS] P1. Implement the Aave V3 Ethereum pre-liquidation producer and
-  canonical shard with the `B < B2` evidence fixture and honest unavailable
-  paths; do not reuse `liquidation_events`.
+- [x] ✅ [MTDS] P1. Implement the Aave V3 Ethereum pre-liquidation producer and
+  canonical snapshot row shape with block-pinned Borrow discovery, pool balances,
+  reserve parameters, oracle prices, deterministic digests, and honest unavailable
+  paths; do not reuse `liquidation_events`. — market-tick-data-service@e34d0afc6f
+  + evidence: `tests/unit/test_aave_candidate_producer.py`; `quality-gates.sh`
+  (11,075 passed, 28 skipped, 1 xpassed). The real historical `B < B2` fixture and
+  CLI canonical-shard wiring remain a separate gate below and do not authorize
+  archetype registration.
+- [ ] [MTDS] P1. BLOCKED-ON:uac_snapshot_contract_and_source_fixture — add the
+  canonical shard handler and prove a real Aave V3 Ethereum `B < B2` replay fixture
+  before the downstream UAC/features/strategy gates are closed.
 - [ ] [FEATURES] P1. Add snapshot enrichment and provenance propagation using
   only real as-of prices, parameters, slippage/liquidity, and gas cost; test
   stale/missing joins as unavailable.
@@ -389,3 +397,13 @@ cache-writer, and parity gates pass may `_ENGINE_DRIVABLE_ARCHETYPES` register
 - [ ] [STRATEGY] P2. After all gates pass, register the archetype and prove one
   real Aave V3 Ethereum candidate emits an instruction; otherwise retain the
   blocked state with the measured gate failure.
+
+
+- **2026-08-20 (slot-7, worker):** shipped the MTDS Aave V3 Ethereum pre-liquidation producer in
+  `market-tick-data-service@e34d0afc6f`. It discovers borrowers from pre-event `Borrow` logs,
+  resolves account/reserve balances and liquidation parameters at the observation block, reads
+  block-pinned Aave oracle prices, emits deterministic candidate IDs/input/snapshot digests, and
+  returns explicit `UNAVAILABLE` rows for missing/stale inputs. It never consumes post-event
+  `liquidation_events`. Full MTDS quality gates passed: 11,075 passed, 28 skipped, 1 xpassed.
+  The real `B < B2` historical fixture and CLI shard integration remain tracked as the explicit
+  blocked follow-up above; archetype registration remains prohibited until that source gate passes.
