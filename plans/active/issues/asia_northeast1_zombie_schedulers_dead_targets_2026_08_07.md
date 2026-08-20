@@ -41,7 +41,7 @@ related:
     /plans/active/infra_consolidated_closeout_2026_07_25.md,
   ]
 created: 2026-08-07
-last_updated: 2026-08-15
+last_updated: 2026-08-20
 parent_epic: observability_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -159,14 +159,12 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
 
 ## Todos
 
-- [x] ✅ [DOC] P2. **Repoint candidate (2) RULED + EXECUTED 2026-08-09**: `uts-prod-client-reporting-daily-snapshot`
-      (asia-northeast1) vs. the europe-west1 `client-reporting-daily-snapshot` twin — RE-ENABLE asia-northeast1, PAUSE
-      europe-west1. **Already executed live this session** via `gcloud scheduler jobs resume/pause`; re-verified fresh
-      just now:
-      `gcloud scheduler jobs describe uts-prod-client-reporting-daily-snapshot --location=asia-northeast1 --project=central-element-323112 --format='value(state)'`
-      → `ENABLED`;
-      `gcloud scheduler jobs describe client-reporting-daily-snapshot --location=europe-west1 --project=central-element-323112 --format='value(state)'`
-      → `PAUSED`. Both confirmed live-verified, DONE.
+- [x] ✅ [DOC] P2. **Repoint candidate (2) corrected + re-verified 2026-08-20**: verified
+      `client-reporting-daily-snapshot` exists in europe-west1 while the asia-northeast1 target is nonexistent. The
+      previously recorded 2026-08-09 state was inverted/stale (asia ENABLED, europe PAUSED). Paused
+      `uts-prod-client-reporting-daily-snapshot` in asia-northeast1 and resumed `client-reporting-daily-snapshot` in
+      europe-west1; live verification: asia `PAUSED`, europe `ENABLED`, both schedule `15 0 * * *`. Reversible; no
+      job deletion.
 - [x] ✅ [INFRA] P2. **STANDING-ACTION — repoint candidate (1) RULED, Terraform retirement EXECUTED 2026-08-15.**
       `uts-prod-client-reporting-hourly-update` (asia-northeast1): RETIRED — `client-reporting-hourly` (via Cloud Run
       Job `client-reporting-batch`, identical `5 * * * *` schedule, confirmed succeeding hourly) already covers the
@@ -421,3 +419,7 @@ dev/staging-tier job) is a product decision, not this triage pass's call.
   a new `[OPERATOR]` todo. No deployment-service change shipped this pass; the ml-inference deletion is the only
   live-infra change.
 - **context-scout 2026-08-17**: populated/refreshed context_scope (2 entries)
+
+- **2026-08-20 (slot 27, dispatch agt-21dce5)**: Corrected the stale candidate-(2) execution record above after
+  direct GCP verification. The dead asia target is now `PAUSED`; the real europe-west1 twin is `ENABLED` on the same
+  `15 0 * * *` schedule. This was a reversible scheduler-state correction; no Cloud Run Job was deleted.

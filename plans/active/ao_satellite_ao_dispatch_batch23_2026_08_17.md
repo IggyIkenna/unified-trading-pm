@@ -138,7 +138,7 @@ are bounded, already-decided, and conflict-clear:
       (0 is not the answer this time). All 167 answers durably stored + retrievable via the fixed
       `GET /api/blocked/{blocked_id}`; 0 in-flight, 11 tasks done, 6 tasks still `queued` (answers preserved) — full
       breakdown in Progress Log.
-- [ ] [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic**
+- [x] ✅ [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic**
       (`scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()`, gated by its sole caller's
       `if not has_field(new_fm, "summary")` guard — reference the symbols, not a line number: this todo previously
       cited `lines ~245-294`/`~646-654`, corrected 2026-08-18 /plan-reconcile per task_template.md §3's "reference
@@ -150,7 +150,20 @@ are bounded, already-decided, and conflict-clear:
       **Done when**: the widened search + mid-clause-cut fallback ship with a regression test covering both defect
       classes (a truncation that previously stopped before the doc's real point, and a dangling first-sentence
       lead-in), and `quality-gates.sh` is green. Source: `/plans/active/issues/docs_reconcile_findings_2026_08_17.md`
-      todo "[SCRIPT] P2. Fix fix_frontmatter.py's summary-truncation logic". Repo: unified-trading-pm.
+      todo "[SCRIPT] P2. Fix fix_frontmatter.py's summary-truncation logic". Repo: unified-trading-pm. — **DONE
+      2026-08-20 (slot 32)**: `get_first_paragraph_after_heading()` now requires a sentence boundary to use at
+      least half the 197-char budget before accepting it (fixes defect b — no more locking onto an early first
+      sentence and wasting most of the budget), adds a comma/semicolon/dash clause-boundary tier before the
+      word-boundary fallback, and only cuts mid-word as the genuine last resort when the paragraph has no space at
+      all (fixes defect a — the old bare hard-cut path). Two new regression tests added to the pre-existing
+      `tests/unit/test_fix_frontmatter_summary_truncation.py` (`test_early_sentence_boundary_does_not_win_over_unused_budget`,
+      `test_late_clause_boundary_used_when_no_late_sentence_boundary`); all 8 tests in that file pass.
+      `quality-gates.sh` green. Also fixed an unrelated pre-existing red (`reachability-gate`:
+      execution-service's `PendleConnector` newly reachable but not dropped from
+      `scripts/quality_gates/reachability_gate_baseline.json`) blocking the shared gate — confirmed via a clean
+      direct re-run of `check_reachability_gate.py`, fixed per the check's own prescribed shrink-the-baseline
+      remedy. Evidence: unified-trading-pm@bd4f0b5884 (truncation fix), unified-trading-pm@5ac4b78f42 (baseline
+      fix, both ancestor-verified on origin/live-defi-rollout).
 - [x] ✅ [SCRIPT] P1. **Make an unresolvable `--only` path a hard error** in `check_reference_paths.py`'s `_run_only()`
       — today `if not p.is_file(): continue` silently drops an unresolvable path and the function reports "0
       violation(s)" / exit 0, a false-clean-bill-of-health that cost 7 failed `safe-doc-push` attempts and 6 wrong
@@ -241,3 +254,16 @@ are bounded, already-decided, and conflict-clear:
     decisions, not 167. Audit conclusion: the delivery gap existed fleet-wide (not just on the reconciler's own runs),
     but it only ever lost the NOTIFICATION, never the answer — the 2026-08-19 fix closes it going forward.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (5 entries)
+- **2026-08-20 (slot 32, infra worker)**: Completed batch23 item 2 — fixed
+  `fix_frontmatter.py`'s `get_first_paragraph_after_heading()` summary-truncation logic (both
+  named defects: early-sentence-boundary wasting most of the budget, and the bare mid-word hard
+  cut). Widened the boundary search with a minimum-budget-usage threshold, added a clause-boundary
+  tier, and kept mid-word cut only as the true last resort. Extended the pre-existing
+  `tests/unit/test_fix_frontmatter_summary_truncation.py` with 2 new regression tests (8/8 pass).
+  Also found and fixed, same session, an unrelated pre-existing red on the shared
+  `reachability-gate` check (execution-service's `PendleConnector` newly reachable, baseline not
+  shrunk) that would have blocked shipping under the green-tree rule — fixed via the check's own
+  prescribed remedy, verified with a standalone clean re-run before touching it.
+  `quality-gates.sh` green both times. Evidence: unified-trading-pm@bd4f0b5884 (truncation fix),
+  unified-trading-pm@5ac4b78f42 (baseline fix) — both ancestor-verified on
+  origin/live-defi-rollout.

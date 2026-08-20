@@ -158,3 +158,8 @@ context_scope:
   legacy Job — so no codex update needed. Referrers repointed: finalize plan `related`, observability_master epic,
   `infra_health_audit_alert_coverage_gaps_2026_08_07.md`,
   `defi_consolidator_paused_by_inflight_rebuild_vm_2026_08_07.md`.
+- **2026-08-20 recurrence (slot 27, dispatch agt-21dce5)**: The archived sole-consumer invariant regressed in live
+  infrastructure. `uts-prod-alerting-paging-cron` was `ENABLED` and its `uts-prod-alerting-paging` Job was consuming
+  `lifecycle-events-sub` alongside `dp-alerting-subscriber`; the scheduler was paused and verified `PAUSED`. The
+  in-flight execution from before the pause was left to drain. The recurrence is tracked in
+  `/plans/active/issues/dp_cron_did_not_fire_still_storming_after_gcs_persistence_fix_2026_08_20.md`.

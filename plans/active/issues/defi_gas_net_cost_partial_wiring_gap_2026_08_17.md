@@ -233,9 +233,56 @@ execution-service's gas-cost models and features-service's onchain calculators. 
   passed, sentinel-verified at HEAD before quickmerge — not a sentinel-hit skip). Shipped strategy-service@fbf78dfe20.
   Remaining sibling todos in this doc (STRATEGY P3 `BACKRUN`, STRATEGY P3 `ExecutionCostEstimator`, STRATEGY P2
   `LIQUIDATION_CAPTURE` paper-universe registration below) are untouched — separate scope, not part of this task.
-- [ ] [STRATEGY] P2. Register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
+- [ ] [STRATEGY] P2. BLOCKED-ON:liquidation_capture_paper_drivability_design — Register `LIQUIDATION_CAPTURE` as a drivable archetype in `paper_universe.py`/
       `paper_run_handler.py` (mirroring how `ARBITRAGE_PRICE_DISPERSION`/DEX-pool archetypes are wired) so it can
       actually run end-to-end in a real paper run — currently NOT in `paper_universe.py`'s drivable
       `StrategyArchetype.*` set at all (confirmed via grep, 2026-08-17). Repo: strategy-service. Done when: a real
       paper run emits at least one `LIQUIDATION_CAPTURE` tick/instruction over real captured on-chain lending data.
 - **context-scout 2026-08-20**: populated/refreshed context_scope (6 entries) — corrected the .tabs/7 absolute prefixes to workspace-root-relative; added the features-service gas_cost_usd_calculator producer
+
+### 6. Required prerequisite design — candidate snapshot and paper injection
+
+The existing `DEFI_LENDING_LIQUIDATIONS` / `liquidation_events` data is a record of positions that were already
+liquidated. It cannot be replayed as a pre-trade candidate feed: it has no current health factor, remaining debt and
+collateral balances, or as-of prices for deciding whether a new liquidation is executable. The features-service
+`health_factor` path is protocol-level aggregate data, not an arbitrary-wallet read, and strategy-service's
+`margin_health_cache` is fail-closed and is populated by the own-position risk path; no current writer scans third-party
+borrowers. Therefore static catalog values, the existing `position_data`, or the post-event liquidation rows must not be
+repurposed to fill the engine's `debt_asset`, `collateral_asset`, `underwater_address`, amounts, prices, bonus, or
+health-cache inputs.
+
+The follow-up design must resolve these boundaries before any paper-universe registration:
+
+1. **Raw producer ownership and honest source gate.** MTDS remains the owner of raw on-chain lending observations and
+canonical event/data-type persistence. The design must first prove, for one supported protocol/chain (recommended
+first slice: Aave V3 Ethereum, where the existing `liquidation_events` handler and live `LiquidationCall` connector
+provide source precedents), that a historical/live source can discover *candidate borrowers before liquidation* and
+provide an as-of block/timestamp. A post-event liquidation feed alone fails this gate. Compound, Morpho, Kamino, and
+the other catalog rows remain honest skips until each has the same source proof; no cross-protocol fallback is allowed.
+
+2. **Canonical candidate snapshot contract.** UAC must own a typed, versioned candidate record (rather than a
+strategy-local dict) containing at minimum: `candidate_id`/underwater account address, protocol, chain, observation
+block and UTC timestamp, debt asset + exact debt amount, collateral asset + exact seizable amount, collateral and debt
+USD prices with their source/as-of metadata, liquidation bonus/penalty, and a validity/staleness bound. It must also
+carry the source event/block identifiers needed for audit and deterministic paper↔batch replay. Missing or stale
+fields are an explicit unavailable status, never zero/default values. The contract must define whether the snapshot is
+keyed by candidate address, position, or liquidation opportunity when one wallet has multiple markets.
+
+3. **Feature enrichment and health-cache population.** Features-service should consume the canonical candidate snapshot,
+join only real oracle prices, protocol liquidation parameters, DEX slippage/liquidity, and the existing gas-cost
+calculator, then emit a deterministic candidate feature row for the paper tick. A separate, typed writer must update
+strategy-service's `margin_health_cache` for the same (`underwater_address`, `protocol`) subject and observation time,
+or the strategy contract must carry an equivalent signed/as-of health reading; the design must not bypass the cache's
+fail-closed semantics. The enrichment must expose provenance and validity so the engine can reject stale candidates.
+
+4. **Runtime and replay injection.** Strategy-service must add an explicit candidate-context injection seam between
+`paper_universe.py`/`paper_run_handler.py` and `LiquidationCaptureEngine.on_tick()`. It must bind the candidate's
+address and debt asset/amount to the generated atomic instruction without encoding an address as a float or mutating
+static catalog rows. The same immutable candidate snapshot and ordering must be recorded in the run manifest and used
+by batch rerun, preserving paper↔batch determinism. Only after this seam and a real source-backed fixture exist may
+`LIQUIDATION_CAPTURE` enter `_ENGINE_DRIVABLE_ARCHETYPES` and the catalog's static rows be mapped to discovered
+candidates.
+
+- [ ] [STRATEGY] P1. Design and approve the cross-repo `LIQUIDATION_CAPTURE` candidate-snapshot contract and producer ownership before registering the archetype: validate a real pre-liquidation source for one protocol/chain, specify the UAC record plus provenance/staleness fields, define features-service enrichment and strategy-service margin-health/runtime injection, and define paper↔batch manifest replay; done when the design names the owning modules, rejects post-event/static fabrication, and provides an implementation-ready follow-up with an evidence-backed source gate.
+
+- **2026-08-20 (slot-7, resumed worker)**: operator answered the blocked-question chain with direction A — build the real cross-repo candidate-snapshot producer/contract, reject deriving fields from `position_data` or static catalog values. Per AO eligibility, this is an open-ended architecture decision, so this session records the design boundary and leaves implementation to a follow-up after approval. Existing `LIQUIDATION_CAPTURE` registration remains `BLOCKED-ON:liquidation_capture_paper_drivability_design`; no code or static registration was changed.
