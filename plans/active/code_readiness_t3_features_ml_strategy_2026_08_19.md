@@ -167,24 +167,6 @@ todos only to confirm they are data-movement, then leave it.
       OPTIONAL (a "flavor", never a mandatory field — pure-passive, fire-immediately and patient-then-escalate are
       all valid consumers), and it is strategy-COMPUTED and strategy-OWNED, with execution merely consuming it.
       Evidence: `/plans/active/issues/execution_delta_proxy_repricer_generalization_2026_08_18.md`.
-- [ ] [FROM-T1] P1. `strategy_instructions` writer/registry DIVERGENCE — your repo's own
-      `strategy_service/engine/core/gcs_storage_service.py::write_instructions` hardcodes its own blob-path
-      string (`f"strategy_instructions/client_id={client_id}/strategy_id={strategy_id}/day={date_str}/
-      instructions.parquet"`) and bypasses UTL's `PATH_REGISTRY`/`build_path()` entirely. T1 just added a
-      REQUIRED `mode={mode}` segment to the `strategy_instructions` `path_template` (path_registry_dead_mode_
-      kwarg fix, 2026-08-20 — batch/paper/live rows were colliding on the same object path for
-      `execution_fills`/`positions`/`strategy_instructions`/`pnl_attribution`/`strategy_orders`), but since this
-      writer never calls `build_path()`, it will keep writing the OLD mode-less path regardless — the registry
-      now describes a shape this writer does not produce. **Not fixed by T1**: this is your repo, and the fix
-      shape depends on how `write_instructions`'s `client_id`/`date_str` params relate to a `mode` your service
-      already has in scope (confirm before assuming — not measured by T1). Two options: migrate this writer to
-      `build_path("strategy_instructions", ..., mode=mode)` so it's byte-parity with the registry, or if there's
-      a reason this writer must stay hardcoded, at minimum add the `mode=` segment to its own literal string so
-      readers going through the registry (currently zero real call sites, per `registry.py`'s own comment, but
-      that could change) don't silently miss real data. Evidence: `unified_trading_library/config_interface/
-      paths/registry.py` (`strategy_instructions` row + its own comment on this writer being the "unwired stub"
-      case), `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_
-      pnl_attribution_2026_08_15.md`.
 
 ## Todos
 
