@@ -64,13 +64,3 @@ recorded `0 records`, `SHARD_INCOMPLETE`, and a missing staging CeFi catalogue; 
 completed, zero-row success is observable, and the missing staging catalogue/Tardis lease must be resolved before a
 bounded serial rerun can produce valid captured-row, canonical-path, manifest, and capture-status evidence. Details:
 [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md].
-
-
-**2026-08-20 — resumed execution evidence (slot 14).** The environment-qualified staging catalogue was verified at
-`gs://instruments-store-cefi-stg-central-element-323112/staging/catalog.parquet` (object present; 434,024 catalogue
-rows). A staging VM for `BITFINEX-SPOT/trades` completed with 2,122 captured rows, a canonical test-bucket object, a
-manifest update, and deployment exit code 0. The retained aggregate report then measured `total=294`, `passed=3`,
-`failed=76`, `skipped=215`; `no_captured_data_for_cell`, `tardis_guard_busy`, and
-`canonical_no_matching_objects_in_test_bucket` remain. The operator ruled that this terminal report does not prove the
-P0 contract. The P0 checkbox therefore remains unchecked; missing rows require bounded serial force-capture attempts
-and per-cell terminal evidence. Details: [/plans/active/issues/cefi_venue_smoke_batch1_missing_catalog_and_driver_teardown_2026_08_20.md].

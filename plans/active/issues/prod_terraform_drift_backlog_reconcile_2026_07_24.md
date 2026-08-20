@@ -351,16 +351,6 @@ None of the 71 resources classified as stale/abandoned/conflicting.
       the 3 alert policies unapplied pending this design work — do not guess-substitute a metric name without
       re-running the same real-metric verification this finding used. Repo: deployment-service.
 
-      **CONSOLIDATED 2026-08-21**: this exact bug was independently found the same day by a different concurrent
-      session (slot-12, AO task `infra_satellite_ao_dispatch_batch18-bdde083837b7`) and already has a dedicated,
-      AO-dispatchable issue doc with the full recommended fix —
-      `plans/active/issues/cloud_run_crash_loop_alert_policy_invalid_metric_2026_08_20.md`. That doc now also carries
-      a bigger addendum finding (2026-08-21): `market-data-query-service` and `central-market-data-tardis-loader`
-      are not currently deployed Cloud Run services at all (`gcloud run services list` confirms only
-      `uts-prod-data-status-rollup-svc` of the 3 is real) — the memory-high + instance-zero policies for those 2 have
-      been silently monitoring nothing since they were created, a materially bigger gap than the crash-loop metric
-      alone. Tracking continues there, not here — see that doc for the live todo set.
-
 ## Progress Log
 
 - **na-eligibility-audit 2026-08-09 (round11 RECLASSIFY+satellite-extraction sweep, infra tranche)**: KEEP-NA, valid —
