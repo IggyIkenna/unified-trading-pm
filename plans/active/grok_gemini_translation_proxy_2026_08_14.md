@@ -266,6 +266,74 @@ differentiated by model/route the same way DeepSeek's pro/flash variants are dif
 
 ## Progress Log
 
+- **2026-08-20 (later, dispatched sub-agent session) — residual live-VM incident closed + full removal
+  RE-VERIFIED end-to-end; nothing new left to remove.** Triggered by a real production incident earlier the
+  same day: two live `provider: "grok"` rows survived in the orchestrator VM's gitignored, operator-edited
+  `data/config/accounts.json` (this file was never touched by any of the code-removal commits below, since
+  it isn't tracked in git) and crash-looped `orchestrator.service` for ~6 minutes on every restart (Pydantic
+  `AccountDef` validation has no tolerance for an invalid `provider` literal). The parent session removed
+  those two accounts directly on the VM via SSM (backup taken first:
+  `data/config/accounts.json.bak-2026-08-20T191808Z-grok-removal`) and restored service; the operator then
+  restated, explicitly, that Grok must be completely gone everywhere — this entry is the resulting
+  verification/closure pass.
+
+  **Shipped**: `agent-orchestrator@868062b8` — `load_accounts()` (`server/accounts.py`) now skips a single
+  malformed account entry with a loud log instead of letting one bad `AccountDef.model_validate()` crash the
+  entire load (and therefore the whole service) — the actual structural fix for today's incident, since
+  `accounts.json` is live operator-edited state, not QG-checked code, so a future typo of this shape is
+  otherwise inevitable again. New regression coverage: `tests/test_accounts_load_resilience.py` — asserts a
+  malformed entry is skipped while the rest of the file still loads, and `"grok" not in get_args(AccountProvider)`
+  specifically (the exact typo, distinct from the real `"groq"` provider, that caused the incident must never
+  silently become valid again). Confirmed via `git merge-base --is-ancestor` that this commit is a real ancestor
+  of `origin/live-defi-rollout` — genuinely shipped, not just committed locally.
+
+  **Re-verified, by direct grep/read of live disk state (not by trusting this doc's own prior entry's prose),
+  that the 2026-08-20 (earlier) removal pass below is complete and holds**: `AccountProvider` Literal
+  (`server/accounts.py`) has no `"grok"` value; `model_pricing.py` carries only a historical comment, no Grok
+  `RateCard`; `test_model_pricing.py` has zero `"grok"` hits; `dashboard/src/TaskUsageWindows.tsx` has no Grok
+  button, only an explanatory comment; `dashboard/src/api.ts`/`types.ts`/`styles.css` are Grok-clean; no
+  `test_grok_balance.py` or `grok-wallet-reconciliation.spec.ts` remain (only stale `.pyc` cache artifacts, not
+  git-tracked). A fresh repo-wide grep across every `.py`/`.ts`/`.tsx` file in `agent-orchestrator` turned up
+  exactly two remaining `"grok"` string matches anywhere in the whole repo, both intentional: the new regression
+  test above, and this incident's own documenting comment in `load_accounts()`'s docstring. `config/litellm/
+  ollama_thinking_monkeypatch.py`'s one `"grok"` hit is a false positive — it only references the shared proxy
+  config's filename in a comment, carries no Grok routing logic.
+
+  **VM-side, confirmed live via read-only AWS SSM (instance i-0c9b283b31d6b5ca7, ap-northeast-1), same pattern
+  as `scripts/orchestrator/check-ao-backlog-status.sh`**: live `accounts.json`
+  (`/home/ubuntu/unified-trading-system-repos/agent-orchestrator/data/config/accounts.json`) has zero
+  `"grok"` provider rows (the parent session's SSM removal holds); the backup file named above is confirmed
+  present. `litellm-grok-gemini-proxy.service` (a SYSTEM unit, not a user unit — the git-tracked template's
+  `User=hk` default is not what's actually deployed here, this VM runs it as `User=ubuntu`, matching
+  `orchestrator.service`) is `active`/`running`, `ExecStart` points at the confirmed-Grok-free
+  `config/litellm/grok_gemini_proxy.yaml`, and `ps aux` shows exactly one matching process (the proxy itself) —
+  no separate Grok process anywhere. `orchestrator.service` is `active`/`running` with a healthy
+  `/api/healthz` response (`uptime_seconds` consistent with the parent session's earlier restart) — the
+  incident is fully resolved, not just patched. Did not run a real Gemini completion through the proxy this
+  pass (no config/service content changed here, so nothing new needed live-model verification; the existing
+  2026-08-18/2026-08-19 entries already prove real tool-calling completions work) — a bare unauthenticated
+  `curl .../health` returned `http_code=500`, which is plausibly LiteLLM's own `/health` route needing auth or
+  attempting live backend probes without a properly-shaped request rather than a real regression; flagged as
+  observed-but-not-investigated, out of this pass's scope, not treated as a fire.
+
+  **Re-affirmed, not re-litigated**: the earlier 2026-08-20 entry's decision to leave `config/litellm/
+  grok_gemini_proxy.yaml` / `scripts/litellm-grok-gemini-proxy.service` /
+  `scripts/install-litellm-grok-gemini-proxy-service.sh` filenames as-is (content already 100% Grok-free,
+  confirmed above) stands — renaming a live-VM-deployed systemd unit + its `ExecStart` path risks a
+  code/VM drift the next `git pull` can't self-heal without a coordinated re-provision. Not done unilaterally
+  here either.
+
+  **Left open, operator-only, unchanged from the earlier entry**: GSM secrets `grok-api-key` and
+  `grok-management-key` (project `1060025368044`, confirmed still present via `gcloud secrets describe`,
+  created 2026-08-15/16, ~$5 real balance per the 2026-08-16 entry below) were NOT deleted this session —
+  deleting a funded cloud secret needs the operator's own explicit go-ahead, not an agent's unilateral call.
+  Operator action needed: revoke/delete both directly in GCP Secret Manager if confirmed unused (they are —
+  zero remaining code path or live account references either secret).
+
+  Plan status unchanged: stays `active`, Gemini-only — several Gemini-specific todos above are still
+  genuinely open (usage-capture cross-check, `sequential_preferred_account_id` live proof, post-live quality/
+  cost calibration), so this plan is not eligible for archival.
+
 - **2026-08-20 — Grok fully removed from the codebase (operator repeat/insisting directive: "Grok should be
   removed from our entire system... shouldn't even exist... shouldn't even be visible anywhere in the agent
   orchestrator or anywhere else"), closing the residual gap the 2026-08-18 decommission cleanup left behind.**
