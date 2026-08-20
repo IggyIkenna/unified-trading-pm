@@ -150,7 +150,10 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
-- [ ] [FROM-T1] P0. **Replace the honest HTTP 501s in `execution-service`'s `/external/instructions` router** — T1
+- [x] ✅ [FROM-T1] P0. **Spun out into the dedicated W22 AO plan, 2026-08-20 —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`** (same underlying ask as this
+      tranche's own "Build the external instruction API surface" todo, closed the same way above). Original
+      text kept below for provenance. **Replace the honest HTTP 501s in `execution-service`'s `/external/instructions` router** — T1
       re-triaged its own plan's "External API surface" section 2026-08-20 and found this targets `execution-service`,
       not any T1-owned repo. Only the TRADE action is live end-to-end today (routed through
       `ManualOperationHandler → LiveOrchestrator.execute_instruction()`); the other 10 (swap, lend, borrow, stake,
@@ -210,7 +213,11 @@ todos only to confirm they are data-movement, then leave it.
       duplicate it — a strategy-envelope KILL_SWITCH/FLATTEN_POSITION instruction becomes a thin translation into
       the SAME already-authorized internal call, never a second independent authority path). Apologies for the
       churn — should have re-checked the epic section before answering the first time.
-- [ ] [FROM-T1] P1. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
+- [x] ✅ [FROM-T1] P1. **Spun out into the dedicated W22 AO plan, 2026-08-20 —
+      `/plans/active/w22_strategy_execution_messaging_external_api_2026_08_20.md`'s "Messaging bridge" section**
+      (execution-service opened its own EventTransport subscriber build there; T3's matching inbound item is
+      T3's own to track — this tranche's side is no longer stalled waiting). Original text kept below for
+      provenance. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
       T3's `## Inbound requests` for full detail (no internal messaging connects strategy-service's decisions to
       execution-service today). Whichever tranche has capacity first can open the UTL `EventTransport` subscription
       on the execution side (subscribing to strategy's instruction stream + the features-service groups it needs)
