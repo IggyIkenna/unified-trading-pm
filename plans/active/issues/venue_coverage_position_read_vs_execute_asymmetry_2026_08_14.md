@@ -499,10 +499,12 @@ Kamino/Jupiter conflated the two.
 - [x] ✅ [AGENT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 14 (na-eligibility-audit 2026-08-17). Kamino's `supply()`/`withdraw()` discriminators (`0x01`/`0x02`) have no citation — found
       2026-08-15 while adding `borrow()`/`repay()` alongside them. Every address constant elsewhere in this repo carries
       a `# DERIVED from <source>` comment; these two do not, and git history shows no citation was ever recorded.
-      `borrow()`/`repay()` avoided the same risk by calling Kamino's real Transactions API (`POST api.kamino.finance/ktx/klend/{borrow,repay}`) instead of hand-rolling.
-      **Resolved 2026-08-20 — execution-service@95f449c13d:** `supply()`/`withdraw()` now call the corresponding
-      Transactions API endpoints (`/ktx/klend/{deposit,withdraw}`) and no longer encode the uncited discriminator
-      bytes. The existing tests remain green; `market_address` is required explicitly by the adapter path.
+      `borrow()`/`repay()` avoided the same risk by calling Kamino's real Transactions API
+      (`POST api.kamino.finance/ktx/klend/{borrow,repay}`) instead of hand-rolling — recommend migrating `supply()`/
+      `withdraw()` to the same API (`/ktx/klend/{deposit,withdraw}`, confirmed to exist in the same OpenAPI spec) and
+      deleting the uncited discriminator bytes, rather than trying to verify them after the fact. Not fixed inline:
+      these two methods are already shipped/tested tier-1 (execution-service@2b92d6ac69) and rewriting a live
+      money-moving path is a larger, separate change than the borrow/repay addition that found it.
 - [x] ✅ [AGENT] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch15_2026_08_17.md` item 15 (na-eligibility-audit 2026-08-17). `AAVEConnector.get_user_account_data()` returns hardcoded placeholder values, not a real read —
       found 2026-08-15 while wiring `RecursiveLoopOrchestrator` to real AAVE calls. Unlike `supply()`/`borrow()`/
       `repay()`/`withdraw()` (which correctly branch on `is_live` and call the real `_Web3LiveExecutor`),

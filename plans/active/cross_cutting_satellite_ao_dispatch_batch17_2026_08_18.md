@@ -11,7 +11,7 @@ summary: >-
   fleet_workflow_template_dedup_to_unified_trading_ci, github_actions_operator_gated_followups,
   june_2026_vintage_audit_findings), the cross-cutting consolidated closeout, and existing satellite batches
   (13-16) before drafting — no item here duplicates ground an existing dispatched todo already claims.
-status: complete # archived 2026-08-20 — every todo done; close-out verified by finalize plan
+status: active
 nature: process
 asset_group: [cross-cutting]
 stage: [meta]
@@ -25,7 +25,7 @@ related:
     /plans/active/fleet_workflow_template_dedup_to_unified_trading_ci_2026_08_06.md,
   ]
 created: "2026-08-18"
-last_updated: "2026-08-20"
+last_updated: "2026-08-18"
 parent_epic: security_and_cross_cutting_master
 assigned_vm: planning
 execution_scope: orchestrator-agent
@@ -39,7 +39,7 @@ drift_direction: advance-code
 locked_by:
 locked_since:
 supersedes:
-superseded_by: cross_cutting_satellite_ao_dispatch_batch17_2026_08_18_finalize
+superseded_by:
 depends_on: []
 context_scope:
   [
@@ -52,8 +52,6 @@ source: >-
   /na-eligibility-audit cross-cutting tranche, dispatch agt-4d9716, slot 19, 2026-08-18. Each item's own Source:
   line below names the exact source doc + todo it was extracted from.
 ---
-
-> **🟢 ARCHIVED 2026-08-20 — COMPLETE.** All three extracted items landed and were re-verified by the finalize plan.
 
 # cross-cutting satellite AO dispatch batch 17
 

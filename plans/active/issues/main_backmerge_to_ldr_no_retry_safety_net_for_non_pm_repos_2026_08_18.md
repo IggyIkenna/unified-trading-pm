@@ -32,6 +32,7 @@ related:
 context_scope:
   [
     /codex/08-workflows/ci-cd-flow.md,
+    /plans/active/cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md,
     unified-trading-pm/.github/workflows/branch-health.yml,
     unified-trading-ci/.github/workflows/main-backmerge-to-ldr.yml,
   ]
@@ -87,18 +88,19 @@ symptom for one repo/one tick — it does not close any todo below.
 
 ## Todos
 
-- [x] ✅ [CI] P1. Landed as `unified-trading-pm@96c163347f` (verified on `origin/live-defi-rollout`; live non-PM dispatch test: `trading-agent-service` run `32303502126`). Completed in the batch17 work split (item 1) (na-eligibility-audit 2026-08-18). Make the `branch-health.yml` drift-tick safety-net FLEET-WIDE instead of `github.repository`-scoped:
+- [x] ✅ [CI] P1. Extracted to `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` item 1 (na-eligibility-audit 2026-08-18). Make the `branch-health.yml` drift-tick safety-net FLEET-WIDE instead of `github.repository`-scoped:
       dispatch `main-backmerge-to-ldr.yml` for every `promotion_model: ldr_main` repo in `workspace-manifest.json`
       (the same repo-list read the AR-lag job in that file already does), not just `unified-trading-pm`. Without this,
       a single transient GHA failure strands any fleet repo's LDR until a human or a conflict_resolver notices.
       Provenance: escalation agt-cebebf, 2026-08-18.
-- [x] ✅ [CI] P2. Landed in 25 caller stubs on `origin/live-defi-rollout` (verified old-comment count 0): `agent-orchestrator@e674c4d0`, `alerting-service@89f81d1`, `batch-live-reconciliation-service@91492a0`, `client-reporting-api@f320528`, `deployment-api@c38b675`, `deployment-service@d2fe2045`, `deployment-ui@cf3072a`, `e2e-testing@eac861e`, `execution-service@196b52dd`, `features-service@25af96cb`, `fund-administration-service@5b9d40a`, `greeks-service@c240e8e`, `ibkr-gateway-infra@657d541`, `instruments-service@6558be48`, `market-data-processing-service@63c9cd15`, `market-tick-data-service@98e3e7e1`, `ml-service@0aec46f`, `strategy-service@f7391889`, `system-integration-tests@44d0a05`, `trading-agent-service@a31f3f5`, `unified-api-contracts@70b0b200`, `unified-trading-api@7dffc4d`, `unified-trading-library@5ceddb2a`, `unified-trading-pm@0369723950`, `unified-trading-system-ui@b3f6b9f3`. Completed in the batch17 work split (item 2) (na-eligibility-audit 2026-08-18, fix-location pointer corrected during extraction — see that item). Fix the misleading comment in the `main-backmerge-to-ldr.yml` caller stub — it states the drift-tick is
+- [x] ✅ [CI] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` item 2 (na-eligibility-audit 2026-08-18, fix-location pointer corrected during extraction — see that item). Fix the misleading comment in the `main-backmerge-to-ldr.yml` caller stub — it states the drift-tick is
       "now handled by PM's branch-health.yml (every 30 min) which dispatches this workflow" and that "for non-PM repos
       the push trigger covers the common case". Both halves mislead: the cadence is hourly, and the dispatch never
-      reaches non-PM repos at all, so the push trigger is not a "common case" fallback but the ONLY path. The misleading text lives in each repo's thin caller stub at `.github/workflows/main-backmerge-to-ldr.yml`; update those
-      per-repo stubs (the reusable workflow in `unified-trading-ci` carries no such comment). Provenance: this comment directly misled the agt-cebebf investigation.
+      reaches non-PM repos at all, so the push trigger is not a "common case" fallback but the ONLY path. Edit the
+      TEMPLATE in `unified-trading-pm/scripts/workflow-templates/` + `rollout-workflow-templates.sh` — never hand-edit
+      the per-repo copies. Provenance: this comment directly misled the agt-cebebf investigation.
       Depends on the P1 todo landing first (the corrected wording depends on what the net actually becomes).
-- [x] ✅ [CI] P2. Landed as `unified-trading-pm@2ead733819` (verified on `origin/live-defi-rollout`; YAML parse, embedded-shell `bash -n`, commit-hook/provenance, and ancestry checks passed; plan-flip commit `6cabee1015`). Completed in the batch17 work split (item 3) (na-eligibility-audit 2026-08-18). Add a detection surface for a FAILED backmerge specifically, so this class is caught by monitoring
+- [x] ✅ [CI] P2. Extracted to `cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md` item 3 (na-eligibility-audit 2026-08-18). Add a detection surface for a FAILED backmerge specifically, so this class is caught by monitoring
       rather than by a downstream promote PR conflicting: `branch-health.yml`'s lag-monitor already computes LDR↔main
       lag — assert additionally that the most recent `main-backmerge-to-ldr` run per repo did not end `failure`, and
       route it through the existing `notify-slack.yml` carrier with a state-transition `dedup_key`. Provenance:
@@ -120,10 +122,8 @@ stub's comment — the dispatch is `github.repository`-scoped, confirming non-PM
 checked clean before auto-merge was armed, per `ldr_to_main_fleet_promote.sh`'s `provenance_check_ok()` /
 `tier_a_merge_gate_ok()`.
 
-- **na-eligibility-audit 2026-08-18** [body-hash:ef6e0dc9d0973bd1]: RECLASSIFY (per-todo split) -- 3 of 4 open todos are bounded/deterministic with cited existing patterns (workspace-manifest.json repo-list read, notify-slack.yml dedup_key carrier). Conflict-checked against 7 other active-plan hits on main-backmerge-to-ldr/branch-health.yml (different axes: git-ref hygiene, CI cost/billing, stuck-queued-run cleanup, template-hosting location, self-hosted-runner migration cost, an already-shipped different-DECISION escalation-resolution poll) -- none claims this scope/comment/detection-surface work. Completed in the batch17 work split (items 1-3). Remaining 1 item stays assigned_vm: NA: todo 4 (evaluate a warm local action-cache), explicitly self-framed in-doc as an open investigation with an uncertain answer. Corrected a stale fix-location pointer in todo 2 while extracting (unified-trading-pm/scripts/workflow-templates/ no longer hosts main-backmerge-to-ldr.yml; migrated to unified-trading-ci 2026-08-07/08). Cross-cutting tranche audit.
+- **na-eligibility-audit 2026-08-18** [body-hash:ef6e0dc9d0973bd1]: RECLASSIFY (per-todo split) -- 3 of 4 open todos are bounded/deterministic with cited existing patterns (workspace-manifest.json repo-list read, notify-slack.yml dedup_key carrier). Conflict-checked against 7 other active-plan hits on main-backmerge-to-ldr/branch-health.yml (different axes: git-ref hygiene, CI cost/billing, stuck-queued-run cleanup, template-hosting location, self-hosted-runner migration cost, an already-shipped different-DECISION escalation-resolution poll) -- none claims this scope/comment/detection-surface work. Extracted to cross_cutting_satellite_ao_dispatch_batch17_2026_08_18.md items 1-3. Remaining 1 item stays assigned_vm: NA: todo 4 (evaluate a warm local action-cache), explicitly self-framed in-doc as an open investigation with an uncertain answer. Corrected a stale fix-location pointer in todo 2 while extracting (unified-trading-pm/scripts/workflow-templates/ no longer hosts main-backmerge-to-ldr.yml; migrated to unified-trading-ci 2026-08-07/08). Cross-cutting tranche audit.
 - **context-scout 2026-08-19**: populated/refreshed context_scope (4 entries).
-- **2026-08-20 (finalize review, slot 18)**: re-verified the three extracted items against landed commits and current `origin/live-defi-rollout`, then added concrete commit/run evidence to the three checkbox citations above. The source doc intentionally remains active with only the independent warm action-cache investigation open.
-
 ## Triage recipe for the next instance of this class
 
 A promote PR reported as `merge_conflict` is NOT necessarily a code conflict. Before resolving anything, spend three
