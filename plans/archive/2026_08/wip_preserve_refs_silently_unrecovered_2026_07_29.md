@@ -131,7 +131,7 @@ closing the "then what" gap:
       reach into `ip-172-31-5-118` (untried by the prior session — it only checked local filesystem access) and ran the
       verifier against all 9 named slots (29 refs now, not 25 — 4 new cascade branches accumulated over the 2
       intervening days). Result: 16 SUPERSEDED, 10 STILL-ORPHANED, 3 WOULD-REGRESS, 0 GONE — full per-ref table in
-      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log and cross-referenced in
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log and cross-referenced in
       `/plans/archive/issues/orphaned_commit_recovery_has_no_dispatch_path_2026_07_30.md`'s own matching todo. This
       doc's slot-15 `strategy-service` ref (`a77eb6d170ca`) — already answered above as SUPERSEDED by the 2026-07-30
       hand-triage — got the identical SUPERSEDED verdict from the automated verifier, cross-validating it.
@@ -191,7 +191,7 @@ closing the "then what" gap:
 - **context-scout 2026-08-01**: populated/refreshed context_scope (4 entries).
 - **2026-08-01 (batch3 todo 3 completion)**: `[DATA] P3` flipped `[x]` — the verifier (shipped 2026-08-01,
   `agent-orchestrator@623009e3`) was run against all 29 fleet-wide wip-preserve refs via SSM reach into
-  `ip-172-31-5-118`. Full table in `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log.
+  `ip-172-31-5-118`. Full table in `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`'s Progress Log.
 - **na-eligibility-audit 2026-08-01** (autonomous, tranche `ao`, dispatch agt-8e95ca, slot 2): KEEP-NA, valid — the 2
   remaining `[SCRIPT] P3` items are unchanged since the 2026-07-30 verdict: a fleet-wide alert/runbook (too-high
   blast-radius class) and a "Consider" fork against the shared `quickmerge.sh` success path (never autonomous). No

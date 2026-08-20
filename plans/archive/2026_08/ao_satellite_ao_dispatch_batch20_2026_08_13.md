@@ -112,7 +112,7 @@ source: >-
       from Req.E to Req.R for plan+issue as the final hardening commit — **DUPLICATE-MERGED, closing this dispatch with
       a real net-new contribution rather than re-running the full scope.** This todo's source doc itself already states
       it's "the SAME work item actively extracted and tracked as todo 1 of
-      `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`" — confirmed by 5 independent na-eligibility-audit
+      `/plans/archive/2026_08/ao_satellite_ao_dispatch_batch3_2026_07_31.md`" — confirmed by 5 independent na-eligibility-audit
       passes (2026-08-01 through 2026-08-10) which each ruled it genuinely unbounded, ongoing corpus-scale work "not
       bounded to a single-worker AO dispatch," i.e. this batch20 extraction duplicating it as a bounded single todo was
       itself a conflict-check miss (it chased this source doc's citation rather than following that doc's own pointer
