@@ -919,3 +919,47 @@ underlying. Consistent with the standing "strategy reads only processed data, ne
 
 - **context-scout 2026-08-20**: refreshed context_scope (7 entries — slightly above the usual 2-6 target, justified
   by this doc's size and ongoing 3-layer design scope).
+
+### 16. RESOLVED — the external build spec arrived, and 16 rulings landed (2026-08-20)
+
+The CTO-level build spec requested in the section-15 `[DOC] P0` **arrived** as
+`Cross_Venue_Factor_Repricing_Platform_Technical_Specification` v1.0. Reviewed in full and reconciled against sections
+11-15 in an operator Q&A session the same day.
+
+**Both outputs are now durable and are the SSOT for everything below:**
+
+- **The contract + the 16 rulings**: [/codex/04-architecture/cross-domain-state-fabric.md](/codex/04-architecture/cross-domain-state-fabric.md)
+- **The external text, verbatim**: [/plans/audit/results/external_hft_factor_repricing_spec_2026_08_20.md](/plans/audit/results/external_hft_factor_repricing_spec_2026_08_20.md)
+
+**What this changes in THIS document.** Three corrections, all of which scope earlier sections rather than reverse
+them:
+
+1. **Section 11's `F_i` is the CONTINUOUS-QUOTE KERNEL, not universal.** An AMM is an exact reserve/tick-math
+   simulation; a sports instrument is a finite-state posterior. The universal invariant is "evaluate current absolute
+   state against an immutable reference generation" — not delta/gamma everywhere.
+2. **Retraction is one envelope operation across every profile**, not a DeFi-specific reorg path. A chain reorg, a
+   sports scoring correction and a voided market are the same mechanism.
+3. **Semantic profile and performance tier are orthogonal.** A DeFi mempool race can be more latency-critical than a
+   thin CeFi venue. Profile bounds the achievable tier (block time is a floor) but does not determine it.
+
+**Section 15's open list now resolves as**: Q1 (market-dependence of `A`) -> R8, low-rank `L R + D`. Q2 (adopt the
+factor model) -> R15, adopted **as the continuous-quote kernel**. Q4 (substrate-conditional transport) -> R3, the
+contract is substrate-neutral and the transport follows locality. **Q3 (position vectors) and the five Wave-0 rulings
+remain OPEN** — carried into the codex doc's section 10.
+
+- [x] ✅ [DOC] P0. **Build spec written** — unified-trading-pm, codex SSOT + verbatim external reference, both linked
+      above. The peer agent's document arrived and was reconciled rather than accepted wholesale; three of its framings
+      were corrected by operator ruling — see the R1-R16 register in /codex/04-architecture/cross-domain-state-fabric.md section 9.
+- [ ] [BACKEND] P0. **Capture local RX time AND region at the MTDS boundary** (R4). Measured 2026-08-20: zero files in
+      market-tick-data-service match `receive_time|recv_time|rx_time|local_receive`, so this is a prerequisite for both
+      the per-region paper/batch equivalence and the cross-region delay estimator — not a later optimisation.
+- [ ] [BACKEND] P0. **Build the cross-region delay estimator** (R9) — properties and its four consumers are in the
+      codex doc section 8. It gates the multi-region build, so it belongs alongside the cloud-multicast-billing check.
+- [ ] [BACKEND] P0. **Extend the UAC venue capability registry with the manifest fields** (R10/R11) — profile defaults
+      throughout, with `finality_model` and `ordering_key` having NO default and requiring explicit per-venue
+      declaration. A fourth parallel venue registry is forbidden.
+- [ ] [BACKEND] P1. **Fold greeks-service into features-service** (R7) — one home for model coefficients, so a snapshot
+      generation cannot be assembled half-and-half across a service boundary.
+- [ ] [REVIEW] P1. **Add a reorg row to the DeFi failure matrix and audit barrier-1 dedup keys for the reorg trap** —
+      a key on `tx_hash` alone wrongly suppresses the same transaction re-included under a different block hash.
+      Measured 2026-08-20: `reorg` has ZERO hits across execution-service, strategy-service and features-service.
