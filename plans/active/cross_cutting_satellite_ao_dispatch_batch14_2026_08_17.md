@@ -111,7 +111,8 @@ source: >-
       entries (route=broker:UNITY, `odds` batch_start_date=None, live="none") in `market_data_categories.py`; resolved
       the `_UNITY_PENDING_CAPABILITY_VENUES` test exemption (test now asserts all 39 sports venues declare) + added a
       DoD-encoding regression test. Full quality-gates.sh green before shipping.
-- [ ] [CODE] P2. Wire NOVIG / PROPHETX / ONEXBET to `route=aggregator:SHARPAPI` — all three are on SharpAPI's active
+- [x] ✅ [CODE] P2. Wire NOVIG / PROPHETX / ONEXBET to `route=aggregator:SHARPAPI` — all three are on SharpAPI's active
+ — unified-api-contracts@6aa2d5797f
       31-book list yet have zero manifest rows, so this is a routing fix, not a build. DoD: each resolves a route;
       actual capture is proven by the MTDS plan, not this one. Repo: unified-api-contracts. Source:
       `plans/active/venue_capability_route_axis_and_cross_ag_declarations_2026_08_14.md`.
