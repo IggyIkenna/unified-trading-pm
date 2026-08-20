@@ -534,10 +534,29 @@ todos only to confirm they are data-movement, then leave it.
       `execution_service/api/manual_instruction_api.py` and `execution_service/cli/handlers/live_execution_handler.py`.
       Both were hit twice this session (once each) by unrelated changes that pushed them 1-10 lines over; both fixes
       had to be made net-zero on line count to land. Any future addition to either needs the same net-zero dance
-      until this is done. No split design decided yet — pick natural seams (manual_instruction_api: request
-      validation vs. orchestrator-dispatch vs. pending-queue endpoints; live_execution_handler: connector
-      construction vs. CLI dispatch) and confirm the split doesn't change import-time behavior (see this session's
+      until this is done. Confirm the split doesn't change import-time behavior (see this session's
       lifespan lesson above — `api/main.py` imports at module load).
+
+      **Investigated 2026-08-20, deliberately NOT executed this session — a real hazard found, not scope-avoidance.**
+      Read the full 900 lines of `manual_instruction_api.py`. Natural seams exist (submit/precheck path; cancel+
+      amend+status path; record-only-fill path; venues/algos+pending-queue path), but EVERY endpoint reads the
+      module-level `_orchestrator`/`_manual_handler`/`_limiter` globals, and `set_manual_handler()`/
+      `set_orchestrator()` are the ONLY sanctioned mutation path — a naive `from .manual_instruction_api import X`
+      in a new submodule captures a snapshot at import time, not a live reference, silently breaking that
+      contract. Worse: **12 test files patch names inside this module's namespace**
+      (`patch("execution_service.api.manual_instruction_api.persist_audit_log", ...)` etc. —
+      `test_manual_record_only.py`, `test_manual_cancel_real_wiring.py`, `test_manual_amend_real_wiring.py`,
+      `test_manual_instruction_close_all_contract.py`, `test_manual_instruction_live_orchestrator_protocol.py`,
+      `test_dynamic_venues.py`, `test_api_app_health.py`, `test_api_main.py`, `engine/test_kill_switch.py`,
+      `engine/test_venue_cascade_kill_switch_chain.py`, `engine/test_pretrade_wiring.py`,
+      `engine/test_wallet_preflight_wire_in.py`). Moving a function to a new module without updating its test's
+      patch target doesn't fail loud — the mock silently stops applying and the test exercises the REAL
+      `persist_audit_log`/`log_event`/etc. instead, in a suite covering live order cancel/amend/manual-submit. The
+      correct pattern (module-qualified access — `import ... as _core; _core._orchestrator`, never
+      `from ... import _orchestrator`) is known and stated here; execute it in one pass that also greps and
+      updates every one of the 12 test files' patch targets in the same commit, verified by actually running the
+      full list, not just the file's own local tests — this is safety-critical order-management code, so a rushed
+      split that silently defangs a live mock is worse than leaving the file at cap.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/04-architecture/` for every contract changed.
 - [ ] [BACKEND] P2. **Build real per-action, role-based authorization + structured audit for AccountInstruction —
       surfaced by the post-phase codex audit 2026-08-20.** `/codex/04-architecture/account-instructions.md`'s
