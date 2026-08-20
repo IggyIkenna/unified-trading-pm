@@ -83,14 +83,14 @@ plan is a serial chain by file-topology, not a reflexive default.
 
 ## Todos
 
-- [x] [BACKEND] P0. Add `grace_period_seconds: int | None` to UAC `AllocatorRedemption` — unified-api-contracts@5da3d42e (feature d1dccb0b + duplicate-field correction), fund-administration-service@52e9138; Evidence: quality-gates.sh passed in both repositories (UAC 307s correction re-gate; service 44s re-gate; service tests 35 passed, 83.90% coverage).
+- [ ] [BACKEND] P0. Add `grace_period_seconds: int | None` to UAC `AllocatorRedemption`
   (`unified_api_contracts/internal/domain/fund_administration/_types.py:125`), default `None`, alongside the existing
   `grace_period_days: int` (kept, unchanged, for backward compatibility with existing callers/tests). Update
   `create_redemption()` (`fund_administration_service/redemption/state_machine.py`) to accept an optional
   `grace_period_seconds` param. Done-when: a new pydantic round-trip test on `AllocatorRedemption` proves the field
   persists through `model_copy`.
 
-- [x] [BACKEND] P0. Update grace-period expiry math in `GracePeriodHandler.run_once()` — fund-administration-service@9e23ccd; Evidence: quality-gates.sh passed (46s full run incl. tests); new tests `test_grace_period_handler_prefers_seconds_over_days_when_expired` + `test_grace_period_handler_seconds_not_yet_expired_is_skipped` in `tests/unit/test_background_handlers.py`.
+- [ ] [BACKEND] P0. Update grace-period expiry math in `GracePeriodHandler.run_once()`
   (`fund_administration_service/background/grace_period_handler.py:81`) to prefer `grace_period_seconds` when set,
   falling back to `grace_period_days * 86400` otherwise — this is what turns "5 business days" into "a few hours"
   when a redemption is created with the new field. Done-when: a unit test creates a redemption with
@@ -163,7 +163,3 @@ plan is a serial chain by file-topology, not a reflexive default.
   `global_ledger_pnl_attribution_master` as parent — corrected in-session: that epic is `status: superseded`, folded
   into `strategy_master` 2026-08-18, which already carries the same acked treasury-ledger-gap finding this plan
   resolves.
-- **2026-08-20**: [slot 5] Item 2 (grace-period expiry math) shipped — `GracePeriodHandler.run_once()` now prefers
-  `grace_period_seconds` over `grace_period_days * 86400` when set. fund-administration-service@9e23ccd, verified
-  ancestor of origin/live-defi-rollout. Remaining P0 todos (cadence loop + NAV-strike loop + DI wiring) are still
-  open, all touch `grace_period_handler.py`/`api/main.py` per this plan's `sequential: true`.

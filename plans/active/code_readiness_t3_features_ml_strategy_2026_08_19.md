@@ -185,28 +185,6 @@ todos only to confirm they are data-movement, then leave it.
       paths/registry.py` (`strategy_instructions` row + its own comment on this writer being the "unwired stub"
       case), `plans/active/issues/path_registry_dead_mode_kwarg_execution_fills_positions_strategy_instructions_
       pnl_attribution_2026_08_15.md`.
-- [ ] [FROM-T1] P2. **Migrate `staked_basis.py`'s `_STAKING_PROTOCOL_CHAIN` off its own hardcoded dict onto UAC's
-      new `get_chain_for_protocol()`.** Registry SSOT hardening 2026-08-16 todo 6 measured that your 8-entry
-      lowercase protocol→chain map (`strategy_service/engine/strategies/v2/carry_and_yield/staked_basis.py:186`)
-      genuinely duplicates data UAC already has: 7 of your 8 entries resolve exactly via UAC's existing
-      `PROTOCOL-CHAIN` venue-suffix convention every `ALL_DEFI_VENUES` entry already follows — the data was
-      never missing, only queried through the wrong mechanism. `unified_api_contracts.registry.venue_constants
-      .get_chain_for_protocol(protocol: str) -> str | None` is that mechanism, shipped
-      `unified-api-contracts@0d7afa29e`, tested against all 8 of your exact values (verbatim-copied into
-      `tests/unit/test_get_chain_for_protocol.py` as the cross-repo parity check — if you ever change one of
-      your 8 values, that test will fail and tell you the two sides drifted).
-      **Not a blind swap**: `coinbase_staking` is the one entry that does NOT resolve via a real DeFi venue —
-      measured zero matches in `ALL_DEFI_VENUES`, because it's Coinbase's custodial retail staking product, not
-      an on-chain protocol. `get_chain_for_protocol()` handles it via a documented, explicit exception
-      (`_NON_DEFI_STAKING_PROTOCOL_CHAIN`), so the function's return value for it is unchanged (`"ethereum"`) —
-      you can swap the call site without special-casing anything on your end.
-      **What to do**: replace `_STAKING_PROTOCOL_CHAIN.get(config.staking_protocol.lower(), "")` with
-      `get_chain_for_protocol(config.staking_protocol) or ""` (same fallback-to-empty-string behavior on a
-      genuine miss), then delete `_STAKING_PROTOCOL_CHAIN` itself — `_ALLOWED_CHAINS`/`ALLOWED_CHAINS` stay,
-      they're a separate concern (which chains this strategy permits, not protocol→chain resolution). This is
-      T3's own repo so T1 cannot make this edit. Evidence:
-      `/plans/active/registry_ssot_hardening_2026_08_16.md` todo 6, `unified-api-contracts/unified_api_contracts
-      /registry/venue_constants.py::get_chain_for_protocol`.
 
 ## Todos
 
@@ -313,49 +291,23 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W9, W10, W13 — balances, risk, exposure, PnL
 
-- [ ] [BACKEND] P0. **Tracked in a pre-existing sibling plan, not duplicated here** — found 2026-08-20:
-      `/plans/active/strategy_service_centralization_fixes_2026_08_16.md` already owns this exact convergence
-      (dated 2026-08-16, before this plan existed) with the full reconciliation already done (A and B are not
-      independent — B's DeFi path already consumes A's `DeFiHealthAggregator.aggregate()` output; the genuinely
-      redundant piece is `positions_health.py`'s separate re-derivation) and real remaining work tracked there:
-      10 done / ~14 open todos, `sequential: true` (a real chain — route the live feed, switch archetypes onto
-      it, extend the data model). Work this from that plan, not as a fresh T3 todo — the two plans would
-      otherwise silently duplicate the same fix.
+- [ ] [BACKEND] P0. Converge the two parallel position-risk mechanisms onto ONE. `DeFiHealthAggregator` (DeFi-only,
+      not live-fed) versus the already-live cross-service `margin_event_emitter.py` / `MarginEvent` — the epic says
+      converge, explicitly.
 - [ ] [BACKEND] P0. Build stale-producer detection on the live path. If strategy-service stops publishing,
       execution-service does not detect it — the kill switch has 5 armed conditions and none is "an internal service
       went silent". Evidence: `/plans/active/producer_silence_flatten_protocol_2026_08_14.md` (23 open),
       `/plans/active/issues/live_path_has_no_stale_producer_revocation_2026_08_14.md`.
 - [ ] [BACKEND] P0. Implement W9 account balances as the single strategy I/O.
-- [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. **Re-verified 2026-08-20, claim
-      mostly holds but needs correction before acting**: `compute_pnl` (`pnl/engine/orchestrator.py:426`) IS
-      confirmed dead — only test callers (`tests/pnl/unit/test_engine.py`, `test_service_startup.py`), the real
-      CLI compute path routes to `calculate_execution_alpha` instead. **But before deleting it**: it computes
-      hold-day interest + sports-settlement PnL (routes to `SportsPnLEngine`) + standard per-instrument
-      breakdown — confirm none of those three are uniquely-only-here before removing, don't just delete a
-      formula that might not be duplicated elsewhere. The "execution-alpha compute_handler is dead with zero
-      readers" half of the claim is **wrong, correct it**: `compute_handler.py` is reachable via the registered
-      `--operation pnl-attribution` CLI operation (`service_entry.py:814-822,1008`) — code-live, not dead — but
-      no cron/systemd/Terraform trigger was found anywhere in the repo, unlike `--operation paper-run` which is
-      documented as the T+1 cron's Stage A (`service_entry.py:827-834`). Real decision needed: wire
-      `pnl-attribution` into a cron trigger, or delete the orphaned CLI operation if `paper_run_attribution.py`
-      already supersedes it. `paper_run_passive.py`/`paper_run_attribution.py` (`engine/backtest/`, not
-      `pnl/engine/` — path corrected) confirmed real: both cite
-      `/codex/09-strategy/operational/paper-batch-live-reconciliation.md` §1 directly, i.e. they ARE the shared
-      batch=paper=live code path per the determinism-spine architecture, not a paper-only surface as the
-      original phrasing implied — so "collapse to one path" may already be closer to done than the todo states;
-      what's left is retiring/merging the two stragglers, not building a new unified path from scratch. HWM
-      confirmed compliant in the live path (`param_schema.py:1361,1371` uses UAC's `hwm_ledger` explicitly on
-      TWR/Notional/PnL-recovery); the one raw-equity HWM implementation found (`pnl_monitor.py:70,201-202`) has
-      no confirmed production instantiation site (dead code, not a live violation) and mock_data_provider's is
-      explicitly D2-smoke/mock-only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
+- [ ] [BACKEND] P0. Collapse the three competing PnL surfaces to one wired path. `compute_pnl` is dead with the
+      right formula but wrong keying/schema/sink; the execution-alpha compute_handler is dead with zero readers;
+      only `paper_run_passive.py` / `paper_run_attribution.py` are real. HWM is never raw equity — TWR / Notional /
+      PnL-recovery only. SSOT: `/codex/09-strategy/architecture-v2/cross-cutting/pnl-attribution.md`.
 - [ ] [BACKEND] P0. Build PnL attribution across every dimension the artefacts describe (W13) — currently
       "specified, not built".
 - [ ] [BACKEND] P1. Fix the interest-accrual wrong engine and banned formula. Evidence:
       `/plans/active/issues/pnl_interest_accrual_wrong_engine_and_banned_formula_2026_07_21.md`.
-- [x] ✅ [BACKEND] P1. Fix DeFi leverage archetypes reading health factor from the wrong source. **Already resolved
-      before this todo was written** — all 11 items in the issue doc's todo list are `[x]`, including the operator
-      ruling (2026-08-17) and the `DeFiHealthAggregator` reconciliation (2026-08-18, `[AGENT]`). Found 2026-08-20
-      already at this state, predating this plan. Evidence:
+- [ ] [BACKEND] P1. Fix DeFi leverage archetypes reading health factor from the wrong source. Evidence:
       `/plans/active/issues/defi_leverage_archetypes_health_factor_wrong_source_2026_08_16.md`.
 - [ ] [BACKEND] P1. Close the DeFi gas net-cost partial wiring gap — gas cost is silently dropped today. Evidence:
       `/plans/active/issues/defi_gas_net_cost_partial_wiring_gap_2026_08_17.md`.
@@ -370,37 +322,17 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Position adapters and venue coverage
 
-- [x] ✅ [BACKEND] P0. Close the position-adapter versus execution-connector asymmetry — strategy-service ships 8 DeFi
-      position adapters against execution-service's ~16 live protocol connectors. **Already resolved before this
-      todo was written**: found 2026-08-20 that the issue doc's own 20-item todo list is essentially all `[x]`
-      (Lido/Marinade/Kamino/Jupiter adapters shipped 2026-08-15/16; generic-first EVM+SPL read/write paths shipped
-      `strategy-service@4dbbd98e1d`/`execution-service@2b92d6ac69`; simulation-only connectors now fail-closed on
-      live per `execution-service@9946ba5a3`), all dated 2026-08-14 through 17, predating this plan. Only 2 items
-      remain, both non-agent-executable: `[AGENT] P2` wire real write paths for Solblaze/Jito Restaking (Solana
-      Anchor non-ABI programs, no SDK dependency — judged too risky to hand-roll; execution-service, T4's repo) and
-      `[OPERATOR] P2` a disclosure decision on out-of-mandate adapters (betfair/ibkr/polymarket). Evidence:
+- [ ] [BACKEND] P0. Close the position-adapter versus execution-connector asymmetry — strategy-service ships 8 DeFi
+      position adapters against execution-service's ~16 live protocol connectors. Evidence:
       `/plans/active/issues/venue_coverage_position_read_vs_execute_asymmetry_2026_08_14.md`.
-- [x] ✅ [BACKEND] P0. Fix CeFi live venue-string dispatch, broken for 9 of 12 major venues — the position-adapter
-      factory hand-rolls a legacy bare-token venue table never extended to the canonical form. **Already fixed
-      before this todo was written** — `strategy-service@9027c2f5a9` (factory match arms) +
-      `strategy-service@c44322ddc0` (routed through the shared `split_venue_base_and_suffix` helper), both
-      2026-08-17 by an AO worker (`slot-29·planning`), predating this plan's 2026-08-19 authorship. Discovered
-      already-done 2026-08-20 while starting this todo — the plan text was stale from birth, never checked
-      against existing work. Only 2 low-priority P3 leftovers remain open in the issue doc (dead-code
-      `routing.py::_map_venue_to_ccxt` with zero production callers; a metadata-only `capabilities.py` table
-      drift) — neither blocks live dispatch. Evidence: `/plans/active/issues/cefi_live_venue_string_dispatch_broken_2026_08_16.md`.
-- [x] ✅ [BACKEND] P1. Resolve the instrument-universe hot-swap position-state contradiction — codex says restart
-      required, shipped code hot-swaps live with no restart or error. **Not an agent todo**: the issue doc's sole
-      follow-up is `[OPERATOR] P2` — rule option A (add a safe-field guard, mirroring the strategies-domain
-      pattern) vs option B (confirm the hot-swap is intentional, correct the codex "restart required" row). Found
-      2026-08-20 already scoped this way, predating this plan. Nothing for an agent to build until the operator
-      rules A or B. Evidence: `/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`.
-- [x] ✅ [BACKEND] P2. Resolve the orphan-coverage design gaps — `strategy_orders` / `strategy_positions` /
-      `strategy_pnl` have NO live writer at all. **Already resolved before this todo was written**: items 1-4 of
-      the issue doc's 5-item todo list are done (RULED 2026-08-05, sinks/paths shipped). Item 5's mechanical
-      sub-parts (data-sink config, `PATH_REGISTRY` path fix) also shipped; the one remaining piece — wiring a real
-      caller — is `[OPERATOR] P2`, blocked on whether inventing one would fabricate the corpus rather than wire up
-      a real producer. Found 2026-08-20 already at this state, predating this plan. Evidence:
+- [ ] [BACKEND] P0. Fix CeFi live venue-string dispatch, broken for 9 of 12 major venues — the position-adapter
+      factory hand-rolls a legacy bare-token venue table never extended to the canonical form. Evidence:
+      `/plans/active/issues/cefi_live_venue_string_dispatch_broken_2026_08_16.md`.
+- [ ] [BACKEND] P1. Resolve the instrument-universe hot-swap position-state contradiction — codex says restart
+      required, shipped code hot-swaps live with no restart or error. One of them is wrong; fix the code or the doc.
+      Evidence: `/plans/active/issues/instrument_universe_hotswap_position_state_safety_unruled_2026_08_14.md`.
+- [ ] [BACKEND] P2. Resolve the orphan-coverage design gaps — `strategy_orders` / `strategy_positions` /
+      `strategy_pnl` have NO live writer at all. Evidence:
       `/plans/active/issues/strategy_ml_orphan_coverage_design_gaps_2026_08_03.md`.
 
 ### features-service and ml-service
@@ -535,13 +467,13 @@ section is now done.
 
 | Area | State | Next concrete step |
 | --- | --- | --- |
-| Archetype code-completeness (all 7 legs, all 3 modes) | **DONE — 59/59 ready every leg/mode** | Nothing. |
-| `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | **DONE — operator decided 2026-08-20**: wired to `CARRY_FUNDING_DISPERSION_RANK` (matches the archetype's own cross-sectional design). `CARRY_FUNDING_RANK` is now the pinned-unreachable legacy alias instead. `strategy-service@<see Progress Log>`. | Nothing. |
+| Archetype code-completeness (all 7 legs, all 3 modes) | **DONE — 59/59 ready every leg/mode** | Nothing. Watch `test_only_the_ambiguous_rank_engine_remains_unreachable` — it fails the moment `CARRY_FUNDING_DISPERSION_RANK` becomes reachable, which is the signal the operator decision below landed. |
+| `CARRY_FUNDING_DISPERSION` vs `_DISPERSION_RANK` ambiguity | Needs an operator DECISION (not blocked on anything else; no ruling doc filed — this row IS the ask) | Read `archetype_allocator.py`'s comment on the mapping; decide which of the two rankers is intended; flip the map entry + delete the pinning assertion in the same change. |
 | DeFi/vol config-key contract drift | **Vol family DONE** (2 real drifts, 8 keys, fixed this tranche) | Same method — make the systemic construct-and-fire test exercise the archetype and see which no-op — for sports, ML-directional, market-making. A4's catalogue-vs-schema comparison structurally cannot catch this class (both can agree while the ENGINE reads a third spelling); the method that found the vol drifts is the one that generalises. |
 | W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. The PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape. |
-| W9/W10/W13 PnL, risk, exposure | **Re-verified, not stale — genuinely open, but re-scoped smaller.** `paper_run_attribution.py`/`paper_run_passive.py` already ARE the shared batch=paper=live path (not paper-only); `compute_pnl` confirmed dead (formula may still hold unique sports/interest logic — verify before deleting); `compute_handler`'s CLI op is code-reachable but has no deployment trigger anywhere in-repo. HWM confirmed compliant in the live path. | Decide compute_handler's fate (wire a cron trigger or delete the orphaned op) and confirm compute_pnl's 3 capabilities are covered elsewhere before retiring it — smaller, more bounded than the original "build a unified path" framing suggested. |
+| W9/W10/W13 PnL, risk, exposure | Untouched | Collapse the three competing PnL surfaces; HWM is never raw equity (TWR / Notional / PnL-recovery only). |
 | W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
-| Position adapters / venue coverage | **DONE — whole section found already resolved** (all 4 sub-items: CeFi dispatch, asymmetry, hot-swap, orphan-coverage), all shipped 2026-08-14 through 17 by prior sessions, predating this plan's 2026-08-19 authorship. This plan section was written stale from birth. Residue is entirely non-agent-executable: 2 `[OPERATOR]` decisions (instrument hot-swap A/B, out-of-mandate adapter disclosure) + 1 `[AGENT]` Solana-SDK item in execution-service (T4's repo). | Nothing. If picking this back up, it's an operator-decision chase (hot-swap A/B, disclosure), not new engineering. |
+| Position adapters / venue coverage | Untouched | CeFi live venue-string dispatch broken for 9 of 12 venues is the highest-value single fix. |
 | features-service | Untouched | 5 of 7 on-chain feature groups write zero-feature parquets stamped `captured=True`; `corporate_actions` still on the banned Massive/Polygon.io vendor. |
 | ml-service | Untouched | MEV opportunity-detection producers — 3 registered engines can never fire because `features.get(key, 0.0)` silently defaults. |
 | Both strategy-service artefacts | Not re-derived | Re-derive markers only AFTER the W-items close; never hand-edit the HTML. |
@@ -612,34 +544,3 @@ lower-effort but lower-value; do it opportunistically alongside whichever W-item
   unstaged edits while a `git pull --ff-only` cleanly fast-forwards past them, leaving both checks green while your
   content is sitting in an unnamed stash. The only real proof is grepping ORIGIN's blob content for something
   distinctively yours, every time, on a contended checkout.
-
-## Progress Log — 2026-08-20 session 3
-
-**Operator decision landed**: `CARRY_FUNDING_DISPERSION` → `CARRY_FUNDING_DISPERSION_RANK`, not the previously-wired
-legacy `CARRY_FUNDING_RANK` alias. Evidence for the recommendation: the archetype engine's own docstring
-(`funding_dispersion.py`) describes a flat cross-sectional rank with no venue/LST hierarchy, arriving as an
-upstream `funding_rank_pct` feature — near-verbatim the same language as `CarryFundingDispersionRankAllocator`'s
-own docstring, while `CARRY_FUNDING_RANK` is explicitly a legacy alias for the unrelated hierarchical
-`CarryBasisPerpRankAllocator`. **Shipped — `strategy-service@06253843`**, content-verified at origin. First ship
-attempt hit a real line-length lint failure (fixed); a second, harmless artifact along the way: a file-watcher
-system-reminder caught the working tree mid-quickmerge showing the OLD content — this was quickmerge's own
-internal stash/checkout mechanics transiently touching the file, not a real revert or a peer-session collision (no
-stash existed afterward, no other session's quickmerge was touching this repo, and the final staged/pushed content
-was correct throughout). Pinning test
-inverted: `test_only_the_ambiguous_rank_engine_remains_unreachable` → `test_only_the_legacy_alias_rank_engine_remains_unreachable`,
-now pinning `CARRY_FUNDING_RANK` (the harmless deprecated alias) as the sole unreachable rank engine instead.
-
-**Major finding — the entire "Position adapters and venue coverage" plan section was stale from birth.** All 4 of
-its todos (asymmetry, CeFi dispatch, hot-swap contradiction, orphan-coverage) turned out to already be resolved by
-prior sessions dated 2026-08-14 through 17 — before this plan was even authored on 2026-08-19. Discovered while
-starting the CeFi-dispatch todo the user prioritized: `git log` on the target file showed a commit
-(`strategy-service@c44322ddc0`, `slot-29·planning`, 2026-08-17) already fixing the exact bug the todo described.
-Pulling that thread through the section's 3 sibling issue docs found the same pattern in all of them — 20/20,
-1/1, and 4/5 todo items already checked `[x]` respectively, each with real shipped SHAs. **Root cause: this plan
-section was authored without checking `git log` / the issue docs' own todo-completion state against the plans that
-were actively being worked in parallel the week before.** The general lesson: before writing a plan todo from an
-issue doc's headline finding, read the issue doc's OWN todos/Progress-Log section first — a finding can be true
-and its fix can already be shipped, and only the plan text is what's stale. All 4 todos corrected in place (flipped
-to `[x]` with the discovery evidence, not silently deleted) rather than left to mislead the next session into
-redoing already-done work. Zero net-new code was needed for this entire plan section; what shipped this session
-(2 commits) is the checkbox-currency-correction, plus the one genuine ranker decision above.
