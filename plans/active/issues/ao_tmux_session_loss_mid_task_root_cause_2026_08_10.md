@@ -374,6 +374,45 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
       above) catching the next death live is still the most promising remaining path, not further task-content
       reading.
 
+- [x] ✅ [INFRA] P0. **ROOT-CAUSED + FIXED, 2026-08-20 — CORRECTS the "no shared trigger" negative result two todos
+      above.** That earlier read was of PLAN-DOC CONTENT only, which genuinely shows no shared mechanism — the real
+      trigger only shows up in the live Claude Code transcript, not the task's plan doc. Downloaded + read the full
+      JSONL transcripts for slot 1 (two deaths), slot 7, and slot 32's most recent teardown (operator-requested,
+      chunked via SSM — no direct scp/S3 path is available under this workspace's GCS/S3-CLI guardrail). Findings:
+      **slot 7 (06:43:12) and slot 32 (06:15:50) are NOT genuine deaths** — both transcripts end with a clean
+      `/api/slots/N/done` call and the standard `one_task_per_session` reset response; slot 32 was already correctly
+      `intentional_teardown`, but **slot 7 was misclassified `unexplained`** — its reset landed at 06:41:41 and the
+      tmux kill was detected 91s later (06:43:12), 1 second past `death_class`'s 90s lookback window for matching the
+      `worker_one_task_per_session_reset` signal — a second, concrete repro of the burst_size/death_class
+      undercounting gap already tracked above. **Slot 1's 06:23:58 SIGTERM death remains genuinely unexplained** — no
+      orphan-reap event nearby, silent for ~102s before the kill, no dangerous command in the transcript tail.
+      **Slot 1's 07:06:02 SIGKILL death — ROOT CAUSE FOUND.** Transcript shows the agent's 4th attempt at
+      `b21_distinct_values_noncanonical_live-d9a1e4c73ce4`, launching a `dex_swaps` retirement script via
+      `setsid nohup uv run python ... --apply &; disown` specifically because "2 prior harness-compact kills" had
+      already taken the same job down. `activity_log` shows `orphan_process_reaped pid=372995 age_seconds=306` at
+      07:04:56, ~1s after the pane's own death — `server/orphan_reap.py`'s `pid_shares_tmux_session` exemption (built
+      for exactly this "worker's own detached background job" case,
+      `nohup_detached_background_process_killed_by_orphan_reap_2026_07_27.md`) assumes plain `nohup` detachment,
+      which preserves the original session id; `setsid` creates a BRAND NEW session id by definition, permanently
+      defeating that exemption — confirmed via the exemption function's own docstring. `boot_grace_seconds=300`
+      (confirmed live config) explains the precise ~300-310s age clustering. **Confirmed NOT rare or isolated** — same
+      signature (age 300-370s) hit slots 1, 10, 32, and **slot 33 sixteen times in under an hour** in the same 3h
+      window, fleet-wide, live, right now. Fixed: `sweep_orphan_processes` now also exempts a candidate whose own OS
+      start time is at/after the slot's `SlotRow.last_spawned_at` (bumped once per respawn) — a dispatch-timeline
+      check that needs no SID/PGID/ancestry signal (impossible to recover after `setsid` by construction) and cannot
+      widen the existing stale-sibling reap (a candidate predating the slot's last respawn is unaffected, regression-
+      tested). Shipped `agent-orchestrator@67b68dac39`, 2 new tests, quality-gates.sh green (468 dashboard + full
+      pytest), landed + ancestry-verified on `live-defi-rollout`. Does NOT explain the slot-1 SIGTERM death or every
+      remaining `unexplained` row fleet-wide — this closes ONE confirmed, live, currently-firing mechanism, not the
+      whole bucket.
+- [ ] [INFRA] P2. Audit whether `reap_dead_slot_worker_tree` (the REACTIVE, always-live twin of
+      `sweep_orphan_processes`, fired the instant `TmuxPruner` confirms a slot's session is gone) needs the same
+      `setsid`-safe dispatch-timeline exemption — this session's fix only touched the periodic sweep, the path that
+      actually killed pid 372995. `reap_dead_slot_worker_tree` has no `pid_shares_tmux_session` check at all today
+      (only `boot_grace_seconds`), so a legitimately-detached `setsid` job surviving a genuine session death would
+      currently be reaped unconditionally on the very next tick — worth the same protection, scoped separately since
+      it's a different (always-live, not dry-run-gated) trust level.
+
 ## Progress Log
 
 - 2026-08-10: doc created same session as the Fleet Efficiency KPIs `dispatches/done` tile +
@@ -767,3 +806,11 @@ this corpus's todo-regression rule — no item was dropped, each was shortened.
   same commit as the ausearch fix (mtime-based staleness detection was tried and rejected — sub-second write-order
   races flagged a fresh install as stale; landed on a plain per-declared-dependency filesystem check instead,
   verified against both a healthy and a simulated-stale state).
+- **2026-08-20 (interactive session, slot 1, continued)**: operator asked to download the full transcripts for slots
+  1/7/32's mid-task deaths and diagnose properly — see the new `[INFRA] P0` todo above for the full finding
+  (slot 7/32 false-positive teardowns; slot 1 SIGKILL root-caused to `orphan_reap`'s SID exemption not covering
+  `setsid` detachment, fixed `agent-orchestrator@67b68dac39`; slot 1 SIGTERM still genuinely unexplained). This is
+  the first session-CONTENT-level (not plan-doc-level) explanation found for any of the "unexplained" deaths since
+  the original kill-server root cause — worth re-reading live transcripts for future unexplained-death
+  investigations before assuming a fresh mechanism, since plan-doc content alone already proved insufficient once
+  (the "no shared task trigger" negative result two todos above, superseded by this entry).
