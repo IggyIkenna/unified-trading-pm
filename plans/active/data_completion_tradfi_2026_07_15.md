@@ -209,7 +209,7 @@ context_scope:
       `tradfi_manifest_canonicalisation_2026_06_01.md`, 2026-07-13 per MTDS consolidation ruling.)**
 
 - [ ] [DATA] P0. **STATUS 2026-08-16 (slot-5, data_engineering)**: this exact item was extracted for AO dispatch
-      to `plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` and its verify step was RUN there —
+      to `plans/archive/2026_08/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` and its verify step was RUN there —
       full evidence + result (NOT GREEN, CF-8 RED, delete correctly withheld) on that doc's own checkbox; not
       duplicated here. This item stays open (still un-checked) pending CF-8 clearing — see that doc for the
       current state, do not re-run the verify independently of it. E7 Verify: `cf_manifest_audit_2026_06_01.py
@@ -611,7 +611,7 @@ Re-audited 2026-07-21:
 
 - **2026-08-16 (na-eligibility-audit follow-up Q&A round 8, operator re-confirmation)**: E7's verify-then-delete
   ruling re-confirmed still current. Extracted to
-  `/plans/active/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch, since this
+  `/plans/archive/2026_08/tradfi_legacy_bucket_delete_ao_dispatch_2026_08_16.md` (+ finalize) for AO dispatch, since this
   doc stays `assigned_vm: NA`.
 
 > **Folded in 2026-07-24** from the M-1 coordinator's (`data_completion_to_100_all_ag_2026_06_21.md`) shared Progress
