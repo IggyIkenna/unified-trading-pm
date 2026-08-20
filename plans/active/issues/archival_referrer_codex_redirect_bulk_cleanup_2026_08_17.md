@@ -152,3 +152,5 @@ is independently shippable, no need to clear all 925 in one pass.
 - [ ] [SCRIPT] P3. Once the baseline reaches 0, consider whether `--diff-base` mode (same shape as
       `check_reference_paths.py`'s) is worth adding for CI-side high-velocity-branch resilience — not needed while the
       baseline is still actively shrinking.
+
+- **slot-22 2026-08-20 (fifth execution batch)**: Removed 25 redundant archived-plan `related:` citations from three clean active plans after verifying each archived basename was already retained in the referring document body: prediction closeout (9), cross-cutting closeout (9), and observability closeout (7). The live checker measured 668 citations, below the prior 671 ratchet, and `--update-baseline` lowered the baseline to 668. The cleanup todo remains open; no codex migration was needed.
