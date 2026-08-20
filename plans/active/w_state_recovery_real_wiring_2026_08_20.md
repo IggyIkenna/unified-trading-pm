@@ -201,6 +201,14 @@ context_scope:
       `/plans/active/w_execution_orchestrator_oms_persistence_2026_08_20.md` (+ mandatory finalize companion) —
       this todo is CLOSED here, tracked THERE. Verify Phase 3 todo 1 (below) by re-running it once that plan's
       own follow-up IMPLEMENTATION plan lands.
+      **Update (2026-08-21):** that design plan closed all 10 of its own todos same-session (write contract,
+      persistence backend `PostgreSQLOrderPersistence`, latency tradeoff, `submitted_orders`/`engine-live`
+      interaction all decided — see its 2026-08-21 Progress Log entry) and authored the follow-up
+      IMPLEMENTATION plan named above:
+      `/plans/active/w_execution_orchestrator_oms_persistence_impl_2026_08_21.md` (+ finalize companion). Once
+      that implementation plan lands and threads one shared `UnifiedOrderManager` instance from startup into
+      both `OrderRecoveryEngine`'s `OrderBook` and `ExecutionOrchestrator`, re-run Phase 3 todo 1 (below) —
+      the empty-`OrderBook` hazard it names will finally be closed.
 - [ ] [AGENT] P0. **`BLOCKED-OPERATOR` + `BLOCKED-CREDENTIALS` (two independent gates, either alone
       sufficient): run real recovery against every wired venue and record the actual result** — this is the
       first genuine evidence the mechanism works, not a smoke test. (1) `BLOCKED-OPERATOR`: blocked on the
