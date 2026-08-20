@@ -450,17 +450,20 @@ todos only to confirm they are data-movement, then leave it.
       `/manual/instruction` 422 (validation, not routing); after teardown both `None` again; a bare app with a
       patched handler answers 422 not 500. Took four gate attempts — the three failures are recorded in the
       Progress Log because each was a distinct, reusable trap.
-- [ ] [BACKEND] P0. **Reconcile the deployed HTTP surface with what this plan and the artefacts claim.** MEASURED
-      2026-08-20: `Dockerfile` CMD is `uvicorn execution_service.api.main:create_app --factory`, and
-      `execution_service/api/main.py:43-44` registers ONLY the UTL health router and
-      `external_instruction_api.router`. `manual_router` (`/instruction`, `/cancel`, `/amend`,
-      `/instructions/{id}`, `/venues`, `/algos`, `/pending`) is registered on `api/app.py:127`, which the container
-      never serves — `api/app.py` is imported only by CLI handlers and `evidence_router`. So on the DEPLOYED
-      service the single HTTP instruction path is `POST /external/instructions`, which 501s every action except
-      TRADE. **This contradicts this plan's own framing that "the only live instruction path today is manual".**
-      NOT YET MEASURED, and required before deciding the fix: how DART's manual-trade surface actually reaches
-      execution-service (a second deployment target, an in-process CLI path, or genuinely unreachable). Resolve
-      that first, then either register `manual_router` on `main.py` or record why it is deliberately CLI-only.
+- [x] ✅ [BACKEND] P0. **Reconciled — RESOLVED BY THE SAME-DAY FIX, `execution-service@9c79bfa0ef`.** This todo's
+      own "MEASURED 2026-08-20" text captured the state BEFORE that commit landed later the same day (01:01:43
+      UTC+1). RE-MEASURED 2026-08-20 against current `main.py`: `create_app()` (`execution_service/api/main.py:107-125`)
+      unconditionally registers all four routers — `health_router`, `external_instruction_router`, `manual_router`,
+      `account_instruction_router` (the last added by the CLOSE_ALL-route todo above, same day) — with no
+      conditional gating any of them. The Dockerfile's `uvicorn execution_service.api.main:create_app --factory`
+      CMD therefore serves `/manual/*` (instruction/cancel/amend/instructions/{id}/venues/algos/pending),
+      `/external/instructions`, and `/account/instruction` together, not `/external/instructions` alone. DART's
+      manual-trade surface reaches this via `unified-trading-api`'s `/execution-service/manual/instruction` proxy
+      (`unified-trading-system-ui/context/api-contracts/openapi/unified-trading-system.openapi.yaml:15434` — a
+      second deployment target, not an in-process CLI-only path), which now resolves against a real registered
+      route instead of 404ing. `api/app.py` still separately registers `manual_router` too (used only by CLI
+      handlers per the original finding) — a harmless second FastAPI instance, not a conflict, since the two never
+      share a running process.
 - [x] ✅ [BACKEND] P1. **Fixed — `execution-service@197e80116`.** Verified the production live orchestrator did
       NOT satisfy the `LiveOrchestrator` protocol it was cast to; real root cause corrected the original
       diagnosis (see Progress Log). Evidence:
@@ -568,13 +571,13 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W14, W15, W17 — fidelity, security, cost
 
-- [ ] [BACKEND] P0. Implement per-venue error codes and classify through UAC `classify_venue_error()`. Shard-level
-      failure isolation, no `raise` in per-shard loops. SSOT:
-      `/codex/04-architecture/shard-level-failure-isolation.md`. **Re-measured 2026-08-20: `classify_venue_error`
-      is already widely adopted (20 files: sports adapters, DeFi protocols, trade_execution adapters, the engine
-      orchestrator/router) — this was NOT unbuilt from scratch, contrary to the todo's original framing.** Audited
-      real per-venue loops for the actual "no raise in per-shard loop" invariant instead (`grep -rn "for venue in"`,
-      ~20 sites) and found + fixed one genuine, safety-relevant violation: `OrderRecoveryEngine.recover_venue()`
+- [x] ✅ [BACKEND] P0. **Implement per-venue error codes and classify through UAC `classify_venue_error()` — CLOSED,
+      full sweep done 2026-08-20.** Shard-level failure isolation, no `raise` in per-shard loops. SSOT:
+      `/codex/04-architecture/shard-level-failure-isolation.md`. **`classify_venue_error` is already widely adopted**
+      (20 files: sports adapters, DeFi protocols, trade_execution adapters, the engine orchestrator/router) — this
+      was NOT unbuilt from scratch, contrary to the todo's original framing. Audited real per-venue loops for the
+      actual "no raise in per-shard loop" invariant instead (`grep -rn "for venue in"`, 21 non-test sites) and
+      found + fixed one genuine, safety-relevant violation: `OrderRecoveryEngine.recover_venue()`
       (`execution_service/engine/startup/order_recovery.py`) only wrapped `fetch_open_orders()` in a try/except —
       `_reconcile_exchange_orphans`'s `cancel_order()`/`confirm_cancel()` calls were NOT wrapped, so any venue-
       adapter exception there propagated uncaught through `run()`'s `for venue in venues:` loop, silently
@@ -583,9 +586,30 @@ todos only to confirm they are data-movement, then leave it.
       reconciliation body, records via the file's own existing `CanonicalNetworkError` + `cb.record_failure()`
       pattern (not `classify_venue_error` — that's a vendor-error-CODE classifier, doesn't fit an arbitrary Python
       exception; kept consistent with this file's own established convention instead). New regression test proves
-      one venue's failure does not abort the second venue in `run()`. **Not done**: a full audit of the other ~19
-      "for venue in" sites for the same class of bug — this fixed the one found to be genuinely unsafe, not a
-      sweep of every site.
+      one venue's failure does not abort the second venue in `run()`.
+      **The remaining ~20 sites, individually audited 2026-08-20, MEASURED zero further violations**: most are pure
+      computation over already-fetched data (`sor_twap.py`'s local `set_liquidity` cache write,
+      `algo_library/solver_auction.py`'s weighted-split math, `sports_router.py`'s in-memory scoring,
+      `engine/live/router.py`'s candidate filtering) — no per-venue I/O, so no exception a venue outage could throw.
+      Several already correctly wrap the risky call: `algo_library/sor_dex.py:165`'s `get_all_quotes()` (catches
+      ValueError/KeyError/TypeError plus TimeoutError/ConnectionError separately),
+      `_venue_book_types.py:153` (ValueError/KeyError/AttributeError), `registry.py`'s `reconnect_all()` (each
+      `reconnect()` call is internally wrapped for ConnectionError/TimeoutError/OSError/ValueError, the only
+      unguarded `KeyError` path is unreachable since it only iterates already-registered keys),
+      `cli/handlers/live_execution_handler.py:263`'s orchestrator-build loop (`_create_orchestrator_for_venue`
+      already catches ValueError/TypeError/KeyError/AttributeError/RuntimeError internally and returns `None`
+      rather than propagating). **One near-miss, deliberately NOT changed**: `algorithms/sor.py:177`'s
+      `get_all_quotes()` catches a narrower exception set than its `algo_library/sor_dex.py` sibling (no
+      TimeoutError/ConnectionError) — but its `_get_venue_quote()` is pure-simulation today (its own comment says
+      "In production, would query actual pool state"), so those exceptions cannot actually fire; adding a catch
+      clause for an I/O error a function never performs would be defensive code for a scenario that can't happen.
+      Flagged here rather than silently dropped — worth revisiting if/when that function is wired to real venue
+      I/O. `execution_service/algorithms/` is confirmed live (imported by `instruction_convert.py`,
+      `handler_registry.py`, `config_validator.py` — not dead code), so this is a real, if currently inert, gap.
+      Preflight's `_check_venue_api_keys` (`engine/preflight.py:77`) and the dependency-checker's
+      `for venue in venues` (`utils/dependency_checker.py:683`) are deliberately out of scope — both are startup
+      preflight/validation, where propagating an exception to halt startup is the correct behaviour, not a
+      per-shard-isolation violation of the live-trading-loop kind this SSOT targets.
 - [ ] [BACKEND] P0. Pin the exchange version per venue and re-run cassettes on drift, so a silent venue-version
       change cannot go undetected (W14). No owning plan existed at authoring time.
 - [x] ✅ [BACKEND] P0. **Spun out into a dedicated AO plan, 2026-08-20** —
