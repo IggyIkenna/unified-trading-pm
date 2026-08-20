@@ -519,7 +519,7 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@7202047877` | per-action `instruction_action_support` (T5's 2nd, action-level ask) |
 | `execution-service@35f0bfb1b` | `OrderStatus.PENDING`/`.OPEN`→`.PENDING_NEW`/`.NEW` rename, UAC sites only |
 | `execution-service@197e80116` | live-orchestrator protocol mismatch: real fix, not the diagnosed one — see below |
-| `execution-service@<pending-confirm>` | real CLOSE_ALL: flattens every open position, CLOB/CeFi-scoped, 8 new tests — **verify this sha before trusting it**, quickmerge was mid-run when this checkpoint was written |
+| `execution-service@96411b68c9` | real CLOSE_ALL: flattens every open position, CLOB/CeFi-scoped, 8 new tests — landing independently verified (empty `git diff --stat origin/live-defi-rollout`, clean tree, HEAD matches) |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
@@ -584,7 +584,7 @@ unilaterally). Left as-is for a future dedicated pass, not silently skipped.
 | Pendle `withdraw()` redemption | open P2 | widen `PENDLE_OPERATIONS` only in the SAME change that implements it |
 | Pendle SIT cascade entry | inbound on T1 | needs UAC test-dict entry + baseline removal together |
 | PARTIALLY_FILLED→CANCELLED/EXPIRED code | inbound on T1 | codex SSOT amended; one-line `ORDER_STATUS_TRANSITIONS` widen is T1's to land |
-| Emergency close-all — route | open P0 | wiring shipped (see Landed table, verify sha); the HTTP route in front of it is the remaining piece |
+| Emergency close-all — route | open P0 | wiring shipped + verified `execution-service@96411b68c9`; the HTTP route in front of it is the remaining piece |
 | Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | T1's superseded-shape ruling (Q12-Q16) |
 | Delta-proxy doc (30 todos) + policy/fill-model-gaps doc (13 todos) | open, design-heavy | genuinely open-ended judgment calls, not single-session scope |
 | Three-way OrderStatus vocabulary fragmentation | open P0 (W11) | UAC canonical / `oms.py` local / `tracker.py` bare-strings — real cross-file reconciliation, not mechanical |
