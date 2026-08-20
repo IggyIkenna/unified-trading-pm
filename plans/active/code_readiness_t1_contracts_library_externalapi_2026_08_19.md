@@ -148,6 +148,14 @@ todos only to confirm they are data-movement, then leave it.
 > Other tranches append `- [ ] [FROM-Tn]` items here when they need a change in a repo you own. Work them at the
 > priority they state — another agent is blocked on each one.
 
+- [ ] [FROM-T2] P2. **The manifest-writer per-VM shard flush issue is entirely yours — T2 has no code to change.**
+      `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md` was allocated
+      into T2's tranche plan as a P1, but the writer lives in
+      `unified-trading-library/unified_trading_library/manifest_writer/` and every remaining todo is UTL-side: the
+      append-only "delta shard" pattern (P2), a reworded P3, and a `[SCRIPT] P3` verification gated on "once either
+      fix above ships". Flagging so it does not sit unworked in a tranche that cannot action it. Its own doc
+      priority is P2. No response needed if it is already queued.
+
 - [ ] [FROM-T2] P0. **`INSTRUMENTS_PARQUET_SCHEMA` has never matched the catalogue writer — a decision is needed
       before B23's schema lock can be enforced anywhere.** MEASURED 2026-08-20 by building B23 part 4's write-time
       gate in `instruments-service` and running it before shipping (then reverting it — shipping would have blocked

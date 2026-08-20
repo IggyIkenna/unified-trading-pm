@@ -266,15 +266,42 @@ todos only to confirm they are data-movement, then leave it.
 ### W2 — data pipeline integrity (code only, no runs)
 
 - [ ] [BACKEND] P0. Land the manifest canonicalisation and skip-logic CODE. Do NOT run the migration.
-- [ ] [BACKEND] P0. Build consolidator-freshness gating so a stale index loud-fails rather than serving stale
+- [x] [BACKEND] P0. Build consolidator-freshness gating so a stale index loud-fails rather than serving stale
       coverage. SSOT: `/codex/05-infrastructure/manifest-consolidator-ssot.md`.
+      ✅ 2026-08-20 — **already shipped, and it loud-fails BY DEFAULT.** Verified in code, not from the codex prose:
+      `unified-trading-library/manifest_writer/_read_index.py:357` —
+      `if fail_fast_legacy or (shards_exist and not _resolve_allow_stale_fallback()):` → raise. Two distinct
+      `ManifestConsolidatorStaleError` raise sites (`:406`, `:422`) deliberately separate "staleness budget too
+      tight for this bucket's cadence" (age < 5x budget) from "consolidator appears DOWN" (blob missing or far past
+      budget), each carrying its own remediation. The per-VM recovery merge is opt-IN only via
+      `MANIFEST_ALLOW_STALE_FALLBACK` — refused by default precisely because it can be a 12+ GB pandas heap
+      (cefi: 1700+ shards → SIGKILL at startup). Live default confirmed:
+      `manifest_consolidated_staleness_sec = 120`. A genuinely-empty bucket is correctly NOT treated as an outage.
+      **Ownership note**: this mechanism lives in `unified-trading-library` — T1's repo, not one of this tranche's
+      three. The todo was mis-scoped to T2; nothing was needed in instruments-service / MTDS / MDPS.
 - [ ] [BACKEND] P0. Build the orphan-shard consumption check — no shard stored that nothing consumes. Epic
       definition-of-done item. SSOT: `/codex/02-data/orphan-object-detection.md`.
-- [ ] [BACKEND] P1. Fix the manifest-writer per-VM shard flush that does a full read-merge-reserialize-upload on
-      every debounced flush — past ~1M rows the flush outlasts the debounce interval and the VM stalls. CODE only.
-      Evidence: `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
+- [ ] [BACKEND] P1. **BLOCKED-UPSTREAM (T1/UTL)** — Fix the manifest-writer per-VM shard flush that does a full
+      read-merge-reserialize-upload on every debounced flush — past ~1M rows the flush outlasts the debounce
+      interval and the VM stalls. CODE only. Evidence:
+      `/plans/active/issues/manifest_writer_per_vm_shard_flush_scales_with_shard_size_2026_07_28.md`.
+      **Reason 2026-08-20**: the manifest writer is
+      `unified-trading-library/unified_trading_library/manifest_writer/` — T1's repo, not one of this tranche's
+      three. The issue doc declares `repos: [unified-trading-library, market-tick-data-service]`, and every
+      remaining todo is UTL-side: the append-only "delta shard" pattern (P2), a reworded P3, and a `[SCRIPT] P3`
+      verification explicitly gated on "once either fix above ships". There is no instruments-service / MTDS / MDPS
+      change available to make here. Filed to T1. The issue's own priority is P2, below this todo's P1 framing.
 - [ ] [BACKEND] P1. Fix blocking GCS writes on the event loop, cross-asset-group. Evidence:
       `/plans/active/issues/blocking_gcs_writes_on_event_loop_cross_asset_group_2026_07_18.md`.
+      **PARTIAL 2026-08-20 — the headline fix is SHIPPED; what remains is a P3 residual tail.** Verified
+      `market-tick-data-service@eeade63b0c` ("perf(defi): fan out evm_defi_collectors/liquidations/
+      liquidation_events via ParallelPerSymbolRunner") is an ANCESTOR of MTDS HEAD via
+      `git merge-base --is-ancestor` — 3 of 8 sites, landed 2026-08-15. The issue's remaining todos are all **P3**,
+      not P1: async-ify the collection loops in `cli/handlers/dex_swaps_handler.py` (`_collect_all_protocols`),
+      `gas_fee_handler.py` (`_collect_evm_chains`), `vault_share_price_handler.py` (`_collect_vault_rows`),
+      re-assess `lst_rates_handler.py` for whether any per-shard fan-out axis exists at all, and fix 2 blocking
+      writes in sync functions. All four handler files confirmed present here, so this residual IS T2-owned — kept
+      OPEN, at its real P3 weight, behind this tranche's outstanding P0s.
 - [ ] [BACKEND] P1. Ensure `expected_unattempted` is materialised by the WRITER and never re-derived downstream.
 
 ### instruments-service
