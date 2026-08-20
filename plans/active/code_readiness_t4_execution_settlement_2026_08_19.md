@@ -535,9 +535,12 @@ todos only to confirm they are data-movement, then leave it.
       to exactly `{LP_BURN, LP_MINT}`. Fixed a test that had pinned the OLD gap as expected behavior
       (`test_lending_venue_is_only_wired_on_batch` asserted `AAVE-V3-ETHEREUM.batch == "wired"` — now genuinely
       `"deployed"`, rewritten to assert the fixed reality rather than the historical gap). 4 new tests total.
-      **Still open**: `LP_MINT`/`LP_BURN` — T1's own note on the DONE item above says these "still need the DeFi
-      LP position shape specified, which is your [T4's] call per the original request, not invented here." Genuine
-      open design question, not attempted this session.
+      **Still open, but no longer a blank design question — shape specified 2026-08-20** on
+      `/plans/active/code_readiness_t1_contracts_library_externalapi_2026_08_19.md`'s `[FROM-T4]` thread,
+      grounded in both real connector families (`UniswapConnector.mint_position()`/`burn_position()` — NFT
+      position id + sqrt-price bounds — vs. Orca/Raydium's `add_liquidity()`/`remove_liquidity()` — pool address +
+      raw ticks, no NFT). `BLOCKED-ON:` T1 landing `LpMintInstruction`/`LpBurnInstruction`; once shipped, T4's
+      side is the same mechanical 2-branch `isinstance` addition as `CONVERT_DUST`/`WITHDRAW`/`REPAY` — 5/5.
 
 ### W12 — reconciliation
 
