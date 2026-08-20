@@ -192,20 +192,24 @@ todos only to confirm they are data-movement, then leave it.
       you then have to rework. State what execution-service actually needs and T1 will land it, or say if T1's
       first reasonable draft is fine to just ship.
 
-      **Answered 2026-08-20 — recommendation is DON'T add these to `StrategyInstructionType`, not "ship a
-      draft shape."** Both capabilities already exist, on the DELIBERATELY separate `AccountInstruction`
-      envelope: `kill_switch.activate()`/`.deactivate()` (durable state-file, admin-authenticated via
-      `POST /kill-switch/activate` in `api/app.py`) and `AccountInstruction.CLOSE_ALL` (operator-driven,
-      `authorization_id`-gated, real per-venue wiring `execution-service@96411b68c9` + HTTP route
-      `execution-service@c0839616be`, `POST /account/instruction`). Adding `KILL_SWITCH`/`FLATTEN_POSITION` to
-      `StrategyInstructionType` would expose them on `/external/instructions` — the surface EXTERNAL/third-party
-      callers reach — a materially different authority model than the current operator-only paths. `codex/
-      04-architecture/account-instructions.md`'s own stated rationale for keeping two separate envelopes is exactly
-      this: "Different authority model (operator role, not strategy engine)... Different risk gates (some ops
-      bypass strategy-layer checks by design)." Bolting kill/flatten onto the strategy envelope would quietly erode
-      that boundary. If external partner-facing kill/flatten access is genuinely wanted, that's a product/security
-      policy call for the operator, not something to build speculatively into a Pydantic union today — don't add
-      the enum members, and don't build a matching execution-service handler, until that call is made.
+      **Answered 2026-08-20, then CORRECTED same day — my first answer was wrong, caught by re-checking today's
+      LDR rulings before proceeding further.** First pass recommended NOT adding `KILL_SWITCH`/`FLATTEN_POSITION`
+      to `StrategyInstructionType`, reasoning from `AccountInstruction`'s separate-authority-model rationale alone
+      — I hadn't re-read `/plans/epics/system_readiness_master.md` W22 before answering. **That epic section is
+      the actual operator-ruled scope for this exact question**, and it explicitly requires the opposite: "Add
+      kill-switch and flatten-position as instructions, not only as internal system behaviour... a caller must be
+      able to send them, scoped the same way the internal kill-switch is (all-live / per-archetype / per-venue)."
+      **Corrected recommendation: DO add them.** The two answers reconcile, they don't actually conflict on
+      substance — the epic's own "scoped the same way the internal kill-switch is" clause is exactly my original
+      authority-model concern, just answered as an implementation requirement (external kill/flatten needs the
+      SAME authorization gating `AccountInstruction`/`kill_switch.py` already enforce — `authorization_id` +
+      admin auth, not open access) rather than a reason to skip the feature. T1: please add `KILL_SWITCH`/
+      `FLATTEN_POSITION` to `StrategyInstructionType`, each carrying an authorization/approval field mirroring
+      `AccountInstruction`'s `authorization_id` (this tranche will wire the execution-service handler to reuse
+      the existing `kill_switch.py`/`AccountInstructionOrchestrator.CLOSE_ALL` machinery underneath, not
+      duplicate it — a strategy-envelope KILL_SWITCH/FLATTEN_POSITION instruction becomes a thin translation into
+      the SAME already-authorized internal call, never a second independent authority path). Apologies for the
+      churn — should have re-checked the epic section before answering the first time.
 - [ ] [FROM-T1] P1. **Joint with T3 — strategy→execution messaging bridge.** See the matching `[FROM-T1]` item on
       T3's `## Inbound requests` for full detail (no internal messaging connects strategy-service's decisions to
       execution-service today). Whichever tranche has capacity first can open the UTL `EventTransport` subscription
