@@ -62,42 +62,14 @@ source: >-
 
 ## Todos
 
-- [x] ✅ [REVIEW] P0. **Re-verify every batch-3 done-claim against reality, not against its checkbox** — for each of the 3
+- [ ] [REVIEW] P0. **Re-verify every batch-3 done-claim against reality, not against its checkbox** — for each of the 3
       todos in `/plans/active/ao_satellite_ao_dispatch_batch3_2026_07_31.md`, re-run `git show --stat <sha>` for every
       cited commit and re-run the specific named test(s) directly rather than trusting the claim, and re-run each todo's
       own stated done-when check where it is a command (the `generate_context_scope_inventory.py` zero-remaining check,
       the priority-inversion replay test, the orphan-verifier's 10-verdict reproduction + the liveness discriminator's
       slot-5/slot-15 shape checks + the 25-ref wip-preserve disposition table). **Done when**: all 3 verified, and any
       claim whose evidence does not hold up is re-opened as a new tracked todo in this doc's Progress Log with the
-      discrepancy stated. **VERIFIED 2026-08-20** (slot 7, finalize worker): (1) context_scope claim holds —
-      `docspec.py` `context_scope` FieldSpec confirmed `Req.R` for plan+issue doc_types (flip commit
-      `unified-trading-pm@bc88604f20`, 2026-08-20), inventory at-claim-time 888/888 consistent; a fresh
-      `generate_context_scope_inventory.py --json` run this session shows post-claim drift (1 NEVER_SCOUTED + 4 STALE,
-      887 in-scope) — re-opened as todo 2 below, NOT a falsified claim. (2) priority-inversion claim holds —
-      `agent-orchestrator@af98fcd` present on LDR with exactly the claimed files; full
-      `tests/test_dispatch_priority_inversion_watchdog.py` green (20 passed, incl. the recorded-incident replay
-      asserting exactly-once page fire). (3) orphan-verifier claim holds — `agent-orchestrator@623009e3` present with
-      the claimed files; `tests/test_orphan_still_orphaned_verifier.py` (4 canonical verdicts + wip-preserve end-to-end)
-      and `tests/test_dirty_state_resolution.py` (liveness slot-5/slot-15 triangulation + controls) green; the 29-ref
-      wip-preserve disposition table is internally consistent (16 SUPERSEDED / 10 STILL-ORPHANED / 3 WOULD-REGRESS / 0
-      GONE = 29 rows). Live SSM re-run of the 29-ref triage attempted but **not reproducible from this session**
-      (AccessDenied on `ssm:DescribeInstanceInformation` for identity `ikenna-worker` — the original batch-3 session's
-      SSM path is unavailable here); recorded-table + verifier tests stand as the evidence.
-- [ ] [SCRIPT] P2. **Scout the 5 post-claim context_scope-drift docs back to UP_TO_DATE** — re-opened from finalize
-      todo 1's verification (2026-08-20): the batch3 todo-1 done-when (`generate_context_scope_inventory.py` zero-
-      remaining check) no longer holds in the present — a fresh run reports 882 UP_TO_DATE / 4 STALE / 1 NEVER_SCOUTED
-      / 887 in-scope. All 5 are post-claim churn (4 docs created 2026-08-20 by concurrent sessions; 1 pre-existing doc
-      gone STALE), not a falsified backfill claim — the FieldSpec `Req.R` flip (`unified-trading-pm@bc88604f20`) and the
-      888/888 at-claim-time snapshot both verified. The 1 NEVER_SCOUTED doc
-      (`/plans/active/issues/dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`) is now
-      missing a REQUIRED field — a genuine `check_frontmatter_schema.py` violation. Docs to scout:
-      `/plans/active/issues/dp_live_004_sports_odds_live_shard_never_captured_shared_key_quota_2026_08_20.md`
-      (NEVER_SCOUTED), `/plans/active/issues/client_reporting_api_nav_aggregation_vehicle_type_blind_2026_08_20.md`,
-      `/plans/active/issues/context_scope_backfill_locked_docs_residual_2026_08_20.md`,
-      `/plans/active/issues/live_sports_odds_upstream_failure_masked_as_honest_absence_2026_08_20.md`, and
-      `/plans/active/cross_cutting_consolidated_closeout_2026_07_25.md` (all STALE). **Done when**: fresh
-      `generate_context_scope_inventory.py --json` reports 0 NEVER_SCOUTED / 0 STALE, matching batch3 todo-1's own
-      done-when. (repo: unified-trading-pm)
+      discrepancy stated.
 - [ ] [REVIEW] P0. **Reconcile each verified todo's evidence back into its TRUE source doc's own checkbox(es)** — batch
       3 was an extraction, so the source-doc items it covers are the ones that go stale, not the batch's. Flip the
       specific todo(s) in each of: `context_scout_completion_and_plan_brainstorm_skill_2026_07_30.md` (its `[SCRIPT] P0`
@@ -158,14 +130,3 @@ source: >-
   no change needed. Gated finalize doc, no source path.
 - **context-scout 2026-08-19**: re-verified context_scope (4 entries) — all paths confirmed resolving on disk, still
   the correct archival SSOT + batch pointer; no change needed.
-- **2026-08-20 (todo 1 — VERIFIED, all 3 batch-3 claims hold)**: re-ran `git show --stat` for both cited commits
-  (`agent-orchestrator@af98fcd`, `@623009e3` — file sets match the batch's claims exactly), the full
-  `tests/test_dispatch_priority_inversion_watchdog.py` (20 passed, incl. the recorded-incident replay),
-  `tests/test_dirty_state_resolution.py` + `tests/test_orphan_still_orphaned_verifier.py` (73 tests green across the
-  three targeted files), a fresh `generate_context_scope_inventory.py --json` (882 UP_TO_DATE / 4 STALE / 1
-  NEVER_SCOUTED / 887 in-scope — the 888/888 at-claim-time snapshot no longer holds ONLY due to post-claim churn; the
-  FieldSpec `Req.R` flip verified live at `unified-trading-pm@bc88604f20`), and the wip-preserve disposition table
-  (internally consistent: 16/10/3/0 = 29). Live SSM re-verify of the 29 wip-preserve refs attempted but
-  **AccessDenied** for this session's identity (`ikenna-worker`, no `ssm:DescribeInstanceInformation`) — the original
-  batch-3 session's SSM path is not reproducible from here; verifier code+tests + recorded-table consistency stand as
-  the evidence. Drift re-opened as todo 2 (5 docs to re-scout).

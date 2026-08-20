@@ -1407,34 +1407,6 @@ sequence is: prove it landed → then restore.
 second divergent version of a document that was safe the whole time. For a long design doc, that reconciliation costs
 more than the original authoring.
 
-### An empty diff against origin is not proof your change landed (2026-08-20)
-
-A sharper case than the two above: **`git diff FETCH_HEAD` coming back empty is consistent with two opposite
-outcomes** — your content landed exactly as pushed, OR your content was reverted underneath you and both sides now
-agree on the WRONG content. Measured 2026-08-20 (`quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_
-2026_08_20.md`): a `--files` argument containing a directory silently staged nothing for it (see the `--files` rule
-below), and the run's own recovery/quarantine pass then reverted the unstaged working-tree edits for the affected
-files — so `git status` came back clean, `git rev-list --left-right --count HEAD...FETCH_HEAD` reported `0 0`, and
-`git diff FETCH_HEAD` was empty. Every cheap signal agreed the run was clean; none of them proved the SHIPPED
-content was correct, because the working tree had already been reverted to match origin's stale state.
-
-**Only a per-file existence/content probe against origin's tree catches this**:
-
-```bash
-git fetch -q origin live-defi-rollout
-for f in <every path you named in --files>; do
-  git cat-file -e FETCH_HEAD:"$f" 2>/dev/null && echo "OK   $f" || echo "MISS $f"
-done
-```
-
-For a whole new directory/package, `git cat-file -e` on the directory path itself does not work (git trees are not
-addressed that way) — probe a specific file you know should be inside it, or `git ls-tree -r FETCH_HEAD -- <dir>`
-to list what actually landed under it.
-
-**`--files` does not accept a directory.** `quickmerge.sh` refuses one outright (exit 1, before any staging) as of
-2026-08-20 — list the individual files instead of the containing directory; expanding it automatically would
-silently widen the commit's scope beyond what `--files` exists to name explicitly.
-
 ### Stale local content silently overwrites unrelated concurrent edits to the same file (2026-08-14)
 
 A THIRD hazard, distinct from both listed above — not a shared-index race, not commit-graph divergence. **Full-file

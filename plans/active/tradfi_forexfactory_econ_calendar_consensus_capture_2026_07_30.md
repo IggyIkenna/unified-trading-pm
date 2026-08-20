@@ -38,12 +38,6 @@ estimate_calibrated_ai_days: 4
 assigned_role: data_engineering
 effort: xhigh
 drift_direction: advance-code
-context_scope:
-  [
-    /codex/02-data/tradfi-databento-sourcing-ssot.md,
-    /plans/archive/issues/tradfi_manifest_consolidator_fred_widespan_stall_2026_07_30.md,
-    features-service/features_service/calendar/adapters/forexfactory_adapter.py,
-  ]
 depends_on: []
 locked_by:
 locked_since:

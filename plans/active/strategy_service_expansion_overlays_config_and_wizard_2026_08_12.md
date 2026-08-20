@@ -39,14 +39,6 @@ estimate_baseline_ai_days: 10
 estimate_calibrated_ai_days: 4
 assigned_role:
 drift_direction: none
-context_scope:
-  [
-    /codex/09-strategy/architecture-v2/capability-wizard.md,
-    /codex/04-architecture/transfer-architecture.md,
-    /codex/06-coding-standards/strategy-identity-versioning.md,
-    strategy-service/strategy_service/engine/strategies/v2/carry_and_yield/dated_contract_resolver.py,
-    strategy-service/strategy_service/engine/strategies/v2/target_universe/catalog_staked_basis.py,
-  ]
 depends_on: []
 locked_by:
 locked_since:
@@ -95,53 +87,24 @@ describes where the CODE lives, never that a value is hardcoded.
 scalar cannot carry a hedge position or a book exposure multiplier. That docstring is the thing to fix first, because it
 is what stops anyone looking for them.
 
-- [x] ✅ [SCRIPT] P0. **Correct `CarryFundingDispersionEngine`'s docstring before anything else.** **SHIPPED
-      2026-08-20 — `strategy-service@ed9ff26875`.** Now states plainly: 3 of 8 overlays are
-      production-real (inverse-vol via feature, squeeze veto in-engine, HL-veto upstream), 5 are not
-      (EWMA-smoothing, rank-buffer, no-trade band, beta-hedge, vol-target), and the last two are BOOK-level so
-      cannot live in this per-leg engine even once built.
-- [x] ✅ [AGENT] P1. **Implement rank-buffer hysteresis at the rank layer** with `rank_buffer_k` schema-declared.
-      **SHIPPED 2026-08-20 — `strategy-service@ed9ff26875`.** Added `rank_buffer_k` to
-      `BaseRankAllocator` + a `previous_selected: frozenset[str] | None` keyword-only param on `weight()` (backward
-      compatible — every existing call site is unaffected; the 4 hierarchical (2/3-stage) subclasses that override
-      `weight()` directly got signature parity but do not implement hysteresis themselves, single-stage only for
-      now). A name already selected stays selected until its rank falls outside `top_n + rank_buffer_k`; a new
-      name only ever enters via the strict `top_n` rule — the buffer is retention-only. Wired the constructor
-      param through to `CarryFundingDispersionRankAllocator` specifically (the archetype this session's earlier
-      `CARRY_FUNDING_DISPERSION_RANK` decision made live). 4 new tests. **Not yet done**: no live caller passes
-      `previous_selected` — `ClientAllocatorInstance`/`PortfolioAllocatorService` (the only production consumer
-      found) has no confirmed construction site anywhere in the repo, so this mechanism is real and tested but not
-      yet reachable in a live rebalance. That's a separate, larger gap (is this whole allocator-service layer
-      wired to a real caller at all) — not silently expanded into here.
-- [x] ✅ [AGENT] P1. **Implement the no-trade band as a guard-rail**, not in an engine. `apply_guard_rails` already
+- [ ] [SCRIPT] P0. **Correct `CarryFundingDispersionEngine`'s docstring before anything else.** It currently tells a
+      reader six overlays are handled elsewhere when four are absent, so the claim actively prevents discovery. State
+      plainly which overlays production applies (inverse-vol via feature, squeeze veto in-engine) and which are
+      book-layer work pending. **Do this even if the overlays are not built** — shipping a repository containing a
+      docstring we know to be wrong is worse than shipping a known gap, and an engineer pointing an LLM at the repo will
+      find it.
+- [ ] [AGENT] P1. **Implement rank-buffer hysteresis at the rank layer** with `rank_buffer_k` schema-declared. Research
+      used a k+6 band to hold a name until it leaves — explicitly tuned for lower turnover while holding Sharpe.
+- [ ] [AGENT] P1. **Implement the no-trade band as a guard-rail**, not in an engine. `apply_guard_rails` already
       computes turnover; add a per-instance minimum weight-change threshold (research default 0.03) so every archetype
-      inherits it. **SHIPPED 2026-08-20 — `strategy-service@ed9ff26875`.** Added
-      `GuardRailConfig.no_trade_band` (`None` = disabled, matching every other optional rail) + `_apply_no_trade_band`,
-      wired into `apply_guard_rails`'s fixed order right before the turnover cap. Confirmed this rail's one real
-      call site (`portfolio_allocator/service.py:229`, via `self.guard_rail_config`) — same caveat as rank-buffer
-      above: the mechanism is real and tested, but nothing in the repo constructs a `GuardRailConfig` with
-      `no_trade_band` set yet, so "every archetype inherits it" needs that default set at whatever real orchestration
-      layer eventually constructs this config — tracked as the same open gap, not duplicated. 3 new tests.
+      inherits it.
 - [ ] [AGENT] P0. **Implement the beta-hedge as a book-level risk overlay.** Needs the book's trailing beta to a hedge
       instrument and a real hedge position. Check `LegPortfolioState` / `target_net_delta` / `portfolio_risk_gate.py`
       for the right seam before adding a new concept. **This is the residual-market-exposure control for every
-      dollar-neutral, not-delta-neutral book** — dispersion is only the first consumer. **Seam investigation
-      2026-08-20 (not a fix — the design question is open, not the wiring)**: `LegPortfolioState` does not exist
-      anywhere in strategy-service (0 hits) — one of the two suggested seams isn't real. `target_net_delta` is
-      confirmed PER-LEG (every v2 engine sets it on its own `AtomicInstruction` — `funding_dispersion.py:171`,
-      `tsmom_btc_cta.py:153`, `continuous.py:154`, etc.), not a book-level aggregate anywhere, so there is no
-      existing cross-archetype delta rollup to hook a hedge off. `portfolio_risk_gate.py` is real but scoped
-      specifically to VOL_TRADING options structures (margin/vega/gamma/liquidity caps) — the wrong seam for a
-      general cross-archetype beta-hedge. **Net: no existing seam fits; this needs a genuine new aggregation layer
-      (where does book-wide `target_net_delta` get summed across a client's whole set of live strategy instances,
-      on what trigger, emitting what instruction type) designed before it's built** — correctly still open, not
-      attempted this session given the financial-correctness stakes of guessing that shape.
+      dollar-neutral, not-delta-neutral book** — dispersion is only the first consumer.
 - [ ] [AGENT] P0. **Implement vol-target ONCE at the book layer and migrate `TSMOM_BTC_CTA` onto it.** TSMOM's
       `target_vol`/`vol_floor`/`max_leverage` is the existing implementation to generalise, not a second one to keep.
       The research book calls vol-target "the drawdown DIAL", so this is the primary risk control, not a refinement.
-      Confirmed 2026-08-20: `vol_target` still only exists in `tsmom_btc_cta.py` (0 hits elsewhere) — genuinely
-      unbuilt at the book layer, same open status, same book-level-aggregation dependency as the beta-hedge item
-      above (both likely share whatever new aggregation layer gets designed).
 - [ ] [AGENT] P2. **Re-derive the strategy's expected risk profile once the four land**, and only then let any
       performance figure be quoted. Production currently runs 2 of 8 overlays; the research Sharpe belongs to the
       8-overlay book.
