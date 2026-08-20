@@ -147,6 +147,12 @@ changes BLRS runtime behaviour for every caller while (a) keeps the honest-no-op
       configured roots are empty, keeping the honest no-op only when resolution genuinely finds nothing — fewer moving
       parts but changes BLRS behaviour for all callers. Operator/main picks; do not guess. Repos: deployment-service
       (+ batch-live-reconciliation-service if (b)). Done when: the chosen mechanism is recorded here and implemented.
+      **Gate id `BLK-op-blrs_daily_determinism_ledger_root_wiring_scope-29413eccdd3a`** (operator-gated, no worker
+      spawned). Raised separately via the blocked-queue as `BLK-8d718e56` on 2026-08-20; review declined to resolve it
+      there — deliberately, so two channels cannot answer the same question differently — and routed it back to THIS
+      todo as the single decision point. Review did record that the worker's recommendation of **(a)** "sounds sound",
+      on the reasoning that confining the new behaviour to the scheduler keeps a resolver bug from turning the honest
+      no-op into a fabricated ε=0 verdict. That is an endorsement, NOT the decision: the operator still picks here.
 - [ ] [INFRA] P2. **Add the Stage A2 batch-rerun job + cron to the terraform module and verify the cron logs a real
       verdict.** New `module "batch_rerun_job"` + `google_cloud_scheduler_job` in
       `deployment-service/terraform/gcp/paper_week_determinism_scheduler.tf`, scheduled between Stage A (02:00) and
