@@ -20,7 +20,7 @@ parent_epic: observability_master
 priority: P1
 assigned_vm: planning
 author: data_pipeline_failure (escalation agt-56f0d4, slot-33)
-resolved_by:
+resolved_by: slot-33 (e2e-testing@0a43d0ec70)
 source:
   - manifest_hygiene_daily.py
   - data_pipeline_hardening_self_monitoring_2026_06_22.md
@@ -110,11 +110,12 @@ Per `data_pipeline_hardening_self_monitoring_2026_06_22.md` Phase 3/5.
 
 ## Todos
 
-- [ ] [SCRIPT] P1. Fix `manifest_hygiene_daily.py::run()`'s `what_i_found` sentence to name
+- [x] ✅ [SCRIPT] P1. Fix `manifest_hygiene_daily.py::run()`'s `what_i_found` sentence to name
       only AGs with an actual non-empty `candidate_csvs` entry (not every AG run) and only the
       finding-class names actually present in `rows` (not a hardcoded 5-class literal spanning
-      both `--mode changed` and `--mode full`). Add a regression test
-      (`test_run_what_i_found_names_only_actual_findings`). Repo: e2e-testing.
+      both `--mode changed` and `--mode full`). Added regression test
+      (`test_run_what_i_found_names_only_actual_findings`). Repo: e2e-testing. —
+      e2e-testing@0a43d0ec70
 - [ ] [DATA] P2. Once the boilerplate fix (above) is live, re-triage the 3 real finding-classes
       (schema_version_not_v9 / oracle_expects_but_empty / noncanonical_path_on_disk) across
       cefi/tradfi/sports/prediction from a fresh daily run's honest CSV list. Repo:
@@ -131,9 +132,10 @@ open) plus a second half of the same root cause (finding-classes hardcoded regar
 `e2e-testing/scripts/audit/manifest_hygiene_daily.py::run()` by deriving the AG-list and
 finding-class-list from the AGs/rows that actually contributed a candidate CSV entry, instead
 of `ag_results` (every AG run) / a hardcoded literal. Added regression test
-`test_run_what_i_found_names_only_actual_findings`. The 3 real finding-classes
-(schema_version_not_v9/oracle_expects_but_empty/noncanonical_path_on_disk) across
-cefi/tradfi/sports/prediction were NOT individually triaged this session — the candidate CSVs
-referenced by the escalation payload are unreadable (never committed, ephemeral-container-only
-per the 2026-08-18 change); tracked as the remaining P2 todo above, to be re-run against a
-fresh, honest daily output once the fix lands.
+`test_run_what_i_found_names_only_actual_findings`. QG green, shipped
+`e2e-testing@0a43d0ec70` (verified ancestor of `origin/live-defi-rollout`). The 3 real
+finding-classes (schema_version_not_v9/oracle_expects_but_empty/noncanonical_path_on_disk)
+across cefi/tradfi/sports/prediction were NOT individually triaged this session — the
+candidate CSVs referenced by the escalation payload are unreadable (never committed,
+ephemeral-container-only per the 2026-08-18 change); tracked as the remaining P2 todo above,
+to be re-run against a fresh, honest daily output once the fix lands.
