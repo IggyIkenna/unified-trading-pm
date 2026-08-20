@@ -310,7 +310,7 @@ todos only to confirm they are data-movement, then leave it.
       cross-file design call (which becomes the source of truth; how the other two read through it without
       breaking `ManualOperationHandler`'s existing `/cancel`/`/amend` callers) — not a mechanical rename like the
       `.PENDING`/`.OPEN` migration above turned out to be for the 5 files that really did import UAC's enum.
-- [ ] [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
+- [x] ✅ [BACKEND] P0. Fix the broken emergency close-all path — **CONFIRMED 2026-08-20, and worse than this todo
       said.** Two independent defects, both measured: (a) no `/api/orders` route exists anywhere under
       `execution_service/api/`, so the strategy-side POST reaches nothing; (b) even the in-process path is a
       no-op — `v2/account_orchestrator.py:48` `AccountInstructionOrchestrator.dispatch()` validates
@@ -332,9 +332,17 @@ todos only to confirm they are data-movement, then leave it.
       position (SELL for LONG, BUY for SHORT) — one leg's failure does not abort the rest, and the result honestly
       reports a partial failure. CLOB/CeFi-scoped only; DeFi/sports have no equivalent close-out primitive.
       Deliberately does NOT bundle cancelling resting orders (CLOSE_ALL means flatten positions, not also
-      CANCEL_ALL). 8 new tests. **Still open**: no HTTP route exists in front of this yet — per this todo's own
-      ordering rule, the route is the ONLY remaining piece, and per that same rule it must not land before the
-      wiring did (wiring is now safely first).
+      CANCEL_ALL). 8 new tests.
+
+      **Route half SHIPPED 2026-08-20 — `execution-service@c0839616be`.** `POST /account/instruction` (new
+      `execution_service/api/account_instruction_api.py`) registered on BOTH `api/app.py` and `api/main.py` (the
+      real deployed entrypoint) — routes every `AccountInstruction` through the same `AccountInstructionOrchestrator`
+      this todo's wiring half built. Kill-switch/drain-mode checked before dispatch; a business-level rejection
+      (missing `authorization_id`, kill-switch active, a failed venue leg) returns HTTP 200 `accepted=False`, never a
+      4xx — matching `manual_instruction_api`'s own documented convention that rejection is not a transport error. 5
+      new HTTP-level tests, including one exercising real CLOSE_ALL flattening through the router via the same fake
+      order-adapter-factory convention `test_account_orchestrator.py` established. Both halves now done — this todo
+      is CLOSED.
 - [ ] [BACKEND] P0. Build state recovery so a restart, a partial fill or a reconciliation drift cannot leave the two
       sides disagreeing. The artefacts describe this as guaranteed; it is not built.
 - [x] ✅ [BACKEND] P0. **`POST /manual/instruction` 404s on the deployed execution-service — FIXED** —
@@ -547,6 +555,7 @@ looked like a real gate failure was actually a wrong-python artifact).
 | `execution-service@35f0bfb1b` | `OrderStatus.PENDING`/`.OPEN`→`.PENDING_NEW`/`.NEW` rename, UAC sites only |
 | `execution-service@197e80116` | live-orchestrator protocol mismatch: real fix, not the diagnosed one — see below |
 | `execution-service@96411b68c9` | real CLOSE_ALL: flattens every open position, CLOB/CeFi-scoped, 8 new tests — landing independently verified (empty `git diff --stat origin/live-defi-rollout`, clean tree, HEAD matches) |
+| `execution-service@c0839616be` | `POST /account/instruction` route on both `app.py` and `main.py` in front of the CLOSE_ALL wiring above — 5 new HTTP tests; emergency close-all todo now CLOSED |
 | `batch-live-reconciliation-service@0aaa663b59` | (sub-agent) M6 startup-continuity gate + T+1 batch/live TTL decision layer |
 | `unified-trading-pm@291da5e837`, `@2d8958bbf2`, `@3ed1d398dc`, `@0858d3e90d`, `@21aba2b0b6`, `@5b40e5616c`, `@d71209b66d` | (sub-agents + parent) doc closures, archival, corrections — see plan body for what each covers |
 
@@ -611,7 +620,6 @@ unilaterally). Left as-is for a future dedicated pass, not silently skipped.
 | Pendle `withdraw()` redemption | open P2 | widen `PENDLE_OPERATIONS` only in the SAME change that implements it |
 | Pendle SIT cascade entry | inbound on T1 | needs UAC test-dict entry + baseline removal together |
 | PARTIALLY_FILLED→CANCELLED/EXPIRED code | inbound on T1 | codex SSOT amended; one-line `ORDER_STATUS_TRANSITIONS` widen is T1's to land |
-| Emergency close-all — route | open P0 | wiring shipped + verified `execution-service@96411b68c9`; the HTTP route in front of it is the remaining piece |
 | Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | T1's superseded-shape ruling (Q12-Q16) |
 | Delta-proxy doc (30 todos) + policy/fill-model-gaps doc (13 todos) | open, design-heavy | genuinely open-ended judgment calls, not single-session scope |
 | Three-way OrderStatus vocabulary fragmentation | open P0 (W11) | UAC canonical / `oms.py` local / `tracker.py` bare-strings — real cross-file reconciliation, not mechanical |
