@@ -139,7 +139,8 @@ itself "done," so the next natural tick after unpause dispatches normally with n
 
 ## Follow-up
 
-- [ ] [SCRIPT] P2. Add a `reason` + `paused_at` field to `scheduled_dispatch_pause.py`'s storage
+- [x] [SCRIPT] P2. Add a `reason` + `paused_at` field to `scheduled_dispatch_pause.py`'s storage
+      — agent-orchestrator@be120911 (API/UI surfaces and unit coverage verified)
       (currently a bare `set[str]` via `dedup_state.load_seen_keys`/`save_seen_keys` — needs a
       small schema change to a `dict[str, {reason, paused_at}]` or equivalent), and surface both
       on `GET /api/scheduled-dispatch/status` and the dashboard's pause UI. This is the structural
