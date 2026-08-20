@@ -317,10 +317,25 @@ todos only to confirm they are data-movement, then leave it.
       yet rule out this session's own level-5c/5d/5e chain/league joins (3 new O(n) groupby projections, each
       producing a result set roughly proportional to defi's higher cardinality) as a contributing factor on
       top of the pre-existing growth-driven pressure, vs. this being purely the SAME recurring class already
-      documented — **relaunched at `e2-highmem-16` (128GB) to get an unblocked coverage.json first**; if THAT
-      also OOMs, the new projections become the leading suspect and need their own investigation (e.g.
-      bounding cardinality, or computing them from a leaner column projection) rather than another blind
-      machine bump.
+      documented — relaunched at `e2-highmem-16` (128GB).
+      **RESOLVED 2026-08-20 — succeeded, and it was never actually stuck.** Two launcher-side false starts
+      first (both this session's own known stale-tarball freshness-check false-negative, self-resolving on
+      retry — `unified-api-contracts`/`market-tick-data-service` pattern recurring for `deployment-service`
+      this time). The real run (`measure-honest-coverage-20260820-212202`) then appeared to stall after
+      loading defi's manifest — 12+ minutes of only `PIPELINE_HEARTBEAT` lines, past the launcher's own 20min
+      poll-and-give-up window (which correctly reported FAILURE rather than a blind success, per its own
+      design). Watched it directly rather than assuming either outcome: `gcloud compute instances describe`
+      confirmed the VM itself was still `RUNNING` (not OOM-killed, no `exit_code=137`), and a longer watchdog
+      confirmed it was making real, if slow, progress — cefi finished ~20:33, defi's heavier computation (5
+      projection levels including this session's 3 new joins, over 162M rows / 82M reachable) simply took
+      until sometime before 20:55, then sports+prediction finished quickly after. **`rc=0`,
+      `DEPLOYMENT_COMPLETED`, `gs://central-element-323112-honest-coverage/2026-08-20/coverage.json` written
+      — a genuine success, not a stall or an OOM.** Live reachable-coverage: cefi 47.40%, defi 36.61%,
+      tradfi 86.95%, sports 99.26%, prediction 92.86%. This IS visible on deployment-api's
+      `/data-status/honest-coverage` route (deployment-ui's data-status tab) now — the operator's original ask
+      for this session. Real signal for a future pass, not urgent: the `--asset-group all` run now takes
+      ~35-40 minutes end-to-end (vs whatever it was before this session's 3 new projection levels landed) —
+      worth profiling if it keeps growing, but not a bug today.
 - [x] [OPERATOR] P0. **Rule on whether level 5 should drop fully-retired keys like level 4 does.** MEASURED
       2026-08-20: `by_venue_instrument_type` (level 4) passes through `_drop_fully_retired_nested`;
       `by_venue_instrument_type_data_type` (level 5) does not. After the 2026-08-20 naming fix the two levels

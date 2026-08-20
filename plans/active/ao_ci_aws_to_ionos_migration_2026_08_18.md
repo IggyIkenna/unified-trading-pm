@@ -91,10 +91,9 @@ credential re-provisioning, and a live DNS/traffic cutover — judgment calls, n
   and the new §6 DR-runbook todo. EBS volumes, Elastic IPs, and the existing CloudWatch/EventBridge config are all
   retained on both AWS boxes specifically so restart-and-serve stays a real option, not a from-scratch rebuild.
 - **2026-08-19, cross-plan input (not an operator decision, a design note from a sibling effort)**: AO's server is
-  being containerized under `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md (archived 2026-08-20,
-  `/plans/archive/2026_08/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md`; the Docker
-  wrap-not-replace decision is now also captured durably in
-  `/codex/04-architecture/runtime-deployment-topology.md`)` Phase 4,
+  being containerized under `/plans/archive/2026_08/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md`
+  (archived 2026-08-20; the Docker wrap-not-replace decision is now also captured durably in
+  `/codex/04-architecture/runtime-deployment-topology.md`) Phase 4,
   explicitly motivated by making cross-cloud moves easier — this migration is its first real test. The
   containerization decision itself: Docker **wraps** the existing self-pull/restart deploy model, it does not
   replace `ao-self-pull.sh`'s mechanics — "how a new version reaches the running box" still flows through the
@@ -188,10 +187,10 @@ that explicitly in the Progress Log if it happens, don't silently ship a weaker 
       initiative (leasability/self-host argument, see `cloud-agnostic-script-pattern.md` Open Questions), not this
       migration. Done-when: a short design note (Progress Log or a codex stub) names the abstraction's shape and which
       ad hoc AWS/GCP branches it replaces. **Cross-plan input, 2026-08-19 (see Decision log)**: AO's server is being
-      containerized (separate effort, `agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md (archived 2026-08-20,
-  `/plans/archive/2026_08/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md`; the Docker
-  wrap-not-replace decision is now also captured durably in
-  `/codex/04-architecture/runtime-deployment-topology.md`)` Phase 4)
+      containerized (separate effort,
+      `/plans/archive/2026_08/agent_orchestrator_ldr_main_promotion_and_qg_hardening_2026_08_19.md` (archived
+      2026-08-20; the Docker wrap-not-replace decision is now also captured durably in
+      `/codex/04-architecture/runtime-deployment-topology.md`) Phase 4)
       — a Docker image, not the bare `uv`-venv install `bootstrap_vm.sh` provisions today. When this todo is picked
       up, evaluate whether the AWS-vs-IONOS abstraction shrinks to "provision compute + firewall + a container
       runtime, then `docker pull` + `docker run` the image" rather than replicating the full Python-venv bootstrap

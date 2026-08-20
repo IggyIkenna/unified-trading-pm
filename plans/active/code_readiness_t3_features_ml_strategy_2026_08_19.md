@@ -553,11 +553,24 @@ todos only to confirm they are data-movement, then leave it.
       field and not a guess. Not built this session; `risk_params` stays AAVE-only until this lands.
       `reward_rate` is also still open — `EigenRewardsCalculator` only covers EIGEN-specific rewards, not a
       general per-protocol reward-token source.
-- [ ] [AGENT] P2. **RADIANT — needs a direct on-chain RPC path, not the DefiLlama pattern.** Verified live
-      2026-08-20: RADIANT has ZERO pools in DefiLlama's `/pools` payload (TVL collapsed after its 2024 hacks) —
-      the DefiLlama-based approach used for the other 6 protocols genuinely cannot cover it. Radiant is a known
-      Aave V2 fork, so its real ABI is likely close to (but not identical to) `aave_live.py`'s Aave V3 ABI —
-      verify against Radiant's own docs/deployed-contract ABI before building, don't assume V2==V3 field-for-field.
+- [ ] [AGENT] P2. **RADIANT — reuse already-proven RPC code, don't research an ABI from scratch (corrected
+      2026-08-20, same session, right after filing the item below it originally).** RADIANT has ZERO pools in
+      DefiLlama's `/pools` payload (TVL collapsed after its 2024 hacks, verified live) — the DefiLlama pattern
+      used for the other 6 protocols genuinely can't cover it, so an RPC path is still needed. But it's NOT a
+      from-scratch build: `market-tick-data-service/market_tick_data_service/cli/handlers/_radiant_oracle_collection.py`
+      already makes a REAL, live-verified (2026-08-13, real eth_call, real returned prices) on-chain call against
+      Radiant's own Arbitrum deployment, resolved via Radiant's own `LendingPoolAddressesProvider.getPriceOracle()`
+      — confirming Radiant is an Aave V2 fork reusing `AavePositionsMixin`'s shared ABI (same repo,
+      `market_interface/adapters/defi/aave_positions.py`), which ALSO already has `_RESERVE_DATA_ABI`/
+      `getReserveData()` — the exact protocol-aggregate call shape the `health_factor` todo above needs (not
+      `getUserAccountData()`). The same `AddressesProvider` that resolved Radiant's oracle address almost
+      certainly resolves Radiant's own `LendingPool` address too via `getLendingPool()` (proven pattern, one more
+      provider call) — verify that call live before assuming, don't guess the address. `instruments-service/
+      reference_data/adapters/defi/radiant.py` has the curated per-chain vault/reserve addresses if needed.
+      **Lesson repeated from the AAVE_V3 finding earlier this session, worth stating explicitly since it recurred
+      within the same plan**: before writing "needs fresh RPC/ABI research," check MTDS/instruments-service (not
+      just execution-service) for an adapter already solving the identical on-chain-read problem for a different
+      purpose — this is now the SECOND time in one session that check found real, reusable, already-live code.
 - [x] ✅ [BACKEND] P0. Remove the banned-vendor dependency — `corporate_actions` is sourced exclusively from
       `polygon_corporate_actions_adapter.py` and Massive-fka-Polygon.io is a FLEET-WIDE banned vendor. **SHIPPED
       2026-08-20 — `features-service@fa78040e30`**, unblocked mid-session by operator ruling R6
