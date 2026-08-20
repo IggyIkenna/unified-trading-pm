@@ -126,7 +126,7 @@ are bounded, already-decided, and conflict-clear:
 
 ## Todos
 
-- [ ] [BACKEND] P2. **Audit whether other `plan_reconciler`/`na-eligibility-audit` runs have silently missed answers
+- [x] ✅ [BACKEND] P2. **Audit whether other `plan_reconciler`/`na-eligibility-audit` runs have silently missed answers
       to still-open blocked questions**, now that this gap is confirmed live (not just suspected — reproduced
       2026-08-16, dispatch agt-3eb42b). Query the escalation/blocked-question table for any row with a recorded
       operator answer but no corresponding worker-side pickup, across recent runs. **Done when**: a count of
@@ -134,7 +134,10 @@ are bounded, already-decided, and conflict-clear:
       resolved (apply the answer now, or re-ask if too stale to trust). Source:
       `/plans/archive/issues/plan_reconciler_blocked_answer_and_result_post_gaps_2026_08_16.md` todo "[BACKEND] P2.
       Audit whether other plan_reconciler/na-eligibility-audit runs...". Repo: agent-orchestrator (+ unified-trading-pm
-      for the source doc's own historical-scan scope).
+      for the source doc's own historical-scan scope). — **DONE 2026-08-20 (slot 14)**: affected count = **167**
+      (0 is not the answer this time). All 167 answers durably stored + retrievable via the fixed
+      `GET /api/blocked/{blocked_id}`; 0 in-flight, 11 tasks done, 6 tasks still `queued` (answers preserved) — full
+      breakdown in Progress Log.
 - [ ] [SCRIPT] P2. **Fix `fix_frontmatter.py`'s summary-truncation logic**
       (`scripts/plan-hygiene/fix_frontmatter.py`'s `get_first_paragraph_after_heading()`, gated by its sole caller's
       `if not has_field(new_fm, "summary")` guard — reference the symbols, not a line number: this todo previously
@@ -205,3 +208,30 @@ are bounded, already-decided, and conflict-clear:
   additive same-status edit.
 - **context-scout 2026-08-19**: verified the pre-existing context_scope (5 entries, set at authoring) — all paths
   confirmed resolving on disk, still the correct source-doc reading list; no change needed.
+
+- **2026-08-20 (slot 14, backend worker)**: Completed batch23 item 1 — the historical blocked-answer-orphan audit
+  (read-only query of the live orchestrator SQLite `data/state/state.db` + the fixed `GET /api/blocked/{id}`
+  endpoint; no code change — the fix already shipped in `agent-orchestrator@4a0753791a`). Findings:
+  - **Affected count = 167** distinct `blocked_queue` rows with `answered_at` set + non-null `answer` whose answer
+    delivery message was orphaned by task/slot reassignment (`blocked_message_orphaned_by_reassign` in
+    `take_pending_messages` — the exact Gap-2 class the source doc reproduced). Span 2026-08-07 → 2026-08-19
+    (per-day 21/5/27/18/5/16/11/4/15/11/16/9/9). Signal: `slot_messages` rows `text LIKE 'BLOCKED Q answered%'` with
+    `answered_at` set (terminal) but `delivered_at` NULL (never delivered), joined to `blocked_queue` on
+    (slot_id, task_id) + answer-time proximity.
+  - **51** of the 167 relate to reconciler/eligibility/audit work (the task's target class).
+  - **0** are for a currently-in-flight task (no slot's `current_task` matches). 11 affected tasks are `done`
+    (answers moot — work completed). **6 affected tasks are still `queued`** — answers preserved in `blocked_queue`,
+    listed so they are not silently lost when they dispatch: `cefi_fwd_backfill_vm_deleted_by_sa_within_10min`
+    (BLK-4a5e7363), `cefi_window_scoped_coverage_gap_okx_binance_bybit_2024` (BLK-23131e14),
+    `defi_satellite_ao_dispatch_batch11` (BLK-13334ded / BLK-6c04234a / BLK-74d8766b / BLK-a635d9e2 / BLK-e59287f4),
+    `safe_doc_push_extreme_stash_quarantine_drops_renamed_file_content` (BLK-0fe3a14a / BLK-633c6d9e),
+    `tradfi_satellite_ao_dispatch_batch9` (BLK-963d4046 / BLK-d3fe28e8),
+    `venue_year_coverage_cefi_oom_deployment_api` (BLK-9e7f98bf).
+  - **Resolution**: no answer content was ever lost — all 167 answers are durably recorded in `blocked_queue` and
+    retrievable by blocked_id via the shipped fix (verified live: `GET /api/blocked/BLK-336884f2` → HTTP 200 with full
+    question+answer). Nothing needs re-asking (all answers present/non-empty). The 11 done tasks' answers are moot;
+    the 6 queued tasks' answers are preserved and fetchable by the blocked_ids above. 145 distinct answer texts among
+    the 167 → ~22 are repeat answers to re-dispatched versions of the same underlying question (e.g. the
+    `defi_satellite_ao_dispatch_batch9` vm-zombie-daemon answer ×5, bare `A` ×16), so the population is ~145 distinct
+    decisions, not 167. Audit conclusion: the delivery gap existed fleet-wide (not just on the reconciler's own runs),
+    but it only ever lost the NOTIFICATION, never the answer — the 2026-08-19 fix closes it going forward.

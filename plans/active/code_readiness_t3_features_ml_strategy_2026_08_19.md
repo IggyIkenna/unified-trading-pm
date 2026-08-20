@@ -420,3 +420,33 @@ todos only to confirm they are data-movement, then leave it.
   machine check. 51-53 rows/mode remain `unverified` and are genuinely different work: `allocator_rank` is a
   per-archetype RULING (generic allocator vs dedicated rank engine), and batch/paper dispatch need a registry lookup
   built before they can be checked at all. Neither is closed by this commit.
+
+## Deferred work after 2026-08-20
+
+Session ended with context exhausted, not with the tranche complete. Everything below is UNSTARTED unless noted;
+nothing is blocked on an answer, so the next agent can pick any row up cold. The Progress Log above is the handoff —
+read the two 2026-08-20 entries first, especially the shipping-incident notes.
+
+| Area | State | Next concrete step |
+| --- | --- | --- |
+| Archetype code-completeness | **DONE — `not_ready` 47 -> 0/mode**, 3 mode-invariant legs 177/177 | Nothing. The residual `unverified` rows are the two below — different work. |
+| `allocator_rank` (153 unverified) | Untouched, correctly reported | Per archetype, RULE whether a generic allocator suffices or a dedicated `<VALUE>_RANK` engine is needed; make the verdict machine-readable so absence stops being ambiguous. |
+| Mode dispatch — batch (42) / paper (47) | Untouched | Build the registry lookup the skill says does not exist (paper's per-family tick-loader dispatch; live below the shared orchestrator), then re-run the dump. |
+| Config-key contract drift | **Vol family DONE** (2 real drifts, 8 keys) | Same method — make the systemic construct-and-fire test exercise them and see which no-op — for sports, ML-directional, market-making. A4 structurally cannot catch this class. |
+| W6 wizard / config | Untouched | rank-buffer hysteresis, no-trade band, beta-hedge overlay, vol-target-at-book-layer. NOTE: the PORTFOLIO engines already ship a working no-trade band (`rebalance_band`) — reuse that shape, do not invent a second one. |
+| W9/W10/W13 PnL, risk, exposure | Untouched | Collapse the three competing PnL surfaces; HWM is never raw equity (TWR / Notional / PnL-recovery only). |
+| W16/W18 preflight + canonical paths | Untouched | Fail-closed startup readiness check; canonical output paths (needs T1's `PATH_REGISTRY` `mode=` fix). |
+| Position adapters / venue coverage | Untouched | CeFi live venue-string dispatch broken for 9 of 12 venues is the highest-value single fix. |
+| features-service | Untouched | 5 of 7 on-chain feature groups write zero-feature parquets stamped `captured=True`; `corporate_actions` still on the banned Massive/Polygon.io vendor (build the replacement adapter, tag `BLOCKED-CREDENTIALS`, never descope). |
+| ml-service | Untouched | MEV opportunity-detection producers — 3 registered engines can never fire because `features.get(key, 0.0)` silently defaults. |
+| Both strategy-service artefacts | Not re-derived | Re-derive markers only AFTER the W-items close; never hand-edit the HTML. |
+
+**Cross-tranche, both filed and both shrinking-worklist-shaped:**
+
+- T5 owes 27 `clients.yaml`/waiver files (`PENDING_CROSS_REPO_WAIVER` in strategy-service is the worklist).
+- T5 owes the two `quickmerge.sh` fixes —
+  `/plans/active/issues/quickmerge_exit_zero_on_failed_regate_and_silent_directory_files_2026_08_20.md`.
+  **Read that issue before your first ship of the session**: it cost this one four failed attempts and a briefly
+  broken LDR.
+- T1's `reference_position` / `credit` extension to `StrategyInstructionEnvelope` was never reached this session, so
+  that edge is still open and unblocked.
