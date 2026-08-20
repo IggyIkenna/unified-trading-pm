@@ -8,7 +8,7 @@ summary: >-
   (GCS-path lowercasing leaking into the manifest row-key), fixes 3 safety defects in the existing
   --apply script, and finds the apply itself is genuinely VM-scale (166k+ per-VM shard objects, a
   29.9M-row consolidated index) rather than safe to run on the shared host.
-status: open
+status: resolved
 nature: issue
 asset_group: [cefi]
 stage: [data]
@@ -33,9 +33,7 @@ priority: P1
 assigned_vm: planning
 execution_scope: orchestrator-agent
 locked_by:
-archive_exempt: true # temporary bridge, dropped in the immediately-following archival commit — see
-  # /plans/archive/2026_08/issues/check_archive_candidates_only_mode_no_flip_then_mv_exemption_2026_08_09.md
-resolved_by:
+resolved_by: market-tick-data-service (cefi-itype-casing-apply-rw-20260820-185429, --apply)
 drift_direction: advance-code
 depends_on: []
 sequential: true # added 2026-08-18 (plan_reconciler) — the 3 remaining open todos are already written as a
@@ -53,6 +51,12 @@ context_scope:
     /codex/05-infrastructure/vm-launcher-runbook.md,
   ]
 ---
+
+> **🗄️ ARCHIVED 2026-08-20** — resolved, all todos closed. The writer fix
+> (`market-tick-data-service@c07cc70e93`) + the memory-bound streaming fix
+> (`market-tick-data-service@bccf8177ff`) + the `--apply` casing normalization
+> (`cefi-itype-casing-apply-rw-20260820-185429`, 39,286 rows, `collisions_dropped=8899`, exact match to the
+> reviewed dry-run) all landed; a live re-audit confirms the casing residual is 0.
 
 ## What I found
 

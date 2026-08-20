@@ -473,7 +473,7 @@ todos only to confirm they are data-movement, then leave it.
       `/plans/active/instruments_cefi_g1_g5_gate_execution_2026_07_24.md`,
       `/plans/active/instruments_tradfi_g1_g5_gate_execution_2026_07_24.md`.
 - [x] [BACKEND] P1. Fix the CeFi `instrument_type` casing active-writer regression. Evidence:
-      `/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`.
+      `/plans/archive/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`.
       ✅ 2026-08-20 — **the writer-side CODE fix is shipped and live; everything left is data movement.**
       `market-tick-data-service@c07cc70e93` verified an ANCESTOR of MTDS HEAD (`git merge-base --is-ancestor`),
       not taken from the checkbox. Root cause it closed: `_tradfi_manifest_shard.py::_tradfi_manifest_itype`
@@ -617,13 +617,24 @@ todos only to confirm they are data-movement, then leave it.
 
 ### Close-out
 
-- [ ] [DATA] P1. **Relaunch the CeFi itype-casing dry-run with reduced concurrency — the 2026-08-20 dry-run
-      OOM-killed (exit 137) after ~19 min on a dedicated `e2-standard-16`, `--workers 16`.** Full evidence:
-      `/plans/active/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md` Progress Log,
-      2026-08-20 entries. Located the log via `vm_run_log_final_uri()` + `download_bytes()` (never `gsutil`) —
-      DETERMINED, not unknown: the script never printed a `Grand total` line, so there is still no disposition
-      to review. Nothing was written (dry-run). Relaunch with materially fewer workers and/or a resized machine
-      before attempting `--apply`.
+- [x] [DATA] P1. **Relaunch the CeFi itype-casing dry-run with reduced concurrency — the 2026-08-20 dry-run
+      OOM-killed (exit 137) after ~19 min on a dedicated `e2-standard-16`, `--workers 16`.**
+      ✅ 2026-08-20 — **DONE, full chain completed: dry-run → apply → re-audit, all clean.** Reduced concurrency
+      alone (`--workers 4`) was NOT sufficient — a second attempt on the same `e2-standard-16` also OOM'd (see
+      the issue doc's timing correction: it ran pre-fix code, so this doesn't cleanly indict worker-count
+      alone). What actually worked: slot-18's memory-bound streaming fix
+      (`market-tick-data-service@bccf8177ff`) + `MACHINE_TYPE=e2-highmem-16` (128GB) + `--workers 4`. Dry-run
+      (`cefi-itype-casing-apply-rw-20260820-181447`) completed clean: `Grand total instrument_type values
+      would be normalized: 39286 (collisions_dropped=8899)` — exact match to the independently re-measured
+      baseline. `--apply` (`cefi-itype-casing-apply-rw-20260820-185429`) then completed clean on the same
+      config: `rc=0`, backup written, manifest re-uploaded, `Grand total instrument_type values normalized:
+      39286` — exact match. Live re-audit
+      (`market-tick-data-service/scripts/audit_cefi_manifest_noncanonical_enumeration_2026_07_18.py`, run
+      directly — a column-projected read, no VM needed) confirms **zero lowercase casing-variant rows remain**.
+      Issue doc fully closed and archived:
+      `/plans/archive/issues/cefi_instrument_type_casing_active_writer_regression_2026_08_17.md`. Evidence:
+      `deployment-service@9ae1a78e9e` (the launcher), VM run.log content quoted above, full Progress Log in the
+      archived issue doc.
 - [ ] [AGENT] P1. Work the non-spine tail of this tranche's allocation to zero open todos or an explicit
       `BLOCKED-*` tag. 31 docs in your allocation are flagged `excluded_data_movement` — confirm and leave them.
 - [ ] [AGENT] P0. Post-phase codex audit across `/codex/02-data/` for every contract you changed.
