@@ -40,7 +40,7 @@ source: /plans/active/venue_smoke_test_bar_2026_08_16.md
 
 - [ ] [BACKEND] P0. Execute the canonical batch smoke contract for every current Sports row above the 2020-06-06 data floor; Gate: rows, canonical paths, manifest atoms, and genuine capture statuses are measured per unit.
 - [ ] [BACKEND] P1. Record one testnet verdict for every Sports venue, including matching-engine simulation where appropriate; Gate: every distinct venue has a written verdict.
-- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and mark unavailable accounts BLOCKED-CREDENTIALS; Gate: no missing credential is treated as a wiring absence.
+- [ ] [BACKEND] P1. Add or run testnet smoke coverage for provisionable credentials and record an honest unavailable result for accounts that cannot be provisioned; Gate: no missing credential is treated as a wiring absence.
 - [ ] [BACKEND] P1. Track every failed or absent Sports row with its source and data type; Gate: expected-unattempted is never presented as captured.
 - [ ] [BACKEND] P0. Verify the Sports data floor and source-scoped Databento/canonical checks with a negative control; Gate: pre-floor or no-data probes fail rather than pass.
 
