@@ -232,7 +232,7 @@ defect (phantom-venue emission) without touching a registry other code may depen
 - **context-scout 2026-08-20**: populated/refreshed context_scope (3 entries) — unchanged, still accurate
 - **2026-08-20 (T2 tranche, `/autonomous`, VM-launch path built + 5 launch attempts)**: per the two-laptop-failure
   diagnosis above, wired a VM-launch path — new
-  `deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` (`deployment-service@<pending>`),
+  `deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` (`deployment-service@9ae1a78e9e`),
   reusing the existing generic `VM_TASK=defi-manifest-force-consolidate` one-off-script dispatch route in
   `setup-data-pipeline-vm.sh` (no deployment-service core-script edit needed) with `VM_SERVICE=instruments_service`
   for the correct tarball. **5 launch attempts, 3 distinct environmental failure signatures, still UNRESOLVED —
