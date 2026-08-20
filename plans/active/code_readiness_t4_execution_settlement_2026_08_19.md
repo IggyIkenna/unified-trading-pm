@@ -344,9 +344,25 @@ todos only to confirm they are data-movement, then leave it.
 
 ### W12 — reconciliation
 
-- [ ] [BACKEND] P0. Build pause-before-manual-entry. Explicitly unbuilt.
-- [ ] [BACKEND] P0. Build virtual and persistent delta exclusion. Explicitly unbuilt.
-- [ ] [BACKEND] P0. Build the soft-delete audit trail. Explicitly unbuilt.
+- [x] ✅ [BACKEND] P0. Build pause-before-manual-entry — **batch-live-reconciliation-service@1e210addb1**. It is an
+      INTERLOCK, not a note: `POST /t1-recon/book-correction` returns 409 until an active pause exists on the
+      break's `(venue, instrument_id)`, because a correction booked while automation still trades that position
+      can double-apply. Lookup is case-insensitive — the break's casing comes from recon output, the operator
+      types their own. MEASURED: 409 without a pause, 200 after pausing, 409 again once the pause is revoked.
+- [x] ✅ [BACKEND] P0. Build virtual and persistent delta exclusion — **batch-live-reconciliation-service@1e210addb1**.
+      The two differ in LIFETIME, and conflating them is how a one-off suppression silently becomes permanent.
+      VIRTUAL is scoped to one `run_date` and held in process; PERSISTENT applies until revoked and is written to
+      `t1-recon/recon/exclusions.json`, so it survives a restart — that asymmetry IS the feature. A VIRTUAL
+      exclusion with no `run_date` is REJECTED, never quietly promoted. MEASURED: virtual suppresses only its own
+      run date and does not survive a new store; persistent survives one and ignores a supplied `run_date`; a
+      corrupt exclusions object fails OPEN (breaks re-raised) rather than suppressing on half-parsed state.
+- [x] ✅ [BACKEND] P0. Build the soft-delete audit trail — **batch-live-reconciliation-service@1e210addb1**. Nothing
+      is removed: revoking a pause or exclusion stamps `revoked_at`/`revoked_by`/`revoke_reason` and keeps the
+      record, and `all_pauses()`/`all_exclusions()` return active and revoked alike — an FCA-relevant surface has
+      to answer "who suppressed this break, and who un-suppressed it" after the fact. Revoking a PERSISTENT
+      exclusion rewrites the GCS object with the record RETAINED. `/breaks` hides actively-excluded breaks;
+      `include_excluded=true` shows them as `status=excluded` so suppression is auditable. MEASURED: after revoke
+      the break is re-raised, the record persists with `active=false`, and `active_only=true` filters it out.
 - [ ] [BACKEND] P1. Implement manual trade entry on EVERY venue — epic definition-of-done item, and manual execution
       mode is first-class alongside automated per the 2026-08-19 addition to W1.
 
@@ -404,24 +420,18 @@ other repos — scope every commit by name, never `git add .`.
 
 **Shipped, each verified in origin rather than by trusting quickmerge's exit code:**
 
-1. **`execution-service@b70d2edb16` — the 864-row unblocker.** `execution_service/readiness/instruction_path.py`
-   exposes `instruction_path_availability(venue)` → `{batch, paper, live, actions, handlers,
-   batch_unhandled_actions, detail}`, each mode `none|wired|deployed`. Derived from three registries the runtime
-   really dispatches on: the order-adapter factory (`get_supported_venues` + `_resolve_venue_str`), the new DeFi
-   route table, and the sports exchange adapters. No I/O. `python -m execution_service.readiness` is the
-   cross-venv probe (stdin JSON venues → stdout JSON). To make "reads the real registry" true rather than
-   aspirational, `DeFiAdapter`'s three private substring `if`-chains were extracted into
-   `adapters/defi_instruction_routes.py`, which the adapter now dispatches through — match order
-   (JUPITER before UNISWAP, MORPHO/KAMINO before AAVE) and all three error wordings are pinned by tests.
-   `backtest_v2/action_handlers.py` gained `BATCH_SETTLEMENT_ACTIONS` / `BATCH_NO_FILL_ACTIONS` and a DERIVED
-   `BATCH_UNHANDLED_ACTIONS`, so a new enum member lands in the gap set automatically.
-   MEASURED by running it: CeFi/TradFi venues → all modes `deployed`, actions `(CANCEL, TRADE)`;
-   `COINBASE-FUTURES` → all `none` (the factory refuses it and the check inherits that);
-   `UNISWAP-V3-ETHEREUM`/`JUPITER-SOLANA` → `SWAP`; `LIDO-ETHEREUM` → `STAKE, UNSTAKE`;
-   `BETFAIR`/`POLYMARKET`/`KALSHI` → `TRADE`; unknown venue → all `none`.
-   **New finding**: `AAVE-V3-ETHEREUM` derives `batch=wired`, not `deployed`, because `resolve_settlement` has no
-   handler for `REPAY`/`WITHDRAW`. Full measured gap set: `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW` —
-   tracked as its own todo.
+1. **`execution-service@b70d2edb16` — the 864-row unblocker.** `readiness/instruction_path.py` exposes
+   `instruction_path_availability(venue)` → `{batch, paper, live, actions, handlers, batch_unhandled_actions,
+   detail}`, each mode `none|wired|deployed`, derived from three registries the runtime really dispatches on (the
+   order-adapter factory, the new DeFi route table, the sports exchange adapters). No I/O.
+   `python -m execution_service.readiness` is the cross-venv probe. To make "reads the real registry" true rather
+   than aspirational, `DeFiAdapter`'s three private substring `if`-chains were extracted into
+   `adapters/defi_instruction_routes.py`, which the adapter now dispatches through — match order and all three
+   error wordings pinned by tests. `backtest_v2/action_handlers.py` gained `BATCH_SETTLEMENT_ACTIONS` /
+   `BATCH_NO_FILL_ACTIONS` and a DERIVED `BATCH_UNHANDLED_ACTIONS`, so a new enum member lands in the gap set
+   automatically. MEASURED verdicts and the `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW` batch gap are on the
+   checkbox above; `COINBASE-FUTURES` correctly derives all-`none` because the factory refuses it and the check
+   inherits that rather than stripping the suffix.
 
 2. **`execution-service@dc4fad8de7` — delta-proxy price leg + QUOTE receipt point.** Detail on its checkbox.
 
@@ -472,8 +482,6 @@ Note: `client.upload_bytes` returns a value — this repo's convention is `_ = c
 
 | item | state | why |
 |---|---|---|
-| Unit 3 (`/manual` 404 fix) | gating, attempt 4 | 3 prior gate failures, each fixed; see gate lessons above |
-| W12 pause/exclusion/audit | built + verified, NOT shipped | gates are serial; queued behind unit 3 |
 | Emergency close-all | open P0 | needs real CLOSE_ALL wiring BEFORE any route — order matters |
 | Delta-proxy position + credit legs | `BLOCKED-OPERATOR` | T1's superseded-shape ruling (Q12-Q16) |
 | BATCH settlement gap | open P1 | `CONVERT_DUST, LP_BURN, LP_MINT, REPAY, WITHDRAW` have no handler |
@@ -481,3 +489,12 @@ Note: `client.upload_bytes` returns a value — this repo's convention is `_ = c
 | W22 strategy→execution messaging | untouched | no `EventTransport` subscriber exists in execution-service |
 | W11 9-state order lifecycle | untouched | needs T1's `OrderState` contract |
 | W14/W15/W17, Elysium, settlement tail | untouched | not reached this session |
+
+- 2026-08-20 — **W12 shipped: `batch-live-reconciliation-service@1e210addb1`** (verified by an empty
+  `git diff --stat origin/live-defi-rollout` over all four files plus confirming `resolution_state.py` and
+  `require_pause` resolve in the landed tree). Its first gate failed on two PRE-EXISTING tests
+  (`test_book_correction_positive_delta_is_buy` / `..._negative_delta_is_sell`) which called `book_correction`
+  with no pause and passed — they encode the pre-W12 contract, and the interlock is precisely the change. They
+  now establish a pause first; the refusal itself stays asserted in `test_resolution_state.py`, so the behaviour
+  they used to cover is not silently lost. Size + basedpyright were run BEFORE gating this time (the lesson from
+  execution-service's four-attempt unit) and were clean.
