@@ -127,10 +127,10 @@ Three audit findings collide with plans that already own those files. Per the fi
 
 ### execution-service — matching engines explicitly out of scope
 
-- [ ] [AGENT] P1. Merge `execution_service/validation/instruction_validator.py` and
+- [x] ✅ [AGENT] P1. SHIPPED execution-service@959c045e9 — kept the `utils/validation/` copy; the deleted one still returned legacy `"swaps"` instead of `"dex_swaps"`, so this was a correctness choice. Original: Merge `execution_service/validation/instruction_validator.py` and
       `execution_service/utils/validation/instruction_validator.py` — 570 vs 561 lines, 59 differing. Pick one home,
       re-point importers.
-- [ ] [AGENT] P1. Runtime-registration check on `execution_service/venues/` (2,030 LOC). Only importers found are
+- [x] ✅ [AGENT] P1. SHIPPED execution-service@959c045e9 — DELETED (2,030 LOC). Evidence: zero production importers, live Deribit path runs via `trade_execution/factory.py` to `DeribitCCXTAdapter`, no importlib/config/UAC dynamic resolution, and sibling `venues/{hyperliquid,uniswap,lido,morpho,etherfi}.py` were already deleted for the same reason. Original: Runtime-registration check on `execution_service/venues/` (2,030 LOC). Only importers found are
       tests and benchmarks, and it duplicates `defi_execution/connectors/` class-for-class — but it contains an
       `initializer.py`, so confirm nothing registers it dynamically before deleting. If the check is inconclusive,
       file an issue doc rather than deleting.
