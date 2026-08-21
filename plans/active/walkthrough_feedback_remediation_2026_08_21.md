@@ -587,6 +587,11 @@ successor plan, the work remains tracked here as still-open todos, not lost).
 
 ### API-reference client-ready follow-ups
 
+- [x] [SCRIPT] P1. market-tick-data-service: org-scoped entitlement seam on external market-data router (§01's
+      "auth is a gate, not a scope" fixed) — new `api/entitlement.py` mirrors client-reporting-api's
+      `enforce_entitlement` for org → `{asset_groups, venues}`: explicit out-of-scope → 403, aggregate listing
+      silently narrows, internal/no-record unrestricted. Tests `TestEntitlement` x8, §01 rewritten. —
+      `market-tick-data-service@746ad763b`, `unified-trading-pm@<pending-ship>`.
 - [x] [SCRIPT] P2. execution-service: `POST /external/instructions` CANCEL currently only supports
       `cancel_scope=SINGLE`; add an `ALL_FOR_STRATEGY_INSTANCE` lookup (index `order_tracker` by strategy-instance,
       not just `instruction_id`) so the doc's remaining "Coming soon" cancel-scope note can close. <1 day. —
