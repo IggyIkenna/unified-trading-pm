@@ -182,7 +182,9 @@ defect (phantom-venue emission) without touching a registry other code may depen
       backfill, unrelated) — so resurrection risk is measured-low and this re-check is cheap
       belt-and-braces, not an open hazard. If somehow resurrected anyway: locate + purge the shard
       source, citing this doc's existing delete-safety proof (same population).
-- [ ] [SHIP] P1. Land the two fix commits currently blocked by a PEER session's in-flight
+- [x] [SHIP] P1. ✅ DONE 2026-08-21 — (a) LANDED as `deployment-service@3000d17ccc` + zombie-watchdog
+      VM relaunched (`vm-zombie-watchdog-20260821-144933`); (b) `instruments-service@26c898e470`.
+      Original item: Land the two fix commits currently blocked by a PEER session's in-flight
       `unified-api-contracts` WIP (its prediction-domain migration breaks every consumer's QG/pre-flight;
       both commits are otherwise ready): (a) `deployment-service` — GREW during the same session's
       pattern-debt work (whole_index_script_pattern_debt_2026_08_21.md Progress Log has the full file
@@ -196,21 +198,37 @@ defect (phantom-venue emission) without touching a registry other code may depen
       (a stash-create commit pinning the FULL 16-file batch at its QG-GREEN state, 2026-08-21: the
       deployment-service full gate ran QG-EXIT=0 — 3,655+ passed, 0 failures — after the peer's UAC
       migration landed; two same-hour ship attempts then failed only because the peer RE-dirtied UAC
-      mid-window. RETRY RECIPE for the next session: confirm `git -C ../unified-api-contracts status
-      --porcelain` is empty, then quickmerge deployment-service with `--agent --files '<the 16 files —
-      exact list = git show --stat aavev3-hardening-batch-backup>'`; if the working tree was swept
-      meanwhile, `git cherry-pick -n aavev3-hardening-batch-backup` restores it. No re-gate needed
-      unless the tree content changed after the green run;
-      a 2nd QG re-run at 07:0x went red with 35 failures ALL in dep-sensitive data-status/turbo
-      suites, none touching the fix's two files — the mid-window quickmerge ancestor cascade pulled
-      newer UTL/UAC into the workspace, so treat that red as upstream drift, not this diff, and
-      re-gate once the peer's UAC migration lands); (b) ✅ DONE 2026-08-21 — `instruments-service`
+      mid-window. OUTCOME 2026-08-21 (~14:5x): LANDED as `deployment-service@3000d17ccc` after a full
+      isolated re-gate (post-push ancestry verified; origin content probes: ManifestCasConflictError=5,
+      `defi-aavev3-bare-alias-purge-` prefix=1, KEEP_VM=3, predicate_scope=14). Three more transient
+      failures preceded it — lessons: (1) conventional-pre-commit REJECTS `+` inside the commit SCOPE
+      (`feat(migrations+vm):` failed; ALSO explains the prior session's unexplained attempt-1 "Commit
+      failed" — use a single-word scope). (2) The retry recipe previously written here was WRONG: a
+      `git stash create` pin is a merge-shaped commit, so `git cherry-pick -n` refuses it — the correct
+      extraction is `git stash apply <pin-sha>` (used twice, works). (3) quickmerge `--isolated` does
+      NOT restore evacuated --files on early failure (measured twice) — they strand in the orphaned
+      `$TMPDIR/qm-iso-<pid>` worktree; `git worktree list` finds it, `git worktree remove --force` +
+      re-apply the pin recovers (todo below). (4) STAGE-1 "UAC DIFFERS" can mean BEHIND (peer landed),
+      not dirty — `git -C unified-api-contracts pull --ff-only` was the whole fix. Pin branch
+      `aavev3-hardening-batch-backup` is now redundant — operator may delete it (`git branch -D` is
+      guardrail-blocked for agents); (b) ✅ DONE 2026-08-21 — `instruments-service`
       streaming purge script SHIPPED as `instruments-service@26c898e470` (the executed code, landed
       for provenance; the peer's UAC migration landed and IS QG went green — 5,427 passed; the one
       residual import-patterns step was a deep `unified_trading_library.cloud_interface` import,
-      fixed to the top-level form pre-ship). After (a) lands: relaunch the
-      zombie-watchdog VM (kill `vm-zombie-watchdog-*` + re-run `launch-vm-zombie-watchdog.sh`) so the live
-      daemon picks up the new `defi-aavev3-bare-alias-purge-` 90-min idle threshold.
+      fixed to the top-level form pre-ship). After (a) landed: zombie-watchdog VM RELAUNCHED same hour — old
+      `vm-zombie-watchdog-20260815-191525` deleted, `vm-zombie-watchdog-20260821-144933` RUNNING
+      (the launcher re-uploads the repo `.py` to the GCS SSOT on every launch, so the live daemon
+      now carries all six new whole-index prefix thresholds).
+- [ ] [INFRA] P2. quickmerge `--isolated` restore-on-early-failure defect (PM-SSOT `scripts/quickmerge.sh`,
+      symlinked fleet-wide): when the run dies before the ship stage (measured 2026-08-21: harness SIGTERM
+      at a 10-min foreground cap mid-gate; STAGE-1 dep-conflict exit-1) the evacuated `--files` are NOT
+      restored to the caller tree despite the banner's "restored … (success or failure)" promise — they
+      strand in `$TMPDIR/qm-iso-<pid>`. Fix the trap to cover early exits + remove the orphan worktree;
+      consider also pre-flighting the commit message against conventional-pre-commit BEFORE the re-gate
+      (a scope typo currently costs a full ~12-min gate run to discover).
+- [ ] [INFRA] P3. `launch-vm-zombie-watchdog.sh:283` — non-fatal `vm-zombie-watchdog-20260815-190257:
+      command not found` during the 2026-08-21 relaunch: an old VM NAME gets executed (quoting/
+      command-substitution slip in the singleton-lock/cleanup path). Launch proceeded fine; fix the quoting.
 - [ ] [CLEANUP] P3. After the durability re-check passes: per the script's own `Delete-when` lifecycle
       marker, delete `instruments-service/scripts/purge_defi_aavev3_bare_alias_manifest_rows_2026_08_20.py`
       + `deployment-service/scripts/vm/launch-defi-aavev3-bare-alias-purge-vm.sh` and remove the
